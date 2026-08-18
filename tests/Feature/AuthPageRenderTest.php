@@ -21,7 +21,7 @@ class AuthPageRenderTest extends TestCase
             ->assertOk()
             ->assertSee('Login')
             ->assertSee('Continue with Google')
-            ->assertSee('Email Address');
+            ->assertSee('Email address');
     }
 
     public function test_register_page_renders_the_updated_memorisation_focused_layout(): void

@@ -13,7 +13,13 @@ class BillingCheckoutTest extends TestCase
     public function test_guest_is_redirected_to_login_from_checkout(): void
     {
         $this->post(route('billing.checkout'), ['plan' => 'premium_monthly'])
-            ->assertRedirect();
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_guest_is_redirected_to_login_from_checkout_alias_route(): void
+    {
+        $this->post(route('checkout'), ['plan' => 'premium_monthly'])
+            ->assertRedirect(route('login'));
     }
 
     public function test_checkout_rejects_unknown_plan(): void

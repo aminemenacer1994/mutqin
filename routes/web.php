@@ -34,8 +34,6 @@ Route::get('/onboarding', function () {
 })->name('onboarding.page');
 
 Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
-Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
 Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
 
 Route::get('/memorisation', function () {
@@ -56,48 +54,53 @@ Route::view('/our-mission', 'content.our-mission')->name('our-mission');
 Route::view('/donate', 'content.donate')->name('donate');
 Route::view('/waiting-list', 'content.waiting-list')->name('waiting-list');
 
-Route::get('/memorisation/audio-download', function (Request $request) {
-    $url = (string) $request->query('url', '');
-    $filename = (string) $request->query('filename', 'ayah.mp3');
-
-    if (!$url) {
-        abort(400, 'Missing audio URL');
-    }
-
-    $parts = parse_url($url);
-    $host = $parts['host'] ?? '';
-    $scheme = $parts['scheme'] ?? '';
-
-    if ($scheme !== 'https' || $host !== 'cdn.islamic.network') {
-        abort(403, 'Unsupported audio host');
-    }
-
-    $safeFilename = preg_replace('/[^A-Za-z0-9._-]/', '-', $filename) ?: 'ayah.mp3';
-    $response = Http::withOptions(['stream' => true])->get($url);
-
-    if (!$response->successful()) {
-        abort($response->status() ?: 502, 'Failed to fetch audio');
-    }
-
-    $stream = $response->toPsrResponse()->getBody();
-
-    return response()->streamDownload(function () use ($stream) {
-        while (!$stream->eof()) {
-            echo $stream->read(8192);
-        }
-    }, $safeFilename, [
-        'Content-Type' => 'audio/mpeg',
-    ]);
-})->name('memorisation.audio-download');
-
 // Protected routes (require authentication)
 Route::middleware(['auth'])->group(function () {
+    Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
+    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
+
+    Route::get('/memorisation/audio-download', function (Request $request) {
+        $url = (string) $request->query('url', '');
+        $filename = (string) $request->query('filename', 'ayah.mp3');
+
+        if (!$url) {
+            abort(400, 'Missing audio URL');
+        }
+
+        $parts = parse_url($url);
+        $host = $parts['host'] ?? '';
+        $scheme = $parts['scheme'] ?? '';
+
+        if ($scheme !== 'https' || $host !== 'cdn.islamic.network') {
+            abort(403, 'Unsupported audio host');
+        }
+
+        $safeFilename = preg_replace('/[^A-Za-z0-9._-]/', '-', $filename) ?: 'ayah.mp3';
+        $response = Http::withOptions(['stream' => true])->get($url);
+
+        if (!$response->successful()) {
+            abort($response->status() ?: 502, 'Failed to fetch audio');
+        }
+
+        $stream = $response->toPsrResponse()->getBody();
+
+        return response()->streamDownload(function () use ($stream) {
+            while (!$stream->eof()) {
+                echo $stream->read(8192);
+            }
+        }, $safeFilename, [
+            'Content-Type' => 'audio/mpeg',
+        ]);
+    })
+        ->middleware('plan:pro')
+        ->name('memorisation.audio-download');
+
     Route::post('/memorisation/transcription-token', function () {
         $apiKey = trim((string) config('services.speechmatics.api_key', ''));
         $configuredRegion = strtolower(trim((string) config('services.speechmatics.region', '')));

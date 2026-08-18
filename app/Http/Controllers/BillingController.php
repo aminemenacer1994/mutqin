@@ -19,6 +19,10 @@ class BillingController extends Controller
 
     public function checkout(Request $request)
     {
+        if (!$request->user()) {
+            return redirect()->route('login');
+        }
+
         $planKey = $request->validate([
             'plan' => ['required', 'string', Rule::in(array_keys($this->paidPlans()))],
         ])['plan'];
