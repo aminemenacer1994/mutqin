@@ -139,8 +139,21 @@ includesAll('onboarding lean guided tour', [
   /onboarding-meta-line/,
   /onboarding-practice-chips/,
   /this\.onboardingPhase = 'tour'/,
-  /this\.completeOnboardingOpenSetup\(\)/
+  /this\.completeOnboardingOpenSetup\(\)/,
+  /shouldAutoOpenOnboarding\(\)/,
+  /markOnboardingAutoPresented\(\)/,
+  /onboardingAutoPresented/,
 ])
+
+const onboardingUiSource = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
+  + '\n'
+  + readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
+
+assert.doesNotMatch(
+  onboardingUiSource,
+  /onboarding-step-screenshot|onboardingStepScreenshotAlt|images\/onboarding\//,
+  'onboarding step screenshots should be removed on desktop and mobile'
+)
 
 assert.doesNotMatch(
   source,
@@ -946,6 +959,17 @@ includesAll('centralised session lifecycle wiring', [
   /exitOnboardingSampleMode/,
   /sampleSession:\s*true/,
   /onboardingSampleSessionActive && !options\.sampleSession/,
+])
+
+includesAll('workspace idle returning-user journey context', [
+  /hasMemorisationHistory\(\)/,
+  /showIdleQuickStartChoices\(\)[\s\S]*?hasMemorisationHistory/,
+  /learnerJourneyLoading/,
+  /dashboard\.journey_now/,
+  /dashboard\.journey_keep_going/,
+  /continueLearnerJourney\(\)/,
+  /reviewLearnerJourney\(\)/,
+  /journeyHasStarted \|\| hasMemorisationHistory/,
 ])
 
 console.log('mutqin controls wiring passed')

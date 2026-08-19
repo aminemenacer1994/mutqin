@@ -558,7 +558,7 @@
                     v-if="isLoggedIn && (shouldShowWorkspaceJourney || showIdleQuickStartChoices)"
                     class="workspace-shell-idle-links"
                     :class="{
-                      'workspace-shell-idle-links--toolbar': !showIdleQuickStartChoices && journeyHasStarted,
+                      'workspace-shell-idle-links--toolbar': !showIdleQuickStartChoices && (journeyHasStarted || hasMemorisationHistory),
                     }"
                     :aria-label="t('memorisation.workspaceJourney.idleLinksLabel')"
                   >
@@ -571,7 +571,7 @@
                       <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
                       <span>{{ t('memorisation.workspaceJourney.openDashboard') }}</span>
                     </a>
-                    <template v-if="journeyHasStarted">
+                    <template v-if="journeyHasStarted || hasMemorisationHistory">
                       <span class="workspace-shell-text-link-sep" aria-hidden="true">·</span>
                       <button
                         type="button"
@@ -3043,18 +3043,6 @@
               >
                 {{ onboardingStepContent.hint }}
               </p>
-
-              <figure
-                v-if="onboardingStepContent?.screenshot"
-                class="onboarding-step-screenshot"
-              >
-                <img
-                  :src="onboardingStepContent.screenshot"
-                  :alt="onboardingStepScreenshotAlt"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </figure>
 
               <div
                 v-if="onboardingStepContent?.key === 'practice'"

@@ -36,8 +36,12 @@ Route::get('/onboarding', function () {
 Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
 Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
 
-Route::get('/memorisation', function () {
-    return view('memorisation');
+Route::get('/memorisation', function (Request $request) {
+    $justRegistered = (bool) $request->session()->pull('mutqin_just_registered', false);
+
+    return view('memorisation', [
+        'justRegistered' => $justRegistered,
+    ]);
 })->middleware('auth')->name('memorisation');
 
 Route::get('/memorisation/demo', function () {

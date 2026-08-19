@@ -1554,10 +1554,11 @@ export default {
       return this.shouldShowWorkspaceEmptyState || this.shouldShowReadingWorkspace
     },
     showIdleQuickStartChoices() {
-      return this.showSessionOverviewIdleActions
-        && !this.journeyHasStarted
-        && !this.journeyReview
-        && !this.hasValidatedResumableSession
+      if (!this.showSessionOverviewIdleActions) return false
+      if (this.journeyHasStarted || this.journeyReview) return false
+      if (this.hasValidatedResumableSession) return false
+      if (this.hasMemorisationHistory) return false
+      return true
     },
     showIdleAsidePanel() {
       if (this.showIdleQuickStartChoices) return false
@@ -1567,22 +1568,47 @@ export default {
       if (this.showIdleQuickStartChoices) return ''
       if (this.journeyReview?.surah_name) return this.journeyReview.surah_name
       if (this.journeyHasStarted) return this.journeyContinue?.surah_name || ''
+      if (this.hasMemorisationHistory) {
+        return this.learnerProgress?.current_surah_name
+          || this.learnerDashboardContinue?.surah_name
+          || ''
+      }
       return ''
     },
     workspaceIdleSurahArabic() {
       if (this.showIdleQuickStartChoices) return ''
-      const surahNumber = Number(this.journeyReview?.surah_number || this.journeyContinue?.surah_number || 0)
+      const surahNumber = Number(
+        this.journeyReview?.surah_number
+        || this.journeyContinue?.surah_number
+        || this.learnerProgress?.current_surah_number
+        || this.learnerDashboardContinue?.surah_number
+        || 0
+      )
       if (surahNumber > 0) return this.getChapterArabicName(surahNumber)
       return ''
     },
     learnerDashboardUrl() {
       return '/dashboard'
     },
+    hasMemorisationHistory() {
+      if (this.journeyMemorisedCount > 0) return true
+      if (this.learnerStreakDays > 0) return true
+      const progress = this.learnerProgress
+      if (Number(progress?.memorised_ayah_count ?? 0) > 0) return true
+      if (progress?.current_surah_number) return true
+      const row = this.learnerDashboardContinue
+      return !!(row?.surah_number || row?.surah_name)
+    },
     journeyHasStarted() {
-      return !!(this.learnerJourney?.has_started && this.journeyContinue)
+      return !!this.learnerJourney?.has_started
     },
     journeyContinue() {
-      return this.learnerJourney?.continue || null
+      if (this.learnerJourney?.continue) return this.learnerJourney.continue
+      if (this.hasMemorisationHistory && this.learnerDashboardContinue) {
+        const row = this.learnerDashboardContinue
+        if (row?.surah_number || row?.surah_name) return row
+      }
+      return null
     },
     journeyReview() {
       const review = this.learnerJourney?.review
@@ -1692,6 +1718,15 @@ export default {
       if (this.journeyHasStarted) {
         return this.journeyContinue?.surah_name || this.t('dashboard.journey_continue_label')
       }
+      if (this.hasMemorisationHistory) {
+        const surah = this.learnerProgress?.current_surah_name
+          || this.learnerDashboardContinue?.surah_name
+          || this.journeyContinue?.surah_name
+        if (surah) {
+          return this.t('dashboard.journey_now', { surah })
+        }
+        return this.t('memorisation.workspaceJourney.statusContinue')
+      }
       return this.t('memorisation.workspaceJourney.startTitle')
     },
     workspaceIdleKicker() {
@@ -1700,6 +1735,9 @@ export default {
     workspaceIdleDesc() {
       if (this.showIdleQuickStartChoices) {
         return this.t('memorisation.workspaceEmpty.desc')
+      }
+      if (this.hasMemorisationHistory && !this.journeyHasStarted && !this.journeyReview) {
+        return this.t('dashboard.journey_keep_going')
       }
       return this.workspaceJourneySubline || ''
     },
@@ -1716,8 +1754,8 @@ export default {
       if (this.journeyHasStarted) {
         return this.t('memorisation.workspaceJourney.hintContinue')
       }
-      if (this.journeyMemorisedCount > 0 || this.learnerStreakDays > 0) {
-        return this.t('memorisation.workspaceJourney.hintStart')
+      if (this.hasMemorisationHistory) {
+        return this.t('memorisation.workspaceJourney.hintContinue')
       }
       return this.t('memorisation.workspaceEmpty.instruction')
     },
@@ -1833,7 +1871,7 @@ export default {
       return null
     },
     shouldShowWorkspaceJourney() {
-      return this.isLoggedIn && (this.journeyHasStarted || this.journeyMemorisedCount > 0 || this.learnerStreakDays > 0)
+      return this.isLoggedIn && (this.journeyHasStarted || this.hasMemorisationHistory || this.learnerStreakDays > 0)
     },
     loginUrl() {
       return this.auth?.login_url || '/login'
@@ -1921,6 +1959,13 @@ export default {
       return this.toolsStartBusy
     },
     showSessionOverviewIdleActions() {
+      if (
+        this.isLoggedIn
+        && this.learningBackendEnabled()
+        && this.learnerJourneyLoading
+      ) {
+        return false
+      }
       return !this.hasVerses
         && !this.isRestoringWorkspace
         && this.isDataReady
@@ -5882,6 +5927,9 @@ export default {
       // Only an in-progress pending first-run still needs it after the flash expires.
       return !!this.readWorkspaceStateValue('onboardingPending', false)
     },
+    shouldAutoOpenOnboarding() {
+      return this.requiresFirstTimeOnboarding && !this.hasOnboardingAutoPresented()
+    },
     isExistingUserLogin() {
       // Welcome Back is only for returning users who already finished onboarding.
       return !!(this.auth?.just_logged_in && !this.auth?.just_registered && this.hasCompletedOnboarding())
@@ -7281,10 +7329,6 @@ export default {
     },
     onboardingStepContent() {
       return this.onboardingSteps[this.onboardingStepIndex] || this.onboardingSteps[0]
-    },
-    onboardingStepScreenshotAlt() {
-      const title = this.onboardingStepContent?.title || this.t('memorisation.onboarding.intro')
-      return this.t('memorisation.onboarding.screenshotAlt', { step: title })
     },
     onboardingStepCounterLabel() {
       return this.t('memorisation.onboarding.stepCounter', {
@@ -8869,6 +8913,7 @@ export default {
         this.markOnboardingCompleted()
       }
       const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
+      const shouldAutoOpenOnboarding = authenticatedWorkspace && this.shouldAutoOpenOnboarding
       const dashboardEntryIntent = this.readDashboardEntryIntent()
 
       if (
@@ -8882,8 +8927,9 @@ export default {
 
       if (shouldAutoRestorePersistedSession) {
         this.isDataReady = true
-      } else if (needsFirstTimeOnboarding) {
+      } else if (shouldAutoOpenOnboarding) {
         this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
+        this.markOnboardingAutoPresented()
         this.openOnboardingModal()
         this.isDataReady = true
       } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
@@ -10304,6 +10350,7 @@ export default {
           this.deleteWorkspaceStateValue(`modeState:${mode}`)
           this.deleteWorkspaceStateValue(`sessionState:${mode}`)
         })
+        this.deleteWorkspaceStateValue('onboardingAutoPresented')
         this.writeWorkspaceStateValue('onboardingPending', true)
         localStorage.removeItem(this.getOnboardingStorageKey())
         localStorage.removeItem(this.continueSessionLocalStorageKey())
@@ -10514,12 +10561,6 @@ export default {
       const points = Array.isArray(pointsRaw)
         ? pointsRaw.map(item => String(item || '').trim()).filter(Boolean)
         : []
-      const screenshotMap = {
-        setup: '/images/onboarding/setup.png',
-        practice: '/images/onboarding/practice.png',
-        coach: '/images/onboarding/coach.png',
-        improve: '/images/onboarding/improve.png',
-      }
       const step = {
         key,
         icon,
@@ -10528,7 +10569,6 @@ export default {
         body: this.t(`${base}.body`),
         hint: hint && hint !== hintKey ? hint : '',
         points,
-        screenshot: screenshotMap[key] || '',
       }
       if (key === 'setup') step.targetSection = 'advanced_setup'
       if (key === 'practice') step.targetSection = 'focus_mode'
@@ -13084,6 +13124,12 @@ export default {
       if (this.isPlaying || this.playerVisible) return true
       return false
     },
+    hasOnboardingAutoPresented() {
+      return !!this.readWorkspaceStateValue('onboardingAutoPresented', false)
+    },
+    markOnboardingAutoPresented() {
+      this.writeWorkspaceStateValue('onboardingAutoPresented', true)
+    },
     hasCompletedOnboarding() {
       const userId = this.auth?.id != null ? String(this.auth.id) : null
 
@@ -13118,6 +13164,7 @@ export default {
       if (this.learningBackendEnabled()) {
         this.writeWorkspaceStateValue(workspaceKey, true)
         this.deleteWorkspaceStateValue('onboardingPending')
+        this.deleteWorkspaceStateValue('onboardingAutoPresented')
         // Drop legacy unscoped flag so it cannot leak across accounts.
         if (workspaceKey !== 'onboardingCompleted') {
           this.deleteWorkspaceStateValue('onboardingCompleted')
@@ -27790,6 +27837,14 @@ export default {
 
       if (action === PRIMARY_SESSION_ACTION.START_SESSION) {
         if (!this.hasVerses) {
+          if (this.journeyReview?.surah_name) {
+            this.reviewLearnerJourney()
+            return
+          }
+          if (this.journeyContinue?.surah_number || this.journeyContinue?.surah_name) {
+            this.continueLearnerJourney()
+            return
+          }
           this.openNewSessionSetup()
           return
         }

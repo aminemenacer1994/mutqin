@@ -90,6 +90,36 @@ class OnboardingTriggerTest extends TestCase
         $page->assertDontSee('just_logged_in":true', false);
     }
 
+    public function test_just_registered_survives_dashboard_visit_before_memorisation(): void
+    {
+        $this->post(route('register'), [
+            'name' => 'Dashboard Stopover',
+            'email' => 'dashboard-stopover@example.com',
+            'password' => 'secret12',
+            'password_confirmation' => 'secret12',
+        ])->assertRedirect('/dashboard');
+
+        $this->get(route('dashboard'))->assertOk();
+
+        $page = $this->get(route('memorisation'));
+        $page->assertOk();
+        $page->assertSee('just_registered":true', false);
+    }
+
+    public function test_just_registered_is_consumed_on_first_memorisation_visit(): void
+    {
+        $this->post(route('register'), [
+            'name' => 'One Shot Flag',
+            'email' => 'one-shot-flag@example.com',
+            'password' => 'secret12',
+            'password_confirmation' => 'secret12',
+        ])->assertRedirect('/dashboard');
+
+        $this->get(route('memorisation'))->assertOk()->assertSee('just_registered":true', false);
+
+        $this->get(route('memorisation'))->assertOk()->assertDontSee('just_registered":true', false);
+    }
+
     private function mockGoogleUser(array $attributes): void
     {
         $socialiteUser = (new SocialiteUser)->map([
