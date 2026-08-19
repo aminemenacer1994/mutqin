@@ -6147,10 +6147,10 @@ html {
   text-align: center;
   width: auto;
   max-width: none;
-  margin: 0 0.08em 0.85em;
-  padding: 0;
+  margin: 0 0.1em 0.65em;
+  padding: 0 0.42em;
   line-height: 1.1;
-  gap: 0.55em;
+  gap: 0.1em;
   background: transparent !important;
   border-radius: 0;
   box-shadow: none !important;
@@ -6162,8 +6162,8 @@ html {
 .mushaf-ayah-text.word-by-word-meanings .word-arabic-text {
   display: block;
   white-space: nowrap;
-  line-height: 1.65;
-  padding-bottom: 0.35em;
+  line-height: 1.22;
+  padding: 0 0.04em 0.06em;
   color: inherit;
 }
 
@@ -6174,15 +6174,15 @@ html {
   font-size: calc(0.72rem * var(--en-scale, 1));
   font-weight: 400;
   font-family: 'Outfit', 'Segoe UI', sans-serif;
-  line-height: 1.3;
+  line-height: 1.28;
   max-width: 8.5em;
   width: max-content;
   direction: ltr;
   unicode-bidi: isolate;
   text-align: center;
   white-space: normal;
-  margin: 0.42em auto 0;
-  padding-top: 0.22em;
+  margin: 0.08em auto 0;
+  padding: 0 0.06em;
 }
 
 .verse-arabic.word-by-word-meanings .wbw-word.highlighted .word-meaning,
@@ -16129,10 +16129,10 @@ body.memorisation-page nav.navbar.app-navbar {
   vertical-align: top;
   white-space: normal;
   text-align: center;
-  margin: 0 0.08em 0.55em;
-  padding: 0;
+  margin: 0 0.1em 0.55em;
+  padding: 0 0.42em;
   line-height: 1.1;
-  gap: 0.38em;
+  gap: 0.1em;
   background: transparent;
   box-shadow: none;
   transform: none;
@@ -16149,8 +16149,8 @@ body.memorisation-page nav.navbar.app-navbar {
   display: block;
   white-space: nowrap;
   font-size: 1em;
-  line-height: 1.55;
-  padding-bottom: 0.2em;
+  line-height: 1.22;
+  padding: 0 0.04em 0.06em;
 }
 
 .mushaf-ayah-text.word-by-word-meanings .word-meaning {
@@ -16159,11 +16159,11 @@ body.memorisation-page nav.navbar.app-navbar {
   font-size: 0.38em;
   font-weight: 400;
   font-family: 'Outfit', 'Segoe UI', sans-serif;
-  line-height: 1.3;
+  line-height: 1.28;
   max-width: 9em;
   width: max-content;
-  margin: 0.28em auto 0;
-  padding-top: 0.12em;
+  margin: 0.08em auto 0;
+  padding: 0 0.06em;
   direction: ltr;
   unicode-bidi: isolate;
   text-align: center;
@@ -17723,8 +17723,8 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .app.is-rtl .word-by-word-meanings .word-meaning {
-  margin-top: 0.32em;
-  padding-top: 0.15em;
+  margin-top: 0.08em;
+  padding: 0 0.06em;
 }
 
 .app.is-rtl .verse-translation,
@@ -37763,16 +37763,33 @@ but not its destructive red. */
   border-radius: 10px;
 }
 
-.tools-body .field-repetitions-clean {
-  gap: 6px;
-  padding: 0.65rem 0.75rem;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  background: var(--surface);
-  box-shadow: none;
+.tools-body .field-repetitions-clean,
+.tools-body .field-individual-ayah-unified {
+  gap: 8px;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 94%, var(--surface) 6%);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--border) 38%, transparent),
+    0 5px 16px color-mix(in srgb, var(--border) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 72%, transparent);
 }
 
-.tools-body .field-repetitions-clean .range-value-pill {
+.tools-body .field-repetitions-clean .range-control,
+.tools-body .field-individual-ayah-unified .individual-ayah-range-control {
+  margin-top: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    0 1px 2px color-mix(in srgb, var(--border) 12%, transparent);
+}
+
+.tools-body .field-repetitions-clean .range-value-pill,
+.tools-body .field-individual-ayah-unified .range-value-pill {
   min-width: 40px;
   padding: 2px 8px;
   font-size: 0.7rem;
@@ -37799,6 +37816,10 @@ but not its destructive red. */
   gap: 0.55rem;
 }
 
+.tools-body .field-individual-ayah-unified .individual-ayah-header {
+  margin-bottom: 0;
+}
+
 .individual-ayah-header > label {
   display: inline-flex;
   align-items: center;
@@ -37807,19 +37828,42 @@ but not its destructive red. */
   font-weight: 600;
 }
 
+.tools-body .field-individual-ayah-unified .individual-ayah-header > label {
+  font-weight: 500;
+}
+
 .individual-ayah-header > label i {
   font-size: 0.88rem;
   color: var(--accent-strong, var(--accent));
 }
 
-.individual-ayah-controls {
-  display: grid;
-  gap: 0.55rem;
+.tools-body .field-individual-ayah-unified .individual-ayah-select {
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    0 1px 2px color-mix(in srgb, var(--border) 10%, transparent);
+  border-radius: 10px;
+  padding-block: 0.45rem;
+}
+
+.tools-body .field-individual-ayah-unified .individual-ayah-select:focus {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--accent) 4%, var(--zone-reading, #fff) 96%);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent);
 }
 
 .individual-ayah-repeat {
   display: grid;
   gap: 0.35rem;
+}
+
+.tools-body .field-individual-ayah-unified .individual-ayah-repeat {
+  padding-top: 0.6rem;
+  margin-top: 0.15rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
 }
 
 .individual-ayah-repeat-header {
@@ -37836,8 +37880,8 @@ but not its destructive red. */
   color: color-mix(in srgb, var(--text-muted) 86%, var(--accent) 14%);
 }
 
-.tools-body .field-individual-ayah .individual-ayah-range {
-  min-block-size: 2.75rem;
+.tools-body .field-individual-ayah-unified .individual-ayah-range {
+  min-block-size: auto;
 }
 
 .technique-group-beginner {
@@ -38103,15 +38147,50 @@ but not its destructive red. */
   background: color-mix(in srgb, var(--accent) 18%, var(--surface) 82%);
 }
 
-[data-theme="dark"] .tools-body .field-repetitions-clean {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(116, 217, 158, 0.16);
+[data-theme="dark"] .tools-body .field-repetitions-clean,
+[data-theme="dark"] .tools-body .field-individual-ayah-unified {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 236, 216, 0.14);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 6px 18px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-[data-theme="dark"] .tools-body .field-repetitions-clean .range-value-pill {
+[data-theme="dark"] .tools-body .field-repetitions-clean .range-control,
+[data-theme="dark"] .tools-body .field-individual-ayah-unified .individual-ayah-range-control {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 236, 216, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+[data-theme="dark"] .tools-body .field-repetitions-clean .range-value-pill,
+[data-theme="dark"] .tools-body .field-individual-ayah-unified .range-value-pill {
   background: rgba(116, 217, 158, 0.12);
   border-color: rgba(116, 217, 158, 0.22);
   color: #b8f5d4;
+}
+
+[data-theme="dark"] .tools-body .field-individual-ayah-unified .individual-ayah-select {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 236, 216, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.14);
+}
+
+[data-theme="dark"] .tools-body .field-individual-ayah-unified .individual-ayah-select:focus {
+  background: rgba(116, 217, 158, 0.08);
+  border-color: rgba(116, 217, 158, 0.28);
+  box-shadow:
+    0 0 0 3px rgba(116, 217, 158, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .tools-body .field-individual-ayah-unified .individual-ayah-repeat {
+  border-top-color: rgba(255, 236, 216, 0.12);
 }
 
 [data-theme="dark"] .tools-body .radio-group-compact .radio {
@@ -39720,11 +39799,11 @@ but not its destructive red. */
 
 .saved-sheet__row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.55rem;
   width: 100%;
   min-width: 0;
-  padding: 0.65rem 0.7rem;
+  padding: 0.72rem 0.75rem;
   border-radius: 12px;
   border: 1px solid var(--saved-border, color-mix(in srgb, var(--border) 72%, transparent));
   background: color-mix(in srgb, var(--saved-card-strong) 88%, transparent);
@@ -39773,7 +39852,7 @@ but not its destructive red. */
 
 .saved-sheet__row-main {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.65rem;
   min-width: 0;
   flex: 1 1 auto;
@@ -39792,6 +39871,7 @@ but not its destructive red. */
   width: 1.85rem;
   height: 1.85rem;
   flex: 0 0 auto;
+  margin-top: 0.05rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--saved-accent) 10%, transparent);
   color: var(--saved-accent);
@@ -39800,33 +39880,70 @@ but not its destructive red. */
 
 .saved-sheet__row-copy {
   display: grid;
-  gap: 0.12rem;
+  gap: 0.18rem;
   min-width: 0;
   flex: 1 1 auto;
 }
 
 .saved-sheet__row-title {
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.25;
   color: var(--saved-text);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .saved-sheet__row-meta {
-  font-size: 0.72rem;
+  display: grid;
+  gap: 0.14rem;
+  min-width: 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
   color: var(--saved-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.saved-sheet__row-meta-line {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.saved-sheet__row-meta-line--secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.28rem 0.38rem;
+}
+
+.saved-sheet__status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.25rem;
+  padding: 0.05rem 0.42rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--success, #2e7d64) 28%, transparent);
+  background: color-mix(in srgb, var(--success, #2e7d64) 10%, transparent);
+  color: var(--success, #2e7d64);
+  font-size: 0.66rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.saved-sheet__meta-dot {
+  color: color-mix(in srgb, var(--saved-muted) 72%, transparent);
 }
 
 .saved-sheet__row-actions {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.3rem;
   flex: 0 0 auto;
+  padding-top: 0.05rem;
   white-space: nowrap;
 }
 
@@ -39926,6 +40043,33 @@ but not its destructive red. */
   --saved-muted: #b3a89b;
   --saved-accent: #d2b08a;
   --saved-accent-strong: #f0d7b5;
+}
+
+@media (max-width: 480px) {
+  .saved-sheet__row {
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.55rem 0.45rem;
+  }
+
+  .saved-sheet__row-main {
+    flex: 1 1 calc(100% - 2.6rem);
+    min-width: min(100%, 12rem);
+  }
+
+  .saved-sheet__row-actions {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 0;
+    border-top: 1px solid color-mix(in srgb, var(--saved-border) 82%, transparent);
+    padding-top: 0.45rem;
+    margin-top: 0.05rem;
+  }
+
+  .saved-sheet__action {
+    min-height: 2.15rem;
+    padding-inline: 0.75rem;
+  }
 }
 
 [data-theme="dark"] .saved-sheet__card,
@@ -51413,9 +51557,9 @@ word.practice-focus-word--active {
   text-align: center !important;
   direction: rtl;
   unicode-bidi: isolate;
-  margin: 0 0.12em 0.2em !important;
-  padding: 0 !important;
-  gap: 0.08em !important;
+  margin: 0 0.1em 0.55em !important;
+  padding: 0 0.42em !important;
+  gap: 0.1em !important;
   background: transparent !important;
   border-radius: 0 !important;
   box-shadow: none !important;
@@ -51440,13 +51584,13 @@ html body .mushaf-page-body.word-by-word-meanings .mushaf-ayah-number {
   position: relative !important;
   z-index: 0 !important;
   white-space: nowrap !important;
-  line-height: 1.35 !important;
+  line-height: 1.2 !important;
   font-size: 1em !important;
   text-align: center !important;
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0.15em !important;
-  padding: 0 0.04em 0.35em !important;
+  padding: 0 0.04em 0.06em !important;
 }
 
 /* Keep tajweed fragments horizontal inside each WBW chip (never flex-column items). */
@@ -51466,13 +51610,13 @@ html body .mushaf-page-body.word-by-word-meanings .mushaf-ayah-number {
   z-index: 2 !important;
   width: max-content !important;
   max-width: 7.5em !important;
-  margin: 0.42em auto 0 !important;
-  padding: 0.22em 0 0 !important;
+  margin: 0.08em auto 0 !important;
+  padding: 0 0.06em !important;
   color: #5c5c5c !important;
   font-size: calc(0.68rem * var(--en-scale, 1)) !important;
   font-weight: 400 !important;
   font-family: 'Outfit', 'Segoe UI', sans-serif !important;
-  line-height: 1.2 !important;
+  line-height: 1.28 !important;
   direction: ltr !important;
   unicode-bidi: isolate !important;
   text-align: center !important;
@@ -58059,13 +58203,17 @@ and mode toggles only.
   background: color-mix(in srgb, var(--zone-elevated) 88%, var(--zone-reading) 12%);
 }
 
-.tools .field-repetitions-clean {
-  border-color: transparent;
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 40%, transparent);
+.tools .field-repetitions-clean,
+.tools .field-individual-ayah-unified {
+  border-color: color-mix(in srgb, var(--border) 88%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--border) 38%, transparent),
+    0 5px 16px color-mix(in srgb, var(--border) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 72%, transparent);
 }
 
-.tools .field-repetitions-clean .range-value-pill {
-  border-color: transparent;
+.tools .field-individual-ayah-unified .individual-ayah-select {
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
 }
 
 .tools .technique-group-advanced {
@@ -58118,6 +58266,13 @@ and mode toggles only.
   box-shadow: none;
 }
 
+.tools .tools-body .field-individual-ayah-unified .individual-ayah-select {
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    0 1px 2px color-mix(in srgb, var(--border) 10%, transparent);
+}
+
 .tools .tools-body .select:focus,
 .tools .tools-body .input:not([type="range"]):focus {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
@@ -58154,12 +58309,20 @@ and mode toggles only.
 [data-theme="dark"] .tools .st-chev,
 [data-theme="dark"] .tools .technique-best,
 [data-theme="dark"] .tools .technique-preview-block,
-[data-theme="dark"] .tools .field-repetitions-clean,
 [data-theme="dark"] .tools .tools-body .radio,
 [data-theme="dark"] .tools .tools-body .switch,
 [data-theme="dark"] .tools .tools-btn-soft,
 [data-theme="dark"] .tools .tools-btn-ghost {
   border-color: transparent;
+}
+
+[data-theme="dark"] .tools .field-repetitions-clean,
+[data-theme="dark"] .tools .field-individual-ayah-unified {
+  border-color: rgba(255, 236, 216, 0.14);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 6px 18px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] .tools .technique-preset-chip {

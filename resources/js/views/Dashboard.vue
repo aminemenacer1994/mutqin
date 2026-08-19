@@ -56,24 +56,6 @@
             </button>
           </div>
 
-          <section
-            v-if="showSubscriptionUpsell"
-            class="dash-subscription-upsell dash-reveal"
-            aria-labelledby="dash-subscription-upsell-title"
-          >
-            <div class="dash-subscription-upsell__copy">
-              <span class="dash-kicker">{{ t('dashboard.subscription_kicker') }}</span>
-              <h2 id="dash-subscription-upsell-title" class="dash-subscription-upsell__title">
-                {{ subscriptionUpsellTitle }}
-              </h2>
-              <p class="dash-subscription-upsell__hint">{{ subscriptionUpsellHint }}</p>
-            </div>
-            <a class="dash-btn dash-btn--primary dash-subscription-upsell__cta" :href="pricingHref">
-              <i class="bi bi-tag-fill" aria-hidden="true"></i>
-              {{ t('dashboard.subscription_cta') }}
-            </a>
-          </section>
-
           <div class="dash-hero__stack">
             <a
               v-if="primaryContinueAction"
@@ -86,6 +68,9 @@
               :href="primaryContinueAction.href"
               :aria-label="primaryContinueAction.ariaLabel || undefined"
             >
+              <span class="dash-continue-card__icon" aria-hidden="true">
+                <i :class="primaryContinueAction.icon" aria-hidden="true"></i>
+              </span>
               <div class="dash-continue-card__main">
                 <span class="dash-continue-card__label">{{ primaryContinueAction.label }}</span>
                 <strong class="dash-continue-card__title">{{ primaryContinueAction.title }}</strong>
@@ -97,6 +82,7 @@
                 </p>
               </div>
               <span class="dash-continue-card__cta">
+                <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
                 {{ primaryContinueAction.cta }}
               </span>
             </a>
@@ -107,15 +93,45 @@
         <div class="user-dashboard__primary">
         <section class="dash-section dash-section--flat dash-reveal" aria-labelledby="dash-data-heading" style="--dash-delay: 10ms">
           <div class="dash-section__head dash-section__head--compact">
-            <h2 id="dash-data-heading">{{ t('dashboard.journey_data_title') }}</h2>
+            <div class="dash-section__title">
+              <span class="dash-section__icon dash-section__icon--success" aria-hidden="true">
+                <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>
+              </span>
+              <div class="dash-section__title-copy">
+                <h2 id="dash-data-heading">{{ t('dashboard.journey_data_title') }}</h2>
+                <p class="dash-section__hint">{{ t('dashboard.journey_data_subtitle') }}</p>
+              </div>
+            </div>
           </div>
           <div class="dash-section__body dash-section__body--spacious">
             <div class="dash-glance">
+              <div class="dash-glance__stats" role="list" :aria-label="t('dashboard.journey_data_title')">
+                <div
+                  v-for="stat in hifzGlanceStats"
+                  :key="stat.key"
+                  class="dash-glance-stat"
+                  role="listitem"
+                >
+                  <span class="dash-glance-stat__icon" aria-hidden="true">
+                    <i :class="stat.icon" aria-hidden="true"></i>
+                  </span>
+                  <div class="dash-glance-stat__copy">
+                    <strong class="dash-glance-stat__value">
+                      <DashAnimatedNumber :value="stat.value" :reduce-motion="reduceMotion" />
+                    </strong>
+                    <span class="dash-glance-stat__label">{{ stat.label }}</span>
+                  </div>
+                </div>
+              </div>
+
               <div class="dash-glance__overall" aria-labelledby="dash-overall-heading">
                 <div class="dash-glance__overall-head">
-                  <span id="dash-overall-heading" class="dash-kicker">
-                    {{ t('dashboard.journey_overall_label') }}
-                  </span>
+                  <div class="dash-glance__overall-copy">
+                    <span id="dash-overall-heading" class="dash-glance__overall-label">
+                      {{ t('dashboard.journey_overall_label') }}
+                    </span>
+                    <p class="dash-glance__overall-desc">{{ t('dashboard.glance_quran_share') }}</p>
+                  </div>
                   <strong class="dash-glance__percent">
                     <DashAnimatedNumber :value="journeyOverallPercent" :reduce-motion="reduceMotion" />%
                   </strong>
@@ -133,18 +149,19 @@
                     :style="{ width: journeyOverallDisplay.fillWidth }"
                   ></span>
                 </div>
-                <p class="dash-glance__meta">
-                  {{ t('dashboard.journey_overall_ayahs', { n: journeyMemorisedCount }) }}
-                  <span v-if="earlyProgressMessage"> · {{ earlyProgressMessage }}</span>
+                <p v-if="earlyProgressMessage" class="dash-glance__meta dash-glance__meta--note">
+                  {{ earlyProgressMessage }}
                 </p>
               </div>
             </div>
 
-            <div class="dash-data-links">
-              <button type="button" class="dash-text-link" @click="openDrawer('activity')">
+            <div class="dash-glance-actions">
+              <button type="button" class="dash-glance-action" @click="openDrawer('activity')">
+                <i class="bi bi-clock-history" aria-hidden="true"></i>
                 {{ t('dashboard.view_all_activity') }}
               </button>
-              <button type="button" class="dash-text-link" @click="openDrawer('hifz')">
+              <button type="button" class="dash-glance-action" @click="openDrawer('hifz')">
+                <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
                 {{ t('dashboard.view_memorised_ayahs') }}
               </button>
             </div>
@@ -159,20 +176,34 @@
         >
           <div class="dash-murajaah-block">
             <div class="dash-murajaah-block__head dash-murajaah-block__head--compact">
-              <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
-                {{ t('dashboard.strengthen_title') }}
-              </h2>
+              <div class="dash-murajaah-block__head-main">
+                <div class="dash-murajaah-block__title-row">
+                  <span class="dash-section__icon dash-section__icon--review" aria-hidden="true">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                  </span>
+                  <div class="dash-section__title-copy">
+                    <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
+                      {{ t('dashboard.strengthen_title') }}
+                    </h2>
+                    <p class="dash-section__hint">{{ murajaahSectionSubtitle }}</p>
+                  </div>
+                </div>
+              </div>
               <button
                 v-if="showMurajaahViewAll"
                 type="button"
-                class="dash-text-link"
+                class="dash-glance-action dash-glance-action--ghost dash-murajaah-block__view-all"
                 @click="openDrawer('murajaah')"
               >
+                <i class="bi bi-list-ul" aria-hidden="true"></i>
                 {{ t('dashboard.view_all_reviews') }}
               </button>
             </div>
 
             <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty">
+              <span class="dash-murajaah-block__empty-icon" aria-hidden="true">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+              </span>
               <p class="dash-murajaah-block__empty-title">{{ t('dashboard.murajaah_no_urgent') }}</p>
               <p v-if="!optionalReviewSuggestion" class="dash-murajaah-block__empty-hint">
                 {{ t('dashboard.weak_empty_message') }}
@@ -181,6 +212,7 @@
                 <span class="dash-kicker">{{ t('dashboard.murajaah_keep_fresh') }}</span>
                 <strong class="dash-murajaah-suggestion__title">{{ optionalReviewSuggestion.title }}</strong>
                 <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="optionalReviewSuggestion.href">
+                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
                   {{ t('dashboard.murajaah_practise') }}
                 </a>
               </div>
@@ -190,15 +222,8 @@
               <li v-for="(item, index) in murajaahPreview" :key="item.key">
                 <div class="dash-murajaah-row dash-reveal" :style="{ '--dash-delay': `${index * 50}ms` }">
                   <a class="dash-murajaah-row__info" :href="item.href || memorisationUrl">
-                    <span class="dash-murajaah-row__title">
+                    <span class="dash-murajaah-row__ref">
                       {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
-                      <span
-                        v-if="item.strength"
-                        class="dash-strength dash-strength--compact"
-                        :class="`dash-strength--${item.strength}`"
-                      >
-                        {{ strengthLabel(item) }}
-                      </span>
                     </span>
                     <span
                       v-if="item.phrase"
@@ -207,9 +232,19 @@
                       dir="rtl"
                     >{{ item.phrase }}</span>
                   </a>
-                  <a class="dash-btn dash-btn--ghost dash-btn--sm dash-murajaah-row__cta" :href="reviewNowHref(item)">
-                    {{ t('dashboard.review_now') }}
-                  </a>
+                  <div class="dash-murajaah-row__aside">
+                    <span
+                      v-if="item.strength"
+                      class="dash-strength"
+                      :class="`dash-strength--${item.strength}`"
+                    >
+                      {{ strengthLabel(item) }}
+                    </span>
+                    <a class="dash-btn dash-btn--ghost dash-btn--sm dash-murajaah-row__cta" :href="reviewNowHref(item)">
+                      <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                      {{ t('dashboard.review_now') }}
+                    </a>
+                  </div>
                 </div>
               </li>
             </ul>
@@ -220,7 +255,12 @@
         <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
           <div class="dash-section__head dash-section__head--compact">
             <div class="dash-section__head-row">
-              <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
+              <div class="dash-section__title">
+                <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
+                  <i class="bi bi-calendar-week" aria-hidden="true"></i>
+                </span>
+                <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
+              </div>
               <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
                 <button
                   type="button"
@@ -272,6 +312,9 @@
                 :style="{ '--dash-delay': `${index * 60}ms` }"
                 role="listitem"
               >
+                <span v-if="item.icon" class="dash-analytic__icon" aria-hidden="true">
+                  <i :class="item.icon" aria-hidden="true"></i>
+                </span>
                 <p class="dash-analytic__value">
                   <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
                 </p>
@@ -325,12 +368,13 @@
           :aria-label="t('dashboard.drawer_close')"
           @click="closeDrawer"
         ></button>
-        <aside
-          class="dash-drawer"
-          :class="drawerMode ? `dash-drawer--${drawerMode}` : ''"
-          tabindex="-1"
-        >
-          <header class="dash-drawer__head">
+          <aside
+            class="dash-drawer"
+            :class="drawerMode ? `dash-drawer--${drawerMode}` : ''"
+            tabindex="-1"
+          >
+            <div class="dash-drawer__handle" aria-hidden="true"></div>
+            <header class="dash-drawer__head">
             <div class="dash-drawer__head-main">
               <span v-if="drawerIcon" class="dash-drawer__head-icon" aria-hidden="true">
                 <i :class="drawerIcon"></i>
@@ -352,9 +396,10 @@
           </header>
 
           <div class="dash-drawer__body">
-            <div
-              v-if="drawerMode === 'activity' && !drawerLoading && !drawerError"
-              class="dash-drawer__filters"
+            <div class="dash-drawer__content">
+              <div
+                v-if="drawerMode === 'activity' && !drawerLoading && !drawerError"
+                class="dash-drawer__filters"
               role="tablist"
               :aria-label="t('dashboard.drawer_activity_title')"
             >
@@ -370,21 +415,25 @@
               >
                 {{ filter.label }}
               </button>
-            </div>
+              </div>
 
-            <div v-if="drawerLoading" class="dash-drawer__status dash-drawer__status--loading" role="status">
+              <div v-if="drawerLoading" class="dash-drawer__status dash-drawer__status--loading" role="status">
               <div class="dash-spinner" aria-hidden="true"></div>
               <span>{{ t('dashboard.drawer_loading') }}</span>
             </div>
             <div v-else-if="drawerError" class="dash-drawer__status dash-drawer__status--error" role="alert">
-              <i class="bi bi-wifi-off" aria-hidden="true"></i>
+              <span class="dash-drawer__status-icon dash-drawer__status-icon--error" aria-hidden="true">
+                <i class="bi bi-wifi-off"></i>
+              </span>
               <p>{{ t('dashboard.drawer_load_error') }}</p>
               <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="retryDrawer">
                 {{ t('dashboard.retry') }}
               </button>
             </div>
             <div v-else-if="!visibleDrawerItems.length" class="dash-drawer__status dash-drawer__status--empty">
-              <i class="bi bi-inbox" aria-hidden="true"></i>
+              <span class="dash-drawer__status-icon" aria-hidden="true">
+                <i class="bi bi-inbox"></i>
+              </span>
               <p>{{ drawerEmptyMessage }}</p>
             </div>
 
@@ -479,10 +528,9 @@
                   class="dash-drawer__row dash-drawer__row--murajaah dash-reveal"
                   :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
                 >
-                  <div class="dash-drawer__row-main">
-                    <span class="dash-drawer__type">{{ t('dashboard.strengthen_title') }}</span>
-                    <span class="dash-drawer__row-title">
-                      {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                  <div class="dash-drawer__murajaah-copy">
+                    <div class="dash-drawer__murajaah-top">
+                      <span class="dash-drawer__type">{{ t('dashboard.strengthen_title') }}</span>
                       <span
                         v-if="item.strength"
                         class="dash-strength dash-strength--compact"
@@ -490,17 +538,25 @@
                       >
                         {{ strengthLabel(item) }}
                       </span>
+                    </div>
+                    <span class="dash-drawer__row-title dash-drawer__murajaah-ref">
+                      {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
                     </span>
-                    <span v-if="item.phrase" class="dash-drawer__row-meta dash-drawer__row-meta--arabic" lang="ar" dir="rtl">
-                      {{ item.phrase }}
-                    </span>
-                    <span v-else-if="item.explanation_key" class="dash-drawer__row-meta">
+                    <p
+                      v-if="item.phrase"
+                      class="dash-drawer__murajaah-phrase"
+                      lang="ar"
+                      dir="rtl"
+                    >{{ item.phrase }}</p>
+                    <p v-else-if="item.explanation_key" class="dash-drawer__row-meta dash-drawer__murajaah-note">
                       {{ t(`dashboard.${item.explanation_key}`) }}
-                    </span>
+                    </p>
                   </div>
-                  <a class="dash-btn dash-btn--ghost dash-btn--sm dash-drawer__row-cta" :href="reviewNowHref(item)">
-                    {{ t('dashboard.review_now') }}
-                  </a>
+                  <div class="dash-drawer__murajaah-actions">
+                    <a class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__murajaah-cta" :href="reviewNowHref(item)">
+                      {{ t('dashboard.review_now') }}
+                    </a>
+                  </div>
                 </div>
               </li>
             </ul>
@@ -524,6 +580,7 @@
                 </div>
               </li>
             </ul>
+            </div>
           </div>
         </aside>
       </div>
@@ -546,12 +603,6 @@ import NetworkFallback from '../components/NetworkFallback.vue'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
-import {
-  hasActiveSubscription,
-  hasPremiumAccess,
-  hasProAccess,
-  pricingUpgradeUrl,
-} from '../utils/billing'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import './Dashboard.css'
 
@@ -650,31 +701,6 @@ export default {
     ownerId() {
       return Number(this.auth?.id || 0)
     },
-    pricingHref() {
-      return pricingUpgradeUrl(this.auth)
-    },
-    showSubscriptionUpsell() {
-      if (this.auth?.is_admin) return false
-      return !hasProAccess(this.auth)
-    },
-    subscriptionUpsellTitle() {
-      if (hasPremiumAccess(this.auth) && !hasProAccess(this.auth)) {
-        return this.t('dashboard.subscription_pro_title')
-      }
-      if (!hasActiveSubscription(this.auth)) {
-        return this.t('dashboard.subscription_free_title')
-      }
-      return this.t('dashboard.subscription_inactive_title')
-    },
-    subscriptionUpsellHint() {
-      if (hasPremiumAccess(this.auth) && !hasProAccess(this.auth)) {
-        return this.t('dashboard.subscription_pro_hint')
-      }
-      if (!hasActiveSubscription(this.auth)) {
-        return this.t('dashboard.subscription_free_hint')
-      }
-      return this.t('dashboard.subscription_inactive_hint')
-    },
     greetingText() {
       const name = this.data?.welcome?.first_name
         || this.auth?.first_name
@@ -741,6 +767,25 @@ export default {
     journeyOverallDisplay() {
       return progressBarDisplay(this.journeyOverallPercent)
     },
+    hifzLearningCount() {
+      return Number(this.data?.progress?.learning_ayah_count ?? 0)
+    },
+    hifzGlanceStats() {
+      return [
+        {
+          key: 'memorised',
+          label: this.t('dashboard.glance_memorised_label'),
+          value: this.journeyMemorisedCount,
+          icon: 'bi bi-stars',
+        },
+        {
+          key: 'learning',
+          label: this.t('dashboard.glance_learning_label'),
+          value: this.hifzLearningCount,
+          icon: 'bi bi-book-half',
+        },
+      ]
+    },
     showJourneyOverall() {
       return this.journeyMemorisedCount > 0 || this.journeyOverallPercent > 0
     },
@@ -788,6 +833,7 @@ export default {
           title,
           hint: this.t('dashboard.saved_session_hint'),
           cta: this.t('dashboard.cta_continue'),
+          icon: 'bi bi-bookmark-heart-fill',
           ariaLabel: `${this.t('dashboard.saved_session_label')}. ${title}. ${this.t('dashboard.saved_session_hint')}`,
         }
       }
@@ -800,6 +846,7 @@ export default {
             title: this.t('memorisation.workspaceEmpty.journeyTitle'),
             hint: this.t('memorisation.workspaceEmpty.journeyDesc'),
             cta: this.t('dashboard.cta_start'),
+            icon: 'bi bi-play-circle-fill',
             ariaLabel: `${this.t('memorisation.workspaceJourney.kicker')}. ${this.t('memorisation.workspaceEmpty.journeyTitle')}. ${this.t('memorisation.workspaceEmpty.journeyDesc')}`,
           }
         }
@@ -813,6 +860,7 @@ export default {
         title: action.title,
         range: this.continueRangeLabel(this.journeyContinue || this.data?.progress),
         cta: action.cta,
+        icon: 'bi bi-book-half',
       }
     },
     showStickyContinue() {
@@ -860,6 +908,12 @@ export default {
     murajaahTotal() {
       const total = Number(this.data?.weaknesses?.total ?? 0)
       return total > 0 ? total : this.murajaahAllItems.length
+    },
+    murajaahSectionSubtitle() {
+      if (this.murajaahPreview.length) {
+        return this.t('dashboard.journey_murajaah_hint', { count: this.murajaahTotal })
+      }
+      return this.t('dashboard.strengthen_subtitle')
     },
     showMurajaahViewAll() {
       return this.murajaahTotal > this.murajaahPreview.length
@@ -982,6 +1036,7 @@ export default {
           value: Number(week.sessions ?? 0),
           drawer: 'activity',
           filter: 'session',
+          icon: 'bi bi-journal-check',
         },
         {
           key: 'week_ayahs',
@@ -989,6 +1044,7 @@ export default {
           hint: this.t('dashboard.analytics_week_ayahs_hint'),
           value: Number(week.ayahs_practised ?? 0),
           drawer: 'hifz',
+          icon: 'bi bi-book',
         },
         {
           key: 'active_days',
@@ -996,6 +1052,7 @@ export default {
           hint: this.t('dashboard.analytics_active_days_hint'),
           value: Number(week.active_days ?? 0),
           drawer: 'activity',
+          icon: 'bi bi-calendar-check',
         },
       ]
     },

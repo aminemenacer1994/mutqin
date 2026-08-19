@@ -978,9 +978,9 @@
     flex: 0 0 auto !important;
     grid-column: auto !important;
     grid-row: auto !important;
-    margin: 0 0.18em 0.85em !important;
-    padding: 0.15em 0.2em !important;
-    gap: 0.55em !important;
+    margin: 0 0.12em 0.75em !important;
+    padding: 0 0.38em !important;
+    gap: 0.1em !important;
     background: transparent !important;
     border-radius: 0.3em !important;
     box-shadow: none !important;
@@ -990,8 +990,8 @@
     display: block !important;
     height: auto !important;
     white-space: nowrap !important;
-    line-height: 1.65 !important;
-    padding-bottom: 0.35em !important;
+    line-height: 1.22 !important;
+    padding: 0 0.04em 0.06em !important;
   }
 
   .verse-arabic.word-by-word-meanings .word-meaning {
@@ -999,10 +999,10 @@
     width: max-content !important;
     max-width: 8.5em !important;
     height: auto !important;
-    margin: 0.42em auto 0 !important;
-    padding-top: 0.22em !important;
+    margin: 0.08em auto 0 !important;
+    padding: 0 0.06em !important;
     white-space: normal !important;
-    line-height: 1.3 !important;
+    line-height: 1.28 !important;
   }
 
   /* Mushaf controls use two compact utility rails above the reading surface. */
@@ -4567,6 +4567,30 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     grid-column: 1 / -1 !important;
   }
 
+  .tools-body .setup-field-row.field-repetitions-clean,
+  .tools-body .setup-field-row.field-individual-ayah-unified {
+    gap: 8px !important;
+    padding: 0.75rem 0.85rem !important;
+    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent) !important;
+    border-radius: 12px !important;
+    background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 94%, var(--surface) 6%) !important;
+    box-shadow:
+      0 1px 2px color-mix(in srgb, var(--border) 38%, transparent),
+      0 5px 16px color-mix(in srgb, var(--border) 16%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #fff 72%, transparent) !important;
+  }
+
+  .tools-body .setup-field-row.field-repetitions-clean .range-control,
+  .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-range-control {
+    padding: 0.55rem 0.7rem !important;
+    border-radius: 999px !important;
+    border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+    background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%) !important;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+      0 1px 2px color-mix(in srgb, var(--border) 12%, transparent) !important;
+  }
+
   .tools-body .setup-field-row > .select,
 .tools-body .setup-field-row > .input,
 .tools-body .setup-field-row .range,
@@ -4582,55 +4606,43 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     white-space: normal !important;
   }
 
-  .tools-body .field-individual-ayah {
+  .tools-body .field-individual-ayah-unified {
     gap: 0.55rem !important;
   }
 
-  .tools-body .field-individual-ayah .individual-ayah-repeat-label,
-  .tools-body .field-individual-ayah .field-hint {
+  .tools-body .field-individual-ayah-unified .individual-ayah-repeat-label,
+  .tools-body .field-individual-ayah-unified .field-hint {
     min-inline-size: 0 !important;
     max-inline-size: 100% !important;
     overflow-wrap: anywhere !important;
     text-align: start !important;
   }
 
-  .tools-body .field-individual-ayah .individual-ayah-repeat {
+  .tools-body .field-individual-ayah-unified .individual-ayah-repeat {
     display: grid !important;
     gap: 0.35rem !important;
   }
 
-  .tools-body .field-individual-ayah .range-value-pill {
+  .tools-body .field-individual-ayah-unified .range-value-pill {
     justify-self: end !important;
     flex-shrink: 0 !important;
   }
 
-  .tools-body .field-individual-ayah .range-control,
-  .tools-body .field-individual-ayah .individual-ayah-range {
+  .tools-body .field-individual-ayah-unified .individual-ayah-range-control,
+  .tools-body .field-individual-ayah-unified .individual-ayah-range {
     width: 100% !important;
     max-width: 100% !important;
-    min-block-size: 2.75rem !important;
+    min-block-size: auto !important;
     touch-action: pan-x !important;
   }
 
-  .tools-body .field-individual-ayah .slider-markers {
-    gap: 0.15rem !important;
-    padding-inline: 0.1rem !important;
-  }
-
-  .tools-body .field-individual-ayah .slider-markers span {
-    font-size: 0.64rem !important;
-    min-width: 0 !important;
-    text-align: center !important;
-    flex: 1 1 0 !important;
-  }
-
-  .tools-body .field-individual-ayah .individual-ayah-range::-webkit-slider-thumb {
+  .tools-body .field-individual-ayah-unified .individual-ayah-range::-webkit-slider-thumb {
     width: 22px !important;
     height: 22px !important;
     margin-top: -8.5px !important;
   }
 
-  .tools-body .field-individual-ayah .individual-ayah-range::-moz-range-thumb {
+  .tools-body .field-individual-ayah-unified .individual-ayah-range::-moz-range-thumb {
     width: 22px !important;
     height: 22px !important;
   }
@@ -4987,6 +4999,16 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     border-radius: 0.7rem !important;
     background: color-mix(in srgb, var(--zone-elevated, #2a241c) 92%, transparent) !important;
     box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 42%, transparent) !important;
+  }
+
+  .app .tools-body .setup-field-row.field-repetitions-clean,
+  .app .tools-body .setup-field-row.field-individual-ayah-unified {
+    border: 1px solid rgba(255, 236, 216, 0.14) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.2),
+      0 6px 18px rgba(0, 0, 0, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
   }
 
   .app .tools-body .setup-field-row .select,
@@ -6390,4 +6412,67 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     min-width: 0 !important;
     white-space: nowrap !important;
   }
+}
+
+/* Setup feature cards — elevated panels (all breakpoints, wins over transparent setup-field-row) */
+.app .tools-body .setup-field-row.field-repetitions-clean,
+.app .tools-body .setup-field-row.field-individual-ayah-unified {
+  gap: 8px !important;
+  padding: 0.75rem 0.85rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent) !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 94%, var(--surface) 6%) !important;
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--border) 38%, transparent),
+    0 5px 16px color-mix(in srgb, var(--border) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 72%, transparent) !important;
+}
+
+.app .tools-body .setup-field-row.field-repetitions-clean .range-control,
+.app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-range-control {
+  margin-top: 0 !important;
+  padding: 0.55rem 0.7rem !important;
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%) !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    0 1px 2px color-mix(in srgb, var(--border) 12%, transparent) !important;
+}
+
+.app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-select {
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%) !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
+    0 1px 2px color-mix(in srgb, var(--border) 10%, transparent) !important;
+  border-radius: 10px !important;
+}
+
+.app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-repeat {
+  padding-top: 0.6rem !important;
+  margin-top: 0.15rem !important;
+  border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent) !important;
+}
+
+html[data-theme="dark"] .app .tools-body .setup-field-row.field-repetitions-clean,
+html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-unified,
+[data-theme="dark"] .app .tools-body .setup-field-row.field-repetitions-clean,
+[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-unified {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 236, 216, 0.14) !important;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 6px 18px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+html[data-theme="dark"] .app .tools-body .setup-field-row.field-repetitions-clean .range-control,
+html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-range-control,
+html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-select,
+[data-theme="dark"] .app .tools-body .setup-field-row.field-repetitions-clean .range-control,
+[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-range-control,
+[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-select {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 236, 216, 0.12) !important;
 }

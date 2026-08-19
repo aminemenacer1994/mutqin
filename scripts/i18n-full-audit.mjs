@@ -16,6 +16,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { needsTranslationFill, shouldSkipUntranslatedKey } from './_i18n-coverage.mjs'
 
 const ROOT = process.cwd()
 const LOCALES_DIR = path.join(ROOT, 'resources/js/locales')
@@ -105,22 +106,6 @@ function walkVueFiles(dir, out = []) {
 
 function looksLikeCssClass(text) {
   return (text.match(/-/g) || []).length >= 2 && !/\s/.test(text)
-}
-
-function shouldSkipUntranslatedKey(key, value) {
-  if (/\.author$/.test(key)) return true
-  if (/^[A-Z][a-z]+ [A-Z][a-z]+$/.test(value)) return true
-  if (value.length <= 10 && !value.includes(' ')) return true
-  if ([
-    'memorisation.fonts.naskh',
-    'memorisation.export.surahIdFallback',
-    'memorisation.misc.surahName',
-    'homepage.social.twitter',
-    'homepage.social.instagram',
-    'homepage.social.youtube',
-    'homepage.social.facebook',
-  ].includes(key)) return true
-  return false
 }
 
 function checkMissingTranslationKeys(enTree) {
@@ -267,10 +252,10 @@ function checkUntranslated(enFlat) {
     const root = key.split('.')[0]
     if (!GUARD_NAMESPACES.includes(root)) continue
     const enValue = enFlat[key]
-    if (!enValue || !/[A-Za-z]{4,}/.test(enValue)) continue
     if (shouldSkipUntranslatedKey(key, enValue)) continue
     for (const locale of UNTRANSLATED_LOCALES) {
-      if (locales[locale][key] === enValue) {
+      const localeValue = locales[locale][key] ?? enValue
+      if (needsTranslationFill(enValue, localeValue)) {
         untranslated.push({ locale, key })
       }
     }

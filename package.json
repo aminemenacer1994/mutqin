@@ -13,7 +13,8 @@
         "audit:i18n:sync": "node scripts/i18n-full-sync.mjs --prune && node scripts/i18n-full-audit.mjs",
         "audit:i18n:translate-workspace": "node scripts/i18n-apply-workspace-patches.mjs",
         "audit:i18n:translate-all": "node scripts/i18n-translate-all-remaining.mjs",
-        "audit:i18n:fill-offline": "node scripts/i18n-apply-workspace-patches.mjs && node scripts/i18n-fill-offline.mjs"
+        "audit:i18n:fill-offline": "node scripts/i18n-apply-workspace-patches.mjs && node scripts/i18n-fill-offline.mjs",
+        "audit:i18n:translate-100": "node scripts/i18n-translate-100-offline.mjs"
     },
     "dependencies": {
         "axios": "^1.16.0",

@@ -35,7 +35,10 @@
       <template v-else>
         <header class="admin-console__top admin-reveal" style="--admin-delay: 0ms">
           <div class="admin-console__brand">
-            <p class="admin-eyebrow">{{ t('admin.eyebrow') }}</p>
+            <p class="admin-eyebrow">
+              <i class="bi bi-speedometer2" aria-hidden="true"></i>
+              {{ t('admin.eyebrow') }}
+            </p>
             <h1>{{ t('admin.greeting', { name: greetingName }) }}</h1>
             <div class="admin-rule" aria-hidden="true"></div>
             <p class="admin-supporting">{{ t('admin.supporting_message') }}</p>
@@ -80,6 +83,9 @@
               :title="metric.tooltip || undefined"
               @click="onKpiClick(metric)"
             >
+              <span class="admin-kpi__icon" aria-hidden="true">
+                <i :class="metric.icon" aria-hidden="true"></i>
+              </span>
               <span class="admin-kpi__label">{{ metric.label }}</span>
               <strong class="admin-kpi__value">{{ metric.value }}</strong>
               <em v-if="metric.trendLabel" class="admin-kpi__trend" :data-dir="metric.trendDir">
@@ -100,6 +106,9 @@
             <div class="admin-users__title-block">
               <p class="admin-eyebrow">{{ t('admin.learners_title') }}</p>
               <div class="admin-users__title-row">
+                <span class="admin-users__title-icon" aria-hidden="true">
+                  <i class="bi bi-people-fill" aria-hidden="true"></i>
+                </span>
                 <h2 class="admin-users__title">{{ t('admin.users_title') }}</h2>
                 <span class="admin-users__count">{{ usersTotal }}</span>
               </div>
@@ -1002,6 +1011,7 @@ export default {
           value: usersTotal,
           action: 'users',
           toneClass: 'admin-kpi--users',
+          icon: 'bi bi-people-fill',
           trendLabel: this.formatTrend(snapshot.users_total?.trend_percent),
           trendDir: this.trendDir(snapshot.users_total?.trend_percent),
         },
@@ -1011,6 +1021,7 @@ export default {
           value: Number(snapshot.active_users?.value || 0),
           action: 'users_active',
           toneClass: activeTone,
+          icon: 'bi bi-person-check-fill',
           trendLabel: this.formatTrend(snapshot.active_users?.trend_percent),
           trendDir: this.trendDir(snapshot.active_users?.trend_percent),
         },
@@ -1020,6 +1031,7 @@ export default {
           value: Number(snapshot.memorised_ayahs?.value || 0),
           action: 'users',
           toneClass: 'admin-kpi--memorised',
+          icon: 'bi bi-stars',
           trendLabel: this.formatTrend(snapshot.memorised_ayahs?.trend_percent),
           trendDir: this.trendDir(snapshot.memorised_ayahs?.trend_percent),
         },
@@ -1029,6 +1041,7 @@ export default {
           value: Number(snapshot.sessions_completed?.value || 0),
           action: 'users',
           toneClass: 'admin-kpi--sessions',
+          icon: 'bi bi-journal-check',
           trendLabel: this.formatTrend(snapshot.sessions_completed?.trend_percent),
           trendDir: this.trendDir(snapshot.sessions_completed?.trend_percent),
         },

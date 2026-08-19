@@ -4,23 +4,23 @@
   --dash-sand: #e3d6c7;
   --dash-ink: #2f2924;
   --dash-muted: #6a5f54;
-  --dash-line: rgba(47, 41, 36, 0.12);
-  --dash-line-strong: rgba(47, 41, 36, 0.2);
+  --dash-line: rgba(47, 41, 36, 0.24);
+  --dash-line-strong: rgba(47, 41, 36, 0.38);
   --dash-soft: #fbf7f1;
-  --dash-card: #fffcf8;
-  --dash-highlight: rgba(255, 255, 255, 0.72);
-  --dash-shadow-xs: 0 1px 1px rgba(47, 41, 36, 0.04);
+  --dash-card: #ffffff;
+  --dash-highlight: rgba(255, 255, 255, 0.9);
+  --dash-shadow-xs: 0 1px 2px rgba(47, 41, 36, 0.06);
   --dash-shadow-soft:
-    0 1px 1px rgba(47, 41, 36, 0.04),
-    0 4px 12px rgba(47, 41, 36, 0.05);
+    0 2px 4px rgba(47, 41, 36, 0.06),
+    0 8px 20px rgba(47, 41, 36, 0.1);
   --dash-shadow:
-    0 1px 2px rgba(47, 41, 36, 0.04),
-    0 8px 20px rgba(47, 41, 36, 0.06),
-    0 18px 40px rgba(47, 41, 36, 0.05);
+    0 2px 4px rgba(47, 41, 36, 0.07),
+    0 14px 32px rgba(47, 41, 36, 0.11),
+    0 28px 56px rgba(47, 41, 36, 0.08);
   --dash-shadow-lift:
-    0 2px 4px rgba(47, 41, 36, 0.05),
-    0 14px 28px rgba(47, 41, 36, 0.1),
-    0 28px 56px rgba(47, 41, 36, 0.06);
+    0 4px 8px rgba(47, 41, 36, 0.08),
+    0 20px 40px rgba(47, 41, 36, 0.14),
+    0 36px 72px rgba(47, 41, 36, 0.1);
   --dash-inset: inset 0 1px 0 var(--dash-highlight);
   --dash-ease: var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
   --dash-radius-xs: 10px;
@@ -94,11 +94,11 @@ html[data-theme="dark"] .admin-console {
   --text-primary-dark: #f6f1ea;
   --dash-ink: var(--text-primary-dark);
   --dash-muted: #c4b5a5;
-  --dash-line: rgba(246, 241, 234, 0.1);
-  --dash-line-strong: rgba(246, 241, 234, 0.18);
+  --dash-line: rgba(246, 241, 234, 0.18);
+  --dash-line-strong: rgba(246, 241, 234, 0.3);
   --dash-soft: #1c1915;
-  --dash-card: #24201b;
-  --dash-highlight: rgba(255, 255, 255, 0.04);
+  --dash-card: #302a24;
+  --dash-highlight: rgba(255, 255, 255, 0.06);
   --dash-shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.28);
   --dash-shadow-soft:
     0 1px 2px rgba(0, 0, 0, 0.28),
@@ -178,7 +178,9 @@ html[data-theme="dark"] .admin-console {
 }
 
 .admin-eyebrow {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   margin: 0;
   font-size: 0.7rem;
   font-weight: 650;
@@ -208,11 +210,11 @@ html[data-theme="dark"] .admin-console {
   display: grid;
   gap: 0.85rem;
   padding: 1rem 1.15rem 1rem;
-  border: 1px solid var(--dash-line);
+  border: 1px solid var(--dash-line-strong);
   border-radius: var(--dash-radius);
   background:
     radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, var(--admin-gold) 10%, transparent), transparent 55%),
-    linear-gradient(160deg, var(--dash-soft) 0%, var(--dash-card) 58%);
+    linear-gradient(160deg, var(--dash-card) 0%, color-mix(in srgb, var(--dash-soft) 72%, var(--dash-card)) 58%);
   box-shadow: var(--dash-shadow), var(--dash-inset);
 }
 
@@ -265,18 +267,21 @@ html[data-theme="dark"] .admin-console {
 
 .admin-kpi {
   appearance: none;
-  border: 1px solid var(--dash-line);
+  border: 1px solid var(--dash-line-strong);
   border-radius: var(--dash-radius-sm);
-  background: var(--dash-soft);
+  background: linear-gradient(165deg, var(--dash-card), color-mix(in srgb, var(--dash-soft) 55%, var(--dash-card)));
   box-shadow: var(--dash-shadow-soft), var(--dash-inset);
-  padding: 0.7rem 0.8rem 0.7rem 0.95rem;
+  padding: 0.75rem 0.85rem 0.75rem 0.95rem;
   min-height: 0;
   text-align: left;
   cursor: pointer;
   color: inherit;
   font: inherit;
   display: grid;
-  gap: 0.15rem;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto auto;
+  column-gap: 0.65rem;
+  row-gap: 0.12rem;
   align-content: start;
   position: relative;
   overflow: hidden;
@@ -316,6 +321,21 @@ html[data-theme="dark"] .admin-console {
   box-shadow: var(--dash-shadow-soft);
 }
 
+.admin-kpi__icon {
+  grid-row: 1 / span 3;
+  align-self: center;
+  display: inline-grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.8rem;
+  border: 1px solid color-mix(in srgb, currentColor 18%, var(--dash-line));
+  background: color-mix(in srgb, var(--dash-card) 72%, white);
+  color: var(--dash-ink);
+  font-size: 1.05rem;
+  box-shadow: var(--dash-shadow-xs), var(--dash-inset);
+}
+
 .admin-kpi__label {
   color: var(--dash-muted);
   font-size: 0.72rem;
@@ -323,10 +343,12 @@ html[data-theme="dark"] .admin-console {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   line-height: 1.25;
+  grid-column: 2;
 }
 
 .admin-kpi__value,
 .admin-kpi strong {
+  grid-column: 2;
   font-family: var(--dash-serif);
   font-size: clamp(1.25rem, 2vw, 1.45rem);
   font-weight: 500;
@@ -342,6 +364,7 @@ html[data-theme="dark"] .admin-console {
   gap: 0.1rem;
   width: fit-content;
   margin: 0.1rem 0 0;
+  grid-column: 2;
   padding: 0.12rem 0.45rem 0.12rem 0.22rem;
   border-radius: 999px;
   font-style: normal;
@@ -377,6 +400,43 @@ html[data-theme="dark"] .admin-console {
 .admin-kpi--memorised::before { background: var(--admin-gold); }
 .admin-kpi--sessions::before { background: var(--admin-teal); }
 .admin-kpi--pending::before { background: var(--admin-amber); }
+
+.admin-kpi--users .admin-kpi__icon {
+  color: var(--admin-blue);
+  border-color: color-mix(in srgb, var(--admin-blue) 28%, var(--dash-line));
+  background: color-mix(in srgb, var(--admin-blue) 10%, var(--dash-card));
+}
+
+.admin-kpi--active-high .admin-kpi__icon,
+.admin-kpi--active-mid .admin-kpi__icon {
+  color: var(--admin-green);
+  border-color: color-mix(in srgb, var(--admin-green) 28%, var(--dash-line));
+  background: color-mix(in srgb, var(--admin-green) 10%, var(--dash-card));
+}
+
+.admin-kpi--active-low .admin-kpi__icon {
+  color: var(--admin-red);
+  border-color: color-mix(in srgb, var(--admin-red) 28%, var(--dash-line));
+  background: color-mix(in srgb, var(--admin-red) 10%, var(--dash-card));
+}
+
+.admin-kpi--memorised .admin-kpi__icon {
+  color: var(--admin-gold);
+  border-color: color-mix(in srgb, var(--admin-gold) 28%, var(--dash-line));
+  background: color-mix(in srgb, var(--admin-gold) 12%, var(--dash-card));
+}
+
+.admin-kpi--sessions .admin-kpi__icon {
+  color: var(--admin-teal);
+  border-color: color-mix(in srgb, var(--admin-teal) 28%, var(--dash-line));
+  background: color-mix(in srgb, var(--admin-teal) 10%, var(--dash-card));
+}
+
+.admin-kpi--pending .admin-kpi__icon {
+  color: var(--admin-amber);
+  border-color: color-mix(in srgb, var(--admin-amber) 28%, var(--dash-line));
+  background: color-mix(in srgb, var(--admin-amber) 12%, var(--dash-card));
+}
 
 .admin-kpi--users {
   background: color-mix(in srgb, var(--admin-blue) 7%, var(--dash-soft));
@@ -533,10 +593,10 @@ html[data-theme="dark"] .admin-console {
 .admin-users {
   width: 100%;
   max-width: 100%;
-  border: 1px solid var(--dash-line);
+  border: 1px solid var(--dash-line-strong);
   border-radius: var(--dash-radius);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--dash-soft) 70%, var(--dash-card)), var(--dash-card) 5rem);
+    linear-gradient(180deg, var(--dash-card), color-mix(in srgb, var(--dash-soft) 68%, var(--dash-card)) 5rem);
   box-shadow: var(--dash-shadow), var(--dash-inset);
   padding: 1rem 1.15rem 1rem;
   min-width: 0;
@@ -555,7 +615,7 @@ html[data-theme="dark"] .admin-console {
   gap: 0.65rem 1rem;
   padding: 0 0 0.75rem;
   margin-bottom: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--dash-line) 85%, transparent);
+  border-bottom: 1px solid var(--dash-line-strong);
 }
 
 .admin-users__title-row {
@@ -563,6 +623,19 @@ html[data-theme="dark"] .admin-console {
   align-items: center;
   gap: 0.45rem;
   margin-top: 0.15rem;
+}
+
+.admin-users__title-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--admin-teal) 28%, var(--dash-line));
+  background: color-mix(in srgb, var(--admin-teal) 10%, var(--dash-card));
+  color: var(--admin-teal);
+  font-size: 1rem;
+  box-shadow: var(--dash-shadow-xs), var(--dash-inset);
 }
 
 .admin-users__title {
@@ -692,11 +765,11 @@ html[data-theme="dark"] .admin-users__count {
   min-width: 0;
   margin-top: 0.75rem;
   padding: 0.7rem 0.8rem 0.7rem;
-  border: 1px solid var(--dash-line);
+  border: 1px solid var(--dash-line-strong);
   border-radius: var(--dash-radius-sm);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--dash-soft) 88%, var(--dash-card)), color-mix(in srgb, var(--dash-sand) 18%, var(--dash-soft)));
-  box-shadow: var(--dash-shadow-xs), var(--dash-inset);
+    linear-gradient(180deg, var(--dash-card), color-mix(in srgb, var(--dash-soft) 72%, var(--dash-card)));
+  box-shadow: var(--dash-shadow-soft), var(--dash-inset);
 }
 
 html[data-theme="dark"] .admin-toolbar {
@@ -1489,10 +1562,10 @@ html[data-theme="dark"] .admin-toolbar__select {
   max-width: 100%;
   min-width: 0;
   max-height: min(70vh, 40rem);
-  border: 1px solid var(--dash-line);
+  border: 1px solid var(--dash-line-strong);
   border-radius: var(--dash-radius-sm);
   background: var(--dash-card);
-  box-shadow: var(--dash-shadow-xs), var(--dash-inset);
+  box-shadow: var(--dash-shadow-soft), var(--dash-inset);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
@@ -1935,23 +2008,23 @@ html[data-theme="dark"] .admin-status-dot[data-status="inactive"] {
   --dash-sand: #e3d6c7;
   --dash-ink: #2f2924;
   --dash-muted: #6a5f54;
-  --dash-line: rgba(47, 41, 36, 0.12);
-  --dash-line-strong: rgba(47, 41, 36, 0.2);
+  --dash-line: rgba(47, 41, 36, 0.24);
+  --dash-line-strong: rgba(47, 41, 36, 0.38);
   --dash-soft: #fbf7f1;
-  --dash-card: #fffcf8;
-  --dash-highlight: rgba(255, 255, 255, 0.72);
-  --dash-shadow-xs: 0 1px 1px rgba(47, 41, 36, 0.04);
+  --dash-card: #ffffff;
+  --dash-highlight: rgba(255, 255, 255, 0.9);
+  --dash-shadow-xs: 0 1px 2px rgba(47, 41, 36, 0.06);
   --dash-shadow-soft:
-    0 1px 1px rgba(47, 41, 36, 0.04),
-    0 4px 12px rgba(47, 41, 36, 0.05);
+    0 2px 4px rgba(47, 41, 36, 0.06),
+    0 8px 20px rgba(47, 41, 36, 0.1);
   --dash-shadow:
-    0 1px 2px rgba(47, 41, 36, 0.04),
-    0 8px 20px rgba(47, 41, 36, 0.06),
-    0 18px 40px rgba(47, 41, 36, 0.05);
+    0 2px 4px rgba(47, 41, 36, 0.07),
+    0 14px 32px rgba(47, 41, 36, 0.11),
+    0 28px 56px rgba(47, 41, 36, 0.08);
   --dash-shadow-lift:
-    0 2px 4px rgba(47, 41, 36, 0.05),
-    0 14px 28px rgba(47, 41, 36, 0.1),
-    0 28px 56px rgba(47, 41, 36, 0.06);
+    0 4px 8px rgba(47, 41, 36, 0.08),
+    0 20px 40px rgba(47, 41, 36, 0.14),
+    0 36px 72px rgba(47, 41, 36, 0.1);
   --dash-inset: inset 0 1px 0 var(--dash-highlight);
   --dash-ease: var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
   --dash-radius-xs: 10px;
@@ -2003,11 +2076,11 @@ html[data-theme="dark"] .admin-drawer-root {
   --text-primary-dark: #f6f1ea;
   --dash-ink: var(--text-primary-dark);
   --dash-muted: #c4b5a5;
-  --dash-line: rgba(246, 241, 234, 0.1);
-  --dash-line-strong: rgba(246, 241, 234, 0.18);
+  --dash-line: rgba(246, 241, 234, 0.18);
+  --dash-line-strong: rgba(246, 241, 234, 0.3);
   --dash-soft: #1c1915;
-  --dash-card: #24201b;
-  --dash-highlight: rgba(255, 255, 255, 0.04);
+  --dash-card: #302a24;
+  --dash-highlight: rgba(255, 255, 255, 0.06);
   --dash-shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.28);
   --dash-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.28), 0 6px 16px rgba(0, 0, 0, 0.22);
   --dash-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.32), 0 28px 56px rgba(0, 0, 0, 0.22);

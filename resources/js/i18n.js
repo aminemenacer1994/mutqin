@@ -2,6 +2,13 @@ import { createI18n } from 'vue-i18n'
 import enMessages from './locales/en.json'
 
 export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur']
+/** Locales shown in the UI language switcher (temporary subset). */
+export const SWITCHER_LOCALES = ['en', 'fr', 'es']
+export const SWITCHER_LOCALE_LABELS = {
+  en: 'English',
+  fr: 'Français',
+  es: 'Español',
+}
 export const RTL_LOCALES = ['ar', 'ur']
 const STORAGE_KEY = 'mutqin.locale'
 

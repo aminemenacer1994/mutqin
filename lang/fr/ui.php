@@ -19,7 +19,7 @@ return [
     'user' => 'Utilisateur',
     'home' => 'Accueil',
     'memorisation' => 'Mémorisation',
-    'dashboard' => 'Tableau de bord',
+    'dashboard' => 'Progrès',
     'profile' => 'Profil',
     'account' => 'Compte',
     'menu' => 'Menu',

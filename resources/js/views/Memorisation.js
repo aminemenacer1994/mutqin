@@ -1,4 +1,4 @@
-import { RTL_LOCALES } from '../i18n'
+import { RTL_LOCALES, SWITCHER_LOCALES, SWITCHER_LOCALE_LABELS } from '../i18n'
 import {
   cycleGlobalTheme,
   getSavedTheme,
@@ -718,13 +718,10 @@ export default {
       appState: createHifzAppState(),
       theme: 'light',
       activeLocale: 'en',
-      languageOptions: [
-        { value: 'en', label: 'English' },
-        { value: 'ar', label: 'العربية' },
-        { value: 'fr', label: 'Français' },
-        { value: 'id', label: 'Bahasa Indonesia' },
-        { value: 'tr', label: 'Türkçe' }
-      ],
+      languageOptions: SWITCHER_LOCALES.map((value) => ({
+        value,
+        label: SWITCHER_LOCALE_LABELS[value] || value,
+      })),
       tab: 'tools',
       showTools: false,
       toolsPanelMounted: false,
@@ -1071,7 +1068,8 @@ export default {
       ignoreRecordingsAudioPauseEvent: false,
       // AI Memorisation Detection (post-session "Test with AI" only)
       amdOpen: false,
-      amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | null
+      amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | 'saved-session-review' | null
+      savedSessionReviewMode: false,
       dashboardAiCheckReturnTo: null,
       amdStage: AMD_STAGES.IDLE,
       amdScope: 'session',
@@ -13081,6 +13079,10 @@ export default {
     async loadSavedSession(sessionId) {
       const session = this.savedSessions.find(s => s.id === sessionId)
       if (!session) return
+      if (this.isSavedSessionComplete(session)) {
+        await this.reviewCompletedSavedSession(sessionId)
+        return
+      }
       this.loadingSessionId = sessionId
       this.primeAudioPlaybackUnlock()
       try {
@@ -13102,6 +13104,58 @@ export default {
         this.$nextTick(() => {
           this.startSessionWithCountdown({ skipPrime: true })
         })
+      } finally {
+        this.loadingSessionId = ''
+      }
+    },
+
+    async reviewCompletedSavedSession(sessionId) {
+      const session = this.savedSessions.find(s => s.id === sessionId)
+      if (!session) return
+      this.loadingSessionId = sessionId
+      this.primeAudioPlaybackUnlock()
+      try {
+        const config = session.config || {}
+        const mode = session.restore?.currentMode || this.currentMode || 'advanced'
+        this.currentMode = mode
+        this.applySessionConfig({ ...config, mode })
+        await this.loadChapter(mode)
+        this.buildQueue(mode)
+
+        const chapterId = Number(config.chapterId || 0)
+        const rangeStart = Number(config.rangeStart || 1)
+        const rangeEnd = Number(config.rangeEnd || rangeStart)
+        this.chapterId = chapterId
+        this.rangeStart = rangeStart
+        this.rangeEnd = rangeEnd
+
+        this.postSessionSnapshot = {
+          chapterId,
+          chapterName: config.chapterName || session.chapterName || '',
+          rangeStart,
+          rangeEnd,
+          mode,
+          completed: true,
+          fromSavedSessionReview: true,
+        }
+        this.sessionCompleted = true
+        this.sessionEndedEarly = false
+        this.savedSessionReviewMode = true
+        this.showPostSessionModal = false
+        this.showPostSessionConfetti = false
+        this.postSessionOffcanvasOpen = false
+        this.postSessionAiReciteActive = false
+        this.postSessionViewState = 'idle'
+        this.showTools = false
+        this.tab = 'saved'
+
+        await this.openAiMemorisationDetection({
+          scope: 'session',
+          fromSavedSessionReview: true,
+        })
+        if (this.amdOpen && this.isAmdEntryActive(this.amdEntrySource)) {
+          this.postSessionAiReciteActive = true
+        }
       } finally {
         this.loadingSessionId = ''
       }
@@ -13384,6 +13438,22 @@ export default {
         return this.t('memorisation.recitationResult.surahNumberLabel', { number: session.config.chapterId })
       }
       return this.t('memorisation.recitationResult.surahNotSet')
+    },
+    getSavedSessionMetaLine(session) {
+      const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
+      const durationSeconds = Number(stats.time_spent_seconds || 0)
+      if (durationSeconds > 0) {
+        return this.t('memorisation.saved_session_meta_duration', {
+          duration: this.formatTime(durationSeconds),
+        })
+      }
+      return ''
+    },
+    getSavedSessionOpenedLine(session) {
+      if (!session?.savedAt) return ''
+      return this.t('memorisation.saved_session_meta_opened', {
+        date: this.formatDate(session.savedAt),
+      })
     },
     applyOnboardingGoalPreset() {
       this.rangeStart = 1
@@ -19796,9 +19866,10 @@ export default {
       previousAssessmentId = null,
       fromTestWithAi = false,
       fromDashboardReview = false,
+      fromSavedSessionReview = false,
     } = {}) {
-      // Hard gate: Session Complete → Test with AI, or dashboard Needs Review.
-      if (!fromTestWithAi && !fromDashboardReview) {
+      // Hard gate: Session Complete → Test with AI, dashboard Needs Review, or saved-session review.
+      if (!fromTestWithAi && !fromDashboardReview && !fromSavedSessionReview) {
         console.warn('Blocked openAiMemorisationDetection — authorised entry required.')
         return
       }
@@ -19917,7 +19988,9 @@ export default {
       this.amdSeedHtml = this.buildAmdMushafHtml({ live: true })
       // Ready state — learner starts listening via the Start recitation icon.
       this.amdStage = AMD_STAGES.READY
-      this.amdEntrySource = fromDashboardReview ? 'dashboard-review' : 'test-with-ai'
+      this.amdEntrySource = fromDashboardReview
+        ? 'dashboard-review'
+        : (fromSavedSessionReview ? 'saved-session-review' : 'test-with-ai')
       this.amdOpen = true
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
@@ -19926,7 +19999,9 @@ export default {
     },
 
     isAmdEntryActive(source = this.amdEntrySource) {
-      return source === 'test-with-ai' || source === 'dashboard-review'
+      return source === 'test-with-ai'
+        || source === 'dashboard-review'
+        || source === 'saved-session-review'
     },
     rebuildAmdHiddenWordMask({ bumpAttempt = false } = {}) {
       this._amdAyahBoundsSig = null
@@ -20778,7 +20853,9 @@ export default {
         this.playUiTone?.('complete')
       }
 
-      this.closeAmdModal({ returnToCompletion: true })
+      this.closeAmdModal({
+        returnToCompletion: this.amdEntrySource !== 'saved-session-review',
+      })
       this.amdStage = AMD_STAGES.IDLE
       this._amdCompleting = false
       this.amdEndingSoon = false
@@ -20787,7 +20864,9 @@ export default {
     stopAmdAndAssess() {
       if (!this.amdOpen || this._amdCompleting || this.amdEndingSoon) return
       if (this.amdStage === AMD_STAGES.READY || this.amdStage === AMD_STAGES.IDLE) {
-        this.closeAmdModal({ returnToCompletion: true })
+        this.closeAmdModal({
+          returnToCompletion: this.amdEntrySource !== 'saved-session-review',
+        })
         return
       }
       if (
@@ -20814,7 +20893,9 @@ export default {
       void this.completeAmdTestAndReturnToRecommendation({ reason: 'complete' })
     },
     closeAmdModalToCompletion() {
-      this.closeAmdModal({ returnToCompletion: true })
+      this.closeAmdModal({
+        returnToCompletion: this.amdEntrySource !== 'saved-session-review',
+      })
     },
     doneAmdTest() {
       void this.completeAmdTestAndReturnToRecommendation({ reason: 'done' })
@@ -21003,8 +21084,10 @@ export default {
       }
     },
     closeAmdModal(options = {}) {
+      const entrySource = this.amdEntrySource
+      const returnToSavedReview = entrySource === 'saved-session-review' || !!this.savedSessionReviewMode
       const returnToCompletion = options.returnToCompletion !== false
-      const returnToDashboard = this.amdEntrySource === 'dashboard-review' || !!this.dashboardAiCheckReturnTo
+      const returnToDashboard = entrySource === 'dashboard-review' || !!this.dashboardAiCheckReturnTo
       const dashboardHref = this.dashboardAiCheckReturnTo || '/dashboard'
       if (this.recitationCheckRecording || this.recitationCheckPreparing) {
         this.recitationCheckDiscardOnStop = true
@@ -21048,6 +21131,14 @@ export default {
       this.postSessionAdaptiveResultView = null
       this.welcomeBackWorkspaceHidden = false
       this.dashboardAiCheckReturnTo = null
+      if (returnToSavedReview) {
+        this.savedSessionReviewMode = false
+        this.showPostSessionModal = false
+        this.postSessionViewState = 'idle'
+        this.tab = 'saved'
+        this.syncBodyScrollLock(false)
+        return
+      }
       this.syncBodyScrollLock(!!this.showPostSessionModal)
       if (returnToDashboard && typeof window !== 'undefined') {
         window.location.assign(dashboardHref)

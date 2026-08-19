@@ -1156,42 +1156,40 @@
                     </div>
                     <small class="field-hint">{{ Number(repetitionsPerStep) === 1 ? t('sessionSetup.repeatHintOne', { count: repetitionsPerStep }) : t('sessionSetup.repeatHintOther', { count: repetitionsPerStep }) }}</small>
                   </div>
-                  <div class="field field-individual-ayah setup-field-row">
+                  <div class="field field-individual-ayah field-individual-ayah-unified setup-field-row">
                     <div class="field-header individual-ayah-header">
                       <label><i class="bi bi-pin-angle-fill" aria-hidden="true"></i> {{ t('sessionSetup.individualAyah') }}</label>
                     </div>
-                    <div class="individual-ayah-controls">
-                      <select
-                        :value="setupIndividualAyahNumber"
-                        @change="setSetupIndividualAyah(Number($event.target.value))"
-                        class="select"
-                        :disabled="!chapterId || setupIndividualAyahOptions.length === 0"
-                        :aria-label="t('sessionSetup.individualAyah')"
-                      >
-                        <option v-for="option in setupIndividualAyahOptions" :key="`setup-individual-${option.value}`" :value="option.value">
-                          {{ option.label }}
-                        </option>
-                      </select>
-                      <div class="individual-ayah-repeat">
-                        <div class="field-header individual-ayah-repeat-header">
-                          <span class="individual-ayah-repeat-label">{{ t('sessionSetup.individualAyahRepeats') }}</span>
-                          <span class="range-value-pill">{{ individualAyahRepeatDisplayValue }}</span>
-                        </div>
-                        <div class="range-control">
-                          <input
-                            type="range"
-                            :value="individualAyahRepeatSliderValue"
-                            :style="individualAyahRepeatSliderStyle"
-                            @input="setIndividualAyahRepeatFromSlider(Number($event.target.value))"
-                            min="1"
-                            max="10"
-                            step="1"
-                            class="input technique-range individual-ayah-range"
-                            :aria-valuetext="individualAyahRepeatDisplayValue"
-                            :aria-label="t('sessionSetup.individualAyahRepeats')"
-                            :disabled="!setupIndividualAyahKey"
-                          />
-                        </div>
+                    <select
+                      :value="setupIndividualAyahNumber"
+                      @change="setSetupIndividualAyah(Number($event.target.value))"
+                      class="select individual-ayah-select"
+                      :disabled="!chapterId || setupIndividualAyahOptions.length === 0"
+                      :aria-label="t('sessionSetup.individualAyah')"
+                    >
+                      <option v-for="option in setupIndividualAyahOptions" :key="`setup-individual-${option.value}`" :value="option.value">
+                        {{ option.label }}
+                      </option>
+                    </select>
+                    <div class="individual-ayah-repeat">
+                      <div class="field-header individual-ayah-repeat-header">
+                        <span class="individual-ayah-repeat-label">{{ t('sessionSetup.individualAyahRepeats') }}</span>
+                        <span class="range-value-pill">{{ individualAyahRepeatDisplayValue }}</span>
+                      </div>
+                      <div class="range-control individual-ayah-range-control">
+                        <input
+                          type="range"
+                          :value="individualAyahRepeatSliderValue"
+                          :style="individualAyahRepeatSliderStyle"
+                          @input="setIndividualAyahRepeatFromSlider(Number($event.target.value))"
+                          min="1"
+                          max="10"
+                          step="1"
+                          class="input technique-range individual-ayah-range"
+                          :aria-valuetext="individualAyahRepeatDisplayValue"
+                          :aria-label="t('sessionSetup.individualAyahRepeats')"
+                          :disabled="!setupIndividualAyahKey"
+                        />
                       </div>
                     </div>
                     <small class="field-hint">
@@ -1700,7 +1698,18 @@
                         <span class="saved-sheet__row-copy">
                           <span class="saved-sheet__row-title">{{ getSavedSessionName(session) }}</span>
                           <span class="saved-sheet__row-meta">
-                            <template v-if="group.complete">{{ t('memorisation.session_completed_label') }} · </template>{{ getSavedSessionSurah(session) }} · {{ t('memorisation.last_opened', { date: formatDate(session.savedAt) }) }}
+                            <span class="saved-sheet__row-meta-line">{{ getSavedSessionSurah(session) }}</span>
+                            <span class="saved-sheet__row-meta-line saved-sheet__row-meta-line--secondary">
+                              <span
+                                v-if="group.complete"
+                                class="saved-sheet__status-badge"
+                              >{{ t('memorisation.saved_session_meta_completed') }}</span>
+                              <span v-if="getSavedSessionOpenedLine(session)">{{ getSavedSessionOpenedLine(session) }}</span>
+                              <template v-if="getSavedSessionMetaLine(session)">
+                                <span class="saved-sheet__meta-dot" aria-hidden="true">·</span>
+                                <span>{{ getSavedSessionMetaLine(session) }}</span>
+                              </template>
+                            </span>
                           </span>
                         </span>
                       </button>
@@ -1712,8 +1721,8 @@
                           @click="loadSavedSession(session.id)"
                           type="button"
                         >
-                          <i class="bi" :class="group.complete ? 'bi-eye-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-                          <span>{{ group.complete ? t('memorisation.review_session') : t('common.resume') }}</span>
+                          <i class="bi" :class="group.complete ? 'bi-mic-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+                          <span>{{ group.complete ? t('memorisation.ai_recite_review') : t('common.resume') }}</span>
                         </button>
                         <button
                           class="saved-sheet__action saved-sheet__action--ghost"

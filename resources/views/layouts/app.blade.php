@@ -3,6 +3,7 @@
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
     $appThemePreference = $appThemePreference ?? session('mutqin_theme', 'light-mode');
     $appTheme = $appTheme ?? (str_starts_with($appThemePreference, 'dark') ? 'dark' : (str_starts_with($appThemePreference, 'sepia') ? 'sepia' : 'light'));
+    $switcherLocales = ['en', 'fr', 'es'];
     $languageEndonyms = [
         'en' => 'English',
         'fr' => 'Français',
@@ -15,11 +16,7 @@
     $appLocaleOptions = [
         'en' => ['flag' => '🇬🇧', 'label' => $languageEndonyms['en']],
         'fr' => ['flag' => '🇫🇷', 'label' => $languageEndonyms['fr']],
-        'ar' => ['flag' => '🇸🇦', 'label' => $languageEndonyms['ar']],
-        'id' => ['flag' => '🇮🇩', 'label' => $languageEndonyms['id']],
-        'tr' => ['flag' => '🇹🇷', 'label' => $languageEndonyms['tr']],
         'es' => ['flag' => '🇪🇸', 'label' => $languageEndonyms['es']],
-        'ur' => ['flag' => '🇵🇰', 'label' => $languageEndonyms['ur']],
     ];
     $activeLocaleOption = $appLocaleOptions[$appLocale] ?? $appLocaleOptions['en'];
 @endphp
@@ -54,7 +51,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-    <meta name="mutqin-build" content="v128">
+    <meta name="mutqin-build" content="v129">
     <style id="mutqin-ai-recite-force-v125">
       #mutqin-build-stamp {
         display: none !important;
@@ -99,7 +96,7 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v128';
+        var BUILD = 'v129';
         var FORCE = '128';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
@@ -278,25 +275,29 @@
         border-color: #b56a56 !important;
       }
     </style>
-    <style id="mutqin-memorisation-hotfix-v116">
-      /* v116 — WBW gloss spacing + RTL layout toggle label clipping */
+    <style id="mutqin-memorisation-hotfix-v118">
+      /* v118 — WBW interlinear: per-column horizontal padding + compact vertical stack */
       html body .app .verse-arabic.word-by-word-meanings word,
       html body .app .verse-arabic.word-by-word-meanings .wbw-word,
       html body .app .mushaf-ayah-text.word-by-word-meanings word,
       html body .app .mushaf-ayah-text.word-by-word-meanings .wbw-word {
-        gap: 0.55em !important;
-        margin-bottom: 0.85em !important;
+        gap: 0.1em !important;
+        margin: 0 0.1em 0.55em !important;
+        padding: 0 0.42em !important;
+        line-height: 1.1 !important;
       }
       html body .app .verse-arabic.word-by-word-meanings .word-arabic-text,
       html body .app .verse-arabic.tajweed-enabled.word-by-word-meanings .word-arabic-text,
       html body .app .mushaf-ayah-text.word-by-word-meanings .word-arabic-text {
-        padding-bottom: 0.35em !important;
-        line-height: 1.65 !important;
+        padding: 0 0.04em 0.06em !important;
+        margin: 0 !important;
+        line-height: 1.22 !important;
       }
       html body .app .verse-arabic.word-by-word-meanings .word-meaning,
       html body .app .mushaf-ayah-text.word-by-word-meanings .word-meaning {
-        margin-top: 0.42em !important;
-        padding-top: 0.22em !important;
+        margin: 0.08em auto 0 !important;
+        padding: 0 0.06em !important;
+        line-height: 1.28 !important;
       }
       html body .app.is-rtl .workspace-layout-toggle .view-mode-btn {
         min-width: max-content !important;
@@ -2344,7 +2345,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -5846,7 +5847,7 @@
         
         // Global language switcher for all pages
         (function() {
-            const supported = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'];
+            const supported = @json($switcherLocales);
             const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {}, id: {}, tr: {}, es: {}, ur: {} };
 
             function safeGet(key) {
