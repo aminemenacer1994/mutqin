@@ -2574,8 +2574,37 @@
     "title": "عن متقن"
   },
   "aboutUs": {
-    "title": "من نحن",
-    "kicker": "عن متقن",
+    "title": "عن متقن",
+    "kicker": "عن",
+    "heroDesc": "متقن مساحة لحفظ القرآن. يعين على الممارسة بين الدروس. ولا يغني عن المعلّم.",
+    "ctaMission": "مهمتنا",
+    "ctaFeatures": "كيف يعمل",
+    "core": {
+      "purposeTitle": "لماذا وُجد",
+      "purposeDesc": "ليقوى الحفظ بين الدروس والمراجعة.",
+      "teachersTitle": "مع معلّمك",
+      "teachersDesc": "ينسجم مع الحلقة والدراسة، ولا يقوم مقامها.",
+      "limitTitle": "ما ليس عليه",
+      "limitDesc": "أداة للممارسة. ليس معلّماً ولا إجازة."
+    },
+    "verseArabic": "وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ",
+    "verse": "لَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ.",
+    "verseRef": "سورة القمر · ١٧",
+    "exploreTitle": "ذات صلة",
+    "explore": {
+      "homeTitle": "الرئيسية",
+      "missionTitle": "مهمتنا",
+      "supportTitle": "المساعدة"
+    },
+    "ctaPrimary": "ابدأ الحفظ",
+    "ctaSecondary": "مهمتنا",
+    "ctaPricing": "الأسعار",
+    "highlightsAria": "ما يقدّمه متقن",
+    "highlights": {
+      "listen": "استمع",
+      "repeat": "ردّد",
+      "nextStep": "راجع"
+    },
     "built_for_focused_quran_practice": "مصمّم لممارسة قرآنية يومية.",
     "calm_study_flow": "تدفّق دراسة بسيط",
     "revision_led_learning": "مراجعة تثبت",

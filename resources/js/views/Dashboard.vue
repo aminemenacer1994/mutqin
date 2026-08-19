@@ -553,7 +553,6 @@ import {
   pricingUpgradeUrl,
 } from '../utils/billing'
 import { progressBarDisplay } from '../utils/progressDisplay'
-import { daysSinceActivity } from '../scripts/memorisationRuntime'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -721,9 +720,6 @@ export default {
       return href || this.memorisationUrl
     },
     journeyContinueLabel() {
-      if (this.isReturnAfterAbsence && !this.isLiveContinueAction) {
-        return this.t('memorisation.workspaceJourney.returnHint.readyContinue')
-      }
       if (this.isLiveContinueAction) return this.t('dashboard.return_session_label')
       return this.t('dashboard.journey_continue_label')
     },
@@ -770,10 +766,6 @@ export default {
       const pct = this.journeyOverallPercent
       if (pct <= 0 || pct > 10) return ''
       return this.t('dashboard.early_progress_message')
-    },
-    isReturnAfterAbsence() {
-      const lastActivity = this.data?.continue?.last_activity_at || this.data?.progress?.last_activity_at
-      return daysSinceActivity(lastActivity) >= 2
     },
     isSavedSessionContinue() {
       if (this.liveReturnSession) return true

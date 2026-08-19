@@ -380,9 +380,6 @@ import {
   createRealtimeTranscriptionMeta,
   createTranscriptionAudioBridge,
   createSpeechmaticsRealtimeProvider,
-  sessionRangeOverlapsJourney,
-  formatJourneyContinueRangeLabel,
-  daysSinceActivity,
 } from '../scripts/memorisationRuntime'
 
 function activeSessionSnapshotStorageKey(userId = null) {
@@ -1704,21 +1701,14 @@ export default {
       if (this.showIdleQuickStartChoices) {
         return this.t('memorisation.workspaceEmpty.desc')
       }
-      if (this.journeyHasStarted && !this.journeyReview && !this.isPracticeOffJourney) {
-        if (this.isReturnAfterAbsence) {
-          return this.t('memorisation.workspaceJourney.returnHint.readyContinue')
-        }
-        return this.t('memorisation.workspaceJourney.returnHint.nextStepReady')
-      }
       return this.workspaceJourneySubline || ''
     },
     workspaceIdleInstruction() {
       if (this.showIdleQuickStartChoices) {
         return this.t('memorisation.workspaceJourney.hintStart')
       }
-      if (this.journeyHasStarted && !this.journeyReview && !this.isPracticeOffJourney) {
-        return this.journeyReturnHintRangeLabel
-          || this.t('memorisation.workspaceJourney.hintContinue')
+      if (this.journeyHasStarted && !this.journeyReview) {
+        return this.t('memorisation.workspaceJourney.hintContinue')
       }
       if (this.journeyReview?.surah_name) {
         return this.t('memorisation.workspaceJourney.hintReview')
@@ -1730,104 +1720,6 @@ export default {
         return this.t('memorisation.workspaceJourney.hintStart')
       }
       return this.t('memorisation.workspaceEmpty.instruction')
-    },
-    journeyReturnDaysAway() {
-      const lastActivity = this.learnerDashboardContinue?.last_activity_at
-        || this.learnerProgress?.last_activity_at
-        || null
-      return daysSinceActivity(lastActivity)
-    },
-    isReturnAfterAbsence() {
-      return this.journeyReturnDaysAway >= 2
-    },
-    isPracticeOffJourney() {
-      if (!this.journeyHasStarted || !this.journeyContinue) return false
-      const surah = Number(this.chapterId || this.currentChapter?.id || 0)
-      const from = Number(this.rangeStart || 0)
-      const to = Number(this.rangeEnd || from)
-      if (!surah || !from) return false
-      return !sessionRangeOverlapsJourney(surah, from, to, this.journeyContinue)
-    },
-    isPostSessionOffJourney() {
-      const snap = this.postSessionSnapshot
-      if (!snap || !this.journeyHasStarted || !this.journeyContinue) return false
-      const surah = Number(snap.chapterId || 0)
-      const from = Number(snap.rangeStart || 0)
-      const to = Number(snap.rangeEnd || from)
-      if (!surah || !from) return false
-      if (sessionRangeOverlapsJourney(surah, from, to, this.journeyContinue)) return false
-      if (this.postSessionRecommendationContinuesMain) return false
-      return true
-    },
-    postSessionRecommendationContinuesMain() {
-      const rec = this.postSessionRecommendation
-      if (!rec || !this.journeyContinue) return false
-      const surah = Number(rec.surah_number || rec.chapter_id || rec.chapterId || 0)
-      const from = Number(rec.ayah_range?.from || rec.ayah_start || 0)
-      const to = Number(rec.ayah_range?.to || rec.ayah_end || from)
-      if (!surah || !from) return false
-      return sessionRangeOverlapsJourney(surah, from, to, this.journeyContinue)
-    },
-    journeyReturnHintRangeLabel() {
-      return formatJourneyContinueRangeLabel(this.journeyContinue)
-    },
-    journeyReturnHint() {
-      if (!this.journeyHasStarted || !this.journeyContinue) return null
-      if (this.isOnboardingExperienceActive || this.showWelcomeBackModal || this.returningUserChoicePending) {
-        return null
-      }
-
-      const rangeLabel = this.journeyReturnHintRangeLabel
-      const cta = this.t('memorisation.workspaceJourney.returnHint.continue')
-      const base = {
-        rangeLabel,
-        cta,
-        ariaLabel: rangeLabel
-          ? `${this.t('memorisation.workspaceJourney.returnHint.mainStillHere')} ${rangeLabel}`
-          : this.t('memorisation.workspaceJourney.returnHint.mainStillHere'),
-      }
-
-      if (
-        this.showPostSessionModal
-        && !this.onboardingSampleSessionActive
-        && this.isPostSessionOffJourney
-      ) {
-        return {
-          ...base,
-          variant: 'after-practice',
-          placement: 'post-session',
-          message: this.t('memorisation.workspaceJourney.returnHint.mainStillHere'),
-        }
-      }
-
-      if (
-        this.hasVerses
-        && this.isPracticeOffJourney
-        && !this.showPostSessionModal
-        && !this.isPostSessionChoiceVisible
-      ) {
-        return {
-          ...base,
-          variant: 'after-practice',
-          placement: 'active',
-          message: this.t('memorisation.workspaceJourney.returnHint.mainStillHere'),
-        }
-      }
-
-      if (
-        this.showSessionOverviewIdleActions
-        && !this.showIdleQuickStartChoices
-        && this.isPracticeOffJourney
-      ) {
-        return {
-          ...base,
-          variant: 'after-practice',
-          placement: 'idle',
-          message: this.t('memorisation.workspaceJourney.returnHint.mainStillHere'),
-        }
-      }
-
-      return null
     },
     workspaceJourneyGuidance() {
       if (this.journeyReview?.surah_name) {
@@ -28629,9 +28521,6 @@ export default {
         return
       }
       this.openNewSessionSetup()
-    },
-    onJourneyReturnHintContinue() {
-      this.continueLearnerJourney()
     },
     async reviewLearnerJourney() {
       const review = this.journeyReview

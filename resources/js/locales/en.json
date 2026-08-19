@@ -530,13 +530,7 @@
       "guidanceStart": "Begin with Bismillah. Pick a few ayahs, listen, repeat, then try from memory.",
       "guidanceContinue": "Take it step by step — revise what you know before adding new ayahs.",
       "guidanceActive": "Listen with focus, repeat each ayah, then recite without looking when you feel ready.",
-      "guidanceReview": "Revision keeps your memorisation firm. Revise {surah} before moving on.",
-      "returnHint": {
-        "readyContinue": "Ready to continue your Hifz?",
-        "nextStepReady": "Your next step is ready.",
-        "mainStillHere": "Your main Hifz is still here.",
-        "continue": "Continue"
-      }
+      "guidanceReview": "Revision keeps your memorisation firm. Revise {surah} before moving on."
     },
     "workspaceEmpty": {
       "kicker": "Bismillah",
@@ -2998,68 +2992,26 @@
   "aboutUs": {
     "title": "About Mutqin",
     "kicker": "About",
-    "heroDesc": "Mutqin helps you memorise the Qur'an through daily practice. Listen, repeat, and always know what to do next.",
-    "highlightsAria": "What Mutqin offers",
-    "highlights": {
-      "listen": "Listen",
-      "repeat": "Repeat",
-      "nextStep": "Next step"
-    },
-    "ctaPrimary": "Start practising",
-    "ctaSecondary": "Our mission",
-    "ctaPricing": "View pricing",
-    "pillars": {
-      "flowTitle": "Simple study flow",
-      "flowDesc": "Open a session, follow the ayah, and practise without extra steps in the way.",
-      "revisionTitle": "Review that sticks",
-      "revisionDesc": "Weak ayahs surface before they turn into larger gaps between sessions.",
-      "consistencyTitle": "Built for consistency",
-      "consistencyDesc": "Every session ends with a clear next step so coming back tomorrow is easy."
-    },
-    "coreEyebrow": "The product",
-    "coreTitle": "What Mutqin is",
-    "coreLead": "A calm practice companion for memorisation — not a replacement for a teacher.",
+    "heroDesc": "Mutqin is a Qur'an memorisation workspace. It supports practice between lessons. It does not replace a teacher.",
+    "ctaMission": "Our mission",
+    "ctaFeatures": "How it works",
     "core": {
-      "whyTitle": "Why it exists",
-      "whyDesc": "It is easy to practise well today and forget what to revise tomorrow. Mutqin keeps the next step clear.",
-      "whatTitle": "What it does",
-      "whatDesc": "Play the ayah, follow along, and repeat at your own pace. When you finish, Mutqin suggests what to do next.",
-      "respectTitle": "What it respects",
-      "respectDesc": "Mutqin helps you stay consistent. Accuracy and respect for the Qur'an come first — always alongside real study."
+      "purposeTitle": "Why it exists",
+      "purposeDesc": "To help hifz stay steady between lessons and reviews.",
+      "teachersTitle": "With your teacher",
+      "teachersDesc": "Built to fit halaqah, self-study, and instruction, not instead of them.",
+      "limitTitle": "What it is not",
+      "limitDesc": "A tool for practice. Not a teacher, and not ijāzah."
     },
-    "flowEyebrow": "Your session",
-    "flowTitle": "How it works",
-    "flowLead": "Four simple steps from opening the app to knowing what comes next.",
-    "flow": {
-      "steps": {
-        "pickTitle": "Pick your passage",
-        "pickDesc": "Choose a surah or saved session and set up a short, focused practice block.",
-        "listenTitle": "Listen carefully",
-        "listenDesc": "Hear the recitation, follow the words on screen, and absorb the rhythm of each ayah.",
-        "repeatTitle": "Repeat out loud",
-        "repeatDesc": "Recite at your pace. Mutqin can follow along and highlight what needs attention.",
-        "nextTitle": "Know what's next",
-        "nextDesc": "Finish with a suggested revision or new ayahs so tomorrow's session starts itself."
-      }
-    },
-    "stayEyebrow": "Why people stay",
-    "stayTitle": "Less friction, clearer progress",
-    "stayLead": "Mutqin is designed for the rhythm of daily Qur'an practice — not one-off cramming.",
-    "stay": {
-      "setup": "Session setup is simple enough for daily use.",
-      "revision": "Review reminders help you revisit what needs attention.",
-      "focus": "The interface stays focused instead of crowded."
-    },
-    "verse": "Indeed, We have made the Qur'an easy to remember.",
-    "verseRef": "Qur'an 54:17",
-    "exploreTitle": "Explore more",
+    "verseArabic": "وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ",
+    "verse": "We have made the Qur'an easy for remembrance.",
+    "verseRef": "Surah Al-Qamar · 54:17",
+    "exploreTitle": "Related",
     "explore": {
+      "homeTitle": "Home",
       "missionTitle": "Our mission",
-      "missionDesc": "Why Mutqin exists and how we measure success.",
       "pricingTitle": "Plans & pricing",
-      "pricingDesc": "Start free and upgrade when you need more.",
-      "supportTitle": "Help & support",
-      "supportDesc": "Answers for practice, accounts, and sessions."
+      "supportTitle": "Help & support"
     },
     "built_for_focused_quran_practice": "Built for daily Quran practice.",
     "calm_study_flow": "Simple study flow",

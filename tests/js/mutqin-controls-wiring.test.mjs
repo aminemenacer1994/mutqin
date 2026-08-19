@@ -948,21 +948,4 @@ includesAll('centralised session lifecycle wiring', [
   /onboardingSampleSessionActive && !options\.sampleSession/,
 ])
 
-includesAll('journey return hint wiring', [
-  /journeyReturnHint\(\)/,
-  /isPracticeOffJourney\(\)/,
-  /isPostSessionOffJourney\(\)/,
-  /onJourneyReturnHintContinue\(\)/,
-  /sessionRangeOverlapsJourney/,
-  /formatJourneyContinueRangeLabel/,
-  /daysSinceActivity/,
-  /data-testid="journey-return-hint"/,
-  /journey-return-hint--idle/,
-  /journey-return-hint--active/,
-  /journey-return-hint--post-session/,
-  /memorisation\.workspaceJourney\.returnHint\.readyContinue/,
-  /memorisation\.workspaceJourney\.returnHint\.nextStepReady/,
-  /memorisation\.workspaceJourney\.returnHint\.mainStillHere/,
-])
-
 console.log('mutqin controls wiring passed')

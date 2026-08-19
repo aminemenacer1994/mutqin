@@ -641,25 +641,6 @@
               </aside>
             </div>
           </div>
-          <aside
-            v-if="journeyReturnHint && journeyReturnHint.placement === 'idle'"
-            class="journey-return-hint journey-return-hint--idle"
-            role="complementary"
-            data-testid="journey-return-hint"
-            :aria-label="journeyReturnHint.ariaLabel"
-          >
-            <div class="journey-return-hint__copy">
-              <p class="journey-return-hint__message">{{ journeyReturnHint.message }}</p>
-              <p v-if="journeyReturnHint.rangeLabel" class="journey-return-hint__range">{{ journeyReturnHint.rangeLabel }}</p>
-            </div>
-            <button
-              type="button"
-              class="journey-return-hint__cta"
-              @click="onJourneyReturnHintContinue"
-            >
-              {{ journeyReturnHint.cta }}
-            </button>
-          </aside>
         </div>
         <p v-if="chainingSetupBlocking" class="workspace-setup-hint workspace-setup-hint-warning" role="status">
           <span>{{ t('memorisation.techniques.chainingMethodRequired') }}</span>
@@ -730,25 +711,6 @@
           <span>{{ reviewPriorityLabel }}</span>
         </div>
 
-        <aside
-          v-if="journeyReturnHint && journeyReturnHint.placement === 'active'"
-          class="journey-return-hint journey-return-hint--active"
-          role="complementary"
-          data-testid="journey-return-hint"
-          :aria-label="journeyReturnHint.ariaLabel"
-        >
-          <div class="journey-return-hint__copy">
-            <p class="journey-return-hint__message">{{ journeyReturnHint.message }}</p>
-            <p v-if="journeyReturnHint.rangeLabel" class="journey-return-hint__range">{{ journeyReturnHint.rangeLabel }}</p>
-          </div>
-          <button
-            type="button"
-            class="journey-return-hint__cta"
-            @click="onJourneyReturnHintContinue"
-          >
-            {{ journeyReturnHint.cta }}
-          </button>
-        </aside>
 
 </section>
 
@@ -3641,27 +3603,6 @@
               </section>
             </template>
           </div>
-
-          <aside
-            v-if="journeyReturnHint && journeyReturnHint.placement === 'post-session'"
-            class="journey-return-hint journey-return-hint--post-session"
-            role="complementary"
-            data-testid="journey-return-hint"
-            :aria-label="journeyReturnHint.ariaLabel"
-          >
-            <div class="journey-return-hint__copy">
-              <p class="journey-return-hint__message">{{ journeyReturnHint.message }}</p>
-              <p v-if="journeyReturnHint.rangeLabel" class="journey-return-hint__range">{{ journeyReturnHint.rangeLabel }}</p>
-            </div>
-            <button
-              type="button"
-              class="journey-return-hint__cta"
-              :disabled="postSessionActionsBusy"
-              @click="onJourneyReturnHintContinue"
-            >
-              {{ journeyReturnHint.cta }}
-            </button>
-          </aside>
 
           <footer class="post-session-simple__footer">
             <div

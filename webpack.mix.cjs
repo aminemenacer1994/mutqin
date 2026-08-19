@@ -34,6 +34,58 @@ function dropMissingManifestEntries() {
 
 dropMissingManifestEntries();
 
+// Resolve every lazy chunk filename referenced by the freshly emitted app.js
+// runtime. Production builds map numeric ids -> chunk names in a minified
+// template, so naive "131.hash.js" parsing deletes homepage.hash.js by mistake.
+function collectReferencedChunkFiles(appJs) {
+    const keep = new Set();
+
+    for (const match of appJs.matchAll(/"([a-z0-9_-]+)":"([a-f0-9]{8})"/gi)) {
+        keep.add(`${match[1]}.${match[2]}.js`);
+    }
+
+    for (const match of appJs.matchAll(/([a-z0-9_-]+)\.([a-f0-9]{8})\.js/gi)) {
+        keep.add(`${match[1]}.${match[2]}.js`);
+    }
+
+    const chunkLoaderAnchor = 'js/"+({';
+    const chunkLoaderStart = appJs.indexOf(chunkLoaderAnchor);
+    if (chunkLoaderStart !== -1) {
+        const chunkLoaderEnd = appJs.indexOf('}[e]+".js"', chunkLoaderStart);
+        if (chunkLoaderEnd !== -1) {
+            const chunkLoader = appJs.slice(chunkLoaderStart, chunkLoaderEnd + 10);
+            const namesBody = chunkLoader.slice(
+                chunkLoader.indexOf('({') + 2,
+                chunkLoader.indexOf('}[e]||e)')
+            );
+            const hashesBody = chunkLoader.slice(
+                chunkLoader.indexOf('+{', chunkLoader.indexOf('}[e]||e)')) + 2,
+                chunkLoader.indexOf('}[e]+".js"')
+            );
+            const parseMap = (body) => {
+                const map = {};
+                for (const part of body.split(',')) {
+                    const entry = part.match(/(\d+):"([^"]+)"/);
+                    if (entry) map[entry[1]] = entry[2];
+                }
+                return map;
+            };
+            const names = parseMap(namesBody);
+            const hashes = parseMap(hashesBody);
+            for (const [id, hash] of Object.entries(hashes)) {
+                keep.add(`${names[id] || id}.${hash}.js`);
+            }
+            return keep;
+        }
+    }
+
+    for (const match of appJs.matchAll(/(\d+):"([a-f0-9]{8})"/g)) {
+        keep.add(`${match[1]}.${match[2]}.js`);
+    }
+
+    return keep;
+}
+
 // Mix keeps prior contenthashed keys in memory across watch rebuilds. Our
 // mix.then() prune deletes the old files from disk, then mix.version() tries
 // to hash those ghost keys and ENOENTs. Strip missing entries before Mix's
@@ -129,20 +181,23 @@ mix.then(() => {
     );
     keepNames.add('app.js');
 
-    // Preserve hashes referenced by the freshly built runtime (includes unnamed
-    // split chunks like 52.abc12345.js that mix-manifest does not list).
+    // Preserve every chunk filename referenced by the freshly built runtime.
+    let skipPrune = false;
     try {
         const appJs = fs.readFileSync(path.join(jsDir, 'app.js'), 'utf8');
-        for (const match of appJs.matchAll(/(\d+):"([a-f0-9]{8})"/g)) {
-            keepNames.add(`${match[1]}.${match[2]}.js`);
+        const referenced = collectReferencedChunkFiles(appJs);
+        for (const name of referenced) {
+            keepNames.add(name);
         }
-        for (const match of appJs.matchAll(/([a-z0-9-]+)\.([a-f0-9]{8})\.js/gi)) {
-            keepNames.add(`${match[1]}.${match[2]}.js`);
-        }
-        // Named lazy chunks are mapped as JSON keys, e.g. "homepage":"05961901",
-        // not as literal homepage.05961901.js strings in the runtime.
-        for (const match of appJs.matchAll(/"([a-z0-9_-]+)":"([a-f0-9]{8})"/gi)) {
-            keepNames.add(`${match[1]}.${match[2]}.js`);
+        const missingReferenced = [...referenced].filter(
+            (name) => !fs.existsSync(path.join(jsDir, name))
+        );
+        if (missingReferenced.length > 0) {
+            skipPrune = true;
+            console.warn(
+                '[mix] Skipping chunk prune; runtime references missing files:',
+                missingReferenced.join(', ')
+            );
         }
     } catch {
         /* ignore */
@@ -154,18 +209,20 @@ mix.then(() => {
         /* ignore */
     }
 
-    for (const entry of fs.readdirSync(jsDir, { withFileTypes: true })) {
-        if (!entry.isFile()) continue;
-        const name = entry.name;
-        if (!/\.js(\.map)?$/.test(name)) continue;
-        const bare = name.replace(/\.map$/, '');
-        if (keepNames.has(bare) || keepNames.has(name)) continue;
-        // Numeric split chunks are required by the webpack runtime.
-        if (/^\d+\.[a-f0-9]{8}\.js$/i.test(bare)) continue;
-        try {
-            fs.unlinkSync(path.join(jsDir, name));
-        } catch {
-            /* ignore busy/locked files during watch */
+    if (!skipPrune) {
+        for (const entry of fs.readdirSync(jsDir, { withFileTypes: true })) {
+            if (!entry.isFile()) continue;
+            const name = entry.name;
+            if (!/\.js(\.map)?$/.test(name)) continue;
+            const bare = name.replace(/\.map$/, '');
+            if (keepNames.has(bare) || keepNames.has(name)) continue;
+            // Numeric split chunks are required by the webpack runtime.
+            if (/^\d+\.[a-f0-9]{8}\.js$/i.test(bare)) continue;
+            try {
+                fs.unlinkSync(path.join(jsDir, name));
+            } catch {
+                /* ignore busy/locked files during watch */
+            }
         }
     }
 });

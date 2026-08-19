@@ -542,12 +542,6 @@
   font-weight: 700;
 }
 
-.dash-journey__hint {
-  margin: 0 0 0.85rem;
-  color: var(--dash-muted);
-  font-size: 0.875rem;
-}
-
 .dash-journey__start-actions {
   display: flex;
   flex-wrap: wrap;
