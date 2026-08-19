@@ -30,13 +30,13 @@ class ContactMessageController extends Controller
     {
         $contactMessage->forceFill(['status' => 'resolved'])->save();
 
-        return back()->with('contact_status', 'Message marked as resolved.');
+        return back()->with('contact_status', __('admin.contact_messages.resolved_flash'));
     }
 
     public function destroy(ContactSubmission $contactMessage): RedirectResponse
     {
         $contactMessage->delete();
 
-        return back()->with('contact_status', 'Message deleted.');
+        return back()->with('contact_status', __('admin.contact_messages.deleted_flash'));
     }
 }

@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v119 -->
+  <!-- mutqin-ui-build: v120 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
@@ -281,7 +281,7 @@
               </div>
             </div>
           </div>
-          <div class="top-card-icon-controls" aria-label="Reading tools">
+          <div class="top-card-icon-controls" :aria-label="t('memorisation.a11y.readingTools')">
             <div
               class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
               role="group"
@@ -753,7 +753,7 @@
               <div class="container-fluid mushaf-workspace__fluid px-0">
               <section
                 class="mushaf-shell"
-                aria-label="Mushaf"
+                :aria-label="t('memorisation.view.mushaf')"
               >
                 <header
                   class="mushaf-shell__bar"
@@ -890,7 +890,7 @@
                             class="madani-basmala"
                             dir="rtl"
                             lang="ar"
-                            aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"
+                            :aria-label="t('memorisation.a11y.bismillah')"
                           >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
                         </template>
                         <template v-else-if="line.type === 'ayah' || line.type === 'basmala_ayah'">
@@ -953,7 +953,7 @@
                 @touchmove.passive="clearTouchPeek"
                 @touchend.passive="onVerseTouchEnd($event, verse.key)" @touchcancel.passive="clearTouchPeek"
                 @keydown.enter.prevent="onVerseCardClick(verse)" @keydown.space.prevent="onVerseCardClick(verse)"
-                :aria-label="`Open ayah ${verse.number}${isVerseVisuallyActive(verse.key) ? ', active ayah' : ''}`">
+                :aria-label="isVerseVisuallyActive(verse.key) ? t('memorisation.a11y.openActiveAyah', { number: verse.number }) : t('memorisation.a11y.openAyah', { number: verse.number })">
                 <div class="verse-header">
                   <div class="verse-badges">
                     <span class="verse-number verse-ayah-pill">{{ t('memorisation.a11y.ayahNumberLabel', { number: resolveVerseAyahNumber(verse) || verse.number }) }}</span>
@@ -978,8 +978,8 @@
                     <button class="verse-inline-action-btn verse-inline-play-btn" type="button"
                       @click.stop="playAyahCardAudio(verse)"
                       :disabled="!resolveAyahAudioUrl(verse)"
-                      :title="isAyahCardPlaying(verse) ? 'Pause ayah audio' : 'Play ayah audio'"
-                      :aria-label="isAyahCardPlaying(verse) ? 'Pause ayah audio' : 'Play ayah audio'">
+                      :title="isAyahCardPlaying(verse) ? t('memorisation.a11y.pauseAyahAudio') : t('memorisation.a11y.playAyahAudio')"
+                      :aria-label="isAyahCardPlaying(verse) ? t('memorisation.a11y.pauseAyahAudio') : t('memorisation.a11y.playAyahAudio')">
                       <i class="bi" :class="isAyahCardPlaying(verse) ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                     </button>
                   </div>
@@ -1070,20 +1070,20 @@
           </div>
           <div v-if="shouldShowOffcanvasTabs" class="tools-tabs" role="tablist" :aria-label="t('memorisation.a11y.controlsTabs')">
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
-              @click.prevent="setActiveTab('tools')" title="Session setup" type="button">
+              @click.prevent="setActiveTab('tools')" :title="t('memorisation.a11y.setupTab')" type="button">
               <i class="bi bi-sliders"></i> {{ t('memorisation.tools.tabs.setup') }}
             </button>
             <button role="tab" :aria-selected="tab === 'techniques' ? 'true' : 'false'"
               :class="{ active: tab === 'techniques' }" @click.prevent="setActiveTab('techniques')"
-              title="Practice presets" type="button">
+              :title="t('memorisation.a11y.practicePresets')" type="button">
               <i class="bi bi-stars"></i> {{ t('memorisation.practice') }}
             </button>
             <button role="tab" :aria-selected="tab === 'saved' ? 'true' : 'false'" :class="{ active: tab === 'saved' }"
-              @click.prevent="setActiveTab('saved')" title="Saved sessions" type="button">
+              @click.prevent="setActiveTab('saved')" :title="t('memorisation.a11y.savedSessions')" type="button">
               <i class="bi bi-clock-history"></i> {{ t('memorisation.saved') }}
             </button>
             <!-- <button v-if="isLoggedIn" role="tab" :aria-selected="tab === 'stats' ? 'true' : 'false'"
-              :class="{ active: tab === 'stats' }" @click.prevent="setActiveTab('stats')" title="Session insights"
+              :class="{ active: tab === 'stats' }" @click.prevent="setActiveTab('stats')" :title="t('memorisation.a11y.sessionInsights')"
               type="button">
               <i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}
             </button> -->
@@ -1155,6 +1155,54 @@
                       <span v-for="step in repetitionSliderSteps" :key="`rep-${step}`">{{ step }}x</span>
                     </div>
                     <small class="field-hint">{{ Number(repetitionsPerStep) === 1 ? t('sessionSetup.repeatHintOne', { count: repetitionsPerStep }) : t('sessionSetup.repeatHintOther', { count: repetitionsPerStep }) }}</small>
+                  </div>
+                  <div class="field field-individual-ayah setup-field-row">
+                    <div class="field-header individual-ayah-header">
+                      <label><i class="bi bi-pin-angle-fill" aria-hidden="true"></i> {{ t('sessionSetup.individualAyah') }}</label>
+                    </div>
+                    <div class="individual-ayah-controls">
+                      <select
+                        :value="setupIndividualAyahNumber"
+                        @change="setSetupIndividualAyah(Number($event.target.value))"
+                        class="select"
+                        :disabled="!chapterId || setupIndividualAyahOptions.length === 0"
+                        :aria-label="t('sessionSetup.individualAyah')"
+                      >
+                        <option v-for="option in setupIndividualAyahOptions" :key="`setup-individual-${option.value}`" :value="option.value">
+                          {{ option.label }}
+                        </option>
+                      </select>
+                      <div class="individual-ayah-repeat">
+                        <div class="field-header individual-ayah-repeat-header">
+                          <span class="individual-ayah-repeat-label">{{ t('sessionSetup.individualAyahRepeats') }}</span>
+                          <span class="range-value-pill">{{ individualAyahRepeatDisplayValue }}</span>
+                        </div>
+                        <div class="range-control">
+                          <input
+                            type="range"
+                            :value="individualAyahRepeatSliderValue"
+                            :style="individualAyahRepeatSliderStyle"
+                            @input="setIndividualAyahRepeatFromSlider(Number($event.target.value))"
+                            min="1"
+                            max="10"
+                            step="1"
+                            class="input technique-range individual-ayah-range"
+                            :aria-valuetext="individualAyahRepeatDisplayValue"
+                            :aria-label="t('sessionSetup.individualAyahRepeats')"
+                            :disabled="!setupIndividualAyahKey"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <small class="field-hint">
+                      {{ Number(individualAyahRepeatSliderValue) === 1
+                        ? t('sessionSetup.individualAyahRepeatHintOne', { count: individualAyahRepeatSliderValue })
+                        : t('sessionSetup.individualAyahRepeatHintOther', { count: individualAyahRepeatSliderValue }) }}
+                    </small>
+                    <small
+                      v-if="setupIndividualAyahSelectionCount > 0"
+                      class="field-hint individual-ayah-session-count"
+                    >{{ setupIndividualAyahSelectedCountLabel }}</small>
                   </div>
                 </div>
               </div>
@@ -1572,7 +1620,7 @@
               </div>
             </header>
 
-            <section v-if="hasVerses" class="saved-sheet__card saved-sheet__card--current" aria-label="Current session">
+            <section v-if="hasVerses" class="saved-sheet__card saved-sheet__card--current" :aria-label="t('memorisation.a11y.currentSession')">
               <div class="saved-sheet__current-copy">
                 <span class="saved-sheet__eyebrow">{{ t('memorisation.current_session') }}</span>
                 <strong>{{ getChapterDisplayName(currentChapter) || t('memorisation.no_surah_selected') }}</strong>
@@ -1587,7 +1635,7 @@
             <section
               v-if="savedSessions.length > 0"
               class="saved-sheet__groups"
-              aria-label="Saved sessions"
+              :aria-label="t('memorisation.a11y.savedSessions')"
             >
               <div
                 v-for="group in savedSessionGroups"
@@ -1635,7 +1683,7 @@
                         <input
                           type="checkbox"
                           :checked="isSavedSessionSelected(session.id)"
-                          :aria-label="t('memorisation.selectSession') || 'Select session'"
+                          :aria-label="t('memorisation.selectSession')"
                           @change="toggleSavedSessionSelection(session.id)"
                         >
                         <span aria-hidden="true"></span>
@@ -1691,7 +1739,7 @@
               </div>
             </section>
 
-            <section v-else class="saved-sheet__section" aria-label="Saved sessions">
+            <section v-else class="saved-sheet__section" :aria-label="t('memorisation.a11y.savedSessions')">
               <div class="saved-sheet__empty">
                 <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
                 <p>{{ t('memorisation.no_saved_sessions_yet') }}</p>
@@ -1884,11 +1932,11 @@
               {{ t('memorisation.session_name') }}
             </label>
             <input id="sessionName" type="text" v-model="saveSessionName" class="name-input"
-              :class="{ 'error': nameError }" :placeholder="`${getChapterDisplayName(currentChapter) || 'Session'} ${rangeStart}-${rangeEnd}`"
+              :class="{ 'error': nameError }" :placeholder="`${getChapterDisplayName(currentChapter) || t('memorisation.sessionDefaultName')} ${rangeStart}-${rangeEnd}`"
               @keyup.enter="confirmSaveSession" @input="clearNameError" autofocus maxlength="50" />
             <div class="input-hint">
               <span class="char-count">{{ saveSessionName.length }}/50</span>
-              <span class="hint-text">{{ formatSurahAyahDisplay(getChapterDisplayName(currentChapter) || 'Current session', rangeStart, rangeEnd) }}</span>
+              <span class="hint-text">{{ formatSurahAyahDisplay(getChapterDisplayName(currentChapter) || t('memorisation.a11y.currentSession'), rangeStart, rangeEnd) }}</span>
             </div>
             <div v-if="nameError" class="error-message">
               <i class="bi bi-exclamation-circle-fill"></i>
@@ -2643,7 +2691,7 @@
               />
             </div>
           </section>
-          <section class="session-analytics-section advanced-metrics-grid" aria-label="Advanced analytics cards">
+          <section class="session-analytics-section advanced-metrics-grid" :aria-label="t('memorisation.a11y.advancedAnalyticsCards')">
             <article v-for="section in detailedAnalyticsSections" :key="`advanced-section-${section.key}`"
               class="session-analytics-panel detailed-analytics-section">
               <header>
@@ -2676,19 +2724,19 @@
           <div class="recordings-library-head-copy">
             <h2 id="recordingsLibraryTitle">{{ t('memorisation.recordings_library') }}</h2>
             <div class="recordings-library-hierarchy">
-              <span>{{ getChapterDisplayName(currentChapter) || 'Saved session' }}</span>
+              <span>{{ getChapterDisplayName(currentChapter) || t('memorisation.saved_session') }}</span>
               <span>{{ rangeStart }}-{{ rangeEnd }}</span>
-              <span v-if="selectedRecordingsAyahGroup">Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</span>
+              <span v-if="selectedRecordingsAyahGroup">{{ t('memorisation.a11y.ayahNumberLabel', { number: selectedRecordingsAyahGroup.ayahNumber }) }}</span>
               <span v-if="selectedRecordingsEntry">{{ getRecordingAttemptLabel(selectedRecordingsEntry) }}</span>
             </div>
           </div>
           <div class="recordings-library-header-actions">
             <button v-if="recordingsLibraryReturnToSelfCheckKey" class="recordings-library-back-btn" type="button"
-              @click="backToSelfCheckFromLibrary" aria-label="Back to self-check">
+              @click="backToSelfCheckFromLibrary" :aria-label="t('memorisation.back_to_self_check')">
               <i class="bi bi-arrow-left"></i>
               <span>{{ t('memorisation.back_to_self_check') }}</span>
             </button>
-            <button class="modal-close-btn" @click="closeRecordingsLibrary" aria-label="Close recordings library">
+            <button class="modal-close-btn" @click="closeRecordingsLibrary" :aria-label="t('memorisation.a11y.closeRecordingsLibrary')">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
@@ -2718,15 +2766,15 @@
               <div class="recordings-library-nav-head">
                 <div class="recordings-library-nav-intro">
                   <span class="recordings-library-nav-kicker">{{ t('memorisation.saved_session') }}</span>
-                  <strong>{{ getChapterDisplayName(currentChapter) || 'Session recordings' }}</strong>
+                  <strong>{{ getChapterDisplayName(currentChapter) || t('memorisation.recordings.sessionRecordings') }}</strong>
                   <div class="recordings-library-nav-meta">
                     <span>{{ formatAyahRangeDisplay(rangeStart, rangeEnd) }}</span>
-                    <span>{{ filteredRecordingsList.length === 1 ? '1 recording' : `${filteredRecordingsList.length} recordings` }}</span>
+                    <span>{{ filteredRecordingsList.length === 1 ? t('memorisation.recordings.countOne', { count: filteredRecordingsList.length }) : t('memorisation.recordings.countOther', { count: filteredRecordingsList.length }) }}</span>
                   </div>
                 </div>
                 <button class="recordings-library-nav-toggle" type="button" @click="toggleRecordingsNav"
                   :aria-expanded="recordingsNavExpanded ? 'true' : 'false'">
-                  <span>{{ recordingsNavExpanded ? 'Hide list' : 'Show list' }}</span>
+                  <span>{{ recordingsNavExpanded ? t('memorisation.recordings.hideList') : t('memorisation.recordings.showList') }}</span>
                   <i class="bi" :class="recordingsNavExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                 </button>
               </div>
@@ -2734,8 +2782,8 @@
               <div class="recordings-library-search">
                 <label class="recordings-library-search-field">
                   <i class="bi bi-search" aria-hidden="true"></i>
-                  <input v-model.trim="recordingsLibrarySearch" type="search" placeholder="Search surah or ayah number"
-                    aria-label="Search recorded ayahs">
+                  <input v-model.trim="recordingsLibrarySearch" type="search" :placeholder="t('memorisation.recordings.searchPlaceholder')"
+                    :aria-label="t('memorisation.a11y.searchRecordedAyahs')">
                 </label>
               </div>
 
@@ -2756,7 +2804,7 @@
                           @click="selectRecordingsEntry(recording)">
                           <span class="recordings-library-recording-title">{{ getRecordingAttemptLabel(recording) }}</span>
                           <span class="recordings-library-recording-meta">
-                            Ayah {{ ayahGroup.ayahNumber }} · {{ formatRecordingDate(recording.recordedAt) }}
+                            {{ t('memorisation.a11y.ayahNumberLabel', { number: ayahGroup.ayahNumber }) }} · {{ formatRecordingDate(recording.recordedAt) }}
                           </span>
                         </button>
                         <button
@@ -2780,7 +2828,7 @@
                   <span class="recordings-library-detail-kicker">{{ t('memorisation.selected_ayah') }}</span>
                   <h3>{{ getRecordingAttemptLabel(selectedRecordingsEntry) }}</h3>
                   <div class="recordings-library-detail-meta">
-                    <span>Ayah {{ selectedRecordingsAyahGroup.ayahNumber }}</span>
+                    <span>{{ t('memorisation.a11y.ayahNumberLabel', { number: selectedRecordingsAyahGroup.ayahNumber }) }}</span>
                     <span>{{ formatRecordingDate(selectedRecordingsEntry.recordedAt) }}</span>
                   </div>
                 </div>
@@ -2796,7 +2844,7 @@
                     :class="{ 'recording-history-top--standard': !isAiCheckRecording(selectedRecordingsEntry) }">
                     <div class="recording-history-copy">
                       <div class="recording-history-kicker">{{
-                        isAiCheckRecording(selectedRecordingsEntry) ? getRecordingTypeLabel(selectedRecordingsEntry) : 'Saved recording' }}</div>
+                        isAiCheckRecording(selectedRecordingsEntry) ? getRecordingTypeLabel(selectedRecordingsEntry) : t('memorisation.recordings.savedRecording') }}</div>
                       <strong v-if="!isAiCheckRecording(selectedRecordingsEntry)">{{ getRecordingAttemptLabel(selectedRecordingsEntry) }}</strong>
                       <div v-if="!isAiCheckRecording(selectedRecordingsEntry)" class="recording-history-inline-meta">
                         <span>{{ formatRecordingTimestamp(selectedRecordingsEntry.recordedAt) }}</span>
@@ -2814,16 +2862,16 @@
                     <div v-if="selectedRecordingsEntry.audioSrc" class="recording-history-player-compact recording-history-player-compact--surface recording-history-player-compact--simple">
                       <button class="recording-history-player-btn"
                         type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)"
-                        :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Pause replay' : 'Replay recitation'">
+                        :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? t('memorisation.a11y.pauseReplay') : t('memorisation.a11y.replayRecitation')">
                         <i class="bi"
                           :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                       </button>
                       <div class="recording-history-player-copy">
-                        <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Playing' : 'Replay recording' }}</strong>
+                        <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? t('memorisation.recordings.playing') : t('memorisation.recordings.replayRecordingLabel') }}</strong>
                         <span>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
                       </div>
                     </div>
-                    <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>No audio is available for replay.</span></p>
+                    <p v-else class="shared-result-recording-empty"><i class="bi bi-info-circle" aria-hidden="true"></i><span>{{ t('memorisation.recordings.noAudioAvailable') }}</span></p>
                     <div class="recording-history-standard-meta">
                       <span><i class="bi bi-clock-history" aria-hidden="true"></i>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
                       <span><i class="bi bi-bookmark-check" aria-hidden="true"></i>{{ t('memorisation.self_rating') }}</span>
@@ -2869,8 +2917,7 @@
                       </div>
                       <div v-if="getRecitationReviewArabic(selectedRecordingsEntry)" class="recitation-review-ayah shared-result-ayah"
                         dir="rtl"
-                        v-html="getRecitationReviewArabic(selectedRecordingsEntry)"
-                        @click="handleRecitationReviewWordClick($event, selectedRecordingsEntry)"></div>
+                        v-html="getRecitationReviewArabic(selectedRecordingsEntry)"></div>
                       <div class="shared-result-word-review transition-all duration-300">
                         <div v-if="getRecitationWordsToReview(selectedRecordingsEntry).length" class="shared-result-word-review-list" dir="rtl">
                           <span v-for="word in getRecitationWordsToReview(selectedRecordingsEntry)" :key="`saved-review-${word.index}`"
@@ -2911,12 +2958,12 @@
                           <div v-if="selectedRecordingsEntry.audioSrc" class="recording-history-player-compact">
                             <button class="recording-history-player-btn"
                               type="button" @click="toggleRecordingPlayback(selectedRecordingsEntry)"
-                              :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Pause replay' : 'Replay recitation'">
+                              :aria-label="selectedRecordingsEntry.id === activeRecordingPlaybackId ? t('memorisation.a11y.pauseReplay') : t('memorisation.a11y.replayRecitation')">
                               <i class="bi"
                                 :class="selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'bi-pause-fill' : 'bi-play-fill'"></i>
                             </button>
                             <div class="recording-history-player-copy">
-                              <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? 'Playing' : 'Replay recitation' }}</strong>
+                              <strong>{{ selectedRecordingsEntry.id === activeRecordingPlaybackId ? t('memorisation.recordings.playing') : t('memorisation.a11y.replayRecitation') }}</strong>
                               <span>{{ formatRecordingDuration(selectedRecordingsEntry.durationSeconds) }}</span>
                             </div>
                           </div>
@@ -2932,7 +2979,7 @@
                       <button class="recording-history-utility-link" type="button"
                         @click="openRenameRecordingModal(selectedRecordingsEntry.id)">
                         <i class="bi bi-pencil-square"></i>
-                        <span>Rename</span>
+                        <span>{{ t('memorisation.recordings.rename') }}</span>
                       </button>
                     </div>
                   </div>
@@ -3257,11 +3304,6 @@
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
                     {{ t('memorisation.postSession.recommendation.mainFocus') || 'Main focus' }}
                   </p>
-                  <p
-                    v-if="postSessionFocusHighlightParts.some((part) => part.correctable)"
-                    class="post-session-simple__focus-hint"
-                    role="note"
-                  >{{ t('memorisation.postSession.recommendation.tapWordToCorrect') || 'Tap any amber or red word you recited correctly to update the analysis.' }}</p>
                   <button
                     type="button"
                     class="post-session-simple__quran-focus"
@@ -3282,18 +3324,9 @@
                           'is-weak': part.weak,
                           'is-incorrect': part.tone === 'incorrect',
                           'is-partial': part.tone === 'partial',
-                          'is-correctable': part.correctable,
                           'is-corrected': part.tone === 'ok' && !part.weak,
                         }"
                         :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
-                        :role="part.correctable ? 'button' : undefined"
-                        :tabindex="part.correctable ? 0 : undefined"
-                        :aria-label="part.correctable
-                          ? (t('memorisation.aiCheck.markAsAiMistake') || 'Mark as AI mistake.')
-                          : undefined"
-                        @click.stop="part.correctable && onPostSessionFocusWordCorrect(part)"
-                        @keydown.enter.prevent="part.correctable && onPostSessionFocusWordCorrect(part)"
-                        @keydown.space.prevent="part.correctable && onPostSessionFocusWordCorrect(part)"
                       >
                         <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
                       </span>
@@ -3475,6 +3508,32 @@
                       <template v-if="postSessionPersonalPlan?.time?.label">
                         {{ postSessionPersonalPlan.time.label }}
                       </template>
+                    </p>
+                  </div>
+
+                  <div
+                    v-if="postSessionPlanWhyText || postSessionPlanRevisionEmphasis"
+                    class="post-session-simple__why post-session-simple__why--plan"
+                    data-testid="post-session-plan-why"
+                  >
+                    <p
+                      v-if="postSessionPlanWhyText"
+                      class="post-session-simple__section-kicker post-session-simple__section-kicker--sub"
+                    >
+                      {{ t('memorisation.postSession.recommendation.whyRecommended') || 'Why this was recommended' }}
+                    </p>
+                    <p
+                      v-if="postSessionPlanWhyText"
+                      class="post-session-simple__reason post-session-simple__reason--compact"
+                    >
+                      {{ postSessionPlanWhyText }}
+                    </p>
+                    <p
+                      v-if="postSessionPlanRevisionEmphasis"
+                      class="post-session-simple__plan-emphasis"
+                      data-testid="post-session-revision-emphasis"
+                    >
+                      {{ postSessionPlanRevisionEmphasis }}
                     </p>
                   </div>
 
@@ -3839,11 +3898,11 @@
 
     <div v-if="showQuranSearchModal" class="quran-search-modal-backdrop" role="presentation"
       @click.self="closeQuranSearchModal">
-      <section class="quran-search-modal" role="dialog" aria-modal="true" aria-label="Quran search">
+      <section class="quran-search-modal" role="dialog" aria-modal="true" :aria-label="t('memorisation.quranSearch.title')">
         <header class="quran-search-header">
           <div></div>
           <button class="quran-search-close pill-control" type="button" @click="closeQuranSearchModal"
-            aria-label="Close Quran search">
+            :aria-label="t('memorisation.quranSearch.close')">
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </header>
@@ -3852,19 +3911,19 @@
           <label class="quran-search-input-shell" for="quranSearchInput">
             <i class="bi bi-search" aria-hidden="true"></i>
             <input id="quranSearchInput" ref="quranSearchInput" v-model.trim="quranSearchQuery" type="search"
-              dir="auto" placeholder="Type at least 3 words in Arabic or English"
+              dir="auto" :placeholder="t('memorisation.quranSearch.inputPlaceholder')"
               @keydown.enter.prevent="runQuranSearch" />
           </label>
           <button class="pill-control quran-search-voice" :class="{ active: quranSearchVoiceActive }" type="button"
             @click="toggleQuranVoiceSearch" :disabled="!supportsQuranVoiceSearch"
-            :title="supportsQuranVoiceSearch ? 'Voice search' : 'Voice search is not supported in this browser'">
+            :title="supportsQuranVoiceSearch ? t('memorisation.quranSearch.voiceSearch') : t('memorisation.quranSearch.voiceSearchUnsupported')">
             <i class="bi" :class="quranSearchVoiceActive ? 'bi-mic-fill' : 'bi-mic'" aria-hidden="true"></i>
-            <span>{{ quranSearchVoiceActive ? 'Listening' : 'Voice' }}</span>
+            <span>{{ quranSearchVoiceActive ? t('memorisation.quranSearch.listening') : t('memorisation.quranSearch.voice') }}</span>
           </button>
           <button class="pill-control quran-search-submit" type="button" @click="runQuranSearch"
             :disabled="quranSearchLoading || quranSearchWordCount < 3">
             <i class="bi bi-arrow-return-left" aria-hidden="true"></i>
-            <span>{{ quranSearchLoading ? 'Searching' : 'Search' }}</span>
+            <span>{{ quranSearchLoading ? t('memorisation.quranSearch.searching') : t('memorisation.quranSearch.search') }}</span>
           </button>
         </div>
 
@@ -3895,11 +3954,11 @@
               </select>
             </label>
           </div>
-          <div class="quran-search-pill-row" aria-label="Search display options">
+          <div class="quran-search-pill-row" :aria-label="t('memorisation.quranSearch.displayOptions')">
             <button class="pill-control" :class="{ active: quranSearchShowTranslation }" type="button"
               @click="quranSearchShowTranslation = !quranSearchShowTranslation">
               <i class="bi bi-translate" aria-hidden="true"></i>
-              <span>{{ quranSearchShowTranslation ? 'Translation on' : 'Translation off' }}</span>
+              <span>{{ quranSearchShowTranslation ? t('memorisation.common.translationOn') : t('memorisation.common.translationOff') }}</span>
             </button>
             <button class="pill-control" type="button" @click="adjustQuranSearchFont(-4)">
               <i class="bi bi-dash-lg" aria-hidden="true"></i>
@@ -3924,13 +3983,13 @@
 
         <div v-if="filteredQuranSearchResults.length" class="quran-search-results" aria-live="polite">
           <div class="quran-search-results-head">
-            <strong>{{ filteredQuranSearchResults.length }} ayah{{ filteredQuranSearchResults.length === 1 ? '' : 's' }} found</strong>
+            <strong>{{ filteredQuranSearchResults.length === 1 ? t('memorisation.quranSearch.resultsFoundOne', { count: filteredQuranSearchResults.length }) : t('memorisation.quranSearch.resultsFoundOther', { count: filteredQuranSearchResults.length }) }}</strong>
             <span>{{ quranSearchFilterSummary }}</span>
           </div>
           <article v-for="result in filteredQuranSearchResults" :key="result.key" class="quran-search-result-card">
             <div class="quran-search-result-meta">
               <span>{{ formatSurahAyahDisplay(result.surahName, result.ayah) }}</span>
-              <small>Juz {{ result.juz }} · Hizb {{ result.hizb }} · Page {{ result.page }} · Word {{ result.firstWordIndex || 1 }}</small>
+              <small>{{ t('memorisation.quranSearch.resultMeta', { juz: result.juz, hizb: result.hizb, page: result.page, word: result.firstWordIndex || 1 }) }}</small>
             </div>
             <p class="quran-search-arabic" dir="rtl" :style="{ fontSize: `${quranSearchFontSize}px`, fontFamily: quranFontFamily }"
               v-html="highlightQuranSearchMatch(result.arabic, result.matchSource === 'arabic')"></p>
@@ -4013,7 +4072,6 @@
       @done="doneAmdTest"
       @retry="retryAmdAssessment"
       @enable-mic="startAmdAssessment"
-      @word-click="handleAmdWordClick"
     />
 
   <div

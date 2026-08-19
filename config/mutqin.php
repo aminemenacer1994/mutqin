@@ -16,4 +16,11 @@ return [
         // Optional recordings are purged on account deletion / anonymisation.
         'retain_raw_audio' => filter_var(env('MUTQIN_RETAIN_RAW_AUDIO', false), FILTER_VALIDATE_BOOL),
     ],
+
+    'recitation_mastery' => [
+        'ema_alpha' => 0.15,
+        'max_session_delta' => 0.10,
+        'high_confidence_threshold' => 0.72,
+        'persistent_weak_attempts' => 2,
+    ],
 ];

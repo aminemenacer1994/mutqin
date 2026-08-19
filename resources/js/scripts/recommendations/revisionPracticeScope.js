@@ -19,6 +19,9 @@ const CONTEXT_PAD = 1
 const AYAH_LEVEL_RATIO = 0.45
 const AYAH_LEVEL_MIN_WORDS = 3
 
+/** Minimum repeats on ayahs flagged as weak during revision. */
+export const WEAK_AYAH_REPEAT_MIN = 3
+
 /**
  * @param {unknown} value
  * @returns {'weak_areas'|'full_range'|null}
@@ -432,8 +435,24 @@ export function applyScopeToRecommendationSettings(settings = {}, scope, extras 
     }
   }
 
-  // Full-range emphasis: give weak areas more repetition when the method supports it.
-  if (normalised === PRACTICE_SCOPE.FULL_RANGE && extras.bumpRepsForEmphasis !== false) {
+  const weakAyahIds = [
+    ...(Array.isArray(extras.ayahIds) ? extras.ayahIds : []),
+    ...weakWords.map((w) => Number(w.ayahNumber)).filter((n) => Number.isFinite(n) && n > 0),
+  ]
+  const repeatPlan = buildWeakAyahRepeatPlan({
+    weakAyahs: weakAyahIds,
+    weakWords,
+    baseRepetitions: next.repetitions,
+    isRevision: true,
+    scope: normalised,
+    chapterId: extras.chapterId,
+  })
+
+  if (Object.keys(repeatPlan.perAyahRepeats).length) {
+    next.repetitions = repeatPlan.globalRepetitions
+    next.repetitions_per_ayah = repeatPlan.perAyahRepeats
+    next.emphasize_weak_areas = true
+  } else if (normalised === PRACTICE_SCOPE.FULL_RANGE && extras.bumpRepsForEmphasis !== false) {
     const technique = String(next.technique || '').toLowerCase()
     if (['talqin', 'focus', 'chaining', 'anchor', 'chunking'].includes(technique) || !technique) {
       const reps = Number(next.repetitions)
@@ -448,6 +467,105 @@ export function applyScopeToRecommendationSettings(settings = {}, scope, extras 
     next.emphasize_weak_areas = normalised === PRACTICE_SCOPE.FULL_RANGE
   }
 
+  return next
+}
+
+/**
+ * Build per-ayah repeat counts that double down on weak verses during revision.
+ *
+ * @param {{
+ *   weakAyahs?: number[],
+ *   weakWords?: Array<object>,
+ *   baseRepetitions?: number,
+ *   isRevision?: boolean,
+ *   scope?: string,
+ *   chapterId?: number|null,
+ * }} input
+ * @returns {{
+ *   globalRepetitions: number,
+ *   perAyahRepeats: Record<number, number>,
+ *   verseKeyRepeats: Record<string, number>,
+ *   weakAyahs: number[],
+ *   emphasisKey: string|null,
+ *   emphasisParams: Record<string, unknown>|null,
+ * }}
+ */
+export function buildWeakAyahRepeatPlan(input = {}) {
+  const weakAyahs = [...new Set([
+    ...(Array.isArray(input.weakAyahs) ? input.weakAyahs : []).map(Number),
+    ...normaliseWeakWordRecords(input.weakWords || [])
+      .map((w) => Number(w.ayahNumber))
+      .filter((n) => Number.isFinite(n) && n > 0),
+  ].filter((n) => Number.isFinite(n) && n > 0))].sort((a, b) => a - b)
+
+  const baseReps = Math.max(1, Number(input.baseRepetitions) || 3)
+  const isRevision = !!input.isRevision
+  const scope = normalisePracticeScope(input.scope)
+  const chapterId = Number(input.chapterId) || 0
+
+  if (!weakAyahs.length || !isRevision) {
+    return {
+      globalRepetitions: baseReps,
+      perAyahRepeats: {},
+      verseKeyRepeats: {},
+      weakAyahs: [],
+      emphasisKey: null,
+      emphasisParams: null,
+    }
+  }
+
+  const globalRepetitions = Math.min(8, Math.max(baseReps, WEAK_AYAH_REPEAT_MIN))
+  const perAyahRepeats = {}
+  const verseKeyRepeats = {}
+
+  weakAyahs.forEach((ayah) => {
+    const weakRep = scope === PRACTICE_SCOPE.WEAK_AREAS
+      ? Math.min(8, Math.max(WEAK_AYAH_REPEAT_MIN, globalRepetitions))
+      : Math.min(8, Math.max(WEAK_AYAH_REPEAT_MIN, globalRepetitions + 1))
+    perAyahRepeats[ayah] = weakRep
+    if (chapterId > 0) {
+      verseKeyRepeats[`${chapterId}:${ayah}`] = weakRep
+    }
+  })
+
+  let emphasisKey = 'planDetail.weakAyahRepeatMany'
+  /** @type {Record<string, unknown>} */
+  let emphasisParams = {
+    count: perAyahRepeats[weakAyahs[0]] || WEAK_AYAH_REPEAT_MIN,
+    ayahCount: weakAyahs.length,
+  }
+  if (weakAyahs.length === 1) {
+    emphasisKey = 'planDetail.weakAyahRepeatOne'
+    emphasisParams = {
+      ayah: weakAyahs[0],
+      count: perAyahRepeats[weakAyahs[0]] || WEAK_AYAH_REPEAT_MIN,
+    }
+  }
+
+  return {
+    globalRepetitions,
+    perAyahRepeats,
+    verseKeyRepeats,
+    weakAyahs,
+    emphasisKey,
+    emphasisParams,
+  }
+}
+
+/**
+ * Apply per-ayah repeat overrides onto live session state.
+ *
+ * @param {Record<string, number>} verseKeyRepeats
+ * @param {Record<string, number>} [existing]
+ * @returns {Record<string, number>}
+ */
+export function mergeVerseKeyRepeatOverrides(verseKeyRepeats = {}, existing = {}) {
+  const next = { ...(existing && typeof existing === 'object' ? existing : {}) }
+  Object.entries(verseKeyRepeats || {}).forEach(([key, count]) => {
+    const reps = Number(count)
+    if (!key || !Number.isFinite(reps) || reps <= 0) return
+    next[key] = Math.max(1, Math.min(50, Math.round(reps)))
+  })
   return next
 }
 

@@ -117,6 +117,14 @@ class MemorisationHistoryService
         /** @var array<string, array<string, mixed>> $pending */
         $pending = [];
 
+        $existingWordSpots = MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->where('spot_type', MemorisationWeakSpot::TYPE_WORD)
+            ->where('surah_number', (int) $assessment->surah_number)
+            ->whereBetween('ayah_number', [(int) $assessment->start_ayah, (int) $assessment->end_ayah])
+            ->get()
+            ->keyBy('spot_key');
+
         foreach ($weakWords as $word) {
             if (! is_array($word)) {
                 continue;
@@ -139,12 +147,17 @@ class MemorisationHistoryService
                 $ayahNumber,
                 $wordIndex
             );
+            /** @var MemorisationWeakSpot|null $existingSpot */
+            $existingSpot = $existingWordSpots->get($spotKey);
+            if (! $this->isReliableWordWeakness($word, $existingSpot)) {
+                continue;
+            }
             $pending[$spotKey] = [
                 'spot_type' => MemorisationWeakSpot::TYPE_WORD,
                 'surah_number' => $surahNumber,
                 'ayah_number' => $ayahNumber,
                 'word_index' => $wordIndex,
-                'verse_key' => $word['verse_key'] ?? ($surahNumber.':'.$ayahNumber),
+                'verse_key' => $word['verse_key'] ?? $word['verseKey'] ?? ($surahNumber.':'.$ayahNumber),
                 'spot_key' => $spotKey,
                 'severity' => $this->normaliseSeverity($word['severity'] ?? $word['severity_label'] ?? 'moderate'),
             ];
@@ -506,6 +519,130 @@ class MemorisationHistoryService
         }
 
         return $map;
+    }
+
+    /**
+     * Active, repeated word weaknesses for a range (feeds practice plans + Muraja'ah).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function reliableWeakWordsForRange(User $user, int $surah, int $from, int $to, int $limit = 16): array
+    {
+        if ($surah <= 0 || $from <= 0 || $to < $from) {
+            return [];
+        }
+
+        $rows = MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->where('spot_type', MemorisationWeakSpot::TYPE_WORD)
+            ->where('surah_number', $surah)
+            ->whereBetween('ayah_number', [$from, $to])
+            ->whereIn('status', [
+                MemorisationWeakSpot::STATUS_ACTIVE,
+                MemorisationWeakSpot::STATUS_IMPROVING,
+            ])
+            ->where(function ($query) {
+                $query->where('affected_attempt_count', '>=', 2)
+                    ->orWhere('severity', 'high');
+            })
+            ->orderByDesc('affected_attempt_count')
+            ->orderByDesc('last_identified_at')
+            ->limit(max(1, min(40, $limit)))
+            ->get();
+
+        $out = [];
+        foreach ($rows as $spot) {
+            $meta = is_array($spot->metadata) ? $spot->metadata : [];
+            $out[] = [
+                'surahId' => (int) $spot->surah_number,
+                'surah_number' => (int) $spot->surah_number,
+                'ayahNumber' => (int) $spot->ayah_number,
+                'ayah_number' => (int) $spot->ayah_number,
+                'wordIndex' => (int) $spot->word_index,
+                'word_index' => (int) $spot->word_index,
+                'text' => (string) ($meta['text'] ?? ''),
+                'verseKey' => (string) ($spot->verse_key ?? ($spot->surah_number.':'.$spot->ayah_number)),
+                'verse_key' => (string) ($spot->verse_key ?? ($spot->surah_number.':'.$spot->ayah_number)),
+                'severity' => match ((string) $spot->severity) {
+                    'high' => 'red',
+                    'low' => 'amber',
+                    default => 'red',
+                },
+                'reason' => 'persistent',
+                'persistent' => true,
+                'affected_attempt_count' => (int) $spot->affected_attempt_count,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Merge session weak words with durable registry entries (deduped).
+     *
+     * @param  list<array<string, mixed>>  $sessionWords
+     * @param  list<array<string, mixed>>  $persistentWords
+     * @return list<array<string, mixed>>
+     */
+    public function mergeWeakWords(array $sessionWords, array $persistentWords, int $limit = 16): array
+    {
+        $merged = [];
+        $seen = [];
+
+        foreach ([$sessionWords, $persistentWords] as $list) {
+            foreach ($list as $word) {
+                if (! is_array($word)) {
+                    continue;
+                }
+                $surah = (int) ($word['surah_number'] ?? $word['surahId'] ?? 0);
+                $ayah = (int) ($word['ayah_number'] ?? $word['ayahNumber'] ?? 0);
+                $index = $word['word_index'] ?? $word['wordIndex'] ?? $word['ayah_word_index'] ?? null;
+                if ($surah < 1 || $ayah < 1 || ! is_numeric($index)) {
+                    continue;
+                }
+                $key = $surah.':'.$ayah.':'.(int) $index;
+                if (isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+                $merged[] = $word;
+            }
+        }
+
+        return array_slice($merged, 0, max(1, min(40, $limit)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $word
+     */
+    public function isReliableWordWeakness(array $word, ?MemorisationWeakSpot $existing = null): bool
+    {
+        $status = strtolower((string) ($word['status'] ?? $word['reason'] ?? ''));
+        if (in_array($status, ['uncertain', 'gray', 'grey', 'pending', 'skipped'], true)) {
+            return false;
+        }
+
+        $confidence = isset($word['confidence']) && is_numeric($word['confidence'])
+            ? (float) $word['confidence']
+            : null;
+        $isHard = in_array($status, ['wrong', 'missing', 'incorrect', 'red', 'black', 'omitted', 'omission'], true)
+            || in_array((string) ($word['severity'] ?? ''), ['red', 'black', 'high'], true);
+        $isSoft = in_array($status, ['minor_mistake', 'partial', 'amber', 'close'], true)
+            || in_array((string) ($word['severity'] ?? ''), ['amber', 'low'], true);
+
+        if ($isHard) {
+            if ($confidence !== null && $confidence >= 0.72) {
+                return true;
+            }
+
+            return $existing !== null;
+        }
+
+        if ($isSoft) {
+            return $existing !== null && (int) $existing->affected_attempt_count >= 1;
+        }
+
+        return false;
     }
 
     private function normaliseSeverity(mixed $raw): string

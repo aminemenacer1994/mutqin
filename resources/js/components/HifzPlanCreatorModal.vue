@@ -17,11 +17,11 @@
               <span class="hifz-plan-kicker">{{ t('memorisation.planner.hifzPlan') }}</span>
               <h2 id="hifzPlanCreatorTitle" class="modal-title">{{ existingPlan ? t('hifzPlan.wizard.editTitle') : t('hifzPlan.wizard.createTitle') }}</h2>
             </div>
-            <button type="button" class="btn-close" aria-label="Close" @click="close"></button>
+            <button type="button" class="btn-close" :aria-label="t('common.close')" @click="close"></button>
           </div>
 
           <div class="modal-body">
-            <div class="hifz-plan-progress" aria-label="Plan setup progress">
+            <div class="hifz-plan-progress" :aria-label="t('hifzPlan.wizard.setupProgressAria')">
               <div class="hifz-plan-progress-head">
                 <div>
                   <span class="hifz-plan-progress-kicker">{{ t('hifzPlan.wizard.stepCounter', { current: currentStep + 1, total: steps.length }) }}</span>
@@ -247,7 +247,7 @@
                 <h3>{{ t('hifzPlan.your_hifz_journey_is_ready') }}</h3>
                 <p>{{ t('hifzPlan.review_todays_pace_then_start_and_let_mutqin_guide') }}</p>
               </div>
-              <div class="hifz-forecast-grid" aria-label="Hifz Journey Forecast">
+              <div class="hifz-forecast-grid" :aria-label="t('hifzPlan.wizard.forecastAria')">
                 <div v-for="item in forecastItems" :key="item.label" class="hifz-forecast-card">
                   <span class="hifz-forecast-icon"><i class="bi" :class="item.icon"></i></span>
                   <span>{{ item.label }}</span>

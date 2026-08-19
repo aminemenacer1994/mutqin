@@ -37,7 +37,7 @@ class MigrateLocalStorageController extends Controller
         $encodedState = json_encode($validated['state'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         if ($encodedState === false) {
-            return response()->json(['message' => 'Unable to encode migration payload.'], 422);
+            return response()->json(['message' => __('ui.api_migration_encode_failed')], 422);
         }
 
         MemorisationSyncState::create([

@@ -18,7 +18,7 @@ class ContactSubmissionController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Your message has been sent successfully.',
+            'message' => __('ui.contact_message_sent'),
             'data' => $submission,
         ], 201);
     }
@@ -31,11 +31,11 @@ class ContactSubmissionController extends Controller
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
         ], [
-            'name.required' => 'Please enter your name.',
-            'email.required' => 'Please enter your email address.',
-            'email.email' => 'Please enter a valid email address.',
-            'subject.required' => 'Please enter a subject.',
-            'message.required' => 'Please enter a message.',
+            'name.required' => __('ui.contact_name_required'),
+            'email.required' => __('ui.contact_email_required'),
+            'email.email' => __('ui.contact_email_invalid'),
+            'subject.required' => __('ui.contact_subject_required'),
+            'message.required' => __('ui.contact_message_required'),
         ]);
     }
 }

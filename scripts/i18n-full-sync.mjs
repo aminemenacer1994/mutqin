@@ -2,9 +2,12 @@
  * Sync all locale JSON files from en.json, apply missing-key translations,
  * and bootstrap es.json + ur.json.
  * Usage: node scripts/i18n-full-sync.mjs
+ *        node scripts/i18n-full-sync.mjs --prune
  */
 import fs from 'node:fs'
 import path from 'node:path'
+
+const PRUNE = process.argv.includes('--prune')
 
 const LOCALES_DIR = path.resolve('resources/js/locales')
 const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'en.json'), 'utf8'))
@@ -44,6 +47,23 @@ function deepMergeMissing(target, source) {
     }
   }
   return target
+}
+
+/** Drop keys not present in en.json while keeping translated leaf values. */
+function pruneToEnShape(localeData, enData) {
+  if (typeof enData !== 'object' || enData === null || Array.isArray(enData)) {
+    return localeData !== undefined ? localeData : enData
+  }
+  /** @type {Record<string, unknown>} */
+  const out = {}
+  for (const [key, enValue] of Object.entries(enData)) {
+    if (enValue && typeof enValue === 'object' && !Array.isArray(enValue)) {
+      out[key] = pruneToEnShape(localeData?.[key] ?? {}, enValue)
+    } else {
+      out[key] = localeData?.[key] !== undefined ? localeData[key] : enValue
+    }
+  }
+  return out
 }
 
 /** Flat translations for the 58 recently-added memorisation keys. */
@@ -595,6 +615,7 @@ function syncLocale(locale, { baseClone = null, patch = null } = {}) {
     : JSON.parse(fs.readFileSync(file, 'utf8'))
   deepMergeMissing(data, en)
   applyPatch(data, patch)
+  if (PRUNE) data = pruneToEnShape(data, en)
   fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`)
   const keys = flatten(data)
   const missing = flatten(en).filter(k => !keys.includes(k))

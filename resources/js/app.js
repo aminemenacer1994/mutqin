@@ -9,6 +9,11 @@ import { setupI18n, setLocale } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
 import { isBrowserOffline } from './utils/networkStatus';
+import enLocale from './locales/en.json';
+
+function resolveEn(key) {
+    return key.split('.').reduce((node, part) => (node && node[part] !== undefined ? node[part] : undefined), enLocale) ?? key;
+}
 
 const Homepage = defineAsyncComponent(() =>
   import(/* webpackChunkName: "homepage" */ './views/Homepage.vue')
@@ -44,12 +49,20 @@ const AdminDashboard = defineAsyncComponent(() =>
 // on the memorisation page, so load it as a separate async chunk to keep the
 // main bundle (and every other page) lean.
 const MemorisationBootFallback = {
+    computed: {
+        loadingTitle() {
+            return this.t('memorisation.a11y.workspaceLoading');
+        },
+        loadingDesc() {
+            return this.t('memorisation.a11y.workspacePreparing');
+        },
+    },
     template: `
         <div class="memorisation-boot-fallback" role="status" aria-live="polite">
             <div class="memorisation-boot-card">
                 <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                <strong>Loading memorisation workspace…</strong>
-                <span>Preparing your session tools.</span>
+                <strong>{{ loadingTitle }}</strong>
+                <span>{{ loadingDesc }}</span>
             </div>
         </div>
     `,
@@ -66,13 +79,19 @@ const MemorisationLoadError = {
     computed: {
         title() {
             return this.offline
-                ? 'You appear to be offline.'
-                : 'Something went wrong';
+                ? this.t('common.status.offlineTitle')
+                : this.t('common.status.errorTitle');
         },
         description() {
             return this.offline
-                ? 'Check your connection, then try again. We’ll retry automatically when you’re back online.'
-                : 'Something went wrong. Please try again.';
+                ? this.t('common.status.offlineDesc')
+                : this.t('common.status.errorDesc');
+        },
+        retryLabel() {
+            return this.t('common.status.retry');
+        },
+        returnHomeLabel() {
+            return this.t('common.status.returnHome');
         },
     },
     mounted() {
@@ -97,8 +116,8 @@ const MemorisationLoadError = {
                 <strong>{{ title }}</strong>
                 <span>{{ description }}</span>
                 <div class="memorisation-boot-actions">
-                    <button type="button" class="btn btn-sm btn-primary" @click="reload">Retry</button>
-                    <a class="btn btn-sm btn-outline-secondary" href="/">Return Home</a>
+                    <button type="button" class="btn btn-sm btn-primary" @click="reload">{{ retryLabel }}</button>
+                    <a class="btn btn-sm btn-outline-secondary" href="/">{{ returnHomeLabel }}</a>
                 </div>
             </div>
         </div>
@@ -151,7 +170,7 @@ function loadMemorisationChunk(attempt = 0) {
                     const notice = document.createElement('div')
                     notice.setAttribute('role', 'status')
                     notice.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.45);color:#fff;font:500 1rem/1.4 system-ui,sans-serif;text-align:center'
-                    notice.textContent = 'Updating Mutqin…'
+                    notice.textContent = resolveEn('common.status.chunkUpdating')
                     document.body?.appendChild(notice)
                 } catch (_) { /* best-effort */ }
                 url.searchParams.set('mutqin_force', String(Date.now()));
@@ -205,10 +224,12 @@ function showBootstrapFailure(error) {
     const mountTarget = document.getElementById('app');
     if (!mountTarget) return;
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
-    const title = offline ? 'You appear to be offline.' : 'Something went wrong';
+    const title = offline ? resolveEn('common.status.offlineTitle') : resolveEn('common.status.bootErrorTitle');
     const description = offline
-        ? 'Check your connection, then try again.'
-        : 'Something went wrong. Please try again.';
+        ? resolveEn('common.status.offlineDesc')
+        : resolveEn('common.status.bootErrorDesc');
+    const retryLabel = resolveEn('common.status.retry');
+    const returnHomeLabel = resolveEn('common.status.returnHome');
     mountTarget.innerHTML = `
         <main id="mainContent" tabindex="-1">
             <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
@@ -217,8 +238,8 @@ function showBootstrapFailure(error) {
                     <strong>${title}</strong>
                     <span>${description}</span>
                     <div class="memorisation-boot-actions">
-                        <button type="button" class="btn btn-sm btn-primary" onclick="window.location.reload()">Retry</button>
-                        <a class="btn btn-sm btn-outline-secondary" href="/">Return Home</a>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="window.location.reload()">${retryLabel}</button>
+                        <a class="btn btn-sm btn-outline-secondary" href="/">${returnHomeLabel}</a>
                     </div>
                 </div>
             </div>

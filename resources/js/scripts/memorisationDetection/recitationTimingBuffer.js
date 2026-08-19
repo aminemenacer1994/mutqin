@@ -12,20 +12,20 @@
  */
 
 /** Calm tajweed pace baseline (~115 wpm). */
-export const RECITATION_BASE_WORD_MS = 520
-export const RECITATION_MIN_WORD_MS = 380
-export const RECITATION_MAX_WORD_MS = 1400
+export const RECITATION_BASE_WORD_MS = 560
+export const RECITATION_MIN_WORD_MS = 420
+export const RECITATION_MAX_WORD_MS = 2200
 /** Breathing and normal word-to-word transitions. */
-export const RECITATION_INTER_WORD_PAUSE_MS = 280
+export const RECITATION_INTER_WORD_PAUSE_MS = 360
 /** Madd / tajweed elongation allowance. */
-export const RECITATION_TAJWEED_HOLD_MS = 650
+export const RECITATION_TAJWEED_HOLD_MS = 820
 /** Natural pause between ayahs. */
-export const RECITATION_AYAH_BOUNDARY_MS = 1200
+export const RECITATION_AYAH_BOUNDARY_MS = 1600
 /** Floor for silence auto-stop — not a global timeout bump. */
-export const RECITATION_MIN_SILENCE_STOP_MS = 2800
+export const RECITATION_MIN_SILENCE_STOP_MS = 3200
 /** Cap so a genuine long stop still ends the check. */
-export const RECITATION_MAX_SILENCE_STOP_MS = 6500
-export const RECITATION_TIMING_BUFFER_MAX_MS = 4200
+export const RECITATION_MAX_SILENCE_STOP_MS = 9000
+export const RECITATION_TIMING_BUFFER_MAX_MS = 6800
 
 /** Recent-session window — not a permanent learner profile. */
 export const RECENT_PACE_SAMPLE_MAX = 8
@@ -33,10 +33,10 @@ export const MIN_RECENT_PACE_SAMPLES = 2
 
 /** Matches liveCursor LIVE_PACE_MAX_WORDS_PER_SECOND — adaptive pacing pivots on this. */
 export const ADAPTIVE_PACE_BASE_WORDS_PER_SECOND = 1.7
-export const ADAPTIVE_PACE_MIN_WORDS_PER_SECOND = 0.8
-export const ADAPTIVE_PACE_MAX_WORDS_PER_SECOND = 3.4
-export const ADAPTIVE_PACE_MIN_DRIP_MS = 240
-export const ADAPTIVE_PACE_MAX_DRIP_MS = 780
+export const ADAPTIVE_PACE_MIN_WORDS_PER_SECOND = 0.55
+export const ADAPTIVE_PACE_MAX_WORDS_PER_SECOND = 4.2
+export const ADAPTIVE_PACE_MIN_DRIP_MS = 220
+export const ADAPTIVE_PACE_MAX_DRIP_MS = 920
 
 const DEFERRABLE_STATUSES = new Set(['omitted', 'skipped'])
 /** Live paint only — incorrect-word detection must never be softened here. */
@@ -108,7 +108,7 @@ export function estimateRecitationPaceFactor({
 function clampPaceFactor(value) {
   const pace = Number(value)
   if (!Number.isFinite(pace) || pace <= 0) return 1
-  return Math.max(0.65, Math.min(2.2, pace))
+  return Math.max(0.55, Math.min(3.6, pace))
 }
 
 export function createRecitationPaceObserver() {
@@ -227,7 +227,8 @@ export function resolveAdaptiveLivePaceParams({
   )
 
   let maxAdvancePerUpdate = 1
-  if (pace <= 0.75) maxAdvancePerUpdate = 3
+  if (pace <= 0.65) maxAdvancePerUpdate = 4
+  else if (pace <= 0.75) maxAdvancePerUpdate = 3
   else if (pace <= 0.9) maxAdvancePerUpdate = 2
 
   const slack = pace >= 1.45 ? 2 : 1

@@ -1,0 +1,2199 @@
++{count} more
++{n} this week
+, hover, or long-press to peek temporarily
+1 repetition
+1, 3, 7, 14, 30, 60 days
+1-3 ayahs/day
+1. Listen:
+1–2 min
+2. Pause and repeat:
+3-5 ayahs/day
+3. Extend:
+30 days
+5-10 ayahs/day
+7 days
+A couple of coloured marks need a slower pass.
+A few ayahs is enough for a first session.
+A few ayahs need another pass. Review the weak ones first.
+A few days away — pick up gently, one ayah at a time.
+A few extra repetitions will help.
+A few phrases still need attention.
+A few short questions.
+A few spots need another look ({percent}% matched).
+A few spots still need help.
+A few spots still need help. This plan adds a little more support.
+A few verses still need support.
+A few words need clearer saying.
+A few words were missed. We will go back over them gently.
+A focused pass on the weaker words and phrases is recommended first.
+A lighter workload for busy days, with more time for careful revision and steady confidence.
+A little long
+A little more practice will help
+A little short
+A month of showing up. May your connection to the Qur'an deepen.
+A practical daily rhythm for new ayahs, review, and long-term retention.
+A quiet return to the Qur’an is already remembrance.
+A session action is already in progress. Please wait a moment and try again.
+A session is waiting
+A short focused plan will help.
+A short label for this reflection
+A short revision pass will help the words settle before you check again.
+A short stretch remains in this surah. This plan completes the section you began.
+A short {time} practice will lock this in.
+A week of consistency. May Allah make it easy to continue.
+A word of remembrance
+AI Memorisation Checker · Ayah {number}
+AI Memorisation Checker · {surah} · {target}
+AI Recite
+AI Recite checks
+AI Recite may open if a verse needs a spoken check
+AI Recite result and practice plan
+AI Recite unavailable. Your session is saved. Choose confidence or continue.
+AI can sometimes miss or mishear words. Treat this as a guide only — verify with a qualified teacher before relying on it for your Hifz.
+AI check
+AI checks
+AI detected {count} possible issue(s). Tap any amber or red word that AI got wrong to turn it green and update the analysis.
+AI detected {count} word order issue(s). Tap any false highlight to mark it correct and update the results.
+AI did not detect a word-level mistake. Still verify the ayah yourself before saving.
+AI memorisation
+AI memorisation feedback is a guide. Verify important mistakes against the ayah before you save or reset.
+AI memorisation review
+AI memorisation tools
+AI recitation
+AI recitation check is active
+AI recitation is in beta and may miss mistakes. Treat feedback as a guide — verify with a qualified teacher before relying on it for your Hifz.
+AI review check
+AI-check behaviour
+About
+About 1–2 minutes
+About {minutes} minutes
+Accuracy
+Accuracy {accuracy}% · {count} words · {techniques}
+Accuracy: {score}%
+Accuracy: {value}%
+Achieved. You can continue to the next session.
+Active Ayah
+Active days
+Active now
+Active practice setup
+Active study days in a row.
+Adaptive
+Add new verses while gently revising earlier ones.
+Add note
+Add one ayah at a time to a growing run
+Adjust Plan
+Adjust plan
+Adjust the Arabic text size for better readability
+Adjust tools
+Advance or reinforce.
+Advanced
+Advanced Metrics
+After a session, Mutqin suggests a next range and tools so revision stays clear.
+After a session, note how confident you felt so the next step can stay useful.
+After each ayah
+After practice, AI Memorisation listens and shows where recall needs care.
+After today's new ayahs
+After you begin, Mutqin keeps a steady listen–repeat rhythm so you can focus on the ayahs:
+Again
+Alhamdulillah
+All
+All memorised
+All memorised ayahs
+All muraja'ah
+All sessions
+Allow microphone
+Allow microphone access in your browser settings, then try again.
+Almost done
+Also: {technique}
+Alḥamdulillāh. Surah {surah} complete
+Alḥamdulillāh. Your progress is saved.
+Amiri Quran
+Analysing
+Analytics unavailable
+Anchor
+Anchor Mode disabled
+Anchor Mode: Key words will be highlighted as memory hooks
+Anchor Mode: Using {anchorCount}
+Anchor mode off · use key words as memory hooks
+Anchor points per ayah
+And We have certainly made the Qur’an easy for remembrance.
+And be patient, for indeed Allah does not allow the reward of those who do good to be lost.
+And whoever puts their trust in Allah — He is sufficient for them.
+Another pass complete
+Answer a few short questions (and recite if needed) so we can see which verses are firm and which still need support. Your next plan updates from this.
+Any place in the mushaf
+Any surah
+Applied
+As for those who strive for Us, We shall guide them to Our paths.
+As the text fades, recite from the heart.
+As words fade, let your memory lead — ask Allah for firmness.
+Ask Allah for benefit in what you memorise, then begin gently.
+Assalamu alaikum
+Assalamu alaikum, {name}
+Assessing…
+Assessment
+Assessment completed
+Assessment results
+At ayah {n}
+Audio
+Audio choose
+Audio help
+Audio is not available for this ayah yet. Try another reciter or refresh the session.
+Audio isn't ready yet.
+Audio isn't ready yet. Try again in a moment.
+Audio not available for this ayah
+Audio not available for verse {number}
+Audio only
+Audio only for this reciter — word highlighting is unavailable.
+Audio progress
+Audio recitation is in beta. AI can make mistakes — always verify with a qualified teacher.
+Audio recitation · Beta
+Auto moves on immediately, Listen then recite pauses for your turn inside audio playback, and No waits for manual control. This is separate from Talqin mode in Memorisation Techniques.
+Auto moves to the next queue item when audio ends.
+Auto-advance
+Auto-follow
+Auto-follow is active. The current line stays near eye level.
+Auto-follow is on again.
+Auto-follow off
+Auto-follow on
+Auto-follow paused
+Auto-follow paused because you scrolled manually.
+Available
+Available after you start today's session
+Average quality
+Average retention
+Avg grade
+Ayah
+Ayah AI Recite
+Ayah Range
+Ayah activity
+Ayah activity chart
+Ayah complete
+Ayah completed! Moving to next...
+Ayah display
+Ayah number
+Ayah order drifted. Restart from the first ayah of the range.
+Ayah order was uncertain. This plan uses linking and phrase ordering before moving on.
+Ayah pairs are active. Practise each ayah, then join it with the next.
+Ayah range
+Ayah text is not ready yet. Close and try the check again.
+Ayah text not ready
+Ayah text unavailable
+Ayah tools
+Ayah {ayah}
+Ayah {ayah} carried most of the difficulty.
+Ayah {ayah} needs a little reinforcement.
+Ayah {ayah} · Repetition {current} of {total} · {phase}
+Ayah {number}
+Ayah {number} audio downloaded. Open your device Downloads folder to find the MP3.
+Ayah {n}
+Ayahs
+Ayahs are loaded, but the mushaf page list has not synced yet. Switch back to Stacked or reopen this session.
+Ayahs practised
+Ayahs that could use a quick refresh.
+Ayahs to revisit
+Ayahs you've kept
+Ayahs {start}–{end}
+Back
+Back online. Live APIs are available again.
+Back to Self-Check
+Back to mushaf
+Back to plan
+Back to session complete
+Back to top
+Balanced
+Balanced checking and practical feedback.
+Balanced new and review work.
+Barakallahu feek
+Based on this session
+Based on your session and confidence.
+Before you begin
+Before you continue, check what stuck
+Begin
+Begin a set to see your place here.
+Begin in the name of Allah. A small, steady set is better than rushing ahead.
+Begin muraja'ah
+Begin the same set again
+Begin this set
+Begin with Al-Fatihah
+Begin with Bismillah. Pick a few ayahs, listen, repeat, then try from memory.
+Begin with the Qur'an
+Begin with trust, then take the next ayah with care.
+Beginner
+Best for a calm routine where consistency matters more than speed.
+Best for listen-and-repeat practice.
+Best for most learners who want useful correction without slowing the session down.
+Best for:
+Best for: Active recall testing
+Best for: Building long passages
+Best for: Deep memorisation sessions
+Best for: Memorising key vocabulary
+Best if you want a lighter workload while building confidence and consistency.
+Best skill
+Best when you want tighter correction and can handle a more demanding session.
+Beta
+Beta · verify with a qualified teacher.
+Bismillah
+Bismillāh — begin when your heart is ready.
+Blends new memorisation and revision into one manageable daily plan.
+Blue
+Blue — merge
+Blur
+Blur Everything
+Blur Intensity
+Blur Mode works best without chaining, so chaining was turned off.
+Blur everything
+Border
+Browser speech recognition did not return a transcript. Try again and allow speech recognition if prompted.
+Build longer connected runs from the first ayah outward.
+Building
+Built from your AI Recite result.
+By The Grace Of Allah
+Calm repetition is enough for today.
+Cancel
+Chain review
+Chaining is enabled. Choose linking or cumulative in Practice Tools to start.
+Chaining is on, but no method is selected yet.
+Chaining off · {count} repeats
+Change Quran font
+Change Quranic font
+Change set
+Changes the audio voice for the session. Word highlighting stays on for this reciter.
+Chart range
+Check
+Check again
+Check complete
+Check mic
+Check my memorisation
+Check results
+Check the message below, then retry when your microphone is ready.
+Check the word colours, then save your attempt or try again.
+Check this range
+Check this range again
+Check this range again.
+Check what you kept
+Check what you remember
+Check your connection, then try again. We’ll retry automatically when you’re back online.
+Check your memorisation
+Check your memorisation first, then your plan appears here.
+Check your memorisation first. Your practice plan will appear here afterwards.
+Check your memorisation next to unlock a tailored practice plan.
+Check your memorisation to unlock your next plan, or continue when you are ready.
+Check your memorisation to unlock your next plan.
+Check your memorisation when ready, keep practising this range, or choose another.
+Check your microphone or connection, then try again.
+Check {range} again.
+Checking the recording...
+Checking your recitation…
+Checking…
+Checks
+Choose Different Session
+Choose Mushaf text style
+Choose Your Daily Goal
+Choose Your Support Level
+Choose a Surah
+Choose a method and how many questions, then start.
+Choose a reciter before you continue.
+Choose a session range before opening the memorisation checker.
+Choose a session range before starting a session Recite Check.
+Choose a session when ready.
+Choose a small range, repeat with structure, then return for recall and review without dashboard clutter.
+Choose a small set of ayahs and begin with Bismillah.
+Choose a surah
+Choose a surah and ayah range to begin.
+Choose a surah and range, then start.
+Choose a surah...
+Choose a valid surah and ayah range before starting.
+Choose an ayah before starting Recite Check.
+Choose ayah
+Choose ayahs
+Choose ayahs and start
+Choose ayahs, practise with tools, check with AI, then follow your next plan. Allow your microphone when the browser asks.
+Choose chaining method
+Choose differently
+Choose how many new ayahs you want to learn each day.
+Choose how many repeats, which reciter, and the playback speed for each ayah.
+Choose how many times each ayah should repeat.
+Choose how much checking and guidance you want during practice.
+Choose how to revise
+Choose how to revise, then start when you are ready.
+Choose surah, range, and reciter,Start the session from Controls
+Choose today's goal
+Choose what you memorise
+Choose where to start
+Choose your ayahs
+Choose your recitation setup
+Choose your study flow
+Choosing a reading view that stays comfortable.
+Chunk {current} of {total}
+Chunking
+Clear filters
+Clear recall. About {percent}% matched.
+Clear repetition
+Clearer saying
+Close
+Close advanced metrics
+Close confirmation dialog
+Close help and learning
+Close memorisation review
+Close open panel or modal
+Close panel
+Close rename recording dialog
+Close self-check
+Close tour
+Close — keep going.
+Closer checking for stricter mastery.
+Cloud sync failed. Retrying in the background…
+Collapse
+Collapse your notes
+Coloured marks look steady — keep practising gently.
+Come back for a short review tomorrow.
+Compact breakdown for this metric group.
+Compared with earlier attempt
+Comparing with the Qur’an text…
+Complete
+Complete your first session and your weekly activity will appear here.
+Completed
+Completing session…
+Concentrate on one ayah before moving forward
+Confidence
+Confidence was high, but the check found a weak spot. This plan reinforces that gap.
+Confidence: {value}%
+Confident
+Confirm
+Confirm action
+Congratulations. Today&apos;s Hifz session is complete.
+Connect each verse to the next to improve flow.
+Connect each āyah to the next as one smooth flow.
+Connection lost during AI Recite. Progress is saved; retry later or continue below.
+Consistency check
+Consistency matters more than pace. You showed up, and that counts.
+Continue
+Continue and review
+Continue and review is active. Mistakes are noted without stopping you.
+Continue forward
+Continue from where you left off.
+Continue memorising {surah} from where you stopped.
+Continue or begin again.
+Continue setup
+Continue to Ayahs {start}–{end}
+Continue to Mutqin
+Continue to next session
+Continue to plan
+Continue to the next ayah?
+Continue to the next set.
+Continue when ready — a light review is optional.
+Continue where you left off
+Continue while this still feels fresh.
+Continue with Ayah {ayah}
+Continue with Ayahs {start}–{end}
+Continue with {chapter}
+Continue with Āyah {ayah}
+Continue with Āyahs {from}–{to}
+Continue your hifz
+Continue your session.
+Continuing without AI Recite. Choose confidence, or start the plan.
+Controls
+Controls tabs
+Correct
+Could not assess clearly
+Could not complete
+Could not delete this note. Please try again.
+Could not identify surah
+Could not load your notes. Please try again.
+Could not save settings. Please try again.
+Could not save this note. Please try again.
+Could not save your response. Please try again.
+Could not start the check.
+Could not start the session. Please try again.
+Could not start. Please try again.
+Could not sync progress. Your work is saved on this device and will retry automatically.
+Couldn't play the audio.
+Couldn't play this ayah. Try again.
+Couldn't start playback.
+Couldn't start the audio.
+Couldn’t fully check
+Couldn’t load this list.
+Couldn’t load your path.
+Counts
+Covered
+Create Plan
+Create Your Hifz Plan
+Create free account
+Ctrl/Cmd + S
+Cumulative
+Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats {count} time.
+Cumulative flow: repeat 1, then 1-2, then 1-2-3. Each block repeats {count} times.
+Cumulative · {count} repeats
+Current Session
+Current ayah
+Current session analytics
+Current word revealed
+Currently Learning: {range}
+Currently Learning: {surah} · {range}
+Currently learning
+Customize how the Quran appears
+Daily Target
+Daily ayahs
+Days remaining
+Days with the Qur'an
+Decrease font size
+Decrease text size
+Defaults
+Delay between recitations (secs)
+Delete
+Delete Recite Check?
+Delete all
+Delete all recordings for this ayah?
+Delete recording?
+Delete saved session?
+Delete selected
+Delete selected sessions?
+Delete session
+Delete this note?
+Delete this recording
+Deleted {count} recording for ayah {number}.
+Deleted {count} recordings for ayah {number}.
+Deselect all
+Designed for faster progress with tighter daily structure and more review.
+Detailed analytics
+Detected words
+Different session
+Difficulty
+Discard
+Discard saved session?
+Dismiss
+Display
+Displayed ayah review reset.
+Do a short focused review.
+Don't save
+Done
+Down
+Download
+Download ayah audio for offline listening
+Download did not start. Check your connection, then tap download again.
+Download ready ✓
+Downloaded ayah {number} audio
+Due
+Due now
+Duration
+During the session
+Each session is a quiet act of devotion. May it be accepted.
+Each session keeps only the essentials: what it is, where it is, and how to get back in.
+Each step adds the next ayah while repeating everything learned so far — like building a longer run from the start.
+Earlier material faded. This plan schedules an earlier murājaʿah.
+Earlier verses faded a little. We will review them sooner.
+Easy
+Echoing stop on ق ط ب ج د.
+Edit
+Edit Hifz Plan
+Edit Plan
+Editing
+Editing note
+Enable Word audio to preview individual words.
+Enable audio for individual word chips
+Enable microphone
+End
+End session
+End this session now?
+End this sitting
+End this sitting?
+Ended early
+Ending…
+English Transliteration
+English meaning of each verse
+English meaning under each Arabic word
+English, Arabic, or French UI
+Enter
+Enter a minimum of 3 words. Results match the same passage in Arabic text or translation.
+Enter a recording name.
+Enter a valid ayah range or leave both range fields blank.
+Estimated Completion
+Estimated Duration
+Even a few ayahs, done with sincerity, are beloved to Allah.
+Everything centres on one calm memorisation session at a time
+Everything else dims while you work on the active ayah. The next ayah stays hidden until you finish this one.
+Excellent work. Every word was revealed through your recitation.
+Expand
+Expand your notes
+Export failed, retry
+Fading Mode: Word-by-Word disabled
+Failed to download ayah audio
+Failed to download verses
+Failed to load offline surah
+Failed to load surah list
+Failed to load verses
+Fill blank
+Fill the missing word
+Filter
+Filter value
+Finish & re-test
+Finish for now?
+Finish your session, then choose Check my memorisation to open this check.
+Finished ranges will appear here for muraja'ah.
+Finished this week
+Finishing…
+First review
+Flash weak words before the full āyah.
+Flashcard
+Flow
+Flow: selected ayahs in order, each ayah repeated {count} time.
+Flow: selected ayahs in order, each ayah repeated {count} times.
+Fluent and accurate — the ayah flows from memory with confidence
+Focus
+Focus ayahs
+Focus keeps attention on the active ayah,Blur hides text so you recite from memory,Talqin is listen, then your turn
+Focus on one coloured mark at a time — hold gently, then listen once if needed.
+Focus on the highlighted word.
+Focus on the highlighted word: {word}
+Focus on these words next.
+Focus on this word
+Focus on weak areas
+Focus on āyah {ayah}
+Focus on āyahs {ayahs}
+Focus one ayah
+Focus practice on weaker areas.
+Focus strength
+Focus words: {strengthened} / {total} strengthened
+Focus, Blur, and Talqin help you listen and repeat. Tap a tool to preview it.
+Focused ayah ranges
+Focused review
+Focused revision recommended
+Follow the recommendation, then improve weak spots over time.
+Follow the words calmly and recite with sincerity.
+Follow the words calmly — may Allah open your heart.
+Follow this āyah only. Let it settle.
+Follow your next plan
+Font
+Font size
+Font size: {defaultFontSize}%
+Font {font}
+For The Next Step
+Forecast
+Fragile
+Frequent replay
+From
+From memory
+From this session
+From your checks
+From your quiz
+From your voice check
+Full Quran
+Full Screen
+Full player
+Full range
+Full recommended range
+Full session with stronger emphasis on weak areas
+Full text visible
+Full-range revision
+Full-range revision is active. You will revisit the whole selected range.
+General
+Gentle Guidance
+Get a suggested next range and goal,Use the matched tools for that session
+Get started
+Getting ready
+Getting the words right
+Ghunnah / Idgham with ghunnah
+Give one ayah in your range its own repeat count — useful when an ayah needs extra practice.
+Gives extra attention to ayahs that need reinforcement before they become backlog.
+Go slow on the coloured marks below.
+Go to recording library
+Goal
+Gold words are your hooks — notice them first.
+Gold-marked words are your hooks — say them clearly, then the full āyah.
+Good
+Good effort. Strengthen the weak words next.
+Good overall ({percent}%), with a few spots to tighten.
+Good overall, but the order of verses slipped a little.
+Good overall, with a few spots to tighten.
+Good overall, with a pause in verse {ayah}.
+Good overall, with pauses in {count} verses.
+Got it
+Grade yourself
+Gradual hiding is active. More words hide after each successful repetition.
+Gradual hiding is shaping how much text stays visible.
+Gradually hide the text
+Gradually hide words to strengthen recall.
+Gray
+Gray — clear / silent marks
+Great job. Continue to the next ayah.
+Green
+Green — soft nasal hold
+Grow the passage step by step
+Grow the passage step by step (Cumulative)
+Growing the passage is active. Each step adds one more ayah.
+Guided practice
+Hamzat al-wasl and silent letters that are not pronounced.
+Hard
+Hear it first, then recite it back
+Hear the ayah clearly, then prepare to repeat.
+Help
+Help & Learning
+Help topics
+Here is a calm look at your progress on this surah.
+Here is your practice plan from AI Recite.
+Hesitation
+Hidden noon sound and non-nasal joining.
+Hide details
+Hide future words and reveal them as you recite correctly.
+Hide future words and reveal them as you recite.
+Hide more of the text gradually to strengthen recall
+Hide stats
+Hide the Qur’an text and recite from memory.
+Hide the ayah and recite from memory
+Hide the text little by little
+Hide the words bit by bit
+Hide words so you remember them.
+Hide words step by step.
+Hifz
+Hifz Plan
+Hifz plan deleted
+Hifz sessions paused mid-range. Resume exactly where you left off and continue building your memorisation.
+High Precision Mode
+Higher pace, stronger commitment.
+Higher values dim non-active verses more aggressively.
+Highlight memory words
+Highlight memory words as recall hooks.
+Highlights key words as memory anchors to help recall the entire ayah.
+Hints helped a lot. Next time we will show a little less text.
+Hizb
+Hizb number
+Hold
+Hold onto
+Hold onto key words
+Hold to reveal
+Home
+How
+How Mutqin mistake detection works
+How Mutqin stays focused
+How Talqin flows
+How confident do you feel with this range?
+How it went
+How long this recitation has taken — used to personalise your next plan
+How long this recitation took
+How long to pause after the reciter so you can repeat before the next ayah starts.
+How many times each step is repeated.
+How much of the text stays visible while you practise.
+How often you sat with the Qur'an.
+How quickly the reciter plays.
+How this helps
+How you will practise
+How your recitation checks went.
+However long it's been, today is a good day to return.
+I'm ready
+Idgham shafawi
+If today feels heavy, keep the session small and sincere.
+Ikhfa / Idgham without ghunnah
+In Progress
+In session
+In your hifz
+Incorrect
+Increase font size
+Increase text size
+Indeed, with hardship comes ease.
+Insights
+Intensive
+It felt strong, but one part still needs support. We will focus there.
+Itqan
+Join ayahs gradually so the passage stays connected.
+Join ayahs together
+Join ayat is active. Neighbouring ayahs are linked so the passage flows.
+Join neighbouring ayahs into a flowing sequence.
+Join the āyahs
+Join verses together
+Join verses you just learned.
+Jump to first ayah
+Jump to last ayah
+Just finished
+Just now
+Juz
+Juz number
+Keep
+Keep a few key words showing
+Keep a few key words showing.
+Keep colours on: green/purple = soft nasal hold, red = stretch, orange = light bounce.
+Keep going
+Keep practising this simpler plan, then test with AI Recite again.
+Keep ranges small for focused memorisation.
+Keep session
+Keep something fresh
+Keep the active word near eye level during longer checks
+Keep this pace when you check.
+Keep this pace. Move on while the range is still fresh.
+Keep this set of ayahs
+Keep today small and consistent
+Keep your session steady instead of guessing how many times to repeat.
+Keep your tongue, eyes, and heart together on this ayah.
+Keeping earlier memorisation strong over time.
+Keeping the order
+Keeps momentum high while still scheduling reviews after new work.
+Keeps the current recitation line near eye level.
+Keeps the full flow while giving extra attention to weaker words and ayat.
+Kept
+Key words stay visible as recall hooks
+Keyboard Shortcuts
+Labial merging with م.
+Language
+Larger text
+Last AI Recite accuracy: {score}%
+Last opened {date}
+Last saved
+Last sitting
+Last {days} days · {sessions} sessions · {ayahs} ayahs · {active_days} active days.
+Lateef
+Latin script pronunciation aid
+Learn
+Learning
+Learning Style
+Learning: {surah}
+Left at ayah {n}
+Left off at
+Let’s practise this range again
+Lifetime memorisation progress.
+Light
+Light checking and softer feedback.
+Linking
+Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats {count} time.
+Linking flow: repeat the current ayah, the next ayah, then both together. Each step repeats {count} times.
+Linking · {count} repeats
+Listen & Follow
+Listen and follow the recitation.
+Listen and follow.
+Listen and repeat
+Listen and repeat is active. Play the ayah, then recite it yourself.
+Listen back to your recitation
+Listen carefully and follow along.
+Listen carefully. Your turn comes after the audio.
+Listen for how this āyah links to the next.
+Listen once and follow the words.
+Listen once — gold-marked words need extra care.
+Listen once, then hold a little longer
+Listen once, then hold a little shorter
+Listen once, then recite aloud.
+Listen once, then repeat the phrase
+Listen once, then repeat.
+Listen then recite
+Listen to each ayah, repeat it, then try from memory.
+Listen to each section, then repeat it
+Listen to the active ayah and follow calmly.
+Listen to the ayah, then repeat it yourself.
+Listen with focus, repeat each ayah, then recite without looking when you feel ready.
+Listen with presence
+Listen, follow and repeat at a comfortable pace. Choose the method that helps you stay steady.
+Listen, pause, repeat, and extend at a steady pace so you can focus on the ayahs themselves.
+Listen, then choose
+Listen, then recite
+Listen, then repeat — one āyah at a time.
+Listen, then say it.
+Listening
+Listening helped a lot. Next time we will lean a bit more on memory.
+Listening now. Recite the highlighted word to continue.
+Listening paused. Please try again.
+Listening with you. Take your time — finish the whole passage, then tap Stop when you are done.
+Listening…
+Live
+Live memorisation word check
+Load a surah first before downloading
+Loaded cached Recite Check.
+Loaded cached memorisation analysis.
+Loaded {surah} from offline storage
+Loading Quran search index...
+Loading memorisation workspace…
+Loading recording
+Loading recordings…
+Loading verses for the new reciter…
+Loading your notes…
+Loading...
+Loading…
+Lock in one ayah before the next appears
+Log in
+Log in to open your memorisation workspace and keep progress in sync.
+Login
+Logout
+Looking good
+Low
+Low pressure, easy to maintain.
+Madani Mushaf (QCF)
+Madd (elongation)
+Main focus
+Maintain a steady pace with enough revision to strengthen long-term memory.
+Manual recording
+Manually adjusted
+Mark as AI mistake.
+Marked correct — analysis updated.
+Mastered
+Match
+Match {percent} percent
+Matched
+May Allah strengthen what you have memorised and make it firm in your heart.
+May Allah strengthen what you have memorised.
+Meaning
+Memorisation assessment could not be saved on this device right now.
+Memorisation assessment deleted.
+Memorisation assessment discarded.
+Memorisation assessment saved to recordings library.
+Memorisation check result
+Memorisation checker reset.
+Memorisation review
+Memorisation technique
+Memorisation tools
+Memorisation workspace failed to load
+Memorised
+Memorised so far
+Memorised today
+Memorizing
+Memory Review
+Memory breakdown
+Memory prompts were used often. This plan reduces hints with progressive Mushaf hiding.
+Memory-word highlighting is active. Key words stay marked as recall hooks.
+Metadata
+Method
+Microphone access is blocked. Allow the microphone, then try recording again.
+Microphone access is required for AI Recitation. Check your browser permissions and try again.
+Microphone access was blocked. Allow microphone permission, then try again.
+Microphone is live — recite from memory. Words colour as they are recognised.
+Mini player
+Minor reinforcement needed
+Missed
+Missed words
+Mistake at {word}. Try that word again.
+Mistake confirmed
+Mistake feedback
+Mistake handling
+Mistake sound
+Mistake sound is on. A soft cue plays when a mistake is confirmed.
+Mistakes
+Mistakes: {count}
+Mixed
+Mixed Flow
+Moderate pace and revision.
+More options
+More practice needed
+More text hides after each successful repeat. Hold Space or long-press to peek when you need a hint.
+Morning self-check
+Most Improved:
+Most Replayed Ayahs
+Most of this sounded clear.
+Most words landed cleanly. Keep this pace while the range is fresh.
+Most words were right, but the order was a little unsure.
+Mostly clear, with a small pause in verse {ayah}.
+Mostly clear, with one small pause.
+Mostly secure
+Move faster through memorisation while accepting a heavier daily revision load.
+Moving to the next repetition.
+Muhammad Asad
+Multiple choice
+Muraja'ah
+Mushaf
+Mushaf layout
+Mushaf page couldn’t load
+Mushaf tools
+Mushaf view
+Mushaf view and font options stay hidden until the session begins.
+Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help.
+Mutqin listens, follows your place, and highlights mistakes.
+Mutqin marks important words in each ayah. Use them as anchors to pull the rest of the verse back from memory.
+Mutqin plays each section for you. Listen closely, then pause and repeat from memory before moving on.
+Mutqin will start the timer, audio, and ayah highlighting together.
+My Lord, increase me in knowledge.
+My progress
+Mā shā’ Allāh — check complete
+Mā shā’ Allāh. You are ready to test.
+Mā shā’ Allāh. You completed this surah. This plan begins the next surah gently from the opening ayahs.
+Name this session so you can find it again later.
+Nasalisation and joining with a nasal sound.
+Navigation
+Near misses to polish.
+Need a hint?
+Need a hint? Peek at the text
+Needs Focus:
+Needs Review
+Needs a slower pass
+Needs another listen
+Needs another short review
+Needs attention
+Needs more practice
+Needs muraja'ah
+Needs practice
+Needs review
+Needs work
+Neighbouring ayahs are linked into one flowing sequence. Choose linking (pairs) or cumulative (growing passage) below.
+Network error. Check your connection.
+New
+New Memorisation First
+New ayahs
+New reflection
+New set
+Next
+Next ayah
+Next focus
+Next in your plan
+Next muraja'ah
+Next mushaf page
+Next plan
+Next repetition
+Next review
+Next review {date}. {reason}
+Next review: {label} · {confidence}
+Next session
+Next step
+Next surah
+Next verses while this still feels fresh.
+Next āyāt ({start}–{end})
+Next: add one ayah to the block
+Next: single -> next -> pair
+Next: start {surah} · āyahs {from}–{to}
+Nice work — you can continue while this still feels fresh.
+Nice work. Next verses while this still feels fresh.
+Nice work. Next verses. Keep the order steady.
+Nice — that is right.
+No AI Recite checks yet.
+No active session to save
+No advanced insights yet
+No analytics for this session
+No audio was captured.
+No ayah audio played yet for this session.
+No ayah replay data available yet.
+No ayahs scheduled yet
+No clear Arabic words were detected. Record again closer to the microphone.
+No clear weak areas were identified, so the full range is recommended.
+No completed sessions yet
+No data yet
+No insights yet
+No internet connection. Mutqin will resume when you're back online.
+No matches found
+No matching ayahs found for this passage and filter.
+No notes yet
+No notes yet.
+No optional tools selected — listening and repetition only.
+No practice this week yet.
+No reading aids active
+No recordings yet
+No saved Recite Checks for this ayah yet.
+No saved sessions yet
+No sessions in progress
+No sessions yet
+No sessions yet.
+No special hold
+No surah
+No urgent reviews
+No usable audio was captured. Try recording again.
+No verses loaded. Check your network connection.
+No verses to quiz on
+None
+Normal, obligatory, and necessary lengthening.
+Not assessed
+Not available right now
+Not begun
+Not enough matched words to assess
+Not evaluated yet.
+Not firm yet
+Not firm yet — practise this simpler plan, then test again.
+Not matched yet
+Not quite — we will practise that.
+Note
+Note deleted.
+Note saved
+Note saved.
+Note updated.
+Notes
+Notes & Reflections
+Notes & reflections for this ayah
+Notes and reflections
+Nothing here yet
+Nothing in this list.
+Nothing is ready to save yet. Load a surah range or start a session first.
+Nothing needs muraja'ah now. Alhamdulillah.
+Nothing needs muraja'ah right now. Alhamdulillah.
+Nothing to play. Check the selected range.
+Noto Naskh Arabic
+Now reciting
+Now repeat this phrase aloud.
+Number of times to repeat each chaining step
+Off
+Offline
+Offline mode active. Reading falls back to cached ranges.
+Offline surah removed
+On ayah {current} of {total} in this range
+On iPhone or iPad: Settings → Safari → Microphone → Allow, then return and try again.
+On target
+One ayah at a time
+One ayah at a time is active. The next ayah unlocks after you finish this one.
+One careful pass should lock the remaining gaps.
+One day with the Qur'an. Return tomorrow.
+One or more ayahs still need care. This plan returns to that range with focused support before moving on.
+One phrase in Ayah {ayah} needs a little reinforcement.
+One verse at a time
+One verse at a time.
+One āyah at a time
+Only a few words need attention — focused practice will be quicker and clearer.
+Only ayahs within your current range are listed.
+Open
+Open AI memorisation checker for this ayah
+Open AI recitation check for this ayah
+Open another place in the mushaf
+Open ayah {number}
+Open ayah {number}, active ayah
+Open focus phrase in practice
+Open recordings
+Open session controls
+Open the mushaf
+Open the mushaf and continue this set.
+Opening AI Recite…
+Opening your practice plan…
+Optional
+Optional voice check
+Optional — skip if you want to go straight to your plan.
+Optional.
+Optional. A short check before you choose what's next.
+Orange
+Orange — light bounce
+Order
+Other range
+Other session
+Our Lord, give us good in this world and good in the Hereafter.
+Overall progress
+Pace & support
+Page
+Page number
+Pass this check to unlock the next session.
+Past sessions
+Pause
+Pause active ayah
+Pause ayah
+Pause ayah audio
+Pause before each next repetition/recitation in auto mode.
+Pause on mistake
+Pause on mistake is active. The check will pause after a confirmed mistake.
+Pause recording
+Pause session
+Paused
+Pausing…
+Pay extra attention to ayah {ayah}. That is where most slips appeared.
+Pay extra attention to ayahs {ayahs}. Those still need the most support.
+Peace be upon you
+Peek
+Peek at the text
+Peek ayah
+Pending
+Phrase recall needs support. This plan rebuilds the range with listen-and-repeat.
+Pick Your Learning Style
+Pick a different surah or ayah range
+Pick a surah and a few ayahs for today.
+Pick a surah and ayahs.
+Pick a surah, a short ayah range, and a reciter. Start from Controls when ready.
+Pick ayahs
+Pick the matching ayah
+Pick the pace that feels realistic for your daily routine.
+Pick the surah you want to work on.
+Pick the surah, range, and reciter.
+Pick up exactly where you left off
+Pick up exactly where you left off.
+Pick up where you left off
+Pick your daily pace
+Places older memorisation first so retention stays strong before adding more.
+Plan adjusted
+Plan created: {versesPerDay} verses/day for {plannerEstimatedDays} days
+Plan progress
+Play
+Play active ayah
+Play ayah audio
+Play ayah audio or finish a short practice, then open analytics again.
+Play ayah audio to populate the activity chart.
+Play ayah once
+Play current ayah
+Play focus phrase
+Play memorisation check
+Play or pause audio
+Play recording
+Play selected ayah
+Play the active ayah. Use Tools for translation and word-by-word.
+Play word {index} audio for ayah {number}
+Playback
+Playback Speed
+Playback balance appears after ayah audio starts.
+Playback pauses so you can recite what you just heard.
+Playback settings
+Playback speed
+Playback speed and repetitions control how calmly you rehearse each verse.
+Playback speed is set for calm, clear listening.
+Please select a session first
+Please select a surah
+Please select a surah first
+Please select a valid surah and ayah range first
+Please try again.
+Please try that again.
+Please wait a moment.
+Plus: {technique}
+Practice
+Practice active
+Practice aid only — not a teacher’s ruling. Holds are shown as ranges, not exact targets.
+Practice ayah pairs
+Practice ayah pairs (Linking)
+Practice ayahs individually, then in pairs.
+Practice complete
+Practice done. Check when ready.
+Practice method
+Practice plan
+Practice presets
+Practice setup
+Practice streak
+Practice these verses again
+Practice tools
+Practice with the Qur'an
+Practice · {current} / {total}
+Practiced {count} time this session.
+Practiced {count} times this session.
+Practise
+Practise ayahs one at a time, then in pairs, so transitions between them feel natural.
+Practise it in two short parts, then join them.
+Practise only the weaker words and phrases first.
+Practise smooth transitions between ayahs
+Practise the full range
+Practise the marked words slowly.
+Practise the phrase in small parts, then recite it as one.
+Practise these āyāt again
+Practise this range
+Practise those verses
+Practised this week
+Prefer to recite aloud only
+Premium adds adaptive plans and advanced techniques. Pro adds AI recitation review and recordings.
+Prepare recommendation again
+Prepare to recite
+Prepare yourself
+Preparing analytics...
+Preparing microphone…
+Preparing recommendation…
+Preparing revision…
+Preparing the microphone. Words will hide as soon as listening starts.
+Preparing the microphone…
+Preparing your session tools.
+Preparing your set…
+Preserve today's Hifz effort — save your current ayah range so you can return with intention.
+Preset: Chaining + Anchor Mode (with Focus)
+Preset: Focus Mode + Anchor Hooks
+Preset: Guided Start
+Preset: Pure Recall with Blur Mode
+Press and hold the ayah below to peek · release to hide again
+Press play, then recite and repeat at your pace.
+Previous ayah
+Previous mushaf page
+Previous related attempt: {summary}
+Previous related attempts are saved with this recommendation.
+Priority: {count} ayah below 60% confidence
+Priority: {count} ayahs below 60% confidence
+Private
+Private to you — only you can see these notes.
+Pro unlocks live recitation checks, recordings library, and deeper analytics.
+Processing
+Processing…
+Profile
+Progress
+Progress saved
+Progress synced to the cloud.
+Progress you can revisit
+Pronunciation
+Protect what you already know.
+Purple
+Purple — hidden sound
+Put these in the right order
+Qalqalah
+Question
+Questions
+Quick refresh for ayahs that need attention.
+Quick tour
+Quick view of where repetition is concentrating.
+Quiz
+Quiz AI
+Quiz and AI Recite
+Qur'an 11:115
+Qur'an 20:114
+Qur'an 29:69
+Qur'an 2:152
+Qur'an 2:201
+Qur'an 54:17
+Qur'an 65:3
+Qur'an 94:6
+Range
+Range achieved
+Re-test
+Re-test weak areas
+Reading Aids
+Reading carried a lot. We will practise with less text showing.
+Reading layouts
+Reading options
+Ready
+Ready for the next session
+Ready for the next surah?
+Ready to begin
+Ready to begin?
+Ready to check.
+Ready to continue
+Ready to recite from memory
+Ready to resume
+Ready to resume later
+Recall
+Recall Mode
+Recall and review
+Recall is still fragile. Repeat the range, then review again.
+Recall leaned on visible text. This plan hides more of the Mushaf step by step.
+Recall mode is on. Words hide until you recite them correctly.
+Recall the ayah before moving forward.
+Recall the next ayah
+Recall with less clutter
+Recent ayahs still need another quiet pass. This plan returns to that range so recall can settle.
+Recent sessions
+Recitation Confidence Heatmap
+Recitation check
+Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.
+Recitation color rules (Idgham, Ikhfa, Madd, etc.)
+Recitation quality
+Recitation review
+Recitation time
+Recitation window (secs)
+Recite
+Recite Check
+Recite Check Results
+Recite Check complete.
+Recite Check could not be saved on this device right now.
+Recite Check deleted.
+Recite Check discarded.
+Recite Check saved to Saved Attempts.
+Recite aloud from memory. Mutqin will follow along gently as you go.
+Recite first, then reveal.
+Recite from memory
+Recite from memory and let Mutqin follow your progress. See which words may need a little more attention.
+Recite from memory into the check,See which words or ayahs need more care
+Recite from memory so we can build your plan.
+Recite from memory. Mutqin follows along to highlight words that may need more care. This feature is still in beta.
+Recite out loud.
+Recite the {count} skipped words carefully.
+Recite this completed range. Your result will update the next-step recommendation.
+Recite this range from memory and receive a focused review before moving forward
+Recite this āyah without looking.
+Recite what you just heard, then join the next āyah.
+Recite with AI
+Reciter
+Reciter updated for this session.
+Reciting without help
+Recognition confidence
+Recommendation
+Recommendation ready
+Recommended
+Recommended because these words needed more care in recent checks.
+Recommended because this helps the areas that need care.
+Recommended for this session
+Recommended next step
+Recommended plan
+Recommended practice method
+Recommended setup applied
+Record
+Record Again
+Recording
+Recording is not available in this browser.
+Recording is not supported in this browser.
+Recording name
+Recording now
+Recording ready for Ayah {number}
+Recordings Library
+Recordings library
+Recording…
+Red
+Red — stretch (madd)
+Reduce distractions around the active ayah
+Reduce reading aids on the next pass if recall already felt comfortable.
+Reflection
+Reflections are limited to 2,000 characters. Shorten your note to save it.
+Reflections you wrote on ayahs.
+Reflections you've written
+Refresh
+Refresh what is due today, then move forward while the memory is still warm.
+Register
+Remembering the words
+Reminders
+Remove
+Remove offline surah?
+Renew your subscription
+Repair fragile memorisation.
+Repeat Ayah {ayah}
+Repeat Ayahs {start}–{end}
+Repeat a word to correct it — correct words reveal themselves.
+Repeat count
+Repeat each ayah, then join it with the next
+Repeat each verse {count} time before moving on.
+Repeat each verse {count} times before moving on.
+Repeat session
+Repeat the complete session while Mutqin highlights your weaker areas.
+Repeat the gold-marked words aloud, then the full āyah.
+Repeat the harder verses with more support.
+Repeat the same verse a few times before moving on.
+Repeat these ayahs
+Repeat this range now for a cleaner, steadier pass.
+Repeat this range now or come back later from the same stopping point.
+Repeat this same āyah aloud before moving on.
+Repeat this session
+Repeat this set
+Repeat this set, or choose another.
+Repeat weak ayahs
+Repeat with structure
+Repeat, start your own session, or continue into Mutqin.
+Repeated
+Repeats
+Repeats per Ayah
+Repeats per ayah
+Repeats per step
+Repetition
+Repetition count
+Repetitions
+Replay audio
+Replay recording
+Replay surrounding phrase
+Replay was heavy. This plan shifts toward active recall with lighter audio support.
+Reset
+Reset Ayah
+Reset Session Controls?
+Reset displayed ayah review
+Reset memorisation review
+Reset to recommended
+Restart from the first ayah and keep the order steady.
+Restored your previous practice setup.
+Resume
+Resume Now
+Resume auto-follow
+Resume exactly
+Resume session
+Resumed
+Resuming…
+Retention Reviews
+Retention system active
+Retries
+Retry
+Retrying sync…
+Return
+Return Home
+Return now
+Return to memorised ayahs before they begin to fade. Verses that need more care appear sooner.
+Return to sessions
+Return to the ayahs you left.
+Return to the {count} missed words before expanding the range.
+Return to this ayah before moving forward in your Hifz
+Return to this ayah with a calm review before moving ahead.
+Return to your hifz
+Return to your last sitting?
+Return to your place
+Return to your place, or begin a new set.
+Returning in {n}s…
+Returning with steadiness is part of the path — one ayah at a time.
+Returning…
+Reveal
+Reveal Current Word
+Review
+Review Ayah {ayah} once, then continue to Ayahs {start}–{end}.
+Review Session, then reveal to confirm.
+Review Session. Each correct word reveals the next one.
+Review again on {date}
+Review again tomorrow
+Review any ayah that still felt weak before moving on.
+Review it once, then continue to Ayahs {start}–{end}.
+Review load
+Review only the words and phrases that need more attention.
+Review recommended
+Review scheduling
+Review the feedback, then save your attempt or try again.
+Review the full session range.
+Review the highlighted phrase once, then continue.
+Review the verses due now.
+Review the weak phrase once, then continue to Ayahs {start}–{end}.
+Review this ayah, then continue.
+Review this range
+Review today&apos;s pace, then start and let Mutqin guide the first session automatically.
+Review tomorrow
+Review what is due.
+Review what slipped, choose focus or full-range practice, then continue.
+Review your results
+Revise
+Revise again
+Revise each ayah until you can recite it smoothly without looking.
+Revise gently before moving on.
+Revise now
+Revise range
+Revise the weak spots first, then continue.
+Revise the whole selected ayah range.
+Revise these ayahs?
+Revise this range slowly, then check again.
+Revise this range, then check again.
+Revise this surah
+Revise what you know in {surah} before adding new ayahs.
+Revise words
+Revise {surah}
+Revise āyah {ayah}
+Revision
+Revision First
+Revision due
+Revision keeps your memorisation firm. Revise {surah} before moving on.
+Revision only until the next ayahs are due.
+Revision options
+Revision pass complete
+Revisit
+Revisit ayahs {ayahs} before continuing.
+Save
+Save Attempt
+Save Hifz Plan
+Save Memorisation Session
+Save Session
+Save a session and practise a little — your progress cards will appear here.
+Save a session and you’ll unlock the deeper breakdown here.
+Save a session mid-range and it will appear here ready to resume.
+Save a session to unlock full per-session analytics.
+Save changes
+Save current session
+Save name
+Save or discard the current self-check attempt before switching ayahs.
+Save session
+Save the result and practise the weak areas again.
+Save this session?
+Save this sitting
+Saved
+Saved Session
+Saved Sessions
+Saved for later — available from your dashboard and session history.
+Saved locally
+Saved self-check for Ayah {ayahNumber}
+Saved session
+Saved session dismissed
+Saved sessions
+Saved sessions and compact insights stay ready when you come back.
+Saved sitting
+Saved successfully.
+Saved to your recordings library for this ayah.
+Saved word checks for this session range.
+Saved {date}
+Saved {length} verses from {p0} for offline reading.
+Saving settings…
+Saving your progress to the cloud…
+Say the ayah first from memory, then check only what you need.
+Say the key words first, then the full āyah.
+Scheherazade New
+Score
+Screenshot preview for {step}
+See full review
+See how evenly audio attention is spread across the selected range.
+See how it went
+See memorised ayahs and streak on your dashboard
+See my plan
+Select
+Select all
+Select an ayah before opening the recordings library.
+Select an ayah first
+Select session
+Selected
+Selected ayah
+Selected range
+Self assessment
+Self-assessment
+Sequence
+Session
+Session AI Recite
+Session Analytics Overview
+Session Complete
+Session Ended
+Session Finished
+Session Name
+Session Playback Balance
+Session Setup
+Session View
+Session complete
+Session completed
+Session controls
+Session controls reset to defaults
+Session deleted
+Session details
+Session export blocked: incomplete session data.
+Session insights
+Session loaded successfully
+Session paused. You can resume anytime.
+Session ready
+Session saved
+Session saved successfully.
+Session saved with Ctrl+S
+Session setup
+Session signals, review health, cards, graphs, and charts.
+Session stats
+Sessions
+Sessions finished
+Sessions you finished or saved.
+Set Your Playback
+Set Your Study Flow
+Set a realistic number of new ayahs for each day.
+Set your support level
+Settings
+Settings issue: {join}
+Settings saved
+Setup
+Several spots need support before moving on.
+Short enough to stay focused. Structured enough to make long-term memorisation easier to revisit.
+Short guides for calm, steady Qur’an memorisation.
+Short questions about the verses you just did
+Shorter practice that targets the exact spots that slipped.
+Show advanced metrics
+Show answer
+Show audio player
+Show less
+Show or hide tajweed colouring on the text
+Show or hide the English translation
+Show or hide transliteration
+Showing up again matters more than finishing quickly.
+Shown
+Shows ayahs in a familiar page-inspired style.
+Shows each ayah clearly, one after another — helpful on smaller screens.
+Sign in to continue
+Silent / connection marks
+Similar ayahs were mixed. This plan compares them side by side with anchors.
+Similar to the reciter
+Similar verses got mixed up. We will compare them side by side.
+Sit with the Qur'an today.
+Sitting
+Skip
+Skip this one
+Skip tour
+Skipped
+Slow down and rebuild the range ayah by ayah.
+Slow slightly and articulate the {count} close words.
+Small steps, repeated with sincerity, become lasting memorisation.
+Smaller text
+Smart Resume
+So remember Me; I will remember you.
+Soft cue when a mistake is confirmed
+Soft sound on
+Soft sound when a mistake is confirmed.
+Solid overall, with a few gaps that deserve a short revision pass.
+Solid recall with only minor hesitation on a word or two
+Some ayahs are due for murājaʿah. This plan returns to them soon.
+Some of this is due for review. Better to return to it soon.
+Some parts still need help. We will practise these verses again.
+Some verses still need help. We will practise this set again.
+Some words are still settling — a short repeat will help.
+Some words were missed. This plan completes ayahs with listen-and-repeat.
+Something went wrong
+Something went wrong. Please try again.
+Sound
+Sound off
+Source
+Space
+Spaced repetition health
+Speech recognition is unavailable here. You can still use Peek.
+Speed
+Speed changed to {p0}x
+Spend the next pass on ayah {ayah} with Focus mode.
+Spoken recall hesitated. This plan uses phrase chunks, slower playback, and AI Recite.
+Stacked
+Stacked layout
+Stacked: one ayah after another — calm for short ranges.
+Standard Support
+Standard listening
+Start
+Start AI Recite when you are ready. Future words stay hidden until you say them correctly.
+Start AI memorisation check
+Start AI recitation check
+Start Hifz Journey
+Start Reciting
+Start This Practice Plan
+Start a new range when this one feels stable.
+Start a session
+Start a session to build analytics
+Start again
+Start check
+Start focused practice
+Start focused review
+Start manual recording
+Start memory check
+Start new session
+Start next surah
+Start of the surah
+Start practice
+Start reciting when the microphone is active
+Start recommended session
+Start session
+Start the session to build your memorisation queue.
+Start this plan
+Start this simpler plan
+Start with Al-Fatihah, or choose any surah.
+Start with Al-Fatihah, or open any surah.
+Start with a small set — steady steps build lasting memorisation.
+Start with first ayah, then add one more each time.
+Start with fresh ayahs.
+Start with one tool. Add more later.
+Start with the first ayah, then add the next while keeping earlier ones warm in the same sequence.
+Start with these settings
+Start your Hifz journey
+Starting
+Starting next set…
+Starting…
+Stay calm, keep the pace light, and move on when the current ayah feels steady.
+Stay here
+Stay with one ayah before moving on.
+Stay with this āyah until it feels steady in your heart.
+Steady
+Steady effort, even in small portions, is beloved.
+Steady practice
+Steady repetition builds lasting memorisation.
+Step 1
+Step 2
+Step {current} of {total}
+Step {step} of {total}
+Still watch: {items}
+Stop
+Stop AI memorisation check
+Stop AI recitation check
+Stop Check
+Stop Recording
+Stop manual recording
+Stop or discard the current recording before closing Self-Check.
+Stop recording
+Stop the current memorisation check before switching ayahs.
+Stop the current recording before opening the recordings library.
+Stop the current self-check before moving to another ayah.
+Stopped at ayah {ayah}
+Streak
+Strengthen this range before moving forward.
+Strong
+Strong recall
+Strong recall — ready for the next session.
+Strong recall. A light review will keep it firm.
+Strong recall. Keep the same pace for the next session.
+Strong recitation — a couple of small mistakes, but you are making good progress.
+Strong: ready to move on
+Structured repetition
+Students building a calm daily rhythm.
+Students building retention through guided listening and repetition.
+Students improving pronunciation gently while memorising.
+Students who prefer simple self-reflection.
+Students who want gentle feedback after practising aloud.
+Study Flow
+Style
+Submit note
+Subscription
+Suggested next step
+Summary
+Support
+Support Level
+Surah
+Surah complete
+Surah complete recap
+Surah memorisation progress
+Surah {number}
+Surah {surah}
+Switch between stacked cards and a Mushaf-style page depending on what feels easiest to follow.
+Switch to full player
+Switch to mini player
+Switch to stacked view
+Switched to Casual Mode
+Switched to {p0} Mode
+Sync failed
+Sync progress
+Synced
+Syncing…
+Tajweed
+Tajweed Issues: {count}
+Tajweed colours
+Tajweed colours explained
+Tajweed on
+Tajweed practice check
+Take it slow. One step at a time.
+Take it slower — try this āyah at {speed}×.
+Take it step by step — revise what you know before adding new ayahs.
+Take the tour again
+Take your time. Recite the whole passage from memory — pauses are fine. Up to 3 gentle tries.
+Talqin
+Talqin mode
+Tap Start Reciting when you are ready.
+Tap Start session — listen to each ayah, repeat it, then try without looking.
+Tap an answer to continue.
+Tap any amber or red word you recited correctly to update the analysis.
+Tap play to start the audio.
+Tap the Recall Mode icon to hide words before you recite, like Tarteel.
+Tap to play
+Target
+Technique
+Technique that helped: {technique}
+Techniques
+Tell Mutqin what to focus on first during each session.
+Test my memorisation
+Test recitation with AI
+Test with AI Recite when ready.
+Test with AI first. Your score and practice plan appear here after we hear you.
+Text
+Text reduced to {value} visibility.
+Text size
+Text size reset
+Text size: {percent}%
+Text visibility
+That check could not start. You can still continue below.
+That recording was too short to assess. Recite a little longer, then try again.
+The Opening, ayahs 1–7
+The Qur'an is waiting
+The Qur'an opens to those who return to it — keep coming back.
+The check looked strong. Mā shā’ Allāh. This plan continues gently while the ayahs are fresh.
+The current word stays hidden until you recite it correctly.
+The memorisation check could not be completed.
+The memorisation workspace recovered from a startup error.
+The microphone stopped unexpectedly.
+The mushaf is preparing
+The order slipped a little. We will practise linking the verses.
+The page view didn’t load. Try again, or switch to stacked ayahs.
+The recitation check could not be completed.
+The reciter leads. When it pauses, you say it aloud.
+The same ayahs and settings.
+The words were close, but reciting felt hesitant. Slower practice will help.
+Theme
+There is no automatic next set right now. Choose what your heart would like to recite next.
+These Mutqin colours mark common Tajweed rules in the ayah. Use them as practice reminders — not as a teacher’s ruling.
+These are the verses your next session will open on.
+These ayahs
+These settings are intended to help you hear each phrase more clearly, repeat it more consistently and strengthen recall before progressing.
+These āyahs and words need the most attention before you continue.
+Think of the words around it.
+This ayah will repeat {count} time before moving on.
+This ayah will repeat {count} times before moving on.
+This deletes the saved verses from this device.
+This feature isn’t available at the moment. Please try again later.
+This is how you studied.
+This is taking longer than expected.
+This is taking longer than expected. Try again.
+This item will be removed from the recording library.
+This method guides how text and audio appear while you practise.
+This note is longer than 2,000 characters. Shorten it before saving your changes.
+This optional check finds weak spots early — so your next session practises the right verses, not a random repeat.
+This permanently removes {count} recording for ayah {number} from the library.
+This permanently removes {count} recordings for ayah {number} from the library.
+This range feels steady. You can move on while it is fresh.
+This range moved forward.
+This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.
+This range was completed.
+This recording does not have enough metadata to re-run the deterministic audit.
+This recording isn't ready yet. Try again in a moment.
+This removes the Recite Check for ayah {number} from the recording library.
+This removes the current Recite Check result. Saved recordings are not affected unless this result was already saved.
+This removes the current continue-where-you-left-off snapshot from this device.
+This removes the recording for ayah {number} from the recording library.
+This result does not have enough stored metadata to re-run the audit.
+This session
+This set
+This sitting
+This surah
+This week
+This week: {sessions} sessions · {ayahs} ayahs.
+This will permanently remove "{label}" and its export snapshot from this device.
+This will permanently remove this private reflection from this ayah. This cannot be undone.
+This will permanently remove this session and its export snapshot from this device.
+This will permanently remove {count} saved sessions from this device.
+This will reset all session settings to defaults. Your progress will not be lost.
+Three days of showing up. Steadiness is its own quiet blessing.
+Three weeks of practice. Small daily efforts build something lasting.
+Time
+Time to revise
+Time to revise: {surah}
+Times you finished practice
+Timing wasn’t clear enough to check holds this time.
+Tip: download ayahs while online, then play them from your device anytime without using mobile data.
+Tip: {technique}
+Title (optional)
+Today first. Advanced analytics stay tucked away until you ask for them.
+Today&apos;s goal
+Today's Goal
+Today's progress
+Today: Memorise your ayahs
+Toggle Tajweed colouring
+Toggle Tajweed highlights
+Toggle tajweed colours on the mushaf
+Tomorrow
+Tools
+Total Ayahs
+Total Hizb
+Total Juz
+Total Pages
+Track what was covered and return later with clarity.
+Train the transition between neighbouring ayahs.
+Translation
+Translation on
+Translations and word helpers
+Transliteration
+Transliteration on
+Try Reciting
+Try a short sample
+Try again
+Try again ({remaining} left)
+Try again from memory. May Allah make it firm.
+Try clearing filters or searching with different words.
+Try one slower pass
+Try reciting with minimal support.
+Try reciting with the ayah still partially visible.
+Try reciting without looking.
+Try that word again
+Try this combination
+Try {current} of {max}
+Turn this on to keep your place when you end.
+Two weeks of returning to the Book. That rhythm is worth keeping.
+Type missing word
+Type what you remember
+Unable to end session. Please try again.
+Unable to pause session. Please try again.
+Unable to play this word right now.
+Unable to resume session. Please try again.
+Unavailable
+Unlock AI checks and memorisation plans
+Untitled note
+Upcoming
+Updating Mutqin…
+Updating…
+Upgrade to Mutqin Premium to use this feature.
+Upgrade to Mutqin Pro to use this feature.
+Upgrade to Pro for AI recitation review
+Use Peek only when you are stuck. Recite this word correctly to continue.
+Use anchor mode
+Use blur mode
+Use chaining
+Use connected Tajweed text from the Quran API
+Use focus mode
+Use key words as hooks to recall each ayah
+Use only the aids and techniques that support the current passage.
+Use playback, chaining, focus, and blur tools.
+Use slower speed for early memorisation.
+Use talqin mode
+Use the AI recite tool in the header when you want to begin.
+Use the check when you want feedback — not every session needs it.
+Use the colours while you practise. We’ll check holds when timing is clearer.
+Use the memorisation tools
+Use this legend while you listen and repeat. It is a guide, not a replacement for a teacher.
+Use when you want to build longer runs by adding one ayah at a time.
+Use when you want to strengthen transitions between neighboring ayahs.
+Uses the longer of your delay or a brief verse-length pause.
+Using {anchors} as mental anchors for each ayah
+Usually about 1–2 minutes
+Verse plays across the selected range.
+Verse {ayah}
+Verse {ayah} needs the most attention.
+Verse {ayah} needs the most help.
+Verse {ayah} still feels tricky. We will practise these verses again.
+Verses to practise
+View
+View All Recordings
+View Full Analytics
+View Plan
+View Recording
+View all
+View and font controls stay here while planner mode is active.
+View details
+View plans
+View stats
+Voice check
+Waiting
+Watch the highlighted words and keep a steady rhythm before the next ayah.
+Watch the marked words. They will help you remember.
+We clearly matched {matched} of {total} words.
+We could not play this recording. Try reloading it or record again.
+We couldn't connect to the recitation service. Your session is safe. Try again.
+We couldn’t assess this attempt. Check your microphone or connection and try again.
+We couldn’t load this ayah’s Arabic text. Refresh the session or try again.
+We couldn’t prepare this session overview. Close and try again from a saved session.
+We couldn’t reach Mutqin. Check your connection, then try again.
+We couldn’t show the ayah surface for this check. Close and open the check again.
+We heard your recitation, but could not confidently match the words yet.
+We stay with one āyah. Do not rush ahead.
+We will adjust the practice style for this pass.
+We will guide today's session step by step.
+We will join these āyahs into one flow.
+We will keep this short and add a little more support.
+We will practise these verses again with a little more help.
+We will slow the pace a little.
+Weak
+Weak Ayah Focus
+Weak areas
+Weak areas appear across the session, so revisiting the full range with emphasis is recommended.
+Weak words only
+Weak-area focus
+Weak-area focus is active. Practice stays on the words that need care.
+Weak-word emphasis is now active.
+Weekly activity
+Welcome back. There is no rush; begin where you are.
+What a Mutqin session feels like
+What each colour means
+What happens when a mistake is confirmed during an AI check.
+What next
+What next?
+What stayed and what needs muraja'ah
+What to do next
+What to do next?
+What to practise
+What to practise next
+What to strengthen next
+What we found
+What you reviewed today has a place in your heart — return to it gently.
+What you will practise
+What you’ve kept, surah by surah.
+When Tajweed is on, Mutqin colours letters so you can notice pronunciation patterns while you listen and repeat.
+When you add something, it will show up here.
+When you are ready, recite this verse from memory.
+When you start, the timer, audio, and ayah highlighting all begin automatically.
+Why
+Why this helps
+Why this next step?
+Why this plan
+Why this plan?
+Why this was recommended
+With Steadiness
+With the Qur'an
+With word highlighting
+Within the expected range
+Word
+Word audio
+Word audio is not available for this word.
+Word audio on
+Word by word
+Word colour breakdown
+Word number
+Word position
+Word strengthened
+Word timing unavailable for this ayah.
+Word-by-Word Mode: Fading disabled
+Word-by-word on
+Words
+Words Mutqin clearly recognised in this check
+Words fade away as your recall improves
+Words heard clearly.
+Words not recited.
+Words said incorrectly.
+Words shown
+Words that need another calm pass
+Words to focus on
+Words to watch
+Words will hide gradually. Trust your memory.
+Work faster without leaving the memorisation view.
+Work in smaller sections that are easier to repeat well.
+Would you like to save this session so you can return to it later?
+Write a reflection above and it will appear here for this ayah.
+Write your first note
+Write your thoughts, reminders, or lessons from this ayah…
+Yes
+Yesterday
+You appear to be offline.
+You asked for more practice, so we will go over these verses again more slowly, with care.
+You asked for reassurance. This plan offers a short confidence-building pass.
+You can start a new range, save this one, or repeat it now.
+You can still recite aloud if you want.
+You completed all {count} ayahs in this range.
+You completed this range well. This plan continues gently to the next ayahs while they are still fresh.
+You completed this range. This plan continues directly to the next ayahs while the material is still fresh.
+You completed this range. This plan continues to the next ayahs while the material is still fresh, bi’idhnillāh.
+You completed this surah. This plan is ready for Surah {surah} when you are. Mā shā’ Allāh.
+You completed {chapter} in this session — may it settle gently in your heart.
+You completed {sessions} sessions this week.
+You completed {surah}, Ayah {ayah}.
+You completed {surah}, Ayahs {start}–{end}.
+You completed {surah}, {range}.
+You covered {covered} of {total} ayahs before ending.
+You covered {covered} of {total} ayahs in {duration}.
+You feel ready. We will move on while these verses are still fresh, bi’idhnillāh.
+You finished the practice plan. Check your memorisation again to unlock the next session.
+You finished {surah}
+You have reached the end of the available plan. Choose what you would like to recite next. May it be blessed.
+You have {count} ayahs awaiting review. Revisit them gently and keep the chain strong.
+You have {count} verses to review.
+You left {detail}. May Allah make your return light.
+You left {place}. May Allah make your return light.
+You paused mid-range. This plan resumes from the ayahs you left unfinished.
+You paused often. Slow down on one āyah.
+You practised this surah across {count} sessions.
+You practised {days} days this week.
+You reached ayah {ayah} and completed {percent}% of this session.
+You recalled this range successfully.
+You remembered most of this well.
+You remembered most of this, with a few hard spots in verse {ayah}.
+You remembered most of this, with hard spots in {count} verses.
+You repeat each ayah alone, then the next, then both together — so the hand-off between them gets smoother.
+You still have a few verses left in this range.
+You wanted more practice — here is a short, reassuring pass.
+You will repeat each step the set number of times.
+You're making progress — every ayah counts.
+You're on {surah}
+Your AI recitation attempt has been saved.
+Your Hifz Journey Is Ready
+Your Qur'an journey starts here.
+Your check looked good. We are still giving these verses one more calm pass.
+Your checks look ready. Next verses while this still feels fresh.
+Your checks show a few hard spots. We will practise this set again.
+Your completed sitting stays saved.
+Your effort is recorded with sincerity.
+Your first session will show here.
+Your grades are saved for the next planner session.
+Your grades feed the next review cycle.
+Your grades keep chain review aligned with weak links.
+Your hifz
+Your hifz at a glance
+Your hifz will appear here.
+Your key words
+Your memorisation
+Your mushaf
+Your next practice
+Your next session
+Your next set is ready. Tap Start when you're ready.
+Your notes
+Your paid features are paused. View plans to restore access.
+Your path
+Your place
+Your place is waiting
+Your place is waiting. May Allah make every ayah easy.
+Your place will be saved when you end.
+Your plan
+Your plan below already uses this result.
+Your plan softens or advances with your answer, bi’idhnillāh.
+Your progress will be saved.
+Your progress will be saved. You can return later.
+Your recall is strong. A light review at a steady pace will keep it firm.
+Your recent practice, checks, and notes.
+Your recite found parts that still need practice. This plan keeps the same range with more guidance, gently.
+Your recite was mostly correct, with a few gaps. This plan reviews the same range once more with a little more support.
+Your recite was strong. Alḥamdulillāh. This plan continues while the previous ayahs are still fresh.
+Your recording for Ayah {ayahNumber} has been saved.
+Your result
+Your session expired. Refresh the page, then try again.
+Your session was saved successfully. We could not prepare your next recommendation. You can retry or choose another session.
+Your session will use
+Your sessions
+Your sessions will appear here.
+Your short check found parts that still need practice. This plan keeps the same range with more guidance.
+Your short check looked strong. This plan continues while the ayahs are still fresh.
+Your short check was mostly solid, with a few gaps. This plan adds light support.
+Your surah, your week, and how often you practise.
+Your turn to recite
+Your turn to recite now · {seconds}s left
+Your weak spots sit close together, so a short focused review is recommended.
+You’re back online.
+You’re in demo mode. Sign in to save sessions, sync progress, and unlock AI recite.
+auto advance
+ayahs memorised
+complete structure
+completed
+first/last word
+friend
+in hand
+kept
+key word pairs
+listen then recite
+manual advance
+needs care
+plain sequence
+queued today
+review now
+reviews
+scheduled
+steady ayahs
+this session ready
+{chapter}, ayah {number}
+{chapter}, from the start
+{chapter}, {name}
+{checked} of {total} words recognized
+{completed} of {total} ayahs
+{completed} of {total} ayahs in your plan.
+{completed} of {total} repetition completed
+{completed} of {total} repetitions completed
+{correct} of {total} answered well
+{count} Ayahs / Day
+{count} attempt
+{count} attempts
+{count} ayah
+{count} ayah left to complete the range
+{count} ayahs
+{count} ayahs could use a gentle return.
+{count} ayahs left to complete the range
+{count} ayahs need focus ({ayahs}).
+{count} close
+{count} focus item · about {minutes} min
+{count} focus items · about {minutes} min
+{count} improved
+{count} left
+{count} missed words
+{count} order slips
+{count} repeat(s) per chaining step.
+{count} repetition
+{count} repetitions
+{count} slips
+{count} still need practice
+{count} verses to review.
+{count} verses to revisit
+{count} words still need another careful pass.
+{count} words still need help.
+{count} words were close. Slow slightly and articulate each letter.
+{count} words were skipped. Fill those gaps next.
+{count} wrong
+{count}x repeats
+{count}x repeats, {mode}, {chaining}
+{count}× another steady pass.
+{count}× light practice while it is still fresh.
+{count}× more practice for harder verses.
+{covered} of {total} ayahs
+{covered} of {total} ayahs in this set.
+{covered}/{total} ayahs covered.
+{current} / {total}
+{current} of {total}
+{current} of {total} ayahs · {percent}% complete
+{date} · {ayahs} ayahs · {sessions} sessions
+{detail}
+{done} of {total} ayahs ready, {percent} percent
+{eta} left
+{green} green · {amber} amber · {red} red · {black} black
+{label} is now active.
+{label} mode
+{label} turned off.
+{level} confidence
+{load} load
+{memorised} of {total} ayahs memorised, {percent} percent
+{method} chaining
+{mode} plan
+{mode} sitting using {chaining}.
+{n} ayahs
+{n} ayahs memorised
+{n} ayahs so far
+{n} day streak
+{n} days in a row
+{n} days practising
+{n} days with the Qur'an
+{n} in progress
+{n} items
+{n} memorised
+{n} sessions
+{n}% of Qur'an
+{n}% of the Qur'an
+{n}d ago
+{n}h ago
+{n}m ago
+{percent}% match
+{remembered} / {total} kept
+{remembered} of {total} ayahs ready
+{remembered} of {total} ready
+{revealed} of {total} words revealed. Keep going.
+{seconds}s check
+{skill} still needs support.
+{speed}× a bit faster once it feels easy.
+{speed}× slower so each word is clear.
+{speed}× speed
+{start}–{end}
+{surah} · Ayah {ayah}
+{surah} · Ayahs {start}–{end}
+{surah} · {range}
+{time}
+{value}% accuracy
+{when}
+~{percent}% matched
+Āyah {ayah}
+Āyah {ayah} needs another slow pass.
+Āyahs {from}–{to}
+✓ Session "{name}" saved
+✨ Time to refresh
+🌙 Keeping the rhythm steady
+🌫️ Blur Mode: On | 🎯 Focus Mode: Off (cannot use together)
+🌫️ Blur Mode: On | 🔗 Chaining: Off — Blur hides upcoming verses needed for chaining
+🌿 Begin with Bismillah, keep your heart with the ayah
+🎯 Focus Mode: On | 🌫️ Blur Mode: Off (cannot use together)
+💡 Tip: Enable Anchor Mode with Chaining for better recall
+🔗 Chaining: On | 🌫️ Blur Mode: Off — You need to see upcoming verses for chaining to work

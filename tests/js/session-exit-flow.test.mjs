@@ -253,4 +253,19 @@ const t = (key, params = {}) => {
   assert.equal(en.memorisation.sessionExit.confirmEnd, 'End')
 }
 
+// Early exit must not open the Session Complete modal
+{
+  const source = readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
+  assert.match(
+    source,
+    /else if \(\s*\n?\s*rangeComplete\s*\n?\s*&& \(openCompletion \|\| showSummary\)/,
+    'Session Complete modal must be gated on rangeComplete'
+  )
+  assert.match(
+    source,
+    /else if \(!rangeComplete\) \{[\s\S]*?confirmDescriptionEarly/,
+    'Early exit should show saved-progress feedback instead of Session Complete'
+  )
+}
+
 console.log('session-exit-flow.test.mjs: all assertions passed')

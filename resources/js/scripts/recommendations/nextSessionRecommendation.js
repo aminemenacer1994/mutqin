@@ -10,11 +10,16 @@ import {
   getTechniqueShortLabel,
 } from '../techniques/techniqueDisplay.js'
 import { formatRepetitionCountLabel, formatAyahNumberSpans } from '../formatting/ayahLabels.js'
-import { estimatePracticeDuration } from '../session/sessionPracticeCoach.js'
+import { estimatePracticeDuration, normaliseWeakWordRecords } from '../session/sessionPracticeCoach.js'
 import {
   resolveRecommendedPlaybackSpeed,
 } from './playbackSpeedPolicy.js'
 import { resolveWeaknessSeverity } from './postSessionCtaMapping.js'
+import {
+  buildWeakAyahRepeatPlan,
+  PRACTICE_SCOPE,
+  WEAK_AYAH_REPEAT_MIN,
+} from './revisionPracticeScope.js'
 
 export {
   formatAyahRangeLabel,
@@ -946,6 +951,59 @@ export function buildPersonalPracticePlan(input = {}) {
     sources: checkSources,
   }
 
+  const surahName = recommendation.surah?.translated_name
+    || recommendation.surah?.name
+    || snapshot.chapterName
+    || ''
+  const rangeLabel = rangeFrom > 0 && rangeTo >= rangeFrom
+    ? (rangeFrom === rangeTo
+      ? translate('planDetail.singleAyah', `Ayah {ayah}`, { ayah: rangeFrom })
+      : translate('planDetail.ayahRange', `Ayahs {start}–{end}`, { start: rangeFrom, end: rangeTo }))
+    : ''
+
+  const focusLabel = focusAyahs.length === 1
+    ? translate('planDetail.focusOne', 'Focus on ayah {ayah}', { ayah: focusAyahs[0] })
+    : focusAyahs.length > 1
+      ? translate('planDetail.focusMany', 'Focus on {ayahs}', {
+        ayahs: formatAyahNumberSpans(focusAyahs) || focusAyahs.join(', '),
+      })
+      : ''
+
+  const repeatPlan = isRepeat
+    ? buildWeakAyahRepeatPlan({
+      weakAyahs: focusAyahs.length ? focusAyahs : weakAyahs,
+      weakWords: input.aiDetails?.weakWords
+        || recommendation?.settings?.practice_weak_words
+        || recommendation?.ai_assessment?.weak_words
+        || [],
+      baseRepetitions: settings.repetitions,
+      isRevision: true,
+      scope: recommendation?.settings?.practice_scope
+        || (recommendation?.settings?.practice_weak_words_only ? PRACTICE_SCOPE.WEAK_AREAS : PRACTICE_SCOPE.FULL_RANGE),
+      chapterId: Number(recommendation?.surah?.id || snapshot.chapterId || 0) || null,
+    })
+    : null
+
+  let revisionEmphasis = ''
+  if (repeatPlan?.emphasisKey && repeatPlan?.emphasisParams) {
+    revisionEmphasis = translate(
+      repeatPlan.emphasisKey,
+      repeatPlan.emphasisKey.includes('One')
+        ? `Repeat ayah {ayah} {count} times to lock in the weak words.`
+        : `Repeat each weak ayah {count} times to strengthen the words that slipped.`,
+      repeatPlan.emphasisParams,
+    )
+  }
+
+  const whyParts = [personalWhy].filter(Boolean)
+  if (isRepeat && focusLabel && !String(personalWhy || '').includes(String(focusAyahs[0] || ''))) {
+    whyParts.push(focusLabel)
+  }
+  if (revisionEmphasis && !whyParts.some((part) => String(part).includes(String(revisionEmphasis).slice(0, 24)))) {
+    whyParts.push(revisionEmphasis)
+  }
+  const combinedWhy = whyParts.filter(Boolean).join(' ')
+
   // Beginner setup: speed + reps only. Technique copy lives in practiceApproach.
   const setup = []
   const speed = Number(settings.playback_speed)
@@ -965,6 +1023,29 @@ export function buildPersonalPracticePlan(input = {}) {
           `${reps} repetition${reps === 1 ? '' : 's'}`,
           { count: reps },
         ),
+    })
+  }
+  if (repeatPlan?.perAyahRepeats && Object.keys(repeatPlan.perAyahRepeats).length === 1) {
+    const [ayah, count] = Object.entries(repeatPlan.perAyahRepeats)[0]
+    setup.push({
+      key: 'weak-reps',
+      label: translate(
+        'planDetail.weakAyahRepeatOne',
+        `Ayah {ayah} × {count}`,
+        { ayah, count },
+      ),
+    })
+  } else if (repeatPlan?.perAyahRepeats && Object.keys(repeatPlan.perAyahRepeats).length > 1) {
+    setup.push({
+      key: 'weak-reps',
+      label: translate(
+        'planDetail.weakAyahRepeatMany',
+        `Weak ayahs × {count} each`,
+        {
+          count: repeatPlan.perAyahRepeats[repeatPlan.weakAyahs[0]] || WEAK_AYAH_REPEAT_MIN,
+          ayahCount: repeatPlan.weakAyahs.length,
+        },
+      ),
     })
   }
 
@@ -1015,28 +1096,11 @@ export function buildPersonalPracticePlan(input = {}) {
     })
   }
 
-  const surahName = recommendation.surah?.translated_name
-    || recommendation.surah?.name
-    || snapshot.chapterName
-    || ''
-  const rangeLabel = rangeFrom > 0 && rangeTo >= rangeFrom
-    ? (rangeFrom === rangeTo
-      ? translate('planDetail.singleAyah', `Ayah {ayah}`, { ayah: rangeFrom })
-      : translate('planDetail.ayahRange', `Ayahs {start}–{end}`, { start: rangeFrom, end: rangeTo }))
-    : ''
-
-  const focusLabel = focusAyahs.length === 1
-    ? translate('planDetail.focusOne', 'Focus on ayah {ayah}', { ayah: focusAyahs[0] })
-    : focusAyahs.length > 1
-      ? translate('planDetail.focusMany', 'Focus on {ayahs}', {
-        ayahs: formatAyahNumberSpans(focusAyahs) || focusAyahs.join(', '),
-      })
-      : ''
-
   return {
     source,
     headline: translate('planDetail.headline', 'Your practice plan'),
-    personalWhy,
+    personalWhy: combinedWhy || personalWhy,
+    revisionEmphasis,
     range: {
       from: rangeFrom,
       to: rangeTo,

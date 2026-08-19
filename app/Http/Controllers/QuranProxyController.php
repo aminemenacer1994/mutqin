@@ -34,12 +34,12 @@ class QuranProxyController extends Controller
     {
         $config = self::PROVIDERS[$provider] ?? null;
         if (!$config) {
-            abort(404, 'Unknown Quran API provider');
+            abort(404, __('ui.quran_api_unknown_provider'));
         }
 
         $normalizedPath = $this->normalizePath($path);
         if ($normalizedPath === null) {
-            abort(400, 'Invalid Quran API path');
+            abort(400, __('ui.quran_api_invalid_path'));
         }
 
         $query = $request->query();
@@ -101,10 +101,10 @@ class QuranProxyController extends Controller
         } catch (HttpException $exception) {
             throw $exception;
         } catch (ConnectionException $exception) {
-            abort(502, 'Could not reach upstream Quran API');
+            abort(502, __('ui.quran_api_upstream_unreachable'));
         } catch (\Throwable $exception) {
             report($exception);
-            abort(502, 'Quran API proxy failed: '.$exception->getMessage());
+            abort(502, __('ui.quran_api_proxy_failed').' '.$exception->getMessage());
         }
 
         return response($payload['body'], (int) $payload['status'], [

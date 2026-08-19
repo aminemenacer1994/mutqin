@@ -60,7 +60,7 @@
                         <span class="mutqin-ios-pwa__step-num" aria-hidden="true">2</span>
                         <span class="mutqin-ios-pwa__step-copy">
                             {{ __('ui.pwa_install_step_share') }}
-                            <i class="bi bi-box-arrow-up mutqin-ios-pwa__share-icon" aria-hidden="true" title="Share"></i>
+                            <i class="bi bi-box-arrow-up mutqin-ios-pwa__share-icon" aria-hidden="true" title="{{ __('ui.pwa_share_icon_title') }}"></i>
                         </span>
                     </li>
                     <li>

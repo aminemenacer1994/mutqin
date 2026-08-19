@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { attachNetworkFailureEmitter } from '../../utils/networkStatus'
 
 /**
  * Backend-driven learning persistence client.
@@ -60,6 +61,8 @@ export const http = axios.create({
   xsrfCookieName: 'XSRF-TOKEN',
   xsrfHeaderName: 'X-XSRF-TOKEN',
 })
+
+attachNetworkFailureEmitter(http)
 
 http.interceptors.request.use(async (config) => {
   const method = String(config.method || 'get').toLowerCase()
@@ -552,6 +555,17 @@ function sanitizeRecommendationSettings(settings) {
   }
   if (typeof settings.emphasize_weak_areas === 'boolean') {
     clean.emphasize_weak_areas = settings.emphasize_weak_areas
+  }
+  if (settings.repetitions_per_ayah && typeof settings.repetitions_per_ayah === 'object') {
+    const perAyah = {}
+    Object.entries(settings.repetitions_per_ayah).forEach(([ayah, count]) => {
+      const ayahNum = Number(ayah)
+      const reps = Number(count)
+      if (!Number.isFinite(ayahNum) || ayahNum < 1 || ayahNum > 300) return
+      if (!Number.isFinite(reps) || reps <= 0) return
+      perAyah[Math.round(ayahNum)] = Math.max(1, Math.min(8, Math.round(reps)))
+    })
+    if (Object.keys(perAyah).length) clean.repetitions_per_ayah = perAyah
   }
   if (settings.source_attempt_id != null && settings.source_attempt_id !== '') {
     clean.source_attempt_id = String(settings.source_attempt_id).slice(0, 64)

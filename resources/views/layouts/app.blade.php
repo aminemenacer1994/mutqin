@@ -3,6 +3,25 @@
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
     $appThemePreference = $appThemePreference ?? session('mutqin_theme', 'light-mode');
     $appTheme = $appTheme ?? (str_starts_with($appThemePreference, 'dark') ? 'dark' : (str_starts_with($appThemePreference, 'sepia') ? 'sepia' : 'light'));
+    $languageEndonyms = [
+        'en' => 'English',
+        'fr' => 'Français',
+        'ar' => 'العربية',
+        'id' => 'Bahasa Indonesia',
+        'tr' => 'Türkçe',
+        'es' => 'Español',
+        'ur' => 'اردو',
+    ];
+    $appLocaleOptions = [
+        'en' => ['flag' => '🇬🇧', 'label' => $languageEndonyms['en']],
+        'fr' => ['flag' => '🇫🇷', 'label' => $languageEndonyms['fr']],
+        'ar' => ['flag' => '🇸🇦', 'label' => $languageEndonyms['ar']],
+        'id' => ['flag' => '🇮🇩', 'label' => $languageEndonyms['id']],
+        'tr' => ['flag' => '🇹🇷', 'label' => $languageEndonyms['tr']],
+        'es' => ['flag' => '🇪🇸', 'label' => $languageEndonyms['es']],
+        'ur' => ['flag' => '🇵🇰', 'label' => $languageEndonyms['ur']],
+    ];
+    $activeLocaleOption = $appLocaleOptions[$appLocale] ?? $appLocaleOptions['en'];
 @endphp
 <!doctype html>
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
@@ -257,6 +276,36 @@
         -webkit-text-fill-color: #fff !important;
         background: #9a4f3d !important;
         border-color: #b56a56 !important;
+      }
+    </style>
+    <style id="mutqin-memorisation-hotfix-v116">
+      /* v116 — WBW gloss spacing + RTL layout toggle label clipping */
+      html body .app .verse-arabic.word-by-word-meanings word,
+      html body .app .verse-arabic.word-by-word-meanings .wbw-word,
+      html body .app .mushaf-ayah-text.word-by-word-meanings word,
+      html body .app .mushaf-ayah-text.word-by-word-meanings .wbw-word {
+        gap: 0.55em !important;
+        margin-bottom: 0.85em !important;
+      }
+      html body .app .verse-arabic.word-by-word-meanings .word-arabic-text,
+      html body .app .verse-arabic.tajweed-enabled.word-by-word-meanings .word-arabic-text,
+      html body .app .mushaf-ayah-text.word-by-word-meanings .word-arabic-text {
+        padding-bottom: 0.35em !important;
+        line-height: 1.65 !important;
+      }
+      html body .app .verse-arabic.word-by-word-meanings .word-meaning,
+      html body .app .mushaf-ayah-text.word-by-word-meanings .word-meaning {
+        margin-top: 0.42em !important;
+        padding-top: 0.22em !important;
+      }
+      html body .app.is-rtl .workspace-layout-toggle .view-mode-btn {
+        min-width: max-content !important;
+        flex: 1 1 auto !important;
+        padding-inline: 0.95rem !important;
+      }
+      html body .app.is-rtl .workspace-layout-toggle .view-mode-btn span {
+        overflow: visible !important;
+        text-overflow: clip !important;
       }
     </style>
     <style id="mutqin-memorisation-hotfix-v115">
@@ -2295,7 +2344,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -2876,42 +2925,71 @@
             transform: rotate(15deg);
         }
 
+        .global-lang-switcher {
+            min-width: 0;
+            max-width: 100%;
+        }
+
         .app-lang-toggle {
             min-height: var(--tap);
             height: var(--nav-icon);
+            max-width: 100%;
             border-radius: 10px;
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text);
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
-            padding: 0 0.65rem;
+            gap: 0.4rem;
+            padding: 0 0.55rem 0 0.45rem;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
-        .app-lang-toggle.icon-only {
-            width: var(--nav-icon);
-            min-width: var(--tap);
-            height: var(--nav-icon);
-            min-height: var(--tap);
-            padding: 0;
-            justify-content: center;
+        .app-lang-flag,
+        .lang-btn-flag {
+            font-size: 1.05rem;
+            line-height: 1;
+            flex-shrink: 0;
         }
 
-        .global-lang-switcher {
-            display: none !important;
+        .app-lang-label,
+        .lang-btn-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.1;
+            min-width: 0;
         }
 
-        .global-lang-switcher.d-lg-none .app-lang-toggle.icon-only {
-            width: 100%;
+        .app-lang-label {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lang-btn-label {
+            flex: 1 1 auto;
+            text-align: start;
+        }
+
+        .app-lang-chevron {
+            font-size: 0.65rem;
+            line-height: 1;
+            opacity: 0.72;
+            flex-shrink: 0;
         }
 
         .app-lang-toggle:hover,
         .global-lang-switcher .lang-btn.active {
             background: var(--accent-light);
             color: var(--accent);
+        }
+
+        .app-lang-menu .lang-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            width: 100%;
         }
 
         html[dir="rtl"] .navbar-shell,
@@ -2942,6 +3020,41 @@
             border-radius: 16px;
             background: var(--surface-strong);
             z-index: 5200;
+        }
+
+        .app-lang-menu .lang-btn.active {
+            background: var(--accent-light);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-quick-actions > .global-lang-switcher {
+                width: auto !important;
+                min-width: 0;
+                max-width: min(42vw, 10.5rem);
+            }
+
+            .navbar-quick-actions .global-lang-switcher .app-lang-toggle {
+                width: 100%;
+                min-width: 0;
+                padding-inline: 0.4rem;
+                gap: 0.3rem;
+            }
+
+            .navbar-quick-actions .global-lang-switcher .dropdown-menu {
+                position: fixed !important;
+                inset: auto 12px auto auto !important;
+                transform: none !important;
+                margin-top: 8px;
+                max-height: min(60vh, 360px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            html[dir="rtl"] .navbar-quick-actions .global-lang-switcher .dropdown-menu {
+                inset: auto auto auto 12px !important;
+            }
         }
 
         /* Dropdown Styles - NO SHADOWS */
@@ -3184,8 +3297,7 @@
 
             .app-theme-toggle,
             .navbar-toggler,
-            .app-user-toggle,
-            .app-lang-toggle.icon-only {
+            .app-user-toggle {
                 width: var(--nav-icon);
                 min-width: var(--tap);
                 height: var(--nav-icon);
@@ -3193,6 +3305,15 @@
                 padding: 0;
                 border-radius: 10px;
                 justify-content: center;
+            }
+
+            .navbar-quick-actions > .global-lang-switcher {
+                max-width: min(40vw, 9rem);
+            }
+
+            .app-lang-label {
+                font-size: 0.74rem;
+                max-width: 3.75rem;
             }
 
             .app-user-toggle {
@@ -4387,12 +4508,10 @@
             box-shadow: 0 0 0 3px var(--accent-light);
         }
 
-        /* Mobile drawer affordances stay inert outside the phone breakpoint. */
+        /* Mobile drawer affordances stay inert outside the collapsed-nav breakpoint. */
         .nav-links-desktop .nav-link-icon,
         .nav-links-desktop .nav-link-chevron,
         .nav-links-desktop .nav-link-copy small,
-        .offcanvas-body .app-lang-toggle > span,
-        .offcanvas-body .app-lang-toggle > .bi-chevron-down,
         .mobile-nav-only {
             display: none !important;
         }
@@ -4681,18 +4800,26 @@
 
             .navbar-quick-actions {
                 grid-column: 3 / -1;
-                display: grid !important;
-                grid-auto-flow: column;
-                grid-auto-columns: 44px;
-                justify-content: end;
+                display: flex !important;
+                flex-wrap: nowrap;
+                align-items: center;
+                justify-content: flex-end;
                 gap: var(--app-mobile-gap) !important;
                 min-width: 0;
             }
 
-            .navbar-quick-actions > .dropdown,
-            .navbar-quick-actions > button {
+            .navbar-quick-actions > .dropdown:not(.global-lang-switcher),
+            .navbar-quick-actions > button:not(.app-lang-toggle) {
+                flex: 0 0 44px;
                 width: 44px;
                 min-width: 44px;
+            }
+
+            .navbar-quick-actions > .global-lang-switcher {
+                flex: 0 1 auto;
+                width: auto !important;
+                min-width: 0;
+                max-width: min(44vw, 10rem);
             }
 
             .app-navbar .offcanvas-lg {
@@ -4900,28 +5027,6 @@
 
             html[dir="rtl"] .app-navbar .offcanvas-body .nav-link-chevron {
                 transform: scaleX(-1);
-            }
-
-            .app-navbar .offcanvas-body .app-lang-toggle {
-                display: grid;
-                grid-template-columns: 44px minmax(0, 1fr) 20px;
-                gap: 10px;
-                align-items: center;
-                min-height: 54px;
-                padding: 5px 10px;
-                text-align: start;
-            }
-
-            .app-navbar .offcanvas-body .app-lang-toggle > :first-child {
-                width: 44px;
-                height: 44px;
-                display: grid;
-                place-items: center;
-            }
-
-            .app-navbar .offcanvas-body .app-lang-toggle > span,
-            .app-navbar .offcanvas-body .app-lang-toggle > .bi-chevron-down {
-                display: block !important;
             }
 
             .mobile-nav-only {
@@ -5286,7 +5391,7 @@
 <body dir="{{ $appDirection }}">
     <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
         <div class="container-fluid shell navbar-shell">
-            <a class="navbar-brand" href="{{ route('home') }}" aria-label="Mutqin">
+            <a class="navbar-brand" href="{{ route('home') }}" aria-label="{{ __('ui.mutqin_brand') }}">
                 <img
                     src="/images/logo.png"
                     alt=""
@@ -5364,23 +5469,6 @@
                         </div>
                     </div>
 
-                    <div class="global-lang-switcher dropdown d-lg-none w-100" aria-label="{{ __('ui.language_switcher') }}">
-                        <button class="btn app-lang-toggle icon-only w-100 lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
-                            <i class="bi bi-translate" aria-hidden="true"></i>
-                            <span>{{ __('ui.language_switcher') }}</span>
-                            <i class="bi bi-chevron-down" aria-hidden="true"></i>
-                        </button>
-                        <ul class="dropdown-menu w-100 app-lang-menu">
-                            <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
-                            <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
-                            <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
-                            <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
-                            <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
-                            <li><button type="button" class="dropdown-item lang-btn" data-locale="es">🇪🇸 {{ __('ui.spanish') }}</button></li>
-                            <li><button type="button" class="dropdown-item lang-btn" data-locale="ur">🇵🇰 {{ __('ui.urdu') }}</button></li>
-                        </ul>
-                    </div>
-
                     @guest
                         <div class="app-auth-links d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-0">
                             <a class="nav-link" href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right nav-link-icon d-lg-none" aria-hidden="true"></i><span data-i18n="login">{{ __('ui.login') }}</span></a>
@@ -5416,18 +5504,27 @@
             </div>
 
             <div class="d-flex align-items-center gap-2 navbar-quick-actions">
-                <div class="global-lang-switcher dropdown d-none d-lg-block" aria-label="{{ __('ui.language_switcher') }}">
-                    <button class="btn app-lang-toggle icon-only lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('ui.language_switcher') }}">
-                        <i class="bi bi-translate" aria-hidden="true"></i>
+                <div class="global-lang-switcher dropdown" aria-label="{{ __('ui.language_switcher') }}">
+                    <button class="btn app-lang-toggle lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ $activeLocaleOption['label'] }}">
+                        <span class="app-lang-flag" aria-hidden="true">{{ $activeLocaleOption['flag'] }}</span>
+                        <span class="app-lang-label">{{ $activeLocaleOption['label'] }}</span>
+                        <i class="bi bi-chevron-down app-lang-chevron" aria-hidden="true"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end app-lang-menu">
-                        <li><button type="button" class="dropdown-item lang-btn" data-locale="en">🇬🇧 {{ __('ui.english') }}</button></li>
-                        <li><button type="button" class="dropdown-item lang-btn" data-locale="fr">🇫🇷 {{ __('ui.french') }}</button></li>
-                        <li><button type="button" class="dropdown-item lang-btn" data-locale="ar">🇸🇦 {{ __('ui.arabic') }}</button></li>
-                        <li><button type="button" class="dropdown-item lang-btn" data-locale="id">🇮🇩 {{ __('ui.indonesian') }}</button></li>
-                        <li><button type="button" class="dropdown-item lang-btn" data-locale="tr">🇹🇷 {{ __('ui.turkish') }}</button></li>
-                        <li><button type="button" class="dropdown-item lang-btn" data-locale="es">🇪🇸 {{ __('ui.spanish') }}</button></li>
-                        <li><button type="button" class="dropdown-item lang-btn" data-locale="ur">🇵🇰 {{ __('ui.urdu') }}</button></li>
+                        @foreach ($appLocaleOptions as $localeCode => $localeOption)
+                        <li>
+                            <button
+                                type="button"
+                                class="dropdown-item lang-btn"
+                                data-locale="{{ $localeCode }}"
+                                data-flag="{{ $localeOption['flag'] }}"
+                                data-label="{{ $localeOption['label'] }}"
+                            >
+                                <span class="lang-btn-flag" aria-hidden="true">{{ $localeOption['flag'] }}</span>
+                                <span class="lang-btn-label">{{ $localeOption['label'] }}</span>
+                            </button>
+                        </li>
+                        @endforeach
                     </ul>
                 </div>
 
@@ -5499,6 +5596,7 @@
     
     <script>
         window.mutqinInitialLocale = @json($appLocale);
+        window.mutqinLanguageEndonyms = @json($languageEndonyms);
         window.mutqinInitialDirection = @json($appDirection);
         window.mutqinForceInitialLocale = @json(request()->query('lang') ? true : false);
         window.mutqinAuthCheck = @json(Auth::check());
@@ -5631,9 +5729,9 @@
                         passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
                         emailInput.focus();
 
-                        const defaultLabel = button.getAttribute('data-default-label') || 'Use';
+                        const defaultLabel = button.getAttribute('data-default-label') || @json(__('ui.auth_demo_use'));
                         button.classList.add('is-filled');
-                        button.textContent = 'Ready';
+                        button.textContent = @json(__('ui.auth_demo_ready'));
                         window.setTimeout(function() {
                             button.classList.remove('is-filled');
                             button.textContent = defaultLabel;
@@ -5771,6 +5869,23 @@
                 return pack[key] || pack[toSnake(key)] || null;
             }
 
+            function updateLangToggles(locale) {
+                const next = normalize(locale);
+                const endonyms = window.mutqinLanguageEndonyms || {};
+                document.querySelectorAll('.global-lang-switcher').forEach((wrap) => {
+                    const activeBtn = wrap.querySelector(`.lang-btn[data-locale="${next}"]`);
+                    const toggle = wrap.querySelector('.app-lang-toggle');
+                    if (!toggle) return;
+                    const flag = activeBtn?.dataset.flag || activeBtn?.querySelector('.lang-btn-flag')?.textContent || '';
+                    const label = endonyms[next] || activeBtn?.dataset.label || activeBtn?.querySelector('.lang-btn-label')?.textContent || next;
+                    const flagEl = toggle.querySelector('.app-lang-flag');
+                    const labelEl = toggle.querySelector('.app-lang-label');
+                    if (flagEl) flagEl.textContent = flag;
+                    if (labelEl) labelEl.textContent = label;
+                    toggle.setAttribute('aria-label', label);
+                });
+            }
+
             function setDocumentLocale(locale) {
                 const next = normalize(locale);
                 const rtl = next === 'ar' || next === 'ur';
@@ -5782,6 +5897,7 @@
                 document.querySelectorAll('.global-lang-switcher .lang-btn').forEach((btn) => {
                     btn.classList.toggle('active', btn.dataset.locale === next);
                 });
+                updateLangToggles(next);
                 document.querySelectorAll('[data-i18n]').forEach((el) => {
                     const key = el.getAttribute('data-i18n');
                     const text = getLabel(next, key);

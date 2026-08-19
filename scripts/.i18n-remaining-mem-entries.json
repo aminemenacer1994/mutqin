@@ -1,0 +1,850 @@
+[
+  {
+    "key": "memorisation.a11y.ayahNumberLabel",
+    "en": "Ayah {number}"
+  },
+  {
+    "key": "memorisation.a11y.helpTopics",
+    "en": "Help topics"
+  },
+  {
+    "key": "memorisation.a11y.tajweedLabel",
+    "en": "Tajweed"
+  },
+  {
+    "key": "memorisation.activePracticeSetup.moreCount",
+    "en": "+{count} more"
+  },
+  {
+    "key": "memorisation.activePracticeSetup.repetitions",
+    "en": "Repetitions"
+  },
+  {
+    "key": "memorisation.advanced_metrics",
+    "en": "Advanced Metrics"
+  },
+  {
+    "key": "memorisation.aiCheck.colourCloseHint",
+    "en": "Near misses to polish."
+  },
+  {
+    "key": "memorisation.aiRecitePlan.alsoTip",
+    "en": "Tip: {technique}"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.alsoWith",
+    "en": "Also: {technique}"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.attemptProgress",
+    "en": "Try {current} of {max}"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.beginner.how",
+    "en": "How"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.seePracticePlan",
+    "en": "See my plan"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.setup.speed",
+    "en": "{speed}× speed"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.surahRecap.technique",
+    "en": "Technique that helped: {technique}"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.surahRecap.weakLeft",
+    "en": "Still watch: {items}"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.tech.anchorTitle",
+    "en": "Anchor"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.tech.chainingTitle",
+    "en": "Chunking"
+  },
+  {
+    "key": "memorisation.aiRecitePlan.techniques",
+    "en": "Techniques"
+  },
+  {
+    "key": "memorisation.amd.tajweed",
+    "en": "Tajweed"
+  },
+  {
+    "key": "memorisation.amd.tajweedShort",
+    "en": "Tajweed"
+  },
+  {
+    "key": "memorisation.analytics.memoryBreakdown",
+    "en": "Memory breakdown"
+  },
+  {
+    "key": "memorisation.analytics.noDataYet",
+    "en": "No data yet"
+  },
+  {
+    "key": "memorisation.analytics.recitationQuality",
+    "en": "Recitation quality"
+  },
+  {
+    "key": "memorisation.analytics.rowAvgQuality",
+    "en": "Average quality"
+  },
+  {
+    "key": "memorisation.analytics.rowAvgRetention",
+    "en": "Average retention"
+  },
+  {
+    "key": "memorisation.analytics.rowCompleted",
+    "en": "completed"
+  },
+  {
+    "key": "memorisation.analytics.rowDue",
+    "en": "Due"
+  },
+  {
+    "key": "memorisation.analytics.rowMastered",
+    "en": "Mastered"
+  },
+  {
+    "key": "memorisation.analytics.rowNeedsCare",
+    "en": "needs care"
+  },
+  {
+    "key": "memorisation.analytics.rowNew",
+    "en": "New"
+  },
+  {
+    "key": "memorisation.analytics.rowReviews",
+    "en": "reviews"
+  },
+  {
+    "key": "memorisation.analytics.rowScheduled",
+    "en": "scheduled"
+  },
+  {
+    "key": "memorisation.analytics.rowUpcoming",
+    "en": "Upcoming"
+  },
+  {
+    "key": "memorisation.analytics.todayProgressDesc",
+    "en": "{covered}/{total} ayahs covered."
+  },
+  {
+    "key": "memorisation.anchor_points_per_ayah",
+    "en": "Anchor points per ayah"
+  },
+  {
+    "key": "memorisation.any_surah",
+    "en": "Any surah"
+  },
+  {
+    "key": "memorisation.auto_advance",
+    "en": "Auto-advance"
+  },
+  {
+    "key": "memorisation.ayahNotes.edit",
+    "en": "Edit"
+  },
+  {
+    "key": "memorisation.ayahNotes.surahFallback",
+    "en": "Surah {number}"
+  },
+  {
+    "key": "memorisation.ayah_activity",
+    "en": "Ayah activity"
+  },
+  {
+    "key": "memorisation.ayah_display",
+    "en": "Ayah display"
+  },
+  {
+    "key": "memorisation.badges.due",
+    "en": "Due"
+  },
+  {
+    "key": "memorisation.badges.new",
+    "en": "New"
+  },
+  {
+    "key": "memorisation.blur_everything",
+    "en": "Blur Everything"
+  },
+  {
+    "key": "memorisation.blur_intensity",
+    "en": "Blur Intensity"
+  },
+  {
+    "key": "memorisation.common.autoAdvance",
+    "en": "auto advance"
+  },
+  {
+    "key": "memorisation.common.confirm",
+    "en": "Confirm"
+  },
+  {
+    "key": "memorisation.common.filterValue",
+    "en": "Filter value"
+  },
+  {
+    "key": "memorisation.common.fontLabel",
+    "en": "Font {font}"
+  },
+  {
+    "key": "memorisation.common.fullQuran",
+    "en": "Full Quran"
+  },
+  {
+    "key": "memorisation.common.lastOpened",
+    "en": "Last opened {date}"
+  },
+  {
+    "key": "memorisation.common.manualAdvance",
+    "en": "manual advance"
+  },
+  {
+    "key": "memorisation.common.modeLabel",
+    "en": "{label} mode"
+  },
+  {
+    "key": "memorisation.common.noSurah",
+    "en": "No surah"
+  },
+  {
+    "key": "memorisation.common.plainSequence",
+    "en": "plain sequence"
+  },
+  {
+    "key": "memorisation.confirmModals.defaultTitle",
+    "en": "Confirm action"
+  },
+  {
+    "key": "memorisation.confirmModals.discard",
+    "en": "Discard"
+  },
+  {
+    "key": "memorisation.delay_between_recitations_secs",
+    "en": "Delay between recitations (secs)"
+  },
+  {
+    "key": "memorisation.demo.createAccount",
+    "en": "Create free account"
+  },
+  {
+    "key": "memorisation.due",
+    "en": "Due"
+  },
+  {
+    "key": "memorisation.focused_ayah_ranges",
+    "en": "Focused ayah ranges"
+  },
+  {
+    "key": "memorisation.fonts.amiri",
+    "en": "Amiri Quran"
+  },
+  {
+    "key": "memorisation.fonts.lateef",
+    "en": "Lateef"
+  },
+  {
+    "key": "memorisation.fonts.naskh",
+    "en": "Noto Naskh Arabic"
+  },
+  {
+    "key": "memorisation.fonts.scheherazade",
+    "en": "Scheherazade New"
+  },
+  {
+    "key": "memorisation.guided.learn",
+    "en": "Learn"
+  },
+  {
+    "key": "memorisation.guided.recall",
+    "en": "Recall"
+  },
+  {
+    "key": "memorisation.guided.tryReciting",
+    "en": "Try Reciting"
+  },
+  {
+    "key": "memorisation.hold",
+    "en": "Hold"
+  },
+  {
+    "key": "memorisation.how_mutqin_stays_focused",
+    "en": "How Mutqin stays focused"
+  },
+  {
+    "key": "memorisation.labels.ayahs",
+    "en": "Ayahs {start}–{end}"
+  },
+  {
+    "key": "memorisation.live",
+    "en": "Live"
+  },
+  {
+    "key": "memorisation.meta.graceKicker",
+    "en": "By The Grace Of Allah"
+  },
+  {
+    "key": "memorisation.most_improved",
+    "en": "Most Improved:"
+  },
+  {
+    "key": "memorisation.most_replayed_ayahs",
+    "en": "Most Replayed Ayahs"
+  },
+  {
+    "key": "memorisation.new_ayahs",
+    "en": "New ayahs"
+  },
+  {
+    "key": "memorisation.no_ayah_replay_data_available_yet",
+    "en": "No ayah replay data available yet."
+  },
+  {
+    "key": "memorisation.planner.todaysGoal",
+    "en": "Today's Goal"
+  },
+  {
+    "key": "memorisation.plannerUi.tomorrow",
+    "en": "Tomorrow"
+  },
+  {
+    "key": "memorisation.playback_settings",
+    "en": "Playback settings"
+  },
+  {
+    "key": "memorisation.player.fullPlayer",
+    "en": "Full player"
+  },
+  {
+    "key": "memorisation.player.miniPlayer",
+    "en": "Mini player"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.bands.developing",
+    "en": "More practice needed"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.bands.steady",
+    "en": "Mostly secure"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.description",
+    "en": "Optional."
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.feedbackCorrect",
+    "en": "Nice — that is right."
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.memoryCheckOpening",
+    "en": "Starting…"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.memoryCheckOptionalTag",
+    "en": "Optional"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.memoryCheckTimeTag",
+    "en": "1–2 min"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.memoryCheckTitle",
+    "en": "Quiz AI"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.moveDown",
+    "en": "Down"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.nextSteps.start_focused_review",
+    "en": "Do a short focused review."
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.progress",
+    "en": "{current} of {total}"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.progressHint",
+    "en": "Almost done"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.quickCheckDescription",
+    "en": "A few short questions."
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.quickCheckTitle",
+    "en": "Quiz"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.quizAiTitle",
+    "en": "Quiz AI"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultHowLabel",
+    "en": "How"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultScoreLine",
+    "en": "{correct} of {total} answered well"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultTitleStrong",
+    "en": "Looking good"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultTitleWeak",
+    "en": "Needs another short review"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultWhyWeakness",
+    "en": "{skill} still needs support."
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.seeFullReview",
+    "en": "See full review"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.skills.ayahSequence",
+    "en": "Keeping the order"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.skills.independentRecitation",
+    "en": "Reciting without help"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.skillsLabel",
+    "en": "How it went"
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.title",
+    "en": "Quiz AI"
+  },
+  {
+    "key": "memorisation.postSession.celebrationTitleComplete",
+    "en": "Alhamdulillah"
+  },
+  {
+    "key": "memorisation.postSession.celebrationTitlePartial",
+    "en": "Barakallahu feek"
+  },
+  {
+    "key": "memorisation.postSession.coach.ayahRangeLabel",
+    "en": "Āyahs {from}–{to}"
+  },
+  {
+    "key": "memorisation.postSession.coach.live.focusStripLabel",
+    "en": "Hold onto"
+  },
+  {
+    "key": "memorisation.postSession.coach.live.technique.chaining.label",
+    "en": "Join the āyahs"
+  },
+  {
+    "key": "memorisation.postSession.coach.replayPhrase",
+    "en": "Replay surrounding phrase"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.adjustPlan",
+    "en": "Adjust plan"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.adjustSettings",
+    "en": "Adjust plan"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiHighlightWeakAyah",
+    "en": "Ayah {ayah} carried most of the difficulty."
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiMetricMissed",
+    "en": "Missed"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiMetricOrder",
+    "en": "Order"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiMetricOrderIssues",
+    "en": "{count} slips"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiMetricWordsApprox",
+    "en": "~{percent}% matched"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiResult.mixed",
+    "en": "Needs review"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiReviewAccuracyChip",
+    "en": "{percent}% match"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiReviewAyahsLabel",
+    "en": "Ayahs to revisit"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiReviewSequenceChip",
+    "en": "{count} order slips"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.checkAnswerQuizMixed",
+    "en": "Mostly secure"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.checkAnswerQuizWeak",
+    "en": "More practice needed"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.confidenceConfident",
+    "en": "Confident"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.confidenceNeedsPractice",
+    "en": "Needs more practice"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.estimatedTime",
+    "en": "About"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.modeNewLearning",
+    "en": "New"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.modeRepeated",
+    "en": "Repeated"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.modeRevision",
+    "en": "Revision"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.planDetail.alsoWith",
+    "en": "Plus: {technique}"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.planDetail.ayahRange",
+    "en": "Ayahs {start}–{end}"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.planDetail.colourMix",
+    "en": "{green} green · {amber} amber · {red} red · {black} black"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.preparingRecommendation",
+    "en": "Preparing recommendation…"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.preparingRepeatSession",
+    "en": "Preparing revision…"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.recommendedNextSurah",
+    "en": "Surah {surah}"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.retryRecommendation",
+    "en": "Prepare recommendation again"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.savingSettings",
+    "en": "Saving settings…"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.settingsRepetitions",
+    "en": "Repetitions"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.settingsTechnique",
+    "en": "Technique"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.statusMorePracticeNeeded",
+    "en": "More practice needed"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.statusMostlySecure",
+    "en": "Mostly secure"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.stepCheck",
+    "en": "Step 1"
+  },
+  {
+    "key": "memorisation.postSession.recommendation.stepPlan",
+    "en": "Step 2"
+  },
+  {
+    "key": "memorisation.postSession.statsNew",
+    "en": "New"
+  },
+  {
+    "key": "memorisation.postSession.statsRepeated",
+    "en": "Repeated"
+  },
+  {
+    "key": "memorisation.postSession.statsRetries",
+    "en": "Retries"
+  },
+  {
+    "key": "memorisation.postSession.viewStats",
+    "en": "View stats"
+  },
+  {
+    "key": "memorisation.prepare_yourself",
+    "en": "Prepare yourself"
+  },
+  {
+    "key": "memorisation.quiz.ayahLabel",
+    "en": "Ayah {number}"
+  },
+  {
+    "key": "memorisation.quiz.mistakeAyah",
+    "en": "Ayah {number}"
+  },
+  {
+    "key": "memorisation.quiz.progress",
+    "en": "{current} / {total}"
+  },
+  {
+    "key": "memorisation.reading.font",
+    "en": "Font"
+  },
+  {
+    "key": "memorisation.reading.tajweed",
+    "en": "Tajweed"
+  },
+  {
+    "key": "memorisation.reading.translationSource",
+    "en": "Muhammad Asad"
+  },
+  {
+    "key": "memorisation.recall_mode",
+    "en": "Recall Mode"
+  },
+  {
+    "key": "memorisation.recall_mode_listening_title",
+    "en": "Listening…"
+  },
+  {
+    "key": "memorisation.recall_mode_mistake_title",
+    "en": "Try that word again"
+  },
+  {
+    "key": "memorisation.recall_mode_peek_title",
+    "en": "Current word revealed"
+  },
+  {
+    "key": "memorisation.recitation_review",
+    "en": "Recitation review"
+  },
+  {
+    "key": "memorisation.recitation_window_secs",
+    "en": "Recitation window (secs)"
+  },
+  {
+    "key": "memorisation.repeats_per_step",
+    "en": "Repeats per step"
+  },
+  {
+    "key": "memorisation.reset_ayah",
+    "en": "Reset Ayah"
+  },
+  {
+    "key": "memorisation.resume_exactly",
+    "en": "Resume exactly"
+  },
+  {
+    "key": "memorisation.reveal_current_word",
+    "en": "Reveal Current Word"
+  },
+  {
+    "key": "memorisation.search.ayahNumber",
+    "en": "Ayah number"
+  },
+  {
+    "key": "memorisation.search.hizbNumber",
+    "en": "Hizb number"
+  },
+  {
+    "key": "memorisation.search.juzNumber",
+    "en": "Juz number"
+  },
+  {
+    "key": "memorisation.search.pageNumber",
+    "en": "Page number"
+  },
+  {
+    "key": "memorisation.search.wordNumber",
+    "en": "Word number"
+  },
+  {
+    "key": "memorisation.search.wordPosition",
+    "en": "Word position"
+  },
+  {
+    "key": "memorisation.sessionType.advanced",
+    "en": "Advanced"
+  },
+  {
+    "key": "memorisation.sessionType.ayah",
+    "en": "Ayah {n}"
+  },
+  {
+    "key": "memorisation.sessionType.beginner",
+    "en": "Beginner"
+  },
+  {
+    "key": "memorisation.skip",
+    "en": "Skip"
+  },
+  {
+    "key": "memorisation.speed",
+    "en": "Speed"
+  },
+  {
+    "key": "memorisation.stats.duration",
+    "en": "Duration"
+  },
+  {
+    "key": "memorisation.stats.repeats",
+    "en": "Repeats"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.bands.average.label",
+    "en": "Needs a slower pass"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.blue",
+    "en": "Blue"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.gray",
+    "en": "Gray"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.green",
+    "en": "Green"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.orange",
+    "en": "Orange"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.purple",
+    "en": "Purple"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.red",
+    "en": "Red"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.blue",
+    "en": "Blue — merge"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.green",
+    "en": "Green — soft nasal hold"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.orange",
+    "en": "Orange — light bounce"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.purple",
+    "en": "Purple — hidden sound"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.red",
+    "en": "Red — stretch (madd)"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.hold.long",
+    "en": "A little long"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.hold.na",
+    "en": "No special hold"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.hold.short",
+    "en": "A little short"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.labels.hold",
+    "en": "Hold"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.legendTitle",
+    "en": "Tajweed colours explained"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.live.listening",
+    "en": "Listening…"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.next.slowPass",
+    "en": "Try one slower pass"
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.viewDetails",
+    "en": "View details"
+  },
+  {
+    "key": "memorisation.techniques.anchorFirstLast",
+    "en": "first/last word"
+  },
+  {
+    "key": "memorisation.techniques.chainingCumulativeSub",
+    "en": "Build longer connected runs from the first ayah outward."
+  },
+  {
+    "key": "memorisation.techniques.chainingLinkingLabel",
+    "en": "Linking · {count} repeats"
+  },
+  {
+    "key": "memorisation.techniques.chainingLinkingSub",
+    "en": "Train the transition between neighbouring ayahs."
+  },
+  {
+    "key": "memorisation.text",
+    "en": "Text"
+  },
+  {
+    "key": "memorisation.view.mushaf",
+    "en": "Mushaf"
+  },
+  {
+    "key": "memorisation.view.stacked",
+    "en": "Stacked"
+  },
+  {
+    "key": "memorisation.welcomeBack.resumePlaceAyah",
+    "en": "{chapter}, ayah {number}"
+  },
+  {
+    "key": "memorisation.welcomeBack.resumeTitleNamed",
+    "en": "{chapter}, {name}"
+  },
+  {
+    "key": "memorisation.workspaceEmpty.startBeginningHint",
+    "en": "The Opening, ayahs 1–7"
+  },
+  {
+    "key": "memorisation.workspaceJourney.idleLinksLabel",
+    "en": "More options"
+  },
+  {
+    "key": "memorisation.workspaceJourney.overallPercent",
+    "en": "{n}% of the Qur'an"
+  }
+]

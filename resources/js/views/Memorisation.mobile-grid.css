@@ -978,9 +978,9 @@
     flex: 0 0 auto !important;
     grid-column: auto !important;
     grid-row: auto !important;
-    margin: 0 0.18em 0.55em !important;
+    margin: 0 0.18em 0.85em !important;
     padding: 0.15em 0.2em !important;
-    gap: 0.1em !important;
+    gap: 0.55em !important;
     background: transparent !important;
     border-radius: 0.3em !important;
     box-shadow: none !important;
@@ -990,7 +990,8 @@
     display: block !important;
     height: auto !important;
     white-space: nowrap !important;
-    line-height: 1.35 !important;
+    line-height: 1.65 !important;
+    padding-bottom: 0.35em !important;
   }
 
   .verse-arabic.word-by-word-meanings .word-meaning {
@@ -998,9 +999,10 @@
     width: max-content !important;
     max-width: 8.5em !important;
     height: auto !important;
-    margin: 0 auto !important;
+    margin: 0.42em auto 0 !important;
+    padding-top: 0.22em !important;
     white-space: normal !important;
-    line-height: 1.2 !important;
+    line-height: 1.3 !important;
   }
 
   /* Mushaf controls use two compact utility rails above the reading surface. */
@@ -4351,16 +4353,16 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     grid-template-columns: none !important;
   }
 
-  /* Compact translation / transliteration */
+  /* Compact translation / transliteration — keep clear of Arabic diacritics */
   .verses-grid .verse-translation,
 .verses-grid .verse-transliteration,
 .verses-grid .verse-aid,
 .verses-grid .verse-aid-block {
-    margin-top: 0.28rem !important;
+    margin-top: 0.65rem !important;
     margin-bottom: 0 !important;
-    padding: 0.2rem 0 !important;
+    padding: 0.35rem 0 0 !important;
     font-size: 0.78rem !important;
-    line-height: 1.35 !important;
+    line-height: 1.45 !important;
   }
 
   .verses-grid .verse-aid-title {
@@ -4578,6 +4580,59 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .tools-body .setup-field-row .field-hint {
     white-space: normal !important;
+  }
+
+  .tools-body .field-individual-ayah {
+    gap: 0.55rem !important;
+  }
+
+  .tools-body .field-individual-ayah .individual-ayah-repeat-label,
+  .tools-body .field-individual-ayah .field-hint {
+    min-inline-size: 0 !important;
+    max-inline-size: 100% !important;
+    overflow-wrap: anywhere !important;
+    text-align: start !important;
+  }
+
+  .tools-body .field-individual-ayah .individual-ayah-repeat {
+    display: grid !important;
+    gap: 0.35rem !important;
+  }
+
+  .tools-body .field-individual-ayah .range-value-pill {
+    justify-self: end !important;
+    flex-shrink: 0 !important;
+  }
+
+  .tools-body .field-individual-ayah .range-control,
+  .tools-body .field-individual-ayah .individual-ayah-range {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-block-size: 2.75rem !important;
+    touch-action: pan-x !important;
+  }
+
+  .tools-body .field-individual-ayah .slider-markers {
+    gap: 0.15rem !important;
+    padding-inline: 0.1rem !important;
+  }
+
+  .tools-body .field-individual-ayah .slider-markers span {
+    font-size: 0.64rem !important;
+    min-width: 0 !important;
+    text-align: center !important;
+    flex: 1 1 0 !important;
+  }
+
+  .tools-body .field-individual-ayah .individual-ayah-range::-webkit-slider-thumb {
+    width: 22px !important;
+    height: 22px !important;
+    margin-top: -8.5px !important;
+  }
+
+  .tools-body .field-individual-ayah .individual-ayah-range::-moz-range-thumb {
+    width: 22px !important;
+    height: 22px !important;
   }
 
   /* Practice: technique dropdown contents full width */
@@ -5773,13 +5828,22 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .workspace-layout-toggle {
     width: 100% !important;
-    max-width: min(100%, 22rem) !important;
+    max-width: min(100%, 24rem) !important;
+    padding: 0.22rem !important;
   }
 
   .workspace-layout-toggle .view-mode-btn {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    min-width: max-content !important;
     justify-content: center !important;
+    padding-inline: 0.95rem !important;
+    gap: 0.4rem !important;
+  }
+
+  .workspace-layout-toggle .view-mode-btn span {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
   }
 }
 
@@ -6034,6 +6098,77 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 }
 
+@media (min-width: 1025px) {
+  .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    gap: 0.65rem 1rem !important;
+    flex-flow: unset !important;
+  }
+
+  .workspace-shell-head-toolbar > .workspace-shell-copy {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: auto !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+
+  .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.55rem !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+  }
+
+  .workspace-shell-head-utility-row > .workspace-shell-head-actions,
+  .workspace-shell-head-utility-row > .workspace-shell-actions {
+    order: 1 !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+  }
+
+  .workspace-shell-head-utility-row > .top-card-icon-controls {
+    order: 2 !important;
+    align-self: center !important;
+    flex: 0 0 auto !important;
+  }
+
+  .workspace-shell-head-utility-row .action-buttons-group {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: none !important;
+    gap: 0.5rem !important;
+  }
+
+  .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    width: auto !important;
+  }
+
+  .workspace-shell-head-utility-row .top-card-action-trigger.session-primary-action,
+  .workspace-shell-head-utility-row .top-card-action-trigger.action-btn-exit {
+    width: auto !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+  }
+}
+
 /*
  * FORCE FIX — mobile active session card
  * 1) Surah title + reading icons · 2) Pause/End · 3) metadata pills
@@ -6183,5 +6318,76 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     white-space: normal !important;
     word-spacing: normal !important;
     line-height: inherit !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    gap: 0.65rem 1rem !important;
+    flex-flow: unset !important;
+  }
+
+  .workspace-shell-head-toolbar > .workspace-shell-copy {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: auto !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+
+  .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.55rem !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+  }
+
+  .workspace-shell-head-utility-row > .workspace-shell-head-actions,
+  .workspace-shell-head-utility-row > .workspace-shell-actions {
+    order: 1 !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+  }
+
+  .workspace-shell-head-utility-row > .top-card-icon-controls {
+    order: 2 !important;
+    align-self: center !important;
+    flex: 0 0 auto !important;
+  }
+
+  .workspace-shell-head-utility-row .action-buttons-group {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: none !important;
+    gap: 0.5rem !important;
+  }
+
+  .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    width: auto !important;
+  }
+
+  .workspace-shell-head-utility-row .top-card-action-trigger.session-primary-action,
+  .workspace-shell-head-utility-row .top-card-action-trigger.action-btn-exit {
+    width: auto !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
   }
 }

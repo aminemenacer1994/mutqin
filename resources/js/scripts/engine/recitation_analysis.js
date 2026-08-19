@@ -4,6 +4,8 @@ export const DEFAULT_ANALYSIS_TIMESTAMP = '1970-01-01T00:00:00.000Z'
 export const RECITATION_SOFT_SIMILARITY_CAP = 0.74
 /** Below this (non-exact) recognition is uncertain — not a learner mistake. */
 export const RECITATION_UNCERTAIN_CONFIDENCE = 0.55
+/** AMD live: quieter / distant mics should defer to uncertain, not red. */
+export const RECITATION_AMD_UNCERTAIN_CONFIDENCE = 0.38
 
 export function createRecognitionState() {
   return {
@@ -213,12 +215,16 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   const minConfidenceForCorrect = Number.isFinite(Number(options.minConfidenceForCorrect))
     ? Number(options.minConfidenceForCorrect)
     : 0
+  const uncertainConfidence = Number.isFinite(Number(options.uncertainConfidence))
+    ? Number(options.uncertainConfidence)
+    : RECITATION_UNCERTAIN_CONFIDENCE
   const allowArticleMatch = options.allowArticleMatch !== false
   const matchThresholds = {
     correctSimilarity,
     partialSimilarity,
     minConfidenceForCorrect,
     allowArticleMatch,
+    uncertainConfidence,
   }
   const extraWords = []
   let cursor = 0
@@ -226,6 +232,15 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
 
   for (let heardIndex = 0; heardIndex < heardWords.length; heardIndex += 1) {
     const heardWord = heardWords[heardIndex] || {}
+    if (isLikelyTransientNoiseWord(heardWord, matchThresholds)) {
+      continue
+    }
+    if (isLikelyOffTargetTransientNoise(heardWord, targetWords, cursor, matchThresholds)) {
+      continue
+    }
+    if (shouldSkipLearnerStutterRepeat(heardWords, heardIndex, targetWords, cursor)) {
+      continue
+    }
     if (cursor >= targetWords.length) {
       extraWords.push({
         word: heardWord.word || '',
@@ -930,6 +945,100 @@ function duplicateAdjustedExtraCost(words = [], index = 0) {
 function isRepeatedHeardWord(words = [], index = 0) {
   if (index <= 0) return false
   return words[index]?.word && words[index]?.word === words[index - 1]?.word
+}
+
+function readHeardWordDurationMs(heardWord = {}) {
+  const start = finiteOrNull(heardWord?.start ?? heardWord?.startTime)
+  const end = finiteOrNull(heardWord?.end ?? heardWord?.endTime)
+  if (start == null || end == null || end <= start) return null
+  return (end - start) * 1000
+}
+
+/** Coughs, clicks, and ultra-short low-confidence ASR junk — skip without advancing. */
+export function isLikelyTransientNoiseWord(heardWord = {}, options = {}) {
+  const text = String(heardWord?.word || heardWord?.text || '').trim()
+  if (!text) return true
+  const confidence = Number.isFinite(Number(heardWord?.confidence))
+    ? Number(heardWord.confidence)
+    : 1
+  const minConfidence = Number.isFinite(Number(options.minConfidence))
+    ? Number(options.minConfidence)
+    : 0.34
+  const normalized = normalizeArabicForRecitation(text)
+  if (!normalized) return true
+
+  const durationMs = readHeardWordDurationMs(heardWord)
+  if (durationMs != null && durationMs < 90 && confidence < 0.58) return true
+  if (durationMs != null && durationMs < 140 && normalized.length <= 2 && confidence < 0.45) return true
+
+  if (normalized.length <= 1 && confidence < 0.55) return true
+  if (normalized.length <= 2 && confidence < minConfidence) return true
+  if (normalized.length <= 3 && confidence < 0.28) return true
+  return false
+}
+
+/**
+ * Low-confidence tokens that do not resemble the expected word or its near window
+ * are usually background noise — skip without advancing or marking red.
+ */
+export function isLikelyOffTargetTransientNoise(
+  heardWord = {},
+  targetWords = [],
+  cursor = 0,
+  options = {},
+) {
+  if (isLikelyTransientNoiseWord(heardWord, options)) return true
+  const word = String(heardWord?.word || heardWord?.text || '').trim()
+  if (!word) return true
+  const confidence = Number.isFinite(Number(heardWord?.confidence))
+    ? Number(heardWord.confidence)
+    : 1
+  if (confidence >= 0.54) return false
+
+  const targets = Array.isArray(targetWords) ? targetWords : []
+  if (!targets.length) return false
+
+  const allowArticleMatch = options.allowArticleMatch !== false
+  const partialFloor = Number.isFinite(Number(options.partialSimilarity))
+    ? Number(options.partialSimilarity)
+    : 0.35
+  const windowStart = Math.max(0, Number(cursor) || 0)
+  const windowEnd = Math.min(targets.length - 1, windowStart + 2)
+
+  let bestSimilarity = 0
+  for (let index = windowStart; index <= windowEnd; index += 1) {
+    const similarity = getRecitationWordSimilarity(targets[index] || '', word, { allowArticleMatch })
+    if (similarity > bestSimilarity) bestSimilarity = similarity
+    if (similarity >= partialFloor) return false
+  }
+
+  return bestSimilarity < 0.22 && confidence < 0.46
+}
+
+/**
+ * Ignore learner stutters and quick ASR re-emits without treating them as mistakes.
+ * - Re-saying the previous target word while still on the next slot.
+ * - Immediate duplicate tokens in the same breath / segment.
+ */
+export function shouldSkipLearnerStutterRepeat(heardWords = [], heardIndex = 0, targetWords = [], cursor = 0) {
+  const heardWord = heardWords[heardIndex] || {}
+  const word = String(heardWord?.word || '').trim()
+  if (!word) return false
+  const prevHeard = heardWords[heardIndex - 1] || null
+  if (cursor > 0 && word === String(targetWords[cursor - 1] || '')) {
+    return true
+  }
+  if (heardIndex > 0 && prevHeard?.word === word) {
+    const prevEnd = finiteOrNull(prevHeard?.end ?? prevHeard?.endTime)
+    const currStart = finiteOrNull(heardWord?.start ?? heardWord?.startTime)
+    if (prevEnd !== null && currStart !== null) {
+      const gapMs = (currStart - prevEnd) * 1000
+      if (gapMs >= 0 && gapMs < 650) return true
+    } else if (prevHeard?.segmentId && heardWord?.segmentId && prevHeard.segmentId === heardWord.segmentId) {
+      return true
+    }
+  }
+  return false
 }
 
 function operationTieBreak(op) {

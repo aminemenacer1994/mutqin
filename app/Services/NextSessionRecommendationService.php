@@ -9,6 +9,7 @@ use App\Enums\RecommendationType;
 use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\MemorisationProgress;
+use App\Models\MemorisationWeakSpot;
 use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
@@ -16,6 +17,7 @@ use App\Models\UserSession;
 use App\Support\AyahWorkload;
 use App\Support\QuranMetadata;
 use App\Support\SessionDefaults;
+use App\Services\Memorisation\RecitationMasteryService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -49,6 +51,7 @@ class NextSessionRecommendationService
         private readonly RepeatAdaptationService $adaptation,
         private readonly SessionLifecycleService $lifecycle,
         private readonly MainMemorisationPositionService $mainPosition,
+        private readonly RecitationMasteryService $recitationMastery,
     ) {
     }
 
@@ -827,6 +830,21 @@ class NextSessionRecommendationService
         $progress = $context['range_progress'];
         if ($progress->isEmpty()) {
             return null;
+        }
+
+        if ($this->rangeHasReliableWeakSpots(
+            $user,
+            (int) $context['surah']['id'],
+            (int) $context['range_start'],
+            (int) $context['range_end']
+        )) {
+            $progress = $progress->map(function (MemorisationProgress $row) {
+                $meta = is_array($row->metadata) ? $row->metadata : [];
+                $meta['weak_count'] = max(2, (int) ($meta['weak_count'] ?? 0));
+                $row->metadata = $meta;
+
+                return $row;
+            });
         }
 
         $difficult = $progress->filter(fn (MemorisationProgress $row) => $this->isExplicitlyDifficult($row));
@@ -2692,73 +2710,23 @@ class NextSessionRecommendationService
      */
     private function rollupAiReciteProgress(User $user, SessionRecommendation $recommendation, array $assessment): void
     {
-        $range = is_array($assessment['ayah_range'] ?? null) ? $assessment['ayah_range'] : null;
-        $surah = (int) ($recommendation->surah_number ?? 0);
-        if (! $surah && is_array($range)) {
-            $surah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? $range['chapterId'] ?? 0);
-        }
-        $weakAyahs = is_array($assessment['weak_ayahs'] ?? null) ? $assessment['weak_ayahs'] : [];
-        $accuracy = isset($assessment['average_accuracy'])
-            ? (float) $assessment['average_accuracy']
-            : (isset($assessment['accuracy_percent']) ? (float) $assessment['accuracy_percent'] : null);
-        $from = (int) ($range['from'] ?? $recommendation->ayah_start ?? 0);
-        $to = (int) ($range['to'] ?? $recommendation->ayah_end ?? $from);
-        if (! $surah || ! $from || ! $to || $to < $from) {
-            return;
+        $this->recitationMastery->applyFromAiPayload($user, $recommendation, $assessment);
+    }
+
+    private function rangeHasReliableWeakSpots(User $user, int $surah, int $from, int $to): bool
+    {
+        if ($surah <= 0 || $from <= 0 || $to < $from) {
+            return false;
         }
 
-        $ayahNumbers = [];
-        for ($ayah = $from; $ayah <= $to; $ayah++) {
-            if (! QuranMetadata::isValidAyah($surah, $ayah)) {
-                break;
-            }
-            $ayahNumbers[] = $ayah;
-        }
-        if ($ayahNumbers === []) {
-            return;
-        }
-
-        $weakSet = array_fill_keys(array_map('intval', $weakAyahs), true);
-        $existing = MemorisationProgress::query()
+        return MemorisationWeakSpot::query()
             ->where('user_id', $user->id)
+            ->where('spot_type', MemorisationWeakSpot::TYPE_WORD)
             ->where('surah_number', $surah)
-            ->whereIn('ayah_number', $ayahNumbers)
-            ->get()
-            ->keyBy('ayah_number');
-
-        $updatedAt = now()->toIso8601String();
-        foreach ($ayahNumbers as $ayah) {
-            $row = $existing->get($ayah);
-            if (! $row) {
-                $row = new MemorisationProgress([
-                    'user_id' => $user->id,
-                    'surah_number' => $surah,
-                    'ayah_number' => $ayah,
-                    'status' => 'learning',
-                    'mastery_level' => 0,
-                ]);
-            }
-            $meta = is_array($row->metadata) ? $row->metadata : [];
-            $isWeak = isset($weakSet[$ayah]);
-            $meta['ai_recite'] = [
-                'last_accuracy' => $accuracy,
-                'weak' => $isWeak,
-                'recommendation_id' => $recommendation->id,
-                'updated_at' => $updatedAt,
-            ];
-            if (! $isWeak && $accuracy !== null && $accuracy >= 80) {
-                $meta['last_review_at'] = $updatedAt;
-                $meta['ai_recite']['satisfied_review'] = true;
-            }
-            $row->metadata = $meta;
-            if ($isWeak && ! in_array((string) $row->status, ['memorised', 'mastered'], true)) {
-                $row->status = 'reviewing';
-            } elseif (! $isWeak && $accuracy !== null && $accuracy >= 80 && $row->status === 'reviewing') {
-                $row->status = 'memorised';
-                $row->mastery_level = max((int) $row->mastery_level, 50);
-            }
-            $row->save();
-        }
+            ->whereBetween('ayah_number', [$from, $to])
+            ->where('status', MemorisationWeakSpot::STATUS_ACTIVE)
+            ->where('affected_attempt_count', '>=', 2)
+            ->exists();
     }
 
     /**

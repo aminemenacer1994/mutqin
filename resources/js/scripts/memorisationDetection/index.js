@@ -125,6 +125,13 @@ export {
 } from './recitationTimingBuffer'
 
 export {
+  SPEECHMATICS_AMD_FAST_MAX_DELAY_SECONDS,
+  SPEECHMATICS_AMD_MAX_DELAY_SECONDS,
+  SPEECHMATICS_AMD_SLOW_MAX_DELAY_SECONDS,
+  resolveAdaptiveSpeechmaticsDelays,
+} from './speechmaticsDelays'
+
+export {
   AMD_STAGES,
   AI_TEST_MODALS_ENABLED,
   AMD_HOWTO_SEEN_KEY,

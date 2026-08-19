@@ -5,12 +5,12 @@
         <div
           v-if="visible"
           class="network-status-banner"
-          :class="{ 'network-status-banner--offline': !online }"
+          :class="{ 'network-status-banner--offline': effectivelyOffline }"
           role="status"
           aria-live="polite"
         >
           <div class="network-status-banner__inner">
-            <i class="bi" :class="online ? 'bi-wifi' : 'bi-wifi-off'" aria-hidden="true"></i>
+            <i class="bi" :class="effectivelyOffline ? 'bi-wifi-off' : 'bi-wifi'" aria-hidden="true"></i>
             <span>{{ message }}</span>
           </div>
         </div>
@@ -20,35 +20,41 @@
 </template>
 
 <script>
-import { isBrowserOnline, subscribeNetworkStatus } from '../utils/networkStatus'
+import {
+  isBrowserOnline,
+  NETWORK_UNREACHABLE_EVENT,
+  subscribeNetworkStatus,
+} from '../utils/networkStatus'
 
 export default {
   name: 'NetworkStatusBanner',
   data() {
     return {
       online: isBrowserOnline(),
+      networkBlocked: false,
       showBackOnline: false,
       unsubscribe: null,
       backOnlineTimer: null,
-      /** Pages that already surface feature-specific offline copy. */
-      suppressForLocalHandler: false,
+      onNetworkUnreachable: null,
     }
   },
   computed: {
+    effectivelyOffline() {
+      return !this.online || this.networkBlocked
+    },
     visible() {
-      if (this.suppressForLocalHandler && !this.online) return false
-      return !this.online || this.showBackOnline
+      return this.effectivelyOffline || this.showBackOnline
     },
     message() {
-      if (!this.online) return this.t('common.status.offlineBanner')
+      if (this.effectivelyOffline) return this.t('common.status.offlineBanner')
       return this.t('common.status.backOnline')
     },
   },
   mounted() {
-    this.suppressForLocalHandler = !!document.querySelector('memorisation')
     this.unsubscribe = subscribeNetworkStatus((online) => {
-      const wasOffline = !this.online
+      const wasOffline = this.effectivelyOffline
       this.online = online
+      if (online) this.networkBlocked = false
       if (online && wasOffline) {
         this.flashBackOnline()
       }
@@ -56,9 +62,17 @@ export default {
         this.clearBackOnline()
       }
     })
+    this.onNetworkUnreachable = () => {
+      this.networkBlocked = true
+      this.clearBackOnline()
+    }
+    window.addEventListener(NETWORK_UNREACHABLE_EVENT, this.onNetworkUnreachable)
   },
   beforeUnmount() {
     if (typeof this.unsubscribe === 'function') this.unsubscribe()
+    if (this.onNetworkUnreachable) {
+      window.removeEventListener(NETWORK_UNREACHABLE_EVENT, this.onNetworkUnreachable)
+    }
     this.clearBackOnline()
   },
   methods: {

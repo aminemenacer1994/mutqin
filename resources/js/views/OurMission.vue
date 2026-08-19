@@ -3,71 +3,51 @@
     <div class="info-shell">
       <header class="info-header info-reveal">
         <div class="info-header-copy">
-          <span class="info-kicker"><i class="bi bi-compass" aria-hidden="true"></i> Mission</span>
-          <h1>Our mission</h1>
-          <ul class="info-highlights" aria-label="Mission focus">
-            <li><i class="bi bi-flag" aria-hidden="true"></i> Begin</li>
-            <li><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Continue</li>
-            <li><i class="bi bi-heart" aria-hidden="true"></i> Return</li>
+          <span class="info-kicker">
+            <i class="bi bi-compass" aria-hidden="true"></i>
+            {{ t('mission.pageKicker') }}
+          </span>
+          <h1>{{ t('mission.title') }}</h1>
+          <ul class="info-highlights" :aria-label="t('mission.highlightsAria')">
+            <li><i class="bi bi-flag" aria-hidden="true"></i> {{ t('mission.highlights.begin') }}</li>
+            <li><i class="bi bi-arrow-repeat" aria-hidden="true"></i> {{ t('mission.highlights.continue') }}</li>
+            <li><i class="bi bi-heart" aria-hidden="true"></i> {{ t('mission.highlights.return') }}</li>
           </ul>
         </div>
         <div class="info-header-aside">
-          <p>
-            Help people start memorising, keep going, and come back each day,
-            while still learning with a real teacher.
-          </p>
+          <p>{{ t('mission.heroDesc') }}</p>
           <div class="info-actions">
             <a class="info-btn info-btn--primary" href="/memorisation">
-              <i class="bi bi-play-fill" aria-hidden="true"></i> Start a session
+              <i class="bi bi-play-fill" aria-hidden="true"></i> {{ t('mission.ctaStartSession') }}
             </a>
             <a class="info-btn info-btn--ghost" href="/donate">
-              <i class="bi bi-life-preserver" aria-hidden="true"></i> Get help
+              <i class="bi bi-life-preserver" aria-hidden="true"></i> {{ t('mission.ctaGetHelp') }}
             </a>
           </div>
         </div>
       </header>
 
       <div class="info-sections">
-        <section class="info-section info-reveal" style="--d: 60ms">
+        <section
+          v-for="(section, index) in sections"
+          :key="section.key"
+          class="info-section info-reveal"
+          :style="{ '--d': `${60 + index * 60}ms` }"
+        >
           <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-bookmark-check"></i></div>
-            <h2>Practise carefully</h2>
+            <div class="info-icon" aria-hidden="true"><i :class="section.icon"></i></div>
+            <h2>{{ section.title }}</h2>
           </div>
-          <p>
-            Listen, repeat, and check your recitation so what you memorise
-            stays with you beyond one sitting.
-          </p>
-        </section>
-
-        <section class="info-section info-reveal" style="--d: 120ms">
-          <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-calendar-check"></i></div>
-            <h2>Come back each day</h2>
-          </div>
-          <p>
-            After every session you get a clear next step,
-            so ayahs do not fade between days.
-          </p>
-        </section>
-
-        <section class="info-section info-reveal" style="--d: 180ms">
-          <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-shield-check"></i></div>
-            <h2>Respect first</h2>
-          </div>
-          <p>
-            Getting it right matters more than going fast.
-            Mutqin supports study with teachers, not instead of them.
-          </p>
+          <p>{{ section.desc }}</p>
         </section>
       </div>
 
       <div class="info-actions info-reveal" style="--d: 240ms">
         <a class="info-btn info-btn--primary" href="/memorisation">
-          <i class="bi bi-play-fill" aria-hidden="true"></i> Start a session
+          <i class="bi bi-play-fill" aria-hidden="true"></i> {{ t('mission.ctaStartSession') }}
         </a>
         <a class="info-btn info-btn--ghost" href="/donate">
-          <i class="bi bi-life-preserver" aria-hidden="true"></i> Get help
+          <i class="bi bi-life-preserver" aria-hidden="true"></i> {{ t('mission.ctaGetHelp') }}
         </a>
       </div>
     </div>
@@ -75,5 +55,31 @@
 </template>
 
 <script>
-export default { name: 'OurMissionPage' };
+export default {
+  name: 'OurMissionPage',
+  computed: {
+    sections() {
+      return [
+        {
+          key: 'practise',
+          icon: 'bi bi-bookmark-check',
+          title: this.t('mission.sections.practise.title'),
+          desc: this.t('mission.sections.practise.desc'),
+        },
+        {
+          key: 'daily',
+          icon: 'bi bi-calendar-check',
+          title: this.t('mission.sections.daily.title'),
+          desc: this.t('mission.sections.daily.desc'),
+        },
+        {
+          key: 'respect',
+          icon: 'bi bi-shield-check',
+          title: this.t('mission.sections.respect.title'),
+          desc: this.t('mission.sections.respect.desc'),
+        },
+      ];
+    },
+  },
+};
 </script>

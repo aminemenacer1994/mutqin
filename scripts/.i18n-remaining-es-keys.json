@@ -1,0 +1,397 @@
+[
+  {
+    "key": "memorisation.welcomeBack.resumeTitleNamed",
+    "en": "{chapter}, {name}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.welcomeBack.resumePlaceAyah",
+    "en": "{chapter}, ayah {number}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.ayahNotes.surahFallback",
+    "en": "Surah {number}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.view.mushaf",
+    "en": "Mushaf",
+    "fr": null
+  },
+  {
+    "key": "memorisation.quiz.progress",
+    "en": "{current} / {total}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.reading.translationSource",
+    "en": "Muhammad Asad",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.coach.ayahRangeLabel",
+    "en": "Āyahs {from}–{to}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.coach.replayPhrase",
+    "en": "Replay surrounding phrase",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.coach.live.focusStripLabel",
+    "en": "Hold onto",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.celebrationTitlePartial",
+    "en": "Barakallahu feek",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.statsRetries",
+    "en": "Retries",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.statsRepeated",
+    "en": "Repeated",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.viewStats",
+    "en": "View stats",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.description",
+    "en": "Optional.",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.memoryCheckOptionalTag",
+    "en": "Optional",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.memoryCheckTimeTag",
+    "en": "1–2 min",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.seeFullReview",
+    "en": "See full review",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultScoreLine",
+    "en": "{correct} of {total} answered well",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.quickCheckTitle",
+    "en": "Quiz",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.quickCheckDescription",
+    "en": "A few short questions.",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.progress",
+    "en": "{current} of {total}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.progressHint",
+    "en": "Almost done",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.skillsLabel",
+    "en": "How it went",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultTitleWeak",
+    "en": "Needs another short review",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultHowLabel",
+    "en": "How",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.resultWhyWeakness",
+    "en": "{skill} still needs support.",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.moveDown",
+    "en": "Down",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.skills.independentRecitation",
+    "en": "Reciting without help",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.adaptiveCheck.nextSteps.start_focused_review",
+    "en": "Do a short focused review.",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.adjustPlan",
+    "en": "Adjust plan",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.stepCheck",
+    "en": "Step 1",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.stepPlan",
+    "en": "Step 2",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.recommendedNextSurah",
+    "en": "Surah {surah}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.modeRevision",
+    "en": "Revision",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.modeRepeated",
+    "en": "Repeated",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.adjustSettings",
+    "en": "Adjust plan",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.retryRecommendation",
+    "en": "Prepare recommendation again",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.preparingRecommendation",
+    "en": "Preparing recommendation…",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.preparingRepeatSession",
+    "en": "Preparing revision…",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.savingSettings",
+    "en": "Saving settings…",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.settingsTechnique",
+    "en": "Technique",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiResult.mixed",
+    "en": "Needs review",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.confidenceConfident",
+    "en": "Confident",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.planDetail.alsoWith",
+    "en": "Plus: {technique}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.planDetail.colourMix",
+    "en": "{green} green · {amber} amber · {red} red · {black} black",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiReviewAccuracyChip",
+    "en": "{percent}% match",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiReviewSequenceChip",
+    "en": "{count} order slips",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiMetricMissed",
+    "en": "Missed",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiMetricOrder",
+    "en": "Order",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiMetricOrderIssues",
+    "en": "{count} slips",
+    "fr": null
+  },
+  {
+    "key": "memorisation.postSession.recommendation.aiMetricWordsApprox",
+    "en": "~{percent}% matched",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.attemptProgress",
+    "en": "Try {current} of {max}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.seePracticePlan",
+    "en": "See my plan",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.techniques",
+    "en": "Techniques",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.alsoWith",
+    "en": "Also: {technique}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.alsoTip",
+    "en": "Tip: {technique}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.beginner.how",
+    "en": "How",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.surahRecap.technique",
+    "en": "Technique that helped: {technique}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.surahRecap.weakLeft",
+    "en": "Still watch: {items}",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.tech.anchorTitle",
+    "en": "Anchor",
+    "fr": null
+  },
+  {
+    "key": "memorisation.aiRecitePlan.tech.chainingTitle",
+    "en": "Chunking",
+    "fr": null
+  },
+  {
+    "key": "memorisation.fonts.scheherazade",
+    "en": "Scheherazade New",
+    "fr": null
+  },
+  {
+    "key": "memorisation.fonts.lateef",
+    "en": "Lateef",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.legendTitle",
+    "en": "Tajweed colours explained",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.hold.short",
+    "en": "A little short",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.hold.na",
+    "en": "No special hold",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.next.slowPass",
+    "en": "Try one slower pass",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.gray",
+    "en": "Gray",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.green",
+    "en": "Green",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.purple",
+    "en": "Purple",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.orange",
+    "en": "Orange",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.red",
+    "en": "Red",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colourNames.blue",
+    "en": "Blue",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.bands.average.label",
+    "en": "Needs a slower pass",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.green",
+    "en": "Green — soft nasal hold",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.purple",
+    "en": "Purple — hidden sound",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.orange",
+    "en": "Orange — light bounce",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.red",
+    "en": "Red — stretch (madd)",
+    "fr": null
+  },
+  {
+    "key": "memorisation.tajweedPracticeCheck.colours.blue",
+    "en": "Blue — merge",
+    "fr": null
+  }
+]

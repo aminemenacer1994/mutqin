@@ -94,9 +94,11 @@ test('AppStatus and NetworkFallback expose offline/error UI with retry + home', 
   assert.match(banner, /name:\s*'NetworkStatusBanner'/)
   assert.match(banner, /subscribeNetworkStatus/)
   assert.match(banner, /common\.status\.offlineBanner/)
+  assert.match(banner, /NETWORK_UNREACHABLE_EVENT/)
+  assert.match(banner, /effectivelyOffline/)
   assert.match(banner, /position:\s*fixed/)
 
-  assert.equal(en.common.status.offlineBanner, "You're offline. Some features may be unavailable.")
+  assert.equal(en.common.status.offlineBanner, "No internet connection. Mutqin will resume when you're back online.")
   assert.equal(en.common.status.offlineTitle, 'You appear to be offline.')
   assert.match(en.common.status.errorDesc, /Something went wrong\. Please try again/)
   assert.equal(en.common.status.returnHome, 'Return Home')

@@ -38,7 +38,7 @@ class HifzPlanController extends Controller
     {
         if (! Schema::hasTable('hifz_plans')) {
             return response()->json([
-                'message' => 'Hifz plan storage is not ready yet. Run database migrations.',
+                'message' => __('ui.api_hifz_plan_not_ready'),
             ], 503);
         }
 

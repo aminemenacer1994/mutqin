@@ -79,12 +79,12 @@ class MemorisationHistoryController extends Controller
         $previousId = (int) $request->integer('previous_assessment_id');
         $followUpId = (int) $request->integer('follow_up_assessment_id');
         if ($previousId < 1 || $followUpId < 1) {
-            return response()->json(['message' => 'previous_assessment_id and follow_up_assessment_id are required.'], 422);
+            return response()->json(['message' => __('ui.api_comparison_ids_required')], 422);
         }
 
         $payload = $this->history->comparisonForPair($request->user(), $previousId, $followUpId);
         if ($payload === null) {
-            return response()->json(['message' => 'Comparison not found.'], 404);
+            return response()->json(['message' => __('ui.api_comparison_not_found')], 404);
         }
 
         return response()->json($payload);

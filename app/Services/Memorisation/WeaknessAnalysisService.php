@@ -54,7 +54,8 @@ class WeaknessAnalysisService
                 };
                 $byAyah[$ayah]['score'] += $weight;
 
-                if ($weight > 0 || $status === 'uncertain') {
+                // Uncertain STT alone is not a reliable weakness — track count only.
+                if ($weight > 0) {
                     $weakWords[] = [
                         'surahId' => $this->surahFromKey((string) ($word['ayah_key'] ?? '')),
                         'ayahNumber' => $ayah,

@@ -14,6 +14,14 @@ const MOBILE_MQ = '(max-width: 767.98px)';
 const INSTALL_DISMISS_KEY = 'mutqin.pwa.install.dismissed';
 const IOS_INSTALL_DISMISS_KEY = 'mutqin.pwa.ios-install.dismissed';
 
+function uiLabel(key) {
+    const locale = window.mutqinInitialLocale
+        || document.documentElement.getAttribute('lang')
+        || 'en';
+    const pack = window.mutqinUiLabels?.[locale] || window.mutqinUiLabels?.en || {};
+    return pack[key] || window.mutqinUiLabels?.en?.[key] || key;
+}
+
 function isMobileViewport() {
     return window.matchMedia(MOBILE_MQ).matches;
 }
@@ -98,15 +106,15 @@ function createInstallBanner(deferredPrompt) {
     banner.id = 'mutqin-pwa-install';
     banner.className = 'mutqin-pwa-install';
     banner.setAttribute('role', 'dialog');
-    banner.setAttribute('aria-label', 'Install Mutqin');
+    banner.setAttribute('aria-label', uiLabel('pwa_chromium_install_aria'));
     banner.innerHTML = `
         <div class="mutqin-pwa-install__copy">
-            <strong>Install Mutqin</strong>
-            <span>Add to your home screen for a faster, app-like experience.</span>
+            <strong>${uiLabel('pwa_chromium_install_title')}</strong>
+            <span>${uiLabel('pwa_chromium_install_body')}</span>
         </div>
         <div class="mutqin-pwa-install__actions">
-            <button type="button" class="mutqin-pwa-install__btn mutqin-pwa-install__btn--primary" data-pwa-install>Install</button>
-            <button type="button" class="mutqin-pwa-install__btn mutqin-pwa-install__btn--ghost" data-pwa-dismiss aria-label="Dismiss">Not now</button>
+            <button type="button" class="mutqin-pwa-install__btn mutqin-pwa-install__btn--primary" data-pwa-install>${uiLabel('pwa_chromium_install_cta')}</button>
+            <button type="button" class="mutqin-pwa-install__btn mutqin-pwa-install__btn--ghost" data-pwa-dismiss aria-label="${uiLabel('pwa_chromium_dismiss_aria')}">${uiLabel('pwa_chromium_install_dismiss')}</button>
         </div>
     `;
 

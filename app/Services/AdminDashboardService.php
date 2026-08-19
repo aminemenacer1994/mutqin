@@ -341,7 +341,7 @@ class AdminDashboardService
             return compact('updated', 'deleted', 'skipped');
         }
 
-        abort(422, 'Unsupported bulk action.');
+        abort(422, __('admin.bulk_unsupported'));
     }
 
     /**
@@ -407,7 +407,7 @@ class AdminDashboardService
     public function deleteUser(User $actor, User $user): void
     {
         if ((int) $actor->id === (int) $user->id) {
-            abort(422, 'You cannot delete your own admin account.');
+            abort(422, __('admin.cannot_delete_self'));
         }
 
         app(LearningHistoryRetentionService::class)->deleteUserAccount($user, $actor);

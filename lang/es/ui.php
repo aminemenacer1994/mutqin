@@ -18,7 +18,7 @@ return [
     'logout' => 'Logout',
     'user' => 'Utilisateur',
     'home' => 'Home',
-    'memorisation' => 'Memorisation',
+    'memorisation' => 'Hifz',
     'dashboard' => 'Panel',
     'profile' => 'Profile',
     'account' => 'Cuenta',

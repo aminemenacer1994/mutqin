@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { attachNetworkFailureEmitter } from './utils/networkStatus';
 window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+attachNetworkFailureEmitter(window.axios);
 
 // Bootstrap plugins used by the shell and marketing pages (navbar, FAQ accordion).
 import Offcanvas from 'bootstrap/js/dist/offcanvas';

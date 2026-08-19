@@ -12,6 +12,31 @@ export function isBrowserOnline() {
   return !isBrowserOffline()
 }
 
+export const NETWORK_UNREACHABLE_EVENT = 'mutqin:network-unreachable'
+
+export function emitNetworkUnreachable() {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(NETWORK_UNREACHABLE_EVENT))
+}
+
+/**
+ * Surface unreachable-network failures as a global offline toast.
+ * @param {import('axios').AxiosInstance} httpClient
+ */
+export function attachNetworkFailureEmitter(httpClient) {
+  if (!httpClient?.interceptors?.response) return
+
+  httpClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (!isAbortError(error) && isNetworkError(error)) {
+        emitNetworkUnreachable()
+      }
+      return Promise.reject(error)
+    }
+  )
+}
+
 export function isAbortError(error) {
   return !!(
     error?.code === 'ERR_CANCELED'

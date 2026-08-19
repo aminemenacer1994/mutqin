@@ -531,7 +531,7 @@ includesAll('ai memorisation detection modal wiring', [
   assert.match(amdCss, /\.amd-mistake-visual/)
   assert.match(amdVue, /amd-disclaimer--row/)
   assert.match(amdVue, /v-if="disclaimer"/)
-  assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?white-space:\s*nowrap/)
+  assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?white-space:\s*normal/)
   const en = readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url), 'utf8')
   assert.match(en, /"disclaimer":\s*"Practice aid only/)
   assert.match(source, /memorisation\.amd\.disclaimer/)
@@ -615,6 +615,8 @@ includesAll('session completion success flow', [
   /learningApi\.endSession\(/,
   /confirmEndSessionFromExitModal\(\)/,
   /confirmSessionExit\(\{\s*showSummary: false,\s*openCompletion: true,\s*openPostSessionChoice: false,\s*\}\)/,
+  /rangeComplete[\s\S]*openPostSessionModal\(endedSnapshot/,
+  /!rangeComplete[\s\S]*confirmDescriptionEarly/,
   /openPostSessionChoice\(/,
   /submitPostSessionConfidence/,
   /repeatPostSessionFromCompleted/,

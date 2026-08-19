@@ -181,11 +181,30 @@ mix.then(() => {
     );
     keepNames.add('app.js');
 
-    // Preserve every chunk filename referenced by the freshly built runtime.
+    // Preserve every lazy chunk referenced by app.js and other manifest entries
+    // (e.g. memorisation -> amd-modal). Scanning only app.js prunes nested chunks.
     let skipPrune = false;
     try {
-        const appJs = fs.readFileSync(path.join(jsDir, 'app.js'), 'utf8');
-        const referenced = collectReferencedChunkFiles(appJs);
+        const referenced = new Set();
+        const scanChunkReferences = (filePath) => {
+            try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                for (const name of collectReferencedChunkFiles(content)) {
+                    referenced.add(name);
+                }
+            } catch {
+                /* ignore unreadable chunk */
+            }
+        };
+
+        scanChunkReferences(path.join(jsDir, 'app.js'));
+        for (const key of Object.keys(manifest)) {
+            if (!key.startsWith('/js/')) continue;
+            const base = path.basename(key.split('?')[0]);
+            if (!base.endsWith('.js') || base === 'app.js') continue;
+            scanChunkReferences(path.join(jsDir, base));
+        }
+
         for (const name of referenced) {
             keepNames.add(name);
         }

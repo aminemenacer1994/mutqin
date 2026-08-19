@@ -103,7 +103,7 @@ export function buildLiveRecitationCursor({
  * genuine reciter is not held back, but low enough that a short familiar
  * passage cannot paint two ayahs in a few seconds.
  */
-export const LIVE_PACE_MAX_WORDS_PER_SECOND = 1.7
+export const LIVE_PACE_MAX_WORDS_PER_SECOND = 2.4
 /** Head start so the first word paints immediately and skips stay reachable. */
 export const LIVE_PACE_SLACK_WORDS = 1
 /**

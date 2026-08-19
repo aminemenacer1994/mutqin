@@ -18,6 +18,7 @@ class RecitationAssessmentService
         private readonly PracticePlanRecommendationService $plans,
         private readonly NextSessionRecommendationService $recommendations,
         private readonly MemorisationHistoryService $history,
+        private readonly RecitationMasteryService $mastery,
     ) {}
 
     /**
@@ -72,6 +73,18 @@ class RecitationAssessmentService
                 'start_ayah' => (int) $payload['start_ayah'],
                 'end_ayah' => (int) $payload['end_ayah'],
             ];
+
+            $persistentWeakWords = $this->history->reliableWeakWordsForRange(
+                $user,
+                $range['surah_number'],
+                $range['start_ayah'],
+                $range['end_ayah']
+            );
+            $analysis['weak_words'] = $this->history->mergeWeakWords(
+                is_array($analysis['weak_words'] ?? null) ? $analysis['weak_words'] : [],
+                $persistentWeakWords
+            );
+
             $planData = $this->plans->recommend(
                 $analysis,
                 $range,
@@ -176,6 +189,9 @@ class RecitationAssessmentService
             $this->history->syncWordResults($assessment, $aligned['word_results']);
             $this->history->upsertWeakSpots($user, $assessment, $analysis);
             $this->history->markRecalledWords($user, $assessment, $aligned['word_results']);
+
+            $outcome = $aligned['accuracy'] >= 80 ? 'strong' : ($aligned['accuracy'] >= 55 ? 'mixed' : 'weak');
+            $this->mastery->applyFromAssessment($user, $assessment, $analysis, $aligned, $outcome);
 
             $this->mirrorLegacyAttempt($user, $assessment, $practicePlan, $aligned, $analysis);
             $this->syncRecommendation($user, $payload, $assessment, $practicePlan, $aligned, $analysis, $planData);

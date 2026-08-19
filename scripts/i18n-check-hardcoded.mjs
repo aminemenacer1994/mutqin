@@ -1,23 +1,26 @@
 /**
- * Report likely hardcoded UI strings in Vue templates and key JS files.
+ * Report likely hardcoded UI strings in all Vue templates and key JS files.
  * Usage: node scripts/i18n-check-hardcoded.mjs
  */
 import fs from 'node:fs'
 import path from 'node:path'
 
-const vueTargets = [
-  'resources/js/views/Memorisation.vue',
-  'resources/js/views/Homepage.vue',
-  'resources/js/views/About.vue',
-  'resources/js/views/AboutUs.vue',
-  'resources/js/views/OurMission.vue',
-  'resources/js/views/DonationPage.vue',
-  'resources/js/components/HifzPlanCreatorModal.vue',
+const vueRoots = [
+  'resources/js/views',
+  'resources/js/components',
 ]
 
-const jsTargets = [
-  'resources/js/views/Memorisation.js',
-]
+function walkVue(dir, out = []) {
+  if (!fs.existsSync(dir)) return out
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) walkVue(full, out)
+    else if (/\.vue$/.test(entry.name)) out.push(full)
+  }
+  return out
+}
+
+const vueTargets = vueRoots.flatMap(root => walkVue(path.resolve(root)))
 
 const jsComputedGuards = [
   'onboardingSteps',
@@ -57,6 +60,7 @@ function scanTemplate(rel, full) {
     const text = m[1].trim()
     if (!/[A-Za-z]{4,}/.test(text)) continue
     if (text.includes('{{') || text.includes('t(')) continue
+    if (/[{}\]=:]/.test(text)) continue
     if (looksLikeCssClass(text)) continue
     if (skipPatterns.some(p => p.test(text))) continue
     if (/^[0-9$£%]/.test(text)) continue
@@ -100,13 +104,16 @@ function scanMemorisationComputedGuards(rel, full) {
   }
 }
 
-for (const rel of vueTargets) {
-  const file = path.resolve(rel)
-  if (!fs.existsSync(file)) continue
+for (const file of vueTargets) {
+  const rel = path.relative(process.cwd(), file)
   const full = fs.readFileSync(file, 'utf8')
   scanTemplate(rel, full)
   scanVueScript(rel, full)
 }
+
+const jsTargets = [
+  'resources/js/views/Memorisation.js',
+]
 
 for (const rel of jsTargets) {
   const file = path.resolve(rel)

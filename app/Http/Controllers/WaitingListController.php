@@ -19,7 +19,7 @@ class WaitingListController extends Controller
 
         if ($existing) {
             return response()->json([
-                'message' => 'You are already on the waiting list.',
+                'message' => __('ui.waiting_list_already_joined'),
                 'already_joined' => true,
                 'data' => [
                     'name' => $existing->name,
@@ -32,7 +32,7 @@ class WaitingListController extends Controller
             $entry = WaitingListEntry::query()->create($validated);
         } catch (UniqueConstraintViolationException) {
             return response()->json([
-                'message' => 'You are already on the waiting list.',
+                'message' => __('ui.waiting_list_already_joined'),
                 'already_joined' => true,
                 'data' => [
                     'email' => $validated['email'],
@@ -41,7 +41,7 @@ class WaitingListController extends Controller
         }
 
         return response()->json([
-            'message' => 'You have joined the waiting list.',
+            'message' => __('ui.waiting_list_joined'),
             'already_joined' => false,
             'data' => [
                 'name' => $entry->name,

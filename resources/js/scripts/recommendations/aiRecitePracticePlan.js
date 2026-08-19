@@ -7,6 +7,11 @@
 import { resolveTechniqueDisplay } from '../techniques/techniqueDisplay.js'
 import { resolveRecommendedPlaybackSpeed } from './playbackSpeedPolicy.js'
 import { formatAyahNumberSpans } from '../formatting/ayahLabels.js'
+import { buildWeakAyahRepeatPlan } from './revisionPracticeScope.js'
+import {
+  filterReliableWeakWords,
+  mergePersistentWeakWords,
+} from './recitationMastery.js'
 
 export const AI_RECITE_MAX_ATTEMPTS = 3
 export const MAX_PRACTICE_AYAH_SPAN = 3
@@ -473,13 +478,12 @@ export function buildAiReciteDynamicPlan(input = {}) {
     })
   }
 
-  const uniqueWeak = []
-  const seen = new Set()
-  for (const word of weakWords) {
-    const key = `${word.verseKey || ''}:${word.wordIndex}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    uniqueWeak.push(word)
+  const uniqueWeak = mergePersistentWeakWords(
+    filterReliableWeakWords(weakWords),
+    16,
+  )
+  for (const word of uniqueWeak) {
+    if (Number.isFinite(Number(word.ayahNumber))) weakAyahSet.add(Number(word.ayahNumber))
   }
 
   const weakAyahs = [...weakAyahSet].sort((a, b) => a - b)
@@ -558,11 +562,24 @@ export function buildAiReciteDynamicPlan(input = {}) {
   })
 
   const feedback = buildFriendlyReciteFeedback(averageAccuracy, t)
+  const focusAyahs = practiceRange.focus_ayahs.length ? practiceRange.focus_ayahs : weakAyahs
+  const repeatPlan = buildWeakAyahRepeatPlan({
+    weakAyahs: focusAyahs,
+    weakWords: uniqueWeak,
+    baseRepetitions: repetitions,
+    isRevision: band !== ACCURACY_BAND.STRONG || uniqueWeak.length > 0,
+    scope: uniqueWeak.length ? 'weak_areas' : 'full_range',
+    chapterId: Number(input.range?.surahId || input.range?.chapterId || 0) || null,
+  })
+  if (Object.keys(repeatPlan.perAyahRepeats).length) {
+    repetitions = repeatPlan.globalRepetitions
+  }
   const why = buildWhyThisPlan({
     band,
     averageAccuracy,
     weakWords: uniqueWeak,
     techniques: [primary],
+    repeatPlan,
     t,
   })
 
@@ -582,6 +599,8 @@ export function buildAiReciteDynamicPlan(input = {}) {
     anchor_mode_enabled: primary.id === 'anchor',
     anchor_count: Math.min(4, Math.max(2, uniqueWeak.filter((w) => w.severity !== 'amber').length || 2)),
     practice_weak_words: uniqueWeak,
+    repetitions_per_ayah: repeatPlan.perAyahRepeats,
+    emphasize_weak_areas: Object.keys(repeatPlan.perAyahRepeats).length > 0,
     source: 'ai_recite_dynamic',
     average_accuracy: averageAccuracy,
     color_counts: colorCounts,
@@ -595,7 +614,6 @@ export function buildAiReciteDynamicPlan(input = {}) {
     ? (t?.('memorisation.aiRecitePlan.setup.repOne') || '1 repetition')
     : (t?.('memorisation.aiRecitePlan.setup.reps', { count: repetitions }) || `${repetitions} repetitions`)
 
-  const focusAyahs = practiceRange.focus_ayahs.length ? practiceRange.focus_ayahs : weakAyahs
   const planDetail = {
     source: 'ai_recite_dynamic',
     average_accuracy: averageAccuracy,
@@ -604,6 +622,10 @@ export function buildAiReciteDynamicPlan(input = {}) {
     color_counts: colorCounts,
     feedback,
     personalWhy: why,
+    revisionEmphasis: repeatPlan.emphasisKey && repeatPlan.emphasisParams
+      ? (t?.(`memorisation.postSession.recommendation.${repeatPlan.emphasisKey}`, repeatPlan.emphasisParams)
+        || '')
+      : '',
     range: {
       from: practiceRange.from,
       to: practiceRange.to,
@@ -698,7 +720,7 @@ export function buildFriendlyReciteFeedback(accuracy, t = null) {
     || 'Take your time. We will break this down calmly, one step at a time.'
 }
 
-function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
+function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, repeatPlan = null, t }) {
   const primary = techniques?.[0] || null
   const methodTitle = primary?.title || 'a calm method'
   if (weakWords?.length) {
@@ -714,7 +736,16 @@ function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, t }) {
       accuracy: averageAccuracy ?? '',
     })
     if (msg && !String(msg).includes('whyEvidence')) {
-      return String(msg).replace(/\s{2,}/g, ' ').trim()
+      const base = String(msg).replace(/\s{2,}/g, ' ').trim()
+      const repeatCount = repeatPlan?.perAyahRepeats?.[ayah]
+        || repeatPlan?.globalRepetitions
+        || 3
+      const repeatNote = ayah
+        ? (t?.('memorisation.aiRecitePlan.whyWeakRepeat', { ayah, count: repeatCount })
+          || `We will repeat ayah ${ayah} ${repeatCount} times to strengthen the weak words.`)
+        : (t?.('memorisation.aiRecitePlan.whyWeakRepeatGeneric', { count: repeatCount })
+          || `We will repeat the weak ayahs ${repeatCount} times each.`)
+      return `${base} ${repeatNote}`.trim()
     }
     if (count === 1 && ayah) {
       return `One phrase in Ayah ${ayah} needs a little reinforcement.`

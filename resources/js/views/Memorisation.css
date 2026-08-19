@@ -2586,6 +2586,7 @@ body > .self-check-modal-overlay--above-post-session,
   position: relative;
   display: block;
   width: 100%;
+  min-width: 0;
   direction: rtl;
   text-align: right;
   padding: 1rem 1.15rem;
@@ -2593,7 +2594,8 @@ body > .self-check-modal-overlay--above-post-session,
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(154, 103, 56, 0.12);
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: auto;
   transition: transform 0.22s ease, opacity 0.22s ease;
   place-items: unset;
   align-items: unset;
@@ -2604,12 +2606,16 @@ body > .self-check-modal-overlay--above-post-session,
 .self-check-modal-ayah.ai-recite-ayah {
   display: block;
   width: 100%;
-  max-width: none;
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: normal;
   direction: rtl !important;
   unicode-bidi: isolate;
   text-align: right !important;
-  text-wrap: unset;
+  text-wrap: pretty;
   line-height: 2.15;
   color: var(--text);
   font-weight: 500;
@@ -6141,10 +6147,10 @@ html {
   text-align: center;
   width: auto;
   max-width: none;
-  margin: 0 0.08em 0.55em;
+  margin: 0 0.08em 0.85em;
   padding: 0;
   line-height: 1.1;
-  gap: 0.08em;
+  gap: 0.55em;
   background: transparent !important;
   border-radius: 0;
   box-shadow: none !important;
@@ -6156,7 +6162,8 @@ html {
 .mushaf-ayah-text.word-by-word-meanings .word-arabic-text {
   display: block;
   white-space: nowrap;
-  line-height: 1.45;
+  line-height: 1.65;
+  padding-bottom: 0.35em;
   color: inherit;
 }
 
@@ -6167,14 +6174,15 @@ html {
   font-size: calc(0.72rem * var(--en-scale, 1));
   font-weight: 400;
   font-family: 'Outfit', 'Segoe UI', sans-serif;
-  line-height: 1.25;
+  line-height: 1.3;
   max-width: 8.5em;
   width: max-content;
   direction: ltr;
   unicode-bidi: isolate;
   text-align: center;
   white-space: normal;
-  margin: 0 auto;
+  margin: 0.42em auto 0;
+  padding-top: 0.22em;
 }
 
 .verse-arabic.word-by-word-meanings .wbw-word.highlighted .word-meaning,
@@ -10465,6 +10473,8 @@ html {
   direction: ltr;
   text-align: left;
   unicode-bidi: isolate;
+  margin-top: 0.65rem;
+  padding-top: 0.35rem;
 }
 
 .verse-aid-block {
@@ -10491,6 +10501,8 @@ html {
   direction: ltr;
   text-align: left;
   unicode-bidi: isolate;
+  margin-top: 0.65rem;
+  padding-top: 0.35rem;
 }
 
 .verse-words {
@@ -16117,10 +16129,10 @@ body.memorisation-page nav.navbar.app-navbar {
   vertical-align: top;
   white-space: normal;
   text-align: center;
-  margin: 0 0.08em 0.2em;
+  margin: 0 0.08em 0.55em;
   padding: 0;
   line-height: 1.1;
-  gap: 0.08em;
+  gap: 0.38em;
   background: transparent;
   box-shadow: none;
   transform: none;
@@ -16137,7 +16149,8 @@ body.memorisation-page nav.navbar.app-navbar {
   display: block;
   white-space: nowrap;
   font-size: 1em;
-  line-height: 1.45;
+  line-height: 1.55;
+  padding-bottom: 0.2em;
 }
 
 .mushaf-ayah-text.word-by-word-meanings .word-meaning {
@@ -16146,10 +16159,11 @@ body.memorisation-page nav.navbar.app-navbar {
   font-size: 0.38em;
   font-weight: 400;
   font-family: 'Outfit', 'Segoe UI', sans-serif;
-  line-height: 1.25;
+  line-height: 1.3;
   max-width: 9em;
   width: max-content;
-  margin: 0 auto;
+  margin: 0.28em auto 0;
+  padding-top: 0.12em;
   direction: ltr;
   unicode-bidi: isolate;
   text-align: center;
@@ -17700,6 +17714,55 @@ body.memorisation-page nav.navbar.app-navbar {
 .app.is-rtl kbd,
 .app.is-rtl .mushaf-click-guide {
   direction: ltr;
+}
+
+.app.is-rtl .verse-arabic.word-by-word-meanings,
+.app.is-rtl .mushaf-ayah-text.word-by-word-meanings {
+  line-height: 1.65;
+  padding-bottom: 0.2em;
+}
+
+.app.is-rtl .word-by-word-meanings .word-meaning {
+  margin-top: 0.32em;
+  padding-top: 0.15em;
+}
+
+.app.is-rtl .verse-translation,
+.app.is-rtl .verse-transliteration,
+.app.is-rtl .verse-aid-block {
+  margin-top: 0.75rem;
+  padding-top: 0.4rem;
+}
+
+.app.is-rtl .workspace-layout-toggle {
+  min-width: min(100%, 24rem);
+  padding: 0.22rem;
+}
+
+.app.is-rtl .workspace-layout-btn.view-mode-btn {
+  min-width: 0;
+  padding: 0.34rem 0.9rem;
+  gap: 0.42rem;
+}
+
+.app.is-rtl .workspace-layout-btn.view-mode-btn span {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.app.is-rtl .top-card-menu button,
+.app.is-rtl .top-card-menu .top-card-menu-link {
+  gap: 0.65rem;
+  padding-inline: 0.72rem;
+}
+
+.app.is-rtl .top-card-menu .top-card-menu-link span,
+.app.is-rtl .top-card-menu button span {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: start;
+  line-height: 1.35;
 }
 
 .app.is-rtl .tools {
@@ -21642,16 +21705,7 @@ button:active {
 
 .recitation-word-chip.can-correct-ai,
 .recitation-review-ayah .can-correct-ai {
-  cursor: pointer;
-  outline: 1px dashed rgba(47, 111, 88, 0.42);
-  outline-offset: 2px;
-}
-
-.recitation-word-chip.can-correct-ai:hover,
-.recitation-review-ayah .can-correct-ai:hover {
-  border-color: rgba(47, 111, 88, 0.46);
-  background: rgba(47, 111, 88, 0.14);
-  color: #255f4d;
+  cursor: default;
 }
 
 .recitation-result-stat.tone-excellent strong,
@@ -35343,7 +35397,8 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   justify-content: center;
   gap: 0.35rem;
   min-height: 1.85rem;
-  padding: 0.28rem 0.72rem;
+  min-width: max-content;
+  padding: 0.28rem 0.85rem;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -37739,6 +37794,52 @@ but not its destructive red. */
   font-size: 0.62rem;
 }
 
+.field-individual-ayah {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.individual-ayah-header > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.individual-ayah-header > label i {
+  font-size: 0.88rem;
+  color: var(--accent-strong, var(--accent));
+}
+
+.individual-ayah-controls {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.individual-ayah-repeat {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.individual-ayah-repeat-header {
+  margin-bottom: 0;
+}
+
+.individual-ayah-repeat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.individual-ayah-session-count {
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--accent) 14%);
+}
+
+.tools-body .field-individual-ayah .individual-ayah-range {
+  min-block-size: 2.75rem;
+}
+
 .technique-group-beginner {
   margin-top: 0;
 }
@@ -39625,7 +39726,7 @@ but not its destructive red. */
   min-width: 0;
   padding: 0.65rem 0.7rem;
   border-radius: 12px;
-  border: 1px solid transparent;
+  border: 1px solid var(--saved-border, color-mix(in srgb, var(--border) 72%, transparent));
   background: color-mix(in srgb, var(--saved-card-strong) 88%, transparent);
 }
 
@@ -51345,7 +51446,7 @@ html body .mushaf-page-body.word-by-word-meanings .mushaf-ayah-number {
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0.15em !important;
-  padding: 0 0.04em !important;
+  padding: 0 0.04em 0.35em !important;
 }
 
 /* Keep tajweed fragments horizontal inside each WBW chip (never flex-column items). */
@@ -51365,8 +51466,8 @@ html body .mushaf-page-body.word-by-word-meanings .mushaf-ayah-number {
   z-index: 2 !important;
   width: max-content !important;
   max-width: 7.5em !important;
-  margin: 0 auto !important;
-  padding: 0.05em 0 0 !important;
+  margin: 0.42em auto 0 !important;
+  padding: 0.22em 0 0 !important;
   color: #5c5c5c !important;
   font-size: calc(0.68rem * var(--en-scale, 1)) !important;
   font-weight: 400 !important;
@@ -54909,6 +55010,18 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   line-height: 1.4;
   font-weight: 500;
   color: var(--ps-ink);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan {
+  margin-top: 0.65rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-emphasis {
+  margin: 0.45rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--ps-accent, #c48a4a) 72%, var(--ps-ink));
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__evidence {
@@ -59383,4 +59496,22 @@ html body .app .workspace-shell-idle-ring {
     padding: 0.62rem 0.68rem !important;
     margin-inline-start: 0 !important;
   }
+}
+
+/* Memorisation page scroll — document scroll unless a panel/modal owns the viewport */
+body.memorisation-page:not(.tools-panel-open) {
+  overflow-x: clip !important;
+  overflow-y: auto !important;
+}
+
+html:has(body.memorisation-page:not(.tools-panel-open)) {
+  overflow-y: auto !important;
+}
+
+body.memorisation-page.tools-panel-open {
+  overflow: hidden !important;
+}
+
+html:has(body.memorisation-page.tools-panel-open) {
+  overflow: hidden !important;
 }

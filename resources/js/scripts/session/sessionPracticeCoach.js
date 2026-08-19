@@ -21,8 +21,13 @@ export function calculateTechniqueInteractionTime(technique, ayahCount = 1) {
 /**
  * @param {number} minutes
  */
-export function formatAboutMinutes(minutes) {
+export function formatAboutMinutes(minutes, t = null) {
   const m = Math.max(1, Math.round(Number(minutes) || 1))
+  if (typeof t === 'function') {
+    const key = m === 1 ? 'memorisation.recitationResult.aboutMinutes' : 'memorisation.recitationResult.aboutMinutesOther'
+    const value = t(key, { count: m })
+    if (value && !value.includes('aboutMinutes')) return value
+  }
   if (m === 1) return 'About 1 minute'
   return `About ${m} minutes`
 }
@@ -65,7 +70,7 @@ export function estimatePracticeDuration(input = {}) {
   return {
     seconds: estimatedSeconds,
     minutes,
-    label: formatAboutMinutes(minutes),
+    label: formatAboutMinutes(minutes, input.t),
   }
 }
 

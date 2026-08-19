@@ -97,7 +97,7 @@ export async function getChapterWordByWordMeanings(chapterId, rangeStart = 1, ra
       params: {
         language: 'en',
         words: true,
-        word_fields: 'text_uthmani,transliteration',
+        word_fields: 'text_uthmani,transliteration,translation',
         page,
         per_page: perPage
       }
@@ -139,7 +139,7 @@ export async function getMadaniPageVerses(pageNumber, options = {}) {
       words: true,
       mushaf,
       per_page: 50,
-      word_fields: 'code_v2,text_qpc_hafs,text_uthmani,line_number,page_number'
+      word_fields: 'code_v2,text_qpc_hafs,text_uthmani,line_number,page_number,translation'
     }
   })
 

@@ -3,98 +3,54 @@
     <div class="info-shell">
       <header class="info-header info-reveal">
         <div class="info-header-copy">
-          <span class="info-kicker"><i class="bi bi-life-preserver" aria-hidden="true"></i> Support</span>
-          <h1>Support</h1>
-          <ul class="info-highlights" aria-label="Support topics">
-            <li><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> Start</li>
-            <li><i class="bi bi-person-circle" aria-hidden="true"></i> Account</li>
-            <li><i class="bi bi-chat-dots" aria-hidden="true"></i> Contact</li>
+          <span class="info-kicker">
+            <i class="bi bi-life-preserver" aria-hidden="true"></i>
+            {{ t('donate.kicker') }}
+          </span>
+          <h1>{{ t('donate.title') }}</h1>
+          <ul class="info-highlights" :aria-label="t('donate.highlightsAria')">
+            <li><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> {{ t('donate.highlights.start') }}</li>
+            <li><i class="bi bi-person-circle" aria-hidden="true"></i> {{ t('donate.highlights.account') }}</li>
+            <li><i class="bi bi-chat-dots" aria-hidden="true"></i> {{ t('donate.highlights.contact') }}</li>
           </ul>
         </div>
         <div class="info-header-aside">
-          <p>
-            Need help with practice, your account, or a session?
-            Find answers here, or write to us anytime.
-          </p>
+          <p>{{ t('donate.heroDesc') }}</p>
           <div class="info-actions">
             <a class="info-btn info-btn--primary" href="/#contact">
-              <i class="bi bi-envelope" aria-hidden="true"></i> Contact us
+              <i class="bi bi-envelope" aria-hidden="true"></i> {{ t('donate.ctaContact') }}
             </a>
             <a class="info-btn info-btn--ghost" href="/memorisation">
-              <i class="bi bi-play-fill" aria-hidden="true"></i> Start practising
+              <i class="bi bi-play-fill" aria-hidden="true"></i> {{ t('donate.ctaStartPractising') }}
             </a>
           </div>
         </div>
       </header>
 
       <div class="info-sections">
-        <section class="info-section info-reveal" style="--d: 40ms">
+        <section
+          v-for="(section, index) in sections"
+          :key="section.key"
+          class="info-section info-reveal"
+          :style="{ '--d': `${40 + index * 40}ms` }"
+        >
           <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-play-circle"></i></div>
-            <h2>Getting started</h2>
+            <div class="info-icon" aria-hidden="true"><i :class="section.icon"></i></div>
+            <h2>{{ section.title }}</h2>
           </div>
-          <p>Open Memorisation, pick a short passage, then listen and repeat.</p>
-          <a class="info-inline-link" href="/memorisation">
-            Go to Memorisation <i class="bi bi-arrow-right" aria-hidden="true"></i>
-          </a>
-        </section>
-
-        <section class="info-section info-reveal" style="--d: 80ms">
-          <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-person-circle"></i></div>
-            <h2>Your account</h2>
-          </div>
-          <p>Sign in to keep your progress saved. Forgot your password? Use the reset link on the login page.</p>
-          <a class="info-inline-link" href="/login">
-            Sign in <i class="bi bi-arrow-right" aria-hidden="true"></i>
-          </a>
-        </section>
-
-        <section class="info-section info-reveal" style="--d: 120ms">
-          <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-journal-bookmark"></i></div>
-            <h2>During a session</h2>
-          </div>
-          <p>Listen, follow the words, and repeat. When you finish, follow the suggested next step.</p>
-        </section>
-
-        <section class="info-section info-reveal" style="--d: 160ms">
-          <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-mic"></i></div>
-            <h2>Checking your recitation</h2>
-          </div>
-          <p>
-            Recite while Mutqin follows along. It is a practice helper,
-            not a replacement for a teacher.
-          </p>
-        </section>
-
-        <section class="info-section info-reveal" style="--d: 200ms">
-          <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-tools"></i></div>
-            <h2>Something not working?</h2>
-          </div>
-          <p>Refresh once. If that fails, sign out and back in. For recitation, allow microphone access in your browser.</p>
-        </section>
-
-        <section class="info-section info-reveal" style="--d: 240ms">
-          <div class="info-section-head">
-            <div class="info-icon" aria-hidden="true"><i class="bi bi-chat-heart"></i></div>
-            <h2>Share feedback</h2>
-          </div>
-          <p>Tell us what helped, what was unclear, or how practice could be easier.</p>
-          <a class="info-inline-link" href="/#contact">
-            Write to us <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          <p>{{ section.desc }}</p>
+          <a v-if="section.href" class="info-inline-link" :href="section.href">
+            {{ section.link }} <i class="bi bi-arrow-right" aria-hidden="true"></i>
           </a>
         </section>
       </div>
 
       <div class="info-actions info-reveal" style="--d: 280ms">
         <a class="info-btn info-btn--primary" href="/#contact">
-          <i class="bi bi-envelope" aria-hidden="true"></i> Contact us
+          <i class="bi bi-envelope" aria-hidden="true"></i> {{ t('donate.ctaContact') }}
         </a>
         <a class="info-btn info-btn--ghost" href="/memorisation">
-          <i class="bi bi-play-fill" aria-hidden="true"></i> Start practising
+          <i class="bi bi-play-fill" aria-hidden="true"></i> {{ t('donate.ctaStartPractising') }}
         </a>
       </div>
     </div>
@@ -102,5 +58,55 @@
 </template>
 
 <script>
-export default { name: 'DonationPage' };
+export default {
+  name: 'DonationPage',
+  computed: {
+    sections() {
+      return [
+        {
+          key: 'gettingStarted',
+          icon: 'bi bi-play-circle',
+          title: this.t('donate.sections.gettingStarted.title'),
+          desc: this.t('donate.sections.gettingStarted.desc'),
+          href: '/memorisation',
+          link: this.t('donate.sections.gettingStarted.link'),
+        },
+        {
+          key: 'account',
+          icon: 'bi bi-person-circle',
+          title: this.t('donate.sections.account.title'),
+          desc: this.t('donate.sections.account.desc'),
+          href: '/login',
+          link: this.t('donate.sections.account.link'),
+        },
+        {
+          key: 'session',
+          icon: 'bi bi-journal-bookmark',
+          title: this.t('donate.sections.session.title'),
+          desc: this.t('donate.sections.session.desc'),
+        },
+        {
+          key: 'recitation',
+          icon: 'bi bi-mic',
+          title: this.t('donate.sections.recitation.title'),
+          desc: this.t('donate.sections.recitation.desc'),
+        },
+        {
+          key: 'troubleshooting',
+          icon: 'bi bi-tools',
+          title: this.t('donate.sections.troubleshooting.title'),
+          desc: this.t('donate.sections.troubleshooting.desc'),
+        },
+        {
+          key: 'feedback',
+          icon: 'bi bi-chat-heart',
+          title: this.t('donate.sections.feedback.title'),
+          desc: this.t('donate.sections.feedback.desc'),
+          href: '/#contact',
+          link: this.t('donate.sections.feedback.link'),
+        },
+      ];
+    },
+  },
+};
 </script>

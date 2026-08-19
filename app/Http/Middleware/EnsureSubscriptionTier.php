@@ -27,7 +27,7 @@ class EnsureSubscriptionTier
 
         if (!$allowed) {
             return response()->json([
-                'message' => 'This feature requires a Mutqin subscription upgrade.',
+                'message' => __('ui.subscription_upgrade_required'),
                 'required_tier' => $tier,
                 'upgrade_url' => route('pricing'),
             ], 403);

@@ -4,14 +4,14 @@
     <section class="shell admin-page">
         <div class="admin-page-head">
             <div>
-                <span class="profile-kicker">Admin</span>
-                <h1>Contact Messages</h1>
-                <p>Review inbound questions, resolve them when handled, or delete spam and duplicates.</p>
+                <span class="profile-kicker">{{ __('admin.kicker') }}</span>
+                <h1>{{ __('admin.contact_messages.title') }}</h1>
+                <p>{{ __('admin.contact_messages.description') }}</p>
             </div>
             <div class="admin-filter-tabs">
-                <a class="billing-secondary-btn {{ $status !== 'resolved' ? 'admin-filter-active' : '' }}" href="{{ route('admin.contact-messages.index', ['status' => 'open']) }}">Open</a>
-                <a class="billing-secondary-btn {{ $status === 'resolved' ? 'admin-filter-active' : '' }}" href="{{ route('admin.contact-messages.index', ['status' => 'resolved']) }}">Resolved</a>
-                <a class="billing-secondary-btn" href="{{ route('admin.waiting-list.index') }}">Waiting list</a>
+                <a class="billing-secondary-btn {{ $status !== 'resolved' ? 'admin-filter-active' : '' }}" href="{{ route('admin.contact-messages.index', ['status' => 'open']) }}">{{ __('admin.contact_messages.open') }}</a>
+                <a class="billing-secondary-btn {{ $status === 'resolved' ? 'admin-filter-active' : '' }}" href="{{ route('admin.contact-messages.index', ['status' => 'resolved']) }}">{{ __('admin.contact_messages.resolved') }}</a>
+                <a class="billing-secondary-btn" href="{{ route('admin.waiting-list.index') }}">{{ __('admin.contact_messages.waiting_list') }}</a>
             </div>
         </div>
 
@@ -21,7 +21,7 @@
 
         @if ($messages->isEmpty())
             <div class="profile-card">
-                <p class="mb-0">No contact messages in this view.</p>
+                <p class="mb-0">{{ __('admin.contact_messages.empty') }}</p>
             </div>
         @else
             <div class="admin-message-list">
@@ -47,14 +47,14 @@
                                 <form method="POST" action="{{ route('admin.contact-messages.resolve', $message) }}">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" class="billing-primary-btn">Resolve</button>
+                                    <button type="submit" class="billing-primary-btn">{{ __('admin.contact_messages.resolve') }}</button>
                                 </form>
                             @endif
 
-                            <form method="POST" action="{{ route('admin.contact-messages.destroy', $message) }}" onsubmit="return confirm('Delete this contact message?');">
+                            <form method="POST" action="{{ route('admin.contact-messages.destroy', $message) }}" onsubmit="return confirm(@json(__('admin.contact_messages.delete_confirm')));">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="billing-secondary-btn">Delete</button>
+                                <button type="submit" class="billing-secondary-btn">{{ __('admin.contact_messages.delete') }}</button>
                             </form>
                         </div>
                     </article>

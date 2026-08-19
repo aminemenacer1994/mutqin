@@ -3,7 +3,7 @@
 @section('content')
 <div class="auth-page">
     <div class="auth-panel">
-        <a class="auth-brand" href="{{ route('home') }}" aria-label="Mutqin home">
+        <a class="auth-brand" href="{{ route('home') }}" aria-label="{{ __('ui.mutqin_home') }}">
             <img src="/images/logo_main.png" alt="" class="auth-brand-img">
             <span>Mutqin</span>
         </a>

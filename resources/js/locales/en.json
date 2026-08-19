@@ -53,7 +53,7 @@
       "errorTitle": "Something went wrong",
       "errorDesc": "Something went wrong. Please try again.",
       "offlineTitle": "You appear to be offline.",
-      "offlineBanner": "You're offline. Some features may be unavailable.",
+      "offlineBanner": "No internet connection. Mutqin will resume when you're back online.",
       "offlineDesc": "Check your connection, then try again. We’ll retry automatically when you’re back online.",
       "networkTitle": "You appear to be offline.",
       "networkDesc": "We couldn’t reach Mutqin. Check your connection, then try again.",
@@ -66,6 +66,7 @@
       "unavailableDesc": "This feature isn’t available at the moment. Please try again later.",
       "bootErrorTitle": "Something went wrong",
       "bootErrorDesc": "Something went wrong. Please try again.",
+      "chunkUpdating": "Updating Mutqin…",
       "clearFilters": "Clear filters",
       "startSession": "Start a session",
       "returnToSessions": "Return to sessions",
@@ -173,6 +174,16 @@
     "ayahRange": "Ayah range",
     "reciter": "Reciter",
     "repetitions": "Repetitions",
+    "individualAyah": "Focus one āyah",
+    "individualAyahOption": "Āyah {number}",
+    "individualAyahIntro": "Give one āyah in your range its own repeat count.",
+    "individualAyahSelect": "Āyah",
+    "individualAyahSelectHint": "Only āyahs within your current range are listed.",
+    "individualAyahRepeats": "Repeats",
+    "individualAyahRepeatHintOne": "This āyah repeats {count} time before moving on.",
+    "individualAyahRepeatHintOther": "This āyah repeats {count} times before moving on.",
+    "individualAyahSelectedCountOne": "Practiced {count} time this session.",
+    "individualAyahSelectedCountOther": "Practiced {count} times this session.",
     "display": "Display",
     "displaySub": "Customize how the Quran appears",
     "readingAids": "Reading Aids",
@@ -645,6 +656,9 @@
       "resumeReminderTranslation": "As for those who strive for Us, We shall guide them to Our paths.",
       "resumeReminderSource": "Qur'an 29:69",
       "resumeIntention": "Returning with steadiness is part of the path — one ayah at a time.",
+      "freshWhatNext": "Choose how you want to begin. Start a fresh session now, or continue after you save a session snapshot later.",
+      "resumeWhatNext": "Choose how you want to continue. You can start fresh, repeat the range from the beginning, continue from your last ayah, or save this session first.",
+      "resumeWhatNextWithDue": "You have {count} verses due for review. Start fresh, repeat the range, continue from your last ayah, or save this session first.",
       "reminderLabel": "A word of remembrance",
       "startNewSession": "Begin a new set",
       "continuePreviousSession": "Return to this set",
@@ -878,8 +892,45 @@
       "playRecording": "Play recording",
       "pauseRecording": "Pause recording",
       "replayRecording": "Replay recording",
-      "loadingRecording": "Loading recording"
+      "loadingRecording": "Loading recording",
+      "readingTools": "Reading tools",
+      "currentSession": "Current session",
+      "advancedAnalyticsCards": "Advanced analytics cards",
+      "closeRecordingsLibrary": "Close recordings library",
+      "searchRecordedAyahs": "Search recorded ayahs",
+      "pauseReplay": "Pause replay",
+      "replayRecitation": "Replay recitation"
     },
+    "recordings": {
+      "sessionRecordings": "Session recordings",
+      "hideList": "Hide list",
+      "showList": "Show list",
+      "searchPlaceholder": "Search surah or ayah number",
+      "savedRecording": "Saved recording",
+      "playing": "Playing",
+      "replayRecordingLabel": "Replay recording",
+      "noAudioAvailable": "No audio is available for replay.",
+      "countOne": "{count} recording",
+      "countOther": "{count} recordings",
+      "rename": "Rename"
+    },
+    "quranSearch": {
+      "title": "Quran search",
+      "close": "Close Quran search",
+      "inputPlaceholder": "Type at least 3 words in Arabic or English",
+      "voiceSearch": "Voice search",
+      "voiceSearchUnsupported": "Voice search is not supported in this browser",
+      "listening": "Listening",
+      "voice": "Voice",
+      "searching": "Searching",
+      "search": "Search",
+      "displayOptions": "Search display options",
+      "translationOff": "Translation off",
+      "resultsFoundOne": "{count} ayah found",
+      "resultsFoundOther": "{count} ayahs found",
+      "resultMeta": "Juz {juz} · Hizb {hizb} · Page {page} · Word {word}"
+    },
+    "sessionDefaultName": "Session",
     "onboardingLabel": "Onboarding",
     "player": {
       "previous": "Previous",
@@ -1029,6 +1080,10 @@
       "resetControls": {
         "title": "Reset Session Controls?",
         "message": "This will reset all session settings to defaults. Your progress will not be lost."
+      },
+      "deleteHifzPlan": {
+        "title": "Delete Hifz plan?",
+        "message": "Delete this Hifz plan and its planner progress from this browser?"
       }
     },
     "renameRecording": {
@@ -1064,7 +1119,20 @@
       "readyToComplete": "Ready to complete",
       "daysRemaining": "Days remaining",
       "nextReview": "Next muraja'ah",
-      "afterNewAyahs": "After today's new ayahs"
+      "afterNewAyahs": "After today's new ayahs",
+      "currentTarget": "Current target",
+      "noActiveSession": "No active session yet",
+      "targetNoteActive": "Use the selected range as the session target and move through it at a steady pace.",
+      "targetNoteIdle": "Open session setup to choose a target range and start tracking it live.",
+      "ayahsInRange": "{count} ayahs",
+      "ayahsLeftInRange": "{count} ayahs left in this range",
+      "ayahMemorisedToday": "ayah memorised today",
+      "ayahsMemorisedToday": "ayahs memorised today",
+      "newAyahAdded": "new ayah added",
+      "newAyahsAdded": "new ayahs added",
+      "goalStatus": "Progress",
+      "nextReviewHintDefault": "Your next review is already scheduled.",
+      "planReadySummary": "Your plan is ready and your next review has already been scheduled."
     },
     "talqinMode": {
       "title": "Listen and repeat",
@@ -1182,6 +1250,118 @@
       "nextReviewHint": "Next review: {label} · {confidence}",
       "ayahLeftToComplete": "{count} ayah left to complete the range",
       "ayahLeftToCompleteOther": "{count} ayahs left to complete the range"
+    },
+    "recitationLive": {
+      "preparingWords": "Preparing ayah words…",
+      "wordsMatched": "{checked} of {total} spoken words matched",
+      "keepReciting": "Keep reciting — we're listening."
+    },
+    "recitationResult": {
+      "reviewSequence": "Review the sequence",
+      "strong": "Strong recitation",
+      "nearlyThere": "Nearly there",
+      "closeReviewNeeded": "Close review needed",
+      "needsAnotherPass": "Needs another pass",
+      "reviewWordsThenRetry": "Review {count} word, then try again slowly.",
+      "reviewWordsThenRetryOther": "Review {count} words, then try again slowly.",
+      "reviewWordsThenListen": "Review {count} word, then listen once more.",
+      "reviewWordsThenListenOther": "Review {count} words, then listen once more.",
+      "listenTighterToAyah": "Listen once more, then keep tighter to the ayah.",
+      "keepForLightReview": "Keep this for light review.",
+      "listenThenSave": "Listen once more, then save it.",
+      "listenThenKeepOrReplace": "Listen once more, then keep or replace it.",
+      "listenThenSaveOrRetry": "Listen once more, then save or retry.",
+      "preparingAyahWords": "Preparing ayah words…",
+      "selectSurahToStart": "Select a surah and verses to start memorising",
+      "surahNotSet": "Surah not set",
+      "practiceAndSaveSummary": "Practice and save your session to build your progress summary.",
+      "qualityCheckPending": "Quality check pending",
+      "qualityVerified": "Quality verified",
+      "pleaseReviewAgain": "Please review again",
+      "noQualityCheckYet": "No saved quality check yet.",
+      "checksAligned": "Consistent across both checks.",
+      "checksNotAligned": "The checks did not fully align.",
+      "noClearMistakes": "No clear mistakes found. Listen once more before saving.",
+      "recordingNow": "Recording now.",
+      "reviewAttempt": "Review this attempt.",
+      "preparingMic": "Preparing microphone.",
+      "recordingUnsupported": "Recording is not supported in this browser.",
+      "chooseAiOrManual": "Choose AI review or manual recording.",
+      "goodRecall": "Good recall",
+      "closeRecall": "Close recall",
+      "needsSlowReview": "Needs slow review",
+      "saveForLightReview": "Save this attempt for light review.",
+      "reviewWordsThenTry": "Review {words}, then try again.",
+      "tightenWordsThenTry": "Tighten {words}, then try again.",
+      "speechmaticsNotConfigured": "Speechmatics is not configured on the server. Add SPEECHMATICS_API_KEY, then run php artisan config:clear and restart the app.",
+      "speechmaticsRegionNotConfigured": "Speechmatics region is not configured on the server. Add SPEECHMATICS_REGION, then run php artisan config:clear and restart the app.",
+      "liveStreamingUnavailable": "Unable to start live streaming right now.",
+      "sessionChoiceFresh": "Choose how you want to begin. Start a fresh session now, or continue after you save a session snapshot later.",
+      "sessionChoiceContinue": "Choose how you want to continue. You can start fresh, repeat the range from the beginning, continue from your last ayah, or save this session first.",
+      "aiReviewReadyRange": "AI review is ready for this range.",
+      "aiReviewReadyAyah": "AI review is ready for this ayah.",
+      "speechmaticsKeyRejected": "Speechmatics rejected the server key for live token creation.{suffix} Use a key that can create realtime temporary keys, then run php artisan config:clear and restart the app.",
+      "speechmaticsKeySuffixNote": " Laravel is currently using the key ending in {suffix}.",
+      "surahLabel": "Surah {name}",
+      "surahNumberLabel": "Surah {number}",
+      "recommendations": {
+        "skippedAyahs": "Review the {count} skipped ayah in order.",
+        "skippedAyahsOther": "Review the {count} skipped ayahs in order.",
+        "verseJumps": "Return to the ayah sequence and recite it steadily from the beginning.",
+        "sequenceErrors": "Review the ayah order, then begin the selected range again.",
+        "wordSkips": "Revisit the {count} skipped word with a slower pass.",
+        "wordSkipsOther": "Revisit the {count} skipped words with a slower pass.",
+        "missingWords": "Return to the {count} missed word.",
+        "missingWordsOther": "Return to the {count} missed words.",
+        "partialWords": "Tighten the {count} close word.",
+        "partialWordsOther": "Tighten the {count} close words.",
+        "incorrectWords": "Review the {count} changed word.",
+        "incorrectWordsOther": "Review the {count} changed words.",
+        "extraWords": "Keep the ayah boundary tighter on the next pass.",
+        "skippedAyahsAnalysis": "Skipped {count} ayah. Review the selected range in order.",
+        "skippedAyahsAnalysisOther": "Skipped {count} ayahs. Review the selected range in order.",
+        "verseJumpOnce": "Verse jump detected once. Restart from the last complete ayah.",
+        "verseJumpMany": "Verse jump detected {count} times. Restart from the last complete ayah.",
+        "sequenceErrorsAnalysis": "Ayahs were recited out of order. Restart from the first selected ayah.",
+        "wordSkipsAnalysis": "Skipped {count} word. Slow down and complete each ayah before moving on.",
+        "wordSkipsAnalysisOther": "Skipped {count} words. Slow down and complete each ayah before moving on.",
+        "missingWordsAnalysis": "Missing {count} word. Recite that section slowly before retrying.",
+        "missingWordsAnalysisOther": "Missing {count} words. Recite that section slowly before retrying.",
+        "partialWordsAnalysis": "Clarify {count} close word, then check again.",
+        "partialWordsAnalysisOther": "Clarify {count} close words, then check again.",
+        "incorrectWordsAnalysis": "Review {count} changed word and compare with the displayed ayah.",
+        "incorrectWordsAnalysisOther": "Review {count} changed words and compare with the displayed ayah.",
+        "extraWordsAnalysis": "Extra wording detected. Slow down and keep the ayah boundary tight.",
+        "cleanMatch": "Clean match. Save it and keep this ayah on light review.",
+        "mostlyClean": "Mostly clean. Recheck once before saving.",
+        "replayAyah": "Replay the ayah once, recite without looking, then run another Recite Check."
+      },
+      "sessionProgressReady": "Session progress: ready",
+      "reviewDueSoon": "Review: due soon",
+      "noQueueBuilt": "No queue built yet",
+      "exportPreparing": "Preparing…",
+      "recordingResult": {
+        "needsReview": "Needs review",
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair"
+      },
+      "weakWordReasons": {
+        "frequentReplay": "Frequent replay",
+        "hesitation": "Hesitation",
+        "pronunciation": "Pronunciation"
+      },
+      "aboutMinutes": "About {count} minute",
+      "aboutMinutesOther": "About {count} minutes",
+      "silentEvaluation": {
+        "strongRecall": "Strong recall. Keep the same calm pace.",
+        "reviewGently": "Review this ayah gently before moving on."
+      },
+      "practicePlan": {
+        "phraseReinforcementAyah": "One phrase in Ayah {ayah} needs a little reinforcement.",
+        "phraseReinforcement": "One phrase needs a little reinforcement.",
+        "phrasesNeedAttention": "A few phrases still need attention."
+      }
     },
     "calligraphy": {
       "onboarding": "",
@@ -1596,6 +1776,11 @@
         "speedSettled": "Keep this pace when you check.",
         "readyToTest": "Ready to check.",
         "firstPracticeDone": "Practice done. Check when ready.",
+        "reason": {
+          "frequent_replay": "Frequent replay",
+          "hesitation": "Hesitation",
+          "pronunciation": "Pronunciation"
+        },
         "headers": {
           "practiceDone": "Practice complete",
           "repeatDone": "Another pass complete",
@@ -2007,7 +2192,9 @@
           "colourMix": "{green} green · {amber} amber · {red} red · {black} black",
           "rangeExplain": "These are the verses your next session will open on.",
           "methodExplain": "This method guides how text and audio appear while you practise.",
-          "setupExplain": "Playback speed and repetitions control how calmly you rehearse each verse."
+          "setupExplain": "Playback speed and repetitions control how calmly you rehearse each verse.",
+          "weakAyahRepeatOne": "Repeat ayah {ayah} {count} times — extra passes on the words that slipped.",
+          "weakAyahRepeatMany": "Repeat each weak ayah {count} times ({ayahCount} ayahs) to strengthen the words that need care."
         },
         "whatChangingDoes": "How this helps",
         "paramHints": {
@@ -2300,7 +2487,9 @@
         "focusTitle": "Focus",
         "focusHow": "One verse at a time."
       },
-      "whyEvidence": "One phrase in Ayah {ayah} needs a little reinforcement."
+      "whyEvidence": "One phrase in Ayah {ayah} needs a little reinforcement.",
+      "whyWeakRepeat": "We will repeat ayah {ayah} {count} times to strengthen the weak words.",
+      "whyWeakRepeatGeneric": "We will repeat each weak ayah {count} times to strengthen the words that slipped."
     },
     "emotional": {
       "postSession": {
@@ -2478,7 +2667,209 @@
       "chainingNextCumulative": "Next: add one ayah to the block",
       "chainingNextLinking": "Next: single -> next -> pair",
       "chainingMethodRequired": "Chaining is on, but no method is selected yet.",
-      "chooseChainingMethod": "Choose chaining method"
+      "chooseChainingMethod": "Choose chaining method",
+      "chooseLinkingBeforeStart": "Choose linking or cumulative before starting.",
+      "chooseLinkingForPreview": "Select linking or cumulative to preview the chaining queue."
+    },
+    "topCard": {
+      "casualSession": "Casual Session",
+      "metadata": {
+        "surah": "Surah",
+        "range": "Ayah range",
+        "reciter": "Reciter",
+        "repetition": "Repetition",
+        "delay": "Delay",
+        "stoppedAt": "Stopped at",
+        "speed": "Speed",
+        "repeats": "Repeats",
+        "mode": "Mode",
+        "rangeCompact": "Range {range}",
+        "repetitionCompact": "Repetition {value}",
+        "repeatsPerAyah": "{count}x per ayah"
+      }
+    },
+    "setupReadiness": {
+      "loadingSurahs": "Loading surah list...",
+      "chooseSurah": "Choose a surah and verse range.",
+      "ready": "{surah} ayahs {range}. Start when ready."
+    },
+    "startButtonHelp": {
+      "chooseSurah": "Choose a surah first",
+      "loading": "Verses are still loading",
+      "checkRange": "Check the ayah range and optional tools",
+      "ready": "Start guided memorisation"
+    },
+    "featurePills": {
+      "mode": "{phase} mode",
+      "translation": "Translation",
+      "transliteration": "Transliteration",
+      "tajweed": "Tajweed"
+    },
+    "collapsedPlayer": {
+      "percentComplete": "{label} · 0% complete",
+      "progress": "{label} · {current}/{total} · {currentTime} / {duration}"
+    },
+    "plannerBeginnerGuidance": {
+      "beforeStart": "Press start and Mutqin will begin with a countdown, then play the audio automatically.",
+      "recall": "Try the ayah from memory first, then check the text only when you need it.",
+      "practice": "Listen and follow the highlighted words. Move on when the ayah feels steady.",
+      "default": "Mutqin is guiding the order for you. Keep going one ayah at a time."
+    },
+    "hifzJourney": {
+      "setTarget": "Set your target",
+      "ayahsPerDay": "{min}-{max} ayahs/day",
+      "ayahsPerDayMax": "{max} ayahs/day",
+      "learningStyle": {
+        "light": "Light",
+        "balanced": "Balanced",
+        "intensive": "Intensive"
+      },
+      "focusMode": {
+        "newPriority": "New first",
+        "revisionPriority": "Review first",
+        "mixed": "Mixed",
+        "weakAyahFocus": "Strengthen weak ayahs"
+      },
+      "features": {
+        "recitation": "Gentle recitation feedback",
+        "memory": "Recall feedback",
+        "review": "Review reminders",
+        "precision": "Careful checking",
+        "standard": "Standard support"
+      },
+      "recitationFeedbackDefault": "Recite calmly when ready.",
+      "memoryStrength": {
+        "strong": "Strong memory",
+        "steady": "Steady memory",
+        "needsPractice": "Needs gentle review",
+        "ready": "Recall check ready"
+      }
+    },
+    "hifzPlanner": {
+      "schedule": {
+        "dueToday": "Due Today",
+        "tomorrow": "Tomorrow",
+        "thisWeek": "This Week",
+        "overdue": "Overdue Reviews",
+        "recentlyMastered": "Recently Mastered",
+        "notScheduled": "Not scheduled"
+      },
+      "health": {
+        "onTrack": "On Track",
+        "paused": "Paused",
+        "readyToBegin": "Ready to begin",
+        "fallingBehind": "Falling Behind",
+        "slightlyBehind": "Slightly Behind",
+        "createPlanDetail": "Create a plan to begin tracking.",
+        "pausedDetail": "Progress calculations are paused until you resume.",
+        "readyDetail": "Your plan is ready. Missed days start after your first completed session.",
+        "overdueReviewsDetail": "{count} reviews are overdue.",
+        "aheadDetail": "Planned memorisation is ahead of completed progress.",
+        "singleOverdue": "{count} review is overdue.",
+        "multipleOverdue": "{count} reviews are overdue.",
+        "slightAdjustment": "A small adjustment will bring the plan back on track.",
+        "matchingPlan": "Progress and revision are matching the plan.",
+        "pausedMessage": "Your plan is paused. Resume when you are ready to continue.",
+        "statusMessage": "{percent}% complete. Forecast finish: {date}."
+      },
+      "metrics": {
+        "currentStreak": "Current Streak",
+        "daysActive": "Days Active",
+        "daysRemaining": "Days Remaining",
+        "currentProgress": "Current Progress",
+        "currentJuz": "Current Juz",
+        "currentHizb": "Current Hizb",
+        "currentPage": "Current Page",
+        "currentAyah": "Current Ayah",
+        "completionForecast": "Completion Forecast",
+        "progress": "Progress",
+        "streak": "Streak",
+        "dailyTarget": "Daily Target",
+        "retention": "Retention",
+        "activeDays": "active days",
+        "queuedToday": "queued today",
+        "needsReview": "Needs Review",
+        "steady": "Steady",
+        "dueTodayDetail": "{count} due today",
+        "clearToday": "clear today",
+        "ayahsCompleted": "{completed}/{total} ayahs"
+      },
+      "analytics": {
+        "surahProgress": "Surah Progress",
+        "currentPlan": "Current plan",
+        "ayahsCompletedDetail": "{count} ayahs completed",
+        "juzHizbProgress": "Juz and Hizb Progress",
+        "juz": "Juz",
+        "hizb": "Hizb",
+        "totalInPlan": "{count} total in plan",
+        "weakStrongAyahs": "Weak and Strong Ayahs",
+        "weakAyahs": "Weak Ayahs",
+        "strongAyahs": "Strong Ayahs",
+        "noneFlagged": "None flagged",
+        "buildThroughReviews": "Build through reviews",
+        "revisionPerformance": "Revision Performance",
+        "scheduledReviews": "scheduled reviews",
+        "needsAttention": "needs attention",
+        "upcomingReviews": "upcoming reviews",
+        "completionTrends": "Completion Trends",
+        "currentPace": "current pace",
+        "missedDayHistory": "Missed Day History"
+      },
+      "insights": {
+        "scheduleStartsAfterFirst": "Your memory schedule will begin after the first completed ayah.",
+        "retentionImproving": "Your retention strength is improving.",
+        "retentionNeedsReview": "Your retention needs more steady review.",
+        "consistentRemember": "You consistently remember {count} recently learned ayah.",
+        "consistentRememberOther": "You consistently remember {count} recently learned ayahs.",
+        "weakRequires": "{count} ayah requires additional revision.",
+        "weakRequire": "{count} ayahs require additional revision.",
+        "backlogDetected": "Revision backlog detected. Clearing overdue reviews will stabilise the plan.",
+        "srsActive": "Spaced repetition is active and reviews are staying under control."
+      },
+      "progressLine": "{current}/{total} ayahs"
+    },
+    "aiMemorisationChecker": {
+      "selectedAyah": "Selected ayah",
+      "preparingWords": "Preparing ayah words...",
+      "assessmentComplete": "Assessment complete. Review the analysis below.",
+      "reviewHighlights": "Review the highlights, then save or retry.",
+      "preparingReview": "Preparing the review.",
+      "listeningNow": "Listening now.",
+      "startWhenReady": "Start when you are ready.",
+      "analysingRecitation": "Analysing recitation",
+      "resultsReady": "Results ready"
+    },
+    "analyticsReport": {
+      "generating": "Generating report...",
+      "downloadReady": "Download ready ✓",
+      "exportFailed": "Export failed, retry",
+      "downloadReport": "Download Report",
+      "exportError": "Unable to export this session right now.",
+      "versesReviewed": "Ayahs reviewed",
+      "versesReviewedDesc": "Distinct ayahs covered in this session.",
+      "timeMemorising": "Time memorising",
+      "timeMemorisingDesc": "Focused study time recorded for this session.",
+      "versePlays": "Verse plays",
+      "versePlaysDesc": "Total ayah audio starts across the selected range.",
+      "recallStrength": "Recall strength",
+      "recallStrengthDesc": "Simple snapshot of how strong this session felt overall.",
+      "reciteChecks": "Recite checks",
+      "reciteChecksDesc": "Saved checks in this range.",
+      "recallStrengthLow": "Low"
+    },
+    "toolsHeader": {
+      "insights": "Insights",
+      "settings": "Settings",
+      "advanced": "Advanced session",
+      "guidedSetup": "Guided session setup"
+    },
+    "contextLabel": {
+      "noSurah": "No surah selected"
+    },
+    "recordingTypes": {
+      "reciteCheck": "Recite Check",
+      "recording": "recording",
+      "attempt": "Attempt"
     },
     "analytics": {
       "todayProgress": "Today's progress",
@@ -2587,6 +2978,7 @@
       "setupSummary": "{count}x repeats, {mode}, {chaining}",
       "noReadingAids": "No reading aids active",
       "translationOn": "Translation on",
+      "translationOff": "Translation off",
       "transliterationOn": "Transliteration on",
       "wordByWordOn": "Word-by-word on",
       "wordAudioOn": "Word audio on",
@@ -2966,10 +3358,24 @@
     "unableToPlayAyahNow": "Couldn't play this ayah. Try again.",
     "textSizePercent": "Text size: {percent}%",
     "sessionResumeFailed": "Unable to resume session. Please try again.",
+    "sessionResumeUnavailable": "This session can no longer be resumed. Start a new session.",
     "sessionEndFailed": "Unable to end session. Please try again.",
     "sessionPaused": "Session paused. You can resume anytime.",
     "sessionPauseFailed": "Unable to pause session. Please try again.",
-    "couldNotPlayRecording": "We could not play this recording. Try reloading it or record again."
+    "couldNotPlayRecording": "We could not play this recording. Try reloading it or record again.",
+    "defaultSessionLoaded": "Default session loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no memorisation techniques.",
+    "recordingRenamed": "Recording renamed to \"{name}\".",
+    "sessionRestored": "Session restored",
+    "sessionLoaded": "Loaded: {name}",
+    "sessionRestarted": "Session restarted from the beginning.",
+    "recordingQualityVerified": "Recording quality verified.",
+    "recordingNeedsReview": "The recording needs another review.",
+    "auditRerunFailed": "Unable to re-run the deterministic audit for this recording.",
+    "markedForReview": "Marked for review",
+    "progressSaved": "Progress saved",
+    "recordingDeleted": "Recording deleted",
+    "recordingDeletedAyah": "Deleted ayah {number} {type}",
+    "openSetup": "Open setup"
   },
   "errors": {
     "network": "Network error. Check your connection."
@@ -3046,47 +3452,74 @@
     "checkoutNote": "Sign in before checkout so your plan syncs to the correct account. After payment, use the same email you used in Stripe."
   },
   "mission": {
-    "title": "Our mission",
     "kicker": "Our mission",
-    "make_consistent_quran_practice_easier_to_understan": "Make consistent Quran practice easier to start and keep going.",
-    "what_that_means": "What that means",
-    "clear_entry_point": "Clear starting point",
-    "beginners_should_know_what_to_do_in_the_first_minu": "Beginners should know what to do in the first minute.",
-    "reliable_revision_loop": "Reliable review",
-    "weak_ayahs_should_surface_before_they_become_large": "Weak ayahs should show up before they become larger gaps.",
-    "respect_for_real_study": "Respect for real study",
-    "the_product_should_support_teachers_halaqah_and_pe": "The product should support teachers, halaqah, and personal routines.",
-    "lower_the_barrier": "Lower the barrier",
-    "make_the_first_minute_simple_enough_for_beginners_": "Make the first minute simple for beginners and steady for returning learners.",
-    "improve_retention": "Improve retention",
-    "surface_weak_ayahs_before_they_turn_into_larger_re": "Surface weak ayahs before they turn into larger review gaps.",
-    "respect_real_study": "Respect real study",
-    "fit_naturally_alongside_a_teacher_halaqah_or_perso": "Fit alongside a teacher, halaqah, or personal routine without extra noise.",
-    "how_success_looks": "How success looks",
-    "simpler_starts": "Simpler starts",
-    "stronger_retention": "Stronger retention",
-    "more_confidence": "More confidence"
+    "pageKicker": "Mission",
+    "title": "Our mission",
+    "highlightsAria": "Mission focus",
+    "highlights": {
+      "begin": "Begin",
+      "continue": "Continue",
+      "return": "Return"
+    },
+    "heroDesc": "Help people start memorising, keep going, and come back each day, while still learning with a real teacher.",
+    "ctaStartSession": "Start a session",
+    "ctaGetHelp": "Get help",
+    "sections": {
+      "practise": {
+        "title": "Practise carefully",
+        "desc": "Listen, repeat, and check your recitation so what you memorise stays with you beyond one sitting."
+      },
+      "daily": {
+        "title": "Come back each day",
+        "desc": "After every session you get a clear next step, so ayahs do not fade between days."
+      },
+      "respect": {
+        "title": "Respect first",
+        "desc": "Getting it right matters more than going fast. Mutqin supports study with teachers, not instead of them."
+      }
+    }
   },
   "donate": {
+    "kicker": "Support",
     "title": "Support",
-    "donate": "Support",
-    "support_a_simpler_memorisation_experience": "Need help with practice, your account, or a session?",
-    "product_maintenance": "Getting started",
-    "faster_iteration": "Your account",
-    "better_student_experience": "During a session",
-    "support_focus": "Help topics",
-    "fund_the_next_practical_improvements_students_feel": "Find answers here, or write to us anytime.",
-    "flexible": "Practice",
-    "one_time_support": "Checking recitation",
-    "help_with_ongoing_improvements_maintenance_and_car": "Recite while Mutqin follows along. It is a practice helper, not a replacement for a teacher.",
-    "monthly_support": "Something not working?",
-    "support_steady_iteration_on_onboarding_revision_an": "Refresh once. If that fails, sign out and back in. For recitation, allow microphone access in your browser.",
-    "targeted": "Feedback",
-    "project_support": "Share feedback",
-    "back_focused_improvements_for_a_specific_part_of_t": "Tell us what helped, what was unclear, or how practice could be easier.",
-    "start_the_conversation": "Contact us",
-    "if_you_want_to_support_mutqin_contact_us_with_the_": "Ask about billing, practice, or feedback anytime.",
-    "contact_us": "Contact us"
+    "highlightsAria": "Support topics",
+    "highlights": {
+      "start": "Start",
+      "account": "Account",
+      "contact": "Contact"
+    },
+    "heroDesc": "Need help with practice, your account, or a session? Find answers here, or write to us anytime.",
+    "ctaContact": "Contact us",
+    "ctaStartPractising": "Start practising",
+    "sections": {
+      "gettingStarted": {
+        "title": "Getting started",
+        "desc": "Open Memorisation, pick a short passage, then listen and repeat.",
+        "link": "Go to Memorisation"
+      },
+      "account": {
+        "title": "Your account",
+        "desc": "Sign in to keep your progress saved. Forgot your password? Use the reset link on the login page.",
+        "link": "Sign in"
+      },
+      "session": {
+        "title": "During a session",
+        "desc": "Listen, follow the words, and repeat. When you finish, follow the suggested next step."
+      },
+      "recitation": {
+        "title": "Checking your recitation",
+        "desc": "Recite while Mutqin follows along. It is a practice helper, not a replacement for a teacher."
+      },
+      "troubleshooting": {
+        "title": "Something not working?",
+        "desc": "Refresh once. If that fails, sign out and back in. For recitation, allow microphone access in your browser."
+      },
+      "feedback": {
+        "title": "Share feedback",
+        "desc": "Tell us what helped, what was unclear, or how practice could be easier.",
+        "link": "Write to us"
+      }
+    }
   },
   "waitingList": {
     "brand": "Mutqin",
@@ -3135,6 +3568,8 @@
     "wizard": {
       "editTitle": "Edit Hifz Plan",
       "createTitle": "Create Your Hifz Plan",
+      "setupProgressAria": "Plan setup progress",
+      "forecastAria": "Hifz journey forecast",
       "savePlan": "Save Hifz Plan",
       "startJourney": "Start Hifz Journey",
       "chooseSurahPlaceholder": "Choose a Surah",

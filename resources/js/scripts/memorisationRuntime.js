@@ -5,6 +5,13 @@
 import { toRaw } from 'vue'
 import { DEFAULT_RECITATION_CONFIDENCE_THRESHOLD } from './engine/recitation_analysis'
 import {
+  SPEECHMATICS_MAX_DELAY_SECONDS,
+  SPEECHMATICS_END_OF_UTTERANCE_SECONDS,
+  clampSpeechmaticsMaxDelaySeconds,
+  clampSpeechmaticsEndOfUtteranceSeconds,
+  resolveAdaptiveSpeechmaticsDelays,
+} from './memorisationDetection/speechmaticsDelays'
+import {
   MODE_STORAGE_KEYS,
   SESSION_STORAGE_KEYS,
   CENTRAL_SESSION_STORAGE_KEY,
@@ -59,7 +66,7 @@ export const RECITATION_IDB_VERSION = 2
 export const RECITATION_IDB_STORE = 'sessions'
 export const RECITATION_HISTORY_IDB_STORE = 'sessionHistory'
 export const RECITATION_ANALYSIS_VERSION = '2026-06-27-live-rtl-v2'
-export const RECITATION_CONFIDENCE_THRESHOLD = Math.min(DEFAULT_RECITATION_CONFIDENCE_THRESHOLD, 0.40)
+export const RECITATION_CONFIDENCE_THRESHOLD = Math.min(DEFAULT_RECITATION_CONFIDENCE_THRESHOLD, 0.35)
 // Give learners room to breathe between āyahs — 1.4s was cutting mid-passage.
 export const RECITATION_SILENCE_THROTTLE_MS = 3200
 // Larger slices cut MediaRecorder/main-thread churn without hurting ASR latency.
@@ -68,12 +75,22 @@ export const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 5000
 export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 1800
 export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.82
 export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 4096
-// Speechmatics realtime requires max_delay in [0.7, 4]. Values below 0.7
-// (we previously used 0.02) are rejected as invalid_config.
-export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.7
-// Natural pauses between āyahs need more than half a second.
-export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.9
-export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.78
+export {
+  SPEECHMATICS_MAX_DELAY_SECONDS,
+  SPEECHMATICS_AMD_MAX_DELAY_SECONDS,
+  SPEECHMATICS_AMD_SLOW_MAX_DELAY_SECONDS,
+  SPEECHMATICS_AMD_FAST_MAX_DELAY_SECONDS,
+  SPEECHMATICS_END_OF_UTTERANCE_SECONDS,
+  SPEECHMATICS_AMD_END_OF_UTTERANCE_SECONDS,
+  SPEECHMATICS_AMD_SLOW_END_OF_UTTERANCE_SECONDS,
+  SPEECHMATICS_AMD_FAST_END_OF_UTTERANCE_SECONDS,
+  clampSpeechmaticsMaxDelaySeconds,
+  clampSpeechmaticsEndOfUtteranceSeconds,
+  resolveAdaptiveSpeechmaticsDelays,
+} from './memorisationDetection/speechmaticsDelays'
+export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.62
+/** AMD live paint: accept quieter partials from far mics without waiting for finals. */
+export const RECITATION_AMD_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.48
 export const RECITATION_WORD_STATUS_CLASSES = [
   'recitation-word-pending',
   'recitation-word-correct',
@@ -91,6 +108,14 @@ export function tokenizeArabicText(text) {
   const tokens = raw.split(/\s+/).filter(Boolean)
   return tokens
 }
+
+export {
+  normalizeWordForMeaningLookup,
+  buildVerseWordsFromWbw,
+  resolveWordGlossFromVerse,
+  versesHaveWordMeanings,
+  applyWordByWordMeaningsToVerses,
+} from './wordByWordMeanings.js'
 
 export function splitArabicGraphemes(text) {
   const raw = String(text || '')
@@ -246,15 +271,21 @@ export function parseRecordingDurationSeconds(value) {
   return 0
 }
 
-export function normalizeRecordingResult(value) {
+export function normalizeRecordingResult(value, t = null) {
   const raw = String(value || '').trim().toLowerCase()
-  if (!raw) return 'Needs Review'
-  if (raw.includes('excellent')) return 'Excellent'
-  if (raw.includes('good')) return 'Good'
-  if (raw.includes('pass')) return 'Good'
-  if (raw.includes('fair') || raw.includes('building')) return 'Fair'
-  if (raw.includes('review') || raw.includes('needs')) return 'Needs Review'
-  return 'Needs Review'
+  const label = (key, fallback) => {
+    if (typeof t !== 'function') return fallback
+    const value = t(`memorisation.recitationResult.recordingResult.${key}`)
+    if (value && !value.includes('recordingResult.')) return value
+    return fallback
+  }
+  if (!raw) return label('needsReview', 'Needs Review')
+  if (raw.includes('excellent')) return label('excellent', 'Excellent')
+  if (raw.includes('good')) return label('good', 'Good')
+  if (raw.includes('pass')) return label('good', 'Good')
+  if (raw.includes('fair') || raw.includes('building')) return label('fair', 'Fair')
+  if (raw.includes('review') || raw.includes('needs')) return label('needsReview', 'Needs Review')
+  return label('needsReview', 'Needs Review')
 }
 
 export function parseRecordingDate(value) {
@@ -694,10 +725,16 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
                 language: 'ar',
                 model: 'enhanced',
                 enable_partials: true,
-                max_delay: SPEECHMATICS_MAX_DELAY_SECONDS,
+                max_delay: clampSpeechmaticsMaxDelaySeconds(
+                  options.maxDelaySeconds,
+                  SPEECHMATICS_MAX_DELAY_SECONDS,
+                ),
                 max_delay_mode: 'flexible',
                 conversation_config: {
-                  end_of_utterance_silence_trigger: SPEECHMATICS_END_OF_UTTERANCE_SECONDS
+                  end_of_utterance_silence_trigger: clampSpeechmaticsEndOfUtteranceSeconds(
+                    options.endOfUtteranceSeconds,
+                    SPEECHMATICS_END_OF_UTTERANCE_SECONDS,
+                  ),
                 }
               }
             }))
