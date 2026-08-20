@@ -207,6 +207,9 @@ function t(key, params = {}) {
   assert.match(js, /closePostSessionRecommendationModal/)
   assert.match(js, /returnToMemorisationWorkspace\(\)/)
   assert.match(js, /RETURN_TO_WORKSPACE/)
+  assert.match(js, /parkPracticeSetAfterBackToMushaf|landCompletedPracticeSetOnMushaf/)
+  assert.match(js, /resolveBackToMushafTransition/)
+  assert.match(js, /restorePracticeSetOntoWorkspace/)
   assert.doesNotMatch(
     String(js.match(/returnToMemorisationWorkspace\(\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0] || ''),
     /rejectRecommendation|startRecommendedSession|startSessionWithCountdown/,
@@ -216,6 +219,22 @@ function t(key, params = {}) {
     String(js.match(/returnToMemorisationWorkspace\(\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0] || ''),
     /postSessionRecommendation\s*=\s*null|aiReciteFinalPlan\s*=\s*null|postSessionSnapshot\s*=\s*null/,
     'return to workspace must not discard AI/recommendation results',
+  )
+  // Back to mushaf must not blindly wipe resume — park path preserves continue.
+  assert.doesNotMatch(
+    String(js.match(/returnToMemorisationWorkspace\(\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0] || ''),
+    /this\.clearContinueSessionQuietly\(\)/,
+    'Back to mushaf must not clear continue in the top-level handler',
+  )
+  assert.doesNotMatch(
+    String(js.match(/parkPracticeSetAfterBackToMushaf\(snapshot[^=]*= null[\s\S]*?\n\s{4}\}/)?.[0] || ''),
+    /clearContinueSessionQuietly|clearActiveSessionSnapshot/,
+    'parked set must not clear resume affordances',
+  )
+  assert.match(
+    String(js.match(/finishSessionCleanup\(options = \{\}\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0] || ''),
+    /discardSet/,
+    'queue cleanup must be discard-gated so Back to mushaf keeps the set',
   )
   assert.match(en, /"reviseFocusPhrase":\s*"Review"/)
   assert.match(en, /"continueToNextRange":\s*"Continue"/)
@@ -346,6 +365,17 @@ function t(key, params = {}) {
   assert.ok(detailsIdx > weakIdx, 'details follow weak spots')
   assert.ok(practiceIdx > guidedStart, 'practice method card present after review')
   assert.ok(scopeIdx > practiceIdx, 'scope picker lives in the practice plan card')
+  assert.match(completionModal, /data-testid="post-session-practice-how"/)
+  assert.match(completionModal, /post-session-simple__how-demo--footer/)
+  assert.match(completionModal, /aria-controls="postSessionPracticeHowDisclosure"/)
+  assert.match(completionModal, /See how it works|practiceHow\.seeHowItWorks/)
+  assert.match(completionModal, /postSessionPracticeHowExpanded = !postSessionPracticeHowExpanded/)
+  assert.match(en, /"seeHowItWorks":\s*"See how it works"/)
+  assert.match(en, /"howItWorks":\s*"How practice works"/)
+  assert.match(js, /postSessionPracticeHowExpanded:\s*false/)
+  assert.doesNotMatch(js, /postSessionWhyExpanded\s*=\s*true/)
+  assert.match(css, /\.post-session-simple__how-toggle/)
+  assert.match(css, /\.post-session-simple__how-disclosure/)
 }
 
 // Recommendation copy hygiene: keep “then continue …” and pluralize focus meta

@@ -169,6 +169,7 @@ import {
   buildAiReciteDynamicPlan,
   buildFriendlyReciteFeedback,
   extractWeakWordsFromResult,
+  resolvePracticeHowSteps,
   selectPrimaryWeakAyah,
 } from '../scripts/recommendations/aiRecitePracticePlan'
 import {
@@ -237,6 +238,9 @@ import {
   resolveEndSessionConfirmDecision,
   resolvePreferredSessionResumeGate,
   resolveResumeAyahNumber,
+  resolveSessionExitTransition,
+  resolveExitRangeComplete,
+  resolveBackToMushafTransition,
   sessionRangesMatch,
   stashDashboardEntryIntent,
   userScopedStorageKey,
@@ -880,7 +884,7 @@ export default {
       postSessionAdaptiveFeedback: '',
       postSessionAdaptiveQuestionStartedAt: 0,
       postSessionAdaptiveFeedbackTimer: null,
-      postSessionWhyExpanded: false,
+      postSessionPracticeHowExpanded: false,
       postSessionConfidenceSelection: null, // local authoritative selection; null → resolve from recommendation
       postSessionViewState: 'idle', // completing | generating_recommendation | recommendation_ready | editing_settings | starting_recommended | preparing_repeat | starting_repeat | opening_ai_recite | recommendation_failed | action_failed
       postSessionCompletedSessionId: null,
@@ -1664,36 +1668,6 @@ export default {
     },
     journeyHasStarted() {
       return !!this.learnerJourney?.has_started
-    },
-    isOffMainJourneySession() {
-      if (!this.isLoggedIn || this.pendingMainJourney) return false
-      if (!this.journeyHasStarted || !this.journeyContinue) return false
-      const mainSurah = Number(this.journeyContinue.surah_number || 0)
-      const mainFrom = Number(this.journeyContinue.ayah_start || 0)
-      const mainTo = Number(this.journeyContinue.ayah_end || mainFrom)
-      const surah = Number(this.chapterId || 0)
-      const from = Number(this.rangeStart || 0)
-      const to = Number(this.rangeEnd || from)
-      if (surah <= 0 || from <= 0 || mainSurah <= 0) return false
-      if (surah !== mainSurah) return true
-      return to < mainFrom || from > mainTo
-    },
-    offMainJourneyNotice() {
-      if (!this.isOffMainJourneySession) return ''
-      const surah = this.journeyContinue?.surah_name
-        || this.t('memorisation.workspaceJourney.kicker')
-        || 'Your place'
-      const start = Number(this.journeyContinue?.ayah_start || 0)
-      const end = Number(this.journeyContinue?.ayah_end || start)
-      if (start > 0 && end > 0) {
-        return this.t('memorisation.workspaceJourney.offPathNotice', {
-          surah,
-          start,
-          end,
-        }) || `${surah} ${start}–${end} stays your place. This sitting will not move it.`
-      }
-      return this.t('memorisation.workspaceJourney.offPathNoticeShort', { surah })
-        || `${surah} stays your place. This sitting will not move it.`
     },
     journeyContinue() {
       if (this.learnerJourney?.continue) return this.learnerJourney.continue
@@ -2942,13 +2916,14 @@ export default {
       )
     },
     sessionExitRangeComplete() {
-      const snapshot = this.sessionExitPreviewSnapshot || {}
-      if (typeof snapshot.completedAll === 'boolean') return snapshot.completedAll
-      const rangeStart = Math.max(1, Number(snapshot.rangeStart || this.rangeStart || 1))
-      const rangeEnd = Math.max(rangeStart, Number(snapshot.rangeEnd || this.rangeEnd || rangeStart))
-      const covered = Math.max(0, Number(snapshot.coveredAyahCount || this.currentPosition || 0))
-      const progressPercent = Math.max(0, Number(snapshot.progressPercent || this.progressPercent || 0))
-      return covered >= rangeEnd && progressPercent >= 100
+      return resolveExitRangeComplete({
+        sessionCompleted: !!this.sessionCompleted,
+        sessionEndedEarly: !!this.sessionEndedEarly,
+        sessionPaused: !!this.sessionPaused,
+        mutqinSessionActive: !!this.isSessionLive || !!this.mutqinState?.sessionState?.active,
+        engineCompleted: !!this.mutqinState?.sessionState?.completed,
+        centralStatus: this.centralSession?.sessionStatus || null,
+      })
     },
     sessionExitModalTitle() {
       return this.sessionExitRangeComplete
@@ -4533,6 +4508,44 @@ export default {
         ? this.postSessionPersonalPlan.evidence
         : []
       return evidence.slice(0, 3).map((row) => String(row?.label || '').trim()).filter(Boolean).join(' · ')
+    },
+    postSessionPracticeHowSteps() {
+      const plan = this.postSessionPersonalPlan
+        || this.aiReciteFinalPlan
+        || this.amdPracticePlan
+        || null
+      const approach = plan?.practiceApproach
+        || plan?.planDetail?.practiceApproach
+        || null
+      const techniqueId = String(
+        approach?.id
+        || plan?.techniques?.[0]?.id
+        || this.postSessionRecommendation?.settings?.technique
+        || this.postSessionRecommendation?.technique?.id
+        || this.liveSessionTechniqueId
+        || 'talqin',
+      ).toLowerCase()
+      const steps = resolvePracticeHowSteps({
+        techniqueId: techniqueId || 'talqin',
+        steps: approach?.steps,
+        how: approach?.how || this.resolvePostSessionMethodCopy(plan),
+        t: this.t.bind(this),
+      })
+      const cleaned = steps
+        .map((step) => this.stripAiDashes(String(step || '').trim()))
+        .filter(Boolean)
+      if (cleaned.length) return cleaned
+      // Never leave the disclosure empty — first-time users need a fallback.
+      return resolvePracticeHowSteps({
+        techniqueId: 'talqin',
+        t: this.t.bind(this),
+      })
+    },
+    postSessionPracticeHowVisible() {
+      if (this.onboardingSampleSessionActive) return false
+      if (this.postSessionRecommendationStatus === 'loading') return false
+      // Always offer short practice steps above the CTAs (never blocks them).
+      return this.postSessionPracticeHowSteps.length > 0
     },
     livePracticeCoachText() {
       if (!this.hasSessionStarted || this.isSessionCompleted || this.showPostSessionModal) return ''
@@ -14466,7 +14479,7 @@ export default {
         t: this.t.bind(this)
       })
       this.postSessionStatsExpanded = false
-      this.postSessionWhyExpanded = false
+      this.postSessionPracticeHowExpanded = false
       const preservedRecommendation = this.postSessionRecommendation
       const preservedStatus = this.postSessionRecommendationStatus
       const preservedSessionId = this.postSessionCompletedSessionId
@@ -14661,7 +14674,7 @@ export default {
         this.postSessionAdaptiveFeedbackTimer = null
       }
       this.postSessionAdaptiveQuestionStartedAt = 0
-      this.postSessionWhyExpanded = false
+      this.postSessionPracticeHowExpanded = false
       this.postSessionConfidenceSelection = null
       this.postSessionConfidenceHydrated = false
       this.postSessionViewState = 'idle'
@@ -15860,7 +15873,7 @@ export default {
     async landOnAdaptedPlanFromCheck() {
       this.postSessionAdaptiveCheckActive = false
       this.postSessionAdaptiveCheckBusy = false
-      this.postSessionWhyExpanded = true
+      this.postSessionPracticeHowExpanded = false
       this.postSessionViewState = 'recommendation_ready'
       this.syncBodyScrollLock(!!this.showPostSessionModal)
 
@@ -16708,11 +16721,28 @@ export default {
     },
     /**
      * Leave recommendation / post-session choice and restore the main workspace.
-     * Preserves completed-session + AI/recommendation results; never restarts or
-     * duplicates a session record; never rejects/discards the recommendation.
+     * Parks incomplete / mastery sets; lands completed sets on the mushaf.
+     * Preserves AI/recommendation results; never restarts, duplicates, or discards
+     * the set unless the learner explicitly chose discard.
      */
     returnToMemorisationWorkspace() {
       if (this.postSessionActionsBusy || this.postSessionRecommendationStarting) return
+
+      const snap = this.postSessionSnapshot || this.sessionEndedSnapshot || null
+      const rangeComplete = !!(
+        snap?.completedAll
+        || (
+          (this.sessionCompleted || this.centralSession?.sessionStatus === 'completed')
+          && !this.sessionEndedEarly
+          && !this.awaitingMasteryRetest
+        )
+      )
+      const transition = resolveBackToMushafTransition({
+        rangeComplete,
+        discard: false,
+        awaitingMasteryRetest: !!this.awaitingMasteryRetest,
+        sessionEndedEarly: !!this.sessionEndedEarly,
+      })
 
       // Keep recommendation / AI review / snapshot / templates in memory.
       // Do not reject the saved recommendation, start a recommended session, or end again.
@@ -16743,26 +16773,138 @@ export default {
       this.playerVisible = false
       try { this.closePlayer() } catch (_) { /* ignore */ }
 
-      // Drop completion-loop UI so Start is available — without inventing a new session.
+      if (transition.kind === 'park') {
+        this.parkPracticeSetAfterBackToMushaf(snap, transition)
+      } else if (transition.kind === 'complete_return') {
+        this.landCompletedPracticeSetOnMushaf(snap, transition)
+      } else {
+        // discard — should not happen from Back to mushaf; keep workspace usable.
+        this.landCompletedPracticeSetOnMushaf(snap, {
+          ...transition,
+          restoreSet: true,
+          clearContinue: true,
+        })
+      }
+
+      this.syncBodyScrollLock(false)
+      this.persistUiState()
+      try { this.persistModeState?.(this.currentMode) } catch (_) { /* ignore */ }
+      try { this.persistCentralSessionState?.() } catch (_) { /* ignore */ }
+    },
+
+    /**
+     * Rebuild the practice set onto the mushaf so Back to mushaf never lands idle/empty.
+     */
+    restorePracticeSetOntoWorkspace(snapshot = null, { preserveProgress = false } = {}) {
+      const snap = snapshot || this.postSessionSnapshot || this.sessionEndedSnapshot || null
+      const mode = this.currentMode
+      const store = this.getModeStore(mode)
+      if (!store?.verses?.length && !this.hasVerses) return false
+
+      // Keep surah/range from the ended sitting when mode store drifted.
+      if (snap?.chapterId) {
+        const chapterId = Number(snap.chapterId || 0)
+        const rangeStart = Math.max(1, Number(snap.rangeStart || store.rangeStart || this.rangeStart || 1))
+        const rangeEnd = Math.max(rangeStart, Number(snap.rangeEnd || store.rangeEnd || this.rangeEnd || rangeStart))
+        if (chapterId > 0) {
+          store.chapterId = chapterId
+          store.rangeStart = rangeStart
+          store.rangeEnd = rangeEnd
+        }
+      }
+
+      this.buildQueue(mode)
+      if (!Array.isArray(this.queue) || !this.queue.length) return false
+
+      let queueIndex = 0
+      if (preserveProgress) {
+        const covered = Math.max(
+          0,
+          Number(snap?.coveredAyahCount || 0) - Number(snap?.rangeStart || store.rangeStart || 1),
+        )
+        const fromContinue = Number(this.continueSessionPayload?.queueIndex ?? NaN)
+        queueIndex = Number.isFinite(fromContinue)
+          ? fromContinue
+          : Math.max(0, Math.min(this.queue.length - 1, covered))
+      }
+      queueIndex = Math.max(0, Math.min(this.queue.length - 1, queueIndex))
+      if (store) store.queueIndex = queueIndex
+      this.queueIndex = queueIndex
+
+      const entry = this.queue[queueIndex]
+      const verseKey = entry?.verse?.key || entry?.key || store?.verses?.[0]?.key || null
+      if (verseKey) {
+        this.setActiveVerse(verseKey, { mode, queueIndex, scroll: false })
+      }
+      return true
+    },
+
+    parkPracticeSetAfterBackToMushaf(snapshot = null, transition = null) {
+      void transition
       this.sessionCompleted = false
       this.sessionEndedEarly = false
-      this.sessionPaused = false
-      this.backendUnfinishedSession = false
-      this.clearContinueSessionQuietly()
-      this.clearActiveSessionSnapshot()
+      this.sessionCompletedAt = null
+      this.restorePracticeSetOntoWorkspace(snapshot, { preserveProgress: true })
+      this.applyLocalPausedSessionState()
+      // Soft-park must keep resume affordances — never treat navigation as discard.
+      try {
+        this.persistContinueSession()
+      } catch (_) { /* local paused state already applied */ }
+      this.markActiveSessionSnapshot?.()
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.paused = true
+        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.completed_at = null
+      }
       if (this.centralSession) {
-        this.centralSession.sessionStatus = 'idle'
+        this.centralSession.sessionStatus = 'paused'
+        this.centralSession.sessionCompletedAt = null
+      }
+      // Only claim backend unfinished when the server row is still pausable.
+      const backendStatus = String(this.backendSessionSnapshot?.status || '').toLowerCase()
+      const backendStillUnfinished = (
+        backendStatus === 'active'
+        || backendStatus === 'paused'
+        || backendStatus === 'interrupted'
+      )
+      this.backendUnfinishedSession = backendStillUnfinished
+      if (backendStillUnfinished && this.backendSessionSnapshot) {
+        this.backendSessionSnapshot = {
+          ...this.backendSessionSnapshot,
+          status: 'paused',
+        }
+      }
+      try {
+        this.transitionSessionLifecycle?.(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
+      } catch (_) { /* ignore */ }
+    },
+
+    landCompletedPracticeSetOnMushaf(snapshot = null, transition = null) {
+      const clearContinue = transition?.clearContinue !== false
+      this.restorePracticeSetOntoWorkspace(snapshot, { preserveProgress: false })
+      this.sessionCompleted = true
+      this.sessionEndedEarly = false
+      this.sessionPaused = false
+      this.sessionCompletedAt = this.sessionCompletedAt || new Date().toISOString()
+      this.backendUnfinishedSession = false
+      if (clearContinue) {
+        this.clearContinueSessionQuietly()
+        this.clearActiveSessionSnapshot()
+      }
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'completed'
+        this.centralSession.sessionCompletedAt = this.sessionCompletedAt
       }
       if (this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.active = false
         this.mutqinState.sessionState.paused = false
-        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.completed = true
+        this.mutqinState.sessionState.completed_at = this.sessionCompletedAt
       }
       try {
-        this.transitionSessionLifecycle?.(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
+        this.transitionSessionLifecycle?.(SESSION_STATUS.COMPLETED, SESSION_MUTATION.IDLE)
       } catch (_) { /* ignore */ }
-      this.syncBodyScrollLock(false)
-      this.persistUiState()
     },
     resolveFocusPhraseRevisionRange() {
       const snap = this.postSessionSnapshot || {}
@@ -17813,8 +17955,8 @@ export default {
     togglePostSessionStats() {
       this.postSessionStatsExpanded = !this.postSessionStatsExpanded
     },
-    togglePostSessionWhy() {
-      this.postSessionWhyExpanded = !this.postSessionWhyExpanded
+    togglePostSessionPracticeHow() {
+      this.postSessionPracticeHowExpanded = !this.postSessionPracticeHowExpanded
     },
 
     repeatPostSession() {
@@ -25777,6 +25919,7 @@ export default {
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
       this.postSessionAiDetailsExpanded = false
+      this.postSessionPracticeHowExpanded = false
       this.postSessionViewState = this.postSessionRecommendation
         ? 'recommendation_ready'
         : (this.postSessionViewState || 'idle')
@@ -26255,7 +26398,7 @@ export default {
         return
       }
 
-      this.postSessionWhyExpanded = true
+      this.postSessionPracticeHowExpanded = false
       this.postSessionViewState = 'recommendation_ready'
 
       await this.$nextTick()
@@ -32177,14 +32320,55 @@ export default {
     },
 
     async confirmEndSessionFromExitModal() {
-      const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION)
+      const rangeComplete = !!this.sessionExitRangeComplete
+      const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION, {
+        rangeComplete,
+      })
+      // Incomplete range ("Finish for now?") must pause + keep Resume — never terminal-end.
+      if (decision.saveForLater || decision.pauseSession) {
+        await this.saveSessionForLaterFromExitModal()
+        return
+      }
       if (!decision.completeSession) return
-      // End Session confirm opens Session Complete only when the range is finished.
+      // Range finished: End Session opens Session Complete.
       await this.confirmSessionExit({
         showSummary: false,
         openCompletion: true,
         openPostSessionChoice: false,
       })
+    },
+
+    /**
+     * Soft exit: preserve unfinished/resumable state so "You can return later" is truthful.
+     * Backend pause is the source of truth; continue payload stays intact.
+     */
+    async saveSessionForLaterFromExitModal() {
+      if (this.sessionExitEndingBusy) return false
+      const transition = resolveSessionExitTransition({ rangeComplete: false })
+      if (!transition.pauseSession || !transition.resumable) return false
+      this.sessionExitEndingBusy = true
+      try {
+        const paused = await this.pauseSessionFromPrimaryAction({
+          quiet: true,
+          reason: 'save_for_later',
+        })
+        this.closeSessionExitModal({ restore: false })
+        if (paused) {
+          this.showBanner(
+            this.t('memorisation.sessionExit.confirmDescriptionEarly')
+              || 'Your progress was saved. You can return later.',
+            'info',
+            3200,
+          )
+          // Named Saved Sessions are optional bookmarks — distinct from Resume unfinished state.
+          try {
+            this.promptSaveSessionAfterEnd({ wasSample: !!this.onboardingSampleSessionActive })
+          } catch (_) { /* resume state already preserved */ }
+        }
+        return !!paused
+      } finally {
+        this.sessionExitEndingBusy = false
+      }
     },
 
     softPausePlayback() {
@@ -32416,7 +32600,16 @@ export default {
       if (this.anchorModeEnabled) activeMethodLabels.push(this.getTechniqueDisplayLabel('anchor'))
       const pacingSummary = activeMethodLabels.join(', ')
       const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
-      const completedAll = coveredAyah >= totalAyahs && progressPercent >= 100
+      // Never treat "on last ayah" / 100% position as range complete — that made
+      // 1-ayah sittings always terminal-end and wiped Resume on "Finish for now?".
+      const completedAll = resolveExitRangeComplete({
+        sessionCompleted: !!this.sessionCompleted,
+        sessionEndedEarly: !!this.sessionEndedEarly,
+        sessionPaused: !!this.sessionPaused,
+        mutqinSessionActive: !!this.isSessionLive || !!this.mutqinState?.sessionState?.active,
+        engineCompleted: !!this.mutqinState?.sessionState?.completed,
+        centralStatus: this.centralSession?.sessionStatus || null,
+      })
       const durationLabel = this.formatTime(durationSeconds)
       const rangeLabel = chapterName
         ? this.t('memorisation.common.rangeLabel', { start: rangeStart, end: rangeEnd })
@@ -32548,6 +32741,7 @@ export default {
 
     finishSessionCleanup(options = {}) {
       const endedEarly = options.endedEarly ?? !!this.sessionEndedEarly
+      const discardSet = options.discardSet === true
       this.finalizePlannerSessionProgress()
       this.clearRecitationWindowTimer()
       this.clearTalqinPauseTimer()
@@ -32560,15 +32754,25 @@ export default {
 
       const store = this.getModeStore(this.currentMode)
       const firstKey = this.verses[0]?.key || null
-      store.queue = []
-      store.queueIndex = 0
-      store.activeKey = firstKey
-      store.sessionActive = false
+      // Keep the practice set on the mushaf unless the learner explicitly discarded it.
+      // Clearing the queue here left "Back to mushaf" in an unusable idle workspace.
+      if (discardSet) {
+        store.queue = []
+        store.queueIndex = 0
+        store.activeKey = firstKey
+        this.queue = []
+        this.queueIndex = 0
+        this.activeVerseKey = null
+        this.activeKey = firstKey
+      } else if (store) {
+        store.sessionActive = false
+        // Ensure a rebuildable queue remains for park / complete-return.
+        if ((!Array.isArray(store.queue) || !store.queue.length) && store.verses?.length) {
+          this.buildQueue(this.currentMode)
+        }
+      }
+      if (store) store.sessionActive = false
 
-      this.queue = []
-      this.queueIndex = 0
-      this.activeVerseKey = null
-      this.activeKey = firstKey
       this.playerVisible = false
       this.isPlaying = false
       this.currentTime = 0
@@ -32579,8 +32783,10 @@ export default {
 
       if (this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.active = false
-        this.mutqinState.sessionState.queue = []
-        this.mutqinState.sessionState.current_index = 0
+        if (discardSet) {
+          this.mutqinState.sessionState.queue = []
+          this.mutqinState.sessionState.current_index = 0
+        }
         if (endedEarly) {
           this.mutqinState.sessionState.completed = false
           this.mutqinState.sessionState.ended_early = true
@@ -32640,7 +32846,12 @@ export default {
         endedManually: true,
       }
       const rangeComplete = !!endedSnapshot.completedAll
-      const endStatus = rangeComplete ? 'completed' : 'ended_early'
+      // Incomplete range must soft-exit (pause), never terminal ended_early.
+      // That keeps Resume / Return-to-this-set consistent with "You can return later".
+      if (!rangeComplete) {
+        return this.saveSessionForLaterFromExitModal().then((ok) => (ok ? endedSnapshot : null))
+      }
+      const endStatus = 'completed'
       const wasSample = !!this.onboardingSampleSessionActive
       const backendSessionId = this.backendSessionSnapshot?.id
         || this.mutqinState?.sessionState?.backendSessionId
@@ -32671,12 +32882,12 @@ export default {
                   endResult = await learningApi.endSession({
                     idempotency_key: `end-${backendSessionId || 'current'}`,
                     session_id: Number(backendSessionId || 0) || undefined,
-                    range_complete: rangeComplete,
+                    range_complete: true,
                     ayah_number: Number(endedSnapshot.coveredAyahCount || this.currentPosition || 0) || undefined,
                     metadata: {
-                      completed: rangeComplete,
-                      range_complete: rangeComplete,
-                      ended_early: !rangeComplete,
+                      completed: true,
+                      range_complete: true,
+                      ended_early: false,
                       active: false,
                       ended_manually: true,
                       covered_through: Number(endedSnapshot.coveredAyahCount || this.currentPosition || 0) || null,
@@ -32751,24 +32962,15 @@ export default {
             return null
           }
 
-          this.sessionCompleted = rangeComplete
-          this.sessionEndedEarly = !rangeComplete
+          this.sessionCompleted = true
+          this.sessionEndedEarly = false
           this.sessionCompletedAt = new Date().toISOString()
           this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
           this.centralSession.sessionStatus = endStatus
           this.centralSession.sessionCompletedAt = this.sessionCompletedAt
           this._startAttemptNonce = null
-          if (rangeComplete) {
-            completeMutqinSession(this.mutqinState)
-            this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
-          } else {
-            this.addActivityEvent({ ts: Date.now(), type: 'session_ended_early' })
-            if (this.mutqinState?.sessionState) {
-              this.mutqinState.sessionState.completed = false
-              this.mutqinState.sessionState.ended_early = true
-              this.mutqinState.sessionState.ended_at = this.sessionCompletedAt
-            }
-          }
+          completeMutqinSession(this.mutqinState)
+          this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
           // Keep sample flag through the post-session modal so Finish / sample CTAs
           // still render; exitOnboardingSampleMode clears it when leaving that flow.
           this.sessionPaused = false
@@ -32800,7 +33002,7 @@ export default {
 
           try {
             this.recomputeAnalytics()
-            this.finishSessionCleanup({ endedEarly: !rangeComplete })
+            this.finishSessionCleanup({ endedEarly: false })
           } catch (_) { /* completion UI still opens below */ }
 
           this.showPostSessionChoice = false
@@ -32808,21 +33010,12 @@ export default {
           if (openPostSessionChoice) {
             this.openPostSessionChoice(endedSnapshot)
           } else if (
-            rangeComplete
-            && (openCompletion || showSummary)
+            (openCompletion || showSummary)
             && gate.openCompletionScreen
             && gate.showPostCompletionActions
           ) {
-            // Session Complete is only for finished ranges — early exits stay on the workspace.
             this.postSessionActionsUnlocked = true
             this.openPostSessionModal(endedSnapshot, { previousStreak })
-          } else if (!rangeComplete) {
-            this.showBanner(
-              this.t('memorisation.sessionExit.confirmDescriptionEarly')
-                || 'Your progress was saved. You can return later.',
-              'info',
-              3200,
-            )
           }
 
           const finalizeAfterOpen = () => {
@@ -32853,14 +33046,15 @@ export default {
         }
       }).then((locked) => (locked?.ok ? locked.result : null))
     },
-    async pauseSessionFromPrimaryAction() {
+    async pauseSessionFromPrimaryAction(options = {}) {
+      const quiet = !!options.quiet
       // Stuck locks/mutations previously made Pause a silent no-op while the
       // Talqin "your turn" overlay kept counting down.
       if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE || this.sessionActionLock.isLocked()) {
         this.resetStuckSessionLifecycleControls()
       }
-      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return
-      if (this.sessionActionLock.isLocked()) return
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return false
+      if (this.sessionActionLock.isLocked()) return false
 
       const locked = await this.sessionActionLock.run('pause', async () => {
         // Optimistic local pause without LOADING flicker or audio position reset.
@@ -32870,27 +33064,21 @@ export default {
           this.softPausePlayback()
           this.flushPlaybackTime()
           this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
-          const persistPaused = () => {
-            try {
-              this.persistContinueSession()
-            } catch (_) { /* local pause already applied */ }
-          }
-          if (typeof requestIdleCallback === 'function') {
-            requestIdleCallback(persistPaused, { timeout: 400 })
-          } else {
-            setTimeout(persistPaused, 0)
-          }
+          // Persist continue immediately so soft-exit / refresh still expose Resume.
+          try {
+            this.persistContinueSession()
+          } catch (_) { /* local pause already applied */ }
         } catch (error) {
           console.warn('Local pause failed', error)
           this.sessionLifecycleError = 'pause_failed'
           this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
-          this.showBanner(this.t('toasts.sessionPauseFailed'), 'danger', 4200)
+          if (!quiet) this.showBanner(this.t('toasts.sessionPauseFailed'), 'danger', 4200)
           return false
         }
 
         if (!this.learningBackendEnabled()) {
           this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
-          this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
+          if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
           return true
         }
 
@@ -32912,6 +33100,8 @@ export default {
               paused: true,
               completed: false,
               completed_at: null,
+              ended_early: false,
+              save_for_later: options.reason === 'save_for_later',
               config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
             },
           })
@@ -32923,7 +33113,7 @@ export default {
           }
           this.sessionLifecycleError = null
           this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
-          this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
+          if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
           return true
         } catch (error) {
           console.warn('Failed to persist paused session on backend', error)
@@ -32936,14 +33126,19 @@ export default {
           }
           if (error?.response?.status === 422) {
             this.backendUnfinishedSession = false
-            this.showBanner(
-              this.t('toasts.sessionPauseFailed') || 'Could not pause on the server. Session stays paused here.',
-              'warning',
-              4200
-            )
+            if (!quiet) {
+              this.showBanner(
+                this.t('toasts.sessionPauseFailed') || 'Could not pause on the server. Session stays paused here.',
+                'warning',
+                4200
+              )
+            }
+            this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+            // Soft-exit must not claim "return later" when backend rejected pause.
+            return options.reason === 'save_for_later' ? false : true
           } else {
             this.noteLearningBackendFailure?.(error, 'pause')
-            this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
+            if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
           }
           this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
           return true
@@ -33013,8 +33208,7 @@ export default {
       await this.confirmSessionExit({ showSummary: false, openCompletion: true })
     },
     async exitSessionToSaveSession() {
-      await this.pauseSessionFromPrimaryAction()
-      this.closeSessionExitModal({ restore: false })
+      await this.saveSessionForLaterFromExitModal()
     },
     async exitSessionToRetentionCheck() {
       if (!this.hasSessionStarted && this.isSessionCompleted) {
@@ -33121,9 +33315,15 @@ export default {
     },
 
     clearContinueSession() {
+      // Explicit discard is the only path that may clear resumable unfinished state.
+      const transition = resolveSessionExitTransition({ discard: true })
+      const backendSessionId = this.backendSessionSnapshot?.id
+        || this.mutqinState?.sessionState?.backendSessionId
+        || null
       this.hasContinueSession = false
       this.continueSessionPayload = null
       this.continueSessionLabel = ''
+      this.clearActiveSessionSnapshot?.()
       try {
         if (this.learningBackendEnabled()) {
           this.deleteWorkspaceStateValue('continueSession')
@@ -33131,6 +33331,37 @@ export default {
           localStorage.removeItem('mutqin.continueSession')
         }
       } catch (e) { console.error(e) }
+
+      if (
+        transition.clearContinue
+        && this.learningBackendEnabled()
+        && this.backendUnfinishedSession
+      ) {
+        void learningApi.endSession({
+          idempotency_key: `discard-${backendSessionId || 'current'}-${Date.now()}`,
+          session_id: Number(backendSessionId || 0) || undefined,
+          range_complete: false,
+          metadata: {
+            completed: false,
+            range_complete: false,
+            ended_early: true,
+            discarded: true,
+            active: false,
+            paused: false,
+          },
+        }).catch((error) => {
+          console.warn('Failed to discard unfinished session on backend', error)
+        })
+      }
+
+      this.backendUnfinishedSession = false
+      if (this.backendSessionSnapshot) {
+        this.backendSessionSnapshot = {
+          ...this.backendSessionSnapshot,
+          status: transition.backendStatus || 'ended_early',
+        }
+      }
+      this.sessionPaused = false
       this.showBanner(this.t('toasts.savedSessionDismissed'), 'info', 1800)
     },
 

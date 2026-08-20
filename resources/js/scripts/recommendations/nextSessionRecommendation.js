@@ -21,6 +21,7 @@ import {
   PRACTICE_SCOPE,
   WEAK_AYAH_REPEAT_MIN,
 } from './revisionPracticeScope.js'
+import { resolvePracticeHowSteps } from './aiRecitePracticePlan.js'
 import { SURAH_AYAH_COUNTS } from '../engine/hifz_session_engine.js'
 
 /** Juz ʿAmma and other short surahs should be practised as a whole, not a 3-ayah bite. */
@@ -1039,6 +1040,7 @@ export function buildPersonalPracticePlan(input = {}) {
       id: primaryId,
       title: primaryLabel,
       how: primaryHow,
+      steps: resolvePracticeHowSteps({ techniqueId: primaryId, how: primaryHow, t }),
       with: complementaryLabel
         ? translate('planDetail.alsoWith', 'Also: {technique}', { technique: complementaryLabel })
         : '',

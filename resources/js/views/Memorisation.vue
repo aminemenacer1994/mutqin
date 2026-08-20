@@ -737,13 +737,6 @@
               :aria-label="t('memorisation.open_controls')"
               v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"
             -->
-            <p
-              v-if="offMainJourneyNotice && shouldShowReadingWorkspace"
-              class="workspace-off-path-notice"
-              role="status"
-            >
-              {{ offMainJourneyNotice }}
-            </p>
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
               <div class="workspace-empty-card">
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
@@ -3443,8 +3436,10 @@
                 <div v-if="postSessionShowAiDetailsToggle" class="post-session-simple__ai-details">
                   <button
                     type="button"
+                    id="postSessionAiDetailsToggle"
                     class="post-session-simple__ai-details-toggle"
                     :aria-expanded="postSessionAiDetailsExpanded ? 'true' : 'false'"
+                    aria-controls="postSessionAiDetailsDisclosure"
                     @click="postSessionAiDetailsExpanded = !postSessionAiDetailsExpanded"
                   >
                     {{ postSessionAiDetailsExpanded
@@ -3453,7 +3448,10 @@
                   </button>
                   <div
                     v-if="postSessionAiDetailsExpanded"
+                    id="postSessionAiDetailsDisclosure"
                     class="post-session-simple__ai-details-body"
+                    role="region"
+                    aria-labelledby="postSessionAiDetailsToggle"
                     data-testid="post-session-details"
                   >
                     <div
@@ -3750,6 +3748,52 @@
           </div>
 
           <footer class="post-session-simple__footer">
+            <div
+              v-if="postSessionPracticeHowVisible"
+              class="post-session-simple__how-demo post-session-simple__how-demo--footer"
+              data-testid="post-session-practice-how"
+            >
+              <button
+                type="button"
+                id="postSessionPracticeHowToggle"
+                class="post-session-simple__how-toggle"
+                :aria-expanded="postSessionPracticeHowExpanded ? 'true' : 'false'"
+                aria-controls="postSessionPracticeHowDisclosure"
+                @click.stop="postSessionPracticeHowExpanded = !postSessionPracticeHowExpanded"
+              >
+                <span class="post-session-simple__how-toggle-label">
+                  {{ postSessionPracticeHowExpanded
+                    ? (t('memorisation.postSession.recommendation.practiceHow.hide') || 'Hide')
+                    : (t('memorisation.postSession.recommendation.practiceHow.seeHowItWorks') || 'See how it works') }}
+                </span>
+                <i
+                  class="bi"
+                  :class="postSessionPracticeHowExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"
+                  aria-hidden="true"
+                ></i>
+              </button>
+              <div
+                v-if="postSessionPracticeHowExpanded"
+                id="postSessionPracticeHowDisclosure"
+                class="post-session-simple__how-disclosure"
+                role="region"
+                aria-labelledby="postSessionPracticeHowToggle"
+              >
+                <p class="post-session-simple__how-title">
+                  {{ t('memorisation.postSession.recommendation.practiceHow.title')
+                    || t('memorisation.postSession.recommendation.howItWorks')
+                    || 'How practice works' }}
+                </p>
+                <ol class="post-session-simple__how-steps">
+                  <li
+                    v-for="(step, stepIndex) in postSessionPracticeHowSteps"
+                    :key="`practice-how-${stepIndex}`"
+                  >
+                    {{ step }}
+                  </li>
+                </ol>
+              </div>
+            </div>
             <div
               class="post-session-simple__actions post-session-simple__actions--3"
               data-testid="post-session-actions"
@@ -4297,8 +4341,10 @@
               <div v-if="postSessionShowAiDetailsToggle" class="post-session-simple__ai-details">
                 <button
                   type="button"
+                  id="postSessionQuizAiDetailsToggle"
                   class="post-session-simple__ai-details-toggle"
                   :aria-expanded="postSessionAiDetailsExpanded ? 'true' : 'false'"
+                  aria-controls="postSessionQuizAiDetailsDisclosure"
                   @click="postSessionAiDetailsExpanded = !postSessionAiDetailsExpanded"
                 >
                   {{ postSessionAiDetailsExpanded
@@ -4307,7 +4353,10 @@
                 </button>
                 <div
                   v-if="postSessionAiDetailsExpanded"
+                  id="postSessionQuizAiDetailsDisclosure"
                   class="post-session-simple__ai-details-body"
+                  role="region"
+                  aria-labelledby="postSessionQuizAiDetailsToggle"
                 >
                   <div
                     v-if="postSessionAiColourSegments.length"

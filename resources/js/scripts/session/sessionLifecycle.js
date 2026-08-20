@@ -7,8 +7,30 @@
  * Session status and media (audio) status are intentionally separate:
  * pausing an ayah never changes the lifecycle status away from active.
  *
- * Explicit practice-session states used by End / Pause / Resume flows:
- * active → paused | completing → completed
+ * Persistence states (do not overload one boolean for multiple meanings):
+ * - none              — no practice sitting in progress
+ * - active            — live sitting
+ * - paused            — soft leave; unfinished + resumable (backend source of truth)
+ * - unfinished        — interrupted / resumable sitting (same resume contract as paused)
+ * - completed         — full range finished; not resumable
+ * - saved_for_later   — named bookmark sitting (Saved Sessions); distinct from Resume
+ * - ended_early       — terminal incomplete (explicit discard / API end); NOT resumable
+ *
+ * Soft exit ("Finish for now?" / "You can return later") MUST map to paused/unfinished,
+ * never to ended_early. Resume is available iff unfinished backend (or guest continue).
+ *
+ * Practice set states (product language):
+ * ACTIVE SET → currently working
+ * PARKED SET → intentional leave; progress + set remain; Resume / Return to this set
+ * COMPLETED SET → range genuinely finished (not parked)
+ *
+ * "Back to mushaf" parks incomplete/mastery sets and lands completed sets on the mushaf
+ * without discarding them. Navigation away is never abandon unless explicit discard.
+ *
+ * Practice flows:
+ * active → paused (soft exit / pause / back-to-mushaf park) → resume → active
+ * active → completed (range finished) → back-to-mushaf lands set (Start on same range)
+ * unfinished/paused → discarded → none (only explicit discard clears resume)
  */
 
 /** @typedef {'hydrating'|'onboarding_required'|'onboarding_example'|'ready_to_start'|'starting'|'active'|'paused'|'interrupted_resumable'|'resuming'|'pausing'|'completing'|'completed'|'completion_modal_open'|'error_recoverable'|'logged_out'|'rejected'|'uninitialised'|'ready'|'resumable'|'ended'|'error'|'playing'|'interrupted'|'ending'} SessionStatus */
@@ -79,6 +101,21 @@ export const SESSION_MUTATION = Object.freeze({
 export const END_SESSION_CONFIRM_ACTION = Object.freeze({
   KEEP_PRACTISING: 'keep_practising',
   END_SESSION: 'end_session',
+  SAVE_FOR_LATER: 'save_for_later',
+})
+
+/**
+ * Canonical persistence labels for practice sittings.
+ * Resume CTAs must only appear for PAUSED / UNFINISHED.
+ */
+export const PRACTICE_SESSION_PERSISTENCE = Object.freeze({
+  NONE: 'none',
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  UNFINISHED: 'unfinished',
+  COMPLETED: 'completed',
+  SAVED_FOR_LATER: 'saved_for_later',
+  ENDED_EARLY: 'ended_early',
 })
 
 export const BACKEND_SESSION_STATUS = Object.freeze({
@@ -248,6 +285,7 @@ export function isResumableSessionPayload(payload, options = {}) {
   if (
     backendStatus === BACKEND_SESSION_STATUS.COMPLETED
     || backendStatus === BACKEND_SESSION_STATUS.ABANDONED
+    || backendStatus === BACKEND_SESSION_STATUS.ENDED_EARLY
   ) {
     return false
   }
@@ -258,6 +296,218 @@ export function isResumableSessionPayload(payload, options = {}) {
     return false
   }
   return chapterId > 0
+}
+
+/**
+ * Resolve the learner-facing persistence state from backend + local signals.
+ * Backend unfinished (active/paused/interrupted) is authoritative when learning sync is on.
+ */
+export function resolvePracticeSessionPersistence(input = {}) {
+  const {
+    mutqinSessionActive = false,
+    sessionPaused = false,
+    sessionCompleted = false,
+    backendUnfinished = false,
+    backendStatus = null,
+    hasNamedSavedSession = false,
+    hasValidatedContinuePayload = false,
+  } = input
+
+  const status = String(backendStatus || '').toLowerCase()
+
+  if (sessionCompleted || status === BACKEND_SESSION_STATUS.COMPLETED) {
+    return PRACTICE_SESSION_PERSISTENCE.COMPLETED
+  }
+  if (status === BACKEND_SESSION_STATUS.ENDED_EARLY || status === BACKEND_SESSION_STATUS.ABANDONED) {
+    return PRACTICE_SESSION_PERSISTENCE.ENDED_EARLY
+  }
+  if (mutqinSessionActive && !sessionPaused && !sessionCompleted) {
+    return PRACTICE_SESSION_PERSISTENCE.ACTIVE
+  }
+  if (
+    sessionPaused
+    || status === BACKEND_SESSION_STATUS.PAUSED
+  ) {
+    return PRACTICE_SESSION_PERSISTENCE.PAUSED
+  }
+  if (
+    backendUnfinished
+    || status === BACKEND_SESSION_STATUS.ACTIVE
+    || status === BACKEND_SESSION_STATUS.INTERRUPTED
+    || hasValidatedContinuePayload
+  ) {
+    return PRACTICE_SESSION_PERSISTENCE.UNFINISHED
+  }
+  if (hasNamedSavedSession) {
+    return PRACTICE_SESSION_PERSISTENCE.SAVED_FOR_LATER
+  }
+  return PRACTICE_SESSION_PERSISTENCE.NONE
+}
+
+/**
+ * Soft exit ("return later") vs genuine completion vs explicit discard.
+ * Soft exit must keep unfinished + resumable; completion and discard must not.
+ */
+export function resolveSessionExitTransition({
+  rangeComplete = false,
+  discard = false,
+} = {}) {
+  if (discard) {
+    return {
+      kind: 'discard',
+      persistence: PRACTICE_SESSION_PERSISTENCE.ENDED_EARLY,
+      backendStatus: BACKEND_SESSION_STATUS.ENDED_EARLY,
+      unfinished: false,
+      resumable: false,
+      clearContinue: true,
+      pauseSession: false,
+      completeSession: false,
+    }
+  }
+  if (rangeComplete) {
+    return {
+      kind: 'complete',
+      persistence: PRACTICE_SESSION_PERSISTENCE.COMPLETED,
+      backendStatus: BACKEND_SESSION_STATUS.COMPLETED,
+      unfinished: false,
+      resumable: false,
+      clearContinue: true,
+      pauseSession: false,
+      completeSession: true,
+    }
+  }
+  // "Finish for now" / early exit — pause, do not terminal-end.
+  return {
+    kind: 'save_for_later',
+    persistence: PRACTICE_SESSION_PERSISTENCE.PAUSED,
+    backendStatus: BACKEND_SESSION_STATUS.PAUSED,
+    unfinished: true,
+    resumable: true,
+    clearContinue: false,
+    pauseSession: true,
+    completeSession: false,
+  }
+}
+
+/**
+ * Decide whether End Session is a genuine range completion.
+ *
+ * CRITICAL: ayah position / progressPercent alone must NEVER mean complete.
+ * A 1-ayah range is always "100% through the range" by position the moment it
+ * starts — that used to terminal-end soft exits and wipe Resume.
+ *
+ * Complete only when the sitting has already been marked completed (queue
+ * finished / handleSessionComplete), and the learner is not still in a live
+ * or paused practice sitting.
+ */
+export function resolveExitRangeComplete(input = {}) {
+  const {
+    sessionCompleted = false,
+    sessionEndedEarly = false,
+    sessionPaused = false,
+    mutqinSessionActive = false,
+    engineCompleted = false,
+    centralStatus = null,
+  } = input
+
+  if (sessionEndedEarly) return false
+  // Live or paused practice is always soft-exit territory.
+  if (mutqinSessionActive || sessionPaused) return false
+
+  const status = String(centralStatus || '').toLowerCase()
+  if (
+    status === BACKEND_SESSION_STATUS.ENDED_EARLY
+    || status === 'ended_early'
+    || status === SESSION_STATUS.PAUSED
+    || status === BACKEND_SESSION_STATUS.PAUSED
+    || status === BACKEND_SESSION_STATUS.ACTIVE
+    || status === SESSION_STATUS.ACTIVE
+  ) {
+    return false
+  }
+
+  return !!(
+    sessionCompleted
+    || engineCompleted
+    || status === 'completed'
+    || status === BACKEND_SESSION_STATUS.COMPLETED
+  )
+}
+
+/**
+ * Learner-facing set states (product language).
+ * PARKED === paused/unfinished (intentional leave; Resume / Return to this set).
+ * COMPLETED === genuine range finish (not resumable as unfinished).
+ */
+export const PRACTICE_SET_STATE = Object.freeze({
+  NONE: 'none',
+  ACTIVE: 'active',
+  PARKED: 'parked',
+  COMPLETED: 'completed',
+})
+
+/**
+ * Map persistence signals → ACTIVE / PARKED / COMPLETED / NONE.
+ */
+export function resolvePracticeSetState(input = {}) {
+  const persistence = resolvePracticeSessionPersistence(input)
+  if (persistence === PRACTICE_SESSION_PERSISTENCE.ACTIVE) {
+    return PRACTICE_SET_STATE.ACTIVE
+  }
+  if (
+    persistence === PRACTICE_SESSION_PERSISTENCE.PAUSED
+    || persistence === PRACTICE_SESSION_PERSISTENCE.UNFINISHED
+  ) {
+    return PRACTICE_SET_STATE.PARKED
+  }
+  if (persistence === PRACTICE_SESSION_PERSISTENCE.COMPLETED) {
+    return PRACTICE_SET_STATE.COMPLETED
+  }
+  return PRACTICE_SET_STATE.NONE
+}
+
+/**
+ * "Back to mushaf" from calm / post-session UI.
+ * Parks incomplete / mastery-loop sets; lands completed sets without discarding them.
+ * Explicit discard is the only path that clears resume + set.
+ */
+export function resolveBackToMushafTransition({
+  rangeComplete = false,
+  discard = false,
+  awaitingMasteryRetest = false,
+  sessionEndedEarly = false,
+} = {}) {
+  if (discard) {
+    return {
+      ...resolveSessionExitTransition({ discard: true }),
+      kind: 'discard',
+      setState: PRACTICE_SET_STATE.NONE,
+      restoreSet: false,
+      preserveProgress: false,
+    }
+  }
+
+  const shouldPark = !rangeComplete || !!awaitingMasteryRetest || !!sessionEndedEarly
+  if (shouldPark) {
+    return {
+      ...resolveSessionExitTransition({ rangeComplete: false }),
+      kind: 'park',
+      setState: PRACTICE_SET_STATE.PARKED,
+      restoreSet: true,
+      preserveProgress: true,
+      clearContinue: false,
+    }
+  }
+
+  return {
+    ...resolveSessionExitTransition({ rangeComplete: true }),
+    kind: 'complete_return',
+    setState: PRACTICE_SET_STATE.COMPLETED,
+    restoreSet: true,
+    preserveProgress: false,
+    // Completed sets are not unfinished-resumable; Start on the same range instead.
+    clearContinue: true,
+  }
 }
 
 export function isBackendSessionUnfinished(session) {
@@ -941,22 +1191,50 @@ export function reconcileContinuePayloadWithBackend(localPayload, backendSession
  * Resolve End Session confirmation modal actions.
  * Keep practising dismisses the modal without mutating session completion state.
  * Playback may resume after a countdown (UI-only).
+ *
+ * Incomplete range ("Finish for now?") saves for later via pause — never completes.
+ * Completed range ends the sitting and opens Session Complete.
  */
-export function resolveEndSessionConfirmDecision(action) {
+export function resolveEndSessionConfirmDecision(action, options = {}) {
+  const rangeComplete = options.rangeComplete === true
   if (action === END_SESSION_CONFIRM_ACTION.KEEP_PRACTISING) {
     return {
       action: END_SESSION_CONFIRM_ACTION.KEEP_PRACTISING,
       closeModal: true,
       mutateSession: false,
       completeSession: false,
+      pauseSession: false,
+      saveForLater: false,
+    }
+  }
+  if (action === END_SESSION_CONFIRM_ACTION.SAVE_FOR_LATER) {
+    return {
+      action: END_SESSION_CONFIRM_ACTION.SAVE_FOR_LATER,
+      closeModal: true,
+      mutateSession: true,
+      completeSession: false,
+      pauseSession: true,
+      saveForLater: true,
     }
   }
   if (action === END_SESSION_CONFIRM_ACTION.END_SESSION) {
+    if (!rangeComplete) {
+      return {
+        action: END_SESSION_CONFIRM_ACTION.SAVE_FOR_LATER,
+        closeModal: true,
+        mutateSession: true,
+        completeSession: false,
+        pauseSession: true,
+        saveForLater: true,
+      }
+    }
     return {
       action: END_SESSION_CONFIRM_ACTION.END_SESSION,
       closeModal: false,
       mutateSession: true,
       completeSession: true,
+      pauseSession: false,
+      saveForLater: false,
     }
   }
   return {
@@ -964,6 +1242,8 @@ export function resolveEndSessionConfirmDecision(action) {
     closeModal: false,
     mutateSession: false,
     completeSession: false,
+    pauseSession: false,
+    saveForLater: false,
   }
 }
 
@@ -1148,6 +1428,8 @@ export default {
   SESSION_MUTATION,
   BACKEND_SESSION_STATUS,
   END_SESSION_CONFIRM_ACTION,
+  PRACTICE_SESSION_PERSISTENCE,
+  PRACTICE_SET_STATE,
   DASHBOARD_ENTRY_INTENT_STORAGE_KEY,
   LEGAL_TRANSITIONS,
   canTransition,
@@ -1155,6 +1437,11 @@ export default {
   deriveMediaStatus,
   isResumableSessionPayload,
   isBackendSessionUnfinished,
+  resolvePracticeSessionPersistence,
+  resolveSessionExitTransition,
+  resolveExitRangeComplete,
+  resolvePracticeSetState,
+  resolveBackToMushafTransition,
   deriveSessionStatus,
   resolvePrimarySessionAction,
   resolveSessionActionPresentation,

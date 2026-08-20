@@ -166,6 +166,9 @@ const unfinishedIkhlas = {
   assert.equal(isResumableSessionPayload(ikhlas, {
     backendStatus: BACKEND_SESSION_STATUS.ABANDONED,
   }), false)
+  assert.equal(isResumableSessionPayload(ikhlas, {
+    backendStatus: BACKEND_SESSION_STATUS.ENDED_EARLY,
+  }), false)
   assert.equal(isBackendSessionUnfinished({ status: 'completed' }), false)
   assert.equal(isBackendSessionUnfinished({ status: 'ended_early' }), false)
   assert.equal(isBackendSessionUnfinished({ status: 'paused' }), true)

@@ -514,8 +514,6 @@
       "hintContinue": "Listen to each ayah, repeat it, then try from memory.",
       "hintResume": "Your place is waiting. Continue the set you left.",
       "hintStart": "Start with a small set — steady steps build lasting memorisation.",
-      "offPathNotice": "{surah} {start}–{end} stays your place. This sitting will not move it.",
-      "offPathNoticeShort": "{surah} stays your place. This sitting will not move it.",
       "leadRevise": "Revise what you know in {surah} before adding new ayahs.",
       "leadContinue": "Continue memorising {surah} from where you stopped.",
       "leadStart": "Choose a small set of ayahs and begin with Bismillah.",
@@ -1459,23 +1457,23 @@
       "graceKicker": "By The Grace Of Allah",
       "steadinessKicker": "With Steadiness",
       "nextKicker": "For The Next Step",
-      "completedTitle": "This range was completed.",
-      "forwardTitle": "This range moved forward.",
+      "completedTitle": "This Set is complete.",
+      "forwardTitle": "You made Progress on this Set.",
       "studiedTitle": "This is how you studied.",
-      "advanceTitle": "Advance or reinforce.",
-      "continueTitle": "Continue or begin again.",
+      "advanceTitle": "Advance Progress, or reinforce this Set.",
+      "continueTitle": "Continue this Set, or begin again.",
       "previousSession": "Previous session"
     },
     "summary": {
-      "default": "You can start a new range, save this one, or repeat it now.",
-      "completedAll": "You completed all {count} ayahs in this range.",
+      "default": "You can start a new Set, save this one, or repeat it now.",
+      "completedAll": "You completed all {count} ayahs in this Set.",
       "completedRangeDetail": "You covered {covered} of {total} ayahs in {duration}.",
-      "endedPartial": "You reached ayah {ayah} and completed {percent}% of this session.",
+      "endedPartial": "You reached ayah {ayah} and completed {percent}% of this Session.",
       "endedProgress": "You covered {covered} of {total} ayahs before ending.",
-      "nextAdvance": "Start a new range when this one feels stable.",
-      "nextRepeat": "Repeat this range now for a cleaner, steadier pass.",
-      "nextReviewWeak": "Review any ayah that still felt weak before moving on.",
-      "nextContinue": "Repeat this range now or come back later from the same stopping point.",
+      "nextAdvance": "Start a new Set when this one feels stable.",
+      "nextRepeat": "Repeat this Set now for a cleaner, steadier pass.",
+      "nextReviewWeak": "Review any ayah that still felt weak before advancing Progress.",
+      "nextContinue": "Repeat this Set now or come back later from the same stopping point.",
       "nextReduceAids": "Reduce reading aids on the next pass if recall already felt comfortable."
     },
     "reading": {
@@ -1763,10 +1761,10 @@
         "differentSession": "Other session",
         "nextHintAi": "Check your memorisation to unlock your next plan.",
         "rangeCaption": {
-          "test": "Check this range",
-          "retest": "Check this range again",
-          "practice": "Practise this range",
-          "next": "Ready for the next session"
+          "test": "Check this Set",
+          "retest": "Check this Set again",
+          "practice": "Practise this Set",
+          "next": "Ready for the next Session"
         },
         "chooseWhenReady": "Choose a session when ready.",
         "weakWordsFocus": "Words to focus on",
@@ -1792,7 +1790,7 @@
           "practiceDone": "Check your memorisation to unlock your next plan.",
           "aiDone": "Focus on these words next.",
           "aiFirst": "Check your memorisation first, then your plan appears here.",
-          "retestAfterPractice": "Strengthen this range before moving forward.",
+          "retestAfterPractice": "Strengthen this Set before advancing Progress.",
           "strongContinue": "Continue while this still feels fresh.",
           "mostlySecure": "Continue when ready — a light review is optional.",
           "reviseFirst": "Revise the weak spots first, then continue."
@@ -2104,7 +2102,39 @@
         "planReadyTag": "Ready",
         "whyThisHelps": "Why this helps",
         "whatYouWillDo": "What you will practise",
-        "howItWorks": "How you will practise",
+        "howItWorks": "How practice works",
+        "practiceHow": {
+          "seeHowItWorks": "See how it works",
+          "hide": "Hide",
+          "title": "How practice works",
+          "steps": {
+            "talqin": {
+              "1": "Play the ayah once and listen carefully.",
+              "2": "Repeat it aloud while looking.",
+              "3": "Repeat again from memory."
+            },
+            "focus": {
+              "1": "Work on one ayah only.",
+              "2": "Do not move on until it feels steady.",
+              "3": "Then go to the next ayah."
+            },
+            "blur": {
+              "1": "Read the ayah once with the text clear.",
+              "2": "Hide a little more of the text each repeat.",
+              "3": "Finish by recalling without looking."
+            },
+            "chaining": {
+              "1": "Practise the first ayah alone.",
+              "2": "Add the next ayah and join them.",
+              "3": "Recite the short chain smoothly."
+            },
+            "anchor": {
+              "1": "Notice the marked focus words.",
+              "2": "Say those words clearly first.",
+              "3": "Then recite the full ayah."
+            }
+          }
+        },
         "paceAndSupport": "Pace & support",
         "estimatedTime": "About",
         "nextSetTitle": "Next in your plan",
@@ -2136,7 +2166,7 @@
         "resetSettings": "Reset to recommended",
         "testWithAiRecite": "Check my memorisation",
         "testMyMemorisation": "Test my memorisation",
-        "aiReciteSubtitle": "Recite this range from memory and receive a focused review before moving forward",
+        "aiReciteSubtitle": "Recite this Set from memory and receive a focused review before advancing Progress",
         "aiReciteHint": "Recite this completed range. Your result will update the next-step recommendation.",
         "startNewSession": "Start new session",
         "startDifferentSession": "Different session",
@@ -2377,8 +2407,8 @@
           "learningPlanComplete": "You have reached the end of the available plan. Choose what you would like to recite next. May it be blessed.",
           "manualFallback": "There is no automatic next set right now. Choose what your heart would like to recite next.",
           "aiReciteStrong": "Your recite was strong. Alḥamdulillāh. This plan continues while the previous ayahs are still fresh.",
-          "aiReciteMixed": "Your recite was mostly correct, with a few gaps. This plan reviews the same range once more with a little more support.",
-          "aiReciteWeak": "Your recite found parts that still need practice. This plan keeps the same range with more guidance, gently.",
+          "aiReciteMixed": "Your recite was mostly correct, with a few gaps. This plan reviews the same Set once more with a little more support.",
+          "aiReciteWeak": "Your recite found parts that still need practice. This plan keeps the same Set with more guidance, gently.",
           "confidenceConfident": "You feel ready. We will move on while these verses are still fresh, bi’idhnillāh.",
           "confidenceNeedsPractice": "You asked for more practice, so we will go over these verses again more slowly, with care.",
           "sessionIncomplete": "You paused mid-range. This plan resumes from the ayahs you left unfinished.",
@@ -2397,9 +2427,9 @@
           "reviewOverdue": "Some ayahs are due for murājaʿah. This plan returns to them soon.",
           "adaptiveCheckStrong": "Your short check looked strong. This plan continues while the ayahs are still fresh.",
           "adaptiveCheckMixed": "Your short check was mostly solid, with a few gaps. This plan adds light support.",
-          "adaptiveCheckWeak": "Your short check found parts that still need practice. This plan keeps the same range with more guidance.",
-          "simpleContinue": "You completed this range. This plan continues to the next ayahs while the material is still fresh, bi’idhnillāh.",
-          "simpleRepeat": "This range still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.",
+          "adaptiveCheckWeak": "Your short check found parts that still need practice. This plan keeps the same Set with more guidance.",
+          "simpleContinue": "You completed this Set. This plan continues to the next ayahs while the material is still fresh, bi’idhnillāh.",
+          "simpleRepeat": "This Set still needs support. This plan keeps the same ayahs with slower pacing and a little more guidance.",
           "simpleNextSurah": "You completed this surah. This plan is ready for Surah {surah} when you are. Mā shā’ Allāh."
         },
         "repeatWeakAyahs": "Repeat weak ayahs",

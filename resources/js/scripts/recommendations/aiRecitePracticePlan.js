@@ -22,7 +22,7 @@ export const ACCURACY_BAND = Object.freeze({
   GENTLE: 'gentle', // <55%
 })
 
-const BEGINNER_HOW_STEPS = Object.freeze({
+export const BEGINNER_HOW_STEPS = Object.freeze({
   talqin: [
     'Play the ayah once and listen carefully.',
     'Repeat it aloud while looking.',
@@ -49,6 +49,41 @@ const BEGINNER_HOW_STEPS = Object.freeze({
     'Then recite the full ayah.',
   ],
 })
+
+/**
+ * Short first-time practice steps for a technique.
+ * Prefers plan-provided steps, then i18n, then beginner fallbacks.
+ *
+ * @param {object} input
+ * @param {string} [input.techniqueId]
+ * @param {string[]} [input.steps]
+ * @param {string} [input.how]
+ * @param {Function} [input.t]
+ * @returns {string[]}
+ */
+export function resolvePracticeHowSteps(input = {}) {
+  const t = typeof input.t === 'function' ? input.t : null
+  const fromPlan = Array.isArray(input.steps)
+    ? input.steps.map((step) => String(step || '').trim()).filter(Boolean)
+    : []
+  if (fromPlan.length) return fromPlan.slice(0, 4)
+
+  const id = String(input.techniqueId || '').trim().toLowerCase()
+  const defaults = BEGINNER_HOW_STEPS[id] || null
+  if (defaults) {
+    return defaults.map((fallback, index) => {
+      const key = `memorisation.postSession.recommendation.practiceHow.steps.${id}.${index + 1}`
+      const translated = t?.(key)
+      if (translated && translated !== key && !String(translated).includes(key)) {
+        return String(translated).trim()
+      }
+      return fallback
+    })
+  }
+
+  const how = String(input.how || '').trim()
+  return how ? [how] : []
+}
 
 /**
  * Normalize a raw word status into a plan colour severity.

@@ -35,6 +35,7 @@ const t = (key, params = {}) => {
   assert.equal(decision.closeModal, true)
   assert.equal(decision.mutateSession, false)
   assert.equal(decision.completeSession, false)
+  assert.equal(decision.saveForLater, false)
 }
 
 // Pause action while active
@@ -79,9 +80,23 @@ const t = (key, params = {}) => {
   assert.equal(gate.status, SESSION_STATUS.COMPLETED)
   assert.equal(gate.showPostCompletionActions, true)
 
-  const endDecision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION)
+  const endDecision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION, {
+    rangeComplete: true,
+  })
   assert.equal(endDecision.completeSession, true)
   assert.equal(endDecision.mutateSession, true)
+  assert.equal(endDecision.saveForLater, false)
+}
+
+// Early exit confirm must save-for-later (pause), never complete
+{
+  const early = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION, {
+    rangeComplete: false,
+  })
+  assert.equal(early.saveForLater, true)
+  assert.equal(early.pauseSession, true)
+  assert.equal(early.completeSession, false)
+  assert.equal(early.mutateSession, true)
 }
 
 // Failed completion keeps session recoverable and hides completion CTAs
@@ -253,18 +268,33 @@ const t = (key, params = {}) => {
   assert.equal(en.memorisation.sessionExit.confirmEnd, 'End')
 }
 
-// Early exit must not open the Session Complete modal
+// Early exit must soft-save (pause) — never open Session Complete or clear resume
 {
   const source = readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
   assert.match(
     source,
-    /else if \(\s*\n?\s*rangeComplete\s*\n?\s*&& \(openCompletion \|\| showSummary\)/,
-    'Session Complete modal must be gated on rangeComplete'
+    /saveSessionForLaterFromExitModal/,
+    'Early exit must route through save-for-later (pause)'
   )
   assert.match(
     source,
-    /else if \(!rangeComplete\) \{[\s\S]*?confirmDescriptionEarly/,
-    'Early exit should show saved-progress feedback instead of Session Complete'
+    /if \(!rangeComplete\) \{\s*return this\.saveSessionForLaterFromExitModal/,
+    'confirmSessionExit must soft-exit incomplete ranges'
+  )
+  assert.match(
+    source,
+    /decision\.saveForLater \|\| decision\.pauseSession/,
+    'Exit modal End on incomplete range must save for later'
+  )
+  assert.match(
+    source,
+    /confirmDescriptionEarly/,
+    'Soft exit must keep the return-later copy'
+  )
+  assert.match(
+    source,
+    /\(openCompletion \|\| showSummary\)\s*\n?\s*&& gate\.openCompletionScreen/,
+    'Session Complete modal must only open on the completed-range path'
   )
 }
 

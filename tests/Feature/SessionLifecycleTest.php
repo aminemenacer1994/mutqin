@@ -548,6 +548,88 @@ class SessionLifecycleTest extends TestCase
             ->assertJsonPath('session.status', UserSessionStatus::Paused->value);
     }
 
+    public function test_soft_exit_pause_keeps_session_unfinished_and_resumable(): void
+    {
+        $user = User::factory()->create();
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 2,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinute(),
+            'metadata' => [
+                'active' => true,
+                'config' => [
+                    'chapterId' => 112,
+                    'rangeStart' => 1,
+                    'rangeEnd' => 4,
+                ],
+            ],
+        ]);
+
+        // Soft exit ("Finish for now?" / return later) must pause — never terminal-end.
+        $this->actingAs($user)
+            ->postJson('/api/session/pause', [
+                'idempotency_key' => 'soft-exit-1',
+                'surah_number' => 112,
+                'ayah_number' => 2,
+                'metadata' => [
+                    'active' => false,
+                    'paused' => true,
+                    'completed' => false,
+                    'ended_early' => false,
+                    'save_for_later' => true,
+                    'config' => [
+                        'chapterId' => 112,
+                        'rangeStart' => 1,
+                        'rangeEnd' => 4,
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Paused->value);
+
+        $this->actingAs($user)
+            ->getJson('/api/session/current')
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Paused->value)
+            ->assertJsonPath('session.surah_number', 112)
+            ->assertJsonPath('session.ayah_number', 2);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/resume', [])
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Active->value);
+
+        // Explicit discard (terminal incomplete) clears unfinished / Resume.
+        $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'idempotency_key' => 'discard-soft-exit-1',
+                'range_complete' => false,
+                'metadata' => [
+                    'completed' => false,
+                    'range_complete' => false,
+                    'ended_early' => true,
+                    'discarded' => true,
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session.status', UserSessionStatus::EndedEarly->value);
+
+        $this->actingAs($user)
+            ->getJson('/api/session/current')
+            ->assertOk()
+            ->assertJsonPath('unfinished', false);
+
+        $this->assertSame(1, UserSession::where('user_id', $user->id)->count());
+    }
+
     public function test_paused_session_with_stale_completed_at_metadata_remains_unfinished(): void
     {
         $user = User::factory()->create();

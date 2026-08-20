@@ -14885,16 +14885,6 @@ body.memorisation-page nav.navbar.app-navbar {
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, var(--surface) 82%), color-mix(in srgb, var(--surface) 96%, transparent));
 }
 
-.workspace-off-path-notice {
-  margin: 0 0 0.75rem;
-  padding: 0.55rem 0.8rem;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface) 90%);
-  color: var(--text);
-  font-size: 0.88rem;
-  line-height: 1.45;
-}
-
 .workspace-empty-state {
   display: grid;
   place-items: center;
@@ -45922,6 +45912,131 @@ body.memorisation-page .tools {
   color: color-mix(in srgb, var(--text) 82%, transparent);
 }
 
+.post-session-simple__ai-details-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.post-session-simple__how-demo {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.post-session-simple__how-demo--footer {
+  margin: 0 0 0.65rem;
+  width: 100%;
+}
+
+.post-session-simple__footer .post-session-simple__how-toggle {
+  width: 100%;
+  justify-content: space-between;
+  min-height: 2.75rem;
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__how-toggle {
+  border-color: color-mix(in srgb, var(--ps-line, var(--border)) 85%, transparent);
+  background: color-mix(in srgb, var(--ps-card, var(--surface)) 94%, transparent);
+  color: var(--ps-label, var(--text));
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__how-disclosure {
+  border-color: color-mix(in srgb, var(--ps-line, var(--border)) 80%, transparent);
+  background: color-mix(in srgb, var(--ps-card, var(--surface)) 96%, var(--ps-cream, #fff));
+}
+
+.post-session-simple__how-toggle {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+  font-size: 0.84rem;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  text-align: start;
+  cursor: pointer;
+}
+
+.post-session-simple__how-toggle:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--surface) 88%, var(--accent) 6%);
+}
+
+.post-session-simple__how-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.post-session-simple__how-toggle[aria-expanded="true"] {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+}
+
+.post-session-simple__how-toggle-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.post-session-simple__how-toggle .bi {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  opacity: 0.78;
+}
+
+.post-session-simple__how-disclosure {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.55rem 0.65rem 0.65rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+  background: color-mix(in srgb, var(--zone-elevated, var(--surface)) 96%, transparent);
+}
+
+.post-session-simple__how-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+}
+
+.post-session-simple__how-steps {
+  margin: 0;
+  padding-inline-start: 1.15rem;
+  display: grid;
+  gap: 0.28rem;
+  color: color-mix(in srgb, var(--text) 74%, transparent);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.post-session-simple__how-steps li {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639.98px) {
+  .post-session-simple__how-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 .post-session-simple__ai-metrics--details {
   grid-template-columns: 1fr !important;
 }
@@ -46868,6 +46983,9 @@ body.memorisation-page .tools {
 
 .post-session-simple__footer {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
   padding: 0.95rem 1.35rem 1.1rem;
   border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
   background:
