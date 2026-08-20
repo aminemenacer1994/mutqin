@@ -352,7 +352,7 @@ function seededRng(seed = 1) {
 }
 
 {
-  // Frontend recommendation merge — weak check keeps completed range (max 3)
+  // Frontend recommendation merge — weak check repeats the completed session range
   const base = {
     id: 9,
     type: 'continue',

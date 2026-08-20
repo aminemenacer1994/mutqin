@@ -29,6 +29,9 @@ const {
   getRecitationWordSimilarity,
   stabilizeRecognitionEvent,
   createRecognitionState,
+  classifyRecitationWordColor,
+  getRecitationColorCounts,
+  deriveWeakAyahsFromWordStatuses,
 } = recitation.namespace
 
 const target = 'قل هو الله أحد'
@@ -210,6 +213,30 @@ function assertStatuses(result, expected) {
   )
   assert.ok(result.mistakes.missing.includes('أحد') || result.wordStatuses.some(word => word.text === 'أحد' && word.status === 'omitted'))
   assert.ok(result.verseJumpDetected || result.mistakes.missing.length >= 1)
+}
+
+{
+  assert.equal(classifyRecitationWordColor('word-correct'), 'green')
+  assert.equal(classifyRecitationWordColor('close'), 'amber')
+  assert.equal(classifyRecitationWordColor('missing'), 'red')
+  assert.equal(classifyRecitationWordColor('omission'), 'black')
+  assert.equal(classifyRecitationWordColor('pending'), 'gray')
+  const counts = getRecitationColorCounts([
+    { status: 'correct', ayahNumber: 1 },
+    { status: 'close', ayahNumber: 1 },
+    { status: 'missing', ayahNumber: 2 },
+    { status: 'omitted', ayahNumber: 2 },
+  ])
+  assert.equal(counts.green, 1)
+  assert.equal(counts.amber, 1)
+  assert.equal(counts.red, 1)
+  assert.equal(counts.black, 1)
+  const weak = deriveWeakAyahsFromWordStatuses([
+    { status: 'incorrect', ayahNumber: 2 },
+    { status: 'partial', ayah_number: 3 },
+    { status: 'partial', ayah_number: 3 },
+  ])
+  assert.equal(weak.map(Number).join(','), '2,3')
 }
 
 console.log('recitation-mistake-detection: ok')

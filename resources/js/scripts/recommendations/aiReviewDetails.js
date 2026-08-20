@@ -10,6 +10,13 @@
 import { formatAyahNumbersLabel } from '../formatting/ayahLabels.js'
 import { resolveWeaknessSeverity } from './postSessionCtaMapping.js'
 import {
+  classifyRecitationWordColor,
+  deriveWeakAyahsFromWordStatuses,
+  getRecitationColorCounts,
+  recitationWordAyahNumber,
+  RECITATION_COLOR,
+} from '../engine/recitation_analysis.js'
+import {
   RECITATION_RESULT_STATE,
   resolveAccuracyPercent,
   resolveInsufficientAudioReason,
@@ -42,9 +49,7 @@ function countList(value) {
  * @returns {boolean}
  */
 function isCorrectStatus(status) {
-  const s = String(status || '').toLowerCase()
-  if (!s || s.includes('incorrect') || s.includes('incomplete')) return false
-  return s === 'correct' || s.includes('word-correct') || s === 'green'
+  return classifyRecitationWordColor(status) === RECITATION_COLOR.GREEN
 }
 
 /**
@@ -52,35 +57,19 @@ function isCorrectStatus(status) {
  * @returns {boolean}
  */
 function isPartialStatus(status) {
-  const s = String(status || '').toLowerCase()
-  return s.includes('partial') || s.includes('close') || s === 'amber' || s === 'yellow'
+  return classifyRecitationWordColor(status) === RECITATION_COLOR.AMBER
 }
 
-/**
- * @param {unknown} status
- * @returns {boolean}
- */
-function isMissedStatus(status) {
-  const s = String(status || '').toLowerCase()
-  return s.includes('incorrect') || s.includes('missing') || s.includes('missed') || s === 'red'
-}
-
-/**
- * @param {unknown} status
- * @returns {boolean}
- */
-function isOmittedStatus(status) {
-  const s = String(status || '').toLowerCase()
-  return s === 'omitted' || s === 'black' || s.includes('omission')
-}
-
-/**
- * @param {unknown} status
- * @returns {boolean}
- */
-function isGrayStatus(status) {
-  const s = String(status || '').toLowerCase()
-  return s === 'pending' || s === 'skipped' || s === 'notattempted' || s === 'gray' || s === 'grey'
+function collectStructuralAyahNumbers(...lists) {
+  const out = []
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue
+    for (const item of list) {
+      const n = recitationWordAyahNumber(item) || Number(item?.ayahNumber ?? item?.ayah_number ?? item)
+      if (Number.isFinite(n) && n > 0) out.push(n)
+    }
+  }
+  return out
 }
 
 /**
@@ -133,24 +122,22 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
   const mistakes = result?.mistakeBreakdown || result?.mistakes || {}
   const wordStatuses = Array.isArray(result?.wordStatuses) ? result.wordStatuses : []
 
-  const correctWords = wordStatuses.filter((w) => isCorrectStatus(w?.status)).length
-  const partialFromWords = wordStatuses.filter((w) => isPartialStatus(w?.status)).length
-  const redFromWords = wordStatuses.filter((w) => isMissedStatus(w?.status) && !isOmittedStatus(w?.status)).length
-  const blackFromWords = wordStatuses.filter((w) => isOmittedStatus(w?.status)).length
-  const grayFromWords = wordStatuses.filter((w) => isGrayStatus(w?.status)).length
+  const computedCounts = getRecitationColorCounts(wordStatuses)
+  const correctWords = computedCounts.green
+  const partialFromWords = computedCounts.amber
+  const redFromWords = computedCounts.red
+  const blackFromWords = computedCounts.black
   const missedFromWords = redFromWords + blackFromWords
   const outOfOrderWords = wordStatuses.filter((w) => w?.outOfOrder).length
-  const colorCounts = extras.color_counts && typeof extras.color_counts === 'object'
+  const extrasCounts = extras.color_counts && typeof extras.color_counts === 'object'
     ? extras.color_counts
-    : (result?.colorCounts && typeof result.colorCounts === 'object'
-      ? result.colorCounts
-      : {
-        green: correctWords,
-        amber: partialFromWords,
-        red: redFromWords,
-        black: blackFromWords,
-        gray: grayFromWords,
-      })
+    : null
+  const resultCounts = result?.colorCounts && typeof result.colorCounts === 'object'
+    ? result.colorCounts
+    : null
+  const colorCounts = wordStatuses.length
+    ? computedCounts
+    : (extrasCounts || resultCounts || computedCounts)
 
   const assessmentQuality = classifyRecitationAssessmentQuality(result, {
     ...extras,
@@ -189,9 +176,29 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     ? !!extras.pronunciation_issues
     : amberCount >= 2
 
-  const weakAyahs = Array.isArray(extras.weak_ayahs)
+  const providedWeakAyahs = Array.isArray(extras.weak_ayahs)
     ? extras.weak_ayahs.filter(Boolean)
     : (Array.isArray(result?.weakAyahs) ? result.weakAyahs.filter(Boolean) : [])
+  const skippedAyahs = collectStructuralAyahNumbers(
+    result?.skippedAyahs,
+    result?.mistakes?.skippedAyahs,
+    result?.structuralAnalysis?.skippedAyahs,
+    extras.skipped_ayahs,
+  )
+  const sequenceErrorAyahs = collectStructuralAyahNumbers(
+    result?.sequenceErrors,
+    result?.mistakes?.sequenceErrors,
+    extras.sequence_error_ayahs,
+  )
+  const derivedWeakAyahs = deriveWeakAyahsFromWordStatuses(wordStatuses, {
+    skippedAyahs,
+    sequenceErrorAyahs,
+  })
+  const weakAyahs = [...new Set(
+    [...(providedWeakAyahs.length ? providedWeakAyahs : derivedWeakAyahs), ...skippedAyahs]
+      .map(Number)
+      .filter((n) => Number.isFinite(n) && n > 0),
+  )].sort((a, b) => a - b)
 
   const totalWords = wordStatuses.length
     || Math.max(correctWords + missed + amberCount, 0)

@@ -33,6 +33,41 @@ export function formatAboutMinutes(minutes, t = null) {
 }
 
 /**
+ * How much of each playback the learner typically recites back.
+ * Talqin is listen-and-repeat, so the recite pass is nearly as long as the audio.
+ */
+export function learnerReciteFactorForTechnique(technique) {
+  const id = String(technique || '').toLowerCase()
+  if (id === 'talqin') return 0.85
+  if (id === 'chaining') return 0.75
+  if (id === 'blur') return 0.7
+  if (id === 'focus') return 0.65
+  if (id === 'anchor') return 0.6
+  return 0.5
+}
+
+/**
+ * Infer audio length when verse timings are missing.
+ * Word count beats a flat per-ayah guess (short Juz ʿAmma vs long Baqarah).
+ */
+export function inferAudioDurationSeconds(input = {}) {
+  const ayahCount = Math.max(1, Number(input.ayahCount) || 1)
+  const sample = Number(input.sampleSecondsPerAyah)
+  if (Number.isFinite(sample) && sample > 0) {
+    return Math.round(Math.min(50, Math.max(5, sample)) * ayahCount)
+  }
+  const words = Number(input.wordCount)
+  if (Number.isFinite(words) && words > 0) {
+    return Math.round(Math.min(ayahCount * 50, Math.max(ayahCount * 5, words * 1.15)))
+  }
+  const workload = Number(input.workloadScore)
+  if (Number.isFinite(workload) && workload > 0) {
+    return Math.round(Math.min(ayahCount * 50, Math.max(ayahCount * 5, workload * 0.85)))
+  }
+  return ayahCount * 14
+}
+
+/**
  * Dynamic practice duration from audio + session settings.
  *
  * @param {{
@@ -43,6 +78,10 @@ export function formatAboutMinutes(minutes, t = null) {
  *   technique?: string,
  *   ayahCount?: number,
  *   learnerReciteFactor?: number,
+ *   extraAyahPasses?: number,
+ *   wordCount?: number,
+ *   workloadScore?: number,
+ *   sampleSecondsPerAyah?: number,
  * }} input
  */
 export function estimatePracticeDuration(input = {}) {
@@ -50,21 +89,29 @@ export function estimatePracticeDuration(input = {}) {
   const audioRaw = Number(input.audioDurationSeconds)
   const audioDuration = Number.isFinite(audioRaw) && audioRaw > 0
     ? audioRaw
-    : ayahCount * 22
+    : inferAudioDurationSeconds(input)
   const playbackSpeed = Math.max(0.5, Number(input.playbackSpeed) || 1)
   const repetitions = Math.max(1, Number(input.repetitions) || 3)
   const pauseBetweenRepeats = Math.max(0, Number(input.pauseBetweenRepeats) || 1.5)
-  const learnerReciteFactor = Math.max(0, Number(input.learnerReciteFactor) || 0.35)
+  const providedFactor = Number(input.learnerReciteFactor)
+  const learnerReciteFactor = Number.isFinite(providedFactor) && providedFactor >= 0
+    ? providedFactor
+    : learnerReciteFactorForTechnique(input.technique)
 
   const playbackSeconds = audioDuration / playbackSpeed
   const repetitionSeconds = playbackSeconds * repetitions
   const pauseSeconds = pauseBetweenRepeats * Math.max(repetitions - 1, 0) * ayahCount
   const interactionSeconds = calculateTechniqueInteractionTime(input.technique, ayahCount)
+    * (1 + Math.max(0, repetitions - 1) * 0.35)
   const learnerSeconds = playbackSeconds * learnerReciteFactor * repetitions
+  const extraPasses = Math.max(0, Number(input.extraAyahPasses) || 0)
+  const extraSeconds = extraPasses > 0
+    ? extraPasses * (audioDuration / ayahCount / playbackSpeed) * (1 + learnerReciteFactor)
+    : 0
 
   const estimatedSeconds = Math.max(
     30,
-    Math.round(repetitionSeconds + pauseSeconds + interactionSeconds + learnerSeconds),
+    Math.round(repetitionSeconds + pauseSeconds + interactionSeconds + learnerSeconds + extraSeconds),
   )
   const minutes = Math.max(1, Math.round(estimatedSeconds / 60))
   return {

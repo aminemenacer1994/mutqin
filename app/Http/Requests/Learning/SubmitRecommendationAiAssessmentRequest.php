@@ -36,7 +36,7 @@ class SubmitRecommendationAiAssessmentRequest extends FormRequest
             'ayah_range' => ['sometimes', 'nullable', 'array'],
             'ayah_range.from' => ['sometimes', 'integer', 'min:1', 'max:300'],
             'ayah_range.to' => ['sometimes', 'integer', 'min:1', 'max:300'],
-            'ayah_range.count' => ['sometimes', 'integer', 'min:1', 'max:3'],
+            'ayah_range.count' => ['sometimes', 'integer', 'min:1', 'max:20'],
             'focus_ayahs' => ['sometimes', 'array'],
             'focus_ayahs.*' => ['integer', 'min:1', 'max:300'],
             'average_accuracy' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100'],

@@ -299,7 +299,7 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
   assert.equal(
     aiAssessmentAllowsProgression('mixed', {
       accuracy_percent: 90,
-      color_counts: { red: 2, amber: 1, black: 0 },
+      color_counts: { red: 1, amber: 1, black: 0 },
     }),
     true,
   )
@@ -319,7 +319,7 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
       accuracy_percent: 90,
       color_counts: { red: 2, amber: 1, black: 0 },
     })?.type,
-    'continue',
+    'repeat_current_range',
   )
 }
 

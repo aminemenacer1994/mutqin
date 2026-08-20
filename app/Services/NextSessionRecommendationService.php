@@ -179,11 +179,15 @@ class NextSessionRecommendationService
         $surah = (int) (($payload['surah']['id'] ?? null) ?: ($recommendation->surah_number ?? 0));
         $from = (int) (($payload['ayah_range']['from'] ?? null) ?: ($recommendation->ayah_start ?? 1));
         $to = (int) (($payload['ayah_range']['to'] ?? null) ?: ($recommendation->ayah_end ?? $from));
-        if ($from > 0 && $to >= $from && ($to - $from + 1) > self::MAX_SESSION_SIZE) {
-            $to = $from + self::MAX_SESSION_SIZE - 1;
-        }
         $mode = (string) ($recommendation->session_mode ?: ($payload['session_mode'] ?? 'new_learning'));
         $type = RecommendationType::tryFrom((string) $recommendation->recommendation_type);
+        $ayahCount = (int) (QuranMetadata::ayahCount($surah) ?? 0);
+        $keepFullRange = ($type?->isRepeat() ?? false)
+            || ($ayahCount > 0 && $ayahCount <= 7)
+            || ($ayahCount > 0 && $from > 0 && ($ayahCount - $from + 1) <= 7);
+        if (! $keepFullRange && $from > 0 && $to >= $from && ($to - $from + 1) > self::MAX_SESSION_SIZE) {
+            $to = $from + self::MAX_SESSION_SIZE - 1;
+        }
 
         if (! $surah || ! QuranMetadata::isValidAyah($surah, $from) || ! QuranMetadata::isValidAyah($surah, $to) || $to < $from) {
             throw ValidationException::withMessages([
@@ -2127,9 +2131,6 @@ class NextSessionRecommendationService
         if ($result === 'weak') {
             return false;
         }
-        if ($result === 'strong') {
-            return true;
-        }
 
         $accuracy = isset($assessment['average_accuracy']) && is_numeric($assessment['average_accuracy'])
             ? (float) $assessment['average_accuracy']
@@ -2143,23 +2144,25 @@ class NextSessionRecommendationService
 
         $colorCounts = $this->normalizeColorCounts($assessment['color_counts'] ?? null) ?? [];
         $hardWords = (int) ($colorCounts['red'] ?? 0) + (int) ($colorCounts['black'] ?? 0);
+        $omittedWords = (int) ($colorCounts['black'] ?? 0);
+        $partialWords = (int) ($colorCounts['amber'] ?? 0);
         $weakAyahs = is_array($assessment['weak_ayahs'] ?? null) ? count($assessment['weak_ayahs']) : 0;
         $sequenceErrors = (int) ($assessment['sequence_errors'] ?? 0);
 
-        if ($sequenceErrors > 0 || $weakAyahs > 1 || $hardWords >= 4) {
+        if ($sequenceErrors > 0 || $weakAyahs > 1 || $hardWords >= 2 || $omittedWords >= 2) {
             return false;
         }
 
-        if ($accuracy !== null && $accuracy >= 80) {
-            if ($hardWords >= 3 && $accuracy < 85) {
-                return false;
-            }
-
+        if ($result === 'strong' && $hardWords === 0 && $weakAyahs === 0) {
             return true;
         }
 
+        if ($accuracy !== null && $accuracy >= 80) {
+            return $hardWords <= 1 && $weakAyahs <= 1;
+        }
+
         if ($accuracy !== null && $accuracy >= 55) {
-            return $hardWords <= 2 && $weakAyahs <= 1;
+            return $hardWords <= 1 && $weakAyahs <= 1 && $partialWords <= 6;
         }
 
         return false;
@@ -2201,7 +2204,12 @@ class NextSessionRecommendationService
             $from = (int) ($range['from'] ?? 0);
             $to = (int) ($range['to'] ?? 0);
             if ($from > 0 && $to >= $from) {
-                $to = min($to, $from + self::MAX_SESSION_SIZE - 1);
+                $keepFull = ($surahAyahCount > 0 && $surahAyahCount <= 7)
+                    || ($surahAyahCount > 0 && ($surahAyahCount - $from + 1) <= 7)
+                    || ($sessionTo >= $sessionFrom && ($sessionTo - $sessionFrom + 1) > self::MAX_SESSION_SIZE);
+                if (! $keepFull) {
+                    $to = min($to, $from + self::MAX_SESSION_SIZE - 1);
+                }
                 $focus = is_array($range['focus_ayahs'] ?? null)
                     ? array_values(array_map('intval', $range['focus_ayahs']))
                     : (is_array($context['focus_ayahs'] ?? null)

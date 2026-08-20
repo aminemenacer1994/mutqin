@@ -144,7 +144,7 @@ export function resolveWeaknessSeverity(evidence = {}) {
     return 'significant'
   }
 
-  if (sequenceErrors > 0 || weakAyahs > 1 || hardWords >= 4) {
+  if (sequenceErrors > 0 || weakAyahs > 1 || hardWords >= 2) {
     return 'significant'
   }
 
@@ -155,9 +155,9 @@ export function resolveWeaknessSeverity(evidence = {}) {
   ) {
     if (!hasWordLevelEvidence) return null
     if (hardWords === 0 && partialWords === 0 && weakAyahs === 0) return null
-    if (hardWords >= 4 || weakAyahs > 1) return 'significant'
-    if (hardWords >= 3 && accuracy != null && accuracy < 85) return 'significant'
-    if (hardWords <= 3 && weakAyahs <= 1) return 'minor'
+    if (hardWords >= 2 || weakAyahs > 1) return 'significant'
+    if (hardWords === 1 && weakAyahs <= 1) return 'minor'
+    if (hardWords === 0 && partialWords > 0 && weakAyahs <= 1) return 'minor'
     return 'significant'
   }
 
@@ -167,8 +167,8 @@ export function resolveWeaknessSeverity(evidence = {}) {
     || (accuracy != null && accuracy >= 55)
   ) {
     if (!hasWordLevelEvidence) return null
-    if (hardWords >= 3 || weakAyahs >= 2) return 'significant'
-    if (hardWords <= 2 && (partialWords > 0 || hardWords > 0) && weakAyahs <= 1) {
+    if (hardWords >= 2 || weakAyahs >= 2) return 'significant'
+    if (hardWords <= 1 && (partialWords > 0 || hardWords > 0) && weakAyahs <= 1) {
       return 'minor'
     }
     return 'significant'
@@ -266,14 +266,31 @@ export function resolvePostSessionCtaState(input = {}) {
     weaknessSeverity: input.weaknessSeverity,
   })
 
+  const severity = resolveWeaknessSeverity({
+    outcome,
+    resultState: input.resultState,
+    weakAyahCount: input.weakAyahCount,
+    hardWordCount: input.hardWordCount,
+    partialWordCount: input.partialWordCount,
+    sequenceErrors: input.sequenceErrors,
+    accuracyPercent: input.accuracyPercent,
+    hasWordLevelEvidence: input.hasWordLevelEvidence,
+    hasFocusPhrase: input.hasFocusPhrase,
+  })
+
   // Fresh strong result with no meaningful weakness → verified progression.
-  if (input.hasAiCheck && strong && !minorWeakness && !input.hasFocusPhrase) {
+  if (input.hasAiCheck && strong && !minorWeakness && !input.hasFocusPhrase && severity !== 'significant') {
     return POST_SESSION_CTA_STATES.STRONG
   }
 
   // Strong/mixed with a minor isolated phrase/ayah weakness → allow progression.
   if (input.hasAiCheck && (strong || outcome === 'mixed') && minorWeakness) {
     return POST_SESSION_CTA_STATES.MOSTLY_SECURE
+  }
+
+  // Strong overall but a significant weakness → review before advancing.
+  if (input.hasAiCheck && (strong || outcome === 'mixed') && severity === 'significant') {
+    return POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED
   }
 
   // Strong overall but a significant focused weakness → review before advancing.

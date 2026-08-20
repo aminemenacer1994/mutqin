@@ -1372,6 +1372,82 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
   }
 }
 
+export const RECITATION_COLOR = Object.freeze({
+  GREEN: 'green',
+  AMBER: 'amber',
+  RED: 'red',
+  BLACK: 'black',
+  GRAY: 'gray',
+  UNCERTAIN: 'uncertain',
+})
+
+/**
+ * Map a word status (and common aliases) onto the five-tier recitation colour.
+ * Uncertain stays separate so recognition failure does not look like a learner error.
+ */
+export function classifyRecitationWordColor(status) {
+  const s = String(status || '').toLowerCase().trim()
+  if (!s) return RECITATION_COLOR.GRAY
+  if (s === 'uncertain' || s.includes('unrecognised') || s.includes('unrecognized')) {
+    return RECITATION_COLOR.UNCERTAIN
+  }
+  if (
+    s === 'omitted'
+    || s === 'black'
+    || s.includes('omission')
+    || s === 'skipped-omitted'
+  ) {
+    return RECITATION_COLOR.BLACK
+  }
+  if (
+    s.includes('incorrect')
+    || s === 'red'
+    || s === 'wrong'
+    || s === 'missed'
+    || s === 'missing'
+    || s === 'mismatch'
+    || s.includes('word-incorrect')
+  ) {
+    return RECITATION_COLOR.RED
+  }
+  if (
+    s.includes('partial')
+    || s.includes('close')
+    || s === 'amber'
+    || s === 'yellow'
+    || s.includes('hesitat')
+    || s === 'incomplete'
+  ) {
+    return RECITATION_COLOR.AMBER
+  }
+  if (s === 'correct' || s.includes('word-correct') || s === 'green') {
+    return RECITATION_COLOR.GREEN
+  }
+  if (
+    s === 'pending'
+    || s === 'skipped'
+    || s === 'notattempted'
+    || s === 'not_attempted'
+    || s === 'gray'
+    || s === 'grey'
+    || s === 'waiting'
+  ) {
+    return RECITATION_COLOR.GRAY
+  }
+  return RECITATION_COLOR.GRAY
+}
+
+export function recitationWordAyahNumber(word) {
+  const n = Number(
+    word?.ayahNumber
+    ?? word?.ayah_number
+    ?? word?.ayah
+    ?? word?.verseNumber
+    ?? word?.verse_number
+  )
+  return Number.isFinite(n) && n > 0 ? n : 0
+}
+
 /**
  * Five-tier colour counts for AI Recite → recommendation / personal plan.
  * green=correct, amber=partial, red=incorrect, black=omitted, gray=not yet.
@@ -1379,33 +1455,67 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
  */
 export function getRecitationColorCounts(statuses = []) {
   const list = Array.isArray(statuses) ? statuses : []
-  return {
-    green: list.filter(word => word?.status === 'correct').length,
-    amber: list.filter(word => word?.status === 'partial').length,
-    red: list.filter(word => word?.status === 'incorrect').length,
-    black: list.filter(word => word?.status === 'omitted').length,
-    gray: list.filter(word => ['pending', 'skipped', 'notAttempted'].includes(word?.status)).length,
-    uncertain: list.filter(word => word?.status === 'uncertain').length,
+  const counts = {
+    green: 0,
+    amber: 0,
+    red: 0,
+    black: 0,
+    gray: 0,
+    uncertain: 0,
   }
+  for (const word of list) {
+    const color = classifyRecitationWordColor(word?.status ?? word?.visualStatus ?? word)
+    if (color === RECITATION_COLOR.UNCERTAIN) counts.uncertain += 1
+    else counts[color] += 1
+  }
+  return counts
 }
 
 /**
  * Derive weak ayah numbers from word-level colour statuses.
- * Red/black weigh more than amber; gray alone does not mark an ayah weak.
+ * Red/black weigh more than amber; gray/uncertain alone do not mark an ayah weak.
  */
 export function deriveWeakAyahsFromWordStatuses(statuses = [], options = {}) {
   const minScore = Number.isFinite(Number(options.minScore)) ? Number(options.minScore) : 2
   const byAyah = new Map()
-  for (const word of (Array.isArray(statuses) ? statuses : [])) {
-    const ayah = Number(word?.ayahNumber)
-    if (!Number.isFinite(ayah) || ayah <= 0) continue
-    const status = String(word?.status || '')
-    let add = 0
-    if (status === 'incorrect' || status === 'omitted') add = 2
-    else if (status === 'partial') add = 1
-    if (!add) continue
+  const addScore = (ayah, add) => {
+    if (!ayah || !add) return
     byAyah.set(ayah, (byAyah.get(ayah) || 0) + add)
   }
+
+  const ayahWordCounts = new Map()
+  for (const word of (Array.isArray(statuses) ? statuses : [])) {
+    const ayah = recitationWordAyahNumber(word)
+    if (!ayah) continue
+    const color = classifyRecitationWordColor(word?.status ?? word?.visualStatus)
+    const counts = ayahWordCounts.get(ayah) || { total: 0, gray: 0, hit: 0 }
+    counts.total += 1
+    if (color === RECITATION_COLOR.GRAY || color === RECITATION_COLOR.UNCERTAIN) counts.gray += 1
+    else counts.hit += 1
+    ayahWordCounts.set(ayah, counts)
+    if (color === RECITATION_COLOR.RED || color === RECITATION_COLOR.BLACK) addScore(ayah, 2)
+    else if (color === RECITATION_COLOR.AMBER) addScore(ayah, 1)
+    if (word?.outOfOrder) addScore(ayah, 1)
+  }
+
+  if (options.treatUnattemptedAyahsAsWeak !== false) {
+    for (const [ayah, counts] of ayahWordCounts.entries()) {
+      if (counts.total > 0 && counts.hit === 0) addScore(ayah, 2)
+    }
+  }
+
+  const extraLists = [
+    options.skippedAyahs,
+    options.sequenceErrorAyahs,
+  ]
+  for (const list of extraLists) {
+    if (!Array.isArray(list)) continue
+    for (const item of list) {
+      const ayah = recitationWordAyahNumber(item) || Number(item)
+      addScore(Number.isFinite(ayah) && ayah > 0 ? ayah : 0, 2)
+    }
+  }
+
   return [...byAyah.entries()]
     .filter(([, score]) => score >= minScore)
     .map(([ayah]) => ayah)

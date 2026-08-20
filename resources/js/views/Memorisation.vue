@@ -1,8 +1,9 @@
 <template>
-  <!-- mutqin-ui-build: v120 -->
+  <!-- mutqin-ui-build: v125 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
+    'onboarding-post-session-front': showPostSessionModal && !postSessionOffcanvasOpen && !postSessionAiReciteActive && !postSessionAdaptiveCheckActive && postSessionPrimarySurface !== 'builder',
     'post-session-ai-recite-open': postSessionAiReciteActive,
     'post-session-adaptive-check-open': postSessionAdaptiveCheckActive,
     'overlay-onboarding-active': isOnboardingExperienceActive,
@@ -959,8 +960,6 @@
                     <span class="verse-number verse-ayah-pill">{{ t('memorisation.a11y.ayahNumberLabel', { number: resolveVerseAyahNumber(verse) || verse.number }) }}</span>
                     <span v-if="isVerseVisuallyActive(verse.key)" class="verse-status-badge verse-status-badge-active">{{ t('memorisation.badges.active') }}</span>
                     <span v-if="isNewHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-new">{{ t('memorisation.badges.new') }}</span>
-                    <span v-if="isDueHifzAyah(verse.key)" class="verse-status-badge verse-status-badge-due">{{ t('memorisation.due') }}</span>
-                    <span v-if="isWeakAyah(verse.key)" class="verse-status-badge verse-status-badge-weak">{{ t('memorisation.badges.weak') }}</span>
                     <span v-if="isMasteredAyah(verse.key)" class="verse-status-badge verse-status-badge-mastered">{{ t('memorisation.badges.steady') }}</span>
                     <span
                       v-if="getPracticeFocusWordsForVerse(verse.key).length"
@@ -1151,8 +1150,12 @@
                         @input="setRepetitionsFromSlider(Number($event.target.value))" min="1" max="10" step="1"
                         class="input technique-range" :aria-valuetext="repetitionDisplayValue" />
                     </div>
-                    <div class="slider-markers slider-markers-compact">
-                      <span v-for="step in repetitionSliderSteps" :key="`rep-${step}`">{{ step }}x</span>
+                    <div class="slider-markers slider-markers-compact slider-markers-aligned">
+                      <span
+                        v-for="step in repetitionSliderSteps"
+                        :key="`rep-${step}`"
+                        :style="{ insetInlineStart: `${((Number(step) - 1) / 9) * 100}%` }"
+                      >{{ step }}x</span>
                     </div>
                     <small class="field-hint">{{ Number(repetitionsPerStep) === 1 ? t('sessionSetup.repeatHintOne', { count: repetitionsPerStep }) : t('sessionSetup.repeatHintOther', { count: repetitionsPerStep }) }}</small>
                   </div>
@@ -3165,11 +3168,10 @@
     <Teleport to="body">
     <transition name="mutqin-flow">
     <div
-      v-if="showPostSessionModal && !postSessionAiReciteActive"
+      v-if="showPostSessionModal && !postSessionAiReciteActive && postSessionPrimarySurface !== 'builder'"
       class="post-session-simple post-session-simple--calm-v2 post-session-simple--premium"
       :class="{
         'post-session-simple--sample': onboardingSampleSessionActive,
-        'post-session-simple--builder-open': postSessionOffcanvasOpen && showTools,
       }"
       :data-theme="theme"
       aria-live="polite"
@@ -3330,9 +3332,10 @@
                         :key="`focus-part-${idx}`"
                         class="post-session-simple__quran-token"
                         :class="{
-                          'is-weak': part.weak,
+                          'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
                           'is-incorrect': part.tone === 'incorrect',
                           'is-partial': part.tone === 'partial',
+                          'is-omitted': part.tone === 'omitted',
                           'is-corrected': part.tone === 'ok' && !part.weak,
                         }"
                         :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
@@ -3505,17 +3508,17 @@
                       {{ postSessionPersonalPlan?.range?.label || postSessionRecommendationCardTitle }}
                     </p>
                     <p
-                      v-if="postSessionPersonalPlan?.practiceApproach?.title || postSessionPersonalPlan?.time?.label"
+                      v-if="postSessionPersonalPlan?.practiceApproach?.title || postSessionEstimatedTimeLabel || postSessionPersonalPlan?.time?.label"
                       class="post-session-simple__plan-focus"
                     >
                       <template v-if="postSessionPersonalPlan?.practiceApproach?.title">
                         {{ postSessionPersonalPlan.practiceApproach.title }}
                       </template>
-                      <template v-if="postSessionPersonalPlan?.practiceApproach?.title && postSessionPersonalPlan?.time?.label">
+                      <template v-if="postSessionPersonalPlan?.practiceApproach?.title && (postSessionEstimatedTimeLabel || postSessionPersonalPlan?.time?.label)">
                         ·
                       </template>
-                      <template v-if="postSessionPersonalPlan?.time?.label">
-                        {{ postSessionPersonalPlan.time.label }}
+                      <template v-if="postSessionEstimatedTimeLabel || postSessionPersonalPlan?.time?.label">
+                        {{ postSessionEstimatedTimeLabel || postSessionPersonalPlan.time.label }}
                       </template>
                     </p>
                   </div>
@@ -3527,16 +3530,30 @@
                   >
                     <p
                       v-if="postSessionPlanWhyText"
-                      class="post-session-simple__section-kicker post-session-simple__section-kicker--sub"
+                      class="post-session-simple__why-heading"
                     >
                       {{ t('memorisation.postSession.recommendation.whyRecommended') || 'Why this was recommended' }}
                     </p>
                     <p
                       v-if="postSessionPlanWhyText"
-                      class="post-session-simple__reason post-session-simple__reason--compact"
+                      class="post-session-simple__why-body"
                     >
                       {{ postSessionPlanWhyText }}
                     </p>
+                    <ul
+                      v-if="postSessionAiColourSegments.length"
+                      class="post-session-simple__plan-colours"
+                      data-testid="post-session-plan-colours"
+                    >
+                      <li
+                        v-for="segment in postSessionAiColourSegments"
+                        :key="`plan-colour-${segment.key}`"
+                        :class="segment.tone"
+                      >
+                        <span aria-hidden="true"></span>
+                        {{ segment.label }}
+                      </li>
+                    </ul>
                     <p
                       v-if="postSessionPlanRevisionEmphasis"
                       class="post-session-simple__plan-emphasis"

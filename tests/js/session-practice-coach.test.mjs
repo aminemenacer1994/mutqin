@@ -2,6 +2,8 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   estimatePracticeDuration,
+  inferAudioDurationSeconds,
+  learnerReciteFactorForTechnique,
   formatAboutMinutes,
   buildPostPracticeGuidance,
   normaliseWeakWordRecords,
@@ -50,6 +52,33 @@ test('estimatePracticeDuration uses audio, speed and repetitions', () => {
   })
   assert.ok(slow.minutes >= 3)
   assert.ok(slow.seconds > fast.seconds)
+})
+
+test('inferAudioDurationSeconds prefers word count over a flat ayah guess', () => {
+  const short = inferAudioDurationSeconds({ ayahCount: 3, wordCount: 12 })
+  const long = inferAudioDurationSeconds({ ayahCount: 3, wordCount: 90 })
+  assert.ok(short < 3 * 22)
+  assert.ok(long > short)
+  assert.equal(learnerReciteFactorForTechnique('talqin') > learnerReciteFactorForTechnique('focus'), true)
+})
+
+test('estimatePracticeDuration adds extra weak-ayah passes', () => {
+  const base = estimatePracticeDuration({
+    audioDurationSeconds: 45,
+    playbackSpeed: 1,
+    repetitions: 3,
+    technique: 'talqin',
+    ayahCount: 3,
+  })
+  const withExtra = estimatePracticeDuration({
+    audioDurationSeconds: 45,
+    playbackSpeed: 1,
+    repetitions: 3,
+    technique: 'talqin',
+    ayahCount: 3,
+    extraAyahPasses: 4,
+  })
+  assert.ok(withExtra.seconds > base.seconds)
 })
 
 test('formatAboutMinutes is friendly', () => {

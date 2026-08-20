@@ -179,3 +179,7 @@ export function shouldHideCompletionUnderAi(phase) {
     || phase === COMPLETION_FLOW.ADAPTIVE_CHECK
     || phase === COMPLETION_FLOW.ADAPTIVE_CHECK_RESULT
 }
+
+export function shouldHideCompletionUnderBuilder(phase) {
+  return phase === COMPLETION_FLOW.NEW_SESSION_BUILDER
+}

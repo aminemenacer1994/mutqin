@@ -94,6 +94,9 @@ import {
   formatRecommendationSettingsSummary,
   isActionableRecommendation,
   isRepeatRecommendation,
+  SHORT_SURAH_AYAH_LIMIT,
+  shouldKeepFullAyahWindow,
+  surahAyahCount,
   localizeRecommendationReason,
   recommendationModeLabelKey,
   recommendationPrimaryActionKey,
@@ -173,6 +176,7 @@ import {
 } from '../scripts/recommendations/recitationMastery.js'
 import {
   estimatePracticeDuration,
+  inferAudioDurationSeconds,
   buildPostPracticeGuidance,
   buildLiveSessionGuidance,
   resolveLiveTechniqueGuide,
@@ -3900,6 +3904,7 @@ export default {
         quizView: this.postSessionAdaptiveResultView,
         confidence: this.postSessionSelectedConfidence,
         isRepeat: this.postSessionIsRepeatRecommendation,
+        audioDurationSeconds: this.postSessionEstimatedAudioSeconds,
         t: this.t.bind(this),
       })
       if (!built) return stored && typeof stored === 'object' ? stored : null
@@ -4052,6 +4057,7 @@ export default {
     postSessionEstimatedAudioSeconds() {
       const from = Number(this.postSessionRecommendation?.ayah_range?.from || this.postSessionSnapshot?.rangeStart || 0)
       const to = Number(this.postSessionRecommendation?.ayah_range?.to || this.postSessionSnapshot?.rangeEnd || from)
+      const ayahCount = Math.max(1, (from && to && to >= from) ? (to - from + 1) : 1)
       const chapterId = Number(
         this.postSessionRecommendation?.surah?.id
         || this.postSessionSnapshot?.chapterId
@@ -4059,30 +4065,55 @@ export default {
         || 0,
       )
       const verses = Array.isArray(this.verses) ? this.verses : []
+      const verseDuration = (verse) => {
+        const dur = Number(verse.duration || verse.audioDuration || 0)
+        if (Number.isFinite(dur) && dur > 0) return dur
+        try {
+          const estimated = this.estimateVerseDuration?.(verse)
+          return Number.isFinite(estimated) && estimated > 0 ? estimated : 0
+        } catch (_) {
+          return 0
+        }
+      }
+
       let total = 0
       let counted = 0
+      let sampleTotal = 0
+      let sampleCount = 0
       for (const verse of verses) {
         const surah = Number(verse.surah || String(verse.key || '').split(':')[0] || 0)
         const ayah = Number(verse.number || verse.ayah || String(verse.key || '').split(':')[1] || 0)
+        const dur = verseDuration(verse)
+        if (dur > 0) {
+          sampleTotal += dur
+          sampleCount += 1
+        }
         if (chapterId && surah && surah !== chapterId) continue
         if (from && to && ayah && (ayah < from || ayah > to)) continue
-        const dur = Number(verse.duration || verse.audioDuration || 0)
-        if (Number.isFinite(dur) && dur > 0) {
+        if (dur > 0) {
           total += dur
           counted += 1
-        } else {
-          try {
-            const estimated = this.estimateVerseDuration?.(verse)
-            if (Number.isFinite(estimated) && estimated > 0) {
-              total += estimated
-              counted += 1
-            }
-          } catch (_) { /* ignore */ }
         }
       }
-      return counted > 0 ? total : 0
+      if (counted > 0) return total
+      if (sampleCount > 0) {
+        return Math.round((sampleTotal / sampleCount) * ayahCount)
+      }
+      return inferAudioDurationSeconds({
+        ayahCount,
+        wordCount: this.postSessionRecommendation?.workload?.word_count,
+        workloadScore: this.postSessionRecommendation?.workload?.score,
+      })
     },
     postSessionEstimatedTimeLabel() {
+      const planTime = this.postSessionPersonalPlan?.time
+      if (planTime?.minutes) {
+        const localized = this.t('memorisation.postSession.recommendation.planDetail.aboutMinutes', {
+          minutes: planTime.minutes,
+        })
+        if (localized && !String(localized).includes('aboutMinutes')) return localized
+        if (planTime.label) return planTime.label
+      }
       const settings = this.postSessionRecommendation?.settings || {}
       const ayahCount = Number(
         this.postSessionRecommendation?.ayah_range?.count
@@ -4096,6 +4127,7 @@ export default {
         pauseBetweenRepeats: 1.5,
         technique: settings.technique || this.postSessionPersonalPlan?.practiceApproach?.id || 'talqin',
         ayahCount: Math.max(1, ayahCount),
+        extraAyahPasses: Number(this.postSessionPersonalPlan?.extraAyahPasses || 0),
         t: this.t.bind(this),
       })
       const localized = this.t('memorisation.postSession.recommendation.planDetail.aboutMinutes', {
@@ -4290,7 +4322,8 @@ export default {
         || this.aiReciteFinalPlan?.why
         || '',
       ).trim()
-      if (personal) parts.push(this.stripAiDashes(personal))
+      const emphasis = String(this.postSessionPersonalPlan?.revisionEmphasis || '').trim()
+      if (personal && personal !== emphasis) parts.push(this.stripAiDashes(personal))
       if (this.postSessionShowRevisionScopePicker) {
         const scopeReason = String(this.postSessionScopeRecommendReason || '').trim()
         if (scopeReason && !parts.some((part) => part.includes(scopeReason.slice(0, 28)))) {
@@ -4746,10 +4779,10 @@ export default {
       const tokens = phrase.split(/\s+/).filter(Boolean).slice(0, 12)
       if (!tokens.length) return []
 
-      const toneRank = { incorrect: 2, partial: 1 }
+      const toneRank = { omitted: 3, incorrect: 2, partial: 1 }
       const markTone = (bag, index, tone) => {
         if (!Number.isFinite(index) || index < 0 || index >= bag.length) return
-        const next = tone === 'partial' ? 'partial' : 'incorrect'
+        const next = tone === 'omitted' || tone === 'partial' ? tone : 'incorrect'
         const prev = bag[index]
         if (!prev || (toneRank[next] || 0) >= (toneRank[prev] || 0)) bag[index] = next
       }
@@ -4759,9 +4792,11 @@ export default {
       const pushWeakText = (value, reason = 'pronunciation') => {
         const text = this.normalizePracticeFocusWordText?.(value) || String(value || '').trim()
         if (!text) return
-        const tone = reason === 'hesitation' ? 'partial' : 'incorrect'
+        const tone = reason === 'omission'
+          ? 'omitted'
+          : (reason === 'hesitation' ? 'partial' : 'incorrect')
         const prev = weakByNeedle.get(text)
-        if (!prev || (prev === 'partial' && tone === 'incorrect')) weakByNeedle.set(text, tone)
+        if (!prev || (toneRank[tone] || 0) >= (toneRank[prev] || 0)) weakByNeedle.set(text, tone)
       }
       const pushWeakWord = (word, reasonFallback = 'pronunciation') => {
         if (!word || typeof word !== 'object') {
@@ -4775,20 +4810,28 @@ export default {
         const status = String(
           word.status || word.visualStatus || word.visual_status || word.severity || word.reason || '',
         ).toLowerCase()
+        const isOmitted = ['omitted', 'omission', 'black', 'missing'].includes(status)
+          || reasonFallback === 'omission'
         const isPartial = ['partial', 'minor_mistake', 'amber', 'hesitation', 'uncertain'].includes(status)
           || reasonFallback === 'hesitation'
         const isWrong = [
-          'incorrect', 'wrong', 'omitted', 'omission', 'missing', 'red', 'black',
+          'incorrect', 'wrong', 'red',
           'pronunciation', 'pending',
         ].includes(status) || reasonFallback === 'pronunciation'
-        if (!isPartial && !isWrong && !word.text && !word.word && !Number.isFinite(Number(word.wordIndex))) {
+        if (!isPartial && !isWrong && !isOmitted && !word.text && !word.word && !Number.isFinite(Number(word.wordIndex))) {
           return
         }
-        const reason = isPartial ? 'hesitation' : 'pronunciation'
+        const reason = isOmitted ? 'omission' : (isPartial ? 'hesitation' : 'pronunciation')
         pushWeakText(word.text || word.word || word.arabic || word.target_word || word.targetWord, reason)
         const idx = Number(word.wordIndex ?? word.ayahWordIndex ?? word.ayah_word_index ?? word.index)
         const phraseStart = Number(focus?.phraseStart || 0)
-        if (Number.isFinite(idx)) markTone(tonesByIndex, idx - phraseStart, reason === 'hesitation' ? 'partial' : 'incorrect')
+        if (Number.isFinite(idx)) {
+          markTone(
+            tonesByIndex,
+            idx - phraseStart,
+            reason === 'omission' ? 'omitted' : (reason === 'hesitation' ? 'partial' : 'incorrect'),
+          )
+        }
       }
 
       const weakList = Array.isArray(this.postSessionRevisionWeakWords)
@@ -4814,9 +4857,11 @@ export default {
           'incorrect', 'wrong', 'omitted', 'omission', 'missing', 'partial', 'minor_mistake',
           'uncertain', 'pending', 'red', 'black', 'amber',
         ].includes(status)) return
-        const reason = (status === 'partial' || status === 'minor_mistake' || status === 'amber' || status === 'uncertain')
-          ? 'hesitation'
-          : 'pronunciation'
+        const reason = (status === 'omitted' || status === 'omission' || status === 'black' || status === 'missing')
+          ? 'omission'
+          : ((status === 'partial' || status === 'minor_mistake' || status === 'amber' || status === 'uncertain')
+            ? 'hesitation'
+            : 'pronunciation')
         pushWeakWord(word, reason)
       })
 
@@ -6789,7 +6834,10 @@ export default {
       const targets = this.getRecitationCheckTargetVerses()
       const numbers = targets.map((v) => Number(v?.number || String(v?.key || '').split(':')[1] || 0)).filter(Boolean)
       const start = numbers[0] || Number(this.rangeStart || 0)
-      const end = numbers[numbers.length - 1] || Number(this.rangeEnd || start)
+      const end = Math.max(
+        numbers[numbers.length - 1] || 0,
+        Number(this.rangeEnd || start),
+      )
       if (!start) return surah
       return start === end ? `${surah} · Ayah ${start}` : `${surah} · Ayahs ${start}–${end}`
     },
@@ -8766,7 +8814,7 @@ export default {
               inSession,
               wordIndex,
               isActive,
-              isWeak: inSession && this.isWeakAyah(verseKey),
+              isWeak: false,
               isMastered: inSession && this.isMasteredAyah(verseKey),
               isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
               isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
@@ -9396,7 +9444,10 @@ export default {
     showTools(newVal) {
       this.syncBodyScrollLock(newVal)
       this.persistUiState()
-      if (newVal) this.ensureSecondaryToolsLoaded()
+      if (newVal) {
+        this.toolsPanelMounted = true
+        this.ensureSecondaryToolsLoaded()
+      }
     },
     showHifzPlanModal(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -9454,8 +9505,7 @@ export default {
     showPostSessionModal(newVal) {
       this.syncBodyScrollLock(newVal)
       if (newVal) {
-        this.showTools = false
-        this.postSessionOffcanvasOpen = false
+        this.isolatePostSessionRecommendation()
         this.topCardMenuOpen = false
       } else {
         this.postSessionStatsExpanded = false
@@ -9593,9 +9643,6 @@ export default {
       this.persistUiState();
       this.persistCentralSessionState();
       this.applyChainingQueueChange(this.currentMode);
-    },
-    showTools(val) {
-      if (val) this.toolsPanelMounted = true
     },
     chapterId(val) {
       this.persistUiState()
@@ -13478,8 +13525,47 @@ export default {
     },
     applyOnboardingGoalPreset() {
       this.rangeStart = 1
-      this.rangeEnd = 3
+      const lastAyah = this.resolveCurrentSurahAyahCount() || 3
+      this.rangeEnd = lastAyah <= SHORT_SURAH_AYAH_LIMIT ? lastAyah : 3
       this.resetRepetitionsForFreshSession()
+    },
+
+    resolveCurrentSurahAyahCount() {
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
+      const snapshotMatches = Number(this.postSessionSnapshot?.chapterId || 0) === chapterId
+      return Math.max(
+        0,
+        Number(this.currentChapter?.verses_count || 0),
+        Number(this.currentChapter?.ayah_count || 0),
+        Number(this.currentChapter?.versesCount || 0),
+        snapshotMatches ? Number(this.postSessionSnapshot?.totalAyahsInSurah || 0) : 0,
+        snapshotMatches ? Number(this.postSessionSnapshot?.versesInSurah || 0) : 0,
+        surahAyahCount(chapterId),
+      )
+    },
+
+    expandShortSurahSessionRange() {
+      const surahMax = this.resolveCurrentSurahAyahCount()
+      const start = Math.max(1, Number(this.rangeStart || 1))
+      const end = Math.max(start, Number(this.rangeEnd || start))
+      if (!shouldKeepFullAyahWindow({ from: start, surahAyahCount: surahMax })) return false
+      if (surahMax <= 0 || end >= surahMax) return false
+      this.rangeEnd = surahMax
+      const store = this.getModeStore?.(this.currentMode)
+      if (store) store.rangeEnd = surahMax
+      if (this.sessionConfig) {
+        this.sessionConfig = { ...this.sessionConfig, rangeEnd: surahMax }
+      }
+      const snap = this.postSessionSnapshot
+      if (snap && Number(snap.chapterId || 0) === Number(this.chapterId || 0)) {
+        this.postSessionSnapshot = {
+          ...snap,
+          rangeEnd: surahMax,
+          totalAyahsInSurah: surahMax,
+          versesInSurah: surahMax,
+        }
+      }
+      return true
     },
     getOnboardingStorageKey() {
       const userId = this.auth?.id ? String(this.auth.id) : 'guest'
@@ -14159,9 +14245,12 @@ export default {
           return
         }
         console.warn('Failed to load next-session recommendation:', error)
-        this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
         const fallback = snapshotFallback()
-        applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'error')
+        const fallbackReady = isActionableRecommendation(fallback)
+        this.postSessionRecommendationError = fallbackReady
+          ? ''
+          : this.t('memorisation.postSession.recommendation.loadError')
+        applyResult(fallback, fallbackReady ? 'ready' : 'error')
       }
     },
     retryPostSessionRecommendation() {
@@ -14169,19 +14258,31 @@ export default {
     },
     syncPersonalPlanOntoRecommendation(recommendation = this.postSessionRecommendation) {
       if (!recommendation) return recommendation
+      const aiDetails = this.postSessionAiReviewDetails || null
+      const quizView = this.postSessionAdaptiveResultView || null
+      const snapshot = {
+        ...(this.postSessionSnapshot || {}),
+        completion: this.buildCompletionPerformancePayload?.() || null,
+        aiDetails,
+        quizView,
+        color_counts: aiDetails?.colorCounts || null,
+        accuracy_percent: aiDetails?.accuracy ?? aiDetails?.accuracyPercent ?? null,
+        weakAyahs: aiDetails?.weakAyahs || [],
+        skippedAyahs: aiDetails?.skippedAyahs || [],
+      }
+      const aiOutcome = String(aiDetails?.outcome || '').toLowerCase()
+      if (['strong', 'mixed', 'weak'].includes(aiOutcome)) {
+        recommendation = adaptRecommendationForAiAssessment(recommendation, aiOutcome, snapshot)
+      }
       const plan = buildPersonalPracticePlan({
         recommendation,
-        snapshot: {
-          ...(this.postSessionSnapshot || {}),
-          completion: this.buildCompletionPerformancePayload?.() || null,
-          aiDetails: this.postSessionAiReviewDetails || null,
-          quizView: this.postSessionAdaptiveResultView || null,
-        },
-        completion: this.buildCompletionPerformancePayload?.() || null,
-        aiDetails: this.postSessionAiReviewDetails || null,
-        quizView: this.postSessionAdaptiveResultView || null,
+        snapshot,
+        completion: snapshot.completion,
+        aiDetails,
+        quizView,
         confidence: recommendation.confidence_feedback || this.postSessionSelectedConfidence,
         isRepeat: isRepeatRecommendation(recommendation),
+        audioDurationSeconds: this.postSessionEstimatedAudioSeconds,
         t: this.t.bind(this),
       })
       const enriched = this.enrichPostSessionRecommendation(
@@ -14604,7 +14705,7 @@ export default {
         const snap = this.postSessionSnapshot || {}
         const chapterId = Number(snap.chapterId || this.chapterId || this.sessionConfig?.chapterId || 0)
         const from = Number(snap.rangeStart || this.sessionConfig?.rangeStart || 0)
-        const to = Number(snap.rangeEnd || this.sessionConfig?.rangeEnd || from)
+        let to = Number(snap.rangeEnd || this.sessionConfig?.rangeEnd || from)
         if (!chapterId || !from || !to) {
           throw new Error('missing_range')
         }
@@ -14613,6 +14714,8 @@ export default {
         this.chapterId = chapterId
         this.rangeStart = from
         this.rangeEnd = to
+        this.expandShortSurahSessionRange()
+        to = Number(this.rangeEnd || to)
         if (this.sessionConfig) {
           this.sessionConfig = {
             ...this.sessionConfig,
@@ -15158,8 +15261,12 @@ export default {
             result,
             {
               ...(this.postSessionSnapshot || {}),
-              weak_ayahs: extras.weak_ayahs,
-              weakAyahs: extras.weak_ayahs,
+              weak_ayahs: extras.weak_ayahs || this.postSessionAiReviewDetails?.weakAyahs,
+              weakAyahs: extras.weak_ayahs || this.postSessionAiReviewDetails?.weakAyahs,
+              skipped_ayahs: extras.skipped_ayahs || this.postSessionAiReviewDetails?.skippedAyahs,
+              skippedAyahs: extras.skipped_ayahs || this.postSessionAiReviewDetails?.skippedAyahs,
+              color_counts: extras.color_counts || this.postSessionAiReviewDetails?.colorCounts,
+              accuracy_percent: extras.accuracy_percent ?? this.postSessionAiReviewDetails?.accuracy,
               aiDetails: this.postSessionAiReviewDetails,
               completion: this.buildCompletionPerformancePayload?.() || null,
             },
@@ -19514,8 +19621,6 @@ export default {
       return 'notAttempted'
     },
     shouldShowRecitationReviewHighlights(ayahKey) {
-      // FORCE: stacked reading never paints AI red/green/amber on verse cards.
-      if (this.readingViewMode === 'stacked') return false
       // AMD modal owns its own mushaf surface. Painting the page behind it on every
       // recognition tick freezes the UI and looks like colours coming from both sides.
       if (this.amdOpen) return false
@@ -20008,6 +20113,13 @@ export default {
         targets = ref ? [ref] : []
         this.recitationCheckScope = 'ayah'
       } else {
+        this.expandShortSurahSessionRange()
+        const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
+        const from = Math.max(1, Number(this.rangeStart || 1))
+        const to = Math.max(from, Number(this.rangeEnd || from))
+        if (chapterId && from && to) {
+          await this.ensurePostSessionAiReciteVerses(chapterId, from, to)
+        }
         targets = this.getSessionCheckTargetVerses()
         this.recitationCheckScope = 'session'
       }
@@ -27952,8 +28064,15 @@ export default {
       })
     },
 
+    isolatePostSessionRecommendation() {
+      this.showTools = false
+      this.postSessionOffcanvasOpen = false
+    },
     openToolsPanel(options = {}) {
       const { verseKey = null, mode = this.currentMode, scroll = false, tab = 'tools', preserveFreshSelection = false } = options
+      if (this.showPostSessionModal) {
+        this.postSessionOffcanvasOpen = true
+      }
       this.toolsReturnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null
       this.startingFreshSessionSelection = !!preserveFreshSelection
       this.currentMode = mode
@@ -28014,6 +28133,13 @@ export default {
       this.persistCentralSessionState()
       if (this.anchorModeEnabled) {
         this.scheduleAnchorHighlights()
+      }
+      if (
+        !this.isBootstrapping
+        && Number(this.chapterId || 0) > 0
+        && !this.modeDataMatchesConfig(this.currentMode)
+      ) {
+        this.syncWorkspaceFromControls({ reason: 'offcanvas-commit', immediate: true })
       }
     },
 
@@ -30165,7 +30291,7 @@ export default {
 
     clampControlRange(mode = this.currentMode) {
       const store = this.getModeStore(mode)
-      const max = this.currentChapter?.verses_count || 286
+      const max = this.resolveCurrentSurahAyahCount() || Number(this.currentChapter?.verses_count || 0) || 286
       store.rangeStart = Math.max(1, Math.min(Number(store.rangeStart || 1), max))
       store.rangeEnd = Math.max(store.rangeStart, Math.min(Number(store.rangeEnd || store.rangeStart || 1), max))
     },
@@ -33299,14 +33425,12 @@ export default {
         || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
         || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
       )
-      // Prefer exact weak-word marks from AI evidence over whole-ayah shading.
+      // Only mark the exact words that slipped. The ayah badge already says Needs Review.
       const weakClass = focusWeak
         ? ` practice-focus-word${emphasizeWeak ? ' practice-focus-word--emphasis' : ''}${isActive ? ' practice-focus-word--active' : ''}`
-        : (this.practiceFocusWeakWords?.length ? '' : (this.isWeakAyah(verse.key) ? ' weak-word' : ''))
+        : ''
       const masteredClass = this.isMasteredAyah(verse.key) ? ' mastered-word' : ''
-      const recitationStatus = this.readingViewMode === 'stacked'
-        ? ''
-        : this.getRenderedRecitationWordStatusForVerse(verse.key, idx, verse.sessionTargetKey || '')
+      const recitationStatus = this.getRenderedRecitationWordStatusForVerse(verse.key, idx, verse.sessionTargetKey || '')
       const recitationClass = recitationStatus ? ` recitation-word-${recitationStatus}` : ''
       const tajweedClass = wordData?.tajweedClass ? ` ${this.escapeHtml(wordData.tajweedClass)}` : ''
       const sessionTargetAttr = verse?.sessionTargetKey
@@ -36887,8 +37011,8 @@ export default {
       this.chapterId = nextChapterId
       const selectedChapter = this.chapters.find(chapter => Number(chapter.id) === nextChapterId) || null
       this.currentChapter = selectedChapter
-      if (selectedChapter) {
-        const lastAyah = Math.max(1, Number(selectedChapter.verses_count || 1))
+      if (selectedChapter || nextChapterId) {
+        const lastAyah = Math.max(1, this.resolveCurrentSurahAyahCount() || Number(selectedChapter?.verses_count || 1))
         this.rangeStart = 1
         this.rangeEnd = lastAyah
       }

@@ -16,11 +16,18 @@ import {
   assert.equal(normaliseCtaOutcome('mixed'), 'mixed')
   assert.equal(resolveWeaknessSeverity({
     accuracyPercent: 91,
-    hardWordCount: 2,
+    hardWordCount: 1,
     weakAyahCount: 0,
     outcome: 'strong',
     hasWordLevelEvidence: true,
   }), 'minor')
+  assert.equal(resolveWeaknessSeverity({
+    accuracyPercent: 91,
+    hardWordCount: 2,
+    weakAyahCount: 0,
+    outcome: 'strong',
+    hasWordLevelEvidence: true,
+  }), 'significant')
   assert.equal(resolveWeaknessSeverity({
     accuracyPercent: 80,
     hardWordCount: 3,
@@ -52,7 +59,7 @@ import {
     weakAyahCount: 1,
     hardWordCount: 2,
     hasFocusPhrase: true,
-  }), POST_SESSION_CTA_STATES.MOSTLY_SECURE)
+  }), POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
 
   assert.equal(resolvePostSessionCtaState({
     hasAiCheck: true,
@@ -79,7 +86,7 @@ import {
     hardWordCount: 2,
     accuracyPercent: 91,
     hasWordLevelEvidence: true,
-  }), POST_SESSION_CTA_STATES.MOSTLY_SECURE)
+  }), POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
 
   assert.equal(resolvePostSessionCtaState({
     hasAiCheck: true,

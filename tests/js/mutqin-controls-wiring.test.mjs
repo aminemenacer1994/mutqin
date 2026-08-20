@@ -674,7 +674,7 @@ assert.doesNotMatch(
     /\.post-session-simple__confidence/,
     'completion confidence styles remain available'
   )
-  assert.match(vueOnly, /post-session-simple--builder-open/)
+  assert.match(vueOnly, /postSessionPrimarySurface !== 'builder'/)
   assert.match(
     readFileSync(new URL('../../resources/js/views/Memorisation.css', import.meta.url), 'utf8'),
     /onboarding-post-session-tools\s*\{[\s\S]*?z-index:\s*12720/
@@ -856,8 +856,23 @@ includesAll('offcanvas workspace sync', [
   /applyWorkspaceControls\(options = \{\}\)/,
   /clearWorkspaceForConfigChange\(mode = this\.currentMode\)/,
   /onChapterChange\(event\)/,
-  /refreshVerses\(\)/
+  /refreshVerses\(\)/,
+  /commitOffcanvasSettings\(\)[\s\S]*syncWorkspaceFromControls\(\{ reason: 'offcanvas-commit'/,
+  /openToolsPanel\(options = \{\}\)[\s\S]*if \(this\.showPostSessionModal\) \{\s*this\.postSessionOffcanvasOpen = true/,
+  /resolveCurrentSurahAyahCount\(\)/,
 ])
+
+assert.doesNotMatch(
+  source,
+  /if \(this\.showPostSessionModal && !this\.postSessionOffcanvasOpen && !preserveFreshSelection\) \{\s*return/,
+  'tools must stay openable so offcanvas changes can apply to the workspace'
+)
+
+assert.doesNotMatch(
+  source,
+  /if \(val && this\.showPostSessionModal && !this\.postSessionOffcanvasOpen\) \{\s*this\.showTools = false/,
+  'showTools watcher must not immediately close the tools drawer'
+)
 
 includesAll('offcanvas stability hooks', [
   /toolsReturnFocusEl:\s*null/,

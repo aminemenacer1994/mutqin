@@ -10,7 +10,8 @@ import {
   getTechniqueShortLabel,
 } from '../techniques/techniqueDisplay.js'
 import { formatRepetitionCountLabel, formatAyahNumberSpans } from '../formatting/ayahLabels.js'
-import { estimatePracticeDuration, normaliseWeakWordRecords } from '../session/sessionPracticeCoach.js'
+import { estimatePracticeDuration, inferAudioDurationSeconds, normaliseWeakWordRecords } from '../session/sessionPracticeCoach.js'
+import { recitationWordAyahNumber } from '../engine/recitation_analysis.js'
 import {
   resolveRecommendedPlaybackSpeed,
 } from './playbackSpeedPolicy.js'
@@ -20,6 +21,10 @@ import {
   PRACTICE_SCOPE,
   WEAK_AYAH_REPEAT_MIN,
 } from './revisionPracticeScope.js'
+import { SURAH_AYAH_COUNTS } from '../engine/hifz_session_engine.js'
+
+/** Juz ʿAmma and other short surahs should be practised as a whole, not a 3-ayah bite. */
+export const SHORT_SURAH_AYAH_LIMIT = 7
 
 export {
   formatAyahRangeLabel,
@@ -120,6 +125,51 @@ export function isActionableRecommendation(recommendation) {
 
   // Need a concrete surah + range so the Continue button can start a real session.
   return !!(surahId && hasRange)
+}
+
+export function surahAyahCount(surahId) {
+  const id = Number(surahId || 0)
+  if (id < 1) return 0
+  return Number(SURAH_AYAH_COUNTS[id - 1] || 0)
+}
+
+export function shouldKeepFullAyahWindow({
+  from = 0,
+  surahAyahCount: ayahCount = 0,
+  isRepeat = false,
+} = {}) {
+  if (isRepeat) return true
+  const start = Number(from) || 0
+  const surahMax = Number(ayahCount) || 0
+  if (surahMax > 0 && surahMax <= SHORT_SURAH_AYAH_LIMIT) return true
+  if (surahMax > 0 && start > 0 && (surahMax - start + 1) <= SHORT_SURAH_AYAH_LIMIT) {
+    return true
+  }
+  return false
+}
+
+export function resolveAyahWindow({
+  from = 1,
+  surahAyahCount: ayahCount = 0,
+  preferredMax = 3,
+  isRepeat = false,
+  sessionFrom = 0,
+  sessionTo = 0,
+} = {}) {
+  if (isRepeat && Number(sessionFrom) > 0 && Number(sessionTo) >= Number(sessionFrom)) {
+    const start = Number(sessionFrom)
+    const end = Number(sessionTo)
+    return { from: start, to: end, count: end - start + 1 }
+  }
+  const start = Math.max(1, Number(from) || 1)
+  const surahMax = Number(ayahCount) || 0
+  if (shouldKeepFullAyahWindow({ from: start, surahAyahCount: surahMax, isRepeat })) {
+    const end = surahMax > 0 ? surahMax : start
+    return { from: start, to: end, count: Math.max(1, end - start + 1) }
+  }
+  const remaining = surahMax > 0 ? Math.max(1, surahMax - start + 1) : Math.max(1, Number(preferredMax) || 3)
+  const size = Math.min(Math.max(1, Number(preferredMax) || 3), remaining)
+  return { from: start, to: start + size - 1, count: size }
 }
 
 export function isRepeatRecommendation(recommendation) {
@@ -241,6 +291,11 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
   const totalAyahs = Number(snapshot.totalAyahsInSurah || snapshot.surahAyahCount || 0)
   const completedAll = !!snapshot.completedAll
   const preferredSize = Math.max(1, Math.min(3, (rangeEnd - rangeStart + 1) || 3))
+  const nextSurahWindow = (surahId, from = 1) => resolveAyahWindow({
+    from,
+    surahAyahCount: surahAyahCount(surahId) || totalAyahs,
+    preferredMax: preferredSize,
+  })
 
   if (!chapterId || !rangeStart || !rangeEnd) {
     return {
@@ -292,7 +347,7 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
 
   if (totalAyahs && rangeEnd >= totalAyahs) {
     const nextId = resolveNextSurahId(chapterId)
-    const nextRangeTo = Math.min(preferredSize, 3)
+    const opening = nextId ? nextSurahWindow(nextId, 1) : null
     return {
       id: null,
       type: nextId ? RECOMMENDATION_TYPES.NEXT_SURAH : RECOMMENDATION_TYPES.PLAN_COMPLETE,
@@ -300,7 +355,7 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
       range_kind: nextId ? 'new' : null,
       surah: nextId ? { id: nextId, name: '', translated_name: '' } : surah,
       completed_surah: surah,
-      ayah_range: nextId ? { from: 1, to: nextRangeTo, count: nextRangeTo } : null,
+      ayah_range: opening,
       reason_code: nextId ? 'surah_completed' : 'learning_plan_complete',
       reason: '',
       requires_confirmation: !!nextId,
@@ -315,9 +370,11 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
   }
 
   const nextFrom = rangeEnd + 1
-  const remaining = totalAyahs ? Math.max(0, totalAyahs - nextFrom + 1) : preferredSize
-  const size = remaining > 0 ? Math.min(preferredSize, remaining) : preferredSize
-  const nextTo = nextFrom + size - 1
+  const nextWindow = resolveAyahWindow({
+    from: nextFrom,
+    surahAyahCount: totalAyahs,
+    preferredMax: preferredSize,
+  })
 
   return {
     id: null,
@@ -325,11 +382,7 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
     session_mode: 'new_learning',
     range_kind: 'new',
     surah,
-    ayah_range: {
-      from: nextFrom,
-      to: nextTo,
-      count: size,
-    },
+    ayah_range: nextWindow,
     reason_code: 'continue_while_fresh',
     reason: '',
     requires_confirmation: false,
@@ -376,26 +429,24 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
 
   if (confidence === 'needs_practice') {
     const reps = Number(settings.repetitions || 3)
-    const baseRange = range || (snapshotStart
+    const sessionFrom = snapshotStart || Number(range?.from || 0)
+    const sessionTo = Math.max(sessionFrom, snapshotEnd || Number(range?.to || sessionFrom))
+    const baseRange = sessionFrom > 0
       ? {
-        from: snapshotStart,
-        to: Math.max(snapshotStart, snapshotEnd),
-        count: Math.max(1, Math.max(snapshotStart, snapshotEnd) - snapshotStart + 1),
+        from: sessionFrom,
+        to: sessionTo,
+        count: Math.max(1, sessionTo - sessionFrom + 1),
       }
-      : null)
+      : null
     const weakAyahs = collectWeakAyahTargets({
       quizView: snapshot.quizView || null,
       aiDetails: snapshot.aiDetails || null,
       recommendation,
       completion: snapshot.completion || null,
     })
-    const focused = buildFocusedPracticeRange({
-      weakAyahs,
-      sessionFrom: snapshotStart || baseRange?.from,
-      sessionTo: snapshotEnd || baseRange?.to,
-      surahAyahCount: totalAyahs,
-      max: 3,
-    })
+    const focusAyahs = weakAyahs.filter((ayah) => (
+      !sessionFrom || (ayah >= sessionFrom && ayah <= sessionTo)
+    ))
     return {
       ...next,
       type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
@@ -407,14 +458,12 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
       balance_message: null,
       panel_title_key: 'revisionSetTitle',
       primary_action_label_key: 'repeatThisSession',
-      ayah_range: focused
+      ayah_range: baseRange
         ? {
-          from: focused.from,
-          to: focused.to,
-          count: focused.count,
-          focus_ayahs: focused.focusAyahs,
+          ...baseRange,
+          focus_ayahs: focusAyahs,
         }
-        : baseRange,
+        : null,
       settings: {
         ...settings,
         technique: settings.technique || 'talqin',
@@ -468,10 +517,13 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
     || 0
   )
 
-  // Still inside the surah — advance a small next bite (never the rest of the surah).
+  // Still inside the surah — small bite on long surahs, full remainder on short ones.
   if (totalAyahs && nextFrom <= totalAyahs) {
-    const remaining = totalAyahs - nextFrom + 1
-    const size = Math.min(3, remaining)
+    const nextWindow = resolveAyahWindow({
+      from: nextFrom,
+      surahAyahCount: totalAyahs,
+      preferredMax: 3,
+    })
     return {
       ...next,
       type: RECOMMENDATION_TYPES.CONTINUE,
@@ -488,11 +540,7 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
         name: snapshot.chapterName || '',
         translated_name: snapshot.chapterName || '',
       },
-      ayah_range: {
-        from: nextFrom,
-        to: nextFrom + size - 1,
-        count: size,
-      },
+      ayah_range: nextWindow,
       is_end_of_surah: false,
       requires_confirmation: false,
       settings: {
@@ -513,8 +561,11 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
   if ((totalAyahs && nextFrom > totalAyahs) || isTerminal) {
     const nextId = resolveNextSurahId(completedSurahId)
     if (nextId) {
-      // Keep the opening bite small — never dump a whole surah.
-      const openingSize = Math.min(3, 3)
+      const opening = resolveAyahWindow({
+        from: 1,
+        surahAyahCount: surahAyahCount(nextId),
+        preferredMax: 3,
+      })
       return {
         ...next,
         type: RECOMMENDATION_TYPES.NEXT_SURAH,
@@ -533,7 +584,7 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
         },
         surah: { id: nextId, name: '', translated_name: '' },
         next_surah: { id: nextId, name: '', translated_name: '' },
-        ayah_range: { from: 1, to: openingSize, count: openingSize },
+        ayah_range: opening,
         is_end_of_surah: true,
         requires_confirmation: true,
         settings: {
@@ -569,11 +620,11 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
  */
 export function aiAssessmentAllowsProgression(result, snapshot = {}) {
   if (result === 'weak') return false
-  if (result === 'strong') return true
 
   const accuracy = Number(
     snapshot.accuracyPercent
     ?? snapshot.accuracy_percent
+    ?? snapshot.aiDetails?.accuracyPercent
     ?? snapshot.aiDetails?.accuracy
     ?? NaN,
   )
@@ -582,12 +633,24 @@ export function aiAssessmentAllowsProgression(result, snapshot = {}) {
     || snapshot.aiDetails?.colorCounts
     || {}
   const hardWords = Number(colorCounts.red || 0) + Number(colorCounts.black || 0)
+  const omittedWords = Number(colorCounts.black || 0)
   const partialWords = Number(colorCounts.amber || 0)
   const weakAyahs = Array.isArray(snapshot.weakAyahs)
     ? snapshot.weakAyahs
     : (Array.isArray(snapshot.weak_ayahs)
       ? snapshot.weak_ayahs
       : (Array.isArray(snapshot.aiDetails?.weakAyahs) ? snapshot.aiDetails.weakAyahs : []))
+  const skippedAyahs = Array.isArray(snapshot.skippedAyahs)
+    ? snapshot.skippedAyahs
+    : (Array.isArray(snapshot.skipped_ayahs)
+      ? snapshot.skipped_ayahs
+      : (Array.isArray(snapshot.aiDetails?.skippedAyahs) ? snapshot.aiDetails.skippedAyahs : []))
+
+  // Two or more hard errors, omissions, or skipped verses should stay on revision.
+  if (omittedWords >= 2 || skippedAyahs.length > 0) return false
+  if (hardWords >= 2 || weakAyahs.length >= 2) return false
+
+  if (result === 'strong' && hardWords === 0 && weakAyahs.length === 0) return true
 
   const severity = resolveWeaknessSeverity({
     accuracyPercent: Number.isFinite(accuracy) ? accuracy : null,
@@ -602,8 +665,8 @@ export function aiAssessmentAllowsProgression(result, snapshot = {}) {
   })
 
   if (severity === 'significant') return false
-  if (severity === 'minor') return true
-  return Number.isFinite(accuracy) && accuracy >= 80
+  if (severity === 'minor' && hardWords <= 1) return true
+  return Number.isFinite(accuracy) && accuracy >= 80 && hardWords <= 1
 }
 
 /**
@@ -630,7 +693,7 @@ export function adaptRecommendationForAiAssessment(recommendation, result, snaps
     },
   }
 
-  if (result === 'strong' || aiAssessmentAllowsProgression(result, snap)) {
+  if (aiAssessmentAllowsProgression(result, snap)) {
     return adaptRecommendationForConfidence(recommendation, 'confident', snap)
   }
   if (result === 'weak') {
@@ -723,14 +786,27 @@ export function buildFocusedPracticeRange(input = {}) {
  * }} input
  * @returns {number}
  */
+export function extraAyahPassesFromRepeatPlan(repeatPlan, baseRepetitions) {
+  const per = repeatPlan?.perAyahRepeats
+  if (!per || typeof per !== 'object') return 0
+  const base = Math.max(1, Number(baseRepetitions) || 3)
+  return Object.values(per).reduce((sum, count) => (
+    sum + Math.max(0, Number(count) - base)
+  ), 0)
+}
+
 export function estimatePracticeMinutes(input = {}) {
   const ayahCount = Math.max(1, Number(input.ayahCount) || 1)
   const settings = input.settings && typeof input.settings === 'object' ? input.settings : {}
   const technique = String(settings.technique || '').toLowerCase()
   const audioDurationSeconds = Number(input.audioDurationSeconds)
   const hasAudio = Number.isFinite(audioDurationSeconds) && audioDurationSeconds > 0
-  const wordProxy = Number(input.wordCount) || Number(input.workloadScore) || (ayahCount * 12)
-  const inferredAudioSeconds = Math.max(ayahCount * 22, wordProxy * 0.9)
+  const inferredAudioSeconds = inferAudioDurationSeconds({
+    ayahCount,
+    wordCount: input.wordCount,
+    workloadScore: input.workloadScore,
+    sampleSecondsPerAyah: input.sampleSecondsPerAyah,
+  })
 
   const estimated = estimatePracticeDuration({
     audioDurationSeconds: hasAudio ? audioDurationSeconds : inferredAudioSeconds,
@@ -739,6 +815,8 @@ export function estimatePracticeMinutes(input = {}) {
     pauseBetweenRepeats: Number(input.pauseBetweenRepeats) || 1.5,
     technique: technique || 'talqin',
     ayahCount,
+    extraAyahPasses: Number(input.extraAyahPasses) || 0,
+    t: input.t,
   })
   return estimated.minutes
 }
@@ -746,6 +824,13 @@ export function estimatePracticeMinutes(input = {}) {
 /**
  * Collect weak ayah numbers from quiz, AI, and session replay signals.
  */
+function ayahNumbersFromMixedList(list) {
+  if (!Array.isArray(list)) return []
+  return list
+    .map((item) => recitationWordAyahNumber(item) || Number(item?.ayahNumber ?? item?.ayah_number ?? item))
+    .filter((n) => Number.isFinite(n) && n > 0)
+}
+
 export function collectWeakAyahTargets({
   quizView = null,
   aiDetails = null,
@@ -762,8 +847,22 @@ export function collectWeakAyahTargets({
   const fromReplay = Array.isArray(completion?.replay_heavy_ayahs)
     ? completion.replay_heavy_ayahs
     : []
+  const fromSkipped = [
+    ...ayahNumbersFromMixedList(aiDetails?.skippedAyahs),
+    ...ayahNumbersFromMixedList(recommendation?.ai_assessment?.skipped_ayahs),
+  ]
+  const fromSequence = [
+    ...ayahNumbersFromMixedList(aiDetails?.sequenceErrorAyahs),
+    ...ayahNumbersFromMixedList(recommendation?.ai_assessment?.sequence_error_ayahs),
+  ]
+  const fromWeakWords = normaliseWeakWordRecords(
+    aiDetails?.weakWords
+    || recommendation?.settings?.practice_weak_words
+    || recommendation?.ai_assessment?.weak_words
+    || [],
+  ).map((word) => Number(word.ayahNumber))
   return [...new Set(
-    [...fromQuiz, ...fromAi, ...fromRecAi, ...fromReplay]
+    [...fromQuiz, ...fromAi, ...fromRecAi, ...fromReplay, ...fromSkipped, ...fromSequence, ...fromWeakWords]
       .map(Number)
       .filter((n) => Number.isFinite(n) && n > 0),
   )].sort((a, b) => a - b)
@@ -818,7 +917,7 @@ export function buildPersonalPracticePlan(input = {}) {
   const settings = recommendation.settings && typeof recommendation.settings === 'object'
     ? recommendation.settings
     : {}
-  const isRepeat = !!input.isRepeat || isRepeatRecommendation(recommendation)
+  let isRepeat = !!input.isRepeat || isRepeatRecommendation(recommendation)
   const hasAi = !!(input.aiDetails && (input.aiDetails.outcome || input.aiDetails.summaryLine || input.aiDetails.outcomeLabel))
   const hasQuiz = !!input.quizView
   const source = hasAi && hasQuiz
@@ -836,16 +935,8 @@ export function buildPersonalPracticePlan(input = {}) {
     completion: input.completion,
   })
 
-  const sessionFrom = Number(
-    snapshot.rangeStart
-    || recommendation.ayah_range?.from
-    || 0,
-  )
-  const sessionTo = Number(
-    snapshot.rangeEnd
-    || recommendation.ayah_range?.to
-    || sessionFrom,
-  )
+  const sessionFrom = Number(snapshot.rangeStart || 0)
+  const sessionTo = Number(snapshot.rangeEnd || sessionFrom)
 
   const liveRange = recommendation.ayah_range || {}
   let rangeFrom = Number(liveRange.from || 0)
@@ -854,19 +945,20 @@ export function buildPersonalPracticePlan(input = {}) {
     ? liveRange.focus_ayahs.map(Number).filter(Boolean)
     : []
 
-  if (isRepeat && weakAyahs.length) {
-    const focused = buildFocusedPracticeRange({
-      weakAyahs,
-      sessionFrom: sessionFrom || rangeFrom,
-      sessionTo: sessionTo || rangeTo,
-      surahAyahCount: Number(snapshot.totalAyahsInSurah || recommendation.surah?.ayah_count || 0),
-      max: 3,
-    })
-    if (focused) {
-      rangeFrom = focused.from
-      rangeTo = focused.to
-      focusAyahs = focused.focusAyahs
-    }
+  const sessionWeakAyahs = weakAyahs.filter((ayah) => {
+    if (!sessionFrom || !sessionTo) return true
+    return ayah >= sessionFrom && ayah <= sessionTo
+  })
+  if (!isRepeat && sessionWeakAyahs.length && (hasAi || hasQuiz)) {
+    isRepeat = true
+  }
+
+  if (isRepeat && sessionFrom > 0 && sessionTo >= sessionFrom) {
+    rangeFrom = sessionFrom
+    rangeTo = sessionTo
+    focusAyahs = sessionWeakAyahs.length
+      ? sessionWeakAyahs
+      : weakAyahs.filter((w) => w >= sessionFrom && w <= sessionTo)
   } else if (!focusAyahs.length && weakAyahs.length && rangeFrom > 0) {
     focusAyahs = weakAyahs.filter((w) => w >= rangeFrom && w <= rangeTo)
   }
@@ -874,13 +966,6 @@ export function buildPersonalPracticePlan(input = {}) {
   const ayahCount = rangeFrom > 0 && rangeTo >= rangeFrom
     ? (rangeTo - rangeFrom + 1)
     : Number(liveRange.count || recommendation.workload?.ayah_count || 1)
-
-  const minutes = estimatePracticeMinutes({
-    wordCount: recommendation.workload?.word_count,
-    workloadScore: recommendation.workload?.score,
-    ayahCount,
-    settings,
-  })
 
   const insight = buildCombinedCheckInsight({
     aiDetails: input.aiDetails,
@@ -999,10 +1084,19 @@ export function buildPersonalPracticePlan(input = {}) {
   if (isRepeat && focusLabel && !String(personalWhy || '').includes(String(focusAyahs[0] || ''))) {
     whyParts.push(focusLabel)
   }
-  if (revisionEmphasis && !whyParts.some((part) => String(part).includes(String(revisionEmphasis).slice(0, 24)))) {
-    whyParts.push(revisionEmphasis)
-  }
   const combinedWhy = whyParts.filter(Boolean).join(' ')
+
+  const extraAyahPasses = extraAyahPassesFromRepeatPlan(repeatPlan, settings.repetitions)
+  const minutes = estimatePracticeMinutes({
+    wordCount: recommendation.workload?.word_count,
+    workloadScore: recommendation.workload?.score,
+    ayahCount,
+    settings,
+    audioDurationSeconds: input.audioDurationSeconds,
+    sampleSecondsPerAyah: input.sampleSecondsPerAyah,
+    extraAyahPasses,
+    t,
+  })
 
   // Beginner setup: speed + reps only. Technique copy lives in practiceApproach.
   const setup = []
@@ -1098,6 +1192,7 @@ export function buildPersonalPracticePlan(input = {}) {
 
   return {
     source,
+    isRepeat,
     headline: translate('planDetail.headline', 'Your practice plan'),
     personalWhy: combinedWhy || personalWhy,
     revisionEmphasis,
@@ -1120,6 +1215,7 @@ export function buildPersonalPracticePlan(input = {}) {
     },
     evidence: evidence.slice(0, 5),
     estimated_minutes: minutes,
+    extraAyahPasses,
     focus_ayahs: focusAyahs,
   }
 }
@@ -1130,12 +1226,21 @@ export function buildPersonalPracticePlan(input = {}) {
 export function applyPersonalPlanToRecommendation(recommendation, plan) {
   if (!recommendation || !plan) return recommendation
   const next = { ...recommendation, plan_detail: plan }
-  if (plan.range?.from && plan.range?.to && isRepeatRecommendation(recommendation)) {
+  const from = Number(plan.range?.from || 0)
+  const to = Number(plan.range?.to || from)
+  const shouldRepeat = !!(plan.isRepeat || isRepeatRecommendation(recommendation))
+  if (from > 0 && to >= from && shouldRepeat) {
+    if (!isRepeatRecommendation(recommendation)) {
+      next.type = RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE
+      next.session_mode = 'revision'
+      next.range_kind = 'repeated'
+      next.primary_action_label_key = 'repeatThisSession'
+    }
     next.ayah_range = {
       ...(recommendation.ayah_range || {}),
-      from: plan.range.from,
-      to: plan.range.to,
-      count: plan.range.count,
+      from,
+      to,
+      count: Number(plan.range.count || (to - from + 1)),
       focus_ayahs: plan.range.focusAyahs || [],
     }
   }
@@ -1143,7 +1248,8 @@ export function applyPersonalPlanToRecommendation(recommendation, plan) {
 }
 
 /**
- * Hard cap recommended ayah ranges at 3 for beginner-friendly sessions.
+ * Hard cap *new* recommended ayah ranges at 3 for beginner-friendly sessions.
+ * Repeat / revision plans keep the session the learner just practised.
  * @param {object} recommendation
  * @param {number} [max=3]
  */
@@ -1154,6 +1260,44 @@ export function clampRecommendationRange(recommendation, max = 3) {
   const from = Number(range.from || 0)
   const to = Number(range.to || 0)
   if (!from || !to || to < from) return recommendation
+  const surahId = Number(
+    recommendation.surah?.id
+    || recommendation.next_surah?.id
+    || recommendation.surah_number
+    || 0,
+  )
+  const knownAyahCount = Number(
+    recommendation.surah?.ayah_count
+    || recommendation.next_surah?.ayah_count
+    || surahAyahCount(surahId)
+    || 0,
+  )
+  if (isRepeatRecommendation(recommendation)) {
+    const end = knownAyahCount > 0 ? Math.min(to, knownAyahCount) : to
+    return {
+      ...recommendation,
+      ayah_range: {
+        ...range,
+        from,
+        to: end,
+        count: end - from + 1,
+        focus_ayahs: Array.isArray(range.focus_ayahs) ? range.focus_ayahs : undefined,
+      },
+    }
+  }
+  if (shouldKeepFullAyahWindow({ from, surahAyahCount: knownAyahCount })) {
+    const end = knownAyahCount > 0 ? knownAyahCount : to
+    return {
+      ...recommendation,
+      ayah_range: {
+        ...range,
+        from,
+        to: end,
+        count: end - from + 1,
+        focus_ayahs: Array.isArray(range.focus_ayahs) ? range.focus_ayahs : undefined,
+      },
+    }
+  }
   const limit = Math.max(1, Number(max) || 3)
   if ((to - from + 1) <= limit) {
     return {
@@ -1204,8 +1348,8 @@ export function adaptRecommendationForAdaptiveAssessment(recommendation, policyR
   const completedRange = snapFrom > 0 && snapTo >= snapFrom
     ? {
       from: snapFrom,
-      to: Math.min(snapTo, snapFrom + 2),
-      count: Math.min(3, snapTo - snapFrom + 1),
+      to: snapTo,
+      count: snapTo - snapFrom + 1,
     }
     : null
 
@@ -1240,17 +1384,25 @@ export function adaptRecommendationForAdaptiveAssessment(recommendation, policyR
   if (goal === 'advance' || (objective === 'strong' && goal !== 'reinforce' && goal !== 'repeat' && goal !== 'review')) {
     next = adaptRecommendationForConfidence(recommendation, 'confident', snapWithQuiz)
   } else if (goal === 'resume') {
+    const range = completedRange || focusedRange || recommendation.ayah_range
     next = {
       ...recommendation,
       type: RECOMMENDATION_TYPES.RESUME,
       session_mode: 'revision',
       range_kind: 'revision',
-      ayah_range: focusedRange || completedRange || recommendation.ayah_range,
+      ayah_range: range
+        ? {
+          from: range.from,
+          to: range.to,
+          count: range.count || Math.max(1, Number(range.to) - Number(range.from) + 1),
+          focus_ayahs: weakAyahs.filter((ayah) => ayah >= Number(range.from) && ayah <= Number(range.to)),
+        }
+        : recommendation.ayah_range,
     }
   } else {
-    // Reinforce / repeat / review: focus on weak ayahs (+ neighbor), max 3.
+    // Reinforce / repeat / review: same session range, extra focus on weak ayahs.
     next = adaptRecommendationForConfidence(recommendation, 'needs_practice', snapWithQuiz)
-    const range = focusedRange || completedRange
+    const range = completedRange || next.ayah_range || focusedRange
     if (range) {
       next = {
         ...next,
@@ -1260,8 +1412,8 @@ export function adaptRecommendationForAdaptiveAssessment(recommendation, policyR
         ayah_range: {
           from: range.from,
           to: range.to,
-          count: range.count,
-          focus_ayahs: range.focusAyahs || weakAyahs,
+          count: range.count || Math.max(1, Number(range.to) - Number(range.from) + 1),
+          focus_ayahs: weakAyahs.filter((ayah) => ayah >= Number(range.from) && ayah <= Number(range.to)),
         },
       }
     }
@@ -1347,13 +1499,15 @@ export function buildCombinedCheckInsight({
   const quizTone = String(quizView?.objectiveBand || '').toLowerCase()
   const aiWeak = Array.isArray(aiDetails?.weakAyahs) ? aiDetails.weakAyahs.map(Number).filter(Boolean) : []
   const quizWeak = Array.isArray(quizView?.weakAyahs) ? quizView.weakAyahs.map(Number).filter(Boolean) : []
-  const planWeak = [...new Set([...aiWeak, ...quizWeak].filter(inPlan))]
+  const allWeak = [...new Set([...aiWeak, ...quizWeak])]
+  const planWeak = allWeak.filter(inPlan)
+  const sessionWeak = planWeak.length ? planWeak : allWeak
   const checksNeedSupport = aiTone === 'weak'
     || quizTone === 'weak'
-    || planWeak.length > 0
-  const checksLookStrong = (aiTone === 'strong' || !aiTone)
+    || sessionWeak.length > 0
+  const checksLookStrong = aiTone === 'strong'
     && (quizTone === 'strong' || !quizTone)
-    && !planWeak.length
+    && !sessionWeak.length
     && (answers.length > 0)
 
   const hasAi = answers.some((a) => a.source === 'ai')
@@ -1371,17 +1525,17 @@ export function buildCombinedCheckInsight({
   let summary = ''
   if (isRepeat) {
     // Prefer check evidence over stale confidence feedback.
-    if (planWeak.length === 1) {
+    if (sessionWeak.length === 1) {
       summary = translate(
         'combinedRepeatWeakAyah',
         `Verse {ayah} still feels tricky. We will practise these verses again.`,
-        { ayah: planWeak[0] },
+        { ayah: sessionWeak[0] },
       )
-    } else if (planWeak.length > 1 || checksNeedSupport) {
+    } else if (sessionWeak.length > 1 || checksNeedSupport) {
       summary = translate(
         'combinedRepeatWeakAyahs',
         'Some verses still need help. We will practise this set again.',
-        { count: Math.max(planWeak.length, 2) },
+        { count: Math.max(sessionWeak.length, 2) },
       )
     } else if (confidence === 'needs_practice') {
       summary = translate(
@@ -1400,24 +1554,10 @@ export function buildCombinedCheckInsight({
       )
     }
   } else if (checksNeedSupport) {
-    if (planWeak.length === 1) {
-      summary = translate(
-        'combinedRepeatWeakAyah',
-        `Verse {ayah} still feels tricky. We will practise these verses again.`,
-        { ayah: planWeak[0] },
-      )
-    } else if (planWeak.length > 1) {
-      summary = translate(
-        'combinedRepeatWeakAyahs',
-        'Some verses still need help. We will practise this set again.',
-        { count: planWeak.length },
-      )
-    } else {
-      summary = translate(
-        'combinedContinueNeedsSupport',
-        'A few spots still need help. This plan adds a little more support.',
-      )
-    }
+    summary = translate(
+      'combinedContinueNeedsSupport',
+      'A few spots still need help. This plan adds a little more support.',
+    )
   } else if (confidence === 'confident') {
     summary = translate(
       'reasons.confidenceConfident',

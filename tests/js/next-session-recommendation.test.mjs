@@ -19,6 +19,10 @@ import {
   buildPersonalPracticePlan,
   adaptRecommendationForAdaptiveAssessment,
   aiAssessmentAllowsProgression,
+  extraAyahPassesFromRepeatPlan,
+  clampRecommendationRange,
+  applyPersonalPlanToRecommendation,
+  resolveAyahWindow,
 } from '../../resources/js/scripts/recommendations/nextSessionRecommendation.js'
 
 function t(key, params = {}) {
@@ -31,6 +35,8 @@ function t(key, params = {}) {
     return 'Nice work. Next verses — keep the order steady.'
   }
   if (key.includes('planDetail.aboutMinutes')) return `About ${params.minutes} minutes`
+  if (key.includes('weakAyahRepeatOne')) return `Repeat ayah ${params.ayah} ${params.count} times to lock in the weak words.`
+  if (key.includes('combinedContinueNeedsSupport')) return 'A few spots still need help. This plan adds a little more support.'
   if (key.includes('planDetail.focusOne')) return `Focus on ayah ${params.ayah}`
   if (key.includes('planDetail.focusMany')) return `Focus on ayahs ${params.ayahs}`
   if (key.includes('planDetail.ayahRange')) return `Ayahs ${params.start}–${params.end}`
@@ -182,7 +188,7 @@ function t(key, params = {}) {
   assert.equal(afterNas.type, RECOMMENDATION_TYPES.NEXT_SURAH)
   assert.equal(afterNas.next_surah.id, 113)
   assert.equal(afterNas.ayah_range.from, 1)
-  assert.ok(afterNas.ayah_range.to <= 4)
+  assert.equal(afterNas.ayah_range.to, 5)
   assert.equal(isActionableRecommendation(afterNas), true)
 
   const planComplete = {
@@ -201,7 +207,7 @@ function t(key, params = {}) {
   })
   assert.equal(promoted.type, RECOMMENDATION_TYPES.NEXT_SURAH)
   assert.equal(promoted.next_surah.id, 113)
-  assert.equal(promoted.ayah_range.to, 3)
+  assert.equal(promoted.ayah_range.to, 5)
   assert.equal(isActionableRecommendation(promoted), true)
 }
 
@@ -239,12 +245,20 @@ function t(key, params = {}) {
 
 {
   assert.equal(aiAssessmentAllowsProgression('strong', {
+    accuracy_percent: 96,
+    color_counts: { red: 0, black: 0, amber: 0 },
+  }), true)
+  assert.equal(aiAssessmentAllowsProgression('strong', {
     accuracy_percent: 91,
     color_counts: { red: 2, black: 0, amber: 0 },
-  }), true)
+  }), false)
   assert.equal(aiAssessmentAllowsProgression('mixed', {
     accuracy_percent: 91,
     color_counts: { red: 2, black: 0, amber: 1 },
+  }), false)
+  assert.equal(aiAssessmentAllowsProgression('mixed', {
+    accuracy_percent: 90,
+    color_counts: { red: 1, black: 0, amber: 1 },
   }), true)
   assert.equal(aiAssessmentAllowsProgression('mixed', {
     accuracy_percent: 80,
@@ -272,8 +286,8 @@ function t(key, params = {}) {
     accuracy_percent: 91,
     color_counts: { red: 2, black: 0, amber: 0 },
   })
-  assert.equal(afterMinorMixed.type, RECOMMENDATION_TYPES.CONTINUE)
-  assert.equal(afterMinorMixed.ayah_range.from, 13)
+  assert.equal(afterMinorMixed.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
+  assert.equal(afterMinorMixed.ayah_range.from, 10)
 }
 
 {
@@ -435,7 +449,7 @@ function t(key, params = {}) {
   assert.match(js, /chainingEnabled/)
   assert.match(js, /anchorModeEnabled/)
   assert.match(css, /onboarding-post-session-tools[\s\S]*z-index:\s*12720/)
-  assert.match(vue, /showPostSessionModal && !postSessionAiReciteActive/)
+  assert.match(vue, /showPostSessionModal && !postSessionAiReciteActive && postSessionPrimarySurface !== 'builder'/)
   assert.match(js, /zIndex:\s*20000|style\.zIndex\s*=\s*'20000'/)
   assert.match(css, /self-check-modal-overlay--above-post-session[\s\S]*z-index:\s*20000|amd-overlay[\s\S]*z-index:\s*30000/)
   assert.match(vue, /Teleport to="body"[\s\S]*AiMemorisationDetectionModal|Teleport to="body"[\s\S]*self-check-modal-overlay/)
@@ -647,6 +661,23 @@ function t(key, params = {}) {
   assert.ok(plan.setup.length >= 1)
   assert.match(plan.time.label, /About \d+ minutes/)
   assert.ok(plan.estimated_minutes >= 4)
+  assert.ok(plan.extraAyahPasses >= 1)
+  assert.doesNotMatch(plan.personalWhy || '', /Repeat ayah|lock in the weak words|strengthen the words/i)
+  assert.match(plan.revisionEmphasis || '', /5|weak/i)
+
+  const continueInsight = buildCombinedCheckInsight({
+    recommendation: {
+      type: RECOMMENDATION_TYPES.CONTINUE,
+      ayah_range: { from: 7, to: 9, count: 3 },
+    },
+    aiDetails: { outcome: 'weak', outcomeLabel: 'Needs practice', weakAyahs: [8] },
+    isRepeat: false,
+    t,
+  })
+  assert.match(continueInsight.summary, /support|fresh|help/i)
+  assert.doesNotMatch(continueInsight.summary, /practise these verses again/i)
+
+  assert.equal(extraAyahPassesFromRepeatPlan({ perAyahRepeats: { 5: 8 } }, 4), 4)
 
   const adapted = adaptRecommendationForAdaptiveAssessment(
     {
@@ -676,6 +707,90 @@ function t(key, params = {}) {
   assert.equal(adapted.ayah_range.to, 17)
   assert.deepEqual(adapted.ayah_range.focus_ayahs, [16])
   assert.equal(adapted.settings.technique, 'chaining')
+}
+
+{
+  // Repeat the session they just practised — do not shrink 1–9 to 3 ayahs.
+  const wideRepeat = {
+    type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+    session_mode: 'revision',
+    range_kind: 'repeated',
+    surah: { id: 91, name: 'Ash-Shams' },
+    ayah_range: { from: 1, to: 9, count: 9, focus_ayahs: [4, 8] },
+    settings: { technique: 'talqin', playback_speed: 0.85, repetitions: 4 },
+  }
+  const clampedRepeat = clampRecommendationRange(wideRepeat, 3)
+  assert.equal(clampedRepeat.ayah_range.from, 1)
+  assert.equal(clampedRepeat.ayah_range.to, 9)
+  assert.equal(clampedRepeat.ayah_range.count, 9)
+  assert.deepEqual(clampedRepeat.ayah_range.focus_ayahs, [4, 8])
+
+  const clampedContinue = clampRecommendationRange({
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    range_kind: 'new',
+    ayah_range: { from: 10, to: 18, count: 9 },
+  }, 3)
+  assert.equal(clampedContinue.ayah_range.from, 10)
+  assert.equal(clampedContinue.ayah_range.to, 12)
+
+  const masad = clampRecommendationRange({
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    range_kind: 'new',
+    surah: { id: 111, name: 'Al-Masad', ayah_count: 5 },
+    ayah_range: { from: 1, to: 3, count: 3 },
+  }, 3)
+  assert.equal(masad.ayah_range.from, 1)
+  assert.equal(masad.ayah_range.to, 5)
+
+  const masadFull = resolveAyahWindow({ from: 1, surahAyahCount: 5, preferredMax: 3 })
+  assert.equal(masadFull.from, 1)
+  assert.equal(masadFull.to, 5)
+
+  const needsPracticeWide = adaptRecommendationForConfidence({
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    session_mode: 'new_learning',
+    range_kind: 'new',
+    surah: { id: 91, name: 'Ash-Shams' },
+    ayah_range: { from: 10, to: 12, count: 3 },
+    settings: { technique: 'talqin', playback_speed: 1, repetitions: 2 },
+  }, 'needs_practice', {
+    rangeStart: 1,
+    rangeEnd: 9,
+    totalAyahsInSurah: 15,
+    aiDetails: { weakAyahs: [4, 8], accuracyPercent: 40 },
+  })
+  assert.equal(needsPracticeWide.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
+  assert.equal(needsPracticeWide.ayah_range.from, 1)
+  assert.equal(needsPracticeWide.ayah_range.to, 9)
+  assert.ok(needsPracticeWide.ayah_range.focus_ayahs.includes(4))
+  assert.ok(needsPracticeWide.ayah_range.focus_ayahs.includes(8))
+
+  const widePlan = buildPersonalPracticePlan({
+    recommendation: {
+      type: RECOMMENDATION_TYPES.CONTINUE,
+      surah: { id: 91, name: 'Ash-Shams', translated_name: 'The Sun' },
+      ayah_range: { from: 10, to: 12, count: 3 },
+      settings: { technique: 'talqin', playback_speed: 1, repetitions: 2 },
+    },
+    snapshot: { rangeStart: 1, rangeEnd: 9, chapterName: 'Ash-Shams', totalAyahsInSurah: 15 },
+    aiDetails: { outcome: 'weak', outcomeLabel: 'Needs practice', weakAyahs: [4, 8] },
+    isRepeat: false,
+    t,
+  })
+  assert.equal(widePlan.isRepeat, true)
+  assert.equal(widePlan.range.from, 1)
+  assert.equal(widePlan.range.to, 9)
+  assert.deepEqual(widePlan.range.focusAyahs, [4, 8])
+
+  const applied = applyPersonalPlanToRecommendation({
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    session_mode: 'new_learning',
+    range_kind: 'new',
+    ayah_range: { from: 10, to: 12, count: 3 },
+  }, widePlan)
+  assert.equal(applied.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
+  assert.equal(applied.ayah_range.from, 1)
+  assert.equal(applied.ayah_range.to, 9)
 }
 
 console.log('next-session-recommendation.test.mjs: ok')

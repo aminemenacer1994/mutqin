@@ -149,6 +149,12 @@ function t(key, params = {}) {
   assert.ok(stepKickers.length >= 2, 'result and next-practice sections are numbered steps')
   assert.match(completionModal, /post-session-simple__step-num/)
   assert.match(completionModal, /post-session-simple__section-kicker--sub/, 'sub-labels for supporting blocks')
+  assert.match(completionModal, /post-session-simple__why-heading/, 'why heading is larger than its body')
+  assert.match(completionModal, /post-session-simple__why-body/)
+  assert.match(completionModal, /post-session-simple__plan-colours/)
+  assert.match(css, /\.post-session-simple__why-heading/)
+  assert.match(css, /font-size:\s*1\.22rem/)
+  assert.match(css, /font-weight:\s*800/)
   assert.match(completionModal, /post-session-simple__support-block/)
   assert.match(completionModal, /post-session-simple__weak-spots-list--inline/)
   assert.match(css, /\.post-session-simple__section-kicker--step/)
@@ -240,6 +246,19 @@ function t(key, params = {}) {
   }
   const strongRepeatLead = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, { isRepeat: true })[0]
   assert.equal(strongRepeatLead.labelKey, 'repeatThisSession')
+}
+
+// Offcanvas and recommendation must never share the screen
+{
+  assert.match(vue, /postSessionPrimarySurface !== 'builder'/)
+  assert.match(vue, /onboarding-post-session-front/)
+  assert.match(js, /isolatePostSessionRecommendation\(\)/)
+  assert.match(css, /\.app\.onboarding-post-session-front \.tools/)
+  assert.doesNotMatch(
+    css,
+    /body:has\(\.post-session-simple\) \.tools:not\(\.onboarding-post-session-tools\)/,
+    'recommendation node must not hide the tools drawer while Adjust plan / workspace is active',
+  )
 }
 
 // Persisted recommendations: save before show; closing must not discard

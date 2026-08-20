@@ -5,6 +5,7 @@ import {
   primarySurfaceForPhase,
   resolveConfidenceSelection,
   shouldHideCompletionUnderAi,
+  shouldHideCompletionUnderBuilder,
   shouldKeepCompletionMounted,
 } from '../../resources/js/scripts/session/completionFlow.js'
 
@@ -105,6 +106,8 @@ import {
   })
   assert.equal(builder, COMPLETION_FLOW.NEW_SESSION_BUILDER)
   assert.equal(primarySurfaceForPhase(builder), 'builder')
+  assert.equal(shouldHideCompletionUnderBuilder(builder), true)
+  assert.equal(shouldHideCompletionUnderAi(builder), false)
 }
 
 {
