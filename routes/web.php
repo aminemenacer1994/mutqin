@@ -105,7 +105,6 @@ Route::middleware(['auth'])->group(function () {
             'Content-Type' => 'audio/mpeg',
         ]);
     })
-        ->middleware('plan:pro')
         ->name('memorisation.audio-download');
 
     Route::post('/memorisation/transcription-token', function () {

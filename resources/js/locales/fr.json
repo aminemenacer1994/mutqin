@@ -489,10 +489,6 @@
       "attemptCountOne": "{count} intento",
       "attemptCountOther": "Attempts: {count}"
     },
-    "billing": {
-      "premiumRequired": "Passez à Mutqin Premium pour utiliser cette fonctionnalité.",
-      "viewPlans": "Voir les offres"
-    },
     "workspaceJourney": {
       "aria": "Your memorización",
       "kicker": "Aperçu de sesión",

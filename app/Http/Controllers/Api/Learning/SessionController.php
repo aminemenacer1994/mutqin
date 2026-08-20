@@ -23,6 +23,24 @@ class SessionController extends Controller
 
     public function show(Request $request): JsonResponse
     {
+        $requestedId = (int) $request->query('id', 0);
+        if ($requestedId > 0) {
+            $session = UserSession::query()
+                ->where('user_id', $request->user()->id)
+                ->where('id', $requestedId)
+                ->first();
+
+            if ($session) {
+                $this->authorize('view', $session);
+            }
+
+            return response()->json([
+                'session' => $session,
+                'unfinished' => $session ? $this->lifecycle->isUnfinished($session) : false,
+                'found' => (bool) $session,
+            ]);
+        }
+
         $session = UserSession::query()
             ->where('user_id', $request->user()->id)
             ->latest('last_activity_at')
@@ -36,12 +54,17 @@ class SessionController extends Controller
         return response()->json([
             'session' => $session,
             'unfinished' => $session && $this->lifecycle->isUnfinished($session),
+            'found' => (bool) $session,
         ]);
     }
 
     public function current(Request $request): JsonResponse
     {
-        $session = $this->lifecycle->currentUnfinished($request->user());
+        $requestedId = (int) $request->query('id', $request->query('session_id', 0));
+        $session = $requestedId > 0
+            ? $this->lifecycle->findOwnedUnfinished($request->user(), $requestedId)
+            : $this->lifecycle->currentUnfinished($request->user());
+
         if ($session) {
             $this->authorize('view', $session);
         }
@@ -49,6 +72,8 @@ class SessionController extends Controller
         return response()->json([
             'session' => $session,
             'unfinished' => (bool) $session,
+            'requested_id' => $requestedId > 0 ? $requestedId : null,
+            'invalid_requested' => $requestedId > 0 && ! $session,
         ]);
     }
 
@@ -149,10 +174,12 @@ class SessionController extends Controller
         app(MainMemorisationPositionService::class)->syncFromSessionPayload($request->user(), $session, $data);
         DashboardService::forgetForUser($request->user());
 
+        $unfinished = $this->lifecycle->isUnfinished($session);
+
         return response()->json([
             'saved' => true,
             'session' => $session,
-            'unfinished' => true,
+            'unfinished' => $unfinished,
         ]);
     }
 
@@ -169,6 +196,7 @@ class SessionController extends Controller
             'paused_at' => ['nullable', 'date'],
             'metadata' => ['nullable', 'array'],
             'idempotency_key' => ['nullable', 'string', 'max:128'],
+            'session_id' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $session = $this->lifecycle->pause($request->user(), $data);
@@ -192,6 +220,7 @@ class SessionController extends Controller
             'last_activity_at' => ['nullable', 'date'],
             'metadata' => ['nullable', 'array'],
             'idempotency_key' => ['nullable', 'string', 'max:128'],
+            'session_id' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $session = $this->lifecycle->resume($request->user(), $data);
@@ -216,6 +245,7 @@ class SessionController extends Controller
             'idempotency_key' => ['nullable', 'string', 'max:128'],
             'range_complete' => ['nullable', 'boolean'],
             'ayah_number' => ['nullable', 'integer', 'min:1', 'max:300'],
+            'session_id' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $session = $this->lifecycle->end($request->user(), $data);

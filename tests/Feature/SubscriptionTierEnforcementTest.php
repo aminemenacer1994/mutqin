@@ -90,7 +90,7 @@ class SubscriptionTierEnforcementTest extends TestCase
             ->assertJsonPath('available', false);
     }
 
-    public function test_premium_user_can_submit_adaptive_assessment_but_free_user_cannot(): void
+    public function test_free_user_can_submit_adaptive_assessment(): void
     {
         $freeUser = User::factory()->create();
         $premiumUser = User::factory()->premium()->create();
@@ -101,14 +101,12 @@ class SubscriptionTierEnforcementTest extends TestCase
             'confidence' => 'needs_practice',
         ];
 
-        $this->actingAs($freeUser)
-            ->postJson('/api/recommendations/adaptive-assessment', $payload)
-            ->assertForbidden()
-            ->assertJsonPath('required_tier', 'premium');
+        $freeResponse = $this->actingAs($freeUser)
+            ->postJson('/api/recommendations/adaptive-assessment', $payload);
+        $this->assertNotSame(403, $freeResponse->status());
 
         $premiumResponse = $this->actingAs($premiumUser)
             ->postJson('/api/recommendations/adaptive-assessment', $payload);
-
         $this->assertNotSame(403, $premiumResponse->status());
     }
 

@@ -146,7 +146,14 @@ class SessionLifecycleService
                         ->lockForUpdate()
                         ->first();
                     if ($byKey) {
-                        return $byKey;
+                        // Idempotent only while unfinished. A finished row must never
+                        // block a new practice attempt that reuses the same client key
+                        // (e.g. same surah/range after complete/exit).
+                        if ($this->isUnfinished($byKey)) {
+                            return $byKey;
+                        }
+
+                        $byKey->forceFill(['start_idempotency_key' => null])->save();
                     }
                 }
 
@@ -193,6 +200,29 @@ class SessionLifecycleService
     }
 
     /**
+     * Resolve an owned unfinished session, optionally by explicit id.
+     * Invalid / finished / foreign ids fail closed (null) — callers map to 422.
+     */
+    public function findOwnedUnfinished(User $user, mixed $sessionId = null): ?UserSession
+    {
+        $id = is_numeric($sessionId) ? (int) $sessionId : 0;
+        if ($id <= 0) {
+            return $this->currentUnfinished($user);
+        }
+
+        $session = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where('id', $id)
+            ->first();
+
+        if (! $session || ! $this->isUnfinished($session)) {
+            return null;
+        }
+
+        return $session;
+    }
+
+    /**
      * Pause an unfinished session without completing it.
      * Paused sessions remain unfinished and resumable.
      *
@@ -203,7 +233,7 @@ class SessionLifecycleService
         $attributes = $this->normaliseIdempotencyAttributes($attributes, 'pause');
 
         return DB::transaction(function () use ($user, $attributes) {
-            $session = $this->lockCurrentUnfinished($user);
+            $session = $this->lockTargetUnfinished($user, $attributes['session_id'] ?? null);
             if (! $session) {
                 throw ValidationException::withMessages([
                     'session' => ['No unfinished session is available to pause.'],
@@ -250,7 +280,7 @@ class SessionLifecycleService
         $attributes = $this->normaliseIdempotencyAttributes($attributes, 'resume');
 
         return DB::transaction(function () use ($user, $attributes) {
-            $session = $this->lockCurrentUnfinished($user);
+            $session = $this->lockTargetUnfinished($user, $attributes['session_id'] ?? null);
             if (! $session) {
                 throw ValidationException::withMessages([
                     'session' => ['No unfinished session is available to resume.'],
@@ -324,14 +354,18 @@ class SessionLifecycleService
                 }
             }
 
-            $session = $this->lockCurrentUnfinished($user);
+            $requestedId = $attributes['session_id'] ?? null;
+            $session = $this->lockTargetUnfinished($user, $requestedId);
 
             if (! $session) {
-                $latest = UserSession::query()
+                $latestQuery = UserSession::query()
                     ->where('user_id', $user->id)
                     ->latest('id')
-                    ->lockForUpdate()
-                    ->first();
+                    ->lockForUpdate();
+                if (is_numeric($requestedId) && (int) $requestedId > 0) {
+                    $latestQuery->where('id', (int) $requestedId);
+                }
+                $latest = $latestQuery->first();
 
                 // Idempotent end: a prior state-sync/deriver finish (or a
                 // finished row missing ended_at) must not 422 the client.
@@ -483,6 +517,7 @@ class SessionLifecycleService
             ->orderByDesc('last_activity_at')
             ->orderByDesc('id')
             ->lockForUpdate()
+            ->limit(25)
             ->get();
 
         foreach ($sessions as $session) {
@@ -512,6 +547,30 @@ class SessionLifecycleService
         }
 
         return null;
+    }
+
+    /**
+     * Lock a specific unfinished session when session_id is provided; otherwise
+     * lock the current unfinished row.
+     */
+    private function lockTargetUnfinished(User $user, mixed $sessionId = null): ?UserSession
+    {
+        $id = is_numeric($sessionId) ? (int) $sessionId : 0;
+        if ($id <= 0) {
+            return $this->lockCurrentUnfinished($user);
+        }
+
+        $session = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where('id', $id)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $session || ! $this->isUnfinished($session)) {
+            return null;
+        }
+
+        return $session;
     }
 
     /**
@@ -750,7 +809,7 @@ class SessionLifecycleService
                 ->where('user_id', $user->id)
                 ->where('start_idempotency_key', $idempotencyKey)
                 ->first();
-            if ($byKey) {
+            if ($byKey && $this->isUnfinished($byKey)) {
                 return $byKey;
             }
         }

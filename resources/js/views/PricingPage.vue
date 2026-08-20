@@ -199,10 +199,10 @@ export default {
     const comparisonRows = computed(() => [
       { id: 'savedSessions', feature: t('homepage.comparison.savedSessions'), free: '3', premium: '5', pro: t('homepage.comparison.unlimited') },
       { id: 'focusMode', feature: t('homepage.comparison.focusMode'), free: true, premium: true, pro: true },
-      { id: 'blurMethod', feature: t('homepage.comparison.blurMethod'), free: false, premium: true, pro: true },
-      { id: 'chainingPractice', feature: t('homepage.comparison.chainingPractice'), free: false, premium: true, pro: true },
-      { id: 'aiRecitationReview', feature: t('homepage.comparison.aiRecitationReview'), free: false, premium: false, pro: true },
-      { id: 'offlineDownloads', feature: t('homepage.comparison.offlineDownloads'), free: false, premium: false, pro: true }
+      { id: 'blurMethod', feature: t('homepage.comparison.blurMethod'), free: true, premium: true, pro: true },
+      { id: 'chainingPractice', feature: t('homepage.comparison.chainingPractice'), free: true, premium: true, pro: true },
+      { id: 'aiRecitationReview', feature: t('homepage.comparison.aiRecitationReview'), free: true, premium: true, pro: true },
+      { id: 'offlineDownloads', feature: t('homepage.comparison.offlineDownloads'), free: true, premium: true, pro: true }
     ]);
 
     const premiumPrice = computed(() => (billingCycle.value === 'annual' ? '1.50' : '2.99'));

@@ -72,10 +72,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/hifz-plan', [HifzPlanController::class, 'show'])->name('api.hifz-plan.show');
     Route::put('/hifz-plan', [HifzPlanController::class, 'upsert'])
-        ->middleware('plan:premium')
         ->name('api.hifz-plan.upsert');
     Route::delete('/hifz-plan', [HifzPlanController::class, 'destroy'])
-        ->middleware('plan:premium')
         ->name('api.hifz-plan.destroy');
 
     // Private per-āyah notes & reflections (user-scoped).
@@ -98,7 +96,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])
         ->name('api.recommendations.ai-assessment');
     Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])
-        ->middleware('plan:premium')
         ->name('api.recommendations.adaptive-assessment');
 
     // AI Memorisation Detection — assessment, personalised plan, practice execution.

@@ -197,15 +197,26 @@ export const learningApi = {
   },
 
   // Session ---------------------------------------------------------------
-  async getSession() {
-    const { data } = await http.get('/session')
-    return data?.session ?? null
-  },
-  async getCurrentSession() {
-    const { data } = await http.get('/session/current')
+  async getSession(params = {}) {
+    const query = {}
+    const id = Number(params?.id || params?.session_id || 0)
+    if (id > 0) query.id = id
+    const { data } = await http.get('/session', { params: query })
     return {
       session: data?.session ?? null,
       unfinished: !!data?.unfinished,
+      found: data?.found !== false && !!data?.session,
+    }
+  },
+  async getCurrentSession(params = {}) {
+    const query = {}
+    const id = Number(params?.id || params?.session_id || 0)
+    if (id > 0) query.id = id
+    const { data } = await http.get('/session/current', { params: query })
+    return {
+      session: data?.session ?? null,
+      unfinished: !!data?.unfinished,
+      invalidRequested: !!data?.invalid_requested,
     }
   },
   async getSessionHistory() {

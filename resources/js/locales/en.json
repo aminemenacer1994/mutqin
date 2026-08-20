@@ -489,10 +489,6 @@
       "attemptCountOne": "{count} attempt",
       "attemptCountOther": "{count} attempts"
     },
-    "billing": {
-      "premiumRequired": "Upgrade to Mutqin Premium to use this feature.",
-      "viewPlans": "View plans"
-    },
     "workspaceJourney": {
       "aria": "Your memorisation",
       "kicker": "Your place",
@@ -3372,6 +3368,10 @@
     "sessionEndFailed": "Unable to end session. Please try again.",
     "sessionPaused": "Session paused. You can resume anytime.",
     "sessionPauseFailed": "Unable to pause session. Please try again.",
+    "sessionSaveFailed": "Could not save this session. Try again.",
+    "sessionSaveSyncFailed": "Session saved on this device. Sync will retry shortly.",
+    "sessionSaveLimitReached": "Saved session limit reached ({max}). Delete one to save another.",
+    "premiumTechniqueRequired": "This technique needs Premium. Upgrade to unlock it.",
     "couldNotPlayRecording": "We could not play this recording. Try reloading it or record again.",
     "defaultSessionLoaded": "Default session loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no memorisation techniques.",
     "recordingRenamed": "Recording renamed to \"{name}\".",

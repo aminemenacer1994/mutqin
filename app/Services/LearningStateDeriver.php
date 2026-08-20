@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\LearningAnalytic;
 use App\Models\MemorisationProgress;
 use App\Models\User;
-use App\Models\UserSession;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 
@@ -118,8 +117,11 @@ class LearningStateDeriver
         }
 
         if (! empty($session['active'])) {
-            UserSession::create(array_merge($attrs, [
-                'user_id' => $user->id,
+            // Reuse the lifecycle start path so we never create a second unfinished row.
+            $lifecycleService->start($user, array_merge($attrs, [
+                'start_idempotency_key' => isset($session['backendSessionId'])
+                    ? 'engine-'.$session['backendSessionId']
+                    : ($session['start_idempotency_key'] ?? null),
             ]));
         }
     }

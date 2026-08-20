@@ -719,4 +719,237 @@ class SessionLifecycleTest extends TestCase
         $session = UserSession::query()->where('user_id', $user->id)->first();
         $this->assertSame(UserSessionStatus::Active, $session->status);
     }
+
+    public function test_start_after_complete_with_same_idempotency_key_creates_new_session(): void
+    {
+        $user = User::factory()->create();
+
+        $firstId = $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 113,
+                'ayah_number' => 1,
+                'idempotency_key' => 'start-18-113-1-5',
+                'metadata' => [
+                    'config' => ['chapterId' => 113, 'rangeStart' => 1, 'rangeEnd' => 5],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->json('session.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'idempotency_key' => 'end-after-start-1',
+                'range_complete' => true,
+                'session_id' => $firstId,
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session.status', UserSessionStatus::Completed->value);
+
+        $secondId = $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 113,
+                'ayah_number' => 1,
+                'idempotency_key' => 'start-18-113-1-5',
+                'metadata' => [
+                    'config' => ['chapterId' => 113, 'rangeStart' => 1, 'rangeEnd' => 5],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Active->value)
+            ->json('session.id');
+
+        $this->assertNotSame($firstId, $secondId);
+        $this->assertSame(2, UserSession::where('user_id', $user->id)->count());
+        $this->assertSame(
+            UserSessionStatus::Completed,
+            UserSession::find($firstId)?->status
+        );
+        $this->assertNull(UserSession::find($firstId)?->start_idempotency_key);
+    }
+
+    public function test_duplicate_start_clicks_reuse_same_unfinished_session(): void
+    {
+        $user = User::factory()->create();
+
+        $first = $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 1,
+                'ayah_number' => 1,
+                'idempotency_key' => 'dup-click-start',
+            ])
+            ->assertOk()
+            ->json('session.id');
+
+        $second = $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 1,
+                'ayah_number' => 1,
+                'idempotency_key' => 'dup-click-start',
+            ])
+            ->assertOk()
+            ->json('session.id');
+
+        $this->assertSame($first, $second);
+        $this->assertSame(1, UserSession::where('user_id', $user->id)->count());
+    }
+
+    public function test_pause_exit_resume_complete_have_distinct_states(): void
+    {
+        $user = User::factory()->create();
+
+        $sessionId = $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 2,
+                'ayah_number' => 1,
+                'idempotency_key' => 'lifecycle-distinct-1',
+                'metadata' => [
+                    'config' => ['chapterId' => 2, 'rangeStart' => 1, 'rangeEnd' => 7],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('session.status', UserSessionStatus::Active->value)
+            ->json('session.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/session/pause', [
+                'session_id' => $sessionId,
+                'idempotency_key' => 'pause-distinct-1',
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Paused->value);
+
+        $this->actingAs($user)
+            ->getJson('/api/session/current?id='.$sessionId)
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Paused->value);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/resume', [
+                'session_id' => $sessionId,
+                'idempotency_key' => 'resume-distinct-1',
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Active->value);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'session_id' => $sessionId,
+                'idempotency_key' => 'end-distinct-1',
+                'range_complete' => true,
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session.status', UserSessionStatus::Completed->value);
+
+        $this->actingAs($user)
+            ->getJson('/api/session/current')
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session', null);
+    }
+
+    public function test_invalid_session_id_fails_safely_on_resume_and_current(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/api/session/current?id=999999')
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('invalid_requested', true)
+            ->assertJsonPath('session', null);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/resume', ['session_id' => 999999])
+            ->assertStatus(422);
+
+        $this->actingAs($user)
+            ->getJson('/api/session?id=999999')
+            ->assertOk()
+            ->assertJsonPath('found', false)
+            ->assertJsonPath('session', null);
+    }
+
+    public function test_completed_session_is_not_returned_as_unfinished_when_requested_by_id(): void
+    {
+        $user = User::factory()->create();
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 4,
+            'ayah_number' => 1,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now(),
+            'last_activity_at' => now(),
+            'metadata' => ['completed' => true, 'config' => ['chapterId' => 4]],
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/session/current?id='.$session->id)
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('invalid_requested', true)
+            ->assertJsonPath('session', null);
+
+        $this->actingAs($user)
+            ->getJson('/api/session?id='.$session->id)
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session.status', UserSessionStatus::Completed->value);
+    }
+
+    public function test_end_without_unfinished_session_is_recoverable_422(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/session/end', [
+                'idempotency_key' => 'end-missing-1',
+                'range_complete' => false,
+            ])
+            ->assertStatus(422);
+    }
+
+    public function test_refresh_style_current_after_pause_keeps_resumable_state(): void
+    {
+        $user = User::factory()->create();
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 18,
+            'ayah_number' => 3,
+            'status' => UserSessionStatus::Paused,
+            'is_onboarding_example' => false,
+            'paused_at' => now(),
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinutes(2),
+            'metadata' => [
+                'active' => false,
+                'paused' => true,
+                'config' => [
+                    'chapterId' => 18,
+                    'rangeStart' => 1,
+                    'rangeEnd' => 10,
+                    'reciterId' => 'ar.alafasy',
+                    'repetitionsPerStep' => 3,
+                ],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/session/current')
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.id', $session->id)
+            ->assertJsonPath('session.status', UserSessionStatus::Paused->value)
+            ->assertJsonPath('session.metadata.config.chapterId', 18)
+            ->assertJsonPath('session.metadata.config.rangeStart', 1)
+            ->assertJsonPath('session.metadata.config.rangeEnd', 10);
+    }
 }

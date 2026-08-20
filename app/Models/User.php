@@ -167,12 +167,14 @@ class User extends Authenticatable
 
     public function hasPremiumAccess(): bool
     {
-        return in_array($this->effectiveSubscriptionTier(), ['premium', 'pro'], true);
+        // All features are free for every authenticated user.
+        return true;
     }
 
     public function hasProAccess(): bool
     {
-        return $this->effectiveSubscriptionTier() === 'pro';
+        // All features are free for every authenticated user.
+        return true;
     }
 
     public function isAdmin(): bool

@@ -9,29 +9,19 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureSubscriptionTier
 {
     /**
+     * Previously gated premium/pro features. All features are free.
+     *
      * @param  'premium'|'pro'  $tier
      */
     public function handle(Request $request, Closure $next, string $tier = 'premium'): Response
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             abort(401);
         }
 
-        $allowed = match ($tier) {
-            'pro' => $user->hasProAccess(),
-            'premium' => $user->hasPremiumAccess(),
-            default => false,
-        };
-
-        if (!$allowed) {
-            return response()->json([
-                'message' => __('ui.subscription_upgrade_required'),
-                'required_tier' => $tier,
-                'upgrade_url' => route('pricing'),
-            ], 403);
-        }
+        void $tier;
 
         return $next($request);
     }

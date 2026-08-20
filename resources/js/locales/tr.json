@@ -489,10 +489,6 @@
       "attemptCountOne": "{count} deneme",
       "attemptCountOther": "{count} محاولات"
     },
-    "billing": {
-      "premiumRequired": "Bu özelliği kullanmak için Mutqin Premium'a yükseltin.",
-      "viewPlans": "Planları gör"
-    },
     "workspaceJourney": {
       "aria": "Your ezber",
       "kicker": "yeriniz yer",

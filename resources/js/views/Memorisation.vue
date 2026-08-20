@@ -1283,11 +1283,20 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <button type="button" class="mode-radio" :class="{ active: focusModeEnabled }"
-                      :aria-pressed="focusModeEnabled ? 'true' : 'false'" :aria-label="t('memorisation.a11y.useFocusMode')" @click="toggleFocusModeRadio">
+                    <span
+                      role="switch"
+                      tabindex="0"
+                      class="mode-radio"
+                      :class="{ active: focusModeEnabled }"
+                      :aria-checked="focusModeEnabled ? 'true' : 'false'"
+                      :aria-label="t('memorisation.a11y.useFocusMode')"
+                      @click.stop="toggleFocusModeRadio"
+                      @keydown.enter.stop.prevent="toggleFocusModeRadio"
+                      @keydown.space.stop.prevent="toggleFocusModeRadio"
+                    >
                       <i class="mode-radio-icon bi" :class="focusModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
                         aria-hidden="true"></i>
-                    </button>
+                    </span>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.focus_mode }">
                     <i class="bi bi-chevron-down"></i>
@@ -1329,11 +1338,23 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <button type="button" class="mode-radio" :class="{ active: blurModeEnabled }"
-                      :aria-pressed="blurModeEnabled ? 'true' : 'false'" :aria-label="t('memorisation.a11y.useBlurMode')" @click="toggleBlurModeRadio">
-                      <i class="mode-radio-icon bi" :class="blurModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
-                        aria-hidden="true"></i>
-                    </button>
+                    <span
+                      role="switch"
+                      tabindex="0"
+                      class="mode-radio"
+                      :class="{ active: blurModeEnabled }"
+                      :aria-checked="blurModeEnabled ? 'true' : 'false'"
+                      :aria-label="t('memorisation.a11y.useBlurMode')"
+                      @click.stop="toggleBlurModeRadio"
+                      @keydown.enter.stop.prevent="toggleBlurModeRadio"
+                      @keydown.space.stop.prevent="toggleBlurModeRadio"
+                    >
+                      <i
+                        class="mode-radio-icon bi"
+                        :class="blurModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
+                        aria-hidden="true"
+                      ></i>
+                    </span>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.blur_mode }"><i
                       class="bi bi-chevron-down"></i></span>
@@ -1374,17 +1395,20 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <button
+                    <span
                       id="talqin-mode-toggle"
-                      type="button"
+                      role="switch"
+                      tabindex="0"
                       class="mode-radio"
                       :class="{ active: talqinModeEnabled }"
-                      :aria-pressed="talqinModeEnabled ? 'true' : 'false'"
+                      :aria-checked="talqinModeEnabled ? 'true' : 'false'"
                       :aria-label="t('memorisation.a11y.useTalqinMode')"
-                      @click="talqinModeEnabled = !talqinModeEnabled"
+                      @click.stop="talqinModeEnabled = !talqinModeEnabled"
+                      @keydown.enter.stop.prevent="talqinModeEnabled = !talqinModeEnabled"
+                      @keydown.space.stop.prevent="talqinModeEnabled = !talqinModeEnabled"
                     >
                       <i class="mode-radio-icon bi" :class="talqinModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
-                    </button>
+                    </span>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.talqin_mode }"><i class="bi bi-chevron-down"></i></span>
                 </div>
@@ -1422,11 +1446,23 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <button type="button" class="mode-radio" :class="{ active: chainingEnabled }"
-                      :aria-pressed="chainingEnabled ? 'true' : 'false'" :aria-label="t('memorisation.a11y.useChaining')" @click="toggleChainingRadio">
-                      <i class="mode-radio-icon bi" :class="chainingEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
-                        aria-hidden="true"></i>
-                    </button>
+                    <span
+                      role="switch"
+                      tabindex="0"
+                      class="mode-radio"
+                      :class="{ active: chainingEnabled }"
+                      :aria-checked="chainingEnabled ? 'true' : 'false'"
+                      :aria-label="t('memorisation.a11y.useChaining')"
+                      @click.stop="toggleChainingRadio"
+                      @keydown.enter.stop.prevent="toggleChainingRadio"
+                      @keydown.space.stop.prevent="toggleChainingRadio"
+                    >
+                      <i
+                        class="mode-radio-icon bi"
+                        :class="chainingEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
+                        aria-hidden="true"
+                      ></i>
+                    </span>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.chaining }"><i
                       class="bi bi-chevron-down"></i></span>
@@ -1498,11 +1534,23 @@
                 </span>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
-                    <button type="button" class="mode-radio" :class="{ active: anchorModeEnabled }"
-                      :aria-pressed="anchorModeEnabled ? 'true' : 'false'" :aria-label="t('memorisation.a11y.useAnchorMode')" @click="toggleAnchorModeRadio">
-                      <i class="mode-radio-icon bi" :class="anchorModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
-                        aria-hidden="true"></i>
-                    </button>
+                    <span
+                      role="switch"
+                      tabindex="0"
+                      class="mode-radio"
+                      :class="{ active: anchorModeEnabled }"
+                      :aria-checked="anchorModeEnabled ? 'true' : 'false'"
+                      :aria-label="t('memorisation.a11y.useAnchorMode')"
+                      @click.stop="toggleAnchorModeRadio"
+                      @keydown.enter.stop.prevent="toggleAnchorModeRadio"
+                      @keydown.space.stop.prevent="toggleAnchorModeRadio"
+                    >
+                      <i
+                        class="mode-radio-icon bi"
+                        :class="anchorModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
+                        aria-hidden="true"
+                      ></i>
+                    </span>
                   </div>
                   <span class="st-chev" :class="{ open: sectionOpen.anchor_mode }"><i
                       class="bi bi-chevron-down"></i></span>
@@ -2734,7 +2782,7 @@
     </div>
 
 
-    <div v-if="canUseProFeatures && showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
+    <div v-if="showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
       @click.self="closeRecordingsLibrary">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div class="modal-content mutqin-modal-surface recordings-library-modal" role="dialog" aria-modal="true"

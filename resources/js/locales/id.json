@@ -489,10 +489,6 @@
       "attemptCountOne": "{count} percobaan",
       "attemptCountOther": "{count} محاولات"
     },
-    "billing": {
-      "premiumRequired": "Upgrade ke Mutqin Premium untuk fitur ini.",
-      "viewPlans": "Lihat paket"
-    },
     "workspaceJourney": {
       "aria": "Your hafalan",
       "kicker": "Anda posisi",

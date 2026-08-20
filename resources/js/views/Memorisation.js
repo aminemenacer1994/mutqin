@@ -14,10 +14,7 @@ import {
 import { migrateLegacyWorkspaceLocalStorage } from '../utils/mutqinLocalStorageMigration'
 import { isBrowserOffline, isBrowserOnline, isNetworkError } from '../utils/networkStatus'
 import {
-  hasPremiumAccess,
-  hasProAccess,
   maxSavedSessionsForTier,
-  pricingUpgradeUrl,
 } from '../utils/billing'
 import {
   buildPostSessionEmotionalContext,
@@ -2077,7 +2074,7 @@ export default {
       return true
     },
     showHifzPlannerUi() {
-      return this.canUsePremiumTechniques
+      return true
     },
     showAiMemorisationButton() {
       return this.aiTestModalsEnabled
@@ -2086,10 +2083,10 @@ export default {
       return AI_TEST_MODALS_ENABLED === true
     },
     canUsePremiumTechniques() {
-      return hasPremiumAccess(this.auth)
+      return true
     },
     canUseProFeatures() {
-      return hasProAccess(this.auth)
+      return true
     },
     maxSavedSessionsAllowed() {
       return maxSavedSessionsForTier(this.auth)
@@ -10447,7 +10444,26 @@ export default {
         }
 
         if (entry.resume) {
-          this.syncWelcomeBackResumeFromBackend()
+          const preferredSessionId = Number(entry.sessionId || 0) || null
+          if (preferredSessionId && this.learningBackendEnabled()) {
+            try {
+              await this.validateSessionLifecycleAgainstBackend({ preferredSessionId })
+            } catch (_) { /* local resume candidates remain */ }
+            if (this.backendSessionSnapshot?.id && Number(this.backendSessionSnapshot.id) !== preferredSessionId) {
+              // Requested session is not the current unfinished one — fail safely.
+              if (!this.backendUnfinishedSession) {
+                this.showBanner?.(
+                  this.t('toasts.sessionResumeUnavailable')
+                    || 'That session is no longer available to resume.',
+                  'warning',
+                  3600
+                )
+                return true
+              }
+            }
+          } else {
+            this.syncWelcomeBackResumeFromBackend()
+          }
           if (this.hasContinueSession || this.backendUnfinishedSession || this.continueSessionPayload) {
             await this.welcomeBackContinueSession()
             return true
@@ -11879,12 +11895,24 @@ export default {
     },
 
     buildSessionRecord(name, options = {}) {
-      const { archived = false, autoSaved = false } = options
+      const { archived = false, autoSaved = false, existingId = null } = options
+      const backendSessionId = this.backendSessionSnapshot?.id
+        || this.mutqinState?.sessionState?.backendSessionId
+        || this.continueSessionPayload?.backendSessionId
+        || null
+      const continuePayload = {
+        ...(this.buildContinueSessionPayload() || {}),
+        backendSessionId,
+        backendStatus: this.backendSessionSnapshot?.status
+          || this.continueSessionPayload?.backendStatus
+          || null,
+      }
       return {
-        id: Date.now().toString(),
+        id: existingId || Date.now().toString(),
         name,
         archived: !!archived,
         autoSaved: !!autoSaved,
+        backendSessionId: backendSessionId || null,
         fromRecommendation: !!this.currentSessionRecommendationMeta,
         recommendationId: this.currentSessionRecommendationMeta?.recommendationId || null,
         savedAt: new Date().toISOString(),
@@ -11923,12 +11951,13 @@ export default {
           queueIndex: Math.max(0, Number(this.queueIndex || 0)),
           currentTime: Number(this.currentTime || 0),
           playerVisible: !!this.playerVisible,
-          audioSrc: this.audioElement?.currentSrc || ''
+          audioSrc: this.audioElement?.currentSrc || '',
+          backendSessionId: backendSessionId || null,
         },
         restore: {
           version: 1,
           exportedAt: new Date().toISOString(),
-          continueSession: this.buildContinueSessionPayload(),
+          continueSession: continuePayload,
           sessionExitSnapshot: this.buildSessionExitSnapshot(),
           centralSession: deepClone(this.centralSession),
           currentMode: this.currentMode,
@@ -11937,18 +11966,75 @@ export default {
       }
     },
 
-    addSavedSession(session) {
-      const max = this.maxSavedSessionsAllowed
-      if (Number.isFinite(max) && this.savedSessions.length >= max) {
-        this.promptSubscriptionUpgrade(this.canUsePremiumTechniques ? 'pro' : 'premium')
-        return null
+    findSavedSessionDuplicateIndex(session) {
+      if (!session || typeof session !== 'object') return -1
+      const backendId = Number(
+        session.backendSessionId
+        || session?.config?.backendSessionId
+        || session?.restore?.continueSession?.backendSessionId
+        || 0
+      )
+      if (backendId > 0) {
+        const byBackend = this.savedSessions.findIndex((row) => {
+          const rowId = Number(
+            row?.backendSessionId
+            || row?.config?.backendSessionId
+            || row?.restore?.continueSession?.backendSessionId
+            || 0
+          )
+          return rowId > 0 && rowId === backendId
+        })
+        if (byBackend >= 0) return byBackend
       }
-      this.savedSessions.unshift(this.normalizeSavedSessionRecord(session))
+      if (session.id) {
+        const byId = this.savedSessions.findIndex((row) => String(row?.id || '') === String(session.id))
+        if (byId >= 0) return byId
+      }
+      return -1
+    },
+
+    addSavedSession(session, options = {}) {
+      const { replaceOldestWhenFull = !!session?.autoSaved } = options
+      const max = this.maxSavedSessionsAllowed
+      const normalized = this.normalizeSavedSessionRecord(session)
+      if (!normalized) return { session: null, reason: 'invalid' }
+      const existingIdx = this.findSavedSessionDuplicateIndex(normalized)
+      if (existingIdx >= 0) {
+        const merged = {
+          ...this.savedSessions[existingIdx],
+          ...normalized,
+          id: this.savedSessions[existingIdx].id,
+        }
+        const next = [...this.savedSessions]
+        next.splice(existingIdx, 1)
+        next.unshift(merged)
+        this.savedSessions = next
+        this.selectedStatsSessionId = merged.id
+        this.persistSavedSessions()
+        return { session: merged, reason: null }
+      }
+      if (Number.isFinite(max) && this.savedSessions.length >= max) {
+        if (!replaceOldestWhenFull) {
+          return { session: null, reason: 'limit' }
+        }
+        // Auto-save must always persist progress: drop the oldest auto-saved
+        // bookmark first, otherwise the oldest bookmark of any kind.
+        let dropIdx = this.savedSessions.map((row, idx) => (row?.autoSaved ? idx : -1)).filter((idx) => idx >= 0).pop()
+        if (dropIdx == null || dropIdx < 0) {
+          dropIdx = this.savedSessions.length - 1
+        }
+        if (dropIdx >= 0) {
+          const next = [...this.savedSessions]
+          next.splice(dropIdx, 1)
+          this.savedSessions = next
+        }
+      }
+      this.savedSessions.unshift(normalized)
       const hardCap = Number.isFinite(max) ? max : 20
       if (this.savedSessions.length > hardCap) this.savedSessions = this.savedSessions.slice(0, hardCap)
       if (!this.selectedStatsSessionId && this.savedSessions[0]?.id) this.selectedStatsSessionId = this.savedSessions[0].id
       this.persistSavedSessions()
-      return session
+      return { session: normalized, reason: null }
     },
 
     buildAutoSaveSessionName() {
@@ -11994,11 +12080,41 @@ export default {
         this.rangeStart || this.sessionConfig?.rangeStart || '',
         this.rangeEnd || this.sessionConfig?.rangeEnd || '',
         this.sessionStartedAt || this.postSessionSnapshot?.startedAt || '',
+        this.backendSessionSnapshot?.id || this.mutqinState?.sessionState?.backendSessionId || '',
       ].join(':')
       if (this.postSessionAutoSaved && this.lastAutoSavedPostSessionKey === key) {
         return this.savedSessions.find((session) => session.autoSaved && session.name === name) || this.savedSessions[0] || null
       }
-      const session = this.addSavedSession(this.buildSessionRecord(name, { autoSaved: true }))
+      let record
+      try {
+        record = this.buildSessionRecord(name, { autoSaved: true })
+      } catch (error) {
+        console.error('buildSessionRecord failed', error)
+        this.showBanner(
+          this.t('toasts.sessionSaveFailed') || 'Could not save this session. Try again.',
+          'danger',
+          3600
+        )
+        return null
+      }
+      const { session, reason } = this.addSavedSession(record, { replaceOldestWhenFull: true })
+      if (!session) {
+        if (reason === 'limit') {
+          this.showBanner(
+            this.t('toasts.sessionSaveLimitReached', { max: this.maxSavedSessionsAllowed })
+              || `Saved session limit reached (${this.maxSavedSessionsAllowed}). Delete one to save another.`,
+            'warning',
+            4200
+          )
+        } else {
+          this.showBanner(
+            this.t('toasts.sessionSaveFailed') || 'Could not save this session. Try again.',
+            'danger',
+            3600
+          )
+        }
+        return null
+      }
       this.postSessionAutoSaved = true
       this.lastAutoSavedPostSessionKey = key
       this.sessionExitAutoSave = true
@@ -12008,8 +12124,71 @@ export default {
     },
 
     async saveCurrentSessionSilentlyAsync(name = this.buildAutoSaveSessionName()) {
-      await this.ensureSaveableWorkspaceState()
-      return this.saveCurrentSessionSilently(name)
+      try {
+        // Prefer an already-built post-end snapshot so cleanup cannot wipe saveable state.
+        if (this._pendingPostEndSaveRecord) {
+          const pending = this._pendingPostEndSaveRecord
+          this._pendingPostEndSaveRecord = null
+          const { session, reason } = this.addSavedSession(pending, { replaceOldestWhenFull: true })
+          if (!session) {
+            this.showBanner(
+              reason === 'limit'
+                ? (this.t('toasts.sessionSaveLimitReached', { max: this.maxSavedSessionsAllowed })
+                  || `Saved session limit reached (${this.maxSavedSessionsAllowed}). Delete one to save another.`)
+                : (this.t('toasts.sessionSaveFailed') || 'Could not save this session. Try again.'),
+              reason === 'limit' ? 'warning' : 'danger',
+              4200
+            )
+            return null
+          }
+          this.postSessionAutoSaved = true
+          this.sessionExitAutoSave = true
+          this.showSavedSessionToast(this.t('toasts.sessionSaved2'))
+          if (this.learningBackendEnabled()) {
+            try {
+              await this.pushLearningState(true)
+            } catch (error) {
+              console.warn('Saved session locally but sync failed', error)
+              this.showBanner(
+                this.t('toasts.sessionSaveSyncFailed')
+                  || 'Session saved on this device. Sync will retry shortly.',
+                'warning',
+                3600
+              )
+            }
+          }
+          return session
+        }
+
+        await this.ensureSaveableWorkspaceState()
+        if (!this.canSaveCurrentSession()) {
+          this.showBanner(this.t('toasts.nothingReadyToSave') || 'Nothing ready to save yet.', 'info', 2800)
+          return null
+        }
+        const session = this.saveCurrentSessionSilently(name)
+        if (session && this.learningBackendEnabled()) {
+          try {
+            await this.pushLearningState(true)
+          } catch (error) {
+            console.warn('Saved session locally but sync failed', error)
+            this.showBanner(
+              this.t('toasts.sessionSaveSyncFailed')
+                || 'Session saved on this device. Sync will retry shortly.',
+              'warning',
+              3600
+            )
+          }
+        }
+        return session
+      } catch (error) {
+        console.error('saveCurrentSessionSilentlyAsync failed', error)
+        this.showBanner(
+          this.t('toasts.sessionSaveFailed') || 'Could not save this session. Try again.',
+          'danger',
+          3600
+        )
+        return null
+      }
     },
 
     confirmSaveSession() {
@@ -12032,7 +12211,16 @@ export default {
         return
       }
 
-      const session = this.addSavedSession(this.buildSessionRecord(trimmedName))
+      const { session, reason } = this.addSavedSession(this.buildSessionRecord(trimmedName), {
+        replaceOldestWhenFull: false,
+      })
+      if (!session) {
+        this.nameError = reason === 'limit'
+          ? (this.t('toasts.sessionSaveLimitReached', { max: this.maxSavedSessionsAllowed })
+            || `Saved session limit reached (${this.maxSavedSessionsAllowed}).`)
+          : (this.t('toasts.sessionSaveFailed') || 'Could not save this session.')
+        return
+      }
 
       this.showBanner(this.t('toasts.sessionSaved', { name: session.name }), 'success', 2000)
       this.closeSaveModal()
@@ -12774,6 +12962,36 @@ export default {
       this.toolsStartInFlight = false
     },
 
+    buildStartIdempotencyKey() {
+      const userId = this.auth?.id || this.auth?.user?.id || 'guest'
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
+      const rangeStart = Number(this.rangeStart || 0)
+      const rangeEnd = Number(this.rangeEnd || rangeStart || 0)
+      // Reuse while the same unfinished backend session is still live — prevents
+      // double-click duplicates without blocking a fresh attempt after complete.
+      const unfinishedId = Number(this.backendUnfinishedSession ? (this.backendSessionSnapshot?.id || 0) : 0)
+      if (unfinishedId > 0) {
+        return `start-reuse-${unfinishedId}`
+      }
+      if (!this._startAttemptNonce) {
+        this._startAttemptNonce = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      }
+      return `start-${userId}-${chapterId}-${rangeStart}-${rangeEnd}-${this._startAttemptNonce}`
+    },
+
+    applyBackendStartResult(result) {
+      const session = result?.session || null
+      const unfinished = result?.unfinished !== false && !!session
+      this.backendSessionSnapshot = session
+      this.backendUnfinishedSession = unfinished
+      if (session?.id && this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.backendSessionId = session.id
+      }
+      if (unfinished) {
+        this._startAttemptNonce = null
+      }
+    },
+
     startSessionWithCountdown(options = {}) {
       if (this.chainingEnabled && !this.hasChainingMethodSelected) {
         this.clearToolsStartInFlight()
@@ -12823,31 +13041,44 @@ export default {
         this.preloadQueueEntryAudio(preloadEntry, { playerVisible: true })
       }
 
+      // Freeze the start key for this attempt so double-clicks stay idempotent.
+      const startIdempotencyKey = this.buildStartIdempotencyKey()
+
       this.showCountdown(async () => {
         const lockResult = await this.sessionActionLock.run('start', async () => {
           this.transitionSessionLifecycle(SESSION_STATUS.STARTING, SESSION_MUTATION.STARTING)
           try {
+            let startPromise = null
             if (this.learningBackendEnabled() && !this.onboardingSampleSessionActive) {
-              // Fire-and-forget: never block local countdown/audio on the start API.
-              learningApi.startSession({
+              startPromise = learningApi.startSession({
                 surah_number: Number(this.chapterId || this.currentChapter?.id || 0) || null,
                 ayah_number: Number(this.rangeStart || 1) || null,
                 memorisation_mode: this.currentMode,
-                idempotency_key: `start-${this.auth?.id || 'guest'}-${this.chapterId || 0}-${this.rangeStart || 0}-${this.rangeEnd || 0}`,
+                idempotency_key: startIdempotencyKey,
                 metadata: {
                   is_main_journey: !!this.pendingMainJourney,
                   config: {
                     chapterId: Number(this.chapterId || this.currentChapter?.id || 0) || null,
                     rangeStart: Number(this.rangeStart || 0) || null,
                     rangeEnd: Number(this.rangeEnd || this.rangeStart || 0) || null,
+                    reciterId: this.reciterId,
+                    playbackSpeed: this.speed,
+                    repetitionsPerStep: this.repetitionsPerStep,
+                    technique: this.talqinModeEnabled ? 'talqin' : (this.focusModeEnabled ? 'focus' : (this.blurModeEnabled ? 'blur' : null)),
+                    focusModeEnabled: !!this.focusModeEnabled,
+                    blurModeEnabled: !!this.blurModeEnabled,
+                    talqinModeEnabled: !!this.talqinModeEnabled,
                   },
                 },
-              }).then(() => {
+              }).then((result) => {
                 this.pendingMainJourney = false
-                this.backendUnfinishedSession = true
+                this.applyBackendStartResult(result)
+                return result
               }).catch((error) => {
                 this.noteLearningBackendFailure(error, 'start')
                 console.warn('Failed to persist session start on backend; continuing locally', error)
+                this.sessionLifecycleError = 'start_persist_failed'
+                return null
               })
             }
             await this.startSession()
@@ -12857,11 +13088,17 @@ export default {
             if (!playbackStarted && this.queue?.length) {
               this.promptTapToPlay()
             }
+            // Wait for backend id before releasing the lock so pause/end can target it.
+            if (startPromise) {
+              await startPromise
+            }
             this.transitionSessionLifecycle(
               SESSION_STATUS.ACTIVE,
               SESSION_MUTATION.IDLE
             )
-            this.sessionLifecycleError = null
+            this.sessionLifecycleError = this.sessionLifecycleError === 'start_persist_failed'
+              ? 'start_persist_failed'
+              : null
             this.sessionBroadcast?.publish('session-started', { at: Date.now() })
             this.scheduleSessionWorkspaceScroll(
               this.pendingSessionWorkspaceScrollReason || SESSION_WORKSPACE_SCROLL_REASON.NEW_SESSION
@@ -13000,7 +13237,21 @@ export default {
         return
       }
 
-      this.addSavedSession(this.buildSessionRecord(`${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`))
+      const { session, reason } = this.addSavedSession(
+        this.buildSessionRecord(`${this.currentChapter?.name_simple || 'Session'} ${this.rangeStart}-${this.rangeEnd}`),
+        { replaceOldestWhenFull: true },
+      )
+      if (!session) {
+        this.showBanner(
+          reason === 'limit'
+            ? (this.t('toasts.sessionSaveLimitReached', { max: this.maxSavedSessionsAllowed })
+              || `Saved session limit reached (${this.maxSavedSessionsAllowed}).`)
+            : (this.t('toasts.sessionSaveFailed') || 'Could not save this session. Try again.'),
+          reason === 'limit' ? 'warning' : 'danger',
+          3600
+        )
+        return
+      }
       this.showBanner(this.t('toasts.sessionSaved2'), 'success', 1500)
     },
 
@@ -13204,7 +13455,15 @@ export default {
 
     async loadSavedSession(sessionId) {
       const session = this.savedSessions.find(s => s.id === sessionId)
-      if (!session) return
+      if (!session) {
+        this.showBanner(
+          this.t('toasts.sessionResumeUnavailable') || 'That saved session is no longer available.',
+          'warning',
+          3200
+        )
+        return
+      }
+      if (this.loadingSessionId) return
       if (this.isSavedSessionComplete(session)) {
         await this.reviewCompletedSavedSession(sessionId)
         return
@@ -13224,12 +13483,69 @@ export default {
             playerVisible: !!session.config?.playerVisible,
             isPlaying: false
           }
-        await this.hydrateSessionFromPayload(restorePayload, { bannerText: this.t('toasts.sessionLoaded', { name: session.name }), forcePlayback: false })
+        const linkedBackendId = Number(
+          restorePayload.backendSessionId
+          || session.backendSessionId
+          || session.config?.backendSessionId
+          || 0
+        )
+        await this.hydrateSessionFromPayload(restorePayload, {
+          bannerText: this.t('toasts.sessionLoaded', { name: session.name }),
+          forcePlayback: false,
+        })
         this.showTools = false
         this.queueSessionWorkspaceScrollReason(SESSION_WORKSPACE_SCROLL_REASON.SAVED_SESSION)
+
+        if (this.learningBackendEnabled() && linkedBackendId > 0) {
+          const { session: current, unfinished, invalidRequested } = await learningApi.getCurrentSession({
+            id: linkedBackendId,
+          })
+          if (invalidRequested || !unfinished) {
+            // Saved bookmark points at a finished/deleted row — start a fresh
+            // attempt from the restored config without claiming the old id.
+            this.backendUnfinishedSession = false
+            this.backendSessionSnapshot = null
+            if (this.mutqinState?.sessionState) {
+              this.mutqinState.sessionState.backendSessionId = null
+            }
+            this._startAttemptNonce = null
+            this.$nextTick(() => {
+              this.startSessionWithCountdown({ skipPrime: true })
+            })
+            return
+          }
+          this.backendSessionSnapshot = current
+          this.backendUnfinishedSession = true
+          if (this.mutqinState?.sessionState) {
+            this.mutqinState.sessionState.backendSessionId = current.id
+          }
+          this.continueSessionPayload = {
+            ...restorePayload,
+            backendSessionId: current.id,
+            backendStatus: current.status,
+          }
+          this.hasContinueSession = true
+          this.applyLocalPausedSessionState()
+          this.transitionSessionLifecycle(
+            String(current.status || '').toLowerCase() === 'paused'
+              ? SESSION_STATUS.PAUSED
+              : SESSION_STATUS.INTERRUPTED_RESUMABLE,
+            SESSION_MUTATION.IDLE
+          )
+          await this.resumeSessionFromPrimaryAction()
+          return
+        }
+
         this.$nextTick(() => {
           this.startSessionWithCountdown({ skipPrime: true })
         })
+      } catch (error) {
+        console.error('loadSavedSession failed', error)
+        this.showBanner(
+          this.t('toasts.sessionResumeFailed') || 'Could not open that saved session.',
+          'danger',
+          3600
+        )
       } finally {
         this.loadingSessionId = ''
       }
@@ -13520,30 +13836,25 @@ export default {
 
     persistSavedSessions() {
       try {
+        let wrote = false
         if (this.learningBackendEnabled()) {
-          this.writeWorkspaceStateValue('savedSessions', this.savedSessions)
-        } else {
-          localStorage.setItem(this.savedSessionsStorageKey(), JSON.stringify(this.savedSessions))
-        }
-      } catch (e) {
-        console.error('Failed to save sessions:', e)
-      }
-    },
-
-    loadSavedSessions() {
-      try {
-        this.ensureSeededSavedSessions()
-        const saved = localStorage.getItem(this.savedSessionsStorageKey())
-        if (saved) {
-          this.savedSessions = JSON.parse(saved).map(session => this.normalizeSavedSessionRecord(session)).filter(Boolean)
-          if (!this.savedSessions.some(session => session.id === this.selectedStatsSessionId)) {
-            this.selectedStatsSessionId = this.savedSessions[0]?.id || ''
+          wrote = !!this.writeWorkspaceStateValue('savedSessions', this.savedSessions)
+          if (wrote) {
+            this.persistMutqinStateLocally()
+            this.scheduleLearningSync()
           }
         }
+        // Always mirror to localStorage so a workspace-bucket miss never loses the save.
+        try {
+          localStorage.setItem(this.savedSessionsStorageKey(), JSON.stringify(this.savedSessions))
+          wrote = true
+        } catch (storageError) {
+          console.warn('localStorage saved-sessions mirror failed', storageError)
+        }
+        return wrote
       } catch (e) {
-        console.error('Failed to load saved sessions:', e)
-        this.savedSessions = []
-        this.selectedStatsSessionId = ''
+        console.error('Failed to save sessions:', e)
+        return false
       }
     },
 
@@ -19006,6 +19317,7 @@ export default {
       const status = String(
         session?.restore?.centralSession?.sessionStatus
         || session?.status
+        || session?.restore?.continueSession?.backendStatus
         || ''
       ).toLowerCase().trim()
 
@@ -19016,6 +19328,7 @@ export default {
 
       if (session?.restore?.continueSession?.completed === true) return true
       if (session?.restore?.continueSession?.completed === false) return false
+      if (session?.restore?.continueSession?.ended_early === true) return false
 
       const config = session?.config || {}
       const stats = this.normalizeSessionStats(session?.stats || {}, config)
@@ -28354,10 +28667,16 @@ export default {
     queueBackendResumeAfterWelcomeContinue(payload = this.continueSessionPayload) {
       if (!this.learningBackendEnabled() || !this.backendUnfinishedSession) return
       const chapterId = Number(payload?.config?.chapterId || this.chapterId || 0)
+      const sessionId = Number(
+        this.backendSessionSnapshot?.id
+        || payload?.backendSessionId
+        || 0
+      ) || undefined
       Promise.resolve().then(async () => {
         try {
-          await learningApi.resumeSession({
-            idempotency_key: `resume-${this.backendSessionSnapshot?.id || 'welcome'}`,
+          const result = await learningApi.resumeSession({
+            idempotency_key: `resume-${sessionId || 'welcome'}`,
+            session_id: sessionId,
             surah_number: chapterId || null,
             ayah_number: Number(payload?.config?.rangeStart || this.rangeStart || 0) || null,
             memorisation_mode: payload?.mode || this.currentMode,
@@ -28365,9 +28684,20 @@ export default {
           this.backendUnfinishedSession = true
           this.backendSessionSnapshot = {
             ...(this.backendSessionSnapshot || {}),
+            ...(result?.session || {}),
             status: 'active',
           }
         } catch (error) {
+          if (error?.response?.status === 422) {
+            this.backendUnfinishedSession = false
+            this.sessionLifecycleError = 'resume_invalid'
+            this.showBanner?.(
+              this.t('toasts.sessionResumeUnavailable'),
+              'warning',
+              4200
+            )
+            return
+          }
           this.noteLearningBackendFailure?.(error, 'resume')
         }
       })
@@ -28704,8 +29034,10 @@ export default {
             if (this.learningBackendEnabled()) {
               Promise.resolve().then(async () => {
                 try {
-                  await learningApi.resumeSession({
-                    idempotency_key: `resume-${this.backendSessionSnapshot?.id || 'current'}`,
+                  const sessionId = Number(this.backendSessionSnapshot?.id || 0) || undefined
+                  const result = await learningApi.resumeSession({
+                    idempotency_key: `resume-${sessionId || 'current'}`,
+                    session_id: sessionId,
                     surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
                     ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
                     memorisation_mode: this.currentMode,
@@ -28713,6 +29045,7 @@ export default {
                   this.backendUnfinishedSession = true
                   this.backendSessionSnapshot = {
                     ...(this.backendSessionSnapshot || {}),
+                    ...(result?.session || {}),
                     status: 'active',
                   }
                 } catch (error) {
@@ -28761,10 +29094,16 @@ export default {
               }
               await learningApi.resumeSession({
                 idempotency_key: `resume-${session?.id || 'current'}`,
+                session_id: Number(session?.id || 0) || undefined,
                 surah_number: Number(session?.surah_number || this.continueSessionPayload?.config?.chapterId || 0) || null,
                 ayah_number: Number(session?.ayah_number || this.continueSessionPayload?.config?.rangeStart || 0) || null,
                 memorisation_mode: session?.memorisation_mode || this.continueSessionPayload?.mode || this.currentMode,
               })
+              this.backendSessionSnapshot = session
+              this.backendUnfinishedSession = true
+              if (this.mutqinState?.sessionState && session?.id) {
+                this.mutqinState.sessionState.backendSessionId = session.id
+              }
             } catch (error) {
               const status = error?.response?.status
               if (status === 422) {
@@ -28866,7 +29205,7 @@ export default {
       } catch (e) { console.error(e) }
     },
 
-    async validateSessionLifecycleAgainstBackend() {
+    async validateSessionLifecycleAgainstBackend(options = {}) {
       if (!this.learningBackendEnabled()) {
         this.backendUnfinishedSession = false
         this.backendSessionSnapshot = null
@@ -28874,9 +29213,22 @@ export default {
         return
       }
       try {
-        const { session, unfinished } = await learningApi.getCurrentSession()
+        const preferredSessionId = Number(options.preferredSessionId || 0) || null
+        const { session, unfinished, invalidRequested } = await learningApi.getCurrentSession(
+          preferredSessionId ? { id: preferredSessionId } : {}
+        )
         this.backendSessionSnapshot = session
         this.backendUnfinishedSession = !!unfinished
+
+        if (preferredSessionId && invalidRequested) {
+          this.sessionLifecycleError = 'resume_invalid'
+          if (this.continueSessionPayload) {
+            this.clearContinueSessionQuietly()
+          }
+          this.clearActiveSessionSnapshot()
+          this.sessionPaused = false
+          return
+        }
 
         if (!unfinished) {
           // Backend is authoritative: drop stale local continue hints even when
@@ -31867,12 +32219,16 @@ export default {
       const rangeComplete = !!endedSnapshot.completedAll
       const endStatus = rangeComplete ? 'completed' : 'ended_early'
       const wasSample = !!this.onboardingSampleSessionActive
-      const backendSessionId = this.backendSessionSnapshot?.id || this.postSessionCompletedSessionId || 'current'
+      const backendSessionId = this.backendSessionSnapshot?.id
+        || this.mutqinState?.sessionState?.backendSessionId
+        || this.postSessionCompletedSessionId
+        || null
       const previousStreak = Number(this.analytics?.currentStreak || 0)
       const priorStatus = this.sessionPaused ? SESSION_STATUS.PAUSED : SESSION_STATUS.ACTIVE
       return this.sessionActionLock.run('end', async () => {
         this.sessionExitEndingBusy = true
         this.transitionSessionLifecycle(SESSION_STATUS.COMPLETING, SESSION_MUTATION.ENDING)
+        let persistenceSucceeded = !this.learningBackendEnabled() || wasSample
         try {
           this.stopSessionMediaResources()
           // Persist progress before marking complete so a failed end stays recoverable.
@@ -31885,11 +32241,13 @@ export default {
             try {
               if (wasSample) {
                 await learningApi.discardOnboardingExampleSession()
+                persistenceSucceeded = true
               } else {
                 let endResult = null
                 try {
                   endResult = await learningApi.endSession({
-                    idempotency_key: `end-${backendSessionId}`,
+                    idempotency_key: `end-${backendSessionId || 'current'}`,
+                    session_id: Number(backendSessionId || 0) || undefined,
                     range_complete: rangeComplete,
                     ayah_number: Number(endedSnapshot.coveredAyahCount || this.currentPosition || 0) || undefined,
                     metadata: {
@@ -31914,21 +32272,23 @@ export default {
                     },
                     completion_settings: this.buildCompletionPerformancePayload(),
                   })
+                  persistenceSucceeded = true
                 } catch (endError) {
                   if (endError?.response?.status !== 422) throw endError
                   // Already finished by state sync — recover recommendation so the CTA still appears.
                   const params = {}
-                  if (this.backendSessionSnapshot?.id) {
-                    params.source_session_id = this.backendSessionSnapshot.id
+                  if (backendSessionId) {
+                    params.source_session_id = backendSessionId
                   }
                   const recommendation = await learningApi.getNextRecommendation(params).catch(() => null)
                   endResult = {
                     saved: true,
                     unfinished: false,
-                    session: { ...(this.backendSessionSnapshot || {}), status: endStatus },
+                    session: { ...(this.backendSessionSnapshot || {}), id: backendSessionId, status: endStatus },
                     recommendation,
                     recovered_from_end_conflict: true,
                   }
+                  persistenceSucceeded = true
                 }
                 if (endResult?.session?.id) {
                   this.postSessionCompletedSessionId = endResult.session.id
@@ -31943,25 +32303,38 @@ export default {
                 }
               }
             } catch (error) {
-              console.warn('Failed to end session on backend; opening local success modal', error)
-              // Manual end must still reach the success modal. Keep a local plan ready.
-              if (!this.postSessionRecommendation) {
-                const fallback = buildLocalFallbackRecommendation(endedSnapshot)
-                this.postSessionRecommendation = this.enrichPostSessionRecommendation(fallback)
-                this.postSessionRecommendationStatus = isActionableRecommendation(fallback) ? 'ready' : 'empty'
-                this.postSessionViewState = 'recommendation_ready'
-                this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation, { force: true })
-              }
+              console.warn('Failed to end session on backend', error)
+              persistenceSucceeded = false
+              this.sessionLifecycleError = 'end_failed'
+              this.sessionExitEndingBusy = false
+              const gate = resolveCompletionGate({
+                persistenceSucceeded: false,
+                priorStatus,
+              })
+              this.transitionSessionLifecycle(
+                this.isSessionLive || this.sessionPaused ? gate.status : SESSION_STATUS.READY,
+                SESSION_MUTATION.IDLE
+              )
+              this.showBanner(this.t('toasts.sessionEndFailed'), 'danger', 4200)
+              return null
             }
           }
 
-          const gate = resolveCompletionGate({ persistenceSucceeded: true })
+          const gate = resolveCompletionGate({ persistenceSucceeded })
+          if (!gate.openCompletionScreen && gate.keepRecoverable) {
+            this.sessionExitEndingBusy = false
+            this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
+            this.showBanner(this.t('toasts.sessionEndFailed'), 'danger', 4200)
+            return null
+          }
+
           this.sessionCompleted = rangeComplete
           this.sessionEndedEarly = !rangeComplete
           this.sessionCompletedAt = new Date().toISOString()
           this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
           this.centralSession.sessionStatus = endStatus
           this.centralSession.sessionCompletedAt = this.sessionCompletedAt
+          this._startAttemptNonce = null
           if (rangeComplete) {
             completeMutqinSession(this.mutqinState)
             this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
@@ -31980,6 +32353,20 @@ export default {
           this.backendSessionSnapshot = {
             ...(this.backendSessionSnapshot || {}),
             status: endStatus,
+          }
+          // Snapshot the named save BEFORE cleanup clears verses / continue payload.
+          if (this.autoSaveSessionsEnabled && !wasSample) {
+            try {
+              this._pendingPostEndSaveRecord = this.buildSessionRecord(
+                this.buildAutoSaveSessionName(),
+                { autoSaved: true },
+              )
+            } catch (error) {
+              console.warn('Post-end save snapshot failed', error)
+              this._pendingPostEndSaveRecord = null
+            }
+          } else {
+            this._pendingPostEndSaveRecord = null
           }
           this.clearContinueSessionQuietly()
           this.clearActiveSessionSnapshot()
@@ -32086,28 +32473,25 @@ export default {
 
         try {
           const stats = this.buildCurrentSessionStatsSnapshot()
-          const pauseResult = await Promise.race([
-            learningApi.pauseSession({
-              idempotency_key: `pause-${this.backendSessionSnapshot?.id || 'current'}-${Date.now()}`,
-              surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
-              ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
-              current_step: Number(this.queueIndex || 0),
-              memorisation_mode: this.currentMode,
-              repetitions_completed: Number(stats?.repetitions_completed || 0),
-              session_duration_seconds: Number(stats?.time_spent_seconds || 0),
-              metadata: {
-                ...(this.mutqinState?.sessionState || {}),
-                active: false,
-                paused: true,
-                completed: false,
-                completed_at: null,
-                config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
-              },
-            }),
-            new Promise((_, reject) => {
-              window.setTimeout(() => reject(new Error('pause_timeout')), 8000)
-            }),
-          ])
+          const sessionId = Number(this.backendSessionSnapshot?.id || this.mutqinState?.sessionState?.backendSessionId || 0) || undefined
+          const pauseResult = await learningApi.pauseSession({
+            idempotency_key: `pause-${sessionId || 'current'}-${Date.now()}`,
+            session_id: sessionId,
+            surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
+            ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+            current_step: Number(this.queueIndex || 0),
+            memorisation_mode: this.currentMode,
+            repetitions_completed: Number(stats?.repetitions_completed || 0),
+            session_duration_seconds: Number(stats?.time_spent_seconds || 0),
+            metadata: {
+              ...(this.mutqinState?.sessionState || {}),
+              active: false,
+              paused: true,
+              completed: false,
+              completed_at: null,
+              config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
+            },
+          })
           this.backendUnfinishedSession = true
           this.backendSessionSnapshot = {
             ...(this.backendSessionSnapshot || {}),
@@ -32119,34 +32503,26 @@ export default {
           this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
           return true
         } catch (error) {
-          // Keep the local paused/resumable state even if persistence times out.
           console.warn('Failed to persist paused session on backend', error)
           this.sessionLifecycleError = 'pause_persist_failed'
+          // Keep local paused/resumable state so controls stay recoverable.
           this.backendUnfinishedSession = true
           this.backendSessionSnapshot = {
             ...(this.backendSessionSnapshot || {}),
             status: 'paused',
           }
-          try {
-            await learningApi.saveSession({
-              action: 'save',
-              status: 'interrupted',
-              surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
-              ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
-              current_step: Number(this.queueIndex || 0),
-              memorisation_mode: this.currentMode,
-              metadata: {
-                ...(this.mutqinState?.sessionState || {}),
-                active: false,
-                paused: true,
-                completed: false,
-                completed_at: null,
-                config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
-              },
-            })
-          } catch (_) { /* local pause already applied */ }
+          if (error?.response?.status === 422) {
+            this.backendUnfinishedSession = false
+            this.showBanner(
+              this.t('toasts.sessionPauseFailed') || 'Could not pause on the server. Session stays paused here.',
+              'warning',
+              4200
+            )
+          } else {
+            this.noteLearningBackendFailure?.(error, 'pause')
+            this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
+          }
           this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
-          this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
           return true
         } finally {
           if (this.sessionLifecycleMutation === SESSION_MUTATION.PAUSING) {
@@ -35112,49 +35488,16 @@ export default {
     },
 
     enforceSubscriptionFeatureLimits() {
-      if (this.canUsePremiumTechniques) {
-        return
-      }
-
-      if (this.blurModeEnabled) {
-        this.blurModeEnabled = false
-      }
-      if (this.chainingEnabled) {
-        this.chainingEnabled = false
-        this.chainingMethod = ''
-      }
-      if (this.anchorModeEnabled) {
-        this.anchorModeEnabled = false
-        this.clearAnchorHighlights?.()
-      }
-    },
-    promptSubscriptionUpgrade(requiredTier = 'premium') {
-      if (requiredTier === 'pro') {
-        return
-      }
-      const message = this.translateOrFallback('memorisation.billing.premiumRequired', 'Upgrade to Mutqin Premium to use this feature.')
-      this.showBanner(message, 'info', 6500, {
-        key: 'open-pricing',
-        label: this.translateOrFallback('memorisation.billing.viewPlans', 'View plans'),
-      }, { important: true })
+      // All techniques and features are free — nothing to strip.
     },
     requirePremiumTechniqueAccess() {
-      if (this.canUsePremiumTechniques) {
-        return true
-      }
-      this.promptSubscriptionUpgrade('premium')
-      return false
+      return true
     },
     requireProFeatureAccess() {
-      if (this.canUseProFeatures) {
-        return true
-      }
-      this.promptSubscriptionUpgrade('pro')
-      return false
+      return true
     },
     setChainingEnabled(enabled) {
       const nextEnabled = !!enabled
-      if (nextEnabled && !this.requirePremiumTechniqueAccess()) return
       if (this.chainingEnabled === nextEnabled) return
       this.chainingEnabled = nextEnabled
       if (!nextEnabled) {
@@ -35167,22 +35510,18 @@ export default {
       this.persistUiState()
     },
     toggleBlurModeRadio() {
-      if (!this.blurModeEnabled && !this.requirePremiumTechniqueAccess()) return
       this.blurModeEnabled = !this.blurModeEnabled
       this.persistUiState()
     },
     toggleChainingRadio() {
-      if (!this.chainingEnabled && !this.requirePremiumTechniqueAccess()) return
       this.setChainingEnabled(!this.chainingEnabled)
     },
     toggleAnchorModeRadio() {
-      if (!this.anchorModeEnabled && !this.requirePremiumTechniqueAccess()) return
       this.setAnchorMode(!this.anchorModeEnabled)
     },
 
     setAnchorMode(enabled) {
       const nextEnabled = !!enabled
-      if (nextEnabled && !this.requirePremiumTechniqueAccess()) return
       if (this.anchorModeEnabled === nextEnabled) return
       this.toggleAnchorMode()
     },
@@ -35526,10 +35865,6 @@ export default {
       }
       if (actionKey === 'open-recordings-library') {
         this.openRecordingsLibrary(actionPayload || {})
-        return
-      }
-      if (actionKey === 'open-pricing') {
-        window.location.assign(pricingUpgradeUrl(this.auth))
         return
       }
       if (actionKey === 'open-register') {
@@ -36812,6 +37147,16 @@ export default {
         let sessions = []
         if (this.learningBackendEnabled()) {
           sessions = this.readWorkspaceStateValue('savedSessions', [])
+          // Recover from local mirror when workspace is empty (e.g. first sync lag).
+          if (!Array.isArray(sessions) || sessions.length === 0) {
+            try {
+              const mirrored = JSON.parse(localStorage.getItem(this.savedSessionsStorageKey()) || '[]')
+              if (Array.isArray(mirrored) && mirrored.length) {
+                sessions = mirrored
+                this.writeWorkspaceStateValue('savedSessions', sessions)
+              }
+            } catch { /* ignore mirror read */ }
+          }
         } else {
           this.ensureSeededSavedSessions()
           sessions = JSON.parse(localStorage.getItem(this.savedSessionsStorageKey()) || '[]')

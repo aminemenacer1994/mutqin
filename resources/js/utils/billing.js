@@ -1,6 +1,6 @@
 /**
- * Client-side subscription tier checks (mirrors app/Models/User.php).
- * Server middleware is authoritative; these gates improve UX before API calls.
+ * Client-side subscription helpers.
+ * All product features are free — these always grant access.
  */
 
 export function resolveSubscriptionTier(auth = {}) {
@@ -18,43 +18,21 @@ export function resolveSubscriptionTier(auth = {}) {
 }
 
 export function hasActiveSubscription(auth = {}) {
-  if (auth?.is_admin) {
-    return true
-  }
-
-  const status = String(auth?.subscription_status || 'free').toLowerCase()
-
-  return status === 'trialing' || status === 'active'
+  void auth
+  return true
 }
 
 export function hasPremiumAccess(auth = {}) {
-  if (!hasActiveSubscription(auth)) {
-    return false
-  }
-
-  const tier = resolveSubscriptionTier(auth)
-
-  return tier === 'premium' || tier === 'pro'
+  void auth
+  return true
 }
 
 export function hasProAccess(auth = {}) {
-  if (!hasActiveSubscription(auth)) {
-    return false
-  }
-
-  return resolveSubscriptionTier(auth) === 'pro'
-}
-
-export function pricingUpgradeUrl(auth = {}) {
-  return auth?.pricing_url || '/pricing'
+  void auth
+  return true
 }
 
 export function maxSavedSessionsForTier(auth = {}) {
-  if (hasProAccess(auth)) {
-    return Number.POSITIVE_INFINITY
-  }
-  if (hasPremiumAccess(auth)) {
-    return 5
-  }
-  return 3
+  void auth
+  return Number.POSITIVE_INFINITY
 }

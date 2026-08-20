@@ -489,10 +489,6 @@
       "attemptCountOne": "محاولة واحدة",
       "attemptCountOther": "{count} محاولات"
     },
-    "billing": {
-      "premiumRequired": "ترقّ إلى متقن Premium لاستخدام هذه الميزة.",
-      "viewPlans": "عرض الخطط"
-    },
     "workspaceJourney": {
       "aria": "حفظك",
       "kicker": "حفظك",

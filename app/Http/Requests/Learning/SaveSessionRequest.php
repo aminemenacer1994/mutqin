@@ -30,6 +30,9 @@ class SaveSessionRequest extends FormRequest
             'ended_at' => ['nullable', 'date'],
             'metadata' => ['nullable', 'array'],
             'idempotency_key' => ['nullable', 'string', 'max:128'],
+            'session_id' => ['nullable', 'integer', 'min:1'],
+            'range_complete' => ['nullable', 'boolean'],
+            'completion_settings' => ['nullable', 'array'],
         ];
     }
 }
