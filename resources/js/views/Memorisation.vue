@@ -3184,7 +3184,7 @@
                 <button
                   type="button"
                   class="mutqin-modal-btn mutqin-modal-btn--ghost onboarding-action onboarding-skip-btn"
-                  @click="dismissOnboardingTour"
+                  @click="skipOnboardingToFirstSession"
                 >
                   <span>{{ t('memorisation.onboarding.skipTour') }}</span>
                 </button>
@@ -3363,14 +3363,21 @@
                 >{{ t('memorisation.postSession.recommendation.aiDisclaimer') || 'AI can sometimes miss or mishear words. Treat this as a guide only — verify with a qualified teacher before relying on it for your Hifz.' }}</p>
 
                 <div
-                  v-if="postSessionFocusHighlightParts.length"
+                  v-if="postSessionInfoArchitecture.mainFocus.explanation || postSessionFocusHighlightParts.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"
                   data-testid="post-session-main-focus"
                 >
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
-                    {{ t('memorisation.postSession.recommendation.mainFocus') || 'Main focus' }}
+                    {{ postSessionInfoArchitecture.mainFocus.title }}
                   </p>
+                  <p
+                    v-if="postSessionInfoArchitecture.mainFocus.explanation"
+                    class="post-session-simple__why-block post-session-simple__next-line"
+                    data-testid="post-session-why"
+                    data-section="main-focus-explanation"
+                  >{{ postSessionInfoArchitecture.mainFocus.explanation }}</p>
                   <button
+                    v-if="postSessionFocusHighlightParts.length"
                     type="button"
                     class="post-session-simple__quran-focus"
                     :aria-label="t('memorisation.postSession.recommendation.playFocusPhrase') || 'Play focus phrase'"
@@ -3402,24 +3409,23 @@
                   </button>
                 </div>
 
-                <p
-                  v-if="postSessionWhyLine || postSessionPrimaryNextLine"
-                  class="post-session-simple__why-block post-session-simple__next-line"
-                  data-testid="post-session-why"
-                >{{ postSessionWhyLine || postSessionPrimaryNextLine }}</p>
-
                 <section
-                  v-if="postSessionWeakSpotRows.length"
+                  v-if="postSessionInfoArchitecture.weakAreas.items.length"
                   class="post-session-simple__weak-spots post-session-simple__support-block"
                   data-testid="post-session-weak-spots"
-                  :aria-label="t('memorisation.postSession.recommendation.weakSpotsTitle') || 'Weak areas'"
+                  :aria-label="postSessionInfoArchitecture.weakAreas.title"
                 >
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
-                    {{ t('memorisation.postSession.recommendation.weakSpotsTitle') || 'Weak areas' }}
+                    {{ postSessionInfoArchitecture.weakAreas.title }}
                   </p>
+                  <p
+                    v-if="postSessionInfoArchitecture.weakAreas.lead"
+                    class="post-session-simple__weak-spots-lead"
+                    data-testid="post-session-weak-spots-lead"
+                  >{{ postSessionInfoArchitecture.weakAreas.lead }}</p>
                   <ul class="post-session-simple__weak-spots-list post-session-simple__weak-spots-list--inline">
                     <li
-                      v-for="row in postSessionWeakSpotRows"
+                      v-for="row in postSessionInfoArchitecture.weakAreas.items"
                       :key="`weak-ayah-${row.ayah}`"
                       class="post-session-simple__weak-spots-item"
                     >
@@ -3551,29 +3557,40 @@
                   >
                     <p class="post-session-simple__section-kicker post-session-simple__section-kicker--step">
                       <span class="post-session-simple__step-num" aria-hidden="true">2</span>
-                      {{ t('memorisation.postSession.recommendation.whatNext') || 'What to practise next' }}
+                      {{ postSessionInfoArchitecture.whatToPractiseNext.title }}
                     </p>
                     <p class="post-session-simple__action-label" id="postSessionRecTitle">
-                      {{ postSessionPersonalPlan?.headline || postSessionSimpleActionLabel }}
+                      {{ postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
+                        || postSessionPersonalPlan?.range?.label
+                        || postSessionRecommendationCardTitle
+                        || postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                        || postSessionSimpleActionLabel }}
                     </p>
                     <p
-                      v-if="postSessionPersonalPlan?.range?.label || postSessionRecommendationCardTitle"
+                      v-if="postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                        && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                          !== postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
+                        && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                          !== (postSessionPersonalPlan?.range?.label || '')"
                       class="post-session-simple__range"
+                      data-testid="post-session-next-headline"
                     >
-                      {{ postSessionPersonalPlan?.range?.label || postSessionRecommendationCardTitle }}
+                      {{ postSessionInfoArchitecture.whatToPractiseNext.targetLabel }}
                     </p>
                     <p
-                      v-if="postSessionPersonalPlan?.practiceApproach?.title || postSessionEstimatedTimeLabel || postSessionPersonalPlan?.time?.label"
+                      v-if="postSessionInfoArchitecture.whatToPractiseNext.methodTitle
+                        || postSessionInfoArchitecture.whatToPractiseNext.timeLabel"
                       class="post-session-simple__plan-focus"
                     >
-                      <template v-if="postSessionPersonalPlan?.practiceApproach?.title">
-                        {{ postSessionPersonalPlan.practiceApproach.title }}
+                      <template v-if="postSessionInfoArchitecture.whatToPractiseNext.methodTitle">
+                        {{ postSessionInfoArchitecture.whatToPractiseNext.methodTitle }}
                       </template>
-                      <template v-if="postSessionPersonalPlan?.practiceApproach?.title && (postSessionEstimatedTimeLabel || postSessionPersonalPlan?.time?.label)">
+                      <template v-if="postSessionInfoArchitecture.whatToPractiseNext.methodTitle
+                        && postSessionInfoArchitecture.whatToPractiseNext.timeLabel">
                         ·
                       </template>
-                      <template v-if="postSessionEstimatedTimeLabel || postSessionPersonalPlan?.time?.label">
-                        {{ postSessionEstimatedTimeLabel || postSessionPersonalPlan.time.label }}
+                      <template v-if="postSessionInfoArchitecture.whatToPractiseNext.timeLabel">
+                        {{ postSessionInfoArchitecture.whatToPractiseNext.timeLabel }}
                       </template>
                     </p>
                   </div>
@@ -3619,18 +3636,18 @@
                   </div>
 
                   <div
-                    v-if="postSessionShowRevisionScopePicker"
+                    v-if="postSessionInfoArchitecture.revisionOptions.visible"
                     class="post-session-simple__scope-picker post-session-simple__support-block"
                     data-testid="post-session-scope-picker"
                     role="radiogroup"
-                    :aria-label="t('memorisation.postSession.recommendation.scopePickerLabel') || 'Choose how to revise'"
+                    :aria-label="postSessionInfoArchitecture.revisionOptions.lead"
                   >
                     <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
-                      {{ t('memorisation.postSession.recommendation.revisionOptions') || 'Choose how to revise' }}
+                      {{ postSessionInfoArchitecture.revisionOptions.title }}
                     </p>
                     <div class="post-session-simple__scope-cards">
                       <button
-                        v-for="option in postSessionRevisionScopeOptions"
+                        v-for="option in postSessionInfoArchitecture.revisionOptions.options"
                         :key="option.id"
                         type="button"
                         class="post-session-simple__scope-card"
@@ -3759,8 +3776,11 @@
                   :class="`post-session-simple__btn--${btn.variant}`"
                   :disabled="postSessionCtaButtonDisabled(btn)"
                   :aria-busy="postSessionCtaButtonBusy(btn) ? 'true' : 'false'"
+                  :aria-label="btn.label"
                   :data-action="btn.dataAction"
-                  @click="onPostSessionCtaAction(btn.action)"
+                  @click.stop.prevent="onPostSessionCtaAction(btn.action)"
+                  @keydown.enter.stop.prevent="onPostSessionCtaAction(btn.action)"
+                  @keydown.space.stop.prevent="onPostSessionCtaAction(btn.action)"
                 >
                   <span>{{ btn.label }}</span>
                 </button>

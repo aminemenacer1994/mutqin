@@ -65,6 +65,8 @@ const apiSource = readFileSync(new URL('../../resources/js/scripts/api/learning.
 {
   assert.match(source, /preferredSessionId/)
   assert.match(source, /validateSessionLifecycleAgainstBackend\(\{\s*preferredSessionId/)
+  assert.match(source, /resolvePreferredSessionResumeGate\(/)
+  assert.match(source, /stashDashboardEntryIntent\(entry\)/)
   assert.match(source, /session_id:\s*sessionId/)
   assert.match(apiSource, /query\.id\s*=\s*id/)
   assert.equal(isBackendSessionUnfinished({ status: 'paused', id: 12 }), true)
@@ -152,6 +154,7 @@ const apiSource = readFileSync(new URL('../../resources/js/scripts/api/learning.
   assert.match(source, /invalidRequested/)
   assert.match(source, /sessionResumeUnavailable/)
   assert.match(source, /That saved session is no longer available/)
+  assert.match(source, /sessionRangesMatch\(restorePayload,\s*live\.session\)/)
   assert.equal(isResumableSessionPayload({
     config: { chapterId: 1 },
   }, { backendStatus: BACKEND_SESSION_STATUS.COMPLETED }), false)

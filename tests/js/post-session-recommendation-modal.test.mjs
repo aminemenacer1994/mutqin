@@ -94,17 +94,18 @@ function t(key, params = {}) {
   assert.match(completionModal, /data-testid="post-session-outcome"/)
   assert.match(completionModal, /postSessionOutcomeHeadline/)
   assert.match(completionModal, /data-testid="post-session-main-focus"/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus/)
   assert.match(completionModal, /postSessionFocusHighlightParts/)
   assert.match(completionModal, /is-weak/)
   assert.match(completionModal, /data-testid="post-session-why"/)
-  assert.match(completionModal, /postSessionWhyLine|postSessionPrimaryNextLine/)
+  assert.match(completionModal, /main-focus-explanation|postSessionInfoArchitecture\.mainFocus\.explanation/)
   assert.match(completionModal, /postSessionUnderstandingText/)
   assert.match(completionModal, /data-testid="post-session-weak-spots"/)
-  assert.match(completionModal, /postSessionWeakSpotRows/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.weakAreas/)
   assert.match(completionModal, /data-testid="post-session-personal-plan"/)
   assert.match(completionModal, /data-testid="post-session-scope-picker"/)
   assert.match(completionModal, /data-testid="post-session-practice-method"/)
-  assert.match(completionModal, /postSessionSimpleActionLabel|postSessionPersonalPlan|recommendedPlan|Recommended plan/i)
+  assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext|postSessionSimpleActionLabel|recommendedPlan|Recommended plan/i)
   assert.match(completionModal, /data-testid="post-session-details"/)
   assert.match(completionModal, /data-testid="post-session-previous-attempt"/)
   assert.doesNotMatch(completionModal, /softwareGenerated|Software-generated/)
@@ -117,6 +118,8 @@ function t(key, params = {}) {
   assert.match(completionModal, /post-session-simple__outcome--hero/)
   assert.match(completionModal, /is-incorrect/)
   assert.match(js, /postSessionOutcomeStatChips\(\)/)
+  assert.match(js, /postSessionInfoArchitecture\(\)/)
+  assert.match(js, /buildPostSessionInfoArchitecture/)
   assert.match(js, /postSessionPrimaryNextLine\(\)/)
   assert.match(js, /postSessionCheckDurationLabel/)
   assert.match(js, /statRecitationTime/)
@@ -141,6 +144,9 @@ function t(key, params = {}) {
   assert.match(en, /"headlineStrong":\s*"Strong recall"/)
   assert.match(en, /"headlineMixed":\s*"Minor reinforcement needed"/)
   assert.match(en, /"headlineWeak":\s*"Focused revision recommended"/)
+  assert.match(en, /"focusVerse":\s*"Ayah \{ayah\}"/)
+  assert.match(en, /"mainFocusExplanationAyah"/)
+  assert.match(en, /"scopeFullRangeLabel":\s*"Revise the full set"/)
 }
 
 // Hierarchy: two numbered steps, supporting detail visually subordinate
@@ -174,10 +180,11 @@ function t(key, params = {}) {
 
 // Missing data: focus / why / previous attempt optional
 {
-  assert.match(completionModal, /v-if="postSessionFocusHighlightParts\.length"/)
-  assert.match(completionModal, /postSessionPrimaryNextLine/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus\.explanation \|\| postSessionFocusHighlightParts\.length/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus\.explanation/)
   assert.match(completionModal, /v-if="postSessionPreviousAttemptNote"/)
   assert.match(js, /postSessionFocusHighlightParts\(\)/)
+  assert.match(js, /postSessionInfoArchitecture\(\)/)
   assert.match(js, /postSessionPracticeScopeLabel\(\)/)
   assert.match(js, /postSessionPreviousAttemptNote\(\)/)
   assert.match(js, /previous_attempts|related_attempts/)
@@ -210,18 +217,19 @@ function t(key, params = {}) {
     /postSessionRecommendation\s*=\s*null|aiReciteFinalPlan\s*=\s*null|postSessionSnapshot\s*=\s*null/,
     'return to workspace must not discard AI/recommendation results',
   )
-  assert.match(en, /"reviseFocusPhrase":\s*"Revise words"/)
-  assert.match(en, /"continueToNextRange":\s*"Continue forward"/)
-  assert.match(en, /"continueToAyahs":\s*"Next āyāt \(\{start\}–\{end\}\)"/)
+  assert.match(en, /"reviseFocusPhrase":\s*"Review"/)
+  assert.match(en, /"continueToNextRange":\s*"Continue"/)
+  assert.match(en, /"continueToAyahs":\s*"Continue \(\{start\}–\{end\}\)"/)
   assert.match(en, /"repeatThisSession":\s*"Repeat session"/)
   assert.match(en, /"returnToWorkspace":\s*"Back to mushaf"/)
   assert.match(en, /"retest":\s*"Check again"/)
-  assert.match(en, /"startSession":\s*"Continue forward"/)
-  assert.match(en, /"startRevision":\s*"Revise range"/)
-  assert.doesNotMatch(
+  assert.match(en, /"reviewAyahOnce":\s*"Repeat Weak Ayah"/)
+  assert.match(en, /"startSession":\s*"Continue"/)
+  assert.match(en, /"startRevision":\s*"Review"/)
+  assert.match(
     en.match(/"actions"\s*:\s*\{[\s\S]*?"continueToNextRange":\s*"[^"]+"/)?.[0] || '',
     /"continueToNextRange":\s*"Continue"/,
-    'continue CTA must not use the vague label Continue',
+    'continue CTA must use the Continue label',
   )
 
   // Every CTA outcome maps to an explicit destination action.

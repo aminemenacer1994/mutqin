@@ -48,7 +48,12 @@ class RecitationAssessmentService
                 : [];
             if ($recognitionWords === [] && is_string($payload['transcript'] ?? null)) {
                 $tokens = preg_split('/\s+/u', trim((string) $payload['transcript'])) ?: [];
-                $recognitionWords = array_values(array_filter($tokens));
+                // Transcript-only tokens have no ASR confidence — keep them uncertain-capable
+                // so mismatches are not automatically definite mistakes.
+                $recognitionWords = array_values(array_filter(array_map(
+                    static fn ($token) => ['word' => (string) $token, 'confidence' => 0.5],
+                    $tokens
+                ), static fn ($entry) => trim((string) ($entry['word'] ?? '')) !== ''));
             }
 
             $targetText = (string) ($payload['target_text'] ?? '');

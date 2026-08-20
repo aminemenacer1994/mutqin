@@ -277,7 +277,9 @@ class QuranAlignmentService
                 continue;
             }
             $confidence = is_numeric($entry['confidence'] ?? null) ? (float) $entry['confidence'] : 1.0;
-            if ($confidence < 0.35) {
+            // Keep low-confidence tokens in alignment so classifyMatch can mark them
+            // uncertain instead of turning dropped ASR into learner "missing" mistakes.
+            if ($confidence < 0.15) {
                 continue;
             }
             // Keep adjacent duplicates so intentional learner repetitions survive.

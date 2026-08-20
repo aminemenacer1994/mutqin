@@ -650,6 +650,7 @@ class DashboardService
                 'surah' => $surah ?: null,
                 'from' => $rangeStart ?: null,
                 'to' => $rangeEnd ?: null,
+                'journey' => 'main',
             ]);
 
             return [

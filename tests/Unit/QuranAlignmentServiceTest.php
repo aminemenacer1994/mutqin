@@ -154,6 +154,27 @@ class QuranAlignmentServiceTest extends TestCase
         $this->assertSame(0, $result['color_counts']['red']);
     }
 
+    public function test_very_low_confidence_token_is_not_dropped_as_missing(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [['ayah_number' => 1, 'surah_number' => 112, 'words' => ['قل', 'هو', 'الله', 'احد']]],
+            [
+                ['word' => 'قل', 'confidence' => 0.9],
+                ['word' => 'هو', 'confidence' => 0.25],
+                ['word' => 'الله', 'confidence' => 0.9],
+                ['word' => 'احد', 'confidence' => 0.9],
+            ]
+        );
+
+        $statuses = array_column($result['word_results'], 'status');
+        $this->assertSame('correct', $statuses[0]);
+        $this->assertNotSame('missing', $statuses[1], 'low-confidence STT must not become a learner omission');
+        $this->assertContains($statuses[1], ['correct', 'uncertain']);
+        $this->assertSame('correct', $statuses[2]);
+        $this->assertSame('correct', $statuses[3]);
+    }
+
     public function test_skipped_phrase_marks_omissions(): void
     {
         $service = new QuranAlignmentService;

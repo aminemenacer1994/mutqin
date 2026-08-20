@@ -379,16 +379,24 @@ export function mapPostSessionCtas(state, options = {}) {
       return [
         cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
         returnToWorkspace,
-        cta('check_again', 'ghost', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
+        Number(options.weakAyahNumber) > 0
+          ? cta('review_weak_ayah', 'ghost', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
+            labelParams: { ayah: options.weakAyahNumber },
+          })
+          : cta('check_again', 'ghost', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
       ]
 
     case POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED:
       return [
         cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
         returnToWorkspace,
-        cta('continue_next_range', 'ghost', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
-          labelParams: nextSessionLabelParams,
-        }),
+        Number(options.weakAyahNumber) > 0
+          ? cta('review_weak_ayah', 'ghost', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
+            labelParams: { ayah: options.weakAyahNumber },
+          })
+          : cta('continue_next_range', 'ghost', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+            labelParams: nextSessionLabelParams,
+          }),
       ]
 
     case POST_SESSION_CTA_STATES.MOSTLY_SECURE:
@@ -397,9 +405,16 @@ export function mapPostSessionCtas(state, options = {}) {
           labelParams: nextSessionLabelParams,
         }),
         returnToWorkspace,
-        cta('review_weak_ayah', 'ghost', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
-          labelParams: { ayah: options.weakAyahNumber },
-        }),
+        Number(options.weakAyahNumber) > 0
+          ? cta('review_weak_ayah', 'ghost', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
+            labelParams: { ayah: options.weakAyahNumber },
+          })
+          : cta(
+            'review_once_more',
+            'ghost',
+            options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
+            POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE,
+          ),
       ]
 
     case POST_SESSION_CTA_STATES.REVISION_COMPLETED:

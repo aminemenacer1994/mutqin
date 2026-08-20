@@ -93,7 +93,7 @@ export function recommendPracticeScope(input = {}) {
     return {
       scope: PRACTICE_SCOPE.FULL_RANGE,
       reasonKey: 'noWeakAreas',
-      reason: 'No clear weak areas were identified, so the full range is recommended.',
+      reason: 'No clear weak ayahs were identified, so the full set is recommended.',
     }
   }
 
@@ -106,27 +106,27 @@ export function recommendPracticeScope(input = {}) {
     return {
       scope: PRACTICE_SCOPE.WEAK_AREAS,
       reasonKey: 'minorLocal',
-      reason: 'Only a few words need attention — focused practice will be quicker and clearer.',
+      reason: 'Only a few ayahs need attention — focused practice will be quicker and clearer.',
     }
   }
   if (denseLocal && !sparseSpread) {
     return {
       scope: PRACTICE_SCOPE.WEAK_AREAS,
       reasonKey: 'focusedCluster',
-      reason: 'Your weak spots sit close together, so a short focused review is recommended.',
+      reason: 'Your weak ayahs sit close together, so a short focused review is recommended.',
     }
   }
   if (sparseSpread || outcome === 'weak') {
     return {
       scope: PRACTICE_SCOPE.FULL_RANGE,
       reasonKey: 'spreadWeakness',
-      reason: 'Weak areas appear across the session, so revisiting the full range with emphasis is recommended.',
+      reason: 'Weak ayahs appear across this set, so revisiting the full set with emphasis is recommended.',
     }
   }
   return {
     scope: PRACTICE_SCOPE.WEAK_AREAS,
     reasonKey: 'defaultFocus',
-    reason: 'A focused pass on the weaker words and phrases is recommended first.',
+    reason: 'A focused pass on the weaker ayahs is recommended first.',
   }
 }
 
@@ -734,20 +734,20 @@ export function buildRevisionScopeOptions(t = null) {
     {
       id: PRACTICE_SCOPE.WEAK_AREAS,
       label: translate?.('memorisation.postSession.recommendation.scopeWeakAreasLabel')
-        || 'Focus on weak areas',
+        || 'Practise weak ayahs',
       description: translate?.('memorisation.postSession.recommendation.scopeWeakAreasDescription')
-        || 'Review only the words and phrases that need more attention.',
+        || 'Practise only the weak ayahs identified from this session.',
       benefit: translate?.('memorisation.postSession.recommendation.scopeWeakAreasBenefit')
-        || 'Shorter practice that targets the exact spots that slipped.',
+        || 'Shorter practice on the ayahs that need more attention.',
     },
     {
       id: PRACTICE_SCOPE.FULL_RANGE,
       label: translate?.('memorisation.postSession.recommendation.scopeFullRangeLabel')
-        || 'Practise the full range',
+        || 'Revise the full set',
       description: translate?.('memorisation.postSession.recommendation.scopeFullRangeDescription')
-        || 'Repeat the complete session while Mutqin highlights your weaker areas.',
+        || 'Revise the full set while Mutqin emphasises your weak ayahs.',
       benefit: translate?.('memorisation.postSession.recommendation.scopeFullRangeBenefit')
-        || 'Keeps the full flow while giving extra attention to weaker words and ayat.',
+        || 'Keeps the full set flowing while giving extra attention to weak ayahs.',
     },
   ]
 }

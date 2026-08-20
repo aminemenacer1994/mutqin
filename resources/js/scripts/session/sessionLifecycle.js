@@ -693,6 +693,223 @@ export function deriveBackendStatusFromEngine(sessionState = {}) {
   return BACKEND_SESSION_STATUS.NONE
 }
 
+/**
+ * Canonical storage key for dashboard deep-link intent across refresh.
+ * Cleared only after the intent is consumed successfully (or explicitly discarded).
+ */
+export const DASHBOARD_ENTRY_INTENT_STORAGE_KEY = 'mutqin.dashboardEntryIntent.v1'
+
+/**
+ * Normalize chapter + ayah window from a continue payload, backend session, or loaded workspace.
+ */
+export function extractSessionRange(source = {}) {
+  if (!source || typeof source !== 'object') {
+    return { chapterId: 0, rangeStart: 0, rangeEnd: 0 }
+  }
+  const meta = source.metadata && typeof source.metadata === 'object' ? source.metadata : {}
+  const config = (
+    (source.config && typeof source.config === 'object' ? source.config : null)
+    || (meta.config && typeof meta.config === 'object' ? meta.config : null)
+    || source
+  )
+  const chapterId = Number(
+    config.chapterId
+    || source.chapterId
+    || source.surah_number
+    || 0
+  )
+  const rangeStart = Math.max(1, Number(
+    config.rangeStart
+    || source.rangeStart
+    || source.ayah_number
+    || 1
+  ))
+  const rangeEnd = Math.max(rangeStart, Number(
+    config.rangeEnd
+    || source.rangeEnd
+    || rangeStart
+  ))
+  return {
+    chapterId: chapterId > 0 ? chapterId : 0,
+    rangeStart: chapterId > 0 ? rangeStart : 0,
+    rangeEnd: chapterId > 0 ? rangeEnd : 0,
+  }
+}
+
+export function sessionRangesMatch(left, right) {
+  const a = extractSessionRange(left)
+  const b = extractSessionRange(right)
+  if (a.chapterId <= 0 || b.chapterId <= 0) return false
+  return a.chapterId === b.chapterId
+    && a.rangeStart === b.rangeStart
+    && a.rangeEnd === b.rangeEnd
+}
+
+/**
+ * Prefer the ayah the user was on (verse key / queue), not only rangeStart.
+ */
+export function resolveResumeAyahNumber(payload = {}, fallback = {}) {
+  const range = extractSessionRange(payload)
+  const key = String(
+    payload?.activeVerseKey
+    || payload?.activeKey
+    || payload?.config?.activeVerseKey
+    || ''
+  )
+  const fromKey = Number(key.includes(':') ? key.split(':')[1] : 0)
+  if (fromKey > 0) {
+    if (range.rangeStart > 0 && range.rangeEnd >= range.rangeStart) {
+      return Math.min(range.rangeEnd, Math.max(range.rangeStart, fromKey))
+    }
+    return fromKey
+  }
+  const queueIndex = Math.max(0, Number(payload?.queueIndex ?? payload?.config?.queueIndex ?? NaN))
+  if (Number.isFinite(queueIndex) && range.rangeStart > 0) {
+    return Math.min(range.rangeEnd || range.rangeStart, range.rangeStart + queueIndex)
+  }
+  const fallbackAyah = Number(
+    fallback.ayah_number
+    || fallback.currentPosition
+    || fallback.rangeStart
+    || range.rangeStart
+    || 0
+  )
+  return fallbackAyah > 0 ? fallbackAyah : null
+}
+
+/**
+ * Fast-path continue is only safe when the already-loaded mushaf matches the resume set.
+ */
+export function canSkipHydrateForContinue({ hasVerses = false, payload = null, loaded = null } = {}) {
+  if (!hasVerses) return false
+  if (!payload || Number(payload?.config?.chapterId || 0) <= 0) return false
+  if (!loaded || Number(loaded?.chapterId || loaded?.config?.chapterId || 0) <= 0) return false
+  return sessionRangesMatch(payload, loaded)
+}
+
+/**
+ * Preferred ?session= id must win or fail closed — never silently resume another unfinished row.
+ */
+export function resolvePreferredSessionResumeGate({
+  preferredSessionId = null,
+  snapshot = null,
+  unfinished = false,
+  invalidRequested = false,
+} = {}) {
+  const preferred = Number(preferredSessionId || 0) || null
+  if (!preferred) {
+    return { ok: true, reason: null }
+  }
+  if (invalidRequested) {
+    return { ok: false, reason: 'invalid_requested' }
+  }
+  if (!unfinished || !snapshot?.id) {
+    return { ok: false, reason: 'unavailable' }
+  }
+  if (Number(snapshot.id) !== preferred) {
+    return { ok: false, reason: 'mismatch' }
+  }
+  return { ok: true, reason: null }
+}
+
+/**
+ * When backend unfinished exists, local continue must match that set (or preferred id).
+ * Otherwise prefer the backend-built payload so we never "return" to the wrong surah/range.
+ */
+export function pickContinuePayloadForResume({
+  continuePayload = null,
+  backendSession = null,
+  localCandidates = [],
+  preferredSessionId = null,
+  buildFromBackend = null,
+} = {}) {
+  const preferred = Number(preferredSessionId || 0) || null
+  const unfinished = isBackendSessionUnfinished(backendSession)
+  const fromBackend = unfinished && typeof buildFromBackend === 'function'
+    ? buildFromBackend(backendSession)
+    : null
+
+  if (unfinished && backendSession) {
+    const backendId = Number(backendSession.id || 0) || null
+    if (preferred && backendId && preferred !== backendId) {
+      return null
+    }
+    const localMatch = [continuePayload, ...(localCandidates || [])].find((candidate) => {
+      if (!isResumableSessionPayload(candidate)) return false
+      const candidateId = Number(candidate?.backendSessionId || 0) || null
+      if (backendId && candidateId && candidateId === backendId) return true
+      return sessionRangesMatch(candidate, backendSession)
+    })
+    if (localMatch) {
+      return {
+        ...localMatch,
+        backendSessionId: backendId,
+        backendStatus: backendSession.status || BACKEND_SESSION_STATUS.ACTIVE,
+      }
+    }
+    if (fromBackend && Number(fromBackend?.config?.chapterId || 0) > 0) {
+      return fromBackend
+    }
+    return null
+  }
+
+  if (isResumableSessionPayload(continuePayload)) return continuePayload
+  const usable = (localCandidates || []).find((candidate) => isResumableSessionPayload(candidate))
+  return usable || null
+}
+
+export function stashDashboardEntryIntent(intent, storage = null) {
+  const store = storage || (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
+  if (!intent || !store) return false
+  try {
+    store.setItem(DASHBOARD_ENTRY_INTENT_STORAGE_KEY, JSON.stringify({
+      ...intent,
+      stashedAt: Date.now(),
+    }))
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function readStashedDashboardEntryIntent(storage = null) {
+  const store = storage || (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
+  if (!store) return null
+  try {
+    const raw = store.getItem(DASHBOARD_ENTRY_INTENT_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return null
+    const { stashedAt: _stashedAt, ...intent } = parsed
+    if (
+      !intent.resume
+      && !intent.setup
+      && !intent.recommendationId
+      && !(Number(intent.surah || 0) > 0)
+      && intent.panel !== 'saved'
+      && !intent.aiCheck
+      && !intent.journey
+      && !intent.review
+    ) {
+      return null
+    }
+    return intent
+  } catch {
+    return null
+  }
+}
+
+export function clearStashedDashboardEntryIntent(storage = null) {
+  const store = storage || (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
+  if (!store) return false
+  try {
+    store.removeItem(DASHBOARD_ENTRY_INTENT_STORAGE_KEY)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function reconcileContinuePayloadWithBackend(localPayload, backendSession, options = {}) {
   if (!isResumableSessionPayload(localPayload)) return null
   if (options.backendAuthoritative && options.unfinished === false) {
@@ -704,6 +921,14 @@ export function reconcileContinuePayloadWithBackend(localPayload, backendSession
   }
   if (!isBackendSessionUnfinished(backendSession)) {
     return null
+  }
+  // Local continue for a different set must not steal the unfinished session id.
+  if (!sessionRangesMatch(localPayload, backendSession)) {
+    const localId = Number(localPayload?.backendSessionId || 0) || null
+    const backendId = Number(backendSession.id || 0) || null
+    if (!localId || !backendId || localId !== backendId) {
+      return null
+    }
   }
   return {
     ...localPayload,
@@ -923,6 +1148,7 @@ export default {
   SESSION_MUTATION,
   BACKEND_SESSION_STATUS,
   END_SESSION_CONFIRM_ACTION,
+  DASHBOARD_ENTRY_INTENT_STORAGE_KEY,
   LEGAL_TRANSITIONS,
   canTransition,
   assertTransition,
@@ -936,6 +1162,15 @@ export default {
   createSessionActionLock,
   createSessionBroadcast,
   deriveBackendStatusFromEngine,
+  extractSessionRange,
+  sessionRangesMatch,
+  resolveResumeAyahNumber,
+  canSkipHydrateForContinue,
+  resolvePreferredSessionResumeGate,
+  pickContinuePayloadForResume,
+  stashDashboardEntryIntent,
+  readStashedDashboardEntryIntent,
+  clearStashedDashboardEntryIntent,
   reconcileContinuePayloadWithBackend,
   resolveEndSessionConfirmDecision,
   buildRepetitionProgressSummary,

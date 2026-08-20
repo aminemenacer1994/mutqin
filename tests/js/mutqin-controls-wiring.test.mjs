@@ -128,6 +128,9 @@ includesAll('onboarding lean guided tour', [
   /toggleOnboardingPracticeChip\(/,
   /goToOnboardingStep\(/,
   /completeOnboardingOpenSetup\(\)/,
+  /completeOnboardingIntoFirstSession\(\)/,
+  /skipOnboardingToFirstSession/,
+  /persistOnboardingProgress\(/,
   /onboarding-fluid/,
   /post-onboarding-modal--guided/,
   /onboarding-step-rail--four/,
@@ -143,6 +146,8 @@ includesAll('onboarding lean guided tour', [
   /shouldAutoOpenOnboarding\(\)/,
   /markOnboardingAutoPresented\(\)/,
   /onboardingAutoPresented/,
+  /openOnboardingModal\(false\)/,
+  /freshIsolation/,
 ])
 
 const onboardingUiSource = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')

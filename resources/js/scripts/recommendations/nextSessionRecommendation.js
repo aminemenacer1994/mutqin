@@ -1166,7 +1166,7 @@ export function buildPersonalPracticePlan(input = {}) {
   focusAyahs.slice(0, 3).forEach((ayah) => {
     evidence.push({
       key: `ayah-${ayah}`,
-      label: translate('planDetail.focusVerse', `Verse {ayah}`, { ayah }),
+      label: translate('planDetail.focusVerse', `Ayah {ayah}`, { ayah }),
     })
   })
   if (hasAi && input.aiDetails?.outcome) {

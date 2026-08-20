@@ -324,6 +324,83 @@ export function resolvePracticeRange(input = {}) {
   }
 }
 
+/**
+ * Pick the single primary weak ayah from real assessment evidence.
+ * Never invents an ayah. Priority matches resolvePracticeRange densest-window
+ * logic: highest weak-word / structural density, then earliest ayah as tie-break.
+ *
+ * @param {{
+ *   weakAyahs?: Array<number|string>,
+ *   weakWords?: Array<object>,
+ *   skippedAyahs?: Array<number|string|object>,
+ *   sequenceErrorAyahs?: Array<number|string|object>,
+ *   ayahScores?: Record<string, number>|Map<number, number>|null,
+ * }} [input]
+ * @returns {number|null}
+ */
+export function selectPrimaryWeakAyah(input = {}) {
+  const toAyah = (value) => {
+    if (value == null) return 0
+    if (typeof value === 'object') {
+      const fromObj = Number(
+        value.ayahNumber
+        || value.ayah
+        || value.ayah_number
+        || (String(value.verseKey || value.key || '').includes(':')
+          ? String(value.verseKey || value.key).split(':')[1]
+          : 0)
+        || value
+      )
+      return Number.isFinite(fromObj) && fromObj > 0 ? fromObj : 0
+    }
+    const n = Number(value)
+    return Number.isFinite(n) && n > 0 ? n : 0
+  }
+
+  const weakAyahs = (Array.isArray(input.weakAyahs) ? input.weakAyahs : [])
+    .map(toAyah)
+    .filter(Boolean)
+  const skippedAyahs = (Array.isArray(input.skippedAyahs) ? input.skippedAyahs : [])
+    .map(toAyah)
+    .filter(Boolean)
+  const sequenceErrorAyahs = (Array.isArray(input.sequenceErrorAyahs) ? input.sequenceErrorAyahs : [])
+    .map(toAyah)
+    .filter(Boolean)
+  const candidates = [...new Set([...weakAyahs, ...skippedAyahs, ...sequenceErrorAyahs])]
+  if (!candidates.length) return null
+
+  const density = Object.create(null)
+  candidates.forEach((ayah) => { density[ayah] = 0 })
+  skippedAyahs.forEach((ayah) => { density[ayah] += 2 })
+  sequenceErrorAyahs.forEach((ayah) => { density[ayah] += 2 })
+
+  const weakWords = Array.isArray(input.weakWords) ? input.weakWords : []
+  weakWords.forEach((word) => {
+    const ayah = toAyah(word)
+    if (density[ayah] != null) density[ayah] += 1
+  })
+
+  const scores = input.ayahScores
+  if (scores instanceof Map) {
+    scores.forEach((score, key) => {
+      const ayah = toAyah(key)
+      if (density[ayah] != null) density[ayah] += Number(score) || 0
+    })
+  } else if (scores && typeof scores === 'object') {
+    Object.entries(scores).forEach(([key, score]) => {
+      const ayah = toAyah(key)
+      if (density[ayah] != null) density[ayah] += Number(score) || 0
+    })
+  }
+
+  candidates.sort((a, b) => {
+    const scoreDiff = (density[b] || 0) - (density[a] || 0)
+    if (scoreDiff !== 0) return scoreDiff
+    return a - b
+  })
+  return candidates[0] || null
+}
+
 function enrichTechnique(id, t) {
   const display = resolveTechniqueDisplay(id, t)
   const steps = BEGINNER_HOW_STEPS[id] || BEGINNER_HOW_STEPS.focus

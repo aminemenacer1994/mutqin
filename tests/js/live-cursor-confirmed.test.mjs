@@ -47,6 +47,15 @@ const {
 }
 
 {
+  const confirmed = resolveConfirmedWordIndex([
+    { status: 'correct' },
+    { status: 'uncertain' },
+    { status: 'pending' },
+  ])
+  assert.equal(confirmed, 2, 'uncertain STT must settle the cursor, not freeze live paint')
+}
+
+{
   const cursor = buildLiveRecitationCursor({
     committedStatuses: [
       { status: 'correct' },
@@ -168,7 +177,7 @@ const {
 {
   assert.equal(
     resolveLivePaceLimit({ spokenWordCount: 40, elapsedMs: 2_000 }),
-    4,
+    5,
     'two seconds of recitation cannot settle forty words',
   )
   assert.equal(

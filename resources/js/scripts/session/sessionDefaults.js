@@ -65,3 +65,14 @@ export function buildDefaultWorkspaceSessionConfig(overrides = {}) {
     ...overrides,
   }
 }
+
+/**
+ * First real practice set after onboarding: Al-Fatiha 1–3 (fits opening-Fatihah
+ * main-position rules and recommendation max session size).
+ */
+export function buildFirstOnboardingSessionConfig(overrides = {}) {
+  return buildDefaultWorkspaceSessionConfig({
+    rangeEnd: 3,
+    ...overrides,
+  })
+}

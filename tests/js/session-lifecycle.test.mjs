@@ -342,6 +342,34 @@ function presentationFor(input) {
   assert.equal(reconciled, null)
 }
 
+// 18b. Local continue for a different set must not attach the unfinished session id
+{
+  const mismatched = reconcileContinuePayloadWithBackend(
+    { config: { chapterId: 114, rangeStart: 1, rangeEnd: 6 }, backendSessionId: 12 },
+    {
+      id: 41,
+      status: BACKEND_SESSION_STATUS.PAUSED,
+      surah_number: 112,
+      metadata: { config: { chapterId: 112, rangeStart: 1, rangeEnd: 4 } },
+    },
+    { backendAuthoritative: true, unfinished: true }
+  )
+  assert.equal(mismatched, null)
+
+  const matched = reconcileContinuePayloadWithBackend(
+    { config: { chapterId: 112, rangeStart: 1, rangeEnd: 4 }, queueIndex: 2, backendSessionId: 41 },
+    {
+      id: 41,
+      status: BACKEND_SESSION_STATUS.PAUSED,
+      surah_number: 112,
+      metadata: { config: { chapterId: 112, rangeStart: 1, rangeEnd: 4 } },
+    },
+    { backendAuthoritative: true, unfinished: true }
+  )
+  assert.equal(matched.backendSessionId, 41)
+  assert.equal(matched.config.chapterId, 112)
+}
+
 // 19. One user cannot treat another user's finished session as unfinished without ownership signals
 {
   assert.equal(isBackendSessionUnfinished({

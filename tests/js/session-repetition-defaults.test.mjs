@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   DEFAULT_SESSION_REPETITIONS,
   buildDefaultWorkspaceSessionConfig,
+  buildFirstOnboardingSessionConfig,
   freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
 } from '../../resources/js/scripts/session/sessionDefaults.js'
@@ -22,6 +23,16 @@ assert.equal(DEFAULT_SESSION_REPETITIONS, 1, 'new sessions default to 1x')
   const defaults = buildDefaultWorkspaceSessionConfig()
   assert.equal(defaults.repetitionsPerStep, 1)
   assert.equal(defaults.selectedLoopCount, 1)
+}
+
+// First onboarding session uses a short Fatihah window
+{
+  const first = buildFirstOnboardingSessionConfig({ focusModeEnabled: true })
+  assert.equal(first.chapterId, 1)
+  assert.equal(first.rangeStart, 1)
+  assert.equal(first.rangeEnd, 3)
+  assert.equal(first.focusModeEnabled, true)
+  assert.equal(first.repetitionsPerStep, 1)
 }
 
 // Fresh-session helper always returns 1x (clears sticky 2x+ from prior plans)

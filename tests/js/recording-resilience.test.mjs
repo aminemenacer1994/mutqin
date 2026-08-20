@@ -30,6 +30,10 @@ import {
   assert.notEqual(first, second)
   assert.equal(isStaleRecitationAttempt(first, first), false)
   assert.equal(isStaleRecitationAttempt(first, second), true)
+  // Empty active id must not be treated as "matching" a real response id by callers;
+  // isStale itself returns false when either side is empty, so consumers must guard.
+  assert.equal(isStaleRecitationAttempt('', first), false)
+  assert.equal(isStaleRecitationAttempt(first, ''), false)
 }
 
 {

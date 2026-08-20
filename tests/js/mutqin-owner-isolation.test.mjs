@@ -114,6 +114,8 @@ const memorisationSource = (await fs.readFile(path.join(root, 'resources/js/view
 assert.match(memorisationSource, /ensureSignupIsolation/, 'signup isolation must be durable beyond the flash')
 assert.match(memorisationSource, /isSignupIsolationActive/, 'isolation gate must be reusable')
 assert.match(memorisationSource, /resetIsolatedSignupWorkspace/, 'isolated signup must clear only this user workspace')
+assert.match(memorisationSource, /freshIsolation/, 'isolation reset must run only on first activation')
+assert.match(memorisationSource, /signupIsolated && freshIsolation/, 'fresh isolation must gate workspace wipe')
 assert.match(memorisationSource, /allowGuestFallback:\s*false/, 'auth bind must never inherit guest cache')
 assert.match(memorisationSource, /authenticatedWorkspace && !signupIsolated/, 'shared mutqin hydrate must skip isolated signups')
 assert.match(memorisationSource, /if \(this\.isSignupIsolationActive\(\)\) return/, 'push/migration must refuse isolated signups')

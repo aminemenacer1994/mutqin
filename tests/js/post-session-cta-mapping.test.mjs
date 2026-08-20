@@ -116,6 +116,12 @@ import {
     ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
   ])
 
+  const needsPracticeWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
+    weakAyahNumber: 4,
+  })
+  assert.equal(needsPracticeWeak[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(needsPracticeWeak[2].labelKey, 'reviewAyahOnce')
+
   const reviseRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
     preferReviseRange: true,
   })
@@ -195,12 +201,23 @@ import {
     ['ghost', POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, 'reviewAyahOnce'],
   ])
 
+  const mostlySecureNoWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.MOSTLY_SECURE, {
+    nextRangeStart: 3,
+    nextRangeEnd: 5,
+  })
+  assert.equal(mostlySecureNoWeak[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE)
+
   const reviewRecommended = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
   assert.deepEqual(reviewRecommended.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
     ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
   ])
+
+  const reviewRecommendedWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED, {
+    weakAyahNumber: 7,
+  })
+  assert.equal(reviewRecommendedWeak[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
 
   // Every recommendation state: one lead CTA, Return to workspace as secondary.
   for (const state of Object.values(POST_SESSION_CTA_STATES)) {

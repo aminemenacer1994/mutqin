@@ -124,6 +124,10 @@ import {
   resolveRevisionSessionRange,
 } from '../scripts/recommendations/revisionPracticeScope'
 import {
+  buildPostSessionInfoArchitecture,
+  formatRecommendationAyahLabel,
+} from '../scripts/recommendations/postSessionInfoArchitecture'
+import {
   POST_SESSION_ACTION,
   buildRecommendedSessionTemplate,
   canRepeatRecommendedSession,
@@ -165,6 +169,7 @@ import {
   buildAiReciteDynamicPlan,
   buildFriendlyReciteFeedback,
   extractWeakWordsFromResult,
+  selectPrimaryWeakAyah,
 } from '../scripts/recommendations/aiRecitePracticePlan'
 import {
   applyRecitationMasteryFromResult,
@@ -219,13 +224,21 @@ import {
   assertTransition,
   buildRepetitionProgressSummary,
   buildSessionLifecycleViewModel,
+  canSkipHydrateForContinue,
+  clearStashedDashboardEntryIntent,
   createSessionActionLock,
   createSessionBroadcast,
   isResumableSessionPayload,
+  pickContinuePayloadForResume,
+  readStashedDashboardEntryIntent,
   reconcileBootstrapSessionState,
   reconcileContinuePayloadWithBackend,
   resolveCompletionGate,
   resolveEndSessionConfirmDecision,
+  resolvePreferredSessionResumeGate,
+  resolveResumeAyahNumber,
+  sessionRangesMatch,
+  stashDashboardEntryIntent,
   userScopedStorageKey,
 } from '../scripts/session/sessionLifecycle'
 import {
@@ -276,6 +289,7 @@ import {
 import {
   DEFAULT_SESSION_REPETITIONS,
   buildDefaultWorkspaceSessionConfig,
+  buildFirstOnboardingSessionConfig,
   freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
 } from '../scripts/session/sessionDefaults'
@@ -312,6 +326,8 @@ import {
   buildRecitationAdaptivePaceContext,
   computeSilenceAutoStopThresholdMs,
   createRecitationPaceObserver,
+  estimateSessionRecitationPaceFactor,
+  isTajweedHeavyRecitation,
   resetRecitationPaceObserver,
   resolveAdaptiveLivePaceParams,
   createSessionTimer,
@@ -2787,7 +2803,9 @@ export default {
         sessionHydrated: !!this.sessionLifecycleHydrated,
         isAuthenticated: !!this.isLoggedIn,
         requiresOnboarding: !!this.requiresFirstTimeOnboarding,
-        onboardingStarted: !!this.showPostLoginOnboarding || this.onboardingStepIndex > 0,
+        onboardingStarted: !!this.showPostLoginOnboarding
+          || this.onboardingStepIndex > 0
+          || this.readOnboardingStepIndex() > 0,
         onboardingExampleActive: !!this.onboardingSampleSessionActive,
         onboardingExampleRejected: !!this.onboardingExampleRejected,
         mutqinSessionActive: !!this.isSessionLive,
@@ -4444,16 +4462,58 @@ export default {
           row.note = weakWordReasonLabel(word.reason, this.t?.bind?.(this)) || ''
         }
       })
+      const translate = this.t?.bind?.(this) || null
       return [...byAyah.values()]
         .sort((a, b) => a.ayah - b.ayah)
         .slice(0, 6)
         .map((row) => ({
           ...row,
           wordsLabel: row.words.slice(0, 4).join(' · '),
-          ayahLabel: this.t?.('memorisation.postSession.recommendation.planDetail.focusVerse', {
-            ayah: row.ayah,
-          }) || `Ayah ${row.ayah}`,
+          ayahLabel: formatRecommendationAyahLabel(row.ayah, translate)
+            || this.t?.('memorisation.postSession.recommendation.singleAyah', {
+              ayah: row.ayah,
+            })
+            || `Ayah ${row.ayah}`,
         }))
+    },
+    /**
+     * Structured IA for the recommendation modal: Main focus, Weak areas,
+     * Revision options, What to practise next — not inferred from free-form copy.
+     */
+    postSessionInfoArchitecture() {
+      const plan = this.postSessionPersonalPlan
+      const rec = this.postSessionRecommendation || {}
+      const translate = this.t?.bind?.(this) || null
+      const primaryWeakAyah = typeof this.resolvePrimaryPostSessionWeakAyah === 'function'
+        ? this.resolvePrimaryPostSessionWeakAyah()
+        : null
+      const nextRange = plan?.range && typeof plan.range === 'object'
+        ? { from: plan.range.from, to: plan.range.to }
+        : null
+      return buildPostSessionInfoArchitecture({
+        t: translate,
+        outcome: this.postSessionAiReviewDetails?.outcome
+          || this.postSessionOutcomeTone
+          || null,
+        outcomeLabel: this.postSessionOutcomeHeadline || '',
+        understandingText: this.postSessionUnderstandingText || '',
+        primaryWeakAyah,
+        weakAyahRows: this.postSessionWeakSpotRows,
+        focusPhraseParts: this.postSessionFocusHighlightParts,
+        focusAyahLabel: this.postSessionFocusHighlightMeta || '',
+        surahName: rec.surah?.translated_name
+          || rec.surah?.name
+          || this.postSessionSnapshot?.chapterName
+          || '',
+        nextRange,
+        nextHeadline: plan?.headline || this.postSessionSimpleActionLabel || '',
+        methodTitle: plan?.practiceApproach?.title || '',
+        timeLabel: this.postSessionEstimatedTimeLabel || plan?.time?.label || '',
+        planWhy: this.postSessionPlanWhyText || '',
+        revisionOptions: this.postSessionRevisionScopeOptions,
+        showRevisionOptions: this.postSessionShowRevisionScopePicker,
+        isRevision: !!this.postSessionIsRepeatRecommendation,
+      })
     },
     postSessionPersonalPlanVisible() {
       return !!(
@@ -4800,8 +4860,12 @@ export default {
     postSessionFocusHighlightMeta() {
       const focus = this.resolvePostSessionFocusPhrase?.() || null
       if (!focus?.ayahLabel && !focus?.ayahNumber) return ''
-      return focus.ayahLabel
-        || (this.t('memorisation.postSession.coach.ayahLabel', { ayah: focus.ayahNumber }) || `Āyah ${focus.ayahNumber}`)
+      if (focus.ayahNumber) {
+        return formatRecommendationAyahLabel(focus.ayahNumber, this.t?.bind?.(this))
+          || this.t('memorisation.postSession.recommendation.singleAyah', { ayah: focus.ayahNumber })
+          || `Ayah ${focus.ayahNumber}`
+      }
+      return String(focus.ayahLabel || '').replace(/^Verse\b/i, 'Ayah')
     },
     postSessionFocusHighlightParts() {
       if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
@@ -5040,7 +5104,7 @@ export default {
               || `${count} focus item${count === 1 ? '' : 's'} · about ${minutes} min`
           })()
           : (this.t('memorisation.postSession.recommendation.scopeFullMeta')
-            || 'Full session with stronger emphasis on weak areas')
+            || 'Full set with stronger emphasis on weak ayahs')
         return {
           ...option,
           recommended: option.id === recommended.scope,
@@ -5528,6 +5592,7 @@ export default {
             : (isRepeatRecommendation(rec) ? 'startRevision' : 'startSession'))
       })()
       const focus = this.resolvePostSessionFocusPhrase?.() || null
+      const primaryWeakAyah = this.resolvePrimaryPostSessionWeakAyah?.() || null
       const rec = this.postSessionRecommendation || {}
       const snap = this.postSessionSnapshot || {}
       const nextFrom = Number(rec.ayah_range?.from || 0)
@@ -5539,31 +5604,31 @@ export default {
         insufficientReason: this.postSessionAiReviewDetails?.insufficientReason || '',
         showMicrophoneCheck: this.postSessionAiReviewDetails?.showMicrophoneCheck === true
           || String(this.postSessionAiReviewDetails?.insufficientReason || '') === 'mic_permission',
-        weakAyahNumber: Number(focus?.ayahNumber || 0) || null,
+        weakAyahNumber: Number(primaryWeakAyah || focus?.ayahNumber || 0) || null,
         nextRangeStart: nextFrom || Number(snap.rangeEnd || 0) + 1 || null,
         nextRangeEnd: nextTo || null,
       })
       const actionFallbacks = {
-        reviseFocusPhrase: 'Revise words',
-        reviseThisRange: 'Revise range',
-        reviewAyahOnce: 'Revise āyah',
+        reviseFocusPhrase: 'Review',
+        reviseThisRange: 'Review',
+        reviewAyahOnce: 'Repeat Weak Ayah',
         retest: 'Check again',
         tryRecordingAgain: 'Try recording again',
         checkMicrophone: 'Check microphone',
         close: 'Close',
         testWithAi: 'Recite from memory',
         continuePractising: 'Repeat session',
-        continueToNextRange: 'Continue forward',
-        continueToAyahs: 'Next āyāt',
+        continueToNextRange: 'Continue',
+        continueToAyahs: 'Continue',
         repeatThisSession: 'Repeat session',
-        reviewOnceMore: 'Revise again',
+        reviewOnceMore: 'Review',
         chooseAnotherRange: 'Other range',
-        skipForNow: 'Continue forward',
+        skipForNow: 'Continue',
         keepPractising: 'Repeat session',
         returnToWorkspace: 'Back to mushaf',
-        startSession: 'Continue forward',
-        startRevision: 'Revise range',
-        continueToNextSurah: 'Continue forward',
+        startSession: 'Continue',
+        startRevision: 'Review',
+        continueToNextSurah: 'Continue',
       }
       return mapped.map((btn) => {
         let label = ''
@@ -5578,9 +5643,11 @@ export default {
         if (!label || label === `memorisation.postSession.actions.${btn.labelKey}`
           || label === `memorisation.postSession.recommendation.confirm.${btn.labelKey}`) {
           if (btn.labelKey === 'continueToAyahs' && params.start && params.end) {
-            label = `Next āyāt (${params.start}–${params.end})`
-          } else if (btn.labelKey === 'reviewAyahOnce' && params.ayah) {
-            label = `Revise āyah ${params.ayah}`
+            label = `Continue (${params.start}–${params.end})`
+          } else if (btn.labelKey === 'reviewAyahOnce') {
+            label = Number(params.ayah) > 0
+              ? `Repeat Weak Ayah (${params.ayah})`
+              : 'Repeat Weak Ayah'
           } else {
             label = actionFallbacks[btn.labelKey] || this.postSessionConfirmationPrimaryLabel || btn.labelKey
           }
@@ -6005,12 +6072,12 @@ export default {
         || 'Test with AI to unlock your next plan, or continue when you are ready.'
     },
     postSessionActionsBusy() {
+      // Recommendation background loading must not permanently lock footer CTAs.
       return this.postSessionRecommendationStarting
         || this.postSessionConfidenceBusy
         || this.postSessionSettingsBusy
         || this.postSessionAiReciteBusy
         || this.postSessionAdaptiveCheckBusy
-        || this.postSessionRecommendationStatus === 'loading'
     },
     postSessionAiReciteGateBusy() {
       // AI recite is the first step after session complete — do not block it while
@@ -6077,8 +6144,7 @@ export default {
       // Exploring / finishing onboarding must immediately unlock Start Session
       // once completion is marked, even while auth.just_registered is still true.
       if (this.hasCompletedOnboarding()) return false
-      // Dismissing the first tour must unlock Start session — they can reopen it.
-      if (this.hasDismissedFirstTimeOnboarding()) return false
+      // Dismiss only suppresses auto-open — Continue/Get started must still reopen.
       // New accounts stay on first-run onboarding until they finish it themselves.
       if (this.isSignupIsolationActive()) return true
       // Live / resumable practice must never trap the header on Start Onboarding.
@@ -6089,7 +6155,11 @@ export default {
       return !!this.readWorkspaceStateValue('onboardingPending', false)
     },
     shouldAutoOpenOnboarding() {
-      return this.requiresFirstTimeOnboarding && !this.hasOnboardingAutoPresented()
+      if (!this.requiresFirstTimeOnboarding) return false
+      if (this.hasDismissedFirstTimeOnboarding()) return false
+      // Incomplete first-run (pending) must reopen after refresh at the saved step.
+      if (!!this.readWorkspaceStateValue('onboardingPending', false)) return true
+      return !this.hasOnboardingAutoPresented()
     },
     isExistingUserLogin() {
       // Welcome Back is only for returning users who already finished onboarding.
@@ -9105,16 +9175,18 @@ export default {
       // Durable isolation survives the one-shot just_registered flash so refresh
       // cannot re-import another profile's guest/shared learning cache.
       const signupIsolated = this.ensureSignupIsolation()
+      const freshIsolation = !!this._signupIsolationFreshlyActivated
       // Bind owner-scoped cache before any hydrate/sync so a new signup never
       // inherits another profile's guest mutqin_state on this device.
-      this.bindMutqinStateForCurrentOwner({ signupIsolated })
+      // Fresh isolation gets an empty workspace once; later refreshes resume it.
+      this.bindMutqinStateForCurrentOwner({ signupIsolated, freshIsolation })
       this.syncWorkspaceStorageBridge()
       // Shared mutqin.* keys belong to whoever used this browser last — never
       // copy them into a brand-new / isolated account's workspace.
       if (authenticatedWorkspace && !signupIsolated) {
         this.hydrateAuthenticatedWorkspaceStateFromLocalStorage()
       }
-      if (signupIsolated) {
+      if (signupIsolated && freshIsolation) {
         this.resetIsolatedSignupWorkspace()
       }
       const localResumeSnapshot = signupIsolated ? null : this.captureLocalResumeSnapshot()
@@ -9412,12 +9484,15 @@ export default {
       try { this.selfCheckMediaRecorder.stop() } catch { }
     }
     if (this.recitationCheckMediaRecorder && ['recording', 'paused'].includes(this.recitationCheckMediaRecorder.state)) {
+      this.recitationCheckDiscardOnStop = true
       try { this.recitationCheckMediaRecorder.stop() } catch { }
     }
     if (this.aiMemorisationCheckerMediaRecorder && ['recording', 'paused'].includes(this.aiMemorisationCheckerMediaRecorder.state)) {
       this.aiMemorisationCheckerDiscardOnStop = true
       try { this.aiMemorisationCheckerMediaRecorder.stop() } catch { }
     }
+    this.recitationCheckPreparing = false
+    this.recitationCheckRecording = false
     this.cleanupRecitationCheckMedia()
     this.cleanupSelfCheckMedia()
     this.resetReviewResultAudio({ revokeOwned: true })
@@ -9984,7 +10059,11 @@ export default {
     },
     isActiveRecitationAttempt(attemptId = this.recitationAttemptId) {
       if (!this._recitationComponentActive) return false
-      return !isStaleRecitationAttempt(this.recitationAttemptId, attemptId)
+      const active = String(this.recitationAttemptId || '').trim()
+      const response = String(attemptId || '').trim()
+      // Cleared / missing attempt ids must never accept late mic/onstop/submit work.
+      if (!active || !response) return false
+      return !isStaleRecitationAttempt(active, response)
     },
     clearRecitationSlowProcessingNotice() {
       if (typeof this._recitationSlowNoticeDisposer === 'function') {
@@ -10367,23 +10446,36 @@ export default {
         const from = Number(params.get('from') || params.get('ayah') || 0)
         const to = Number(params.get('to') || from || 0)
         const journey = String(params.get('journey') || '').trim().toLowerCase()
-        if (!resume && !setup && !recommendationId && !(surah > 0) && panel !== 'saved' && !aiCheck && !journey && !review) return null
-        return {
-          resume,
-          setup,
-          aiCheck,
-          review,
-          recommendationId: recommendationId || null,
-          sessionId: sessionId || null,
-          panel: panel || null,
-          returnTo: returnTo || null,
-          journey: journey || null,
-          surah: surah > 0 ? surah : 0,
-          from: from > 0 ? from : 0,
-          to: to > 0 ? to : 0,
+        const hasUrlIntent = !!(
+          resume
+          || setup
+          || recommendationId
+          || (surah > 0)
+          || panel === 'saved'
+          || aiCheck
+          || journey
+          || review
+        )
+        if (hasUrlIntent) {
+          return {
+            resume,
+            setup,
+            aiCheck,
+            review,
+            recommendationId: recommendationId || null,
+            sessionId: sessionId || null,
+            panel: panel || null,
+            returnTo: returnTo || null,
+            journey: journey || null,
+            surah: surah > 0 ? surah : 0,
+            from: from > 0 ? from : 0,
+            to: to > 0 ? to : 0,
+          }
         }
+        // Refresh mid-consume: URL may already be cleaned; restore stashed destination.
+        return readStashedDashboardEntryIntent()
       } catch (_) {
-        return null
+        return readStashedDashboardEntryIntent()
       }
     },
 
@@ -10398,10 +10490,16 @@ export default {
       } catch (_) { /* ignore */ }
     },
 
+    markDashboardEntryIntentConsumed() {
+      clearStashedDashboardEntryIntent()
+    },
+
     async consumeDashboardEntryIntent(intent = null) {
       const entry = intent || this.readDashboardEntryIntent()
       if (!entry) return false
 
+      // Persist before clearing the URL so refresh keeps the intended destination.
+      stashDashboardEntryIntent(entry)
       this.clearDashboardEntryIntentFromUrl()
       if (this.welcomeBackRevealTimer) {
         window.clearTimeout(this.welcomeBackRevealTimer)
@@ -10423,11 +10521,13 @@ export default {
             ayah: entry.from,
             returnTo: entry.returnTo,
           })
+          this.markDashboardEntryIntentConsumed()
           return true
         }
 
         if (entry.panel === 'saved') {
           this.openSavedSessionsPanel()
+          this.markDashboardEntryIntentConsumed()
           return true
         }
 
@@ -10440,34 +10540,50 @@ export default {
             sessionMode: 'revision',
             autoStart: true,
           })
+          this.markDashboardEntryIntentConsumed()
           return true
         }
 
         if (entry.resume) {
           const preferredSessionId = Number(entry.sessionId || 0) || null
+          let invalidRequested = false
           if (preferredSessionId && this.learningBackendEnabled()) {
             try {
-              await this.validateSessionLifecycleAgainstBackend({ preferredSessionId })
+              const result = await this.validateSessionLifecycleAgainstBackend({ preferredSessionId })
+              invalidRequested = !!result?.invalidRequested
             } catch (_) { /* local resume candidates remain */ }
-            if (this.backendSessionSnapshot?.id && Number(this.backendSessionSnapshot.id) !== preferredSessionId) {
-              // Requested session is not the current unfinished one — fail safely.
-              if (!this.backendUnfinishedSession) {
-                this.showBanner?.(
-                  this.t('toasts.sessionResumeUnavailable')
-                    || 'That session is no longer available to resume.',
-                  'warning',
-                  3600
-                )
-                return true
-              }
+            const gate = resolvePreferredSessionResumeGate({
+              preferredSessionId,
+              snapshot: this.backendSessionSnapshot,
+              unfinished: !!this.backendUnfinishedSession,
+              invalidRequested: invalidRequested || this.sessionLifecycleError === 'resume_invalid',
+            })
+            if (!gate.ok) {
+              this.showBanner?.(
+                this.t('toasts.sessionResumeUnavailable')
+                  || 'That session is no longer available to resume.',
+                'warning',
+                3600
+              )
+              this.markDashboardEntryIntentConsumed()
+              return true
             }
           } else {
             this.syncWelcomeBackResumeFromBackend()
           }
           if (this.hasContinueSession || this.backendUnfinishedSession || this.continueSessionPayload) {
-            await this.welcomeBackContinueSession()
+            await this.welcomeBackContinueSession({ preferredSessionId })
+            this.markDashboardEntryIntentConsumed()
             return true
           }
+          this.showBanner?.(
+            this.t('toasts.sessionResumeUnavailable')
+              || 'That session is no longer available to resume.',
+            'warning',
+            3600
+          )
+          this.markDashboardEntryIntentConsumed()
+          return true
         }
 
         if (entry.recommendationId && this.learningBackendEnabled()) {
@@ -10488,6 +10604,7 @@ export default {
                 sessionPayload: result?.session || null,
                 autoStart: true,
               })
+              this.markDashboardEntryIntentConsumed()
               return true
             }
           } catch (error) {
@@ -10501,18 +10618,18 @@ export default {
             chapterId: entry.surah,
             rangeStart: entry.from,
             rangeEnd,
-            sessionMode: entry.resume ? 'revision' : 'new_learning',
+            sessionMode: 'new_learning',
             autoStart: true,
           })
+          this.markDashboardEntryIntentConsumed()
           return true
         }
 
-        if (entry.setup || entry.resume) {
+        if (entry.setup) {
           this.startingFreshSessionSelection = true
-          if (entry.setup && !entry.resume) {
-            this.resetRepetitionsForFreshSession()
-          }
+          this.resetRepetitionsForFreshSession()
           this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
+          this.markDashboardEntryIntentConsumed()
           return true
         }
       } catch (error) {
@@ -10670,20 +10787,28 @@ export default {
     },
 
     ensureSignupIsolation() {
-      if (!this.learningBackendEnabled()) return false
+      if (!this.learningBackendEnabled()) {
+        this._signupIsolationFreshlyActivated = false
+        return false
+      }
       if (this.auth?.just_registered) {
-        this.activateSignupIsolation()
+        this._signupIsolationFreshlyActivated = this.activateSignupIsolation()
         return true
       }
+      this._signupIsolationFreshlyActivated = false
       return this.isSignupIsolationActive()
     },
 
     activateSignupIsolation() {
       const key = this.getSignupIsolationStorageKey()
-      if (!key) return
+      if (!key) return false
       try {
+        const already = localStorage.getItem(key) === '1'
         localStorage.setItem(key, '1')
-      } catch { /* ignore */ }
+        return !already
+      } catch {
+        return false
+      }
     },
 
     clearSignupIsolation() {
@@ -10692,11 +10817,13 @@ export default {
       try {
         localStorage.removeItem(key)
       } catch { /* ignore */ }
+      this._signupIsolationFreshlyActivated = false
     },
 
     resetIsolatedSignupWorkspace() {
       // Clear ONLY this account's scoped markers / resume hints.
       // Guest and other users' mutqin_state:* caches stay intact.
+      // Called once when isolation is first activated — not on every refresh.
       try {
         this.deleteWorkspaceStateValue('onboardingCompleted')
         this.deleteWorkspaceStateValue(this.getOnboardingWorkspaceKey())
@@ -10709,6 +10836,9 @@ export default {
           this.deleteWorkspaceStateValue(`sessionState:${mode}`)
         })
         this.deleteWorkspaceStateValue('onboardingAutoPresented')
+        this.deleteWorkspaceStateValue('onboardingDismissed')
+        this.deleteWorkspaceStateValue('onboardingStepIndex')
+        this.deleteWorkspaceStateValue('onboardingPreferences')
         this.writeWorkspaceStateValue('onboardingPending', true)
         localStorage.removeItem(this.getOnboardingStorageKey())
         localStorage.removeItem(this.continueSessionLocalStorageKey())
@@ -10726,14 +10856,20 @@ export default {
       return saveMutqinState(this.mutqinState, this.getMutqinStateOwner())
     },
 
-    bindMutqinStateForCurrentOwner({ signupIsolated = false } = {}) {
+    bindMutqinStateForCurrentOwner({ signupIsolated = false, freshIsolation = false } = {}) {
       const owner = this.getMutqinStateOwner()
-      if (signupIsolated) {
+      if (signupIsolated && freshIsolation) {
         // Brand-new accounts get a fresh unique cache under mutqin_state:{userId}.
         // Guest / other users' keys are left untouched.
         replaceMutqinState(this.mutqinState, {})
         this.persistMutqinStateLocally()
         this.learningSync.lastPushedHash = this.learningPayloadHash(this.buildLearningStatePayload())
+        return owner
+      }
+      if (signupIsolated) {
+        // Incomplete first-run refresh: resume this owner's local workspace only.
+        const scoped = loadMutqinState(owner, { allowGuestFallback: false })
+        replaceMutqinState(this.mutqinState, scoped)
         return owner
       }
       if (this.learningBackendEnabled()) {
@@ -10860,6 +10996,10 @@ export default {
       return buildDefaultWorkspaceSessionConfig()
     },
 
+    buildFirstOnboardingSessionConfig(overrides = {}) {
+      return buildFirstOnboardingSessionConfig(overrides)
+    },
+
     /**
      * Reset repetition controls to 1x for a genuinely new normal session.
      * Does not touch resume / recommendation hydration — callers must only use
@@ -10872,8 +11012,10 @@ export default {
     },
 
     applyDefaultWorkspaceSessionConfig(options = {}) {
-      const { openSetup = true, silent = false } = options
-      const defaults = this.buildDefaultWorkspaceSessionConfig()
+      const { openSetup = true, silent = false, config = null } = options
+      const defaults = config && typeof config === 'object'
+        ? config
+        : this.buildDefaultWorkspaceSessionConfig()
       this.currentMode = 'advanced'
       this.chapterId = defaults.chapterId
       this.rangeStart = defaults.rangeStart
@@ -10909,6 +11051,25 @@ export default {
       if (!silent) {
         this.showBanner(this.t('toasts.defaultSessionLoaded'), 'info', 3200)
       }
+    },
+
+    applyFirstOnboardingSessionConfig(options = {}) {
+      const { openSetup = false, silent = true, prefs = null } = options
+      const techniquePrefs = prefs && typeof prefs === 'object'
+        ? prefs
+        : (this.readOnboardingPreferences() || {})
+      const focus = !!techniquePrefs.focusModeEnabled
+      const blur = !!techniquePrefs.blurModeEnabled && !focus
+      const talqin = !!techniquePrefs.talqinModeEnabled
+      this.applyDefaultWorkspaceSessionConfig({
+        openSetup,
+        silent,
+        config: this.buildFirstOnboardingSessionConfig({
+          focusModeEnabled: focus,
+          blurModeEnabled: blur,
+          talqinModeEnabled: talqin,
+        }),
+      })
     },
 
     buildOnboardingStep(key, icon) {
@@ -13500,39 +13661,84 @@ export default {
           const { session: current, unfinished, invalidRequested } = await learningApi.getCurrentSession({
             id: linkedBackendId,
           })
-          if (invalidRequested || !unfinished) {
-            // Saved bookmark points at a finished/deleted row — start a fresh
-            // attempt from the restored config without claiming the old id.
-            this.backendUnfinishedSession = false
-            this.backendSessionSnapshot = null
+          if (!invalidRequested && unfinished && current) {
+            this.backendSessionSnapshot = current
+            this.backendUnfinishedSession = true
             if (this.mutqinState?.sessionState) {
-              this.mutqinState.sessionState.backendSessionId = null
+              this.mutqinState.sessionState.backendSessionId = current.id
             }
+            this.continueSessionPayload = {
+              ...restorePayload,
+              backendSessionId: current.id,
+              backendStatus: current.status,
+            }
+            this.hasContinueSession = true
+            this.applyLocalPausedSessionState()
+            this.transitionSessionLifecycle(
+              String(current.status || '').toLowerCase() === 'paused'
+                ? SESSION_STATUS.PAUSED
+                : SESSION_STATUS.INTERRUPTED_RESUMABLE,
+              SESSION_MUTATION.IDLE
+            )
+            await this.resumeSessionFromPrimaryAction()
+            return
+          }
+
+          // Linked row finished/deleted — never claim that id. Prefer a live
+          // unfinished session for the same set; otherwise restore locally.
+          this.backendUnfinishedSession = false
+          this.backendSessionSnapshot = null
+          if (this.mutqinState?.sessionState) {
+            this.mutqinState.sessionState.backendSessionId = null
+          }
+          restorePayload.backendSessionId = null
+          restorePayload.backendStatus = null
+
+          const live = await learningApi.getCurrentSession()
+          if (live?.unfinished && live?.session && sessionRangesMatch(restorePayload, live.session)) {
+            this.backendSessionSnapshot = live.session
+            this.backendUnfinishedSession = true
+            if (this.mutqinState?.sessionState) {
+              this.mutqinState.sessionState.backendSessionId = live.session.id
+            }
+            this.continueSessionPayload = {
+              ...restorePayload,
+              backendSessionId: live.session.id,
+              backendStatus: live.session.status,
+            }
+            this.hasContinueSession = true
+            this.applyLocalPausedSessionState()
+            this.transitionSessionLifecycle(
+              String(live.session.status || '').toLowerCase() === 'paused'
+                ? SESSION_STATUS.PAUSED
+                : SESSION_STATUS.INTERRUPTED_RESUMABLE,
+              SESSION_MUTATION.IDLE
+            )
+            await this.resumeSessionFromPrimaryAction()
+            return
+          }
+
+          this.continueSessionPayload = restorePayload
+          this.hasContinueSession = true
+          this.persistContinueSession?.()
+          this.applyLocalPausedSessionState()
+          this.transitionSessionLifecycle(SESSION_STATUS.INTERRUPTED_RESUMABLE, SESSION_MUTATION.IDLE)
+
+          if (!live?.unfinished) {
+            // No unfinished row exists — safe to open a single new attempt for this set.
             this._startAttemptNonce = null
             this.$nextTick(() => {
               this.startSessionWithCountdown({ skipPrime: true })
             })
-            return
+          } else {
+            // Another unfinished set is live; keep this bookmark restored without
+            // overwriting / duplicating that backend session via an auto-start.
+            this.showBanner?.(
+              this.t('toasts.sessionRestored') || 'Session restored. Resume when ready.',
+              'info',
+              3200
+            )
           }
-          this.backendSessionSnapshot = current
-          this.backendUnfinishedSession = true
-          if (this.mutqinState?.sessionState) {
-            this.mutqinState.sessionState.backendSessionId = current.id
-          }
-          this.continueSessionPayload = {
-            ...restorePayload,
-            backendSessionId: current.id,
-            backendStatus: current.status,
-          }
-          this.hasContinueSession = true
-          this.applyLocalPausedSessionState()
-          this.transitionSessionLifecycle(
-            String(current.status || '').toLowerCase() === 'paused'
-              ? SESSION_STATUS.PAUSED
-              : SESSION_STATUS.INTERRUPTED_RESUMABLE,
-            SESSION_MUTATION.IDLE
-          )
-          await this.resumeSessionFromPrimaryAction()
           return
         }
 
@@ -13965,6 +14171,39 @@ export default {
     markOnboardingAutoPresented() {
       this.writeWorkspaceStateValue('onboardingAutoPresented', true)
     },
+    readOnboardingStepIndex() {
+      const max = Math.max(0, (this.onboardingSteps?.length || 4) - 1)
+      const raw = Number(this.readWorkspaceStateValue('onboardingStepIndex', 0) || 0)
+      if (!Number.isFinite(raw)) return 0
+      return Math.max(0, Math.min(max, Math.round(raw)))
+    },
+    readOnboardingPreferences() {
+      const prefs = this.readWorkspaceStateValue('onboardingPreferences', null)
+      if (!prefs || typeof prefs !== 'object') return null
+      return {
+        focusModeEnabled: !!prefs.focusModeEnabled,
+        blurModeEnabled: !!prefs.blurModeEnabled,
+        talqinModeEnabled: !!prefs.talqinModeEnabled,
+      }
+    },
+    persistOnboardingProgress() {
+      if (!this.learningBackendEnabled()) return
+      this.writeWorkspaceStateValue('onboardingStepIndex', Number(this.onboardingStepIndex || 0))
+      this.writeWorkspaceStateValue('onboardingPending', true)
+      this.writeWorkspaceStateValue('onboardingPreferences', {
+        focusModeEnabled: !!this.focusModeEnabled,
+        blurModeEnabled: !!this.blurModeEnabled,
+        talqinModeEnabled: !!this.talqinModeEnabled,
+      })
+      this.persistMutqinStateLocally()
+    },
+    applyPersistedOnboardingPreferences() {
+      const prefs = this.readOnboardingPreferences()
+      if (!prefs) return
+      this.focusModeEnabled = !!prefs.focusModeEnabled
+      this.blurModeEnabled = !!prefs.blurModeEnabled && !this.focusModeEnabled
+      this.talqinModeEnabled = !!prefs.talqinModeEnabled
+    },
     hasCompletedOnboarding() {
       const userId = this.auth?.id != null ? String(this.auth.id) : null
 
@@ -14001,6 +14240,7 @@ export default {
         this.deleteWorkspaceStateValue('onboardingPending')
         this.deleteWorkspaceStateValue('onboardingAutoPresented')
         this.deleteWorkspaceStateValue('onboardingDismissed')
+        this.deleteWorkspaceStateValue('onboardingStepIndex')
         // Drop legacy unscoped flag so it cannot leak across accounts.
         if (workspaceKey !== 'onboardingCompleted') {
           this.deleteWorkspaceStateValue('onboardingCompleted')
@@ -14009,14 +14249,17 @@ export default {
       try {
         localStorage.setItem(this.getOnboardingStorageKey(), 'true')
       } catch { }
-      // User finished their own first-run — isolation can end.
+      // User finished their own first-run — isolation can end and sync unblocks.
       this.clearSignupIsolation()
+      this.persistMutqinStateLocally()
+      if (this.learningBackendEnabled()) {
+        this.pushLearningState(true).catch(() => { /* best-effort; local gate still holds */ })
+      }
     },
     openOnboardingModal(force = false) {
       if (!this.isLoggedIn && !force) return
       this.onboardingManualLaunch = !!force
       this.onboardingPhase = 'tour'
-      this.onboardingStepIndex = 0
       if (this.isSignupIsolationActive()) {
         // New account: clear ONLY this user's scoped completion markers.
         // Never remove guest / other accounts' mutqin.onboardingCompleted.* keys.
@@ -14025,8 +14268,15 @@ export default {
           localStorage.removeItem(this.getOnboardingStorageKey())
         } catch { /* ignore */ }
         this.writeWorkspaceStateValue('onboardingPending', true)
+        // Re-opening from Continue clears dismiss so the tour is active again.
+        this.deleteWorkspaceStateValue('onboardingDismissed')
       }
       if (!force && this.hasCompletedOnboarding() && !this.isSignupIsolationActive()) return
+      const shouldResume = !force && (
+        this.isSignupIsolationActive()
+        || !!this.readWorkspaceStateValue('onboardingPending', false)
+      )
+      this.onboardingStepIndex = shouldResume ? this.readOnboardingStepIndex() : 0
       this.sessionEndedSnapshot = null
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
       this.showTools = false
@@ -14034,7 +14284,9 @@ export default {
       window.setTimeout(() => {
         this.showPostLoginOnboarding = true
         this.applyOnboardingGoalPreset()
-        this.applyOnboardingStep(0)
+        this.applyOnboardingStep(this.onboardingStepIndex)
+        this.applyPersistedOnboardingPreferences()
+        this.persistOnboardingProgress()
       }, 50)
     },
     openOnboardingFromTopMenu() {
@@ -14046,12 +14298,14 @@ export default {
       this.onboardingStepIndex = 0
       if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
       this.applyOnboardingStep(0)
+      this.persistOnboardingProgress()
     },
     prevOnboardingStep() {
       if (!this.onboardingIsTour) return
       if (this.onboardingStepIndex <= 0) return
       this.onboardingStepIndex -= 1
       this.applyOnboardingStep(this.onboardingStepIndex)
+      this.persistOnboardingProgress()
     },
     nextOnboardingStep() {
       if (!this.onboardingIsTour) return
@@ -14061,21 +14315,25 @@ export default {
       }
       this.onboardingStepIndex += 1
       this.applyOnboardingStep(this.onboardingStepIndex)
+      this.persistOnboardingProgress()
     },
     toggleOnboardingPracticeChip(key) {
       if (!this.onboardingDemoActive || !this.onboardingIsTour) return
       if (key === 'focus') {
         this.focusModeEnabled = !this.focusModeEnabled
         if (this.focusModeEnabled) this.blurModeEnabled = false
+        this.persistOnboardingProgress()
         return
       }
       if (key === 'blur') {
         this.blurModeEnabled = !this.blurModeEnabled
         if (this.blurModeEnabled) this.focusModeEnabled = false
+        this.persistOnboardingProgress()
         return
       }
       if (key === 'talqin') {
         this.talqinModeEnabled = !this.talqinModeEnabled
+        this.persistOnboardingProgress()
       }
     },
     goToOnboardingStep(index) {
@@ -14083,6 +14341,7 @@ export default {
       const next = Math.max(0, Math.min(this.onboardingSteps.length - 1, Number(index || 0)))
       this.onboardingStepIndex = next
       this.applyOnboardingStep(next)
+      this.persistOnboardingProgress()
     },
     resetOnboardingModalState() {
       this.showPostLoginOnboarding = false
@@ -14097,14 +14356,20 @@ export default {
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
     },
-    /** UI dismiss: revisit uses skip; first-time closes and unlocks Start session. */
+    /** First-time Skip: complete onboarding and start the first practice session. */
+    async skipOnboardingToFirstSession() {
+      await this.completeOnboardingIntoFirstSession()
+    },
+    /** UI dismiss (X / overlay): close tour, unlock Start, persist resume point. */
     dismissOnboardingTour() {
       if (!this.requiresFirstTimeOnboarding) {
         this.skipOnboarding()
         return
       }
+      this.persistOnboardingProgress()
       this.writeWorkspaceStateValue('onboardingDismissed', true)
       this.markOnboardingAutoPresented()
+      this.persistMutqinStateLocally()
       this.resetOnboardingModalState()
       this.isDataReady = true
     },
@@ -14146,26 +14411,32 @@ export default {
         })
       }
     },
-    async completeOnboardingOpenSetup() {
+    async completeOnboardingIntoFirstSession() {
+      this.primeAudioPlaybackUnlock()
+      this.persistOnboardingProgress()
+      const prefs = this.readOnboardingPreferences() || {
+        focusModeEnabled: !!this.focusModeEnabled,
+        blurModeEnabled: !!this.blurModeEnabled,
+        talqinModeEnabled: !!this.talqinModeEnabled,
+      }
       this.markOnboardingCompleted()
+      this.deleteWorkspaceStateValue('onboardingPreferences')
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
-      this.applyDefaultWorkspaceSessionConfig({ openSetup: true, silent: true })
+      this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true, prefs })
+      this.isDataReady = true
       if (this.chapterId) {
         await this.loadChapter(this.currentMode)
+        this.$nextTick(() => {
+          this.startSessionWithCountdown({ skipPrime: true })
+        })
       }
-      this.isDataReady = true
+    },
+    async completeOnboardingOpenSetup() {
+      await this.completeOnboardingIntoFirstSession()
     },
     async completeOnboardingExploreWorkspace() {
-      this.markOnboardingCompleted()
-      this.resetOnboardingModalState()
-      this.restoreOnboardingDemo()
-      this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
-      if (this.chapterId) {
-        await this.loadChapter(this.currentMode)
-      }
-      this.showTools = false
-      this.isDataReady = true
+      await this.completeOnboardingIntoFirstSession()
     },
     openPostSessionModal(snapshot = null, options = {}) {
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
@@ -14525,9 +14796,11 @@ export default {
       const applyResult = (recommendation, status = 'ready') => {
         if (requestId !== this.postSessionRecommendationRequestId) return
         this.memorisationPlanManualOverride = false
-        this.postSessionRecommendation = this.syncPersonalPlanOntoRecommendation(
-          this.enrichPostSessionRecommendation(recommendation),
-        )
+        this.postSessionRecommendation = recommendation
+          ? this.syncPersonalPlanOntoRecommendation(
+            this.enrichPostSessionRecommendation(recommendation),
+          )
+          : null
         this.postSessionRecommendationStatus = status
         this.postSessionViewState = status === 'error' ? 'recommendation_failed' : 'recommendation_ready'
         this.postSessionRecommendationFailed = status === 'error'
@@ -14545,8 +14818,10 @@ export default {
         })
       }
 
+      const useBackendRecommendations = this.isLoggedIn && this.learningBackendEnabled()
+
       try {
-        if (this.isLoggedIn && this.learningBackendEnabled()) {
+        if (useBackendRecommendations) {
           // Session end already persisted completion + often returns a plan.
           // Do not block the recommendation UI on a full mutqinState deep-clone sync.
           this.pushLearningState(true).catch(() => { /* best-effort background sync */ })
@@ -14572,8 +14847,8 @@ export default {
           if (requestId !== this.postSessionRecommendationRequestId) return
 
           if (!recommendation || recommendation.type === RECOMMENDATION_TYPES.NO_RECOMMENDATION) {
-            const fallback = snapshotFallback()
-            applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
+            this.postSessionRecommendationError = ''
+            applyResult(recommendation || null, 'empty')
             return
           }
           if (
@@ -14582,26 +14857,10 @@ export default {
             || recommendation.type === RECOMMENDATION_TYPES.PLAN_COMPLETE
             || recommendation.type === RECOMMENDATION_TYPES.SURAH_COMPLETE
           ) {
-            // Terminal payloads without a concrete next range — rebuild from the session snapshot.
+            // Terminal backend payloads without a concrete next range — surface as empty,
+            // never invent a hard-coded next plan on the client.
             if (!isActionableRecommendation(recommendation)) {
-              const snap = this.postSessionSnapshot || {}
-              const promoted = adaptRecommendationForConfidence(
-                recommendation,
-                'confident',
-                {
-                  ...snap,
-                  totalAyahsInSurah: snap.totalAyahsInSurah
-                    || snap.versesInSurah
-                    || this.currentChapter?.verses_count
-                    || 0,
-                }
-              )
-              if (isActionableRecommendation(promoted)) {
-                applyResult(promoted, 'ready')
-                return
-              }
-              const fallback = snapshotFallback()
-              applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
+              applyResult(recommendation, 'empty')
               return
             }
           }
@@ -14617,15 +14876,46 @@ export default {
           || error?.name === 'CanceledError'
           || error?.name === 'AbortError'
         ) {
+          // Aborted without a newer request must not leave CTAs locked on "loading".
+          if (
+            requestId === this.postSessionRecommendationRequestId
+            && this.postSessionRecommendationStatus === 'loading'
+          ) {
+            if (useBackendRecommendations) {
+              this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
+              applyResult(null, 'error')
+            } else {
+              const fallback = snapshotFallback()
+              applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
+            }
+          }
           return
         }
         console.warn('Failed to load next-session recommendation:', error)
+        if (useBackendRecommendations) {
+          this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
+          applyResult(null, 'error')
+          return
+        }
         const fallback = snapshotFallback()
         const fallbackReady = isActionableRecommendation(fallback)
         this.postSessionRecommendationError = fallbackReady
           ? ''
           : this.t('memorisation.postSession.recommendation.loadError')
         applyResult(fallback, fallbackReady ? 'ready' : 'error')
+      } finally {
+        if (
+          requestId === this.postSessionRecommendationRequestId
+          && this.postSessionRecommendationStatus === 'loading'
+        ) {
+          if (useBackendRecommendations) {
+            this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
+            applyResult(null, 'error')
+          } else {
+            const fallback = snapshotFallback()
+            applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
+          }
+        }
       }
     },
     retryPostSessionRecommendation() {
@@ -15087,11 +15377,11 @@ export default {
         }
 
         // Ensure AI Recite uses the completed session range even after cleanup.
+        // Do not expand short-surah windows — the check must match what was practised
+        // (e.g. onboarding first session Al-Fatiha 1–3, not the full surah).
         this.chapterId = chapterId
         this.rangeStart = from
         this.rangeEnd = to
-        this.expandShortSurahSessionRange()
-        to = Number(this.rangeEnd || to)
         if (this.sessionConfig) {
           this.sessionConfig = {
             ...this.sessionConfig,
@@ -15889,7 +16179,12 @@ export default {
       })
     },
     async confirmPostSessionRecommendation() {
-      if (!this.postSessionRecommendationActionable || this.postSessionRecommendationStarting) return
+      if (this.postSessionRecommendationStarting) return
+      const hasSnapshotRange = !!(
+        Number(this.postSessionSnapshot?.chapterId || 0)
+        && Number(this.postSessionSnapshot?.rangeStart || 0)
+      )
+      if (!this.postSessionRecommendationActionable && !hasSnapshotRange) return
       const recommendation = this.postSessionRecommendation
       this.postSessionRecommendationStarting = true
       this.postSessionRecommendationStartError = ''
@@ -16052,7 +16347,6 @@ export default {
         this.aiReciteShowFinalPlan = false
       } catch (error) {
         console.error('Failed to start recommended session:', error)
-        this.postSessionRecommendationStarting = false
         this.recommendedPracticePending = false
         if (error?.response?.status === 422) {
           try {
@@ -16062,7 +16356,21 @@ export default {
         this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
         this.postSessionRecommendationStep = 'confirm'
         this.postSessionViewState = 'action_failed'
+      } finally {
+        this.postSessionRecommendationStarting = false
       }
+    },
+    resolvePrimaryPostSessionWeakAyah() {
+      return selectPrimaryWeakAyah({
+        weakAyahs: this.postSessionRevisionWeakAyahs,
+        weakWords: this.postSessionRevisionWeakWords,
+        skippedAyahs: this.postSessionAiReviewDetails?.skippedAyahs
+          || this.postSessionRecommendation?.ai_assessment?.skipped_ayahs
+          || [],
+        sequenceErrorAyahs: this.postSessionAiReviewDetails?.sequenceErrorAyahs
+          || this.postSessionRecommendation?.ai_assessment?.sequence_error_ayahs
+          || [],
+      })
     },
     resolvePostSessionFocusPhrase() {
       const plan = this.aiReciteFinalPlan || this.amdPracticePlan || null
@@ -16075,9 +16383,33 @@ export default {
               ? this.practiceFocusWeakWords
               : (this.postSessionRecommendation?.settings?.practice_weak_words || []))),
       )
-      const first = weakWords[0] || null
-      if (!first) return null
-      const ayahNumber = Number(first.ayahNumber || first.ayah || first.ayah_number || 0)
+      const primaryAyah = this.resolvePrimaryPostSessionWeakAyah()
+      const first = (primaryAyah > 0
+        ? weakWords.find((word) => Number(word?.ayahNumber || word?.ayah || 0) === primaryAyah)
+        : null)
+        || weakWords[0]
+        || null
+      if (!first) {
+        if (!(primaryAyah > 0)) return null
+        const chapterIdOnly = Number(
+          this.postSessionSnapshot?.chapterId
+          || this.postSessionRecommendation?.surah?.id
+          || this.chapterId
+          || 0,
+        )
+        return {
+          phrase: '',
+          phraseStart: 0,
+          ayahNumber: primaryAyah,
+          verseKey: chapterIdOnly ? `${chapterIdOnly}:${primaryAyah}` : '',
+          wordIndex: null,
+          ayahLabel: this.t('memorisation.postSession.coach.ayahLabel', { ayah: primaryAyah })
+            || `Āyah ${primaryAyah}`,
+          weakWord: null,
+          surahId: chapterIdOnly,
+        }
+      }
+      const ayahNumber = Number(first.ayahNumber || first.ayah || first.ayah_number || primaryAyah || 0)
       const chapterId = Number(
         first.surahId
         || String(first.verseKey || '').split(':')[0]
@@ -16122,7 +16454,7 @@ export default {
         phraseStart = Math.max(0, wordIndex - 2)
       }
       if (!phrase) phrase = String(first.text || first.word || '').trim()
-      if (!phrase) return null
+      if (!phrase && !(ayahNumber > 0)) return null
       return {
         phrase,
         phraseStart,
@@ -16133,6 +16465,7 @@ export default {
           ? (this.t('memorisation.postSession.coach.ayahLabel', { ayah: ayahNumber }) || `Āyah ${ayahNumber}`)
           : '',
         weakWord: first,
+        surahId: chapterId,
       }
     },
     resolvePostSessionMethodCopy(plan = null) {
@@ -16279,27 +16612,31 @@ export default {
       if (action === POST_SESSION_CTA_ACTIONS.CLOSE) {
         return !!this.postSessionActionsBusy
       }
+      const hasSnapshotRange = !!(
+        Number(this.postSessionSnapshot?.chapterId || 0)
+        && Number(this.postSessionSnapshot?.rangeStart || 0)
+      )
+      if (action === POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH) {
+        const weakAyah = Number(this.resolvePrimaryPostSessionWeakAyah?.() || 0)
+        return this.postSessionActionsBusy || !(weakAyah > 0)
+      }
       if (action === POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE
-        || action === POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH
         || action === POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING
         || action === POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE) {
-        const hasSnapshotRange = !!(
-          Number(this.postSessionSnapshot?.chapterId || 0)
-          && Number(this.postSessionSnapshot?.rangeStart || 0)
-        )
         return this.postSessionActionsBusy
           || !(this.postSessionRecommendationActionable || hasSnapshotRange)
       }
       if (action === POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE
         || action === POST_SESSION_CTA_ACTIONS.CONFIRM_START
         || action === POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW) {
-        return this.postSessionActionsBusy || !this.postSessionRecommendationActionable
+        return this.postSessionActionsBusy
+          || !(this.postSessionRecommendationActionable || hasSnapshotRange)
       }
       if (action === POST_SESSION_CTA_ACTIONS.OTHER_RANGE) {
-        return this.postSessionActionsBusy || this.postSessionRecommendationStarting
+        return this.postSessionActionsBusy
       }
       if (action === POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE) {
-        return this.postSessionActionsBusy || this.postSessionRecommendationStarting
+        return this.postSessionActionsBusy
       }
       return this.postSessionActionsBusy
     },
@@ -16495,8 +16832,8 @@ export default {
       const weakAyahOnly = options.weakAyahOnly === true
       const focus = this.resolvePostSessionFocusPhrase?.() || null
       const weakAyah = Number(
-        focus?.ayahNumber
-        || this.postSessionRevisionWeakAyahs?.[0]
+        this.resolvePrimaryPostSessionWeakAyah?.()
+        || focus?.ayahNumber
         || 0,
       )
       const hasSnapshotRange = !!(
@@ -16504,6 +16841,12 @@ export default {
         && Number(this.postSessionSnapshot?.rangeStart || 0)
       )
       if (this.postSessionActionsBusy) return
+      if (weakAyahOnly && !(weakAyah > 0)) {
+        this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.noWeakAyah')
+          || 'No weak ayah was identified from this assessment.'
+        this.showBanner?.(this.postSessionRecommendationStartError, 'info', 3200)
+        return
+      }
       if (!this.postSessionRecommendationActionable && !hasSnapshotRange && !(weakAyahOnly && weakAyah > 0)) {
         return
       }
@@ -16529,7 +16872,10 @@ export default {
         if (!chapterId || !rangeStart || !rangeEnd) {
           throw new Error('invalid_focus_phrase_range')
         }
-        const focusWord = this.resolveRecommendedFocusPhraseWord()
+        const focusWord = weakAyahOnly && weakAyah > 0
+          ? (this.postSessionRevisionWeakWords.find((word) => Number(word?.ayahNumber || 0) === weakAyah)
+            || this.resolveRecommendedFocusPhraseWord())
+          : this.resolveRecommendedFocusPhraseWord()
         const activeRecommendation = this.postSessionRecommendation || {}
         const planSettings = this.buildRevisionScopedSettings(
           scope,
@@ -16557,7 +16903,12 @@ export default {
           || this.aiReciteFinalPlan?.technique
           || 'talqin'
         if (this.postSessionRevisionWeakWords.length) {
-          planSettings.practice_weak_words = normaliseWeakWordRecords(this.postSessionRevisionWeakWords)
+          const scopedWords = weakAyahOnly && weakAyah > 0
+            ? this.postSessionRevisionWeakWords.filter((word) => Number(word?.ayahNumber || 0) === weakAyah)
+            : this.postSessionRevisionWeakWords
+          planSettings.practice_weak_words = normaliseWeakWordRecords(
+            scopedWords.length ? scopedWords : this.postSessionRevisionWeakWords,
+          )
         } else if (focusWord) {
           planSettings.practice_weak_words = normaliseWeakWordRecords([focusWord])
         }
@@ -16607,11 +16958,12 @@ export default {
         })
       } catch (error) {
         console.error('Failed to open focus phrase revision:', error)
-        this.postSessionRecommendationStarting = false
         this.recommendedPracticePending = false
         this.focusPhraseRevisionActive = false
         this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
         this.postSessionViewState = 'action_failed'
+      } finally {
+        this.postSessionRecommendationStarting = false
       }
     },
     async continuePractisingCurrentRange() {
@@ -16657,9 +17009,10 @@ export default {
         }
       } catch (error) {
         console.error('Failed to continue practising current range:', error)
-        this.postSessionRecommendationStarting = false
         this.recommendedPracticePending = false
         this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
+      } finally {
+        this.postSessionRecommendationStarting = false
       }
     },
     practiceWeakWordKey(word) {
@@ -17185,6 +17538,10 @@ export default {
       autoStart = false,
     }) {
       this.primeAudioPlaybackUnlock()
+      // Reuse the backend session created by acceptAndStart — never open a duplicate.
+      if (sessionPayload?.id) {
+        this.applyBackendStartResult({ session: sessionPayload, unfinished: true })
+      }
       const recommendationForPlan = {
         settings: settings && typeof settings === 'object' ? settings : null,
         technique: techniqueId ? { id: techniqueId } : null,
@@ -17319,7 +17676,12 @@ export default {
           this.showTools = false
           this.postSessionViewState = 'idle'
           this.closePostSessionChoice()
-          this.startSessionWithCountdown({ skipPrime: true })
+          const started = this.startSessionWithCountdown({ skipPrime: true })
+          if (started === false) {
+            this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
+              || 'Could not start that session. Try again when ready.'
+            this.showBanner?.(this.postSessionRecommendationStartError, 'warning', 3600)
+          }
         }
         this.schedulePracticeFocusWordDomSync([300, 800, 1600, 2800])
       })
@@ -17879,46 +18241,15 @@ export default {
       this.postSessionSnapshot = null
       this.postSessionEmotionalContext = null
       this.restoreOnboardingDemo()
-      this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
+      this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true })
       this.showTools = false
       this.topCardMenuOpen = false
     },
     async completeOnboardingAndStart() {
-      this.primeAudioPlaybackUnlock()
-      this.markOnboardingCompleted()
-      const wasManual = !!this.onboardingManualLaunch
-      this.resetOnboardingModalState()
-      if (wasManual) {
-        this.restoreOnboardingDemo()
-        return
-      }
-      this.restoreOnboardingDemo({ keepCurrentSession: true })
-      this.applyOnboardingGoalPreset()
-      this.currentMode = 'advanced'
-      this.tab = 'tools'
-      this.showTools = false
-      if (this.chapterId) {
-        this.focusModeEnabled = false
-        this.blurModeEnabled = false
-        this.chainingEnabled = false
-        this.anchorModeEnabled = false
-        await this.loadChapter(this.currentMode)
-        this.$nextTick(() => {
-          this.startSessionWithCountdown({ skipPrime: true })
-        })
-      }
+      await this.completeOnboardingIntoFirstSession()
     },
     async completeOnboardingWithDefaultSession() {
-      this.primeAudioPlaybackUnlock()
-      this.markOnboardingCompleted()
-      this.resetOnboardingModalState()
-      this.restoreOnboardingDemo({ keepCurrentSession: true })
-      this.applyDefaultWorkspaceSessionConfig({ openSetup: false })
-      await this.loadChapter(this.currentMode)
-      this.isDataReady = true
-      this.$nextTick(() => {
-        this.startSessionWithCountdown({ skipPrime: true })
-      })
+      await this.completeOnboardingIntoFirstSession()
     },
     prepareOnboardingDemo() {
       const snapshot = {
@@ -20491,7 +20822,8 @@ export default {
         targets = ref ? [ref] : []
         this.recitationCheckScope = 'ayah'
       } else {
-        this.expandShortSurahSessionRange()
+        // Keep the practised session window — never expand short surahs to full
+        // length here, or AI Recite drifts from onboarding / partial sets (e.g. 1–3 → 1–7).
         const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
         const from = Math.max(1, Number(this.rangeStart || 1))
         const to = Math.max(from, Number(this.rangeEnd || from))
@@ -21692,6 +22024,8 @@ export default {
         try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
       }
       try { this.stopRecitationSpeechRecognition?.() } catch (_) { /* ignore */ }
+      // Invalidate any in-flight attempt so late getUserMedia / onstop cannot restart listening.
+      this.recitationAttemptId = ''
       this.resetAmdElapsedTimer()
       this.clearAmdMistakeVisual()
       try { this.amdMistakeFeedback?.resetSessionSignals?.() } catch (_) { /* ignore */ }
@@ -23999,7 +24333,8 @@ export default {
       const liveWords = kind === 'memorisation' ? this.aiMemorisationCheckerLiveWords : this.recitationLiveWords
       if (!Array.isArray(liveWords) || liveWords.length < targetWordCount) return false
       const lastWord = liveWords[targetWordCount - 1]
-      return ['correct', 'partial', 'incorrect', 'omitted'].includes(String(lastWord?.status || ''))
+      // Soft "omitted" during a pause must never count as heard — that cut slow / tajweed takes short.
+      return ['correct', 'partial', 'incorrect', 'uncertain'].includes(String(lastWord?.status || ''))
     },
     shouldAutoStopRecitationCheckFromAlignment(alignment = null) {
       if (!this.recitationCheckRecording || !alignment?.progression?.complete) return false
@@ -24008,6 +24343,8 @@ export default {
       // Multi-ayah: never cut the learner off when soft alignment marks every word
       // evaluated — let them finish and press Stop.
       if (this.isSessionRecitationCheckActive()) return false
+      // Require a spoken last word — soft omissions during pauses are not completion.
+      if (!this.hasRecitationCheckHeardThroughEnd('recitation')) return false
       return true
     },
     shouldAutoStopRecitationCheckFromSilence() {
@@ -24634,7 +24971,8 @@ export default {
         const provider = createSpeechmaticsRealtimeProvider({
           getAccessToken: () => this.fetchTranscriptionAccessToken(),
           getSampleRate: () => Number(bridge.sampleRate || 0),
-          handshakeTimeoutMs: 1600,
+          // Allow slower token/handshake without abandoning a healthy Speechmatics session.
+          handshakeTimeoutMs: liveRecitation ? 2800 : 2200,
           maxDelaySeconds: speechmaticsDelays.maxDelaySeconds,
           endOfUtteranceSeconds: speechmaticsDelays.endOfUtteranceSeconds,
         })
@@ -24732,8 +25070,9 @@ export default {
     startSpeechRecognitionWatchdog(kind = 'recitation') {
       this.stopSpeechRecognitionWatchdog(kind)
       const key = kind === 'memorisation' ? '_aiMemorisationSttWatchdog' : '_recitationSttWatchdog'
-      // AMD needs a quicker Speechmatics → browser handoff so listening never feels stalled.
-      const delayMs = (kind === 'recitation' && this.amdOpen) ? 800 : 900
+      // Pre-speech silence and tajweed pauses are normal. Only hand off when the
+      // Speechmatics socket is actually dead — not merely quiet.
+      const delayMs = 10000
       this[key] = window.setTimeout(() => {
         this[key] = null
         const recording = kind === 'memorisation'
@@ -24743,7 +25082,8 @@ export default {
         const meta = this.getTranscriptionMeta(kind)
         const words = this.getBestRecognitionWordsForAssessment(kind)
         if (Number(meta?.messageCount || 0) > 0 || words.length) return
-        // Speechmatics connected but produced nothing — exclusive browser STT handoff.
+        const provider = this.getTranscriptionProvider(kind)
+        if (provider?.isOpen?.()) return
         this.failoverTranscriptionToBrowserStt(kind)
       }, delayMs)
     },
@@ -24759,19 +25099,21 @@ export default {
         const idleMs = Date.now() - Number(this._amdLastRecognitionAt || 0)
         // Allow natural pauses, but recover if STT is truly silent.
         if (idleMs < 12000) return
-        this._amdLastRecognitionAt = Date.now()
         const heard = this.getBestRecognitionWordsForAssessment?.('recitation') || []
         const liveProgress = (Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : [])
           .some((word) => {
             const status = String(word?.status || '').toLowerCase()
             return status && status !== 'pending' && status !== 'notattempted'
           })
-        if (this.getTranscriptionProvider?.('recitation')?.isOpen?.()) {
-          if (!heard.length && !liveProgress) {
-            this.failoverTranscriptionToBrowserStt('recitation')
+        const provider = this.getTranscriptionProvider?.('recitation')
+        if (provider?.isOpen?.()) {
+          // Connected but quiet — learner may still be pausing. Do not tear down Speechmatics.
+          if (heard.length || liveProgress) {
+            this._amdLastRecognitionAt = Date.now()
           }
           return
         }
+        this._amdLastRecognitionAt = Date.now()
         if (!this.recitationSpeechRecognition) {
           this.startRecitationSpeechRecognition()
         }
@@ -25267,11 +25609,7 @@ export default {
         (colorCounts.red || 0) + (colorCounts.black || 0),
       )
       const summary = this.buildPostSessionAiReviewSummary(result, outcome)
-      this.postSessionAiFeedback = summary
-      this.postSessionAiDetailsExpanded = false
-      this.capturePracticeFocusWeakWordsFromResult(result)
-      this.applyLocalRecitationMasteryFromPostSession(outcome, extras, result)
-      await this.applyPostSessionAiAssessment(outcome, summary, {
+      const assessmentExtras = {
         weak_ayahs: weakAyahs,
         sequence_errors: listCount(mistakes.sequenceErrors) + listCount(mistakes.verseJumps) + listCount(mistakes.skippedAyahs),
         missed_words: missedWords,
@@ -25282,7 +25620,17 @@ export default {
         assessment_quality: assessmentQuality,
         result_state: resultState,
         _result: { ...result, colorCounts, weakAyahs, assessmentQuality, resultState, durationSeconds },
-      })
+      }
+      this.postSessionAiFeedback = summary
+      this.postSessionAiDetailsExpanded = false
+      this.capturePracticeFocusWeakWordsFromResult(result)
+      // Must not throw — a ReferenceError here previously aborted recommendation sync.
+      try {
+        this.applyLocalRecitationMasteryFromPostSession(outcome, assessmentExtras, result)
+      } catch (error) {
+        console.warn('Local recitation mastery update failed', error)
+      }
+      await this.applyPostSessionAiAssessment(outcome, summary, assessmentExtras)
     },
     async applyInsufficientAudioAssessment(result = null, options = {}) {
       const durationSeconds = Number(
@@ -25996,14 +26344,14 @@ export default {
       this.showBanner(this.t('toasts.reciteCheckDeleted'), 'info', 1400)
     },
     async toggleRecitationCheck() {
-      if (this.recitationCheckRecording) {
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
         this.stopRecitationCheckRecording()
         return
       }
       await this.startRecitationCheckRecording()
     },
     toggleRecitationCheckForVerse(verse, options = {}) {
-      if (this.recitationCheckRecording) {
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
         this.stopRecitationCheckRecording()
         return
       }
@@ -26011,7 +26359,7 @@ export default {
       this.startRecitationCheckRecording(verse)
     },
     toggleRecitationCheckForCurrentModal() {
-      if (this.recitationCheckRecording) {
+      if (this.recitationCheckRecording || this.recitationCheckPreparing) {
         this.stopRecitationCheckRecording()
         return
       }
@@ -26041,7 +26389,14 @@ export default {
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
 
       const attemptId = this.beginRecitationAttempt()
+      // Fresh attempt owns the mic lifecycle — clear leftover discard from a prior cancel.
+      this.recitationCheckDiscardOnStop = false
+      const startedWhileAmd = !!this.amdOpen
       const micProbe = await probeMicrophonePermission()
+      if (!this.isActiveRecitationAttempt(attemptId) || this.recitationCheckDiscardOnStop) {
+        this.recitationCheckPreparing = false
+        return
+      }
       if (micProbe.denied) {
         const micMessage = this.resolveRecitationFailureText(
           { name: 'NotAllowedError', message: 'permission_denied' },
@@ -26058,7 +26413,6 @@ export default {
         return
       }
 
-      this.recitationCheckDiscardOnStop = false
       this.recitationCheckError = ''
       this.recitationCheckResult = null
       this.resetReviewResultAudio({ revokeOwned: true })
@@ -26095,10 +26449,17 @@ export default {
           console.warn('getUserMedia with constraints failed, retrying basic audio', constraintError)
           stream = await navigator.mediaDevices.getUserMedia({ audio: true })
         }
-        // User may have pressed Stop while the permission prompt was open.
-        if (this.amdOpen && (this._amdCompleting || this.amdEndingSoon)) {
+        // Cancelled while the permission prompt / getUserMedia was pending —
+        // never leave the mic live or flip into recording after leave/retry.
+        const cancelledDuringPrepare = this.recitationCheckDiscardOnStop
+          || !this.isActiveRecitationAttempt(attemptId)
+          || (startedWhileAmd && !this.amdOpen)
+          || (this.amdOpen && (this._amdCompleting || this.amdEndingSoon))
+        if (cancelledDuringPrepare) {
           try { stream.getTracks?.().forEach((track) => track.stop()) } catch (_) { /* ignore */ }
           this.recitationCheckPreparing = false
+          this.recitationCheckRecording = false
+          this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
           return
         }
         const mimeType = this.chooseRecorderMimeType()
@@ -26185,11 +26546,24 @@ export default {
           try {
             // If nothing was recognised during the take, don't wait the full EndOfTranscript timeout.
             const emptyStream = usedSpeechmatics && Number(metaBeforeFinalize?.messageCount || 0) === 0 && !alreadyHeardWords
+            const paceFactor = Number(this._recitationPaceObserver
+              ? estimateSessionRecitationPaceFactor({
+                observer: this._recitationPaceObserver,
+                recognitionWords: this.getBestRecognitionWordsForAssessment('recitation'),
+              })
+              : 1) || 1
+            const tajweedHeavy = isTajweedHeavyRecitation(this._recitationPaceObserver, paceFactor)
+            // Slow / tajweed sessions need a bit more final-transcript grace; fast sessions settle sooner.
+            const settleBase = this.amdOpen ? 2800 : (this.postSessionAiReciteActive ? 2200 : 1800)
+            const settleTimeoutMs = emptyStream
+              ? 700
+              : Math.round(settleBase * (tajweedHeavy || paceFactor >= 1.25 ? 1.25 : (paceFactor <= 0.8 ? 0.9 : 1)))
+            const settleQuietMs = emptyStream
+              ? 180
+              : Math.round((this.amdOpen ? 400 : 280) * (tajweedHeavy || paceFactor >= 1.25 ? 1.2 : 1))
             await this.finalizeTranscriptionRecognition('recitation', {
-              timeoutMs: emptyStream
-                ? 700
-                : (this.amdOpen ? 2800 : (this.postSessionAiReciteActive ? 2200 : 1800)),
-              quietMs: emptyStream ? 180 : (this.amdOpen ? 400 : 280),
+              timeoutMs: Math.max(700, Math.min(3600, settleTimeoutMs)),
+              quietMs: Math.max(180, Math.min(700, settleQuietMs)),
               requireEndOfTranscript: usedSpeechmatics && !emptyStream,
             })
           } catch (settleError) {
@@ -26236,6 +26610,8 @@ export default {
             this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.COMPLETE)
           } catch (error) {
             if (!this.isActiveRecitationAttempt(stopAttemptId)) return
+            // Invalidate so a late submit from Promise.race cannot corrupt the next attempt.
+            this.beginRecitationAttempt()
             console.error('Failed to process recitation check:', error)
             const failureText = this.resolveRecitationFailureText(error, { context: 'recitation_submit' })
             const classification = classifyRecitationFailure(error, { context: 'recitation_submit' })
@@ -26273,7 +26649,7 @@ export default {
               provider: 'client',
             })
           } finally {
-            if (!this.isActiveRecitationAttempt(stopAttemptId)) return
+            // stopAttemptId may have been invalidated on failure — always clear prepare UI.
             this.recitationCheckPreparing = false
             this.clearRecitationSlowProcessingNotice()
             this.cleanupRecitationCheckMedia()
@@ -26373,7 +26749,20 @@ export default {
         // Preserve elapsed when the mic stops; completion / discard decide reset vs keep.
         this.stopAmdElapsedTimer()
       }
-      if (!this.recitationCheckMediaRecorder || !['recording', 'paused'].includes(this.recitationCheckMediaRecorder.state)) return
+      const recorderState = this.recitationCheckMediaRecorder?.state
+      if (!this.recitationCheckMediaRecorder || !['recording', 'paused'].includes(recorderState)) {
+        // Cancel in-flight prepare (permission prompt / getUserMedia) so Start is never stuck.
+        if (this.recitationCheckPreparing || this.recitationCheckRecording) {
+          this.recitationCheckDiscardOnStop = true
+          this.recitationCheckPreparing = false
+          this.recitationCheckRecording = false
+          this.recitationCheckAutoStopArmed = false
+          try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+          this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+          this.clearRecitationSlowProcessingNotice()
+        }
+        return
+      }
       this.recitationCheckAutoStopArmed = false
       // Discard / AMD completion already owns Processing UI — don't flip preparing
       // (which can fight stage watchers and feel like Stop lag).
@@ -26638,6 +27027,7 @@ export default {
         // Do not park results in the AI Recite modal — hand off to success modal.
         if (!this.isActiveRecitationAttempt(attemptId)) return null
         await this.finalizePostSessionAiReciteFromResult(result)
+        await this.maybeApplyPostSessionAiAssessmentFromResult(result)
       } else {
         if (!this.isActiveRecitationAttempt(attemptId)) return null
         this.recitationCheckResult = result
@@ -28570,25 +28960,22 @@ export default {
       this.openToolsPanel({ tab: 'tools', preserveFreshSelection: true })
     },
 
-    resolveWelcomeBackContinuePayload(localCandidates = []) {
-      if (Number(this.continueSessionPayload?.config?.chapterId || 0) > 0) {
-        return this.continueSessionPayload
-      }
-      if (this.backendUnfinishedSession && this.backendSessionSnapshot) {
-        const fromBackend = this.buildContinuePayloadFromBackendSession(this.backendSessionSnapshot)
-        if (Number(fromBackend?.config?.chapterId || 0) > 0) return fromBackend
-      }
-      const usable = (localCandidates || []).find((candidate) => (
-        Number(candidate?.config?.chapterId || 0) > 0
-        && isResumableSessionPayload(candidate, {
-          backendStatus: this.backendSessionSnapshot?.status || null,
-          isSample: false,
-        })
-      ))
-      if (usable) return usable
+    resolveWelcomeBackContinuePayload(localCandidates = [], options = {}) {
+      const preferredSessionId = Number(options.preferredSessionId || 0) || null
+      const picked = pickContinuePayloadForResume({
+        continuePayload: this.continueSessionPayload,
+        backendSession: this.backendUnfinishedSession ? this.backendSessionSnapshot : null,
+        localCandidates,
+        preferredSessionId,
+        buildFromBackend: (session) => this.buildContinuePayloadFromBackendSession(session),
+      })
+      if (picked && Number(picked?.config?.chapterId || 0) > 0) return picked
       const withChapter = (localCandidates || []).find((candidate) => Number(candidate?.config?.chapterId || 0) > 0)
-      if (withChapter) return withChapter
-      return this.buildPayloadFromLoadedWorkspaceSession()
+      if (withChapter && !this.backendUnfinishedSession) return withChapter
+      if (!this.backendUnfinishedSession) {
+        return this.buildPayloadFromLoadedWorkspaceSession()
+      }
+      return null
     },
 
     buildPayloadFromLoadedWorkspaceSession() {
@@ -28620,6 +29007,8 @@ export default {
         audioSrc: this.audioElement?.currentSrc || '',
         readingViewMode: this.readingViewMode,
         mushafPageIndex: this.mushafPageIndex,
+        backendSessionId: Number(this.mutqinState?.sessionState?.backendSessionId || this.backendSessionSnapshot?.id || 0) || null,
+        backendStatus: this.backendSessionSnapshot?.status || null,
         config: {
           ...config,
           chapterId,
@@ -28672,13 +29061,18 @@ export default {
         || payload?.backendSessionId
         || 0
       ) || undefined
+      const ayahNumber = resolveResumeAyahNumber(payload, {
+        ayah_number: this.backendSessionSnapshot?.ayah_number,
+        currentPosition: this.currentPosition,
+        rangeStart: this.rangeStart,
+      })
       Promise.resolve().then(async () => {
         try {
           const result = await learningApi.resumeSession({
             idempotency_key: `resume-${sessionId || 'welcome'}`,
             session_id: sessionId,
             surah_number: chapterId || null,
-            ayah_number: Number(payload?.config?.rangeStart || this.rangeStart || 0) || null,
+            ayah_number: ayahNumber,
             memorisation_mode: payload?.mode || this.currentMode,
           })
           this.backendUnfinishedSession = true
@@ -28703,7 +29097,7 @@ export default {
       })
     },
 
-    async welcomeBackContinueSession() {
+    async welcomeBackContinueSession(options = {}) {
       if (this.welcomeBackContinueInFlight) return
       this.welcomeBackContinueInFlight = true
       this.primeAudioPlaybackUnlock()
@@ -28711,6 +29105,7 @@ export default {
       this.sessionActionLock?.reset?.()
       this.sessionLifecycleMutation = SESSION_MUTATION.IDLE
       this.sessionLifecycleError = null
+      const preferredSessionId = Number(options.preferredSessionId || 0) || null
 
       // Capture resume candidates before validate/sync can wipe them.
       const localCandidates = [
@@ -28728,34 +29123,44 @@ export default {
       try {
         if (this.learningBackendEnabled()) {
           try {
-            await this.validateSessionLifecycleAgainstBackend()
+            await this.validateSessionLifecycleAgainstBackend(
+              preferredSessionId ? { preferredSessionId } : {}
+            )
           } catch (e) { /* keep local candidates */ }
         }
         this.syncWelcomeBackResumeFromBackend()
 
-        let payload = this.resolveWelcomeBackContinuePayload(localCandidates)
+        let payload = this.resolveWelcomeBackContinuePayload(localCandidates, { preferredSessionId })
         if (payload?.config?.chapterId) {
           this.continueSessionPayload = payload
           this.hasContinueSession = true
         }
 
-        const chapterReady = Number(
-          this.chapterId
-          || this.sessionConfig?.chapterId
-          || this.advanced?.chapterId
-          || this.beginner?.chapterId
-          || payload?.config?.chapterId
-          || 0
-        ) > 0
+        const loadedRange = {
+          chapterId: Number(
+            this.chapterId
+            || this.sessionConfig?.chapterId
+            || this.advanced?.chapterId
+            || this.beginner?.chapterId
+            || 0
+          ),
+          rangeStart: Number(this.rangeStart || this.sessionConfig?.rangeStart || this.advanced?.rangeStart || this.beginner?.rangeStart || 0),
+          rangeEnd: Number(this.rangeEnd || this.sessionConfig?.rangeEnd || this.advanced?.rangeEnd || this.beginner?.rangeEnd || 0),
+        }
+        const canFastPath = canSkipHydrateForContinue({
+          hasVerses: !!this.hasVerses,
+          payload,
+          loaded: loadedRange,
+        })
 
         // Fast path: previous session is already loaded behind the welcome gate.
-        if (this.hasVerses && chapterReady) {
+        if (canFastPath) {
           this.revealLoadedPreviousSession()
           this.queueBackendResumeAfterWelcomeContinue(payload)
           return
         }
 
-        if (this.canSoftResumePausedSession()) {
+        if (this.canSoftResumePausedSession() && (!payload || sessionRangesMatch(payload, loadedRange))) {
           this.revealLoadedPreviousSession()
           this.softResumePausedSession()
           this.queueBackendResumeAfterWelcomeContinue(payload)
@@ -28913,7 +29318,7 @@ export default {
         action === PRIMARY_SESSION_ACTION.START_ONBOARDING
         || action === PRIMARY_SESSION_ACTION.CONTINUE_ONBOARDING
       ) {
-        this.showPostLoginOnboarding = true
+        this.openOnboardingModal(false)
         return
       }
 
@@ -29210,7 +29615,7 @@ export default {
         this.backendUnfinishedSession = false
         this.backendSessionSnapshot = null
         this.sessionLifecycleHydrated = true
-        return
+        return { session: null, unfinished: false, invalidRequested: false }
       }
       try {
         const preferredSessionId = Number(options.preferredSessionId || 0) || null
@@ -29227,7 +29632,7 @@ export default {
           }
           this.clearActiveSessionSnapshot()
           this.sessionPaused = false
-          return
+          return { session: null, unfinished: false, invalidRequested: true }
         }
 
         if (!unfinished) {
@@ -29242,7 +29647,7 @@ export default {
             if (this.centralSession) this.centralSession.sessionStatus = this.sessionCompleted ? 'completed' : 'idle'
             if (this.mutqinState?.sessionState) this.mutqinState.sessionState.active = false
           }
-          return
+          return { session, unfinished: false, invalidRequested: false }
         }
 
         this.sessionPaused = String(session?.status || '').toLowerCase() === 'paused'
@@ -29258,10 +29663,12 @@ export default {
           this.continueSessionPayload = reconciled
           this.hasContinueSession = true
         }
+        return { session, unfinished: true, invalidRequested: false }
       } catch (error) {
         console.warn('Failed to validate session against backend', error)
         this.sessionLifecycleError = 'backend_validation_failed'
         this.noteLearningBackendFailure(error, 'validate')
+        return { session: this.backendSessionSnapshot, unfinished: !!this.backendUnfinishedSession, invalidRequested: false }
       } finally {
         this.sessionLifecycleHydrated = true
       }
@@ -29276,12 +29683,16 @@ export default {
       const rangeStart = Math.max(1, Number(config.rangeStart || session.ayah_number || 1))
       const rangeEnd = Math.max(rangeStart, Number(config.rangeEnd || rangeStart))
       const queueIndex = Math.max(0, Number(session.current_step ?? meta.current_index ?? 0))
+      const activeAyah = Math.min(
+        rangeEnd,
+        Math.max(rangeStart, Number(session.ayah_number || rangeStart + queueIndex))
+      )
       return {
         timestamp: Date.now(),
         mode: session.memorisation_mode || meta.mode || this.currentMode || 'advanced',
         tab: 'tools',
-        activeKey: `${chapterId}:${Math.min(rangeEnd, rangeStart + queueIndex)}`,
-        activeVerseKey: `${chapterId}:${Math.min(rangeEnd, rangeStart + queueIndex)}`,
+        activeKey: `${chapterId}:${activeAyah}`,
+        activeVerseKey: `${chapterId}:${activeAyah}`,
         queueIndex,
         currentTime: 0,
         duration: 0,
@@ -29301,7 +29712,9 @@ export default {
           focusModeEnabled: !!config.focusModeEnabled,
           blurModeEnabled: !!config.blurModeEnabled,
           talqinModeEnabled: !!config.talqinModeEnabled,
+          readingViewMode: config.readingViewMode || null,
         },
+        appliedPracticeSetup: meta.appliedPracticeSetup || config.appliedPracticeSetup || null,
       }
     },
 
@@ -31368,6 +31781,12 @@ export default {
       const activeVerseKey = mutqinItem?.ayahId
         || this.activeVerseKey
         || (config.chapterId ? `${config.chapterId}:${fallbackAyah}` : null)
+      const backendSessionId = Number(
+        mutqinSession.backendSessionId
+        || this.backendSessionSnapshot?.id
+        || this.continueSessionPayload?.backendSessionId
+        || 0
+      ) || null
       return {
         timestamp: Date.now(),
         mode: this.currentMode,
@@ -31385,6 +31804,10 @@ export default {
         readingViewMode: this.readingViewMode,
         mushafPageIndex: this.mushafPageIndex,
         sessionStartedAt: Number(this.sessionStartedAt || 0) || null,
+        backendSessionId,
+        backendStatus: this.backendSessionSnapshot?.status
+          || this.continueSessionPayload?.backendStatus
+          || null,
         config,
         appliedPracticeSetup: this.appliedPracticeSetupSnapshot
           || this.captureAppliedPracticeSetup(),

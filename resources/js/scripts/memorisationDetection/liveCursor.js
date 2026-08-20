@@ -13,6 +13,8 @@ export function isSettledLiveStatus(status = '') {
     || value === 'incorrect'
     || value === 'omitted'
     || value === 'skipped'
+    // Uncertain recognition still advances the live cursor — never freeze on STT doubt.
+    || value === 'uncertain'
 }
 
 export function isPaintedLiveStatus(status = '') {
@@ -21,6 +23,7 @@ export function isPaintedLiveStatus(status = '') {
     || value === 'partial'
     || value === 'incorrect'
     || value === 'omitted'
+    || value === 'uncertain'
 }
 
 /**

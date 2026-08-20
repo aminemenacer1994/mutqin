@@ -216,7 +216,8 @@ const saveReq = readFileSync(join(root, 'app/Http/Requests/Learning/SaveRecommen
 {
   assert.match(vue, /data-testid="post-session-scope-picker"/)
   assert.match(vue, /selectPostSessionPracticeScope/)
-  assert.match(vue, /scopeWeakAreasLabel|postSessionRevisionScopeOptions/)
+  assert.match(vue, /postSessionInfoArchitecture\.revisionOptions|postSessionRevisionScopeOptions|scopeWeakAreasLabel/)
+  assert.match(js, /postSessionRevisionScopeOptions\(\)/)
   assert.match(vue, /data-testid="post-session-attempt-compare"/)
   assert.match(js, /buildRevisionScopedSettings/)
   assert.match(js, /ensurePostSessionPracticeScopeDefault/)
