@@ -113,7 +113,7 @@ export const LIVE_PACE_SLACK_WORDS = 1
  */
 export const LIVE_PACE_MAX_ADVANCE_PER_UPDATE = 1
 /** How often held-back words may drip forward while recognition is quiet. */
-export const LIVE_PACE_DRIP_MS = 420
+export const LIVE_PACE_DRIP_MS = 180
 
 /**
  * How far into the target the confirmed cursor is allowed to sit.

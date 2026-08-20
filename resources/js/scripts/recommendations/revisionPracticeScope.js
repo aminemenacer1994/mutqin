@@ -22,6 +22,12 @@ const AYAH_LEVEL_MIN_WORDS = 3
 /** Minimum repeats on ayahs flagged as weak during revision. */
 export const WEAK_AYAH_REPEAT_MIN = 3
 
+/** Strict double-down on the recommended weak ayah / words, capped at 8. */
+export function doubleDownRevisionRepetitions(baseRepetitions) {
+  const base = Math.max(1, Number(baseRepetitions) || WEAK_AYAH_REPEAT_MIN)
+  return Math.min(8, Math.max(WEAK_AYAH_REPEAT_MIN * 2, base * 2))
+}
+
 /**
  * @param {unknown} value
  * @returns {'weak_areas'|'full_range'|null}
@@ -514,14 +520,12 @@ export function buildWeakAyahRepeatPlan(input = {}) {
     }
   }
 
-  const globalRepetitions = Math.min(8, Math.max(baseReps, WEAK_AYAH_REPEAT_MIN))
+  const globalRepetitions = doubleDownRevisionRepetitions(baseReps)
   const perAyahRepeats = {}
   const verseKeyRepeats = {}
 
   weakAyahs.forEach((ayah) => {
-    const weakRep = scope === PRACTICE_SCOPE.WEAK_AREAS
-      ? Math.min(8, Math.max(WEAK_AYAH_REPEAT_MIN, globalRepetitions))
-      : Math.min(8, Math.max(WEAK_AYAH_REPEAT_MIN, globalRepetitions + 1))
+    const weakRep = globalRepetitions
     perAyahRepeats[ayah] = weakRep
     if (chapterId > 0) {
       verseKeyRepeats[`${chapterId}:${ayah}`] = weakRep

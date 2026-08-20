@@ -107,19 +107,19 @@ const { resolveAdaptiveSpeechmaticsDelays } = delays.namespace
 {
   const general = resolveAdaptiveSpeechmaticsDelays({ amdLive: false })
   assert.equal(general.tier, 'general')
-  assert.equal(general.maxDelaySeconds, 1.4)
+  assert.equal(general.maxDelaySeconds, 0.7)
 
   const fast = resolveAdaptiveSpeechmaticsDelays({ amdLive: true, paceFactor: 0.7 })
   assert.equal(fast.tier, 'fast')
-  assert.equal(fast.maxDelaySeconds, 1.2)
+  assert.equal(fast.maxDelaySeconds, 0.7)
 
   const balanced = resolveAdaptiveSpeechmaticsDelays({ amdLive: true, paceFactor: 1 })
   assert.equal(balanced.tier, 'balanced')
-  assert.equal(balanced.maxDelaySeconds, 2.0)
+  assert.equal(balanced.maxDelaySeconds, 0.7)
 
   const slow = resolveAdaptiveSpeechmaticsDelays({ amdLive: true, paceFactor: 1.4, tajweedHeavy: true })
   assert.equal(slow.tier, 'slow')
-  assert.equal(slow.maxDelaySeconds, 2.8)
+  assert.equal(slow.maxDelaySeconds, 0.9)
 }
 
 // Wiring: Memorisation uses pace-aware Speechmatics config for AMD.

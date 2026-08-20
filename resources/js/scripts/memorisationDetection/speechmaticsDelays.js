@@ -1,27 +1,27 @@
-export const SPEECHMATICS_MAX_DELAY_SECONDS = 1.4
-/** Default AMD connect — balanced latency vs pause tolerance. */
-export const SPEECHMATICS_AMD_MAX_DELAY_SECONDS = 2.0
-/** Slow / tajwīd-heavy sessions — maximum Speechmatics patience. */
-export const SPEECHMATICS_AMD_SLOW_MAX_DELAY_SECONDS = 2.8
-/** Fast reciters — lower partial lag. */
-export const SPEECHMATICS_AMD_FAST_MAX_DELAY_SECONDS = 1.2
-export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 1.4
-export const SPEECHMATICS_AMD_END_OF_UTTERANCE_SECONDS = 1.8
-export const SPEECHMATICS_AMD_SLOW_END_OF_UTTERANCE_SECONDS = 2.2
-export const SPEECHMATICS_AMD_FAST_END_OF_UTTERANCE_SECONDS = 1.2
+export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.7
+/** Default AMD connect — Speechmatics floor for live colouring. */
+export const SPEECHMATICS_AMD_MAX_DELAY_SECONDS = 0.7
+/** Slow / tajwīd-heavy sessions — keep a tiny extra hold, still under 1s. */
+export const SPEECHMATICS_AMD_SLOW_MAX_DELAY_SECONDS = 0.9
+/** Fast reciters — Speechmatics minimum. */
+export const SPEECHMATICS_AMD_FAST_MAX_DELAY_SECONDS = 0.7
+export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.45
+export const SPEECHMATICS_AMD_END_OF_UTTERANCE_SECONDS = 0.5
+export const SPEECHMATICS_AMD_SLOW_END_OF_UTTERANCE_SECONDS = 0.7
+export const SPEECHMATICS_AMD_FAST_END_OF_UTTERANCE_SECONDS = 0.4
 
-function clampSpeechmaticsDelay(value, fallback) {
+function clampSpeechmaticsDelay(value, fallback, min = 0.7, max = 4) {
   const num = Number(value)
   if (!Number.isFinite(num)) return fallback
-  return Math.max(0.7, Math.min(4, num))
+  return Math.max(min, Math.min(max, num))
 }
 
 export function clampSpeechmaticsMaxDelaySeconds(value, fallback = SPEECHMATICS_MAX_DELAY_SECONDS) {
-  return clampSpeechmaticsDelay(value, fallback)
+  return clampSpeechmaticsDelay(value, fallback, 0.7, 4)
 }
 
 export function clampSpeechmaticsEndOfUtteranceSeconds(value, fallback = SPEECHMATICS_END_OF_UTTERANCE_SECONDS) {
-  return clampSpeechmaticsDelay(value, fallback)
+  return clampSpeechmaticsDelay(value, fallback, 0.4, 4)
 }
 
 /**

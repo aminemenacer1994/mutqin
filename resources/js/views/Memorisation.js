@@ -116,6 +116,7 @@ import {
   buildWeakOnlyPracticeSequence,
   canMarkAyahMasteredFromPractice,
   compareRevisionAttempts,
+  doubleDownRevisionRepetitions,
   mergeVerseKeyRepeatOverrides,
   normalisePracticeScope,
   readPracticeScopeFromSettings,
@@ -402,6 +403,25 @@ import {
 function activeSessionSnapshotStorageKey(userId = null) {
   const id = userId != null && String(userId).trim() !== '' ? String(userId) : 'guest'
   return `${ACTIVE_SESSION_SNAPSHOT_KEY}.${id}`
+}
+
+function waitForMediaRecorderChunks(getChunks, timeoutMs = 200) {
+  const existing = typeof getChunks === 'function' ? getChunks() : []
+  if (Array.isArray(existing) && existing.length) {
+    return Promise.resolve([...existing])
+  }
+  return new Promise((resolve) => {
+    const deadline = Date.now() + Math.max(80, Number(timeoutMs) || 450)
+    const poll = () => {
+      const chunks = typeof getChunks === 'function' ? getChunks() : []
+      if ((Array.isArray(chunks) && chunks.length) || Date.now() >= deadline) {
+        resolve(Array.isArray(chunks) ? [...chunks] : [])
+        return
+      }
+      window.setTimeout(poll, 40)
+    }
+    poll()
+  })
 }
 
 const HELP_LEARNING_FALLBACKS = {
@@ -917,6 +937,7 @@ export default {
       recitationCheckMediaStream: null,
       recitationCheckChunks: [],
       recitationCheckStartedAt: 0,
+      _transcriptionTokenInFlight: null,
       recitationCheckResult: null,
       recitationCheckPendingTargets: [],
       recitationSessionEvaluationMap: {},
@@ -13719,10 +13740,19 @@ export default {
       const preservedSessionId = this.postSessionCompletedSessionId
       const keepMasteryLoop = this.awaitingMasteryRetest && this.masteryTargetRange
       const masteryTarget = keepMasteryLoop ? { ...this.masteryTargetRange } : null
+      const pendingRevision = !!(this.recommendedPracticePending || this.awaitingMasteryRetest)
+      const preservedWeakWords = normaliseWeakWordRecords(this.practiceFocusWeakWords || [])
+      const preservedFocusKey = this.selectedPracticeWeakWordKey
       this.resetPostSessionRecommendationState()
       if (keepMasteryLoop && masteryTarget) {
         this.awaitingMasteryRetest = true
         this.masteryTargetRange = masteryTarget
+        this.recommendedPracticeCompleted = pendingRevision
+        if (preservedWeakWords.length) {
+          this.practiceFocusWeakWords = preservedWeakWords
+          this.selectedPracticeWeakWordKey = preservedFocusKey
+          this.persistPracticeFocusWeakWords()
+        }
       }
       if (preservedSessionId) {
         this.postSessionCompletedSessionId = preservedSessionId
@@ -13761,7 +13791,8 @@ export default {
       if (this.aiTestModalsEnabled) {
         void preloadAiMemorisationDetectionModal().catch(() => {})
       }
-      // Never auto-open the memorisation-test modal on session complete.
+      // Fresh sessions wait for the learner. Revision / mastery loops
+      // immediately reopen the AI reciter to evaluate the weak ayah.
       this.amdOpen = false
       this.amdEntrySource = null
       this.postSessionAiReciteActive = false
@@ -13805,6 +13836,15 @@ export default {
       }
       if (!this.onboardingSampleSessionActive) {
         if (keepMasteryLoop) {
+          if (this.aiTestModalsEnabled) {
+            this.$nextTick(() => {
+              void this.openPostSessionAiRecite({
+                fromTestWithAi: true,
+                fromRevisionComplete: true,
+                resetAttempts: true,
+              })
+            })
+          }
           // Stay on the mastery range — do not fetch a forward CONTINUE yet.
           if (!(this.postSessionRecommendationStatus === 'ready' && this.postSessionRecommendation)) {
             this.postSessionRecommendationStatus = 'ready'
@@ -14525,8 +14565,8 @@ export default {
       }
     },
     async openPostSessionAiRecite(options = {}) {
-      // Strict entry: this modal may only open from Session Complete → "Test with AI".
-      if (!options.fromTestWithAi) {
+      // Session Complete → Test with AI, or the revision loop after a weak-ayah repeat.
+      if (!options.fromTestWithAi && !options.fromRevisionComplete) {
         console.warn('Blocked AI memorisation modal open — only "Test with AI" may open it.')
         return
       }
@@ -14551,7 +14591,9 @@ export default {
         this.aiReciteFinalPlan = null
         this.aiReciteShowFinalPlan = false
         this.aiReciteAverageAccuracy = null
-        this.practiceFocusWeakWords = []
+        if (!options.fromRevisionComplete) {
+          this.practiceFocusWeakWords = []
+        }
         this.postSessionAiReviewDetails = null
         this.postSessionAiFeedback = ''
       } else {
@@ -15507,6 +15549,8 @@ export default {
         }
 
         this.recommendedPracticePending = true
+        this.awaitingMasteryRetest = false
+        this.masteryTargetRange = null
         const planSettings = this.resolveRecommendationStartSettings(activeRecommendation, sessionPayload)
         await this.startSessionFromRecommendationPayload({
           chapterId,
@@ -15805,8 +15849,10 @@ export default {
       }
       switch (action) {
         case POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE:
-        case POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH:
           await this.reviseFocusPhraseFromRecommendation()
+          return
+        case POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH:
+          await this.reviseFocusPhraseFromRecommendation({ weakAyahOnly: true })
           return
         case POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN:
           await this.retryInsufficientAudioRecording()
@@ -15920,13 +15966,20 @@ export default {
         rangeStart = Number(planRange?.from || recRange?.from || this.rangeStart || 1)
         rangeEnd = Number(planRange?.to || recRange?.to || this.rangeEnd || rangeStart)
       }
+      const weakAyahs = (this.postSessionRevisionWeakAyahs || [])
+        .map(Number)
+        .filter((n) => Number.isFinite(n) && n > 0)
+      if (weakAyahs.length) {
+        rangeStart = Math.min(rangeStart || weakAyahs[0], ...weakAyahs)
+        rangeEnd = Math.max(rangeEnd || weakAyahs[0], ...weakAyahs)
+      }
       const scope = this.postSessionSelectedPracticeScope
       const scoped = resolveRevisionSessionRange({
         scope,
         sessionFrom: rangeStart,
         sessionTo: rangeEnd,
         weakWords: this.postSessionRevisionWeakWords,
-        weakAyahs: this.postSessionRevisionWeakAyahs,
+        weakAyahs,
         focusItems: this.postSessionWeakOnlySequence?.items || [],
       })
       return {
@@ -15955,14 +16008,41 @@ export default {
         this.livePracticeCoachPhase = source === 'replay' ? 'replayPhrase' : (this.livePracticeCoachPhase || 'playing')
       } catch (_) { /* ignore */ }
     },
-    async reviseFocusPhraseFromRecommendation() {
-      if (this.postSessionActionsBusy || !this.postSessionRecommendationActionable) return
+    async reviseFocusPhraseFromRecommendation(options = {}) {
+      const weakAyahOnly = options.weakAyahOnly === true
+      const focus = this.resolvePostSessionFocusPhrase?.() || null
+      const weakAyah = Number(
+        focus?.ayahNumber
+        || this.postSessionRevisionWeakAyahs?.[0]
+        || 0,
+      )
+      const hasSnapshotRange = !!(
+        Number(this.postSessionSnapshot?.chapterId || 0)
+        && Number(this.postSessionSnapshot?.rangeStart || 0)
+      )
+      if (this.postSessionActionsBusy) return
+      if (!this.postSessionRecommendationActionable && !hasSnapshotRange && !(weakAyahOnly && weakAyah > 0)) {
+        return
+      }
       this.postSessionRecommendationStarting = true
       this.postSessionRecommendationStartError = ''
       this.postSessionViewState = 'starting_repeat'
       try {
         this.ensurePostSessionPracticeScopeDefault()
-        const { chapterId, rangeStart, rangeEnd, scope } = this.resolveFocusPhraseRevisionRange()
+        let { chapterId, rangeStart, rangeEnd, scope } = this.resolveFocusPhraseRevisionRange()
+        if (weakAyahOnly && weakAyah > 0) {
+          chapterId = Number(
+            this.postSessionSnapshot?.chapterId
+            || focus?.surahId
+            || this.postSessionRecommendation?.surah?.id
+            || chapterId
+            || this.chapterId
+            || 0,
+          )
+          rangeStart = weakAyah
+          rangeEnd = weakAyah
+          scope = PRACTICE_SCOPE.WEAK_AREAS
+        }
         if (!chapterId || !rangeStart || !rangeEnd) {
           throw new Error('invalid_focus_phrase_range')
         }
@@ -15972,6 +16052,23 @@ export default {
           scope,
           this.resolveRecommendationStartSettings(activeRecommendation, null),
         )
+        planSettings.emphasize_weak_areas = true
+        if (weakAyahOnly && weakAyah > 0) {
+          planSettings.practice_scope = PRACTICE_SCOPE.WEAK_AREAS
+          planSettings.focus_ayahs = [weakAyah]
+        }
+        const doubledReps = doubleDownRevisionRepetitions(planSettings.repetitions)
+        planSettings.repetitions = doubledReps
+        const weakAyahsToDouble = [
+          ...(weakAyahOnly && weakAyah > 0 ? [weakAyah] : []),
+          ...((planSettings.focus_ayahs || this.postSessionRevisionWeakAyahs || []).map(Number)),
+        ].filter((n) => Number.isFinite(n) && n > 0)
+        if (weakAyahsToDouble.length) {
+          planSettings.repetitions_per_ayah = {
+            ...(planSettings.repetitions_per_ayah || {}),
+            ...Object.fromEntries(weakAyahsToDouble.map((ayah) => [ayah, doubledReps])),
+          }
+        }
         const techniqueId = planSettings.technique
           || activeRecommendation?.technique?.id
           || this.aiReciteFinalPlan?.technique
@@ -16016,6 +16113,7 @@ export default {
           techniqueId,
           settings: planSettings,
           sessionPayload: null,
+          autoStart: true,
         })
         this.$nextTick(() => {
           if (focusWord) {
@@ -16050,6 +16148,14 @@ export default {
           || activeRecommendation?.technique?.id
           || 'talqin'
         this.recommendedPracticePending = true
+        this.awaitingMasteryRetest = true
+        this.masteryTargetRange = {
+          chapterId,
+          from: rangeStart,
+          to: rangeEnd,
+          surahName: this.postSessionSnapshot?.chapterName || activeRecommendation?.surah?.name || '',
+          settings: planSettings,
+        }
         this.focusPhraseRevisionActive = !!this.practiceFocusWeakWords?.length
         this.focusPhraseMeaningfulInteraction = false
         await this.startSessionFromRecommendationPayload({
@@ -16060,6 +16166,7 @@ export default {
           techniqueId,
           settings: planSettings,
           sessionPayload: null,
+          autoStart: true,
         })
         const focusWord = this.resolveRecommendedFocusPhraseWord()
         if (focusWord) {
@@ -20271,7 +20378,7 @@ export default {
     },
     ensureAmdPaceDrip() {
       if (this._amdPaceDripTimer != null || typeof window === 'undefined') return
-      const dripMs = Math.max(200, Number(this._amdAdaptiveDripMs || LIVE_PACE_DRIP_MS) || 420)
+      const dripMs = Math.max(120, Number(this._amdAdaptiveDripMs || LIVE_PACE_DRIP_MS) || 180)
       this._amdPaceDripTimer = window.setInterval(() => {
         if (!this._amdPaceHeld || !this.canReleaseAmdPaceHold()) {
           this.clearAmdPaceDrip()
@@ -21945,11 +22052,6 @@ export default {
         this.aiMemorisationCheckerChunks = []
         const bridgeReady = this.startTranscriptionAudioBridge('memorisation', stream)
         if (bridgeReady) await this.ensureTranscriptionAudioBridgeRunning('memorisation')
-        const transcriptionReady = bridgeReady && await this.startTranscriptionRecognition('memorisation')
-        if (!transcriptionReady) {
-          // Browser STT starts after recording=true — attach() guards on the flag.
-          this.stopTranscriptionAudioBridge('memorisation')
-        }
         recorder.ondataavailable = event => {
           if (event.data?.size) {
             this.aiMemorisationCheckerChunks.push(event.data)
@@ -21963,8 +22065,7 @@ export default {
           this.cleanupAiMemorisationCheckerMedia()
         }
         recorder.onstop = async () => {
-          await new Promise(resolve => queueMicrotask(resolve))
-          const chunks = [...this.aiMemorisationCheckerChunks]
+          const chunks = await waitForMediaRecorderChunks(() => this.aiMemorisationCheckerChunks)
           await this.finalizeTranscriptionRecognition('memorisation')
           this.stopSpeechRecognitionWatchdog('memorisation')
           this.stopTranscriptionAudioPump('memorisation')
@@ -21997,13 +22098,24 @@ export default {
         this.aiMemorisationCheckerStartedAt = Date.now()
         this.aiMemorisationCheckerRecording = true
         this.aiMemorisationCheckerPreparing = false
-        // Start STT after recording=true — attach() no-ops when the flag is still false.
-        if (!transcriptionReady) {
-          this.startAiMemorisationCheckerSpeechRecognition()
-        } else {
-          this.startSpeechRecognitionWatchdog('memorisation')
-          this.startTranscriptionAudioPump('memorisation')
-        }
+        // Start the mic first — never block recording on the Speechmatics token.
+        void this.startTranscriptionRecognition('memorisation')
+          .then((transcriptionReady) => {
+            if (!this.aiMemorisationCheckerRecording) return
+            if (transcriptionReady) {
+              this.startSpeechRecognitionWatchdog('memorisation')
+              this.startTranscriptionAudioPump('memorisation')
+              return
+            }
+            this.stopTranscriptionAudioBridge('memorisation')
+            this.startAiMemorisationCheckerSpeechRecognition()
+          })
+          .catch((error) => {
+            console.warn('Memorisation STT connect failed', error)
+            if (!this.aiMemorisationCheckerRecording) return
+            this.stopTranscriptionAudioBridge('memorisation')
+            try { this.startAiMemorisationCheckerSpeechRecognition() } catch (_) { /* ignore */ }
+          })
         this.persistAiMemorisationCheckerSession()
       } catch (error) {
         console.error('Failed to start memorisation check:', error)
@@ -23121,9 +23233,9 @@ export default {
         liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
         liveAlignmentOptions.allowArticleMatch = true
         // Soft ASR letter conflation is capped below this floor (see RECITATION_SOFT_SIMILARITY_CAP).
-        liveAlignmentOptions.correctSimilarity = 0.80
-        liveAlignmentOptions.partialSimilarity = 0.48
-        liveAlignmentOptions.minConfidenceForCorrect = 0.10
+        liveAlignmentOptions.correctSimilarity = 0.76
+        liveAlignmentOptions.partialSimilarity = 0.42
+        liveAlignmentOptions.minConfidenceForCorrect = 0.18
         liveAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
         livePreviewAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.lookahead = 0
@@ -23131,9 +23243,9 @@ export default {
         livePreviewAlignmentOptions.partialAdvances = true
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
-        livePreviewAlignmentOptions.correctSimilarity = 0.80
-        livePreviewAlignmentOptions.partialSimilarity = 0.48
-        livePreviewAlignmentOptions.minConfidenceForCorrect = 0.08
+        livePreviewAlignmentOptions.correctSimilarity = 0.76
+        livePreviewAlignmentOptions.partialSimilarity = 0.42
+        livePreviewAlignmentOptions.minConfidenceForCorrect = 0.14
         livePreviewAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
       }
       const targetAyahMeta = this.buildRecitationTargetAyahMetadata(targetVerses)
@@ -23151,15 +23263,14 @@ export default {
           targetVerses,
           liveAlignmentOptions
         )
-      // AMD paints committed speech only — interim hypotheses race ahead of the learner.
-      const liveAlignment = (this.amdOpen && kind === 'recitation')
+      // Paint the current word from high-confidence partials; never colour ahead
+      // of the confirmed cursor (merge + clamp keep that lock).
+      const liveAlignment = this.areRecognitionWordListsEquivalent(displayWords, committedWords)
         ? committedAlignment
-        : (this.areRecognitionWordListsEquivalent(displayWords, committedWords)
-          ? committedAlignment
-          : buildRealtimePreviewAlignment(targetText, displayWords, {
-            ...livePreviewAlignmentOptions,
-            targetAyahs: targetAyahMeta
-          }))
+        : buildRealtimePreviewAlignment(targetText, displayWords, {
+          ...livePreviewAlignmentOptions,
+          targetAyahs: targetAyahMeta
+        })
       const preferVisible = this.amdOpen && kind === 'recitation'
       const committedStatuses = preferVisible
         ? (committedAlignment.progression?.visibleStatuses || committedAlignment.wordStatuses || [])
@@ -23192,9 +23303,8 @@ export default {
         committedStatuses,
         candidateStatuses,
         {
-          protectAgainstInterimRed: preferVisible,
-          // Confirmed speech only — never let interim paint pull the cursor forward.
-          confirmedOnly: preferVisible,
+          protectAgainstInterimRed: true,
+          confirmedOnly: false,
         },
       )
       statuses = clampStatusesToConfirmedCursor(statuses, cursor.confirmedWordIndex)
@@ -23220,7 +23330,7 @@ export default {
         statuses = statuses.map((status) => {
           if (!status || String(status.status || '').toLowerCase() !== 'incorrect') return status
           const similarity = Number(status.similarity || 0)
-          if (similarity >= 0.48 && similarity < 0.80) {
+          if (similarity >= 0.42 && similarity < 0.76) {
             return {
               ...status,
               status: 'partial',
@@ -23903,7 +24013,7 @@ export default {
             resolve(meta)
             return
           }
-          window.setTimeout(check, 120)
+          window.setTimeout(check, 50)
         }
         check()
       })
@@ -23939,6 +24049,11 @@ export default {
         return this.t('memorisation.recitationResult.speechmaticsKeyRejected', { suffix: suffixNote })
       }
 
+      if (status === 429) {
+        return this.t('memorisation.aiCheck.serviceUnavailable')
+          || 'Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.'
+      }
+
       if (message) return message
       return this.t('memorisation.recitationResult.liveStreamingUnavailable')
     },
@@ -23968,6 +24083,15 @@ export default {
       }
     },
     async fetchTranscriptionAccessToken() {
+      if (this._transcriptionTokenInFlight) return this._transcriptionTokenInFlight
+      const request = this.requestTranscriptionAccessToken()
+        .finally(() => {
+          if (this._transcriptionTokenInFlight === request) this._transcriptionTokenInFlight = null
+        })
+      this._transcriptionTokenInFlight = request
+      return request
+    },
+    async requestTranscriptionAccessToken() {
       const postToken = () => axios.post('/memorisation/transcription-token', null, {
         withCredentials: true,
         headers: this.buildCsrfRequestHeaders(),
@@ -24020,7 +24144,7 @@ export default {
         const provider = createSpeechmaticsRealtimeProvider({
           getAccessToken: () => this.fetchTranscriptionAccessToken(),
           getSampleRate: () => Number(bridge.sampleRate || 0),
-          handshakeTimeoutMs: 5000,
+          handshakeTimeoutMs: 1600,
           maxDelaySeconds: speechmaticsDelays.maxDelaySeconds,
           endOfUtteranceSeconds: speechmaticsDelays.endOfUtteranceSeconds,
         })
@@ -24106,7 +24230,7 @@ export default {
           return
         }
         this.pumpTranscriptionAudio(kind)
-      }, 80)
+      }, 40)
     },
     stopTranscriptionAudioPump(kind = 'recitation') {
       const key = kind === 'memorisation' ? '_aiMemorisationAudioPumpTimer' : '_recitationAudioPumpTimer'
@@ -24119,7 +24243,7 @@ export default {
       this.stopSpeechRecognitionWatchdog(kind)
       const key = kind === 'memorisation' ? '_aiMemorisationSttWatchdog' : '_recitationSttWatchdog'
       // AMD needs a quicker Speechmatics → browser handoff so listening never feels stalled.
-      const delayMs = (kind === 'recitation' && this.amdOpen) ? 1600 : 3200
+      const delayMs = (kind === 'recitation' && this.amdOpen) ? 800 : 900
       this[key] = window.setTimeout(() => {
         this[key] = null
         const recording = kind === 'memorisation'
@@ -24196,8 +24320,8 @@ export default {
       if (trailingAudio?.byteLength) provider.streamAudioChunk(trailingAudio)
       provider.endStream()
       await this.waitForTranscriptionSettlement(kind, {
-        timeoutMs: Number(options.timeoutMs || (this.amdOpen ? 12000 : RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS)),
-        quietMs: Number(options.quietMs || (this.amdOpen ? 2500 : RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS)),
+        timeoutMs: Number(options.timeoutMs || (this.amdOpen ? 3200 : RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS)),
+        quietMs: Number(options.quietMs || (this.amdOpen ? 500 : RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS)),
         requireEndOfTranscript: options.requireEndOfTranscript !== false,
       })
       this.stopTranscriptionRecognition(kind)
@@ -25497,21 +25621,7 @@ export default {
         const bridgeReady = this.startTranscriptionAudioBridge('recitation', stream)
         if (bridgeReady) await this.ensureTranscriptionAudioBridgeRunning('recitation')
 
-        // AMD: start the mic immediately — do not block Recording UI on Speechmatics
-        // token/websocket handshake (previously the main Record-button lag).
-        const deferRealtimeStt = !!this.amdOpen
-        let transcriptionReady = false
-        if (!deferRealtimeStt) {
-          // Prefer Speechmatics for non-AMD; browser STT is exclusive failover.
-          transcriptionReady = bridgeReady
-            && await this.startTranscriptionRecognition('recitation')
-          if (!transcriptionReady) {
-            // Tear the unused bridge down now; browser STT starts after recording=true
-            // because attach() guards on recitationCheckRecording.
-            this.stopTranscriptionAudioBridge('recitation')
-          }
-        }
-
+        // Start the mic immediately — never block recording on the Speechmatics token.
         recorder.ondataavailable = event => {
           if (event.data?.size) {
             this.recitationCheckChunks.push(event.data)
@@ -25567,7 +25677,7 @@ export default {
             }
             return
           }
-          const chunks = [...this.recitationCheckChunks]
+          const chunks = await waitForMediaRecorderChunks(() => this.recitationCheckChunks)
           const usedSpeechmatics = !!this.getTranscriptionProvider('recitation')
           const metaBeforeFinalize = this.getTranscriptionMeta('recitation')
           const alreadyHeardWords = this.getBestRecognitionWordsForAssessment('recitation').length
@@ -25587,9 +25697,9 @@ export default {
             const emptyStream = usedSpeechmatics && Number(metaBeforeFinalize?.messageCount || 0) === 0 && !alreadyHeardWords
             await this.finalizeTranscriptionRecognition('recitation', {
               timeoutMs: emptyStream
-                ? 1800
-                : (this.amdOpen ? 14000 : (this.postSessionAiReciteActive ? 8000 : 10000)),
-              quietMs: emptyStream ? 400 : (this.amdOpen ? 2800 : 2000),
+                ? 700
+                : (this.amdOpen ? 2800 : (this.postSessionAiReciteActive ? 2200 : 1800)),
+              quietMs: emptyStream ? 180 : (this.amdOpen ? 400 : 280),
               requireEndOfTranscript: usedSpeechmatics && !emptyStream,
             })
           } catch (settleError) {
@@ -25715,17 +25825,11 @@ export default {
 
         const attachRecognitionAfterMicLive = async () => {
           if (!this.recitationCheckRecording) return
-          if (deferRealtimeStt) {
-            transcriptionReady = bridgeReady
-              && await this.startTranscriptionRecognition('recitation')
-            if (!this.recitationCheckRecording) return
-            if (!transcriptionReady) {
-              this.stopTranscriptionAudioBridge('recitation')
-            }
-          }
-          // Browser STT / Speechmatics watchdog must start AFTER recording=true —
-          // startRecitationSpeechRecognition().attach() no-ops when the flag is false.
+          const transcriptionReady = bridgeReady
+            && await this.startTranscriptionRecognition('recitation')
+          if (!this.recitationCheckRecording) return
           if (!transcriptionReady) {
+            this.stopTranscriptionAudioBridge('recitation')
             this.startRecitationSpeechRecognition()
           } else {
             this.startSpeechRecognitionWatchdog('recitation')
@@ -25736,17 +25840,13 @@ export default {
           }
         }
 
-        if (deferRealtimeStt) {
-          void attachRecognitionAfterMicLive().catch((error) => {
-            console.warn('AMD deferred STT connect failed', error)
-            if (this.recitationCheckRecording) {
-              try { this.startRecitationSpeechRecognition() } catch (_) { /* ignore */ }
-              if (this.amdOpen) this.startAmdRecognitionHeartbeat()
-            }
-          })
-        } else {
-          await attachRecognitionAfterMicLive()
-        }
+        void attachRecognitionAfterMicLive().catch((error) => {
+          console.warn('Deferred STT connect failed', error)
+          if (this.recitationCheckRecording) {
+            try { this.startRecitationSpeechRecognition() } catch (_) { /* ignore */ }
+            if (this.amdOpen) this.startAmdRecognitionHeartbeat()
+          }
+        })
 
         // Ensure ayah word nodes exist before the first live colour patches land.
         await this.$nextTick()

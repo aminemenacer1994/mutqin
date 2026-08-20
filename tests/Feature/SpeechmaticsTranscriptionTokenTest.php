@@ -56,4 +56,31 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
 
         Http::assertSentCount(1);
     }
+
+    public function test_transcription_token_allows_repeated_recitation_starts_without_throttling(): void
+    {
+        $user = User::factory()->pro()->create();
+
+        config([
+            'services.speechmatics.api_key' => 'speechmatics-test-key-123456',
+            'services.speechmatics.region' => 'eu',
+        ]);
+
+        Http::fake([
+            'https://mp.speechmatics.com/*' => Http::response([
+                'key_value' => 'rt-test-token',
+            ], 201),
+        ]);
+
+        $this->actingAs($user);
+
+        for ($attempt = 0; $attempt < 12; $attempt++) {
+            $this->postJson(route('memorisation.transcription-token'))
+                ->assertOk()
+                ->assertJson([
+                    'access_token' => 'rt-test-token',
+                    'websocket_host' => 'eu.rt.speechmatics.com',
+                ]);
+        }
+    }
 }

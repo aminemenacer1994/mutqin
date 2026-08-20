@@ -8,6 +8,7 @@ import {
   buildWeakOnlyPracticeSequence,
   canMarkAyahMasteredFromPractice,
   compareRevisionAttempts,
+  doubleDownRevisionRepetitions,
   normalisePracticeScope,
   recommendPracticeScope,
   resolveRevisionSessionRange,
@@ -155,6 +156,9 @@ const saveReq = readFileSync(join(root, 'app/Http/Requests/Learning/SaveRecommen
   assert.ok(settings.practice_weak_words.length === 1)
   assert.ok(settings.practice_focus_items.length === 1)
   assert.deepEqual(settings.focus_ayahs, [1])
+  assert.equal(doubleDownRevisionRepetitions(3), 6)
+  assert.equal(settings.repetitions_per_ayah[1], 6)
+  assert.equal(settings.repetitions, 6)
 
   const full = applyScopeToRecommendationSettings(
     { technique: 'talqin', repetitions: 3 },
@@ -220,6 +224,9 @@ const saveReq = readFileSync(join(root, 'app/Http/Requests/Learning/SaveRecommen
   assert.match(js, /updateRevisionAttemptComparison/)
   assert.match(js, /canMarkAyahMasteredFromPractice/)
   assert.match(js, /practice-focus-word--emphasis/)
+  assert.match(js, /fromRevisionComplete:\s*true/)
+  assert.match(js, /doubleDownRevisionRepetitions/)
+  assert.match(js, /emphasize_weak_areas = true/)
   assert.match(css, /practice-focus-word--emphasis/)
   assert.match(css, /post-session-simple__scope-card/)
   assert.match(learning, /practice_scope/)

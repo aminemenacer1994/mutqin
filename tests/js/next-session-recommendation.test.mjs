@@ -311,6 +311,12 @@ function t(key, params = {}) {
   assert.match(vue, /data-cta-state/)
   assert.match(js, /resolvePostSessionCtaState|mapPostSessionCtas/)
   assert.match(js, /reviseFocusPhraseFromRecommendation/)
+  assert.match(js, /reviseFocusPhraseFromRecommendation\(\{\s*weakAyahOnly:\s*true\s*\}\)/)
+  assert.match(
+    js,
+    /async reviseFocusPhraseFromRecommendation[\s\S]*autoStart:\s*true/,
+    'Revise ayah starts the repeat session immediately',
+  )
   assert.match(js, /isMeaningfulFocusPhraseRevision/)
   assert.doesNotMatch(vue, /post-session-simple__confidence/, 'confidence prompt removed from completion UI')
   assert.doesNotMatch(vue, /confidencePrompt/, 'confidence prompt copy removed from completion UI')
@@ -331,8 +337,8 @@ function t(key, params = {}) {
   assert.match(vue, /postSessionShowRecommendationPlan/, 'recommendation plan gated until after AI test')
   assert.match(completionModal, /openPostSessionAdjustPlan/, 'adjust plan restored on completion modal')
   assert.match(vue, /aiFirstBody/, 'aiFirstBody localization key present')
-  assert.match(js, /correctSimilarity\s*=\s*0\.85/)
-  assert.match(js, /partialSimilarity\s*=\s*0\.55/)
+  assert.match(js, /correctSimilarity\s*=\s*0\.76/)
+  assert.match(js, /partialSimilarity\s*=\s*0\.42/)
   assert.match(js, /partialAdvances\s*=\s*true/)
   assert.match(js, /advanceOnIncorrect\s*=\s*!stopOnMistake/)
   assert.match(js, /amdFrozenAtWordIndex/)
@@ -363,6 +369,11 @@ function t(key, params = {}) {
   assert.match(js, /adaptRecommendationForAiAssessment/)
   assert.match(js, /adaptRecommendationForAdaptiveAssessment/)
   assert.match(js, /openPostSessionAiRecite/)
+  assert.match(
+    js,
+    /keepMasteryLoop[\s\S]*openPostSessionAiRecite\(\{[\s\S]*fromRevisionComplete:\s*true/,
+    'finishing a revision session opens the AI reciter',
+  )
   assert.match(js, /onPostSessionTestWithAi|onPostSessionCalmPrimaryAction/)
   assert.match(js, /recommendedPracticeCompleted/)
   assert.match(js, /saveCurrentSessionSilently/)

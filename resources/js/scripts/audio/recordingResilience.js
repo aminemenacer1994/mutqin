@@ -26,7 +26,7 @@ export const RECITATION_FAILURE_KIND = Object.freeze({
 })
 
 /** Show "taking longer than expected" after this delay during submit/settle. */
-export const RECITATION_SLOW_PROCESSING_MS = 8000
+export const RECITATION_SLOW_PROCESSING_MS = 4000
 
 /** Default submit race — aligned with Memorisation.js AMD/recite paths. */
 export const RECITATION_SUBMIT_TIMEOUT_MS = 12000

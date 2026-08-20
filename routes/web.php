@@ -209,7 +209,7 @@ Route::middleware(['auth'])->group(function () {
             'websocket_host' => $region['host'],
         ]);
     })
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:40,1')
         ->name('memorisation.transcription-token');
 });
 

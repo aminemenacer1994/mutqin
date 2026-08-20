@@ -35,8 +35,8 @@ export const MIN_RECENT_PACE_SAMPLES = 2
 export const ADAPTIVE_PACE_BASE_WORDS_PER_SECOND = 1.7
 export const ADAPTIVE_PACE_MIN_WORDS_PER_SECOND = 0.55
 export const ADAPTIVE_PACE_MAX_WORDS_PER_SECOND = 4.2
-export const ADAPTIVE_PACE_MIN_DRIP_MS = 220
-export const ADAPTIVE_PACE_MAX_DRIP_MS = 920
+export const ADAPTIVE_PACE_MIN_DRIP_MS = 120
+export const ADAPTIVE_PACE_MAX_DRIP_MS = 520
 
 const DEFERRABLE_STATUSES = new Set(['omitted', 'skipped'])
 /** Live paint only — incorrect-word detection must never be softened here. */
