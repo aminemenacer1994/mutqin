@@ -574,6 +574,47 @@ class NextSessionRecommendationTest extends TestCase
             ->assertJsonPath('recommendation.ayah_range.to', 14);
     }
 
+    public function test_mixed_ai_with_significant_weakness_repeats_even_if_confident(): void
+    {
+        $user = User::factory()->pro()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/confidence', [
+                'recommendation_id' => $recommendationId,
+                'confidence' => 'confident',
+            ])
+            ->assertOk();
+
+        $mixed = $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'mixed',
+                'summary' => 'Several words still slipped',
+                'color_counts' => ['red' => 3, 'black' => 1, 'amber' => 2, 'green' => 8],
+                'weak_ayahs' => [12, 13],
+                'average_accuracy' => 68,
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $mixed['type']);
+        $this->assertSame(12, $mixed['ayah_range']['from']);
+        $this->assertSame(14, $mixed['ayah_range']['to']);
+
+        $stillRepeat = $this->actingAs($user)
+            ->postJson('/api/recommendations/confidence', [
+                'recommendation_id' => $mixed['id'],
+                'confidence' => 'confident',
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $stillRepeat['type']);
+        $this->assertSame(12, $stillRepeat['ayah_range']['from']);
+    }
+
     public function test_adaptive_assessment_snapshot_reshapes_plan(): void
     {
         $user = User::factory()->premium()->create();

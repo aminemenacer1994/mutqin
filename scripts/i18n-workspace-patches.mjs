@@ -1811,7 +1811,6 @@ export const WORKSPACE_PATCHES = {
     'memorisation.best_for_deep_memorisation_sessions': 'Idéal pour : sessions de mémorisation approfondie',
     'memorisation.best_for_memorising_key_vocabulary': 'Idéal pour : mémoriser le vocabulaire clé',
     'memorisation.billing.premiumRequired': 'Passez à Mutqin Premium pour utiliser cette fonctionnalité.',
-    'memorisation.billing.proRequired': 'Passez à Mutqin Pro pour utiliser cette fonctionnalité.',
     'memorisation.billing.viewPlans': 'Voir les offres',
     'memorisation.blur_everything': 'Tout flouter',
     'memorisation.blur_intensity': 'Intensité du flou',

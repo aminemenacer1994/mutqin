@@ -143,7 +143,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('memorisation'));
 
         $user = User::where('email', 'new@example.com')->first();
 
@@ -167,7 +167,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get('/auth/callback')
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('memorisation'));
 
         $user = User::where('email', 'legacy@example.com')->first();
 

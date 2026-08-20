@@ -491,7 +491,6 @@
     },
     "billing": {
       "premiumRequired": "Bu özelliği kullanmak için Mutqin Premium'a yükseltin.",
-      "proRequired": "Bu özelliği kullanmak için Mutqin Pro'ya yükseltin.",
       "viewPlans": "Planları gör"
     },
     "workspaceJourney": {

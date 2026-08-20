@@ -32,8 +32,9 @@ export function resolveAdaptiveSpeechmaticsDelays({
   paceFactor = 1,
   tajweedHeavy = false,
   amdLive = false,
+  live = false,
 } = {}) {
-  if (!amdLive) {
+  if (!amdLive && !live) {
     return {
       maxDelaySeconds: SPEECHMATICS_MAX_DELAY_SECONDS,
       endOfUtteranceSeconds: SPEECHMATICS_END_OF_UTTERANCE_SECONDS,

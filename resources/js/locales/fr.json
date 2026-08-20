@@ -491,7 +491,6 @@
     },
     "billing": {
       "premiumRequired": "Passez à Mutqin Premium pour utiliser cette fonctionnalité.",
-      "proRequired": "Passez à Mutqin Pro pour utiliser cette fonctionnalité.",
       "viewPlans": "Voir les offres"
     },
     "workspaceJourney": {

@@ -6,25 +6,30 @@ use App\Models\User;
 
 /**
  * Single post-auth destination for login / guest redirects.
- * Admins land on the admin dashboard; learners land on their journey overview.
+ * Admins land on the admin dashboard. New learners go straight to practice.
+ * Returning learners land on their journey overview.
  */
 final class AuthRedirect
 {
-    public static function routeName(?User $user): string
+    public static function routeName(?User $user, bool $justRegistered = false): string
     {
-        return $user?->isAdmin() === true ? 'admin.dashboard' : 'dashboard';
+        if ($user?->isAdmin() === true) {
+            return 'admin.dashboard';
+        }
+
+        return $justRegistered ? 'memorisation' : 'dashboard';
     }
 
-    public static function to(?User $user): string
+    public static function to(?User $user, bool $justRegistered = false): string
     {
-        return route(self::routeName($user));
+        return route(self::routeName($user, $justRegistered));
     }
 
     /**
      * Path form used by laravel/ui redirectTo() / $redirectTo.
      */
-    public static function path(?User $user): string
+    public static function path(?User $user, bool $justRegistered = false): string
     {
-        return route(self::routeName($user), absolute: false);
+        return route(self::routeName($user, $justRegistered), absolute: false);
     }
 }

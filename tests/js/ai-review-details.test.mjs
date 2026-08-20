@@ -31,6 +31,8 @@ const t = (key, params = {}) => {
     'memorisation.postSession.recommendation.aiHighlightStrongRecall': 'Most words landed cleanly.',
     'memorisation.postSession.recommendation.aiHighlightMissedWords': `${params.count} words still need another careful pass.`,
     'memorisation.postSession.recommendation.aiHighlightPronunciation': `${params.count} words were close.`,
+    'memorisation.postSession.recommendation.aiHighlightUncertain': 'Amber words were unclear to the listener — not counted as hard mistakes.',
+    'memorisation.postSession.recommendation.needsPracticeNext': 'Revise the highlighted words, then check again.',
     'memorisation.postSession.recommendation.aiHighlightSequence': 'Ayah order drifted.',
     'memorisation.postSession.recommendation.aiHighlightWeakAyah': `Ayah ${params.ayah} carried most of the difficulty.`,
     'memorisation.postSession.recommendation.aiHighlightWeakAyahs': `${params.count} ayahs need focus (${params.ayahs}).`,
@@ -138,7 +140,7 @@ const t = (key, params = {}) => {
 
   assert.equal(details.outcomeLabel, 'More practice needed')
   assert.match(details.summaryLine, /We clearly matched 6 of 10 words/i)
-  assert.match(details.summaryLine, /Focus on the highlighted phrase before checking again/i)
+  assert.match(details.summaryLine, /Revise the highlighted words, then check again/i)
   assert.equal(details.metrics.length, 0)
   assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '60%'))
   // One Match % only — no second equivalent accuracy percentage chip.

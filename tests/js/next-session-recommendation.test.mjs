@@ -303,6 +303,12 @@ function t(key, params = {}) {
   assert.match(vue, /post-session-simple__actions--3|post-session-simple__btn--primary/)
   assert.match(vue, /data-testid="post-session-actions"/)
   assert.match(js, /postSessionRecommendationReasonLine/)
+  assert.match(js, /hasDismissedFirstTimeOnboarding/)
+  assert.match(js, /isOffMainJourneySession/)
+  assert.match(js, /awaitingCheckNext/)
+  assert.match(js, /needsPracticeNext/)
+  assert.match(vue, /workspace-off-path-notice/)
+  assert.match(en, /offPathNotice/)
   assert.match(vue, /postSessionWhyLine|post-session-simple__focus-phrase/)
   assert.match(vue, /onPostSessionFocusPhraseActivate/)
   assert.match(vue, /recommendedPlan|Recommended plan|practiceSetup|Practice setup/)
@@ -476,6 +482,18 @@ function t(key, params = {}) {
     totalAyahsInSurah: 286,
   })
   assert.equal(confident.type, RECOMMENDATION_TYPES.CONTINUE)
+
+  const blocked = adaptRecommendationForConfidence(repeat, 'confident', {
+    rangeStart: 12,
+    rangeEnd: 14,
+    totalAyahsInSurah: 286,
+    result: 'mixed',
+    accuracy_percent: 68,
+    color_counts: { red: 3, black: 1, amber: 2, green: 8 },
+    weak_ayahs: [12, 13],
+  })
+  assert.equal(blocked.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
+  assert.equal(blocked.ayah_range.from, 12)
   assert.equal(confident.confidence_feedback, 'confident')
   assert.equal(confident.user_reason, null)
   assert.equal(confident.ayah_range.from, 15)

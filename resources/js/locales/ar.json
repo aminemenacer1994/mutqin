@@ -491,7 +491,6 @@
     },
     "billing": {
       "premiumRequired": "ترقّ إلى متقن Premium لاستخدام هذه الميزة.",
-      "proRequired": "ترقّ إلى متقن Pro لاستخدام هذه الميزة.",
       "viewPlans": "عرض الخطط"
     },
     "workspaceJourney": {

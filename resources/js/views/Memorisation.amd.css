@@ -1268,15 +1268,17 @@
   .amd-overlay {
     align-items: stretch;
     padding: 0;
+    overflow-x: hidden;
   }
 
   .amd-modal--premium {
-    max-width: 100vw;
-    width: 100vw;
+    width: 100%;
+    max-width: 100%;
     max-height: 100dvh;
     min-height: 100dvh;
     border-radius: 0;
     border: 0;
+    box-sizing: border-box;
   }
 
   .amd-body--premium {
@@ -1949,11 +1951,12 @@
 
 @media (max-width: 720px) {
   .amd-modal--premium {
-    max-width: 100vw;
-    width: 100vw;
+    width: 100%;
+    max-width: 100%;
     max-height: 100dvh;
     min-height: 100dvh;
     border-radius: 0;
+    box-sizing: border-box;
   }
 
   .amd-body--premium {
@@ -1962,8 +1965,13 @@
   }
 
   .amd-mushaf-shell--premium {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     padding: clamp(1rem, 4vw, 1.5rem) clamp(0.7rem, 3.5vw, 1.1rem);
     border-radius: 14px;
+    box-sizing: border-box;
+    overflow-x: clip;
   }
 
   .amd-mushaf-ayah--premium {
@@ -3298,12 +3306,14 @@
 
   .amd-overlay .mutqin-modal-dialog.amd-dialog,
   .amd-overlay .amd-dialog.mutqin-modal-dialog--wide {
-    width: min(100%, calc(100vw - 1.25rem)) !important;
-    max-width: min(100%, calc(100vw - 1.25rem)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
     max-height: none !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     border-radius: 1rem !important;
     flex: 0 0 auto;
+    box-sizing: border-box !important;
   }
 
   .amd-modal.amd-modal--premium {
@@ -3385,17 +3395,35 @@
   }
 
   .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
     min-height: 0 !important;
     max-height: min(50dvh, 400px) !important;
+    margin: 0 !important;
     padding: 0.75rem 0.65rem !important;
     border-radius: 0.75rem;
+    overflow-x: clip !important;
     overflow-y: auto !important;
+    box-sizing: border-box !important;
   }
 
   .amd-mushaf-ayah--premium {
     font-size: calc(clamp(1.28rem, 5.4vw, 1.75rem) * var(--amd-font-scale, 1.12)) !important;
     line-height: 2.35 !important;
+    width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+    box-sizing: border-box !important;
+  }
+
+  .amd-body--premium.amd-body--scroll {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
   }
 
   .amd-footer--sticky {
@@ -5169,5 +5197,66 @@
   .amd-mushaf-shell--primary,
   .amd-modal--spacious .amd-mushaf-shell--primary {
     padding-inline: clamp(0.55rem, 3vw, 1rem) !important;
+  }
+}
+
+/* Mobile: lock AI check modal to the viewport — no horizontal drift from 100vw / RTL overflow */
+@media (max-width: 767.98px) {
+  body.memorisation-page .amd-overlay.mutqin-modal-overlay {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    overflow-x: hidden !important;
+    padding:
+      max(0.5rem, env(safe-area-inset-top, 0px))
+      max(0.5rem, env(safe-area-inset-right, 0px))
+      max(0.5rem, env(safe-area-inset-bottom, 0px))
+      max(0.5rem, env(safe-area-inset-left, 0px)) !important;
+  }
+
+  body.memorisation-page .amd-overlay.mutqin-modal-overlay > .mutqin-modal-dialog.amd-dialog,
+  body.memorisation-page .amd-overlay.mutqin-modal-overlay > .amd-dialog.mutqin-modal-dialog--wide {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  body.memorisation-page .amd-overlay .amd-modal.amd-modal--premium {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  body.memorisation-page .amd-overlay .amd-body--scroll,
+  body.memorisation-page .amd-overlay .amd-body--premium {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+  }
+
+  body.memorisation-page .amd-overlay .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    margin: 0 !important;
+    overflow-x: clip !important;
+    box-sizing: border-box !important;
+  }
+
+  body.memorisation-page .amd-overlay .amd-mushaf-ayah--premium {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    overflow-wrap: anywhere !important;
+    box-sizing: border-box !important;
   }
 }

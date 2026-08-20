@@ -253,7 +253,14 @@ function t(key, params = {}) {
   assert.match(vue, /postSessionPrimarySurface !== 'builder'/)
   assert.match(vue, /onboarding-post-session-front/)
   assert.match(js, /isolatePostSessionRecommendation\(\)/)
-  assert.match(css, /\.app\.onboarding-post-session-front \.tools/)
+  assert.match(js, /flushOffcanvasToWorkspace\(/)
+  assert.match(js, /async flushOffcanvasToWorkspace/)
+  assert.match(js, /await this\.flushOffcanvasToWorkspace\('offcanvas-commit'\)/)
+  assert.doesNotMatch(
+    css,
+    /\.app\.onboarding-post-session-front \.tools:not\(\.open\)/,
+    'post-session must not force-hide the tools drawer with display:none',
+  )
   assert.doesNotMatch(
     css,
     /body:has\(\.post-session-simple\) \.tools:not\(\.onboarding-post-session-tools\)/,

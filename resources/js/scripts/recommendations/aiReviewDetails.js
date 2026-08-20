@@ -311,9 +311,11 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     highlights.push({
       key: 'pronunciation',
       tone: 'mid',
-      text: t('memorisation.postSession.recommendation.aiHighlightPronunciation', {
+      text: t('memorisation.postSession.recommendation.aiHighlightUncertain', {
         count: Math.max(amberCount, 1),
-      }),
+      }) || t('memorisation.postSession.recommendation.aiHighlightPronunciation', {
+        count: Math.max(amberCount, 1),
+      }) || 'Amber words were unclear to the listener — not counted as hard mistakes.',
     })
   }
   if ((colorCounts.black || 0) > 0) {
@@ -752,8 +754,9 @@ function buildAiSummaryLine({
     }
 
     if (hasWordLevelEvidence && (missed > 0 || partial > 0 || matched < total) && !isStrongBand) {
-      const focusLine = t('memorisation.postSession.recommendation.aiSummaryFocusPhrase')
-        || 'Focus on the highlighted phrase before checking again.'
+      const focusLine = t('memorisation.postSession.recommendation.needsPracticeNext')
+        || t('memorisation.postSession.recommendation.aiSummaryFocusPhrase')
+        || 'Revise the highlighted words, then check again.'
       return `${matchLine} ${focusLine}`.trim()
     }
 

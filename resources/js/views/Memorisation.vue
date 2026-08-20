@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v125 -->
+  <!-- mutqin-ui-build: v127 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'onboarding-post-session-active': showPostSessionModal,
@@ -737,6 +737,13 @@
               :aria-label="t('memorisation.open_controls')"
               v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"
             -->
+            <p
+              v-if="offMainJourneyNotice && shouldShowReadingWorkspace"
+              class="workspace-off-path-notice"
+              role="status"
+            >
+              {{ offMainJourneyNotice }}
+            </p>
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
               <div class="workspace-empty-card">
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
@@ -1117,9 +1124,9 @@
                   <div class="field setup-field-row">
                     <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
                     <div class="range range-single">
-                      <input type="number" class="input" v-model.number="rangeStart" @change="adjustRange" min="1">
+                      <input type="number" class="input" v-model.number="rangeStart" @input="adjustRange()" @change="adjustRange({ immediate: true })" min="1">
                       <span>{{ t('sessionSetup.to') }}</span>
-                      <input type="number" class="input" v-model.number="rangeEnd" @change="adjustRange" min="1">
+                      <input type="number" class="input" v-model.number="rangeEnd" @input="adjustRange()" @change="adjustRange({ immediate: true })" min="1">
                     </div>
                     <small class="field-hint">{{ t('sessionSetup.rangeHint') }}</small>
                   </div>

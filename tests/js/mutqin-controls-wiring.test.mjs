@@ -852,12 +852,17 @@ assert.doesNotMatch(source, /<div v-if="showSessionEndedModal" class="modal-over
 assert.doesNotMatch(source, /this\.showSelfCheckModal \|\|\s*this\.showRecordingsLibrary/, 'open self-check modal should not force periodic rerenders')
 
 includesAll('offcanvas workspace sync', [
+  /flushOffcanvasToWorkspace\(reason = 'offcanvas'\)/,
+  /async flushOffcanvasToWorkspace/,
+  /await this\.flushOffcanvasToWorkspace\('offcanvas-commit'\)/,
+  /void this\.flushOffcanvasToWorkspace\('offcanvas-open'\)/,
+  /await this\.flushOffcanvasToWorkspace\('start-session'\)/,
   /syncWorkspaceFromControls\(options = \{\}\)/,
   /applyWorkspaceControls\(options = \{\}\)/,
   /clearWorkspaceForConfigChange\(mode = this\.currentMode\)/,
   /onChapterChange\(event\)/,
   /refreshVerses\(\)/,
-  /commitOffcanvasSettings\(\)[\s\S]*syncWorkspaceFromControls\(\{ reason: 'offcanvas-commit'/,
+  /adjustRange\(options = \{\}\)/,
   /openToolsPanel\(options = \{\}\)[\s\S]*if \(this\.showPostSessionModal\) \{\s*this\.postSessionOffcanvasOpen = true/,
   /resolveCurrentSurahAyahCount\(\)/,
 ])

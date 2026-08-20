@@ -1738,7 +1738,7 @@
 
   .mutqin-modal-dialog:not(.ayah-notes-delete-dialog),
 .mutqin-modal-dialog--wide:not(.ayah-notes-delete-dialog),
-.mutqin-modal-overlay:not(.ayah-notes-delete-overlay) > .mutqin-modal-dialog,
+.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay) > .mutqin-modal-dialog,
 .mutqin-modal-flow .mutqin-modal-dialog:not(.ayah-notes-delete-dialog),
 .welcome-back-modal-wrap .modal-dialog,
 .session-exit-modal-wrap .modal-dialog,
@@ -1749,6 +1749,16 @@
     min-block-size: 0 !important;
     max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
     margin: 0 !important;
+  }
+
+  .amd-overlay.mutqin-modal-overlay > .mutqin-modal-dialog.amd-dialog,
+  .amd-overlay.mutqin-modal-overlay > .amd-dialog.mutqin-modal-dialog--wide {
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-delete-modal) {

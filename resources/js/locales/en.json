@@ -491,7 +491,6 @@
     },
     "billing": {
       "premiumRequired": "Upgrade to Mutqin Premium to use this feature.",
-      "proRequired": "Upgrade to Mutqin Pro to use this feature.",
       "viewPlans": "View plans"
     },
     "workspaceJourney": {
@@ -517,7 +516,10 @@
       "statusContinue": "Pick up where you left off",
       "hintReview": "Revise each ayah until you can recite it smoothly without looking.",
       "hintContinue": "Listen to each ayah, repeat it, then try from memory.",
+      "hintResume": "Your place is waiting. Continue the set you left.",
       "hintStart": "Start with a small set — steady steps build lasting memorisation.",
+      "offPathNotice": "{surah} {start}–{end} stays your place. This sitting will not move it.",
+      "offPathNoticeShort": "{surah} stays your place. This sitting will not move it.",
       "leadRevise": "Revise what you know in {surah} before adding new ayahs.",
       "leadContinue": "Continue memorising {surah} from where you stopped.",
       "leadStart": "Choose a small set of ayahs and begin with Bismillah.",
@@ -2246,6 +2248,10 @@
         "aiResultLineMixedOrder": "Good overall, but the order of verses slipped a little.",
         "aiResultLineWeak": "A few spots still need help.",
         "aiResultLineWeakAyah": "Verse {ayah} needs the most help.",
+        "aiHighlightUncertain": "Amber words were unclear to the listener — not counted as hard mistakes.",
+        "awaitingCheckNext": "Test from memory, or continue to Ayahs {start}–{end}.",
+        "insufficientAudioNext": "Try the recording again. If the browser asks, allow the microphone.",
+        "needsPracticeNext": "Revise the highlighted words, then check again.",
         "evidenceFromSessionAndConfidence": "Based on your session and confidence.",
         "checkAnswerQuizStrong": "Ready to continue",
         "checkAnswerQuizMixed": "Mostly secure",

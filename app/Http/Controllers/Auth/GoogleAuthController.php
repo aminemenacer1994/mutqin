@@ -97,7 +97,7 @@ class GoogleAuthController extends Controller
             request()->session()->flash('mutqin_just_logged_in', true);
         }
 
-        return redirect()->intended(AuthRedirect::to($user));
+        return redirect()->intended(AuthRedirect::to($user, justRegistered: $created));
     }
 
     private function googleProvider()

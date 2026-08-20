@@ -1131,6 +1131,34 @@ class DashboardTest extends TestCase
         $this->assertSame(21, $position->metadata['main_position']['ayah_start']);
     }
 
+    public function test_first_random_session_does_not_lock_main_position(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/session/start', [
+                'surah_number' => 36,
+                'ayah_number' => 1,
+                'memorisation_mode' => 'advanced',
+                'metadata' => [
+                    'config' => [
+                        'chapterId' => 36,
+                        'rangeStart' => 1,
+                        'rangeEnd' => 10,
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.journey.has_started', false);
+
+        $position = UserLastPosition::where('user_id', $user->id)->first();
+        $this->assertNull(data_get($position?->metadata, 'main_position'));
+    }
+
     public function test_continue_api_preserves_main_position_metadata(): void
     {
         $user = User::factory()->create();

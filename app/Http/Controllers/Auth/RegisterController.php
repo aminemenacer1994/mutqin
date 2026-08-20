@@ -41,7 +41,7 @@ class RegisterController extends Controller
      */
     protected function redirectTo(): string
     {
-        return AuthRedirect::path($this->guard()->user());
+        return AuthRedirect::path($this->guard()->user(), justRegistered: true);
     }
 
     /**
@@ -73,7 +73,7 @@ class RegisterController extends Controller
         ]);
     }
 
-    protected function registered(Request $request, $user): void
+    protected function registered(Request $request, $user)
     {
         // Match login/Google: login event id powers Welcome Back vs onboarding,
         // and just_registered must survive the redirect into /memorisation.
@@ -82,5 +82,7 @@ class RegisterController extends Controller
         $request->session()->put('mutqin_just_registered', true);
         // Existing-user Welcome Back must not win over first-run onboarding.
         $request->session()->forget('mutqin_just_logged_in');
+
+        return redirect()->to(AuthRedirect::to($user, justRegistered: true));
     }
 }

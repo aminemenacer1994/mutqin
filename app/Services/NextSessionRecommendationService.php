@@ -411,6 +411,19 @@ class NextSessionRecommendationService
         $type = RecommendationType::tryFrom((string) ($payload['type'] ?? ''));
 
         if ($type?->isRepeat()) {
+            $ai = is_array($recommendation->ai_assessment) ? $recommendation->ai_assessment : [];
+            $aiResult = strtolower((string) ($ai['result'] ?? ''));
+            $aiBlocksProgress = $aiResult === 'weak'
+                || ($aiResult === 'mixed' && ! $this->assessmentAllowsProgression($ai));
+
+            if ($aiBlocksProgress) {
+                $payload = $this->payloadFromRecord($recommendation);
+                $payload['confidence_feedback'] = $feedback->value;
+                $payload['reason_code'] = RecommendationReasonCode::ConfidenceConfident->value;
+
+                return $this->attachPlanExtrasToPayload($payload, $planExtras, $recommendation);
+            }
+
             return $this->strengthenContinue(
                 $user,
                 $recommendation,
@@ -525,8 +538,6 @@ class NextSessionRecommendationService
             }
         } elseif ($result === 'mixed') {
             if ($this->assessmentAllowsProgression(array_merge($assessment, ['result' => $result]))) {
-                $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed, $assessment);
-            } elseif ($confidence === ConfidenceFeedback::Confident->value) {
                 $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed, $assessment);
             } else {
                 $payload = $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteMixed);

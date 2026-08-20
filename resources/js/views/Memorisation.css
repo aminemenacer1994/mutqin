@@ -2477,14 +2477,7 @@ body > .self-check-modal-overlay--above-post-session,
   opacity: 0 !important;
 }
 
-/* Hide leftover tools only while the recommendation card is the visible front surface. */
-.app.onboarding-post-session-front .tools,
-.app.onboarding-post-session-front .tools-backdrop {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transform: translateX(100%) !important;
-}
+/* Post-session recommendation owns the front surface; tools stay closed via showTools=false. */
 
 .self-check-post-session-hint {
   margin: 0.35rem 0 0;
@@ -14890,6 +14883,16 @@ body.memorisation-page nav.navbar.app-navbar {
 
 [data-theme="dark"] .idle-action-card-primary {
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, var(--surface) 82%), color-mix(in srgb, var(--surface) 96%, transparent));
+}
+
+.workspace-off-path-notice {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface) 90%);
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.45;
 }
 
 .workspace-empty-state {
@@ -43722,6 +43725,15 @@ body,
     max-width: 100vw !important;
     min-height: 100dvh;
     margin: 0 !important;
+  }
+
+  .amd-overlay.mutqin-modal-overlay > .mutqin-modal-dialog.amd-dialog,
+  .amd-overlay.mutqin-modal-overlay > .amd-dialog.mutqin-modal-dialog--wide {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .modal-content.mutqin-modal-surface:not(.ayah-notes-modal):not(.ayah-notes-delete-modal),

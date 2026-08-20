@@ -495,6 +495,25 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
     && recFrom > 0
     && recFrom <= snapshotEnd
 
+  const aiOutcome = String(
+    snapshot.aiDetails?.outcome
+    || snapshot.aiResult
+    || snapshot.result
+    || recommendation.ai_assessment?.result
+    || ''
+  ).toLowerCase()
+  const aiBlocksProgress = aiOutcome === 'weak'
+    || (aiOutcome === 'mixed' && !aiAssessmentAllowsProgression('mixed', snapshot))
+  if (aiBlocksProgress && (isRepeatRecommendation(recommendation) || rangeOverlapsCompleted || isTerminal)) {
+    return {
+      ...next,
+      reason_code: 'confidence_confident',
+      user_reason: null,
+      reason: '',
+      balance_message: null,
+    }
+  }
+
   // Already a forward plan beyond the completed range — keep it.
   if (!isRepeatRecommendation(recommendation) && !isTerminal && !rangeOverlapsCompleted) {
     return {

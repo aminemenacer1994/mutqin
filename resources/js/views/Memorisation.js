@@ -1652,6 +1652,36 @@ export default {
     journeyHasStarted() {
       return !!this.learnerJourney?.has_started
     },
+    isOffMainJourneySession() {
+      if (!this.isLoggedIn || this.pendingMainJourney) return false
+      if (!this.journeyHasStarted || !this.journeyContinue) return false
+      const mainSurah = Number(this.journeyContinue.surah_number || 0)
+      const mainFrom = Number(this.journeyContinue.ayah_start || 0)
+      const mainTo = Number(this.journeyContinue.ayah_end || mainFrom)
+      const surah = Number(this.chapterId || 0)
+      const from = Number(this.rangeStart || 0)
+      const to = Number(this.rangeEnd || from)
+      if (surah <= 0 || from <= 0 || mainSurah <= 0) return false
+      if (surah !== mainSurah) return true
+      return to < mainFrom || from > mainTo
+    },
+    offMainJourneyNotice() {
+      if (!this.isOffMainJourneySession) return ''
+      const surah = this.journeyContinue?.surah_name
+        || this.t('memorisation.workspaceJourney.kicker')
+        || 'Your place'
+      const start = Number(this.journeyContinue?.ayah_start || 0)
+      const end = Number(this.journeyContinue?.ayah_end || start)
+      if (start > 0 && end > 0) {
+        return this.t('memorisation.workspaceJourney.offPathNotice', {
+          surah,
+          start,
+          end,
+        }) || `${surah} ${start}–${end} stays your place. This sitting will not move it.`
+      }
+      return this.t('memorisation.workspaceJourney.offPathNoticeShort', { surah })
+        || `${surah} stays your place. This sitting will not move it.`
+    },
     journeyContinue() {
       if (this.learnerJourney?.continue) return this.learnerJourney.continue
       if (this.hasMemorisationHistory && this.learnerDashboardContinue) {
@@ -1799,6 +1829,11 @@ export default {
       return this.workspaceJourneySubline || ''
     },
     workspaceIdleInstruction() {
+      if (this.canResumePreviousSession) {
+        return this.t('memorisation.welcomeBack.resumeSubtitle')
+          || this.t('memorisation.workspaceJourney.hintResume')
+          || 'Your place is waiting. Continue the set you left.'
+      }
       if (this.showIdleQuickStartChoices) {
         return this.t('memorisation.workspaceJourney.hintStart')
       }
@@ -5343,6 +5378,26 @@ export default {
       const ctaState = this.postSessionCtaState
       const allowProgress = ctaState === POST_SESSION_CTA_STATES.MOSTLY_SECURE
         || ctaState === POST_SESSION_CTA_STATES.STRONG
+      if (ctaState === POST_SESSION_CTA_STATES.AWAITING_CHECK && nextFrom && nextTo) {
+        return this.stripAiDashes(
+          this.t('memorisation.postSession.recommendation.awaitingCheckNext', {
+            start: nextFrom,
+            end: nextTo,
+          }) || `Test from memory, or continue to Ayahs ${nextFrom}–${nextTo}.`,
+        )
+      }
+      if (ctaState === POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO) {
+        return this.stripAiDashes(
+          this.t('memorisation.postSession.recommendation.insufficientAudioNext')
+            || 'Try the recording again. If the browser asks, allow the microphone.',
+        )
+      }
+      if (ctaState === POST_SESSION_CTA_STATES.NEEDS_PRACTICE) {
+        return this.stripAiDashes(
+          this.t('memorisation.postSession.recommendation.needsPracticeNext')
+            || 'Revise the highlighted words, then check again.',
+        )
+      }
       // Never claim a phrase was weak without word-level assessment evidence.
       if (focus?.phrase && focus?.ayahNumber && hasWordEvidence) {
         const primary = this.t('memorisation.postSession.recommendation.phraseNeedsAttention', {
@@ -6025,6 +6080,8 @@ export default {
       // Exploring / finishing onboarding must immediately unlock Start Session
       // once completion is marked, even while auth.just_registered is still true.
       if (this.hasCompletedOnboarding()) return false
+      // Dismissing the first tour must unlock Start session — they can reopen it.
+      if (this.hasDismissedFirstTimeOnboarding()) return false
       // New accounts stay on first-run onboarding until they finish it themselves.
       if (this.isSignupIsolationActive()) return true
       // Live / resumable practice must never trap the header on Start Onboarding.
@@ -12884,7 +12941,8 @@ export default {
         }
 
         this.closePostSessionChoice()
-        this.closeToolsPanel()
+        await this.closeToolsPanel()
+        await this.flushOffcanvasToWorkspace('start-session')
         await this.$nextTick()
         const started = this.startSessionWithCountdown({ skipPrime: true })
         if (!started) {
@@ -13590,6 +13648,9 @@ export default {
     hasOnboardingAutoPresented() {
       return !!this.readWorkspaceStateValue('onboardingAutoPresented', false)
     },
+    hasDismissedFirstTimeOnboarding() {
+      return !!this.readWorkspaceStateValue('onboardingDismissed', false)
+    },
     markOnboardingAutoPresented() {
       this.writeWorkspaceStateValue('onboardingAutoPresented', true)
     },
@@ -13628,6 +13689,7 @@ export default {
         this.writeWorkspaceStateValue(workspaceKey, true)
         this.deleteWorkspaceStateValue('onboardingPending')
         this.deleteWorkspaceStateValue('onboardingAutoPresented')
+        this.deleteWorkspaceStateValue('onboardingDismissed')
         // Drop legacy unscoped flag so it cannot leak across accounts.
         if (workspaceKey !== 'onboardingCompleted') {
           this.deleteWorkspaceStateValue('onboardingCompleted')
@@ -13724,12 +13786,14 @@ export default {
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
     },
-    /** UI dismiss: revisit uses skip; first-time closes without forcing completion. */
+    /** UI dismiss: revisit uses skip; first-time closes and unlocks Start session. */
     dismissOnboardingTour() {
       if (!this.requiresFirstTimeOnboarding) {
         this.skipOnboarding()
         return
       }
+      this.writeWorkspaceStateValue('onboardingDismissed', true)
+      this.markOnboardingAutoPresented()
       this.resetOnboardingModalState()
       this.isDataReady = true
     },
@@ -14480,6 +14544,7 @@ export default {
       this.persistUiState()
       this.persistCentralSessionState()
       this.openToolsPanel({ tab: 'techniques' })
+      await this.flushOffcanvasToWorkspace('post-session-adjust')
     },
     async updatePostSessionInlineSetting(key, value) {
       if (!this.postSessionRecommendation?.id || this.postSessionActionsBusy) return
@@ -24249,8 +24314,8 @@ export default {
       await this.ensureTranscriptionAudioBridgeRunning(kind)
 
       try {
-        const amdLive = kind === 'recitation' && this.amdOpen
-        const speechmaticsDelays = amdLive
+        const liveRecitation = kind === 'recitation'
+        const speechmaticsDelays = liveRecitation
           ? this.resolveAmdSpeechmaticsDelays()
           : resolveAdaptiveSpeechmaticsDelays({ amdLive: false })
         const provider = createSpeechmaticsRealtimeProvider({
@@ -28068,6 +28133,15 @@ export default {
       this.showTools = false
       this.postSessionOffcanvasOpen = false
     },
+    async flushOffcanvasToWorkspace(reason = 'offcanvas') {
+      if (this.isBootstrapping) return
+      const chapterId = Number(this.chapterId || 0)
+      if (!chapterId) return
+      this.clampControlRange(this.currentMode)
+      this.persistModeState(this.currentMode)
+      this.persistUiState()
+      await this.applyWorkspaceControls({ reason, mode: this.currentMode })
+    },
     openToolsPanel(options = {}) {
       const { verseKey = null, mode = this.currentMode, scroll = false, tab = 'tools', preserveFreshSelection = false } = options
       if (this.showPostSessionModal) {
@@ -28096,6 +28170,7 @@ export default {
       this.showWelcomeBackModal = false
       this.showTools = true
       this.persistUiState()
+      void this.flushOffcanvasToWorkspace('offcanvas-open')
       this.$nextTick(() => {
         const panel = this.$refs.toolsPanel
         const panelBody = this.$refs.toolsBody
@@ -28105,9 +28180,9 @@ export default {
       })
     },
 
-    closeToolsPanel() {
+    async closeToolsPanel() {
       if (!this.showTools) return
-      this.commitOffcanvasSettings()
+      await this.commitOffcanvasSettings()
       this.showTools = false
       this.welcomeBackWorkspaceHidden = false
       if (this.showPostSessionModal) {
@@ -28126,21 +28201,14 @@ export default {
       this.restoreToolsFocus()
     },
 
-    commitOffcanvasSettings() {
+    async commitOffcanvasSettings() {
       this.applySettingsChanges({ silent: true })
       this.applySpeed()
-      this.persistModeState(this.currentMode)
       this.persistCentralSessionState()
       if (this.anchorModeEnabled) {
         this.scheduleAnchorHighlights()
       }
-      if (
-        !this.isBootstrapping
-        && Number(this.chapterId || 0) > 0
-        && !this.modeDataMatchesConfig(this.currentMode)
-      ) {
-        this.syncWorkspaceFromControls({ reason: 'offcanvas-commit', immediate: true })
-      }
+      await this.flushOffcanvasToWorkspace('offcanvas-commit')
     },
 
     resolveResumeStoppedAyahNumber(payload = null) {
@@ -35061,9 +35129,10 @@ export default {
       }
     },
     promptSubscriptionUpgrade(requiredTier = 'premium') {
-      const message = requiredTier === 'pro'
-        ? this.translateOrFallback('memorisation.billing.proRequired', 'Upgrade to Mutqin Pro to use this feature.')
-        : this.translateOrFallback('memorisation.billing.premiumRequired', 'Upgrade to Mutqin Premium to use this feature.')
+      if (requiredTier === 'pro') {
+        return
+      }
+      const message = this.translateOrFallback('memorisation.billing.premiumRequired', 'Upgrade to Mutqin Premium to use this feature.')
       this.showBanner(message, 'info', 6500, {
         key: 'open-pricing',
         label: this.translateOrFallback('memorisation.billing.viewPlans', 'View plans'),
@@ -37000,10 +37069,17 @@ export default {
       // Don't close panel automatically - let user decide
     },
 
-    adjustRange() {
+    adjustRange(options = {}) {
       this.clampControlRange(this.currentMode)
       this.clampSetupIndividualAyah()
-      this.applyWorkspaceControls({ reason: 'range' })
+      if (options.immediate) {
+        void this.applyWorkspaceControls({ reason: 'range' })
+        return
+      }
+      if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
+      this.workspaceSyncTimer = setTimeout(() => {
+        void this.applyWorkspaceControls({ reason: 'range' })
+      }, 140)
     },
 
     onChapterChange(event) {

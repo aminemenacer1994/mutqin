@@ -155,7 +155,7 @@ class MainMemorisationPositionService
         $to = max($from, $to);
         $current = $this->get($user);
 
-        if ($explicitMain || $current === null) {
+        if ($explicitMain) {
             if ($isRevision && $current !== null && ! $this->overlaps($current, $surah, $from, $to)) {
                 return;
             }
@@ -164,7 +164,24 @@ class MainMemorisationPositionService
                 'surah_number' => $surah,
                 'ayah_start' => $from,
                 'ayah_end' => $to,
-                'source' => $explicitMain ? 'explicit' : 'first_session',
+                'source' => 'explicit',
+            ]);
+
+            return;
+        }
+
+        // A first random browse must not lock "your place". Only the opening
+        // Fatihah set (or an explicit journey start) becomes the main position.
+        if ($current === null) {
+            if ($isRevision || ! $this->isOpeningFatihahRange($surah, $from, $to)) {
+                return;
+            }
+
+            $this->save($user, [
+                'surah_number' => $surah,
+                'ayah_start' => $from,
+                'ayah_end' => $to,
+                'source' => 'first_session',
             ]);
 
             return;
@@ -287,6 +304,11 @@ class MainMemorisationPositionService
         return $next !== null && $surah === (int) $next['id'] && $from === 1;
     }
 
+    private function isOpeningFatihahRange(int $surah, int $from, int $to): bool
+    {
+        return $surah === 1 && $from === 1 && $to >= 1 && $to <= 7;
+    }
+
     /**
      * @return array{surah_number: int, surah_name: string|null, ayah_start: int, ayah_end: int, source: string|null}|null
      */
@@ -346,16 +368,18 @@ class MainMemorisationPositionService
             ->latest('id')
             ->first();
         if ($unfinished && ($fromSession = $this->fromSession($unfinished))) {
-            $fromSession['source'] = 'inferred_session';
+            if ($this->sessionLooksLikeMainJourney($unfinished, $fromSession)) {
+                $fromSession['source'] = 'inferred_session';
 
-            return $fromSession;
+                return $fromSession;
+            }
         }
 
         if ($row && (int) $row->surah_number > 0) {
             $meta = is_array($row->metadata) ? $row->metadata : [];
             $start = (int) ($meta['rangeStart'] ?? $row->ayah_number ?? 0);
             $end = (int) ($meta['rangeEnd'] ?? $start);
-            if ($start > 0) {
+            if ($start > 0 && $this->isOpeningFatihahRange((int) $row->surah_number, $start, $end)) {
                 return $this->normalize([
                     'surah_number' => $row->surah_number,
                     'ayah_start' => $start,
@@ -371,12 +395,32 @@ class MainMemorisationPositionService
             ->latest('last_activity_at')
             ->first();
         if ($any && ($fromSession = $this->fromSession($any))) {
-            $fromSession['source'] = 'inferred_session';
+            if ($this->sessionLooksLikeMainJourney($any, $fromSession)) {
+                $fromSession['source'] = 'inferred_session';
 
-            return $fromSession;
+                return $fromSession;
+            }
         }
 
         return null;
+    }
+
+    /**
+     * @param  array{surah_number?: int, ayah_start?: int, ayah_end?: int}  $fromSession
+     */
+    private function sessionLooksLikeMainJourney(UserSession $session, array $fromSession): bool
+    {
+        $meta = is_array($session->metadata) ? $session->metadata : [];
+        $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
+        if (! empty($meta['is_main_journey']) || ! empty($config['is_main_journey'])) {
+            return true;
+        }
+
+        return $this->isOpeningFatihahRange(
+            (int) ($fromSession['surah_number'] ?? 0),
+            (int) ($fromSession['ayah_start'] ?? 0),
+            (int) ($fromSession['ayah_end'] ?? 0),
+        );
     }
 
     /**
