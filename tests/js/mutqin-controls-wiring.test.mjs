@@ -202,7 +202,7 @@ includesAll('tajweed independence', [
 
 includesAll('welcome back continue session flow', [
   /welcomeBackContinueInFlight/,
-  /async welcomeBackContinueSession\(\) \{/,
+  /async welcomeBackContinueSession\(options = \{\}\) \{/,
   /if \(this\.welcomeBackContinueInFlight\) return/,
   /resolveWelcomeBackContinuePayload/,
   /buildPayloadFromLoadedWorkspaceSession/,
@@ -233,7 +233,7 @@ includesAll('welcome back continue session flow', [
   assert.doesNotMatch(welcomeBlock, /welcome-back-hint|welcome-back-kicker/, 'welcome-back modal must not show redundant hint/kicker copy')
   assert.match(welcomeBlock, /@click="closeWelcomeBackModal"/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-backdrop"[^>]*welcomeBackStartNewSession/)
-  assert.match(en, /"freshSubtitle": "Return to your place, or begin a new set\."/)
+  assert.match(en, /"freshSubtitle": "Begin a new set when you are ready\."/)
   assert.match(en, /"resumeSubtitleAtPlace": "You left \{place\}\. May Allah make your return light\."/)
   assert.match(en, /"resumePlaceBeginning": "\{chapter\}, from the start"/)
   assert.match(en, /"resumePlaceAyah": "\{chapter\}, ayah \{number\}"/)
@@ -243,14 +243,19 @@ includesAll('welcome back continue session flow', [
   assert.match(welcomeBlock, /welcome-back-meta-line/)
   assert.match(welcomeBlock, /welcome-back-meta-chip/)
   assert.doesNotMatch(welcomeBlock, /welcome-back-context/)
-  assert.match(en, /"continuePreviousSession": "Return to this set"/)
-}
+  assert.match(en, /"continuePreviousSession": "Return to your place"/)
+  assert.match(
+    welcomeBlock,
+    /v-if="canResumePreviousSession"/,
+    'Return to this set must only render when a parked/resumable set exists',
+  )}
 
 {
   const js = readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
-  const continueFn = js.match(/async welcomeBackContinueSession\(\) \{[\s\S]*?\n    \},\n\n    logoutFromWelcomeBack/)?.[0] || ''
+  const continueFn = js.match(/async welcomeBackContinueSession\(options = \{\}\) \{[\s\S]*?\n    \},\n\n    logoutFromWelcomeBack/)?.[0] || ''
   assert.ok(continueFn, 'welcomeBackContinueSession body not found')
   assert.match(continueFn, /dismissWelcomeBackAfterContinue\(\)/)
+  assert.match(continueFn, /restoreWorkspaceToContinuePayload/)
   assert.match(continueFn, /revealLoadedPreviousSession|hydrateSessionFromPayload\(payload/)
   assert.doesNotMatch(
     continueFn,
@@ -537,6 +542,13 @@ includesAll('ai memorisation detection modal wiring', [
   assert.match(amdVue, /amd-disclaimer--row/)
   assert.match(amdVue, /v-if="disclaimer"/)
   assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?white-space:\s*normal/)
+  assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?overflow:\s*visible/)
+  assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?-webkit-line-clamp:\s*unset/)
+  assert.doesNotMatch(
+    amdCss,
+    /\.amd-overlay \.amd-disclaimer--row[\s\S]{0,120}-webkit-line-clamp:\s*2/,
+    'AMD disclaimer must not clamp to 2 lines (no ellipsis truncation)',
+  )
   const en = readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url), 'utf8')
   assert.match(en, /"disclaimer":\s*"Practice aid only/)
   assert.match(source, /memorisation\.amd\.disclaimer/)
@@ -863,8 +875,9 @@ includesAll('offcanvas workspace sync', [
   /flushOffcanvasToWorkspace\(reason = 'offcanvas'\)/,
   /async flushOffcanvasToWorkspace/,
   /await this\.flushOffcanvasToWorkspace\('offcanvas-commit'\)/,
-  /void this\.flushOffcanvasToWorkspace\('offcanvas-open'\)/,
-  /await this\.flushOffcanvasToWorkspace\('start-session'\)/,
+  /Do not flush\/reload the mushaf just for opening controls/,
+  /modeDataMatchesConfig\(mode\)/,
+  /If Surah\/range\/reciter\/display already match/,
   /syncWorkspaceFromControls\(options = \{\}\)/,
   /applyWorkspaceControls\(options = \{\}\)/,
   /clearWorkspaceForConfigChange\(mode = this\.currentMode\)/,
@@ -874,6 +887,18 @@ includesAll('offcanvas workspace sync', [
   /openToolsPanel\(options = \{\}\)[\s\S]*if \(this\.showPostSessionModal\) \{\s*this\.postSessionOffcanvasOpen = true/,
   /resolveCurrentSurahAyahCount\(\)/,
 ])
+
+assert.doesNotMatch(
+  source,
+  /openToolsPanel\(options = \{\}\)[\s\S]{0,900}?flushOffcanvasToWorkspace\('offcanvas-open'\)/,
+  'opening tools must not flush/wipe the workspace',
+)
+
+assert.doesNotMatch(
+  source,
+  /await this\.closeToolsPanel\(\)\s*\n\s*await this\.flushOffcanvasToWorkspace\('start-session'\)/,
+  'start must not double-flush/wipe workspace after closeToolsPanel already synced',
+)
 
 assert.doesNotMatch(
   source,

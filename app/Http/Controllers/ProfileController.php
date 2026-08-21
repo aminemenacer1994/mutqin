@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Services\Memorisation\LearningHistoryRetentionService;
+use App\Support\AdminEmails;
 
 class ProfileController extends Controller
 {
@@ -26,14 +27,26 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        $emailRules = [
+            'required',
+            'string',
+            'email',
+            'max:255',
+            Rule::unique('users', 'email')->ignore($user->id),
+        ];
+        if (! $user->isAdmin()) {
+            $emailRules[] = Rule::notIn(AdminEmails::reserved());
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'email' => $emailRules,
         ], [
             'name.required' => __('profile.name_required'),
             'email.required' => __('profile.email_required'),
             'email.email' => __('profile.email_invalid'),
             'email.unique' => __('profile.email_taken'),
+            'email.not_in' => __('profile.email_reserved') ?: 'This email address is reserved.',
         ]);
 
         $emailChanged = strtolower($validated['email']) !== strtolower((string) $user->email);

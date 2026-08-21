@@ -588,7 +588,7 @@
       "greetingTranslation": "Peace be upon you",
       "freshTitle": "The Qur'an is waiting",
       "freshTitleNamed": "Assalamu alaikum, {name}",
-      "freshSubtitle": "Return to your place, or begin a new set.",
+      "freshSubtitle": "Begin a new set when you are ready.",
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
       "freshReminderTranslation": "My Lord, increase me in knowledge.",
       "freshReminderSource": "Qur'an 20:114",
@@ -657,7 +657,7 @@
       "resumeWhatNextWithDue": "You have {count} verses due for review. Start fresh, repeat the range, continue from your last ayah, or save this session first.",
       "reminderLabel": "A word of remembrance",
       "startNewSession": "Begin a new set",
-      "continuePreviousSession": "Return to this set",
+      "continuePreviousSession": "Return to your place",
       "continueSessionShort": "Continue",
       "hint": "Return to your place, or begin a new set.",
       "closeLabel": "Close"
@@ -2087,7 +2087,20 @@
           "minorLocal": "Only a few ayahs need attention — focused practice will be quicker and clearer.",
           "focusedCluster": "Your weak ayahs sit close together, so a short focused review is recommended.",
           "spreadWeakness": "Weak ayahs appear across this set, so revisiting the full set with emphasis is recommended.",
-          "defaultFocus": "A focused pass on the weaker ayahs is recommended first."
+          "defaultFocus": "A focused pass on the weaker ayahs is recommended first.",
+          "strongContinue": "This set is secure — continue with the recommended technique on the next set."
+        },
+        "successFlow": {
+          "title": "Recommended next steps",
+          "strongLead": "Strong recall — keep the flow going with the recommended technique.",
+          "mostlySecureLead": "Secure overall — reinforce the weak ayah, then continue.",
+          "reinforceTitle": "Repeat weak ayah {ayah}",
+          "reinforceDetail": "Consolidate Ayah {ayah} once before advancing.",
+          "reinforceWithTechnique": "Use {technique} on Ayah {ayah}, then move on.",
+          "continueAfterReinforce": "Then continue to the next set when the weak ayah feels steady.",
+          "continueWithTechnique": "Then continue with {technique}.",
+          "strongDetail": "This set is secure — continue to the next recommended set.",
+          "strongWithTechnique": "Continue with {technique} on the next set."
         },
         "previousAttemptNote": "Previous related attempt: {summary}",
         "previousAttemptsAvailable": "Previous related attempts are saved with this recommendation.",
@@ -2717,14 +2730,14 @@
         "surah": "Surah",
         "range": "Ayah range",
         "reciter": "Reciter",
-        "repetition": "Repetition",
+        "repetition": "Repetitions",
         "delay": "Delay",
         "stoppedAt": "Stopped at",
         "speed": "Speed",
         "repeats": "Repeats",
         "mode": "Mode",
         "rangeCompact": "Range {range}",
-        "repetitionCompact": "Repetition {value}",
+        "repetitionCompact": "Repetitions {value}",
         "repeatsPerAyah": "{count}x per ayah"
       }
     },

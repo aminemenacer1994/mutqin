@@ -80,7 +80,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('memorisation'));
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertSame(1, User::count());
@@ -91,7 +91,7 @@ class GoogleAuthControllerTest extends TestCase
     {
         config()->set('mutqin.admin_emails', ['admin@example.com']);
 
-        $admin = User::factory()->create([
+        $admin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
             'google_id' => 'google-admin-1',
         ]);
@@ -125,11 +125,34 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('memorisation'));
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertSame('google-456', $user->fresh()->google_id);
         $this->assertSame('https://example.com/avatar.png', $user->fresh()->avatar);
+        $this->assertSame(1, User::count());
+    }
+
+    public function test_unverified_email_account_is_not_auto_linked_to_google(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'email' => 'unverified@example.com',
+            'google_id' => null,
+        ]);
+
+        $this->mockGoogleUser([
+            'id' => 'google-unverified',
+            'name' => 'Attacker Or Victim',
+            'email' => 'unverified@example.com',
+            'avatar' => 'https://example.com/avatar.png',
+        ]);
+
+        $this->get(route('auth.google.callback'))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('google');
+
+        $this->assertGuest();
+        $this->assertNull($user->fresh()->google_id);
         $this->assertSame(1, User::count());
     }
 

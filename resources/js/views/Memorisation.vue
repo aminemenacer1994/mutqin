@@ -517,7 +517,7 @@
                         <strong>{{ t('memorisation.workspaceEmpty.startBeginning') }}</strong>
                         <span>{{ t('memorisation.workspaceEmpty.startBeginningHint') }}</span>
                       </span>
-                      <i class="bi bi-chevron-right workspace-shell-idle-choice__chevron" aria-hidden="true"></i>
+                      <i class="bi workspace-shell-idle-choice__chevron" :class="isRtlLocale ? 'bi-chevron-left' : 'bi-chevron-right'" aria-hidden="true"></i>
                     </button>
                     <button
                       class="workspace-shell-idle-choice"
@@ -531,7 +531,7 @@
                         <strong>{{ t('memorisation.workspaceEmpty.chooseStart') }}</strong>
                         <span>{{ t('memorisation.workspaceEmpty.chooseStartHint') }}</span>
                       </span>
-                      <i class="bi bi-chevron-right workspace-shell-idle-choice__chevron" aria-hidden="true"></i>
+                      <i class="bi workspace-shell-idle-choice__chevron" :class="isRtlLocale ? 'bi-chevron-left' : 'bi-chevron-right'" aria-hidden="true"></i>
                     </button>
                   </div>
                   <div
@@ -804,7 +804,7 @@
                         @click="goToPreviousMushafPage"
                         :aria-label="t('memorisation.a11y.previousMushafPage')"
                       >
-                        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                        <i class="bi" :class="isRtlLocale ? 'bi-chevron-right' : 'bi-chevron-left'" aria-hidden="true"></i>
                       </button>
                       <span class="mushaf-shell__pager-label">{{ mushafPaginationLabel }}</span>
                       <button
@@ -814,7 +814,7 @@
                         @click="goToNextMushafPage"
                         :aria-label="t('memorisation.a11y.nextMushafPage')"
                       >
-                        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                        <i class="bi" :class="isRtlLocale ? 'bi-chevron-left' : 'bi-chevron-right'" aria-hidden="true"></i>
                       </button>
                     </div>
                   </div>
@@ -944,7 +944,7 @@
                 'serious-training': false,
                 'hifz-ayah-new': isNewHifzAyah(verse.key),
                 'hifz-ayah-due': isDueHifzAyah(verse.key),
-                'hifz-ayah-weak': isWeakAyah(verse.key),
+                'hifz-ayah-weak': isWeakAyah(verse.key) && !isMasteredAyah(verse.key),
                 'hifz-ayah-mastered': isMasteredAyah(verse.key),
                 'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
                 'peek-revealed': isVersePeekRevealed(verse.key),
@@ -2118,9 +2118,13 @@
 
               <div class="modal-footer mutqin-modal-footer welcome-back-footer welcome-back-footer--lean">
                 <div
-                  class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2 welcome-back-actions-grid--trio mutqin-modal-actions--3"
+                  class="mutqin-modal-actions welcome-back-actions-grid welcome-back-actions-grid--v2"
+                  :class="canResumePreviousSession
+                    ? 'welcome-back-actions-grid--trio mutqin-modal-actions--3'
+                    : 'welcome-back-actions-grid--duo mutqin-modal-actions--2'"
                 >
                   <button
+                    v-if="canResumePreviousSession"
                     type="button"
                     class="mutqin-modal-btn mutqin-modal-btn--primary mutqin-btn-animate welcome-back-action welcome-back-action--primary"
                     data-testid="welcome-back-continue"
@@ -2134,7 +2138,10 @@
                   </button>
                   <button
                     type="button"
-                    class="mutqin-modal-btn mutqin-modal-btn--secondary mutqin-btn-animate welcome-back-action welcome-back-action--secondary"
+                    class="mutqin-modal-btn mutqin-btn-animate welcome-back-action"
+                    :class="canResumePreviousSession
+                      ? 'mutqin-modal-btn--secondary welcome-back-action--secondary'
+                      : 'mutqin-modal-btn--primary welcome-back-action--primary'"
                     :disabled="welcomeBackContinueInFlight"
                     @click="welcomeBackStartNewSession"
                   >
@@ -3557,17 +3564,46 @@
                       <span class="post-session-simple__step-num" aria-hidden="true">2</span>
                       {{ postSessionInfoArchitecture.whatToPractiseNext.title }}
                     </p>
-                    <p class="post-session-simple__action-label" id="postSessionRecTitle">
-                      {{ postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
-                        || postSessionPersonalPlan?.range?.label
-                        || postSessionRecommendationCardTitle
-                        || postSessionInfoArchitecture.whatToPractiseNext.targetLabel
-                        || postSessionSimpleActionLabel }}
-                    </p>
+                    <div
+                      class="post-session-simple__next-target"
+                      id="postSessionRecTitle"
+                      data-testid="post-session-next-target"
+                    >
+                      <p
+                        v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName"
+                        class="post-session-simple__surah-arabic"
+                        lang="ar"
+                        dir="rtl"
+                      >
+                        {{ postSessionInfoArchitecture.whatToPractiseNext.surahArabicName }}
+                      </p>
+                      <p
+                        v-if="postSessionInfoArchitecture.whatToPractiseNext.surahName"
+                        class="post-session-simple__surah-latin"
+                        :class="{
+                          'post-session-simple__surah-latin--solo':
+                            !postSessionInfoArchitecture.whatToPractiseNext.surahArabicName,
+                        }"
+                      >
+                        {{ postSessionInfoArchitecture.whatToPractiseNext.surahName }}
+                      </p>
+                      <p
+                        v-else-if="!postSessionInfoArchitecture.whatToPractiseNext.surahArabicName"
+                        class="post-session-simple__action-label"
+                      >
+                        {{ postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
+                          || postSessionPersonalPlan?.range?.label
+                          || postSessionRecommendationCardTitle
+                          || postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                          || postSessionSimpleActionLabel }}
+                      </p>
+                    </div>
                     <p
                       v-if="postSessionInfoArchitecture.whatToPractiseNext.targetLabel
                         && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
                           !== postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
+                        && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                          !== postSessionInfoArchitecture.whatToPractiseNext.surahName
                         && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
                           !== (postSessionPersonalPlan?.range?.label || '')"
                       class="post-session-simple__range"
@@ -3575,22 +3611,20 @@
                     >
                       {{ postSessionInfoArchitecture.whatToPractiseNext.targetLabel }}
                     </p>
-                    <p
-                      v-if="postSessionInfoArchitecture.whatToPractiseNext.methodTitle
-                        || postSessionInfoArchitecture.whatToPractiseNext.timeLabel"
-                      class="post-session-simple__plan-focus"
+                    <div
+                      v-if="postSessionInfoArchitecture.whatToPractiseNext.pills.length"
+                      class="post-session-simple__pills post-session-simple__pills--next"
+                      data-testid="post-session-next-pills"
                     >
-                      <template v-if="postSessionInfoArchitecture.whatToPractiseNext.methodTitle">
-                        {{ postSessionInfoArchitecture.whatToPractiseNext.methodTitle }}
-                      </template>
-                      <template v-if="postSessionInfoArchitecture.whatToPractiseNext.methodTitle
-                        && postSessionInfoArchitecture.whatToPractiseNext.timeLabel">
-                        ·
-                      </template>
-                      <template v-if="postSessionInfoArchitecture.whatToPractiseNext.timeLabel">
-                        {{ postSessionInfoArchitecture.whatToPractiseNext.timeLabel }}
-                      </template>
-                    </p>
+                      <span
+                        v-for="pill in postSessionInfoArchitecture.whatToPractiseNext.pills"
+                        :key="`next-pill-${pill.key}`"
+                        class="post-session-simple__pill"
+                        :class="`post-session-simple__pill--${pill.key}`"
+                      >
+                        {{ pill.label }}
+                      </span>
+                    </div>
                   </div>
 
                   <div
@@ -3631,6 +3665,43 @@
                     >
                       {{ postSessionPlanRevisionEmphasis }}
                     </p>
+                  </div>
+
+                  <div
+                    v-if="postSessionInfoArchitecture.successFlow?.visible"
+                    class="post-session-simple__success-flow post-session-simple__support-block"
+                    data-testid="post-session-success-flow"
+                  >
+                    <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
+                      {{ postSessionInfoArchitecture.successFlow.title }}
+                    </p>
+                    <p
+                      v-if="postSessionInfoArchitecture.successFlow.lead"
+                      class="post-session-simple__success-flow-lead"
+                    >
+                      {{ postSessionInfoArchitecture.successFlow.lead }}
+                    </p>
+                    <ol class="post-session-simple__success-steps">
+                      <li
+                        v-for="step in postSessionInfoArchitecture.successFlow.steps"
+                        :key="`success-step-${step.key}`"
+                        class="post-session-simple__success-step"
+                        :data-tone="step.tone"
+                      >
+                        <span class="post-session-simple__success-step-num" aria-hidden="true">{{ step.step }}</span>
+                        <span class="post-session-simple__success-step-body">
+                          <span class="post-session-simple__success-step-title">{{ step.title }}</span>
+                          <span
+                            v-if="step.detail"
+                            class="post-session-simple__success-step-detail"
+                          >{{ step.detail }}</span>
+                          <span
+                            v-if="step.technique"
+                            class="post-session-simple__success-step-technique"
+                          >{{ step.technique }}</span>
+                        </span>
+                      </li>
+                    </ol>
                   </div>
 
                   <div
@@ -3748,52 +3819,6 @@
           </div>
 
           <footer class="post-session-simple__footer">
-            <div
-              v-if="postSessionPracticeHowVisible"
-              class="post-session-simple__how-demo post-session-simple__how-demo--footer"
-              data-testid="post-session-practice-how"
-            >
-              <button
-                type="button"
-                id="postSessionPracticeHowToggle"
-                class="post-session-simple__how-toggle"
-                :aria-expanded="postSessionPracticeHowExpanded ? 'true' : 'false'"
-                aria-controls="postSessionPracticeHowDisclosure"
-                @click.stop="postSessionPracticeHowExpanded = !postSessionPracticeHowExpanded"
-              >
-                <span class="post-session-simple__how-toggle-label">
-                  {{ postSessionPracticeHowExpanded
-                    ? (t('memorisation.postSession.recommendation.practiceHow.hide') || 'Hide')
-                    : (t('memorisation.postSession.recommendation.practiceHow.seeHowItWorks') || 'See how it works') }}
-                </span>
-                <i
-                  class="bi"
-                  :class="postSessionPracticeHowExpanded ? 'bi-chevron-up' : 'bi-chevron-down'"
-                  aria-hidden="true"
-                ></i>
-              </button>
-              <div
-                v-if="postSessionPracticeHowExpanded"
-                id="postSessionPracticeHowDisclosure"
-                class="post-session-simple__how-disclosure"
-                role="region"
-                aria-labelledby="postSessionPracticeHowToggle"
-              >
-                <p class="post-session-simple__how-title">
-                  {{ t('memorisation.postSession.recommendation.practiceHow.title')
-                    || t('memorisation.postSession.recommendation.howItWorks')
-                    || 'How practice works' }}
-                </p>
-                <ol class="post-session-simple__how-steps">
-                  <li
-                    v-for="(step, stepIndex) in postSessionPracticeHowSteps"
-                    :key="`practice-how-${stepIndex}`"
-                  >
-                    {{ step }}
-                  </li>
-                </ol>
-              </div>
-            </div>
             <div
               class="post-session-simple__actions post-session-simple__actions--3"
               data-testid="post-session-actions"

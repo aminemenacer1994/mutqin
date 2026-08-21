@@ -33,7 +33,7 @@ class ContactMessageFlowTest extends TestCase
     {
         config()->set('mutqin.admin_emails', ['admin@example.com']);
 
-        $admin = User::factory()->create([
+        $admin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
         ]);
 

@@ -62,8 +62,9 @@ const en = readFileSync(new URL('../../resources/js/locales/en.json', import.met
     nextRangeStart: 6,
     nextRangeEnd: 8,
   })
-  assert.equal(mostly[0].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
-  assert.equal(mostly[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(mostly[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(mostly[0].variant, 'reinforce')
+  assert.equal(mostly[2].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
 
   const review = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED, {
     weakAyahNumber: 5,

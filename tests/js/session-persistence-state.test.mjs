@@ -117,10 +117,36 @@ const t = (key) => key
     mutqinSessionActive: false,
   })
   assert.equal(afterSoftExit.resumable, true)
-  assert.equal(afterSoftExit.sessionPaused, true)
+  assert.equal(afterSoftExit.sessionPaused, false)
   assert.equal(afterSoftExit.sessionCompleted, false)
   assert.ok(afterSoftExit.continuePayload?.config?.chapterId)
-  assert.equal(afterSoftExit.status, SESSION_STATUS.PAUSED)
+  assert.equal(afterSoftExit.status, SESSION_STATUS.INTERRUPTED_RESUMABLE)
+
+  const softExitVm = buildSessionLifecycleViewModel({
+    authHydrated: true,
+    sessionHydrated: true,
+    sessionPaused: false,
+    backendUnfinished: true,
+    backendStatus: BACKEND_SESSION_STATUS.PAUSED,
+    hasValidatedContinuePayload: true,
+    t,
+  })
+  assert.equal(softExitVm.status, SESSION_STATUS.INTERRUPTED_RESUMABLE)
+  assert.equal(softExitVm.action, PRIMARY_SESSION_ACTION.RESUME_SESSION)
+  assert.equal(softExitVm.presentation.showEndCompanion, false)
+
+  const livePausedVm = buildSessionLifecycleViewModel({
+    authHydrated: true,
+    sessionHydrated: true,
+    sessionPaused: true,
+    backendUnfinished: true,
+    backendStatus: BACKEND_SESSION_STATUS.PAUSED,
+    hasValidatedContinuePayload: true,
+    t,
+  })
+  assert.equal(livePausedVm.status, SESSION_STATUS.PAUSED)
+  assert.equal(livePausedVm.action, PRIMARY_SESSION_ACTION.RESUME_SESSION)
+  assert.equal(livePausedVm.presentation.showEndCompanion, true)
 
   const vm = buildSessionLifecycleViewModel({
     authHydrated: true,
@@ -201,7 +227,8 @@ const t = (key) => key
     mutqinSessionActive: false,
   })
   assert.equal(refreshed.resumable, true)
-  assert.equal(refreshed.sessionPaused, true)
+  assert.equal(refreshed.sessionPaused, false)
+  assert.equal(refreshed.status, SESSION_STATUS.INTERRUPTED_RESUMABLE)
   assert.equal(Number(refreshed.continuePayload?.config?.chapterId), 36)
 }
 
@@ -231,10 +258,35 @@ const t = (key) => key
     source,
     /if \(!rangeComplete\) \{\s*return this\.saveSessionForLaterFromExitModal/,
   )
+  assert.match(source, /demoteSoftExitedSitting/)
+  assert.match(
+    source,
+    /saveSessionForLaterFromExitModal[\s\S]{0,2500}?demoteSoftExitedSitting\(/,
+  )
   // Soft exit must not clear continue on the early path
   assert.doesNotMatch(
     source,
     /saveSessionForLaterFromExitModal[\s\S]{0,800}clearContinueSessionQuietly/,
+  )
+  // End session must open even when verses have not hydrated yet
+  assert.match(
+    source,
+    /openSessionExitModal\(\) \{[\s\S]*?canOpenWithoutWorkspace[\s\S]*?showHeaderEndSessionAction/,
+  )
+  assert.doesNotMatch(
+    source,
+    /openSessionExitModal\(\) \{\s*if \(!this\.hasVerses && !this\.playerVisible\) return/,
+    'End session must not silent-return solely for missing verses',
+  )
+  // Already-paused backend 422 must still count as soft-exit success
+  assert.match(
+    source,
+    /reason === 'save_for_later' \|\| options\.reason === 'park_set'[\s\S]*?return true/,
+  )
+  assert.doesNotMatch(
+    source,
+    /reason === 'save_for_later' \|\| options\.reason === 'park_set'[\s\S]{0,400}?return false/,
+    'save_for_later/park_set 422 must not make End session a silent no-op',
   )
   // Explicit discard clears backend unfinished
   assert.match(

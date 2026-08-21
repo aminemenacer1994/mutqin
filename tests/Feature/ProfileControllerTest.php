@@ -66,7 +66,7 @@ class ProfileControllerTest extends TestCase
     {
         config(['mutqin.admin_emails' => ['admin@example.com']]);
 
-        $user = User::factory()->create([
+        $user = User::factory()->admin()->create([
             'email' => 'admin@example.com',
         ]);
 
@@ -84,7 +84,7 @@ class ProfileControllerTest extends TestCase
     {
         config(['mutqin.admin_emails' => ['admin@example.com']]);
 
-        $user = User::factory()->create([
+        $user = User::factory()->admin()->create([
             'email' => 'admin@example.com',
             'google_id' => 'google-admin-1',
         ]);

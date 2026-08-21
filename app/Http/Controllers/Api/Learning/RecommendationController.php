@@ -28,9 +28,13 @@ class RecommendationController extends Controller
                 ->first();
         }
 
-        $recommendation = $sourceSession
-            ? ($service->recommendForCompletedSession($request->user(), $sourceSession) ?? $service->recommend($request->user(), $sourceSession))
-            : $service->recommend($request->user());
+        if ($sourceSession) {
+            // Unfinished sessions must not fall through to recommend(), which persists
+            // a completion-style recommendation against an active/paused row.
+            $recommendation = $service->recommendForCompletedSession($request->user(), $sourceSession);
+        } else {
+            $recommendation = $service->recommend($request->user());
+        }
 
         return response()->json([
             'recommendation' => $recommendation,

@@ -1630,22 +1630,28 @@
   font-weight: 450;
 }
 
-/* Visible disclaimer under the AMD title */
+/* Visible disclaimer under the AMD title — always wrap fully (no ellipsis / clamp). */
 .amd-disclaimer--row {
   display: block;
   margin-top: 0.45rem;
   max-width: 100%;
-  padding: 0.48rem 0.62rem;
+  box-sizing: border-box;
+  padding: 0.55rem 0.7rem;
   border-radius: 0.55rem;
   background: color-mix(in srgb, var(--accent, #8b5e3c) 7%, var(--surface, #fff));
   border: 1px solid color-mix(in srgb, var(--accent, #8b5e3c) 22%, transparent);
   color: color-mix(in srgb, var(--text, #1c1917) 78%, var(--accent, #8b5e3c) 22%);
   white-space: normal;
   overflow: visible;
-  text-overflow: unset;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  -webkit-box-orient: unset;
   font-size: 0.74rem;
-  line-height: 1.4;
+  line-height: 1.45;
   letter-spacing: 0.01em;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .amd-record-btn {
@@ -1675,7 +1681,7 @@
   display: grid;
   place-items: center;
   background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.35), transparent 55%);
-  box-shadow: 0 0 0 6px color-mix(in srgb, #b55041 16%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, #8b5e3c 14%, transparent);
 }
 
 .amd-record-btn__core {
@@ -1685,10 +1691,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #d4786a 0%, #b55041 55%, #9a4336 100%);
+  background: linear-gradient(180deg, #a67c52 0%, #8b5e3c 55%, #6f4a2f 100%);
   color: #fffaf8;
   box-shadow:
-    0 10px 22px rgba(181, 80, 65, 0.35),
+    0 10px 22px rgba(139, 94, 60, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
@@ -2195,10 +2201,12 @@
   margin-top: 0.22rem;
   max-width: 100%;
   font-size: 0.72rem;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
 }
 
 .amd-mic-status--compact {
@@ -2409,14 +2417,14 @@
   justify-content: center !important;
   gap: 0.55rem !important;
   width: auto !important;
-  max-width: 14.5rem !important;
-  min-width: 10.5rem !important;
+  max-width: min(14.5rem, 100%) !important;
+  min-width: min(10.5rem, 100%) !important;
   min-height: 3rem !important;
   height: 3rem !important;
   padding: 0.45rem 1.25rem !important;
   border-radius: 999px !important;
-  background: linear-gradient(180deg, #d4786a 0%, #b55041 55%, #9a4336 100%) !important;
-  box-shadow: 0 4px 14px rgba(181, 80, 65, 0.24) !important;
+  background: linear-gradient(180deg, #a67c52 0%, #8b5e3c 55%, #6f4a2f 100%) !important;
+  box-shadow: 0 4px 14px rgba(139, 94, 60, 0.22) !important;
   border: 0 !important;
 }
 
@@ -2468,9 +2476,9 @@
 }
 
 .amd-record-btn--inline.amd-record-btn--stop.active {
-  background: linear-gradient(180deg, #e07a6a 0%, #c45a4a 55%, #a84638 100%) !important;
+  background: linear-gradient(180deg, #9a6b45 0%, #7a5332 55%, #5f4028 100%) !important;
   box-shadow:
-    0 6px 14px rgba(196, 90, 74, 0.24),
+    0 6px 14px rgba(122, 83, 50, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
@@ -2536,13 +2544,13 @@
 
 [data-theme="dark"] .amd-tool-btn--stop,
 .app[data-theme="dark"] .amd-tool-btn--stop {
-  border-color: color-mix(in srgb, #f87171 40%, transparent);
-  color: #fca5a5;
+  border-color: color-mix(in srgb, #9a7350 40%, transparent);
+  color: #e8d2b8;
 }
 
 [data-theme="dark"] .amd-record-btn--inline,
 .app[data-theme="dark"] .amd-record-btn--inline {
-  background: linear-gradient(180deg, #c46a5c 0%, #a84638 55%, #8a382c 100%) !important;
+  background: linear-gradient(180deg, #9a7350 0%, #7d5a3c 55%, #634830 100%) !important;
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
@@ -2555,7 +2563,7 @@
 
 [data-theme="dark"] .amd-record-btn--inline.amd-record-btn--stop.active,
 .app[data-theme="dark"] .amd-record-btn--inline.amd-record-btn--stop.active {
-  background: linear-gradient(180deg, #c46a5c 0%, #a84638 55%, #8a382c 100%) !important;
+  background: linear-gradient(180deg, #9a7350 0%, #7d5a3c 55%, #634830 100%) !important;
 }
 
 [data-theme="dark"] .amd-record-btn__label,
@@ -3189,14 +3197,26 @@
 .amd-overlay[data-theme="dark"] .amd-footer-stop-btn.active,
 [data-theme="dark"] .amd-tool-btn--stop.active,
 [data-theme="dark"] .amd-footer-stop-btn.active {
-  background: color-mix(in srgb, #f87171 16%, #171412);
-  border-color: color-mix(in srgb, #f87171 34%, transparent);
-  color: #fecaca;
+  background: color-mix(in srgb, #9a7350 18%, #171412);
+  border-color: color-mix(in srgb, #9a7350 36%, transparent);
+  color: #e8d2b8;
 }
 
 .amd-overlay[data-theme="dark"] .amd-disclaimer,
 [data-theme="dark"] .amd-disclaimer {
   color: #a8a29e;
+}
+
+.amd-overlay[data-theme="dark"] .amd-disclaimer--row,
+[data-theme="dark"] .amd-disclaimer--row {
+  background: color-mix(in srgb, #9a7350 12%, #1c1917);
+  border-color: color-mix(in srgb, #9a7350 28%, transparent);
+  color: #c4b5a5;
+  overflow: visible;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  white-space: normal;
 }
 
 .amd-overlay[data-theme="dark"] .amd-beta-badge,
@@ -3347,13 +3367,16 @@
     white-space: nowrap;
   }
 
-  .amd-header--compact .amd-disclaimer--compact {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  .amd-header--compact .amd-disclaimer--compact,
+  .amd-header--compact .amd-disclaimer--row {
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
     font-size: 0.72rem;
-    line-height: 1.35;
+    line-height: 1.4;
     margin-top: 0.25rem;
   }
 
@@ -4168,7 +4191,7 @@
 .amd-record-btn--inline {
   min-height: 3rem !important;
   width: auto !important;
-  max-width: 14rem !important;
+  max-width: min(14rem, 100%) !important;
   border-radius: 999px !important;
   letter-spacing: -0.01em;
 }
@@ -4178,8 +4201,8 @@
 }
 
 @keyframes amd-record-pulse {
-  0%, 100% { box-shadow: 0 3px 10px rgba(196, 90, 74, 0.22); }
-  50% { box-shadow: 0 4px 14px rgba(196, 90, 74, 0.34); }
+  0%, 100% { box-shadow: 0 3px 10px rgba(139, 94, 60, 0.2); }
+  50% { box-shadow: 0 4px 14px rgba(139, 94, 60, 0.32); }
 }
 
 .amd-complete--handoff {
@@ -4511,14 +4534,14 @@
 .amd-footer__stop .amd-record-btn--inline,
 .amd-footer-stop-btn {
   width: auto !important;
-  max-width: 14.5rem !important;
-  min-width: 10.5rem !important;
+  max-width: min(14.5rem, 100%) !important;
+  min-width: min(10.5rem, 100%) !important;
   min-height: 3rem !important;
   height: 3rem !important;
   padding: 0.45rem 1.25rem !important;
   gap: 0.55rem !important;
   border-radius: 999px !important;
-  box-shadow: 0 4px 14px rgba(181, 80, 65, 0.24) !important;
+  box-shadow: 0 4px 14px rgba(139, 94, 60, 0.22) !important;
 }
 
 .amd-record-btn--inline .amd-record-btn__core {
@@ -4666,10 +4689,12 @@
 /* ===== FORCE tools bar UX (must stay last) ===== */
 .amd-overlay .amd-tools-container,
 .amd-modal .amd-tools-container {
-  width: fit-content !important;
+  width: 100% !important;
   max-width: 100% !important;
-  margin: 0 0 1.15rem 0 !important;
+  margin: 0 0 0.75rem 0 !important;
   padding: 0 !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .amd-overlay .amd-toolbar.amd-tools-bar,
@@ -4681,12 +4706,13 @@
   flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: 0.55rem !important;
-  width: fit-content !important;
-  max-width: min(100%, 100vw - 2rem) !important;
+  gap: 0.45rem !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   min-height: 0 !important;
   margin: 0 !important;
-  padding: 0.45rem 0.55rem !important;
+  padding: 0.4rem 0.5rem !important;
   border-radius: 0.9rem !important;
   background: color-mix(in srgb, #fff 86%, #f5f0e8) !important;
   border: 1px solid color-mix(in srgb, #a8a29e 22%, transparent) !important;
@@ -4695,6 +4721,7 @@
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch !important;
   scrollbar-width: none !important;
+  box-sizing: border-box !important;
 }
 
 .amd-overlay .amd-toolbar.amd-tools-bar::-webkit-scrollbar,
@@ -5258,5 +5285,143 @@
     min-inline-size: 0 !important;
     overflow-wrap: anywhere !important;
     box-sizing: border-box !important;
+  }
+}
+
+/* Fit-size mode: shrink AMD UI to stay inside the viewport (prefer smaller over clipped) */
+@media (max-width: 767.98px) {
+  .amd-overlay {
+    --amd-fit-scale: 0.92;
+    --amd-modal-width: 100%;
+    --amd-font-scale: 0.92;
+  }
+
+  .amd-overlay .amd-dialog.mutqin-modal-dialog,
+  .amd-overlay .amd-dialog.mutqin-modal-dialog--wide,
+  .amd-overlay .amd-modal.amd-modal--premium {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .amd-overlay .amd-header--premium,
+  .amd-overlay .amd-header--sticky {
+    padding-inline: 0.65rem !important;
+    gap: 0.45rem !important;
+  }
+
+  .amd-overlay .amd-header-copy {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .amd-overlay .amd-disclaimer,
+  .amd-overlay .amd-disclaimer--row,
+  .amd-overlay .amd-disclaimer--compact {
+    display: block !important;
+    -webkit-box-orient: unset !important;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    font-size: 0.7rem !important;
+    line-height: 1.45 !important;
+    max-width: 100% !important;
+    padding-block: 0.55rem !important;
+  }
+
+  .amd-overlay .amd-body--premium,
+  .amd-overlay .amd-body--scroll {
+    padding: 0.45rem 0.55rem 0.4rem !important;
+    gap: 0.45rem !important;
+    overflow-x: hidden !important;
+  }
+
+  .amd-overlay .amd-tools-container {
+    margin-bottom: 0.45rem !important;
+  }
+
+  .amd-overlay .amd-toolbar.amd-tools-bar {
+    padding: 0.32rem 0.4rem !important;
+    gap: 0.35rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  .amd-overlay .amd-tools-bar__btn,
+  .amd-overlay .amd-tools-bar__shown,
+  .amd-overlay .amd-tools-bar__timer {
+    height: 1.85rem !important;
+    min-height: 1.85rem !important;
+    font-size: 0.78rem !important;
+  }
+
+  .amd-overlay .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+    min-height: min(34dvh, 280px) !important;
+    max-height: min(42dvh, 360px) !important;
+    padding: 0.55rem 0.5rem !important;
+    overflow-x: clip !important;
+  }
+
+  .amd-overlay .amd-mushaf-ayah--premium {
+    font-size: calc(clamp(1.15rem, 4.2vw, 1.65rem) * var(--amd-font-scale, 0.92)) !important;
+    line-height: 2.2 !important;
+  }
+
+  .amd-overlay .amd-footer--sticky,
+  .amd-overlay .amd-footer {
+    padding: 0.45rem 0.55rem calc(0.55rem + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: 0 !important;
+  }
+
+  .amd-overlay .amd-footer__inner {
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .amd-overlay .amd-record-btn--inline,
+  .amd-overlay .amd-start-wrap--footer .amd-record-btn--inline,
+  .amd-overlay .amd-footer__stop .amd-record-btn--inline,
+  .amd-overlay .amd-footer-stop-btn {
+    width: min(11.5rem, 100%) !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 2.65rem !important;
+    min-height: 2.65rem !important;
+    padding: 0.35rem 0.95rem !important;
+    margin-inline: auto !important;
+  }
+
+  .amd-overlay .amd-record-btn--inline .amd-record-btn__core {
+    width: 1.45rem !important;
+    height: 1.45rem !important;
+  }
+
+  .amd-overlay .amd-record-btn--inline .amd-record-btn__label {
+    font-size: 0.88rem !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .amd-overlay {
+    --amd-font-scale: 0.86;
+  }
+
+  .amd-overlay .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+    min-height: min(30dvh, 240px) !important;
+    max-height: min(38dvh, 300px) !important;
+  }
+
+  .amd-overlay .amd-record-btn--inline,
+  .amd-overlay .amd-start-wrap--footer .amd-record-btn--inline,
+  .amd-overlay .amd-footer__stop .amd-record-btn--inline {
+    width: min(10.5rem, 100%) !important;
+    height: 2.5rem !important;
+    min-height: 2.5rem !important;
   }
 }

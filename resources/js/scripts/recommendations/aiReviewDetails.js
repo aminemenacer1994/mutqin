@@ -158,7 +158,9 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     return buildInsufficientAudioDetails(t, extras, result)
   }
 
-  const accuracy = resolveAccuracyPercent(result, extras)
+  // Scored accuracy may include structural penalties (order slips, verse jumps).
+  // Keep it for outcome banding; never show it beside Detected words as "Match".
+  const scoredAccuracy = resolveAccuracyPercent(result, extras)
 
   const missed = Math.max(
     countList(extras.missed_words),
@@ -204,14 +206,20 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     || Math.max(correctWords + missed + amberCount, 0)
   const estimatedCorrect = totalWords > 0
     ? correctWords
-    : (accuracy != null ? Math.round((accuracy / 100) * Math.max(totalWords, 1)) : null)
+    : (scoredAccuracy != null ? Math.round((scoredAccuracy / 100) * Math.max(totalWords, 1)) : null)
 
   const durationSeconds = Number(result?.durationSeconds || extras.duration_seconds || 0)
   const matchedWords = estimatedCorrect ?? correctWords
+  // Match % must equal Detected words ratio when word statuses exist (e.g. 10/10 → 100%),
+  // even if scoredAccuracy was reduced by order/structure penalties.
+  const wordMatchPercent = totalWords > 0 && matchedWords != null
+    ? Math.max(0, Math.min(100, Math.round((matchedWords / totalWords) * 100)))
+    : null
+  const accuracy = wordMatchPercent != null ? wordMatchPercent : scoredAccuracy
   const noWordsMatched = (matchedWords === 0 || matchedWords == null)
-    && (accuracy === 0 || correctWords === 0)
+    && ((scoredAccuracy === 0 || accuracy === 0) || correctWords === 0)
   const isValidZeroMatch = assessmentQuality === ASSESSMENT_QUALITY.VALID_ZERO_MATCH
-    || (accuracy === 0 && noWordsMatched && totalWords > 0)
+    || ((scoredAccuracy === 0 || accuracy === 0) && noWordsMatched && totalWords > 0)
 
   if (isValidZeroMatch) {
     return buildValidZeroMatchDetails({
@@ -395,7 +403,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     && (missed > 0 || amberCount > 0 || (Array.isArray(weakAyahs) && weakAyahs.length > 0))
     && resolvedState !== RECITATION_RESULT_STATE.NEEDS_PRACTICE
   const weaknessSeverity = resolveWeaknessSeverity({
-    accuracyPercent: accuracy,
+    accuracyPercent: scoredAccuracy ?? accuracy,
     hardWordCount: missedFromWords + Number(colorCounts.black || 0),
     partialWordCount: amberCount,
     weakAyahCount: hasWordLevelEvidence ? weakAyahs.length : 0,
@@ -414,7 +422,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
         || t('memorisation.postSession.recommendation.aiOutcomeMixed')
         || 'Mostly secure')
       : (resolvedState === RECITATION_RESULT_STATE.NEEDS_PRACTICE
-        || (accuracy != null && accuracy < 55))
+        || (scoredAccuracy != null && scoredAccuracy < 55))
         ? (t('memorisation.postSession.recommendation.statusMorePracticeNeeded')
           || t('memorisation.postSession.recommendation.aiOutcomeWeak')
           || 'More practice needed')
@@ -431,7 +439,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     resultState: resolvedState,
     matchedWords: resolvedMatched,
     totalWords,
-    accuracy,
+    accuracy: scoredAccuracy ?? accuracy,
     hasWordLevelEvidence,
     weakAyahs: hasWordLevelEvidence ? weakAyahs : [],
     missed,
@@ -447,6 +455,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     outcomeLabel,
     weaknessSeverity,
     accuracy,
+    scoredAccuracy: scoredAccuracy ?? accuracy,
     matchedWords: resolvedMatched,
     totalWords,
     colorCounts,

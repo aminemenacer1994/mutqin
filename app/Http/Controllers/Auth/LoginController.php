@@ -49,7 +49,9 @@ class LoginController extends Controller
     protected function authenticated(Request $request, $user): void
     {
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
-        $request->session()->flash('mutqin_just_logged_in', true);
+        // Put (not flash): Welcome Back is consumed on first /memorisation visit.
+        // Survive any intermediate hops (e.g. dashboard) before practice loads.
+        $request->session()->put('mutqin_just_logged_in', true);
     }
 
     /**

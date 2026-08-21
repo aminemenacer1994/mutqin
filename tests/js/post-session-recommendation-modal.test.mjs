@@ -106,6 +106,8 @@ function t(key, params = {}) {
   assert.match(completionModal, /data-testid="post-session-scope-picker"/)
   assert.match(completionModal, /data-testid="post-session-practice-method"/)
   assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext|postSessionSimpleActionLabel|recommendedPlan|Recommended plan/i)
+  assert.match(completionModal, /data-testid="post-session-next-pills"/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext\.surahArabicName/)
   assert.match(completionModal, /data-testid="post-session-details"/)
   assert.match(completionModal, /data-testid="post-session-previous-attempt"/)
   assert.doesNotMatch(completionModal, /softwareGenerated|Software-generated/)
@@ -255,7 +257,7 @@ function t(key, params = {}) {
   const outcomeMatrix = [
     [POST_SESSION_CTA_STATES.NEEDS_PRACTICE, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
     [POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
-    [POST_SESSION_CTA_STATES.MOSTLY_SECURE, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
+    [POST_SESSION_CTA_STATES.MOSTLY_SECURE, POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE, 'repeatThisSession'],
     [POST_SESSION_CTA_STATES.STRONG, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
     [POST_SESSION_CTA_STATES.REVISION_COMPLETED, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
     [POST_SESSION_CTA_STATES.AWAITING_CHECK, POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION, 'testWithAi'],
@@ -267,10 +269,22 @@ function t(key, params = {}) {
     assert.equal(lead.action, action, `${state} lead action`)
     assert.equal(lead.labelKey, labelKey, `${state} lead label`)
     assert.ok(
-      lead.variant === 'primary' || lead.variant === 'success' || lead.variant === 'ai',
-      `${state} lead is primary/success/ai`,
+      lead.variant === 'primary'
+      || lead.variant === 'success'
+      || lead.variant === 'ai'
+      || lead.variant === 'reinforce',
+      `${state} lead is primary/success/ai/reinforce`,
     )
   }
+  const mostlySecureWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.MOSTLY_SECURE, {
+    weakAyahNumber: 4,
+    nextRangeStart: 7,
+    nextRangeEnd: 7,
+  })
+  assert.equal(mostlySecureWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(mostlySecureWeak[0].variant, 'reinforce')
+  assert.equal(mostlySecureWeak[2].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
+  assert.equal(mostlySecureWeak[2].labelKey, 'continueToAyahs')
   const strongRepeatLead = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, { isRepeat: true })[0]
   assert.equal(strongRepeatLead.labelKey, 'repeatThisSession')
 }
@@ -365,17 +379,16 @@ function t(key, params = {}) {
   assert.ok(detailsIdx > weakIdx, 'details follow weak spots')
   assert.ok(practiceIdx > guidedStart, 'practice method card present after review')
   assert.ok(scopeIdx > practiceIdx, 'scope picker lives in the practice plan card')
-  assert.match(completionModal, /data-testid="post-session-practice-how"/)
-  assert.match(completionModal, /post-session-simple__how-demo--footer/)
-  assert.match(completionModal, /aria-controls="postSessionPracticeHowDisclosure"/)
-  assert.match(completionModal, /See how it works|practiceHow\.seeHowItWorks/)
-  assert.match(completionModal, /postSessionPracticeHowExpanded = !postSessionPracticeHowExpanded/)
-  assert.match(en, /"seeHowItWorks":\s*"See how it works"/)
-  assert.match(en, /"howItWorks":\s*"How practice works"/)
-  assert.match(js, /postSessionPracticeHowExpanded:\s*false/)
+  assert.doesNotMatch(completionModal, /data-testid="post-session-practice-how"/)
+  assert.doesNotMatch(completionModal, /post-session-simple__how-demo/)
+  assert.doesNotMatch(completionModal, /See how it works|practiceHow\.seeHowItWorks/)
+  assert.doesNotMatch(completionModal, /postSessionPracticeHowExpanded/)
+  assert.doesNotMatch(js, /postSessionPracticeHowExpanded/)
+  assert.doesNotMatch(js, /togglePostSessionPracticeHow/)
+  assert.doesNotMatch(js, /postSessionPracticeHowVisible/)
+  assert.doesNotMatch(css, /\.post-session-simple__how-toggle/)
+  assert.doesNotMatch(css, /\.post-session-simple__how-disclosure/)
   assert.doesNotMatch(js, /postSessionWhyExpanded\s*=\s*true/)
-  assert.match(css, /\.post-session-simple__how-toggle/)
-  assert.match(css, /\.post-session-simple__how-disclosure/)
 }
 
 // Recommendation copy hygiene: keep “then continue …” and pluralize focus meta

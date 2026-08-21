@@ -6,8 +6,8 @@ use App\Models\User;
 
 /**
  * Single post-auth destination for login / guest redirects.
- * Admins land on the admin dashboard. New learners go straight to practice.
- * Returning learners land on their journey overview.
+ * Admins land on the admin dashboard. Learners go straight to practice so
+ * Welcome Back / first-run onboarding can gate the workspace on arrival.
  */
 final class AuthRedirect
 {
@@ -17,7 +17,7 @@ final class AuthRedirect
             return 'admin.dashboard';
         }
 
-        return $justRegistered ? 'memorisation' : 'dashboard';
+        return 'memorisation';
     }
 
     public static function to(?User $user, bool $justRegistered = false): string

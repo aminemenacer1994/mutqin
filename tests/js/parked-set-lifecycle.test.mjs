@@ -127,6 +127,20 @@ const t = (key) => {
   })
   assert.equal(parkedVm.status, SESSION_STATUS.PAUSED)
   assert.equal(parkedVm.action, PRIMARY_SESSION_ACTION.RESUME_SESSION)
+  assert.equal(parkedVm.presentation.showEndCompanion, true)
+
+  const softParkedVm = buildSessionLifecycleViewModel({
+    authHydrated: true,
+    sessionHydrated: true,
+    sessionPaused: false,
+    backendUnfinished: true,
+    backendStatus: BACKEND_SESSION_STATUS.PAUSED,
+    hasValidatedContinuePayload: true,
+    t,
+  })
+  assert.equal(softParkedVm.status, SESSION_STATUS.INTERRUPTED_RESUMABLE)
+  assert.equal(softParkedVm.action, PRIMARY_SESSION_ACTION.RESUME_SESSION)
+  assert.equal(softParkedVm.presentation.showEndCompanion, false)
 
   const completedVm = buildSessionLifecycleViewModel({
     authHydrated: true,
@@ -196,7 +210,9 @@ const t = (key) => {
   assert.match(source, /restorePracticeSetOntoWorkspace\(/)
   assert.match(source, /saveSessionForLaterFromExitModal\(/)
 
-  const backFn = String(source.match(/returnToMemorisationWorkspace\(\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0] || '')
+  const backFn = String(source.match(/async returnToMemorisationWorkspace\(\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0]
+    || source.match(/returnToMemorisationWorkspace\(\)\s*\{[\s\S]*?\n\s{4}\}/)?.[0]
+    || '')
   assert.match(backFn, /resolveBackToMushafTransition/)
   assert.match(backFn, /parkPracticeSetAfterBackToMushaf/)
   assert.match(backFn, /landCompletedPracticeSetOnMushaf/)
@@ -208,9 +224,13 @@ const t = (key) => {
     'Back to mushaf must not reject, restart, or duplicate sets',
   )
 
-  const parkFn = String(source.match(/parkPracticeSetAfterBackToMushaf\(snapshot[^=]*= null[\s\S]*?\n\s{4}\}/)?.[0] || '')
+  const parkFn = String(source.match(/async parkPracticeSetAfterBackToMushaf\(snapshot[^=]*= null[\s\S]*?\n\s{4}\}/)?.[0]
+    || source.match(/parkPracticeSetAfterBackToMushaf\(snapshot[^=]*= null[\s\S]*?\n\s{4}\}/)?.[0]
+    || '')
   assert.match(parkFn, /persistContinueSession/)
   assert.match(parkFn, /applyLocalPausedSessionState/)
+  assert.match(parkFn, /backendUnfinishedSession/)
+  assert.match(parkFn, /pauseSessionFromPrimaryAction/)
   assert.doesNotMatch(parkFn, /clearContinueSessionQuietly/)
 
   const landFn = String(source.match(/landCompletedPracticeSetOnMushaf\(snapshot[^=]*= null[\s\S]*?\n\s{4}\}/)?.[0] || '')

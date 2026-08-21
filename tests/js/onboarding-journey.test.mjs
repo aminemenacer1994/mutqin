@@ -112,6 +112,9 @@ function sliceMethod(source, name) {
   assert.match(memorisationJs, /just_logged_in && !this\.auth\?\.just_registered/)
   assert.match(memorisationJs, /isExistingUserLogin\(\)/)
   assert.match(memorisationJs, /maybeShowWelcomeBackModal/)
+  assert.match(memorisationJs, /preferWelcomeBackOnLogin/)
+  const welcomeGate = sliceMethod(memorisationJs, 'maybeShowWelcomeBackModal')
+  assert.doesNotMatch(welcomeGate, /\|\|\s*this\.sessionPaused/)
 }
 
 // 6. Skip completes + starts; Close dismisses without completing; no auto-open when dismissed

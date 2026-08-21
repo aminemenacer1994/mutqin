@@ -205,6 +205,18 @@ class NextSessionRecommendationService
 
         $idempotencyKey = 'rec-'.$recommendation->id.'-start';
 
+        // Never silently rewrite an in-progress session into a different recommendation range.
+        $unfinished = $this->lifecycle->currentUnfinished($user);
+        if ($unfinished) {
+            $sameRecommendation = (int) ($unfinished->recommendation_id ?? 0) === (int) $recommendation->id
+                || (int) ($recommendation->started_session_id ?? 0) === (int) $unfinished->id;
+            if (! $sameRecommendation) {
+                throw ValidationException::withMessages([
+                    'session' => ['Finish or park your current session before starting this recommendation.'],
+                ]);
+            }
+        }
+
         $session = $this->lifecycle->start($user, [
             'surah_number' => $surah,
             'ayah_number' => $from,

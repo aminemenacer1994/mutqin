@@ -118,6 +118,145 @@ export function buildMainFocusExplanation(input = {}) {
 }
 
 /**
+ * Technique-led next steps after a successful / mostly-secure check.
+ * Replaces the stale "Practise weak ayahs + Revise the full set" picker.
+ *
+ * @param {{
+ *   t?: Function|null,
+ *   ctaState?: string|null,
+ *   primaryWeakAyah?: number|null,
+ *   nextRange?: { from?: number, to?: number }|null,
+ *   methodTitle?: string|null,
+ *   complementaryTitle?: string|null,
+ * }} input
+ */
+export function buildSuccessRecommendationFlow(input = {}) {
+  const t = input.t || null
+  const state = String(input.ctaState || '').toLowerCase().trim()
+  const weakAyah = Number(input.primaryWeakAyah || 0)
+  const nextRange = input.nextRange && typeof input.nextRange === 'object' ? input.nextRange : null
+  const from = Number(nextRange?.from || 0)
+  const to = Number(nextRange?.to || from)
+  const methodTitle = String(input.methodTitle || '').trim()
+  const complementaryTitle = String(input.complementaryTitle || '').trim()
+
+  const continueFromActions = (() => {
+    if (typeof t === 'function') {
+      if (from > 0) {
+        const value = t('memorisation.postSession.actions.continueToAyahs', { start: from, end: to })
+        if (value && !String(value).includes('continueToAyahs')) return value
+      }
+      const value = t('memorisation.postSession.actions.continueToNextRange')
+      if (value && !String(value).includes('continueToNextRange')) return value
+    }
+    if (from > 0) return `Continue (${from}–${to})`
+    return 'Continue'
+  })()
+
+  if (state === 'mostly_secure' && weakAyah > 0) {
+    const reinforceTitle = translate(
+      t,
+      'successFlow.reinforceTitle',
+      `Repeat weak ayah ${weakAyah}`,
+      { ayah: weakAyah },
+    )
+    const reinforceDetail = methodTitle
+      ? translate(
+        t,
+        'successFlow.reinforceWithTechnique',
+        `Use ${methodTitle} on Ayah ${weakAyah}, then move on.`,
+        { technique: methodTitle, ayah: weakAyah },
+      )
+      : translate(
+        t,
+        'successFlow.reinforceDetail',
+        `Consolidate Ayah ${weakAyah} once before advancing.`,
+        { ayah: weakAyah },
+      )
+    const continueDetail = complementaryTitle || methodTitle
+      ? translate(
+        t,
+        'successFlow.continueWithTechnique',
+        `Then continue with ${complementaryTitle || methodTitle}.`,
+        { technique: complementaryTitle || methodTitle },
+      )
+      : translate(
+        t,
+        'successFlow.continueAfterReinforce',
+        'Then continue to the next set when the weak ayah feels steady.',
+      )
+    return {
+      visible: true,
+      title: translate(t, 'successFlow.title', 'Recommended next steps'),
+      lead: translate(
+        t,
+        'successFlow.mostlySecureLead',
+        'Secure overall — reinforce the weak ayah, then continue.',
+      ),
+      steps: [
+        {
+          key: 'reinforce',
+          tone: 'reinforce',
+          step: 1,
+          title: reinforceTitle,
+          detail: reinforceDetail,
+          technique: methodTitle,
+        },
+        {
+          key: 'continue',
+          tone: 'continue',
+          step: 2,
+          title: continueFromActions,
+          detail: continueDetail,
+          technique: complementaryTitle || methodTitle,
+        },
+      ],
+    }
+  }
+
+  if (state === 'strong' || state === 'mostly_secure') {
+    const continueDetail = methodTitle
+      ? translate(
+        t,
+        'successFlow.strongWithTechnique',
+        `Continue with ${methodTitle} on the next set.`,
+        { technique: methodTitle },
+      )
+      : translate(
+        t,
+        'successFlow.strongDetail',
+        'This set is secure — continue to the next recommended set.',
+      )
+    return {
+      visible: true,
+      title: translate(t, 'successFlow.title', 'Recommended next steps'),
+      lead: translate(
+        t,
+        'successFlow.strongLead',
+        'Strong recall — keep the flow going with the recommended technique.',
+      ),
+      steps: [
+        {
+          key: 'continue',
+          tone: 'continue',
+          step: 1,
+          title: continueFromActions,
+          detail: continueDetail,
+          technique: methodTitle,
+        },
+      ],
+    }
+  }
+
+  return {
+    visible: false,
+    title: '',
+    lead: '',
+    steps: [],
+  }
+}
+
+/**
  * Build the full IA payload for the recommendation modal body.
  *
  * @param {{
@@ -130,13 +269,17 @@ export function buildMainFocusExplanation(input = {}) {
  *   focusPhraseParts?: Array<object>,
  *   focusAyahLabel?: string|null,
  *   surahName?: string|null,
+ *   surahArabicName?: string|null,
  *   nextRange?: { from?: number, to?: number }|null,
  *   nextHeadline?: string|null,
  *   methodTitle?: string|null,
+ *   complementaryTitle?: string|null,
  *   timeLabel?: string|null,
  *   planWhy?: string|null,
  *   revisionOptions?: Array<object>,
  *   showRevisionOptions?: boolean,
+ *   successFlow?: object|null,
+ *   ctaState?: string|null,
  *   isRevision?: boolean,
  * }} input
  */
@@ -159,7 +302,26 @@ export function buildPostSessionInfoArchitecture(input = {}) {
     : null
   const setLabel = nextRange ? formatRecommendationSetLabel(nextRange, t) : ''
   const surahName = String(input.surahName || '').trim()
+  const surahArabicName = String(input.surahArabicName || '').trim()
   const surahSetDisplay = formatRecommendationSurahSet(surahName, nextRange || {}, t)
+  const methodTitle = String(input.methodTitle || '').trim()
+  const timeLabel = String(input.timeLabel || '').trim()
+  const pills = [
+    setLabel ? { key: 'set', label: setLabel } : null,
+    methodTitle ? { key: 'method', label: methodTitle } : null,
+    timeLabel ? { key: 'time', label: timeLabel } : null,
+  ].filter(Boolean)
+
+  const successFlow = input.successFlow && typeof input.successFlow === 'object'
+    ? input.successFlow
+    : buildSuccessRecommendationFlow({
+      t,
+      ctaState: input.ctaState,
+      primaryWeakAyah,
+      nextRange,
+      methodTitle,
+      complementaryTitle: input.complementaryTitle,
+    })
 
   return {
     mainFocus: {
@@ -191,14 +353,17 @@ export function buildPostSessionInfoArchitecture(input = {}) {
       visible: input.showRevisionOptions !== false && Array.isArray(input.revisionOptions) && input.revisionOptions.length > 0,
       options: Array.isArray(input.revisionOptions) ? input.revisionOptions : [],
     },
+    successFlow,
     whatToPractiseNext: {
       title: translate(t, 'whatNext', 'What to practise next'),
       targetLabel: String(input.nextHeadline || '').trim(),
       surahName,
+      surahArabicName,
       setLabel,
       surahSetDisplay,
-      methodTitle: String(input.methodTitle || '').trim(),
-      timeLabel: String(input.timeLabel || '').trim(),
+      methodTitle,
+      timeLabel,
+      pills,
       why: String(input.planWhy || '').trim(),
     },
   }
@@ -209,5 +374,6 @@ export default {
   formatRecommendationSetLabel,
   formatRecommendationSurahSet,
   buildMainFocusExplanation,
+  buildSuccessRecommendationFlow,
   buildPostSessionInfoArchitecture,
 }

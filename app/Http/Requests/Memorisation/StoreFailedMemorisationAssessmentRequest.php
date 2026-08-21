@@ -3,9 +3,12 @@
 namespace App\Http\Requests\Memorisation;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreFailedMemorisationAssessmentRequest extends FormRequest
 {
+    use ValidatesOwnedAssessmentForeignKeys;
+
     public function authorize(): bool
     {
         return $this->user() !== null;
@@ -38,5 +41,10 @@ class StoreFailedMemorisationAssessmentRequest extends FormRequest
             'started_at' => ['sometimes', 'nullable', 'date'],
             'device_metadata' => ['sometimes', 'nullable', 'array'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(fn (Validator $v) => $this->validateOwnedAssessmentForeignKeys($v));
     }
 }

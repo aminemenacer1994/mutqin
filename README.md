@@ -86,7 +86,7 @@ Copy `.env.example` to `.env` and configure:
 | `SPEECHMATICS_REGION` | `eu` or `us` |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth login |
 | `STRIPE_*` | Publishable/secret keys, webhook secret, price IDs |
-| `MUTQIN_ADMIN_EMAILS` | Comma-separated admin emails |
+| `MUTQIN_ADMIN_EMAILS` | Reserved admin mailboxes (registration/profile deny-list). Admin privilege is `users.is_admin` — migration bootstraps matching emails once. |
 
 **Never commit real secrets.** Stripe keys in `.env.example` are placeholders only.
 

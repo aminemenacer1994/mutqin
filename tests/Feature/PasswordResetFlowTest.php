@@ -45,7 +45,7 @@ class PasswordResetFlowTest extends TestCase
             'password_confirmation' => 'new-secure-password',
         ]);
 
-        $response->assertRedirect('/dashboard');
+        $response->assertRedirect('/memorisation');
         $this->assertTrue(Hash::check('new-secure-password', $user->fresh()->password));
     }
 

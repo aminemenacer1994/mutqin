@@ -65,6 +65,16 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $email)->first();
 
             if ($user) {
+                // Do not auto-link Google onto an unverified password account — that is an
+                // account-takeover path (attacker registers victim@gmail.com first).
+                if ($user->email_verified_at === null) {
+                    return redirect()
+                        ->route('login')
+                        ->withErrors([
+                            'google' => 'This email already has an account that is not verified. Sign in with your password and verify the email before linking Google.',
+                        ]);
+                }
+
                 $user->forceFill([
                     'google_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),
@@ -73,6 +83,7 @@ class GoogleAuthController extends Controller
                 $user = User::create([
                     'name' => $googleUser->getName() ?: Str::before($email, '@'),
                     'email' => $email,
+                    'email_verified_at' => now(),
                     'google_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),
                     'password' => null,
@@ -94,7 +105,8 @@ class GoogleAuthController extends Controller
             // Existing-user Welcome Back must not win over first-run onboarding.
             request()->session()->forget('mutqin_just_logged_in');
         } else {
-            request()->session()->flash('mutqin_just_logged_in', true);
+            // Put (not flash): survive any hop before /memorisation consumes it.
+            request()->session()->put('mutqin_just_logged_in', true);
         }
 
         return redirect()->intended(AuthRedirect::to($user, justRegistered: $created));

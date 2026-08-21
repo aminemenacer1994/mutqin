@@ -41,7 +41,7 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_can_view_admin_dashboard_page(): void
     {
-        $admin = User::factory()->create([
+        $admin = User::factory()->admin()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
         ]);
@@ -65,7 +65,9 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_dashboard_api_returns_aggregates_and_respects_chart_days(): void
     {
-        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
         $learner = User::factory()->create([
             'email' => 'learner@example.com',
             'locale' => 'ar',
@@ -168,7 +170,9 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_can_list_users_and_resolve_contact_via_api(): void
     {
-        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
         User::factory()->create(['name' => 'Zayd', 'email' => 'zayd@example.com']);
 
         $contact = ContactSubmission::create([
@@ -198,7 +202,9 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_can_filter_sort_and_bulk_update_users(): void
     {
-        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
         $active = User::factory()->create([
             'email' => 'active@example.com',
             'subscription_status' => 'active',
@@ -299,7 +305,9 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_can_view_user_detail(): void
     {
-        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
         $learner = User::factory()->create([
             'name' => 'Fatima',
             'email' => 'fatima@example.com',
@@ -380,7 +388,9 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_can_create_update_and_delete_users(): void
     {
-        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
 
         $created = $this->actingAs($admin)
             ->postJson('/api/admin/users', [
@@ -426,7 +436,9 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_dashboard_nav_replaces_user_dashboard_for_admins(): void
     {
-        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
 
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
@@ -455,7 +467,7 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_login_redirects_to_admin_dashboard(): void
     {
-        $admin = User::factory()->create([
+        $admin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
             'password' => bcrypt('secret12'),
         ]);
@@ -468,7 +480,7 @@ class AdminDashboardTest extends TestCase
         $this->assertAuthenticatedAs($admin);
     }
 
-    public function test_learner_login_still_redirects_to_dashboard(): void
+    public function test_learner_login_redirects_to_memorisation(): void
     {
         User::factory()->create([
             'email' => 'learner@example.com',
@@ -478,12 +490,14 @@ class AdminDashboardTest extends TestCase
         $this->post(route('login'), [
             'email' => 'learner@example.com',
             'password' => 'secret12',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect(route('memorisation'));
     }
 
     public function test_authenticated_admin_visiting_login_redirects_to_admin_dashboard(): void
     {
-        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
 
         $this->actingAs($admin)
             ->get(route('login'))
@@ -492,7 +506,9 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_visiting_customer_dashboard_is_sent_to_admin_dashboard(): void
     {
-        $admin = User::factory()->create(['email' => 'admin@example.com']);
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
 
         $this->actingAs($admin)
             ->get(route('dashboard'))

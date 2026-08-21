@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import {
   buildMainFocusExplanation,
   buildPostSessionInfoArchitecture,
+  buildSuccessRecommendationFlow,
   formatRecommendationAyahLabel,
   formatRecommendationSetLabel,
   formatRecommendationSurahSet,
@@ -59,6 +60,7 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
       { ayah: 4, ayahLabel: 'Ayah 4', words: [] },
     ],
     surahName: 'Al-Ikhlas',
+    surahArabicName: 'الإخلاص',
     nextRange: { from: 1, to: 4 },
     nextHeadline: 'Continue with care',
     methodTitle: 'Talqin',
@@ -82,6 +84,54 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.equal(ia.whatToPractiseNext.setLabel, 'Ayahs 1–4')
   assert.equal(ia.whatToPractiseNext.targetLabel, 'Continue with care')
   assert.equal(ia.whatToPractiseNext.methodTitle, 'Talqin')
+  assert.equal(ia.whatToPractiseNext.surahArabicName, 'الإخلاص')
+  assert.deepEqual(
+    ia.whatToPractiseNext.pills.map((pill) => pill.key),
+    ['set', 'method', 'time'],
+  )
+  assert.equal(ia.whatToPractiseNext.pills[0].label, 'Ayahs 1–4')
+  assert.equal(ia.whatToPractiseNext.pills[1].label, 'Talqin')
+  assert.equal(ia.whatToPractiseNext.pills[2].label, 'About 4 minutes')
+}
+
+// Success sessions get technique-led next steps instead of the stale scope picker
+{
+  const mostly = buildSuccessRecommendationFlow({
+    ctaState: 'mostly_secure',
+    primaryWeakAyah: 5,
+    nextRange: { from: 7, to: 7 },
+    methodTitle: 'Focus',
+    complementaryTitle: 'Chaining',
+  })
+  assert.equal(mostly.visible, true)
+  assert.equal(mostly.steps.length, 2)
+  assert.equal(mostly.steps[0].tone, 'reinforce')
+  assert.match(mostly.steps[0].title, /5/)
+  assert.equal(mostly.steps[1].tone, 'continue')
+  assert.match(mostly.steps[1].title, /7/)
+
+  const strong = buildSuccessRecommendationFlow({
+    ctaState: 'strong',
+    nextRange: { from: 8, to: 10 },
+    methodTitle: 'Talqin',
+  })
+  assert.equal(strong.visible, true)
+  assert.equal(strong.steps.length, 1)
+  assert.equal(strong.steps[0].tone, 'continue')
+  assert.match(strong.steps[0].detail, /Talqin/)
+
+  const successIa = buildPostSessionInfoArchitecture({
+    outcome: 'strong',
+    ctaState: 'mostly_secure',
+    primaryWeakAyah: 3,
+    nextRange: { from: 4, to: 6 },
+    methodTitle: 'Focus',
+    showRevisionOptions: false,
+    revisionOptions: [],
+  })
+  assert.equal(successIa.revisionOptions.visible, false)
+  assert.equal(successIa.successFlow.visible, true)
+  assert.equal(successIa.successFlow.steps[0].key, 'reinforce')
 }
 
 // Revision options use set/ayah terminology — not mixed "range/session/ayat"
@@ -100,6 +150,8 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.equal(rec.weakSpotsTitle, 'Weak areas')
   assert.equal(rec.whatNext, 'What to practise next')
   assert.equal(rec.revisionOptions, 'Revision options')
+  assert.equal(rec.successFlow.title, 'Recommended next steps')
+  assert.match(rec.successFlow.reinforceTitle, /Repeat weak ayah/)
   assert.equal(rec.planDetail.focusVerse, 'Ayah {ayah}')
   assert.equal(rec.singleAyah, 'Ayah {ayah}')
   assert.match(rec.scopeFullRangeLabel, /full set/i)
@@ -117,7 +169,14 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus\.explanation/)
   assert.match(completionModal, /postSessionInfoArchitecture\.weakAreas\.items/)
   assert.match(completionModal, /postSessionInfoArchitecture\.revisionOptions/)
-  assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext\.surahSetDisplay/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.successFlow/)
+  assert.match(completionModal, /data-testid="post-session-success-flow"/)
+  assert.match(js, /POST_SESSION_CTA_STATES\.STRONG/)
+  assert.match(js, /POST_SESSION_CTA_STATES\.MOSTLY_SECURE/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext\.surahArabicName/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext\.pills/)
+  assert.match(completionModal, /data-testid="post-session-next-pills"/)
+  assert.match(completionModal, /data-testid="post-session-next-target"/)
   assert.match(completionModal, /data-section="main-focus-explanation"/)
   // Footer actions remain action verbs, not descriptive section copy
   assert.match(completionModal, /postSessionCtaButtons/)

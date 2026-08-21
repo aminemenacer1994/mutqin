@@ -2438,10 +2438,17 @@ html body .verse-arabic .wbw-word.practice-focus-word,
 html body .verse-arabic word.practice-focus-word,
 html body .verse-arabic .wbw-word.anchor-highlight,
 html body .verse-arabic word.anchor-highlight {
-  background: color-mix(in srgb, #c9a227 34%, #fff6d6) !important;
-  box-shadow: inset 0 -3px 0 #8a6a2b, 0 0 0 1px color-mix(in srgb, #c9a227 45%, transparent) !important;
-  border-radius: 0.35em !important;
-  padding: 0.08em 0.18em !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e36b5b 38%, transparent) 0%,
+    color-mix(in srgb, #c24b3c 54%, transparent) 100%
+  ) !important;
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, #8f2f24 78%, transparent),
+    0 0.08em 0.22em color-mix(in srgb, #c24b3c 28%, transparent) !important;
+  border-radius: 0.22em !important;
+  padding: 0.06em 0.14em !important;
+  outline: none !important;
   font-weight: 600;
 }
 
@@ -6281,11 +6288,16 @@ html {
 }
 
 .verse-arabic.verse-weak .wbw-word.weak-word {
-  background: transparent;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #f0b429 38%, transparent),
+    color-mix(in srgb, #e59a28 52%, transparent)
+  );
   color: inherit;
-  border-bottom: 0;
-  box-shadow: none;
+  border-radius: 0.2em;
+  box-shadow: inset 0 -0.14em 0 color-mix(in srgb, #a15f14 72%, transparent);
   text-decoration: none;
+  padding-inline: 0.08em;
 }
 
 .verse-arabic.verse-mastered .wbw-word.mastered-word {
@@ -6300,10 +6312,13 @@ html {
 }
 
 [data-theme="dark"] .verse-arabic.verse-weak .wbw-word.weak-word {
-  background: transparent;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e4a76a 28%, transparent),
+    color-mix(in srgb, #d9894a 40%, transparent)
+  );
   color: inherit;
-  border-bottom: 0;
-  box-shadow: none;
+  box-shadow: inset 0 -0.14em 0 color-mix(in srgb, #e4a76a 70%, transparent);
   text-decoration: none;
 }
 
@@ -15814,17 +15829,33 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .madani-word.practice-focus-word {
-  box-shadow: inset 0 -0.14em 0 rgba(220, 38, 38, 0.75);
-  background: color-mix(in srgb, #dc2626 12%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e36b5b 36%, transparent),
+    color-mix(in srgb, #c24b3c 52%, transparent)
+  );
+  box-shadow: inset 0 -0.16em 0 color-mix(in srgb, #8f2f24 80%, transparent);
+  border-radius: 0.16em;
+  outline: none;
 }
 
 .madani-word.practice-focus-word--active {
-  box-shadow: inset 0 -0.18em 0 rgba(220, 38, 38, 0.95);
-  background: color-mix(in srgb, #dc2626 18%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ef8576 48%, transparent),
+    color-mix(in srgb, #b83d30 64%, transparent)
+  );
+  box-shadow:
+    inset 0 -0.18em 0 color-mix(in srgb, #7a241c 88%, transparent),
+    0 0 0 0.12em color-mix(in srgb, #e36b5b 34%, transparent);
+  border-radius: 0.16em;
+  outline: none;
 }
 
 .madani-word.hifz-ayah-weak {
-  box-shadow: inset 0 -0.1em 0 rgba(239, 68, 68, 0.55);
+  background: color-mix(in srgb, #f0c14d 12%, transparent);
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c9891f 58%, transparent);
+  border-radius: 0.12em;
 }
 
 .madani-word.hifz-ayah-due {
@@ -15964,8 +15995,13 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .mushaf-wbw-chip.practice-focus-word {
-  border-color: rgba(220, 38, 38, 0.45);
-  box-shadow: inset 0 -0.12em 0 rgba(220, 38, 38, 0.75);
+  border-color: color-mix(in srgb, #c24b3c 45%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e36b5b 24%, #f4f4f5),
+    color-mix(in srgb, #c24b3c 32%, #f4f4f5)
+  );
+  box-shadow: inset 0 -0.14em 0 color-mix(in srgb, #8f2f24 75%, transparent);
 }
 
 .mushaf-wbw-chip__ar {
@@ -25940,7 +25976,14 @@ never mint green */
 }
 
 .verse-card.hifz-ayah-weak {
-  background: color-mix(in srgb, var(--surface) 88%, #fff2df 12%);
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, #e59a28 16%, transparent) 0,
+      color-mix(in srgb, #e59a28 16%, transparent) 0.22rem,
+      color-mix(in srgb, var(--surface) 86%, #fff1d6 14%) 0.22rem
+    );
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #d08920 22%, transparent);
 }
 
 .verse-card.hifz-ayah-mastered {
@@ -25948,9 +25991,18 @@ never mint green */
   border-color: color-mix(in srgb, #4d9b73 24%, var(--border));
 }
 
-.mushaf-ayah.hifz-ayah-due .mushaf-ayah-text,
-.mushaf-ayah.hifz-ayah-weak .mushaf-ayah-text {
+.mushaf-ayah.hifz-ayah-due .mushaf-ayah-text {
   box-shadow: inset 0 -0.12em 0 rgba(199, 138, 47, 0.42);
+}
+
+.mushaf-ayah.hifz-ayah-weak .mushaf-ayah-text {
+  background: color-mix(in srgb, #f0c14d 14%, transparent);
+  border-radius: 0.35em;
+  box-shadow:
+    inset 0 -0.14em 0 color-mix(in srgb, #c9891f 55%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #d08920 18%, transparent);
+  padding-block: 0.08em;
+  padding-inline: 0.12em;
 }
 
 .mushaf-ayah.hifz-ayah-mastered .mushaf-ayah-text {
@@ -25970,9 +26022,10 @@ never mint green */
 }
 
 .verse-status-badge-weak {
-  background: rgba(194, 91, 63, 0.12);
-  border-color: rgba(194, 91, 63, 0.24);
-  color: #9b432f;
+  background: color-mix(in srgb, #e59a28 18%, transparent);
+  border-color: color-mix(in srgb, #c9891f 36%, transparent);
+  color: #8a5410;
+  font-weight: 650;
 }
 
 .verse-status-badge-mastered {
@@ -37801,6 +37854,15 @@ but not its destructive red. */
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
     0 1px 2px color-mix(in srgb, var(--border) 12%, transparent);
+  /* Keep 1→10 left-to-right so thumb, fill, and markers stay aligned in RTL. */
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.tools-body .field-repetitions-clean .slider-markers-aligned,
+.tools-body .field-individual-ayah-unified .slider-markers-aligned {
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .tools-body .field-repetitions-clean .range-value-pill,
@@ -45918,125 +45980,6 @@ body.memorisation-page .tools {
   border-radius: 4px;
 }
 
-.post-session-simple__how-demo {
-  display: grid;
-  gap: 0.45rem;
-  min-width: 0;
-  margin: 0.15rem 0 0.35rem;
-}
-
-.post-session-simple__how-demo--footer {
-  margin: 0 0 0.65rem;
-  width: 100%;
-}
-
-.post-session-simple__footer .post-session-simple__how-toggle {
-  width: 100%;
-  justify-content: space-between;
-  min-height: 2.75rem;
-  pointer-events: auto;
-  position: relative;
-  z-index: 2;
-}
-
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__how-toggle {
-  border-color: color-mix(in srgb, var(--ps-line, var(--border)) 85%, transparent);
-  background: color-mix(in srgb, var(--ps-card, var(--surface)) 94%, transparent);
-  color: var(--ps-label, var(--text));
-}
-
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__how-disclosure {
-  border-color: color-mix(in srgb, var(--ps-line, var(--border)) 80%, transparent);
-  background: color-mix(in srgb, var(--ps-card, var(--surface)) 96%, var(--ps-cream, #fff));
-}
-
-.post-session-simple__how-toggle {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.4rem;
-  min-height: 2.5rem;
-  max-width: 100%;
-  margin: 0;
-  padding: 0.35rem 0.55rem;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: 0.65rem;
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  color: color-mix(in srgb, var(--text) 78%, transparent);
-  font-size: 0.84rem;
-  font-weight: 550;
-  letter-spacing: -0.01em;
-  text-align: start;
-  cursor: pointer;
-}
-
-.post-session-simple__how-toggle:hover {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  background: color-mix(in srgb, var(--surface) 88%, var(--accent) 6%);
-}
-
-.post-session-simple__how-toggle:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
-  outline-offset: 2px;
-}
-
-.post-session-simple__how-toggle[aria-expanded="true"] {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
-}
-
-.post-session-simple__how-toggle-label {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.post-session-simple__how-toggle .bi {
-  flex: 0 0 auto;
-  font-size: 0.78rem;
-  opacity: 0.78;
-}
-
-.post-session-simple__how-disclosure {
-  display: grid;
-  gap: 0.4rem;
-  min-width: 0;
-  padding: 0.55rem 0.65rem 0.65rem;
-  border-radius: 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
-  background: color-mix(in srgb, var(--zone-elevated, var(--surface)) 96%, transparent);
-}
-
-.post-session-simple__how-title {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  color: color-mix(in srgb, var(--text) 82%, transparent);
-}
-
-.post-session-simple__how-steps {
-  margin: 0;
-  padding-inline-start: 1.15rem;
-  display: grid;
-  gap: 0.28rem;
-  color: color-mix(in srgb, var(--text) 74%, transparent);
-  font-size: 0.82rem;
-  line-height: 1.4;
-}
-
-.post-session-simple__how-steps li {
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 639.98px) {
-  .post-session-simple__how-toggle {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
 .post-session-simple__ai-metrics--details {
   grid-template-columns: 1fr !important;
 }
@@ -46574,8 +46517,21 @@ body.memorisation-page .tools {
   box-shadow: none;
 }
 
+.post-session-simple__panel--hero[data-plan="reinforce"] {
+  border-color: color-mix(in srgb, #c9891f 34%, var(--border));
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, #c9891f 18%, transparent) 0,
+      color-mix(in srgb, #c9891f 18%, transparent) 0.22rem,
+      color-mix(in srgb, var(--surface) 96%, #fff8eb 4%) 0.22rem
+    );
+  box-shadow: none;
+}
+
 .post-session-simple__panel--hero[data-plan="next-surah"]::before,
-.post-session-simple__panel--hero[data-plan="continue"]::before {
+.post-session-simple__panel--hero[data-plan="continue"]::before,
+.post-session-simple__panel--hero[data-plan="reinforce"]::before {
   display: none;
 }
 
@@ -47157,6 +47113,19 @@ body.memorisation-page .tools {
   background: linear-gradient(135deg, var(--success-strong, #23624e), var(--success, #2e7d64));
   transform: translateY(-1px);
   box-shadow: 0 14px 28px color-mix(in srgb, var(--success, #2e7d64) 26%, transparent);
+}
+
+.post-session-simple__btn--reinforce {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #c9891f, #a66d12);
+  box-shadow: 0 12px 26px color-mix(in srgb, #c9891f 28%, transparent);
+}
+
+.post-session-simple__btn--reinforce:hover:not(:disabled) {
+  background: linear-gradient(135deg, #a66d12, #c9891f);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px color-mix(in srgb, #c9891f 34%, transparent);
 }
 
 .post-session-simple__btn--secondary {
@@ -51078,17 +51047,30 @@ body:has(.post-session-simple) {
 
 .wbw-word.practice-focus-word,
 word.practice-focus-word {
-  background: color-mix(in srgb, #c4a35a 22%, transparent);
-  box-shadow: inset 0 -2px 0 color-mix(in srgb, #8a6a2b 70%, transparent);
-  border-radius: 0.25rem;
-  padding-inline: 0.08em;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e36b5b 38%, transparent),
+    color-mix(in srgb, #c24b3c 54%, transparent)
+  );
+  box-shadow:
+    inset 0 -0.14em 0 color-mix(in srgb, #8f2f24 78%, transparent),
+    0 0.06em 0.16em color-mix(in srgb, #c24b3c 20%, transparent);
+  border-radius: 0.22em;
+  padding-inline: 0.1em;
+  outline: none;
 }
 
 .wbw-word.practice-focus-word--active,
 word.practice-focus-word--active {
-  background: color-mix(in srgb, #c4a35a 34%, transparent);
-  outline: 2px solid color-mix(in srgb, #8a6a2b 45%, transparent);
-  outline-offset: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ef8576 50%, transparent),
+    color-mix(in srgb, #b83d30 66%, transparent)
+  );
+  outline: none;
+  box-shadow:
+    inset 0 -0.16em 0 #7a241c,
+    0 0 0 0.12em color-mix(in srgb, #e36b5b 30%, transparent);
 }
 
 .post-session-simple--calm-v2 .post-session-simple__header {
@@ -51898,11 +51880,21 @@ html body .mushaf-ayah-text.word-by-word-meanings word.highlighted .word-meaning
   text-decoration: none !important;
 }
 
-/* AI simpler-plan weak words: persistent gold marks inside ayah cards */
+/* AI simpler-plan weak words: highlighter wash + underline (no thin outline box) */
 @keyframes practice-focus-pulse {
   0%,
-100% { box-shadow: inset 0 -2.5px 0 #a67c1a, 0 0 0 0 color-mix(in srgb, #c9a227 0%, transparent); }
-  50% { box-shadow: inset 0 -2.5px 0 #8a6a2b, 0 0 0 3px color-mix(in srgb, #c9a227 22%, transparent); }
+  100% {
+    box-shadow:
+      inset 0 -0.18em 0 #8a5410,
+      0 0 0 0 color-mix(in srgb, #e8a93a 0%, transparent),
+      0 0.1em 0.28em color-mix(in srgb, #c9891f 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      inset 0 -0.18em 0 #6f430c,
+      0 0 0 0.16em color-mix(in srgb, #e8a93a 28%, transparent),
+      0 0.12em 0.34em color-mix(in srgb, #c9891f 30%, transparent);
+  }
 }
 
 html body .verse-arabic .wbw-word.practice-focus-word,
@@ -51912,11 +51904,23 @@ html body .mushaf-ayah-text word.practice-focus-word,
 html body .verse-arabic.word-by-word-meanings .wbw-word.practice-focus-word,
 html body .verse-arabic.word-by-word-meanings word.practice-focus-word {
   position: relative;
-  background: color-mix(in srgb, #c9a227 26%, transparent) !important;
-  background-image: none !important;
-  box-shadow: inset 0 -2.5px 0 #a67c1a !important;
-  border-radius: 0.28em !important;
-  padding-inline: 0.1em;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e36b5b 42%, transparent) 0%,
+    color-mix(in srgb, #c24b3c 58%, transparent) 100%
+  ) !important;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e36b5b 42%, transparent) 0%,
+    color-mix(in srgb, #c24b3c 58%, transparent) 100%
+  ) !important;
+  box-shadow:
+    inset 0 -0.16em 0 #8f2f24,
+    0 0.08em 0.2em color-mix(in srgb, #c24b3c 24%, transparent) !important;
+  border-radius: 0.22em !important;
+  padding-inline: 0.12em;
+  padding-block: 0.04em;
+  outline: none !important;
 }
 
 html body .verse-arabic .wbw-word.practice-focus-word .word-arabic-text,
@@ -51932,10 +51936,18 @@ html body .mushaf-ayah-text .wbw-word.practice-focus-word--active,
 html body .mushaf-ayah-text word.practice-focus-word--active,
 html body .verse-arabic.word-by-word-meanings .wbw-word.practice-focus-word--active,
 html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
-  background: color-mix(in srgb, #c9a227 40%, transparent) !important;
-  outline: 2px solid color-mix(in srgb, #a67c1a 55%, transparent) !important;
-  outline-offset: 2px;
-  animation: practice-focus-pulse 1.15s ease-in-out infinite;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ef8576 52%, transparent) 0%,
+    color-mix(in srgb, #b83d30 68%, transparent) 100%
+  ) !important;
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ef8576 52%, transparent) 0%,
+    color-mix(in srgb, #b83d30 68%, transparent) 100%
+  ) !important;
+  outline: none !important;
+  animation: practice-focus-pulse 1.2s ease-in-out infinite;
   z-index: 1;
 }
 
@@ -51996,8 +52008,15 @@ html body .verse-arabic.word-by-word-meanings word.practice-focus-word--active {
 
 .verse-arabic.verse-practice-focus .wbw-word.practice-focus-word,
 .verse-arabic.verse-practice-focus word.practice-focus-word {
-  background: color-mix(in srgb, #c9a227 28%, transparent) !important;
-  box-shadow: inset 0 -2.5px 0 #a67c1a !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e36b5b 44%, transparent),
+    color-mix(in srgb, #c24b3c 60%, transparent)
+  ) !important;
+  box-shadow:
+    inset 0 -0.16em 0 #8f2f24,
+    0 0.08em 0.2em color-mix(in srgb, #c24b3c 24%, transparent) !important;
+  outline: none !important;
 }
 
 .ps-ai-result--beginner,
@@ -52702,18 +52721,33 @@ contained page (top session card untouched) —— */
 }
 
 .main.mushaf-mode-active .madani-word.practice-focus-word {
-  background: transparent !important;
-  color: #b91c1c !important;
-  -webkit-text-fill-color: #b91c1c;
-  box-shadow: none !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e36b5b 40%, transparent),
+    color-mix(in srgb, #c24b3c 56%, transparent)
+  ) !important;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor;
+  box-shadow:
+    inset 0 -0.16em 0 #8f2f24,
+    0 0.06em 0.18em color-mix(in srgb, #c24b3c 22%, transparent) !important;
+  border-radius: 0.16em;
+  outline: none !important;
 }
 
 .main.mushaf-mode-active .madani-word.practice-focus-word.highlighted,
 .main.mushaf-mode-active .madani-word.practice-focus-word.phrase-highlighted {
-  background: transparent !important;
-  color: #b45309 !important;
-  -webkit-text-fill-color: #b45309 !important;
-  box-shadow: none !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ef8576 50%, transparent),
+    color-mix(in srgb, #b83d30 66%, transparent)
+  ) !important;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor !important;
+  box-shadow:
+    inset 0 -0.18em 0 #7a241c,
+    0 0 0 0.12em color-mix(in srgb, #e36b5b 32%, transparent) !important;
+  outline: none !important;
 }
 
 .main.mushaf-mode-active .madani-word--out {
@@ -54998,6 +55032,108 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   margin: 0.25rem 0 0.1rem;
 }
 
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.35rem 0 0.15rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow-lead {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--ps-muted) 94%, transparent);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-steps {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--ps-line);
+  background: color-mix(in srgb, var(--ps-card) 94%, #fff);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"] {
+  border-color: color-mix(in srgb, #c9891f 36%, var(--ps-line));
+  background: color-mix(in srgb, #fff8eb 70%, var(--ps-card));
+  box-shadow: inset 3px 0 0 #c9891f;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="continue"] {
+  border-color: color-mix(in srgb, #1f7a4d 30%, var(--ps-line));
+  background: color-mix(in srgb, #edf8f2 68%, var(--ps-card));
+  box-shadow: inset 3px 0 0 #1f7a4d;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: #fff;
+  background: #6b7280;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"] .post-session-simple__success-step-num {
+  background: #c9891f;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="continue"] .post-session-simple__success-step-num {
+  background: #1f7a4d;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-body {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-title {
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-detail {
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--ps-muted) 96%, transparent);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-technique {
+  display: inline-flex;
+  align-self: start;
+  margin-top: 0.15rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #1f7a4d;
+  background: color-mix(in srgb, #1f7a4d 12%, transparent);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"] .post-session-simple__success-step-technique {
+  color: #8a5410;
+  background: color-mix(in srgb, #c9891f 16%, transparent);
+}
+
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-reason {
   margin: 0;
   font-size: 0.86rem;
@@ -55033,6 +55169,16 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   text-align: start;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card[data-scope="weak_areas"] {
+  border-color: color-mix(in srgb, #c9891f 30%, var(--ps-line));
+  box-shadow: inset 3px 0 0 color-mix(in srgb, #c9891f 78%, transparent);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card[data-scope="full_range"] {
+  border-color: color-mix(in srgb, #1f7a4d 26%, var(--ps-line));
+  box-shadow: inset 3px 0 0 color-mix(in srgb, #1f7a4d 74%, transparent);
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card:hover:not(:disabled),
@@ -55125,34 +55271,42 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .wbw-word.practice-focus-word--emphasis,
 word.practice-focus-word--emphasis,
 .madani-word.practice-focus-word--emphasis {
-  box-shadow: inset 0 -0.18em 0 color-mix(in srgb, #b45309 55%, transparent);
-  outline: 2px solid color-mix(in srgb, #b45309 42%, transparent);
-  outline-offset: 1px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #f0b429 52%, transparent),
+    color-mix(in srgb, #d97706 66%, transparent)
+  ) !important;
+  box-shadow:
+    inset 0 -0.18em 0 color-mix(in srgb, #9a3412 70%, transparent),
+    0 0.08em 0.24em color-mix(in srgb, #c2410c 26%, transparent) !important;
+  outline: none !important;
 }
 
 .wbw-word.practice-focus-word--emphasis::after,
 word.practice-focus-word--emphasis::after {
-  content: '';
-  display: inline-block;
-  width: 0.35rem;
-  height: 0.35rem;
-  margin-inline-start: 0.15rem;
-  border-radius: 50%;
-  background: #b45309;
-  vertical-align: super;
+  content: none;
+  display: none;
 }
 
 [data-theme="dark"] .wbw-word.practice-focus-word--emphasis,
 [data-theme="dark"] word.practice-focus-word--emphasis,
 [data-theme="dark"] .madani-word.practice-focus-word--emphasis,
 .post-session-simple[data-theme="dark"] .wbw-word.practice-focus-word--emphasis {
-  outline-color: color-mix(in srgb, #e4a76a 50%, transparent);
-  box-shadow: inset 0 -0.18em 0 color-mix(in srgb, #e4a76a 55%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #e4a76a 36%, transparent),
+    color-mix(in srgb, #d9894a 50%, transparent)
+  ) !important;
+  box-shadow:
+    inset 0 -0.18em 0 color-mix(in srgb, #e4a76a 72%, transparent),
+    0 0.08em 0.24em color-mix(in srgb, #e4a76a 28%, transparent) !important;
+  outline: none !important;
 }
 
 [data-theme="dark"] .wbw-word.practice-focus-word--emphasis::after,
 [data-theme="dark"] word.practice-focus-word--emphasis::after {
-  background: #e4a76a;
+  content: none;
+  display: none;
 }
 
 [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus,
@@ -55277,6 +55431,52 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   line-height: 1.25;
 }
 
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-target {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-arabic {
+  margin: 0;
+  font-family: var(--quran-font, var(--font-ar, "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif));
+  font-size: clamp(1.35rem, 3.4vw, 1.7rem);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ps-ink);
+  letter-spacing: 0;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-latin {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 550;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--ps-ink) 72%, transparent);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-latin--solo {
+  font-size: clamp(1.05rem, 2.7vw, 1.22rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--ps-ink);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pills--next {
+  margin-top: 0.55rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pill--set {
+  border-color: color-mix(in srgb, var(--ps-accent, var(--ps-mint)) 28%, var(--ps-line));
+  background: color-mix(in srgb, var(--ps-accent, var(--ps-mint)) 8%, var(--ps-card));
+  color: color-mix(in srgb, var(--ps-ink) 88%, var(--ps-accent, var(--ps-mint)));
+  font-weight: 600;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pill--time {
+  color: var(--ps-muted);
+}
+
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__range {
   margin: 0.2rem 0 0;
   font-size: 0.92rem;
@@ -55378,6 +55578,12 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   border-color: color-mix(in srgb, #d97706 34%, var(--ps-line));
   background: color-mix(in srgb, #fff7ed 58%, var(--ps-card));
   box-shadow: inset 3px 0 0 #d97706;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan="reinforce"] {
+  border-color: color-mix(in srgb, #c9891f 36%, var(--ps-line));
+  background: color-mix(in srgb, #fff8eb 62%, var(--ps-card));
+  box-shadow: inset 3px 0 0 #c9891f;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan="continue"],
@@ -57452,6 +57658,15 @@ never recolour tajweed text */
 .welcome-back-modal--lean .welcome-back-actions-grid--trio {
   display: grid !important;
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 0.82fr) !important;
+  gap: var(--wb-gap) !important;
+  align-items: stretch !important;
+  width: 100%;
+}
+
+.welcome-back-modal--lean .welcome-back-actions-grid--duo,
+.welcome-back-modal--lean .welcome-back-actions-grid--v2.mutqin-modal-actions--2 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) !important;
   gap: var(--wb-gap) !important;
   align-items: stretch !important;
   width: 100%;

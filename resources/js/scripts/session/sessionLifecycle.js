@@ -589,14 +589,9 @@ export function deriveSessionStatus(input = {}) {
     || backendStatus === BACKEND_SESSION_STATUS.PAUSED
     || backendStatus === BACKEND_SESSION_STATUS.INTERRUPTED
 
-  if (
-    !mutqinSessionActive
-    && !sessionCompleted
-    && (
-      sessionPaused
-      || backendStatus === BACKEND_SESSION_STATUS.PAUSED
-    )
-  ) {
+  // Live mid-sitting pause only (Pause control). Soft-exit / refresh with a
+  // backend paused row is INTERRUPTED_RESUMABLE so End session can leave.
+  if (!mutqinSessionActive && !sessionCompleted && sessionPaused) {
     return SESSION_STATUS.PAUSED
   }
 
@@ -699,9 +694,12 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
   const translate = typeof t === 'function' ? t : (key) => key
   const loading = action === PRIMARY_SESSION_ACTION.LOADING
   const disabled = loading || action === PRIMARY_SESSION_ACTION.NONE
+  const status = normaliseSessionStatus(options.status)
+  // End sits beside Pause, and beside Resume only during a live mid-sitting
+  // pause — not after "Finish for now" / soft-exit (INTERRUPTED_RESUMABLE).
   const showEndCompanion = (
     action === PRIMARY_SESSION_ACTION.PAUSE_SESSION
-    || action === PRIMARY_SESSION_ACTION.RESUME_SESSION
+    || (action === PRIMARY_SESSION_ACTION.RESUME_SESSION && status === SESSION_STATUS.PAUSED)
   )
 
   const map = {
@@ -997,6 +995,9 @@ export function sessionRangesMatch(left, right) {
 
 /**
  * Prefer the ayah the user was on (verse key / queue), not only rangeStart.
+ *
+ * IMPORTANT: `fallback.currentPosition` must be an absolute mushaf ayah number.
+ * Never pass Memorisation.vue's relative `currentPosition` (1-based index in range).
  */
 export function resolveResumeAyahNumber(payload = {}, fallback = {}) {
   const range = extractSessionRange(payload)
@@ -1017,14 +1018,40 @@ export function resolveResumeAyahNumber(payload = {}, fallback = {}) {
   if (Number.isFinite(queueIndex) && range.rangeStart > 0) {
     return Math.min(range.rangeEnd || range.rangeStart, range.rangeStart + queueIndex)
   }
-  const fallbackAyah = Number(
-    fallback.ayah_number
-    || fallback.currentPosition
-    || fallback.rangeStart
-    || range.rangeStart
-    || 0
-  )
-  return fallbackAyah > 0 ? fallbackAyah : null
+  const absoluteFallback = Number(fallback.ayah_number || 0)
+  if (absoluteFallback > 0) {
+    if (range.rangeStart > 0 && range.rangeEnd >= range.rangeStart) {
+      return Math.min(range.rangeEnd, Math.max(range.rangeStart, absoluteFallback))
+    }
+    return absoluteFallback
+  }
+  // Legacy callers sometimes passed absolute ayah as currentPosition — accept only when
+  // it already looks like a mushaf ayah inside the range (not a relative 1..N index).
+  const legacyAbsolute = Number(fallback.currentPosition || 0)
+  if (
+    legacyAbsolute > 0
+    && range.rangeStart > 0
+    && legacyAbsolute >= range.rangeStart
+    && legacyAbsolute <= (range.rangeEnd || legacyAbsolute)
+  ) {
+    return legacyAbsolute
+  }
+  const rangeStart = Number(fallback.rangeStart || range.rangeStart || 0)
+  return rangeStart > 0 ? rangeStart : null
+}
+
+/**
+ * True when continue payload points past the first ayah of the set (or has playback progress).
+ */
+export function hasResumePlaybackPosition(payload = {}) {
+  const ayahNumber = resolveResumeAyahNumber(payload)
+  if (!ayahNumber || ayahNumber <= 0) return false
+  const rangeStart = Number(payload?.config?.rangeStart || extractSessionRange(payload).rangeStart || 0)
+  if (rangeStart > 0 && ayahNumber > rangeStart) return true
+  return Number(payload.sessionStartedAt || 0) > 0
+    || Number(payload.queueIndex || 0) > 0
+    || Number(payload.mutqinSessionIndex || 0) > 0
+    || Number(payload.currentTime || 0) > 0
 }
 
 /**
@@ -1346,17 +1373,18 @@ export function reconcileBootstrapSessionState(input = {}) {
   // Authoritative unfinished row: keep resumable even if local storage still
   // says "completed" from an earlier session attempt.
   if (hasUnfinished) {
-    const paused = backendStatus === BACKEND_SESSION_STATUS.PAUSED
     const resumablePayload = isResumableSessionPayload(localContinuePayload, { backendStatus })
       || isResumableSessionPayload(activeSnapshot, { backendStatus })
+    // Soft-exit / refresh: resumable without live Pause/End chrome.
+    // Mid-sitting Pause keeps sessionPaused=true in the running app only.
     return {
       mutqinSessionActive: false,
       sessionCompleted: false,
-      sessionPaused: paused,
+      sessionPaused: false,
       continuePayload: resumablePayload ? (localContinuePayload || activeSnapshot) : (localContinuePayload || activeSnapshot || null),
       activeSnapshot: resumablePayload ? activeSnapshot : (activeSnapshot || null),
       resumable: true,
-      status: paused ? SESSION_STATUS.PAUSED : SESSION_STATUS.INTERRUPTED_RESUMABLE,
+      status: SESSION_STATUS.INTERRUPTED_RESUMABLE,
     }
   }
 
@@ -1452,6 +1480,7 @@ export default {
   extractSessionRange,
   sessionRangesMatch,
   resolveResumeAyahNumber,
+  hasResumePlaybackPosition,
   canSkipHydrateForContinue,
   resolvePreferredSessionResumeGate,
   pickContinuePayloadForResume,

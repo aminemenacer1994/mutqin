@@ -25,7 +25,7 @@
     @endphp
 
     <aside class="auth-tester-notice" role="note" aria-label="{{ __('ui.auth_demo_title') }}">
-        <details class="auth-tester-notice__panel" open>
+        <details class="auth-tester-notice__panel">
             <summary class="auth-tester-notice__toggle">
                 <span class="auth-tester-notice__toggle-copy">
                     <span class="auth-tester-notice__title">{{ __('ui.auth_demo_title') }}</span>

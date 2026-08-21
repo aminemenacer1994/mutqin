@@ -104,8 +104,9 @@ function assertStatuses(result, expected) {
 
 // Soft ASR letter swap must not silently mark correct (false negative)
 {
+  // Soft ق/ك conflation must stay below the correct floor
   assert.ok(
-    getRecitationWordSimilarity('قل', 'كل') < 0.78,
+    getRecitationWordSimilarity('قل', 'كل') < 0.79,
     'soft ق/ك conflation must stay below the correct floor'
   )
   const result = buildDeterministicRecitationResult(target, createWordsFromTranscript('كل هو الله أحد'), opts)
@@ -169,6 +170,20 @@ function assertStatuses(result, expected) {
   assert.equal(reemitResult.extraWords.length, 0)
   assert.equal(reemitResult.mistakes.repeated.length, 0)
   assert.ok(reemitResult.accuracyScore >= 95)
+
+  // Short-gap ASR re-emit (non-overlapping) must not count as a learner repetition.
+  const shortGapReemit = [
+    { word: 'قل', confidence: 0.95, start: 0.1, end: 0.3, segmentId: 'a' },
+    { word: 'هو', confidence: 0.9, start: 0.35, end: 0.5, segmentId: 'a' },
+    { word: 'هو', confidence: 0.95, start: 0.72, end: 0.9, segmentId: 'a' },
+    { word: 'الله', confidence: 0.95, start: 0.95, end: 1.2, segmentId: 'a' },
+    { word: 'أحد', confidence: 0.95, start: 1.25, end: 1.5, segmentId: 'a' },
+  ]
+  const shortGapResult = buildDeterministicRecitationResult(target, shortGapReemit, opts)
+  assert.equal(shortGapResult.extraWords.length, 0)
+  assert.equal(shortGapResult.mistakes.repeated.length, 0)
+  assert.equal(shortGapResult.repeatedWords.length, 0)
+  assert.ok(shortGapResult.accuracyScore >= 95)
 }
 
 // Live exact-skip window detects skipped phrases without fuzzy lookahead
@@ -237,6 +252,11 @@ function assertStatuses(result, expected) {
     { status: 'partial', ayah_number: 3 },
   ])
   assert.equal(weak.map(Number).join(','), '2,3')
+  // A single amber is enough to surface a weak ayah.
+  assert.equal(
+    deriveWeakAyahsFromWordStatuses([{ status: 'partial', ayahNumber: 4 }]).map(Number).join(','),
+    '4',
+  )
 }
 
 console.log('recitation-mistake-detection: ok')

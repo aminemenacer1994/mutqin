@@ -169,7 +169,6 @@ import {
   buildAiReciteDynamicPlan,
   buildFriendlyReciteFeedback,
   extractWeakWordsFromResult,
-  resolvePracticeHowSteps,
   selectPrimaryWeakAyah,
 } from '../scripts/recommendations/aiRecitePracticePlan'
 import {
@@ -238,6 +237,7 @@ import {
   resolveEndSessionConfirmDecision,
   resolvePreferredSessionResumeGate,
   resolveResumeAyahNumber,
+  hasResumePlaybackPosition,
   resolveSessionExitTransition,
   resolveExitRangeComplete,
   resolveBackToMushafTransition,
@@ -374,6 +374,9 @@ import {
   tokenizeRecitationWords as tokenizeRecitationWordsEngine,
   wordsToTranscript,
   RECITATION_AMD_UNCERTAIN_CONFIDENCE,
+  RECITATION_LIVE_CORRECT_SIMILARITY,
+  RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT,
+  RECITATION_LIVE_PARTIAL_SIMILARITY,
 } from '../scripts/engine/recitation_analysis'
 import {
   DEFAULT_REPLAY_VALIDATION_COUNT,
@@ -884,7 +887,6 @@ export default {
       postSessionAdaptiveFeedback: '',
       postSessionAdaptiveQuestionStartedAt: 0,
       postSessionAdaptiveFeedbackTimer: null,
-      postSessionPracticeHowExpanded: false,
       postSessionConfidenceSelection: null, // local authoritative selection; null → resolve from recommendation
       postSessionViewState: 'idle', // completing | generating_recommendation | recommendation_ready | editing_settings | starting_recommended | preparing_repeat | starting_repeat | opening_ai_recite | recommendation_failed | action_failed
       postSessionCompletedSessionId: null,
@@ -2784,8 +2786,9 @@ export default {
         onboardingExampleRejected: !!this.onboardingExampleRejected,
         mutqinSessionActive: !!this.isSessionLive,
         sessionCompleted: !!this.isSessionCompleted,
-        sessionPaused: !!this.sessionPaused
-          || this.backendSessionSnapshot?.status === 'paused',
+        // Only local mid-sitting pause — backend "paused" alone is soft-exit /
+        // resumable and must not keep the End session companion on screen.
+        sessionPaused: !!this.sessionPaused,
         completionModalOpen: !!this.showPostSessionModal,
         hasValidatedContinuePayload: this.hasValidatedResumableSession,
         backendUnfinished: !!this.backendUnfinishedSession,
@@ -3804,6 +3807,13 @@ export default {
       )
     },
     postSessionPlanKind() {
+      const ctaState = this.postSessionCtaState
+      if (
+        ctaState === POST_SESSION_CTA_STATES.MOSTLY_SECURE
+        && Number(this.resolvePrimaryPostSessionWeakAyah?.() || 0) > 0
+      ) {
+        return 'reinforce'
+      }
       if (this.postSessionIsRepeatRecommendation) return 'repeat'
       if (this.postSessionRecommendation?.type === RECOMMENDATION_TYPES.NEXT_SURAH) return 'next-surah'
       if (this.postSessionRecommendationStatus === 'empty' || !this.postSessionRecommendationActionable) return 'empty'
@@ -3819,6 +3829,7 @@ export default {
       return this.t('memorisation.postSession.recommendation.planRecommended')
     },
     postSessionPlanSealIcon() {
+      if (this.postSessionPlanKind === 'reinforce') return 'bi-arrow-repeat'
       if (this.postSessionPlanKind === 'repeat') return 'bi-arrow-repeat'
       if (this.postSessionPlanKind === 'next-surah') return 'bi-book'
       if (this.postSessionPlanKind === 'empty') return 'bi-compass'
@@ -4462,9 +4473,61 @@ export default {
       const primaryWeakAyah = typeof this.resolvePrimaryPostSessionWeakAyah === 'function'
         ? this.resolvePrimaryPostSessionWeakAyah()
         : null
-      const nextRange = plan?.range && typeof plan.range === 'object'
+      const planRange = plan?.range && typeof plan.range === 'object'
         ? { from: plan.range.from, to: plan.range.to }
         : null
+      const recRange = rec?.ayah_range && typeof rec.ayah_range === 'object'
+        ? { from: rec.ayah_range.from, to: rec.ayah_range.to }
+        : null
+      const snapshotRange = this.postSessionSnapshot?.range && typeof this.postSessionSnapshot.range === 'object'
+        ? { from: this.postSessionSnapshot.range.from, to: this.postSessionSnapshot.range.to }
+        : (
+          Number(this.postSessionSnapshot?.rangeStart) > 0
+            ? {
+              from: Number(this.postSessionSnapshot.rangeStart),
+              to: Number(this.postSessionSnapshot.rangeEnd || this.postSessionSnapshot.rangeStart),
+            }
+            : null
+        )
+      const pickRange = (range) => {
+        const from = Number(range?.from)
+        const to = Number(range?.to ?? range?.from)
+        if (!Number.isFinite(from) || from <= 0) return null
+        return { from, to: Number.isFinite(to) && to >= from ? to : from }
+      }
+      const nextRange = pickRange(planRange) || pickRange(recRange) || pickRange(snapshotRange)
+      const chapterId = Number(
+        rec.surah?.id
+        || rec.next_surah?.id
+        || plan?.range?.surahId
+        || this.postSessionSnapshot?.chapterId
+        || this.chapterId
+        || 0,
+      )
+      const surahArabicName = this.getChapterArabicName(chapterId)
+        || this.getChapterArabicName(rec.surah)
+        || ''
+      const surahName = this.getChapterLatinName(chapterId)
+        || String(rec.surah?.name || '').trim()
+        || String(rec.surah?.translated_name || '').trim()
+        || String(this.postSessionSnapshot?.chapterName || '').trim()
+        || ''
+      const planHeadline = String(plan?.headline || '').trim()
+      const genericHeadline = String(
+        translate?.('memorisation.postSession.recommendation.planDetail.headline')
+        || '',
+      ).trim()
+      const nextHeadline = planHeadline
+        && planHeadline !== genericHeadline
+        && planHeadline !== 'Your next practice'
+        && planHeadline !== this.postSessionSimpleActionLabel
+        ? planHeadline
+        : ''
+      const complementaryTitle = String(
+        plan?.practiceApproach?.with
+        || plan?.techniques?.find?.((tech) => tech?.role === 'complementary')?.label
+        || '',
+      ).replace(/^Also:\s*/i, '').trim()
       return buildPostSessionInfoArchitecture({
         t: translate,
         outcome: this.postSessionAiReviewDetails?.outcome
@@ -4476,17 +4539,17 @@ export default {
         weakAyahRows: this.postSessionWeakSpotRows,
         focusPhraseParts: this.postSessionFocusHighlightParts,
         focusAyahLabel: this.postSessionFocusHighlightMeta || '',
-        surahName: rec.surah?.translated_name
-          || rec.surah?.name
-          || this.postSessionSnapshot?.chapterName
-          || '',
+        surahName,
+        surahArabicName,
         nextRange,
-        nextHeadline: plan?.headline || this.postSessionSimpleActionLabel || '',
+        nextHeadline,
         methodTitle: plan?.practiceApproach?.title || '',
+        complementaryTitle,
         timeLabel: this.postSessionEstimatedTimeLabel || plan?.time?.label || '',
         planWhy: this.postSessionPlanWhyText || '',
         revisionOptions: this.postSessionRevisionScopeOptions,
         showRevisionOptions: this.postSessionShowRevisionScopePicker,
+        ctaState: this.postSessionCtaState,
         isRevision: !!this.postSessionIsRepeatRecommendation,
       })
     },
@@ -4508,44 +4571,6 @@ export default {
         ? this.postSessionPersonalPlan.evidence
         : []
       return evidence.slice(0, 3).map((row) => String(row?.label || '').trim()).filter(Boolean).join(' · ')
-    },
-    postSessionPracticeHowSteps() {
-      const plan = this.postSessionPersonalPlan
-        || this.aiReciteFinalPlan
-        || this.amdPracticePlan
-        || null
-      const approach = plan?.practiceApproach
-        || plan?.planDetail?.practiceApproach
-        || null
-      const techniqueId = String(
-        approach?.id
-        || plan?.techniques?.[0]?.id
-        || this.postSessionRecommendation?.settings?.technique
-        || this.postSessionRecommendation?.technique?.id
-        || this.liveSessionTechniqueId
-        || 'talqin',
-      ).toLowerCase()
-      const steps = resolvePracticeHowSteps({
-        techniqueId: techniqueId || 'talqin',
-        steps: approach?.steps,
-        how: approach?.how || this.resolvePostSessionMethodCopy(plan),
-        t: this.t.bind(this),
-      })
-      const cleaned = steps
-        .map((step) => this.stripAiDashes(String(step || '').trim()))
-        .filter(Boolean)
-      if (cleaned.length) return cleaned
-      // Never leave the disclosure empty — first-time users need a fallback.
-      return resolvePracticeHowSteps({
-        techniqueId: 'talqin',
-        t: this.t.bind(this),
-      })
-    },
-    postSessionPracticeHowVisible() {
-      if (this.onboardingSampleSessionActive) return false
-      if (this.postSessionRecommendationStatus === 'loading') return false
-      // Always offer short practice steps above the CTAs (never blocks them).
-      return this.postSessionPracticeHowSteps.length > 0
     },
     livePracticeCoachText() {
       if (!this.hasSessionStarted || this.isSessionCompleted || this.showPostSessionModal) return ''
@@ -5042,6 +5067,15 @@ export default {
     postSessionShowRevisionScopePicker() {
       if (!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck)) return false
       if (this.postSessionAiPresentationMode === 'insufficient_audio') return false
+      // Success / mostly-secure paths use technique-led next steps, not the
+      // stale "Practise weak ayahs + Revise the full set" picker.
+      const ctaState = this.postSessionCtaState
+      if (
+        ctaState === POST_SESSION_CTA_STATES.STRONG
+        || ctaState === POST_SESSION_CTA_STATES.MOSTLY_SECURE
+      ) {
+        return false
+      }
       const words = this.postSessionRevisionWeakWords
       const ayahs = this.postSessionRevisionWeakAyahs
       if (words.length > 0 || ayahs.length > 0) return true
@@ -5570,7 +5604,9 @@ export default {
       const colorCounts = this.postSessionAiReviewDetails?.colorCounts || {}
       const hardWordCount = Number(colorCounts.red || 0) + Number(colorCounts.black || 0)
       const partialWordCount = Number(colorCounts.amber || 0)
-      const accuracyPercent = this.postSessionAiReviewDetails?.accuracy ?? null
+      const accuracyPercent = this.postSessionAiReviewDetails?.scoredAccuracy
+        ?? this.postSessionAiReviewDetails?.accuracy
+        ?? null
       const hasWordLevelEvidence = Number(this.postSessionAiReviewDetails?.totalWords || 0) > 0
       return resolvePostSessionCtaState({
         isConfirmStep: this.postSessionRecommendationStep === 'confirm'
@@ -9323,13 +9359,15 @@ export default {
       const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
       const shouldAutoOpenOnboarding = authenticatedWorkspace && this.shouldAutoOpenOnboarding
       const dashboardEntryIntent = this.readDashboardEntryIntent()
-
-      if (
-        !dashboardEntryIntent
-        && this.isLoggedIn
+      // Fresh returning login: Welcome Back is the resume gate. Do not let
+      // dashboard ?resume=1 / ?setup=1 deep-links skip it.
+      const preferWelcomeBackOnLogin = !!(
+        this.isLoggedIn
         && !needsFirstTimeOnboarding
         && this.isExistingUserLogin
-      ) {
+      )
+
+      if (preferWelcomeBackOnLogin) {
         this.maybeShowWelcomeBackModal()
       }
 
@@ -9356,8 +9394,16 @@ export default {
           this.isDataReady = true
         }
 
-      if (dashboardEntryIntent && !needsFirstTimeOnboarding) {
+      if (
+        dashboardEntryIntent
+        && !needsFirstTimeOnboarding
+        && !preferWelcomeBackOnLogin
+      ) {
         await this.consumeDashboardEntryIntent(dashboardEntryIntent)
+      } else if (dashboardEntryIntent && preferWelcomeBackOnLogin) {
+        // Drop stashed/URL resume intent so it cannot steal the gate later.
+        this.clearDashboardEntryIntentFromUrl()
+        this.markDashboardEntryIntentConsumed()
       }
 
       } catch (error) {
@@ -10659,6 +10705,9 @@ export default {
       if (!this.isExistingUserLogin) return
       if (!this.getReadyToBeginLoginEventId()) return
       if (this.hasShownWelcomeBackModalForCurrentLogin()) return
+      // Paused/unfinished work must NOT block Welcome Back — that modal is the
+      // Continue vs new-session gate for exactly that state. Only skip when a
+      // live session is already running in this tab.
       if (
         this.showPostLoginOnboarding
         || this.isOnboardingExperienceActive
@@ -10670,7 +10719,6 @@ export default {
         || this.postSessionAdaptiveCheckActive
         || this.hasSessionStarted
         || this.isSessionLive
-        || this.sessionPaused
       ) return
       // Sync Continue CTA with backend + frontend resume state before reveal.
       this.syncWelcomeBackResumeFromBackend()
@@ -13353,7 +13401,7 @@ export default {
 
         this.closePostSessionChoice()
         await this.closeToolsPanel()
-        await this.flushOffcanvasToWorkspace('start-session')
+        // closeToolsPanel already soft-flushed controls → workspace; avoid a second wipe.
         await this.$nextTick()
         const started = this.startSessionWithCountdown({ skipPrime: true })
         if (!started) {
@@ -13430,7 +13478,10 @@ export default {
     },
 
     setRepetitionsFromSlider(value) {
-      this.repetitionsPerStep = Math.max(1, Math.min(10, Number(value || 1)))
+      const next = Math.max(1, Math.min(10, Number(value || 1)))
+      this.repetitionsPerStep = next
+      // Keep legacy loop-count state in sync so hydrate / queue rebuilds match the slider.
+      this.selectedLoopCount = next
     },
 
     clampSetupIndividualAyah() {
@@ -14479,7 +14530,6 @@ export default {
         t: this.t.bind(this)
       })
       this.postSessionStatsExpanded = false
-      this.postSessionPracticeHowExpanded = false
       const preservedRecommendation = this.postSessionRecommendation
       const preservedStatus = this.postSessionRecommendationStatus
       const preservedSessionId = this.postSessionCompletedSessionId
@@ -14674,7 +14724,6 @@ export default {
         this.postSessionAdaptiveFeedbackTimer = null
       }
       this.postSessionAdaptiveQuestionStartedAt = 0
-      this.postSessionPracticeHowExpanded = false
       this.postSessionConfidenceSelection = null
       this.postSessionConfidenceHydrated = false
       this.postSessionViewState = 'idle'
@@ -14944,7 +14993,10 @@ export default {
         aiDetails,
         quizView,
         color_counts: aiDetails?.colorCounts || null,
-        accuracy_percent: aiDetails?.accuracy ?? aiDetails?.accuracyPercent ?? null,
+        accuracy_percent: aiDetails?.scoredAccuracy
+          ?? aiDetails?.accuracy
+          ?? aiDetails?.accuracyPercent
+          ?? null,
         weakAyahs: aiDetails?.weakAyahs || [],
         skippedAyahs: aiDetails?.skippedAyahs || [],
       }
@@ -15873,7 +15925,6 @@ export default {
     async landOnAdaptedPlanFromCheck() {
       this.postSessionAdaptiveCheckActive = false
       this.postSessionAdaptiveCheckBusy = false
-      this.postSessionPracticeHowExpanded = false
       this.postSessionViewState = 'recommendation_ready'
       this.syncBodyScrollLock(!!this.showPostSessionModal)
 
@@ -15945,7 +15996,9 @@ export default {
               skipped_ayahs: extras.skipped_ayahs || this.postSessionAiReviewDetails?.skippedAyahs,
               skippedAyahs: extras.skipped_ayahs || this.postSessionAiReviewDetails?.skippedAyahs,
               color_counts: extras.color_counts || this.postSessionAiReviewDetails?.colorCounts,
-              accuracy_percent: extras.accuracy_percent ?? this.postSessionAiReviewDetails?.accuracy,
+              accuracy_percent: extras.accuracy_percent
+                ?? this.postSessionAiReviewDetails?.scoredAccuracy
+                ?? this.postSessionAiReviewDetails?.accuracy,
               aiDetails: this.postSessionAiReviewDetails,
               completion: this.buildCompletionPerformancePayload?.() || null,
             },
@@ -16713,7 +16766,7 @@ export default {
           await this.chooseOtherFromRecommendation()
           return
         case POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE:
-          this.returnToMemorisationWorkspace()
+          await this.returnToMemorisationWorkspace()
           return
         default:
           break
@@ -16725,7 +16778,7 @@ export default {
      * Preserves AI/recommendation results; never restarts, duplicates, or discards
      * the set unless the learner explicitly chose discard.
      */
-    returnToMemorisationWorkspace() {
+    async returnToMemorisationWorkspace() {
       if (this.postSessionActionsBusy || this.postSessionRecommendationStarting) return
 
       const snap = this.postSessionSnapshot || this.sessionEndedSnapshot || null
@@ -16774,7 +16827,7 @@ export default {
       try { this.closePlayer() } catch (_) { /* ignore */ }
 
       if (transition.kind === 'park') {
-        this.parkPracticeSetAfterBackToMushaf(snap, transition)
+        await this.parkPracticeSetAfterBackToMushaf(snap, transition)
       } else if (transition.kind === 'complete_return') {
         this.landCompletedPracticeSetOnMushaf(snap, transition)
       } else {
@@ -16839,7 +16892,7 @@ export default {
       return true
     },
 
-    parkPracticeSetAfterBackToMushaf(snapshot = null, transition = null) {
+    async parkPracticeSetAfterBackToMushaf(snapshot = null, transition = null) {
       void transition
       this.sessionCompleted = false
       this.sessionEndedEarly = false
@@ -16861,23 +16914,35 @@ export default {
         this.centralSession.sessionStatus = 'paused'
         this.centralSession.sessionCompletedAt = null
       }
-      // Only claim backend unfinished when the server row is still pausable.
+      // Preserve an already-known unfinished flag even when snapshot status is blank.
+      // Clearing it here made welcome-back render "fresh" with no set meta chips.
       const backendStatus = String(this.backendSessionSnapshot?.status || '').toLowerCase()
       const backendStillUnfinished = (
-        backendStatus === 'active'
+        !!this.backendUnfinishedSession
+        || backendStatus === 'active'
         || backendStatus === 'paused'
         || backendStatus === 'interrupted'
       )
       this.backendUnfinishedSession = backendStillUnfinished
-      if (backendStillUnfinished && this.backendSessionSnapshot) {
+      if (backendStillUnfinished) {
         this.backendSessionSnapshot = {
-          ...this.backendSessionSnapshot,
+          ...(this.backendSessionSnapshot || {}),
           status: 'paused',
         }
       }
       try {
         this.transitionSessionLifecycle?.(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
       } catch (_) { /* ignore */ }
+      // Persist pause on the server so login / refresh still expose Return to this set + meta.
+      if (
+        this.learningBackendEnabled?.()
+        && backendStillUnfinished
+        && Number(this.backendSessionSnapshot?.id || 0) > 0
+      ) {
+        try {
+          await this.pauseSessionFromPrimaryAction({ quiet: true, reason: 'park_set' })
+        } catch (_) { /* local parked/continue state already applied */ }
+      }
     },
 
     landCompletedPracticeSetOnMushaf(snapshot = null, transition = null) {
@@ -17954,9 +18019,6 @@ export default {
     },
     togglePostSessionStats() {
       this.postSessionStatsExpanded = !this.postSessionStatsExpanded
-    },
-    togglePostSessionPracticeHow() {
-      this.postSessionPracticeHowExpanded = !this.postSessionPracticeHowExpanded
     },
 
     repeatPostSession() {
@@ -24198,10 +24260,12 @@ export default {
         liveAlignmentOptions.partialAdvances = true
         liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
         liveAlignmentOptions.allowArticleMatch = true
-        // Soft ASR letter conflation is capped below this floor (see RECITATION_SOFT_SIMILARITY_CAP).
-        liveAlignmentOptions.correctSimilarity = 0.76
-        liveAlignmentOptions.partialSimilarity = 0.42
-        liveAlignmentOptions.minConfidenceForCorrect = 0.18
+        // Soft ASR letter conflation is capped below the final green floor.
+        // Live matching stays slightly more tolerant so ASR jitter does not paint
+        // correct words red while still catching clear substitutions.
+        liveAlignmentOptions.correctSimilarity = RECITATION_LIVE_CORRECT_SIMILARITY
+        liveAlignmentOptions.partialSimilarity = RECITATION_LIVE_PARTIAL_SIMILARITY
+        liveAlignmentOptions.minConfidenceForCorrect = RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT
         liveAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
         livePreviewAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.lookahead = 0
@@ -24209,9 +24273,12 @@ export default {
         livePreviewAlignmentOptions.partialAdvances = true
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
-        livePreviewAlignmentOptions.correctSimilarity = 0.76
-        livePreviewAlignmentOptions.partialSimilarity = 0.42
-        livePreviewAlignmentOptions.minConfidenceForCorrect = 0.14
+        livePreviewAlignmentOptions.correctSimilarity = RECITATION_LIVE_CORRECT_SIMILARITY
+        livePreviewAlignmentOptions.partialSimilarity = RECITATION_LIVE_PARTIAL_SIMILARITY
+        livePreviewAlignmentOptions.minConfidenceForCorrect = Math.max(
+          0.16,
+          RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT - 0.04,
+        )
         livePreviewAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
       }
       const targetAyahMeta = this.buildRecitationTargetAyahMetadata(targetVerses)
@@ -25919,7 +25986,6 @@ export default {
       this.showPostSessionConfetti = false
       this.postSessionOffcanvasOpen = false
       this.postSessionAiDetailsExpanded = false
-      this.postSessionPracticeHowExpanded = false
       this.postSessionViewState = this.postSessionRecommendation
         ? 'recommendation_ready'
         : (this.postSessionViewState || 'idle')
@@ -26398,7 +26464,6 @@ export default {
         return
       }
 
-      this.postSessionPracticeHowExpanded = false
       this.postSessionViewState = 'recommendation_ready'
 
       await this.$nextTick()
@@ -29016,7 +29081,7 @@ export default {
       this.showWelcomeBackModal = false
       this.showTools = true
       this.persistUiState()
-      void this.flushOffcanvasToWorkspace('offcanvas-open')
+      // Do not flush/reload the mushaf just for opening controls — that broke live sessions.
       this.$nextTick(() => {
         const panel = this.$refs.toolsPanel
         const panelBody = this.$refs.toolsBody
@@ -29054,28 +29119,39 @@ export default {
       if (this.anchorModeEnabled) {
         this.scheduleAnchorHighlights()
       }
+      // Persist + soft-apply. Queue rebuild stays on the repetitions/chaining watchers.
       await this.flushOffcanvasToWorkspace('offcanvas-commit')
+    },
+
+    /**
+     * Absolute mushaf ayah for the live workspace (never relative currentPosition).
+     */
+    resolveLiveAbsoluteAyahNumber(payload = null) {
+      const data = payload && typeof payload === 'object' ? payload : null
+      return resolveResumeAyahNumber(data || {
+        activeVerseKey: this.effectiveActiveVerseKey || this.activeVerseKey || this.activeKey,
+        queueIndex: this.queueIndex,
+        config: {
+          chapterId: Number(this.chapterId || this.sessionConfig?.chapterId || 0),
+          rangeStart: Number(this.rangeStart || this.sessionConfig?.rangeStart || 0),
+          rangeEnd: Number(this.rangeEnd || this.sessionConfig?.rangeEnd || 0),
+        },
+      }, {
+        ayah_number: this.backendSessionSnapshot?.ayah_number,
+        rangeStart: Number(this.rangeStart || this.sessionConfig?.rangeStart || 0),
+      })
     },
 
     resolveResumeStoppedAyahNumber(payload = null) {
       const data = payload || this.continueSessionPayload || {}
-      const key = data.activeVerseKey || data.activeKey
-      if (!key) return null
-      const parts = String(key).split(':')
-      const ayahPart = parts.length > 1 ? parts[1] : parts[0]
-      const parsed = Number(ayahPart)
-      if (!Number.isFinite(parsed) || parsed <= 0) return null
-      return parsed
+      return resolveResumeAyahNumber(data, {
+        ayah_number: this.backendSessionSnapshot?.ayah_number,
+        rangeStart: Number(data?.config?.rangeStart || this.rangeStart || 0),
+      })
     },
 
     hasResumePlaybackPosition(payload = null) {
-      const data = payload || this.continueSessionPayload || {}
-      const ayahNumber = this.resolveResumeStoppedAyahNumber(data)
-      if (ayahNumber == null) return false
-      return Number(data.sessionStartedAt || 0) > 0
-        || Number(data.queueIndex || 0) > 0
-        || Number(data.mutqinSessionIndex || 0) > 0
-        || Number(data.currentTime || 0) > 0
+      return hasResumePlaybackPosition(payload || this.continueSessionPayload || {})
     },
 
     formatResumeStoppedAyahLabel(payload = null) {
@@ -29084,6 +29160,46 @@ export default {
       }
       const n = this.resolveResumeStoppedAyahNumber(payload)
       return this.t('memorisation.welcomeBack.stoppedAtAyah', { number: n })
+    },
+
+    /**
+     * Re-seek the already-loaded mushaf to the continue payload's ayah/queue.
+     * Fast-path Welcome Back continue must not leave the learner at ayah 1 of the set.
+     */
+    restoreWorkspaceToContinuePayload(payload = null) {
+      const data = payload || this.continueSessionPayload
+      if (!data?.config?.chapterId) return false
+      const mode = data.mode || this.currentMode || 'advanced'
+      const store = this.getModeStore?.(mode) || null
+      const queue = store?.queue || this.queue || []
+      if (!queue.length) return false
+
+      const targetKey = data.activeVerseKey || data.activeKey || data.config?.activeVerseKey || null
+      let restoredQueueIndex = Math.max(0, Number(data.queueIndex ?? data.config?.queueIndex ?? 0))
+      if (targetKey) {
+        const exactIndex = queue.findIndex(item => (item?.verse?.key || item?.key) === targetKey)
+        if (exactIndex >= 0) restoredQueueIndex = exactIndex
+      }
+      restoredQueueIndex = Math.min(restoredQueueIndex, Math.max(queue.length - 1, 0))
+      if (store) store.queueIndex = restoredQueueIndex
+      this.queueIndex = restoredQueueIndex
+      if (this.mutqinState?.sessionState) {
+        moveMutqinSession(this.mutqinState, this.queueIndex + 1)
+      }
+      const restoredKey = queue[this.queueIndex]?.verse?.key
+        || queue[this.queueIndex]?.key
+        || targetKey
+      if (restoredKey) {
+        this.setActiveVerse(restoredKey, { mode, queueIndex: this.queueIndex, scroll: false })
+      }
+      this.restoredAudioState = {
+        src: data.audioSrc || data.config?.audioSrc || this.restoredAudioState?.src || '',
+        currentTime: Number(data.currentTime ?? data.config?.currentTime ?? 0),
+        playerVisible: !!(data.playerVisible ?? data.config?.playerVisible ?? true),
+        speed: Number(data.config?.speed || this.speed || 1),
+        isPlaying: false,
+      }
+      return true
     },
 
     closeWelcomeBackModal() {
@@ -29132,7 +29248,13 @@ export default {
       const rangeEnd = Math.max(rangeStart, Number(store?.rangeEnd || this.rangeEnd || rangeStart))
       const activeVerseKey = this.activeVerseKey
         || this.effectiveActiveVerseKey
-        || `${chapterId}:${Math.min(rangeEnd, Math.max(rangeStart, Number(this.currentPosition || rangeStart)))}`
+        || (() => {
+          const absolute = this.resolveLiveAbsoluteAyahNumber({
+            queueIndex: this.queueIndex,
+            config: { chapterId, rangeStart, rangeEnd },
+          })
+          return absolute ? `${chapterId}:${absolute}` : null
+        })()
       const config = typeof this.cloneModeState === 'function'
         ? this.cloneModeState(store || {})
         : { ...(store || {}) }
@@ -29206,9 +29328,8 @@ export default {
       ) || undefined
       const ayahNumber = resolveResumeAyahNumber(payload, {
         ayah_number: this.backendSessionSnapshot?.ayah_number,
-        currentPosition: this.currentPosition,
-        rangeStart: this.rangeStart,
-      })
+        rangeStart: Number(payload?.config?.rangeStart || this.rangeStart || 0),
+      }) || this.resolveLiveAbsoluteAyahNumber(payload)
       Promise.resolve().then(async () => {
         try {
           const result = await learningApi.resumeSession({
@@ -29298,12 +29419,14 @@ export default {
 
         // Fast path: previous session is already loaded behind the welcome gate.
         if (canFastPath) {
+          this.restoreWorkspaceToContinuePayload(payload)
           this.revealLoadedPreviousSession()
           this.queueBackendResumeAfterWelcomeContinue(payload)
           return
         }
 
         if (this.canSoftResumePausedSession() && (!payload || sessionRangesMatch(payload, loadedRange))) {
+          this.restoreWorkspaceToContinuePayload(payload)
           this.revealLoadedPreviousSession()
           this.softResumePausedSession()
           this.queueBackendResumeAfterWelcomeContinue(payload)
@@ -29587,7 +29710,7 @@ export default {
                     idempotency_key: `resume-${sessionId || 'current'}`,
                     session_id: sessionId,
                     surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
-                    ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+                    ayah_number: this.resolveLiveAbsoluteAyahNumber() || Number(this.rangeStart || 0) || null,
                     memorisation_mode: this.currentMode,
                   })
                   this.backendUnfinishedSession = true
@@ -29644,7 +29767,10 @@ export default {
                 idempotency_key: `resume-${session?.id || 'current'}`,
                 session_id: Number(session?.id || 0) || undefined,
                 surah_number: Number(session?.surah_number || this.continueSessionPayload?.config?.chapterId || 0) || null,
-                ayah_number: Number(session?.ayah_number || this.continueSessionPayload?.config?.rangeStart || 0) || null,
+                ayah_number: resolveResumeAyahNumber(this.continueSessionPayload, {
+                  ayah_number: session?.ayah_number,
+                  rangeStart: Number(this.continueSessionPayload?.config?.rangeStart || 0),
+                }) || Number(session?.ayah_number || this.continueSessionPayload?.config?.rangeStart || 0) || null,
                 memorisation_mode: session?.memorisation_mode || this.continueSessionPayload?.mode || this.currentMode,
               })
               this.backendSessionSnapshot = session
@@ -29823,13 +29949,21 @@ export default {
       const config = meta.config && typeof meta.config === 'object' ? meta.config : {}
       const chapterId = Number(config.chapterId || session.surah_number || 0)
       if (!chapterId) return null
-      const rangeStart = Math.max(1, Number(config.rangeStart || session.ayah_number || 1))
+      const rangeStart = Math.max(1, Number(config.rangeStart || 1))
       const rangeEnd = Math.max(rangeStart, Number(config.rangeEnd || rangeStart))
-      const queueIndex = Math.max(0, Number(session.current_step ?? meta.current_index ?? 0))
-      const activeAyah = Math.min(
-        rangeEnd,
-        Math.max(rangeStart, Number(session.ayah_number || rangeStart + queueIndex))
-      )
+      let queueIndex = Math.max(0, Number(session.current_step ?? meta.current_index ?? 0))
+      const activeAyah = resolveResumeAyahNumber({
+        activeVerseKey: meta.activeVerseKey || meta.activeKey || config.activeVerseKey || null,
+        queueIndex,
+        config: { chapterId, rangeStart, rangeEnd },
+      }, {
+        ayah_number: session.ayah_number,
+        rangeStart,
+      }) || rangeStart
+      // If backend only stored absolute ayah (or a legacy relative was corrected), keep queue in sync.
+      if (activeAyah > rangeStart && queueIndex === 0) {
+        queueIndex = Math.max(0, activeAyah - rangeStart)
+      }
       return {
         timestamp: Date.now(),
         mode: session.memorisation_mode || meta.mode || this.currentMode || 'advanced',
@@ -30973,7 +31107,7 @@ export default {
         active: !!word.isActive,
         'hifz-ayah-new': !!word.isNew,
         'hifz-ayah-due': !!word.isDue,
-        'hifz-ayah-weak': !!word.isWeak,
+        'hifz-ayah-weak': !!word.isWeak && !word.isMastered,
         'hifz-ayah-mastered': !!word.isMastered,
         'blur-upcoming': !!word.isBlurred,
         'peek-revealed': !!word.isPeekRevealed,
@@ -31226,6 +31360,9 @@ export default {
       const mode = options.mode || this.currentMode
       const store = this.getModeStore(mode)
       const chapterId = Number(store?.chapterId || 0)
+      const reason = String(options.reason || 'config')
+      const forceReload = options.force === true
+        || ['chapter', 'range', 'reciter', 'start', 'post-session-adjust'].includes(reason)
 
       if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
       this.persistUiState()
@@ -31242,8 +31379,21 @@ export default {
       const matchedChapter = this.chapters.find(chapter => Number(chapter.id) === chapterId) || null
       this.currentChapter = matchedChapter || (this.chapters.length ? null : this.currentChapter)
       this.clampControlRange(mode)
+      this.persistModeState(mode)
+
+      // If Surah/range/reciter/display already match the loaded mushaf, do not wipe it.
+      // Never rebuild the queue here — that was resetting live session progress on open/close.
+      const hasLoadedVerses = Array.isArray(store.verses) && store.verses.length > 0
+      if (!forceReload && hasLoadedVerses && this.modeDataMatchesConfig(mode)) {
+        this.isWorkspaceRefreshing = false
+        this.workspaceRefreshReason = ''
+        this.isDataReady = true
+        this.persistCentralSessionState()
+        return
+      }
+
       this.isWorkspaceRefreshing = true
-      this.workspaceRefreshReason = options.reason || 'config'
+      this.workspaceRefreshReason = reason
       this.clearWorkspaceForConfigChange(mode)
 
       if (options.immediate) {
@@ -31400,7 +31550,9 @@ export default {
       if (!config) return
       const mode = config.mode || this.currentMode
       this.currentMode = mode
-      this.tab = 'tools'
+      if (config.tab && ['tools', 'techniques', 'saved', 'stats'].includes(config.tab)) {
+        this.tab = config.tab
+      }
       this.chapterId = Number(config.chapterId || 0)
       this.rangeStart = Number(config.rangeStart || 1)
       this.rangeEnd = Number(config.rangeEnd || this.rangeStart || 1)
@@ -31415,9 +31567,13 @@ export default {
       this.recitationWindowSeconds = Math.max(5, Math.min(30, Number(config.recitationWindowSeconds || this.recitationWindowSeconds || 8)))
       this.order = 'seq'
       this.repetitionsPerStep = resolveSessionRepetitions(config.repetitionsPerStep, this.repetitionsPerStep)
-      this.selectedLoopCount = config.selectedLoopCount === 'infinite'
-        ? 'infinite'
-        : resolveSessionRepetitions(config.selectedLoopCount, this.selectedLoopCount, this.repetitionsPerStep)
+      if (config.selectedLoopCount === 'infinite') {
+        this.selectedLoopCount = 'infinite'
+      } else if (config.selectedLoopCount != null && config.selectedLoopCount !== '') {
+        this.selectedLoopCount = resolveSessionRepetitions(config.selectedLoopCount, this.repetitionsPerStep)
+      } else {
+        this.selectedLoopCount = this.repetitionsPerStep
+      }
       this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(config.gapBetweenVerses)
         ? config.gapBetweenVerses
         : this.gapBetweenVerses
@@ -32285,9 +32441,20 @@ export default {
     },
 
     openSessionExitModal() {
-      if (!this.hasVerses && !this.playerVisible) return
-      if (this.sessionExitEndingBusy) return
+      // Always clear stuck end/pause locks first — a prior failed end left the
+      // button as a silent no-op via sessionExitEndingBusy.
       this.resetStuckSessionLifecycleControls()
+      // End companion can show for unfinished/resumable sits before verses hydrate
+      // (welcome-back / parked set). Never no-op the visible End session control.
+      const canOpenWithoutWorkspace = !!(
+        this.showHeaderEndSessionAction
+        || this.backendUnfinishedSession
+        || this.hasValidatedResumableSession
+        || this.continueSessionPayload
+        || this.sessionPaused
+        || this.isSessionLive
+      )
+      if (!this.hasVerses && !this.playerVisible && !canOpenWithoutWorkspace) return
       // Soft-pause keeps position for Keep practising; paint the modal before heavy persistence.
       this.softPausePlayback()
       if (this.audioElement) {
@@ -32343,17 +32510,35 @@ export default {
      * Backend pause is the source of truth; continue payload stays intact.
      */
     async saveSessionForLaterFromExitModal() {
-      if (this.sessionExitEndingBusy) return false
+      if (this.sessionExitEndingBusy) {
+        this.resetStuckSessionLifecycleControls()
+      }
       const transition = resolveSessionExitTransition({ rangeComplete: false })
       if (!transition.pauseSession || !transition.resumable) return false
       this.sessionExitEndingBusy = true
       try {
-        const paused = await this.pauseSessionFromPrimaryAction({
+        let paused = await this.pauseSessionFromPrimaryAction({
           quiet: true,
           reason: 'save_for_later',
         })
+        // Backend pause can 422 when already paused — local soft-exit still succeeded.
+        if (!paused && (this.sessionPaused || this.backendUnfinishedSession)) {
+          paused = true
+        }
+        if (!paused) {
+          try {
+            this.applyLocalPausedSessionState()
+            this.softPausePlayback()
+            this.persistContinueSession()
+            this.transitionSessionLifecycle(SESSION_STATUS.PAUSED, SESSION_MUTATION.IDLE)
+            this.backendUnfinishedSession = true
+            paused = true
+          } catch (_) { /* fall through */ }
+        }
         this.closeSessionExitModal({ restore: false })
         if (paused) {
+          // Drop live Pause/End chrome — progress stays resumable via Resume only.
+          this.demoteSoftExitedSitting()
           this.showBanner(
             this.t('memorisation.sessionExit.confirmDescriptionEarly')
               || 'Your progress was saved. You can return later.',
@@ -32369,6 +32554,32 @@ export default {
       } finally {
         this.sessionExitEndingBusy = false
       }
+    },
+
+    /**
+     * After End session soft-exit: keep continue / backend unfinished, but leave
+     * the live Pause+End companion so "End session" actually goes away.
+     */
+    demoteSoftExitedSitting() {
+      this.softPausePlayback()
+      this.playerVisible = false
+      this.isPlaying = false
+      this.sessionPaused = false
+      this.sessionEndedEarly = false
+      this.sessionCompleted = false
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.paused = false
+        this.mutqinState.sessionState.completed = false
+        this.mutqinState.sessionState.completed_at = null
+      }
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'idle'
+        this.centralSession.sessionCompletedAt = null
+      }
+      try {
+        this.transitionSessionLifecycle(SESSION_STATUS.INTERRUPTED_RESUMABLE, SESSION_MUTATION.IDLE)
+      } catch (_) { /* resume affordance already preserved */ }
     },
 
     softPausePlayback() {
@@ -32879,18 +33090,21 @@ export default {
               } else {
                 let endResult = null
                 try {
+                  const absoluteAyah = this.resolveLiveAbsoluteAyahNumber()
+                    || Number(endedSnapshot.rangeStart || this.rangeStart || 0)
+                    || undefined
                   endResult = await learningApi.endSession({
                     idempotency_key: `end-${backendSessionId || 'current'}`,
                     session_id: Number(backendSessionId || 0) || undefined,
                     range_complete: true,
-                    ayah_number: Number(endedSnapshot.coveredAyahCount || this.currentPosition || 0) || undefined,
+                    ayah_number: absoluteAyah,
                     metadata: {
                       completed: true,
                       range_complete: true,
                       ended_early: false,
                       active: false,
                       ended_manually: true,
-                      covered_through: Number(endedSnapshot.coveredAyahCount || this.currentPosition || 0) || null,
+                      covered_through: absoluteAyah || null,
                       config: {
                         chapterId: endedSnapshot.chapterId || this.chapterId || this.sessionConfig?.chapterId,
                         rangeStart: endedSnapshot.rangeStart || this.sessionConfig?.rangeStart,
@@ -33089,7 +33303,7 @@ export default {
             idempotency_key: `pause-${sessionId || 'current'}-${Date.now()}`,
             session_id: sessionId,
             surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
-            ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+            ayah_number: this.resolveLiveAbsoluteAyahNumber() || Number(this.rangeStart || 0) || null,
             current_step: Number(this.queueIndex || 0),
             memorisation_mode: this.currentMode,
             repetitions_completed: Number(stats?.repetitions_completed || 0),
@@ -33125,6 +33339,13 @@ export default {
             status: 'paused',
           }
           if (error?.response?.status === 422) {
+            // Soft-exit / park: local pause already applied above. Treat as success so
+            // End session confirm is not a silent no-op when the server is already paused.
+            if (options.reason === 'save_for_later' || options.reason === 'park_set') {
+              this.backendUnfinishedSession = true
+              this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+              return true
+            }
             this.backendUnfinishedSession = false
             if (!quiet) {
               this.showBanner(
@@ -33134,8 +33355,7 @@ export default {
               )
             }
             this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
-            // Soft-exit must not claim "return later" when backend rejected pause.
-            return options.reason === 'save_for_later' ? false : true
+            return true
           } else {
             this.noteLearningBackendFailure?.(error, 'pause')
             if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
@@ -37186,14 +37406,19 @@ export default {
             ? state.chainingMethod
             : this.chainingMethod
           this.chainingRepetitions = Math.max(1, Math.min(5, Number(state.chainingRepetitions || this.chainingRepetitions || 1)))
-          this.selectedLoopCount = state.selectedLoopCount === 'infinite'
-            ? 'infinite'
-            : [1, 3, 5, 10].includes(Number(state.selectedLoopCount))
-              ? Number(state.selectedLoopCount)
-              : this.selectedLoopCount
-          this.repetitionsPerStep = this.selectedLoopCount === 'infinite'
-            ? 10
-            : resolveSessionRepetitions(state.repetitionsPerStep, this.selectedLoopCount, this.repetitionsPerStep)
+          // Prefer explicit repetitionsPerStep (continuous 1–10). Only honor legacy
+          // "infinite" when no finite repetitions were saved.
+          if (state.selectedLoopCount === 'infinite' && !Number(state.repetitionsPerStep)) {
+            this.selectedLoopCount = 'infinite'
+            this.repetitionsPerStep = 10
+          } else {
+            this.repetitionsPerStep = resolveSessionRepetitions(
+              state.repetitionsPerStep,
+              state.selectedLoopCount === 'infinite' ? null : state.selectedLoopCount,
+              this.repetitionsPerStep,
+            )
+            this.selectedLoopCount = this.repetitionsPerStep
+          }
           this.setupIndividualAyah = Number.isFinite(Number(state.setupIndividualAyah))
             ? Number(state.setupIndividualAyah)
             : null
@@ -37467,7 +37692,7 @@ export default {
         const payload = {
           idempotency_key: `unload-pause-${this.backendSessionSnapshot?.id || 'current'}-${Date.now()}`,
           surah_number: Number(this.chapterId || this.sessionConfig?.chapterId || 0) || null,
-          ayah_number: Number(this.currentPosition || this.rangeStart || 0) || null,
+          ayah_number: this.resolveLiveAbsoluteAyahNumber() || Number(this.rangeStart || 0) || null,
           current_step: Number(this.queueIndex || 0),
           memorisation_mode: this.currentMode,
           metadata: {

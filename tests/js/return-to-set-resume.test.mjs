@@ -8,6 +8,7 @@ import {
   canSkipHydrateForContinue,
   clearStashedDashboardEntryIntent,
   extractSessionRange,
+  hasResumePlaybackPosition,
   isBackendSessionUnfinished,
   isResumableSessionPayload,
   pickContinuePayloadForResume,
@@ -58,7 +59,26 @@ const unfinishedIkhlas = {
     config: { chapterId: 112, rangeStart: 1, rangeEnd: 4 },
     queueIndex: 1,
   }), 2)
-  assert.equal(resolveResumeAyahNumber({}, { currentPosition: 5 }), 5)
+  assert.equal(resolveResumeAyahNumber({}, { ayah_number: 5 }), 5)
+  // Relative progress index must not be treated as an absolute mushaf ayah.
+  assert.equal(resolveResumeAyahNumber({
+    config: { chapterId: 2, rangeStart: 10, rangeEnd: 20 },
+  }, { currentPosition: 3 }), 10)
+  // Absolute ayah inside the range is still accepted via legacy currentPosition.
+  assert.equal(resolveResumeAyahNumber({
+    config: { chapterId: 2, rangeStart: 10, rangeEnd: 20 },
+  }, { currentPosition: 15 }), 15)
+  // Mid-range verse key with queueIndex 0 is still a real resume place.
+  assert.equal(hasResumePlaybackPosition({
+    activeVerseKey: '2:15',
+    queueIndex: 0,
+    config: { chapterId: 2, rangeStart: 10, rangeEnd: 20 },
+  }), true)
+  assert.equal(hasResumePlaybackPosition({
+    activeVerseKey: '2:10',
+    queueIndex: 0,
+    config: { chapterId: 2, rangeStart: 10, rangeEnd: 20 },
+  }), false)
 }
 
 {
@@ -195,10 +215,19 @@ const unfinishedIkhlas = {
   assert.match(source, /canSkipHydrateForContinue\(/)
   assert.match(source, /pickContinuePayloadForResume\(/)
   assert.match(source, /resolveResumeAyahNumber\(/)
+  assert.match(source, /resolveLiveAbsoluteAyahNumber\(/)
+  assert.match(source, /restoreWorkspaceToContinuePayload\(/)
   assert.match(source, /welcomeBackContinueSession\(\{\s*preferredSessionId/)
   assert.match(source, /sessionRangesMatch\(restorePayload,\s*live\.session\)/)
   assert.match(source, /That session is no longer available to resume/)
   assert.match(source, /backendSessionId/)
+  // Pause / unload must persist absolute ayah, not relative currentPosition.
+  assert.match(source, /ayah_number:\s*this\.resolveLiveAbsoluteAyahNumber\(\)/)
+  assert.doesNotMatch(
+    source,
+    /ayah_number:\s*Number\(this\.currentPosition\s*\|\|\s*this\.rangeStart/,
+    'ayah_number must not use relative currentPosition',
+  )
   // Fast path no longer trusts hasVerses alone
   assert.doesNotMatch(source, /if \(this\.hasVerses && chapterReady\)/)
 }

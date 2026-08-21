@@ -105,19 +105,20 @@ const t = (key, params = {}) => {
   }, t)
 
   assert.equal(details.outcome, 'strong')
-  assert.equal(details.accuracy, 91)
+  assert.equal(details.accuracy, 90)
+  assert.equal(details.scoredAccuracy, 91)
   assert.equal(details.outcomeLabel, 'Mostly secure')
   assert.equal(details.durationLabel, '18s check')
   assert.equal(details.presentationMode, 'standard')
   assert.equal(details.metrics.length, 0, 'primary metric wall hidden by default')
   assert.equal(details.showDetailsToggle, true)
-  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '91%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '90%'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '9/10'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'missed' && m.value === '1'))
   assert.match(details.summaryLine, /We clearly matched 9 of 10 words/i)
   assert.doesNotMatch(details.summaryLine, /Focus on the highlighted phrase/i)
   assert.match(details.summaryLine, /Strong overall, with one small hesitation|Strong recitation|good progress/i)
-  assert.doesNotMatch(details.summaryLine, /91%/)
+  assert.doesNotMatch(details.summaryLine, /91%|90%/)
   assert.ok(details.highlights.length >= 2)
   assert.ok(details.focus)
   assert.match(details.focus, /missed words/i)
@@ -184,13 +185,46 @@ const t = (key, params = {}) => {
     committedWords: [{ text: 'بسم' }],
     wordStatuses: Array.from({ length: 10 }, () => ({ status: 'correct' })),
   }, t)
-  assert.equal(details.accuracy, 96)
+  assert.equal(details.accuracy, 100)
+  assert.equal(details.scoredAccuracy, 96)
   assert.equal(details.metrics.length, 0)
   assert.ok(details.detailsMetrics.length >= 3)
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '100%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '10/10'))
   assert.ok(details.highlights.length >= 1)
   assert.match(details.focus, /Keep this pace/i)
   assert.match(details.summaryLine, /We clearly matched 10 of 10 words/i)
   assert.match(details.summaryLine, /Nice work/i)
+}
+
+{
+  // Screenshot regression: all words matched + 1 order slip must not show Match 78% beside Detected 10/10.
+  const details = buildAiReviewDetails('mixed', {
+    accuracy_percent: 78,
+    sequence_errors: 1,
+    missed_words: 0,
+  }, {
+    accuracyScore: 78,
+    committedWords: Array.from({ length: 10 }, () => ({ text: 'كلمة' })),
+    wordStatuses: Array.from({ length: 10 }, () => ({ status: 'correct' })),
+    mistakeBreakdown: {
+      missing: [],
+      incorrect: [],
+      partial: [],
+      sequenceErrors: [{ message: 'ayah order slip' }],
+    },
+  }, t)
+
+  assert.equal(details.matchedWords, 10)
+  assert.equal(details.totalWords, 10)
+  assert.equal(details.accuracy, 100)
+  assert.equal(details.scoredAccuracy, 78)
+  assert.equal(details.progressPercent, 100)
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '100%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '10/10'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'missed' && m.value === '0'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'sequence' && /1 slips/.test(m.value)))
+  assert.ok(details.highlights.some((h) => h.key === 'sequence'))
 }
 
 {

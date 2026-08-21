@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Arr;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -60,6 +59,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'password_set_at' => 'datetime',
+            'is_admin' => 'boolean',
             'subscription_trial_ends_at' => 'datetime',
             'subscription_current_period_ends_at' => 'datetime',
         ];
@@ -179,6 +179,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return in_array(strtolower((string) $this->email), Arr::wrap(config('mutqin.admin_emails')), true);
+        // Privilege is an explicit DB flag — never granted by registering an admin mailbox.
+        return (bool) $this->is_admin;
     }
 }

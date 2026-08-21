@@ -102,11 +102,13 @@ export function recommendPracticeScope(input = {}) {
   const denseLocal = wordCount > 0 && wordCount <= 4 && weakAyahs.length <= 2
   const sparseSpread = weakAyahs.length >= 3 || ayahCoverage >= 0.5
 
-  if (outcome === 'strong' && denseLocal) {
+  // Successful checks progress with technique-led continue/reinforce flows —
+  // do not default to the stale "practise weak ayahs only" scope.
+  if (outcome === 'strong') {
     return {
-      scope: PRACTICE_SCOPE.WEAK_AREAS,
-      reasonKey: 'minorLocal',
-      reason: 'Only a few ayahs need attention — focused practice will be quicker and clearer.',
+      scope: PRACTICE_SCOPE.FULL_RANGE,
+      reasonKey: 'strongContinue',
+      reason: 'This set is secure — continue with the recommended technique on the next set.',
     }
   }
   if (denseLocal && !sparseSpread) {

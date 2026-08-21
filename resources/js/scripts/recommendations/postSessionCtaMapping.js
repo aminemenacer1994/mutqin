@@ -5,9 +5,10 @@
  * labels stay consistent across the Session Complete footer.
  *
  * Colour variants:
- *   primary  — warm brown (normal actions)
- *   ai       — green (memorisation check / recite)
- *   success  — green (verified / strong progression only)
+ *   primary   — warm brown (normal actions)
+ *   ai        — green (memorisation check / recite)
+ *   success   — green (verified / strong progression)
+ *   reinforce — warm amber (consolidate weak ayah before advancing)
  *   secondary / ghost — neutral outline
  */
 
@@ -321,7 +322,7 @@ export function resolvePostSessionCtaState(input = {}) {
 
 /**
  * @param {string} id
- * @param {'primary'|'success'|'secondary'|'ghost'} variant
+ * @param {'primary'|'success'|'reinforce'|'secondary'|'ghost'|'ai'} variant
  * @param {string} labelKey
  * @param {string} action
  * @param {object} [extra]
@@ -400,21 +401,22 @@ export function mapPostSessionCtas(state, options = {}) {
       ]
 
     case POST_SESSION_CTA_STATES.MOSTLY_SECURE:
+      // Consolidate the weak ayah first (prominent), then allow progression.
       return [
-        cta('continue_next_range', 'primary', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
-          labelParams: nextSessionLabelParams,
-        }),
-        returnToWorkspace,
         Number(options.weakAyahNumber) > 0
-          ? cta('review_weak_ayah', 'ghost', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
+          ? cta('review_weak_ayah', 'reinforce', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
             labelParams: { ayah: options.weakAyahNumber },
           })
           : cta(
             'review_once_more',
-            'ghost',
+            'reinforce',
             options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
             POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE,
           ),
+        returnToWorkspace,
+        cta('continue_next_range', 'ghost', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+          labelParams: nextSessionLabelParams,
+        }),
       ]
 
     case POST_SESSION_CTA_STATES.REVISION_COMPLETED:

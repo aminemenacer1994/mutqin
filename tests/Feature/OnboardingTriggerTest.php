@@ -41,12 +41,38 @@ class OnboardingTriggerTest extends TestCase
         $this->post(route('login'), [
             'email' => 'returning@example.com',
             'password' => 'secret12',
-        ])->assertRedirect('/dashboard');
+        ])->assertRedirect('/memorisation');
 
         $page = $this->get(route('memorisation'));
         $page->assertOk();
         $page->assertSee('just_logged_in":true', false);
         $page->assertDontSee('just_registered":true', false);
+    }
+
+    public function test_just_logged_in_survives_dashboard_visit_before_memorisation(): void
+    {
+        User::factory()->create([
+            'email' => 'returning-dash@example.com',
+            'password' => bcrypt('secret12'),
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'returning-dash@example.com',
+            'password' => 'secret12',
+        ])->assertRedirect('/memorisation');
+
+        // Even if the learner visits dashboard first, the login flag must survive
+        // until the first /memorisation render (Welcome Back gate).
+        $this->get(route('dashboard'))->assertOk();
+
+        $page = $this->get(route('memorisation'));
+        $page->assertOk();
+        $page->assertSee('just_logged_in":true', false);
+
+        // One-shot: second memorisation visit must not keep the login flag.
+        $this->get(route('memorisation'))
+            ->assertOk()
+            ->assertDontSee('just_logged_in":true', false);
     }
 
     public function test_new_google_user_flashes_just_registered(): void

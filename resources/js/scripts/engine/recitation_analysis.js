@@ -2,10 +2,27 @@ export const DEFAULT_RECITATION_CONFIDENCE_THRESHOLD = 0.70
 export const DEFAULT_ANALYSIS_TIMESTAMP = '1970-01-01T00:00:00.000Z'
 /** Soft ASR letter conflation may lift near-misses toward amber, never alone to green. */
 export const RECITATION_SOFT_SIMILARITY_CAP = 0.74
+/**
+ * Default floor for painting a word green.
+ * Keep this just above the soft cap so soft letter swaps stay amber,
+ * while normal ASR near-matches (hamza, tanween, slight noise) can still go green.
+ */
+export const RECITATION_CORRECT_SIMILARITY = 0.79
 /** Below this (non-exact) recognition is uncertain — not a learner mistake. */
 export const RECITATION_UNCERTAIN_CONFIDENCE = 0.55
 /** AMD live: quieter / distant mics should defer to uncertain, not red. */
 export const RECITATION_AMD_UNCERTAIN_CONFIDENCE = 0.38
+/** Live AMD green floor — slightly softer than final scoring to absorb ASR jitter. */
+export const RECITATION_LIVE_CORRECT_SIMILARITY = 0.77
+/** Live AMD: do not require high STT confidence for a correct paint. */
+export const RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT = 0.22
+/** Live AMD partial (amber) floor. */
+export const RECITATION_LIVE_PARTIAL_SIMILARITY = 0.38
+/**
+ * Same-word ASR re-emits / brief stutters within this gap are not learner repetitions.
+ * Genuine pause-and-repeat (clear breath) sits above this window.
+ */
+export const RECITATION_ASR_REEMIT_MAX_GAP_MS = 650
 
 export function createRecognitionState() {
   return {
@@ -208,7 +225,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   const skipWindow = Math.max(lookahead, exactSkipLookahead)
   const correctSimilarity = Number.isFinite(Number(options.correctSimilarity))
     ? Number(options.correctSimilarity)
-    : 0.78
+    : RECITATION_CORRECT_SIMILARITY
   const partialSimilarity = Number.isFinite(Number(options.partialSimilarity))
     ? Number(options.partialSimilarity)
     : 0.35
@@ -460,7 +477,9 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         outOfOrderIndex: laterIndex,
         targetIndex: targetIndex - 1,
         targetUnit: targetUnits[targetIndex - 1] || null,
-        correctSimilarity: Number.isFinite(Number(options.correctSimilarity)) ? Number(options.correctSimilarity) : 0.78,
+        correctSimilarity: Number.isFinite(Number(options.correctSimilarity))
+          ? Number(options.correctSimilarity)
+          : RECITATION_CORRECT_SIMILARITY,
         partialSimilarity: Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.35,
         minConfidenceForCorrect: Number.isFinite(Number(options.minConfidenceForCorrect))
           ? Number(options.minConfidenceForCorrect)
@@ -504,8 +523,12 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
   applyWrongOrderGuard(statuses, targetWords, transcriptWords)
   reconcileUncertainFromRejectedWords(statuses, options.rejectedWords || [], {
     allowArticleMatch: options.allowArticleMatch !== false,
-    correctSimilarity: Number.isFinite(Number(options.correctSimilarity)) ? Number(options.correctSimilarity) : 0.78,
-    partialSimilarity: Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.35,
+    correctSimilarity: Number.isFinite(Number(options.correctSimilarity))
+      ? Number(options.correctSimilarity)
+      : RECITATION_CORRECT_SIMILARITY,
+    partialSimilarity: Number.isFinite(Number(options.partialSimilarity))
+      ? Number(options.partialSimilarity)
+      : 0.35,
   })
   const progression = buildStableProgression(statuses, extraWords, options)
   const structural = buildStructuralRecitationAnalysis({
@@ -908,11 +931,32 @@ function normaliseCommittedRecognitionWords(words = [], options = {}) {
 function isNearbyWord(left = {}, right = {}) {
   const leftEnd = finiteOrNull(left.end)
   const rightStart = finiteOrNull(right.start)
-  if (leftEnd !== null && rightStart !== null) return rightStart <= leftEnd
+  if (leftEnd !== null && rightStart !== null) {
+    const gapMs = (rightStart - leftEnd) * 1000
+    // Overlap or a short ASR re-emit / stutter — not a deliberate pause-repeat.
+    return gapMs <= RECITATION_ASR_REEMIT_MAX_GAP_MS
+  }
   // Missing timestamps: only treat as nearby within the same segment.
   // Defaulting to true previously dropped legitimate last-word re-emits after EOU.
   if (left.segmentId && right.segmentId && left.segmentId === right.segmentId) return true
   return false
+}
+
+function heardWordGapMs(previous = {}, current = {}) {
+  const previousEnd = finiteOrNull(previous?.end ?? previous?.endTime)
+  const currentStart = finiteOrNull(current?.start ?? current?.startTime)
+  if (previousEnd === null || currentStart === null) return null
+  return (currentStart - previousEnd) * 1000
+}
+
+/** True when consecutive identical tokens look like a deliberate learner repeat. */
+function isDeliberateHeardRepetition(previous = {}, current = {}) {
+  if (!previous?.word || previous.word !== current?.word) return false
+  const gapMs = heardWordGapMs(previous, current)
+  // Timed: only a clear pause counts as a learner repetition.
+  if (gapMs !== null) return gapMs > RECITATION_ASR_REEMIT_MAX_GAP_MS
+  // No timestamps (transcript / recovered): keep consecutive duplicates as repeats.
+  return true
 }
 
 function getWeightedMatchCost(targetWord, heardWord, similarity, confidence, options = {}) {
@@ -944,7 +988,7 @@ function duplicateAdjustedExtraCost(words = [], index = 0) {
 
 function isRepeatedHeardWord(words = [], index = 0) {
   if (index <= 0) return false
-  return words[index]?.word && words[index]?.word === words[index - 1]?.word
+  return isDeliberateHeardRepetition(words[index - 1], words[index])
 }
 
 function readHeardWordDurationMs(heardWord = {}) {
@@ -1029,12 +1073,15 @@ export function shouldSkipLearnerStutterRepeat(heardWords = [], heardIndex = 0, 
     return true
   }
   if (heardIndex > 0 && prevHeard?.word === word) {
-    const prevEnd = finiteOrNull(prevHeard?.end ?? prevHeard?.endTime)
-    const currStart = finiteOrNull(heardWord?.start ?? heardWord?.startTime)
-    if (prevEnd !== null && currStart !== null) {
-      const gapMs = (currStart - prevEnd) * 1000
-      if (gapMs >= 0 && gapMs < 650) return true
-    } else if (prevHeard?.segmentId && heardWord?.segmentId && prevHeard.segmentId === heardWord.segmentId) {
+    // Nearby ASR re-emit / brief stutter — not a mistake; deliberate pauses stay.
+    if (!isDeliberateHeardRepetition(prevHeard, heardWord)) return true
+    // Untimed same-segment duplicates in the live stream are ASR noise.
+    if (
+      heardWordGapMs(prevHeard, heardWord) === null
+      && prevHeard?.segmentId
+      && heardWord?.segmentId
+      && prevHeard.segmentId === heardWord.segmentId
+    ) {
       return true
     }
   }
@@ -1127,7 +1174,7 @@ function classifyWordMatch({
   outOfOrderIndex = -1,
   targetIndex = 0,
   targetUnit = null,
-  correctSimilarity = 0.78,
+  correctSimilarity = RECITATION_CORRECT_SIMILARITY,
   partialSimilarity = 0.35,
   minConfidenceForCorrect = 0,
   allowArticleMatch = true,
@@ -1150,7 +1197,9 @@ function classifyWordMatch({
       stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
       || stripArabicClitics(expected) === stripArabicClitics(actual)
     )
-  const correctFloor = Number.isFinite(Number(correctSimilarity)) ? Number(correctSimilarity) : 0.78
+  const correctFloor = Number.isFinite(Number(correctSimilarity))
+    ? Number(correctSimilarity)
+    : RECITATION_CORRECT_SIMILARITY
   const partialFloor = Number.isFinite(Number(partialSimilarity)) ? Number(partialSimilarity) : 0.35
   const minCorrectConfidence = Number.isFinite(Number(minConfidenceForCorrect))
     ? Number(minConfidenceForCorrect)
@@ -1254,8 +1303,12 @@ function reconcileUncertainFromRejectedWords(statuses = [], rejectedWords = [], 
     .filter(Boolean)
   if (!rejected.length) return statuses
   const allowArticleMatch = options.allowArticleMatch !== false
-  const correctFloor = Number.isFinite(Number(options.correctSimilarity)) ? Number(options.correctSimilarity) : 0.78
-  const partialFloor = Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.35
+  const correctFloor = Number.isFinite(Number(options.correctSimilarity))
+    ? Number(options.correctSimilarity)
+    : RECITATION_CORRECT_SIMILARITY
+  const partialFloor = Number.isFinite(Number(options.partialSimilarity))
+    ? Number(options.partialSimilarity)
+    : 0.42
   const used = new Set()
   for (let index = 0; index < statuses.length; index += 1) {
     const status = statuses[index]
@@ -1473,10 +1526,11 @@ export function getRecitationColorCounts(statuses = []) {
 
 /**
  * Derive weak ayah numbers from word-level colour statuses.
- * Red/black weigh more than amber; gray/uncertain alone do not mark an ayah weak.
+ * Red/black weigh more than amber; a single amber or hard mistake marks the ayah.
+ * Gray/uncertain alone do not mark an ayah weak (ASR noise is not a learner error).
  */
 export function deriveWeakAyahsFromWordStatuses(statuses = [], options = {}) {
-  const minScore = Number.isFinite(Number(options.minScore)) ? Number(options.minScore) : 2
+  const minScore = Number.isFinite(Number(options.minScore)) ? Number(options.minScore) : 1
   const byAyah = new Map()
   const addScore = (ayah, add) => {
     if (!ayah || !add) return
@@ -1543,9 +1597,15 @@ function buildStructuralRecitationAnalysis({ statuses = [], heardWords = [], ext
 function detectRepeatedWords(heardWords = [], extraWords = []) {
   const repeated = []
   const seen = new Set()
-  // Prefer alignment-confirmed repetitions (pause-separated extras), not ASR re-emits.
+  // Prefer alignment-confirmed deliberate repetitions, not ASR re-emits / stutters.
   for (const item of extraWords) {
     if (item?.type !== 'repetition' || !item.word) continue
+    const heardIndex = Number(item.heardIndex)
+    const previous = Number.isFinite(heardIndex) && heardIndex > 0
+      ? heardWords[heardIndex - 1]
+      : null
+    const current = Number.isFinite(heardIndex) ? heardWords[heardIndex] : null
+    if (previous && current && !isDeliberateHeardRepetition(previous, current)) continue
     const key = `${item.word}:${item.heardIndex - 1}:${item.heardIndex}`
     if (seen.has(key)) continue
     seen.add(key)
@@ -1560,12 +1620,7 @@ function detectRepeatedWords(heardWords = [], extraWords = []) {
   for (let index = 1; index < heardWords.length; index += 1) {
     const current = heardWords[index]
     const previous = heardWords[index - 1]
-    if (!current?.word || current.word !== previous?.word) continue
-    // Timestamp-proven nearby re-emits are ASR noise. Missing timestamps keep
-    // transcript/learner repeats (createWordsFromTranscript, recovered paths).
-    const previousEnd = finiteOrNull(previous.end)
-    const currentStart = finiteOrNull(current.start)
-    if (previousEnd !== null && currentStart !== null && currentStart <= previousEnd) continue
+    if (!isDeliberateHeardRepetition(previous, current)) continue
     const key = `${current.word}:${index - 1}:${index}`
     if (seen.has(key)) continue
     seen.add(key)

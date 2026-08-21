@@ -141,7 +141,7 @@ class WeaknessAnalysisService
         if ($accuracy < 55 || ($total >= 4 && $score / max(1, $total) >= 0.55)) {
             return 'priority';
         }
-        if ($accuracy < 80 || $score >= 2) {
+        if ($accuracy < 80 || $score >= 1) {
             return 'attention';
         }
 

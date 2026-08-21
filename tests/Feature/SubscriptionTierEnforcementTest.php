@@ -128,7 +128,7 @@ class SubscriptionTierEnforcementTest extends TestCase
     {
         config(['mutqin.admin_emails' => ['admin@example.com']]);
 
-        $admin = User::factory()->create([
+        $admin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
         ]);
 

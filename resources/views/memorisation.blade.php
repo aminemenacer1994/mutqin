@@ -22,7 +22,7 @@
             'created_at' => Auth::user()?->created_at?->toIso8601String(),
             'login_event_id' => session('mutqin_login_event_id'),
             'just_registered' => !empty($justRegistered),
-            'just_logged_in' => session('mutqin_just_logged_in', false),
+            'just_logged_in' => !empty($justLoggedIn),
             'csrf_token' => csrf_token(),
             'login_url' => route('login'),
             'google_login_url' => route('auth.google.redirect'),

@@ -154,6 +154,7 @@ const t = (key, params = {}) => {
   const root = dirname(fileURLToPath(import.meta.url))
   const vue = readFileSync(join(root, '../../resources/js/views/Memorisation.vue'), 'utf8')
   const js = readFileSync(join(root, '../../resources/js/views/Memorisation.js'), 'utf8')
+  const css = readFileSync(join(root, '../../resources/js/views/Memorisation.css'), 'utf8')
   assert.match(vue, /:value="sliderRepetitionValue"/)
   assert.match(vue, /@input="setRepetitionsFromSlider\(Number\(\$event\.target\.value\)\)"/)
   assert.match(vue, /min="1" max="10" step="1"/)
@@ -162,6 +163,16 @@ const t = (key, params = {}) => {
     js,
     /sessionRepetitionSliderStyle\(\)\s*\{[\s\S]*?sliderRepetitionValue - 1/,
     'fill progress must track the 1–10 value, not discrete marker index',
+  )
+  assert.match(
+    js,
+    /setRepetitionsFromSlider\(value\)\s*\{[\s\S]*?selectedLoopCount\s*=\s*next/,
+    'offcanvas slider must keep selectedLoopCount in sync with repetitionsPerStep',
+  )
+  assert.match(
+    css,
+    /\.tools-body \.field-repetitions-clean \.range-control[\s\S]*?direction:\s*ltr/,
+    'offcanvas repetitions slider must stay LTR so thumb/markers match in Arabic RTL',
   )
 }
 

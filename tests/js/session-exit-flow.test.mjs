@@ -175,8 +175,8 @@ const t = (key, params = {}) => {
   })
   assert.equal(paused.resumable, true)
   assert.equal(paused.sessionCompleted, false)
-  assert.equal(paused.sessionPaused, true)
-  assert.equal(paused.status, SESSION_STATUS.PAUSED)
+  assert.equal(paused.sessionPaused, false)
+  assert.equal(paused.status, SESSION_STATUS.INTERRUPTED_RESUMABLE)
   assert.ok(paused.continuePayload?.config?.chapterId)
 }
 

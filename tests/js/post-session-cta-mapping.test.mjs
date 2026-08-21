@@ -196,16 +196,18 @@ import {
     weakAyahNumber: 2,
   })
   assert.deepEqual(mostlySecure.map((b) => [b.variant, b.action, b.labelKey]), [
-    ['primary', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToAyahs'],
+    ['reinforce', POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, 'reviewAyahOnce'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, 'reviewAyahOnce'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToAyahs'],
   ])
 
   const mostlySecureNoWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.MOSTLY_SECURE, {
     nextRangeStart: 3,
     nextRangeEnd: 5,
   })
-  assert.equal(mostlySecureNoWeak[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE)
+  assert.equal(mostlySecureNoWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE)
+  assert.equal(mostlySecureNoWeak[0].variant, 'reinforce')
+  assert.equal(mostlySecureNoWeak[2].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
 
   const reviewRecommended = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
   assert.deepEqual(reviewRecommended.map((b) => [b.variant, b.action, b.labelKey]), [
@@ -224,7 +226,12 @@ import {
     const buttons = mapPostSessionCtas(state, state === POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO
       ? { insufficientReason: 'mic_permission' }
       : {})
-    const leadCount = buttons.filter((b) => b.variant === 'primary' || b.variant === 'success' || b.variant === 'ai').length
+    const leadCount = buttons.filter((b) => (
+      b.variant === 'primary'
+      || b.variant === 'success'
+      || b.variant === 'ai'
+      || b.variant === 'reinforce'
+    )).length
     assert.equal(leadCount, 1, `${state} must keep a single recommended primary/success CTA`)
     assert.equal(
       buttons.filter((b) => b.variant === 'secondary').length,

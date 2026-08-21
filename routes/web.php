@@ -38,9 +38,12 @@ Route::get('/billing/success', [BillingController::class, 'success'])->name('bil
 
 Route::get('/memorisation', function (Request $request) {
     $justRegistered = (bool) $request->session()->pull('mutqin_just_registered', false);
+    // Consumed here (not on /dashboard) so Welcome Back survives post-login overview.
+    $justLoggedIn = (bool) $request->session()->pull('mutqin_just_logged_in', false);
 
     return view('memorisation', [
         'justRegistered' => $justRegistered,
+        'justLoggedIn' => $justLoggedIn,
     ]);
 })->middleware('auth')->name('memorisation');
 

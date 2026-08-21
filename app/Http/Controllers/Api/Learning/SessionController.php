@@ -284,6 +284,15 @@ class SessionController extends Controller
             if (($data['status'] ?? null) === \App\Enums\UserSessionStatus::None->value) {
                 unset($data['status']);
             }
+            // Terminal statuses must go through end() — never via mid-session save.
+            $terminal = [
+                \App\Enums\UserSessionStatus::Completed->value,
+                \App\Enums\UserSessionStatus::EndedEarly->value,
+                \App\Enums\UserSessionStatus::Abandoned->value,
+            ];
+            if (isset($data['status']) && in_array((string) $data['status'], $terminal, true)) {
+                unset($data['status']);
+            }
 
             $unfinished->fill(array_filter([
                 'surah_number' => $data['surah_number'] ?? null,
