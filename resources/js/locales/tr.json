@@ -206,32 +206,33 @@
   },
   "homepage": {
     "hero": {
-      "badge": "Hifz companion",
+      "badge": "Hifz yol arkadaşı",
       "title": "Keep your Hifz close, one calm session at a time.",
       "desc": "Practise a short range, check what you still hold, and know what to return to next, bi’idhnillāh.",
-      "promiseLabel": "The need and the answer",
+      "promiseLabel": "İhtiyaç ve cevap",
       "problem": "The need",
       "problemText": "Busy days scatter your place. Weak ayahs fade between sessions, and it is hard to know what to open when you return.",
       "solution": "Mutqin",
       "solutionText": "Open a small set, practise with gentle tools, check your recall, and follow a clear next step while the verses still feel fresh.",
-      "startFree": "Begin your session",
-      "joinWaitlist": "Join the waiting list",
+      "startFree": "Oturumunu başlat",
+      "joinWaitlist": "Bekleme listesine katıl",
       "viewPricing": "View plans",
-      "seeFeatures": "See how it helps"
+      "seeFeatures": "Nasıl yardımcı olduğunu gör"
     },
     "shots": {
-      "hero": "Mutqin session ready to begin on Al-Kafirun",
-      "setup": "Session setup with surah, ayah range, and repetitions",
-      "tools": "Practice tools including gradually hide the text",
-      "check": "Live memorisation check while you recite",
-      "next": "Recommended next practice after a session",
-      "return": "Welcome back with your saved place",
-      "practise": "Ayah cards with translation during practice",
-      "checkReady": "Check your memorisation ready to record",
-      "result": "Practice complete showing strong recall",
-      "recommend": "Next practice recommendation after a session",
-      "sessionComplete": "Session complete with recite from memory",
-      "savePlace": "Finish for now with progress saved"
+      "hero": "Mutqin oturumu Al-Kafirun ile başlamaya hazır",
+      "setup": "Sure, ayet aralığı ve tekrarlarla oturum kurulumu",
+      "tools": "Metni kademeli gizleme dahil pratik araçları",
+      "check": "Okurken canlı ezber kontrolü",
+      "next": "Oturumdan sonra önerilen sonraki pratik",
+      "return": "Kayıtlı yerinizle yeniden hoş geldiniz",
+      "practise": "Pratik sırasında mealli ayet kartları",
+      "checkReady": "Kayıt için hazır ezber kontrolü",
+      "result": "Güçlü hatırlama ile pratik tamamlandı",
+      "recommend": "Oturumdan sonra sonraki pratik önerisi",
+      "sessionComplete": "Ezberden okuma ile oturum tamamlandı",
+      "savePlace": "İlerleme kaydedilerek şimdilik bitir",
+      "progress": "Ezberlenen ayetler ve genel pay ile Hifz ilerlemesi"
     },
     "features": {
       "kicker": "Features",
@@ -240,47 +241,55 @@
       "cta": "Try a short session",
       "items": {
         "setup": {
-          "title": "Choose a focused range",
-          "description": "Pick a surah, a small ayah set, and how many times to hear it. Keep each session light so it fits real life."
+          "title": "Ezber kurulumu",
+          "description": "Sure, ayet aralığı, tekrarlar ve nasıl çalışacağınızı seçin, niyeti pratik hale getirin."
         },
-        "tools": {
-          "title": "Practise with gentle tools",
-          "description": "Hide the text gradually, join ayahs, or listen and repeat. Simple tools that strengthen recall without rushing."
+        "techniques": {
+          "title": "Ezber teknikleri",
+          "description": "Metni kademeli gizleyin, ayetleri birleştirin, dinleyin ve tekrar edin, taşıdığınızı güçlendiren yöntemler."
         },
-        "check": {
-          "title": "Check what you still hold",
-          "description": "Recite from memory while Mutqin follows along. A gentle check so you can see where the tongue hesitates."
+        "progress": {
+          "title": "İlerleme görünümü",
+          "description": "Hifzini bir bakışta gör, ezberlenen ayetler, şimdi öğrendiklerin ve ne kadar yol aldığın."
         },
-        "next": {
-          "title": "Know what comes next",
-          "description": "When a session ends, Mutqin suggests the next range and method while the verses still feel fresh, bi’idhnillāh."
+        "aiRecitation": {
+          "title": "Tilavet kontrolü",
+          "description": "Ezberden okuyun, Mutqin sizi takip etsin, tilavetiniz için nazik bir ayna."
+        },
+        "mushafLayout": {
+          "title": "Mushaf düzeni",
+          "description": "Sakin ve odaklı pratik için net bir mushaf sayfasında oku."
+        },
+        "translationTajweed": {
+          "title": "Meal ve tecvid",
+          "description": "Ezberlerken anlamı ve tecvidi yakın tutun, kalp ve dil birlikte hareket etsin."
         }
       }
     },
     "how": {
       "kicker": "How it works",
-      "title": "From an open mushaf to a clear next step",
+      "title": "Açık mushaftan net bir sonraki adıma",
       "subtitle": "A quiet practice loop in four moments. See what happens in each one, then take the next step with ease.",
       "items": {
         "choose": {
-          "title": "Set your range",
-          "description": "Choose the surah, ayahs, and repetitions. A small, steady set is enough for one session.",
-          "detail": "Start where you are. A short range is easier to finish, easier to check, and easier to return to tomorrow."
+          "title": "Aralığını belirle",
+          "description": "Sure, ayetler ve tekrarları seç. Küçük, dengeli bir set bir oturum için yeter.",
+          "detail": "Olduğun yerden başla. Kısa aralık bitirmesi, kontrol etmesi ve yarına dönmesi daha kolaydır."
         },
         "recite": {
-          "title": "Recite from memory",
-          "description": "Record your tilawah. Mutqin follows the words so you can see where the tongue hesitates.",
-          "detail": "This is a guide, not a judge. Use it to notice weak spots, then strengthen them while the verses still feel close."
+          "title": "Ezberden oku",
+          "description": "Tilavetini kaydet. Mutqin kelimeleri takip eder, dilin nerede tereddüt ettiğini görürsün.",
+          "detail": "Bu bir rehberdir, hâkim değil. Zayıf noktaları fark etmek ve ayetler henüz yakındayken güçlendirmek için kullan."
         },
         "see": {
-          "title": "See what is strong",
-          "description": "A clear summary shows what matched well and what deserves another pass.",
-          "detail": "Leave the session knowing what held and what needs care. Calm feedback helps you practise with intention."
+          "title": "Nelerin güçlü olduğunu gör",
+          "description": "Okuduktan sonra net bir sonuç gör, eşleşen kelimeler, zayıf noktalar ve odak.",
+          "detail": "Dürüst geri bildirim, böylece muracaatın amaçlı olur."
         },
         "continue": {
-          "title": "Take the next step",
-          "description": "Follow the recommended ayahs and method while the verses still feel fresh, or return to the mushaf.",
-          "detail": "Mutqin keeps the thread of your Hifz. Open again and continue without hunting for your place."
+          "title": "Öneriyi takip et",
+          "description": "Mutqin bir sonraki adımı sunar, aynı seti gözden geçir veya hatırlama taze iken devam et.",
+          "detail": "Bi’idhnillāh net bir plan, böylece sırada ne açacağını merak etmezsin."
         }
       }
     },
@@ -288,7 +297,7 @@
       "kicker": "Your path",
       "title": "Three beats, then return",
       "subtitle": "A simple rhythm for daily Hifz. No screenshots here, only the habit.",
-      "cta": "Start where you are",
+      "cta": "Olduğun yerden başla",
       "items": {
         "sit": {
           "title": "Choose a small range",
@@ -378,7 +387,9 @@
       "workspace": "Ezber workspace",
       "dashboard": "kontrol paneli",
       "connectNote": "Follow Mutqin for freeLimitedduct updates.",
-      "demo": "Demo"
+      "demo": "Demo",
+      "login": "Giriş yap",
+      "register": "Kayıt ol"
     },
     "name": "« Name»",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
@@ -520,52 +531,53 @@
       }
     },
     "pipelineDemo": {
-      "kicker": "Product demo",
-      "title": "Watch the Mutqin pipeline",
-      "subtitle": "A short, smooth walkthrough from setting a range to returning to your place — about fifteen seconds.",
-      "pipelineLabel": "Pipeline steps",
-      "play": "Play demo",
-      "pause": "Pause demo",
+      "kicker": "Bir oturum, baştan sona",
+      "title": "Bir Mutqin oturumunun akışını görün",
+      "subtitle": "Kurulumdan öneriye, Allah rızası için tekrarlayabileceğin sakin bir döngü.",
+      "pipelineLabel": "Oturum adımları",
+      "play": "Gezintiyi oynat",
+      "pause": "Gezintiyi duraklat",
       "steps": {
         "setup": {
-          "label": "Set range",
-          "text": "Choose surah, ayahs, and repetitions."
+          "label": "Kurulum",
+          "text": "Sure, ayetler ve nasıl çalışacağını seç."
         },
         "practise": {
-          "label": "Practise",
-          "text": "Use gentle tools while the verses stay close."
-        },
-        "recite": {
-          "label": "Check recall",
-          "text": "Recite from memory as Mutqin follows."
+          "label": "Pratik",
+          "text": "Seti huzurla çalış, acele etme."
         },
         "result": {
-          "label": "See strength",
-          "text": "A clear summary of what held."
+          "label": "Sonucunuz",
+          "text": "Nelerin güçlü olduğunu ve nelere dikkat gerektiğini görün."
         },
-        "next": {
-          "label": "Next step",
-          "text": "A suggested range while memory is fresh."
+        "check": {
+          "label": "Ezber kontrolü",
+          "text": "Ezberden okuyun, Mutqin takip etsin."
         },
-        "return": {
-          "label": "Return",
-          "text": "Open again and continue where you stopped."
+        "complete": {
+          "label": "Oturum bitti",
+          "text": "Bu oturumda bitirdiğinizi görün."
+        },
+        "recommend": {
+          "label": "Öneri",
+          "text": "Ayetler hâlâ yakınken net bir sonraki plan."
         }
-      }
+      },
+      "stepOf": "Adım {current} / {total}"
     }
   },
   "memorisation": {
     "labels": {
       "ayah": "آية {آية}",
-      "ayahs": "Ayah {start}–{end}",
+      "ayahs": "Ayah {start}, {end}",
       "surahAyah": "{surah} · ayah {ayah}",
-      "surahAyahs": "{surah} · ayahs {start}–{end}",
+      "surahAyahs": "{surah} · ayahs {start}, {end}",
       "continueToAyah": "Ayet {ayah} ile devam et",
-      "continueToAyahs": "Ayetler {start}–{end} ile devam et",
+      "continueToAyahs": "Ayetler {start}, {end} ile devam et",
       "repeatAyah": "Tekrarla Ayah {ayah}",
-      "repeatAyahs": "Tekrarla Ayahs {start}–{end}",
+      "repeatAyahs": "Tekrarla Ayahs {start}, {end}",
       "completedSurahAyah": "sen completed {surah}, Ayah {ayah}.",
-      "completedSurahAyahs": "sen completed {surah}, Ayahs {start}–{end}.",
+      "completedSurahAyahs": "sen completed {surah}, Ayahs {start}, {end}.",
       "checkAyahsAgain": "{range} aralığını tekrar kontrol et.",
       "ayahCountOne": "{count} آية",
       "ayahCountOther": "{count} آيات",
@@ -597,7 +609,7 @@
       "statusContinue": "Pick up where sen left kapalı",
       "hintReview": "Tekrar et each ayah until you can recite it smoothly without looking.",
       "hintContinue": "Dinle to each ayah, repeat it, then try from memory.",
-      "hintStart": "Başlat with a small set — steady steps build lasting ezber.",
+      "hintStart": "Başlat with a small set, steady steps build lasting ezber.",
       "leadRevise": "Tekrar et what you know in {surah} before adding new ayahs.",
       "leadContinue": "Devam et memorising {surah} from where you stopped.",
       "leadStart": "Seçin a small set of ayahs and begin with Bismillah.",
@@ -607,7 +619,7 @@
       "factTotalValue": "{n} آيات so far",
       "factStreakLabel": "Pratik streak",
       "factStreakValue": "{n} gün üst üste",
-      "nextStep": "Dokunun Oturumu başlat — listen to each ayah, repeat it, then try without looking.",
+      "nextStep": "Dokunun Oturumu başlat, listen to each ayah, repeat it, then try without looking.",
       "placeWaiting": "Öğreniliyor: {surah}",
       "reviewWaiting": "kez to revise: {surah}",
       "reviewWaitingShort": "kez to revise",
@@ -619,7 +631,7 @@
       "rangeProgress": "Bu oturum",
       "tour": "Hızlı tur",
       "guidanceStart": "Başla with Bismillah. Pick a few ayahs, listen, repeat, then try from memory.",
-      "guidanceContinue": "Take it step by step — revise Ne sen know önce adding new ayahs.",
+      "guidanceContinue": "Take it step by step, revise Ne sen know önce adding new ayahs.",
       "guidanceActive": "Dinle with focus, repeat each ayah, then recite without looking when you feel hazır.",
       "guidanceReview": "Revision keeps your ezber firm. Tekrar et {surah} before moving on."
     },
@@ -649,7 +661,7 @@
     },
     "analyticsEmpty": {
       "title": "No öngörüler yet",
-      "desc": "Kaydet a oturum and practise a little — your ilerleme cards will appear here.",
+      "desc": "Kaydet a oturum and practise a little, your ilerleme cards will appear here.",
       "modalErrorTitle": "analitik unavailable",
       "modalErrorDesc": "We couldn’t prepare this oturum overview. Kapat and try again from a saved oturum.",
       "modalEmptyTitle": "No analitik for this oturum",
@@ -676,7 +688,7 @@
       "freshReminderArabic": "رَبِّ زِدْنِى عِلْمًا",
       "freshReminderTranslation": "Rabbim, ilmimi artır.",
       "freshReminderSource": "القرآن ٢٠:١١٤",
-      "freshIntention": "Begin with a sincere niyyah — even a few ayahs, done consistently, are beloved to Allah.",
+      "freshIntention": "Begin with a sincere niyyah, even a few ayahs, done consistently, are beloved to Allah.",
       "reminders": {
         "1": {
           "translation": "Rabbim, ilmimi artır.",
@@ -686,7 +698,7 @@
         "2": {
           "translation": "Bizim uğrumuzda cihad edenleri yollarımıza eriştireceğiz.",
           "source": "القرآن ٢٩:٦٩",
-          "intention": "İstikrarla dönmek yolun parçasıdır — bir ayah bir ayah."
+          "intention": "İstikrarla dönmek yolun parçasıdır, bir ayah bir ayah."
         },
         "3": {
           "translation": "Beni anın ki Ben de sizi anayım.",
@@ -720,10 +732,10 @@
         }
       },
       "resumeTitle": "Devam et with {chapter}",
-      "resumeTitleNamed": "{chapter} — {name}",
+      "resumeTitleNamed": "{chapter}, {name}",
       "resumeGeneric": "Tekrar hoş geldiniz",
       "resumeGenericNamed": "Tekrar hoş geldiniz, {name}",
-      "resumeSubtitle": "Son oturumunuz sizi bekliyor — Allah her ayeti kolaylaştırsın.",
+      "resumeSubtitle": "Son oturumunuz sizi bekliyor, Allah her ayeti kolaylaştırsın.",
       "resumeSubtitleAtPlace": "Kaldığınız yer: {place}. Allah dönüşünüzü hafif ve bereketli kılsın.",
       "resumeSubtitleDetail": "Kaldığınız yer: {detail}. Allah dönüşünüzü hafif ve bereketli kılsın.",
       "resumePlaceAyah": "{chapter}, ayet {number}",
@@ -735,7 +747,7 @@
       "resumeReminderArabic": "وَٱلَّذِينَ جَـٰهَدُوا۟ فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا",
       "resumeReminderTranslation": "Bizim uğrumuzda cihad edenleri yollarımıza eriştireceğiz.",
       "resumeReminderSource": "القرآن ٢٩:٦٩",
-      "resumeIntention": "Returning to your ayahs with steadiness is part of the path — take it one verse at a time.",
+      "resumeIntention": "Returning to your ayahs with steadiness is part of the path, take it one verse at a time.",
       "freshWhatNext": "Seçin how you want to begin. Başlat a fresh oturum now, or continue after you save a oturum snapshot later.",
       "resumeWhatNext": "Seçin how you want to continue. You can start fresh, repeat the range from the beginning, continue from your last ayah, or save this oturum first.",
       "resumeWhatNextWithDue": "You have {count} verses due for review. Başlat fresh, repeat the range, continue from your last ayah, or save this oturum first.",
@@ -792,7 +804,7 @@
       "openTools": "Pratik tools",
       "showLess": "Göster less",
       "moreCount": "+{count} daha",
-      "emptyOptional": "No optional tools selected — listening and tekrar only.",
+      "emptyOptional": "No optional tools selected, listening and tekrar only.",
       "recommendedLabel": "Recommended for this oturum",
       "recommendedReasonDefault": "Önerilen because Bu helps the areas that ihtiyaç duyar care.",
       "recommendedReasonWeak": "Önerilen because Bu Kelimeler needed more care in recent kontroller.",
@@ -1061,7 +1073,7 @@
     "ayahNotes": {
       "buttonHint": "notlar & yansımalar için Bu ayah",
       "title": "notlar & yansımalar",
-      "subtitle": "Private to sen — only sen can see Bu notlar.",
+      "subtitle": "Private to sen, only sen can see Bu notlar.",
       "privacyChip": "Özel",
       "contextBadge": "{surah} · ayah {ayah}",
       "surahFallback": "Sure {number}",
@@ -1301,7 +1313,7 @@
       "matchLabel": "Eşleşme",
       "matchPercentAria": "Eşleşme yüzde {percent}",
       "colourMeterAria": "Word renk breakdown",
-      "guidanceFreeFlow": "Listening ile sen. Take yeriniz kez — finish the whole passage, sonra tap Stop sonlandırdığınızda sen are done.",
+      "guidanceFreeFlow": "Listening ile sen. Take yeriniz kez, finish the whole passage, sonra tap Stop sonlandırdığınızda sen are done.",
       "guidanceHiddenReveal": "Listening now. Oku the highlighted word to continue.",
       "guidanceFixWord": "hata at {word}. Try that word again.",
       "wordsToRevisit": "Yeniden göz at",
@@ -1334,7 +1346,7 @@
     "recitationLive": {
       "preparingWords": "Preparing ayah Kelimeler…",
       "wordsMatched": "{checked} of {total} spoken Kelimeler matched",
-      "keepReciting": "koru reciting — we're listening."
+      "keepReciting": "koru reciting, we're listening."
     },
     "recitationResult": {
       "reviewSequence": "Sırayı gözden geçir",
@@ -1456,7 +1468,7 @@
     "view": {
       "stacked": "Yığılmış",
       "mushaf": "« Mushaf»",
-      "stackedHint": "Yığın: peş peşe ayet — kısa aralıklar için sakin.",
+      "stackedHint": "Yığın: peş peşe ayet, kısa aralıklar için sakin.",
       "mushafHint": "Mushaf: sayfa düzeni. Okuma yardımcıları ve tecvid Kontroller ve Yardım’da."
     },
     "actions": {
@@ -1661,7 +1673,7 @@
           "title": "AI ile tilaveti test et",
           "stepLabel": "AI kontrol",
           "body": "Pratikten sonra AI Ezber dinler ve hatırlamanın zayıf olduğu yerleri gösterir.",
-          "hint": "Geri bildirim istediğinizde kullanın — her oturumda gerekmez.",
+          "hint": "Geri bildirim istediğinizde kullanın, her oturumda gerekmez.",
           "points": [
             "Kontrolde ezberden okuyun",
             "Hangi kelime veya ayetlerin bakıma ihtiyacı var görün"
@@ -1736,7 +1748,7 @@
     "best_for_memorising_key_vocabulary": "Best için: Memorising Anahtar kelimeler vocabulary",
     "anchor_points_per_ayah": "Ayah başına çapa noktaları",
     "saved_sessions": "kaydedilmiş oturumlar",
-    "saved_sessions_intro": "Hıfz yolculuklarınız — tamamlanan hatim veya devam eden aralığa dönün.",
+    "saved_sessions_intro": "Hıfz yolculuklarınız, tamamlanan hatim veya devam eden aralığa dönün.",
     "completed_sessions": "Tamamlanan oturumlar",
     "completed_sessions_desc": "Ayet aralığının sonuna ulaştığınız oturumlar. Muraja'ah için tekrar ziyaret edin.",
     "incomplete_sessions": "Tamamlanmayan oturumlar",
@@ -1821,7 +1833,7 @@
         "reviseFocusPhrase": "Gözden geçirmeye başla",
         "reviseThisRange": "Gözden geçirmeye başla",
         "continueToNextRange": "Sonraki oturuma geç",
-        "continueToAyahs": "Ayetler {start}–{end} ile devam et",
+        "continueToAyahs": "Ayetler {start}, {end} ile devam et",
         "repeatThisSession": "Bu oturumu tekrarla",
         "reviewOnceMore": "Bir kez daha gözden geçir",
         "reviewAyahOnce": "Tekrar et āyah {ayah}",
@@ -1851,7 +1863,7 @@
         "chooseWhenReady": "Seçin a oturum when hazır.",
         "weakWordsFocus": "Kelimeler to Odak açık",
         "ayahLabel": "Ayah {ayah}",
-        "ayahRangeLabel": "Ayah {from}–{to}",
+        "ayahRangeLabel": "Ayah {from}, {to}",
         "replayPhrase": "Çevredeki ifadeyi tekrar oynat",
         "ayahNeededMore": "Āyah {آية} needs another slow pass.",
         "takeItSlow": "You duraklatıldı often. Slow down on one āyah.",
@@ -1874,7 +1886,7 @@
           "aiFirst": "Check your ezber first, then your plan appears here.",
           "retestAfterPractice": "İlerlemeden önce bu aralığı güçlendir.",
           "strongContinue": "Devam et while this still feels fresh.",
-          "mostlySecure": "Devam et when hazır — a light review is optional.",
+          "mostlySecure": "Devam et when hazır, a light review is optional.",
           "reviseFirst": "Tekrar et the weak spots first, then continue."
         },
         "guidance": {
@@ -1889,8 +1901,8 @@
         "live": {
           "before": "Dinle once and follow the words.",
           "beforeTalqin": "Dinle once, then recite aloud.",
-          "beforeFocus": "Dinle once — gold-marked words need extra care.",
-          "playing": "Follow the Kelimeler calmly — may Allah open yeriniz kalbinde.",
+          "beforeFocus": "Dinle once, gold-marked words need extra care.",
+          "playing": "Follow the Kelimeler calmly, may Allah open yeriniz kalbinde.",
           "playingFocus": "Odak açık the highlighted word.",
           "focusWord": "Odak açık the highlighted word: {word}",
           "focusCueTitle": "Odak açık Bu word",
@@ -1899,7 +1911,7 @@
           "hooksLabel": "yeriniz Anahtar kelimeler Kelimeler",
           "pause": "önce tekrarlarken Bu phrase aloud.",
           "pauseFocus": "Tekrarla the gold-marked words aloud, then the full āyah.",
-          "difficulty": "Take it slower — try Bu āyah at {speed}×.",
+          "difficulty": "Take it slower, try Bu āyah at {speed}×.",
           "after": "Oku this āyah without looking.",
           "ready": "Mā shā’ Allāh. You are hazır to test.",
           "ayahCue": "Ayah {ayah}",
@@ -1924,7 +1936,7 @@
             "pause": "Oku what you just heard, then join the next āyah."
           },
           "anchor": {
-            "before": "Gold Kelimeler are yeriniz hooks — notice them first.",
+            "before": "Gold Kelimeler are yeriniz hooks, notice them first.",
             "playing": "Watch the marked Kelimeler. They kalıcı olarak help sen remember.",
             "pause": "Say the Anahtar kelimeler Kelimeler first, sonra the full āyah."
           },
@@ -1939,7 +1951,7 @@
             },
             "blur": {
               "label": "Gizle the text little by little",
-              "hint": "As Kelimeler soluyor, let yeriniz memory lead — ask Allah için firmness."
+              "hint": "As Kelimeler soluyor, let yeriniz memory lead, ask Allah için firmness."
             },
             "chaining": {
               "label": "Ayetleri birleştir",
@@ -1947,7 +1959,7 @@
             },
             "anchor": {
               "label": "Hold onto Anahtar kelimeler Kelimeler",
-              "hint": "Gold-marked Kelimeler are yeriniz hooks — say them clearly, sonra the full āyah."
+              "hint": "Gold-marked Kelimeler are yeriniz hooks, say them clearly, sonra the full āyah."
             },
             "listen": {
               "label": "Dinle with presence",
@@ -1962,7 +1974,7 @@
         "evidenceReturn": "Dönüş",
         "evidenceThen": "Sonraki",
         "evidenceThenAyah": "Ayet {ayah} ile devam et",
-        "evidenceThenRange": "Ayetler {from}–{to} ile devam et"
+        "evidenceThenRange": "Ayetler {from}, {to} ile devam et"
       },
       "summaryTitle": "Session summary",
       "progressLabel": "Range progress",
@@ -2002,14 +2014,14 @@
         "memoryCheckTitle": "Yapay zekâ sınavı",
         "memoryCheckDescription": "Answer a few short questions (ve ok if needed) so we can see which ayah are firm ve which still ihtiyaç duyar support. yeriniz Sonraki plan updates from Bu.",
         "memoryCheckLead": "önce sen devam, kontrol Ne stuck",
-        "memoryCheckWhy": "This optional check finds weak spots early — so your next oturum practises the right verses, not a random repeat.",
+        "memoryCheckWhy": "This optional check finds weak spots early, so your next oturum practises the right verses, not a random repeat.",
         "memoryCheckBulletQuiz": "Short questions about the ayah sen Az did",
         "memoryCheckBulletAi": "AI Oku may open if a verse needs a spoken check",
         "memoryCheckBulletTime": "Usually about 1–2 dk",
         "memoryCheckCta": "Başlat memory check",
         "memoryCheckOpening": "Başlatılıyor…",
         "memoryCheckIncludes": "Quiz and AI Oku",
-        "memoryCheckHint": "Optional — skip if sen want to go straight to yeriniz plan.",
+        "memoryCheckHint": "Optional, skip if sen want to go straight to yeriniz plan.",
         "memoryCheckOptionalTag": "İsteğe bağlı",
         "memoryCheckTimeTag": "1–2 dk",
         "voiceOnlyCta": "Prefer to ok aloud only",
@@ -2042,9 +2054,9 @@
         "startAiRecite": "Oku with AI",
         "startError": "That kontrol could değil start. sen can still devam below.",
         "answerError": "Lütfen try that again.",
-        "feedbackCorrect": "Güzel — bu doğru.",
-        "feedbackAlmost": "Kapat — keep going.",
-        "feedbackIncorrect": "değil quite — we kalıcı olarak practise that.",
+        "feedbackCorrect": "Güzel, bu doğru.",
+        "feedbackAlmost": "Kapat, keep going.",
+        "feedbackIncorrect": "değil quite, we kalıcı olarak practise that.",
         "resultTitleStrong": "İyi görünüyor",
         "resultTitleMixed": "A little more practice kalıcı olarak help",
         "resultTitleWeak": "Bir kısa tekrar daha gerekiyor",
@@ -2082,7 +2094,7 @@
         },
         "explanations": {
           "sessionIncomplete": "sen still have a few ayah left in Bu aralık.",
-          "lowRecall": "Some Kelimeler are still settling — a short tekrarlarken kalıcı olarak help.",
+          "lowRecall": "Some Kelimeler are still settling, a short tekrarlarken kalıcı olarak help.",
           "sequenceErrors": "The order slipped a little. We kalıcı olarak practise linking the ayah.",
           "highHintDependency": "Hints helped a lot. Sonraki kez we kalıcı olarak show a little less text.",
           "visualDependency": "Reading carried a lot. We kalıcı olarak practise ile less text showing.",
@@ -2092,7 +2104,7 @@
           "similarAyahConfusion": "Similar ayah got mixed up. We kalıcı olarak compare them side by side.",
           "lowDelayedRetention": "Earlier ayah faded a little. We kalıcı olarak review them sooner.",
           "highPerformance": "Bu aralık feels Kararlı çaba. sen can move açık while it is fresh.",
-          "lowConfidence": "sen wanted more practice — here is a short, reassuring pass.",
+          "lowConfidence": "sen wanted more practice, here is a short, reassuring pass.",
           "overconfidence": "It felt strong, but one part still needs support. We kalıcı olarak Odak there.",
           "reviewOverdue": "Some of Bu is due için review. Better to dön to it soon."
         },
@@ -2129,7 +2141,7 @@
         "softwareGenerated": "",
         "teacherComplement": "",
         "aiRecitationBeta": "ses recitation · Beta",
-        "aiDisclaimer": "AI can sometimes miss or mishear words. Treat this as a guide only — verify with a qualified teacher before relying on it for your hifz.",
+        "aiDisclaimer": "Yapay zekâ bazen kelimeleri kaçırabilir veya yanlış duyabilir. Bunu yalnızca rehber kabul edin, Hifziniz için güvenmeden önce nitelikli bir hocaya danışın.",
         "tapWordToCorrect": "Dokunun any amber or red word you recited correctly to update the analysis.",
         "viewDetails": "Ayrıntıları gör",
         "hideDetails": "Ayrıntıları gizle",
@@ -2157,19 +2169,19 @@
         "attemptContinued": "{count} still ihtiyaç duyar practice",
         "scopeReason": {
           "noWeakAreas": "No clear weak areas were identified, so the full aralık is Önerilen.",
-          "minorLocal": "Only a few Kelimeler ihtiyaç duyar dikkat — focused practice kalıcı olarak be quicker ve clearer.",
+          "minorLocal": "Only a few Kelimeler ihtiyaç duyar dikkat, focused practice kalıcı olarak be quicker ve clearer.",
           "focusedCluster": "yeriniz weak spots sit close together, so a short focused review is Önerilen.",
           "spreadWeakness": "Zayıf areas appear across the oturum, so revisiting the full range with emphasis is recommended.",
           "defaultFocus": "A focused pass açık the weaker Kelimeler ve phrases is Önerilen first."
         },
         "previousAttemptNote": "Previous related deneme: {summary}",
         "previousAttemptsAvailable": "Previous related attempts are kaydedilmiş ile Bu recommendation.",
-        "persistedForLater": "Saved for later — available from your kontrol paneli and oturum history.",
+        "persistedForLater": "Saved for later, available from your kontrol paneli and oturum history.",
         "basedOnThisSession": "Based on this oturum",
         "tryThisCombination": "Try Bu combination",
         "adjustPlan": "Planı ayarla",
         "suggestedNextStep": "Suggested next step",
-        "flowIntro": "Bismillāh — begin when your heart is hazır.",
+        "flowIntro": "Bismillāh, begin when your heart is hazır.",
         "stepCheck": "Adım 1",
         "stepPlan": "Adım 2",
         "planReadyTag": "Hazır",
@@ -2184,8 +2196,8 @@
         "chooseNext": "Suggested Sonraki step",
         "recommendedNext": "{سورة} · {range}",
         "recommendedNextSurah": "Sure {surah}",
-        "surahCompletedTitle": "Alhamdulillah — Surah {surah} complete",
-        "ayahRange": "Ayah {start}–{end}",
+        "surahCompletedTitle": "Alhamdulillah, Surah {surah} complete",
+        "ayahRange": "Ayah {start}, {end}",
         "singleAyah": "آية {آية}",
         "ayahCount": "{count} ayat",
         "ayahCountOne": "{count} آية",
@@ -2200,8 +2212,8 @@
         "planApplied": "مُطبَّق",
         "planManual": "مُعدَّل يدويًا",
         "continueToNextSurah": "Sonraki surah",
-        "continueToAyat": "Continue to ayat {start}–{end}",
-        "repeatAyat": "Repeat ayat {start}–{end}",
+        "continueToAyat": "Continue to ayat {start}, {end}",
+        "repeatAyat": "Repeat ayat {start}, {end}",
         "repeatThisSession": "Tekrarla this oturum",
         "adjustSettings": "Planı ayarla",
         "resetSettings": "Reset to Önerilen",
@@ -2217,13 +2229,13 @@
         "backToOverview": "Geri",
         "retry": "Tekrar dene",
         "retryRecommendation": "Öneriyi yeniden hazırla",
-        "loadError": "Suggestion unavailable — your session is still saved.",
+        "loadError": "Suggestion unavailable, your session is still saved.",
         "startError": "Yapılamadı start. Lütfen try again.",
         "settingsError": "Yapılamadı save settings. Lütfen try again.",
         "confidenceError": "Yapılamadı save your response. Lütfen try again.",
-        "aiReciteError": "AI Recite unavailable. Your session is saved — choose confidence or continue.",
+        "aiReciteError": "AI Recite unavailable. Your session is saved, choose confidence or continue.",
         "aiReciteOffline": "Connection lost during AI Oku. ilerleme is saved; retry later or continue below.",
-        "aiReciteOptionalHint": "Optional — may Allah make the words firm for you.",
+        "aiReciteOptionalHint": "Optional, may Allah make the words firm for you.",
         "aiReciteSkippedHint": "Continuing without AI Recite. Pick how the range felt, or start the recommended plan.",
         "openingAiRecite": "Opening AI Oku…",
         "preparingRecommendation": "Öneri hazırlanıyor…",
@@ -2264,29 +2276,29 @@
           "focusVerse": "ayah {ayah}",
           "focusOne": "Pay extra dikkat to ayah {ayah}. That is where most slips appeared.",
           "focusMany": "Pay extra dikkat to ayahs {ayahs}. Those still ihtiyaç duyar the most support.",
-          "ayahRange": "Ayah {start}–{end}",
+          "ayahRange": "Ayah {start}, {end}",
           "singleAyah": "آية {آية}",
           "colourMix": "{green} yeşil · {amber} kehribar · {red} kırmızı · {black} siyah",
           "rangeExplain": "These are the verses your next oturum will open on.",
           "methodExplain": "This method guides how text and ses appear while you practise.",
           "setupExplain": "oynatma hızı and repetitions control how calmly you rehearse each verse.",
-          "weakAyahRepeatOne": "Ayah {ayah} için {count} kez tekrar et — kayan kelimeler için ekstra tur.",
-          "weakAyahRepeatMany": "Her zayıf ayah'ı {count} kez tekrar et ({ayahCount} ayah) — dikkat gereken kelimeleri güçlendirmek için."
+          "weakAyahRepeatOne": "Ayah {ayah} için {count} kez tekrar et, kayan kelimeler için ekstra tur.",
+          "weakAyahRepeatMany": "Her zayıf ayah'ı {count} kez tekrar et ({ayahCount} ayah), dikkat gereken kelimeleri güçlendirmek için."
         },
         "whatChangingDoes": "How Bu helps",
         "paramHints": {
-          "repetitionsHigh": "{count}× repetitions — more passes help challenging ayahs settle.",
-          "repetitionsModerate": "{count} repetitions — another steady pass without overload.",
-          "repetitionsLight": "{count}× — light practice while the range is still fresh.",
-          "focus": "Focus Mode — one ayah at a time, fewer distractions.",
-          "blur": "Blur — hide the text so you recall instead of read.",
-          "talqin": "Talqin — listen, then recite before moving on.",
-          "anchor": "Anchor — keep key words visible as the rest fades.",
-          "chaining": "Chaining — join ayahs you have just memorised.",
-          "speedSlower": "{speed}× speed — more time to hear each phrase clearly.",
-          "speedFaster": "{speed}× speed — brisk practice once the range feels familiar."
+          "repetitionsHigh": "{count}× repetitions, more passes help challenging ayahs settle.",
+          "repetitionsModerate": "{count} repetitions, another steady pass without overload.",
+          "repetitionsLight": "{count}×, light practice while the range is still fresh.",
+          "focus": "Focus Mode, one ayah at a time, fewer distractions.",
+          "blur": "Blur, hide the text so you recall instead of read.",
+          "talqin": "Talqin, listen, then recite before moving on.",
+          "anchor": "Anchor, keep key words visible as the rest fades.",
+          "chaining": "Chaining, join ayahs you have just memorised.",
+          "speedSlower": "{speed}× speed, more time to hear each phrase clearly.",
+          "speedFaster": "{speed}× speed, brisk practice once the range feels familiar."
         },
-        "supportingCompletedRange": "Masha’Allah, you completed {surah}, ayat {start}–{end}",
+        "supportingCompletedRange": "Masha’Allah, you completed {surah}, ayat {start}, {end}",
         "supportingProgressSaved": "Your progress has been saved.",
         "repeatThisRange": "Bu ayetleri tekrar çalış",
         "continueNextSet": "Recommended plan",
@@ -2294,12 +2306,12 @@
         "repeatRangeTitle": "{سورة} · {range}",
         "steadyRepetitionEncouragement": "Düzenli tekrar kalıcı ezber oluşturur.",
         "phraseNeedsAttention": "Ayet {ayah} içindeki bir ifade net değildi.",
-        "phraseNeedsAttentionNext": "Gözden geçir it once, then continue to Ayahs {start}–{end}.",
+        "phraseNeedsAttentionNext": "Gözden geçir it once, then continue to Ayahs {start}, {end}.",
         "phrasesNeedAttention": "Birkaç ifade hâlâ dikkat istiyor.",
         "ayahNeedsAttention": "Ayet {ayah} net değildi.",
-        "ayahNeedsAttentionNext": "Gözden geçir Ayah {ayah} once, then continue to Ayahs {start}–{end}.",
+        "ayahNeedsAttentionNext": "Gözden geçir Ayah {ayah} once, then continue to Ayahs {start}, {end}.",
         "evidenceReviewNow": "Bu aralığı tekrar kontrol et.",
-        "evidenceReviewThenContinue": "Gözden geçir the weak phrase once, then continue to Ayahs {start}–{end}.",
+        "evidenceReviewThenContinue": "Gözden geçir the weak phrase once, then continue to Ayahs {start}, {end}.",
         "statusReadyToContinue": "Hazır to continue",
         "statusMostlySecure": "Çoğunlukla sağlam",
         "statusReviewRecommended": "Gözden geçir recommended",
@@ -2344,7 +2356,7 @@
         "aiReviewWeakAyah": "Based on this session",
         "aiReviewWeakAyahs": "Based on this session",
         "aiReviewSequence": "Based on this session",
-        "aiReviewStrongDetail": "Strong recall — about {percent}% matched.",
+        "aiReviewStrongDetail": "Strong recall, about {percent}% matched.",
         "aiReviewMixedDetail": "Solid overall ({percent}%), with a few gaps to tighten.",
         "aiReviewWeakDetail": "Several spots need another pass ({percent}% matched).",
         "aiReviewMissedWords": "{count} words still need attention.",
@@ -2362,9 +2374,9 @@
         "aiSummaryMatchedWords": "{total} kelimeden {matched} tanesini net biçimde eşleştirdik.",
         "aiSummaryFocusPhrase": "Tekrar kontrol etmeden önce vurgulanan ifadeye odaklan.",
         "aiSummaryFocusRange": "Bu aralığı gözden geçir, sonra tekrar kontrol et.",
-        "aiSummaryStrongMinorMistakes": "Güçlü recitation — a couple of small mistakes, but you are making good ilerleme.",
-        "aiSummaryStrongFollowUp": "Güzel — henüz taze iken devam edebilirsin.",
-        "aiSummaryMinorWeaknessNext": "Gözden geçir it once, then continue to Ayahs {start}–{end}.",
+        "aiSummaryStrongMinorMistakes": "Güçlü recitation, a couple of small mistakes, but you are making good ilerleme.",
+        "aiSummaryStrongFollowUp": "Güzel, henüz taze iken devam edebilirsin.",
+        "aiSummaryMinorWeaknessNext": "Gözden geçir it once, then continue to Ayahs {start}, {end}.",
         "aiMetricConfidence": "Tanıma güveni",
         "zeroMatchStatus": "Bu aralığı birlikte yeniden çalışalım",
         "zeroMatchSummary": "Tilavetini duyduk ama kelimeleri henüz güvenle eşleştiremedik.",
@@ -2389,10 +2401,10 @@
         "aiMetricOrderIssues": "{count} hata",
         "aiMetricOrderNotAssessed": "Değerlendirilmedi",
         "aiMetricSequenceNotEnough": "Değerlendirme için yeterli eşleşen kelime yok",
-        "aiHighlightStrongRecall": "Most words landed cleanly — keep this pace while the range is fresh.",
+        "aiHighlightStrongRecall": "Most words landed cleanly, keep this pace while the range is fresh.",
         "aiHighlightMissedWords": "{count} Kelimeler still ihtiyaç duyar another careful pass.",
-        "aiHighlightPronunciation": "{count} words were close — slow slightly and articulate each letter.",
-        "aiHighlightSequence": "Ayah order drifted — restart from the first ayah of the range.",
+        "aiHighlightPronunciation": "{count} words were close, slow slightly and articulate each letter.",
+        "aiHighlightSequence": "Ayah order drifted, restart from the first ayah of the range.",
         "aiHighlightWeakAyah": "Ayah {ayah} zorluğun çoğunu taşıdı.",
         "aiHighlightWeakAyahs": "{count} ayahs ihtiyaç duyar Odak ({ayahs}).",
         "aiHighlightMixed": "Solid overall, ile a few gaps that deserve a short revision pass.",
@@ -2479,7 +2491,7 @@
         "aiHighlightOmittedWords": "{count} Kelimeler were skipped. Fill those gaps Sonraki.",
         "aiFocusOmitted": "Oku the {count} skipped words carefully.",
         "aiReviewAyahsLabel": "Tekrar edilecek ayetler",
-        "aiFocusStrong": "Keep this pace — move on while the range is still fresh.",
+        "aiFocusStrong": "Keep this pace, move on while the range is still fresh.",
         "aiFocusNearly": "One careful pass should lock the kalan gaps.",
         "aiFocusRetry": "Slow down ve rebuild the aralık ayah by ayah.",
         "aiFocusMissed": "dön to the {count} missed Kelimeler önce expanding the aralık.",
@@ -2496,7 +2508,7 @@
     },
     "aiRecitePlan": {
       "startReciting": "Başlat Reciting",
-      "startHint": "Take your time. Oku the whole passage from memory — pauses are fine. Up to 3 gentle tries.",
+      "startHint": "Take your time. Oku the whole passage from memory, pauses are fine. Up to 3 gentle tries.",
       "attemptProgress": "Deneme {current} / {max}",
       "tryAgainRemaining": "Tekrar dene ({kalan} left)",
       "seePracticePlan": "Planımı gör",
@@ -2513,9 +2525,9 @@
       "startSimplerPlan": "Başlat this simpler plan",
       "continueNextSession": "Devam et to next oturum",
       "masteryTitle": "aralık achieved",
-      "masterySubtitle": "Güçlü recall — hazır for the next oturum.",
+      "masterySubtitle": "Güçlü recall, hazır for the next oturum.",
       "masteryBanner": "Achieved. You can continue to the next oturum.",
-      "simplerSubtitle": "değil firm yet — practise Bu simpler plan, sonra test again.",
+      "simplerSubtitle": "değil firm yet, practise Bu simpler plan, sonra test again.",
       "simplerBanner": "Keep practising this simpler plan, then test with AI Oku again.",
       "returningToPlan": "Opening yeriniz practice plan…",
       "focusAyah": "Odak açık āyah {ayah}",
@@ -2539,7 +2551,7 @@
         "accuracy": "Last AI Oku doğruluk: {score}%",
         "technique": "Yardımcı olan teknik: {technique}",
         "weakLeft": "Hâlâ dikkat edilecek: {items}",
-        "next": "Sonraki: start {surah} · āyahs {from}–{to}",
+        "next": "Sonraki: start {surah} · āyahs {from}, {to}",
         "cta": "Başlat next surah"
       },
       "feedbackStrong": "Güçlü recall. A light review will keep it firm.",
@@ -2558,7 +2570,7 @@
         "anchorTitle": "Çapa",
         "anchorHow": "Flash weak Kelimeler önce the full āyah.",
         "talqinTitle": "talqin",
-        "talqinHow": "Dinle, then repeat — one āyah at a time.",
+        "talqinHow": "Dinle, then repeat, one āyah at a time.",
         "chainingTitle": "Parçalama",
         "chainingHow": "İki kısa parçada çalış, sonra birleştir.",
         "phrasePartsHow": "İfadeyi küçük parçalarda çalış, sonra tek parça olarak oku.",
@@ -2574,14 +2586,14 @@
     "emotional": {
       "postSession": {
         "encouragement1": "Small steps, repeated with sincerity, become lasting ezber.",
-        "encouragement2": "Ne sen bugün gözden geçirdikleriniz Bugün has a yer in yeriniz kalbinde — dön to it nazikçe.",
+        "encouragement2": "Ne sen bugün gözden geçirdikleriniz Bugün has a yer in yeriniz kalbinde, dön to it nazikçe.",
         "encouragement3": "Istikrar daha önemli more than hız. sen geldiniz up, ve that önemli.",
         "encouragement4": "Each oturum is a quiet act of devotion. May it be accepted.",
-        "encouragement5": "The Qur'an opens to those who dön to it — koru coming geri.",
+        "encouragement5": "The Qur'an opens to those who dön to it, koru coming geri.",
         "encouragement6": "Kararlı çaba effort, even in small portions, is sevilidir."
       },
       "milestone": {
-        "surahComplete": "You completed {chapter} in this oturum — may it settle gently in your heart.",
+        "surahComplete": "You completed {chapter} in this oturum, may it settle gently in your heart.",
         "streak3": "Three gün of showing up. Steadiness is its own quiet blessing.",
         "streak7": "A week of Istikrar. May Allah make it easy to devam.",
         "streak14": "أسبوعان من العودة إلى الكتاب. هذا الإيقاع يستحق الحفاظ عليه.",
@@ -2590,7 +2602,7 @@
       },
       "consistency": {
         "nudgeShort": "However long it's been, Bugün is a good gün to dön.",
-        "nudgeMedium": "A few gün away — pick up nazikçe, one ayah at a kez.",
+        "nudgeMedium": "A few gün away, pick up nazikçe, one ayah at a kez.",
         "nudgeLong": "Tekrar hoş geldiniz geri. There is no rush; begin where sen are."
       }
     },
@@ -2679,7 +2691,7 @@
       "review": "Gözden Geçir",
       "excellentHint": "Ezberden güvenli ve doğru",
       "goodHint": "Küçük duraksamalarla çoğunlukla doğru",
-      "fairHint": "Çoğunlukla hazır ama boşluklar var — bir tekrar daha değer.",
+      "fairHint": "Çoğunlukla hazır ama boşluklar var, bir tekrar daha değer.",
       "reviewHint": "Devam etmeden önce bu ayeti tekrar gözden geçir"
     },
     "selfCheckRecorder": {
@@ -2688,7 +2700,7 @@
       "assessmentHeading": "Hıfznızı değerlendirin",
       "aiSessionReady": "Hazır olduğunuzda ayet aralığınızı tilavet edin ve AI incelemenizi yönlendirsin.",
       "aiAyahReady": "Hazır olduğunuzda bu ayeti hıfızdan tilavet edin ve AI incelemenizi yönlendirsin.",
-      "recordingActive": "Mikrofonunuz açık — tecvidle tilavet edin, bitince durdurun.",
+      "recordingActive": "Mikrofonunuz açık, tecvidle tilavet edin, bitince durdurun.",
       "reviewDraft": "Kaydınızı dinleyin, dürüstçe değerlendirin ve kaydedin.",
       "preparingMic": "Net bir kayıt için mikrofon hazırlanıyor, inşaallah.",
       "unsupportedBrowser": "Kayıt için mikrofon destekli bir tarayıcı gerekir.",
@@ -3048,7 +3060,7 @@
       "stop": "إيقاف",
       "savedAt": "kaydedilmiş {date}",
       "lastOpened": "Son açılış {date}",
-      "rangeLabel": "Ayah {start}–{end}",
+      "rangeLabel": "Ayah {start}, {end}",
       "rangeLabelSingle": "آية {آية}",
       "manualAdvance": "manuel ilerleme",
       "autoAdvance": "otomatik ilerleme",
@@ -3131,10 +3143,10 @@
     "tajweedPracticeCheck": {
       "title": "Tajweed practice kontrol",
       "legendTitle": "Tecvid renkleri açıklandı",
-      "legendIntro": "Bu Mutqin colours mark common Tajweed rules in the ayah. Kullan them as practice reminders — değil as a öğretmen’s ruling.",
-      "disclaimer": "Pratik aid only — not a teacher’s ruling. Holds are shown as ranges, not exact targets.",
+      "legendIntro": "Bu Mutqin colours mark common Tajweed rules in the ayah. Kullan them as practice reminders, değil as a öğretmen’s ruling.",
+      "disclaimer": "Pratik aid only, not a teacher’s ruling. Holds are shown as ranges, not exact targets.",
       "summaryStrong": "koru colours açık: green/purple = soft nasal hold, red = stretch, orange = light bounce.",
-      "summaryIssues": "Odak açık one coloured mark at a kez — hold nazikçe, sonra dinlerken once if needed.",
+      "summaryIssues": "Odak açık one coloured mark at a kez, hold nazikçe, sonra dinlerken once if needed.",
       "summaryUnable": "Kullan the colours while sen practise. We’ll kontrol holds sonlandırdığınızda timing is clearer.",
       "viewDetails": "Ayrıntıları gör",
       "labels": {
@@ -3175,7 +3187,7 @@
       },
       "bands": {
         "strong": {
-          "headline": "Coloured işaretler look Kararlı çaba — koru practising nazikçe.",
+          "headline": "Coloured işaretler look Kararlı çaba, koru practising nazikçe.",
           "label": "Kararlı çaba practice"
         },
         "average": {
@@ -3192,12 +3204,12 @@
         }
       },
       "colours": {
-        "gray": "Gray — clear / Sessiz işaretler",
-        "green": "Yeşil — hafif gunneli tutuş",
-        "purple": "Mor — gizli ses",
-        "orange": "Turuncu — hafif sıçrama",
-        "red": "Kırmızı — uzatma (med)",
-        "blue": "Mavi — birleştirme"
+        "gray": "Gray, clear / Sessiz işaretler",
+        "green": "Yeşil, hafif gunneli tutuş",
+        "purple": "Mor, gizli ses",
+        "orange": "Turuncu, hafif sıçrama",
+        "red": "Kırmızı, uzatma (med)",
+        "blue": "Mavi, birleştirme"
       }
     },
     "amd": {
@@ -3206,8 +3218,8 @@
       "emptyAyahDesc": "We couldn’t show the ayah surface for this check. Kapat and open the check again.",
       "ayahTextUnavailable": "Ayah text is not hazır yet. Kapat and try the check again.",
       "betaBadge": "تجريبي",
-      "disclaimer": "Yalnızca pratik yardımı — bir hocanın hükmü değildir.",
-      "disclaimerShort": "Yalnızca pratik yardımı — bir hocanın hükmü değildir.",
+      "disclaimer": "Sesli tilavet beta aşamasındadır. Yapay zekâ hata yapabilir, her zaman nitelikli bir hocaya danışın.",
+      "disclaimerShort": "Yalnızca pratik yardımı, bir hocanın hükmü değildir.",
       "onlyFromTestWithAi": "Finish your oturum, then choose Check my ezber to open this check.",
       "assessmentType": "من الحفظ",
       "readyCopy": "Select your range, hide the text, and recite from memory. Mutqin will listen, highlight mistakes, and build a personalised practice plan.",
@@ -3233,7 +3245,7 @@
       "micGuidanceUnsupported": "Speech recognition is unavailable here. sen can still Kullan Peek.",
       "hintStarting": "Preparing the mikrofon…",
       "hintListening": "Recite from memory. Correct words reveal; mistakes highlight immediately.",
-      "hintListeningLive": "mikrofon is live — recite from memory. Words colour as they are recognised.",
+      "hintListeningLive": "mikrofon is live, recite from memory. Words colour as they are recognised.",
       "hintProcessing": "Processing your recitation…",
       "hintProcessingSlow": "Bu is taking longer than expected.",
       "hintAnalysing": "Comparing with the Quran text…",
@@ -3257,7 +3269,7 @@
       "peekHintShort": "اضغط مطولًا للإظهار",
       "wordsShownShort": "ظاهر",
       "elapsedTimer": "Recitation kez",
-      "elapsedTimerHint": "How long Bu recitation has taken — used to personalise yeriniz Sonraki plan",
+      "elapsedTimerHint": "How long Bu recitation has taken, used to personalise yeriniz Sonraki plan",
       "textSizeShort": "حجم النص",
       "textSmallerShort": "نص أصغر",
       "textLargerShort": "نtext أكبر",
@@ -3280,7 +3292,7 @@
       "autoFollowPaused": "otomatik takip duraklatıldı",
       "autoFollowResume": "Resume otomatik takip",
       "autoFollowHint": "Keep the aktif word near eye level during longer checks",
-      "completeTitle": "Mā shā’ Allāh — check tamamlandı",
+      "completeTitle": "Mā shā’ Allāh, check tamamlandı",
       "completeBody": "sen recalled Bu aralık successfully.",
       "sessionEnded": "oturum tamamlandı",
       "sessionEndedBody": "جارٍ العودة…",
@@ -3316,7 +3328,7 @@
       "howKicker": "How Mutqin hata detection works",
       "how1": "Gizle the Qur’an text and recite from memory.",
       "how2": "Mutqin listens, follows yeriniz yer, ve highlights mistakes.",
-      "how3": "Tekrarla a word to correct it — correct words reveal themselves.",
+      "how3": "Tekrarla a word to correct it, correct words reveal themselves.",
       "how4": "Kaydet the result and practise the weak areas again.",
       "toolRecite": "Oku",
       "toolAudio": "ses help",

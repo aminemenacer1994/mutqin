@@ -540,16 +540,9 @@ includesAll('ai memorisation detection modal wiring', [
   assert.match(amdCss, /\.amd-overlay\[data-theme="dark"\] \.amd-inline-error/)
   assert.match(amdCss, /\.amd-overlay\[data-theme="sepia"\] \.amd-modal--premium/)
   assert.match(amdCss, /\.amd-mistake-visual/)
-  assert.match(amdVue, /amd-disclaimer--row/)
-  assert.match(amdVue, /v-if="disclaimer"/)
-  assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?white-space:\s*normal/)
-  assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?overflow:\s*visible/)
-  assert.match(amdCss, /\.amd-disclaimer--row[\s\S]*?-webkit-line-clamp:\s*unset/)
-  assert.doesNotMatch(
-    amdCss,
-    /\.amd-overlay \.amd-disclaimer--row[\s\S]{0,120}-webkit-line-clamp:\s*2/,
-    'AMD disclaimer must not clamp to 2 lines (no ellipsis truncation)',
-  )
+  // AI disclaimer banner removed from AMD UI (prop may still exist for a11y title)
+  assert.doesNotMatch(amdVue, /amd-disclaimer--row/)
+  assert.match(amdCss, /\.amd-disclaimer[\s\S]*?display:\s*none/)
   const en = readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url), 'utf8')
   assert.match(en, /"disclaimer":\s*"Practice aid only/)
   assert.match(source, /memorisation\.amd\.disclaimer/)

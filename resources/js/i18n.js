@@ -1,5 +1,11 @@
 import { createI18n } from 'vue-i18n'
 import enMessages from './locales/en.json'
+import frMessages from './locales/fr.json'
+import esMessages from './locales/es.json'
+import arMessages from './locales/ar.json'
+import idMessages from './locales/id.json'
+import trMessages from './locales/tr.json'
+import urMessages from './locales/ur.json'
 
 export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur']
 /** Locales shown in the UI language switcher. */
@@ -11,6 +17,17 @@ export const SWITCHER_LOCALE_LABELS = {
 }
 export const RTL_LOCALES = ['ar', 'ur']
 const STORAGE_KEY = 'mutqin.locale'
+
+/** Eager message packs so locale switching never depends on async chunks Mix may prune. */
+const STATIC_MESSAGES = {
+  en: enMessages,
+  fr: frMessages,
+  es: esMessages,
+  ar: arMessages,
+  id: idMessages,
+  tr: trMessages,
+  ur: urMessages,
+}
 
 function normalizeLocale(locale) {
   return SUPPORT_LOCALES.includes(locale) ? locale : 'en'
@@ -49,17 +66,8 @@ function setDocumentLanguage(locale) {
 export async function loadLocaleMessages(i18n, locale) {
   const normalized = normalizeLocale(locale)
   if (!i18n.global.availableLocales.includes(normalized)) {
-    try {
-      const messages = normalized === 'en'
-        ? { default: enMessages }
-        : await import(`./locales/${normalized}.json`)
-      i18n.global.setLocaleMessage(normalized, messages.default)
-    } catch (error) {
-      console.error(`Failed to load locale "${normalized}", falling back to English`, error)
-      if (normalized !== 'en') {
-        return loadLocaleMessages(i18n, 'en')
-      }
-    }
+    const pack = STATIC_MESSAGES[normalized] || STATIC_MESSAGES.en
+    i18n.global.setLocaleMessage(normalized, pack)
   }
   i18n.global.locale.value = normalized
   setDocumentLanguage(normalized)
@@ -104,7 +112,7 @@ export async function setupI18n() {
     globalInjection: true,
     locale: 'en',
     fallbackLocale: 'en',
-    messages: { en: enMessages }
+    messages: { ...STATIC_MESSAGES },
   })
   await loadLocaleMessages(i18n, getSavedLocale())
   return i18n

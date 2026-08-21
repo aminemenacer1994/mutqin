@@ -3486,12 +3486,6 @@
                   </ul>
                 </div>
 
-                <p
-                  class="post-session-simple__ai-disclaimer"
-                  role="note"
-                  data-testid="post-session-ai-disclaimer"
-                >{{ t('memorisation.postSession.recommendation.aiDisclaimer') || 'AI can sometimes miss or mishear words. Treat this as a guide only — verify with a qualified teacher before relying on it for your Hifz.' }}</p>
-
                 <div
                   v-if="postSessionInfoArchitecture.mainFocus.explanation || postSessionFocusHighlightParts.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"

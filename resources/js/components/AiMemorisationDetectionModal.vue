@@ -55,7 +55,6 @@
                 </button>
               </div>
             </div>
-            <p v-if="disclaimer" class="amd-disclaimer amd-disclaimer--row" role="note">{{ disclaimer }}</p>
           </header>
 
           <div class="amd-body amd-body--premium amd-body--scroll">

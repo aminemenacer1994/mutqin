@@ -1,13 +1,14 @@
 {
-  "duration": 14.05,
-  "frameDuration": 2.8,
-  "fade": 0.55,
+  "duration": 12.4,
+  "frameDuration": 2.4,
+  "fade": 0.4,
+  "stepSpan": 2.0,
   "steps": [
     "setup",
     "practise",
-    "recite",
-    "result",
-    "next",
-    "return"
+    "check",
+    "complete",
+    "weak",
+    "success"
   ]
 }

@@ -207,13 +207,13 @@
   "homepage": {
     "hero": {
       "badge": "Hifz companion",
-      "title": "Keep your Hifz close, one calm session at a time.",
-      "desc": "Practise a short range, check what you still hold, and know what to return to next, bi’idhnillāh.",
+      "title": "Keep your Hifz close to your heart, one calm session at a time.",
+      "desc": "Practise a short set, recite for Allah’s sake, and leave knowing what to open next, bi’idhnillāh.",
       "promiseLabel": "The need and the answer",
-      "problem": "The need",
-      "problemText": "Busy days scatter your place. Weak ayahs fade between sessions, and it is hard to know what to open when you return.",
+      "problem": "Need",
+      "problemText": "Busy days scatter your place in the Qur’an. Weak ayahs fade, and the next opening feels unclear.",
       "solution": "Mutqin",
-      "solutionText": "Open a small set, practise with gentle tools, check your recall, and follow a clear next step while the verses still feel fresh.",
+      "solutionText": "A small set, gentle tools, a sincere recall check, and a clear next step, with barakah in consistency.",
       "startFree": "Begin your session",
       "joinWaitlist": "Join the waiting list",
       "viewPricing": "View plans",
@@ -231,36 +231,45 @@
       "result": "Practice complete showing strong recall",
       "recommend": "Next practice recommendation after a session",
       "sessionComplete": "Session complete with recite from memory",
-      "savePlace": "Finish for now with progress saved"
+      "savePlace": "Finish for now with progress saved",
+      "progress": "Hifz progress with memorised ayahs and overall share"
     },
     "features": {
       "kicker": "Features",
-      "title": "What Mutqin holds for you",
-      "subtitle": "The tools that keep practice small, honest, and easy to return to.",
-      "cta": "Try a short session",
+      "title": "Tools that serve your Hifz",
+      "subtitle": "Built for sincere, steady memorisation, not noise.",
+      "cta": "",
       "items": {
         "setup": {
-          "title": "Choose a focused range",
-          "description": "Pick a surah, a small ayah set, and how many times to hear it. Keep each session light so it fits real life."
+          "title": "Memorisation setup",
+          "description": "Choose your surah, ayah range, repetitions, and how you want to practise, a niyyah made practical."
         },
-        "tools": {
-          "title": "Practise with gentle tools",
-          "description": "Hide the text gradually, join ayahs, or listen and repeat. Simple tools that strengthen recall without rushing."
+        "techniques": {
+          "title": "Memorisation techniques",
+          "description": "Hide the text gradually, join ayahs, listen and repeat, methods that strengthen what you carry."
         },
-        "check": {
-          "title": "Check what you still hold",
-          "description": "Recite from memory while Mutqin follows along. A gentle check so you can see where the tongue hesitates."
+        "progress": {
+          "title": "Progress layout",
+          "description": "See your Hifz at a glance, memorised ayahs, what you are learning now, and how far you have come."
         },
-        "next": {
-          "title": "Know what comes next",
-          "description": "When a session ends, Mutqin suggests the next range and method while the verses still feel fresh, bi’idhnillāh."
+        "aiRecitation": {
+          "title": "Recitation check",
+          "description": "Recite from memory while Mutqin follows along, a gentle mirror for your tilawah."
+        },
+        "mushafLayout": {
+          "title": "Mushaf layout",
+          "description": "Read in a clear mushaf page made for calm, focused practice."
+        },
+        "translationTajweed": {
+          "title": "Translation & tajweed",
+          "description": "Keep meaning and tajweed close while you memorise, so the heart and tongue move together."
         }
       }
     },
     "how": {
       "kicker": "How it works",
       "title": "From an open mushaf to a clear next step",
-      "subtitle": "A quiet practice loop in four moments. See what happens in each one, then take the next step with ease.",
+      "subtitle": "A short loop you can repeat each day.",
       "items": {
         "choose": {
           "title": "Set your range",
@@ -274,13 +283,13 @@
         },
         "see": {
           "title": "See what is strong",
-          "description": "A clear summary shows what matched well and what deserves another pass.",
-          "detail": "Leave the session knowing what held and what needs care. Calm feedback helps you practise with intention."
+          "description": "After you recite, see a clear result, matched words, weak spots, and where to focus.",
+          "detail": "Honest feedback so your revision is purposeful."
         },
         "continue": {
-          "title": "Take the next step",
-          "description": "Follow the recommended ayahs and method while the verses still feel fresh, or return to the mushaf.",
-          "detail": "Mutqin keeps the thread of your Hifz. Open again and continue without hunting for your place."
+          "title": "Follow the recommendation",
+          "description": "Mutqin offers a next step, revise the same set, or continue while recall is fresh.",
+          "detail": "One clear plan, bi’idhnillāh, so you never wonder what to open next."
         }
       }
     },
@@ -292,21 +301,21 @@
     },
     "steps": {
       "kicker": "Your path",
-      "title": "Three beats, then return",
-      "subtitle": "A simple rhythm for daily Hifz. No screenshots here, only the habit.",
+      "title": "A simple path you can repeat",
+      "subtitle": "Three straightforward steps, set, check, return.",
       "cta": "Start where you are",
       "items": {
         "sit": {
-          "title": "Choose a small range",
-          "description": "Pick a surah and a short set of ayahs you can finish today."
+          "title": "1. Set your range",
+          "description": "Pick a short set of ayahs you can finish in one sitting."
         },
         "check": {
-          "title": "Check your recall",
-          "description": "Recite from memory, notice what is weak, then practise again while it is fresh."
+          "title": "2. Check your recall",
+          "description": "Recite from memory. See what is strong and what needs another pass."
         },
         "return": {
-          "title": "Come back to your place",
-          "description": "Mutqin remembers where you stopped, so the next opening is easy, bi’idhnillāh."
+          "title": "3. Return tomorrow",
+          "description": "Open Mutqin again and continue from your saved place, bi’idhnillāh."
         }
       }
     },
@@ -346,12 +355,12 @@
     },
     "contact": {
       "kicker": "Contact",
-      "title": "Contact us",
+      "title": "Write to us",
       "subtitle": "Ask about billing, practice, or feedback.",
       "email": "Email",
       "subject": "Subject",
       "message": "Message",
-      "extendedSubtitle": "Write with ease. We will reply with a clear, respectful answer.",
+      "extendedSubtitle": "Ask about practice, access, or feedback. We reply clearly and respectfully.",
       "sending": "Sending…",
       "sendMessage": "Send message",
       "errors": {
@@ -384,7 +393,9 @@
       "workspace": "Memorisation workspace",
       "dashboard": "Dashboard",
       "connectNote": "Follow Mutqin for quiet product updates.",
-      "demo": "Demo"
+      "demo": "Demo",
+      "login": "Log in",
+      "register": "Register"
     },
     "name": "Name",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
@@ -520,52 +531,53 @@
       }
     },
     "pipelineDemo": {
-      "kicker": "Product demo",
-      "title": "Watch the Mutqin pipeline",
-      "subtitle": "A short, smooth walkthrough from setting a range to returning to your place — about fifteen seconds.",
-      "pipelineLabel": "Pipeline steps",
-      "play": "Play demo",
-      "pause": "Pause demo",
+      "kicker": "One session, start to finish",
+      "title": "See how a Mutqin session flows",
+      "subtitle": "From setup to recommendation, a calm loop you can repeat for the sake of Allah.",
+      "pipelineLabel": "Session steps",
+      "play": "Play walkthrough",
+      "pause": "Pause walkthrough",
       "steps": {
         "setup": {
-          "label": "Set range",
-          "text": "Choose surah, ayahs, and repetitions."
+          "label": "Setup",
+          "text": "Choose surah, ayahs, and how you will practise."
         },
         "practise": {
           "label": "Practise",
-          "text": "Use gentle tools while the verses stay close."
+          "text": "Work the set with presence, no rush."
         },
-        "recite": {
-          "label": "Check recall",
-          "text": "Recite from memory as Mutqin follows."
+        "check": {
+          "label": "Recall check",
+          "text": "Recite from memory while Mutqin follows."
+        },
+        "complete": {
+          "label": "Session done",
+          "text": "See what you finished in this sitting."
         },
         "result": {
-          "label": "See strength",
-          "text": "A clear summary of what held."
+          "label": "Your result",
+          "text": "See what is strong, and what still needs care."
         },
-        "next": {
-          "label": "Next step",
-          "text": "A suggested range while memory is fresh."
-        },
-        "return": {
-          "label": "Return",
-          "text": "Open again and continue where you stopped."
+        "recommend": {
+          "label": "Recommendation",
+          "text": "A clear next plan while the ayahs are still close."
         }
-      }
+      },
+      "stepOf": "Step {current} of {total}"
     }
   },
   "memorisation": {
     "labels": {
       "ayah": "Ayah {ayah}",
-      "ayahs": "Ayahs {start}–{end}",
+      "ayahs": "Ayahs {start}, {end}",
       "surahAyah": "{surah} · Ayah {ayah}",
-      "surahAyahs": "{surah} · Ayahs {start}–{end}",
+      "surahAyahs": "{surah} · Ayahs {start}, {end}",
       "continueToAyah": "Continue with Ayah {ayah}",
-      "continueToAyahs": "Continue with Ayahs {start}–{end}",
+      "continueToAyahs": "Continue with Ayahs {start}, {end}",
       "repeatAyah": "Repeat Ayah {ayah}",
-      "repeatAyahs": "Repeat Ayahs {start}–{end}",
+      "repeatAyahs": "Repeat Ayahs {start}, {end}",
       "completedSurahAyah": "You completed {surah}, Ayah {ayah}.",
-      "completedSurahAyahs": "You completed {surah}, Ayahs {start}–{end}.",
+      "completedSurahAyahs": "You completed {surah}, Ayahs {start}, {end}.",
       "checkAyahsAgain": "Check {range} again.",
       "ayahCountOne": "{count} ayah",
       "ayahCountOther": "{count} ayahs",
@@ -598,7 +610,7 @@
       "hintReview": "Revise each ayah until you can recite it smoothly without looking.",
       "hintContinue": "Listen to each ayah, repeat it, then try from memory.",
       "hintResume": "Your place is waiting. Continue the set you left.",
-      "hintStart": "Start with a small set — steady steps build lasting memorisation.",
+      "hintStart": "Start with a small set, steady steps build lasting memorisation.",
       "leadRevise": "Revise what you know in {surah} before adding new ayahs.",
       "leadContinue": "Continue memorising {surah} from where you stopped.",
       "leadStart": "Choose a small set of ayahs and begin with Bismillah.",
@@ -608,7 +620,7 @@
       "factTotalValue": "{n} ayahs so far",
       "factStreakLabel": "Practice streak",
       "factStreakValue": "{n} days in a row",
-      "nextStep": "Tap Start session — listen to each ayah, repeat it, then try without looking.",
+      "nextStep": "Tap Start session, listen to each ayah, repeat it, then try without looking.",
       "placeWaiting": "Learning: {surah}",
       "reviewWaiting": "Time to revise: {surah}",
       "reviewWaitingShort": "Time to revise",
@@ -620,7 +632,7 @@
       "rangeProgress": "This session",
       "tour": "Quick tour",
       "guidanceStart": "Begin with Bismillah. Pick a few ayahs, listen, repeat, then try from memory.",
-      "guidanceContinue": "Take it step by step — revise what you know before adding new ayahs.",
+      "guidanceContinue": "Take it step by step, revise what you know before adding new ayahs.",
       "guidanceActive": "Listen with focus, repeat each ayah, then recite without looking when you feel ready.",
       "guidanceReview": "Revision keeps your memorisation firm. Revise {surah} before moving on."
     },
@@ -650,7 +662,7 @@
     },
     "analyticsEmpty": {
       "title": "No insights yet",
-      "desc": "Save a session and practise a little — your progress cards will appear here.",
+      "desc": "Save a session and practise a little, your progress cards will appear here.",
       "modalErrorTitle": "Analytics unavailable",
       "modalErrorDesc": "We couldn’t prepare this session overview. Close and try again from a saved session.",
       "modalEmptyTitle": "No analytics for this session",
@@ -687,7 +699,7 @@
         "2": {
           "translation": "As for those who strive for Us, We shall guide them to Our paths.",
           "source": "Qur'an 29:69",
-          "intention": "Returning with steadiness is part of the path — one ayah at a time."
+          "intention": "Returning with steadiness is part of the path, one ayah at a time."
         },
         "3": {
           "translation": "So remember Me; I will remember you.",
@@ -715,7 +727,7 @@
           "intention": "Ask Allah for benefit in what you memorise, then begin gently."
         },
         "8": {
-          "translation": "And whoever puts their trust in Allah — He is sufficient for them.",
+          "translation": "And whoever puts their trust in Allah, He is sufficient for them.",
           "source": "Qur'an 65:3",
           "intention": "Begin with trust, then take the next ayah with care."
         }
@@ -736,7 +748,7 @@
       "resumeReminderArabic": "وَٱلَّذِينَ جَـٰهَدُوا۟ فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا",
       "resumeReminderTranslation": "As for those who strive for Us, We shall guide them to Our paths.",
       "resumeReminderSource": "Qur'an 29:69",
-      "resumeIntention": "Returning with steadiness is part of the path — one ayah at a time.",
+      "resumeIntention": "Returning with steadiness is part of the path, one ayah at a time.",
       "freshWhatNext": "Choose how you want to begin. Start a fresh session now, or continue after you save a session snapshot later.",
       "resumeWhatNext": "Choose how you want to continue. You can start fresh, repeat the range from the beginning, continue from your last ayah, or save this session first.",
       "resumeWhatNextWithDue": "You have {count} verses due for review. Start fresh, repeat the range, continue from your last ayah, or save this session first.",
@@ -793,7 +805,7 @@
       "openTools": "Practice tools",
       "showLess": "Show less",
       "moreCount": "+{count} more",
-      "emptyOptional": "No optional tools selected — listening and repetition only.",
+      "emptyOptional": "No optional tools selected, listening and repetition only.",
       "recommendedLabel": "Recommended for this session",
       "recommendedReasonDefault": "Recommended because this helps the areas that need care.",
       "recommendedReasonWeak": "Recommended because these words needed more care in recent checks.",
@@ -1062,7 +1074,7 @@
     "ayahNotes": {
       "buttonHint": "Notes & reflections for this ayah",
       "title": "Notes & Reflections",
-      "subtitle": "Private to you — only you can see these notes.",
+      "subtitle": "Private to you, only you can see these notes.",
       "privacyChip": "Private",
       "contextBadge": "{surah} · Ayah {ayah}",
       "surahFallback": "Surah {number}",
@@ -1302,7 +1314,7 @@
       "matchLabel": "Match",
       "matchPercentAria": "Match {percent} percent",
       "colourMeterAria": "Word colour breakdown",
-      "guidanceFreeFlow": "Listening with you. Take your time — finish the whole passage, then tap Stop when you are done.",
+      "guidanceFreeFlow": "Listening with you. Take your time, finish the whole passage, then tap Stop when you are done.",
       "guidanceHiddenReveal": "Listening now. Recite the highlighted word to continue.",
       "guidanceFixWord": "Mistake at {word}. Try that word again.",
       "wordsToRevisit": "Revisit",
@@ -1335,7 +1347,7 @@
     "recitationLive": {
       "preparingWords": "Preparing ayah words…",
       "wordsMatched": "{checked} of {total} spoken words matched",
-      "keepReciting": "Keep reciting — we're listening."
+      "keepReciting": "Keep reciting, we're listening."
     },
     "recitationResult": {
       "reviewSequence": "Review the sequence",
@@ -1382,7 +1394,7 @@
       "aiReviewReadyRange": "AI review is ready for this range.",
       "aiReviewReadyAyah": "AI review is ready for this ayah.",
       "speechmaticsKeyRejected": "Speechmatics rejected the server key for live token creation.{suffix} Use a key that can create realtime temporary keys, then run php artisan config:clear and restart the app.",
-      "speechmaticsKeySuffixNote": " Laravel is currently using the key ending in {suffix}.",
+      "speechmaticsKeySuffixNote": "Laravel is currently using the key ending in {suffix}.",
       "surahLabel": "Surah {name}",
       "surahNumberLabel": "Surah {number}",
       "recommendations": {
@@ -1457,7 +1469,7 @@
     "view": {
       "stacked": "Stacked",
       "mushaf": "Mushaf",
-      "stackedHint": "Stacked: one ayah after another — calm for short ranges.",
+      "stackedHint": "Stacked: one ayah after another, calm for short ranges.",
       "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help."
     },
     "actions": {
@@ -1644,12 +1656,12 @@
         "session": {
           "title": "Practise, then end",
           "body": "Use the ayahs and tools here. When you are ready, tap End session.",
-          "waitHint": "Start the session first — End session will light up here."
+          "waitHint": "Start the session first, End session will light up here."
         },
         "plan": {
           "title": "Start your recommendation",
           "body": "Do not stop at selecting a plan. Tap the primary button to start it and keep going.",
-          "waitHint": "Finish the session and open your result — the plan will appear here."
+          "waitHint": "Finish the session and open your result, the plan will appear here."
         },
         "dashboard": {
           "title": "Check progress later",
@@ -1661,18 +1673,18 @@
     "testerGuide": {
       "kicker": "Tester path",
       "title": "Where to go in Mutqin",
-      "intro": "Follow these steps in order. Minimize anytime — the compass chip brings it back.",
+      "intro": "Follow these steps in order. Minimize anytime, the compass chip brings it back.",
       "chip": "Guide",
       "minimize": "Minimize guide",
       "dismiss": "Dismiss guide",
       "next": "Next step",
       "openDashboard": "Open Dashboard",
       "steps": {
-        "workspace": "You are on Memorisation — the main practice workspace.",
+        "workspace": "You are on Memorisation, the main practice workspace.",
         "welcome": "If Welcome back appears, choose Start new session.",
         "setup": "Open Controls → Setup, pick Al-Fatiha 1–3, then Start session.",
         "aiCheck": "Practise, end the session, then Check memorisation (AI).",
-        "plan": "Pick a recommendation plan and tap Start this plan — do not stop at selecting it.",
+        "plan": "Pick a recommendation plan and tap Start this plan, do not stop at selecting it.",
         "keepGoing": "Open Dashboard for progress and muraja'ah, then return here for the next session."
       }
     },
@@ -1723,7 +1735,7 @@
           "title": "Test recitation with AI",
           "stepLabel": "AI check",
           "body": "After practice, AI Memorisation listens and shows where recall needs care.",
-          "hint": "Use the check when you want feedback — not every session needs it.",
+          "hint": "Use the check when you want feedback, not every session needs it.",
           "points": [
             "Recite from memory into the check",
             "See which words or ayahs need more care"
@@ -1733,7 +1745,7 @@
           "title": "Follow your next plan",
           "stepLabel": "Next plan",
           "body": "After a session, Mutqin suggests a next range and tools so revision stays clear.",
-          "hint": "Choose a recommendation, then start that plan — do not stop at selecting it.",
+          "hint": "Choose a recommendation, then start that plan, do not stop at selecting it.",
           "points": [
             "Get a suggested next range and goal",
             "Pick a plan and tap Start this plan"
@@ -1809,7 +1821,7 @@
     "best_for_memorising_key_vocabulary": "Best for: Memorising key vocabulary",
     "anchor_points_per_ayah": "Anchor points per ayah",
     "saved_sessions": "Saved Sessions",
-    "saved_sessions_intro": "Your Hifz journeys, bookmarked with barakah — pick up a completed khatm or return to an ayah range still in progress.",
+    "saved_sessions_intro": "Your Hifz journeys, bookmarked with barakah, pick up a completed khatm or return to an ayah range still in progress.",
     "completed_sessions": "Completed",
     "completed_sessions_desc": "Sessions where you reached the end of your selected ayah range. Revisit for muraja'ah and strengthen your recall.",
     "incomplete_sessions": "In Progress",
@@ -1830,7 +1842,7 @@
     "no_surah_selected": "No surah selected",
     "each_session_keeps_only_the_essentials_what_it_is_": "Each session keeps only the essentials: what it is, where it is, and how to get back in.",
     "no_saved_sessions_yet": "No saved sessions yet",
-    "save_your_current_session_to_get_started": "Preserve today's Hifz effort — save your current ayah range so you can return with intention.",
+    "save_your_current_session_to_get_started": "Preserve today's Hifz effort, save your current ayah range so you can return with intention.",
     "current_session": "Current Session",
     "today_first_advanced_analytics_stay_tucked_away_un": "Today first. Advanced analytics stay tucked away until you ask for them.",
     "show_advanced_metrics": "Show advanced metrics",
@@ -1900,7 +1912,7 @@
         "reviseFocusPhrase": "Review",
         "reviseThisRange": "Review",
         "continueToNextRange": "Continue",
-        "continueToAyahs": "Continue ({start}–{end})",
+        "continueToAyahs": "Continue ({start}, {end})",
         "repeatThisSession": "Repeat session",
         "reviewOnceMore": "Review",
         "reviewAyahOnce": "Repeat Weak Ayah",
@@ -1931,7 +1943,7 @@
         "chooseWhenReady": "Choose a session when ready.",
         "weakWordsFocus": "Words to focus on",
         "ayahLabel": "Āyah {ayah}",
-        "ayahRangeLabel": "Āyahs {from}–{to}",
+        "ayahRangeLabel": "Āyahs {from}, {to}",
         "replayPhrase": "Replay surrounding phrase",
         "ayahNeededMore": "Āyah {ayah} needs another slow pass.",
         "takeItSlow": "You paused often. Slow down on one āyah.",
@@ -1954,7 +1966,7 @@
           "aiFirst": "Check your memorisation first, then your plan appears here.",
           "retestAfterPractice": "Strengthen this Set before advancing Progress.",
           "strongContinue": "Continue while this still feels fresh.",
-          "mostlySecure": "Continue when ready — a light review is optional.",
+          "mostlySecure": "Continue when ready, a light review is optional.",
           "reviseFirst": "Revise the weak spots first, then continue."
         },
         "guidance": {
@@ -1969,8 +1981,8 @@
         "live": {
           "before": "Listen once and follow the words.",
           "beforeTalqin": "Listen once, then recite aloud.",
-          "beforeFocus": "Listen once — gold-marked words need extra care.",
-          "playing": "Follow the words calmly — may Allah open your heart.",
+          "beforeFocus": "Listen once, gold-marked words need extra care.",
+          "playing": "Follow the words calmly, may Allah open your heart.",
           "playingFocus": "Focus on the highlighted word.",
           "focusWord": "Focus on the highlighted word: {word}",
           "focusCueTitle": "Focus on this word",
@@ -1979,7 +1991,7 @@
           "hooksLabel": "Your key words",
           "pause": "Now repeat this phrase aloud.",
           "pauseFocus": "Repeat the gold-marked words aloud, then the full āyah.",
-          "difficulty": "Take it slower — try this āyah at {speed}×.",
+          "difficulty": "Take it slower, try this āyah at {speed}×.",
           "after": "Recite this āyah without looking.",
           "ready": "Mā shā’ Allāh. You are ready to test.",
           "ayahCue": "Āyah {ayah}",
@@ -2004,7 +2016,7 @@
             "pause": "Recite what you just heard, then join the next āyah."
           },
           "anchor": {
-            "before": "Gold words are your hooks — notice them first.",
+            "before": "Gold words are your hooks, notice them first.",
             "playing": "Watch the marked words. They will help you remember.",
             "pause": "Say the key words first, then the full āyah."
           },
@@ -2019,7 +2031,7 @@
             },
             "blur": {
               "label": "Hide the text little by little",
-              "hint": "As words fade, let your memory lead — ask Allah for firmness."
+              "hint": "As words fade, let your memory lead, ask Allah for firmness."
             },
             "chaining": {
               "label": "Join the āyahs",
@@ -2027,7 +2039,7 @@
             },
             "anchor": {
               "label": "Hold onto key words",
-              "hint": "Gold-marked words are your hooks — say them clearly, then the full āyah."
+              "hint": "Gold-marked words are your hooks, say them clearly, then the full āyah."
             },
             "listen": {
               "label": "Listen with presence",
@@ -2042,7 +2054,7 @@
         "evidenceReturn": "Return",
         "evidenceThen": "Next",
         "evidenceThenAyah": "Continue with Āyah {ayah}",
-        "evidenceThenRange": "Continue with Āyahs {from}–{to}"
+        "evidenceThenRange": "Continue with Āyahs {from}, {to}"
       },
       "summaryTitle": "This sitting",
       "progressLabel": "These ayahs",
@@ -2082,14 +2094,14 @@
         "memoryCheckTitle": "Quiz AI",
         "memoryCheckDescription": "Answer a few short questions (and recite if needed) so we can see which verses are firm and which still need support. Your next plan updates from this.",
         "memoryCheckLead": "Before you continue, check what stuck",
-        "memoryCheckWhy": "This optional check finds weak spots early — so your next session practises the right verses, not a random repeat.",
+        "memoryCheckWhy": "This optional check finds weak spots early, so your next session practises the right verses, not a random repeat.",
         "memoryCheckBulletQuiz": "Short questions about the verses you just did",
         "memoryCheckBulletAi": "AI Recite may open if a verse needs a spoken check",
         "memoryCheckBulletTime": "Usually about 1–2 minutes",
         "memoryCheckCta": "Start memory check",
         "memoryCheckOpening": "Starting…",
         "memoryCheckIncludes": "Quiz and AI Recite",
-        "memoryCheckHint": "Optional — skip if you want to go straight to your plan.",
+        "memoryCheckHint": "Optional, skip if you want to go straight to your plan.",
         "memoryCheckOptionalTag": "Optional",
         "memoryCheckTimeTag": "1–2 min",
         "voiceOnlyCta": "Prefer to recite aloud only",
@@ -2122,9 +2134,9 @@
         "startAiRecite": "Recite with AI",
         "startError": "That check could not start. You can still continue below.",
         "answerError": "Please try that again.",
-        "feedbackCorrect": "Nice — that is right.",
-        "feedbackAlmost": "Close — keep going.",
-        "feedbackIncorrect": "Not quite — we will practise that.",
+        "feedbackCorrect": "Nice, that is right.",
+        "feedbackAlmost": "Close, keep going.",
+        "feedbackIncorrect": "Not quite, we will practise that.",
         "resultTitleStrong": "Looking good",
         "resultTitleMixed": "A little more practice will help",
         "resultTitleWeak": "Needs another short review",
@@ -2162,7 +2174,7 @@
         },
         "explanations": {
           "sessionIncomplete": "You still have a few verses left in this range.",
-          "lowRecall": "Some words are still settling — a short repeat will help.",
+          "lowRecall": "Some words are still settling, a short repeat will help.",
           "sequenceErrors": "The order slipped a little. We will practise linking the verses.",
           "highHintDependency": "Hints helped a lot. Next time we will show a little less text.",
           "visualDependency": "Reading carried a lot. We will practise with less text showing.",
@@ -2172,7 +2184,7 @@
           "similarAyahConfusion": "Similar verses got mixed up. We will compare them side by side.",
           "lowDelayedRetention": "Earlier verses faded a little. We will review them sooner.",
           "highPerformance": "This range feels steady. You can move on while it is fresh.",
-          "lowConfidence": "You wanted more practice — here is a short, reassuring pass.",
+          "lowConfidence": "You wanted more practice, here is a short, reassuring pass.",
           "overconfidence": "It felt strong, but one part still needs support. We will focus there.",
           "reviewOverdue": "Some of this is due for review. Better to return to it soon."
         },
@@ -2200,7 +2212,7 @@
         "mainFocus": "Main focus",
         "mainFocusExplanationAyah": "Strengthen Ayah {ayah} in this set.",
         "mainFocusExplanationWeakAreas": "Strengthen the weak ayahs identified in this set.",
-        "mainFocusExplanationStrong": "This set is secure — continue to the next recommended set.",
+        "mainFocusExplanationStrong": "This set is secure, continue to the next recommended set.",
         "mainFocusExplanationRevision": "Revise this set before moving on.",
         "checkComplete": "Check complete",
         "yourResult": "Your result",
@@ -2213,7 +2225,7 @@
         "softwareGenerated": "",
         "teacherComplement": "",
         "aiRecitationBeta": "Audio recitation · Beta",
-        "aiDisclaimer": "AI can sometimes miss or mishear words. Treat this as a guide only — verify with a qualified teacher before relying on it for your Hifz.",
+        "aiDisclaimer": "AI can sometimes miss or mishear words. Treat this as a guide only, verify with a qualified teacher before relying on it for your Hifz.",
         "tapWordToCorrect": "Tap any amber or red word you recited correctly to update the analysis.",
         "viewDetails": "View details",
         "hideDetails": "Hide details",
@@ -2241,32 +2253,32 @@
         "attemptContinued": "{count} still need practice",
         "scopeReason": {
           "noWeakAreas": "No clear weak ayahs were identified, so the full set is recommended.",
-          "minorLocal": "Only a few ayahs need attention — focused practice will be quicker and clearer.",
+          "minorLocal": "Only a few ayahs need attention, focused practice will be quicker and clearer.",
           "focusedCluster": "Your weak ayahs sit close together, so a short focused review is recommended.",
           "spreadWeakness": "Weak ayahs appear across this set, so revisiting the full set with emphasis is recommended.",
           "defaultFocus": "A focused pass on the weaker ayahs is recommended first.",
-          "strongContinue": "This set is secure — continue with the recommended technique on the next set."
+          "strongContinue": "This set is secure, continue with the recommended technique on the next set."
         },
         "successFlow": {
           "title": "Recommended next steps",
-          "strongLead": "Strong recall — keep the flow going with the recommended technique.",
-          "mostlySecureLead": "Secure overall — reinforce the weak ayah, then continue.",
+          "strongLead": "Strong recall, keep the flow going with the recommended technique.",
+          "mostlySecureLead": "Secure overall, reinforce the weak ayah, then continue.",
           "reinforceTitle": "Repeat weak ayah {ayah}",
           "reinforceDetail": "Consolidate Ayah {ayah} once before advancing.",
           "reinforceWithTechnique": "Use {technique} on Ayah {ayah}, then move on.",
           "continueAfterReinforce": "Then continue to the next set when the weak ayah feels steady.",
           "continueWithTechnique": "Then continue with {technique}.",
-          "strongDetail": "This set is secure — continue to the next recommended set.",
+          "strongDetail": "This set is secure, continue to the next recommended set.",
           "strongWithTechnique": "Continue with {technique} on the next set."
         },
         "previousAttemptNote": "Previous related attempt: {summary}",
         "previousAttemptsAvailable": "Previous related attempts are saved with this recommendation.",
-        "persistedForLater": "Saved for later — available from your dashboard and session history.",
+        "persistedForLater": "Saved for later, available from your dashboard and session history.",
         "basedOnThisSession": "Based on this session",
         "tryThisCombination": "Try this combination",
         "adjustPlan": "Adjust plan",
         "suggestedNextStep": "Your next session",
-        "flowIntro": "Bismillāh — begin when your heart is ready.",
+        "flowIntro": "Bismillāh, begin when your heart is ready.",
         "stepCheck": "Step 1",
         "stepPlan": "Step 2",
         "planReadyTag": "Ready",
@@ -2314,7 +2326,7 @@
         "recommendedNext": "{surah} · {range}",
         "recommendedNextSurah": "Surah {surah}",
         "surahCompletedTitle": "Alḥamdulillāh. Surah {surah} complete",
-        "ayahRange": "Ayahs {start}–{end}",
+        "ayahRange": "Ayahs {start}, {end}",
         "singleAyah": "Ayah {ayah}",
         "ayahCount": "{count} ayahs",
         "ayahCountOne": "{count} ayah",
@@ -2329,8 +2341,8 @@
         "planApplied": "Applied",
         "planManual": "Manually adjusted",
         "continueToNextSurah": "Next surah",
-        "continueToAyat": "Continue to Ayahs {start}–{end}",
-        "repeatAyat": "Repeat Ayahs {start}–{end}",
+        "continueToAyat": "Continue to Ayahs {start}, {end}",
+        "repeatAyat": "Repeat Ayahs {start}, {end}",
         "repeatThisSession": "Repeat this session",
         "adjustSettings": "Adjust plan",
         "resetSettings": "Reset to recommended",
@@ -2393,13 +2405,13 @@
           "focusVerse": "Ayah {ayah}",
           "focusOne": "Pay extra attention to Ayah {ayah}. That is where most slips appeared.",
           "focusMany": "Pay extra attention to ayahs {ayahs}. Those still need the most support.",
-          "ayahRange": "Ayahs {start}–{end}",
+          "ayahRange": "Ayahs {start}, {end}",
           "singleAyah": "Ayah {ayah}",
           "colourMix": "{green} green · {amber} amber · {red} red · {black} black",
           "rangeExplain": "These are the ayahs your next session will open on.",
           "methodExplain": "This method guides how text and audio appear while you practise.",
           "setupExplain": "Playback speed and repetitions control how calmly you rehearse each ayah.",
-          "weakAyahRepeatOne": "Repeat Ayah {ayah} {count} times — extra passes on the words that slipped.",
+          "weakAyahRepeatOne": "Repeat Ayah {ayah} {count} times, extra passes on the words that slipped.",
           "weakAyahRepeatMany": "Repeat each weak ayah {count} times ({ayahCount} ayahs) to strengthen the words that need care."
         },
         "whatChangingDoes": "How this helps",
@@ -2423,12 +2435,12 @@
         "repeatRangeTitle": "{surah} · {range}",
         "steadyRepetitionEncouragement": "Steady repetition builds lasting memorisation.",
         "phraseNeedsAttention": "One phrase in Ayah {ayah} needs a little reinforcement.",
-        "phraseNeedsAttentionNext": "Review it once, then continue to Ayahs {start}–{end}.",
+        "phraseNeedsAttentionNext": "Review it once, then continue to Ayahs {start}, {end}.",
         "phrasesNeedAttention": "A few phrases still need attention.",
         "ayahNeedsAttention": "Ayah {ayah} needs a little reinforcement.",
-        "ayahNeedsAttentionNext": "Review Ayah {ayah} once, then continue to Ayahs {start}–{end}.",
+        "ayahNeedsAttentionNext": "Review Ayah {ayah} once, then continue to Ayahs {start}, {end}.",
         "evidenceReviewNow": "Check this range again.",
-        "evidenceReviewThenContinue": "Review the weak phrase once, then continue to Ayahs {start}–{end}.",
+        "evidenceReviewThenContinue": "Review the weak phrase once, then continue to Ayahs {start}, {end}.",
         "statusReadyToContinue": "Ready to continue",
         "statusMostlySecure": "Mostly secure",
         "statusReviewRecommended": "Review recommended",
@@ -2448,8 +2460,8 @@
         "aiResultLineMixedOrder": "Good overall, but the order of verses slipped a little.",
         "aiResultLineWeak": "A few spots still need help.",
         "aiResultLineWeakAyah": "Verse {ayah} needs the most help.",
-        "aiHighlightUncertain": "Amber words were unclear to the listener — not counted as hard mistakes.",
-        "awaitingCheckNext": "Test from memory, or continue to Ayahs {start}–{end}.",
+        "aiHighlightUncertain": "Amber words were unclear to the listener, not counted as hard mistakes.",
+        "awaitingCheckNext": "Test from memory, or continue to Ayahs {start}, {end}.",
         "insufficientAudioNext": "Try the recording again. If the browser asks, allow the microphone.",
         "needsPracticeNext": "Revise the highlighted words, then check again.",
         "evidenceFromSessionAndConfidence": "Based on your session and confidence.",
@@ -2495,9 +2507,9 @@
         "aiSummaryMatchedWords": "We clearly matched {matched} of {total} words.",
         "aiSummaryFocusPhrase": "Review the highlighted phrase once, then continue.",
         "aiSummaryFocusRange": "Revise this range, then check again.",
-        "aiSummaryStrongMinorMistakes": "Strong recitation — a couple of small mistakes, but you are making good progress.",
-        "aiSummaryStrongFollowUp": "Nice work — you can continue while this still feels fresh.",
-        "aiSummaryMinorWeaknessNext": "Review it once, then continue to Ayahs {start}–{end}.",
+        "aiSummaryStrongMinorMistakes": "Strong recitation, a couple of small mistakes, but you are making good progress.",
+        "aiSummaryStrongFollowUp": "Nice work, you can continue while this still feels fresh.",
+        "aiSummaryMinorWeaknessNext": "Review it once, then continue to Ayahs {start}, {end}.",
         "aiMetricConfidence": "Recognition confidence",
         "zeroMatchStatus": "Let’s practise this range again",
         "zeroMatchSummary": "We heard your recitation, but could not confidently match the words yet.",
@@ -2626,7 +2638,7 @@
     },
     "aiRecitePlan": {
       "startReciting": "Start Reciting",
-      "startHint": "Take your time. Recite the whole passage from memory — pauses are fine. Up to 3 gentle tries.",
+      "startHint": "Take your time. Recite the whole passage from memory, pauses are fine. Up to 3 gentle tries.",
       "attemptProgress": "Try {current} of {max}",
       "tryAgainRemaining": "Try again ({remaining} left)",
       "seePracticePlan": "See my plan",
@@ -2643,9 +2655,9 @@
       "startSimplerPlan": "Start this simpler plan",
       "continueNextSession": "Continue to next session",
       "masteryTitle": "Range achieved",
-      "masterySubtitle": "Strong recall — ready for the next session.",
+      "masterySubtitle": "Strong recall, ready for the next session.",
       "masteryBanner": "Achieved. You can continue to the next session.",
-      "simplerSubtitle": "Not firm yet — practise this simpler plan, then test again.",
+      "simplerSubtitle": "Not firm yet, practise this simpler plan, then test again.",
       "simplerBanner": "Keep practising this simpler plan, then test with AI Recite again.",
       "returningToPlan": "Opening your practice plan…",
       "focusAyah": "Focus on āyah {ayah}",
@@ -2669,7 +2681,7 @@
         "accuracy": "Last AI Recite accuracy: {score}%",
         "technique": "Technique that helped: {technique}",
         "weakLeft": "Still watch: {items}",
-        "next": "Next: start {surah} · āyahs {from}–{to}",
+        "next": "Next: start {surah} · āyahs {from}, {to}",
         "cta": "Start next surah"
       },
       "feedbackStrong": "Strong recall. A light review will keep it firm.",
@@ -2688,7 +2700,7 @@
         "anchorTitle": "Anchor",
         "anchorHow": "Flash weak words before the full āyah.",
         "talqinTitle": "Talqin",
-        "talqinHow": "Listen, then repeat — one āyah at a time.",
+        "talqinHow": "Listen, then repeat, one āyah at a time.",
         "chainingTitle": "Chunking",
         "chainingHow": "Practise it in two short parts, then join them.",
         "phrasePartsHow": "Practise the phrase in small parts, then recite it as one.",
@@ -2704,14 +2716,14 @@
     "emotional": {
       "postSession": {
         "encouragement1": "Small steps, repeated with sincerity, become lasting memorisation.",
-        "encouragement2": "What you reviewed today has a place in your heart — return to it gently.",
+        "encouragement2": "What you reviewed today has a place in your heart, return to it gently.",
         "encouragement3": "Consistency matters more than pace. You showed up, and that counts.",
         "encouragement4": "Each session is a quiet act of devotion. May it be accepted.",
-        "encouragement5": "The Qur'an opens to those who return to it — keep coming back.",
+        "encouragement5": "The Qur'an opens to those who return to it, keep coming back.",
         "encouragement6": "Steady effort, even in small portions, is beloved."
       },
       "milestone": {
-        "surahComplete": "You completed {chapter} in this session — may it settle gently in your heart.",
+        "surahComplete": "You completed {chapter} in this session, may it settle gently in your heart.",
         "streak3": "Three days of showing up. Steadiness is its own quiet blessing.",
         "streak7": "A week of consistency. May Allah make it easy to continue.",
         "streak14": "Two weeks of returning to the Book. That rhythm is worth keeping.",
@@ -2720,7 +2732,7 @@
       },
       "consistency": {
         "nudgeShort": "However long it's been, today is a good day to return.",
-        "nudgeMedium": "A few days away — pick up gently, one ayah at a time.",
+        "nudgeMedium": "A few days away, pick up gently, one ayah at a time.",
         "nudgeLong": "Welcome back. There is no rush; begin where you are."
       }
     },
@@ -2796,7 +2808,7 @@
     "go_to_recording_library": "Go to recording library",
     "view_all_recording_library": "View All Recording Library",
     "back_to_session_complete": "Back to session complete",
-    "ai_recitation_feedback_is_a_guide_verify_important": "AI recitation is in beta and may miss mistakes. Treat feedback as a guide — verify with a qualified teacher before relying on it for your Hifz.",
+    "ai_recitation_feedback_is_a_guide_verify_important": "AI recitation is in beta and may miss mistakes. Treat feedback as a guide, verify with a qualified teacher before relying on it for your Hifz.",
     "recording_now": "Recording now",
     "stop_recording": "Stop Recording",
     "review_this_attempt": "Listen back to your recitation",
@@ -2807,9 +2819,9 @@
       "good": "Strong recall",
       "fair": "Still building",
       "review": "Needs muraja'ah",
-      "excellentHint": "Fluent and accurate — the ayah flows from memory with confidence",
+      "excellentHint": "Fluent and accurate, the ayah flows from memory with confidence",
       "goodHint": "Solid recall with only minor hesitation on a word or two",
-      "fairHint": "Mostly there, but a few gaps remain — worth one more repetition",
+      "fairHint": "Mostly there, but a few gaps remain, worth one more repetition",
       "reviewHint": "Return to this ayah before moving forward in your Hifz"
     },
     "selfCheckRecorder": {
@@ -2818,7 +2830,7 @@
       "assessmentHeading": "Assess your Hifz",
       "aiSessionReady": "When you are ready, recite your selected ayah range aloud and let AI guide your review.",
       "aiAyahReady": "When you are ready, recite this ayah from memory and let AI guide your review.",
-      "recordingActive": "Your microphone is live — recite the ayah with tajweed, then press stop when you finish.",
+      "recordingActive": "Your microphone is live, recite the ayah with tajweed, then press stop when you finish.",
       "reviewDraft": "Listen to your recording, honestly rate your recall, then save this attempt to your library.",
       "preparingMic": "Preparing your microphone for a clear recording, insha'Allah.",
       "unsupportedBrowser": "Recording needs a browser with microphone support to capture your recitation.",
@@ -2846,8 +2858,8 @@
     "techniques": {
       "focusDescription": "Concentrate on one ayah before moving forward",
       "chainingOffDescription": "Neighbouring ayahs are linked into one flowing sequence. Choose linking (pairs) or cumulative (growing passage) below.",
-      "chainingCumulativeDescription": "Each step adds the next ayah while repeating everything learned so far — like building a longer run from the start.",
-      "chainingLinkingDescription": "You repeat each ayah alone, then the next, then both together — so the hand-off between them gets smoother.",
+      "chainingCumulativeDescription": "Each step adds the next ayah while repeating everything learned so far, like building a longer run from the start.",
+      "chainingLinkingDescription": "You repeat each ayah alone, then the next, then both together, so the hand-off between them gets smoother.",
       "chainingLinkingHint": "Practice ayahs individually, then in pairs.",
       "chainingCumulativeHint": "Start with first ayah, then add one more each time.",
       "chainingOffSub": "Practise smooth transitions between ayahs",
@@ -3178,7 +3190,7 @@
       "stop": "Stop",
       "savedAt": "Saved {date}",
       "lastOpened": "Last opened {date}",
-      "rangeLabel": "Ayahs {start}–{end}",
+      "rangeLabel": "Ayahs {start}, {end}",
       "rangeLabelSingle": "Ayah {ayah}",
       "manualAdvance": "manual advance",
       "autoAdvance": "auto advance",
@@ -3261,10 +3273,10 @@
     "tajweedPracticeCheck": {
       "title": "Tajweed practice check",
       "legendTitle": "Tajweed colours explained",
-      "legendIntro": "These Mutqin colours mark common Tajweed rules in the ayah. Use them as practice reminders — not as a teacher’s ruling.",
-      "disclaimer": "Practice aid only — not a teacher’s ruling. Holds are shown as ranges, not exact targets.",
+      "legendIntro": "These Mutqin colours mark common Tajweed rules in the ayah. Use them as practice reminders, not as a teacher’s ruling.",
+      "disclaimer": "Practice aid only, not a teacher’s ruling. Holds are shown as ranges, not exact targets.",
       "summaryStrong": "Keep colours on: green/purple = soft nasal hold, red = stretch, orange = light bounce.",
-      "summaryIssues": "Focus on one coloured mark at a time — hold gently, then listen once if needed.",
+      "summaryIssues": "Focus on one coloured mark at a time, hold gently, then listen once if needed.",
       "summaryUnable": "Use the colours while you practise. We’ll check holds when timing is clearer.",
       "viewDetails": "View details",
       "labels": {
@@ -3305,7 +3317,7 @@
       },
       "bands": {
         "strong": {
-          "headline": "Coloured marks look steady — keep practising gently.",
+          "headline": "Coloured marks look steady, keep practising gently.",
           "label": "Steady practice"
         },
         "average": {
@@ -3322,12 +3334,12 @@
         }
       },
       "colours": {
-        "gray": "Gray — clear / silent marks",
-        "green": "Green — soft nasal hold",
-        "purple": "Purple — hidden sound",
-        "orange": "Orange — light bounce",
-        "red": "Red — stretch (madd)",
-        "blue": "Blue — merge"
+        "gray": "Gray, clear / silent marks",
+        "green": "Green, soft nasal hold",
+        "purple": "Purple, hidden sound",
+        "orange": "Orange, light bounce",
+        "red": "Red, stretch (madd)",
+        "blue": "Blue, merge"
       }
     },
     "amd": {
@@ -3336,7 +3348,7 @@
       "emptyAyahDesc": "We couldn’t show the ayah surface for this check. Close and open the check again.",
       "ayahTextUnavailable": "Ayah text is not ready yet. Close and try the check again.",
       "betaBadge": "Beta",
-      "disclaimer": "Audio recitation is in beta. AI can make mistakes — always verify with a qualified teacher.",
+      "disclaimer": "Audio recitation is in beta. AI can make mistakes, always verify with a qualified teacher.",
       "disclaimerShort": "Beta · verify with a qualified teacher.",
       "onlyFromTestWithAi": "Finish your session, then choose Check my memorisation to open this check.",
       "assessmentType": "From memory",
@@ -3362,8 +3374,8 @@
       "micGuidanceSafari": "On iPhone or iPad: Settings → Safari → Microphone → Allow, then return and try again.",
       "micGuidanceUnsupported": "Speech recognition is unavailable here. You can still use Peek.",
       "hintStarting": "Preparing the microphone…",
-      "hintListening": "Microphone is live — recite from memory. Words colour as they are recognised.",
-      "hintListeningLive": "Microphone is live — recite from memory. Words colour as they are recognised.",
+      "hintListening": "Microphone is live, recite from memory. Words colour as they are recognised.",
+      "hintListeningLive": "Microphone is live, recite from memory. Words colour as they are recognised.",
       "hintProcessing": "Finishing…",
       "hintProcessingSlow": "This is taking longer than expected.",
       "hintAnalysing": "Comparing with the Qur’an text…",
@@ -3387,7 +3399,7 @@
       "peekHintShort": "Hold to reveal",
       "wordsShownShort": "Shown",
       "elapsedTimer": "Recitation time",
-      "elapsedTimerHint": "How long this recitation has taken — used to personalise your next plan",
+      "elapsedTimerHint": "How long this recitation has taken, used to personalise your next plan",
       "textSizeShort": "Text size",
       "textSmallerShort": "Smaller text",
       "textLargerShort": "Larger text",
@@ -3410,7 +3422,7 @@
       "autoFollowPaused": "Auto-follow paused",
       "autoFollowResume": "Resume auto-follow",
       "autoFollowHint": "Keep the active word near eye level during longer checks",
-      "completeTitle": "Mā shā’ Allāh — check complete",
+      "completeTitle": "Mā shā’ Allāh, check complete",
       "completeBody": "You recalled this range successfully.",
       "sessionEnded": "Session complete",
       "sessionEndedBody": "Returning…",
@@ -3446,7 +3458,7 @@
       "howKicker": "How Mutqin mistake detection works",
       "how1": "Hide the Qur’an text and recite from memory.",
       "how2": "Mutqin listens, follows your place, and highlights mistakes.",
-      "how3": "Repeat a word to correct it — correct words reveal themselves.",
+      "how3": "Repeat a word to correct it, correct words reveal themselves.",
       "how4": "Save the result and practise the weak areas again.",
       "toolRecite": "Recite",
       "toolAudio": "Audio help",

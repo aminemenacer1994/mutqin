@@ -2715,7 +2715,9 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            padding-top: env(safe-area-inset-top, 0px);
+            /* Push content below Dynamic Island / notch, not just flush under status icons */
+            padding-top: max(0.55rem, calc(env(safe-area-inset-top, 0px) + 0.35rem));
+            padding-inline: max(0.55rem, env(safe-area-inset-left, 0px)) max(0.55rem, env(safe-area-inset-right, 0px));
             box-shadow: none !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
@@ -2732,7 +2734,7 @@
         .navbar-shell {
             max-width: var(--shell-max);
             margin: 0 auto;
-            padding: 8px var(--gutter);
+            padding: 8px max(var(--gutter), 14px);
             min-height: var(--nav-h);
             gap: 10px;
             align-items: center;
@@ -3248,8 +3250,8 @@
 
         @media (max-width: 767.98px) {
             .navbar-shell {
-                min-height: calc(var(--nav-h) + env(safe-area-inset-top, 0px));
-                padding: 6px max(10px, env(safe-area-inset-left, 0px)) 6px max(10px, env(safe-area-inset-right, 0px));
+                min-height: var(--nav-h);
+                padding: 8px max(14px, env(safe-area-inset-left, 0px)) 8px max(14px, env(safe-area-inset-right, 0px));
                 gap: 8px;
                 flex-wrap: nowrap;
                 align-items: center;
@@ -5440,13 +5442,6 @@
                                 <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">{{ __('ui.nav_memorisation_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
-                            @guest
-                            <a class="nav-link nav-link-pricing {{ request()->routeIs('pricing') ? 'active' : '' }}" href="{{ route('pricing') }}">
-                                <i class="bi bi-tag nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="pricing">{{ __('ui.pricing') }}</strong><small class="d-lg-none">{{ __('ui.nav_pricing_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
-                            @endguest
                             @auth
                             @if (Auth::user()->isAdmin())
                             <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
@@ -5461,12 +5456,6 @@
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endif
-                            @else
-                            <a class="nav-link {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about-us') }}">
-                                <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>{{ __('ui.about') }}</strong><small class="d-lg-none">{{ __('ui.nav_about_sub') }}</small></span>
-                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
-                            </a>
                             @endauth
                         </div>
                     </div>

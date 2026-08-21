@@ -45,15 +45,20 @@
                 class="hero__fan-item"
                 :class="`hero__fan-item--${shot.id}`"
               >
-                <img
-                  class="shot"
-                  :src="shot.src"
-                  :alt="shot.alt"
-                  width="444"
-                  height="929"
-                  :loading="shot.id === 'center' ? 'eager' : 'lazy'"
-                  decoding="async"
-                >
+                <div class="device device--sm">
+                  <div class="device__island" aria-hidden="true"></div>
+                  <div class="device__screen">
+                    <img
+                      class="shot"
+                      :src="shot.src"
+                      :alt="shot.alt"
+                      width="444"
+                      height="929"
+                      :loading="shot.id === 'center' ? 'eager' : 'lazy'"
+                      decoding="async"
+                    >
+                  </div>
+                </div>
               </figure>
             </div>
           </div>
@@ -84,15 +89,20 @@
               <p v-if="item.detail" class="how__detail">{{ item.detail }}</p>
             </div>
             <div class="how__shot">
-              <img
-                class="shot"
-                :src="item.image"
-                :alt="item.shotAlt"
-                width="444"
-                height="929"
-                loading="lazy"
-                decoding="async"
-              >
+              <div class="device device--md">
+                <div class="device__island" aria-hidden="true"></div>
+                <div class="device__screen">
+                  <img
+                    class="shot"
+                    :src="item.image"
+                    :alt="item.shotAlt"
+                    width="444"
+                    height="929"
+                    loading="lazy"
+                    decoding="async"
+                  >
+                </div>
+              </div>
             </div>
           </article>
         </div>
@@ -108,49 +118,60 @@
         </header>
 
         <div class="demo__stage" data-reveal>
-          <div class="demo__glow" aria-hidden="true"></div>
-          <div class="demo__player">
-            <video
-              ref="demoVideo"
-              class="demo__video"
-              playsinline
-              muted
-              loop
-              preload="auto"
-              :poster="demoPoster"
-              @timeupdate="onDemoTimeUpdate"
-              @play="demoPlaying = true"
-              @pause="demoPlaying = false"
-            >
-              <source src="/videos/product-pipeline-demo.webm" type="video/webm">
-              <source src="/videos/product-pipeline-demo.mp4" type="video/mp4">
-            </video>
-            <button
-              type="button"
-              class="demo__toggle"
-              :aria-label="demoPlaying ? t('homepage.pipelineDemo.pause') : t('homepage.pipelineDemo.play')"
-              @click="toggleDemoPlayback"
-            >
-              <i class="bi" :class="demoPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-            </button>
+          <div class="demo__phone">
+            <div class="device device--demo">
+              <div class="device__island" aria-hidden="true"></div>
+              <div class="device__screen">
+                <Transition name="demo-fade" mode="out-in">
+                  <img
+                    :key="demoSteps[demoActiveIndex]?.id"
+                    class="shot demo__shot"
+                    :src="demoSteps[demoActiveIndex]?.image"
+                    :alt="demoSteps[demoActiveIndex]?.label || ''"
+                    width="446"
+                    height="930"
+                    decoding="async"
+                  >
+                </Transition>
+              </div>
+            </div>
           </div>
 
-          <ol class="demo__steps" :aria-label="t('homepage.pipelineDemo.pipelineLabel')">
-            <li
-              v-for="(step, idx) in demoSteps"
-              :key="step.id"
-              class="demo__step"
-              :class="{ 'is-active': idx === demoActiveIndex, 'is-done': idx < demoActiveIndex }"
-            >
-              <button type="button" class="demo__step-btn" @click="seekDemoStep(idx)">
-                <span class="demo__step-num" aria-hidden="true">{{ idx + 1 }}</span>
-                <span class="demo__step-copy">
-                  <strong>{{ step.label }}</strong>
-                  <span>{{ step.text }}</span>
-                </span>
+          <div class="demo__story">
+            <p class="demo__phase">
+              {{ t('homepage.pipelineDemo.stepOf', { current: demoActiveIndex + 1, total: demoSteps.length }) }}
+            </p>
+            <h3 class="demo__headline">{{ demoSteps[demoActiveIndex]?.label }}</h3>
+            <p class="demo__body">{{ demoSteps[demoActiveIndex]?.text }}</p>
+
+            <div class="demo__chrome">
+              <button
+                type="button"
+                class="demo__toggle"
+                :aria-label="demoPlaying ? t('homepage.pipelineDemo.pause') : t('homepage.pipelineDemo.play')"
+                @click="toggleDemoPlayback"
+              >
+                <i class="bi" :class="demoPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
               </button>
-            </li>
-          </ol>
+              <div class="demo__progress" aria-hidden="true">
+                <span class="demo__progress-bar" :style="{ width: `${demoProgress}%` }"></span>
+              </div>
+            </div>
+
+            <ol class="demo__rail" :aria-label="t('homepage.pipelineDemo.pipelineLabel')">
+              <li
+                v-for="(step, idx) in demoSteps"
+                :key="step.id"
+                class="demo__rail-item"
+                :class="{ 'is-active': idx === demoActiveIndex, 'is-done': idx < demoActiveIndex }"
+              >
+                <button type="button" class="demo__rail-btn" @click="seekDemoStep(idx)">
+                  <span class="demo__rail-num" aria-hidden="true">{{ idx + 1 }}</span>
+                  <span class="demo__rail-label">{{ step.label }}</span>
+                </button>
+              </li>
+            </ol>
+          </div>
         </div>
       </div>
     </section>
@@ -171,27 +192,25 @@
             data-reveal
             :style="{ '--delay': `${idx * 70}ms` }"
           >
-            <img
-              class="shot features__shot"
-              :src="feature.image"
-              :alt="feature.shotAlt"
-              width="444"
-              height="929"
-              loading="lazy"
-              decoding="async"
-            >
+            <div class="device device--sm features__device">
+              <div class="device__island" aria-hidden="true"></div>
+              <div class="device__screen">
+                <img
+                  class="shot"
+                  :src="feature.image"
+                  :alt="feature.shotAlt"
+                  width="444"
+                  height="929"
+                  loading="lazy"
+                  decoding="async"
+                >
+              </div>
+            </div>
             <div class="features__copy">
               <h3>{{ feature.title }}</h3>
               <p>{{ feature.description }}</p>
             </div>
           </article>
-        </div>
-
-        <div class="section-cta" data-reveal>
-          <a :href="startFreeHref" class="btn btn--primary">
-            <i class="bi bi-book-half" aria-hidden="true"></i>
-            {{ t('homepage.features.cta') }}
-          </a>
         </div>
       </div>
     </section>
@@ -204,10 +223,31 @@
           <p class="section-sub">{{ t('homepage.steps.subtitle') }}</p>
         </header>
 
-        <ol class="steps__list" data-reveal>
-          <li v-for="(step, idx) in steps" :key="step.id" class="steps__item">
-            <span class="steps__num" aria-hidden="true">{{ idx + 1 }}</span>
-            <div>
+        <ol class="steps__track" data-reveal>
+          <li
+            v-for="(step, idx) in steps"
+            :key="step.id"
+            class="steps__card"
+            :style="{ '--delay': `${idx * 90}ms` }"
+          >
+            <div class="steps__visual">
+              <div class="device device--xs">
+                <div class="device__island" aria-hidden="true"></div>
+                <div class="device__screen">
+                  <img
+                    class="shot"
+                    :src="step.image"
+                    :alt="step.shotAlt"
+                    width="444"
+                    height="929"
+                    loading="lazy"
+                    decoding="async"
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="steps__body">
+              <span class="steps__num" aria-hidden="true">{{ String(idx + 1).padStart(2, '0') }}</span>
               <h3>{{ step.title }}</h3>
               <p>{{ step.description }}</p>
             </div>
@@ -271,12 +311,12 @@
     </section>
 
     <section id="contact" class="contact">
-      <div class="wrap wrap--tight">
-        <div class="contact__panel" data-reveal>
+      <div class="wrap wrap--narrow">
+        <div class="contact__card" data-reveal>
           <header class="contact__head">
             <p class="section-kicker section-kicker--left">{{ t('homepage.contact.kicker') }}</p>
-            <h2>{{ t('homepage.contact.title') }}</h2>
-            <p>{{ t('homepage.contact.extendedSubtitle') }}</p>
+            <h2 class="contact__title">{{ t('homepage.contact.title') }}</h2>
+            <p class="contact__sub">{{ t('homepage.contact.extendedSubtitle') }}</p>
           </header>
 
           <div
@@ -289,26 +329,26 @@
           </div>
 
           <form class="contact__form" @submit.prevent="submitContact">
-            <div class="contact__row">
-              <div>
+            <div class="contact__grid">
+              <div class="contact__field">
                 <label class="form-label" for="contactName">{{ t('homepage.name') }}</label>
                 <input id="contactName" v-model.trim="contactForm.name" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.name }" autocomplete="name">
                 <div v-if="contactErrors.name" class="invalid-feedback d-block">{{ contactErrors.name }}</div>
               </div>
-              <div>
+              <div class="contact__field">
                 <label class="form-label" for="contactEmail">{{ t('homepage.contact.email') }}</label>
                 <input id="contactEmail" v-model.trim="contactForm.email" type="email" class="form-control" :class="{ 'is-invalid': contactErrors.email }" autocomplete="email">
                 <div v-if="contactErrors.email" class="invalid-feedback d-block">{{ contactErrors.email }}</div>
               </div>
             </div>
-            <div>
+            <div class="contact__field">
               <label class="form-label" for="contactSubject">{{ t('homepage.contact.subject') }}</label>
               <input id="contactSubject" v-model.trim="contactForm.subject" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.subject }" autocomplete="off" required>
               <div v-if="contactErrors.subject" class="invalid-feedback d-block">{{ contactErrors.subject }}</div>
             </div>
-            <div>
+            <div class="contact__field">
               <label class="form-label" for="contactMessage">{{ t('homepage.contact.message') }}</label>
-              <textarea id="contactMessage" v-model.trim="contactForm.message" class="form-control" :class="{ 'is-invalid': contactErrors.message }" rows="3"></textarea>
+              <textarea id="contactMessage" v-model.trim="contactForm.message" class="form-control contact__message" :class="{ 'is-invalid': contactErrors.message }" rows="3"></textarea>
               <div v-if="contactErrors.message" class="invalid-feedback d-block">{{ contactErrors.message }}</div>
             </div>
             <button type="submit" class="btn btn--primary contact__submit" :disabled="contactSubmitting">
@@ -330,18 +370,17 @@
             </div>
             <p>{{ t('homepage.focused_quran_memorisation_tools_for_recitation_ch') }}</p>
           </div>
-          <div class="footer__links">
+                    <div class="footer__links">
             <h4>{{ t('homepage.footer.product') }}</h4>
             <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
             <a href="#demo" @click.prevent="scrollToId('demo')">{{ t('homepage.footer.demo') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
-            <a href="/waiting-list">{{ t('homepage.footer.waitlist') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
-            <a href="/about-us">{{ t('homepage.footer.aboutUs') }}</a>
             <a href="#contact" @click.prevent="scrollToId('contact')">{{ t('homepage.footer.contact') }}</a>
-            <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
+            <a href="/login">{{ t('homepage.footer.login') }}</a>
+            <a href="/register">{{ t('homepage.footer.register') }}</a>
           </div>
         </div>
         <div class="footer__bottom">
@@ -361,14 +400,101 @@ import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 export default {
   name: 'Homepage',
   setup() {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const currentTheme = ref(getSavedTheme());
     const featuresSection = ref(null);
-    const demoVideo = ref(null);
     const demoPlaying = ref(false);
     const demoActiveIndex = ref(0);
-    const demoPoster = '/videos/product-pipeline-demo-poster.jpg';
-    const DEMO_STEP_SPAN = 2.25; // frameDuration - fade from product-pipeline-demo.json
+    const demoProgress = ref(0);
+    const DEMO_STEP_MS = 3800;
+    let demoTimer = null;
+
+    const demoSteps = computed(() => {
+      void locale.value;
+      return [
+        {
+          id: 'setup',
+          image: '/images/landing/journey-01-setup.jpg',
+          label: t('homepage.pipelineDemo.steps.setup.label'),
+          text: t('homepage.pipelineDemo.steps.setup.text'),
+        },
+        {
+          id: 'practise',
+          image: '/images/landing/journey-02-practise.jpg',
+          label: t('homepage.pipelineDemo.steps.practise.label'),
+          text: t('homepage.pipelineDemo.steps.practise.text'),
+        },
+        {
+          id: 'check',
+          image: '/images/landing/journey-03-check.jpg',
+          label: t('homepage.pipelineDemo.steps.check.label'),
+          text: t('homepage.pipelineDemo.steps.check.text'),
+        },
+        {
+          id: 'complete',
+          image: '/images/landing/journey-04-complete.jpg',
+          label: t('homepage.pipelineDemo.steps.complete.label'),
+          text: t('homepage.pipelineDemo.steps.complete.text'),
+        },
+        {
+          id: 'result',
+          image: '/images/landing/demo-step-5.jpg',
+          label: t('homepage.pipelineDemo.steps.result.label'),
+          text: t('homepage.pipelineDemo.steps.result.text'),
+        },
+        {
+          id: 'recommend',
+          image: '/images/landing/demo-step-6.jpg',
+          label: t('homepage.pipelineDemo.steps.recommend.label'),
+          text: t('homepage.pipelineDemo.steps.recommend.text'),
+        },
+      ];
+    });
+
+    const syncDemoProgress = () => {
+      const total = demoSteps.value.length || 1;
+      demoProgress.value = ((demoActiveIndex.value + 1) / total) * 100;
+    };
+    syncDemoProgress();
+
+    const clearDemoTimer = () => {
+      if (demoTimer) {
+        window.clearInterval(demoTimer);
+        demoTimer = null;
+      }
+    };
+
+    const tickDemo = () => {
+      demoActiveIndex.value = (demoActiveIndex.value + 1) % demoSteps.value.length;
+      syncDemoProgress();
+    };
+
+    const startDemoPlayback = () => {
+      clearDemoTimer();
+      demoPlaying.value = true;
+      syncDemoProgress();
+      demoTimer = window.setInterval(tickDemo, DEMO_STEP_MS);
+    };
+
+    const stopDemoPlayback = () => {
+      clearDemoTimer();
+      demoPlaying.value = false;
+    };
+
+    const toggleDemoPlayback = () => {
+      if (demoPlaying.value) stopDemoPlayback();
+      else startDemoPlayback();
+    };
+
+    const seekDemoStep = (idx) => {
+      demoActiveIndex.value = idx;
+      syncDemoProgress();
+      if (demoPlaying.value) {
+        clearDemoTimer();
+        demoTimer = window.setInterval(tickDemo, DEMO_STEP_MS);
+      }
+    };
+
     let revealObserver = null;
     let demoObserver = null;
 
@@ -390,7 +516,7 @@ export default {
     };
 
     const startFreeHref = computed(() => (
-      window.mutqinAuthCheck ? '/memorisation' : '/memorisation/demo'
+      window.mutqinAuthCheck ? '/memorisation' : '/register'
     ));
 
     const contactForm = reactive({ name: '', email: '', subject: '', message: '' });
@@ -445,140 +571,138 @@ export default {
       }
     };
 
-    const heroShots = computed(() => [
-      { id: 'left', src: '/images/landing/hero-left.jpg', alt: t('homepage.shots.check') },
-      { id: 'center', src: '/images/landing/hero-center.jpg', alt: t('homepage.shots.hero') },
-      { id: 'right', src: '/images/landing/hero-right.jpg', alt: t('homepage.shots.next') },
-    ]);
+    const heroShots = computed(() => {
+      void locale.value;
+      return [
+        { id: 'left', src: '/images/landing/hero-left.jpg', alt: t('homepage.shots.check') },
+        { id: 'center', src: '/images/landing/hero-center.jpg', alt: t('homepage.shots.hero') },
+        { id: 'right', src: '/images/landing/hero-right.jpg', alt: t('homepage.shots.next') },
+      ];
+    });
 
-    const features = computed(() => [
-      {
-        id: 'setup',
-        image: '/images/landing/feature-setup.jpg',
-        title: t('homepage.features.items.setup.title'),
-        description: t('homepage.features.items.setup.description'),
-        shotAlt: t('homepage.shots.setup'),
-      },
-      {
-        id: 'tools',
-        image: '/images/landing/feature-tools.jpg',
-        title: t('homepage.features.items.tools.title'),
-        description: t('homepage.features.items.tools.description'),
-        shotAlt: t('homepage.shots.tools'),
-      },
-      {
-        id: 'check',
-        image: '/images/landing/feature-check.jpg',
-        title: t('homepage.features.items.check.title'),
-        description: t('homepage.features.items.check.description'),
-        shotAlt: t('homepage.shots.check'),
-      },
-      {
-        id: 'next',
-        image: '/images/landing/feature-next.jpg',
-        title: t('homepage.features.items.next.title'),
-        description: t('homepage.features.items.next.description'),
-        shotAlt: t('homepage.shots.next'),
-      },
-    ]);
+    const features = computed(() => {
+      void locale.value;
+      return [
+        {
+          id: 'setup',
+          image: '/images/landing/feature-setup.jpg',
+          title: t('homepage.features.items.setup.title'),
+          description: t('homepage.features.items.setup.description'),
+          shotAlt: t('homepage.shots.setup'),
+        },
+        {
+          id: 'techniques',
+          image: '/images/landing/feature-tools.jpg',
+          title: t('homepage.features.items.techniques.title'),
+          description: t('homepage.features.items.techniques.description'),
+          shotAlt: t('homepage.shots.tools'),
+        },
+        {
+          id: 'progress',
+          image: '/images/landing/hero-right.jpg',
+          title: t('homepage.features.items.progress.title'),
+          description: t('homepage.features.items.progress.description'),
+          shotAlt: t('homepage.shots.progress'),
+        },
+        {
+          id: 'aiRecitation',
+          image: '/images/landing/feature-check.jpg',
+          title: t('homepage.features.items.aiRecitation.title'),
+          description: t('homepage.features.items.aiRecitation.description'),
+          shotAlt: t('homepage.shots.check'),
+        },
+        {
+          id: 'mushafLayout',
+          image: '/images/landing/journey-02-practise.jpg',
+          title: t('homepage.features.items.mushafLayout.title'),
+          description: t('homepage.features.items.mushafLayout.description'),
+          shotAlt: t('homepage.shots.practise'),
+        },
+        {
+          id: 'translationTajweed',
+          image: '/images/landing/hero-center.jpg',
+          title: t('homepage.features.items.translationTajweed.title'),
+          description: t('homepage.features.items.translationTajweed.description'),
+          shotAlt: t('homepage.shots.hero'),
+        },
+      ];
+    });
 
-    const howItems = computed(() => [
-      {
-        id: 'choose',
-        image: '/images/landing/how-1-setup.jpg',
-        title: t('homepage.how.items.choose.title'),
-        description: t('homepage.how.items.choose.description'),
-        detail: t('homepage.how.items.choose.detail'),
-        shotAlt: t('homepage.shots.setup'),
-      },
-      {
-        id: 'recite',
-        image: '/images/landing/how-2-recite.jpg',
-        title: t('homepage.how.items.recite.title'),
-        description: t('homepage.how.items.recite.description'),
-        detail: t('homepage.how.items.recite.detail'),
-        shotAlt: t('homepage.shots.check'),
-      },
-      {
-        id: 'see',
-        image: '/images/landing/how-3-result.jpg',
-        title: t('homepage.how.items.see.title'),
-        description: t('homepage.how.items.see.description'),
-        detail: t('homepage.how.items.see.detail'),
-        shotAlt: t('homepage.shots.result'),
-      },
-      {
-        id: 'continue',
-        image: '/images/landing/how-4-next.jpg',
-        title: t('homepage.how.items.continue.title'),
-        description: t('homepage.how.items.continue.description'),
-        detail: t('homepage.how.items.continue.detail'),
-        shotAlt: t('homepage.shots.next'),
-      },
-    ]);
+    const howItems = computed(() => {
+      void locale.value;
+      return [
+        {
+          id: 'choose',
+          image: '/images/landing/how-1-setup.jpg',
+          title: t('homepage.how.items.choose.title'),
+          description: t('homepage.how.items.choose.description'),
+          detail: t('homepage.how.items.choose.detail'),
+          shotAlt: t('homepage.shots.setup'),
+        },
+        {
+          id: 'recite',
+          image: '/images/landing/how-2-recite.jpg',
+          title: t('homepage.how.items.recite.title'),
+          description: t('homepage.how.items.recite.description'),
+          detail: t('homepage.how.items.recite.detail'),
+          shotAlt: t('homepage.shots.check'),
+        },
+        {
+          id: 'see',
+          image: '/images/landing/demo-step-5.jpg',
+          title: t('homepage.how.items.see.title'),
+          description: t('homepage.how.items.see.description'),
+          detail: t('homepage.how.items.see.detail'),
+          shotAlt: t('homepage.shots.result'),
+        },
+        {
+          id: 'continue',
+          image: '/images/landing/demo-step-6.jpg',
+          title: t('homepage.how.items.continue.title'),
+          description: t('homepage.how.items.continue.description'),
+          detail: t('homepage.how.items.continue.detail'),
+          shotAlt: t('homepage.shots.next'),
+        },
+      ];
+    });
 
-    const steps = computed(() => [
-      {
-        id: 'sit',
-        title: t('homepage.steps.items.sit.title'),
-        description: t('homepage.steps.items.sit.description'),
-      },
-      {
-        id: 'check',
-        title: t('homepage.steps.items.check.title'),
-        description: t('homepage.steps.items.check.description'),
-      },
-      {
-        id: 'return',
-        title: t('homepage.steps.items.return.title'),
-        description: t('homepage.steps.items.return.description'),
-      },
-    ]);
+    const steps = computed(() => {
+      void locale.value;
+      return [
+        {
+          id: 'sit',
+          image: '/images/landing/step-1-setup.jpg',
+          title: t('homepage.steps.items.sit.title'),
+          description: t('homepage.steps.items.sit.description'),
+          shotAlt: t('homepage.shots.setup'),
+        },
+        {
+          id: 'check',
+          image: '/images/landing/step-2-check.jpg',
+          title: t('homepage.steps.items.check.title'),
+          description: t('homepage.steps.items.check.description'),
+          shotAlt: t('homepage.shots.check'),
+        },
+        {
+          id: 'return',
+          image: '/images/landing/step-3-return.jpg',
+          title: t('homepage.steps.items.return.title'),
+          description: t('homepage.steps.items.return.description'),
+          shotAlt: t('homepage.shots.return'),
+        },
+      ];
+    });
 
-    const faqItems = computed(() => [
-      { id: 'whatIsMutqin', question: t('homepage.faq.items.whatIsMutqin.question'), answer: t('homepage.faq.items.whatIsMutqin.answer') },
-      { id: 'howMemorisation', question: t('homepage.faq.items.howMemorisation.question'), answer: t('homepage.faq.items.howMemorisation.answer') },
-      { id: 'howAiFeedback', question: t('homepage.faq.items.howAiFeedback.question'), answer: t('homepage.faq.items.howAiFeedback.answer') },
-      { id: 'whatIsPro', question: t('homepage.faq.items.whatIsPro.question'), answer: t('homepage.faq.items.whatIsPro.answer') },
-      { id: 'howRevision', question: t('homepage.faq.items.howRevision.question'), answer: t('homepage.faq.items.howRevision.answer') },
-    ]);
-
-    const demoSteps = computed(() => [
-      { id: 'setup', label: t('homepage.pipelineDemo.steps.setup.label'), text: t('homepage.pipelineDemo.steps.setup.text') },
-      { id: 'practise', label: t('homepage.pipelineDemo.steps.practise.label'), text: t('homepage.pipelineDemo.steps.practise.text') },
-      { id: 'recite', label: t('homepage.pipelineDemo.steps.recite.label'), text: t('homepage.pipelineDemo.steps.recite.text') },
-      { id: 'result', label: t('homepage.pipelineDemo.steps.result.label'), text: t('homepage.pipelineDemo.steps.result.text') },
-      { id: 'next', label: t('homepage.pipelineDemo.steps.next.label'), text: t('homepage.pipelineDemo.steps.next.text') },
-      { id: 'return', label: t('homepage.pipelineDemo.steps.return.label'), text: t('homepage.pipelineDemo.steps.return.text') },
-    ]);
-
-    const onDemoTimeUpdate = () => {
-      const video = demoVideo.value;
-      if (!video || !Number.isFinite(video.currentTime)) return;
-      const nextIndex = Math.min(
-        demoSteps.value.length - 1,
-        Math.floor(video.currentTime / DEMO_STEP_SPAN),
-      );
-      if (nextIndex !== demoActiveIndex.value) demoActiveIndex.value = nextIndex;
-    };
-
-    const toggleDemoPlayback = async () => {
-      const video = demoVideo.value;
-      if (!video) return;
-      if (video.paused) {
-        try { await video.play(); } catch (_) { /* autoplay may be blocked */ }
-      } else {
-        video.pause();
-      }
-    };
-
-    const seekDemoStep = async (idx) => {
-      const video = demoVideo.value;
-      if (!video) return;
-      demoActiveIndex.value = idx;
-      video.currentTime = idx * DEMO_STEP_SPAN + 0.05;
-      try { await video.play(); } catch (_) { /* ignore */ }
-    };
+    const faqItems = computed(() => {
+      void locale.value;
+      return [
+        { id: 'whatIsMutqin', question: t('homepage.faq.items.whatIsMutqin.question'), answer: t('homepage.faq.items.whatIsMutqin.answer') },
+        { id: 'howMemorisation', question: t('homepage.faq.items.howMemorisation.question'), answer: t('homepage.faq.items.howMemorisation.answer') },
+        { id: 'howAiFeedback', question: t('homepage.faq.items.howAiFeedback.question'), answer: t('homepage.faq.items.howAiFeedback.answer') },
+        { id: 'whatIsPro', question: t('homepage.faq.items.whatIsPro.question'), answer: t('homepage.faq.items.whatIsPro.answer') },
+        { id: 'howRevision', question: t('homepage.faq.items.howRevision.question'), answer: t('homepage.faq.items.howRevision.answer') },
+      ];
+    });
 
     onMounted(() => {
       applyTheme();
@@ -603,22 +727,19 @@ export default {
         });
       }
 
-      const video = demoVideo.value;
-      if (video) {
+      const demoSection = document.getElementById('demo');
+      if (demoSection) {
         demoObserver = new IntersectionObserver((entries) => {
           entries.forEach((entry) => {
             if (reduceMotion) {
-              video.pause();
+              stopDemoPlayback();
               return;
             }
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.45) {
-              video.play().catch(() => {});
-            } else {
-              video.pause();
-            }
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.4) startDemoPlayback();
+            else stopDemoPlayback();
           });
-        }, { threshold: [0, 0.45, 0.75] });
-        demoObserver.observe(video);
+        }, { threshold: [0, 0.4, 0.75] });
+        demoObserver.observe(demoSection);
       }
     });
 
@@ -626,6 +747,7 @@ export default {
       window.removeEventListener('mutqin:theme-change', onThemeChange);
       revealObserver?.disconnect();
       demoObserver?.disconnect();
+      clearDemoTimer();
     });
 
     return {
@@ -640,12 +762,10 @@ export default {
       howItems,
       steps,
       faqItems,
-      demoVideo,
-      demoPoster,
       demoPlaying,
       demoActiveIndex,
+      demoProgress,
       demoSteps,
-      onDemoTimeUpdate,
       toggleDemoPlayback,
       seekDemoStep,
       contactForm,
