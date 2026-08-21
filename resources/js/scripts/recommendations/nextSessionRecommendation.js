@@ -183,6 +183,71 @@ export function isRepeatRecommendation(recommendation) {
     || recommendation?.range_kind === 'revision'
 }
 
+/** Advance / progress-to-next recommendation types (soft memorisation-check nudge). */
+const ADVANCE_RECOMMENDATION_TYPES = new Set([
+  RECOMMENDATION_TYPES.CONTINUE,
+  RECOMMENDATION_TYPES.CONTINUE_NEXT_RANGE,
+  RECOMMENDATION_TYPES.NEXT_SURAH,
+  RECOMMENDATION_TYPES.COMPLETE_SURAH,
+  'similar',
+])
+
+const NEEDS_PRACTICE_REASON_CODES = new Set([
+  'confidence_needs_practice',
+  'needs_more_practice',
+  'revision_required',
+  'difficult_ayah_detected',
+  'low_recall',
+  'reinforce_recent_range',
+])
+
+/**
+ * True when the pending plan advances to a new/next range (not repeat/revise).
+ *
+ * @param {object|null|undefined} recommendation
+ * @returns {boolean}
+ */
+export function isAdvanceRecommendation(recommendation) {
+  if (!recommendation || typeof recommendation !== 'object') return false
+  if (isRepeatRecommendation(recommendation)) return false
+  const type = String(recommendation.type || '')
+  if (ADVANCE_RECOMMENDATION_TYPES.has(type)) return true
+  if (recommendation.goal === 'advance' || recommendation.intended_outcome === 'advance') {
+    return true
+  }
+  return false
+}
+
+/**
+ * Soft nudge before starting an advance recommendation without an AI check.
+ * One-time per completed session; never hard-blocks; never for repeat/revise plans.
+ *
+ * @param {{
+ *   hasAiCheck?: boolean,
+ *   recommendation?: object|null,
+ *   alreadyNudged?: boolean,
+ * }} input
+ * @returns {boolean}
+ */
+export function shouldNudgeMemorisationCheckBeforeAdvance(input = {}) {
+  if (input.alreadyNudged) return false
+  if (input.hasAiCheck) return false
+  const recommendation = input.recommendation || null
+  if (!recommendation) return false
+  if (isRepeatRecommendation(recommendation)) return false
+  const reason = String(recommendation.reason_code || '').toLowerCase().trim()
+  if (NEEDS_PRACTICE_REASON_CODES.has(reason)) return false
+  const type = String(recommendation.type || '')
+  if (
+    type === RECOMMENDATION_TYPES.REVISION
+    || type === RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE
+    || type === RECOMMENDATION_TYPES.RESUME
+  ) {
+    return false
+  }
+  return isAdvanceRecommendation(recommendation)
+}
+
 export function recommendationPrimaryActionKey(recommendation) {
   if (recommendation?.primary_action_label_key) {
     return recommendation.primary_action_label_key
@@ -432,13 +497,6 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
     const reps = Number(settings.repetitions || 3)
     const sessionFrom = snapshotStart || Number(range?.from || 0)
     const sessionTo = Math.max(sessionFrom, snapshotEnd || Number(range?.to || sessionFrom))
-    const baseRange = sessionFrom > 0
-      ? {
-        from: sessionFrom,
-        to: sessionTo,
-        count: Math.max(1, sessionTo - sessionFrom + 1),
-      }
-      : null
     const weakAyahs = collectWeakAyahTargets({
       quizView: snapshot.quizView || null,
       aiDetails: snapshot.aiDetails || null,
@@ -448,6 +506,39 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
     const focusAyahs = weakAyahs.filter((ayah) => (
       !sessionFrom || (ayah >= sessionFrom && ayah <= sessionTo)
     ))
+    // When weak ayahs are known, shrink to weak ±1 neighbor (max 3) instead of
+    // blindly restarting the whole completed window.
+    const focused = focusAyahs.length
+      ? buildFocusedPracticeRange({
+        weakAyahs: focusAyahs,
+        sessionFrom,
+        sessionTo,
+        surahAyahCount: totalAyahs,
+        max: 3,
+      })
+      : null
+    const baseRange = focused
+      ? {
+        from: focused.from,
+        to: focused.to,
+        count: focused.count,
+        focus_ayahs: focused.focusAyahs,
+      }
+      : (sessionFrom > 0
+        ? {
+          from: sessionFrom,
+          to: sessionTo,
+          count: Math.max(1, sessionTo - sessionFrom + 1),
+          focus_ayahs: focusAyahs,
+        }
+        : null)
+    const rangeCount = baseRange ? baseRange.count : 1
+    const weakWords = normaliseWeakWordRecords(
+      snapshot.aiDetails?.weakWords
+      || snapshot.aiDetails?.weak_words
+      || settings.practice_weak_words
+      || [],
+    )
     return {
       ...next,
       type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
@@ -458,13 +549,8 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
       reason: '',
       balance_message: null,
       panel_title_key: 'revisionSetTitle',
-      primary_action_label_key: 'repeatThisSession',
-      ayah_range: baseRange
-        ? {
-          ...baseRange,
-          focus_ayahs: focusAyahs,
-        }
-        : null,
+      primary_action_label_key: focusAyahs.length ? 'startFocusedReview' : 'repeatThisSession',
+      ayah_range: baseRange,
       settings: {
         ...settings,
         technique: settings.technique || 'talqin',
@@ -475,6 +561,9 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
           accuracyPercent: Number(snapshot.aiDetails?.accuracyPercent || snapshot.completion?.accuracy || 0) || null,
         }),
         repetitions: Math.max(4, Number.isFinite(reps) ? reps : 3),
+        ...(rangeCount >= 2 ? { ayat_per_step: 1 } : {}),
+        ...(focusAyahs.length ? { focus_ayahs: baseRange?.focus_ayahs || focusAyahs } : {}),
+        ...(weakWords.length ? { practice_weak_words: weakWords.slice(0, 12) } : {}),
       },
     }
   }
@@ -633,6 +722,7 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
 
 /**
  * Whether an AI Recite outcome should advance rather than repeat the same range.
+ * Mirrors NextSessionRecommendationService::assessmentAllowsProgression.
  *
  * @param {'strong'|'mixed'|'weak'} result
  * @param {object} snapshot
@@ -645,6 +735,7 @@ export function aiAssessmentAllowsProgression(result, snapshot = {}) {
     snapshot.accuracyPercent
     ?? snapshot.accuracy_percent
     ?? snapshot.aiDetails?.accuracyPercent
+    ?? snapshot.aiDetails?.averageAccuracy
     ?? snapshot.aiDetails?.accuracy
     ?? NaN,
   )
@@ -665,11 +756,21 @@ export function aiAssessmentAllowsProgression(result, snapshot = {}) {
     : (Array.isArray(snapshot.skipped_ayahs)
       ? snapshot.skipped_ayahs
       : (Array.isArray(snapshot.aiDetails?.skippedAyahs) ? snapshot.aiDetails.skippedAyahs : []))
+  const sequenceErrors = Number(
+    snapshot.sequenceErrors
+    ?? snapshot.sequence_errors
+    ?? snapshot.aiDetails?.sequenceErrors
+    ?? snapshot.aiDetails?.sequence_errors
+    ?? 0,
+  )
+  // Keep in sync with RECITATION_AUDIO_THRESHOLDS.progressionWithErrorsMin.
+  const progressionWithErrorsMin = 85
 
-  // Two or more hard errors, omissions, or skipped verses should stay on revision.
-  if (omittedWords >= 2 || skippedAyahs.length > 0) return false
+  // Structural / multi-error signals always stay on revision.
+  if (sequenceErrors > 0 || omittedWords >= 2 || skippedAyahs.length > 0) return false
   if (hardWords >= 2 || weakAyahs.length >= 2) return false
 
+  // Clean strong (no hard errors) → next set.
   if (result === 'strong' && hardWords === 0 && weakAyahs.length === 0) return true
 
   const severity = resolveWeaknessSeverity({
@@ -677,6 +778,7 @@ export function aiAssessmentAllowsProgression(result, snapshot = {}) {
     hardWordCount: hardWords,
     partialWordCount: partialWords,
     weakAyahCount: weakAyahs.length,
+    sequenceErrors,
     outcome: result,
     hasWordLevelEvidence: hardWords > 0
       || partialWords > 0
@@ -685,8 +787,16 @@ export function aiAssessmentAllowsProgression(result, snapshot = {}) {
   })
 
   if (severity === 'significant') return false
-  if (severity === 'minor' && hardWords <= 1) return true
-  return Number.isFinite(accuracy) && accuracy >= 80 && hardWords <= 1
+  // Minor local weakness: advance only when accuracy clears the with-errors floor,
+  // or when developing/mixed is clean enough for reinforce-then-continue.
+  if (severity === 'minor' && hardWords <= 1) {
+    if (hardWords === 0) return true
+    return Number.isFinite(accuracy) && accuracy >= progressionWithErrorsMin
+  }
+  if (Number.isFinite(accuracy) && accuracy >= progressionWithErrorsMin && hardWords <= 1) {
+    return true
+  }
+  return Number.isFinite(accuracy) && accuracy >= 80 && hardWords === 0
 }
 
 /**
@@ -974,11 +1084,26 @@ export function buildPersonalPracticePlan(input = {}) {
   }
 
   if (isRepeat && sessionFrom > 0 && sessionTo >= sessionFrom) {
-    rangeFrom = sessionFrom
-    rangeTo = sessionTo
-    focusAyahs = sessionWeakAyahs.length
-      ? sessionWeakAyahs
-      : weakAyahs.filter((w) => w >= sessionFrom && w <= sessionTo)
+    const focused = sessionWeakAyahs.length
+      ? buildFocusedPracticeRange({
+        weakAyahs: sessionWeakAyahs,
+        sessionFrom,
+        sessionTo,
+        surahAyahCount: Number(snapshot.totalAyahsInSurah || snapshot.totalAyahs || 0),
+        max: 3,
+      })
+      : null
+    if (focused?.from && focused?.to) {
+      rangeFrom = focused.from
+      rangeTo = focused.to
+      focusAyahs = focused.focusAyahs
+    } else {
+      rangeFrom = sessionFrom
+      rangeTo = sessionTo
+      focusAyahs = sessionWeakAyahs.length
+        ? sessionWeakAyahs
+        : weakAyahs.filter((w) => w >= sessionFrom && w <= sessionTo)
+    }
   } else if (!focusAyahs.length && weakAyahs.length && rangeFrom > 0) {
     focusAyahs = weakAyahs.filter((w) => w >= rangeFrom && w <= rangeTo)
   }
@@ -1421,20 +1546,29 @@ export function adaptRecommendationForAdaptiveAssessment(recommendation, policyR
         : recommendation.ayah_range,
     }
   } else {
-    // Reinforce / repeat / review: same session range, extra focus on weak ayahs.
+    // Reinforce / repeat / review: prefer weak ±1 (max 3) when weak ayahs are known.
     next = adaptRecommendationForConfidence(recommendation, 'needs_practice', snapWithQuiz)
-    const range = completedRange || next.ayah_range || focusedRange
+    const range = (focusedRange && weakAyahs.length)
+      ? focusedRange
+      : (next.ayah_range || completedRange || focusedRange)
     if (range) {
+      const from = Number(range.from)
+      const to = Number(range.to)
       next = {
         ...next,
         type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
         session_mode: 'revision',
         range_kind: 'repeated',
+        primary_action_label_key: weakAyahs.length
+          ? 'startFocusedReview'
+          : (next.primary_action_label_key || 'repeatThisSession'),
         ayah_range: {
-          from: range.from,
-          to: range.to,
-          count: range.count || Math.max(1, Number(range.to) - Number(range.from) + 1),
-          focus_ayahs: weakAyahs.filter((ayah) => ayah >= Number(range.from) && ayah <= Number(range.to)),
+          from,
+          to,
+          count: range.count || Math.max(1, to - from + 1),
+          focus_ayahs: Array.isArray(range.focusAyahs)
+            ? range.focusAyahs
+            : weakAyahs.filter((ayah) => ayah >= from && ayah <= to),
         },
       }
     }

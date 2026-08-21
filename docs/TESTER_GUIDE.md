@@ -23,9 +23,9 @@ The main workspace is **Memorisation** (`/memorisation`). **Dashboard** (`/dashb
 
 1. Open the app in your browser (local example: `http://localhost:8000`).
 2. Go to **Login** (`/login`).
-3. Sign in with **email + password**, or use **Continue with Google** if Google OAuth is configured for that environment.
+3. On local/staging, tap **Sign in with demo** (one click — no form needed), **or** sign in with email + password / Google.
 
-After login you are taken to the memorisation workspace.
+After login you land on **Memorisation**. A workspace **spotlight tour** dims everything except the current control and walks you through Welcome → Controls → Setup → Start → practise/End → Start recommendation → Dashboard.
 
 **Tip:** Allow microphone access when the browser asks. AI Recite and AI Memorisation checks need it.
 
@@ -41,13 +41,15 @@ php artisan migrate --seed
 
 ### Recommended starting account
 
-Use this for your first full test:
+The login page **Sign in with demo** button uses this account:
 
 | Label | Email | Password | Plan | Why use it |
 |---|---|---|---|---|
-| **Tester — Beginner (EN)** | `layla.beginner@mutqin.test` | `DemoPass1!` | Free | Small Al-Fatiha progress, a saved session, and a “continue” recommendation — good default for most testing |
+| **Tester — Beginner (EN)** | `layla.beginner@mutqin.test` | `DemoPass1!` | Free | Small Al-Fatiha progress — good default for most testing |
 
 ### Other useful accounts
+
+(For QA who need a specific data state — enter email/password manually.)
 
 | Label | Email | Password | Plan | Best for |
 |---|---|---|---|---|
@@ -77,8 +79,8 @@ Practice accounts `practice01`–`practice15` use password **`PracticeNN!`** (fo
 
 Do this in order on your first visit:
 
-1. **Sign in** with **Tester — Beginner (EN)**.
-2. If you see **Welcome back**, choose **Start new session** (or continue if you are testing resume).
+1. **Sign in** with **Sign in with demo** (or **Tester — Beginner (EN)** manually).
+2. Follow the floating **Where to go in Mutqin** guide (or minimize it). If you see **Welcome back**, choose **Start new session** (or continue if you are testing resume).
 3. Open **Controls** (toolbar) → **Setup** tab.
 4. Pick **Surah Al-Fatiha**, ayahs **1–3**, and a reciter.
 5. Tap **Start session**.

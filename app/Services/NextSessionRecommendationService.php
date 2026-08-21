@@ -542,14 +542,20 @@ class NextSessionRecommendationService
             'weak_words' => is_array($assessment['weak_words'] ?? null) ? array_values($assessment['weak_words']) : [],
         ], $this->planExtrasForAdaptation($assessment));
 
+        $assessed = array_merge($assessment, ['result' => $result]);
         if ($result === 'strong') {
-            if ($confidence === ConfidenceFeedback::NeedsPractice->value) {
+            // Clean strong always advances — do not let a prior "needs practice"
+            // confidence sticky-repeat a trustworthy next-set outcome.
+            // Borderline / error-heavy "strong" labels still reinforce first.
+            if ($this->assessmentAllowsProgression($assessed)) {
+                $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong, $assessment);
+            } elseif ($confidence === ConfidenceFeedback::NeedsPractice->value) {
                 $payload = $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::ConfidenceNeedsPractice);
             } else {
-                $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteStrong, $assessment);
+                $payload = $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteMixed);
             }
         } elseif ($result === 'mixed') {
-            if ($this->assessmentAllowsProgression(array_merge($assessment, ['result' => $result]))) {
+            if ($this->assessmentAllowsProgression($assessed)) {
                 $payload = $this->strengthenContinue($user, $recommendation, RecommendationReasonCode::AiReciteMixed, $assessment);
             } else {
                 $payload = $this->supersedeWithRepeat($user, $recommendation, $adaptationExtra, RecommendationReasonCode::AiReciteMixed);
@@ -1980,6 +1986,13 @@ class NextSessionRecommendationService
             return $this->payloadFromRecord($current);
         }
 
+        $originalFrom = (int) ($context['range_start'] ?? $current->ayah_start ?? 0);
+        $originalTo = (int) ($context['range_end'] ?? $current->ayah_end ?? 0);
+        $rangeNarrowed = $focused !== null
+            && $originalFrom > 0
+            && $originalTo >= $originalFrom
+            && ($from !== $originalFrom || $to !== $originalTo);
+
         $performance = is_array($context['performance'] ?? null) ? $context['performance'] : [];
         $rangeStats = AyahWorkload::rangeStats((int) $surah['id'], $from, $to);
         $adapted = $this->adaptation->resolve($context['base_settings'] ?? [], array_merge($performance, [
@@ -1987,17 +2000,21 @@ class NextSessionRecommendationService
             'range_ayah_count' => max(1, $to - $from + 1),
             'range_workload_score' => (float) ($rangeStats['score'] ?? 0),
             'mode' => 'revision',
+            'range_narrowed' => $rangeNarrowed,
+            'focus_ayahs' => $focused['focus_ayahs'] ?? ($adaptationContext['focus_ayahs'] ?? []),
         ], $adaptationContext));
 
-        // Prefer the client AI Recite dynamic plan settings when present.
+        // Prefer client / AMD practice-plan technique settings when present.
+        // SessionRecommendation stays the progression authority; plan settings
+        // only refine technique detail for the repeat.
         $clientSettings = is_array($adaptationContext['client_settings'] ?? null)
             ? $adaptationContext['client_settings']
             : null;
         $planSource = is_array($adaptationContext['plan_detail'] ?? null)
             ? (string) ($adaptationContext['plan_detail']['source'] ?? '')
             : '';
-        if ($clientSettings && $planSource === 'ai_recite_dynamic') {
-            $adapted = array_merge($adapted, $clientSettings);
+        if ($clientSettings && in_array($planSource, ['ai_recite_dynamic', 'memorisation_detection'], true)) {
+            $adapted = $this->adaptation->mergeOverrides($adapted, $clientSettings);
         }
 
         $payload = $this->buildPayload(
@@ -2144,7 +2161,14 @@ class NextSessionRecommendationService
     }
 
     /**
-     * Mirror client-side progression rules for AI Recite assessments.
+     * Mirror client-side progression rules for AI Recite assessments
+     * (resources/js/.../aiAssessmentAllowsProgression).
+     *
+     * Bands (labels stay 80 / 55):
+     * - strong + clean → advance
+     * - ≥85% with at most one hard error → mostly-secure advance
+     * - 55–84% developing with light local issues → reinforce-then-continue
+     * - weak / multi-error / sequence skips → repeat
      *
      * @param  array<string, mixed>  $assessment
      */
@@ -2171,19 +2195,38 @@ class NextSessionRecommendationService
         $partialWords = (int) ($colorCounts['amber'] ?? 0);
         $weakAyahs = is_array($assessment['weak_ayahs'] ?? null) ? count($assessment['weak_ayahs']) : 0;
         $sequenceErrors = (int) ($assessment['sequence_errors'] ?? 0);
+        $skippedAyahs = is_array($assessment['skipped_ayahs'] ?? null)
+            ? count($assessment['skipped_ayahs'])
+            : (is_array($assessment['skippedAyahs'] ?? null) ? count($assessment['skippedAyahs']) : 0);
+        // Keep in sync with RECITATION_AUDIO_THRESHOLDS.progressionWithErrorsMin.
+        $progressionWithErrorsMin = 85;
 
-        if ($sequenceErrors > 0 || $weakAyahs > 1 || $hardWords >= 2 || $omittedWords >= 2) {
+        if (
+            $sequenceErrors > 0
+            || $skippedAyahs > 0
+            || $weakAyahs > 1
+            || $hardWords >= 2
+            || $omittedWords >= 2
+        ) {
             return false;
         }
 
+        // Clean strong → next set.
         if ($result === 'strong' && $hardWords === 0 && $weakAyahs === 0) {
             return true;
         }
 
-        if ($accuracy !== null && $accuracy >= 80) {
+        // Strong/high accuracy with one residual hard error needs the higher floor.
+        if ($accuracy !== null && $accuracy >= $progressionWithErrorsMin) {
             return $hardWords <= 1 && $weakAyahs <= 1;
         }
 
+        // Clean 80–84% (no hard errors) may still advance.
+        if ($accuracy !== null && $accuracy >= 80) {
+            return $hardWords === 0 && $weakAyahs <= 1;
+        }
+
+        // Developing / mixed middle path: reinforce-then-continue when issues are local.
         if ($accuracy !== null && $accuracy >= 55) {
             return $hardWords <= 1 && $weakAyahs <= 1 && $partialWords <= 6;
         }

@@ -16,7 +16,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\QuranProxyController;
 
 // Authentication routes (from laravel/ui)
-Auth::routes();
+Auth::routes(['verify' => true]);
 
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');

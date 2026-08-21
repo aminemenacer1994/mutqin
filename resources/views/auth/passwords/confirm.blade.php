@@ -8,13 +8,13 @@
             <span>Mutqin</span>
         </a>
 
-        <h1 class="auth-heading">{{ __('Confirm Password') }}</h1>
+        <h1 class="auth-heading">{{ __('ui.confirm_password') }}</h1>
 
         <form method="POST" action="{{ route('password.confirm') }}" class="auth-form">
             @csrf
 
             <div class="auth-field">
-                <label for="password" class="form-label">{{ __('Password') }}</label>
+                <label for="password" class="form-label">{{ __('ui.password') }}</label>
                 <div class="auth-password-wrap">
                     <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" autofocus>
                     <button type="button" class="auth-password-toggle" data-password-toggle="password" aria-label="{{ __('ui.show_password') }}">
@@ -26,7 +26,7 @@
                 @enderror
             </div>
 
-            <button type="submit" class="btn auth-submit">{{ __('Confirm Password') }}</button>
+            <button type="submit" class="btn auth-submit">{{ __('ui.confirm_password') }}</button>
 
             @if (Route::has('password.request'))
                 <p class="auth-footer">

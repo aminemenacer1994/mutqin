@@ -2,7 +2,7 @@ import { createI18n } from 'vue-i18n'
 import enMessages from './locales/en.json'
 
 export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur']
-/** Locales shown in the UI language switcher (temporary subset). */
+/** Locales shown in the UI language switcher. */
 export const SWITCHER_LOCALES = ['en', 'fr', 'es']
 export const SWITCHER_LOCALE_LABELS = {
   en: 'English',

@@ -22,6 +22,13 @@ import {
     hasWordLevelEvidence: true,
   }), 'minor')
   assert.equal(resolveWeaknessSeverity({
+    accuracyPercent: 81,
+    hardWordCount: 1,
+    weakAyahCount: 0,
+    outcome: 'strong',
+    hasWordLevelEvidence: true,
+  }), 'significant')
+  assert.equal(resolveWeaknessSeverity({
     accuracyPercent: 91,
     hardWordCount: 2,
     weakAyahCount: 0,
@@ -35,6 +42,13 @@ import {
     outcome: 'strong',
     hasWordLevelEvidence: true,
   }), 'significant')
+  assert.equal(resolveWeaknessSeverity({
+    accuracyPercent: 72,
+    hardWordCount: 0,
+    weakAyahCount: 0,
+    outcome: 'mixed',
+    hasWordLevelEvidence: true,
+  }), 'minor')
 }
 
 {
@@ -51,7 +65,7 @@ import {
   assert.equal(resolvePostSessionCtaState({
     hasAiCheck: true,
     outcome: 'mixed',
-  }), POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
+  }), POST_SESSION_CTA_STATES.MOSTLY_SECURE)
 
   assert.equal(resolvePostSessionCtaState({
     hasAiCheck: true,
@@ -221,7 +235,8 @@ import {
   })
   assert.equal(reviewRecommendedWeak[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
 
-  // Every recommendation state: one lead CTA, Return to workspace as secondary.
+  // Every recommendation state: one lead CTA, Return to workspace as secondary
+  // (except the soft AI-check nudge, whose secondary is Continue without testing).
   for (const state of Object.values(POST_SESSION_CTA_STATES)) {
     const buttons = mapPostSessionCtas(state, state === POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO
       ? { insufficientReason: 'mic_permission' }
@@ -236,8 +251,13 @@ import {
     assert.equal(
       buttons.filter((b) => b.variant === 'secondary').length,
       1,
-      `${state} must expose Return to workspace as the secondary CTA`,
+      `${state} must expose a single secondary CTA`,
     )
+    if (state === POST_SESSION_CTA_STATES.MEMORISATION_CHECK_NUDGE) {
+      assert.equal(buttons[1].action, POST_SESSION_CTA_ACTIONS.CONTINUE_WITHOUT_TESTING)
+      assert.equal(buttons[0].action, POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION)
+      continue
+    }
     assert.equal(
       buttons[1].action,
       POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,

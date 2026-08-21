@@ -1,0 +1,13 @@
+{
+  "duration": 14.05,
+  "frameDuration": 2.8,
+  "fade": 0.55,
+  "steps": [
+    "setup",
+    "practise",
+    "recite",
+    "result",
+    "next",
+    "return"
+  ]
+}

@@ -37,7 +37,7 @@ php artisan serve
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
-### Demo accounts (local / staging)
+### Demo login (local / staging)
 
 ```bash
 php artisan migrate --seed
@@ -45,7 +45,9 @@ php artisan migrate --seed
 php artisan db:seed --class=DemoDataSeeder
 ```
 
-See [docs/TESTER_GUIDE.md](docs/TESTER_GUIDE.md) for test flows, demo logins, and feature checklist.
+On `/login`, tap **Sign in with demo** (uses the Beginner tester account). After login, a floating **Where to go in Mutqin** guide appears on Memorisation and continues past starting a recommendation plan.
+
+See [docs/TESTER_GUIDE.md](docs/TESTER_GUIDE.md) for test flows, extra demo logins, and feature checklist.
 
 ## Development
 

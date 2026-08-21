@@ -18,7 +18,8 @@
         'fr' => ['flag' => '🇫🇷', 'label' => $languageEndonyms['fr']],
         'es' => ['flag' => '🇪🇸', 'label' => $languageEndonyms['es']],
     ];
-    $activeLocaleOption = $appLocaleOptions[$appLocale] ?? $appLocaleOptions['en'];
+    $supportedDocumentLocales = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'];
+    $activeLocaleOption = $appLocaleOptions[$appLocale] ?? ['flag' => '🇬🇧', 'label' => $languageEndonyms[$appLocale] ?? $appLocale];
 @endphp
 <!doctype html>
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
@@ -5728,6 +5729,19 @@
                         passwordInput.value = button.getAttribute('data-test-password') || '';
                         emailInput.dispatchEvent(new Event('input', { bubbles: true }));
                         passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+                        if (button.hasAttribute('data-auth-submit-after-fill')) {
+                            const form = emailInput.closest('form');
+                            if (form) {
+                                if (typeof form.requestSubmit === 'function') {
+                                    form.requestSubmit();
+                                } else {
+                                    form.submit();
+                                }
+                                return;
+                            }
+                        }
+
                         emailInput.focus();
 
                         const defaultLabel = button.getAttribute('data-default-label') || @json(__('ui.auth_demo_use'));
@@ -5847,7 +5861,7 @@
         
         // Global language switcher for all pages
         (function() {
-            const supported = @json($switcherLocales);
+            const supported = @json($supportedDocumentLocales);
             const labels = window.mutqinUiLabels || { en: {}, fr: {}, ar: {}, id: {}, tr: {}, es: {}, ur: {} };
 
             function safeGet(key) {
@@ -5945,6 +5959,10 @@
                         const panel = document.getElementById('primaryNavbar');
                         if (panel?.classList.contains('show') && window.bootstrap?.Offcanvas) {
                             window.bootstrap.Offcanvas.getOrCreateInstance(panel).hide();
+                        }
+                        // Blade auth pages need a reload so __('ui.*') strings re-render.
+                        if (document.querySelector('.auth-page')) {
+                            window.location.reload();
                         }
                     });
                 });

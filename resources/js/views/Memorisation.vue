@@ -33,6 +33,79 @@
       </div>
     </div>
 
+    <aside
+      v-if="workspaceTourActive"
+      class="workspace-tour"
+      data-workspace-tour
+      role="dialog"
+      aria-modal="true"
+      :aria-label="workspaceTourStepCopy.title"
+    >
+      <div
+        v-for="(blocker, index) in workspaceTourBlockers"
+        :key="`tour-blocker-${index}`"
+        class="workspace-tour__blocker"
+        :style="blocker"
+        @click.prevent
+      ></div>
+
+      <div
+        class="workspace-tour__hole"
+        :class="{ 'is-ready': !!workspaceTourRect }"
+        :style="workspaceTourHoleStyle"
+        aria-hidden="true"
+      ></div>
+
+      <div
+        class="workspace-tour__tooltip"
+        :class="workspaceTourTooltipPlacementClass"
+        :style="workspaceTourTooltipStyle"
+      >
+        <p class="workspace-tour__kicker">
+          {{ t('memorisation.workspaceTour.stepCounter', {
+            current: workspaceTourStepIndex + 1,
+            total: workspaceTourSteps.length
+          }) }}
+        </p>
+        <h2 class="workspace-tour__title">{{ workspaceTourStepCopy.title }}</h2>
+        <p class="workspace-tour__body">{{ workspaceTourStepCopy.body }}</p>
+        <div class="workspace-tour__actions">
+          <button
+            type="button"
+            class="workspace-tour__btn workspace-tour__btn--ghost"
+            @click="skipWorkspaceTour"
+          >
+            {{ t('memorisation.workspaceTour.skip') }}
+          </button>
+          <button
+            type="button"
+            class="workspace-tour__btn workspace-tour__btn--ghost"
+            :disabled="workspaceTourStepIndex <= 0"
+            @click="prevWorkspaceTourStep"
+          >
+            {{ t('common.back') }}
+          </button>
+          <button
+            type="button"
+            class="workspace-tour__btn workspace-tour__btn--primary"
+            :disabled="workspaceTourNextDisabled"
+            @click="nextWorkspaceTourStep"
+          >
+            {{ workspaceTourIsLastStep
+              ? t('memorisation.workspaceTour.finish')
+              : t('memorisation.workspaceTour.next') }}
+          </button>
+        </div>
+        <p
+          v-if="workspaceTourStepCopy.waitHint"
+          class="workspace-tour__wait"
+          role="status"
+        >
+          {{ workspaceTourStepCopy.waitHint }}
+        </p>
+      </div>
+    </aside>
+
     <div
       v-if="practiceSetupStatusMessage"
       class="practice-setup-status-toast"
@@ -272,6 +345,7 @@
                   v-if="showHeaderEndSessionAction"
                   type="button"
                   class="action-btn top-card-action-trigger action-btn-exit mutqin-btn--destructive"
+                  data-tour="end-session"
                   @click="openSessionExitModalFromMenu"
                   :title="t('sessionStatus.end')"
                   :aria-label="t('sessionStatus.end')"
@@ -333,6 +407,7 @@
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
                 role="button"
                 tabindex="0"
+                data-tour="controls"
                 @click="openAdvancedControls"
                 @keydown.enter.prevent="openAdvancedControls"
                 @keydown.space.prevent="openAdvancedControls"
@@ -418,6 +493,7 @@
                   <a
                     :href="isAdmin ? adminDashboardUrl : learnerDashboardUrl"
                     class="top-card-menu-link"
+                    data-tour="dashboard"
                     @click.stop="topCardMenuOpen = false; isAdmin ? null : openDashboardView()"
                   >
                     <i class="bi bi-grid-1x2" aria-hidden="true"></i>
@@ -566,6 +642,7 @@
                     <a
                       class="workspace-shell-text-link"
                       :href="learnerDashboardUrl"
+                      data-tour="dashboard"
                       :title="t('memorisation.workspaceJourney.openDashboardHint')"
                       @click.prevent="openDashboardView"
                     >
@@ -731,6 +808,7 @@
           </div>
 
           <main v-if="isDataReady && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden && shouldShowWorkspaceMain" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
+            data-tour="workspace-main"
             :aria-label="t('memorisation.a11y.memorisationWorkspace')">
             <!-- Source-guard references:
               <button v-if="!hasVerses" class="action-btn primary" type="button" @click="openAdvancedControls">
@@ -1069,11 +1147,12 @@
           </div>
           <div v-if="shouldShowOffcanvasTabs" class="tools-tabs" role="tablist" :aria-label="t('memorisation.a11y.controlsTabs')">
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
+              data-tour="setup-tab"
               @click.prevent="setActiveTab('tools')" :title="t('memorisation.a11y.setupTab')" type="button">
               <i class="bi bi-sliders"></i> {{ t('memorisation.tools.tabs.setup') }}
             </button>
             <button role="tab" :aria-selected="tab === 'techniques' ? 'true' : 'false'"
-              :class="{ active: tab === 'techniques' }" @click.prevent="setActiveTab('techniques')"
+              :class="{ active: tab === 'techniques' }" data-tour="practice-tab" @click.prevent="setActiveTab('techniques')"
               :title="t('memorisation.a11y.practicePresets')" type="button">
               <i class="bi bi-stars"></i> {{ t('memorisation.practice') }}
             </button>
@@ -1093,7 +1172,7 @@
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
           <div v-if="tab === 'tools'" class="sheet">
-            <section class="sheet-section sheet-section-compact">
+            <section class="sheet-section sheet-section-compact" data-tour="setup-sheet">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-journal-text"></i></span>
@@ -1106,7 +1185,7 @@
               </button>
               <div class="sheet-content" v-show="sectionOpen.advanced_setup">
                 <div class="field-stack field-stack-compact setup-field-list">
-                  <div class="field setup-field-row">
+                  <div class="field setup-field-row" data-tour="setup-surah">
                     <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
                     <select :value="chapterId" @change="onChapterChange" class="select">
                       <option :value="0">{{ t('sessionSetup.chooseSurah') }}</option>
@@ -1114,7 +1193,7 @@
                     </select>
                     <small class="field-hint">{{ t('sessionSetup.surahHint') }}</small>
                   </div>
-                  <div class="field setup-field-row">
+                  <div class="field setup-field-row" data-tour="setup-range">
                     <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
                     <div class="range range-single">
                       <input type="number" class="input" v-model.number="rangeStart" @input="adjustRange()" @change="adjustRange({ immediate: true })" min="1">
@@ -1159,51 +1238,88 @@
                     </div>
                     <small class="field-hint">{{ Number(repetitionsPerStep) === 1 ? t('sessionSetup.repeatHintOne', { count: repetitionsPerStep }) : t('sessionSetup.repeatHintOther', { count: repetitionsPerStep }) }}</small>
                   </div>
-                  <div class="field field-individual-ayah field-individual-ayah-unified setup-field-row">
+                  <div
+                    class="field field-individual-ayah field-individual-ayah-unified setup-field-row"
+                    :class="{ 'is-enabled': individualAyahFocusEnabled }"
+                  >
                     <div class="field-header individual-ayah-header">
-                      <label><i class="bi bi-pin-angle-fill" aria-hidden="true"></i> {{ t('sessionSetup.individualAyah') }}</label>
+                      <label for="individual-ayah-focus-toggle">
+                        <i class="bi bi-pin-angle-fill" aria-hidden="true"></i>
+                        {{ t('sessionSetup.individualAyah') }}
+                      </label>
+                      <span
+                        role="switch"
+                        id="individual-ayah-focus-toggle"
+                        tabindex="0"
+                        class="mode-radio individual-ayah-toggle"
+                        :class="{ active: individualAyahFocusEnabled }"
+                        :aria-checked="individualAyahFocusEnabled ? 'true' : 'false'"
+                        :aria-label="t('sessionSetup.individualAyah')"
+                        @click="setIndividualAyahFocusEnabled(!individualAyahFocusEnabled)"
+                        @keydown.enter.prevent="setIndividualAyahFocusEnabled(!individualAyahFocusEnabled)"
+                        @keydown.space.prevent="setIndividualAyahFocusEnabled(!individualAyahFocusEnabled)"
+                      >
+                        <i
+                          class="mode-radio-icon bi"
+                          :class="individualAyahFocusEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
+                          aria-hidden="true"
+                        ></i>
+                      </span>
                     </div>
-                    <select
-                      :value="setupIndividualAyahNumber"
-                      @change="setSetupIndividualAyah(Number($event.target.value))"
-                      class="select individual-ayah-select"
-                      :disabled="!chapterId || setupIndividualAyahOptions.length === 0"
-                      :aria-label="t('sessionSetup.individualAyah')"
-                    >
-                      <option v-for="option in setupIndividualAyahOptions" :key="`setup-individual-${option.value}`" :value="option.value">
-                        {{ option.label }}
-                      </option>
-                    </select>
-                    <div class="individual-ayah-repeat">
-                      <div class="field-header individual-ayah-repeat-header">
-                        <span class="individual-ayah-repeat-label">{{ t('sessionSetup.individualAyahRepeats') }}</span>
-                        <span class="range-value-pill">{{ individualAyahRepeatDisplayValue }}</span>
+                    <small class="field-hint individual-ayah-intro">{{ t('sessionSetup.individualAyahIntro') }}</small>
+                    <template v-if="individualAyahFocusEnabled">
+                      <select
+                        :value="setupIndividualAyahNumber"
+                        @change="setSetupIndividualAyah(Number($event.target.value))"
+                        class="select individual-ayah-select"
+                        :disabled="!chapterId || setupIndividualAyahOptions.length === 0 || chainingEnabled"
+                        :aria-label="t('sessionSetup.individualAyah')"
+                      >
+                        <option v-for="option in setupIndividualAyahOptions" :key="`setup-individual-${option.value}`" :value="option.value">
+                          {{ option.label }}
+                        </option>
+                      </select>
+                      <div class="individual-ayah-repeat">
+                        <div class="field-header individual-ayah-repeat-header">
+                          <span class="individual-ayah-repeat-label">{{ t('sessionSetup.individualAyahRepeats') }}</span>
+                          <span class="range-value-pill">{{ individualAyahRepeatDisplayValue }}</span>
+                        </div>
+                        <div class="range-control individual-ayah-range-control">
+                          <input
+                            type="range"
+                            :value="individualAyahRepeatSliderValue"
+                            :style="individualAyahRepeatSliderStyle"
+                            @input="setIndividualAyahRepeatFromSlider(Number($event.target.value))"
+                            min="1"
+                            max="10"
+                            step="1"
+                            class="input technique-range individual-ayah-range"
+                            :aria-valuetext="individualAyahRepeatDisplayValue"
+                            :aria-label="t('sessionSetup.individualAyahRepeats')"
+                            :disabled="!setupIndividualAyahKey || chainingEnabled"
+                          />
+                        </div>
                       </div>
-                      <div class="range-control individual-ayah-range-control">
-                        <input
-                          type="range"
-                          :value="individualAyahRepeatSliderValue"
-                          :style="individualAyahRepeatSliderStyle"
-                          @input="setIndividualAyahRepeatFromSlider(Number($event.target.value))"
-                          min="1"
-                          max="10"
-                          step="1"
-                          class="input technique-range individual-ayah-range"
-                          :aria-valuetext="individualAyahRepeatDisplayValue"
-                          :aria-label="t('sessionSetup.individualAyahRepeats')"
-                          :disabled="!setupIndividualAyahKey"
-                        />
-                      </div>
-                    </div>
-                    <small class="field-hint">
-                      {{ Number(individualAyahRepeatSliderValue) === 1
-                        ? t('sessionSetup.individualAyahRepeatHintOne', { count: individualAyahRepeatSliderValue })
-                        : t('sessionSetup.individualAyahRepeatHintOther', { count: individualAyahRepeatSliderValue }) }}
-                    </small>
-                    <small
-                      v-if="setupIndividualAyahSelectionCount > 0"
-                      class="field-hint individual-ayah-session-count"
-                    >{{ setupIndividualAyahSelectedCountLabel }}</small>
+                      <small class="field-hint">
+                        {{ chainingEnabled
+                          ? t('sessionSetup.individualAyahChainingDisabled')
+                          : (setupIndividualAyahHasCustomRepeat
+                            ? (Number(individualAyahRepeatSliderValue) === 1
+                              ? t('sessionSetup.individualAyahRepeatHintOne', { count: individualAyahRepeatSliderValue })
+                              : t('sessionSetup.individualAyahRepeatHintOther', { count: individualAyahRepeatSliderValue }))
+                            : t('sessionSetup.individualAyahUsingSessionDefault', { count: sliderRepetitionValue })) }}
+                      </small>
+                      <button
+                        v-if="setupIndividualAyahHasCustomRepeat"
+                        type="button"
+                        class="individual-ayah-clear"
+                        @click="clearIndividualAyahRepeatOverride"
+                      >{{ t('sessionSetup.individualAyahClearOverride') }}</button>
+                      <small
+                        v-if="setupIndividualAyahSelectionCount > 0"
+                        class="field-hint individual-ayah-session-count"
+                      >{{ setupIndividualAyahSelectedCountLabel }}</small>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -1956,6 +2072,7 @@
           <button
             type="button"
             class="tools-btn btn btn-primary session-primary-action"
+            data-tour="start-session"
             :class="{ 'is-loading': toolsStartBusy, 'is-disabled': toolsStartDisabled }"
             :disabled="toolsStartDisabled"
             :aria-busy="toolsStartBusy ? 'true' : 'false'"
@@ -2142,6 +2259,7 @@
                     :class="canResumePreviousSession
                       ? 'mutqin-modal-btn--secondary welcome-back-action--secondary'
                       : 'mutqin-modal-btn--primary welcome-back-action--primary'"
+                    data-tour="welcome-start"
                     :disabled="welcomeBackContinueInFlight"
                     @click="welcomeBackStartNewSession"
                   >
@@ -3279,6 +3397,18 @@
               </p>
             </template>
 
+            <template v-else-if="postSessionRecommendationStep === 'memorisation_check_nudge'">
+              <section
+                class="post-session-simple__panel post-session-simple__panel--hero"
+                aria-labelledby="postSessionMemorisationCheckNudgeTitle"
+                data-testid="post-session-memorisation-check-nudge"
+              >
+                <h3 id="postSessionMemorisationCheckNudgeTitle" class="post-session-simple__panel-title" tabindex="-1">
+                  {{ t('memorisation.postSession.memorisationCheckNudge.title') || 'Test your memorisation first?' }}
+                </h3>
+              </section>
+            </template>
+
             <template v-else-if="postSessionRecommendationStep === 'confirm' && postSessionRecommendationActionable">
               <section class="post-session-simple__panel post-session-simple__panel--hero" aria-labelledby="postSessionConfirmTitle">
                 <h3 id="postSessionConfirmTitle" class="post-session-simple__panel-title" tabindex="-1">
@@ -3542,6 +3672,7 @@
                 :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
                 :aria-label="postSessionSimpleActionLabel"
                 data-testid="post-session-practice-method"
+                data-tour="rec-plan"
               >
                 <div v-if="postSessionRecommendationStatus === 'loading'" class="post-session-simple__skeleton" aria-hidden="true">
                   <span></span><span></span><span></span>
@@ -3820,8 +3951,10 @@
 
           <footer class="post-session-simple__footer">
             <div
-              class="post-session-simple__actions post-session-simple__actions--3"
+              class="post-session-simple__actions"
+              :class="postSessionCtaButtons.length <= 2 ? 'post-session-simple__actions--2' : 'post-session-simple__actions--3'"
               data-testid="post-session-actions"
+              data-tour="rec-cta"
               :data-cta-state="postSessionCtaState || undefined"
             >
               <template v-if="onboardingSampleSessionActive">

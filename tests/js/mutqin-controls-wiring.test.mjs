@@ -107,7 +107,8 @@ includesAll('onboarding system steps', [
   /key: 'setup'/,
   /key: 'practice'/,
   /key: 'coach'/,
-  /key: 'improve'/
+  /key: 'improve'/,
+  /key: 'continue'/
 ])
 
 assert.doesNotMatch(

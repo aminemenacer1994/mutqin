@@ -9,6 +9,11 @@ import {
   mapPostSessionCtas,
   POST_SESSION_CTA_STATES,
 } from '../../resources/js/scripts/recommendations/postSessionCtaMapping.js'
+import {
+  RECOMMENDATION_TYPES,
+  isAdvanceRecommendation,
+  shouldNudgeMemorisationCheckBeforeAdvance,
+} from '../../resources/js/scripts/recommendations/nextSessionRecommendation.js'
 
 const source = readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
 const vue = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
@@ -89,6 +94,127 @@ const en = readFileSync(new URL('../../resources/js/locales/en.json', import.met
   assert.match(en, /"reviseFocusPhrase": "Review"/)
   assert.match(en, /"continueToNextRange": "Continue"/)
   assert.match(en, /"reviewAyahOnce": "Repeat Weak Ayah"/)
+  assert.match(en, /"startFocusedReview": "Start focused review"/)
+  assert.match(en, /"checkNow": "Check now"/)
+  assert.match(en, /"continueWithoutTesting": "Continue without testing"/)
+  assert.match(en, /"Test your memorisation first\?"/)
+  assert.match(source, /preferStartFocusedReview/)
+  assert.match(source, /buildFocusedPracticeRange/)
+
+  const focusedCtas = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
+    preferStartFocusedReview: true,
+    weakAyahNumber: 13,
+  })
+  assert.equal(focusedCtas[0].labelKey, 'startFocusedReview')
+  assert.equal(focusedCtas[0].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+}
+
+// Soft nudge: advance without AI check only
+{
+  const continueRec = {
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    session_mode: 'new_learning',
+    range_kind: 'new',
+    surah: { id: 1 },
+    ayah_range: { from: 4, to: 6 },
+  }
+  const nextRangeRec = {
+    type: RECOMMENDATION_TYPES.CONTINUE_NEXT_RANGE,
+    session_mode: 'new_learning',
+    ayah_range: { from: 7, to: 9 },
+    surah: { id: 1 },
+  }
+  const nextSurahRec = {
+    type: RECOMMENDATION_TYPES.NEXT_SURAH,
+    session_mode: 'new_learning',
+    next_surah: { id: 2 },
+    ayah_range: { from: 1, to: 3 },
+  }
+  const similarRec = {
+    type: 'similar',
+    session_mode: 'new_learning',
+    surah: { id: 2 },
+    ayah_range: { from: 1, to: 2 },
+  }
+  const repeatRec = {
+    type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+    session_mode: 'revision',
+    range_kind: 'repeated',
+    surah: { id: 1 },
+    ayah_range: { from: 1, to: 3 },
+  }
+  const needsPracticeRec = {
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    session_mode: 'new_learning',
+    reason_code: 'confidence_needs_practice',
+    surah: { id: 1 },
+    ayah_range: { from: 4, to: 6 },
+  }
+
+  assert.equal(isAdvanceRecommendation(continueRec), true)
+  assert.equal(isAdvanceRecommendation(nextRangeRec), true)
+  assert.equal(isAdvanceRecommendation(nextSurahRec), true)
+  assert.equal(isAdvanceRecommendation(similarRec), true)
+  assert.equal(isAdvanceRecommendation(repeatRec), false)
+
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: false,
+    recommendation: continueRec,
+    alreadyNudged: false,
+  }), true)
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: false,
+    recommendation: nextRangeRec,
+  }), true)
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: false,
+    recommendation: nextSurahRec,
+  }), true)
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: false,
+    recommendation: similarRec,
+  }), true)
+
+  // No nudge after AI check, when already shown, or for repeat / needs-practice plans
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: true,
+    recommendation: continueRec,
+  }), false)
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: false,
+    recommendation: continueRec,
+    alreadyNudged: true,
+  }), false)
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: false,
+    recommendation: repeatRec,
+  }), false)
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: false,
+    recommendation: needsPracticeRec,
+  }), false)
+  assert.equal(shouldNudgeMemorisationCheckBeforeAdvance({
+    hasAiCheck: false,
+    recommendation: null,
+  }), false)
+
+  const nudgeCtas = mapPostSessionCtas(POST_SESSION_CTA_STATES.MEMORISATION_CHECK_NUDGE)
+  assert.deepEqual(nudgeCtas.map((b) => [b.variant, b.action, b.labelKey]), [
+    ['ai', POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION, 'checkNow'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.CONTINUE_WITHOUT_TESTING, 'continueWithoutTesting'],
+  ])
+}
+
+// Wiring: soft nudge gates start recommended session
+{
+  assert.match(source, /shouldNudgeMemorisationCheckBeforeAdvance\(/)
+  assert.match(source, /maybeShowMemorisationCheckNudge\(/)
+  assert.match(source, /continueWithoutMemorisationCheck\(/)
+  assert.match(source, /memorisation_check_nudge/)
+  assert.match(source, /skipMemorisationCheckNudge/)
+  assert.match(source, /CONTINUE_WITHOUT_TESTING/)
+  assert.match(vue, /data-testid="post-session-memorisation-check-nudge"/)
+  assert.match(vue, /memorisationCheckNudge\.title/)
 }
 
 console.log('recommendation-cta-actions.test.mjs: ok')

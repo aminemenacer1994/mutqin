@@ -304,6 +304,13 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
     true,
   )
   assert.equal(
+    aiAssessmentAllowsProgression('strong', {
+      accuracy_percent: 82,
+      color_counts: { red: 1, amber: 0, black: 0 },
+    }),
+    false,
+  )
+  assert.equal(
     adaptRecommendationForAiAssessment({
       type: 'repeat_current_range',
       session_mode: 'revision',

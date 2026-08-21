@@ -27,9 +27,14 @@ export const RECITATION_AUDIO_THRESHOLDS = Object.freeze({
    * for empty recognition — that path is caught by spoken-evidence checks.
    */
   minRecognitionConfidence: 0.35,
-  /** Accuracy banding for scored attempts. */
+  /** Accuracy banding for scored attempts (labels: strong / developing / needs_practice). */
   strongAccuracyMin: 80,
   developingAccuracyMin: 55,
+  /**
+   * Advancement with residual hard errors (1 red/black word) requires this floor.
+   * Clean strong (0 hard errors) may still advance from strongAccuracyMin.
+   */
+  progressionWithErrorsMin: 85,
 })
 
 export const INSUFFICIENT_AUDIO_REASONS = Object.freeze({

@@ -8,21 +8,21 @@
             <span>Mutqin</span>
         </a>
 
-        <h1 class="auth-heading">{{ __('Verify Your Email Address') }}</h1>
+        <h1 class="auth-heading">{{ __('ui.verify_title') }}</h1>
 
         @if (session('resent'))
             <div class="alert alert-success auth-alert" role="alert">
-                {{ __('A fresh verification link has been sent to your email address.') }}
+                {{ __('ui.verify_resent') }}
             </div>
         @endif
 
         <p class="auth-lede">
-            {{ __('Before proceeding, please check your email for a verification link.') }}
+            {{ __('ui.verify_message') }}
         </p>
 
         <form method="POST" action="{{ route('verification.resend') }}" class="auth-form">
             @csrf
-            <button type="submit" class="btn auth-submit">{{ __('Resend verification email') }}</button>
+            <button type="submit" class="btn auth-submit">{{ __('ui.verify_resend_button') }}</button>
         </form>
     </div>
 </div>

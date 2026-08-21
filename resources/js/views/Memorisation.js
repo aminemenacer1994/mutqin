@@ -93,6 +93,8 @@ import {
   isRepeatRecommendation,
   SHORT_SURAH_AYAH_LIMIT,
   shouldKeepFullAyahWindow,
+  shouldNudgeMemorisationCheckBeforeAdvance,
+  buildFocusedPracticeRange,
   surahAyahCount,
   localizeRecommendationReason,
   recommendationModeLabelKey,
@@ -627,6 +629,8 @@ export default {
       selectedLoopCount: DEFAULT_SESSION_REPETITIONS,
       /** Ayah number within the current range for per-ayah repeat setup (null → rangeStart). */
       setupIndividualAyah: null,
+      /** Opt-in: when false, per-ayah repeats never apply and Setup stays out of the way. */
+      individualAyahFocusEnabled: false,
       /** Per-verse repeat overrides keyed by verse key (e.g. "1:3"). */
       individualAyahRepeatCounts: {},
       fontOpen: false,
@@ -807,6 +811,14 @@ export default {
       onboardingManualLaunch: false,
       onboardingGoal: 'small',
       onboardingSampleSessionActive: false,
+      showTesterStartGuide: false,
+      testerGuideCollapsed: false,
+      testerGuideStepIndex: 0,
+      workspaceTourActive: false,
+      workspaceTourStepIndex: 0,
+      workspaceTourRect: null,
+      workspaceTourTooltipPos: { top: 16, left: 16, placement: 'bottom' },
+      workspaceTourMeasureToken: 0,
       showPostSessionModal: false,
       showPostSessionChoice: false,
       postSessionChoiceAction: null, // repeat_recommended | create_custom | null
@@ -827,10 +839,12 @@ export default {
       postSessionRecommendation: null,
       postSessionRecommendationStatus: 'idle', // idle | loading | ready | error | empty
       postSessionRecommendationError: '',
-      postSessionRecommendationStep: 'main', // main | confirm
+      postSessionRecommendationStep: 'main', // main | confirm | memorisation_check_nudge
       postSessionRecommendationStarting: false,
       postSessionRecommendationStartError: '',
       postSessionRecommendationRequestId: 0,
+      /** One-time soft nudge when advancing without an AI check for this completed session. */
+      postSessionMemorisationCheckNudgeShown: false,
       postSessionConfidenceBusy: false,
       postSessionConfidenceError: '',
       postSessionSettingsBusy: false,
@@ -2593,7 +2607,16 @@ export default {
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
       const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
-      const repeatCount = Math.max(1, Number(this.repetitionsPerStep || 1))
+      const activeEntry = this.activeQueueEntry
+      const activeVerse = activeEntry?.verse || this.activeVerseRef
+      const repeatTotal = Math.max(
+        1,
+        Number(activeEntry?.totalRepeats || 0) || this.resolveRepetitionsForVerse(activeVerse),
+      )
+      const repeatCurrent = Math.max(1, Number(activeEntry?.repeatCount || 1))
+      const repeatValue = repeatTotal > 1 && activeEntry
+        ? `${repeatCurrent}/${repeatTotal}`
+        : `${repeatTotal}x`
       const delaySeconds = Number.isFinite(Number(this.delay)) ? Math.max(0, Number(this.delay)) : 0
       const rangeValue = formatAyahRangeLabel({ start, end }, this.t.bind(this))
       const delayValue = `${delaySeconds}s`
@@ -2602,7 +2625,7 @@ export default {
         { key: 'surah', label: this.t('memorisation.topCard.metadata.surah'), value: surahName },
         { key: 'range', label: this.t('memorisation.topCard.metadata.range'), value: rangeValue },
         { key: 'reciter', label: this.t('memorisation.topCard.metadata.reciter'), value: reciter?.name || 'Alafasy' },
-        { key: 'repetition', label: this.t('memorisation.topCard.metadata.repetition'), value: `${repeatCount}x` },
+        { key: 'repetition', label: this.t('memorisation.topCard.metadata.repetition'), value: repeatValue },
         { key: 'delay', label: this.t('memorisation.topCard.metadata.delay'), value: delayValue }
       ]
     },
@@ -2757,7 +2780,17 @@ export default {
         meter,
         meta: [
           { key: 'mode', label: this.t('memorisation.topCard.metadata.mode'), value: this.playModeSummaryLabel },
-          { key: 'repeat', label: this.t('memorisation.topCard.metadata.repeats'), value: this.t('memorisation.topCard.metadata.repeatsPerAyah', { count: Math.max(1, Number(this.repetitionsPerStep || 1)) }) }
+          {
+            key: 'repeat',
+            label: this.t('memorisation.topCard.metadata.repeats'),
+            value: this.t('memorisation.topCard.metadata.repeatsPerAyah', {
+              count: Math.max(
+                1,
+                Number(this.activeQueueEntry?.totalRepeats || 0)
+                  || this.resolveRepetitionsForVerse(this.activeQueueEntry?.verse || this.activeVerseRef),
+              ),
+            }),
+          },
         ]
       }
     },
@@ -5609,6 +5642,7 @@ export default {
         ?? null
       const hasWordLevelEvidence = Number(this.postSessionAiReviewDetails?.totalWords || 0) > 0
       return resolvePostSessionCtaState({
+        isMemorisationCheckNudgeStep: this.postSessionRecommendationStep === 'memorisation_check_nudge',
         isConfirmStep: this.postSessionRecommendationStep === 'confirm'
           && this.postSessionRecommendationActionable,
         hasAiCheck: !!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck),
@@ -5650,6 +5684,11 @@ export default {
         isRepeat: this.postSessionIsRepeatRecommendation,
         confirmLabelKey: confirmKey,
         preferReviseRange: this.postSessionAiPresentationMode === 'valid_zero_match',
+        preferStartFocusedReview: !!(
+          (Array.isArray(this.postSessionRevisionWeakAyahs) && this.postSessionRevisionWeakAyahs.length)
+          || Number(primaryWeakAyah || focus?.ayahNumber || 0)
+          || String(rec.primary_action_label_key || '') === 'startFocusedReview'
+        ),
         insufficientReason: this.postSessionAiReviewDetails?.insufficientReason || '',
         showMicrophoneCheck: this.postSessionAiReviewDetails?.showMicrophoneCheck === true
           || String(this.postSessionAiReviewDetails?.insufficientReason || '') === 'mic_permission',
@@ -5660,12 +5699,15 @@ export default {
       const actionFallbacks = {
         reviseFocusPhrase: 'Review',
         reviseThisRange: 'Review',
+        startFocusedReview: 'Start focused review',
         reviewAyahOnce: 'Repeat Weak Ayah',
         retest: 'Check again',
         tryRecordingAgain: 'Try recording again',
         checkMicrophone: 'Check microphone',
         close: 'Close',
         testWithAi: 'Recite from memory',
+        checkNow: 'Check now',
+        continueWithoutTesting: 'Continue without testing',
         continuePractising: 'Repeat session',
         continueToNextRange: 'Continue',
         continueToAyahs: 'Continue',
@@ -6663,14 +6705,116 @@ export default {
       }))
     },
     onboardingSteps() {
-      // Core journey: ayahs → tools → AI check → next plan
+      // Core journey: ayahs → tools → AI check → next plan → keep going
       const defs = [
         { key: 'setup', icon: 'bi-journal-text' },
         { key: 'practice', icon: 'bi-stars' },
         { key: 'coach', icon: 'bi-mic' },
-        { key: 'improve', icon: 'bi-arrow-repeat' }
+        { key: 'improve', icon: 'bi-arrow-repeat' },
+        { key: 'continue', icon: 'bi-signpost-2' }
       ]
       return defs.map(({ key, icon }) => this.buildOnboardingStep(key, icon))
+    },
+    testerGuideSteps() {
+      return []
+    },
+    testerGuideDashboardUrl() {
+      return this.auth?.dashboard_url || '/dashboard'
+    },
+    workspaceTourSteps() {
+      return [
+        { key: 'welcome', selector: '[data-tour="welcome-start"]', optional: true },
+        { key: 'controls', selector: '[data-tour="controls"]' },
+        { key: 'setup', selector: '[data-tour="setup-sheet"]' },
+        { key: 'start', selector: '[data-tour="start-session"]' },
+        { key: 'session', selector: '[data-tour="end-session"], [data-tour="workspace-main"]' },
+        { key: 'plan', selector: '[data-tour="rec-cta"], [data-tour="rec-plan"]' },
+        { key: 'dashboard', selector: '[data-tour="dashboard"]' }
+      ]
+    },
+    workspaceTourStep() {
+      return this.workspaceTourSteps[this.workspaceTourStepIndex] || this.workspaceTourSteps[0] || null
+    },
+    workspaceTourIsLastStep() {
+      return this.workspaceTourStepIndex >= Math.max(0, this.workspaceTourSteps.length - 1)
+    },
+    workspaceTourNextDisabled() {
+      const key = this.workspaceTourStep?.key
+      if (key === 'start') {
+        return !(this.hasSessionStarted || this.isSessionLive || this.showHeaderEndSessionAction)
+      }
+      if (key === 'session') return !this.showPostSessionModal
+      if (key === 'plan') return !this.showPostSessionModal
+      return false
+    },
+    workspaceTourStepCopy() {
+      const key = this.workspaceTourStep?.key || 'controls'
+      const base = `memorisation.workspaceTour.steps.${key}`
+      let waitHint = ''
+      if (key === 'start' && this.workspaceTourNextDisabled) {
+        waitHint = this.t(`${base}.waitHint`) || this.t('memorisation.workspaceTour.steps.start.body')
+      } else if (key === 'session' && !this.showPostSessionModal) {
+        waitHint = this.t(`${base}.waitHint`)
+      } else if (key === 'plan' && !this.showPostSessionModal) {
+        waitHint = this.t(`${base}.waitHint`)
+      }
+      return {
+        title: this.t(`${base}.title`),
+        body: this.t(`${base}.body`),
+        waitHint: key === 'start' && this.workspaceTourNextDisabled
+          ? this.t('memorisation.workspaceTour.steps.start.waitHint')
+          : waitHint
+      }
+    },
+    workspaceTourHoleStyle() {
+      const rect = this.workspaceTourRect
+      if (!rect) {
+        return {
+          top: '40%',
+          left: '50%',
+          width: '1px',
+          height: '1px',
+          opacity: 0
+        }
+      }
+      return {
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        opacity: 1
+      }
+    },
+    workspaceTourBlockers() {
+      const rect = this.workspaceTourRect
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 0
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 0
+      if (!rect) {
+        return [{ top: '0px', left: '0px', width: `${vw}px`, height: `${vh}px` }]
+      }
+      const pad = 10
+      const top = Math.max(0, rect.top - pad)
+      const left = Math.max(0, rect.left - pad)
+      const right = Math.min(vw, rect.left + rect.width + pad)
+      const bottom = Math.min(vh, rect.top + rect.height + pad)
+      const width = Math.max(0, right - left)
+      const height = Math.max(0, bottom - top)
+      return [
+        { top: '0px', left: '0px', width: `${vw}px`, height: `${top}px` },
+        { top: `${bottom}px`, left: '0px', width: `${vw}px`, height: `${Math.max(0, vh - bottom)}px` },
+        { top: `${top}px`, left: '0px', width: `${left}px`, height: `${height}px` },
+        { top: `${top}px`, left: `${right}px`, width: `${Math.max(0, vw - right)}px`, height: `${height}px` }
+      ]
+    },
+    workspaceTourTooltipStyle() {
+      const pos = this.workspaceTourTooltipPos || { top: 16, left: 16 }
+      return {
+        top: `${pos.top}px`,
+        left: `${pos.left}px`
+      }
+    },
+    workspaceTourTooltipPlacementClass() {
+      return `is-${this.workspaceTourTooltipPos?.placement || 'bottom'}`
     },
     onboardingIsTour() {
       return this.onboardingPhase === 'tour'
@@ -7695,13 +7839,16 @@ export default {
     setupIndividualAyahSelectionCount() {
       const key = this.setupIndividualAyahKey
       if (!key) return 0
+      // Only real playback counts — never inflate from dropdown selection clicks.
       const playCounts = this.mutqinState?.sessionState?.verse_play_counts || {}
-      const selectionCounts = this.mutqinState?.sessionState?.ayah_selection_counts || {}
-      return Math.max(
-        0,
-        Number(playCounts[key] || 0),
-        Number(selectionCounts[key] || 0),
-      )
+      return Math.max(0, Number(playCounts[key] || 0))
+    },
+    setupIndividualAyahHasCustomRepeat() {
+      if (!this.individualAyahFocusEnabled) return false
+      const key = this.setupIndividualAyahKey
+      if (!key) return false
+      const fromMap = Number(this.individualAyahRepeatCounts?.[key])
+      return Number.isFinite(fromMap) && fromMap > 0
     },
     individualAyahRepeatSliderValue() {
       const key = this.setupIndividualAyahKey
@@ -9429,6 +9576,7 @@ export default {
         this.markActiveSessionSnapshot()
       }
       this.reconcilePersistedSessionCompletion()
+      this.scheduleWorkspaceTourStart()
       this.applyRestoredPostSessionChoice({ clearPending: true })
       if (this.isDemoMode) {
         this.initGuestDemoWorkspace()
@@ -9565,6 +9713,7 @@ export default {
     }
     this.cancelStatsVisualTick()
     this.cancelLiveWordDomPatchFrame()
+    this.unbindWorkspaceTourListeners()
     if (this.wordClickHandler) {
       document.removeEventListener('click', this.wordClickHandler)
       this.wordClickHandler = null
@@ -9695,6 +9844,7 @@ export default {
       if (newVal) {
         this.isolatePostSessionRecommendation()
         this.topCardMenuOpen = false
+        this.maybeAdvanceWorkspaceTourFromSession()
       } else {
         this.postSessionStatsExpanded = false
         this.postSessionEmotionalContext = null
@@ -9712,8 +9862,24 @@ export default {
         this.postSessionChoiceAction = null
         this.postSessionChoiceOffcanvasOpen = false
         this._pendingPostSessionChoiceRestore = null
+        if (this.workspaceTourActive && this.workspaceTourStep?.key === 'welcome') {
+          this.$nextTick(() => this.measureWorkspaceTourTarget())
+        }
       } else {
         this.welcomeBackModalReady = false
+        if (this.workspaceTourActive && this.workspaceTourStep?.key === 'welcome') {
+          this.nextWorkspaceTourStep()
+        }
+      }
+    },
+    showHeaderEndSessionAction(newVal) {
+      if (newVal && this.workspaceTourActive) {
+        this.maybeAdvanceWorkspaceTourFromSession()
+      }
+    },
+    hasSessionStarted(newVal) {
+      if (newVal && this.workspaceTourActive) {
+        this.maybeAdvanceWorkspaceTourFromSession()
       }
     },
     showSessionExitModal(newVal) {
@@ -11070,6 +11236,10 @@ export default {
       const defaults = freshSessionRepetitionDefaults()
       this.repetitionsPerStep = defaults.repetitionsPerStep
       this.selectedLoopCount = defaults.selectedLoopCount
+      // Keep Focus-one-āyah fully off so it cannot leak into a fresh session.
+      this.individualAyahFocusEnabled = false
+      this.individualAyahRepeatCounts = {}
+      this.setupIndividualAyah = null
     },
 
     applyDefaultWorkspaceSessionConfig(options = {}) {
@@ -13493,15 +13663,34 @@ export default {
     },
 
     setSetupIndividualAyah(value) {
+      if (!this.individualAyahFocusEnabled) return
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
       const ayah = Math.max(start, Math.min(end, Number(value || start)))
       this.setupIndividualAyah = ayah
-      this.recordAyahSelectionCount(this.setupIndividualAyahKey)
       this.persistUiState()
     },
 
+    setIndividualAyahFocusEnabled(enabled) {
+      const next = !!enabled
+      if (next === this.individualAyahFocusEnabled) return
+      this.individualAyahFocusEnabled = next
+      if (!next) {
+        this.individualAyahRepeatCounts = {}
+        this.setupIndividualAyah = null
+      } else {
+        this.clampSetupIndividualAyah()
+      }
+      this.persistUiState()
+      this.persistCentralSessionState()
+      // Avoid rebuilding the live queue while audio is advancing — that left advanceLocked stuck.
+      if (this.hasVerses && !this.chainingEnabled && !this.isPlaying && !this.advanceLocked) {
+        this.rebuildQueue(this.currentMode)
+      }
+    },
+
     setIndividualAyahRepeatFromSlider(value) {
+      if (!this.individualAyahFocusEnabled || this.chainingEnabled) return
       const key = this.setupIndividualAyahKey
       if (!key) return
       const repeatCount = Math.max(1, Math.min(10, Number(value || 1)))
@@ -13509,34 +13698,46 @@ export default {
         ...(this.individualAyahRepeatCounts || {}),
         [key]: repeatCount,
       }
-      if (this.hasVerses && !this.chainingEnabled) {
-        this.applyChainingQueueChange(this.currentMode, { restart: true })
-      } else {
-        this.persistUiState()
-        this.persistCentralSessionState()
+      this.persistUiState()
+      this.persistCentralSessionState()
+      if (this.hasVerses && !this.chainingEnabled && !this.isPlaying && !this.advanceLocked) {
+        this.rebuildQueue(this.currentMode)
       }
     },
 
-    recordAyahSelectionCount(verseKey) {
-      if (!verseKey || !this.mutqinState?.sessionState) return
-      const currentMap = this.mutqinState.sessionState.ayah_selection_counts || {}
-      const current = Math.max(0, Number(currentMap[verseKey] || 0))
-      this.mutqinState.sessionState.ayah_selection_counts = {
-        ...currentMap,
-        [verseKey]: current + 1,
-      }
-      this.persistMutqinStateLocally()
+    clearIndividualAyahRepeatOverride() {
+      if (!this.individualAyahFocusEnabled) return
+      const key = this.setupIndividualAyahKey
+      if (!key || !this.individualAyahRepeatCounts?.[key]) return
+      const next = { ...(this.individualAyahRepeatCounts || {}) }
+      delete next[key]
+      this.individualAyahRepeatCounts = next
+      this.persistUiState()
       this.persistCentralSessionState()
+      if (this.hasVerses && !this.chainingEnabled && !this.isPlaying && !this.advanceLocked) {
+        this.rebuildQueue(this.currentMode)
+      }
     },
 
     resolveRepetitionsForVerse(verse, chainingEnabled = this.chainingEnabled) {
       if (chainingEnabled) {
         return Math.max(1, Math.min(5, Number(this.chainingRepetitions || 1)))
       }
-      const key = verse?.key || verse?.verse?.key || ''
+      // Apply any explicit overrides (Setup toggle or recommendation plans).
+      // The Setup toggle only gates the offcanvas editor — not playback.
+      const key = String(verse?.key || verse?.verse_key || verse?.verse?.key || '').trim()
       const perAyah = key ? Number(this.individualAyahRepeatCounts?.[key]) : NaN
       if (Number.isFinite(perAyah) && perAyah > 0) {
         return Math.max(1, Math.min(50, perAyah))
+      }
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
+      const ayahNum = Number(verse?.number || verse?.verse_number || String(key).split(':')[1] || 0)
+      if (chapterId > 0 && ayahNum > 0) {
+        const composedKey = `${chapterId}:${ayahNum}`
+        const composed = Number(this.individualAyahRepeatCounts?.[composedKey])
+        if (Number.isFinite(composed) && composed > 0) {
+          return Math.max(1, Math.min(50, composed))
+        }
       }
       return Math.max(1, Math.min(50, Number(this.repetitionsPerStep || 1)))
     },
@@ -14235,8 +14436,284 @@ export default {
     markOnboardingAutoPresented() {
       this.writeWorkspaceStateValue('onboardingAutoPresented', true)
     },
+    getTesterGuideStorageKey() {
+      const userId = this.auth?.id != null ? String(this.auth.id) : 'guest'
+      return `mutqin.workspaceTourDismissed.${userId}`
+    },
+    initTesterStartGuide() {
+      this.scheduleWorkspaceTourStart()
+    },
+    scheduleWorkspaceTourStart() {
+      if (!this.auth?.show_tester_guide || !this.auth?.check) {
+        this.workspaceTourActive = false
+        return
+      }
+      if (this._workspaceTourStartTimer) {
+        window.clearTimeout(this._workspaceTourStartTimer)
+        this._workspaceTourStartTimer = null
+      }
+      // Wait for Welcome Back (or its skip) so the first spotlight can land on it.
+      this._workspaceTourStartTimer = window.setTimeout(() => {
+        this._workspaceTourStartTimer = null
+        this.initWorkspaceTour()
+      }, this.auth?.just_logged_in ? 650 : 200)
+    },
+    initWorkspaceTour() {
+      if (!this.auth?.show_tester_guide || !this.auth?.check) {
+        this.workspaceTourActive = false
+        return
+      }
+
+      if (this.auth?.just_logged_in) {
+        try {
+          localStorage.removeItem(this.getTesterGuideStorageKey())
+        } catch { /* ignore */ }
+        this.startWorkspaceTour(0)
+        return
+      }
+
+      try {
+        if (localStorage.getItem(this.getTesterGuideStorageKey()) === '1') {
+          this.workspaceTourActive = false
+          return
+        }
+      } catch { /* ignore */ }
+
+      this.startWorkspaceTour(0)
+    },
+    async startWorkspaceTour(stepIndex = 0) {
+      this.workspaceTourActive = true
+      this.workspaceTourStepIndex = Math.max(0, Number(stepIndex) || 0)
+      await this.applyWorkspaceTourStep(this.workspaceTourStepIndex)
+      this.bindWorkspaceTourListeners()
+    },
+    bindWorkspaceTourListeners() {
+      if (this._workspaceTourResizeBound) return
+      this._workspaceTourResizeBound = () => {
+        if (!this.workspaceTourActive) return
+        this.measureWorkspaceTourTarget()
+      }
+      window.addEventListener('resize', this._workspaceTourResizeBound)
+      window.addEventListener('scroll', this._workspaceTourResizeBound, true)
+    },
+    unbindWorkspaceTourListeners() {
+      if (!this._workspaceTourResizeBound) return
+      window.removeEventListener('resize', this._workspaceTourResizeBound)
+      window.removeEventListener('scroll', this._workspaceTourResizeBound, true)
+      this._workspaceTourResizeBound = null
+    },
+    async applyWorkspaceTourStep(stepIndex) {
+      const steps = this.workspaceTourSteps || []
+      let index = Math.max(0, Math.min(steps.length - 1, Number(stepIndex) || 0))
+      let step = steps[index]
+      if (!step) return
+
+      if (step.key === 'welcome' && !this.showWelcomeBackModal) {
+        index = Math.min(steps.length - 1, index + 1)
+        this.workspaceTourStepIndex = index
+        step = steps[index]
+      }
+
+      await this.prepareWorkspaceTourStep(step?.key)
+      await this.$nextTick()
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+      this.measureWorkspaceTourTarget()
+    },
+    async prepareWorkspaceTourStep(key) {
+      if (key === 'welcome') {
+        this.topCardMenuOpen = false
+        return
+      }
+
+      if (key === 'controls') {
+        if (this.showWelcomeBackModal) {
+          try {
+            await this.welcomeBackStartNewSession()
+          } catch {
+            this.closeWelcomeBackModal()
+          }
+        }
+        if (this.showTools) await this.closeToolsPanel()
+        this.topCardMenuOpen = false
+        return
+      }
+
+      if (key === 'setup') {
+        if (this.showWelcomeBackModal) this.closeWelcomeBackModal()
+        this.topCardMenuOpen = false
+        this.openAdvancedControls()
+        this.setActiveTab('tools')
+        if (this.sectionOpen && this.sectionOpen.advanced_setup !== undefined) {
+          this.sectionOpen.advanced_setup = true
+        }
+        if (!this.chapterId || Number(this.chapterId) === 0) {
+          this.chapterId = 1
+          this.rangeStart = 1
+          this.rangeEnd = 3
+          try {
+            await this.loadChapter(this.currentMode)
+          } catch { /* ignore */ }
+        }
+        return
+      }
+
+      if (key === 'start') {
+        this.topCardMenuOpen = false
+        if (!this.showTools) this.openAdvancedControls()
+        this.setActiveTab('tools')
+        if (this.sectionOpen && this.sectionOpen.advanced_setup !== undefined) {
+          this.sectionOpen.advanced_setup = true
+        }
+        return
+      }
+
+      if (key === 'session') {
+        this.topCardMenuOpen = false
+        if (this.showTools) await this.closeToolsPanel()
+        return
+      }
+
+      if (key === 'plan') {
+        this.topCardMenuOpen = false
+        if (this.showTools) await this.closeToolsPanel()
+        return
+      }
+
+      if (key === 'dashboard') {
+        if (this.showTools) await this.closeToolsPanel()
+        await this.$nextTick()
+        if (!document.querySelector('.workspace-shell-idle-links [data-tour="dashboard"]')) {
+          this.topCardMenuOpen = true
+        }
+      }
+    },
+    measureWorkspaceTourTarget() {
+      if (!this.workspaceTourActive) return
+      const token = ++this.workspaceTourMeasureToken
+      const step = this.workspaceTourStep
+      const selector = step?.selector
+      let el = null
+      if (selector) {
+        const parts = String(selector).split(',').map((part) => part.trim()).filter(Boolean)
+        for (const part of parts) {
+          const found = document.querySelector(part)
+          if (found && found.getClientRects().length) {
+            el = found
+            break
+          }
+        }
+      }
+
+      if (!el) {
+        this.workspaceTourRect = null
+        this.workspaceTourTooltipPos = {
+          top: Math.max(16, window.innerHeight * 0.3),
+          left: Math.max(16, (window.innerWidth - 320) / 2),
+          placement: 'center'
+        }
+        return
+      }
+
+      try {
+        el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+      } catch { /* ignore */ }
+
+      window.setTimeout(() => {
+        if (token !== this.workspaceTourMeasureToken || !this.workspaceTourActive) return
+        const rect = el.getBoundingClientRect()
+        if (!rect.width && !rect.height) {
+          this.workspaceTourRect = null
+          return
+        }
+        this.workspaceTourRect = {
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height
+        }
+        this.positionWorkspaceTourTooltip(rect)
+      }, 80)
+    },
+    positionWorkspaceTourTooltip(rect) {
+      const tipWidth = Math.min(340, window.innerWidth - 24)
+      const tipHeight = 190
+      const gap = 14
+      const spaceBelow = window.innerHeight - (rect.bottom + gap)
+      const spaceAbove = rect.top - gap
+      let placement = 'bottom'
+      let top = rect.bottom + gap
+      if (spaceBelow < tipHeight && spaceAbove > spaceBelow) {
+        placement = 'top'
+        top = Math.max(12, rect.top - tipHeight - gap)
+      }
+      let left = rect.left + (rect.width / 2) - (tipWidth / 2)
+      left = Math.max(12, Math.min(left, window.innerWidth - tipWidth - 12))
+      top = Math.max(12, Math.min(top, window.innerHeight - tipHeight - 12))
+      this.workspaceTourTooltipPos = { top, left, placement }
+    },
+    async prevWorkspaceTourStep() {
+      if (this.workspaceTourStepIndex <= 0) return
+      this.workspaceTourStepIndex -= 1
+      await this.applyWorkspaceTourStep(this.workspaceTourStepIndex)
+    },
+    async nextWorkspaceTourStep() {
+      if (this.workspaceTourNextDisabled) return
+      if (this.workspaceTourIsLastStep) {
+        this.finishWorkspaceTour()
+        return
+      }
+      this.workspaceTourStepIndex += 1
+      await this.applyWorkspaceTourStep(this.workspaceTourStepIndex)
+    },
+    skipWorkspaceTour() {
+      this.finishWorkspaceTour({ dismiss: true })
+    },
+    finishWorkspaceTour({ dismiss = true } = {}) {
+      this.workspaceTourActive = false
+      this.workspaceTourRect = null
+      this.unbindWorkspaceTourListeners()
+      this.topCardMenuOpen = false
+      if (dismiss) {
+        try {
+          localStorage.setItem(this.getTesterGuideStorageKey(), '1')
+        } catch { /* ignore */ }
+      }
+    },
+    maybeAdvanceWorkspaceTourFromSession() {
+      if (!this.workspaceTourActive) return
+      if (this.workspaceTourStep?.key === 'start' && (this.hasSessionStarted || this.isSessionLive || this.showHeaderEndSessionAction)) {
+        const sessionIndex = this.workspaceTourSteps.findIndex((step) => step.key === 'session')
+        if (sessionIndex >= 0) {
+          this.workspaceTourStepIndex = sessionIndex
+          this.applyWorkspaceTourStep(sessionIndex)
+        }
+        return
+      }
+      if (this.workspaceTourStep?.key === 'session' && this.showPostSessionModal) {
+        const planIndex = this.workspaceTourSteps.findIndex((step) => step.key === 'plan')
+        if (planIndex >= 0) {
+          this.workspaceTourStepIndex = planIndex
+          this.applyWorkspaceTourStep(planIndex)
+        }
+      } else if (this.workspaceTourStep?.key === 'plan' && this.showPostSessionModal) {
+        this.measureWorkspaceTourTarget()
+      } else if (this.workspaceTourStep?.key === 'session' && this.showHeaderEndSessionAction) {
+        this.measureWorkspaceTourTarget()
+      }
+    },
+    collapseTesterGuide() {},
+    expandTesterGuide() {},
+    dismissTesterGuide() {
+      this.finishWorkspaceTour({ dismiss: true })
+    },
+    prevTesterGuideStep() {
+      this.prevWorkspaceTourStep()
+    },
+    nextTesterGuideStep() {
+      this.nextWorkspaceTourStep()
+    },
     readOnboardingStepIndex() {
-      const max = Math.max(0, (this.onboardingSteps?.length || 4) - 1)
+      const max = Math.max(0, (this.onboardingSteps?.length || 5) - 1)
       const raw = Number(this.readWorkspaceStateValue('onboardingStepIndex', 0) || 0)
       if (!Number.isFinite(raw)) return 0
       return Math.max(0, Math.min(max, Math.round(raw)))
@@ -14680,6 +15157,7 @@ export default {
       this.postSessionRecommendationStep = 'main'
       this.postSessionRecommendationStarting = false
       this.postSessionRecommendationStartError = ''
+      this.postSessionMemorisationCheckNudgeShown = false
       this.postSessionConfidenceBusy = false
       this.postSessionConfidenceError = ''
       this.postSessionSettingsBusy = false
@@ -16205,6 +16683,36 @@ export default {
       this.postSessionRecommendationStep = 'main'
       this.postSessionRecommendationStartError = ''
     },
+    /**
+     * Soft one-time nudge before advancing without an AI check.
+     * @returns {boolean} true when the nudge was shown (caller should abort start)
+     */
+    maybeShowMemorisationCheckNudge() {
+      if (!this.aiTestModalsEnabled) return false
+      const shouldNudge = shouldNudgeMemorisationCheckBeforeAdvance({
+        hasAiCheck: !!(this.postSessionShowRecommendationPlan || this.postSessionHasAiCheck),
+        recommendation: this.postSessionRecommendation,
+        alreadyNudged: !!this.postSessionMemorisationCheckNudgeShown,
+      })
+      if (!shouldNudge) return false
+      this.postSessionMemorisationCheckNudgeShown = true
+      this.postSessionRecommendationStartError = ''
+      this.postSessionRecommendationStep = 'memorisation_check_nudge'
+      this.$nextTick(() => {
+        const title = this.$el?.querySelector?.('#postSessionMemorisationCheckNudgeTitle')
+        if (title && typeof title.focus === 'function') {
+          title.setAttribute('tabindex', '-1')
+          title.focus()
+        }
+      })
+      return true
+    },
+    async continueWithoutMemorisationCheck() {
+      if (this.postSessionActionsBusy) return
+      this.postSessionMemorisationCheckNudgeShown = true
+      this.postSessionRecommendationStep = 'main'
+      await this.confirmPostSessionRecommendation({ skipMemorisationCheckNudge: true })
+    },
     async dismissPostSessionRecommendation(choseOther = true) {
       const recommendation = this.postSessionRecommendation
       if (recommendation?.id && this.isLoggedIn && this.learningBackendEnabled()) {
@@ -16244,14 +16752,20 @@ export default {
         sessionMode: 'revision',
       })
     },
-    async confirmPostSessionRecommendation() {
+    async confirmPostSessionRecommendation(options = {}) {
       if (this.postSessionRecommendationStarting) return
       const hasSnapshotRange = !!(
         Number(this.postSessionSnapshot?.chapterId || 0)
         && Number(this.postSessionSnapshot?.rangeStart || 0)
       )
       if (!this.postSessionRecommendationActionable && !hasSnapshotRange) return
+
+      if (!options.skipMemorisationCheckNudge && this.maybeShowMemorisationCheckNudge()) {
+        return
+      }
+
       const recommendation = this.postSessionRecommendation
+      this.postSessionRecommendationStep = 'main'
       this.postSessionRecommendationStarting = true
       this.postSessionRecommendationStartError = ''
       this.postSessionViewState = isRepeatRecommendation(recommendation)
@@ -16653,6 +17167,10 @@ export default {
     async onPostSessionTestWithAi() {
       if (this.postSessionAiReciteGateBusy) return
       if (!this.aiTestModalsEnabled) return
+      // Leaving the soft nudge for the AI flow; weak→repeat / strong→advance still apply after.
+      if (this.postSessionRecommendationStep === 'memorisation_check_nudge') {
+        this.postSessionRecommendationStep = 'main'
+      }
       // Sole allowed entry point for the memorisation-test modal.
       await this.openPostSessionAiRecite({ resetAttempts: true, fromTestWithAi: true })
     },
@@ -16694,7 +17212,8 @@ export default {
       }
       if (action === POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE
         || action === POST_SESSION_CTA_ACTIONS.CONFIRM_START
-        || action === POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW) {
+        || action === POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW
+        || action === POST_SESSION_CTA_ACTIONS.CONTINUE_WITHOUT_TESTING) {
         return this.postSessionActionsBusy
           || !(this.postSessionRecommendationActionable || hasSnapshotRange)
       }
@@ -16721,7 +17240,8 @@ export default {
         || action === POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE
         || action === POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE
         || action === POST_SESSION_CTA_ACTIONS.CONFIRM_START
-        || action === POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW) {
+        || action === POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW
+        || action === POST_SESSION_CTA_ACTIONS.CONTINUE_WITHOUT_TESTING) {
         return !!this.postSessionRecommendationStarting
       }
       return false
@@ -16757,6 +17277,9 @@ export default {
         case POST_SESSION_CTA_ACTIONS.CONFIRM_START:
         case POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW:
           await this.onPostSessionContinueToAyahs()
+          return
+        case POST_SESSION_CTA_ACTIONS.CONTINUE_WITHOUT_TESTING:
+          await this.continueWithoutMemorisationCheck()
           return
         case POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING:
         case POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE:
@@ -16976,14 +17499,15 @@ export default {
       const planRange = this.aiReciteFinalPlan?.ayah_range
         || this.masteryTargetRange
         || null
-      const recRange = this.postSessionRecommendation?.ayah_range || null
+      const rec = this.postSessionRecommendation || null
+      const recRange = rec?.ayah_range || null
       // Preserve the completed session window as the outer bound; never advance on revise.
       const chapterId = Number(
         snap.chapterId
         || planRange?.surahId
         || planRange?.chapterId
         || recRange?.surah_id
-        || this.postSessionRecommendation?.surah?.id
+        || rec?.surah?.id
         || this.chapterId
         || 0,
       )
@@ -16996,10 +17520,25 @@ export default {
       const weakAyahs = (this.postSessionRevisionWeakAyahs || [])
         .map(Number)
         .filter((n) => Number.isFinite(n) && n > 0)
-      if (weakAyahs.length) {
-        rangeStart = Math.min(rangeStart || weakAyahs[0], ...weakAyahs)
-        rangeEnd = Math.max(rangeEnd || weakAyahs[0], ...weakAyahs)
+
+      // Prefer an already-focused repeat recommendation (weak ± neighbors, max 3).
+      if (isRepeatRecommendation(rec) && Number(recRange?.from) > 0 && Number(recRange?.to) > 0) {
+        rangeStart = Number(recRange.from)
+        rangeEnd = Number(recRange.to)
+      } else if (weakAyahs.length) {
+        const focused = buildFocusedPracticeRange({
+          weakAyahs,
+          sessionFrom: rangeStart,
+          sessionTo: rangeEnd,
+          surahAyahCount: Number(snap.totalAyahsInSurah || snap.totalAyahs || 0),
+          max: 3,
+        })
+        if (focused?.from && focused?.to) {
+          rangeStart = focused.from
+          rangeEnd = focused.to
+        }
       }
+
       const scope = this.postSessionSelectedPracticeScope
       const scoped = resolveRevisionSessionRange({
         scope,
@@ -17014,7 +17553,9 @@ export default {
         rangeStart: Number(scoped.from || rangeStart),
         rangeEnd: Number(scoped.to || rangeEnd),
         scope: scoped.scope,
-        focusAyahs: scoped.focus_ayahs || [],
+        focusAyahs: scoped.focus_ayahs
+          || recRange?.focus_ayahs
+          || weakAyahs.filter((n) => n >= rangeStart && n <= rangeEnd),
       }
     },
     resolveRecommendedFocusPhraseWord() {
@@ -17062,7 +17603,7 @@ export default {
       this.postSessionViewState = 'starting_repeat'
       try {
         this.ensurePostSessionPracticeScopeDefault()
-        let { chapterId, rangeStart, rangeEnd, scope } = this.resolveFocusPhraseRevisionRange()
+        let { chapterId, rangeStart, rangeEnd, scope, focusAyahs: scopedFocusAyahs } = this.resolveFocusPhraseRevisionRange()
         if (weakAyahOnly && weakAyah > 0) {
           chapterId = Number(
             this.postSessionSnapshot?.chapterId
@@ -17092,6 +17633,19 @@ export default {
         if (weakAyahOnly && weakAyah > 0) {
           planSettings.practice_scope = PRACTICE_SCOPE.WEAK_AREAS
           planSettings.focus_ayahs = [weakAyah]
+        } else {
+          const focusAyahs = [
+            ...(Array.isArray(planSettings.focus_ayahs) ? planSettings.focus_ayahs : []),
+            ...(Array.isArray(scopedFocusAyahs) ? scopedFocusAyahs : []),
+            ...(Array.isArray(activeRecommendation?.ayah_range?.focus_ayahs)
+              ? activeRecommendation.ayah_range.focus_ayahs
+              : []),
+            ...(this.postSessionRevisionWeakAyahs || []),
+          ].map(Number).filter((n) => Number.isFinite(n) && n > 0
+            && n >= rangeStart && n <= rangeEnd)
+          if (focusAyahs.length) {
+            planSettings.focus_ayahs = [...new Set(focusAyahs)].sort((a, b) => a - b)
+          }
         }
         const doubledReps = doubleDownRevisionRepetitions(planSettings.repetitions)
         planSettings.repetitions = doubledReps
@@ -18557,6 +19111,7 @@ export default {
         { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'techniques', section: 'focus_mode', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'techniques', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
         { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       if (stepMeta.targetSection) stepConfig.section = stepMeta.targetSection
@@ -29119,6 +29674,12 @@ export default {
       if (this.anchorModeEnabled) {
         this.scheduleAnchorHighlights()
       }
+      // Never reload workspace media mid-playback — that froze the player after ayah 1.
+      if (this.isPlaying || this.advanceLocked || this.hasSessionStarted || this.isSessionLive) {
+        this.persistUiState()
+        this.persistModeState(this.currentMode)
+        return
+      }
       // Persist + soft-apply. Queue rebuild stays on the repetitions/chaining watchers.
       await this.flushOffcanvasToWorkspace('offcanvas-commit')
     },
@@ -31425,6 +31986,9 @@ export default {
     clearWorkspaceForConfigChange(mode = this.currentMode) {
       const store = this.getModeStore(mode)
       if (!store) return
+      this.clearPlaybackAdvanceTimer()
+      this.advanceLocked = false
+      this.playRequestLocked = false
       this.stopWordHighlighting()
       if (this.audioElement) {
         try { this.audioElement.pause() } catch { }
@@ -35450,57 +36014,75 @@ export default {
         this.advanceLocked = true
         this.isPlaying = false
         this.stopWordHighlighting()
-        if (this.guidedUiStep === 'learn') {
-          this.flowListenPlays += 1
-          this.persistUiState()
-        }
-        if (this.manualOnlyPlayback) {
-          this.manualOnlyPlayback = false
-          this.advanceLocked = false
-          return
-        }
-        if (this.readingViewMode === 'mushaf' && this.playMode !== 'manual') {
-          this.prefetchMushafPageForUpcomingAyah()
-        }
-        const gapSeconds = this.getCurrentPlaybackGapSeconds()
-        const gapDelayMs = Math.max(0, gapSeconds * 1000)
-        this.clearPlaybackAdvanceTimer()
-        if (this.talqinModeActive && this.playMode !== 'manual') {
-          this.advanceLocked = false
-          this.beginTalqinRecitationTurn(() => {
-            if (isSessionAutomationHalted({
-              sessionPaused: this.sessionPaused,
-              sessionCompleted: this.sessionCompleted,
-            })) {
+        try {
+          if (this.guidedUiStep === 'learn') {
+            this.flowListenPlays += 1
+            this.persistUiState()
+          }
+          if (this.manualOnlyPlayback) {
+            this.manualOnlyPlayback = false
+            this.advanceLocked = false
+            return
+          }
+          if (this.readingViewMode === 'mushaf' && this.playMode !== 'manual') {
+            this.prefetchMushafPageForUpcomingAyah()
+          }
+          const gapSeconds = this.getCurrentPlaybackGapSeconds()
+          const gapDelayMs = Math.max(0, Number.isFinite(gapSeconds) ? gapSeconds * 1000 : 0)
+          this.clearPlaybackAdvanceTimer()
+          if (this.talqinModeActive && this.playMode !== 'manual') {
+            this.advanceLocked = false
+            this.beginTalqinRecitationTurn(() => {
+              if (isSessionAutomationHalted({
+                sessionPaused: this.sessionPaused,
+                sessionCompleted: this.sessionCompleted,
+              })) {
+                return
+              }
+              if (this.canNext) {
+                this.next()
+                return
+              }
+              this.handleSessionComplete()
+            })
+            return
+          }
+          if (this.playMode === 'follow') {
+            this.advanceLocked = false
+            this.startRecitationWindow(() => {
+              if (isSessionAutomationHalted({
+                sessionPaused: this.sessionPaused,
+                sessionCompleted: this.sessionCompleted,
+              })) {
+                return
+              }
+              if (this.canNext) {
+                this.next()
+                return
+              }
+              this.handleSessionComplete()
+            })
+            return
+          }
+          if (this.playMode === 'auto') {
+            if (!this.chainingEnabled && this.selectedLoopCount === 'infinite' && this.activeQueueEntry) {
+              this.playbackAdvanceTimer = window.setTimeout(() => {
+                this.playbackAdvanceTimer = null
+                if (isSessionAutomationHalted({
+                  sessionPaused: this.sessionPaused,
+                  sessionCompleted: this.sessionCompleted,
+                })) {
+                  this.advanceLocked = false
+                  return
+                }
+                const entry = this.activeQueueEntry
+                this.advanceLocked = false
+                if (entry) {
+                  this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+                }
+              }, gapDelayMs)
               return
             }
-            if (this.canNext) {
-              this.next()
-              return
-            }
-            this.handleSessionComplete()
-          })
-          return
-        }
-        if (this.playMode === 'follow') {
-          this.advanceLocked = false
-          this.startRecitationWindow(() => {
-            if (isSessionAutomationHalted({
-              sessionPaused: this.sessionPaused,
-              sessionCompleted: this.sessionCompleted,
-            })) {
-              return
-            }
-            if (this.canNext) {
-              this.next()
-              return
-            }
-            this.handleSessionComplete()
-          })
-          return
-        }
-        if (this.playMode === 'auto') {
-          if (!this.chainingEnabled && this.selectedLoopCount === 'infinite' && this.activeQueueEntry) {
             this.playbackAdvanceTimer = window.setTimeout(() => {
               this.playbackAdvanceTimer = null
               if (isSessionAutomationHalted({
@@ -35510,27 +36092,14 @@ export default {
                 this.advanceLocked = false
                 return
               }
-              const entry = this.activeQueueEntry
               this.advanceLocked = false
-              if (entry) {
-                this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
-              }
+              this.next()
             }, gapDelayMs)
-            return
-          }
-          this.playbackAdvanceTimer = window.setTimeout(() => {
-            this.playbackAdvanceTimer = null
-            if (isSessionAutomationHalted({
-              sessionPaused: this.sessionPaused,
-              sessionCompleted: this.sessionCompleted,
-            })) {
-              this.advanceLocked = false
-              return
-            }
+          } else {
             this.advanceLocked = false
-            this.next()
-          }, gapDelayMs)
-        } else {
+          }
+        } catch (error) {
+          console.error('audioEnded advance failed:', error)
           this.advanceLocked = false
         }
       }
@@ -35690,7 +36259,8 @@ export default {
       const activeSrc = this.audioElement?.currentSrc
         ? this.normalizeAudioUrl(this.audioElement.currentSrc)
         : this.normalizeAudioUrl(this.audioElement?.getAttribute?.('src') || '')
-      if (activeSrc !== audioUrl) {
+      const sameAudioSource = !!activeSrc && activeSrc === audioUrl
+      if (!sameAudioSource) {
         this.ignoreMainAudioPauseEvent = true
         this.audioElement.src = audioUrl
         this.audioElement.load()
@@ -35728,6 +36298,11 @@ export default {
           segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal))
           this.segmentEndTime = segmentEnd
           this.audioElement.currentTime = segmentStart
+        } else if (sameAudioSource) {
+          // Same-ayah repeats reuse the URL; without a rewind, play() stays at EOF and freezes.
+          try {
+            this.audioElement.currentTime = 0
+          } catch (_) { /* ignore seek errors */ }
         }
 
         await this.audioElement.play()
@@ -37419,13 +37994,20 @@ export default {
             )
             this.selectedLoopCount = this.repetitionsPerStep
           }
-          this.setupIndividualAyah = Number.isFinite(Number(state.setupIndividualAyah))
-            ? Number(state.setupIndividualAyah)
-            : null
-          this.individualAyahRepeatCounts = (state.individualAyahRepeatCounts && typeof state.individualAyahRepeatCounts === 'object')
-            ? { ...state.individualAyahRepeatCounts }
-            : {}
-          this.clampSetupIndividualAyah()
+          this.individualAyahFocusEnabled = state.individualAyahFocusEnabled === true
+          if (this.individualAyahFocusEnabled) {
+            this.setupIndividualAyah = Number.isFinite(Number(state.setupIndividualAyah))
+              ? Number(state.setupIndividualAyah)
+              : null
+            this.individualAyahRepeatCounts = (state.individualAyahRepeatCounts && typeof state.individualAyahRepeatCounts === 'object')
+              ? { ...state.individualAyahRepeatCounts }
+              : {}
+            this.clampSetupIndividualAyah()
+          } else {
+            // Drop stale Setup overrides so they cannot change session/technique behaviour.
+            this.setupIndividualAyah = null
+            this.individualAyahRepeatCounts = {}
+          }
           this.gapBetweenVerses = ['none', '1x', '3s', '5s', 'custom'].includes(state.gapBetweenVerses)
             ? state.gapBetweenVerses
             : this.gapBetweenVerses
@@ -37538,7 +38120,10 @@ export default {
           repetitionsPerStep: this.repetitionsPerStep,
           selectedLoopCount: this.selectedLoopCount,
           setupIndividualAyah: this.setupIndividualAyah,
-          individualAyahRepeatCounts: this.individualAyahRepeatCounts || {},
+          individualAyahFocusEnabled: !!this.individualAyahFocusEnabled,
+          individualAyahRepeatCounts: this.individualAyahFocusEnabled
+            ? (this.individualAyahRepeatCounts || {})
+            : {},
           gapBetweenVerses: this.gapBetweenVerses,
           customGapSeconds: this.customGapSeconds,
           fontScale: this.fontScale,
@@ -38295,7 +38880,9 @@ export default {
 
     adjustRange(options = {}) {
       this.clampControlRange(this.currentMode)
-      this.clampSetupIndividualAyah()
+      if (this.individualAyahFocusEnabled) {
+        this.clampSetupIndividualAyah()
+      }
       if (options.immediate) {
         void this.applyWorkspaceControls({ reason: 'range' })
         return
@@ -38317,7 +38904,8 @@ export default {
         this.rangeEnd = lastAyah
       }
       this.setupIndividualAyah = null
-      this.clampSetupIndividualAyah()
+      this.individualAyahFocusEnabled = false
+      this.individualAyahRepeatCounts = {}
       this.applyWorkspaceControls({ reason: 'chapter' })
     },
 

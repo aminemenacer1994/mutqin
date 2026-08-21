@@ -148,9 +148,13 @@ mix.js('resources/js/app.js', 'public/js')
    })
    .webpackConfig({
        output: {
-           // Contenthash so browsers cannot keep a stale memorisation chunk forever.
-           // (Stable `memorisation.js` was cached indefinitely by Safari/Chrome.)
-           chunkFilename: 'js/[name].[contenthash:8].js'
+           // Production: contenthash so browsers cannot keep a stale memorisation
+           // chunk forever. Watch/dev: stable names — contenthash in watch mode
+           // updates app.js's chunk map before (or without) re-emitting unchanged
+           // async chunks, which causes ChunkLoadError 404s (e.g. homepage.*.js).
+           chunkFilename: mix.inProduction()
+               ? 'js/[name].[contenthash:8].js'
+               : 'js/[name].js'
        },
        plugins: [new PruneMissingManifestEntriesPlugin()]
    })

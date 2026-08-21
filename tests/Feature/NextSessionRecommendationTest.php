@@ -615,6 +615,153 @@ class NextSessionRecommendationTest extends TestCase
         $this->assertSame(12, $stillRepeat['ayah_range']['from']);
     }
 
+    public function test_clean_strong_ai_advances_even_if_needs_practice_confidence(): void
+    {
+        $user = User::factory()->pro()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $this->actingAs($user)
+            ->postJson('/api/recommendations/confidence', [
+                'recommendation_id' => $recommendationId,
+                'confidence' => 'needs_practice',
+            ])
+            ->assertOk();
+
+        $openId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $advanced = $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $openId,
+                'result' => 'strong',
+                'summary' => 'Clean and steady',
+                'color_counts' => ['red' => 0, 'black' => 0, 'amber' => 0, 'green' => 18],
+                'weak_ayahs' => [],
+                'average_accuracy' => 96,
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertNotSame(RecommendationType::RepeatCurrentRange->value, $advanced['type']);
+        $this->assertGreaterThan(14, (int) ($advanced['ayah_range']['from'] ?? 0));
+    }
+
+    public function test_borderline_strong_with_hard_error_repeats(): void
+    {
+        $user = User::factory()->pro()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $repeated = $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'strong',
+                'summary' => 'Mostly strong but one hard slip',
+                'color_counts' => ['red' => 1, 'black' => 0, 'amber' => 1, 'green' => 14],
+                'weak_ayahs' => [13],
+                'average_accuracy' => 81,
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $repeated['type']);
+        $this->assertSame(12, $repeated['ayah_range']['from']);
+        $this->assertSame(14, $repeated['ayah_range']['to']);
+    }
+
+    public function test_weak_ai_shrinks_wide_session_to_focused_ayahs(): void
+    {
+        $user = User::factory()->pro()->create();
+        $this->seedCompletedSession($user, 2, 10, 18);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $repeated = $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'weak',
+                'summary' => 'Local weakness around ayah 13',
+                'color_counts' => ['red' => 3, 'black' => 1, 'amber' => 2, 'green' => 10],
+                'weak_ayahs' => [13],
+                'average_accuracy' => 48,
+                'missed_words' => 3,
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $repeated['type']);
+        $this->assertSame(12, (int) $repeated['ayah_range']['from']);
+        $this->assertSame(14, (int) $repeated['ayah_range']['to']);
+        $this->assertSame([13], array_map('intval', $repeated['ayah_range']['focus_ayahs'] ?? []));
+        $this->assertStringContainsString('weaker ayahs', (string) ($repeated['user_reason'] ?? $repeated['reason'] ?? ''));
+    }
+
+    public function test_memorisation_detection_plan_settings_merge_into_repeat(): void
+    {
+        $user = User::factory()->pro()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $repeated = $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'weak',
+                'summary' => 'Needs a focused pass',
+                'weak_ayahs' => [13],
+                'average_accuracy' => 44,
+                'missed_words' => 2,
+                'ayah_range' => ['from' => 12, 'to' => 14, 'count' => 3, 'focus_ayahs' => [13]],
+                'focus_ayahs' => [13],
+                'plan_detail' => [
+                    'source' => 'memorisation_detection',
+                    'title' => 'Strengthen Ayah 13',
+                ],
+                'settings' => [
+                    'technique' => 'chunking',
+                    'playback_speed' => 0.85,
+                    'repetitions' => 5,
+                    'practice_weak_words' => [
+                        [
+                            'text' => 'ٱهْدِنَا',
+                            'wordIndex' => 0,
+                            'ayahNumber' => 13,
+                            'surahId' => 2,
+                            'verseKey' => '2:13',
+                        ],
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $repeated['type']);
+        $this->assertSame('focus', $repeated['settings']['technique'] ?? null);
+        $this->assertSame(0.85, (float) ($repeated['settings']['playback_speed'] ?? 0));
+        $this->assertSame(5, (int) ($repeated['settings']['repetitions'] ?? 0));
+        $this->assertNotEmpty($repeated['settings']['practice_weak_words'] ?? []);
+    }
+
+    public function test_clean_mixed_developing_allows_progression(): void
+    {
+        $user = User::factory()->pro()->create();
+        $this->seedCompletedSession($user, 2, 12, 14);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $continued = $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'mixed',
+                'summary' => 'Developing but local only',
+                'color_counts' => ['red' => 0, 'black' => 0, 'amber' => 2, 'green' => 12],
+                'weak_ayahs' => [],
+                'average_accuracy' => 74,
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertNotSame(RecommendationType::RepeatCurrentRange->value, $continued['type']);
+        $this->assertGreaterThan(14, (int) ($continued['ayah_range']['from'] ?? 0));
+    }
+
     public function test_adaptive_assessment_snapshot_reshapes_plan(): void
     {
         $user = User::factory()->premium()->create();

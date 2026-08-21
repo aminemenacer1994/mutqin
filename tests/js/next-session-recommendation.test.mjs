@@ -252,6 +252,20 @@ function t(key, params = {}) {
     accuracy_percent: 91,
     color_counts: { red: 2, black: 0, amber: 0 },
   }), false)
+  // Borderline strong + 1 hard error should not free-advance.
+  assert.equal(aiAssessmentAllowsProgression('strong', {
+    accuracy_percent: 81,
+    color_counts: { red: 1, black: 0, amber: 0 },
+  }), false)
+  assert.equal(aiAssessmentAllowsProgression('strong', {
+    accuracy_percent: 91,
+    color_counts: { red: 1, black: 0, amber: 0 },
+  }), true)
+  assert.equal(aiAssessmentAllowsProgression('strong', {
+    accuracy_percent: 92,
+    sequence_errors: 1,
+    color_counts: { red: 0, black: 0, amber: 0 },
+  }), false)
   assert.equal(aiAssessmentAllowsProgression('mixed', {
     accuracy_percent: 91,
     color_counts: { red: 2, black: 0, amber: 1 },
@@ -259,6 +273,11 @@ function t(key, params = {}) {
   assert.equal(aiAssessmentAllowsProgression('mixed', {
     accuracy_percent: 90,
     color_counts: { red: 1, black: 0, amber: 1 },
+  }), true)
+  // Clean developing / mixed → reinforce-then-continue (not sticky repeat).
+  assert.equal(aiAssessmentAllowsProgression('mixed', {
+    accuracy_percent: 72,
+    color_counts: { red: 0, black: 0, amber: 0 },
   }), true)
   assert.equal(aiAssessmentAllowsProgression('mixed', {
     accuracy_percent: 80,
@@ -288,6 +307,16 @@ function t(key, params = {}) {
   })
   assert.equal(afterMinorMixed.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
   assert.equal(afterMinorMixed.ayah_range.from, 10)
+
+  const afterCleanDeveloping = adaptRecommendationForAiAssessment(repeatRec, 'mixed', {
+    chapterId: 2,
+    rangeStart: 10,
+    rangeEnd: 12,
+    totalAyahsInSurah: 286,
+    accuracy_percent: 74,
+    color_counts: { red: 0, black: 0, amber: 2 },
+  })
+  assert.equal(afterCleanDeveloping.type, RECOMMENDATION_TYPES.CONTINUE)
 }
 
 {
@@ -727,6 +756,37 @@ function t(key, params = {}) {
   assert.equal(adapted.ayah_range.to, 17)
   assert.deepEqual(adapted.ayah_range.focus_ayahs, [16])
   assert.equal(adapted.settings.technique, 'chaining')
+  assert.equal(adapted.primary_action_label_key, 'startFocusedReview')
+}
+
+{
+  // Wide reinforce with a local weak ayah shrinks to weak ±1 (max 3).
+  const wideAdapted = adaptRecommendationForAdaptiveAssessment(
+    {
+      id: 8,
+      type: RECOMMENDATION_TYPES.CONTINUE,
+      surah: { id: 2, name: 'Al-Baqarah' },
+      ayah_range: { from: 20, to: 22, count: 3 },
+      settings: { technique: 'talqin', playback_speed: 1, repetitions: 3 },
+    },
+    {
+      goal: 'reinforce',
+      settings: { technique: 'focus', playback_speed: 0.75, repetitions: 4 },
+      reason_code: 'weak_ayah_cluster',
+      weak_ayahs: [12],
+      primary_action_label_key: 'startFocusedReview',
+    },
+    {
+      rangeStart: 10,
+      rangeEnd: 18,
+      objectiveBand: 'weak',
+      weakAyahs: [12],
+    },
+  )
+  assert.equal(wideAdapted.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
+  assert.equal(wideAdapted.ayah_range.from, 11)
+  assert.equal(wideAdapted.ayah_range.to, 13)
+  assert.deepEqual(wideAdapted.ayah_range.focus_ayahs, [12])
 }
 
 {
@@ -780,10 +840,25 @@ function t(key, params = {}) {
     aiDetails: { weakAyahs: [4, 8], accuracyPercent: 40 },
   })
   assert.equal(needsPracticeWide.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
-  assert.equal(needsPracticeWide.ayah_range.from, 1)
+  // Weak ayahs ± neighbors, hard-capped at 3 — not a blind 1–9 restart.
+  assert.equal(needsPracticeWide.ayah_range.from, 7)
   assert.equal(needsPracticeWide.ayah_range.to, 9)
-  assert.ok(needsPracticeWide.ayah_range.focus_ayahs.includes(4))
-  assert.ok(needsPracticeWide.ayah_range.focus_ayahs.includes(8))
+  assert.deepEqual(needsPracticeWide.ayah_range.focus_ayahs, [8])
+  assert.equal(needsPracticeWide.primary_action_label_key, 'startFocusedReview')
+  assert.equal(needsPracticeWide.settings.ayat_per_step, 1)
+
+  const needsPracticeTight = adaptRecommendationForConfidence({
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    ayah_range: { from: 20, to: 22, count: 3 },
+    settings: { technique: 'talqin', repetitions: 3 },
+  }, 'needs_practice', {
+    rangeStart: 18,
+    rangeEnd: 25,
+    aiDetails: { weakAyahs: [20], accuracyPercent: 42 },
+  })
+  assert.equal(needsPracticeTight.ayah_range.from, 19)
+  assert.equal(needsPracticeTight.ayah_range.to, 21)
+  assert.deepEqual(needsPracticeTight.ayah_range.focus_ayahs, [20])
 
   const widePlan = buildPersonalPracticePlan({
     recommendation: {
@@ -798,9 +873,9 @@ function t(key, params = {}) {
     t,
   })
   assert.equal(widePlan.isRepeat, true)
-  assert.equal(widePlan.range.from, 1)
+  assert.equal(widePlan.range.from, 7)
   assert.equal(widePlan.range.to, 9)
-  assert.deepEqual(widePlan.range.focusAyahs, [4, 8])
+  assert.deepEqual(widePlan.range.focusAyahs, [8])
 
   const applied = applyPersonalPlanToRecommendation({
     type: RECOMMENDATION_TYPES.CONTINUE,
@@ -809,8 +884,9 @@ function t(key, params = {}) {
     ayah_range: { from: 10, to: 12, count: 3 },
   }, widePlan)
   assert.equal(applied.type, RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE)
-  assert.equal(applied.ayah_range.from, 1)
+  assert.equal(applied.ayah_range.from, 7)
   assert.equal(applied.ayah_range.to, 9)
+  assert.deepEqual(applied.ayah_range.focus_ayahs, [8])
 }
 
 console.log('next-session-recommendation.test.mjs: ok')

@@ -6333,32 +6333,32 @@ html {
 [data-theme="dark"] .recitation-review-ayah .recitation-word-correct,
 [data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-correct {
   color: #8fd4a8;
-  background: rgba(143, 212, 168, 0.14);
-  box-shadow: inset 0 -0.1em 0 rgba(143, 212, 168, 0.75), 0 0 0 0.045em rgba(143, 212, 168, 0.28);
+  background: transparent;
+  box-shadow: none;
   text-decoration-color: rgba(143, 212, 168, 0.95);
 }
 
 [data-theme="dark"] .recitation-review-ayah .recitation-word-partial,
 [data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-partial {
   color: #f0c56e;
-  background: rgba(240, 197, 110, 0.14);
-  box-shadow: inset 0 -0.1em 0 rgba(240, 197, 110, 0.7), 0 0 0 0.045em rgba(240, 197, 110, 0.28);
+  background: transparent;
+  box-shadow: none;
   text-decoration-color: rgba(240, 197, 110, 0.95);
 }
 
 [data-theme="dark"] .recitation-review-ayah .recitation-word-incorrect,
 [data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect {
   color: #f0a090;
-  background: rgba(240, 160, 144, 0.14);
-  box-shadow: inset 0 -0.05em 0 rgba(240, 160, 144, 0.8), inset 0 -0.14em 0 rgba(240, 160, 144, 0.55), 0 0 0 0.045em rgba(240, 160, 144, 0.28);
+  background: transparent;
+  box-shadow: none;
   text-decoration-color: rgba(240, 160, 144, 0.95);
 }
 
 [data-theme="dark"] .recitation-review-ayah .recitation-word-omitted,
 [data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-omitted {
   color: #f2ebe3;
-  background: rgba(242, 235, 227, 0.1);
-  box-shadow: inset 0 -0.1em 0 rgba(242, 235, 227, 0.7), 0 0 0 0.045em rgba(242, 235, 227, 0.28);
+  background: transparent;
+  box-shadow: none;
   text-decoration-color: rgba(242, 235, 227, 0.9);
 }
 
@@ -6784,45 +6784,52 @@ html {
   line-height: inherit;
   white-space: normal;
   margin: 0;
-  padding: 0 0.08em 0.05em;
-  border-radius: 0.18em;
-  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: color 0.18s ease, text-decoration-color 0.18s ease;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-pending {
   opacity: 0.78;
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline dotted;
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-correct {
-  background: rgba(20, 100, 67, 0.14);
-  box-shadow: 0 0 0 1px rgba(20, 100, 67, 0.28);
+  color: #146443;
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline solid;
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-partial {
-  background: rgba(138, 79, 8, 0.14);
-  box-shadow: 0 0 0 1px rgba(138, 79, 8, 0.3);
+  color: #8a4f08;
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline dashed;
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-incorrect {
-  background: rgba(155, 46, 39, 0.14);
-  box-shadow: 0 0 0 1px rgba(155, 46, 39, 0.3);
+  color: #9b2e27;
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline double;
   text-decoration-thickness: 0.12em;
   text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-omitted {
-  background: rgba(31, 26, 23, 0.1);
-  box-shadow: 0 0 0 1px rgba(31, 26, 23, 0.32);
+  background: transparent;
+  box-shadow: none;
   color: #1f1a17;
   text-decoration: underline dotted;
   text-decoration-thickness: 0.12em;
@@ -17886,14 +17893,18 @@ body.memorisation-page nav.navbar.app-navbar {
   display: inline;
   position: relative;
   margin-inline: 0.025em;
-  padding: 0.02em 0.08em 0.04em;
-  border-radius: 0.16em;
-  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: color 160ms ease, text-decoration-color 160ms ease, opacity 160ms ease;
 }
 
 .self-check-modal-ayah.recitation-word-review-active .recitation-word-pending {
   color: color-mix(in srgb, var(--text) 68%, transparent);
   opacity: 0.78;
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline dotted;
   text-decoration-color: rgba(69, 74, 82, 0.55);
   text-decoration-thickness: 0.08em;
@@ -17902,8 +17913,8 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .self-check-modal-ayah.recitation-word-review-active .recitation-word-correct {
   color: #146443;
-  background: rgba(20, 100, 67, 0.13);
-  box-shadow: inset 0 -0.12em 0 rgba(20, 100, 67, 0.55), 0 0 0 0.045em rgba(20, 100, 67, 0.22);
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline solid;
   text-decoration-color: rgba(20, 100, 67, 0.9);
   text-decoration-thickness: 0.1em;
@@ -17912,8 +17923,8 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .self-check-modal-ayah.recitation-word-review-active .recitation-word-partial {
   color: #8a4f08;
-  background: rgba(138, 79, 8, 0.14);
-  box-shadow: inset 0 -0.12em 0 rgba(138, 79, 8, 0.5), 0 0 0 0.045em rgba(138, 79, 8, 0.24);
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline dashed;
   text-decoration-color: rgba(138, 79, 8, 0.9);
   text-decoration-thickness: 0.1em;
@@ -17922,8 +17933,8 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect {
   color: #9b2e27;
-  background: rgba(155, 46, 39, 0.13);
-  box-shadow: inset 0 -0.05em 0 rgba(155, 46, 39, 0.7), inset 0 -0.14em 0 rgba(155, 46, 39, 0.55), 0 0 0 0.045em rgba(155, 46, 39, 0.24);
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline double;
   text-decoration-color: rgba(155, 46, 39, 0.9);
   text-decoration-thickness: 0.12em;
@@ -17932,8 +17943,8 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .self-check-modal-ayah.recitation-word-review-active .recitation-word-omitted {
   color: #1f1a17;
-  background: rgba(31, 26, 23, 0.1);
-  box-shadow: inset 0 -0.12em 0 rgba(31, 26, 23, 0.55), 0 0 0 0.045em rgba(31, 26, 23, 0.28);
+  background: transparent;
+  box-shadow: none;
   text-decoration: underline dotted;
   text-decoration-color: rgba(31, 26, 23, 0.88);
   text-decoration-thickness: 0.12em;
@@ -18255,7 +18266,7 @@ body.memorisation-page nav.navbar.app-navbar {
   color: color-mix(in srgb, var(--text) 72%, transparent);
   opacity: 0.82;
   background: transparent;
-  box-shadow: inset 0 -0.08em 0 rgba(69, 74, 82, 0.5);
+  box-shadow: none;
   text-decoration: underline dotted;
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.12em;
@@ -18264,7 +18275,7 @@ body.memorisation-page nav.navbar.app-navbar {
 .recitation-review-ayah .recitation-word-correct {
   color: #146443;
   background: transparent;
-  box-shadow: inset 0 -0.1em 0 rgba(20, 100, 67, 0.7);
+  box-shadow: none;
   text-decoration: underline solid;
   text-decoration-color: rgba(20, 100, 67, 0.9);
   text-decoration-thickness: 0.1em;
@@ -18274,7 +18285,7 @@ body.memorisation-page nav.navbar.app-navbar {
 .recitation-review-ayah .recitation-word-partial {
   color: #8a4f08;
   background: transparent;
-  box-shadow: inset 0 -0.1em 0 rgba(138, 79, 8, 0.65);
+  box-shadow: none;
   text-decoration: underline dashed;
   text-decoration-color: rgba(138, 79, 8, 0.9);
   text-decoration-thickness: 0.1em;
@@ -18284,7 +18295,7 @@ body.memorisation-page nav.navbar.app-navbar {
 .recitation-review-ayah .recitation-word-incorrect {
   color: #9b2e27;
   background: transparent;
-  box-shadow: inset 0 -0.05em 0 rgba(155, 46, 39, 0.75), inset 0 -0.14em 0 rgba(155, 46, 39, 0.55);
+  box-shadow: none;
   text-decoration: underline double;
   text-decoration-color: rgba(155, 46, 39, 0.9);
   text-decoration-thickness: 0.12em;
@@ -18294,7 +18305,7 @@ body.memorisation-page nav.navbar.app-navbar {
 .recitation-review-ayah .recitation-word-omitted {
   color: color-mix(in srgb, var(--text) 88%, #1a1a1a);
   background: transparent;
-  box-shadow: inset 0 -0.1em 0 rgba(31, 26, 23, 0.7);
+  box-shadow: none;
   opacity: 0.95;
   text-decoration: underline dotted;
   text-decoration-color: rgba(31, 26, 23, 0.88);
@@ -21003,11 +21014,16 @@ button:active {
   background: rgba(177, 63, 50, 0.055);
 }
 
-.recitation-word-chip.word-incorrect,
-.recitation-word-incorrect {
+.recitation-word-chip.word-incorrect {
   background: rgba(177, 63, 50, 0.13);
   color: #9d3025;
   border-color: rgba(177, 63, 50, 0.28);
+}
+
+.recitation-word-incorrect {
+  background: transparent;
+  color: #9d3025;
+  border-color: transparent;
 }
 
 .recordings-library-surah-group {
@@ -22318,13 +22334,19 @@ never mint green */
 }
 
 .memorisation-checker-modal .recitation-word-chip.word-incorrect,
-.memorisation-checker-modal .recitation-word-incorrect,
 .memorisation-checker-modal .recitation-result-stat.tone-review,
 .memorisation-checker-modal .recording-result-pill.tone-review,
 .memorisation-checker-modal .recitation-check-score.tone-review {
   color: #6d4b12;
   border-color: rgba(180, 126, 37, 0.32);
   background: rgba(180, 126, 37, 0.12);
+}
+
+.memorisation-checker-modal .recitation-word-incorrect {
+  color: #9b2e27;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .memorisation-checker-modal .recitation-result-stat.tone-review strong,
@@ -23976,7 +23998,7 @@ never mint green */
 .recitation-review-ayah word.recitation-word-correct {
   border-color: transparent;
   background: transparent;
-  box-shadow: inset 0 -0.1em 0 rgba(26, 107, 72, 0.55);
+  box-shadow: none;
   color: #1a6b48;
 }
 
@@ -23985,7 +24007,7 @@ never mint green */
 .recitation-review-ayah word.recitation-word-partial {
   border-color: transparent;
   background: transparent;
-  box-shadow: inset 0 -0.1em 0 rgba(154, 98, 7, 0.5);
+  box-shadow: none;
   color: #9a6207;
 }
 
@@ -23994,7 +24016,7 @@ never mint green */
 .recitation-review-ayah word.recitation-word-incorrect {
   border-color: transparent;
   background: transparent;
-  box-shadow: inset 0 -0.1em 0 rgba(168, 51, 39, 0.55);
+  box-shadow: none;
   color: #a83327;
 }
 
@@ -24003,7 +24025,7 @@ never mint green */
 .recitation-review-ayah word.recitation-word-omitted {
   border-color: transparent;
   background: transparent;
-  box-shadow: inset 0 -0.1em 0 rgba(26, 26, 26, 0.5);
+  box-shadow: none;
   color: color-mix(in srgb, var(--text) 78%, #1a1a1a);
 }
 
@@ -24012,7 +24034,7 @@ never mint green */
 .recitation-review-ayah word.recitation-word-pending {
   border-color: transparent;
   background: transparent;
-  box-shadow: inset 0 -0.08em 0 rgba(116, 126, 141, 0.35);
+  box-shadow: none;
   color: color-mix(in srgb, var(--text) 52%, transparent);
 }
 
@@ -24022,9 +24044,9 @@ never mint green */
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-correct,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-correct,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-correct {
-  border-color: rgba(32, 126, 87, 0.28);
-  background: rgba(32, 126, 87, 0.13);
-  box-shadow: inset 0 -0.12em 0 rgba(32, 126, 87, 0.28);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   color: #146443;
 }
 
@@ -24034,9 +24056,9 @@ never mint green */
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-partial,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-partial,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-partial {
-  border-color: rgba(176, 105, 12, 0.28);
-  background: rgba(176, 105, 12, 0.13);
-  box-shadow: inset 0 -0.12em 0 rgba(176, 105, 12, 0.26);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   color: #8a4f08;
 }
 
@@ -24046,9 +24068,9 @@ never mint green */
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-incorrect,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-incorrect,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-incorrect {
-  border-color: rgba(180, 50, 42, 0.28);
-  background: rgba(180, 50, 42, 0.13);
-  box-shadow: inset 0 -0.12em 0 rgba(180, 50, 42, 0.26);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   color: #9b2e27;
 }
 
@@ -24224,42 +24246,48 @@ never mint green */
 [data-theme="dark"] .recitation-review-ayah .recitation-word-correct,
 [data-theme="dark"] .recitation-review-ayah .wbw-word.recitation-word-correct,
 [data-theme="dark"] .recitation-review-ayah word.recitation-word-correct {
-  border-color: rgba(128, 225, 178, 0.34);
-  background: rgba(128, 225, 178, 0.14);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   color: #a8f0c9;
 }
 
 [data-theme="dark"] .recitation-review-ayah .recitation-word-partial,
 [data-theme="dark"] .recitation-review-ayah .wbw-word.recitation-word-partial,
 [data-theme="dark"] .recitation-review-ayah word.recitation-word-partial {
-  border-color: rgba(246, 199, 107, 0.36);
-  background: rgba(246, 199, 107, 0.14);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   color: var(--text-secondary);
 }
 
 [data-theme="dark"] .recitation-review-ayah .recitation-word-incorrect,
 [data-theme="dark"] .recitation-review-ayah .wbw-word.recitation-word-incorrect,
 [data-theme="dark"] .recitation-review-ayah word.recitation-word-incorrect {
-  border-color: rgba(255, 156, 140, 0.36);
-  background: rgba(255, 156, 140, 0.14);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   color: #ffb0a2;
 }
 
 [data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-correct,
 [data-theme="dark"] .memorisation-checker-ayah.recitation-word-review-active .recitation-word-correct {
-  background: rgba(128, 225, 178, 0.14);
+  background: transparent;
+  box-shadow: none;
   color: #a8f0c9;
 }
 
 [data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-partial,
 [data-theme="dark"] .memorisation-checker-ayah.recitation-word-review-active .recitation-word-partial {
-  background: rgba(246, 199, 107, 0.14);
+  background: transparent;
+  box-shadow: none;
   color: #ffd986;
 }
 
 [data-theme="dark"] .self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect,
 [data-theme="dark"] .memorisation-checker-ayah.recitation-word-review-active .recitation-word-incorrect {
-  background: rgba(255, 156, 140, 0.14);
+  background: transparent;
+  box-shadow: none;
   color: #ffb0a2;
 }
 
@@ -26991,43 +27019,68 @@ textarea {
 }
 
 .recitation-result-stat.tone-green,
-.recitation-word-chip.word-correct,
-.recitation-review-ayah .recitation-word-correct,
-.recitation-review-ayah .wbw-word.recitation-word-correct,
-.recitation-review-ayah word.recitation-word-correct {
+.recitation-word-chip.word-correct {
   background: rgba(34, 130, 82, 0.14);
   border-color: rgba(34, 130, 82, 0.3);
   color: #17603c;
 }
 
+.recitation-review-ayah .recitation-word-correct,
+.recitation-review-ayah .wbw-word.recitation-word-correct,
+.recitation-review-ayah word.recitation-word-correct {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #17603c;
+}
+
 .recitation-result-stat.tone-amber,
-.recitation-word-chip.word-partial,
-.recitation-review-ayah .recitation-word-partial,
-.recitation-review-ayah .wbw-word.recitation-word-partial,
-.recitation-review-ayah word.recitation-word-partial {
+.recitation-word-chip.word-partial {
   background: rgba(198, 129, 18, 0.14);
   border-color: rgba(198, 129, 18, 0.3);
   color: #8b5608;
 }
 
+.recitation-review-ayah .recitation-word-partial,
+.recitation-review-ayah .wbw-word.recitation-word-partial,
+.recitation-review-ayah word.recitation-word-partial {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #8b5608;
+}
+
 .recitation-result-stat.tone-red,
-.recitation-word-chip.word-incorrect,
-.recitation-review-ayah .recitation-word-incorrect,
-.recitation-review-ayah .wbw-word.recitation-word-incorrect,
-.recitation-review-ayah word.recitation-word-incorrect {
+.recitation-word-chip.word-incorrect {
   background: rgba(184, 56, 45, 0.14);
   border-color: rgba(184, 56, 45, 0.3);
   color: #942f25;
 }
 
+.recitation-review-ayah .recitation-word-incorrect,
+.recitation-review-ayah .wbw-word.recitation-word-incorrect,
+.recitation-review-ayah word.recitation-word-incorrect {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #942f25;
+}
+
 .recitation-result-stat.tone-grey,
 .recitation-word-chip.word-pending,
-.recitation-word-chip.word-notAttempted,
+.recitation-word-chip.word-notAttempted {
+  background: rgba(111, 118, 128, 0.14);
+  border-color: rgba(111, 118, 128, 0.28);
+  color: #4e535c;
+  opacity: 1;
+}
+
 .recitation-review-ayah .recitation-word-pending,
 .recitation-review-ayah .wbw-word.recitation-word-pending,
 .recitation-review-ayah word.recitation-word-pending {
-  background: rgba(111, 118, 128, 0.14);
-  border-color: rgba(111, 118, 128, 0.28);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
   color: #4e535c;
   opacity: 1;
 }
@@ -27201,22 +27254,25 @@ textarea {
 .verse-arabic.recitation-word-review-active .recitation-word-correct,
 .self-check-modal-ayah.recitation-word-review-active .recitation-word-correct {
   color: #11643f;
-  background: rgba(29, 126, 78, 0.12);
-  border-color: rgba(29, 126, 78, 0.24);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-partial,
 .self-check-modal-ayah.recitation-word-review-active .recitation-word-partial {
   color: #8a5207;
-  background: rgba(197, 126, 18, 0.12);
-  border-color: rgba(197, 126, 18, 0.24);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-incorrect,
 .self-check-modal-ayah.recitation-word-review-active .recitation-word-incorrect {
   color: #8f2b22;
-  background: rgba(184, 56, 45, 0.12);
-  border-color: rgba(184, 56, 45, 0.24);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-pending,
@@ -28785,10 +28841,14 @@ textarea {
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-correct,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-correct,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-correct {
-  color: inherit;
-  background: rgba(33, 153, 92, 0.16);
-  box-shadow: inset 0 -0.22em 0 rgba(33, 153, 92, 0.42);
+  color: #146443;
+  background: transparent;
+  box-shadow: none;
   border-color: transparent;
+  text-decoration: underline solid;
+  text-decoration-color: rgba(33, 153, 92, 0.85);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-partial,
@@ -28800,10 +28860,14 @@ textarea {
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-partial,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-partial,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-partial {
-  color: inherit;
-  background: rgba(214, 140, 18, 0.18);
-  box-shadow: inset 0 -0.22em 0 rgba(214, 140, 18, 0.44);
+  color: #8a4f08;
+  background: transparent;
+  box-shadow: none;
   border-color: transparent;
+  text-decoration: underline dashed;
+  text-decoration-color: rgba(214, 140, 18, 0.85);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-incorrect,
@@ -28815,10 +28879,14 @@ textarea {
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-incorrect,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-incorrect,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-incorrect {
-  color: inherit;
-  background: rgba(199, 70, 54, 0.16);
-  box-shadow: inset 0 -0.22em 0 rgba(199, 70, 54, 0.44);
+  color: #9b2e27;
+  background: transparent;
+  box-shadow: none;
   border-color: transparent;
+  text-decoration: underline double;
+  text-decoration-color: rgba(199, 70, 54, 0.85);
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-pending,
@@ -29107,9 +29175,13 @@ textarea {
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-correct,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-correct,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-correct {
-  color: inherit;
-  background: rgba(27, 152, 89, 0.08);
-  box-shadow: inset 0 -0.16em 0 rgba(27, 152, 89, 0.65);
+  color: #146443;
+  background: transparent;
+  box-shadow: none;
+  text-decoration: underline solid;
+  text-decoration-color: rgba(27, 152, 89, 0.85);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-partial,
@@ -29121,9 +29193,13 @@ textarea {
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-partial,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-partial,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-partial {
-  color: inherit;
-  background: rgba(218, 146, 23, 0.08);
-  box-shadow: inset 0 -0.16em 0 rgba(218, 146, 23, 0.68);
+  color: #8a4f08;
+  background: transparent;
+  box-shadow: none;
+  text-decoration: underline dashed;
+  text-decoration-color: rgba(218, 146, 23, 0.85);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.12em;
 }
 
 .verse-arabic.recitation-word-review-active .recitation-word-incorrect,
@@ -29135,9 +29211,13 @@ textarea {
 .memorisation-checker-ayah.recitation-word-review-active .recitation-word-incorrect,
 .memorisation-checker-ayah.recitation-word-review-active .wbw-word.recitation-word-incorrect,
 .memorisation-checker-ayah.recitation-word-review-active word.recitation-word-incorrect {
-  color: inherit;
-  background: rgba(204, 68, 52, 0.08);
-  box-shadow: inset 0 -0.16em 0 rgba(204, 68, 52, 0.7);
+  color: #9b2e27;
+  background: transparent;
+  box-shadow: none;
+  text-decoration: underline double;
+  text-decoration-color: rgba(204, 68, 52, 0.85);
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.12em;
 }
 
 .recitation-live-word-stream,
@@ -29168,20 +29248,32 @@ textarea {
 
 .recitation-live-word-stream .recitation-word-chip.word-live.word-correct {
   color: #176b43;
-  background: rgba(27, 152, 89, 0.08);
-  box-shadow: inset 0 -0.15em 0 rgba(27, 152, 89, 0.64);
+  background: transparent;
+  box-shadow: none;
+  text-decoration: underline solid;
+  text-decoration-color: rgba(27, 152, 89, 0.85);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.12em;
 }
 
 .recitation-live-word-stream .recitation-word-chip.word-live.word-partial {
   color: #8c5903;
-  background: rgba(218, 146, 23, 0.08);
-  box-shadow: inset 0 -0.15em 0 rgba(218, 146, 23, 0.66);
+  background: transparent;
+  box-shadow: none;
+  text-decoration: underline dashed;
+  text-decoration-color: rgba(218, 146, 23, 0.85);
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.12em;
 }
 
 .recitation-live-word-stream .recitation-word-chip.word-live.word-incorrect {
   color: #922f22;
-  background: rgba(204, 68, 52, 0.08);
-  box-shadow: inset 0 -0.15em 0 rgba(204, 68, 52, 0.68);
+  background: transparent;
+  box-shadow: none;
+  text-decoration: underline double;
+  text-decoration-color: rgba(204, 68, 52, 0.85);
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.12em;
 }
 
 .recitation-live-word-stream .recitation-word-chip.word-live.word-pending,
@@ -33963,62 +34055,6 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   object-position: top center;
 }
 
-.session-exit-saved-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  margin-top: 0.15rem;
-  padding: 0.7rem 0.75rem;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface) 92%);
-}
-
-.session-exit-saved-notice__icon {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  color: var(--accent-strong, var(--accent));
-}
-
-.session-exit-saved-notice__copy {
-  display: grid;
-  gap: 0.12rem;
-  flex: 1 1 auto;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.session-exit-saved-notice__kicker {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.session-exit-saved-notice__copy strong {
-  font-size: 0.86rem;
-  font-weight: 650;
-  color: var(--text);
-  overflow-wrap: anywhere;
-}
-
-.session-exit-saved-notice__hint {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  font-size: 0.76rem;
-  color: var(--text-muted);
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-
 .saved-session-toast {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 72px);
@@ -34066,28 +34102,6 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
     padding: 0.8rem 0.95rem;
     font-size: 0.88rem;
   }
-}
-
-.session-exit-auto-save-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.15rem;
-  cursor: pointer;
-  user-select: none;
-}
-
-.session-exit-auto-save-toggle input {
-  width: 1rem;
-  height: 1rem;
-  margin: 0;
-  accent-color: var(--accent-strong, var(--accent));
-}
-
-.session-exit-auto-save-toggle__label {
-  font-size: 0.82rem;
-  font-weight: 650;
-  color: var(--text);
 }
 
 .rename-recording-modal {
@@ -37902,6 +37916,10 @@ but not its destructive red. */
 
 .tools-body .field-individual-ayah-unified .individual-ayah-header {
   margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .individual-ayah-header > label {
@@ -37919,6 +37937,18 @@ but not its destructive red. */
 .individual-ayah-header > label i {
   font-size: 0.88rem;
   color: var(--accent-strong, var(--accent));
+}
+
+.individual-ayah-toggle {
+  flex: 0 0 auto;
+}
+
+.tools-body .field-individual-ayah-unified:not(.is-enabled) {
+  padding-block: 0.65rem;
+}
+
+.tools-body .field-individual-ayah-unified:not(.is-enabled) .individual-ayah-intro {
+  margin-bottom: 0;
 }
 
 .tools-body .field-individual-ayah-unified .individual-ayah-select {
@@ -37962,6 +37992,29 @@ but not its destructive red. */
 
 .individual-ayah-session-count {
   color: color-mix(in srgb, var(--text-muted) 86%, var(--accent) 14%);
+}
+
+.individual-ayah-intro {
+  margin-top: -0.15rem;
+}
+
+.individual-ayah-clear {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  align-self: start;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent-strong, var(--accent));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.individual-ayah-clear:hover {
+  color: var(--accent);
 }
 
 .tools-body .field-individual-ayah-unified .individual-ayah-range {
@@ -57115,11 +57168,27 @@ never recolour tajweed text */
   width: 100% !important;
 }
 
+.post-session-simple__actions--2,
+.post-session-simple--calm-v2 .post-session-simple__actions--2,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2 {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-items: stretch !important;
+  gap: 0.55rem !important;
+  width: 100% !important;
+}
+
 @media (min-width: 640px) {
   .post-session-simple__actions--3,
   .post-session-simple--calm-v2 .post-session-simple__actions--3,
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .post-session-simple__actions--2,
+  .post-session-simple--calm-v2 .post-session-simple__actions--2,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
@@ -60267,5 +60336,136 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
     background: var(--ps-cream, var(--bg, #f3eee6)) !important;
+  }
+}
+
+
+/* Workspace spotlight tour — dim everything except the active target */
+.workspace-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 14500;
+  pointer-events: none;
+}
+
+.workspace-tour__blocker {
+  position: fixed;
+  background: color-mix(in srgb, #0a100d 62%, transparent);
+  pointer-events: auto;
+}
+
+[data-theme="light"] .workspace-tour__blocker {
+  background: color-mix(in srgb, #1a1410 48%, transparent);
+}
+
+.workspace-tour__hole {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent, #c48a4a) 75%, white),
+    0 0 0 8px color-mix(in srgb, var(--accent, #c48a4a) 22%, transparent);
+  pointer-events: none;
+  transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease, opacity 160ms ease;
+  z-index: 14501;
+}
+
+.workspace-tour__hole.is-ready {
+  animation: workspace-tour-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes workspace-tour-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #c48a4a) 75%, white), 0 0 0 8px color-mix(in srgb, var(--accent, #c48a4a) 18%, transparent); }
+  50% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #c48a4a) 90%, white), 0 0 0 12px color-mix(in srgb, var(--accent, #c48a4a) 28%, transparent); }
+}
+
+.workspace-tour__tooltip {
+  position: fixed;
+  z-index: 14502;
+  width: min(21.5rem, calc(100vw - 1.5rem));
+  padding: 0.9rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 24%, var(--border, rgba(28,25,23,0.12)));
+  background: color-mix(in srgb, var(--surface, #fffaf3) 96%, var(--accent-light, #f0e9de));
+  color: var(--text, #1f1a17);
+  box-shadow: 0 16px 40px color-mix(in srgb, #14231c 18%, transparent);
+  pointer-events: auto;
+  font-family: var(--font-ui, system-ui, sans-serif);
+}
+
+[data-theme="dark"] .workspace-tour__tooltip {
+  background: color-mix(in srgb, #1a1714 94%, var(--accent-light, #3a2f24));
+  border-color: color-mix(in srgb, var(--accent, #d4a574) 28%, rgba(255,255,255,0.1));
+}
+
+.workspace-tour__kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-strong, #9a6738);
+}
+
+.workspace-tour__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.workspace-tour__body {
+  margin: 0.35rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--text-muted, #6b635b);
+}
+
+.workspace-tour__wait {
+  margin: 0.55rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--accent-strong, #9a6738);
+}
+
+.workspace-tour__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+
+.workspace-tour__btn {
+  min-height: 2.1rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workspace-tour__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.workspace-tour__btn--ghost {
+  border-color: color-mix(in srgb, var(--border, rgba(28,25,23,0.12)) 90%, transparent);
+  background: transparent;
+  color: var(--text, #1f1a17);
+}
+
+.workspace-tour__btn--primary {
+  margin-inline-start: auto;
+  border-color: color-mix(in srgb, var(--accent, #c48a4a) 42%, transparent);
+  background: color-mix(in srgb, var(--accent, #c48a4a) 16%, transparent);
+  color: var(--accent-strong, #9a6738);
+}
+
+@media (max-width: 480px) {
+  .workspace-tour__tooltip {
+    left: 0.75rem !important;
+    right: 0.75rem;
+    width: auto;
   }
 }

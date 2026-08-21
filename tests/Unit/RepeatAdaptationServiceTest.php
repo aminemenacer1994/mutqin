@@ -254,6 +254,51 @@ class RepeatAdaptationServiceTest extends TestCase
         $this->assertStringNotContainsStringIgnoringCase('score', $result['user_reason']);
     }
 
+    public function test_narrowed_range_copy_avoids_same_range_phrasing(): void
+    {
+        $result = $this->service->resolve([
+            'technique' => 'focus',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'confidence' => 'needs_practice',
+            'mode' => 'revision',
+            'ai_result' => 'weak',
+            'missed_words' => 2,
+            'weak_ayahs' => [13],
+            'range_ayah_count' => 3,
+            'range_narrowed' => true,
+            'replay_ratio' => 1.0,
+            'max_ayah_replays' => 1,
+        ]);
+
+        $this->assertSame('focus', $result['technique']);
+        $this->assertStringContainsString('weaker ayahs', $result['user_reason']);
+        $this->assertStringNotContainsString('keeps the same range', $result['user_reason']);
+    }
+
+    public function test_chunking_alias_maps_to_focus_in_overrides(): void
+    {
+        $merged = $this->service->mergeOverrides([
+            'technique' => 'talqin',
+            'playback_speed' => 1.0,
+            'repetitions' => 3,
+        ], [
+            'technique' => 'chunking',
+            'playback_speed' => 0.85,
+            'repetitions' => 5,
+            'practice_weak_words' => [
+                ['text' => 'test', 'wordIndex' => 0, 'ayahNumber' => 13],
+            ],
+        ]);
+
+        $this->assertSame('focus', $merged['technique']);
+        $this->assertTrue((bool) ($merged['focus_enabled'] ?? false));
+        $this->assertSame(0.85, $merged['playback_speed']);
+        $this->assertSame(5, $merged['repetitions']);
+        $this->assertCount(1, $merged['practice_weak_words']);
+    }
+
     public function test_replay_signal_summary(): void
     {
         $signals = $this->service->summariseReplaySignals([

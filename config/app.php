@@ -33,7 +33,8 @@ return [
     | Demo Accounts (Login Page)
     |--------------------------------------------------------------------------
     |
-    | When enabled, the login page shows pre-seeded demo account shortcuts.
+    | When enabled, the login page shows a one-click demo login shortcut
+    | and Memorisation shows a short tester start guide.
     | Enable on staging/demo deployments via SHOW_DEMO_ACCOUNTS=true.
     |
     */

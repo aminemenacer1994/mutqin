@@ -21,6 +21,7 @@ export const POST_SESSION_CTA_STATES = Object.freeze({
   AWAITING_CHECK: 'awaiting_check',
   INSUFFICIENT_AUDIO: 'insufficient_audio',
   CONFIRM: 'confirm',
+  MEMORISATION_CHECK_NUDGE: 'memorisation_check_nudge',
 })
 
 export const POST_SESSION_CTA_ACTIONS = Object.freeze({
@@ -38,6 +39,7 @@ export const POST_SESSION_CTA_ACTIONS = Object.freeze({
   CLOSE: 'close',
   CONFIRM_START: 'confirm_start',
   SKIP_FOR_NOW: 'skip_for_now',
+  CONTINUE_WITHOUT_TESTING: 'continue_without_testing',
 })
 
 const LABEL_KEYS = Object.freeze({
@@ -57,6 +59,8 @@ const LABEL_KEYS = Object.freeze({
   returnToWorkspace: 'returnToWorkspace',
   skipForNow: 'skipForNow',
   keepPractising: 'keepPractising',
+  checkNow: 'checkNow',
+  continueWithoutTesting: 'continueWithoutTesting',
 })
 
 /**
@@ -136,6 +140,8 @@ export function resolveWeaknessSeverity(evidence = {}) {
   const partialWords = Math.max(0, Number(evidence.partialWordCount || 0))
   const weakAyahs = Math.max(0, Number(evidence.weakAyahCount || 0))
   const sequenceErrors = Math.max(0, Number(evidence.sequenceErrors || 0))
+  // Keep in sync with RECITATION_AUDIO_THRESHOLDS.progressionWithErrorsMin.
+  const progressionWithErrorsMin = 85
 
   if (
     outcome === 'weak'
@@ -157,7 +163,11 @@ export function resolveWeaknessSeverity(evidence = {}) {
     if (!hasWordLevelEvidence) return null
     if (hardWords === 0 && partialWords === 0 && weakAyahs === 0) return null
     if (hardWords >= 2 || weakAyahs > 1) return 'significant'
-    if (hardWords === 1 && weakAyahs <= 1) return 'minor'
+    // Borderline "strong" scores with a hard error should not feel like a free advance.
+    if (hardWords === 1 && weakAyahs <= 1) {
+      if (accuracy != null && accuracy < progressionWithErrorsMin) return 'significant'
+      return 'minor'
+    }
     if (hardWords === 0 && partialWords > 0 && weakAyahs <= 1) return 'minor'
     return 'significant'
   }
@@ -169,9 +179,8 @@ export function resolveWeaknessSeverity(evidence = {}) {
   ) {
     if (!hasWordLevelEvidence) return null
     if (hardWords >= 2 || weakAyahs >= 2) return 'significant'
-    if (hardWords <= 1 && (partialWords > 0 || hardWords > 0) && weakAyahs <= 1) {
-      return 'minor'
-    }
+    // Clean or lightly local developing → reinforce-then-continue (not sticky repeat).
+    if (hardWords <= 1 && weakAyahs <= 1) return 'minor'
     return 'significant'
   }
 
@@ -233,6 +242,7 @@ export function isMinorIsolatedWeakness(evidence = {}) {
  *
  * @param {{
  *   isConfirmStep?: boolean,
+ *   isMemorisationCheckNudgeStep?: boolean,
  *   hasAiCheck?: boolean,
  *   outcome?: string|null,
  *   masteryAchieved?: boolean,
@@ -246,6 +256,9 @@ export function isMinorIsolatedWeakness(evidence = {}) {
  * }} input
  */
 export function resolvePostSessionCtaState(input = {}) {
+  if (input.isMemorisationCheckNudgeStep) {
+    return POST_SESSION_CTA_STATES.MEMORISATION_CHECK_NUDGE
+  }
   if (input.isConfirmStep) return POST_SESSION_CTA_STATES.CONFIRM
 
   const outcome = normaliseCtaOutcome(input.outcome)
@@ -339,6 +352,7 @@ function cta(id, variant, labelKey, action, extra = {}) {
  *   isRepeat?: boolean,
  *   confirmLabelKey?: string|null,
  *   preferReviseRange?: boolean,
+ *   preferStartFocusedReview?: boolean,
  *   insufficientReason?: string,
  *   showMicrophoneCheck?: boolean,
  *   weakAyahNumber?: number|null,
@@ -361,9 +375,11 @@ export function mapPostSessionCtas(state, options = {}) {
     LABEL_KEYS.chooseAnotherRange,
     POST_SESSION_CTA_ACTIONS.OTHER_RANGE,
   )
-  const reviseLabelKey = options.preferReviseRange
-    ? 'reviseThisRange'
-    : LABEL_KEYS.reviseFocusPhrase
+  const reviseLabelKey = options.preferStartFocusedReview
+    ? 'startFocusedReview'
+    : (options.preferReviseRange
+      ? 'reviseThisRange'
+      : LABEL_KEYS.reviseFocusPhrase)
 
   const nextSessionLabelKey = continueSessionLabelKey(options)
   const nextSessionLabelParams = {
@@ -484,6 +500,18 @@ export function mapPostSessionCtas(state, options = {}) {
         ),
         returnToWorkspace,
         otherRange,
+      ]
+
+    case POST_SESSION_CTA_STATES.MEMORISATION_CHECK_NUDGE:
+      // Soft nudge only — Check now leads; continue without testing stays available.
+      return [
+        cta('check_now', 'ai', LABEL_KEYS.checkNow, POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION),
+        cta(
+          'continue_without_testing',
+          'secondary',
+          LABEL_KEYS.continueWithoutTesting,
+          POST_SESSION_CTA_ACTIONS.CONTINUE_WITHOUT_TESTING,
+        ),
       ]
 
     case POST_SESSION_CTA_STATES.AWAITING_CHECK:

@@ -297,6 +297,12 @@ function t(key, params = {}) {
   assert.match(js, /flushOffcanvasToWorkspace\(/)
   assert.match(js, /async flushOffcanvasToWorkspace/)
   assert.match(js, /await this\.flushOffcanvasToWorkspace\('offcanvas-commit'\)/)
+  assert.match(js, /shouldNudgeMemorisationCheckBeforeAdvance\(/)
+  assert.match(js, /memorisation_check_nudge/)
+  assert.match(vue, /data-testid="post-session-memorisation-check-nudge"/)
+  assert.match(en, /"memorisationCheckNudge"\s*:\s*\{[\s\S]*?"title":\s*"Test your memorisation first\?"/)
+  assert.match(en, /"checkNow":\s*"Check now"/)
+  assert.match(en, /"continueWithoutTesting":\s*"Continue without testing"/)
   assert.doesNotMatch(
     css,
     /\.app\.onboarding-post-session-front \.tools:not\(\.open\)/,

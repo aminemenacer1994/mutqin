@@ -345,22 +345,22 @@
 
 .amd-mushaf-ayah .recitation-word-correct {
   color: #15803d;
-  background: rgba(22, 163, 74, 0.12);
+  background: transparent;
 }
 
 .amd-mushaf-ayah .recitation-word-partial {
   color: #b45309;
-  background: rgba(245, 158, 11, 0.16);
+  background: transparent;
 }
 
 .amd-mushaf-ayah .recitation-word-incorrect {
   color: #b91c1c;
-  background: rgba(239, 68, 68, 0.14);
+  background: transparent;
 }
 
 .amd-mushaf-ayah .recitation-word-omitted {
   color: #111827;
-  background: rgba(17, 24, 39, 0.08);
+  background: transparent;
 }
 
 /* Hidden words keep their original inline box — never display:none / collapse. */
@@ -1573,19 +1573,22 @@
 .amd-mushaf-ayah--premium .recitation-word-correct {
   color: #15803d !important;
   -webkit-text-fill-color: #15803d !important;
-  background: color-mix(in srgb, #15803d 16%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .amd-mushaf-ayah--premium .recitation-word-partial {
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309 !important;
-  background: color-mix(in srgb, #b45309 18%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .amd-mushaf-ayah--premium .recitation-word-incorrect {
   color: #b91c1c !important;
   -webkit-text-fill-color: #b91c1c !important;
-  background: color-mix(in srgb, #b91c1c 18%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .amd-start-wrap {
@@ -3822,8 +3825,9 @@
 .amd-mushaf-ayah--premium .amd-mushaf-stream.tajweed-enabled .wbw-word.recitation-word-correct {
   color: #15803d !important;
   -webkit-text-fill-color: #15803d !important;
-  background: color-mix(in srgb, #15803d 16%, transparent) !important;
-  border-radius: 0.3em;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
 }
 
 .amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-partial,
@@ -3833,8 +3837,9 @@
 .amd-mushaf-ayah--premium .amd-mushaf-stream.tajweed-enabled .wbw-word.recitation-word-partial {
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309 !important;
-  background: color-mix(in srgb, #b45309 18%, transparent) !important;
-  border-radius: 0.3em;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
 }
 
 .amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-incorrect,
@@ -3844,9 +3849,9 @@
 .amd-mushaf-ayah--premium .amd-mushaf-stream.tajweed-enabled .wbw-word.recitation-word-incorrect {
   color: #b91c1c !important;
   -webkit-text-fill-color: #b91c1c !important;
-  background: color-mix(in srgb, #b91c1c 18%, transparent) !important;
-  border-radius: 0.3em;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #b91c1c 35%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
 }
 
 .amd-mushaf-ayah--premium.tajweed-enabled word.recitation-word-correct .tajweed-mark,
@@ -3872,33 +3877,44 @@
   background: transparent !important;
 }
 
-/* Without tajweed: soft background feedback only (no underlines) */
+/* Without tajweed: colour the word only (no fill background) */
 .amd-mushaf-ayah--premium:not(.tajweed-enabled) .recitation-word-correct,
 .amd-mushaf-ayah--premium:not(.tajweed-enabled) .wbw-word.recitation-word-correct {
   color: #1b7a4c !important;
   -webkit-text-fill-color: #1b7a4c !important;
-  background: color-mix(in srgb, #1b7a4c 12%, transparent) !important;
-  text-decoration: none !important;
-  border-radius: 0.25em;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-decoration: underline solid !important;
+  text-decoration-color: color-mix(in srgb, #1b7a4c 85%, transparent) !important;
+  text-decoration-thickness: 0.1em !important;
+  text-underline-offset: 0.12em !important;
+  border-radius: 0;
 }
 
 .amd-mushaf-ayah--premium:not(.tajweed-enabled) .recitation-word-partial,
 .amd-mushaf-ayah--premium:not(.tajweed-enabled) .wbw-word.recitation-word-partial {
   color: #b7791f !important;
   -webkit-text-fill-color: #b7791f !important;
-  background: color-mix(in srgb, #b7791f 14%, transparent) !important;
-  text-decoration: none !important;
-  border-radius: 0.25em;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-decoration: underline dashed !important;
+  text-decoration-color: color-mix(in srgb, #b7791f 85%, transparent) !important;
+  text-decoration-thickness: 0.1em !important;
+  text-underline-offset: 0.12em !important;
+  border-radius: 0;
 }
 
 .amd-mushaf-ayah--premium:not(.tajweed-enabled) .recitation-word-incorrect,
 .amd-mushaf-ayah--premium:not(.tajweed-enabled) .wbw-word.recitation-word-incorrect {
   color: #b91c1c !important;
   -webkit-text-fill-color: #b91c1c !important;
-  background: color-mix(in srgb, #b91c1c 14%, transparent) !important;
-  text-decoration: none !important;
-  border-radius: 0.25em;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #b91c1c 28%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
+  text-decoration: underline double !important;
+  text-decoration-color: color-mix(in srgb, #b91c1c 85%, transparent) !important;
+  text-decoration-thickness: 0.12em !important;
+  text-underline-offset: 0.12em !important;
+  border-radius: 0;
 }
 
 [data-theme="dark"] .amd-mushaf-ayah--premium:not(.tajweed-enabled) .recitation-word-incorrect,
@@ -3907,8 +3923,8 @@
 .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium:not(.tajweed-enabled) .wbw-word.recitation-word-incorrect {
   color: #f87171 !important;
   -webkit-text-fill-color: #f87171 !important;
-  background: color-mix(in srgb, #ef4444 22%, transparent) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #f87171 40%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 [data-theme="dark"] .amd-mushaf-ayah--premium:not(.tajweed-enabled) .recitation-word-correct,
@@ -3916,7 +3932,8 @@
 .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium:not(.tajweed-enabled) .recitation-word-correct {
   color: #6ec9a4 !important;
   -webkit-text-fill-color: #6ec9a4 !important;
-  background: color-mix(in srgb, #6ec9a4 16%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 [data-theme="dark"] .amd-mushaf-ayah--premium:not(.tajweed-enabled) .recitation-word-partial,
@@ -3924,7 +3941,8 @@
 .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium:not(.tajweed-enabled) .recitation-word-partial {
   color: #e4a76a !important;
   -webkit-text-fill-color: #e4a76a !important;
-  background: color-mix(in srgb, #e4a76a 16%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 /* Omitted / missed words stay grey (including tajweed children). */
@@ -4951,9 +4969,10 @@
 .amd-modal .amd-mushaf-ayah--premium .wbw-word.recitation-word-correct {
   color: #15803d !important;
   -webkit-text-fill-color: #15803d !important;
-  background: color-mix(in srgb, #15803d 18%, transparent) !important;
-  border-radius: 0.35em;
-  padding: 0.12rem 0.22rem;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding: 0;
 }
 
 .amd-overlay .amd-mushaf-ayah--premium word.recitation-word-partial,
@@ -4962,9 +4981,10 @@
 .amd-modal .amd-mushaf-ayah--premium .wbw-word.recitation-word-partial {
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309 !important;
-  background: color-mix(in srgb, #b45309 20%, transparent) !important;
-  border-radius: 0.35em;
-  padding: 0.12rem 0.22rem;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding: 0;
 }
 
 .amd-overlay .amd-mushaf-ayah--premium word.recitation-word-incorrect,
@@ -4973,10 +4993,10 @@
 .amd-modal .amd-mushaf-ayah--premium .wbw-word.recitation-word-incorrect {
   color: #b91c1c !important;
   -webkit-text-fill-color: #b91c1c !important;
-  background: color-mix(in srgb, #b91c1c 20%, transparent) !important;
-  border-radius: 0.35em;
-  padding: 0.12rem 0.22rem;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #b91c1c 32%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding: 0;
 }
 
 /* Tajweed letter spans must inherit the full status colour */
@@ -5018,7 +5038,8 @@
 [data-theme="dark"] .amd-modal .amd-mushaf-ayah--premium word.recitation-word-correct {
   color: #6ec9a4 !important;
   -webkit-text-fill-color: #6ec9a4 !important;
-  background: color-mix(in srgb, #6ec9a4 18%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium word.recitation-word-partial,
@@ -5027,7 +5048,8 @@
 [data-theme="dark"] .amd-modal .amd-mushaf-ayah--premium word.recitation-word-partial {
   color: #e4a76a !important;
   -webkit-text-fill-color: #e4a76a !important;
-  background: color-mix(in srgb, #e4a76a 18%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium word.recitation-word-incorrect,
@@ -5036,8 +5058,8 @@
 [data-theme="dark"] .amd-modal .amd-mushaf-ayah--premium word.recitation-word-incorrect {
   color: #f87171 !important;
   -webkit-text-fill-color: #f87171 !important;
-  background: color-mix(in srgb, #ef4444 24%, transparent) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #f87171 42%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium word.recitation-word-omitted,
