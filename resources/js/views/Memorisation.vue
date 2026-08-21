@@ -1049,7 +1049,7 @@
         v-if="toolsPanelMounted"
         id="memorisationToolsPanel"
         ref="toolsPanel"
-        class="tools offcanvas-section offcanvas-end h-100"
+        class="tools offcanvas-section h-100"
         :class="{
         open: showTools,
         'onboarding-post-session-tools': showPostSessionModal && postSessionOffcanvasOpen,

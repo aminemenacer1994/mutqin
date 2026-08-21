@@ -17,43 +17,45 @@
       >
         <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium">
           <header class="amd-header amd-header--premium amd-header--sticky">
-            <div class="amd-header-copy">
-              <div class="amd-title-row">
-                <h2 id="amdModalTitle" class="amd-title amd-title--premium" tabindex="-1">{{ title }}</h2>
-                <span
-                  v-if="betaBadge"
-                  class="amd-beta-badge"
+            <div class="amd-header-top">
+              <div class="amd-header-copy">
+                <div class="amd-title-row">
+                  <h2 id="amdModalTitle" class="amd-title amd-title--premium" tabindex="-1">{{ title }}</h2>
+                  <span
+                    v-if="betaBadge"
+                    class="amd-beta-badge"
+                    :title="disclaimer || undefined"
+                  >{{ betaBadge }}</span>
+                </div>
+                <p v-if="rangeLabel" class="amd-range amd-range--premium">{{ rangeLabel }}</p>
+              </div>
+              <div class="amd-header-aside">
+                <div
+                  class="amd-mic-status amd-mic-status--header"
+                  :class="{
+                    'amd-mic-status--recording': isListening,
+                    'amd-mic-status--starting': isStarting,
+                  }"
+                  :data-status="micStatusKey"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
                   :title="disclaimer || undefined"
-                >{{ betaBadge }}</span>
+                >
+                  <span class="amd-mic-dot" aria-hidden="true"></span>
+                  <span class="amd-mic-status__label">{{ displayMicStatusLabel }}</span>
+                </div>
+                <button
+                  class="amd-icon-btn amd-icon-btn--close"
+                  type="button"
+                  :aria-label="closeLabel"
+                  @click.stop="onCancel"
+                >
+                  <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
               </div>
-              <p v-if="rangeLabel" class="amd-range amd-range--premium">{{ rangeLabel }}</p>
-              <p v-if="disclaimer" class="amd-disclaimer amd-disclaimer--row" role="note">{{ disclaimer }}</p>
             </div>
-            <div class="amd-header-aside">
-              <div
-                class="amd-mic-status amd-mic-status--header"
-                :class="{
-                  'amd-mic-status--recording': isListening,
-                  'amd-mic-status--starting': isStarting,
-                }"
-                :data-status="micStatusKey"
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-                :title="disclaimer || undefined"
-              >
-                <span class="amd-mic-dot" aria-hidden="true"></span>
-                <span class="amd-mic-status__label">{{ displayMicStatusLabel }}</span>
-              </div>
-              <button
-                class="amd-icon-btn amd-icon-btn--close"
-                type="button"
-                :aria-label="closeLabel"
-                @click.stop="onCancel"
-              >
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-              </button>
-            </div>
+            <p v-if="disclaimer" class="amd-disclaimer amd-disclaimer--row" role="note">{{ disclaimer }}</p>
           </header>
 
           <div class="amd-body amd-body--premium amd-body--scroll">
