@@ -217,7 +217,8 @@
       "startFree": "Mulai sesi Anda",
       "joinWaitlist": "Gabung daftar tunggu",
       "viewPricing": "View plans",
-      "seeFeatures": "Lihat bagaimana ini membantu"
+      "seeFeatures": "Lihat bagaimana ini membantu",
+      "seeHow": "Lihat cara kerjanya"
     },
     "shots": {
       "hero": "Sesi Mutqin siap dimulai pada Al-Kafirun",
@@ -254,7 +255,7 @@
         },
         "aiRecitation": {
           "title": "Pemeriksaan tilawah",
-          "description": "Tilawah dari hafalan sementara Mutqin mengikuti, cermin lembut untuk tilawah Anda."
+          "description": "Baca dari hafalan sementara Mutqin mengikuti, cermin lembut untuk tilawah Anda."
         },
         "mushafLayout": {
           "title": "Tata letak mushaf",
@@ -269,7 +270,7 @@
     "how": {
       "kicker": "How it works",
       "title": "Dari mushaf terbuka ke langkah berikutnya yang jelas",
-      "subtitle": "A quiet practice loop in four moments. See what happens in each one, then take the next step with ease.",
+      "subtitle": "Satu siklus tenang, dari pengaturan ke langkah berikutnya yang jelas. Tonton sekali, lalu mulai.",
       "items": {
         "choose": {
           "title": "Tentukan rentang Anda",
@@ -323,7 +324,7 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Questions people ask",
-      "subtitle": "Clear answers about practice, feedback, and returning to your Hifz.",
+      "subtitle": "Kepercayaan penting untuk Hifz. Jawaban jelas tentang akurasi, privasi, harga, dan latihan.",
       "items": {
         "whatIsMutqin": {
           "question": "What is Mutqin?",
@@ -334,16 +335,32 @@
           "answer": "Choose a surah and ayah range, practise in short sessions, and use tools like gradually hiding the text or joining ayahs. Small, steady sets are enough."
         },
         "howAiFeedback": {
-          "question": "How should I treat the audio check?",
-          "answer": "Audio recitation is a guide. AI can miss or mishear words, so always verify with a qualified teacher before relying on it for your Hifz."
+          "question": "Seberapa akurat pemeriksaan tilawah audio?",
+          "answer": "Pemeriksaan bisa melewatkan atau salah mendengar kata. Anggap sorotan sebagai bantuan latihan, bukan keputusan tentang tilawah. Selalu konfirmasi dengan guru."
         },
         "whatIsPro": {
-          "question": "What does Pro include?",
-          "answer": "Pro deepens recitation review, memorisation checks, history, and planning tools so longer journeys stay organised."
+          "question": "Apakah saya perlu Pro untuk mulai?",
+          "answer": "Tidak. Mulai gratis, latih set singkat, dan upgrade hanya jika Anda ingin umpan balik serta riwayat yang lebih kaya."
         },
         "howRevision": {
           "question": "How does revision work?",
           "answer": "Mutqin helps you return to recent and weaker ayahs before they fade, and suggests a next practice while the verses still feel fresh."
+        },
+        "accuracy": {
+          "question": "Bisakah saya mempercayai Mutqin untuk hafalan Qur’an?",
+          "answer": "Mutqin adalah pendamping latihan, bukan pengganti guru atau sanad. Gunakan untuk sesi singkat dan titik lemah, lalu verifikasi dengan guru yang berkualifikasi. Pemeriksaan tilawah hanya panduan."
+        },
+        "privacy": {
+          "question": "Apa yang terjadi pada rekaman dan data Hifz saya?",
+          "answer": "Data latihan milik akun Anda. Audio pemeriksaan diproses untuk umpan balik dan tidak dijual. Anda dapat meminta penghapusan akun dan data terkait. Lihat kebijakan privasi."
+        },
+        "pricing": {
+          "question": "Apakah Mutqin gratis? Berapa biaya Pro?",
+          "answer": "Anda bisa mulai berlatih tanpa paket berbayar. Pro menambah tinjauan lebih dalam, riwayat, dan perencanaan. Harga ditampilkan jelas sebelum upgrade."
+        },
+        "whoFor": {
+          "question": "Untuk siapa Mutqin?",
+          "answer": "Untuk siapa pun yang membangun atau merevisi Hifz dan ingin sesi singkat, posisi tersimpan, dan langkah berikutnya yang jelas."
         }
       }
     },

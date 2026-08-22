@@ -30,9 +30,9 @@
                 <i class="bi bi-play-fill" aria-hidden="true"></i>
                 {{ t('homepage.hero.startFree') }}
               </a>
-              <a href="/waiting-list" class="btn btn--secondary">
-                <i class="bi bi-envelope-open" aria-hidden="true"></i>
-                {{ t('homepage.hero.joinWaitlist') }}
+              <a href="#how-it-works" class="btn btn--secondary" @click.prevent="scrollToId('how-it-works')">
+                <i class="bi bi-play-circle" aria-hidden="true"></i>
+                {{ t('homepage.hero.seeHow') }}
               </a>
             </div>
           </div>
@@ -66,58 +66,15 @@
       </div>
     </section>
 
-    <section id="how-it-works" class="how">
+    <section id="how-it-works" class="how" aria-labelledby="how-title">
       <div class="wrap">
         <header class="section-head" data-reveal>
           <p class="section-kicker">{{ t('homepage.how.kicker') }}</p>
-          <h2 class="section-title">{{ t('homepage.how.title') }}</h2>
+          <h2 id="how-title" class="section-title">{{ t('homepage.how.title') }}</h2>
           <p class="section-sub">{{ t('homepage.how.subtitle') }}</p>
         </header>
 
-        <div class="how__flow">
-          <article
-            v-for="(item, idx) in howItems"
-            :key="item.id"
-            class="how__row"
-            :class="{ 'how__row--flip': idx % 2 === 1 }"
-            data-reveal
-          >
-            <div class="how__copy">
-              <span class="how__index">{{ String(idx + 1).padStart(2, '0') }}</span>
-              <h3>{{ item.title }}</h3>
-              <p class="how__lead">{{ item.description }}</p>
-              <p v-if="item.detail" class="how__detail">{{ item.detail }}</p>
-            </div>
-            <div class="how__shot">
-              <div class="device device--md">
-                <div class="device__island" aria-hidden="true"></div>
-                <div class="device__screen">
-                  <img
-                    class="shot"
-                    :src="item.image"
-                    :alt="item.shotAlt"
-                    width="444"
-                    height="929"
-                    loading="lazy"
-                    decoding="async"
-                  >
-                </div>
-              </div>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="demo" class="demo" aria-labelledby="demo-title">
-      <div class="wrap">
-        <header class="section-head" data-reveal>
-          <p class="section-kicker">{{ t('homepage.pipelineDemo.kicker') }}</p>
-          <h2 id="demo-title" class="section-title">{{ t('homepage.pipelineDemo.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.pipelineDemo.subtitle') }}</p>
-        </header>
-
-        <div class="demo__stage" data-reveal>
+        <div class="how__stage demo__stage" data-reveal>
           <div class="demo__phone">
             <div class="device device--demo">
               <div class="device__island" aria-hidden="true"></div>
@@ -211,63 +168,6 @@
               <p>{{ feature.description }}</p>
             </div>
           </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="steps" class="steps">
-      <div class="wrap">
-        <header class="section-head" data-reveal>
-          <p class="section-kicker">{{ t('homepage.steps.kicker') }}</p>
-          <h2 class="section-title">{{ t('homepage.steps.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.steps.subtitle') }}</p>
-        </header>
-
-        <ol class="steps__track" data-reveal>
-          <li
-            v-for="(step, idx) in steps"
-            :key="step.id"
-            class="steps__card"
-            :style="{ '--delay': `${idx * 90}ms` }"
-          >
-            <div class="steps__visual">
-              <div class="device device--xs">
-                <div class="device__island" aria-hidden="true"></div>
-                <div class="device__screen">
-                  <img
-                    class="shot"
-                    :src="step.image"
-                    :alt="step.shotAlt"
-                    width="444"
-                    height="929"
-                    loading="lazy"
-                    decoding="async"
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="steps__body">
-              <span class="steps__num" aria-hidden="true">{{ String(idx + 1).padStart(2, '0') }}</span>
-              <h3>{{ step.title }}</h3>
-              <p>{{ step.description }}</p>
-            </div>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <section id="waiting-list" class="waitlist" aria-labelledby="waitlist-title">
-      <div class="wrap wrap--tight">
-        <div class="waitlist__band" data-reveal>
-          <div>
-            <p class="waitlist__kicker">{{ t('homepage.waitlist.kicker') }}</p>
-            <h2 id="waitlist-title">{{ t('homepage.waitlist.title') }}</h2>
-            <p>{{ t('homepage.waitlist.subtitle') }}</p>
-          </div>
-          <a href="/waiting-list" class="btn btn--primary">
-            <i class="bi bi-envelope-open" aria-hidden="true"></i>
-            {{ t('homepage.waitlist.cta') }}
-          </a>
         </div>
       </div>
     </section>
@@ -373,8 +273,8 @@
                     <div class="footer__links">
             <h4>{{ t('homepage.footer.product') }}</h4>
             <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
-            <a href="#demo" @click.prevent="scrollToId('demo')">{{ t('homepage.footer.demo') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
+            <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
@@ -628,79 +528,17 @@ export default {
       ];
     });
 
-    const howItems = computed(() => {
-      void locale.value;
-      return [
-        {
-          id: 'choose',
-          image: '/images/landing/how-1-setup.jpg',
-          title: t('homepage.how.items.choose.title'),
-          description: t('homepage.how.items.choose.description'),
-          detail: t('homepage.how.items.choose.detail'),
-          shotAlt: t('homepage.shots.setup'),
-        },
-        {
-          id: 'recite',
-          image: '/images/landing/how-2-recite.jpg',
-          title: t('homepage.how.items.recite.title'),
-          description: t('homepage.how.items.recite.description'),
-          detail: t('homepage.how.items.recite.detail'),
-          shotAlt: t('homepage.shots.check'),
-        },
-        {
-          id: 'see',
-          image: '/images/landing/demo-step-5.jpg',
-          title: t('homepage.how.items.see.title'),
-          description: t('homepage.how.items.see.description'),
-          detail: t('homepage.how.items.see.detail'),
-          shotAlt: t('homepage.shots.result'),
-        },
-        {
-          id: 'continue',
-          image: '/images/landing/demo-step-6.jpg',
-          title: t('homepage.how.items.continue.title'),
-          description: t('homepage.how.items.continue.description'),
-          detail: t('homepage.how.items.continue.detail'),
-          shotAlt: t('homepage.shots.next'),
-        },
-      ];
-    });
-
-    const steps = computed(() => {
-      void locale.value;
-      return [
-        {
-          id: 'sit',
-          image: '/images/landing/step-1-setup.jpg',
-          title: t('homepage.steps.items.sit.title'),
-          description: t('homepage.steps.items.sit.description'),
-          shotAlt: t('homepage.shots.setup'),
-        },
-        {
-          id: 'check',
-          image: '/images/landing/step-2-check.jpg',
-          title: t('homepage.steps.items.check.title'),
-          description: t('homepage.steps.items.check.description'),
-          shotAlt: t('homepage.shots.check'),
-        },
-        {
-          id: 'return',
-          image: '/images/landing/step-3-return.jpg',
-          title: t('homepage.steps.items.return.title'),
-          description: t('homepage.steps.items.return.description'),
-          shotAlt: t('homepage.shots.return'),
-        },
-      ];
-    });
-
     const faqItems = computed(() => {
       void locale.value;
       return [
         { id: 'whatIsMutqin', question: t('homepage.faq.items.whatIsMutqin.question'), answer: t('homepage.faq.items.whatIsMutqin.answer') },
         { id: 'howMemorisation', question: t('homepage.faq.items.howMemorisation.question'), answer: t('homepage.faq.items.howMemorisation.answer') },
+        { id: 'accuracy', question: t('homepage.faq.items.accuracy.question'), answer: t('homepage.faq.items.accuracy.answer') },
+        { id: 'privacy', question: t('homepage.faq.items.privacy.question'), answer: t('homepage.faq.items.privacy.answer') },
+        { id: 'pricing', question: t('homepage.faq.items.pricing.question'), answer: t('homepage.faq.items.pricing.answer') },
         { id: 'howAiFeedback', question: t('homepage.faq.items.howAiFeedback.question'), answer: t('homepage.faq.items.howAiFeedback.answer') },
-        { id: 'whatIsPro', question: t('homepage.faq.items.whatIsPro.question'), answer: t('homepage.faq.items.whatIsPro.answer') },
         { id: 'howRevision', question: t('homepage.faq.items.howRevision.question'), answer: t('homepage.faq.items.howRevision.answer') },
+        { id: 'whoFor', question: t('homepage.faq.items.whoFor.question'), answer: t('homepage.faq.items.whoFor.answer') },
       ];
     });
 
@@ -727,19 +565,19 @@ export default {
         });
       }
 
-      const demoSection = document.getElementById('demo');
-      if (demoSection) {
+      const howSection = document.getElementById('how-it-works');
+      if (howSection) {
         demoObserver = new IntersectionObserver((entries) => {
           entries.forEach((entry) => {
             if (reduceMotion) {
               stopDemoPlayback();
               return;
             }
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.4) startDemoPlayback();
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.35) startDemoPlayback();
             else stopDemoPlayback();
           });
-        }, { threshold: [0, 0.4, 0.75] });
-        demoObserver.observe(demoSection);
+        }, { threshold: [0, 0.35, 0.75] });
+        demoObserver.observe(howSection);
       }
     });
 
@@ -759,8 +597,6 @@ export default {
       scrollToId,
       heroShots,
       features,
-      howItems,
-      steps,
       faqItems,
       demoPlaying,
       demoActiveIndex,

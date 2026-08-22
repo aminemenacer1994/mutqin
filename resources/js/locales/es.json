@@ -217,7 +217,8 @@
       "startFree": "Empieza tu sesión",
       "joinWaitlist": "Únete a la lista de espera",
       "viewPricing": "Ver planes",
-      "seeFeatures": "Ver cómo ayuda"
+      "seeFeatures": "Ver cómo ayuda",
+      "seeHow": "Ver cómo funciona"
     },
     "shots": {
       "hero": "Sesión Mutqin lista para empezar en Al-Kafirun",
@@ -269,7 +270,7 @@
     "how": {
       "kicker": "Cómo funciona",
       "title": "Del mushaf abierto a un siguiente paso claro",
-      "subtitle": "Un ciclo breve que puedes repetir cada día.",
+      "subtitle": "Un ciclo sereno, de la configuración a un siguiente paso claro. Míralo una vez y empieza.",
       "items": {
         "choose": {
           "title": "Define tu rango",
@@ -323,7 +324,7 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Preguntas frecuentes",
-      "subtitle": "Respuestas claras sobre práctica, comprobación y volver a tu Hifz.",
+      "subtitle": "La confianza importa para el Hifz. Respuestas claras sobre exactitud, privacidad, precios y práctica.",
       "items": {
         "whatIsMutqin": {
           "question": "¿Qué es Mutqin?",
@@ -334,16 +335,32 @@
           "answer": "Elige una sura y un rango, practica en sesiones cortas y usa herramientas como ocultar el texto gradualmente. Conjuntos pequeños y constantes bastan."
         },
         "howAiFeedback": {
-          "question": "¿Cómo tratar la comprobación de audio?",
-          "answer": "La recitación de audio es una guía. La IA puede fallar , verifica siempre con un maestro cualificado antes de confiar en ella para tu Hifz."
+          "question": "¿Qué tan precisa es la comprobación de audio?",
+          "answer": "La comprobación puede omitir o maloír palabras. Trata las marcas como ayuda de práctica, no como un juicio sobre tu tilawah. Confirma siempre con un profesor."
         },
         "whatIsPro": {
-          "question": "¿Qué incluye Pro?",
-          "answer": "Pro profundiza la revisión de recitación, comprobaciones de memorización, historial y herramientas de planificación."
+          "question": "¿Necesito Pro para empezar?",
+          "answer": "No. Empieza gratis, practica un conjunto breve y mejora solo si quieres más comentarios e historial."
         },
         "howRevision": {
           "question": "¿Cómo funciona la revisión?",
           "answer": "Mutqin te ayuda a volver a ayahs recientes y más débiles antes de que se desvanezcan, y sugiere la siguiente práctica mientras los versos aún se sienten frescos."
+        },
+        "accuracy": {
+          "question": "¿Puedo confiar en Mutqin para mi memorización del Corán?",
+          "answer": "Mutqin es un compañero de práctica, no un sustituto de un profesor o sanad. Úsalo para organizar sesiones cortas y notar puntos débiles, luego verifica lo importante con un profesor cualificado. Las comprobaciones de recitación son solo una guía."
+        },
+        "privacy": {
+          "question": "¿Qué ocurre con mis grabaciones y datos de Hifz?",
+          "answer": "Tus datos de práctica pertenecen a tu cuenta. El audio de las comprobaciones se procesa para dar feedback y no se vende. Puedes pedir que eliminemos tu cuenta y datos asociados. Consulta nuestra política de privacidad."
+        },
+        "pricing": {
+          "question": "¿Mutqin es gratis? ¿Cuánto cuesta Pro?",
+          "answer": "Puedes empezar a practicar sin un plan de pago. Pro añade revisión más profunda, historial y herramientas de planificación. Los precios se muestran con claridad antes de cualquier mejora."
+        },
+        "whoFor": {
+          "question": "¿Para quién es Mutqin?",
+          "answer": "Para quien construye o revisa su Hifz y quiere sesiones cortas, un lugar guardado y una guía clara del siguiente paso, sobre todo cuando los días están ocupados."
         }
       }
     },

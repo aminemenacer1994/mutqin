@@ -217,7 +217,8 @@
       "startFree": "اپنا سیشن شروع کریں",
       "joinWaitlist": "ویٹنگ لسٹ میں شامل ہوں",
       "viewPricing": "View plans",
-      "seeFeatures": "دیکھیں یہ کیسے مدد کرتا ہے"
+      "seeFeatures": "دیکھیں یہ کیسے مدد کرتا ہے",
+      "seeHow": "دیکھیں یہ کیسے کام کرتا ہے"
     },
     "shots": {
       "hero": "متقن سیشن سورۃ الکافرون پر شروع کے لیے تیار",
@@ -253,8 +254,8 @@
           "description": "اپنے حفظ پر ایک نظر، محفوظ آیات، جو اب سیکھ رہے ہیں، اور کتنا سفر طے ہوا۔"
         },
         "aiRecitation": {
-          "title": "تلاوت کی جانچ",
-          "description": "حفظ سے پڑھیں اور متقن ساتھ چلے، آپ کی تلاوت کے لیے نرم آئینہ۔"
+          "title": "تلاوت کا معائنہ",
+          "description": "حافظے سے پڑھیں جبکہ متقن ساتھ چلتا ہے، آپ کی تلاوت کے لیے نرم آئینہ۔"
         },
         "mushafLayout": {
           "title": "مصحف لے آؤٹ",
@@ -269,7 +270,7 @@
     "how": {
       "kicker": "How it works",
       "title": "کھلے مصحف سے واضح اگلے قدم تک",
-      "subtitle": "A quiet practice loop in four moments. See what happens in each one, then take the next step with ease.",
+      "subtitle": "ایک پرسکون چکر، سیٹ اپ سے واضح اگلے قدم تک۔ ایک بار دیکھیں، پھر شروع کریں۔",
       "items": {
         "choose": {
           "title": "اپنی حد مقرر کریں",
@@ -323,7 +324,7 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Questions people ask",
-      "subtitle": "Clear answers about practice, feedback, and returning to your Hifz.",
+      "subtitle": "حفظ کے لیے اعتماد اہم ہے۔ درستگی، رازداری، قیمت اور مشق کے واضح جوابات۔",
       "items": {
         "whatIsMutqin": {
           "question": "What is Mutqin?",
@@ -334,16 +335,32 @@
           "answer": "Choose a surah and ayah range, practise in short sessions, and use tools like gradually hiding the text or joining ayahs. Small, steady sets are enough."
         },
         "howAiFeedback": {
-          "question": "How should I treat the audio check?",
-          "answer": "Audio recitation is a guide. AI can miss or mishear words, so always verify with a qualified teacher before relying on it for your Hifz."
+          "question": "آڈیو یادداشت کی جانچ کتنی درست ہے؟",
+          "answer": "جانچ الفاظ چھوڑ یا غلط سن سکتی ہے۔ نمایاں الفاظ کو مشق کی مدد سمجھیں، تلاوت کا فیصلہ نہیں۔ ہمیشہ استاد سے تصدیق کریں۔"
         },
         "whatIsPro": {
-          "question": "What does Pro include?",
-          "answer": "Pro deepens recitation review, memorisation checks, history, and planning tools so longer journeys stay organised."
+          "question": "کیا شروع کرنے کے لیے Pro چاہیے؟",
+          "answer": "نہیں۔ مفت شروع کریں، مختصر سیٹ مشق کریں، اور صرف تب اپ گریڈ کریں جب زیادہ فیڈبیک اور تاریخ چاہیے۔"
         },
         "howRevision": {
           "question": "How does revision work?",
           "answer": "Mutqin helps you return to recent and weaker ayahs before they fade, and suggests a next practice while the verses still feel fresh."
+        },
+        "accuracy": {
+          "question": "کیا میں اپنے قرآن حفظ کے لیے متقن پر بھروسہ کر سکتا ہوں؟",
+          "answer": "متقن مشق کا ساتھی ہے، استاد یا سند کا متبادل نہیں۔ مختصر نشستوں اور کمزور مقامات کے لیے استعمال کریں، اہم حصے اہل استاد سے تصدیق کریں۔ تلاوت کی جانچ صرف رہنمائی ہے۔"
+        },
+        "privacy": {
+          "question": "میری ریکارڈنگز اور حفظ کے ڈیٹا کا کیا ہوتا ہے؟",
+          "answer": "آپ کے مشق کے ڈیٹا کا تعلق آپ کے اکاؤنٹ سے ہے۔ یادداشت کی جانچ کی آڈیو فیڈبیک کے لیے پروسیس ہوتی ہے اور فروخت نہیں ہوتی۔ آپ اکاؤنٹ اور متعلقہ ڈیٹا حذف کروا سکتے ہیں۔ پرائیویسی پالیسی دیکھیں۔"
+        },
+        "pricing": {
+          "question": "کیا متقن مفت ہے؟ Pro کی قیمت کیا ہے؟",
+          "answer": "آپ بغیر ادائیگی والے پلان کے مشق شروع کر سکتے ہیں۔ Pro گہری جائزہ، تاریخ اور منصوبہ بندی کا اضافہ کرتا ہے۔ اپ گریڈ سے پہلے قیمتیں واضح دکھائی جاتی ہیں۔"
+        },
+        "whoFor": {
+          "question": "متقن کس کے لیے ہے؟",
+          "answer": "ہر اس شخص کے لیے جو حفظ بنا رہا ہو یا دہرا رہا ہو اور مختصر نشستیں، محفوظ جگہ اور واضح اگلا قدم چاہتا ہو۔"
         }
       }
     },
@@ -377,7 +394,7 @@
       "resources": "الموارد",
       "company": "الشركة",
       "contact": "اتصل",
-      "faq": "FAQ",
+      "faq": "عمومی سوالات",
       "connect": "تواصل",
       "privacy": "الخصوصية",
       "terms": "الشروط",

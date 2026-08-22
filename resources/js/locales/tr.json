@@ -217,7 +217,8 @@
       "startFree": "Oturumunu başlat",
       "joinWaitlist": "Bekleme listesine katıl",
       "viewPricing": "View plans",
-      "seeFeatures": "Nasıl yardımcı olduğunu gör"
+      "seeFeatures": "Nasıl yardımcı olduğunu gör",
+      "seeHow": "Nasıl çalıştığını görün"
     },
     "shots": {
       "hero": "Mutqin oturumu Al-Kafirun ile başlamaya hazır",
@@ -254,7 +255,7 @@
         },
         "aiRecitation": {
           "title": "Tilavet kontrolü",
-          "description": "Ezberden okuyun, Mutqin sizi takip etsin, tilavetiniz için nazik bir ayna."
+          "description": "Ezberden okurken Mutqin sizi takip eder; tilavetinize nazik bir ayna."
         },
         "mushafLayout": {
           "title": "Mushaf düzeni",
@@ -269,7 +270,7 @@
     "how": {
       "kicker": "How it works",
       "title": "Açık mushaftan net bir sonraki adıma",
-      "subtitle": "A quiet practice loop in four moments. See what happens in each one, then take the next step with ease.",
+      "subtitle": "Sakin bir döngü: kurulumdan net bir sonraki adıma. Bir kez izleyin, sonra başlayın.",
       "items": {
         "choose": {
           "title": "Aralığını belirle",
@@ -323,7 +324,7 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Questions people ask",
-      "subtitle": "Clear answers about practice, feedback, and returning to your Hifz.",
+      "subtitle": "Hifz için güven önemlidir. Doğruluk, gizlilik, fiyatlandırma ve pratik hakkında net cevaplar.",
       "items": {
         "whatIsMutqin": {
           "question": "What is Mutqin?",
@@ -334,16 +335,32 @@
           "answer": "Choose a surah and ayah range, practise in short sessions, and use tools like gradually hiding the text or joining ayahs. Small, steady sets are enough."
         },
         "howAiFeedback": {
-          "question": "How should I treat the audio check?",
-          "answer": "Audio recitation is a guide. AI can miss or mishear words, so always verify with a qualified teacher before relying on it for your Hifz."
+          "question": "Sesli ezber kontrolü ne kadar doğru?",
+          "answer": "Kontrol kelimeleri kaçırabilir veya yanlış duyabilir. Vurguları pratik yardımı sayın, tilavet hükmü değil. Her zaman bir hocaya danışın."
         },
         "whatIsPro": {
-          "question": "What does Pro include?",
-          "answer": "Pro deepens recitation review, memorisation checks, history, and planning tools so longer journeys stay organised."
+          "question": "Başlamak için Pro gerekir mi?",
+          "answer": "Hayır. Ücretsiz başlayın, kısa bir set çalışın; daha fazla geri bildirim ve geçmiş istiyorsanız Pro’ya geçin."
         },
         "howRevision": {
           "question": "How does revision work?",
           "answer": "Mutqin helps you return to recent and weaker ayahs before they fade, and suggests a next practice while the verses still feel fresh."
+        },
+        "accuracy": {
+          "question": "Kur’an ezberim için Mutqin’e güvenebilir miyim?",
+          "answer": "Mutqin bir pratik yol arkadaşıdır; hoca veya sened yerine geçmez. Kısa oturumlar ve zayıf noktalar için kullanın, önemli kısımları nitelikli bir hocaya danışın. Tilavet kontrolleri yalnızca rehberdir."
+        },
+        "privacy": {
+          "question": "Kayıtlarıma ve Hifz verilerime ne olur?",
+          "answer": "Pratik verileriniz hesabınıza aittir. Kontrol sesi geri bildirim için işlenir, satılmaz. Hesabınızın ve ilişkili verilerin silinmesini isteyebilirsiniz. Gizlilik politikasına bakın."
+        },
+        "pricing": {
+          "question": "Mutqin ücretsiz mi? Pro ne kadar?",
+          "answer": "Ücretli plan olmadan pratik yapmaya başlayabilirsiniz. Pro daha derin inceleme, geçmiş ve planlama ekler. Fiyatlar yükseltmeden önce açıkça gösterilir."
+        },
+        "whoFor": {
+          "question": "Mutqin kimler için?",
+          "answer": "Hifzini kuran veya gözden geçiren, kısa oturumlar, kayıtlı bir yer ve net bir sonraki adım isteyen herkes için."
         }
       }
     },
@@ -377,7 +394,7 @@
       "resources": "« Resources»",
       "company": "« Company»",
       "contact": "« Contact»",
-      "faq": "FAQ",
+      "faq": "SSS",
       "connect": "« Connect»",
       "privacy": "« Privacy»",
       "terms": "« Terms»",

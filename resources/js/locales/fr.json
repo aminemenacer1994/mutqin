@@ -217,7 +217,8 @@
       "startFree": "Commencer votre session",
       "joinWaitlist": "Rejoindre la liste d’attente",
       "viewPricing": "Voir les offres",
-      "seeFeatures": "Voir comment cela aide"
+      "seeFeatures": "Voir comment cela aide",
+      "seeHow": "Voir comment ça marche"
     },
     "shots": {
       "hero": "Session Mutqin prête à commencer sur Al-Kafirun",
@@ -269,7 +270,7 @@
     "how": {
       "kicker": "Comment ça marche",
       "title": "Du mushaf ouvert à une prochaine étape claire",
-      "subtitle": "Une boucle courte à répéter chaque jour.",
+      "subtitle": "Une boucle calme, du réglage à une prochaine étape claire. Regardez une fois, puis commencez.",
       "items": {
         "choose": {
           "title": "Fixer votre passage",
@@ -323,7 +324,7 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Questions fréquentes",
-      "subtitle": "Réponses claires sur la pratique, le retour d’écoute, et le retour à votre Hifz.",
+      "subtitle": "La confiance compte pour le Hifz. Réponses claires sur l’exactitude, la confidentialité, les tarifs et la pratique.",
       "items": {
         "whatIsMutqin": {
           "question": "Qu’est-ce que Mutqin ?",
@@ -334,16 +335,32 @@
           "answer": "Choisissez une sourate et un passage, pratiquez en courtes séances, et utilisez des outils comme masquer le texte progressivement. De petits ensembles réguliers suffisent."
         },
         "howAiFeedback": {
-          "question": "Comment traiter la vérification audio ?",
-          "answer": "La récitation audio est un guide. L’IA peut manquer ou mal entendre des mots , vérifiez toujours auprès d’un enseignant qualifié pour votre Hifz."
+          "question": "Quelle est la précision du contrôle audio ?",
+          "answer": "Le contrôle peut manquer ou mal entendre des mots. Traitez les surlignages comme une aide à la pratique, pas comme un jugement sur votre tilawah. Confirmez toujours avec un enseignant."
         },
         "whatIsPro": {
-          "question": "Que comprend Pro ?",
-          "answer": "Pro approfondit la revue de récitation, les contrôles de mémorisation, l’historique et les outils de planification."
+          "question": "Ai-je besoin de Pro pour commencer ?",
+          "answer": "Non. Commencez gratuitement, pratiquez un court ensemble, et passez à Pro seulement si vous voulez plus de retours et d’historique."
         },
         "howRevision": {
           "question": "Comment fonctionne la révision ?",
           "answer": "Mutqin vous aide à revenir aux ayahs récents et plus faibles avant qu’ils ne s’effacent, et suggère la prochaine pratique tant que les versets restent frais."
+        },
+        "accuracy": {
+          "question": "Puis-je faire confiance à Mutqin pour mon Hifz ?",
+          "answer": "Mutqin est un compagnon de pratique, pas un substitut à un enseignant ou à une chaîne de transmission. Utilisez-le pour organiser de courtes sessions et repérer les points faibles, puis vérifiez l’essentiel avec un enseignant qualifié. Les contrôles de récitation sont un guide seulement."
+        },
+        "privacy": {
+          "question": "Qu’advient-il de mes enregistrements et de mes données de Hifz ?",
+          "answer": "Vos données de pratique appartiennent à votre compte. L’audio des contrôles de rappel est traité pour le retour, et n’est pas vendu. Vous pouvez demander la suppression de votre compte et des données associées. Voir notre politique de confidentialité."
+        },
+        "pricing": {
+          "question": "Mutqin est-il gratuit ? Que coûte Pro ?",
+          "answer": "Vous pouvez commencer à pratiquer sans formule payante. Pro ajoute une revue plus profonde, l’historique et des outils de planification. Les tarifs sont indiqués clairement avant tout passage à Pro."
+        },
+        "whoFor": {
+          "question": "Pour qui est Mutqin ?",
+          "answer": "Pour toute personne qui construit ou révise son Hifz et veut de courtes sessions, une place sauvegardée, et une prochaine étape claire, surtout quand les journées sont chargées."
         }
       }
     },

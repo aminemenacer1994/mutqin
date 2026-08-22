@@ -217,7 +217,8 @@
       "startFree": "Begin your session",
       "joinWaitlist": "Join the waiting list",
       "viewPricing": "View plans",
-      "seeFeatures": "See how it helps"
+      "seeFeatures": "See how it helps",
+      "seeHow": "See how it works"
     },
     "shots": {
       "hero": "Mutqin session ready to begin on Al-Kafirun",
@@ -269,7 +270,7 @@
     "how": {
       "kicker": "How it works",
       "title": "From an open mushaf to a clear next step",
-      "subtitle": "A short loop you can repeat each day.",
+      "subtitle": "One calm loop, from setup to a clear next step. Watch it once, then begin.",
       "items": {
         "choose": {
           "title": "Set your range",
@@ -329,7 +330,7 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Questions people ask",
-      "subtitle": "Clear answers about practice, feedback, and returning to your Hifz.",
+      "subtitle": "Trust matters for Hifz. Clear answers on accuracy, privacy, pricing, and practice.",
       "items": {
         "whatIsMutqin": {
           "question": "What is Mutqin?",
@@ -340,16 +341,32 @@
           "answer": "Choose a surah and ayah range, practise in short sessions, and use tools like gradually hiding the text or joining ayahs. Small, steady sets are enough."
         },
         "howAiFeedback": {
-          "question": "How should I treat the audio check?",
-          "answer": "Audio recitation is a guide. AI can miss or mishear words, so always verify with a qualified teacher before relying on it for your Hifz."
+          "question": "How accurate is the audio recall check?",
+          "answer": "The check can miss or mishear words. Treat highlights as a practice aid, not a ruling on your tilawah. Always confirm with a teacher before changing how you memorise."
         },
         "whatIsPro": {
-          "question": "What does Pro include?",
-          "answer": "Pro deepens recitation review, memorisation checks, history, and planning tools so longer journeys stay organised."
+          "question": "Do I need Pro to start?",
+          "answer": "No. Start free, practise a short set, and upgrade only if you want richer feedback and history. Faithful consistency matters more than unlocking every tool on day one."
         },
         "howRevision": {
           "question": "How does revision work?",
           "answer": "Mutqin helps you return to recent and weaker ayahs before they fade, and suggests a next practice while the verses still feel fresh."
+        },
+        "accuracy": {
+          "question": "Can I trust Mutqin with my Qur’an memorisation?",
+          "answer": "Mutqin is a practice companion, not a substitute for a teacher or sanad. Use it to organise short sessions and notice weak spots, then verify important parts with a qualified teacher. Recitation checks are a guide only."
+        },
+        "privacy": {
+          "question": "What happens to my recordings and Hifz data?",
+          "answer": "Your practice data belongs to your account. Audio used for recall checks is processed to give feedback and is not sold. You can ask us to delete your account and associated data. See our Privacy policy for full detail."
+        },
+        "pricing": {
+          "question": "Is Mutqin free? What does Pro cost?",
+          "answer": "You can begin practising without a paid plan. Pro adds deeper review, history, and planning tools when you want them. Pricing is shown clearly before any upgrade, with no surprise charges for simply exploring."
+        },
+        "whoFor": {
+          "question": "Who is Mutqin for?",
+          "answer": "Anyone building or revising Hifz who wants short, focused sessions, a saved place to return to, and gentle next-step guidance. It is especially helpful when days are busy and you need a clear starting point."
         }
       }
     },
