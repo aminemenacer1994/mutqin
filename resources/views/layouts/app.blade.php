@@ -2516,10 +2516,10 @@
 
         [data-theme="sepia"] {
             --bg: #f4ecd8;
-            --surface: rgba(255, 248, 235, 0.96);
+            --surface: #fff8eb;
             --surface-strong: #fff8eb;
             --surface-elevated: #fff4e3;
-            --surface-soft: rgba(239, 223, 200, 0.62);
+            --surface-soft: #efdfc8;
             --border: rgba(139, 94, 60, 0.15);
             --text: #3d2b1f;
             --text-muted: #8b7355;
@@ -2728,7 +2728,10 @@
         }
 
         [data-theme="sepia"] .app-navbar {
-            background: var(--surface-strong);
+            background: #fff8eb !important;
+            background-color: #fff8eb !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
 
         .navbar-shell {

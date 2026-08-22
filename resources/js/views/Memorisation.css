@@ -1310,8 +1310,8 @@
 
 [data-theme="sepia"] {
   --bg: #efe2cb;
-  --surface: rgba(250, 241, 227, 0.88);
-  --surface-strong: rgba(255, 248, 237, 0.94);
+  --surface: #faf1e3;
+  --surface-strong: #fff8ed;
   --border: rgba(78, 58, 38, 0.26);
   --border-strong: rgba(78, 58, 38, 0.4);
   --text: #352516;

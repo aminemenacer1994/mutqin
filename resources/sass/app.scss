@@ -76,8 +76,8 @@
 
 html[data-theme="sepia"] {
   --bg: #f1e7d8;
-  --surface: rgba(255, 250, 243, 0.86);
-  --surface-strong: rgba(255, 255, 255, 0.92);
+  --surface: #fffaf3;
+  --surface-strong: #fff8eb;
   --border: rgba(78, 58, 38, 0.26);
   --border-strong: rgba(78, 58, 38, 0.4);
   --text: #201812;
@@ -250,6 +250,14 @@ canvas {
   background: var(--surface-strong);
   border-bottom: 1px solid var(--border);
   box-shadow: none !important;
+}
+
+html[data-theme="sepia"] .app-navbar,
+[data-theme="sepia"] .app-navbar {
+  background: #fff8eb !important;
+  background-color: #fff8eb !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 html[data-theme="dark"] .app-navbar {
@@ -510,6 +518,11 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--text-muted);
+}
+
+.auth-tester-notice__form {
+  margin: 0;
+  width: 100%;
 }
 
 .auth-tester-notice__fill {

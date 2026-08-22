@@ -43,6 +43,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Demo Login Account
+    |--------------------------------------------------------------------------
+    |
+    | Used by POST /login/demo when show_demo_accounts is enabled. The account
+    | is created/updated on demand so demos work after deploy without a full
+    | DemoDataSeeder run.
+    |
+    */
+
+    'demo_login' => [
+        'email' => env('DEMO_LOGIN_EMAIL', 'layla.beginner@mutqin.test'),
+        'password' => env('DEMO_LOGIN_PASSWORD', 'DemoPass1!'),
+        'name' => env('DEMO_LOGIN_NAME', 'Tester — Beginner (EN)'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |

@@ -5,16 +5,15 @@
             <p class="auth-tester-notice__intro">{{ __('ui.auth_demo_intro') }}</p>
         </div>
 
-        <button
-            type="button"
-            class="auth-tester-notice__fill auth-tester-notice__fill--primary"
-            data-auth-fill-test-account
-            data-auth-submit-after-fill
-            data-test-email="layla.beginner@mutqin.test"
-            data-test-password="DemoPass1!"
-            data-default-label="{{ __('ui.auth_demo_use') }}"
-        >
-            {{ __('ui.auth_demo_use') }}
-        </button>
+        <form method="POST" action="{{ route('login.demo') }}" class="auth-tester-notice__form">
+            @csrf
+            <button
+                type="submit"
+                class="auth-tester-notice__fill auth-tester-notice__fill--primary"
+                data-default-label="{{ __('ui.auth_demo_use') }}"
+            >
+                {{ __('ui.auth_demo_use') }}
+            </button>
+        </form>
     </aside>
 @endif

@@ -18,6 +18,10 @@ use App\Http\Controllers\QuranProxyController;
 // Authentication routes (from laravel/ui)
 Auth::routes(['verify' => true]);
 
+Route::post('/login/demo', \App\Http\Controllers\Auth\DemoLoginController::class)
+    ->middleware('guest')
+    ->name('login.demo');
+
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');

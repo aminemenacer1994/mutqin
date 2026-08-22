@@ -40,11 +40,33 @@ class AuthPageRenderTest extends TestCase
             ->assertOk()
             ->assertSee(__('ui.auth_demo_title'))
             ->assertSee(__('ui.auth_demo_use'))
-            ->assertSee('layla.beginner@mutqin.test', false)
-            ->assertSee('data-auth-submit-after-fill', false)
+            ->assertSee(route('login.demo'), false)
             ->assertDontSee('omar.active@mutqin.test', false)
             ->assertDontSee('fatima.reviser@mutqin.test', false)
             ->assertDontSee('noah.paused@mutqin.test', false);
+    }
+
+    public function test_demo_login_creates_account_and_signs_in_when_enabled(): void
+    {
+        config(['app.show_demo_accounts' => true]);
+
+        $this->post(route('login.demo'))
+            ->assertRedirect();
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'email' => 'layla.beginner@mutqin.test',
+        ]);
+    }
+
+    public function test_demo_login_is_unavailable_when_disabled(): void
+    {
+        config(['app.show_demo_accounts' => false]);
+
+        $this->post(route('login.demo'))
+            ->assertNotFound();
+
+        $this->assertGuest();
     }
 
     public function test_memorisation_exposes_tester_guide_flag_when_demo_accounts_enabled(): void
