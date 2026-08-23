@@ -33,6 +33,7 @@
       </div>
     </div>
 
+    <Teleport to="body">
     <aside
       v-if="workspaceTourActive"
       class="workspace-tour"
@@ -55,6 +56,18 @@
         :style="workspaceTourHoleStyle"
         aria-hidden="true"
       ></div>
+
+      <div
+        v-if="workspaceTourDashboardOpen"
+        class="workspace-tour__dashboard"
+        data-tour="tour-dashboard"
+      >
+        <iframe
+          class="workspace-tour__dashboard-frame"
+          :src="testerGuideDashboardUrl"
+          title="Dashboard"
+        ></iframe>
+      </div>
 
       <div
         class="workspace-tour__tooltip"
@@ -105,6 +118,7 @@
         </p>
       </div>
     </aside>
+    </Teleport>
 
     <div
       v-if="practiceSetupStatusMessage"
@@ -259,7 +273,7 @@
           :data-reading-mode="readingViewMode"
           :aria-label="t('memorisation.a11y.sessionOverview')"
         >
-        <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }">
+        <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }" data-tour="workspace-welcome">
           <template v-if="hasVerses || isPostSessionChoiceVisible">
           <div class="workspace-shell-head-toolbar">
           <div class="workspace-shell-copy">
@@ -3152,158 +3166,6 @@
       </div>
     </div>
 
-    <div
-      v-if="showPostLoginOnboarding"
-      class="modal-overlay mutqin-modal-overlay post-onboarding-overlay"
-      @click.self="dismissOnboardingTour"
-    >
-      <div class="modal-dialog modal-dialog-centered modal-lg mutqin-modal-dialog onboarding-dialog">
-        <div
-          class="modal-content mutqin-modal-surface post-onboarding-modal post-onboarding-modal--guided"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="postOnboardingTitle"
-        >
-          <button
-            type="button"
-            class="modal-close-btn onboarding-close-btn"
-            @click="dismissOnboardingTour"
-            :aria-label="t('common.closeTour')"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
-
-          <div class="container-fluid onboarding-fluid">
-            <header class="onboarding-hero onboarding-hero--guided">
-              <span class="onboarding-step-icon" aria-hidden="true">
-                <i class="bi" :class="onboardingModalIcon"></i>
-              </span>
-              <div class="onboarding-hero-copy">
-                <span class="onboarding-kicker">{{ onboardingStepCounterLabel }}</span>
-                <h2 id="postOnboardingTitle" class="onboarding-title">
-                  {{ onboardingModalTitle }}
-                </h2>
-                <p
-                  v-if="onboardingMetaLine"
-                  class="onboarding-meta-line"
-                >
-                  {{ onboardingMetaLine }}
-                </p>
-              </div>
-            </header>
-
-            <nav
-              class="onboarding-step-rail onboarding-step-rail--four"
-              :aria-label="onboardingStepCounterLabel"
-            >
-              <button
-                v-for="(step, index) in onboardingSteps"
-                :key="step.key"
-                type="button"
-                class="onboarding-step-chip"
-                :class="{
-                  active: index === onboardingStepIndex,
-                  complete: index < onboardingStepIndex
-                }"
-                @click="goToOnboardingStep(index)"
-              >
-                <span class="onboarding-step-chip-icon" aria-hidden="true">
-                  <i class="bi" :class="index < onboardingStepIndex ? 'bi-check2' : step.icon"></i>
-                </span>
-                <span class="onboarding-step-chip-label">{{ step.stepLabel }}</span>
-              </button>
-            </nav>
-
-            <div class="onboarding-body onboarding-body--guided">
-              <p
-                v-if="onboardingModalBody"
-                class="onboarding-lead"
-              >
-                {{ onboardingModalBody }}
-              </p>
-
-              <ul
-                v-if="onboardingStepContent?.points?.length"
-                class="onboarding-points"
-              >
-                <li
-                  v-for="(point, pointIndex) in onboardingStepContent.points"
-                  :key="`${onboardingStepContent.key}-point-${pointIndex}`"
-                >
-                  {{ point }}
-                </li>
-              </ul>
-
-              <p
-                v-if="onboardingStepContent?.hint"
-                class="onboarding-step-hint"
-                role="note"
-              >
-                {{ onboardingStepContent.hint }}
-              </p>
-
-              <div
-                v-if="onboardingStepContent?.key === 'practice'"
-                class="onboarding-practice-chips"
-                role="group"
-                :aria-label="t('memorisation.onboarding.steps.practice.stepLabel')"
-              >
-                <button
-                  v-for="chip in onboardingPracticeChips"
-                  :key="chip.key"
-                  type="button"
-                  class="onboarding-practice-chip"
-                  :class="{ active: chip.active }"
-                  :aria-pressed="chip.active ? 'true' : 'false'"
-                  @click="toggleOnboardingPracticeChip(chip.key)"
-                >
-                  <i class="bi" :class="chip.icon" aria-hidden="true"></i>
-                  <span>{{ chip.label }}</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="modal-footer mutqin-modal-footer onboarding-footer">
-              <div class="mutqin-modal-actions onboarding-actions-grid onboarding-actions-grid--trio-row onboarding-nav-actions">
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--ghost onboarding-action onboarding-skip-btn"
-                  @click="skipOnboardingToFirstSession"
-                >
-                  <span>{{ t('memorisation.onboarding.skipTour') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--secondary onboarding-action"
-                  :disabled="onboardingStepIndex <= 0"
-                  @click="prevOnboardingStep"
-                >
-                  <i class="bi bi-arrow-left" aria-hidden="true"></i>
-                  <span>{{ t('common.back') }}</span>
-                </button>
-                <button
-                  type="button"
-                  class="mutqin-modal-btn mutqin-modal-btn--primary onboarding-action"
-                  @click="nextOnboardingStep"
-                >
-                  <span>
-                    {{ onboardingStepIndex >= onboardingSteps.length - 1
-                      ? t('memorisation.onboarding.finish')
-                      : t('memorisation.next') }}
-                  </span>
-                  <i
-                    class="bi"
-                    :class="onboardingStepIndex >= onboardingSteps.length - 1 ? 'bi-check2-circle' : 'bi-arrow-right'"
-                    aria-hidden="true"
-                  ></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <Teleport to="body">
     <transition name="mutqin-flow">
     <div
@@ -3456,6 +3318,7 @@
                   v-if="postSessionInfoArchitecture.mainFocus.explanation || postSessionFocusAyahRows.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"
                   data-testid="post-session-main-focus"
+                  data-tour="ai-results"
                 >
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
                     {{ postSessionInfoArchitecture.mainFocus.title }}
@@ -3973,6 +3836,7 @@
                   :aria-busy="postSessionCtaButtonBusy(btn) ? 'true' : 'false'"
                   :aria-label="btn.label"
                   :data-action="btn.dataAction"
+                  :data-tour="(btn.variant === 'primary' || btn.variant === 'ai' || btn.variant === 'success') ? 'rec-start' : undefined"
                   @click.stop.prevent="onPostSessionCtaAction(btn.action)"
                   @keydown.enter.stop.prevent="onPostSessionCtaAction(btn.action)"
                   @keydown.space.stop.prevent="onPostSessionCtaAction(btn.action)"

@@ -143,7 +143,7 @@ function loadMemorisationChunk(attempt = 0) {
             document.documentElement.dataset.practiceCoach = 'v2';
             document.documentElement.dataset.aiReciteUi = 'v75';
             document.documentElement.dataset.stackedAyahEnd = 'v8-removed';
-            document.documentElement.dataset.mutqinUi = 'v119';
+            document.documentElement.dataset.mutqinUi = 'v120';
             document.documentElement.dataset.amdTestGate = 'test-with-ai-only';
             document.documentElement.dataset.postSessionChoice = 'v15';
         }

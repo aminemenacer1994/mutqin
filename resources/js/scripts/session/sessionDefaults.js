@@ -73,6 +73,9 @@ export function buildDefaultWorkspaceSessionConfig(overrides = {}) {
 export function buildFirstOnboardingSessionConfig(overrides = {}) {
   return buildDefaultWorkspaceSessionConfig({
     rangeEnd: 3,
+    reciterId: DEFAULT_RECITER_ID,
+    repetitionsPerStep: 2,
+    selectedLoopCount: 2,
     ...overrides,
   })
 }

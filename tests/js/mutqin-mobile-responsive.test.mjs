@@ -38,7 +38,7 @@ const stateSelectors = {
   recordings: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-shell', '.recordings-library-detail', '.recording-history-card'],
   recordingsLoading: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-loading'],
   recordingsEmpty: ['.recordings-library-modal', '.recordings-library-header', '.recordings-library-body', '.recordings-library-empty'],
-  onboarding: ['.post-onboarding-modal', '.onboarding-fluid', '.onboarding-hero', '.onboarding-step-rail'],
+  onboarding: ['.workspace-tour', '.workspace-tour__tooltip', '.workspace-tour__hole'],
   paused: ['.session-exit-modal', '.modal-header', '.session-exit-body', '.mutqin-modal-footer', '.session-exit-confirm-actions'],
   complete: ['.post-session-simple', '.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__footer', '.post-session-simple__actions']
 }
@@ -60,7 +60,7 @@ const touchTargetSelectors = {
   recordings: '.recordings-library-header button, .recordings-library-nav-toggle, .recording-history-actions button',
   recordingsLoading: '.recordings-library-header button',
   recordingsEmpty: '.recordings-library-header button',
-  onboarding: '.onboarding-close-btn, .onboarding-step-chip, .onboarding-nav-actions .onboarding-action',
+  onboarding: '.workspace-tour__btn, .workspace-tour__btn--primary',
   paused: '.session-exit-confirm-actions button, .session-exit-modal .modal-close-btn',
   complete: '.post-session-simple__footer button'
 }
@@ -334,9 +334,8 @@ async function setState(page, state) {
         vm.showSelfCheckModal = true
       }
     } else if (state === 'onboarding') {
-      vm.onboardingPhase = 'tour'
-      vm.onboardingStepIndex = 0
-      vm.showPostLoginOnboarding = true
+      vm.workspaceTourActive = true
+      vm.workspaceTourStepIndex = 0
     } else if (state === 'paused') {
       if (typeof vm.openSessionExitModal === 'function') vm.openSessionExitModal()
       else vm.showSessionExitModal = true
@@ -439,7 +438,7 @@ async function inspectState(page, state) {
       recordings: ['.recordings-library-header', '.recordings-library-body', '.recordings-library-shell', '.recordings-library-nav-head', '.recordings-library-detail-head', '.recording-history-top'],
       recordingsLoading: ['.recordings-library-header', '.recordings-library-body'],
       recordingsEmpty: ['.recordings-library-header', '.recordings-library-body'],
-      onboarding: ['.onboarding-hero', '.onboarding-fluid', '.onboarding-step-rail'],
+      onboarding: ['.workspace-tour__tooltip', '.workspace-tour__actions'],
       paused: ['.session-exit-body', ['.session-exit-confirm-actions', 1], '.session-exit-progress-summary'],
       complete: ['.post-session-simple__header', '.post-session-simple__body', '.post-session-simple__row', '.post-session-simple__actions']
     }
@@ -485,7 +484,7 @@ async function inspectState(page, state) {
       }
       if (['recording', 'processing', 'recordingError', 'report'].includes(state)) expectParallel('.ai-check-step-badge', '.ai-check-step-copy', 'AI Recite step guide')
       if (state === 'recordings') expectParallel('.recordings-library-nav-intro', '.recordings-library-nav-toggle', 'recordings navigation')
-      if (state === 'onboarding') expectParallel('.onboarding-step-icon', '.onboarding-hero-copy', 'onboarding hero')
+      if (state === 'onboarding') expectParallel('.workspace-tour__title', '.workspace-tour__body', 'workspace tour copy')
       if (state === 'paused' && viewportWidth >= 350) {
         const keepBtn = Array.from(document.querySelectorAll('.session-exit-confirm-actions button')).find(btn => /keep practising/i.test(btn.textContent || ''))
         const endBtn = Array.from(document.querySelectorAll('.session-exit-confirm-actions button')).find(btn => /end session/i.test(btn.textContent || ''))
@@ -661,7 +660,7 @@ async function inspectState(page, state) {
     }
 
     if (['onboarding', 'paused', 'complete'].includes(state)) {
-      const selector = state === 'onboarding' ? '.post-onboarding-modal' : state === 'paused' ? '.session-exit-modal' : '.post-session-simple__dialog'
+      const selector = state === 'onboarding' ? '.workspace-tour__tooltip' : state === 'paused' ? '.session-exit-modal' : '.post-session-simple__dialog'
       const surface = document.querySelector(selector)
       if (surface && surface.getBoundingClientRect().height > viewportHeight - 18) {
         issues.push(`${state}: centered dialog has no viewport gutter`)

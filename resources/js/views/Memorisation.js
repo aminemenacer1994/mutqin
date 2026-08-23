@@ -826,6 +826,11 @@ export default {
       workspaceTourRect: null,
       workspaceTourTooltipPos: { top: 16, left: 16, placement: 'bottom' },
       workspaceTourMeasureToken: 0,
+      workspaceTourPreviewOwned: false,
+      workspaceTourOpenedPostSession: false,
+      workspaceTourConfigSnapshot: null,
+      workspaceTourDashboardOpen: false,
+      workspaceTourMeasureAllowScroll: true,
       showPostSessionModal: false,
       showPostSessionChoice: false,
       postSessionChoiceAction: null, // repeat_recommended | create_custom | null
@@ -2819,10 +2824,8 @@ export default {
         authHydrated: !this.isBootstrapping,
         sessionHydrated: !!this.sessionLifecycleHydrated,
         isAuthenticated: !!this.isLoggedIn,
-        requiresOnboarding: !!this.requiresFirstTimeOnboarding,
-        onboardingStarted: !!this.showPostLoginOnboarding
-          || this.onboardingStepIndex > 0
-          || this.readOnboardingStepIndex() > 0,
+        requiresOnboarding: false,
+        onboardingStarted: false,
         onboardingExampleActive: !!this.onboardingSampleSessionActive,
         onboardingExampleRejected: !!this.onboardingExampleRejected,
         mutqinSessionActive: !!this.isSessionLive,
@@ -6191,7 +6194,7 @@ export default {
       return null
     },
     isOnboardingExperienceActive() {
-      return !!this.showPostLoginOnboarding
+      return false
     },
     isRtlLocale() {
       return RTL_LOCALES.includes(this.activeLocale)
@@ -6220,7 +6223,9 @@ export default {
       return !this.hasOnboardingAutoPresented()
     },
     isExistingUserLogin() {
-      // Welcome Back is only for returning users who already finished onboarding.
+      // Welcome Back is only for returning learners — never demo testers or
+      // first-run signups, even after they finish or skip the spotlight tour.
+      if (this.shouldSuppressWelcomeBackModal()) return false
       return !!(this.auth?.just_logged_in && !this.auth?.just_registered && this.hasCompletedOnboarding())
     },
     hasMeaningfulSessionCompletionData() {
@@ -6690,13 +6695,15 @@ export default {
     },
     workspaceTourSteps() {
       return [
-        { key: 'welcome', selector: '[data-tour="welcome-start"]', optional: true },
-        { key: 'controls', selector: '[data-tour="controls"]' },
-        { key: 'setup', selector: '[data-tour="setup-sheet"]' },
-        { key: 'start', selector: '[data-tour="start-session"]' },
-        { key: 'session', selector: '[data-tour="end-session"], [data-tour="workspace-main"]' },
-        { key: 'plan', selector: '[data-tour="rec-cta"], [data-tour="rec-plan"]' },
-        { key: 'dashboard', selector: '[data-tour="dashboard"]' }
+        { key: 'welcome', selector: '[data-tour="workspace-welcome"], [data-tour="welcome-start"]', pad: 10, radius: 16, placement: 'bottom' },
+        { key: 'controls', selector: '[data-tour="controls"]', pad: 8, radius: 12, placement: 'bottom' },
+        { key: 'setup', selector: '[data-tour="setup-sheet"]', pad: 8, radius: 16, placement: 'left' },
+        { key: 'start', selector: '[data-tour="start-session"]', pad: 10, radius: 16, placement: 'top' },
+        { key: 'session', selector: '[data-tour="workspace-main"], [data-tour="end-session"]', pad: 8, radius: 14, placement: 'bottom' },
+        { key: 'ai', selector: '[data-tour="ai-modal"] .amd-mushaf-shell, [data-tour="ai-modal"], .amd-modal', pad: 8, radius: 20, placement: 'left' },
+        { key: 'results', selector: '[data-tour="ai-results"], [data-testid="post-session-main-focus"]', pad: 10, radius: 16, placement: 'left' },
+        { key: 'plan', selector: '[data-tour="rec-plan"]', pad: 10, radius: 16, placement: 'left' },
+        { key: 'dashboard', selector: '[data-tour="tour-dashboard"], .app-navbar .nav-link-dashboard, [data-tour="nav-dashboard"]', pad: 8, radius: 12, placement: 'left' },
       ]
     },
     workspaceTourStep() {
@@ -6706,12 +6713,6 @@ export default {
       return this.workspaceTourStepIndex >= Math.max(0, this.workspaceTourSteps.length - 1)
     },
     workspaceTourNextDisabled() {
-      const key = this.workspaceTourStep?.key
-      if (key === 'start') {
-        return !(this.hasSessionStarted || this.isSessionLive || this.showHeaderEndSessionAction)
-      }
-      if (key === 'session') return !this.showPostSessionModal
-      if (key === 'plan') return !this.showPostSessionModal
       return false
     },
     workspaceTourStepCopy() {
@@ -6720,17 +6721,13 @@ export default {
       let waitHint = ''
       if (key === 'start' && this.workspaceTourNextDisabled) {
         waitHint = this.t(`${base}.waitHint`) || this.t('memorisation.workspaceTour.steps.start.body')
-      } else if (key === 'session' && !this.showPostSessionModal) {
-        waitHint = this.t(`${base}.waitHint`)
-      } else if (key === 'plan' && !this.showPostSessionModal) {
+      } else if (key === 'session' && !this.showPostSessionModal && !this.showHeaderEndSessionAction) {
         waitHint = this.t(`${base}.waitHint`)
       }
       return {
         title: this.t(`${base}.title`),
         body: this.t(`${base}.body`),
-        waitHint: key === 'start' && this.workspaceTourNextDisabled
-          ? this.t('memorisation.workspaceTour.steps.start.waitHint')
-          : waitHint
+        waitHint
       }
     },
     workspaceTourHoleStyle() {
@@ -6741,15 +6738,19 @@ export default {
           left: '50%',
           width: '1px',
           height: '1px',
-          opacity: 0
+          opacity: 0,
+          '--tour-hole-radius': '16px',
         }
       }
+      const radius = Math.max(8, Number(rect.radius) || 16)
       return {
         top: `${rect.top}px`,
         left: `${rect.left}px`,
         width: `${rect.width}px`,
         height: `${rect.height}px`,
-        opacity: 1
+        opacity: 1,
+        borderRadius: `${radius}px`,
+        '--tour-hole-radius': `${radius}px`,
       }
     },
     workspaceTourBlockers() {
@@ -6759,11 +6760,10 @@ export default {
       if (!rect) {
         return [{ top: '0px', left: '0px', width: `${vw}px`, height: `${vh}px` }]
       }
-      const pad = 10
-      const top = Math.max(0, rect.top - pad)
-      const left = Math.max(0, rect.left - pad)
-      const right = Math.min(vw, rect.left + rect.width + pad)
-      const bottom = Math.min(vh, rect.top + rect.height + pad)
+      const top = Math.max(0, rect.top)
+      const left = Math.max(0, rect.left)
+      const right = Math.min(vw, rect.left + rect.width)
+      const bottom = Math.min(vh, rect.top + rect.height)
       const width = Math.max(0, right - left)
       const height = Math.max(0, bottom - top)
       return [
@@ -9461,9 +9461,10 @@ export default {
         authenticatedWorkspace
         && !signupIsolated
         && !this.hasCompletedOnboarding()
+        && !this.shouldAutoStartWorkspaceTour()
         && (
           this.hasPostOnboardingPracticeEvidence()
-          || (this.auth?.just_logged_in && !this.auth?.just_registered)
+          || (this.auth?.just_logged_in && !this.auth?.just_registered && !this.isDemoWorkspaceAccount())
         )
       ) {
         // Returning accounts (or users already practising) must not stick on
@@ -9479,6 +9480,8 @@ export default {
         this.isLoggedIn
         && !needsFirstTimeOnboarding
         && this.isExistingUserLogin
+        && !this.shouldSuppressWelcomeBackModal()
+        && !this.shouldAutoStartWorkspaceTour()
       )
 
       if (preferWelcomeBackOnLogin) {
@@ -9490,7 +9493,6 @@ export default {
       } else if (shouldAutoOpenOnboarding) {
         this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
         this.markOnboardingAutoPresented()
-        this.openOnboardingModal()
         this.isDataReady = true
       } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
         this.currentMode = 'advanced'
@@ -9772,6 +9774,9 @@ export default {
     },
     amdOpen(newVal) {
       this.syncBodyScrollLock(!!newVal || this.isAnyModalOverlayActive)
+      if (this.workspaceTourActive && (this.workspaceTourStep?.key === 'ai' || this.workspaceTourStep?.key === 'results')) {
+        this.$nextTick(() => this.measureWorkspaceTourTarget())
+      }
     },
     verses() {
       if (!this.amdOpen) return
@@ -10836,6 +10841,7 @@ export default {
 
     maybeShowWelcomeBackModal() {
       if (!this.isLoggedIn) return
+      if (this.shouldSuppressWelcomeBackModal()) return
       if (!this.isExistingUserLogin) return
       if (!this.getReadyToBeginLoginEventId()) return
       if (this.hasShownWelcomeBackModalForCurrentLogin()) return
@@ -14503,13 +14509,55 @@ export default {
     },
     getTesterGuideStorageKey() {
       const userId = this.auth?.id != null ? String(this.auth.id) : 'guest'
-      return `mutqin.workspaceTourDismissed.${userId}`
+      return `mutqin.workspaceTourDismissed.v3.${userId}`
+    },
+    isDemoWorkspaceAccount() {
+      const email = String(this.auth?.email || this.auth?.user?.email || '').trim().toLowerCase()
+      if (!email) return false
+      if (email.endsWith('@mutqin.test')) return true
+      if (/^practice\d+@example\.com$/.test(email)) return true
+      if (email === 'test@example.com') return true
+      return false
+    },
+    shouldSuppressWelcomeBackModal() {
+      // Only hide Welcome Back while the first-time spotlight is about to play.
+      // Demo testers keep their saved set and see Welcome Back on later logins.
+      if (this.auth?.just_registered || this.isSignupIsolationActive?.()) return true
+      if (this.shouldAutoStartWorkspaceTour()) return true
+      return false
+    },
+    hasDismissedWorkspaceTour() {
+      try {
+        return localStorage.getItem(this.getTesterGuideStorageKey()) === '1'
+      } catch {
+        return false
+      }
+    },
+    shouldAutoStartWorkspaceTour() {
+      if (!this.auth?.check) return false
+      if (this.hasDismissedWorkspaceTour()) return false
+      if (this.auth?.just_registered || this.isSignupIsolationActive?.()) return true
+      if (this.isDemoWorkspaceAccount()) return true
+      return false
     },
     initTesterStartGuide() {
       this.scheduleWorkspaceTourStart()
     },
     scheduleWorkspaceTourStart() {
-      if (!this.auth?.show_tester_guide || !this.auth?.check) {
+      if (!this.auth?.check) {
+        this.workspaceTourActive = false
+        return
+      }
+      // Returning logins never auto-play. Demo + first-time signup still may.
+      if (
+        this.auth?.just_logged_in
+        && !this.auth?.just_registered
+        && !this.isDemoWorkspaceAccount()
+      ) {
+        this.workspaceTourActive = false
+        return
+      }
+      if (!this.shouldAutoStartWorkspaceTour()) {
         this.workspaceTourActive = false
         return
       }
@@ -14517,38 +14565,29 @@ export default {
         window.clearTimeout(this._workspaceTourStartTimer)
         this._workspaceTourStartTimer = null
       }
-      // Wait for Welcome Back (or its skip) so the first spotlight can land on it.
       this._workspaceTourStartTimer = window.setTimeout(() => {
         this._workspaceTourStartTimer = null
         this.initWorkspaceTour()
-      }, this.auth?.just_logged_in ? 650 : 200)
+      }, this.auth?.just_registered || this.showWelcomeBackModal ? 650 : 200)
     },
     initWorkspaceTour() {
-      if (!this.auth?.show_tester_guide || !this.auth?.check) {
+      if (!this.shouldAutoStartWorkspaceTour()) {
         this.workspaceTourActive = false
         return
       }
-
-      if (this.auth?.just_logged_in) {
-        try {
-          localStorage.removeItem(this.getTesterGuideStorageKey())
-        } catch { /* ignore */ }
-        this.startWorkspaceTour(0)
-        return
-      }
-
-      try {
-        if (localStorage.getItem(this.getTesterGuideStorageKey()) === '1') {
-          this.workspaceTourActive = false
-          return
-        }
-      } catch { /* ignore */ }
-
       this.startWorkspaceTour(0)
     },
     async startWorkspaceTour(stepIndex = 0) {
       this.workspaceTourActive = true
       this.workspaceTourStepIndex = Math.max(0, Number(stepIndex) || 0)
+      this.showPostLoginOnboarding = false
+      if (this.showWelcomeBackModal) {
+        this.showWelcomeBackModal = false
+        this.welcomeBackWorkspaceHidden = false
+        this.returningUserChoicePending = false
+      }
+      this.captureWorkspaceTourConfigSnapshot()
+      await this.applyWorkspaceTourPracticePreview()
       await this.applyWorkspaceTourStep(this.workspaceTourStepIndex)
       this.bindWorkspaceTourListeners()
     },
@@ -14556,165 +14595,239 @@ export default {
       if (this._workspaceTourResizeBound) return
       this._workspaceTourResizeBound = () => {
         if (!this.workspaceTourActive) return
-        this.measureWorkspaceTourTarget()
+        this.scheduleWorkspaceTourMeasure({ allowScroll: false })
       }
       window.addEventListener('resize', this._workspaceTourResizeBound)
       window.addEventListener('scroll', this._workspaceTourResizeBound, true)
     },
     unbindWorkspaceTourListeners() {
-      if (!this._workspaceTourResizeBound) return
-      window.removeEventListener('resize', this._workspaceTourResizeBound)
-      window.removeEventListener('scroll', this._workspaceTourResizeBound, true)
-      this._workspaceTourResizeBound = null
+      if (this._workspaceTourResizeBound) {
+        window.removeEventListener('resize', this._workspaceTourResizeBound)
+        window.removeEventListener('scroll', this._workspaceTourResizeBound, true)
+        this._workspaceTourResizeBound = null
+      }
+      if (this._workspaceTourMeasureTimer) {
+        window.clearTimeout(this._workspaceTourMeasureTimer)
+        this._workspaceTourMeasureTimer = null
+      }
+    },
+    scheduleWorkspaceTourMeasure({ allowScroll = true } = {}) {
+      if (this._workspaceTourMeasureTimer) window.clearTimeout(this._workspaceTourMeasureTimer)
+      this._workspaceTourMeasureTimer = window.setTimeout(() => {
+        this._workspaceTourMeasureTimer = null
+        this.measureWorkspaceTourTarget({ allowScroll })
+      }, allowScroll ? 16 : 120)
     },
     async applyWorkspaceTourStep(stepIndex) {
       const steps = this.workspaceTourSteps || []
-      let index = Math.max(0, Math.min(steps.length - 1, Number(stepIndex) || 0))
-      let step = steps[index]
+      const index = Math.max(0, Math.min(steps.length - 1, Number(stepIndex) || 0))
+      const step = steps[index]
       if (!step) return
-
-      if (step.key === 'welcome' && !this.showWelcomeBackModal) {
-        index = Math.min(steps.length - 1, index + 1)
-        this.workspaceTourStepIndex = index
-        step = steps[index]
-      }
-
-      await this.prepareWorkspaceTourStep(step?.key)
+      this.workspaceTourStepIndex = index
+      await this.prepareWorkspaceTourStep(step.key)
       await this.$nextTick()
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-      this.measureWorkspaceTourTarget()
+      this.measureWorkspaceTourTarget({ allowScroll: true })
+      window.setTimeout(() => {
+        if (this.workspaceTourActive) this.measureWorkspaceTourTarget({ allowScroll: false })
+      }, 240)
+    },
+    async closeWorkspaceTourOverlays({ keepAi = false, keepPostSession = false } = {}) {
+      this.topCardMenuOpen = false
+      this.workspaceTourDashboardOpen = false
+      if (!keepAi && this.amdOpen) {
+        this._amdCompleting = false
+        this.amdEndingSoon = false
+        this.closeAmdModal?.({ returnToCompletion: false })
+        this.postSessionAiReciteActive = false
+      }
+      if (!keepPostSession && this.showPostSessionModal) {
+        this.showPostSessionModal = false
+      }
     },
     async prepareWorkspaceTourStep(key) {
-      if (key === 'welcome') {
-        this.topCardMenuOpen = false
-        return
-      }
-
-      if (key === 'controls') {
-        if (this.showWelcomeBackModal) {
-          try {
-            await this.welcomeBackStartNewSession()
-          } catch {
-            this.closeWelcomeBackModal()
-          }
-        }
+      if (key === 'welcome' || key === 'controls') {
+        await this.closeWorkspaceTourOverlays()
         if (this.showTools) await this.closeToolsPanel()
-        this.topCardMenuOpen = false
         return
       }
 
-      if (key === 'setup') {
-        if (this.showWelcomeBackModal) this.closeWelcomeBackModal()
-        this.topCardMenuOpen = false
+      if (key === 'setup' || key === 'start') {
+        await this.closeWorkspaceTourOverlays()
         this.openAdvancedControls()
         this.setActiveTab('tools')
         if (this.sectionOpen && this.sectionOpen.advanced_setup !== undefined) {
           this.sectionOpen.advanced_setup = true
         }
-        if (!this.chapterId || Number(this.chapterId) === 0) {
-          this.chapterId = 1
-          this.rangeStart = 1
-          this.rangeEnd = 3
-          try {
-            await this.loadChapter(this.currentMode)
-          } catch { /* ignore */ }
-        }
-        return
-      }
-
-      if (key === 'start') {
-        this.topCardMenuOpen = false
-        if (!this.showTools) this.openAdvancedControls()
-        this.setActiveTab('tools')
-        if (this.sectionOpen && this.sectionOpen.advanced_setup !== undefined) {
-          this.sectionOpen.advanced_setup = true
-        }
+        await this.applyWorkspaceTourPracticePreview()
         return
       }
 
       if (key === 'session') {
-        this.topCardMenuOpen = false
+        await this.closeWorkspaceTourOverlays()
         if (this.showTools) await this.closeToolsPanel()
+        await this.applyWorkspaceTourPracticePreview()
+        return
+      }
+
+      if (key === 'ai') {
+        await this.closeWorkspaceTourOverlays({ keepAi: true })
+        if (this.showTools) await this.closeToolsPanel()
+        await this.ensureWorkspaceTourAiModal()
+        return
+      }
+
+      if (key === 'results') {
+        await this.closeWorkspaceTourOverlays({ keepPostSession: true })
+        if (this.showTools) await this.closeToolsPanel()
+        await this.ensureWorkspaceTourResultsPreview()
         return
       }
 
       if (key === 'plan') {
-        this.topCardMenuOpen = false
+        await this.closeWorkspaceTourOverlays({ keepPostSession: true })
         if (this.showTools) await this.closeToolsPanel()
+        await this.ensureWorkspaceTourPlanPreview()
         return
       }
 
       if (key === 'dashboard') {
+        await this.closeWorkspaceTourOverlays()
         if (this.showTools) await this.closeToolsPanel()
-        await this.$nextTick()
-        if (!document.querySelector('.workspace-shell-idle-links [data-tour="dashboard"]')) {
-          this.topCardMenuOpen = true
-        }
+        this.workspaceTourDashboardOpen = true
       }
     },
-    measureWorkspaceTourTarget() {
+    isWorkspaceTourTargetVisible(el) {
+      if (!el || typeof el.getBoundingClientRect !== 'function') return false
+      const rects = el.getClientRects?.() || []
+      if (!rects.length) return false
+      const rect = el.getBoundingClientRect()
+      if (rect.width < 8 || rect.height < 8) return false
+      const style = window.getComputedStyle(el)
+      if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false
+      if (rect.bottom < 4 || rect.right < 4) return false
+      if (rect.top > window.innerHeight - 4 || rect.left > window.innerWidth - 4) return false
+      return true
+    },
+    readWorkspaceTourTargetRadius(el, fallback = 16) {
+      try {
+        const style = window.getComputedStyle(el)
+        const raw = String(style.borderTopLeftRadius || style.borderRadius || '')
+        const value = parseFloat(raw)
+        if (Number.isFinite(value) && value > 0) return Math.min(28, Math.max(8, value))
+      } catch { /* ignore */ }
+      return fallback
+    },
+    findWorkspaceTourTarget(selector) {
+      if (!selector) return null
+      const parts = String(selector).split(',').map((part) => part.trim()).filter(Boolean)
+      for (const part of parts) {
+        let nodes = []
+        try {
+          nodes = Array.from(document.querySelectorAll(part))
+        } catch {
+          continue
+        }
+        for (const node of nodes) {
+          if (this.isWorkspaceTourTargetVisible(node)) return node
+        }
+      }
+      return null
+    },
+    measureWorkspaceTourTarget({ allowScroll = true } = {}) {
       if (!this.workspaceTourActive) return
       const token = ++this.workspaceTourMeasureToken
       const step = this.workspaceTourStep
-      const selector = step?.selector
-      let el = null
-      if (selector) {
-        const parts = String(selector).split(',').map((part) => part.trim()).filter(Boolean)
-        for (const part of parts) {
-          const found = document.querySelector(part)
-          if (found && found.getClientRects().length) {
-            el = found
-            break
-          }
-        }
-      }
+      const el = this.findWorkspaceTourTarget(step?.selector)
 
       if (!el) {
         this.workspaceTourRect = null
         this.workspaceTourTooltipPos = {
-          top: Math.max(16, window.innerHeight * 0.3),
+          top: Math.max(16, window.innerHeight * 0.22),
           left: Math.max(16, (window.innerWidth - 320) / 2),
           placement: 'center'
         }
         return
       }
 
-      try {
-        el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
-      } catch { /* ignore */ }
+      const visibleNow = this.isWorkspaceTourTargetVisible(el)
+      if (allowScroll && !visibleNow) {
+        try {
+          el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
+        } catch { /* ignore */ }
+      }
 
       window.setTimeout(() => {
         if (token !== this.workspaceTourMeasureToken || !this.workspaceTourActive) return
-        const rect = el.getBoundingClientRect()
-        if (!rect.width && !rect.height) {
+        if (!this.isWorkspaceTourTargetVisible(el)) {
           this.workspaceTourRect = null
           return
         }
+        const rect = el.getBoundingClientRect()
+        const pad = Number(step?.pad ?? 8)
+        const radius = Number(step?.radius) || this.readWorkspaceTourTargetRadius(el, 16)
         this.workspaceTourRect = {
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height
+          top: Math.max(4, rect.top - pad),
+          left: Math.max(4, rect.left - pad),
+          width: Math.max(16, rect.width + pad * 2),
+          height: Math.max(16, rect.height + pad * 2),
+          radius,
         }
-        this.positionWorkspaceTourTooltip(rect)
-      }, 80)
+        this.positionWorkspaceTourTooltip({
+          top: this.workspaceTourRect.top,
+          left: this.workspaceTourRect.left,
+          width: this.workspaceTourRect.width,
+          height: this.workspaceTourRect.height,
+          bottom: this.workspaceTourRect.top + this.workspaceTourRect.height,
+          right: this.workspaceTourRect.left + this.workspaceTourRect.width,
+        }, step?.placement)
+      }, allowScroll ? 80 : 0)
     },
-    positionWorkspaceTourTooltip(rect) {
-      const tipWidth = Math.min(340, window.innerWidth - 24)
-      const tipHeight = 190
-      const gap = 14
-      const spaceBelow = window.innerHeight - (rect.bottom + gap)
-      const spaceAbove = rect.top - gap
-      let placement = 'bottom'
-      let top = rect.bottom + gap
-      if (spaceBelow < tipHeight && spaceAbove > spaceBelow) {
-        placement = 'top'
-        top = Math.max(12, rect.top - tipHeight - gap)
+    positionWorkspaceTourTooltip(rect, preferred = '') {
+      const tipEl = document.querySelector('.workspace-tour__tooltip')
+      const tipWidth = Math.min(tipEl?.offsetWidth || 340, window.innerWidth - 24)
+      const tipHeight = Math.max(tipEl?.offsetHeight || 0, 176)
+      const gap = 18
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const candidates = []
+      const push = (placement, top, left) => {
+        const next = {
+          placement,
+          top: Math.max(12, Math.min(top, vh - tipHeight - 12)),
+          left: Math.max(12, Math.min(left, vw - tipWidth - 12)),
+        }
+        const tip = {
+          top: next.top,
+          left: next.left,
+          right: next.left + tipWidth,
+          bottom: next.top + tipHeight,
+        }
+        const overlaps = !(
+          tip.right < rect.left - 8
+          || tip.left > rect.right + 8
+          || tip.bottom < rect.top - 8
+          || tip.top > rect.bottom + 8
+        )
+        const offscreen = next.top < 8 || next.left < 8
+          || next.top + tipHeight > vh - 8
+          || next.left + tipWidth > vw - 8
+        next.score = (overlaps ? 80 : 0) + (offscreen ? 40 : 0)
+        candidates.push(next)
       }
-      let left = rect.left + (rect.width / 2) - (tipWidth / 2)
-      left = Math.max(12, Math.min(left, window.innerWidth - tipWidth - 12))
-      top = Math.max(12, Math.min(top, window.innerHeight - tipHeight - 12))
-      this.workspaceTourTooltipPos = { top, left, placement }
+
+      push('bottom', rect.bottom + gap, rect.left + (rect.width / 2) - (tipWidth / 2))
+      push('top', rect.top - tipHeight - gap, rect.left + (rect.width / 2) - (tipWidth / 2))
+      push('left', rect.top + Math.min(20, rect.height / 8), rect.left - tipWidth - gap)
+      push('right', rect.top + Math.min(20, rect.height / 8), rect.right + gap)
+
+      const preferredMatch = candidates.find((item) => item.placement === preferred && item.score < 80)
+      const best = preferredMatch || candidates.slice().sort((a, b) => a.score - b.score)[0]
+      this.workspaceTourTooltipPos = best || {
+        top: 16,
+        left: 16,
+        placement: preferred || 'bottom',
+      }
     },
     async prevWorkspaceTourStep() {
       if (this.workspaceTourStepIndex <= 0) return
@@ -14738,10 +14851,14 @@ export default {
       this.workspaceTourRect = null
       this.unbindWorkspaceTourListeners()
       this.topCardMenuOpen = false
+      this.teardownWorkspaceTourPreview()
       if (dismiss) {
         try {
           localStorage.setItem(this.getTesterGuideStorageKey(), '1')
         } catch { /* ignore */ }
+        if (!this.hasCompletedOnboarding()) {
+          this.markOnboardingCompleted()
+        }
       }
     },
     maybeAdvanceWorkspaceTourFromSession() {
@@ -14755,16 +14872,196 @@ export default {
         return
       }
       if (this.workspaceTourStep?.key === 'session' && this.showPostSessionModal) {
-        const planIndex = this.workspaceTourSteps.findIndex((step) => step.key === 'plan')
-        if (planIndex >= 0) {
-          this.workspaceTourStepIndex = planIndex
-          this.applyWorkspaceTourStep(planIndex)
+        const aiIndex = this.workspaceTourSteps.findIndex((step) => step.key === 'ai')
+        if (aiIndex >= 0) {
+          this.workspaceTourStepIndex = aiIndex
+          this.applyWorkspaceTourStep(aiIndex)
         }
-      } else if (this.workspaceTourStep?.key === 'plan' && this.showPostSessionModal) {
+        return
+      }
+      if (this.workspaceTourStep?.key === 'session' && this.showHeaderEndSessionAction) {
         this.measureWorkspaceTourTarget()
-      } else if (this.workspaceTourStep?.key === 'session' && this.showHeaderEndSessionAction) {
+        return
+      }
+      if (['results', 'plan'].includes(this.workspaceTourStep?.key) && this.showPostSessionModal) {
         this.measureWorkspaceTourTarget()
       }
+    },
+    captureWorkspaceTourConfigSnapshot() {
+      if (this.workspaceTourConfigSnapshot) return
+      this.workspaceTourConfigSnapshot = {
+        chapterId: this.chapterId,
+        rangeStart: this.rangeStart,
+        rangeEnd: this.rangeEnd,
+        reciterId: this.reciterId,
+        repetitionsPerStep: this.repetitionsPerStep,
+        selectedLoopCount: this.selectedLoopCount,
+        readingViewMode: this.readingViewMode,
+      }
+    },
+    buildWorkspaceTourPracticeConfig() {
+      return this.buildFirstOnboardingSessionConfig({
+        chapterId: 1,
+        rangeStart: 1,
+        rangeEnd: 3,
+        reciterId: 'ar.alafasy',
+        repetitionsPerStep: 2,
+        selectedLoopCount: 2,
+        readingViewMode: this.readingViewMode === 'stacked' ? 'stacked' : 'mushaf',
+      })
+    },
+    async applyWorkspaceTourPracticePreview() {
+      this.captureWorkspaceTourConfigSnapshot()
+      const preview = this.buildWorkspaceTourPracticeConfig()
+      this.chapterId = preview.chapterId
+      this.rangeStart = preview.rangeStart
+      this.rangeEnd = preview.rangeEnd
+      this.reciterId = preview.reciterId
+      this.repetitionsPerStep = preview.repetitionsPerStep
+      this.selectedLoopCount = preview.selectedLoopCount
+      if (preview.readingViewMode) this.readingViewMode = preview.readingViewMode
+      this.workspaceTourPreviewOwned = true
+      try {
+        await this.loadChapter(this.currentMode)
+      } catch { /* keep the range even if verses are still loading */ }
+    },
+    async restoreWorkspaceTourPracticePreview() {
+      const snap = this.workspaceTourConfigSnapshot
+      this.workspaceTourConfigSnapshot = null
+      if (!snap) return
+      this.chapterId = snap.chapterId
+      this.rangeStart = snap.rangeStart
+      this.rangeEnd = snap.rangeEnd
+      this.reciterId = snap.reciterId
+      this.repetitionsPerStep = snap.repetitionsPerStep
+      this.selectedLoopCount = snap.selectedLoopCount
+      if (snap.readingViewMode) this.readingViewMode = snap.readingViewMode
+      try {
+        if (Number(snap.chapterId) > 0) await this.loadChapter(this.currentMode)
+      } catch { /* ignore */ }
+    },
+    buildWorkspaceTourSampleSnapshot() {
+      return {
+        chapterId: 1,
+        chapterName: 'Al-Fatihah',
+        rangeStart: 1,
+        rangeEnd: 3,
+        repetitions: 2,
+        reciterId: 'ar.alafasy',
+        totalAyahsInSurah: 7,
+      }
+    },
+    async ensureWorkspaceTourSessionPreview() {
+      await this.applyWorkspaceTourPracticePreview()
+      const snapshot = {
+        ...(this.buildSessionEndedSnapshot?.({ force: true }) || {}),
+        ...this.buildWorkspaceTourSampleSnapshot(),
+      }
+      this.openPostSessionModal(snapshot)
+      this.workspaceTourPreviewOwned = true
+      this.workspaceTourOpenedPostSession = true
+      await this.$nextTick()
+    },
+    ensureWorkspaceTourSampleAnalysis() {
+      const ayah = 2
+      const sampleWords = [
+        { text: 'الْحَمْدُ', status: 'correct', ayahNumber: ayah, wordIndex: 0 },
+        { text: 'لِلَّهِ', status: 'correct', ayahNumber: ayah, wordIndex: 1 },
+        { text: 'رَبِّ', status: 'incorrect', ayahNumber: ayah, wordIndex: 2 },
+        { text: 'الْعَالَمِينَ', status: 'correct', ayahNumber: ayah, wordIndex: 3 },
+      ]
+      this.practiceFocusWeakWords = [{
+        text: 'رَبِّ',
+        ayahNumber: ayah,
+        status: 'incorrect',
+        reason: 'pronunciation',
+        wordIndex: 2,
+      }]
+      this.postSessionAiReviewDetails = this.buildPostSessionAiReviewDetails('mixed', {
+        weak_ayahs: [ayah],
+        missed_words: 1,
+        accuracy_percent: 75,
+        focus: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
+      }, {
+        wordStatuses: sampleWords,
+        accuracyScore: 75,
+        weakAyahs: [ayah],
+        mistakeBreakdown: { incorrect: 1, missing: 0, partial: 0 },
+      })
+      this.postSessionAiFeedback = this.postSessionAiReviewDetails?.summaryLine
+        || this.t('memorisation.workspaceTour.steps.results.body')
+      this.workspaceTourPreviewOwned = true
+    },
+    ensureWorkspaceTourSamplePlan() {
+      this.ensureWorkspaceTourSampleAnalysis()
+      const snapshot = this.buildWorkspaceTourSampleSnapshot()
+      const recommendation = buildLocalFallbackRecommendation(snapshot) || {}
+      this.postSessionRecommendation = {
+        ...recommendation,
+        settings: {
+          ...(recommendation.settings || {}),
+          reciter: 'ar.alafasy',
+          repetitions: 2,
+        },
+      }
+      this.postSessionRecommendationStatus = 'ready'
+      this.postSessionViewState = 'recommendation_ready'
+      this.workspaceTourPreviewOwned = true
+    },
+    async ensureWorkspaceTourAiModal() {
+      await this.applyWorkspaceTourPracticePreview()
+      if (this.showPostSessionModal) this.showPostSessionModal = false
+      this._amdCompleting = false
+      this.amdEndingSoon = false
+      this.amdBusy = false
+      if (!this.amdOpen) {
+        try {
+          await this.openAiMemorisationDetection({
+            scope: 'session',
+            fromTestWithAi: true,
+          })
+        } catch { /* stay on workspace if the check cannot open */ }
+      }
+      this.amdStage = AMD_STAGES.READY
+      this.amdBusy = false
+      this.recitationCheckRecording = false
+      this.recitationCheckPreparing = false
+      try { this.cleanupRecitationCheckMedia?.() } catch { /* ignore */ }
+      this.workspaceTourPreviewOwned = true
+      await this.$nextTick()
+    },
+    async ensureWorkspaceTourResultsPreview() {
+      if (this.amdOpen) {
+        this.closeAmdModal?.({ returnToCompletion: false })
+        this.postSessionAiReciteActive = false
+      }
+      await this.ensureWorkspaceTourSessionPreview()
+      this.ensureWorkspaceTourSampleAnalysis()
+      await this.$nextTick()
+    },
+    async ensureWorkspaceTourPlanPreview() {
+      if (this.amdOpen) {
+        this.closeAmdModal?.({ returnToCompletion: false })
+        this.postSessionAiReciteActive = false
+      }
+      await this.ensureWorkspaceTourSessionPreview()
+      this.ensureWorkspaceTourSamplePlan()
+      await this.$nextTick()
+    },
+    teardownWorkspaceTourPreview() {
+      this.workspaceTourDashboardOpen = false
+      if (this.amdOpen) this.closeAmdModal?.({ returnToCompletion: false })
+      this.postSessionAiReciteActive = false
+      this._amdCompleting = false
+      this.amdEndingSoon = false
+      if (this.workspaceTourOpenedPostSession) {
+        this.showPostSessionModal = false
+        this.postSessionAiReviewDetails = null
+        this.postSessionAiFeedback = ''
+      }
+      this.workspaceTourPreviewOwned = false
+      this.workspaceTourOpenedPostSession = false
+      void this.restoreWorkspaceTourPracticePreview()
     },
     collapseTesterGuide() {},
     expandTesterGuide() {},
@@ -14865,39 +15162,13 @@ export default {
     openOnboardingModal(force = false) {
       if (!this.isLoggedIn && !force) return
       this.onboardingManualLaunch = !!force
-      this.onboardingPhase = 'tour'
-      if (this.isSignupIsolationActive()) {
-        // New account: clear ONLY this user's scoped completion markers.
-        // Never remove guest / other accounts' mutqin.onboardingCompleted.* keys.
-        try {
-          this.deleteWorkspaceStateValue(this.getOnboardingWorkspaceKey())
-          localStorage.removeItem(this.getOnboardingStorageKey())
-        } catch { /* ignore */ }
-        this.writeWorkspaceStateValue('onboardingPending', true)
-        // Re-opening from Continue clears dismiss so the tour is active again.
-        this.deleteWorkspaceStateValue('onboardingDismissed')
-      }
-      if (!force && this.hasCompletedOnboarding() && !this.isSignupIsolationActive()) return
-      const shouldResume = !force && (
-        this.isSignupIsolationActive()
-        || !!this.readWorkspaceStateValue('onboardingPending', false)
-      )
-      this.onboardingStepIndex = shouldResume ? this.readOnboardingStepIndex() : 0
-      this.sessionEndedSnapshot = null
-      if (!this.onboardingDemoActive) this.prepareOnboardingDemo()
-      this.showTools = false
-      this.tab = 'tools'
-      window.setTimeout(() => {
-        this.showPostLoginOnboarding = true
-        this.applyOnboardingGoalPreset()
-        this.applyOnboardingStep(this.onboardingStepIndex)
-        this.applyPersistedOnboardingPreferences()
-        this.persistOnboardingProgress()
-      }, 50)
+      this.showPostLoginOnboarding = false
+      this.startWorkspaceTour(0)
     },
     openOnboardingFromTopMenu() {
       this.topCardMenuOpen = false
-      this.openOnboardingModal(true)
+      this.showPostLoginOnboarding = false
+      this.startWorkspaceTour(0)
     },
     startOnboardingTour() {
       this.onboardingPhase = 'tour'
@@ -22795,6 +23066,7 @@ export default {
       void this.completeAmdTestAndReturnToRecommendation({ reason: 'stop' })
     },
     maybeCompleteAmdMemorisationTest() {
+      if (this.workspaceTourActive) return false
       if (!this.amdOpen || this._amdCompleting || this.amdEndingSoon) return false
       if (this.amdStage === AMD_STAGES.COMPLETE) return true
       // Full-range pass finished (green/amber/red all settled) → auto-stop + plan.
@@ -30380,7 +30652,7 @@ export default {
         action === PRIMARY_SESSION_ACTION.START_ONBOARDING
         || action === PRIMARY_SESSION_ACTION.CONTINUE_ONBOARDING
       ) {
-        this.openOnboardingModal(false)
+        this.startWorkspaceTour(0)
         return
       }
 
@@ -34611,6 +34883,7 @@ export default {
 
     persistCentralSessionState() {
       if (this.isBootstrapping) return
+      if (this.workspaceTourActive && this.workspaceTourConfigSnapshot) return
       try {
         this.centralSession = {
           ...this.centralSession,
@@ -38372,6 +38645,7 @@ export default {
       // into a single debounced localStorage write instead of writing on every
       // change. The synchronous writer is still used directly on teardown/unload.
       if (this.isBootstrapping) return
+      if (this.workspaceTourActive && this.workspaceTourConfigSnapshot) return
       if (!this._uiPersistDebouncer) {
         this._uiPersistDebouncer = createDebouncer(() => this._persistUiStateNow(), 700)
       }
@@ -38381,6 +38655,7 @@ export default {
     _persistUiStateNow() {
 
       if (this.isBootstrapping) return
+      if (this.workspaceTourActive && this.workspaceTourConfigSnapshot) return
       try {
         const nextUiState = {
           anchorModeEnabled: this.anchorModeEnabled,
@@ -38700,6 +38975,7 @@ export default {
 
     async pushLearningState(force = false) {
       if (!this.learningBackendEnabled()) return
+      if (this.workspaceTourActive && this.workspaceTourConfigSnapshot) return
       // Isolated signups must never upload another profile's local cache —
       // including forced retry pushes — until the user finishes their own first-run.
       if (this.isSignupIsolationActive()) return

@@ -59,7 +59,7 @@ assert.match(
 )
 assert.match(
   vue,
-  /class="post-session-simple"[\s\S]*?:data-theme="theme"/,
+  /class="post-session-simple[\s\S]*?:data-theme="theme"/,
   'teleported post-session modal must carry data-theme'
 )
 assert.doesNotMatch(
@@ -89,7 +89,7 @@ const modalSurfaces = [
   'mutqin-modal-surface',
   'session-exit-modal',
   'welcome-back-modal',
-  'post-onboarding-modal',
+  'workspace-tour',
   'confirm-modal',
   'save-name-modal',
   'AiMemorisationDetectionModal',

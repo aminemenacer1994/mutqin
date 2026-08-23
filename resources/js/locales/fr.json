@@ -1643,6 +1643,59 @@
     },
     "view_recording": "Voir l'enregistrement",
     "revisitOnboarding": "Revoir l'introduction",
+    "workspaceTour": {
+      "stepCounter": "Étape {current} sur {total}",
+      "next": "Suivant",
+      "skip": "Passer",
+      "finish": "Terminé",
+      "steps": {
+        "welcome": {
+          "title": "Voici Mémorisation",
+          "body": "Votre espace de hifz. Nous commençons par Al-Fatiha 1–3 pour garder le chemin court et clair.",
+          "waitHint": ""
+        },
+        "controls": {
+          "title": "Ouvrir les contrôles",
+          "body": "Ici : configuration, outils de pratique et sessions enregistrées. Touchez-le, ou appuyez sur Suivant.",
+          "waitHint": ""
+        },
+        "setup": {
+          "title": "Choisir vos ayahs",
+          "body": "Choisissez une sourate et une courte plage (Al-Fatiha 1–3 est idéal). Tout le reste reste atténué.",
+          "waitHint": ""
+        },
+        "start": {
+          "title": "Démarrer la session",
+          "body": "Appuyez sur Commencer un nouvel ensemble lorsque la plage convient. Vous pratiquerez ensuite dans l’espace de travail.",
+          "waitHint": "Touchez Commencer un nouvel ensemble dans le contrôle mis en avant."
+        },
+        "session": {
+          "title": "Pratiquer, puis terminer",
+          "body": "Utilisez les ayahs et les outils ici. Quand vous êtes prêt, touchez Terminer la session, ou Suivant pour voir la suite.",
+          "waitHint": "Démarrez d’abord la session. Terminer la session s’allumera ici."
+        },
+        "ai": {
+          "title": "Vérifier avec la récitation IA",
+          "body": "Appuyez sur Enregistrer quand vous êtes prêt. Le contrôle vous attend — il ne se termine pas tout seul.",
+          "waitHint": ""
+        },
+        "results": {
+          "title": "Voir les mots justes et faux",
+          "body": "Le vert a été reconnu. Un mot mis en avant a encore besoin d’attention. Cet exemple montre l’analyse après un contrôle.",
+          "waitHint": ""
+        },
+        "plan": {
+          "title": "Suivre votre recommandation",
+          "body": "Mutqin transforme l’analyse en plan suivant. Cet exemple garde Al-Fatiha 1–3, Alafasy, 2 répétitions.",
+          "waitHint": ""
+        },
+        "dashboard": {
+          "title": "Voir le progrès",
+          "body": "Voici le tableau de bord : séries, couverture et muraja’ah. Retour pour revenir, ou Terminé pour finir.",
+          "waitHint": ""
+        }
+      }
+    },
     "onboarding": {
       "stepCounter": "Étape {current} sur {total}",
       "intro": "Choisissez les ayahs, pratiquez avec les outils, vérifiez avec l’IA, puis suivez le plan suivant.",

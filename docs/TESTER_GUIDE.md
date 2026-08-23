@@ -25,7 +25,7 @@ The main workspace is **Memorisation** (`/memorisation`). **Dashboard** (`/dashb
 2. Go to **Login** (`/login`).
 3. On local/staging, tap **Sign in with demo** (one click — no form needed), **or** sign in with email + password / Google.
 
-After login you land on **Memorisation**. A workspace **spotlight tour** dims everything except the current control and walks you through Welcome → Controls → Setup → Start → practise/End → Start recommendation → Dashboard.
+After login you land on **Memorisation**. Demo accounts and new signups see the workspace **spotlight tour** once (not again on later logins). Replay it anytime from **Take the tour again**. It walks through Welcome → Controls → Setup → Start → practise/End → AI recitation → results (right/wrong words) → recommendation plan → Dashboard.
 
 **Tip:** Allow microphone access when the browser asks. AI Recite and AI Memorisation checks need it.
 

@@ -522,11 +522,7 @@
 }
 
 .amd-mic-dot {
-  width: 0.62rem;
-  height: 0.62rem;
-  border-radius: 999px;
-  background: #a8a29e;
-  flex-shrink: 0;
+  display: none !important;
 }
 
 .amd-mic-status[data-status="listening"] .amd-mic-dot,

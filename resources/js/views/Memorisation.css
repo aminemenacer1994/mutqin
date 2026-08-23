@@ -60582,43 +60582,52 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 .workspace-tour {
   position: fixed;
   inset: 0;
-  z-index: 14500;
+  z-index: 32000;
   pointer-events: none;
 }
 
 .workspace-tour__blocker {
   position: fixed;
-  background: color-mix(in srgb, #0a100d 62%, transparent);
+  background: transparent;
   pointer-events: auto;
-}
-
-[data-theme="light"] .workspace-tour__blocker {
-  background: color-mix(in srgb, #1a1410 48%, transparent);
 }
 
 .workspace-tour__hole {
   position: fixed;
-  border-radius: 14px;
-  box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--accent, #c48a4a) 75%, white),
-    0 0 0 8px color-mix(in srgb, var(--accent, #c48a4a) 22%, transparent);
+  border: 0;
+  outline: 0;
+  border-radius: var(--tour-hole-radius, 16px);
+  box-shadow: 0 0 0 9999px color-mix(in srgb, #0a100d 62%, transparent);
   pointer-events: none;
-  transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease, opacity 160ms ease;
-  z-index: 14501;
+  transition: opacity 160ms ease, border-radius 160ms ease;
+  z-index: 32001;
 }
 
-.workspace-tour__hole.is-ready {
-  animation: workspace-tour-pulse 1.8s ease-in-out infinite;
+.workspace-tour__dashboard {
+  position: fixed;
+  inset: 4.5rem 0.75rem 0.75rem;
+  z-index: 32000;
+  pointer-events: auto;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface, #fffaf3);
+  box-shadow: 0 16px 48px color-mix(in srgb, #14231c 22%, transparent);
 }
 
-@keyframes workspace-tour-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #c48a4a) 75%, white), 0 0 0 8px color-mix(in srgb, var(--accent, #c48a4a) 18%, transparent); }
-  50% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #c48a4a) 90%, white), 0 0 0 12px color-mix(in srgb, var(--accent, #c48a4a) 28%, transparent); }
+.workspace-tour__dashboard-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--surface, #fffaf3);
+}
+
+[data-theme="light"] .workspace-tour__hole {
+  box-shadow: 0 0 0 9999px color-mix(in srgb, #1a1410 48%, transparent);
 }
 
 .workspace-tour__tooltip {
   position: fixed;
-  z-index: 14502;
+  z-index: 32002;
   width: min(21.5rem, calc(100vw - 1.5rem));
   padding: 0.9rem 0.95rem;
   border-radius: 14px;
@@ -60698,6 +60707,11 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   border-color: color-mix(in srgb, var(--accent, #c48a4a) 42%, transparent);
   background: color-mix(in srgb, var(--accent, #c48a4a) 16%, transparent);
   color: var(--accent-strong, #9a6738);
+}
+
+.workspace-tour__tooltip.is-left,
+.workspace-tour__tooltip.is-right {
+  width: min(20.5rem, calc(100vw - 1.5rem));
 }
 
 @media (max-width: 480px) {

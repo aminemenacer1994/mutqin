@@ -308,7 +308,7 @@
       "items": {
         "sit": {
           "title": "1. Set your range",
-          "description": "Pick a short set of ayahs you can finish in one sitting."
+          "description": "Pick a short set of ayahs you can finish in one set."
         },
         "check": {
           "title": "2. Check your recall",
@@ -569,7 +569,7 @@
         },
         "complete": {
           "label": "Session done",
-          "text": "See what you finished in this sitting."
+          "text": "See what you finished in this set."
         },
         "result": {
           "label": "Your result",
@@ -691,7 +691,7 @@
       "repeatRecommended": "Repeat this set",
       "repeatRecommendedDesc": "The same ayahs and settings.",
       "returnToWorkspace": "Return to your place",
-      "returnToWorkspaceDesc": "Your completed sitting stays saved.",
+      "returnToWorkspaceDesc": "Your completed set stays saved.",
       "createCustom": "Choose a surah",
       "createCustomDesc": "Pick a surah and ayahs.",
       "startCustomSession": "Begin"
@@ -781,9 +781,9 @@
       "startNewSession": "Begin a new set",
       "repeatSession": "Repeat this set",
       "continueSession": "Continue this set",
-      "saveSession": "Save this sitting",
-      "confirmTitle": "End this sitting?",
-      "confirmTitleComplete": "End this sitting?",
+      "saveSession": "Save this set",
+      "confirmTitle": "End this set?",
+      "confirmTitleComplete": "End this set?",
       "confirmTitleEarly": "Finish for now?",
       "confirmDescription": "Your progress will be saved.",
       "confirmDescriptionComplete": "Your progress will be saved.",
@@ -794,8 +794,8 @@
       "confirmEndEarly": "End",
       "confirmContinue": "Keep going",
       "keepPractising": "Keep going",
-      "savedSessionKicker": "Saved sitting",
-      "autoSaveLabel": "Save this sitting",
+      "savedSessionKicker": "Saved set",
+      "autoSaveLabel": "Save this set",
       "savedSessionHint": "Your place will be saved when you end.",
       "autoSaveOffHint": "Turn this on to keep your place when you end.",
       "repetitionsProgress": "{completed} of {total} repetitions completed",
@@ -917,7 +917,7 @@
     },
     "a11y": {
       "sessionOverview": "Session overview",
-      "endSession": "End this sitting",
+      "endSession": "End this set",
       "openReadingOptions": "Reading options",
       "sessionMetadata": "This set",
       "memorisationWorkspace": "Your mushaf",
@@ -1492,8 +1492,8 @@
     "actions": {
       "newSession": "New set",
       "repeatRange": "Repeat these ayahs",
-      "saveSession": "Save this sitting",
-      "resumeSession": "Return to your last sitting?",
+      "saveSession": "Save this set",
+      "resumeSession": "Return to your last set?",
       "retentionCheck": "Check what you kept"
     },
     "quiz": {
@@ -1651,38 +1651,48 @@
       "finish": "Done",
       "steps": {
         "welcome": {
-          "title": "Start fresh here",
-          "body": "Choose Start new session. The rest of the screen stays dim so this choice stays clear.",
+          "title": "This is Memorisation",
+          "body": "Your workspace for hifz. We start with Al-Fatiha 1–3 so the path stays short and clear.",
           "waitHint": ""
         },
         "controls": {
           "title": "Open Controls",
-          "body": "This opens Setup, practice tools, and saved sessions. Tap it, or press Next to continue.",
+          "body": "This opens Setup, practice tools, and saved sets. Tap it, or press Next to continue.",
           "waitHint": ""
         },
         "setup": {
           "title": "Choose your ayahs",
-          "body": "Pick a surah and a short range (Al-Fatiha 1–3 is ideal). Everything else stays dimmed.",
+          "body": "Al-Fatiha 1–3, Alafasy, and 2 repetitions is the focused review. Change this later whenever you like.",
           "waitHint": ""
         },
         "start": {
-          "title": "Start the session",
-          "body": "Press Start when the range looks right. You will practise in the workspace next.",
-          "waitHint": "Tap Start in the highlighted control to continue."
+          "title": "Begin the set",
+          "body": "When the range looks right, press Begin a new set. Or press Next to see the workspace first.",
+          "waitHint": ""
         },
         "session": {
-          "title": "Practise, then end",
-          "body": "Use the ayahs and tools here. When you are ready, tap End session.",
-          "waitHint": "Start the session first, End session will light up here."
+          "title": "Practise these ayahs",
+          "body": "Al-Fatiha 1–3 stays on the page. Listen, repeat, then continue to see the AI check.",
+          "waitHint": ""
+        },
+        "ai": {
+          "title": "Check with AI recitation",
+          "body": "Press Record when you are ready. The check waits for you — it does not finish on its own.",
+          "waitHint": ""
+        },
+        "results": {
+          "title": "See right and wrong words",
+          "body": "Green words matched. A highlighted word still needs care. This sample shows how analysis looks after a check.",
+          "waitHint": ""
         },
         "plan": {
-          "title": "Start your recommendation",
-          "body": "Do not stop at selecting a plan. Tap the primary button to start it and keep going.",
-          "waitHint": "Finish the session and open your result, the plan will appear here."
+          "title": "Follow your recommendation",
+          "body": "Mutqin turns the analysis into a next plan. This example keeps Al-Fatiha 1–3 with Alafasy at 2 repetitions.",
+          "waitHint": ""
         },
         "dashboard": {
-          "title": "Check progress later",
-          "body": "Dashboard shows streaks, progress, and muraja'ah. Open it when you want an overview, then return to Memorisation to practise again.",
+          "title": "Review progress",
+          "body": "This is your dashboard: streaks, coverage, and muraja'ah. Press Back to return, or Done when you are finished.",
           "waitHint": ""
         }
       }
@@ -1787,7 +1797,7 @@
     "mushaf_page_is_preparing": "The mushaf is preparing",
     "session_setup_in_progress": "Preparing your set…",
     "text": "Text",
-    "session": "Sitting",
+    "session": "Set",
     "practice": "Practice",
     "saved": "Saved",
     "selectSessions": "Select",
@@ -2073,9 +2083,9 @@
         "evidenceThenAyah": "Continue with Āyah {ayah}",
         "evidenceThenRange": "Continue with Āyahs {from}, {to}"
       },
-      "summaryTitle": "This sitting",
+      "summaryTitle": "This set",
       "progressLabel": "These ayahs",
-      "detailsLabel": "This sitting",
+      "detailsLabel": "This set",
       "nextStepLabel": "What next",
       "celebrationTitleComplete": "Alhamdulillah",
       "celebrationTitlePartial": "Barakallahu feek",
@@ -3182,7 +3192,7 @@
     "sessionEnd": {
       "reviewInsights": "See how it went",
       "reviewInsightsDesc": "What stayed and what needs muraja'ah",
-      "saveSession": "Save this sitting",
+      "saveSession": "Save this set",
       "saveSessionDesc": "Keep this set of ayahs",
       "resetRange": "Repeat these ayahs",
       "resetRangeDesc": "Begin the same set again",
@@ -3192,21 +3202,21 @@
     "sessionType": {
       "label": "Hifz",
       "nowPlaying": "Now reciting",
-      "session": "Sitting",
+      "session": "Set",
       "ayah": "Ayah {n}",
       "ayahLabel": "Ayah",
       "pause": "Pause",
       "startSession": "Begin",
       "advanced": "Advanced",
       "beginner": "Beginner",
-      "sessionExplanation": "{mode} sitting using {chaining}."
+      "sessionExplanation": "{mode} set using {chaining}."
     },
     "common": {
       "mushafSyncMessage": "Ayahs are loaded, but the mushaf page list has not synced yet. Switch back to Stacked or reopen this session.",
       "fullQuran": "Full Quran",
       "filterValue": "Filter value",
       "noSurah": "No surah",
-      "currentSession": "This sitting",
+      "currentSession": "This set",
       "confirm": "Confirm",
       "stop": "Stop",
       "savedAt": "Saved {date}",
@@ -3714,7 +3724,7 @@
     "sections": {
       "practise": {
         "title": "Practise carefully",
-        "desc": "Listen, repeat, and check your recitation so what you memorise stays with you beyond one sitting."
+        "desc": "Listen, repeat, and check your recitation so what you memorise stays with you beyond one set."
       },
       "daily": {
         "title": "Come back each day",
@@ -4118,7 +4128,7 @@
     "completed_count": "kept",
     "learning_count": "Learning",
     "in_progress_count": "in hand",
-    "last_activity": "Last sitting",
+    "last_activity": "Last set",
     "last_activity_soft": "{when}",
     "not_started": "Not begun",
     "range_completion": "This set",

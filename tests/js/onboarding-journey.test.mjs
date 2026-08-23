@@ -22,7 +22,6 @@ function sliceMethod(source, name) {
     if (before.includes('this.')) continue
     if (!/\n\s{2,6}$/.test(before) && !/async\s+$/.test(before)) continue
 
-    // Skip parameter list (may contain `{ ... }` defaults) to the method body brace.
     let depth = 0
     let bodyBrace = -1
     for (let i = idx + needle.length - 1; i < source.length; i += 1) {
@@ -50,41 +49,41 @@ function sliceMethod(source, name) {
   assert.fail(`missing method ${name}`)
 }
 
-// 1. Brand-new: finish lands in first session (Fatihah 1–3) and auto-starts
 {
   const first = buildFirstOnboardingSessionConfig()
   assert.equal(first.chapterId, 1)
   assert.equal(first.rangeStart, 1)
   assert.equal(first.rangeEnd, 3)
+  assert.equal(first.repetitionsPerStep, 2)
+  assert.equal(first.reciterId, 'ar.alafasy')
   assert.equal(buildDefaultWorkspaceSessionConfig().rangeEnd, 7)
-
-  const finish = sliceMethod(memorisationJs, 'completeOnboardingIntoFirstSession')
-  assert.match(finish, /markOnboardingCompleted\(\)/)
-  assert.match(finish, /applyFirstOnboardingSessionConfig/)
-  assert.match(finish, /startSessionWithCountdown\(\{\s*skipPrime:\s*true\s*\}\)/)
-  assert.match(
-    sliceMethod(memorisationJs, 'completeOnboardingOpenSetup'),
-    /completeOnboardingIntoFirstSession/,
-  )
 }
 
-// 2. Incomplete: step + prefs persist; Continue restores via openOnboardingModal
 {
-  assert.match(memorisationJs, /persistOnboardingProgress\s*\(/)
-  assert.match(memorisationJs, /readOnboardingStepIndex\s*\(/)
-  assert.match(memorisationJs, /onboardingPreferences/)
+  assert.doesNotMatch(memorisationVue, /post-onboarding-modal/)
+  assert.doesNotMatch(memorisationVue, /showPostLoginOnboarding/)
+  assert.doesNotMatch(memorisationVue, /onboarding-step-rail--four/)
+  assert.match(memorisationVue, /data-workspace-tour/)
+}
+
+{
   const open = sliceMethod(memorisationJs, 'openOnboardingModal')
-  assert.match(open, /readOnboardingStepIndex\(\)/)
-  assert.match(open, /applyPersistedOnboardingPreferences\(\)/)
+  assert.match(open, /startWorkspaceTour\(0\)/)
+  assert.doesNotMatch(open, /showPostLoginOnboarding = true/)
+
   const header = sliceMethod(memorisationJs, 'handleHeaderSessionAction')
-  assert.match(header, /openOnboardingModal\(false\)/)
-  assert.doesNotMatch(
-    header,
-    /START_ONBOARDING[\s\S]*this\.showPostLoginOnboarding = true/,
+  assert.match(header, /startWorkspaceTour\(0\)/)
+  assert.doesNotMatch(header, /openOnboardingModal\(false\)/)
+
+  const active = sliceMethod(memorisationJs, 'isOnboardingExperienceActive')
+  assert.match(active, /return false/)
+
+  assert.match(
+    sliceMethod(memorisationJs, 'sessionLifecycleInput'),
+    /requiresOnboarding:\s*false/,
   )
 }
 
-// 3. Refresh mid-tour: isolation reset only on fresh activation
 {
   assert.match(memorisationJs, /_signupIsolationFreshlyActivated/)
   assert.match(memorisationJs, /freshIsolation/)
@@ -98,7 +97,6 @@ function sliceMethod(source, name) {
   assert.match(bind, /allowGuestFallback:\s*false/)
 }
 
-// 4. Completed: clears isolation + pending and force-pushes
 {
   const mark = sliceMethod(memorisationJs, 'markOnboardingCompleted')
   assert.match(mark, /clearSignupIsolation\(\)/)
@@ -107,7 +105,6 @@ function sliceMethod(source, name) {
   assert.match(mark, /onboardingStepIndex/)
 }
 
-// 5. Returning user path intact
 {
   assert.match(memorisationJs, /just_logged_in && !this\.auth\?\.just_registered/)
   assert.match(memorisationJs, /isExistingUserLogin\(\)/)
@@ -115,30 +112,20 @@ function sliceMethod(source, name) {
   assert.match(memorisationJs, /preferWelcomeBackOnLogin/)
   const welcomeGate = sliceMethod(memorisationJs, 'maybeShowWelcomeBackModal')
   assert.doesNotMatch(welcomeGate, /\|\|\s*this\.sessionPaused/)
+  assert.match(welcomeGate, /shouldSuppressWelcomeBackModal\(\)/)
+  assert.match(sliceMethod(memorisationJs, 'isExistingUserLogin'), /shouldSuppressWelcomeBackModal\(\)/)
+  assert.match(sliceMethod(memorisationJs, 'shouldSuppressWelcomeBackModal'), /shouldAutoStartWorkspaceTour/)
 }
 
-// 6. Skip completes + starts; Close dismisses without completing; no auto-open when dismissed
 {
-  assert.match(memorisationVue, /@click="skipOnboardingToFirstSession"/)
-  assert.match(memorisationVue, /modal-close-btn[\s\S]*@click="dismissOnboardingTour"/)
-  assert.match(
-    sliceMethod(memorisationJs, 'skipOnboardingToFirstSession'),
-    /completeOnboardingIntoFirstSession/,
-  )
-  const dismiss = sliceMethod(memorisationJs, 'dismissOnboardingTour')
-  assert.match(dismiss, /onboardingDismissed/)
-  assert.doesNotMatch(dismiss, /markOnboardingCompleted\(\)/)
-  assert.match(
-    sliceMethod(memorisationJs, 'shouldAutoOpenOnboarding'),
-    /hasDismissedFirstTimeOnboarding/,
-  )
-  assert.match(
-    sliceMethod(memorisationJs, 'applyFirstOnboardingSessionConfig'),
-    /focusModeEnabled/,
+  const finish = sliceMethod(memorisationJs, 'finishWorkspaceTour')
+  assert.match(finish, /markOnboardingCompleted\(\)/)
+  assert.doesNotMatch(
+    sliceMethod(memorisationJs, 'scheduleWorkspaceTourStart'),
+    /openOnboardingModal\(\)/,
   )
 }
 
-// 7. Logged-in recommendation: recoverable empty/error — no inventing plans
 {
   const load = sliceMethod(memorisationJs, 'loadPostSessionRecommendation')
   assert.match(load, /useBackendRecommendations/)

@@ -15,7 +15,7 @@
         aria-modal="true"
         aria-labelledby="amdModalTitle"
       >
-        <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium">
+        <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium" data-tour="ai-modal">
           <header class="amd-header amd-header--premium amd-header--sticky">
             <div class="amd-header-top">
               <div class="amd-header-copy">

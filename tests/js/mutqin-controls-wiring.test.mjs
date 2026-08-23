@@ -123,33 +123,21 @@ assert.doesNotMatch(
   'old onboarding copy should be removed'
 )
 
-includesAll('onboarding lean guided tour', [
-  /onboardingPhase: 'tour'/,
-  /startOnboardingTour\(\)/,
-  /toggleOnboardingPracticeChip\(/,
-  /goToOnboardingStep\(/,
-  /completeOnboardingOpenSetup\(\)/,
-  /completeOnboardingIntoFirstSession\(\)/,
-  /skipOnboardingToFirstSession/,
-  /persistOnboardingProgress\(/,
-  /onboarding-fluid/,
-  /post-onboarding-modal--guided/,
-  /onboarding-step-rail--four/,
-  /onboarding-actions-grid--trio-row onboarding-nav-actions/,
-  /onboarding-body--guided/,
-  /onboardingIsTour/,
-  /memorisation\.onboarding\.skipTour/,
-  /container-fluid onboarding-fluid/,
-  /onboarding-meta-line/,
-  /onboarding-practice-chips/,
-  /this\.onboardingPhase = 'tour'/,
-  /this\.completeOnboardingOpenSetup\(\)/,
-  /shouldAutoOpenOnboarding\(\)/,
-  /markOnboardingAutoPresented\(\)/,
-  /onboardingAutoPresented/,
-  /openOnboardingModal\(false\)/,
+includesAll('workspace spotlight tour is the only onboarding', [
+  /workspaceTourActive/,
+  /startWorkspaceTour\(/,
+  /scheduleWorkspaceTourStart\(/,
+  /shouldAutoStartWorkspaceTour\(/,
+  /openOnboardingFromTopMenu\(/,
   /freshIsolation/,
+  /markOnboardingCompleted\(/,
 ])
+
+assert.doesNotMatch(
+  readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8'),
+  /post-onboarding-modal--guided|onboarding-step-rail--four|onboarding-fluid/,
+  'old guided onboarding modal markup must be gone',
+)
 
 const onboardingUiSource = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
   + '\n'

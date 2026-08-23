@@ -97,8 +97,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v129';
-        var FORCE = '128';
+        var BUILD = 'v131';
+        var FORCE = '130';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -275,6 +275,9 @@
         background: #9a4f3d !important;
         border-color: #b56a56 !important;
       }
+    </style>
+    <style id="mutqin-memorisation-hotfix-v131">
+      .amd-mic-dot { display: none !important; }
     </style>
     <style id="mutqin-memorisation-hotfix-v118">
       /* v118 — WBW interlinear: per-column horizontal padding + compact vertical stack */
@@ -2346,7 +2349,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -5468,13 +5471,13 @@
                             </a>
                             @auth
                             @if (Auth::user()->isAdmin())
-                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-dashboard">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_admin_dashboard_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @else
-                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" data-tour="nav-dashboard">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
                                 <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_dashboard_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>

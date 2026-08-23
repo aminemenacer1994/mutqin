@@ -32,7 +32,8 @@ assert.equal(DEFAULT_SESSION_REPETITIONS, 1, 'new sessions default to 1x')
   assert.equal(first.rangeStart, 1)
   assert.equal(first.rangeEnd, 3)
   assert.equal(first.focusModeEnabled, true)
-  assert.equal(first.repetitionsPerStep, 1)
+  assert.equal(first.repetitionsPerStep, 2)
+  assert.equal(first.reciterId, 'ar.alafasy')
 }
 
 // Fresh-session helper always returns 1x (clears sticky 2x+ from prior plans)
