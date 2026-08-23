@@ -164,7 +164,10 @@ class QuranAlignmentService
 
     public function normalizeArabic(string $text): string
     {
-        $value = preg_replace('/[\x{0610}-\x{061A}\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06ED}]/u', '', $text) ?? $text;
+        // Dagger alef (ٰ) is a real alef in mushaf orthography — expand before
+        // stripping marks, or العَٰلَمِين / الصِّرَٰط become العلمين / الصرط.
+        $value = str_replace("\u{0670}", 'ا', $text);
+        $value = preg_replace('/[\x{0610}-\x{061A}\x{064B}-\x{065F}\x{06D6}-\x{06ED}]/u', '', $value) ?? $value;
         $value = str_replace("\u{0640}", '', $value);
         $value = preg_replace('/[إأآٱ]/u', 'ا', $value) ?? $value;
         $value = str_replace(['ؤ', 'ئ', 'ى', 'ة'], ['و', 'ي', 'ي', 'ه'], $value);
@@ -172,6 +175,25 @@ class QuranAlignmentService
         $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
 
         return trim($value);
+    }
+
+    private function stripAlefForCompare(string $word): string
+    {
+        return str_replace('ا', '', $word);
+    }
+
+    private function alefOptionalEqual(string $left, string $right): bool
+    {
+        if ($left === '' || $right === '') {
+            return false;
+        }
+        if ($left === $right) {
+            return true;
+        }
+        $a = $this->stripAlefForCompare($left);
+        $b = $this->stripAlefForCompare($right);
+
+        return $a !== '' && $a === $b;
     }
 
     /**
@@ -320,8 +342,8 @@ class QuranAlignmentService
     {
         $value = preg_replace('/[قك]/u', 'ك', $text) ?? $text;
         $value = preg_replace('/[طت]/u', 'ت', $value) ?? $value;
-        // Keep ض/ظ/ذ soft for ASR; do not fold د — ض↔د is a real learner mistake.
-        $value = preg_replace('/[ظضذ]/u', 'ذ', $value) ?? $value;
+        // Keep ض/ظ/ذ/د soft for ASR (ض↔د is a common recognition swap).
+        $value = preg_replace('/[ظضذد]/u', 'ذ', $value) ?? $value;
         $value = preg_replace('/[غخ]/u', 'غ', $value) ?? $value;
 
         return preg_replace('/[صسث]/u', 'س', $value) ?? $value;
@@ -373,6 +395,16 @@ class QuranAlignmentService
         if ($cliticA !== '' && $cliticA === $cliticB) {
             return 1.0;
         }
+        // Mushaf dagger-alef expansions vs plain ASR (العالمين/العلمين, ملك/مالك).
+        if ($this->alefOptionalEqual($left, $right)) {
+            return 1.0;
+        }
+        if ($this->alefOptionalEqual($a, $b)) {
+            return 1.0;
+        }
+        if ($this->alefOptionalEqual($cliticA, $cliticB)) {
+            return 1.0;
+        }
 
         $hardBest = max(
             $this->levenshteinSimilarity($left, $right),
@@ -408,6 +440,9 @@ class QuranAlignmentService
         if ($left === '' || $right === '' || $left === $right) {
             return false;
         }
+        if ($this->alefOptionalEqual($left, $right)) {
+            return false;
+        }
         $a = $this->stripArticle($left);
         $b = $this->stripArticle($right);
         $cliticA = $this->stripClitics($left);
@@ -416,6 +451,9 @@ class QuranAlignmentService
             return false;
         }
         if ($cliticA !== '' && $cliticA === $cliticB) {
+            return false;
+        }
+        if ($this->alefOptionalEqual($a, $b) || $this->alefOptionalEqual($cliticA, $cliticB)) {
             return false;
         }
         $best = min(
@@ -566,13 +604,9 @@ class QuranAlignmentService
             && ! $exactOrArticle
             && mb_strlen($expected) <= 2
             && mb_strlen($expected) === mb_strlen($actual);
-        $hardSingleEdit = $expected !== ''
-            && $actual !== ''
-            && ! $exactOrArticle
-            && mb_strlen($expected) === mb_strlen($actual)
-            && $this->isSingleEditMismatch($expected, $actual)
-            && ! $this->differsOnlyBySoftAsrLetters($expected, $actual);
-        if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && ! $hardSingleEdit && $similarity >= 0.79))) {
+        // Single-edit near-misses stay below green via soft similarity cap, but
+        // must not paint red when the learner is close / ASR jittered one letter.
+        if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && $similarity >= 0.79))) {
             return array_merge($base, [
                 'status' => 'correct',
                 'note' => 'Correct.',
@@ -590,7 +624,7 @@ class QuranAlignmentService
             ]);
         }
 
-        if ($expected !== '' && $actual !== '' && ($shortSubstitution || $hardSingleEdit)) {
+        if ($expected !== '' && $actual !== '' && $shortSubstitution) {
             return array_merge($base, [
                 'status' => 'wrong',
                 'note' => "Expected {$display}; heard {$actual}.",

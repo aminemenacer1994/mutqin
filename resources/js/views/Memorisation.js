@@ -4484,7 +4484,18 @@ export default {
           byAyah.set(ayah, { ayah, words: [], note: '' })
         }
         const row = byAyah.get(ayah)
-        if (text && !row.words.includes(text)) row.words.push(text)
+        if (text && !row.words.some((entry) => entry.text === text)) {
+          const severity = String(word?.severity || word?.status || word?.reason || '').toLowerCase()
+          const tone = ['omitted', 'omission', 'black', 'missing'].includes(severity)
+            ? 'omitted'
+            : (
+              ['partial', 'minor_mistake', 'amber', 'hesitation', 'uncertain'].includes(severity)
+                || severity === 'hesitation'
+                ? 'partial'
+                : 'incorrect'
+            )
+          row.words.push({ text, tone })
+        }
         if (!row.note && word?.reason) {
           row.note = weakWordReasonLabel(word.reason, this.t?.bind?.(this)) || ''
         }
@@ -4495,7 +4506,8 @@ export default {
         .slice(0, 6)
         .map((row) => ({
           ...row,
-          wordsLabel: row.words.slice(0, 4).join(' · '),
+          wordsLabel: row.words.slice(0, 4).map((entry) => entry.text).join(' · '),
+          wordEntries: row.words.slice(0, 4),
           ayahLabel: formatRecommendationAyahLabel(row.ayah, translate)
             || this.t?.('memorisation.postSession.recommendation.singleAyah', {
               ayah: row.ayah,
@@ -25026,11 +25038,10 @@ export default {
       if (this.amdOpen && kind === 'recitation') {
         const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
         liveAlignmentOptions.strictProgression = true
-        // Exact-only skip window (not fuzzy): detect skipped phrases/jumps without
-        // letting soft ASR matches paint ahead of the voice. Stop-on-mistake stays
-        // locked to the current word.
+        // Exact-only skip window (not fuzzy): detect skipped phrases without
+        // soft lookahead. Always on so missing words paint as omitted.
         liveAlignmentOptions.lookahead = 0
-        liveAlignmentOptions.exactSkipLookahead = stopOnMistake ? 0 : 3
+        liveAlignmentOptions.exactSkipLookahead = 3
         liveAlignmentOptions.partialAdvances = true
         liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
         liveAlignmentOptions.allowArticleMatch = true
@@ -25043,7 +25054,7 @@ export default {
         liveAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
         livePreviewAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.lookahead = 0
-        livePreviewAlignmentOptions.exactSkipLookahead = stopOnMistake ? 0 : 3
+        livePreviewAlignmentOptions.exactSkipLookahead = 3
         livePreviewAlignmentOptions.partialAdvances = true
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
@@ -25079,12 +25090,13 @@ export default {
           targetAyahs: targetAyahMeta
         })
       const preferVisible = this.amdOpen && kind === 'recitation'
-      const committedStatuses = preferVisible
-        ? (committedAlignment.progression?.visibleStatuses || committedAlignment.wordStatuses || [])
-        : (committedAlignment.wordStatuses || committedAlignment.progression?.visibleStatuses || [])
-      const candidateStatuses = preferVisible
-        ? (liveAlignment.progression?.visibleStatuses || liveAlignment.wordStatuses || [])
-        : (liveAlignment.wordStatuses || liveAlignment.progression?.visibleStatuses || [])
+      // Full wordStatuses — visibleStatuses blank later mistakes after the first blocker.
+      const committedStatuses = committedAlignment.wordStatuses
+        || committedAlignment.progression?.visibleStatuses
+        || []
+      const candidateStatuses = liveAlignment.wordStatuses
+        || liveAlignment.progression?.visibleStatuses
+        || []
       const buildTargetUnits = () => (committedAlignment.displayWords || committedStatuses.map(word => word?.text || '')).map((display, index) => ({
         display,
         text: display,

@@ -3537,7 +3537,24 @@
                     >
                       <strong class="post-session-simple__weak-spots-ayah">{{ row.ayahLabel }}</strong>
                       <span
-                        v-if="row.wordsLabel"
+                        v-if="row.wordEntries?.length"
+                        class="post-session-simple__weak-spots-words"
+                        dir="rtl"
+                        lang="ar"
+                      >
+                        <span
+                          v-for="(entry, wordIdx) in row.wordEntries"
+                          :key="`weak-word-${row.ayah}-${wordIdx}`"
+                          class="post-session-simple__weak-spots-word"
+                          :class="{
+                            'is-partial': entry.tone === 'partial',
+                            'is-omitted': entry.tone === 'omitted',
+                            'is-incorrect': entry.tone !== 'partial' && entry.tone !== 'omitted',
+                          }"
+                        >{{ entry.text }}<template v-if="wordIdx < row.wordEntries.length - 1"> · </template></span>
+                      </span>
+                      <span
+                        v-else-if="row.wordsLabel"
                         class="post-session-simple__weak-spots-words"
                         dir="rtl"
                         lang="ar"

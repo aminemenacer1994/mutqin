@@ -140,11 +140,11 @@ function assertStatuses(result, expected) {
     createWordsFromTranscript('غير المغضوب عليهم ولا الدالين'),
     opts,
   )
-  assert.equal(statusMap(result)['الضالين'], 'incorrect', 'ض→د hard letter swap is incorrect')
-  assert.ok(result.mistakes.incorrect.some(item => item.expected === 'الضالين'))
+  assert.equal(statusMap(result)['الضالين'], 'partial', 'ض→د ASR near-miss stays amber, never green')
+  assert.ok(!result.mistakes.incorrect.some(item => item.expected === 'الضالين'))
 }
 
-// Hard mid-length letter swaps (الحمد→الحمت) are incorrect, never green
+// Soft mid-length near-miss (الحمد→الحمت) stays amber, never green
 {
   const result = buildDeterministicRecitationResult(
     'الحمد لله',
@@ -152,7 +152,7 @@ function assertStatuses(result, expected) {
     opts,
   )
   assert.notEqual(statusMap(result)['الحمد'], 'correct')
-  assert.equal(statusMap(result)['الحمد'], 'incorrect')
+  assert.equal(statusMap(result)['الحمد'], 'partial')
 }
 
 // ASR truncation (insertion/deletion) stays amber, never green
@@ -164,6 +164,28 @@ function assertStatuses(result, expected) {
     opts,
   )
   assert.equal(statusMap(result)['العالمين'], 'partial')
+}
+
+// Mushaf dagger-alef (ٰ) must match plain ASR — these were permanent false reds
+{
+  assert.equal(getRecitationWordSimilarity('ٱلْعَٰلَمِينَ', 'العالمين'), 1)
+  assert.equal(getRecitationWordSimilarity('ٱلصِّرَٰطَ', 'الصراط'), 1)
+  assert.equal(getRecitationWordSimilarity('مَلِكِ', 'ملك'), 1)
+  assert.equal(getRecitationWordSimilarity('مَٰلِكِ', 'ملك'), 1)
+  assert.equal(getRecitationWordSimilarity('الرَّحْمَٰنِ', 'الرحمن'), 1)
+  // Even the historically broken stem (dagger deleted) must still match via optional alef.
+  assert.equal(getRecitationWordSimilarity('العلمين', 'العالمين'), 1)
+  assert.equal(getRecitationWordSimilarity('الصرط', 'الصراط'), 1)
+
+  const result = buildDeterministicRecitationResult(
+    'الْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ مَلِكِ يَوْمِ ٱلدِّينِ ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ',
+    createWordsFromTranscript('الحمد لله رب العالمين ملك يوم الدين اهدنا الصراط المستقيم'),
+    opts,
+  )
+  assert.equal(statusMap(result)['ٱلْعَٰلَمِينَ'], 'correct')
+  assert.equal(statusMap(result)['مَلِكِ'], 'correct')
+  assert.equal(statusMap(result)['ٱلصِّرَٰطَ'], 'correct')
+  assert.ok(result.accuracyScore >= 95)
 }
 
 // Short-word substitution is a real mistake, not amber "close"
@@ -279,6 +301,46 @@ function assertStatuses(result, expected) {
   assert.equal(liveSkip.statuses[3].status, 'correct')
 }
 
+// Soft-continue must not overwrite a red with the next heard word on the same slot
+{
+  const live = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين الرحمن الرحيم',
+    createWordsFromTranscript('الحمد لله رب صمد الرحمن الرحيم'),
+    {
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      strictProgression: true,
+      advanceOnIncorrect: true,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+      partialSimilarity: 0.45,
+    }
+  )
+  assert.equal(live.statuses[3].status, 'incorrect', 'صمد must stay red on العالمين')
+  assert.equal(live.statuses[3].actual, 'صمد')
+  assert.equal(live.statuses[4].status, 'correct')
+  assert.equal(live.statuses[5].status, 'correct')
+}
+
+// Soft-continue skip: next-word match paints omitted, not false incorrect
+{
+  const live = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين',
+    createWordsFromTranscript('الحمد لله العالمين'),
+    {
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      strictProgression: true,
+      advanceOnIncorrect: true,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+      partialSimilarity: 0.45,
+    }
+  )
+  assert.equal(live.statuses[2].status, 'omitted', 'رب skipped must be omitted')
+  assert.equal(live.statuses[3].status, 'correct')
+}
+
 // Mid-confidence wrong words must paint red, not vanish as noise
 {
   const words = createWordsFromTranscript('قل هو الله صمد').map((w) => ({ ...w, confidence: 0.45 }))
@@ -294,6 +356,24 @@ function assertStatuses(result, expected) {
   })
   assert.equal(live.statuses[3].status, 'incorrect')
   assert.equal(live.statuses[3].actual, 'صمد')
+}
+
+// Partial near-miss stays amber
+{
+  const live = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين',
+    createWordsFromTranscript('الحمد لله رب العاليمن'),
+    {
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      strictProgression: true,
+      advanceOnIncorrect: true,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+      partialSimilarity: 0.45,
+    }
+  )
+  assert.equal(live.statuses[3].status, 'partial')
 }
 
 // Partial phrase recitation marks remaining words omitted (final assessment)

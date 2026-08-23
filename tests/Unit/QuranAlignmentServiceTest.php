@@ -13,7 +13,52 @@ class QuranAlignmentServiceTest extends TestCase
     {
         $service = new QuranAlignmentService;
         $this->assertSame('الله', $service->normalizeArabic('اللَّهَ'));
-        $this->assertSame('الرحمن', $service->normalizeArabic('الرَّحْمَٰنِ'));
+        // Dagger alef expands to ا (الرَّحْمَٰنِ → الرحمان), not deleted.
+        $this->assertSame('الرحمان', $service->normalizeArabic('الرَّحْمَٰنِ'));
+        $this->assertSame('العالمين', $service->normalizeArabic('ٱلْعَٰلَمِينَ'));
+        $this->assertSame('الصراط', $service->normalizeArabic('ٱلصِّرَٰطَ'));
+    }
+
+    public function test_mushaf_dagger_alef_words_match_plain_asr(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [
+                [
+                    'ayah_number' => 2,
+                    'surah_number' => 1,
+                    'text' => 'الْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ',
+                ],
+                [
+                    'ayah_number' => 4,
+                    'surah_number' => 1,
+                    'text' => 'مَلِكِ يَوْمِ ٱلدِّينِ',
+                ],
+                [
+                    'ayah_number' => 6,
+                    'surah_number' => 1,
+                    'text' => 'ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ',
+                ],
+            ],
+            [
+                ['word' => 'الحمد', 'confidence' => 0.95],
+                ['word' => 'لله', 'confidence' => 0.95],
+                ['word' => 'رب', 'confidence' => 0.95],
+                ['word' => 'العالمين', 'confidence' => 0.95],
+                ['word' => 'ملك', 'confidence' => 0.95],
+                ['word' => 'يوم', 'confidence' => 0.95],
+                ['word' => 'الدين', 'confidence' => 0.95],
+                ['word' => 'اهدنا', 'confidence' => 0.95],
+                ['word' => 'الصراط', 'confidence' => 0.95],
+                ['word' => 'المستقيم', 'confidence' => 0.95],
+            ]
+        );
+
+        $this->assertSame(100, $result['accuracy']);
+        $this->assertSame(10, $result['color_counts']['green']);
+        foreach ($result['word_results'] as $word) {
+            $this->assertSame('correct', $word['status'], json_encode($word, JSON_UNESCAPED_UNICODE));
+        }
     }
 
     public function test_perfect_recitation_marks_words_correct(): void
@@ -152,7 +197,7 @@ class QuranAlignmentServiceTest extends TestCase
         );
 
         $last = $result['word_results'][4];
-        $this->assertSame('wrong', $last['status']);
+        $this->assertSame('minor_mistake', $last['status']);
         $this->assertSame('الدالين', $last['actual']);
     }
 

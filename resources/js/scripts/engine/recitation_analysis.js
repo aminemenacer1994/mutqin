@@ -38,7 +38,11 @@ export function createRecognitionState() {
 
 export function normalizeArabicForRecitation(text) {
   return String(text || '')
-    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+    // Dagger alef (ٰ) is a real alef in mushaf orthography — expand before
+    // stripping marks, or العَٰلَمِين / الصِّرَٰط become العلمين / الصرط and
+    // never match correct ASR العالمين / الصراط.
+    .replace(/\u0670/g, 'ا')
+    .replace(/[\u0610-\u061A\u064B-\u065F\u06D6-\u06ED]/g, '')
     .replace(/\u0640/g, '')
     .replace(/([^\s])ٱ\s+(?=ل)/g, '$1 ٱ')
     .replace(/(^|\s)ٱ\s+(?=ل)/g, '$1ٱ')
@@ -51,6 +55,21 @@ export function normalizeArabicForRecitation(text) {
     .replace(/[^\u0621-\u064A\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+/** Plain Arabic often omits or inserts ا vs mushaf dagger-alef expansions. */
+export function stripArabicAlefForCompare(word = '') {
+  return String(word || '').replace(/ا/g, '')
+}
+
+export function arabicAlefOptionalEqual(left = '', right = '') {
+  const a = String(left || '')
+  const b = String(right || '')
+  if (!a || !b) return false
+  if (a === b) return true
+  const sa = stripArabicAlefForCompare(a)
+  const sb = stripArabicAlefForCompare(b)
+  return sa.length > 0 && sa === sb
 }
 
 /** ASR often drops or reattaches ال on ayah-final words — compare bare stems too. */
@@ -296,8 +315,9 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       continue
     }
 
-    // Soft continue: if the learner already moved on, mark current red and
-    // match this hear against the next word — never burn ahead on junk ASR.
+    // Soft continue: if the learner already moved on to the next word, treat the
+    // current slot as skipped (omitted) — not as a false substitution with the
+    // ahead hear attached as "actual".
     if (options.advanceOnIncorrect && cursor + 1 < targetWords.length) {
       const nextTarget = targetWords[cursor + 1] || ''
       const nextSimilarity = getRecitationWordSimilarity(nextTarget, heardWord.word, { allowArticleMatch })
@@ -313,8 +333,23 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       })
       if (nextClassified.status === 'correct'
         || (nextClassified.status === 'partial' && options.partialAdvances !== false)) {
-        statuses[cursor] = classified
+        const skipUnit = targetUnits[cursor] || null
+        statuses[cursor] = {
+          text: displayWords[cursor] || targetWord,
+          targetWord,
+          status: 'omitted',
+          note: `Skipped. Expected ${displayWords[cursor] || targetWord} before continuing.`,
+          actual: '',
+          confidence: 0,
+          similarity: 0,
+          targetIndex: cursor,
+          ayahKey: skipUnit?.ayahKey || '',
+          ayahNumber: skipUnit?.ayahNumber ?? null,
+          ayahIndex: Number.isFinite(Number(skipUnit?.ayahIndex)) ? Number(skipUnit.ayahIndex) : 0,
+          ayahWordIndex: Number.isFinite(Number(skipUnit?.ayahWordIndex)) ? Number(skipUnit.ayahWordIndex) : cursor,
+        }
         statuses[cursor + 1] = nextClassified
+        firstBlockingIndex = cursor
         cursor += 2
         continue
       }
@@ -369,11 +404,13 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
 
     statuses[cursor] = classified
     firstBlockingIndex = cursor
-    // Stay on the current word for reds unless a next-word match already advanced.
-    // Soft continue: keep the cursor put and try later heard tokens against the
-    // same word (retry) or the next word — never discard the rest of the hear.
+    // Soft continue MUST advance past a red so the next heard token cannot
+    // overwrite the mistake (e.g. صمد→incorrect then الرحمن re-scoring the same slot).
     if (strict) {
-      if (options.advanceOnIncorrect) continue
+      if (options.advanceOnIncorrect) {
+        cursor += 1
+        continue
+      }
       break
     }
     cursor += 1
@@ -758,9 +795,12 @@ function findExactWordIndexWithinWindow(words = [], word = '', fromIndex = 0, lo
   for (let index = Math.max(0, fromIndex); index < end; index += 1) {
     const candidate = words[index] || ''
     if (candidate === word) return index
+    if (arabicAlefOptionalEqual(candidate, word)) return index
     if (!allowArticleMatch || !candidate) continue
     if (stripArabicDefiniteArticle(candidate) === stripArabicDefiniteArticle(word)) return index
     if (stripArabicClitics(candidate) === stripArabicClitics(word)) return index
+    if (arabicAlefOptionalEqual(stripArabicDefiniteArticle(candidate), stripArabicDefiniteArticle(word))) return index
+    if (arabicAlefOptionalEqual(stripArabicClitics(candidate), stripArabicClitics(word))) return index
   }
   return -1
 }
@@ -1103,8 +1143,8 @@ function softenArabicAsrForms(text = '') {
   return String(text || '')
     .replace(/[قك]/g, 'ك')
     .replace(/[طت]/g, 'ت')
-    // Keep ض/ظ/ذ soft for ASR; do not fold د — ض↔د is a real learner mistake.
-    .replace(/[ظضذ]/g, 'ذ')
+    // Keep ض/ظ/ذ/د soft for ASR (ض↔د is a common recognition swap).
+    .replace(/[ظضذد]/g, 'ذ')
     .replace(/[غخ]/g, 'غ')
     .replace(/[صسث]/g, 'س')
 }
@@ -1136,8 +1176,10 @@ export function differsOnlyBySoftAsrLetters(left, right, options = {}) {
 }
 
 export function getRecitationWordSimilarity(left, right, options = {}) {
-  const a = String(left || '')
-  const b = String(right || '')
+  // Always re-normalize so mushaf dagger-alef (ٰ) expands even if a caller
+  // passed display orthography or a stale pre-normalized stem.
+  const a = normalizeArabicForRecitation(left)
+  const b = normalizeArabicForRecitation(right)
   if (!a || !b) return 0
   if (a === b) return 1
   const allowArticleMatch = options.allowArticleMatch !== false
@@ -1148,6 +1190,10 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
   // Exact after article/clitic strip counts as a full match (ASR often drops و/ال).
   if (allowArticleMatch && strippedA && strippedA === strippedB) return 1
   if (allowArticleMatch && cliticA && cliticB && cliticA === cliticB) return 1
+  // Mushaf dagger-alef expansions vs plain ASR (العالمين/العلمين, ملك/مالك, الصراط/الصرط).
+  if (arabicAlefOptionalEqual(a, b)) return 1
+  if (allowArticleMatch && arabicAlefOptionalEqual(strippedA, strippedB)) return 1
+  if (allowArticleMatch && arabicAlefOptionalEqual(cliticA, cliticB)) return 1
   const base = levenshteinSimilarity(a, b)
   const stem = Math.max(
     levenshteinSimilarity(strippedA, strippedB),
@@ -1188,9 +1234,11 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
 
 /** True when the closest hard form differs by exactly one character edit. */
 export function isSingleEditMismatch(left, right, options = {}) {
-  const a = String(left || '')
-  const b = String(right || '')
+  const a = normalizeArabicForRecitation(left)
+  const b = normalizeArabicForRecitation(right)
   if (!a || !b || a === b) return false
+  // Alef presence is orthographic (dagger↔plain / ملك↔مالك), not a learner error.
+  if (arabicAlefOptionalEqual(a, b)) return false
   const allowArticleMatch = options.allowArticleMatch !== false
   const candidates = [[a, b]]
   if (allowArticleMatch) {
@@ -1200,6 +1248,8 @@ export function isSingleEditMismatch(left, right, options = {}) {
     const cliticB = stripArabicClitics(b)
     if (strippedA && strippedA === strippedB) return false
     if (cliticA && cliticB && cliticA === cliticB) return false
+    if (arabicAlefOptionalEqual(strippedA, strippedB)) return false
+    if (arabicAlefOptionalEqual(cliticA, cliticB)) return false
     candidates.push([strippedA, strippedB], [cliticA, cliticB])
   }
   let best = Infinity
@@ -1268,6 +1318,9 @@ function classifyWordMatch({
     && (
       stripArabicDefiniteArticle(expected) === stripArabicDefiniteArticle(actual)
       || stripArabicClitics(expected) === stripArabicClitics(actual)
+      || arabicAlefOptionalEqual(expected, actual)
+      || arabicAlefOptionalEqual(stripArabicDefiniteArticle(expected), stripArabicDefiniteArticle(actual))
+      || arabicAlefOptionalEqual(stripArabicClitics(expected), stripArabicClitics(actual))
     )
   const correctFloor = Number.isFinite(Number(correctSimilarity))
     ? Number(correctSimilarity)
@@ -1296,14 +1349,9 @@ function classifyWordMatch({
     && !exactOrArticle
     && Math.min(expected.length, actual.length) <= 2
     && expected.length === actual.length
-  // Same-length hard single-letter swaps (non-ASR soft) are learner mistakes.
-  const hardSingleEdit = expected
-    && actual
-    && !exactOrArticle
-    && expected.length === actual.length
-    && isSingleEditMismatch(expected, actual, { allowArticleMatch })
-    && !differsOnlyBySoftAsrLetters(expected, actual, { allowArticleMatch })
-  if (expected && confidenceOk && (exactOrArticle || (!shortSubstitution && !hardSingleEdit && effectiveSimilarity >= correctFloor))) {
+  // Single-edit near-misses stay below green via the soft similarity cap, but
+  // must not paint red when the learner is close / ASR jittered one letter.
+  if (expected && confidenceOk && (exactOrArticle || (!shortSubstitution && effectiveSimilarity >= correctFloor))) {
     return {
       text: displayText,
       targetWord: expected,
@@ -1332,7 +1380,7 @@ function classifyWordMatch({
       ...location
     }
   }
-  if (expected && actual && (shortSubstitution || hardSingleEdit)) {
+  if (expected && actual && shortSubstitution) {
     return {
       text: displayText,
       targetWord: expected,
@@ -1346,6 +1394,7 @@ function classifyWordMatch({
       ...location
     }
   }
+  // Near-miss / soft-letter / single-edit ASR noise → amber, not red.
   if (expected && actual && effectiveSimilarity >= partialFloor) {
     return {
       text: displayText,
@@ -1481,7 +1530,10 @@ function buildStableProgression(statuses = [], extraWords = [], options = {}) {
   // green/amber proves the learner moved on (never unlock from a lone red).
   const firstBlockingIndex = statuses.findIndex((word, index) => {
     if (isProgressionAdvanceStatus(word.status, options)) return false
-    if (word.status === 'incorrect' && options.advanceOnIncorrect) {
+    if (
+      (word.status === 'incorrect' || word.status === 'omitted')
+      && options.advanceOnIncorrect
+    ) {
       const laterSettled = statuses
         .slice(index + 1)
         .some(entry => isProgressionAdvanceStatus(entry.status, options))

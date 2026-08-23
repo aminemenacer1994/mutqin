@@ -54920,7 +54920,19 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   font-size: 1.08rem;
   line-height: 1.55;
   font-family: var(--quran-font, inherit);
+  color: #b45309;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-word.is-partial {
+  color: #b45309;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-word.is-incorrect {
   color: #9f1239;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-word.is-omitted {
+  color: #44403c;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-note {
