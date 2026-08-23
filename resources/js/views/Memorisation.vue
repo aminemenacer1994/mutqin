@@ -1,7 +1,8 @@
 <template>
-  <!-- mutqin-ui-build: v127 -->
+  <!-- mutqin-ui-build: v152 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
+    'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
     'onboarding-post-session-active': showPostSessionModal,
     'onboarding-post-session-front': showPostSessionModal && !postSessionOffcanvasOpen && !postSessionAiReciteActive && !postSessionAdaptiveCheckActive && postSessionPrimarySurface !== 'builder',
     'post-session-ai-recite-open': postSessionAiReciteActive,
@@ -38,6 +39,7 @@
       v-if="workspaceTourActive"
       class="workspace-tour"
       data-workspace-tour
+      :data-tour-step="workspaceTourStep?.key"
       :data-theme="theme"
       role="dialog"
       aria-modal="true"
@@ -65,11 +67,61 @@
         class="workspace-tour__dashboard"
         data-tour="tour-dashboard"
       >
-        <iframe
-          class="workspace-tour__dashboard-frame"
-          :src="workspaceTourDashboardUrl"
-          title="Dashboard"
-        ></iframe>
+        <div class="workspace-tour__dashboard-preview" aria-hidden="true">
+          <header class="workspace-tour__dash-hero">
+            <p class="workspace-tour__dash-kicker">{{ t('dashboard.journey_kicker') }}</p>
+            <h3 class="workspace-tour__dash-title">{{ workspaceTourDashboardGreeting }}</h3>
+            <span class="workspace-tour__dash-chip">
+              <i class="bi bi-fire" aria-hidden="true"></i>
+              {{ t('dashboard.streak', { n: 1 }) }}
+            </span>
+          </header>
+
+          <div class="workspace-tour__dash-stats">
+            <div class="workspace-tour__dash-stat">
+              <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>
+              <strong>0</strong>
+              <span>{{ t('dashboard.glance_memorised_label') }}</span>
+            </div>
+            <div class="workspace-tour__dash-stat">
+              <i class="bi bi-bookmark-plus" aria-hidden="true"></i>
+              <strong>3</strong>
+              <span>{{ t('dashboard.glance_learning_label') }}</span>
+            </div>
+          </div>
+
+          <div class="workspace-tour__dash-card">
+            <div class="workspace-tour__dash-card-head">
+              <span>{{ t('dashboard.journey_overall_label') }}</span>
+              <strong>0%</strong>
+            </div>
+            <div class="workspace-tour__dash-bar">
+              <span></span>
+            </div>
+          </div>
+
+          <div class="workspace-tour__dash-card">
+            <div class="workspace-tour__dash-card-head">
+              <span>{{ t('dashboard.strengthen_title') }}</span>
+            </div>
+            <p>{{ t('dashboard.weak_empty_message') }}</p>
+          </div>
+
+          <div class="workspace-tour__dash-card">
+            <div class="workspace-tour__dash-card-head">
+              <span>{{ t('dashboard.activity_chart_title') }}</span>
+            </div>
+            <div class="workspace-tour__dash-chart">
+              <span style="--h: 32%"></span>
+              <span style="--h: 48%"></span>
+              <span style="--h: 24%"></span>
+              <span style="--h: 70%"></span>
+              <span style="--h: 40%"></span>
+              <span style="--h: 86%"></span>
+              <span style="--h: 58%"></span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div
@@ -3176,6 +3228,7 @@
       class="post-session-simple post-session-simple--calm-v2 post-session-simple--premium"
       :class="{
         'post-session-simple--sample': onboardingSampleSessionActive,
+        'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
       }"
       :data-theme="theme"
       aria-live="polite"

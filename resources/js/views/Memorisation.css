@@ -60723,12 +60723,147 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   pointer-events: none;
 }
 
-.workspace-tour__dashboard-frame {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  background: var(--surface, #fffaf3);
+.workspace-tour__dashboard-preview {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 1rem 1rem 1.15rem;
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  background: var(--bg, #f6f3ee);
+  color: var(--text, #1f1a17);
   pointer-events: none;
+}
+
+.workspace-tour__dash-hero {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.workspace-tour__dash-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-strong, #9a6738);
+}
+
+.workspace-tour__dash-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.workspace-tour__dash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  min-height: 1.7rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent, #c48a4a) 14%, #fff);
+  color: var(--accent-strong, #9a6738);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.workspace-tour__dash-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.workspace-tour__dash-stat,
+.workspace-tour__dash-card {
+  padding: 0.75rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent, #c48a4a) 16%, rgba(28, 25, 23, 0.1));
+  background: var(--surface, #fffaf3);
+}
+
+.workspace-tour__dash-stat {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.workspace-tour__dash-stat i {
+  color: var(--accent-strong, #9a6738);
+  font-size: 1rem;
+}
+
+.workspace-tour__dash-stat strong {
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.workspace-tour__dash-stat span,
+.workspace-tour__dash-card p {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-muted, #6b635b);
+}
+
+.workspace-tour__dash-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.workspace-tour__dash-bar {
+  height: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent, #c48a4a) 12%, #efe6d8);
+  overflow: hidden;
+}
+
+.workspace-tour__dash-bar span {
+  display: block;
+  width: 8%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent, #c48a4a);
+}
+
+.workspace-tour__dash-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  height: 4.25rem;
+}
+
+.workspace-tour__dash-chart span {
+  flex: 1;
+  height: var(--h, 40%);
+  border-radius: 6px 6px 2px 2px;
+  background: color-mix(in srgb, var(--accent, #c48a4a) 62%, #efe6d8);
+}
+
+[data-theme="dark"] .workspace-tour__dashboard,
+.workspace-tour[data-theme="dark"] .workspace-tour__dashboard {
+  background: #1a1714;
+}
+
+[data-theme="dark"] .workspace-tour__dashboard-preview,
+.workspace-tour[data-theme="dark"] .workspace-tour__dashboard-preview {
+  background: #141210;
+  color: #f4ece3;
+}
+
+[data-theme="dark"] .workspace-tour__dash-stat,
+[data-theme="dark"] .workspace-tour__dash-card,
+.workspace-tour[data-theme="dark"] .workspace-tour__dash-stat,
+.workspace-tour[data-theme="dark"] .workspace-tour__dash-card {
+  background: #1a1714;
+  border-color: color-mix(in srgb, #d4a574 22%, rgba(255, 255, 255, 0.08));
 }
 
 [data-theme="light"] .workspace-tour__hole {
@@ -60877,6 +61012,22 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     max-width: calc(100vw - 1.25rem);
   }
 
+  .post-session-simple.workspace-tour-plan-active.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+  .post-session-simple.workspace-tour-plan-active.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg,
+  body:has(.workspace-tour[data-tour-step="plan"]) .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+  body:has(.workspace-tour[data-tour-step="plan"]) .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+    max-height: min(96dvh, calc(100dvh - 0.4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))) !important;
+  }
+
+  .post-session-simple.workspace-tour-plan-active .post-session-simple__scope-picker,
+  .post-session-simple.workspace-tour-plan-active .post-session-simple__scope-cards,
+  .post-session-simple.workspace-tour-plan-active .post-session-simple__scope-card,
+  body:has(.workspace-tour[data-tour-step="plan"]) .post-session-simple__scope-picker,
+  body:has(.workspace-tour[data-tour-step="plan"]) .post-session-simple__scope-cards,
+  body:has(.workspace-tour[data-tour-step="plan"]) .post-session-simple__scope-card {
+    overflow: visible;
+  }
+
   .workspace-tour__tooltip,
   .workspace-tour__tooltip.is-left,
   .workspace-tour__tooltip.is-right,
@@ -60928,7 +61079,25 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   }
 
   .workspace-tour__dashboard {
-    inset: max(4.25rem, calc(env(safe-area-inset-top, 0px) + 3.5rem)) 0.5rem 0.5rem;
+    top: max(4.25rem, calc(env(safe-area-inset-top, 0px) + 3.5rem));
+    right: 0.5rem;
+    left: 0.5rem;
+    bottom: auto;
+    height: calc(100dvh - min(46vh, 22rem) - 5rem - env(safe-area-inset-bottom, 0px));
+    max-height: 54vh;
+  }
+
+  .workspace-tour__dashboard-preview {
+    padding: 0.85rem 0.8rem;
+    gap: 0.6rem;
+  }
+
+  .workspace-tour__dash-title {
+    font-size: 1.05rem;
+  }
+
+  .workspace-tour__dash-chart {
+    height: 3.4rem;
   }
 }
 
@@ -60959,4 +61128,174 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 /* AI disclaimer banners removed from UI */
 .post-session-simple__ai-disclaimer {
   display: none !important;
+}
+
+/* Mobile + installed PWA: stack CTAs (Repeat Weak Ayah must be full width)
+   and punch correct / incorrect marks harder than the desktop text-only tint. */
+@media (max-width: 720px) {
+  .post-session-simple__actions--3,
+  .post-session-simple--calm-v2 .post-session-simple__actions--3,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.55rem !important;
+    width: 100% !important;
+  }
+
+  .post-session-simple__actions--3 > .post-session-simple__btn,
+  .post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn,
+  .post-session-simple__actions [data-action="review_weak_ayah"] {
+    grid-column: 1 / -1 !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 2.85rem !important;
+    padding: 0.7rem 0.85rem !important;
+    font-size: 0.92rem !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"],
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"],
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.32rem;
+    min-height: 1.7rem;
+    padding: 0.18rem 0.5rem !important;
+    border-radius: 999px !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"] {
+    background: color-mix(in srgb, #15803d 16%, #ecfdf3) !important;
+    border: 1px solid color-mix(in srgb, #15803d 32%, transparent) !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"] > i,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"] .post-session-simple__outcome-chip-value {
+    color: #14532d !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"],
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] {
+    background: color-mix(in srgb, #b91c1c 14%, #fff1f2) !important;
+    border: 1px solid color-mix(in srgb, #b91c1c 34%, transparent) !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] > i,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-value,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] > i,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-value {
+    color: #9f1239 !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected {
+    --tajweed-colour: #15803d;
+    color: #14532d !important;
+    -webkit-text-fill-color: #14532d !important;
+    background: color-mix(in srgb, #15803d 20%, #ecfdf3) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #15803d 42%, transparent) !important;
+    border-radius: 0.28em !important;
+    padding-inline: 0.14em !important;
+    font-weight: 700 !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect {
+    --tajweed-colour: #b91c1c;
+    color: #9f1239 !important;
+    -webkit-text-fill-color: #9f1239 !important;
+    background: color-mix(in srgb, #b91c1c 18%, #fff1f2) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #b91c1c 46%, transparent) !important;
+    border-radius: 0.28em !important;
+    padding-inline: 0.14em !important;
+    font-weight: 700 !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected .post-session-simple__quran-token-text {
+    color: #14532d !important;
+    -webkit-text-fill-color: #14532d !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak .post-session-simple__quran-token-text,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect .post-session-simple__quran-token-text {
+    color: #9f1239 !important;
+    -webkit-text-fill-color: #9f1239 !important;
+  }
+
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"],
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="strong"] {
+    background: color-mix(in srgb, #22c55e 22%, #1f2a22) !important;
+    border-color: color-mix(in srgb, #4ade80 40%, transparent) !important;
+  }
+
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"] > i,
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"] .post-session-simple__outcome-chip-value,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="strong"] > i,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="strong"] .post-session-simple__outcome-chip-value {
+    color: #86efac !important;
+  }
+
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"],
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"],
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="weak"],
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"] {
+    background: color-mix(in srgb, #ef4444 24%, #2a1c1c) !important;
+    border-color: color-mix(in srgb, #f87171 42%, transparent) !important;
+  }
+
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-corrected {
+    color: #86efac !important;
+    -webkit-text-fill-color: #86efac !important;
+    background: color-mix(in srgb, #22c55e 28%, #1f2a22) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #4ade80 55%, transparent) !important;
+  }
+
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-weak,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-incorrect {
+    color: #fecaca !important;
+    -webkit-text-fill-color: #fecaca !important;
+    background: color-mix(in srgb, #ef4444 32%, #2a1c1c) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #f87171 62%, transparent) !important;
+  }
+}
+
+html.mutqin-pwa-mobile .post-session-simple__actions--3,
+html.mutqin-pwa-mobile .post-session-simple--calm-v2 .post-session-simple__actions--3,
+html.mutqin-pwa-mobile .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  width: 100% !important;
+}
+
+html.mutqin-pwa-mobile .post-session-simple__actions--3 > .post-session-simple__btn,
+html.mutqin-pwa-mobile .post-session-simple__actions [data-action="review_weak_ayah"] {
+  grid-column: 1 / -1 !important;
+  justify-self: stretch !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+html.mutqin-pwa-mobile .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected {
+  background: color-mix(in srgb, #15803d 20%, #ecfdf3) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #15803d 42%, transparent) !important;
+}
+
+html.mutqin-pwa-mobile .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
+html.mutqin-pwa-mobile .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect {
+  background: color-mix(in srgb, #b91c1c 18%, #fff1f2) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #b91c1c 46%, transparent) !important;
+}
+
+html.mutqin-pwa-mobile .post-session-simple.workspace-tour-plan-active.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+html.mutqin-pwa-mobile .post-session-simple.workspace-tour-plan-active.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg,
+html.mutqin-pwa-standalone .post-session-simple.workspace-tour-plan-active.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+html.mutqin-pwa-standalone .post-session-simple.workspace-tour-plan-active.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg,
+html.mutqin-pwa-mobile body:has(.workspace-tour[data-tour-step="plan"]) .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg,
+html.mutqin-pwa-standalone body:has(.workspace-tour[data-tour-step="plan"]) .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+  max-height: min(96dvh, calc(100dvh - 0.4rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))) !important;
 }

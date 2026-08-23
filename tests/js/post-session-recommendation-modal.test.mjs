@@ -332,7 +332,7 @@ function t(key, params = {}) {
   assert.match(js, /getNextRecommendation/)
 }
 
-// Mobile inset sheet (not full-bleed) + compact 3-col footer
+// Mobile inset sheet (not full-bleed) + stacked full-width Repeat Weak Ayah
 {
   assert.match(
     css,
@@ -349,6 +349,10 @@ function t(key, params = {}) {
   assert.match(css, /\[data-theme="dark"\] \.post-session-simple\.post-session-simple--premium/)
   assert.match(css, /\.post-session-simple__quran-token\.is-weak/)
   assert.match(css, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
+  assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*?\[data-action="review_weak_ayah"\][\s\S]*?width:\s*100%\s*!important/)
+  assert.match(css, /html\.mutqin-pwa-mobile[\s\S]*?\[data-action="review_weak_ayah"\][\s\S]*?width:\s*100%\s*!important/)
+  assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*?\.post-session-simple__quran-token\.is-corrected[\s\S]*?background:/)
+  assert.match(css, /@media \(max-width:\s*720px\)[\s\S]*?\.post-session-simple__quran-token\.is-incorrect[\s\S]*?background:/)
   assert.match(css, /\.post-session-simple__text-close[\s\S]*?display:\s*none/)
   assert.match(css, /post-session-simple__plan-prompt--context/)
 

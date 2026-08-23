@@ -6707,10 +6707,9 @@ export default {
     testerGuideDashboardUrl() {
       return this.auth?.dashboard_url || '/dashboard'
     },
-    workspaceTourDashboardUrl() {
-      const base = String(this.testerGuideDashboardUrl || '/dashboard')
-      const join = base.includes('?') ? '&' : '?'
-      return `${base}${join}mutqin_embed=1`
+    workspaceTourDashboardGreeting() {
+      const name = this.welcomeBackDisplayName || this.t('dashboard.dear_friend')
+      return this.t('dashboard.greeting', { name })
     },
     workspaceTourSteps() {
       return [
@@ -6725,7 +6724,7 @@ export default {
         { key: 'results', selector: '[data-tour="ai-results"], [data-testid="post-session-section-1"]', pad: 8, radius: 18, placement: 'dock-outside', scroll: 'start' },
         { key: 'weak', selector: '[data-tour="weak-areas"], [data-testid="post-session-weak-spots"]', pad: 8, radius: 16, placement: 'top', scroll: 'center', maxHeight: 240 },
         { key: 'plan', selector: '[data-tour="rec-plans"], [data-testid="post-session-scope-picker"], [data-tour="rec-why"], [data-testid="post-session-plan-why"], [data-testid="post-session-personal-plan"], [data-tour="rec-plan"]', pad: 8, radius: 16, placement: 'top', scroll: 'center', maxHeight: 280 },
-        { key: 'dashboard', selector: '[data-tour="tour-dashboard"]', pad: 8, radius: 12, placement: 'left' },
+        { key: 'dashboard', selector: '[data-tour="tour-dashboard"]', pad: 8, radius: 16, placement: 'dock-bottom' },
       ]
     },
     workspaceTourStep() {
@@ -14812,7 +14811,7 @@ export default {
     },
     shouldDockWorkspaceTourTooltip() {
       const step = this.workspaceTourStep
-      return step?.placement === 'dock-bottom' || step?.key === 'welcome'
+      return step?.placement === 'dock-bottom' || step?.key === 'welcome' || step?.key === 'dashboard'
     },
     shouldParkWorkspaceTourTooltipOutside() {
       const step = this.workspaceTourStep
@@ -14930,13 +14929,61 @@ export default {
         el.scrollIntoView({ block: alignStart ? 'start' : 'center', inline: 'nearest', behavior: 'auto' })
       } catch { /* ignore */ }
     },
+    isWorkspaceTourMobileViewport() {
+      if (this.isMobileViewport?.() === true) return true
+      if (typeof window === 'undefined') return false
+      if ((window.innerWidth || 0) <= 720) return true
+      try {
+        const root = document.documentElement
+        return root.classList.contains('mutqin-pwa-mobile')
+          || root.classList.contains('mutqin-pwa-standalone')
+      } catch {
+        return false
+      }
+    },
+    shouldCoverWorkspaceTourPlanCards(step = null) {
+      return (step?.key || this.workspaceTourStep?.key) === 'plan' && this.isWorkspaceTourMobileViewport()
+    },
+    readWorkspaceTourTargetRect(el, step = null) {
+      const base = el?.getBoundingClientRect?.()
+      if (!base) return null
+      const rect = {
+        top: base.top,
+        left: base.left,
+        right: base.right,
+        bottom: base.bottom,
+      }
+      if (this.shouldCoverWorkspaceTourPlanCards(step)) {
+        const host = el.closest?.('[data-tour="rec-plans"], [data-testid="post-session-scope-picker"]') || el
+        const cards = host.querySelectorAll?.('.post-session-simple__scope-card') || []
+        cards.forEach((card) => {
+          const next = card.getBoundingClientRect()
+          rect.top = Math.min(rect.top, next.top)
+          rect.left = Math.min(rect.left, next.left)
+          rect.right = Math.max(rect.right, next.right)
+          rect.bottom = Math.max(rect.bottom, next.bottom)
+        })
+      }
+      return {
+        ...rect,
+        width: rect.right - rect.left,
+        height: rect.bottom - rect.top,
+      }
+    },
     clampWorkspaceTourHole(rect, pad = 8, radius = 16, step = null) {
       const inset = this.readWorkspaceTourSafeInset()
-      const maxHeight = Number(step?.maxHeight || 0)
+      const coverPlanCards = this.shouldCoverWorkspaceTourPlanCards(step)
+      const maxHeight = coverPlanCards ? 0 : Number(step?.maxHeight || 0)
+      const edge = (typeof window !== 'undefined' && window.innerWidth <= 720) ? 10 : 8
+      const vh = typeof window !== 'undefined' ? (window.innerHeight || 0) : 0
       let top = Math.max(inset.top, rect.top - pad)
       let left = Math.max(inset.left, rect.left - pad)
       let right = Math.min(inset.right, rect.right + pad)
       let bottom = Math.min(inset.bottom, rect.bottom + pad)
+      if (coverPlanCards) {
+        top = Math.min(top, Math.max(edge, rect.top - pad))
+        bottom = Math.max(bottom, Math.min(Math.max(edge, vh - edge), rect.bottom + pad))
+      }
       if (maxHeight > 0 && bottom - top > maxHeight) {
         bottom = top + maxHeight
       }
@@ -15018,8 +15065,8 @@ export default {
         if (shouldScroll && !this.isWorkspaceTourTargetFramed(el)) {
           this.scrollWorkspaceTourTargetIntoView(el)
         }
-        const rect = el.getBoundingClientRect()
-        const pad = Number(step?.pad ?? 8)
+        const rect = this.readWorkspaceTourTargetRect(el, step) || el.getBoundingClientRect()
+        const pad = Number(step?.pad ?? 8) + (this.shouldCoverWorkspaceTourPlanCards(step) ? 6 : 0)
         const radius = Number(step?.radius) || this.readWorkspaceTourTargetRadius(el, 16)
         this.workspaceTourRect = this.clampWorkspaceTourHole(rect, pad, radius, step)
         this.positionWorkspaceTourTooltip({
