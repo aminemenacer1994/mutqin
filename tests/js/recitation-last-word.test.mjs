@@ -57,8 +57,8 @@ const softConflation = buildRealtimePreviewAlignment(
 )
 assert.equal(
   softConflation.statuses.find(word => word.targetWord === 'الصراط')?.status,
-  'correct',
-  'common ص/س ASR conflation should count as correct at AMD-tolerant thresholds'
+  'partial',
+  'ص/س letter swap must stay amber — never green, even at AMD-tolerant thresholds'
 )
 const waPrefix = buildRealtimePreviewAlignment(
   'والشمس وضحها',

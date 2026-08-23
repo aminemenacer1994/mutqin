@@ -1249,13 +1249,25 @@ class DashboardService
         $from = now()->startOfWeek();
         $to = now()->endOfDay();
 
-        $sessions = UserSession::query()
+        $sessionStatuses = [
+            UserSessionStatus::Completed->value,
+            UserSessionStatus::Paused->value,
+        ];
+
+        $weekSessions = UserSession::query()
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
-            ->where('status', UserSessionStatus::Completed->value)
-            ->where('ended_at', '>=', $from)
-            ->where('ended_at', '<=', $to)
-            ->count();
+            ->whereIn('status', $sessionStatuses)
+            ->where(function ($query) use ($from, $to) {
+                $query->whereBetween('ended_at', [$from, $to])
+                    ->orWhere(function ($inner) use ($from, $to) {
+                        $inner->whereNull('ended_at')
+                            ->whereBetween('last_activity_at', [$from, $to]);
+                    });
+            })
+            ->get(['id', 'status', 'ended_at', 'last_activity_at', 'ayah_number', 'metadata']);
+
+        $sessions = $weekSessions->count();
 
         $aiChecks = AiReciteAttempt::query()
             ->where('user_id', $user->id)
@@ -1267,14 +1279,29 @@ class DashboardService
             ->where('user_id', $user->id)
             ->whereDate('session_date', '>=', $from->toDateString())
             ->whereDate('session_date', '<=', $to->toDateString())
-            ->get(['ayahs_memorised', 'ayahs_reviewed']);
+            ->get(['ayahs_memorised', 'ayahs_reviewed', 'sessions_completed', 'session_date']);
 
         $ayahsPractised = (int) $analytics->sum(function (LearningAnalytic $row) {
             return (int) ($row->ayahs_memorised ?? 0) + (int) ($row->ayahs_reviewed ?? 0);
         });
 
+        // Fallback: derive practised ayahs from session metadata when analytics lag behind.
+        if ($ayahsPractised === 0 && $weekSessions->isNotEmpty()) {
+            $ayahsPractised = (int) $weekSessions->sum(function (UserSession $session) {
+                $meta = is_array($session->metadata) ? $session->metadata : [];
+                $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
+                $start = (int) ($config['rangeStart'] ?? $config['range_start'] ?? $session->ayah_number ?? 0);
+                $end = (int) ($config['rangeEnd'] ?? $config['range_end'] ?? $start);
+                if ($start <= 0) {
+                    return 0;
+                }
+
+                return max(1, $end >= $start ? ($end - $start + 1) : 1);
+            });
+        }
+
         $activeDays = (int) $analytics
-            ->filter(function (LearningAnalytic $row) use ($sessions) {
+            ->filter(function (LearningAnalytic $row) {
                 $activity = (int) ($row->ayahs_memorised ?? 0)
                     + (int) ($row->ayahs_reviewed ?? 0)
                     + (int) ($row->sessions_completed ?? 0);
@@ -1284,16 +1311,15 @@ class DashboardService
             ->unique(fn (LearningAnalytic $row) => $row->session_date?->toDateString())
             ->count();
 
-        if ($activeDays === 0 && $sessions > 0) {
-            $activeDays = (int) UserSession::query()
-                ->where('user_id', $user->id)
-                ->where('is_onboarding_example', false)
-                ->where('status', UserSessionStatus::Completed->value)
-                ->where('ended_at', '>=', $from)
-                ->where('ended_at', '<=', $to)
-                ->selectRaw('DATE(ended_at) as day')
-                ->distinct()
-                ->count('day');
+        if ($activeDays === 0 && $weekSessions->isNotEmpty()) {
+            $activeDays = (int) $weekSessions
+                ->map(function (UserSession $session) {
+                    $at = $session->ended_at ?? $session->last_activity_at;
+                    return $at ? $at->toDateString() : null;
+                })
+                ->filter()
+                ->unique()
+                ->count();
         }
 
         $isEmpty = $sessions === 0 && $aiChecks === 0 && $ayahsPractised === 0;

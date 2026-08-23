@@ -23,6 +23,7 @@ import {
   clampRecommendationRange,
   applyPersonalPlanToRecommendation,
   resolveAyahWindow,
+  resolveNextPracticeRangeAfterCompleted,
 } from '../../resources/js/scripts/recommendations/nextSessionRecommendation.js'
 
 function t(key, params = {}) {
@@ -890,3 +891,41 @@ function t(key, params = {}) {
 }
 
 console.log('next-session-recommendation.test.mjs: ok')
+
+
+{
+  // Advance past the completed window — never treat it as "next".
+  const advanced = resolveNextPracticeRangeAfterCompleted({
+    candidateRange: { from: 1, to: 3 },
+    completedRange: { from: 1, to: 3 },
+    surahAyahCount: 7,
+    preferredMax: 3,
+    allowRepeat: false,
+  })
+  // Short surahs keep the remainder as one window (4–7 of 7).
+  assert.deepEqual(advanced, { from: 4, to: 7 })
+
+  const keepForward = resolveNextPracticeRangeAfterCompleted({
+    candidateRange: { from: 4, to: 6 },
+    completedRange: { from: 1, to: 3 },
+    surahAyahCount: 286,
+    allowRepeat: false,
+  })
+  assert.deepEqual(keepForward, { from: 4, to: 6 })
+
+  const keepRepeat = resolveNextPracticeRangeAfterCompleted({
+    candidateRange: { from: 2, to: 3 },
+    completedRange: { from: 1, to: 3 },
+    surahAyahCount: 7,
+    allowRepeat: true,
+  })
+  assert.deepEqual(keepRepeat, { from: 2, to: 3 })
+
+  const endOfSurah = resolveNextPracticeRangeAfterCompleted({
+    candidateRange: { from: 5, to: 7 },
+    completedRange: { from: 5, to: 7 },
+    surahAyahCount: 7,
+    allowRepeat: false,
+  })
+  assert.equal(endOfSurah, null)
+}

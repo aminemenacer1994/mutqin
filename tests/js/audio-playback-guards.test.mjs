@@ -74,4 +74,33 @@ describe('audio playback guards', () => {
     )
     assert.doesNotMatch(swSource, /cacheFirst\(request, AUDIO_CACHE\)/)
   })
+
+  it('unlocks advanceLocked when cancelling the gap timer (prevents frozen transport)', () => {
+    assert.match(
+      memorisationSource,
+      /clearPlaybackAdvanceTimer\(options = \{\}\) \{[\s\S]*options\.unlock[\s\S]*advanceLocked = false/
+    )
+    assert.match(
+      memorisationSource,
+      /async playVerse\([\s\S]*clearPlaybackAdvanceTimer\(\{\s*unlock:\s*true\s*\}\)/
+    )
+  })
+
+  it('cancels stale playVerse work with a generation token', () => {
+    assert.match(memorisationSource, /playGeneration:\s*0/)
+    assert.match(
+      memorisationSource,
+      /async playVerse\([\s\S]*playGeneration = \+\+this\.playGeneration[\s\S]*playGeneration !== this\.playGeneration/
+    )
+  })
+
+  it('recovers main-audio waiting/stalled freezes', () => {
+    assert.match(memorisationSource, /addEventListener\('waiting',\s*this\.audioWaiting\)/)
+    assert.match(memorisationSource, /addEventListener\('stalled',\s*this\.audioStalled\)/)
+    assert.match(memorisationSource, /recoverStalledMainAudio\(\)/)
+    assert.match(
+      memorisationSource,
+      /togglePlay\(\) \{[\s\S]*audioElement\.ended[\s\S]*currentTime = 0/
+    )
+  })
 })

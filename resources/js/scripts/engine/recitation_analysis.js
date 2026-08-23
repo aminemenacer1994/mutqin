@@ -13,11 +13,11 @@ export const RECITATION_UNCERTAIN_CONFIDENCE = 0.55
 /** AMD live: quieter / distant mics should defer to uncertain, not red. */
 export const RECITATION_AMD_UNCERTAIN_CONFIDENCE = 0.38
 /** Live AMD green floor — slightly softer than final scoring to absorb ASR jitter. */
-export const RECITATION_LIVE_CORRECT_SIMILARITY = 0.77
+export const RECITATION_LIVE_CORRECT_SIMILARITY = 0.79
 /** Live AMD: do not require high STT confidence for a correct paint. */
-export const RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT = 0.22
+export const RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT = 0.35
 /** Live AMD partial (amber) floor. */
-export const RECITATION_LIVE_PARTIAL_SIMILARITY = 0.38
+export const RECITATION_LIVE_PARTIAL_SIMILARITY = 0.45
 /**
  * Same-word ASR re-emits / brief stutters within this gap are not learner repetitions.
  * Genuine pause-and-repeat (clear breath) sits above this window.
@@ -228,7 +228,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     : RECITATION_CORRECT_SIMILARITY
   const partialSimilarity = Number.isFinite(Number(options.partialSimilarity))
     ? Number(options.partialSimilarity)
-    : 0.35
+    : 0.48
   const minConfidenceForCorrect = Number.isFinite(Number(options.minConfidenceForCorrect))
     ? Number(options.minConfidenceForCorrect)
     : 0
@@ -480,7 +480,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         correctSimilarity: Number.isFinite(Number(options.correctSimilarity))
           ? Number(options.correctSimilarity)
           : RECITATION_CORRECT_SIMILARITY,
-        partialSimilarity: Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.35,
+        partialSimilarity: Number.isFinite(Number(options.partialSimilarity)) ? Number(options.partialSimilarity) : 0.48,
         minConfidenceForCorrect: Number.isFinite(Number(options.minConfidenceForCorrect))
           ? Number(options.minConfidenceForCorrect)
           : 0,
@@ -528,7 +528,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
       : RECITATION_CORRECT_SIMILARITY,
     partialSimilarity: Number.isFinite(Number(options.partialSimilarity))
       ? Number(options.partialSimilarity)
-      : 0.35,
+      : 0.48,
   })
   const progression = buildStableProgression(statuses, extraWords, options)
   const structural = buildStructuralRecitationAnalysis({
@@ -584,8 +584,8 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
   const correctScore = statuses.filter(word => word.status === 'correct').length
   const partialScore = statuses.filter(word => word.status === 'partial').reduce((sum, word) => {
     const confidence = Number.isFinite(Number(word.confidence)) ? Number(word.confidence) : 1
-    // Near-miss ASR still shows effort — credit more generously than before.
-    return sum + (0.65 * Math.max(0.4, Math.min(1, confidence)))
+    // Amber credit stays modest so soft/ASR near-misses do not inflate accuracy.
+    return sum + (0.4 * Math.max(0.4, Math.min(1, confidence)))
   }, 0)
   const uncertainScore = statuses.filter(word => word.status === 'uncertain').length * 0.35
   const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.2
@@ -978,6 +978,9 @@ function getWeightedMatchCost(targetWord, heardWord, similarity, confidence, opt
   }
   if (similarity >= 0.92) return 0.22 + ((1 - confidence) * 0.12)
   if (similarity >= 0.85) return 0.42 + ((1 - confidence) * 0.16)
+  // Soft-capped near-misses (~0.74) must stay cheaper than omit+later-match,
+  // otherwise DP skips الصراط and wrongly attaches السراط to المستقيم.
+  if (similarity >= 0.72) return 0.5 + ((1 - confidence) * 0.18)
   if (similarity >= 0.35) return 0.78 + ((1 - confidence) * 0.24)
   return 1.45
 }
@@ -1104,6 +1107,32 @@ function softenArabicAsrForms(text = '') {
     .replace(/[صسث]/g, 'س')
 }
 
+export function differsOnlyBySoftAsrLetters(left, right, options = {}) {
+  const a = String(left || '')
+  const b = String(right || '')
+  if (!a || !b || a === b) return false
+  const allowArticleMatch = options.allowArticleMatch !== false
+  const strippedA = stripArabicDefiniteArticle(a)
+  const strippedB = stripArabicDefiniteArticle(b)
+  const cliticA = stripArabicClitics(a)
+  const cliticB = stripArabicClitics(b)
+  // Exact article/clitic stem match is not a soft-letter difference.
+  if (allowArticleMatch && strippedA && strippedA === strippedB) return false
+  if (allowArticleMatch && cliticA && cliticB && cliticA === cliticB) return false
+  const softA = softenArabicAsrForms(a)
+  const softB = softenArabicAsrForms(b)
+  if (softA && softA === softB) return true
+  if (allowArticleMatch) {
+    const softStripA = softenArabicAsrForms(strippedA)
+    const softStripB = softenArabicAsrForms(strippedB)
+    if (softStripA && softStripA === softStripB) return true
+    const softCliticA = softenArabicAsrForms(cliticA)
+    const softCliticB = softenArabicAsrForms(cliticB)
+    if (softCliticA && softCliticA === softCliticB) return true
+  }
+  return false
+}
+
 export function getRecitationWordSimilarity(left, right, options = {}) {
   const a = String(left || '')
   const b = String(right || '')
@@ -1116,7 +1145,7 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
   const cliticB = stripArabicClitics(b)
   // Exact after article/clitic strip counts as a full match (ASR often drops و/ال).
   if (allowArticleMatch && strippedA && strippedA === strippedB) return 1
-  if (allowArticleMatch && cliticA && cliticA === cliticB) return 1
+  if (allowArticleMatch && cliticA && cliticB && cliticA === cliticB) return 1
   const base = levenshteinSimilarity(a, b)
   const stem = Math.max(
     levenshteinSimilarity(strippedA, strippedB),
@@ -1138,16 +1167,50 @@ export function getRecitationWordSimilarity(left, right, options = {}) {
   const softCap = Number.isFinite(Number(options.softSimilarityCap))
     ? Number(options.softSimilarityCap)
     : RECITATION_SOFT_SIMILARITY_CAP
+  // صراط↔سراط etc. can still clear the green floor via raw Levenshtein even when
+  // the only edit is a soft-confusable letter. Cap those to amber.
+  if (differsOnlyBySoftAsrLetters(a, b, { allowArticleMatch })) {
+    return Math.min(Math.max(hardBest, Math.min(softRaw, softCap)), softCap)
+  }
   const softCapped = softRaw > hardBest
     ? Math.max(hardBest, Math.min(softRaw, softCap))
     : softRaw
-  if (!allowArticleMatch) return Math.max(base, softCapped)
-  return Math.max(hardBest, softCapped)
+  let score = !allowArticleMatch ? Math.max(base, softCapped) : Math.max(hardBest, softCapped)
+  // One substitution/insertion/deletion on longer words still clears ~0.79–0.85
+  // via 1 − 1/n (الضالين↔الدالين). Never paint those green.
+  if (isSingleEditMismatch(a, b, { allowArticleMatch })) {
+    score = Math.min(score, softCap)
+  }
+  return score
 }
 
-function levenshteinSimilarity(a, b) {
-  if (!a || !b) return 0
-  if (a === b) return 1
+/** True when the closest hard form differs by exactly one character edit. */
+export function isSingleEditMismatch(left, right, options = {}) {
+  const a = String(left || '')
+  const b = String(right || '')
+  if (!a || !b || a === b) return false
+  const allowArticleMatch = options.allowArticleMatch !== false
+  const candidates = [[a, b]]
+  if (allowArticleMatch) {
+    const strippedA = stripArabicDefiniteArticle(a)
+    const strippedB = stripArabicDefiniteArticle(b)
+    const cliticA = stripArabicClitics(a)
+    const cliticB = stripArabicClitics(b)
+    if (strippedA && strippedA === strippedB) return false
+    if (cliticA && cliticB && cliticA === cliticB) return false
+    candidates.push([strippedA, strippedB], [cliticA, cliticB])
+  }
+  let best = Infinity
+  for (const [x, y] of candidates) {
+    if (!x || !y) continue
+    best = Math.min(best, levenshteinDistance(x, y))
+  }
+  return best === 1
+}
+
+function levenshteinDistance(a, b) {
+  if (!a || !b) return Math.max(String(a || '').length, String(b || '').length)
+  if (a === b) return 0
   const rows = a.length + 1
   const cols = b.length + 1
   const matrix = Array.from({ length: rows }, () => Array(cols).fill(0))
@@ -1163,7 +1226,14 @@ function levenshteinSimilarity(a, b) {
       )
     }
   }
-  return 1 - (matrix[a.length][b.length] / Math.max(a.length, b.length))
+  return matrix[a.length][b.length]
+}
+
+function levenshteinSimilarity(a, b) {
+  if (!a || !b) return 0
+  if (a === b) return 1
+  const distance = levenshteinDistance(a, b)
+  return 1 - (distance / Math.max(a.length, b.length))
 }
 
 function classifyWordMatch({
@@ -1175,7 +1245,7 @@ function classifyWordMatch({
   targetIndex = 0,
   targetUnit = null,
   correctSimilarity = RECITATION_CORRECT_SIMILARITY,
-  partialSimilarity = 0.35,
+  partialSimilarity = 0.48,
   minConfidenceForCorrect = 0,
   allowArticleMatch = true,
   uncertainConfidence = RECITATION_UNCERTAIN_CONFIDENCE,
@@ -1200,7 +1270,7 @@ function classifyWordMatch({
   const correctFloor = Number.isFinite(Number(correctSimilarity))
     ? Number(correctSimilarity)
     : RECITATION_CORRECT_SIMILARITY
-  const partialFloor = Number.isFinite(Number(partialSimilarity)) ? Number(partialSimilarity) : 0.35
+  const partialFloor = Number.isFinite(Number(partialSimilarity)) ? Number(partialSimilarity) : 0.48
   const minCorrectConfidence = Number.isFinite(Number(minConfidenceForCorrect))
     ? Number(minConfidenceForCorrect)
     : 0
@@ -1224,7 +1294,16 @@ function classifyWordMatch({
     && !exactOrArticle
     && Math.min(expected.length, actual.length) <= 2
     && expected.length === actual.length
-  if (expected && confidenceOk && (exactOrArticle || (!shortSubstitution && effectiveSimilarity >= correctFloor))) {
+  // Hard same-length single-letter substitutions (الضالين↔الدالين) are learner
+  // mistakes. Single insertions/deletions often come from ASR truncation and
+  // stay amber via the soft similarity cap instead.
+  const hardSingleEdit = expected
+    && actual
+    && !exactOrArticle
+    && expected.length === actual.length
+    && isSingleEditMismatch(expected, actual, { allowArticleMatch })
+    && !differsOnlyBySoftAsrLetters(expected, actual, { allowArticleMatch })
+  if (expected && confidenceOk && (exactOrArticle || (!shortSubstitution && !hardSingleEdit && effectiveSimilarity >= correctFloor))) {
     return {
       text: displayText,
       targetWord: expected,
@@ -1253,7 +1332,21 @@ function classifyWordMatch({
       ...location
     }
   }
-  if (expected && actual && !shortSubstitution && effectiveSimilarity >= partialFloor) {
+  if (expected && actual && (shortSubstitution || hardSingleEdit)) {
+    return {
+      text: displayText,
+      targetWord: expected,
+      status: 'incorrect',
+      note: actual ? `Expected ${displayText}; heard ${actual}.` : 'Incorrect word.',
+      actual,
+      confidence,
+      similarity: effectiveSimilarity,
+      targetIndex,
+      heardIndex: heardWord.commitIndex,
+      ...location
+    }
+  }
+  if (expected && actual && effectiveSimilarity >= partialFloor) {
     return {
       text: displayText,
       targetWord: expected,

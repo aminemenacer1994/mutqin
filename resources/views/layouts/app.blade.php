@@ -3254,11 +3254,15 @@
         @media (max-width: 767.98px) {
             .navbar-shell {
                 min-height: var(--nav-h);
-                padding: 8px max(14px, env(safe-area-inset-left, 0px)) 8px max(14px, env(safe-area-inset-right, 0px));
+                /* Physical insets so the trailing hamburger is never flush/clipped */
+                padding-block: 8px;
+                padding-left: max(0.85rem, env(safe-area-inset-left, 0px));
+                padding-right: max(0.85rem, env(safe-area-inset-right, 0px));
                 gap: 8px;
                 flex-wrap: nowrap;
                 align-items: center;
-                overflow: hidden;
+                /* Was overflow:hidden — clipped the toggler's right border/radius */
+                overflow: visible;
             }
 
             .navbar-brand {
@@ -4532,8 +4536,10 @@
 
         @media (max-width: 767.98px) {
             .app-navbar {
+                /* Shell owns horizontal inset — avoid double padding that squeezes actions */
                 padding-inline: 0;
                 z-index: var(--bs-offcanvas-zindex, 1045);
+                overflow: visible;
             }
 
             /* Solid black navbar + drawer on mobile dark mode */
@@ -4549,6 +4555,18 @@
                 width: 100%;
                 max-width: 100%;
                 margin: 0;
+                overflow: visible;
+            }
+
+            .navbar-quick-actions {
+                overflow: visible;
+                /* Keep the hamburger fully inside the cell */
+                padding-inline-end: 0.1rem;
+            }
+
+            .navbar-toggler {
+                box-sizing: border-box;
+                flex-shrink: 0;
             }
 
             .app-navbar-logo {
@@ -4811,15 +4829,18 @@
                 flex-wrap: nowrap;
                 align-items: center;
                 justify-content: flex-end;
-                gap: var(--app-mobile-gap) !important;
+                gap: clamp(4px, 1.6vw, 8px) !important;
                 min-width: 0;
+                overflow: visible;
             }
 
             .navbar-quick-actions > .dropdown:not(.global-lang-switcher),
             .navbar-quick-actions > button:not(.app-lang-toggle) {
-                flex: 0 0 44px;
-                width: 44px;
-                min-width: 44px;
+                flex: 0 0 auto;
+                width: var(--tap);
+                min-width: var(--tap);
+                max-width: var(--tap);
+                box-sizing: border-box;
             }
 
             .navbar-quick-actions > .global-lang-switcher {

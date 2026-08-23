@@ -326,6 +326,34 @@ class QuranAlignmentService
         return preg_replace('/[صسث]/u', 'س', $value) ?? $value;
     }
 
+    private function differsOnlyBySoftAsrLetters(string $left, string $right): bool
+    {
+        if ($left === '' || $right === '' || $left === $right) {
+            return false;
+        }
+        $a = $this->stripArticle($left);
+        $b = $this->stripArticle($right);
+        $cliticA = $this->stripClitics($left);
+        $cliticB = $this->stripClitics($right);
+        if ($a !== '' && $a === $b) {
+            return false;
+        }
+        if ($cliticA !== '' && $cliticA === $cliticB) {
+            return false;
+        }
+        if ($this->softenAsrForms($left) === $this->softenAsrForms($right)) {
+            return true;
+        }
+        if ($a !== '' && $b !== '' && $this->softenAsrForms($a) === $this->softenAsrForms($b)) {
+            return true;
+        }
+        if ($cliticA !== '' && $cliticB !== '' && $this->softenAsrForms($cliticA) === $this->softenAsrForms($cliticB)) {
+            return true;
+        }
+
+        return false;
+    }
+
     private function similarity(string $left, string $right): float
     {
         if ($left === '' || $right === '') {
@@ -357,26 +385,58 @@ class QuranAlignmentService
         );
         // Soft letter conflation may lift toward amber, never alone to green.
         $softCap = 0.74;
+        // صراط↔سراط etc. can still clear the green floor via raw Levenshtein —
+        // cap soft-letter-only diffs to amber.
+        if ($this->differsOnlyBySoftAsrLetters($left, $right)) {
+            return min(max($hardBest, min($softRaw, $softCap)), $softCap);
+        }
         $softCapped = $softRaw > $hardBest
             ? max($hardBest, min($softRaw, $softCap))
             : $softRaw;
+        $score = max($hardBest, $softCapped);
+        // One substitution/insertion/deletion still clears ~0.79–0.85 via 1 − 1/n.
+        if ($this->isSingleEditMismatch($left, $right)) {
+            $score = min($score, $softCap);
+        }
 
-        return max($hardBest, $softCapped);
+        return $score;
     }
 
-    private function levenshteinSimilarity(string $a, string $b): float
+    private function isSingleEditMismatch(string $left, string $right): bool
     {
+        if ($left === '' || $right === '' || $left === $right) {
+            return false;
+        }
+        $a = $this->stripArticle($left);
+        $b = $this->stripArticle($right);
+        $cliticA = $this->stripClitics($left);
+        $cliticB = $this->stripClitics($right);
+        if ($a !== '' && $a === $b) {
+            return false;
+        }
+        if ($cliticA !== '' && $cliticA === $cliticB) {
+            return false;
+        }
+        $best = min(
+            $this->levenshteinDistance($left, $right),
+            $this->levenshteinDistance($a, $b),
+            $this->levenshteinDistance($cliticA, $cliticB)
+        );
+
+        return $best === 1;
+    }
+
+    private function levenshteinDistance(string $a, string $b): int
+    {
+        if ($a === '' && $b === '') {
+            return 0;
+        }
         if ($a === '' || $b === '') {
-            return 0.0;
+            return max(mb_strlen($a), mb_strlen($b));
         }
         if ($a === $b) {
-            return 1.0;
+            return 0;
         }
-        $len = max(mb_strlen($a), mb_strlen($b));
-        if ($len === 0) {
-            return 1.0;
-        }
-        // Use byte-safe fallback for latin; for Arabic use grapheme-aware split.
         $aChars = preg_split('//u', $a, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $bChars = preg_split('//u', $b, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $rows = count($aChars) + 1;
@@ -398,9 +458,27 @@ class QuranAlignmentService
                 );
             }
         }
-        $distance = $matrix[count($aChars)][count($bChars)];
 
-        return 1 - ($distance / max(count($aChars), count($bChars)));
+        return (int) $matrix[count($aChars)][count($bChars)];
+    }
+
+    private function levenshteinSimilarity(string $a, string $b): float
+    {
+        if ($a === '' || $b === '') {
+            return 0.0;
+        }
+        if ($a === $b) {
+            return 1.0;
+        }
+        $aChars = preg_split('//u', $a, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $bChars = preg_split('//u', $b, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $len = max(count($aChars), count($bChars));
+        if ($len === 0) {
+            return 1.0;
+        }
+        $distance = $this->levenshteinDistance($a, $b);
+
+        return 1 - ($distance / $len);
     }
 
     private function matchCost(string $target, string $heard, float $similarity, float $confidence): float
@@ -415,6 +493,10 @@ class QuranAlignmentService
         }
         if ($similarity >= 0.85) {
             return 0.42 + ((1 - $confidence) * 0.16);
+        }
+        // Soft-capped near-misses (~0.74) must stay cheaper than omit+later-match.
+        if ($similarity >= 0.72) {
+            return 0.5 + ((1 - $confidence) * 0.18);
         }
         if ($similarity >= 0.35) {
             return 0.78 + ((1 - $confidence) * 0.24);
@@ -483,8 +565,14 @@ class QuranAlignmentService
             && ! $exactOrArticle
             && mb_strlen($expected) <= 2
             && mb_strlen($expected) === mb_strlen($actual);
+        $hardSingleEdit = $expected !== ''
+            && $actual !== ''
+            && ! $exactOrArticle
+            && mb_strlen($expected) === mb_strlen($actual)
+            && $this->isSingleEditMismatch($expected, $actual)
+            && ! $this->differsOnlyBySoftAsrLetters($expected, $actual);
 
-        if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && $similarity >= 0.78))) {
+        if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && ! $hardSingleEdit && $similarity >= 0.79))) {
             return array_merge($base, [
                 'status' => 'correct',
                 'note' => 'Correct.',
@@ -502,7 +590,15 @@ class QuranAlignmentService
             ]);
         }
 
-        if ($expected !== '' && $actual !== '' && ! $shortSubstitution && $similarity >= 0.35) {
+        if ($expected !== '' && $actual !== '' && ($shortSubstitution || $hardSingleEdit)) {
+            return array_merge($base, [
+                'status' => 'wrong',
+                'note' => "Expected {$display}; heard {$actual}.",
+                'visual_status' => 'red',
+            ]);
+        }
+
+        if ($expected !== '' && $actual !== '' && $similarity >= 0.48) {
             return array_merge($base, [
                 'status' => 'minor_mistake',
                 'note' => "Close. Expected {$display}; heard {$actual}.",
@@ -531,7 +627,7 @@ class QuranAlignmentService
                 $correct += 1.0;
             } elseif ($status === 'minor_mistake') {
                 $confidence = max(0.4, min(1.0, (float) ($word['confidence'] ?? 1)));
-                $correct += 0.65 * $confidence;
+                $correct += 0.4 * $confidence;
             } elseif ($status === 'uncertain') {
                 $correct += 0.35;
             }

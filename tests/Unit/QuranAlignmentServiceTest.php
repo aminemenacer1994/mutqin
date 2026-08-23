@@ -137,6 +137,25 @@ class QuranAlignmentServiceTest extends TestCase
         $this->assertContains($result['word_results'][0]['status'], ['minor_mistake', 'wrong']);
     }
 
+    public function test_hard_single_letter_edit_is_wrong_not_green(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [['ayah_number' => 7, 'surah_number' => 1, 'words' => ['غير', 'المغضوب', 'عليهم', 'ولا', 'الضالين']]],
+            [
+                ['word' => 'غير', 'confidence' => 0.95],
+                ['word' => 'المغضوب', 'confidence' => 0.95],
+                ['word' => 'عليهم', 'confidence' => 0.95],
+                ['word' => 'ولا', 'confidence' => 0.95],
+                ['word' => 'الدالين', 'confidence' => 0.95],
+            ]
+        );
+
+        $last = $result['word_results'][4];
+        $this->assertSame('wrong', $last['status']);
+        $this->assertSame('الدالين', $last['actual']);
+    }
+
     public function test_low_confidence_is_uncertain_not_wrong(): void
     {
         $service = new QuranAlignmentService;

@@ -173,6 +173,63 @@ export function resolveAyahWindow({
   return { from: start, to: start + size - 1, count: size }
 }
 
+/**
+ * Pick a normalised { from, to } ayah window, or null.
+ * @param {{ from?: number, to?: number, start?: number, end?: number }|null|undefined} range
+ * @returns {{ from: number, to: number }|null}
+ */
+export function pickAyahRange(range) {
+  const from = Number(range?.from ?? range?.start)
+  const to = Number(range?.to ?? range?.end ?? range?.from ?? range?.start)
+  if (!Number.isFinite(from) || from <= 0) return null
+  return { from, to: Number.isFinite(to) && to >= from ? to : from }
+}
+
+/**
+ * Resolve the "next" practice window after a completed session.
+ * Advance plans must start after the finished window — never reuse it as "next".
+ * Repeat/revision plans may keep a candidate inside the completed window.
+ *
+ * @param {{
+ *   candidateRange?: { from?: number, to?: number }|null,
+ *   completedRange?: { from?: number, to?: number }|null,
+ *   surahAyahCount?: number,
+ *   preferredMax?: number,
+ *   allowRepeat?: boolean,
+ * }} [input]
+ * @returns {{ from: number, to: number }|null}
+ */
+export function resolveNextPracticeRangeAfterCompleted(input = {}) {
+  const completed = pickAyahRange(input.completedRange)
+  const candidate = pickAyahRange(input.candidateRange)
+  const allowRepeat = !!input.allowRepeat
+  const preferredMax = Math.max(1, Number(input.preferredMax) || 3)
+  const surahAyahCount = Number(input.surahAyahCount) || 0
+
+  if (allowRepeat) {
+    return candidate || completed
+  }
+
+  const completedEnd = completed ? Number(completed.to) : 0
+  if (candidate && (!(completedEnd > 0) || Number(candidate.from) > completedEnd)) {
+    return candidate
+  }
+
+  if (!(completedEnd > 0)) return candidate
+
+  const advanceFrom = completedEnd + 1
+  if (surahAyahCount > 0 && advanceFrom > surahAyahCount) {
+    return null
+  }
+
+  const window = resolveAyahWindow({
+    from: advanceFrom,
+    surahAyahCount,
+    preferredMax,
+  })
+  return { from: window.from, to: window.to }
+}
+
 export function isRepeatRecommendation(recommendation) {
   const type = String(recommendation?.type || '')
   return type === RECOMMENDATION_TYPES.REVISION

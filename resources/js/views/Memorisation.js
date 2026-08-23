@@ -102,6 +102,8 @@ import {
   buildCombinedCheckInsight,
   buildPersonalPracticePlan,
   applyPersonalPlanToRecommendation,
+  resolveAyahWindow,
+  resolveNextPracticeRangeAfterCompleted,
 } from '../scripts/recommendations/nextSessionRecommendation'
 import {
   POST_SESSION_CTA_ACTIONS,
@@ -375,6 +377,7 @@ import {
   tokenizeRecitationDisplayWords as tokenizeRecitationDisplayWordsEngine,
   tokenizeRecitationWords as tokenizeRecitationWordsEngine,
   wordsToTranscript,
+  differsOnlyBySoftAsrLetters,
   RECITATION_AMD_UNCERTAIN_CONFIDENCE,
   RECITATION_LIVE_CORRECT_SIMILARITY,
   RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT,
@@ -757,6 +760,10 @@ export default {
       advanceLocked: false,
       repeatActionLocked: false,
       playRequestLocked: false,
+      /** Bumped on every playVerse start so stale awaits cannot clear locks or call play(). */
+      playGeneration: 0,
+      audioBuffering: false,
+      audioStallRecoveryTimer: null,
       ignoreMainAudioPauseEvent: false,
       mainCardCollapsed: false,
       feedbackCollapsed: true,
@@ -833,7 +840,8 @@ export default {
       postSessionStatsExpanded: false,
       postSessionEmotionalContext: null,
       postSessionAutoSaved: false,
-      autoSaveSessionsEnabled: true,
+      // Named auto-save permanently removed from the end-session modal.
+      autoSaveSessionsEnabled: false,
       pendingPostSessionModalPayload: null,
       lastAutoSavedPostSessionKey: '',
       postSessionRecommendation: null,
@@ -4528,7 +4536,32 @@ export default {
         if (!Number.isFinite(from) || from <= 0) return null
         return { from, to: Number.isFinite(to) && to >= from ? to : from }
       }
-      const nextRange = pickRange(planRange) || pickRange(recRange) || pickRange(snapshotRange)
+      // Advance plans must start after the finished window. Plan/rec ranges that
+      // still sit inside the just-finished session (common when weak-ayah focus
+      // rewrites the plan) are not valid "next" ranges.
+      const candidateRange = pickRange(planRange) || pickRange(recRange)
+      const completedRange = pickRange(snapshotRange)
+      const preferredSize = candidateRange
+        ? Math.max(1, Number(candidateRange.to) - Number(candidateRange.from) + 1)
+        : 3
+      const nextRange = resolveNextPracticeRangeAfterCompleted({
+        candidateRange,
+        completedRange,
+        surahAyahCount: Number(
+          this.postSessionSnapshot?.totalAyahsInSurah
+          || this.postSessionSnapshot?.totalAyahs
+          || this.postSessionSnapshot?.versesInSurah
+          || surahAyahCount(Number(
+            rec.surah?.id
+            || this.postSessionSnapshot?.chapterId
+            || this.chapterId
+            || 0,
+          ))
+          || 0,
+        ),
+        preferredMax: preferredSize,
+        allowRepeat: isRepeatRecommendation(rec),
+      })
       const chapterId = Number(
         rec.surah?.id
         || rec.next_surah?.id
@@ -9667,6 +9700,7 @@ export default {
     if (this.loadVersesTimer) clearTimeout(this.loadVersesTimer)
     if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
     if (this.playbackAdvanceTimer) clearTimeout(this.playbackAdvanceTimer)
+    if (this.audioStallRecoveryTimer) clearTimeout(this.audioStallRecoveryTimer)
     if (this.segmentPlaybackTimer) clearTimeout(this.segmentPlaybackTimer)
     if (this.sessionQuizConfettiTimer) clearTimeout(this.sessionQuizConfettiTimer)
     this.clearRecitationWindowTimer()
@@ -12145,10 +12179,107 @@ export default {
       this.recitationWindowActive = false
       this.recitationWindowRemaining = 0
     },
-    clearPlaybackAdvanceTimer() {
+    clearPlaybackAdvanceTimer(options = {}) {
       if (this.playbackAdvanceTimer) {
         window.clearTimeout(this.playbackAdvanceTimer)
         this.playbackAdvanceTimer = null
+      }
+      // Cancelling the gap timer without unlocking leaves next()/audioEnded dead.
+      if (options.unlock) {
+        this.advanceLocked = false
+      }
+    },
+
+    clearAudioStallRecoveryTimer() {
+      if (this.audioStallRecoveryTimer) {
+        window.clearTimeout(this.audioStallRecoveryTimer)
+        this.audioStallRecoveryTimer = null
+      }
+    },
+
+    scheduleAudioStallRecovery() {
+      this.clearAudioStallRecoveryTimer()
+      this.audioStallRecoveryTimer = window.setTimeout(() => {
+        this.audioStallRecoveryTimer = null
+        this.recoverStalledMainAudio()
+      }, 4500)
+    },
+
+    recoverStalledMainAudio() {
+      const audio = this.audioElement
+      if (!audio || audio.paused) {
+        this.audioBuffering = false
+        return
+      }
+      // Still advancing — not a stall.
+      const time = Number(audio.currentTime || 0)
+      if (Number.isFinite(time) && time > 0 && Number(audio.readyState || 0) >= 3) {
+        this.audioBuffering = false
+        return
+      }
+      const src = String(audio.getAttribute('src') || audio.currentSrc || '').trim()
+      if (!src || src.startsWith('data:')) {
+        this.audioBuffering = false
+        this.playRequestLocked = false
+        this.advanceLocked = false
+        this.isPlaying = false
+        this.promptTapToPlay()
+        return
+      }
+      try {
+        const resumeAt = Number(audio.currentTime || 0)
+        this.ignoreMainAudioPauseEvent = true
+        audio.load()
+        const resume = () => {
+          try {
+            if (Number.isFinite(resumeAt) && resumeAt > 0.15) {
+              audio.currentTime = resumeAt
+            }
+          } catch { /* ignore seek */ }
+          audio.play().then(() => {
+            this.isPlaying = true
+            this.audioBuffering = false
+          }).catch(() => {
+            this.isPlaying = false
+            this.audioBuffering = false
+            this.playRequestLocked = false
+            this.advanceLocked = false
+            this.promptTapToPlay()
+          }).finally(() => {
+            window.setTimeout(() => {
+              this.ignoreMainAudioPauseEvent = false
+            }, 120)
+          })
+        }
+        if (Number(audio.readyState || 0) >= 1) {
+          resume()
+        } else {
+          const onReady = () => {
+            audio.removeEventListener('loadedmetadata', onReady)
+            audio.removeEventListener('canplay', onReady)
+            resume()
+          }
+          audio.addEventListener('loadedmetadata', onReady, { once: true })
+          audio.addEventListener('canplay', onReady, { once: true })
+          window.setTimeout(() => {
+            audio.removeEventListener('loadedmetadata', onReady)
+            audio.removeEventListener('canplay', onReady)
+            if (audio.paused) {
+              this.isPlaying = false
+              this.audioBuffering = false
+              this.playRequestLocked = false
+              this.advanceLocked = false
+              this.promptTapToPlay()
+            }
+          }, 8000)
+        }
+      } catch (error) {
+        console.warn('Main audio stall recovery failed:', error)
+        this.isPlaying = false
+        this.audioBuffering = false
+        this.playRequestLocked = false
+        this.advanceLocked = false
+        this.promptTapToPlay()
       }
     },
     startRecitationWindow(onComplete = null, options = {}) {
@@ -15272,6 +15403,44 @@ export default {
           name: this.resolveRecommendationSurahName(next.completed_surah),
         }
       }
+
+      // Advance recommendations must not keep the just-finished window as their
+      // ayah_range — rewrite to the true next bite before clamping.
+      if (!isRepeatRecommendation(next)) {
+        const snap = this.postSessionSnapshot || {}
+        const completed = {
+          from: Number(snap.range?.from || snap.rangeStart || 0),
+          to: Number(snap.range?.to || snap.rangeEnd || snap.rangeStart || 0),
+        }
+        const advanced = resolveNextPracticeRangeAfterCompleted({
+          candidateRange: next.ayah_range,
+          completedRange: completed.from > 0 ? completed : null,
+          surahAyahCount: Number(
+            snap.totalAyahsInSurah
+            || snap.totalAyahs
+            || snap.versesInSurah
+            || next.surah?.ayah_count
+            || surahAyahCount(Number(next.surah?.id || 0))
+            || 0,
+          ),
+          preferredMax: Math.max(
+            1,
+            Number(next.ayah_range?.count)
+            || (Number(next.ayah_range?.to) - Number(next.ayah_range?.from) + 1)
+            || 3,
+          ),
+          allowRepeat: false,
+        })
+        if (advanced?.from) {
+          next.ayah_range = {
+            ...(next.ayah_range || {}),
+            from: advanced.from,
+            to: advanced.to,
+            count: Math.max(1, Number(advanced.to) - Number(advanced.from) + 1),
+          }
+        }
+      }
+
       return clampRecommendationRange(next, 3)
     },
     syncPostSessionConfidenceFromRecommendation(recommendation, { force = false } = {}) {
@@ -15663,13 +15832,14 @@ export default {
         reciterId: settings.reciter || baseConfig.reciterId,
         speed: this.normalizePlaybackSpeed(settings.playback_speed ?? baseConfig.speed ?? 1),
         repetitionsPerStep: resolveSessionRepetitions(settings.repetitions, baseConfig.repetitionsPerStep),
-        talqinModeEnabled: !!settings.talqin_enabled,
-        focusModeEnabled: !!settings.focus_enabled,
-        blurModeEnabled: !!settings.blur_enabled,
-        chainingEnabled: !!settings.chaining_enabled,
+        // Standard setup — do not auto-apply recommended techniques.
+        talqinModeEnabled: false,
+        focusModeEnabled: false,
+        blurModeEnabled: false,
+        chainingEnabled: false,
         chainingMethod: settings.chaining_method || 'linking',
         chainingRepetitions: Number(settings.chaining_repetitions || baseConfig.chainingRepetitions || 2),
-        anchorModeEnabled: !!settings.anchor_mode_enabled,
+        anchorModeEnabled: false,
         anchorCount: Number(settings.anchor_count || baseConfig.anchorCount || 2),
       })
 
@@ -18224,31 +18394,15 @@ export default {
       if (!this.memorisationPlanManualOverride && plan) {
         Object.assign(settings, fromPlan)
       }
-      if (!settings.technique) {
-        settings.technique = recommendation?.technique?.id || plan?.techniqueIds?.[0] || null
-      }
-      if (!settings.complementary_technique && recommendation?.technique?.complementary) {
-        settings.complementary_technique = recommendation.technique.complementary
-      }
-      if ((settings.chaining_enabled || settings.technique === 'chaining' || settings.complementary_technique === 'chaining')
-        && !['linking', 'cumulative'].includes(String(settings.chaining_method || ''))) {
-        settings.chaining_method = 'linking'
-      }
-      if (settings.chaining_enabled == null && (settings.technique === 'chaining' || settings.complementary_technique === 'chaining')) {
-        settings.chaining_enabled = true
-      }
-      if (settings.talqin_enabled == null && settings.technique === 'talqin') {
-        settings.talqin_enabled = true
-      }
-      if (settings.focus_enabled == null && settings.technique === 'focus') {
-        settings.focus_enabled = true
-      }
-      if (settings.blur_enabled == null && settings.technique === 'blur') {
-        settings.blur_enabled = true
-      }
-      if (settings.anchor_mode_enabled == null && settings.technique === 'anchor') {
-        settings.anchor_mode_enabled = true
-      }
+      // Keep technique ids for display/plan copy only — never auto-enable tools
+      // when landing the next session (standard setup).
+      settings.technique = null
+      settings.complementary_technique = null
+      settings.talqin_enabled = false
+      settings.focus_enabled = false
+      settings.blur_enabled = false
+      settings.chaining_enabled = false
+      settings.anchor_mode_enabled = false
       return settings
     },
     landPostSessionPreparedWorkspace(options = {}) {
@@ -18350,13 +18504,14 @@ export default {
         reciterId: mergedSettings.reciter || baseConfig.reciterId,
         speed: this.normalizePlaybackSpeed(mergedSettings.playback_speed ?? baseConfig.speed ?? 1),
         repetitionsPerStep: resolveSessionRepetitions(mergedSettings.repetitions, baseConfig.repetitionsPerStep),
-        talqinModeEnabled: !!mergedSettings.talqin_enabled,
-        focusModeEnabled: !!mergedSettings.focus_enabled,
-        blurModeEnabled: !!mergedSettings.blur_enabled,
-        chainingEnabled: !!mergedSettings.chaining_enabled,
+        // Next-session start always uses standard setup (no auto-applied techniques).
+        talqinModeEnabled: false,
+        focusModeEnabled: false,
+        blurModeEnabled: false,
+        chainingEnabled: false,
         chainingMethod: mergedSettings.chaining_method || 'linking',
         chainingRepetitions: Number(mergedSettings.chaining_repetitions || baseConfig.chainingRepetitions || 2),
-        anchorModeEnabled: !!mergedSettings.anchor_mode_enabled,
+        anchorModeEnabled: false,
         anchorCount: Number(mergedSettings.anchor_count || baseConfig.anchorCount || 2),
       })
 
@@ -18451,71 +18606,19 @@ export default {
       }
     },
     applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning', settings = null) {
-      const id = String(techniqueId || '').toLowerCase().trim()
-      const complementary = String(settings?.complementary_technique || '').toLowerCase().trim()
-      // Reset to a calm baseline, then enable the recommended technique set.
+      // Standard setup only when moving to the next session — never auto-apply
+      // recommended/random memorisation techniques from the recommendation payload.
       this.focusModeEnabled = false
       this.blurModeEnabled = false
       this.talqinModeEnabled = false
       this.chainingEnabled = false
       this.anchorModeEnabled = false
 
-      const enable = (technique) => {
-        if (technique === 'talqin') this.talqinModeEnabled = true
-        else if (technique === 'focus') this.focusModeEnabled = true
-        else if (technique === 'blur') this.blurModeEnabled = true
-        else if (technique === 'chaining') {
-          this.chainingEnabled = true
-          this.chainingMethod = settings?.chaining_method || this.chainingMethod || 'linking'
-          if (settings?.chaining_repetitions) this.chainingRepetitions = Number(settings.chaining_repetitions)
-        } else if (technique === 'anchor') {
-          this.anchorModeEnabled = true
-          if (settings?.anchor_count) this.anchorCount = Number(settings.anchor_count)
-        }
-      }
-
-      if (id) enable(id)
-      if (complementary && complementary !== id) enable(complementary)
-
-      // Honour explicit flags from the recommendation payload when present.
       if (settings && typeof settings === 'object') {
-        if (settings.focus_enabled != null) this.focusModeEnabled = !!settings.focus_enabled
-        if (settings.blur_enabled != null) this.blurModeEnabled = !!settings.blur_enabled
-        if (settings.talqin_enabled != null) this.talqinModeEnabled = !!settings.talqin_enabled
-        if (settings.chaining_enabled != null) this.chainingEnabled = !!settings.chaining_enabled
-        if (settings.anchor_mode_enabled != null) this.anchorModeEnabled = !!settings.anchor_mode_enabled
-        if (settings.chaining_method) this.chainingMethod = settings.chaining_method
-        if (settings.chaining_repetitions) this.chainingRepetitions = Number(settings.chaining_repetitions)
-        if (settings.anchor_count) this.anchorCount = Number(settings.anchor_count)
         const weak = settings.practice_weak_words || settings.weak_words
         if (Array.isArray(weak) && weak.length) {
           this.practiceFocusWeakWords = normaliseWeakWordRecords(weak)
         }
-      }
-
-      if (this.chainingEnabled && !['linking', 'cumulative'].includes(String(this.chainingMethod || ''))) {
-        this.chainingMethod = 'linking'
-      }
-
-      if (!id && sessionMode === 'revision' && !this.talqinModeEnabled && !this.focusModeEnabled && !this.blurModeEnabled && !this.anchorModeEnabled) {
-        this.blurModeEnabled = true
-      }
-
-      // Enforce product mutual exclusions.
-      if (this.blurModeEnabled && this.focusModeEnabled) this.focusModeEnabled = false
-      if (this.blurModeEnabled && this.chainingEnabled) this.chainingEnabled = false
-
-      // Weak-ayah / weak-word revision must highlight those spots — not first/last anchors.
-      const hasWeakFocus = !!(
-        (Array.isArray(settings?.practice_weak_words) && settings.practice_weak_words.length)
-        || (Array.isArray(settings?.weak_words) && settings.weak_words.length)
-        || (Array.isArray(settings?.focus_ayahs) && settings.focus_ayahs.length)
-        || settings?.practice_weak_words_only === true
-        || settings?.weak_words_only === true
-        || (sessionMode === 'revision' && this.focusPhraseRevisionActive)
-      )
-      if (hasWeakFocus) {
-        this.anchorModeEnabled = false
       }
     },
     queuePostSessionModalAfterAiReview(snapshot = null, previousStreak = 0) {
@@ -18867,13 +18970,14 @@ export default {
         repetitionsPerStep: resolveSessionRepetitions(settings.repetitions, baseConfig.repetitionsPerStep),
         gapBetweenVerses: template.gapBetweenVerses || baseConfig.gapBetweenVerses,
         customGapSeconds: template.customGapSeconds ?? baseConfig.customGapSeconds,
-        talqinModeEnabled: !!settings.talqin_enabled,
-        focusModeEnabled: !!settings.focus_enabled,
-        blurModeEnabled: !!settings.blur_enabled,
-        chainingEnabled: !!settings.chaining_enabled,
+        // Standard setup — do not auto-apply recommended techniques.
+        talqinModeEnabled: false,
+        focusModeEnabled: false,
+        blurModeEnabled: false,
+        chainingEnabled: false,
         chainingMethod: settings.chaining_method || 'linking',
         chainingRepetitions: Number(settings.chaining_repetitions || baseConfig.chainingRepetitions || 2),
-        anchorModeEnabled: !!settings.anchor_mode_enabled,
+        anchorModeEnabled: false,
         anchorCount: Number(settings.anchor_count || baseConfig.anchorCount || 2),
       })
 
@@ -18971,13 +19075,13 @@ export default {
     },
 
     promptSaveSessionAfterEnd({ wasSample = false } = {}) {
-      if (wasSample || this.onboardingSampleSessionActive) return
-      if (!this.autoSaveSessionsEnabled) return
-      void this.saveCurrentSessionSilentlyAsync()
+      // Named auto-save permanently removed — progress still persists via continue/session APIs.
+      return
     },
 
     toggleAutoSaveSessionsEnabled() {
-      this.autoSaveSessionsEnabled = !this.autoSaveSessionsEnabled
+      // Permanently disabled: end-session modal no longer offers named auto-save.
+      this.autoSaveSessionsEnabled = false
       this.persistUiState()
     },
     logoutFromPostSession() {
@@ -24913,12 +25017,16 @@ export default {
           tajweedHeavy: paceContext?.tajweedHeavy,
         })
       }
-      // Live AMD: only demote clear near-miss reds to amber — never inflate greens.
+      // Live AMD: only demote soft-letter near-miss reds to amber — never inflate greens
+      // or forgive hard single-letter substitutions (those stay red).
       if (preferVisible) {
         statuses = statuses.map((status) => {
           if (!status || String(status.status || '').toLowerCase() !== 'incorrect') return status
           const similarity = Number(status.similarity || 0)
-          if (similarity >= 0.42 && similarity < 0.76) {
+          const expected = String(status.targetWord || status.text || '')
+          const actual = String(status.actual || '')
+          const softOnly = expected && actual && differsOnlyBySoftAsrLetters(expected, actual)
+          if (softOnly && similarity >= 0.62 && similarity < RECITATION_LIVE_CORRECT_SIMILARITY) {
             return {
               ...status,
               status: 'partial',
@@ -30747,6 +30855,8 @@ export default {
       // HAVE_METADATA (1) is enough for play(); requiring HAVE_CURRENT_DATA (2)
       // falsely times out on some browsers/CDNs that hold metadata-only until play().
       const isReady = () => Number(audio.readyState || 0) >= 1
+      const tokenAtStart = Number(audio._mutqinUnlockToken) || 0
+      const isSuperseded = () => (Number(audio._mutqinUnlockToken) || 0) !== tokenAtStart
 
       if (isReady()) return Promise.resolve()
 
@@ -30764,10 +30874,18 @@ export default {
         }
 
         const onReady = () => {
+          if (isSuperseded()) {
+            finish(reject, new Error('Audio wait superseded'))
+            return
+          }
           if (isReady()) finish(resolve)
         }
 
         const onError = () => {
+          if (isSuperseded()) {
+            finish(reject, new Error('Audio wait superseded'))
+            return
+          }
           // Ignore aborts from concurrent src/load changes; keep waiting for the
           // current source unless a real decode/network failure sticks.
           if (this.isAudioLoadAbortError(audio)) return
@@ -33149,7 +33267,9 @@ export default {
     softPausePlayback() {
       this.clearRecitationWindowTimer()
       this.clearTalqinPauseTimer()
-      this.clearPlaybackAdvanceTimer()
+      this.clearPlaybackAdvanceTimer({ unlock: true })
+      this.clearAudioStallRecoveryTimer()
+      this.audioBuffering = false
       if (this.segmentPlaybackTimer) {
         window.clearTimeout(this.segmentPlaybackTimer)
         this.segmentPlaybackTimer = null
@@ -33785,9 +33905,9 @@ export default {
 
           this.showPostSessionChoice = false
 
-          if (openPostSessionChoice) {
-            this.openPostSessionChoice(endedSnapshot)
-          } else if (
+          // Session complete modal is the only success surface — never replace it
+          // with the legacy post-session choice workspace actions.
+          if (
             (openCompletion || showSummary)
             && gate.openCompletionScreen
             && gate.showPostCompletionActions
@@ -36132,6 +36252,8 @@ export default {
 
       this.audioPlaying = () => {
         this.isPlaying = true
+        this.audioBuffering = false
+        this.clearAudioStallRecoveryTimer()
         if (this.audioElement) {
           const safeSpeed = this.normalizePlaybackSpeed(this.speed)
           this.audioElement.defaultPlaybackRate = safeSpeed
@@ -36174,6 +36296,24 @@ export default {
         this.stopWordHighlighting()
       }
 
+      
+      this.audioWaiting = () => {
+        if (!this.isPlaying && this.audioElement?.paused) return
+        this.audioBuffering = true
+        this.scheduleAudioStallRecovery()
+      }
+
+      this.audioStalled = () => {
+        if (!this.isPlaying && this.audioElement?.paused) return
+        this.audioBuffering = true
+        this.scheduleAudioStallRecovery()
+      }
+
+      this.audioCanPlay = () => {
+        this.audioBuffering = false
+        this.clearAudioStallRecoveryTimer()
+      }
+
       this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate)
       this.audioElement.addEventListener('ended', this.audioEnded)
       this.audioElement.addEventListener('error', this.audioError)
@@ -36183,10 +36323,14 @@ export default {
       this.audioElement.addEventListener('playing', this.audioPlaying)
       this.audioElement.addEventListener('ratechange', this.audioRateChange)
       this.audioElement.addEventListener('loadstart', this.audioLoadStart)
+      this.audioElement.addEventListener('waiting', this.audioWaiting)
+      this.audioElement.addEventListener('stalled', this.audioStalled)
+      this.audioElement.addEventListener('canplay', this.audioCanPlay)
     },
 
     async playVerse(verse, options = {}) {
       if (this.playRequestLocked && !options.force) return
+      const playGeneration = ++this.playGeneration
       this.playRequestLocked = true
       this.clearRecitationWindowTimer()
       this.clearTalqinPauseTimer()
@@ -36195,10 +36339,10 @@ export default {
         clearTimeout(this.segmentPlaybackTimer)
         this.segmentPlaybackTimer = null
       }
-      if (this.playbackAdvanceTimer) {
-        clearTimeout(this.playbackAdvanceTimer)
-        this.playbackAdvanceTimer = null
-      }
+      // Cancel gap auto-advance and unlock — otherwise next()/audioEnded stay dead.
+      this.clearPlaybackAdvanceTimer({ unlock: true })
+      this.clearAudioStallRecoveryTimer()
+      this.audioBuffering = false
       this.segmentEndTime = 0
       this.segmentPlaybackKind = ''
 
@@ -36279,6 +36423,7 @@ export default {
 
       try {
         await this.waitForAudioElementReady(this.audioElement)
+        if (playGeneration !== this.playGeneration) return
 
         const safeSpeed = this.normalizePlaybackSpeed(this.speed)
         this.audioElement.defaultPlaybackRate = safeSpeed
@@ -36305,7 +36450,12 @@ export default {
           } catch (_) { /* ignore seek errors */ }
         }
 
+        if (playGeneration !== this.playGeneration) return
         await this.audioElement.play()
+        if (playGeneration !== this.playGeneration) {
+          try { this.audioElement.pause() } catch { }
+          return
+        }
         this.isPlaying = true
         this.incrementVersePlayCount(verse.key)
         this.markPlaybackStart()
@@ -36320,11 +36470,15 @@ export default {
           })
         }
       } catch (err) {
-        console.error('playVerse failed:', err)
-        this.isPlaying = false
-        this.promptTapToPlay()
+        if (playGeneration === this.playGeneration) {
+          console.error('playVerse failed:', err)
+          this.isPlaying = false
+          this.promptTapToPlay()
+        }
       } finally {
-        this.playRequestLocked = false
+        if (playGeneration === this.playGeneration) {
+          this.playRequestLocked = false
+        }
         window.setTimeout(() => {
           this.ignoreMainAudioPauseEvent = false
         }, 120)
@@ -36391,6 +36545,14 @@ export default {
         const safeSpeed = this.normalizePlaybackSpeed(this.speed)
         this.audioElement.defaultPlaybackRate = safeSpeed
         this.audioElement.playbackRate = safeSpeed
+        // Resume from EOF looks paused but play() is a no-op — rewind first.
+        try {
+          const duration = Number(this.audioElement.duration || 0)
+          const current = Number(this.audioElement.currentTime || 0)
+          if (this.audioElement.ended || (duration > 0 && current >= duration - 0.05)) {
+            this.audioElement.currentTime = 0
+          }
+        } catch { /* ignore seek */ }
         this.audioElement.play()
           .then(() => {
             this.isPlaying = true
@@ -36535,10 +36697,9 @@ export default {
         clearTimeout(this.segmentPlaybackTimer)
         this.segmentPlaybackTimer = null
       }
-      if (this.playbackAdvanceTimer) {
-        clearTimeout(this.playbackAdvanceTimer)
-        this.playbackAdvanceTimer = null
-      }
+      this.clearPlaybackAdvanceTimer({ unlock: true })
+      this.clearAudioStallRecoveryTimer()
+      this.audioBuffering = false
       this.segmentEndTime = 0
       this.segmentPlaybackKind = ''
       this.advanceLocked = false
@@ -38047,7 +38208,7 @@ export default {
             show: !!state.showPostSessionChoice,
             template: state.postSessionChoiceJustEndedTemplate || null,
           }
-          this.autoSaveSessionsEnabled = state.autoSaveSessionsEnabled !== false
+          this.autoSaveSessionsEnabled = false
         }
       } catch (e) {
         console.error('Error loading UI state:', e)

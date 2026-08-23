@@ -59688,6 +59688,153 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   background: var(--mutqin-modal-backdrop, color-mix(in srgb, #070a09 72%, transparent));
 }
 
+
+/* Recommendation / success-step cards: elevated light surfaces in dark mode */
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step {
+  --text: #2c2118;
+  --ps-muted: #5c4e42;
+  background: #f3eee6 !important;
+  border: 1px solid rgba(60, 42, 28, 0.14) !important;
+  color: #2c2118 !important;
+  box-shadow: inset 3px 0 0 #6f8f6a;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"],
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"],
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step[data-tone="reinforce"] {
+  box-shadow: inset 3px 0 0 #c4893a;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="continue"],
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="continue"],
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step[data-tone="continue"] {
+  box-shadow: inset 3px 0 0 #3f7a55;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-title,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-detail,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-body,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-title,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-detail,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step-title,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step-detail {
+  color: #2c2118 !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step-num {
+  background: #3f7a55 !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"] .post-session-simple__success-step-num,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"] .post-session-simple__success-step-num,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step[data-tone="reinforce"] .post-session-simple__success-step-num {
+  background: #c4893a !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-technique,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-technique,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step-technique {
+  background: rgba(63, 122, 85, 0.16) !important;
+  color: #2f5d40 !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"] .post-session-simple__success-step-technique,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"] .post-session-simple__success-step-technique,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step[data-tone="reinforce"] .post-session-simple__success-step-technique {
+  background: rgba(196, 137, 58, 0.18) !important;
+  color: #7a4e16 !important;
+}
+
+/* Hero recommendation + scope cards (including plan-tone variants) */
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan],
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan],
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card[data-plan] {
+  --text: #2c2118;
+  --ps-muted: #5c4e42;
+  background: #f3eee6 !important;
+  color: #2c2118 !important;
+  border-color: rgba(60, 42, 28, 0.16) !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan="repeat"],
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan="repeat"],
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card[data-plan="repeat"] {
+  box-shadow: inset 3px 0 0 #c4893a;
+  border-color: rgba(196, 137, 58, 0.35) !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan="continue"],
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan="next-surah"],
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan="continue"],
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan="next-surah"],
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card[data-plan="continue"],
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card[data-plan="next-surah"] {
+  box-shadow: inset 3px 0 0 #3f7a55;
+  border-color: rgba(63, 122, 85, 0.35) !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__section-kicker,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__reason,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__surah-latin,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__range,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__why-heading,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__why-body,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__plan-title,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__plan-meta,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__section-kicker,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__reason,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__surah-latin,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__range,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__why-heading,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card .post-session-simple__why-body,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card .post-session-simple__section-kicker,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card .post-session-simple__reason,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card .post-session-simple__surah-latin,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card .post-session-simple__range,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card .post-session-simple__why-heading,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .ps-rec-card .post-session-simple__why-body {
+  color: #2c2118 !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__scope-card {
+  --text: #2c2118;
+  background: #f3eee6 !important;
+  color: #2c2118 !important;
+  border-color: rgba(60, 42, 28, 0.16) !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-label,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-desc,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-benefit,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-meta,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-label,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-desc,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-benefit,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-meta,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__scope-card-label,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__scope-card-desc,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__scope-card-benefit,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__scope-card-meta {
+  color: #2c2118 !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-desc,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-meta,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-desc,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-meta {
+  color: #5c4e42 !important;
+}
+
 /* Check meter + outcome badges — readable on warm dark surfaces */
 [data-theme="dark"] .post-session-simple__check-meter-segment.tone-green {
   background: #6ec9a4;

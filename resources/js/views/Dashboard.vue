@@ -301,16 +301,20 @@
             </div>
 
             <div
-              class="dash-analytics dash-analytics--static"
+              class="dash-analytics"
               role="list"
               :aria-label="t('dashboard.weekly_stats_aria')"
             >
-              <div
+              <button
                 v-for="(item, index) in weeklyAnalytics"
                 :key="item.key"
-                class="dash-analytic dash-analytic--static dash-reveal"
+                type="button"
+                class="dash-analytic dash-reveal"
                 :style="{ '--dash-delay': `${index * 60}ms` }"
                 role="listitem"
+                :title="item.hint || item.label"
+                :aria-label="`${item.label}: ${item.value}`"
+                @click="onAnalyticActivate(item)"
               >
                 <span v-if="item.icon" class="dash-analytic__icon" aria-hidden="true">
                   <i :class="item.icon" aria-hidden="true"></i>
@@ -319,7 +323,7 @@
                   <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
                 </p>
                 <p class="dash-analytic__label">{{ item.label }}</p>
-              </div>
+              </button>
             </div>
           </div>
         </section>
@@ -504,24 +508,6 @@
               </li>
             </ul>
 
-            <ul v-else-if="drawerMode === 'notes'" class="dash-drawer__list">
-              <li v-for="(item, index) in visibleDrawerItems" :key="`note-${item.id}`">
-                <div
-                  class="dash-drawer__row dash-reveal"
-                  :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
-                >
-                  <div class="dash-drawer__row-main">
-                    <span class="dash-drawer__type">{{ t('dashboard.activity_type_note') }}</span>
-                    <span class="dash-drawer__row-title">{{ noteHeading(item) }}</span>
-                    <span v-if="noteSnippet(item)" class="dash-drawer__row-meta">{{ noteSnippet(item) }}</span>
-                  </div>
-                  <time class="dash-drawer__row-time" :datetime="item.updated_at || item.created_at">
-                    {{ formatActivityDate(item.updated_at || item.created_at) }}
-                  </time>
-                </div>
-              </li>
-            </ul>
-
             <ul v-else-if="drawerMode === 'murajaah'" class="dash-drawer__list dash-drawer__list--murajaah">
               <li v-for="(item, index) in visibleDrawerItems" :key="`murajaah-${item.key}`">
                 <div
@@ -612,7 +598,6 @@ const METRIC_META = [
   { key: 'completed_sessions', tone: 'success', labelKey: 'metric_completed', hintKey: 'metric_completed_hint', drawer: 'sessions', icon: 'bi bi-journal-check' },
   { key: 'saved_sessions', tone: 'accent', labelKey: 'metric_saved', hintKey: 'metric_saved_hint', hrefPanel: 'saved', icon: 'bi bi-bookmark-heart' },
   { key: 'memorised_ayahs', tone: 'info', labelKey: 'metric_memorised', hintKey: 'metric_memorised_hint', altHintKey: 'metric_completed_ayahs_hint', drawer: 'hifz', icon: 'bi bi-stars' },
-  { key: 'notes', tone: 'neutral', labelKey: 'metric_notes', hintKey: 'metric_notes_hint', drawer: 'notes', icon: 'bi bi-journal-text' },
 ]
 
 const DRAWER_TITLES = {
@@ -1303,22 +1288,21 @@ export default {
         { key: 'all', label: this.t('dashboard.activity_filter_all') },
         { key: 'session', label: this.t('dashboard.activity_filter_sessions') },
         { key: 'ai_check', label: this.t('dashboard.activity_filter_ai') },
-        { key: 'note', label: this.t('dashboard.activity_filter_notes') },
       ]
     },
     visibleDrawerItems() {
       if (this.drawerMode !== 'activity' || this.activityFilter === 'all') {
-        return this.drawerItems
+        return this.drawerItems.filter((item) => String(item?.type || '').toLowerCase() !== 'note')
       }
       return this.drawerItems.filter((item) => {
         const type = String(item?.type || '').toLowerCase()
+        if (type === 'note') return false
         if (this.activityFilter === 'session') {
           return type === 'session' || type.startsWith('session_')
         }
         if (this.activityFilter === 'ai_check') {
           return type === 'ai_check' || type === 'ai_recite'
         }
-        if (this.activityFilter === 'note') return type === 'note'
         return true
       })
     },
@@ -1689,7 +1673,7 @@ export default {
       }
     },
     async openDrawer(mode) {
-      if (!mode) return
+      if (!mode || mode === 'notes') return
       this.drawerMode = mode
       this.drawerItems = []
       this.drawerError = false
@@ -1713,8 +1697,6 @@ export default {
           items = await learningApi.getSessionHistory()
         } else if (mode === 'ai_checks') {
           items = await learningApi.getAiReciteAttempts()
-        } else if (mode === 'notes') {
-          items = await learningApi.getAyahNotes()
         } else if (mode === 'hifz') {
           const progress = await learningApi.getProgress()
           items = this.groupHifzProgress(progress)

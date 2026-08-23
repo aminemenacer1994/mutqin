@@ -114,6 +114,57 @@ function assertStatuses(result, expected) {
   assert.ok(['partial', 'incorrect'].includes(statusMap(result)['قل']))
 }
 
+// Longer soft letter swaps (صراط/سراط) must also stay below green
+{
+  assert.ok(
+    getRecitationWordSimilarity('الصراط', 'السراط') <= 0.74,
+    'ص/س on longer words must stay at/under soft cap'
+  )
+  const result = buildDeterministicRecitationResult(
+    'اهدنا الصراط المستقيم',
+    createWordsFromTranscript('اهدنا السراط المستقيم'),
+    opts,
+  )
+  assert.notEqual(statusMap(result)['الصراط'], 'correct', 'صراط→سراط must not be green')
+  assert.equal(statusMap(result)['الصراط'], 'partial')
+}
+
+// Hard single-letter edits on longer words must not paint green (1 − 1/n hole)
+{
+  assert.ok(
+    getRecitationWordSimilarity('الضالين', 'الدالين') <= 0.74,
+    'ض→د single edit must stay at/under soft cap'
+  )
+  const result = buildDeterministicRecitationResult(
+    'غير المغضوب عليهم ولا الضالين',
+    createWordsFromTranscript('غير المغضوب عليهم ولا الدالين'),
+    opts,
+  )
+  assert.equal(statusMap(result)['الضالين'], 'incorrect', 'ض→د must be red, not green/amber')
+  assert.ok(result.mistakes.incorrect.some(item => item.expected === 'الضالين' && item.actual === 'الدالين'))
+}
+
+// Hard single-letter edits on mid-length words (الحمد→الحمت) stay incorrect
+{
+  const result = buildDeterministicRecitationResult(
+    'الحمد لله',
+    createWordsFromTranscript('الحمت لله'),
+    opts,
+  )
+  assert.equal(statusMap(result)['الحمد'], 'incorrect')
+}
+
+// ASR truncation (insertion/deletion) stays amber, never green
+{
+  assert.ok(getRecitationWordSimilarity('العالمين', 'العالمي') <= 0.74)
+  const result = buildDeterministicRecitationResult(
+    'الحمد لله رب العالمين',
+    createWordsFromTranscript('الحمد لله رب العالمي'),
+    opts,
+  )
+  assert.equal(statusMap(result)['العالمين'], 'partial')
+}
+
 // Short-word substitution is a real mistake, not amber "close"
 {
   const result = buildDeterministicRecitationResult(target, createWordsFromTranscript('قل هي الله أحد'), opts)
