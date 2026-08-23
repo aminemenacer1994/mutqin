@@ -12,6 +12,7 @@ import {
   isBackendSessionUnfinished,
   isResumableSessionPayload,
   pickContinuePayloadForResume,
+  buildContinuePayloadFromLastPosition,
   readStashedDashboardEntryIntent,
   reconcileBootstrapSessionState,
   reconcileContinuePayloadWithBackend,
@@ -204,6 +205,28 @@ const unfinishedIkhlas = {
   assert.equal(done.continuePayload, null)
 }
 
+{
+  const lastPlace = buildContinuePayloadFromLastPosition({
+    surah_number: 1,
+    ayah_number: 1,
+    last_step: 0,
+    last_opened_at: '2026-08-23T21:12:31.000Z',
+    metadata: {
+      mode: 'advanced',
+      activeVerseKey: '1:1',
+      config: { chapterId: 1, rangeStart: 1, rangeEnd: 7, reciterId: 'ar.alafasy' },
+    },
+  })
+  assert.equal(lastPlace.fromLastPosition, true)
+  assert.equal(lastPlace.config.chapterId, 1)
+  assert.equal(lastPlace.config.rangeStart, 1)
+  assert.equal(lastPlace.config.rangeEnd, 7)
+  assert.equal(lastPlace.activeVerseKey, '1:1')
+  assert.equal(isResumableSessionPayload(lastPlace), true)
+  assert.equal(buildContinuePayloadFromLastPosition(null), null)
+  assert.equal(buildContinuePayloadFromLastPosition({ surah_number: 0 }), null)
+}
+
 // --- Wiring contracts in Memorisation.js ---
 
 {
@@ -218,6 +241,11 @@ const unfinishedIkhlas = {
   assert.match(source, /resolveLiveAbsoluteAyahNumber\(/)
   assert.match(source, /restoreWorkspaceToContinuePayload\(/)
   assert.match(source, /welcomeBackContinueSession\(\{\s*preferredSessionId/)
+  assert.match(source, /restoreContinueFromLastPosition\(/)
+  assert.match(source, /hasRestorableLastPlace/)
+  assert.match(source, /getContinuePosition\(/)
+  assert.match(source, /revealRestoredLastPlace\(/)
+  assert.match(source, /fromLastPosition/)
   assert.match(source, /sessionRangesMatch\(restorePayload,\s*live\.session\)/)
   assert.match(source, /That session is no longer available to resume/)
   assert.match(source, /backendSessionId/)

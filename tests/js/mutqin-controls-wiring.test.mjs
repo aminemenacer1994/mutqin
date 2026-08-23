@@ -210,6 +210,9 @@ includesAll('welcome back continue session flow', [
   /closeWelcomeBackModal\(\) \{/,
   /if \(this\.showWelcomeBackModal\) \{[\s\S]*this\.closeWelcomeBackModal\(\)/,
   /welcomeBackWorkspaceHidden = true/,
+  /restoreContinueFromLastPosition/,
+  /hasRestorableLastPlace/,
+  /revealRestoredLastPlace/,
   /returningUserChoicePending/,
   /shouldGateWorkspaceForResumeChoice\(\) \{\s*return !!\(this\.isLoggedIn && this\.returningUserChoicePending\)/,
 ])
@@ -681,6 +684,12 @@ assert.doesNotMatch(
     /onboarding-post-session-tools\s*\{[\s\S]*?z-index:\s*12720/
   )
 }
+
+includesAll('player dock waits for playback', [
+  /showPlayerDock\(\) \{[\s\S]*showCountdownOverlay[\s\S]*SESSION_MUTATION\.STARTING[\s\S]*isSessionLive/,
+  /preloadQueueEntryAudio\(preloadEntry, \{ playerVisible: false \}\)/,
+  /this\.playerVisible = true\n\s*\n\s*try \{\n\s*await this\.waitForAudioElementReady/,
+])
 
 includesAll('audio unlock flow', [
   /primeUiAudioUnlock\(\) \{/,

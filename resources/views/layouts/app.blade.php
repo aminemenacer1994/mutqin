@@ -52,6 +52,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    @if(request()->boolean('mutqin_embed'))
+    <style id="mutqin-embed-shell">
+      .app-navbar,
+      .navbar.app-navbar,
+      footer.site-footer,
+      .app-footer {
+        display: none !important;
+      }
+      body {
+        padding-top: 0 !important;
+      }
+    </style>
+    @endif
     <meta name="mutqin-build" content="v129">
     <style id="mutqin-ai-recite-force-v125">
       #mutqin-build-stamp {
@@ -97,8 +110,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v131';
-        var FORCE = '130';
+        var BUILD = 'v149';
+        var FORCE = '148';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;

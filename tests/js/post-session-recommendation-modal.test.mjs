@@ -360,7 +360,15 @@ function t(key, params = {}) {
   )
   assert.match(
     css,
-    /html\[data-theme="dark"\][\s\S]{0,280}\.post-session-simple__weak-spots-list--inline > \.post-session-simple__weak-spots-item[\s\S]{0,160}background:\s*#3a2a28\s*!important/,
+    /html\[data-theme="dark"\][\s\S]{0,280}\.post-session-simple__weak-spots-list--inline > \.post-session-simple__weak-spots-item[\s\S]{0,160}background:\s*#4a2a2a\s*!important/,
+  )
+  assert.match(css, /Recommendation \+ why: stay on the dark surface[\s\S]{0,900}background:\s*#2f2924\s*!important/)
+  assert.match(css, /\.ps-rec-card \.post-session-simple__why-heading[\s\S]{0,420}color:\s*#fff4e8\s*!important/)
+  assert.match(css, /Recommended next-step cards: stay on the dark surface/)
+  assert.match(css, /\.post-session-simple__success-step \{[\s\S]{0,280}background:\s*#2f2924\s*!important/)
+  assert.doesNotMatch(
+    css,
+    /\.post-session-simple__success-step[\s\S]{0,220}background:\s*#f3eee6/,
   )
   assert.match(
     css,

@@ -1657,42 +1657,57 @@
         },
         "controls": {
           "title": "Open Controls",
-          "body": "This opens Setup, practice tools, and saved sets. Tap it, or press Next to continue.",
+          "body": "This opens Setup, practice tools, and saved sets.",
           "waitHint": ""
         },
         "setup": {
-          "title": "Choose your ayahs",
-          "body": "Al-Fatiha 1–3, Alafasy, and 2 repetitions is the focused review. Change this later whenever you like.",
+          "title": "Setup",
+          "body": "Pick the surah and ayah range here. Focused review starts at Al-Fatiha 1–3 with Alafasy and 2 repetitions.",
+          "waitHint": ""
+        },
+        "practice": {
+          "title": "Practice tools",
+          "body": "Focus, Blur, and Talqin live here. Use one tool at a time while you listen and repeat.",
+          "waitHint": ""
+        },
+        "saved": {
+          "title": "Saved sets",
+          "body": "Sets you save come back here. Open one to continue, or keep the current focused review.",
           "waitHint": ""
         },
         "start": {
           "title": "Begin the set",
-          "body": "When the range looks right, press Begin a new set. Or press Next to see the workspace first.",
+          "body": "This starts the focused review: Al-Fatiha 1–3 with Alafasy and 2 repetitions.",
           "waitHint": ""
         },
         "session": {
           "title": "Practise these ayahs",
-          "body": "Al-Fatiha 1–3 stays on the page. Listen, repeat, then continue to see the AI check.",
+          "body": "Al-Fatiha 1–3 stays on the page. Listen and repeat here during a session.",
           "waitHint": ""
         },
         "ai": {
           "title": "Check with AI recitation",
-          "body": "Press Record when you are ready. The check waits for you — it does not finish on its own.",
+          "body": "This is the AI recitation check. It listens and marks each word. It does not finish on its own.",
           "waitHint": ""
         },
         "results": {
           "title": "See right and wrong words",
-          "body": "Green words matched. A highlighted word still needs care. This sample shows how analysis looks after a check.",
+          "body": "Green words matched. Several highlighted words still need care. This sample shows how analysis looks after a check.",
+          "waitHint": ""
+        },
+        "weak": {
+          "title": "Weak areas",
+          "body": "These ayahs and words need more care. Mutqin uses them to shape the next plans.",
           "waitHint": ""
         },
         "plan": {
-          "title": "Follow your recommendation",
-          "body": "Mutqin turns the analysis into a next plan. This example keeps Al-Fatiha 1–3 with Alafasy at 2 repetitions.",
+          "title": "Recommended plans",
+          "body": "Two plans follow this check: practise the weak ayahs, or revise Al-Fatiha 1–3 with Alafasy at 2 repetitions.",
           "waitHint": ""
         },
         "dashboard": {
           "title": "Review progress",
-          "body": "This is your dashboard: streaks, coverage, and muraja'ah. Press Back to return, or Done when you are finished.",
+          "body": "This is your dashboard: streaks, coverage, and muraja'ah.",
           "waitHint": ""
         }
       }
@@ -1750,7 +1765,7 @@
         "practice": {
           "title": "Use the memorisation tools",
           "stepLabel": "Tools",
-          "body": "Focus, Blur, and Talqin help you listen and repeat. Tap a tool to preview it.",
+          "body": "Focus, Blur, and Talqin help you listen and repeat.",
           "hint": "Start with one tool. Add more later.",
           "points": [
             "Focus keeps attention on the active ayah",

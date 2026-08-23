@@ -233,6 +233,7 @@ import {
   createSessionActionLock,
   createSessionBroadcast,
   isResumableSessionPayload,
+  buildContinuePayloadFromLastPosition,
   pickContinuePayloadForResume,
   readStashedDashboardEntryIntent,
   reconcileBootstrapSessionState,
@@ -831,6 +832,7 @@ export default {
       workspaceTourConfigSnapshot: null,
       workspaceTourDashboardOpen: false,
       workspaceTourMeasureAllowScroll: true,
+      workspaceTourFreshStartPending: false,
       showPostSessionModal: false,
       showPostSessionChoice: false,
       postSessionChoiceAction: null, // repeat_recommended | create_custom | null
@@ -2820,6 +2822,7 @@ export default {
       return this.hasVerses || this.showSessionOverviewIdleActions
     },
     sessionLifecycleInput() {
+      const forceFreshStart = !!this.workspaceTourFreshStartPending
       return {
         authHydrated: !this.isBootstrapping,
         sessionHydrated: !!this.sessionLifecycleHydrated,
@@ -2828,14 +2831,14 @@ export default {
         onboardingStarted: false,
         onboardingExampleActive: !!this.onboardingSampleSessionActive,
         onboardingExampleRejected: !!this.onboardingExampleRejected,
-        mutqinSessionActive: !!this.isSessionLive,
-        sessionCompleted: !!this.isSessionCompleted,
+        mutqinSessionActive: forceFreshStart ? false : !!this.isSessionLive,
+        sessionCompleted: forceFreshStart ? false : !!this.isSessionCompleted,
         // Only local mid-sitting pause — backend "paused" alone is soft-exit /
         // resumable and must not keep the End session companion on screen.
-        sessionPaused: !!this.sessionPaused,
+        sessionPaused: forceFreshStart ? false : !!this.sessionPaused,
         completionModalOpen: !!this.showPostSessionModal,
-        hasValidatedContinuePayload: this.hasValidatedResumableSession,
-        backendUnfinished: !!this.backendUnfinishedSession,
+        hasValidatedContinuePayload: forceFreshStart ? false : this.hasValidatedResumableSession,
+        backendUnfinished: forceFreshStart ? false : !!this.backendUnfinishedSession,
         backendStatus: this.backendSessionSnapshot?.status || null,
         isPlaying: !!this.isPlaying,
         isPaused: !this.isPlaying && !!this.playerVisible,
@@ -2940,6 +2943,7 @@ export default {
         && !this.isPostSessionChoiceVisible
     },
     hasValidatedResumableSession() {
+      if (this.workspaceTourFreshStartPending) return false
       if (this.onboardingSampleSessionActive) return false
       // Stale local "completed" must not hide Resume when backend still has unfinished work.
       if (
@@ -3137,8 +3141,15 @@ export default {
         : this.t('common.close')
     },
     canResumePreviousSession() {
+      if (this.workspaceTourFreshStartPending) return false
       return this.hasValidatedResumableSession
         || this.primarySessionAction === PRIMARY_SESSION_ACTION.RESUME_SESSION
+        || this.hasRestorableLastPlace
+    },
+    hasRestorableLastPlace() {
+      if (this.workspaceTourFreshStartPending) return false
+      if (this.onboardingSampleSessionActive) return false
+      return Number(this.continueSessionPayload?.config?.chapterId || 0) > 0
     },
     hasPersistedInProgressSession() {
       if (this.onboardingSampleSessionActive) return false
@@ -6202,16 +6213,20 @@ export default {
     requiresFirstTimeOnboarding() {
       if (!this.isLoggedIn) return false
       if (this.onboardingManualLaunch) return false
+      // Skip / Done (or a previous auto-show) means they are now existing.
+      if (this.hasDismissedWorkspaceTour()) return false
+      // Demo testers get first-run chrome until they finish or skip the tour.
+      // Seeded practice data must not skip that first visit.
+      if (this.isDemoWorkspaceAccount()) return true
       // Exploring / finishing onboarding must immediately unlock Start Session
       // once completion is marked, even while auth.just_registered is still true.
       if (this.hasCompletedOnboarding()) return false
-      // Dismiss only suppresses auto-open — Continue/Get started must still reopen.
-      // New accounts stay on first-run onboarding until they finish it themselves.
-      if (this.isSignupIsolationActive()) return true
+      // Regular returning logins never re-enter first-time onboarding.
+      if (this.auth?.just_logged_in && !this.auth?.just_registered) return false
       // Live / resumable practice must never trap the header on Start Onboarding.
       if (this.hasPostOnboardingPracticeEvidence()) return false
-      // Returning logins never re-enter first-time onboarding.
-      if (this.auth?.just_logged_in && !this.auth?.just_registered) return false
+      // New accounts stay on first-run onboarding until they finish it themselves.
+      if (this.auth?.just_registered || this._signupIsolationFreshlyActivated) return true
       // Only an in-progress pending first-run still needs it after the flash expires.
       return !!this.readWorkspaceStateValue('onboardingPending', false)
     },
@@ -6223,8 +6238,7 @@ export default {
       return !this.hasOnboardingAutoPresented()
     },
     isExistingUserLogin() {
-      // Welcome Back is only for returning learners — never demo testers or
-      // first-run signups, even after they finish or skip the spotlight tour.
+      // Welcome Back is for returning learners after their first-time tour.
       if (this.shouldSuppressWelcomeBackModal()) return false
       return !!(this.auth?.just_logged_in && !this.auth?.just_registered && this.hasCompletedOnboarding())
     },
@@ -6693,17 +6707,25 @@ export default {
     testerGuideDashboardUrl() {
       return this.auth?.dashboard_url || '/dashboard'
     },
+    workspaceTourDashboardUrl() {
+      const base = String(this.testerGuideDashboardUrl || '/dashboard')
+      const join = base.includes('?') ? '&' : '?'
+      return `${base}${join}mutqin_embed=1`
+    },
     workspaceTourSteps() {
       return [
-        { key: 'welcome', selector: '[data-tour="workspace-welcome"], [data-tour="welcome-start"]', pad: 10, radius: 16, placement: 'bottom' },
+        { key: 'welcome', selector: '[data-tour="workspace-welcome"]', pad: 8, radius: 20, placement: 'dock-bottom' },
         { key: 'controls', selector: '[data-tour="controls"]', pad: 8, radius: 12, placement: 'bottom' },
-        { key: 'setup', selector: '[data-tour="setup-sheet"]', pad: 8, radius: 16, placement: 'left' },
+        { key: 'setup', selector: '[data-tour="setup-sheet"], [data-tour="setup-tab"]', pad: 8, radius: 16, placement: 'left' },
+        { key: 'practice', selector: '[data-tour="practice-sheet"], [data-tour="practice-tab"]', pad: 8, radius: 16, placement: 'left' },
+        { key: 'saved', selector: '[data-tour="saved-sheet"], [data-tour="saved-tab"]', pad: 8, radius: 16, placement: 'left' },
         { key: 'start', selector: '[data-tour="start-session"]', pad: 10, radius: 16, placement: 'top' },
         { key: 'session', selector: '[data-tour="workspace-main"], [data-tour="end-session"]', pad: 8, radius: 14, placement: 'bottom' },
         { key: 'ai', selector: '[data-tour="ai-modal"] .amd-mushaf-shell, [data-tour="ai-modal"], .amd-modal', pad: 8, radius: 20, placement: 'left' },
-        { key: 'results', selector: '[data-tour="ai-results"], [data-testid="post-session-main-focus"]', pad: 10, radius: 16, placement: 'left' },
-        { key: 'plan', selector: '[data-tour="rec-plan"]', pad: 10, radius: 16, placement: 'left' },
-        { key: 'dashboard', selector: '[data-tour="tour-dashboard"], .app-navbar .nav-link-dashboard, [data-tour="nav-dashboard"]', pad: 8, radius: 12, placement: 'left' },
+        { key: 'results', selector: '[data-tour="ai-results"], [data-testid="post-session-section-1"]', pad: 8, radius: 18, placement: 'dock-outside', scroll: 'start' },
+        { key: 'weak', selector: '[data-tour="weak-areas"], [data-testid="post-session-weak-spots"]', pad: 8, radius: 16, placement: 'top', scroll: 'center', maxHeight: 240 },
+        { key: 'plan', selector: '[data-tour="rec-plans"], [data-testid="post-session-scope-picker"], [data-tour="rec-why"], [data-testid="post-session-plan-why"], [data-testid="post-session-personal-plan"], [data-tour="rec-plan"]', pad: 8, radius: 16, placement: 'top', scroll: 'center', maxHeight: 280 },
+        { key: 'dashboard', selector: '[data-tour="tour-dashboard"]', pad: 8, radius: 12, placement: 'left' },
       ]
     },
     workspaceTourStep() {
@@ -6718,16 +6740,10 @@ export default {
     workspaceTourStepCopy() {
       const key = this.workspaceTourStep?.key || 'controls'
       const base = `memorisation.workspaceTour.steps.${key}`
-      let waitHint = ''
-      if (key === 'start' && this.workspaceTourNextDisabled) {
-        waitHint = this.t(`${base}.waitHint`) || this.t('memorisation.workspaceTour.steps.start.body')
-      } else if (key === 'session' && !this.showPostSessionModal && !this.showHeaderEndSessionAction) {
-        waitHint = this.t(`${base}.waitHint`)
-      }
       return {
         title: this.t(`${base}.title`),
         body: this.t(`${base}.body`),
-        waitHint
+        waitHint: ''
       }
     },
     workspaceTourHoleStyle() {
@@ -8984,11 +9000,27 @@ export default {
     },
 
     showPlayerDock() {
-      return this.playbackPillVisible || this.playerVisible || this.talqinRecitationTurnActive
+      if (this.showCountdownOverlay) return false
+      if (
+        this.sessionLifecycleMutation === SESSION_MUTATION.STARTING
+        || this.sessionLifecycleMutation === SESSION_MUTATION.RESUMING
+      ) return false
+      return this.playbackPillVisible
+        || this.playerVisible
+        || this.talqinRecitationTurnActive
+        || this.isSessionLive
     },
 
     playbackShellActive() {
-      return this.playerVisible || this.playbackPillVisible || this.talqinRecitationTurnActive
+      if (this.showCountdownOverlay) return false
+      if (
+        this.sessionLifecycleMutation === SESSION_MUTATION.STARTING
+        || this.sessionLifecycleMutation === SESSION_MUTATION.RESUMING
+      ) return false
+      return this.playerVisible
+        || this.playbackPillVisible
+        || this.talqinRecitationTurnActive
+        || this.isSessionLive
     },
 
     playerDockShowsTalqinOnly() {
@@ -9444,6 +9476,9 @@ export default {
       }
       await this.validateSessionLifecycleAgainstBackend()
       this.loadContinueSessionPrompt()
+      if (!this.backendUnfinishedSession) {
+        await this.restoreContinueFromLastPosition()
+      }
       this.demoteLiveSessionToResumableOnBootstrap()
       // Re-apply after demote/reconcile so refresh still shows Repeat / Custom.
       this.applyRestoredPostSessionChoice({ clearPending: false })
@@ -9459,12 +9494,12 @@ export default {
       // by a stale completion flag computed before workspace state was ready.
       if (
         authenticatedWorkspace
-        && !signupIsolated
         && !this.hasCompletedOnboarding()
         && !this.shouldAutoStartWorkspaceTour()
+        && !this.isDemoWorkspaceAccount()
         && (
           this.hasPostOnboardingPracticeEvidence()
-          || (this.auth?.just_logged_in && !this.auth?.just_registered && !this.isDemoWorkspaceAccount())
+          || (this.auth?.just_logged_in && !this.auth?.just_registered)
         )
       ) {
         // Returning accounts (or users already practising) must not stick on
@@ -10151,6 +10186,11 @@ export default {
           this.closePostSessionChoice()
           this._pendingPostSessionChoiceRestore = null
         }
+        // Countdown autoplay is often blocked; reveal the dock so Play is tappable.
+        if (!this.playerDismissed && !this.showCountdownOverlay) {
+          this.playerVisible = true
+        }
+        this.ensureLiveSessionAudioAttached()
         if (this.practiceFocusWeakWords?.length) {
           this.restorePracticeFocusWeakWords()
           this.schedulePracticeFocusWordDomSync([0, 250, 700, 1500, 2500])
@@ -10862,6 +10902,9 @@ export default {
       ) return
       // Sync Continue CTA with backend + frontend resume state before reveal.
       this.syncWelcomeBackResumeFromBackend()
+      if (!this.canResumePreviousSession && !this.backendUnfinishedSession) {
+        void this.restoreContinueFromLastPosition()
+      }
       this.markWelcomeBackModalShownForCurrentLogin()
       this.returningUserChoicePending = true
       // Hide workspace immediately so verses never flash before the modal.
@@ -10902,11 +10945,38 @@ export default {
         && this.sessionLifecycleHydrated
         && !this.backendUnfinishedSession
       ) {
-        // Backend says nothing to resume — clear stale frontend continue hints.
+        // Keep a last-place payload so Welcome Back can still return to the mushaf.
+        if (this.continueSessionPayload?.fromLastPosition) return
         if (this.continueSessionPayload) this.clearContinueSessionQuietly()
         return
       }
       // Frontend-only / pre-hydrate: keep existing validated local continue payload.
+    },
+
+    async restoreContinueFromLastPosition() {
+      if (!this.learningBackendEnabled()) return false
+      if (this.workspaceTourFreshStartPending) return false
+      if (this.backendUnfinishedSession) return false
+      if (Number(this.continueSessionPayload?.config?.chapterId || 0) > 0) {
+        if (!this.continueSessionPayload.fromLastPosition) {
+          this.continueSessionPayload = {
+            ...this.continueSessionPayload,
+            fromLastPosition: true,
+          }
+        }
+        return true
+      }
+      try {
+        const position = await learningApi.getContinuePosition()
+        const payload = buildContinuePayloadFromLastPosition(position)
+        if (!payload) return false
+        this.continueSessionPayload = payload
+        this.hasContinueSession = true
+        return true
+      } catch (error) {
+        console.warn('Failed to restore last place for Welcome Back', error)
+        return false
+      }
     },
 
     hasShownWelcomeBackModalForCurrentLogin() {
@@ -13482,6 +13552,7 @@ export default {
       if (this.onboardingSampleSessionActive && !options.sampleSession) {
         this.exitOnboardingSampleMode({ discard: true, markCompleted: true })
       }
+      this.workspaceTourFreshStartPending = false
 
       this.showPlannerCompletionModal = false
       this.showPlannerCompletionConfetti = false
@@ -13501,7 +13572,7 @@ export default {
 
       const preloadEntry = this.queue?.[this.queueIndex] || this.queue?.[0]
       if (preloadEntry) {
-        this.preloadQueueEntryAudio(preloadEntry, { playerVisible: true })
+        this.preloadQueueEntryAudio(preloadEntry, { playerVisible: false })
       }
 
       // Freeze the start key for this attempt so double-clicks stay idempotent.
@@ -13549,6 +13620,7 @@ export default {
             // that races load()/abort and floods Audio load errors.
             const playbackStarted = await this.ensureSessionPlaybackStarted({ skipImmediatePlay: true })
             if (!playbackStarted && this.queue?.length) {
+              this.ensureLiveSessionAudioAttached()
               this.promptTapToPlay()
             }
             // Wait for backend id before releasing the lock so pause/end can target it.
@@ -14521,8 +14593,7 @@ export default {
     },
     shouldSuppressWelcomeBackModal() {
       // Only hide Welcome Back while the first-time spotlight is about to play.
-      // Demo testers keep their saved set and see Welcome Back on later logins.
-      if (this.auth?.just_registered || this.isSignupIsolationActive?.()) return true
+      if (this.auth?.just_registered || this._signupIsolationFreshlyActivated) return true
       if (this.shouldAutoStartWorkspaceTour()) return true
       return false
     },
@@ -14536,8 +14607,15 @@ export default {
     shouldAutoStartWorkspaceTour() {
       if (!this.auth?.check) return false
       if (this.hasDismissedWorkspaceTour()) return false
-      if (this.auth?.just_registered || this.isSignupIsolationActive?.()) return true
+      // Demo testers: first browser visit only. Seeded completion/practice
+      // flags must not consume that first-time spotlight.
       if (this.isDemoWorkspaceAccount()) return true
+      if (this.hasCompletedOnboarding()) return false
+      // Regular existing-account login never auto-starts.
+      if (this.auth?.just_logged_in && !this.auth?.just_registered) return false
+      if (this.auth?.just_registered || this._signupIsolationFreshlyActivated) return true
+      // Refresh during an unfinished first signup can still resume the tour.
+      if (this.isSignupIsolationActive?.()) return true
       return false
     },
     initTesterStartGuide() {
@@ -14545,15 +14623,6 @@ export default {
     },
     scheduleWorkspaceTourStart() {
       if (!this.auth?.check) {
-        this.workspaceTourActive = false
-        return
-      }
-      // Returning logins never auto-play. Demo + first-time signup still may.
-      if (
-        this.auth?.just_logged_in
-        && !this.auth?.just_registered
-        && !this.isDemoWorkspaceAccount()
-      ) {
         this.workspaceTourActive = false
         return
       }
@@ -14591,16 +14660,39 @@ export default {
       await this.applyWorkspaceTourStep(this.workspaceTourStepIndex)
       this.bindWorkspaceTourListeners()
     },
+    isWorkspaceTourControlEvent(event) {
+      const target = event?.target
+      if (!target || typeof target.closest !== 'function') return false
+      return !!target.closest('.workspace-tour__btn')
+    },
+    guardWorkspaceTourPointer(event) {
+      if (!this.workspaceTourActive) return
+      if (this.isWorkspaceTourControlEvent(event)) return
+      event.preventDefault()
+      event.stopPropagation()
+      if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation()
+    },
     bindWorkspaceTourListeners() {
-      if (this._workspaceTourResizeBound) return
-      this._workspaceTourResizeBound = () => {
-        if (!this.workspaceTourActive) return
-        this.scheduleWorkspaceTourMeasure({ allowScroll: false })
+      if (!this._workspaceTourResizeBound) {
+        this._workspaceTourResizeBound = () => {
+          if (!this.workspaceTourActive) return
+          this.scheduleWorkspaceTourMeasure({ allowScroll: false })
+        }
+        window.addEventListener('resize', this._workspaceTourResizeBound)
+        window.addEventListener('scroll', this._workspaceTourResizeBound, true)
       }
-      window.addEventListener('resize', this._workspaceTourResizeBound)
-      window.addEventListener('scroll', this._workspaceTourResizeBound, true)
+      if (!this._workspaceTourPointerGuard) {
+        this._workspaceTourPointerGuard = (event) => this.guardWorkspaceTourPointer(event)
+        document.addEventListener('pointerdown', this._workspaceTourPointerGuard, true)
+        document.addEventListener('click', this._workspaceTourPointerGuard, true)
+      }
     },
     unbindWorkspaceTourListeners() {
+      if (this._workspaceTourPointerGuard) {
+        document.removeEventListener('pointerdown', this._workspaceTourPointerGuard, true)
+        document.removeEventListener('click', this._workspaceTourPointerGuard, true)
+        this._workspaceTourPointerGuard = null
+      }
       if (this._workspaceTourResizeBound) {
         window.removeEventListener('resize', this._workspaceTourResizeBound)
         window.removeEventListener('scroll', this._workspaceTourResizeBound, true)
@@ -14629,8 +14721,8 @@ export default {
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
       this.measureWorkspaceTourTarget({ allowScroll: true })
       window.setTimeout(() => {
-        if (this.workspaceTourActive) this.measureWorkspaceTourTarget({ allowScroll: false })
-      }, 240)
+        if (this.workspaceTourActive) this.measureWorkspaceTourTarget({ allowScroll: true })
+      }, ['weak', 'plan'].includes(step.key) ? 280 : 240)
     },
     async closeWorkspaceTourOverlays({ keepAi = false, keepPostSession = false } = {}) {
       this.topCardMenuOpen = false
@@ -14645,6 +14737,20 @@ export default {
         this.showPostSessionModal = false
       }
     },
+    openWorkspaceTourControlsTab(tabName) {
+      this._workspaceTourApplyingTab = true
+      this.tab = tabName
+      this._workspaceTourApplyingTab = false
+    },
+    syncWorkspaceTourFromControlsTab(tabName) {
+      if (this._workspaceTourApplyingTab) return
+      const key = tabName === 'techniques' ? 'practice' : (tabName === 'saved' ? 'saved' : 'setup')
+      if (!['setup', 'practice', 'saved'].includes(this.workspaceTourStep?.key)) return
+      if (this.workspaceTourStep?.key === key) return
+      const index = this.workspaceTourSteps.findIndex((step) => step.key === key)
+      if (index < 0) return
+      this.workspaceTourStepIndex = index
+    },
     async prepareWorkspaceTourStep(key) {
       if (key === 'welcome' || key === 'controls') {
         await this.closeWorkspaceTourOverlays()
@@ -14652,10 +14758,11 @@ export default {
         return
       }
 
-      if (key === 'setup' || key === 'start') {
+      if (key === 'setup' || key === 'practice' || key === 'saved' || key === 'start') {
         await this.closeWorkspaceTourOverlays()
         this.openAdvancedControls()
-        this.setActiveTab('tools')
+        const tab = key === 'practice' ? 'techniques' : (key === 'saved' ? 'saved' : 'tools')
+        this.openWorkspaceTourControlsTab(tab)
         if (this.sectionOpen && this.sectionOpen.advanced_setup !== undefined) {
           this.sectionOpen.advanced_setup = true
         }
@@ -14677,17 +14784,11 @@ export default {
         return
       }
 
-      if (key === 'results') {
+      if (key === 'results' || key === 'weak' || key === 'plan') {
         await this.closeWorkspaceTourOverlays({ keepPostSession: true })
         if (this.showTools) await this.closeToolsPanel()
-        await this.ensureWorkspaceTourResultsPreview()
-        return
-      }
-
-      if (key === 'plan') {
-        await this.closeWorkspaceTourOverlays({ keepPostSession: true })
-        if (this.showTools) await this.closeToolsPanel()
-        await this.ensureWorkspaceTourPlanPreview()
+        if (key === 'results') await this.ensureWorkspaceTourResultsPreview()
+        else await this.ensureWorkspaceTourPlanPreview()
         return
       }
 
@@ -14709,6 +14810,146 @@ export default {
       if (rect.top > window.innerHeight - 4 || rect.left > window.innerWidth - 4) return false
       return true
     },
+    shouldDockWorkspaceTourTooltip() {
+      const step = this.workspaceTourStep
+      return step?.placement === 'dock-bottom' || step?.key === 'welcome'
+    },
+    shouldParkWorkspaceTourTooltipOutside() {
+      const step = this.workspaceTourStep
+      return step?.placement === 'dock-outside' || step?.key === 'results'
+    },
+    readWorkspaceTourDockHeight() {
+      const tipEl = document.querySelector('.workspace-tour__tooltip')
+      const isNarrow = (window.innerWidth || 0) <= 720
+      const measured = Number(tipEl?.offsetHeight || 0)
+      return Math.max(measured, isNarrow ? 168 : 176) + (isNarrow ? 16 : 20)
+    },
+    dockWorkspaceTourTooltip() {
+      const tipEl = document.querySelector('.workspace-tour__tooltip')
+      const vw = window.innerWidth || 0
+      const vh = window.innerHeight || 0
+      const isNarrow = vw <= 720
+      const sidePad = isNarrow ? 12 : 16
+      const tipWidth = Math.min(tipEl?.offsetWidth || 340, vw - sidePad * 2)
+      const tipHeight = Math.max(Number(tipEl?.offsetHeight || 0), isNarrow ? 168 : 176)
+      this.workspaceTourTooltipPos = {
+        top: Math.max(sidePad, vh - tipHeight - sidePad),
+        left: Math.max(sidePad, (vw - tipWidth) / 2),
+        placement: 'dock-bottom',
+      }
+    },
+    parkWorkspaceTourTooltipOutside(rect = null) {
+      const tipEl = document.querySelector('.workspace-tour__tooltip')
+      const vw = window.innerWidth || 0
+      const vh = window.innerHeight || 0
+      const isNarrow = vw <= 720
+      const sidePad = isNarrow ? 12 : 16
+      const tipWidth = Math.min(tipEl?.offsetWidth || 320, isNarrow ? vw - sidePad * 2 : 320)
+      const tipHeight = Math.max(Number(tipEl?.offsetHeight || 0), isNarrow ? 148 : 156)
+      const host = document.querySelector('.post-session-simple__dialog')?.getBoundingClientRect()
+        || rect
+        || this.workspaceTourRect
+      const hostTop = Number(host?.top || 12)
+      const hostLeft = Number(host?.left || sidePad)
+      const hostRight = Number(host?.right || vw - sidePad)
+      const rightSpace = vw - hostRight
+      const leftSpace = hostLeft
+      if (!isNarrow && rightSpace >= tipWidth + 20) {
+        this.workspaceTourTooltipPos = {
+          top: Math.max(sidePad, Math.min(hostTop, vh - tipHeight - sidePad)),
+          left: hostRight + 12,
+          placement: 'dock-right',
+        }
+        return
+      }
+      if (!isNarrow && leftSpace >= tipWidth + 20) {
+        this.workspaceTourTooltipPos = {
+          top: Math.max(sidePad, Math.min(hostTop, vh - tipHeight - sidePad)),
+          left: hostLeft - tipWidth - 12,
+          placement: 'dock-left',
+        }
+        return
+      }
+      this.workspaceTourTooltipPos = {
+        top: sidePad,
+        left: Math.max(sidePad, (vw - tipWidth) / 2),
+        placement: 'dock-top',
+      }
+    },
+    readWorkspaceTourSafeInset() {
+      const vw = window.innerWidth || 0
+      const vh = window.innerHeight || 0
+      const footer = document.querySelector('.post-session-simple__footer, .post-session-simple__actions')
+      const header = document.querySelector('.post-session-simple__header')
+      const footerBottom = footer ? footer.getBoundingClientRect().top : vh
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0
+      const edge = vw <= 720 ? 10 : 8
+      const dockReserve = this.shouldDockWorkspaceTourTooltip()
+        ? this.readWorkspaceTourDockHeight()
+        : 0
+      return {
+        top: Math.max(edge, headerBottom + 6),
+        left: edge,
+        right: vw - edge,
+        bottom: Math.min(vh - edge, footerBottom - 8) - dockReserve,
+      }
+    },
+    isWorkspaceTourTargetFramed(el) {
+      if (!this.isWorkspaceTourTargetVisible(el)) return false
+      const rect = el.getBoundingClientRect()
+      const inset = this.readWorkspaceTourSafeInset()
+      const visibleHeight = Math.min(rect.bottom, inset.bottom) - Math.max(rect.top, inset.top)
+      const visibleWidth = Math.min(rect.right, inset.right) - Math.max(rect.left, inset.left)
+      if (visibleWidth < Math.min(64, rect.width * 0.7)) return false
+      if (this.workspaceTourStep?.scroll === 'start') {
+        return rect.top >= inset.top - 16 && rect.top <= inset.top + 28
+      }
+      if (visibleHeight < Math.min(64, rect.height * 0.7)) return false
+      return rect.top >= inset.top - 12 && rect.left >= inset.left - 12
+    },
+    scrollWorkspaceTourTargetIntoView(el) {
+      if (!el) return
+      const alignStart = this.workspaceTourStep?.scroll === 'start'
+      const scroller = el.closest('.post-session-simple__body, .tools-body, .amd-body, .workspace-tour__dashboard')
+      if (scroller && scroller !== el) {
+        const inset = this.readWorkspaceTourSafeInset()
+        const elRect = el.getBoundingClientRect()
+        const scRect = scroller.getBoundingClientRect()
+        const viewTop = Math.max(scRect.top, inset.top)
+        const viewBottom = Math.min(scRect.bottom, inset.bottom)
+        if (alignStart) {
+          scroller.scrollTop += elRect.top - viewTop
+          return
+        }
+        const viewCenter = (viewTop + viewBottom) / 2
+        const elCenter = elRect.top + Math.min(elRect.height, viewBottom - viewTop) / 2
+        scroller.scrollTop += elCenter - viewCenter
+        return
+      }
+      try {
+        el.scrollIntoView({ block: alignStart ? 'start' : 'center', inline: 'nearest', behavior: 'auto' })
+      } catch { /* ignore */ }
+    },
+    clampWorkspaceTourHole(rect, pad = 8, radius = 16, step = null) {
+      const inset = this.readWorkspaceTourSafeInset()
+      const maxHeight = Number(step?.maxHeight || 0)
+      let top = Math.max(inset.top, rect.top - pad)
+      let left = Math.max(inset.left, rect.left - pad)
+      let right = Math.min(inset.right, rect.right + pad)
+      let bottom = Math.min(inset.bottom, rect.bottom + pad)
+      if (maxHeight > 0 && bottom - top > maxHeight) {
+        bottom = top + maxHeight
+      }
+      const width = Math.max(24, right - left)
+      const height = Math.max(24, bottom - top)
+      return {
+        top,
+        left,
+        width,
+        height,
+        radius: Number(radius) || 16,
+      }
+    },
     readWorkspaceTourTargetRadius(el, fallback = 16) {
       try {
         const style = window.getComputedStyle(el)
@@ -14728,9 +14969,10 @@ export default {
         } catch {
           continue
         }
-        for (const node of nodes) {
-          if (this.isWorkspaceTourTargetVisible(node)) return node
-        }
+        const present = nodes.find((node) => node && document.contains(node))
+        if (!present) continue
+        const visible = nodes.find((node) => this.isWorkspaceTourTargetVisible(node))
+        return visible || present
       }
       return null
     },
@@ -14742,37 +14984,44 @@ export default {
 
       if (!el) {
         this.workspaceTourRect = null
-        this.workspaceTourTooltipPos = {
-          top: Math.max(16, window.innerHeight * 0.22),
-          left: Math.max(16, (window.innerWidth - 320) / 2),
-          placement: 'center'
+        if (this.shouldDockWorkspaceTourTooltip()) this.dockWorkspaceTourTooltip()
+        else if (this.shouldParkWorkspaceTourTooltipOutside()) this.parkWorkspaceTourTooltipOutside()
+        else {
+          this.workspaceTourTooltipPos = {
+            top: Math.max(16, window.innerHeight * 0.22),
+            left: Math.max(16, (window.innerWidth - 320) / 2),
+            placement: 'center'
+          }
         }
         return
       }
 
-      const visibleNow = this.isWorkspaceTourTargetVisible(el)
-      if (allowScroll && !visibleNow) {
-        try {
-          el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
-        } catch { /* ignore */ }
+      if (this.shouldDockWorkspaceTourTooltip()) {
+        this.dockWorkspaceTourTooltip()
+      } else if (this.shouldParkWorkspaceTourTooltipOutside()) {
+        this.parkWorkspaceTourTooltipOutside(el.getBoundingClientRect())
+      }
+
+      const shouldScroll = allowScroll && (
+        step?.key !== 'welcome'
+        && (
+          step?.scroll === 'center'
+          || !this.isWorkspaceTourTargetFramed(el)
+        )
+      )
+      if (shouldScroll) {
+        this.scrollWorkspaceTourTargetIntoView(el)
       }
 
       window.setTimeout(() => {
         if (token !== this.workspaceTourMeasureToken || !this.workspaceTourActive) return
-        if (!this.isWorkspaceTourTargetVisible(el)) {
-          this.workspaceTourRect = null
-          return
+        if (shouldScroll && !this.isWorkspaceTourTargetFramed(el)) {
+          this.scrollWorkspaceTourTargetIntoView(el)
         }
         const rect = el.getBoundingClientRect()
         const pad = Number(step?.pad ?? 8)
         const radius = Number(step?.radius) || this.readWorkspaceTourTargetRadius(el, 16)
-        this.workspaceTourRect = {
-          top: Math.max(4, rect.top - pad),
-          left: Math.max(4, rect.left - pad),
-          width: Math.max(16, rect.width + pad * 2),
-          height: Math.max(16, rect.height + pad * 2),
-          radius,
-        }
+        this.workspaceTourRect = this.clampWorkspaceTourHole(rect, pad, radius, step)
         this.positionWorkspaceTourTooltip({
           top: this.workspaceTourRect.top,
           left: this.workspaceTourRect.left,
@@ -14781,15 +15030,37 @@ export default {
           bottom: this.workspaceTourRect.top + this.workspaceTourRect.height,
           right: this.workspaceTourRect.left + this.workspaceTourRect.width,
         }, step?.placement)
-      }, allowScroll ? 80 : 0)
+      }, shouldScroll ? 140 : 0)
     },
     positionWorkspaceTourTooltip(rect, preferred = '') {
+      if (preferred === 'dock-bottom' || this.shouldDockWorkspaceTourTooltip()) {
+        this.dockWorkspaceTourTooltip()
+        return
+      }
+      if (preferred === 'dock-outside' || this.shouldParkWorkspaceTourTooltipOutside()) {
+        this.parkWorkspaceTourTooltipOutside(rect)
+        return
+      }
       const tipEl = document.querySelector('.workspace-tour__tooltip')
-      const tipWidth = Math.min(tipEl?.offsetWidth || 340, window.innerWidth - 24)
-      const tipHeight = Math.max(tipEl?.offsetHeight || 0, 176)
-      const gap = 18
       const vw = window.innerWidth
       const vh = window.innerHeight
+      const isNarrow = vw <= 720
+      const sidePad = isNarrow ? 12 : 12
+      const tipWidth = Math.min(tipEl?.offsetWidth || 340, vw - sidePad * 2)
+      const tipHeight = Math.max(tipEl?.offsetHeight || 0, isNarrow ? 168 : 176)
+      const gap = isNarrow ? 12 : 18
+      if (isNarrow) {
+        const placeAbove = rect.top > vh * 0.42
+        const top = placeAbove
+          ? Math.max(sidePad, Math.min(rect.top - tipHeight - gap, vh - tipHeight - sidePad))
+          : Math.min(vh - tipHeight - sidePad, rect.bottom + gap)
+        this.workspaceTourTooltipPos = {
+          top,
+          left: sidePad,
+          placement: placeAbove ? 'top' : 'bottom',
+        }
+        return
+      }
       const candidates = []
       const push = (placement, top, left) => {
         const next = {
@@ -14883,7 +15154,7 @@ export default {
         this.measureWorkspaceTourTarget()
         return
       }
-      if (['results', 'plan'].includes(this.workspaceTourStep?.key) && this.showPostSessionModal) {
+      if (['results', 'weak', 'plan'].includes(this.workspaceTourStep?.key) && this.showPostSessionModal) {
         this.measureWorkspaceTourTarget()
       }
     },
@@ -14962,31 +15233,56 @@ export default {
       this.workspaceTourOpenedPostSession = true
       await this.$nextTick()
     },
-    ensureWorkspaceTourSampleAnalysis() {
-      const ayah = 2
+    buildWorkspaceTourSampleMistakes() {
       const sampleWords = [
-        { text: 'الْحَمْدُ', status: 'correct', ayahNumber: ayah, wordIndex: 0 },
-        { text: 'لِلَّهِ', status: 'correct', ayahNumber: ayah, wordIndex: 1 },
-        { text: 'رَبِّ', status: 'incorrect', ayahNumber: ayah, wordIndex: 2 },
-        { text: 'الْعَالَمِينَ', status: 'correct', ayahNumber: ayah, wordIndex: 3 },
+        { text: 'بِسْمِ', status: 'correct', ayahNumber: 1, wordIndex: 0 },
+        { text: 'ٱللَّهِ', status: 'incorrect', ayahNumber: 1, wordIndex: 1 },
+        { text: 'ٱلرَّحْمَٰنِ', status: 'correct', ayahNumber: 1, wordIndex: 2 },
+        { text: 'ٱلرَّحِيمِ', status: 'partial', ayahNumber: 1, wordIndex: 3 },
+        { text: 'ٱلْحَمْدُ', status: 'correct', ayahNumber: 2, wordIndex: 0 },
+        { text: 'لِلَّهِ', status: 'correct', ayahNumber: 2, wordIndex: 1 },
+        { text: 'رَبِّ', status: 'incorrect', ayahNumber: 2, wordIndex: 2 },
+        { text: 'ٱلْعَٰلَمِينَ', status: 'partial', ayahNumber: 2, wordIndex: 3 },
+        { text: 'ٱلرَّحْمَٰنِ', status: 'correct', ayahNumber: 3, wordIndex: 0 },
+        { text: 'ٱلرَّحِيمِ', status: 'incorrect', ayahNumber: 3, wordIndex: 1 },
       ]
-      this.practiceFocusWeakWords = [{
-        text: 'رَبِّ',
-        ayahNumber: ayah,
-        status: 'incorrect',
-        reason: 'pronunciation',
-        wordIndex: 2,
-      }]
+      const weakWords = sampleWords
+        .filter((word) => word.status === 'incorrect' || word.status === 'partial')
+        .map((word) => ({
+          text: word.text,
+          ayahNumber: word.ayahNumber,
+          status: word.status,
+          reason: word.status === 'partial' ? 'hesitation' : 'pronunciation',
+          wordIndex: word.wordIndex,
+        }))
+      return {
+        sampleWords,
+        weakWords,
+        weakAyahs: [1, 2, 3],
+        accuracyPercent: 50,
+      }
+    },
+    ensureWorkspaceTourSampleAnalysis() {
+      const { sampleWords, weakWords, weakAyahs, accuracyPercent } = this.buildWorkspaceTourSampleMistakes()
+      this.practiceFocusWeakWords = weakWords
+      this.aiReciteFinalPlan = {
+        outcome: 'mixed',
+        weakAyahs,
+        weakWords,
+        why: this.t('memorisation.workspaceTour.steps.weak.body'),
+      }
       this.postSessionAiReviewDetails = this.buildPostSessionAiReviewDetails('mixed', {
-        weak_ayahs: [ayah],
-        missed_words: 1,
-        accuracy_percent: 75,
-        focus: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
+        weak_ayahs: weakAyahs,
+        missed_words: weakWords.filter((word) => word.status === 'incorrect').length,
+        accuracy_percent: accuracyPercent,
+        focus: 'ٱللَّهِ · رَبِّ · ٱلرَّحِيمِ',
+        transcript: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
       }, {
         wordStatuses: sampleWords,
-        accuracyScore: 75,
-        weakAyahs: [ayah],
-        mistakeBreakdown: { incorrect: 1, missing: 0, partial: 0 },
+        accuracyScore: accuracyPercent,
+        weakAyahs,
+        transcript: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+        mistakeBreakdown: { incorrect: 3, missing: 0, partial: 2 },
       })
       this.postSessionAiFeedback = this.postSessionAiReviewDetails?.summaryLine
         || this.t('memorisation.workspaceTour.steps.results.body')
@@ -14995,15 +15291,41 @@ export default {
     ensureWorkspaceTourSamplePlan() {
       this.ensureWorkspaceTourSampleAnalysis()
       const snapshot = this.buildWorkspaceTourSampleSnapshot()
-      const recommendation = buildLocalFallbackRecommendation(snapshot) || {}
+      const { weakWords, weakAyahs } = this.buildWorkspaceTourSampleMistakes()
       this.postSessionRecommendation = {
-        ...recommendation,
+        type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+        session_mode: 'revision',
+        range_kind: 'revision',
+        surah: {
+          id: snapshot.chapterId,
+          name: snapshot.chapterName,
+          translated_name: snapshot.chapterName,
+        },
+        ayah_range: {
+          from: snapshot.rangeStart,
+          to: snapshot.rangeEnd,
+          count: Math.max(1, snapshot.rangeEnd - snapshot.rangeStart + 1),
+        },
+        reason_code: 'needs_more_practice',
+        reason: this.t('memorisation.workspaceTour.steps.plan.body'),
+        requires_confirmation: false,
         settings: {
-          ...(recommendation.settings || {}),
           reciter: 'ar.alafasy',
           repetitions: 2,
+          technique: 'talqin',
+          playback_speed: 0.75,
+          practice_scope: PRACTICE_SCOPE.WEAK_AREAS,
+          practice_weak_words_only: true,
+          practice_weak_words: weakWords,
+        },
+        ai_assessment: {
+          result: 'mixed',
+          weak_ayahs: weakAyahs,
+          weak_words: weakWords,
         },
       }
+      this.postSessionSimpleReason = this.t('memorisation.workspaceTour.steps.plan.body')
+      this.postSessionPracticeScopeOverride = PRACTICE_SCOPE.WEAK_AREAS
       this.postSessionRecommendationStatus = 'ready'
       this.postSessionViewState = 'recommendation_ready'
       this.workspaceTourPreviewOwned = true
@@ -15036,7 +15358,7 @@ export default {
         this.postSessionAiReciteActive = false
       }
       await this.ensureWorkspaceTourSessionPreview()
-      this.ensureWorkspaceTourSampleAnalysis()
+      this.ensureWorkspaceTourSamplePlan()
       await this.$nextTick()
     },
     async ensureWorkspaceTourPlanPreview() {
@@ -15061,7 +15383,43 @@ export default {
       }
       this.workspaceTourPreviewOwned = false
       this.workspaceTourOpenedPostSession = false
-      void this.restoreWorkspaceTourPracticePreview()
+      void this.commitWorkspaceTourFocusedReview()
+    },
+    async commitWorkspaceTourFocusedReview() {
+      this.workspaceTourConfigSnapshot = null
+      this.workspaceTourFreshStartPending = true
+      this.sessionPaused = false
+      this.sessionCompleted = false
+      this.sessionEndedEarly = false
+      this.backendUnfinishedSession = false
+      this.backendSessionSnapshot = null
+      this.returningUserChoicePending = false
+      this.welcomeBackWorkspaceHidden = false
+      this.showWelcomeBackModal = false
+      this.clearContinueSessionQuietly?.()
+      this.clearActiveSessionSnapshot?.()
+      if (this.mutqinState?.sessionState) {
+        this.mutqinState.sessionState.active = false
+        this.mutqinState.sessionState.paused = false
+        this.mutqinState.sessionState.completed = false
+      }
+      if (this.centralSession) {
+        this.centralSession.sessionStatus = 'idle'
+        this.centralSession.sessionStartedAt = null
+      }
+      const preview = this.buildWorkspaceTourPracticeConfig()
+      this.chapterId = preview.chapterId
+      this.rangeStart = preview.rangeStart
+      this.rangeEnd = preview.rangeEnd
+      this.reciterId = preview.reciterId
+      this.repetitionsPerStep = preview.repetitionsPerStep
+      this.selectedLoopCount = preview.selectedLoopCount
+      if (preview.readingViewMode) this.readingViewMode = preview.readingViewMode
+      this.persistUiState()
+      this.persistCentralSessionState()
+      try {
+        await this.loadChapter(this.currentMode)
+      } catch { /* workspace still shows the focused review range */ }
     },
     collapseTesterGuide() {},
     expandTesterGuide() {},
@@ -15391,7 +15749,11 @@ export default {
         })
         this.postSessionRecommendationStatus = 'ready'
       }
-      this.showPostSessionConfetti = true
+      this.showPostSessionConfetti = !(
+        this.workspaceTourActive
+        || this.workspaceTourPreviewOwned
+        || this.onboardingSampleSessionActive
+      )
       this.showPostSessionModal = true
       this.postSessionActionsUnlocked = true
       this.showTools = false
@@ -15475,6 +15837,8 @@ export default {
           }
         } else if (this.postSessionRecommendationStatus === 'ready' && this.postSessionRecommendation) {
           // Already finalised with the completion response — keep stable.
+        } else if (this.workspaceTourActive || this.workspaceTourPreviewOwned) {
+          this.ensureWorkspaceTourSamplePlan()
         } else {
           this.loadPostSessionRecommendation()
         }
@@ -15699,6 +16063,10 @@ export default {
       }
     },
     async loadPostSessionRecommendation() {
+      if (this.workspaceTourActive || this.workspaceTourPreviewOwned) {
+        this.ensureWorkspaceTourSamplePlan()
+        return
+      }
       const requestId = ++this.postSessionRecommendationRequestId
       this.postSessionRecommendationStatus = 'loading'
       this.postSessionRecommendationError = ''
@@ -30360,6 +30728,18 @@ export default {
       this.startingFreshSessionSelection = false
     },
 
+    revealRestoredLastPlace() {
+      this.dismissWelcomeBackAfterContinue()
+      this.closePostSessionChoice()
+      this._pendingPostSessionChoiceRestore = null
+      this.flowStep = 'learn'
+      this.showTools = false
+      this.queueSessionWorkspaceScrollReason(SESSION_WORKSPACE_SCROLL_REASON.DASHBOARD_RETURN)
+      this.$nextTick(() => {
+        this.scrollToWorkspaceMain?.()
+      })
+    },
+
     revealLoadedPreviousSession() {
       // Continue must never auto-open the tools offcanvas.
       this.dismissWelcomeBackAfterContinue()
@@ -30461,6 +30841,9 @@ export default {
           } catch (e) { /* keep local candidates */ }
         }
         this.syncWelcomeBackResumeFromBackend()
+        if (!this.backendUnfinishedSession && !this.continueSessionPayload) {
+          await this.restoreContinueFromLastPosition()
+        }
 
         let payload = this.resolveWelcomeBackContinuePayload(localCandidates, { preferredSessionId })
         if (payload?.config?.chapterId) {
@@ -30484,10 +30867,15 @@ export default {
           payload,
           loaded: loadedRange,
         })
+        const lastPlaceOnly = !!(payload?.fromLastPosition && !this.backendUnfinishedSession)
 
         // Fast path: previous session is already loaded behind the welcome gate.
         if (canFastPath) {
           this.restoreWorkspaceToContinuePayload(payload)
+          if (lastPlaceOnly) {
+            this.revealRestoredLastPlace()
+            return
+          }
           this.revealLoadedPreviousSession()
           this.queueBackendResumeAfterWelcomeContinue(payload)
           return
@@ -30559,6 +30947,10 @@ export default {
           throw new Error('continue restored without verses')
         }
 
+        if (lastPlaceOnly) {
+          this.revealRestoredLastPlace()
+          return
+        }
         this.revealLoadedPreviousSession()
         this.queueBackendResumeAfterWelcomeContinue(payload)
       } catch (error) {
@@ -30636,6 +31028,11 @@ export default {
       window.location.assign(this.isAdmin ? this.adminDashboardUrl : this.learnerDashboardUrl)
     },
     handleHeaderSessionAction() {
+      if (this.workspaceTourFreshStartPending) {
+        this.startingFreshSessionSelection = false
+        this.startSessionWithCountdown()
+        return
+      }
       if (this.headerSessionActionDisabled) {
         this.resetStuckSessionLifecycleControls()
         if (this.headerSessionActionDisabled) return
@@ -33829,7 +34226,7 @@ export default {
       }
       const firstEntry = this.queue?.[0]
       if (firstEntry) {
-        this.preloadQueueEntryAudio(firstEntry, { playerVisible: true })
+        this.preloadQueueEntryAudio(firstEntry, { playerVisible: false })
       }
     },
 
@@ -34759,6 +35156,12 @@ export default {
         this.tab = 'tools'
       } else {
         this.tab = tabName
+      }
+
+      if (this.workspaceTourActive) {
+        this.syncWorkspaceTourFromControlsTab(this.tab)
+        this.$nextTick(() => this.measureWorkspaceTourTarget({ allowScroll: false }))
+        return
       }
 
       // Force re-render if needed
@@ -36760,13 +37163,13 @@ export default {
         return
       }
 
-      if (!verse.audio) {
+      const audioUrl = this.ensureVerseAudioUrl(verse)
+      if (!audioUrl) {
         this.showBanner(this.t('toasts.audioNotAvailableForVerse', { number: verse.number }), 'info', 2000)
         this.playRequestLocked = false
         return
       }
-
-      const audioUrl = this.normalizeAudioUrl(verse.audio)
+      if (verse.audio !== audioUrl) verse.audio = audioUrl
       this.manualOnlyPlayback = !!options.manualOnly
       const currentSrc = this.audioElement?.currentSrc ? this.normalizeAudioUrl(this.audioElement.currentSrc) : ''
       const isSameSource = !!currentSrc && currentSrc === audioUrl
@@ -36825,9 +37228,11 @@ export default {
           try { this.audioElement.load() } catch { }
         }
       }
-      this.playerVisible = true
       this.playerDismissed = false
       this.playerCompact = this.isMobileViewport() ? true : false
+      // Reveal before play() — countdown autoplay is often blocked, and the
+      // dock must still be there so the learner can tap Play.
+      this.playerVisible = true
 
       try {
         await this.waitForAudioElementReady(this.audioElement)
@@ -36865,6 +37270,7 @@ export default {
           return
         }
         this.isPlaying = true
+        this.playerVisible = true
         this.incrementVersePlayCount(verse.key)
         this.markPlaybackStart()
         this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
@@ -36947,7 +37353,15 @@ export default {
         this.playQueueEntry(this.activeQueueEntry, { force: true, queueIndex: this.queueIndex })
         return
       }
-      if (!this.audioElement?.src) return
+      const src = String(this.audioElement?.src || this.audioElement?.getAttribute?.('src') || '').trim()
+      const hasSrc = !!src && src !== 'about:blank' && !src.startsWith('data:')
+      if (!hasSrc) {
+        const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
+        if (entry) {
+          this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+        }
+        return
+      }
 
       if (this.audioElement.paused) {
         const safeSpeed = this.normalizePlaybackSpeed(this.speed)
@@ -37140,7 +37554,11 @@ export default {
       try {
         const cached = this.getCachedVerses(mode, targetConfig)
         if (cached?.verses?.length) {
-          let resolvedVerses = cached.verses.map(verse => this.sanitizeVerseDisplayText(verse))
+          let resolvedVerses = cached.verses.map((verse) => {
+            const clean = this.sanitizeVerseDisplayText(verse)
+            const audio = this.ensureVerseAudioUrl(clean)
+            return audio && clean.audio !== audio ? { ...clean, audio } : clean
+          })
           if (this.showWordByWord && !versesHaveWordMeanings(resolvedVerses)) {
             const wbwByNumber = await getChapterWordByWordMeanings(chapterId, rangeStart, rangeEnd)
             if (requestId !== this.verseRequestId) return
@@ -37786,6 +38204,30 @@ export default {
         : (secondary?.url || secondary?.audio || secondary?.src || '')
       const fallback = ayah.audioUrl || ayah.audio_url || ayah.url || ''
       return this.normalizeAudioUrl(direct || nested || secondaryUrl || fallback || '')
+    },
+    resolveGlobalAyahNumber(verse = {}) {
+      const global = Number(verse.globalNumber)
+      if (Number.isFinite(global) && global > 0) return global
+      const chapterId = Number(verse.chapterId || this.chapterId || 0)
+      const ayah = Number(verse.numberInSurah || verse.number || 0)
+      if (!chapterId || !ayah) return ayah
+      if (chapterId === 1) return ayah
+      let offset = 0
+      for (let i = 1; i < chapterId; i += 1) offset += Number(surahAyahCount(i) || 0)
+      return offset + ayah
+    },
+    ensureVerseAudioUrl(verse = {}) {
+      const resolved = this.resolveAyahAudioUrl(verse)
+      if (resolved) return resolved
+      return this.buildFallbackAyahAudioUrl(this.resolveGlobalAyahNumber(verse))
+    },
+    ensureLiveSessionAudioAttached() {
+      const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
+      const verse = entry?.verse || entry || this.activeVerseRef
+      const url = this.ensureVerseAudioUrl(verse)
+      if (!url || !verse) return false
+      if (verse.audio !== url) verse.audio = url
+      return this.preloadQueueEntryAudio(entry || { verse }, { playerVisible: true })
     },
     buildFallbackAyahAudioUrl(globalAyahNumber) {
       const n = Number(globalAyahNumber)
@@ -39832,7 +40274,6 @@ export default {
         this.segmentPlaybackKind = ''
         this.stopWordHighlighting()
         this.setActiveVerse(targetVerse.key, { scroll: false })
-        this.playerVisible = true
 
         if (currentSrc !== verseAudioUrl) {
           this.audioElement.pause()
@@ -39873,6 +40314,7 @@ export default {
         this.updateWordHighlight(targetVerse.key, targetIndex)
         await this.audioElement.play()
         this.isPlaying = true
+        this.playerVisible = true
         this.markPlaybackStart()
       } catch (error) {
         console.error('Word playback failed:', error)

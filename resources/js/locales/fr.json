@@ -1656,42 +1656,57 @@
         },
         "controls": {
           "title": "Ouvrir les contrôles",
-          "body": "Ici : configuration, outils de pratique et sessions enregistrées. Touchez-le, ou appuyez sur Suivant.",
+          "body": "Ici : configuration, outils de pratique et sessions enregistrées.",
           "waitHint": ""
         },
         "setup": {
-          "title": "Choisir vos ayahs",
-          "body": "Choisissez une sourate et une courte plage (Al-Fatiha 1–3 est idéal). Tout le reste reste atténué.",
+          "title": "Configuration",
+          "body": "Choisissez ici la sourate et la plage. La revue ciblée commence à Al-Fatiha 1–3, Alafasy, 2 répétitions.",
+          "waitHint": ""
+        },
+        "practice": {
+          "title": "Outils de pratique",
+          "body": "Focus, Flou et Talqin sont ici. Utilisez un outil à la fois en écoutant et en répétant.",
+          "waitHint": ""
+        },
+        "saved": {
+          "title": "Ensembles enregistrés",
+          "body": "Les ensembles sauvegardés reviennent ici. Ouvrez-en un, ou gardez la revue ciblée actuelle.",
           "waitHint": ""
         },
         "start": {
           "title": "Démarrer la session",
-          "body": "Appuyez sur Commencer un nouvel ensemble lorsque la plage convient. Vous pratiquerez ensuite dans l’espace de travail.",
-          "waitHint": "Touchez Commencer un nouvel ensemble dans le contrôle mis en avant."
+          "body": "Ceci lance la revue ciblée : Al-Fatiha 1–3, Alafasy, 2 répétitions.",
+          "waitHint": ""
         },
         "session": {
           "title": "Pratiquer, puis terminer",
-          "body": "Utilisez les ayahs et les outils ici. Quand vous êtes prêt, touchez Terminer la session, ou Suivant pour voir la suite.",
-          "waitHint": "Démarrez d’abord la session. Terminer la session s’allumera ici."
+          "body": "Al-Fatiha 1–3 reste sur la page. Écoutez et répétez ici pendant une session.",
+          "waitHint": ""
         },
         "ai": {
           "title": "Vérifier avec la récitation IA",
-          "body": "Appuyez sur Enregistrer quand vous êtes prêt. Le contrôle vous attend — il ne se termine pas tout seul.",
+          "body": "Voici le contrôle de récitation IA. Il écoute et marque chaque mot. Il ne se termine pas tout seul.",
           "waitHint": ""
         },
         "results": {
           "title": "Voir les mots justes et faux",
-          "body": "Le vert a été reconnu. Un mot mis en avant a encore besoin d’attention. Cet exemple montre l’analyse après un contrôle.",
+          "body": "Le vert a été reconnu. Plusieurs mots mis en avant ont encore besoin d’attention. Cet exemple montre l’analyse après un contrôle.",
+          "waitHint": ""
+        },
+        "weak": {
+          "title": "Zones faibles",
+          "body": "Ces ayahs et mots demandent plus de soin. Mutqin s’en sert pour former les plans suivants.",
           "waitHint": ""
         },
         "plan": {
-          "title": "Suivre votre recommandation",
-          "body": "Mutqin transforme l’analyse en plan suivant. Cet exemple garde Al-Fatiha 1–3, Alafasy, 2 répétitions.",
+          "title": "Plans recommandés",
+          "body": "Deux plans suivent ce contrôle : pratiquer les ayahs faibles, ou réviser Al-Fatiha 1–3 avec Alafasy à 2 répétitions.",
           "waitHint": ""
         },
         "dashboard": {
           "title": "Voir le progrès",
-          "body": "Voici le tableau de bord : séries, couverture et muraja’ah. Retour pour revenir, ou Terminé pour finir.",
+          "body": "Voici le tableau de bord : séries, couverture et muraja’ah.",
           "waitHint": ""
         }
       }
@@ -1731,7 +1746,7 @@
         "practice": {
           "title": "Utiliser les outils de mémorisation",
           "stepLabel": "Outils",
-          "body": "Focus, Flou et Talqin aident à écouter et répéter. Touchez un outil pour l’aperçu.",
+          "body": "Focus, Flou et Talqin aident à écouter et répéter.",
           "hint": "Commencez avec un seul outil. Ajoutez-en plus tard.",
           "points": [
             "Focus garde l’attention sur l’ayah active",

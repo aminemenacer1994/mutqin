@@ -38,6 +38,7 @@
       v-if="workspaceTourActive"
       class="workspace-tour"
       data-workspace-tour
+      :data-theme="theme"
       role="dialog"
       aria-modal="true"
       :aria-label="workspaceTourStepCopy.title"
@@ -55,6 +56,8 @@
         :class="{ 'is-ready': !!workspaceTourRect }"
         :style="workspaceTourHoleStyle"
         aria-hidden="true"
+        @click.prevent
+        @pointerdown.prevent
       ></div>
 
       <div
@@ -64,7 +67,7 @@
       >
         <iframe
           class="workspace-tour__dashboard-frame"
-          :src="testerGuideDashboardUrl"
+          :src="workspaceTourDashboardUrl"
           title="Dashboard"
         ></iframe>
       </div>
@@ -109,13 +112,6 @@
               : t('memorisation.workspaceTour.next') }}
           </button>
         </div>
-        <p
-          v-if="workspaceTourStepCopy.waitHint"
-          class="workspace-tour__wait"
-          role="status"
-        >
-          {{ workspaceTourStepCopy.waitHint }}
-        </p>
       </div>
     </aside>
     </Teleport>
@@ -264,6 +260,7 @@
         <section
           v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
+          data-tour="workspace-welcome"
           data-session-scroll-target
           :class="{
             collapsed: mainCardCollapsed,
@@ -273,7 +270,7 @@
           :data-reading-mode="readingViewMode"
           :aria-label="t('memorisation.a11y.sessionOverview')"
         >
-        <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }" data-tour="workspace-welcome">
+        <div class="workspace-shell-head" :class="{ 'is-idle': showSessionOverviewIdleActions }">
           <template v-if="hasVerses || isPostSessionChoiceVisible">
           <div class="workspace-shell-head-toolbar">
           <div class="workspace-shell-copy">
@@ -1159,7 +1156,12 @@
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
             </button>
           </div>
-          <div v-if="shouldShowOffcanvasTabs" class="tools-tabs" role="tablist" :aria-label="t('memorisation.a11y.controlsTabs')">
+          <div
+            v-if="shouldShowOffcanvasTabs"
+            class="tools-tabs"
+            role="tablist"
+            :aria-label="t('memorisation.a11y.controlsTabs')"
+          >
             <button role="tab" :aria-selected="tab === 'tools' ? 'true' : 'false'" :class="{ active: tab === 'tools' }"
               data-tour="setup-tab"
               @click.prevent="setActiveTab('tools')" :title="t('memorisation.a11y.setupTab')" type="button">
@@ -1171,6 +1173,7 @@
               <i class="bi bi-stars"></i> {{ t('memorisation.practice') }}
             </button>
             <button role="tab" :aria-selected="tab === 'saved' ? 'true' : 'false'" :class="{ active: tab === 'saved' }"
+              data-tour="saved-tab"
               @click.prevent="setActiveTab('saved')" :title="t('memorisation.a11y.savedSessions')" type="button">
               <i class="bi bi-clock-history"></i> {{ t('memorisation.saved') }}
             </button>
@@ -1389,7 +1392,7 @@
           </div>
 
           <!-- TECHNIQUES TAB -->
-          <div v-if="tab === 'techniques'" class="sheet">
+          <div v-if="tab === 'techniques'" class="sheet" data-tour="practice-sheet">
             <div class="technique-group-copy technique-group-beginner">
               <span class="technique-group-kicker">{{ t('memorisation.practiceTools.beginner') }}</span>
               <p>{{ t('memorisation.practiceTools.beginnerDesc') }}</p>
@@ -1761,7 +1764,7 @@
           </div>
 
           <!-- SAVED TAB -->
-          <div v-if="tab === 'saved'" class="sheet saved-sheet saved-sheet--beige">
+          <div v-if="tab === 'saved'" class="sheet saved-sheet saved-sheet--beige" data-tour="saved-sheet">
             <header class="saved-sheet__header">
               <div class="saved-sheet__header-copy">
                 <h3 class="saved-sheet__title">{{ t('memorisation.saved_sessions') }}</h3>
@@ -3187,7 +3190,7 @@
       >
         <div class="post-session-simple__dialog post-session-simple__dialog--lg">
           <div
-            v-if="showPostSessionConfetti"
+            v-if="showPostSessionConfetti && !workspaceTourActive && !onboardingSampleSessionActive"
             class="onboarding-post-session-confetti-layer"
             :class="{ 'onboarding-post-session-confetti-layer--sample': onboardingSampleSessionActive }"
             aria-hidden="true"
@@ -3271,6 +3274,8 @@
                 :data-presentation="postSessionAiPresentationMode"
                 :data-outcome="postSessionAiReviewDetails?.outcome || 'mixed'"
                 :aria-label="t('memorisation.a11y.aiMemorisationResult')"
+                data-testid="post-session-section-1"
+                data-tour="ai-results"
               >
                 <div
                   class="post-session-simple__outcome post-session-simple__outcome--hero"
@@ -3318,7 +3323,6 @@
                   v-if="postSessionInfoArchitecture.mainFocus.explanation || postSessionFocusAyahRows.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"
                   data-testid="post-session-main-focus"
-                  data-tour="ai-results"
                 >
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
                     {{ postSessionInfoArchitecture.mainFocus.title }}
@@ -3382,6 +3386,7 @@
                   v-if="postSessionInfoArchitecture.weakAreas.items.length"
                   class="post-session-simple__weak-spots post-session-simple__support-block"
                   data-testid="post-session-weak-spots"
+                  data-tour="weak-areas"
                   :aria-label="postSessionInfoArchitecture.weakAreas.title"
                 >
                   <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
@@ -3626,6 +3631,7 @@
                     v-if="postSessionPlanWhyText || postSessionPlanRevisionEmphasis"
                     class="post-session-simple__why post-session-simple__why--plan"
                     data-testid="post-session-plan-why"
+                    data-tour="rec-why"
                   >
                     <p
                       v-if="postSessionPlanWhyText"
@@ -3703,6 +3709,7 @@
                     v-if="postSessionInfoArchitecture.revisionOptions.visible"
                     class="post-session-simple__scope-picker post-session-simple__support-block"
                     data-testid="post-session-scope-picker"
+                    data-tour="rec-plans"
                     role="radiogroup"
                     :aria-label="postSessionInfoArchitecture.revisionOptions.lead"
                   >
@@ -3950,7 +3957,7 @@
           </div>
 
         <div
-          v-if="playerVisible"
+          v-if="playerVisible || isSessionLive"
           class="player-bar"
           :class="{ compact: playerCompact, 'is-playing': isPlaying, 'has-talqin-strip': talqinRecitationTurnActive }"
           role="region"

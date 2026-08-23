@@ -94,6 +94,19 @@ describe('audio playback guards', () => {
     )
   })
 
+  it('attaches fallback ayah audio when Play is pressed without a source', () => {
+    assert.match(memorisationSource, /ensureVerseAudioUrl\(verse/)
+    assert.match(memorisationSource, /ensureLiveSessionAudioAttached\(\)/)
+    assert.match(
+      memorisationSource,
+      /togglePlay\(\) \{[\s\S]*hasSrc[\s\S]*playQueueEntry\(entry, \{ force: true/,
+    )
+    assert.match(
+      memorisationSource,
+      /async playVerse\([\s\S]*const audioUrl = this\.ensureVerseAudioUrl\(verse\)/,
+    )
+  })
+
   it('recovers main-audio waiting/stalled freezes', () => {
     assert.match(memorisationSource, /addEventListener\('waiting',\s*this\.audioWaiting\)/)
     assert.match(memorisationSource, /addEventListener\('stalled',\s*this\.audioStalled\)/)

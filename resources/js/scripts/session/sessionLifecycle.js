@@ -277,6 +277,57 @@ export function deriveMediaStatus(mediaState = {}) {
   return MEDIA_STATUS.IDLE
 }
 
+/**
+ * Reconstruct a continue payload from /continue last-position.
+ * Used when there is no unfinished backend sitting, but the learner still
+ * has a saved place in the mushaf to return to.
+ */
+export function buildContinuePayloadFromLastPosition(position) {
+  if (!position || typeof position !== 'object') return null
+  const meta = position.metadata && typeof position.metadata === 'object'
+    ? position.metadata
+    : {}
+  const nestedConfig = meta.config && typeof meta.config === 'object' ? meta.config : {}
+  const chapterId = Number(
+    nestedConfig.chapterId
+    || meta.chapterId
+    || position.surah_number
+    || 0
+  )
+  if (chapterId <= 0) return null
+  const rangeStart = Math.max(
+    1,
+    Number(nestedConfig.rangeStart || meta.rangeStart || position.ayah_number || 1)
+  )
+  const rangeEnd = Math.max(
+    rangeStart,
+    Number(nestedConfig.rangeEnd || meta.rangeEnd || rangeStart)
+  )
+  const ayahNumber = Number(position.ayah_number || nestedConfig.rangeStart || rangeStart || 0)
+  const activeVerseKey = meta.activeVerseKey
+    || meta.activeKey
+    || (ayahNumber > 0 ? `${chapterId}:${ayahNumber}` : null)
+  const base = isResumableSessionPayload(meta)
+    ? { ...meta }
+    : {}
+  return {
+    ...base,
+    timestamp: Number(base.timestamp || Date.parse(position.last_opened_at || '') || Date.now()),
+    mode: base.mode || meta.mode || 'advanced',
+    activeKey: base.activeKey || activeVerseKey,
+    activeVerseKey: base.activeVerseKey || activeVerseKey,
+    queueIndex: Math.max(0, Number(base.queueIndex ?? meta.queueIndex ?? position.last_step ?? 0)),
+    fromLastPosition: true,
+    config: {
+      ...(base.config || {}),
+      ...nestedConfig,
+      chapterId,
+      rangeStart: Number((base.config || {}).rangeStart || rangeStart),
+      rangeEnd: Number((base.config || {}).rangeEnd || rangeEnd),
+    },
+  }
+}
+
 export function isResumableSessionPayload(payload, options = {}) {
   if (!payload || typeof payload !== 'object') return false
   if (options.isSample || payload.isOnboardingSample || payload.sessionKind === 'sample') return false
@@ -1484,6 +1535,7 @@ export default {
   canSkipHydrateForContinue,
   resolvePreferredSessionResumeGate,
   pickContinuePayloadForResume,
+  buildContinuePayloadFromLastPosition,
   stashDashboardEntryIntent,
   readStashedDashboardEntryIntent,
   clearStashedDashboardEntryIntent,
