@@ -328,7 +328,8 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       { allowArticleMatch }
     )
     if (exactAheadIndex >= 0) {
-      // Soft mode: words jumped over are omitted (black), not a wrong substitution.
+      // Exact ahead match = skipped words. Always paint omissions + the matched word.
+      // Never attach the ahead hear as a false "incorrect" on the skipped slot.
       for (let skipIndex = cursor; skipIndex < exactAheadIndex; skipIndex += 1) {
         const skipUnit = targetUnits[skipIndex] || null
         statuses[skipIndex] = {
@@ -347,14 +348,6 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         }
       }
       firstBlockingIndex = cursor
-      if (strict && !options.advanceOnIncorrect) {
-        statuses[cursor] = {
-          ...classified,
-          note: `Expected ${displayWords[cursor] || targetWord} before ${heardWord.display || heardWord.word || 'this word'}.`,
-          outOfOrder: true
-        }
-        break
-      }
       const aheadUnit = targetUnits[exactAheadIndex] || null
       statuses[exactAheadIndex] = classifyWordMatch({
         displayText: displayWords[exactAheadIndex] || targetWords[exactAheadIndex] || '',
@@ -367,6 +360,10 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         ...matchThresholds,
       })
       cursor = exactAheadIndex + 1
+      // Stop-on-mistake modes still record the skip, then freeze further painting.
+      if (strict && !options.advanceOnIncorrect) {
+        break
+      }
       continue
     }
 
@@ -1040,7 +1037,10 @@ export function isLikelyOffTargetTransientNoise(
   const confidence = Number.isFinite(Number(heardWord?.confidence))
     ? Number(heardWord.confidence)
     : 1
-  if (confidence >= 0.54) return false
+  // Clear spoken tokens must reach the matcher as wrong/partial — never vanish as "noise".
+  if (confidence >= 0.42) return false
+  const normalized = normalizeArabicForRecitation(word)
+  if (normalized.length >= 3 && confidence >= 0.28) return false
 
   const targets = Array.isArray(targetWords) ? targetWords : []
   if (!targets.length) return false
@@ -1059,7 +1059,8 @@ export function isLikelyOffTargetTransientNoise(
     if (similarity >= partialFloor) return false
   }
 
-  return bestSimilarity < 0.22 && confidence < 0.46
+  // Only ultra-low-confidence, off-target blips (coughs / mic ticks).
+  return bestSimilarity < 0.18 && confidence < 0.34
 }
 
 /**
@@ -1102,6 +1103,7 @@ function softenArabicAsrForms(text = '') {
   return String(text || '')
     .replace(/[قك]/g, 'ك')
     .replace(/[طت]/g, 'ت')
+    // Keep ض/ظ/ذ soft for ASR; do not fold د — ض↔د is a real learner mistake.
     .replace(/[ظضذ]/g, 'ذ')
     .replace(/[غخ]/g, 'غ')
     .replace(/[صسث]/g, 'س')
@@ -1294,9 +1296,7 @@ function classifyWordMatch({
     && !exactOrArticle
     && Math.min(expected.length, actual.length) <= 2
     && expected.length === actual.length
-  // Hard same-length single-letter substitutions (الضالين↔الدالين) are learner
-  // mistakes. Single insertions/deletions often come from ASR truncation and
-  // stay amber via the soft similarity cap instead.
+  // Same-length hard single-letter swaps (non-ASR soft) are learner mistakes.
   const hardSingleEdit = expected
     && actual
     && !exactOrArticle

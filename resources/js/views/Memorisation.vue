@@ -3453,7 +3453,7 @@
                 </div>
 
                 <div
-                  v-if="postSessionInfoArchitecture.mainFocus.explanation || postSessionFocusHighlightParts.length"
+                  v-if="postSessionInfoArchitecture.mainFocus.explanation || postSessionFocusAyahRows.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"
                   data-testid="post-session-main-focus"
                 >
@@ -3466,37 +3466,53 @@
                     data-testid="post-session-why"
                     data-section="main-focus-explanation"
                   >{{ postSessionInfoArchitecture.mainFocus.explanation }}</p>
-                  <button
-                    v-if="postSessionFocusHighlightParts.length"
-                    type="button"
-                    class="post-session-simple__quran-focus"
-                    :aria-label="t('memorisation.postSession.recommendation.playFocusPhrase') || 'Play focus phrase'"
-                    :disabled="postSessionActionsBusy"
-                    @click="onPostSessionFocusPhraseActivate(postSessionFocusActivatePayload)"
+                  <ul
+                    v-if="postSessionFocusAyahRows.length"
+                    class="post-session-simple__focus-ayah-list"
+                    data-testid="post-session-focus-ayah-list"
                   >
-                    <span
-                      class="post-session-simple__quran-focus-text"
-                      dir="rtl"
-                      lang="ar"
+                    <li
+                      v-for="row in postSessionFocusAyahRows"
+                      :key="`focus-ayah-${row.ayah || row.ayahLabel}`"
+                      class="post-session-simple__focus-ayah-item"
                     >
-                      <span
-                        v-for="(part, idx) in postSessionFocusHighlightParts"
-                        :key="`focus-part-${idx}`"
-                        class="post-session-simple__quran-token"
-                        :class="{
-                          'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
-                          'is-incorrect': part.tone === 'incorrect',
-                          'is-partial': part.tone === 'partial',
-                          'is-omitted': part.tone === 'omitted',
-                          'is-corrected': part.tone === 'ok' && !part.weak,
-                        }"
-                        :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
+                      <p
+                        v-if="row.ayahLabel"
+                        class="post-session-simple__focus-ayah-label"
+                      >{{ row.ayahLabel }}</p>
+                      <button
+                        v-if="row.parts.length"
+                        type="button"
+                        class="post-session-simple__quran-focus"
+                        :aria-label="t('memorisation.postSession.recommendation.playFocusPhrase') || 'Play focus phrase'"
+                        :disabled="postSessionActionsBusy"
+                        @click="onPostSessionFocusPhraseActivate(row.activatePayload)"
                       >
-                        <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
-                      </span>
-                    </span>
-                    <i class="bi bi-play-circle post-session-simple__focus-phrase-icon" aria-hidden="true"></i>
-                  </button>
+                        <span
+                          class="post-session-simple__quran-focus-text"
+                          dir="rtl"
+                          lang="ar"
+                        >
+                          <span
+                            v-for="(part, idx) in row.parts"
+                            :key="`focus-${row.ayah}-${idx}`"
+                            class="post-session-simple__quran-token"
+                            :class="{
+                              'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
+                              'is-incorrect': part.tone === 'incorrect',
+                              'is-partial': part.tone === 'partial',
+                              'is-omitted': part.tone === 'omitted',
+                              'is-corrected': part.tone === 'ok' && !part.weak,
+                            }"
+                            :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
+                          >
+                            <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
+                          </span>
+                        </span>
+                        <i class="bi bi-play-circle post-session-simple__focus-phrase-icon" aria-hidden="true"></i>
+                      </button>
+                    </li>
+                  </ul>
                 </div>
 
                 <section
@@ -3702,20 +3718,28 @@
                     >
                       {{ postSessionInfoArchitecture.whatToPractiseNext.targetLabel }}
                     </p>
-                    <div
-                      v-if="postSessionInfoArchitecture.whatToPractiseNext.pills.length"
-                      class="post-session-simple__pills post-session-simple__pills--next"
-                      data-testid="post-session-next-pills"
+                    <p
+                      v-if="postSessionInfoArchitecture.whatToPractiseNext.lead"
+                      class="post-session-simple__next-lead"
+                      data-testid="post-session-next-lead"
                     >
-                      <span
-                        v-for="pill in postSessionInfoArchitecture.whatToPractiseNext.pills"
-                        :key="`next-pill-${pill.key}`"
-                        class="post-session-simple__pill"
-                        :class="`post-session-simple__pill--${pill.key}`"
+                      {{ postSessionInfoArchitecture.whatToPractiseNext.lead }}
+                    </p>
+                    <dl
+                      v-if="(postSessionInfoArchitecture.whatToPractiseNext.metaRows || []).length"
+                      class="post-session-simple__next-meta"
+                      data-testid="post-session-next-meta"
+                    >
+                      <div
+                        v-for="row in postSessionInfoArchitecture.whatToPractiseNext.metaRows"
+                        :key="`next-meta-${row.key}`"
+                        class="post-session-simple__next-meta-row"
+                        :class="`post-session-simple__next-meta-row--${row.key}`"
                       >
-                        {{ pill.label }}
-                      </span>
-                    </div>
+                        <dt>{{ row.label }}</dt>
+                        <dd>{{ row.value }}</dd>
+                      </div>
+                    </dl>
                   </div>
 
                   <div
@@ -3837,14 +3861,6 @@
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    class="post-session-simple__adjust-link"
-                    :disabled="postSessionActionsBusy"
-                    @click="openPostSessionAdjustPlan"
-                  >
-                    {{ t('memorisation.postSession.recommendation.adjustPlan') }}
-                  </button>
                 </template>
                 <p
                   v-if="postSessionRecommendationStatus === 'error' && postSessionRecommendationError"
@@ -4540,9 +4556,6 @@
         </section>
 
         <div class="memory-check-actions memory-check-actions--result">
-          <button type="button" class="memory-check-btn memory-check-btn--ghost" @click="adjustAdaptivePlan">
-            {{ t('memorisation.postSession.recommendation.adjustPlan') }}
-          </button>
           <button type="button" class="memory-check-btn memory-check-btn--primary" @click="acceptAdaptiveRecommendation">
             {{ t('memorisation.postSession.adaptiveCheck.continueToPlan') }}
           </button>

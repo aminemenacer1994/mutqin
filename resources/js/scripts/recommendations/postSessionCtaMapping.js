@@ -394,45 +394,51 @@ export function mapPostSessionCtas(state, options = {}) {
   switch (state) {
     case POST_SESSION_CTA_STATES.NEEDS_PRACTICE:
       return [
-        cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
-        returnToWorkspace,
         Number(options.weakAyahNumber) > 0
-          ? cta('review_weak_ayah', 'ghost', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
+          ? cta('review_weak_ayah', 'primary', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
             labelParams: { ayah: options.weakAyahNumber },
           })
-          : cta('check_again', 'ghost', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
+          : cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
+        Number(options.weakAyahNumber) > 0
+          ? cta('revise_focus_phrase', 'secondary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+          : cta('check_again', 'secondary', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
+        returnToWorkspace,
       ]
 
     case POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED:
       return [
-        cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
-        returnToWorkspace,
         Number(options.weakAyahNumber) > 0
-          ? cta('review_weak_ayah', 'ghost', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
+          ? cta('review_weak_ayah', 'primary', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
             labelParams: { ayah: options.weakAyahNumber },
           })
-          : cta('continue_next_range', 'ghost', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+          : cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
+        Number(options.weakAyahNumber) > 0
+          ? cta('revise_focus_phrase', 'secondary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+          : cta('continue_next_range', 'secondary', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
             labelParams: nextSessionLabelParams,
           }),
+        returnToWorkspace,
       ]
 
     case POST_SESSION_CTA_STATES.MOSTLY_SECURE:
       // Consolidate the weak ayah first (prominent), then allow progression.
       return [
         Number(options.weakAyahNumber) > 0
-          ? cta('review_weak_ayah', 'reinforce', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
+          ? cta('review_weak_ayah', 'primary', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
             labelParams: { ayah: options.weakAyahNumber },
           })
           : cta(
             'review_once_more',
-            'reinforce',
+            'primary',
             options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
             POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE,
           ),
+        Number(options.weakAyahNumber) > 0
+          ? cta('revise_focus_phrase', 'secondary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+          : cta('continue_next_range', 'secondary', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
+            labelParams: nextSessionLabelParams,
+          }),
         returnToWorkspace,
-        cta('continue_next_range', 'ghost', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
-          labelParams: nextSessionLabelParams,
-        }),
       ]
 
     case POST_SESSION_CTA_STATES.REVISION_COMPLETED:

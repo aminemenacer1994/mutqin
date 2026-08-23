@@ -78,20 +78,20 @@ export function buildMainFocusExplanation(input = {}) {
   const weakCount = Number(input.weakAyahCount || 0)
   const outcome = String(input.outcome || '').toLowerCase().trim()
 
-  if (primary > 0) {
-    return translate(
-      t,
-      'mainFocusExplanationAyah',
-      `Strengthen Ayah ${primary} in this set.`,
-      { ayah: primary },
-    )
-  }
   if (weakCount > 1) {
     return translate(
       t,
       'mainFocusExplanationWeakAreas',
       'Strengthen the weak ayahs identified in this set.',
       { count: weakCount },
+    )
+  }
+  if (primary > 0) {
+    return translate(
+      t,
+      'mainFocusExplanationAyah',
+      `Strengthen Ayah ${primary} in this set.`,
+      { ayah: primary },
     )
   }
   if (outcome === 'strong') {
@@ -300,7 +300,23 @@ export function buildPostSessionInfoArchitecture(input = {}) {
   const nextRange = input.nextRange && typeof input.nextRange === 'object'
     ? input.nextRange
     : null
-  const setLabel = nextRange ? formatRecommendationSetLabel(nextRange, t) : ''
+  const setLabel = (() => {
+    if (Array.isArray(input.weakAyahNumbers) && input.weakAyahNumbers.length > 1) {
+      const nums = input.weakAyahNumbers.map(Number).filter((n) => n > 0)
+      if (nums.length > 1) {
+        const sorted = [...new Set(nums)].sort((a, b) => a - b)
+        const contiguous = sorted.every((n, i) => i === 0 || n === sorted[i - 1] + 1)
+        if (contiguous) return formatRecommendationSetLabel({ from: sorted[0], to: sorted[sorted.length - 1] }, t)
+        return translate(
+          t,
+          'weakAyahsList',
+          `Ayahs ${sorted.join(', ')}`,
+          { list: sorted.join(', ') },
+        ) || `Ayahs ${sorted.join(', ')}`
+      }
+    }
+    return nextRange ? formatRecommendationSetLabel(nextRange, t) : ''
+  })()
   const surahName = String(input.surahName || '').trim()
   const surahArabicName = String(input.surahArabicName || '').trim()
   const surahSetDisplay = formatRecommendationSurahSet(surahName, nextRange || {}, t)
@@ -310,6 +326,29 @@ export function buildPostSessionInfoArchitecture(input = {}) {
     setLabel ? { key: 'set', label: setLabel } : null,
     methodTitle ? { key: 'method', label: methodTitle } : null,
     timeLabel ? { key: 'time', label: timeLabel } : null,
+  ].filter(Boolean)
+  const metaRows = [
+    setLabel
+      ? {
+        key: 'set',
+        label: translate(t, 'nextMetaRange', 'Focus'),
+        value: setLabel,
+      }
+      : null,
+    methodTitle
+      ? {
+        key: 'method',
+        label: translate(t, 'nextMetaMethod', 'Technique'),
+        value: methodTitle,
+      }
+      : null,
+    timeLabel
+      ? {
+        key: 'time',
+        label: translate(t, 'nextMetaTime', 'Time'),
+        value: timeLabel,
+      }
+      : null,
   ].filter(Boolean)
 
   const successFlow = input.successFlow && typeof input.successFlow === 'object'
@@ -364,7 +403,13 @@ export function buildPostSessionInfoArchitecture(input = {}) {
       methodTitle,
       timeLabel,
       pills,
+      metaRows,
       why: String(input.planWhy || '').trim(),
+      lead: translate(
+        t,
+        'whatNextLead',
+        'Based on this session, practise this next set with the technique below.',
+      ),
     },
   }
 }

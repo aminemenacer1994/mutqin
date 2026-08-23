@@ -225,19 +225,19 @@ class SessionLifecycleService
     /**
      * Pause an unfinished session without completing it.
      * Paused sessions remain unfinished and resumable.
+     * Idempotent: when nothing is unfinished, returns null (caller treats as idle success).
      *
      * @param  array<string, mixed>  $attributes
      */
-    public function pause(User $user, array $attributes = []): UserSession
+    public function pause(User $user, array $attributes = []): ?UserSession
     {
         $attributes = $this->normaliseIdempotencyAttributes($attributes, 'pause');
 
         return DB::transaction(function () use ($user, $attributes) {
             $session = $this->lockTargetUnfinished($user, $attributes['session_id'] ?? null);
             if (! $session) {
-                throw ValidationException::withMessages([
-                    'session' => ['No unfinished session is available to pause.'],
-                ]);
+                // Soft-exit / double-pause often hit this after end — do not 422.
+                return null;
             }
 
             $status = UserSessionStatus::tryFromMixed($session->status);

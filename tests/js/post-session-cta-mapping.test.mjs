@@ -126,15 +126,20 @@ import {
   const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
   assert.deepEqual(needsPractice.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
   ])
 
   const needsPracticeWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
     weakAyahNumber: 4,
+    preferStartFocusedReview: true,
   })
-  assert.equal(needsPracticeWeak[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
-  assert.equal(needsPracticeWeak[2].labelKey, 'reviewAyahOnce')
+  assert.equal(needsPracticeWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(needsPracticeWeak[0].labelKey, 'reviewAyahOnce')
+  assert.equal(needsPracticeWeak[0].variant, 'primary')
+  assert.equal(needsPracticeWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(needsPracticeWeak[1].labelKey, 'startFocusedReview')
+  assert.equal(needsPracticeWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
   const reviseRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
     preferReviseRange: true,
@@ -208,11 +213,12 @@ import {
     nextRangeStart: 3,
     nextRangeEnd: 5,
     weakAyahNumber: 2,
+    preferStartFocusedReview: true,
   })
   assert.deepEqual(mostlySecure.map((b) => [b.variant, b.action, b.labelKey]), [
-    ['reinforce', POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, 'reviewAyahOnce'],
+    ['primary', POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, 'reviewAyahOnce'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'startFocusedReview'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToAyahs'],
   ])
 
   const mostlySecureNoWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.MOSTLY_SECURE, {
@@ -220,20 +226,24 @@ import {
     nextRangeEnd: 5,
   })
   assert.equal(mostlySecureNoWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE)
-  assert.equal(mostlySecureNoWeak[0].variant, 'reinforce')
-  assert.equal(mostlySecureNoWeak[2].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
+  assert.equal(mostlySecureNoWeak[0].variant, 'primary')
+  assert.equal(mostlySecureNoWeak[1].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
+  assert.equal(mostlySecureNoWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
   const reviewRecommended = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
   assert.deepEqual(reviewRecommended.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
   ])
 
   const reviewRecommendedWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED, {
     weakAyahNumber: 7,
+    preferStartFocusedReview: true,
   })
-  assert.equal(reviewRecommendedWeak[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(reviewRecommendedWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(reviewRecommendedWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(reviewRecommendedWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
   // Every recommendation state: one lead CTA, Return to workspace as secondary
   // (except the soft AI-check nudge, whose secondary is Continue without testing).
@@ -248,22 +258,15 @@ import {
       || b.variant === 'reinforce'
     )).length
     assert.equal(leadCount, 1, `${state} must keep a single recommended primary/success CTA`)
-    assert.equal(
-      buttons.filter((b) => b.variant === 'secondary').length,
-      1,
-      `${state} must expose a single secondary CTA`,
-    )
     if (state === POST_SESSION_CTA_STATES.MEMORISATION_CHECK_NUDGE) {
       assert.equal(buttons[1].action, POST_SESSION_CTA_ACTIONS.CONTINUE_WITHOUT_TESTING)
       assert.equal(buttons[0].action, POST_SESSION_CTA_ACTIONS.CHECK_MEMORISATION)
       continue
     }
-    assert.equal(
-      buttons[1].action,
-      POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
-      `${state} secondary action must be return_to_workspace`,
+    assert.ok(
+      buttons.some((b) => b.action === POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE),
+      `${state} must expose return_to_workspace`,
     )
-    assert.equal(buttons[1].labelKey, 'returnToWorkspace')
     assert.notEqual(buttons[0].labelKey, 'continue')
     assert.notEqual(buttons[0].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
     // Lead CTA must never use a vague/unmapped label.

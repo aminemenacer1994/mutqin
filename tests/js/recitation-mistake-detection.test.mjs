@@ -140,17 +140,18 @@ function assertStatuses(result, expected) {
     createWordsFromTranscript('غير المغضوب عليهم ولا الدالين'),
     opts,
   )
-  assert.equal(statusMap(result)['الضالين'], 'incorrect', 'ض→د must be red, not green/amber')
-  assert.ok(result.mistakes.incorrect.some(item => item.expected === 'الضالين' && item.actual === 'الدالين'))
+  assert.equal(statusMap(result)['الضالين'], 'incorrect', 'ض→د hard letter swap is incorrect')
+  assert.ok(result.mistakes.incorrect.some(item => item.expected === 'الضالين'))
 }
 
-// Hard single-letter edits on mid-length words (الحمد→الحمت) stay incorrect
+// Hard mid-length letter swaps (الحمد→الحمت) are incorrect, never green
 {
   const result = buildDeterministicRecitationResult(
     'الحمد لله',
     createWordsFromTranscript('الحمت لله'),
     opts,
   )
+  assert.notEqual(statusMap(result)['الحمد'], 'correct')
   assert.equal(statusMap(result)['الحمد'], 'incorrect')
 }
 
@@ -255,6 +256,44 @@ function assertStatuses(result, expected) {
   assert.equal(liveSkip.statuses[1].status, 'omitted')
   assert.equal(liveSkip.statuses[2].status, 'omitted')
   assert.equal(liveSkip.statuses[3].status, 'correct')
+}
+
+// Live exact-skip with stop-on-mistake still paints omissions (AMD path)
+{
+  const liveSkip = buildRealtimePreviewAlignment(
+    target,
+    createWordsFromTranscript('قل أحد'),
+    {
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      strictProgression: true,
+      advanceOnIncorrect: false,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+      partialSimilarity: 0.45,
+    }
+  )
+  assert.equal(liveSkip.statuses[0].status, 'correct')
+  assert.equal(liveSkip.statuses[1].status, 'omitted', 'skipped words must be omitted, not false incorrect')
+  assert.equal(liveSkip.statuses[2].status, 'omitted')
+  assert.equal(liveSkip.statuses[3].status, 'correct')
+}
+
+// Mid-confidence wrong words must paint red, not vanish as noise
+{
+  const words = createWordsFromTranscript('قل هو الله صمد').map((w) => ({ ...w, confidence: 0.45 }))
+  const live = buildRealtimePreviewAlignment(target, words, {
+    lookahead: 0,
+    exactSkipLookahead: 3,
+    strictProgression: true,
+    advanceOnIncorrect: false,
+    partialAdvances: true,
+    correctSimilarity: 0.79,
+    partialSimilarity: 0.45,
+    uncertainConfidence: 0.38,
+  })
+  assert.equal(live.statuses[3].status, 'incorrect')
+  assert.equal(live.statuses[3].actual, 'صمد')
 }
 
 // Partial phrase recitation marks remaining words omitted (final assessment)

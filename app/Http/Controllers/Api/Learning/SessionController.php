@@ -200,6 +200,15 @@ class SessionController extends Controller
         ]);
 
         $session = $this->lifecycle->pause($request->user(), $data);
+        if (! $session) {
+            return response()->json([
+                'saved' => true,
+                'session' => null,
+                'unfinished' => false,
+                'already_idle' => true,
+            ]);
+        }
+
         $this->authorize('update', $session);
         DashboardService::forgetForUser($request->user());
 

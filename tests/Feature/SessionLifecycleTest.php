@@ -728,7 +728,9 @@ class SessionLifecycleTest extends TestCase
 
         $this->actingAs($user)
             ->postJson('/api/session/pause', [])
-            ->assertStatus(422);
+            ->assertOk()
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('already_idle', true);
 
         $this->actingAs($user)
             ->postJson('/api/session/resume', [])

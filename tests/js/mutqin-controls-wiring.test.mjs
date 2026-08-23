@@ -638,7 +638,6 @@ includesAll('session completion success flow', [
   /openPostSessionAdjustPlan/,
   /postSessionOffcanvasOpen/,
   /ps-quiz/,
-  /post-session-simple__adjust-link/,
   /keepPractisingFromExitModal/,
   /continueSessionFromExitModal/,
   /showCountdown\(/,

@@ -320,6 +320,7 @@ class QuranAlignmentService
     {
         $value = preg_replace('/[قك]/u', 'ك', $text) ?? $text;
         $value = preg_replace('/[طت]/u', 'ت', $value) ?? $value;
+        // Keep ض/ظ/ذ soft for ASR; do not fold د — ض↔د is a real learner mistake.
         $value = preg_replace('/[ظضذ]/u', 'ذ', $value) ?? $value;
         $value = preg_replace('/[غخ]/u', 'غ', $value) ?? $value;
 
@@ -571,7 +572,6 @@ class QuranAlignmentService
             && mb_strlen($expected) === mb_strlen($actual)
             && $this->isSingleEditMismatch($expected, $actual)
             && ! $this->differsOnlyBySoftAsrLetters($expected, $actual);
-
         if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && ! $hardSingleEdit && $similarity >= 0.79))) {
             return array_merge($base, [
                 'status' => 'correct',

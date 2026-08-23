@@ -72,7 +72,7 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   })
 
   assert.equal(ia.mainFocus.title, 'Main focus')
-  assert.match(ia.mainFocus.explanation, /Ayah 2/)
+  assert.match(ia.mainFocus.explanation, /weak ayahs/i)
   assert.equal(ia.weakAreas.title, 'Weak areas')
   assert.equal(ia.weakAreas.items.length, 2)
   assert.equal(ia.weakAreas.items[0].ayahLabel, 'Ayah 2')
@@ -86,12 +86,14 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.equal(ia.whatToPractiseNext.methodTitle, 'Talqin')
   assert.equal(ia.whatToPractiseNext.surahArabicName, 'الإخلاص')
   assert.deepEqual(
-    ia.whatToPractiseNext.pills.map((pill) => pill.key),
-    ['set', 'method', 'time'],
+    ia.whatToPractiseNext.metaRows.map((row) => [row.key, row.label, row.value]),
+    [
+      ['set', 'Focus', 'Ayahs 1–4'],
+      ['method', 'Technique', 'Talqin'],
+      ['time', 'Time', 'About 4 minutes'],
+    ],
   )
-  assert.equal(ia.whatToPractiseNext.pills[0].label, 'Ayahs 1–4')
-  assert.equal(ia.whatToPractiseNext.pills[1].label, 'Talqin')
-  assert.equal(ia.whatToPractiseNext.pills[2].label, 'About 4 minutes')
+  assert.match(ia.whatToPractiseNext.lead, /Based on this session/i)
 }
 
 // Success sessions get technique-led next steps instead of the stale scope picker
@@ -174,8 +176,9 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.match(js, /POST_SESSION_CTA_STATES\.STRONG/)
   assert.match(js, /POST_SESSION_CTA_STATES\.MOSTLY_SECURE/)
   assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext\.surahArabicName/)
-  assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext\.pills/)
-  assert.match(completionModal, /data-testid="post-session-next-pills"/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext\.metaRows/)
+  assert.match(completionModal, /data-testid="post-session-next-meta"/)
+  assert.match(completionModal, /data-testid="post-session-next-lead"/)
   assert.match(completionModal, /data-testid="post-session-next-target"/)
   assert.match(completionModal, /data-section="main-focus-explanation"/)
   // Footer actions remain action verbs, not descriptive section copy

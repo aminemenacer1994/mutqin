@@ -379,7 +379,7 @@ const t = (key, params = {}) => {
   assert.ok(summaryIdx > 0)
   assert.ok(focusIdx > summaryIdx, 'focus / recommendation appears after summary')
   assert.ok(detailsIdx > focusIdx, 'details disclosure appears after focus')
-  assert.match(slice, /postSessionInlineRecommendationRows|postSessionGuidedMethodRows|postSessionFocusHighlightParts/)
+  assert.match(slice, /postSessionInlineRecommendationRows|postSessionGuidedMethodRows|postSessionFocusAyahRows/)
   assert.match(slice, /viewDetails/)
   // Colour meter / metrics only inside expanded details body.
   const meterIdx = slice.indexOf('post-session-simple__check-meter')

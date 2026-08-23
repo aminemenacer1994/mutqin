@@ -95,7 +95,8 @@ function t(key, params = {}) {
   assert.match(completionModal, /postSessionOutcomeHeadline/)
   assert.match(completionModal, /data-testid="post-session-main-focus"/)
   assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus/)
-  assert.match(completionModal, /postSessionFocusHighlightParts/)
+  assert.match(completionModal, /postSessionFocusAyahRows/)
+  assert.match(completionModal, /post-session-focus-ayah-list/)
   assert.match(completionModal, /is-weak/)
   assert.match(completionModal, /data-testid="post-session-why"/)
   assert.match(completionModal, /main-focus-explanation|postSessionInfoArchitecture\.mainFocus\.explanation/)
@@ -106,7 +107,8 @@ function t(key, params = {}) {
   assert.match(completionModal, /data-testid="post-session-scope-picker"/)
   assert.match(completionModal, /data-testid="post-session-practice-method"/)
   assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext|postSessionSimpleActionLabel|recommendedPlan|Recommended plan/i)
-  assert.match(completionModal, /data-testid="post-session-next-pills"/)
+  assert.match(completionModal, /data-testid="post-session-next-meta"/)
+  assert.match(completionModal, /data-testid="post-session-next-lead"/)
   assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext\.surahArabicName/)
   assert.match(completionModal, /data-testid="post-session-details"/)
   assert.match(completionModal, /data-testid="post-session-previous-attempt"/)
@@ -182,10 +184,10 @@ function t(key, params = {}) {
 
 // Missing data: focus / why / previous attempt optional
 {
-  assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus\.explanation \|\| postSessionFocusHighlightParts\.length/)
+  assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus\.explanation \|\| postSessionFocusAyahRows\.length/)
   assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus\.explanation/)
   assert.match(completionModal, /v-if="postSessionPreviousAttemptNote"/)
-  assert.match(js, /postSessionFocusHighlightParts\(\)/)
+  assert.match(js, /postSessionFocusAyahRows\(\)/)
   assert.match(js, /postSessionInfoArchitecture\(\)/)
   assert.match(js, /postSessionPracticeScopeLabel\(\)/)
   assert.match(js, /postSessionPreviousAttemptNote\(\)/)
@@ -193,13 +195,13 @@ function t(key, params = {}) {
   assert.match(js, /persistedForLater|dashboard and session history/)
 }
 
-// CTA hierarchy: primary recommended → secondary Return to workspace → tertiary alternate
+// CTA hierarchy: Repeat weak ayah / focused review primary → secondary alternate → Back to mushaf
 {
   const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
   assert.deepEqual(needsPractice.map((b) => [b.variant, b.action]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE],
+    ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN],
   ])
   assert.match(completionModal, /data-testid="post-session-actions"/)
   assert.match(completionModal, /postSessionCtaButtons/)
@@ -240,7 +242,7 @@ function t(key, params = {}) {
   )
   assert.match(en, /"reviseFocusPhrase":\s*"Review"/)
   assert.match(en, /"continueToNextRange":\s*"Continue"/)
-  assert.match(en, /"continueToAyahs":\s*"Continue \(\{start\}–\{end\}\)"/)
+  assert.match(en, /"continueToAyahs":\s*"Continue \(\{start\}, \{end\}\)"/)
   assert.match(en, /"repeatThisSession":\s*"Repeat session"/)
   assert.match(en, /"returnToWorkspace":\s*"Back to mushaf"/)
   assert.match(en, /"retest":\s*"Check again"/)
@@ -282,9 +284,9 @@ function t(key, params = {}) {
     nextRangeEnd: 7,
   })
   assert.equal(mostlySecureWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
-  assert.equal(mostlySecureWeak[0].variant, 'reinforce')
-  assert.equal(mostlySecureWeak[2].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
-  assert.equal(mostlySecureWeak[2].labelKey, 'continueToAyahs')
+  assert.equal(mostlySecureWeak[0].variant, 'primary')
+  assert.equal(mostlySecureWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(mostlySecureWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
   const strongRepeatLead = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, { isRepeat: true })[0]
   assert.equal(strongRepeatLead.labelKey, 'repeatThisSession')
 }
@@ -407,8 +409,8 @@ function t(key, params = {}) {
   assert.match(js, /Collapse duplicated .then continue/)
   assert.match(js, /scopeFocusMetaOne/)
   assert.match(en, /"scopeFocusMetaOne":\s*"\{count\} focus item · about \{minutes\} min"/)
-  assert.match(en, /"phraseNeedsAttentionNext":\s*"Review it once, then continue to Ayahs \{start\}–\{end\}\."/)
-  assert.match(en, /"evidenceReviewThenContinue":\s*"Review the weak phrase once, then continue to Ayahs \{start\}–\{end\}\."/)
+  assert.match(en, /"phraseNeedsAttentionNext":\s*"Review it once, then continue to Ayahs \{start\}, \{end\}\."/)
+  assert.match(en, /"evidenceReviewThenContinue":\s*"Review the weak phrase once, then continue to Ayahs \{start\}, \{end\}\."/)
 
   function stripAiDashes(text = '') {
     const RANGE_TOKEN = '\uE000'

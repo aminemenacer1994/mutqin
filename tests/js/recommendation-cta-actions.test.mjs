@@ -66,16 +66,20 @@ const en = readFileSync(new URL('../../resources/js/locales/en.json', import.met
     weakAyahNumber: 5,
     nextRangeStart: 6,
     nextRangeEnd: 8,
+    preferStartFocusedReview: true,
   })
   assert.equal(mostly[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
-  assert.equal(mostly[0].variant, 'reinforce')
-  assert.equal(mostly[2].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
+  assert.equal(mostly[0].variant, 'primary')
+  assert.equal(mostly[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(mostly[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
   const review = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED, {
     weakAyahNumber: 5,
+    preferStartFocusedReview: true,
   })
-  assert.equal(review[0].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
-  assert.equal(review[2].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(review[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(review[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(review[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 }
 
 // Wiring contracts
@@ -105,8 +109,12 @@ const en = readFileSync(new URL('../../resources/js/locales/en.json', import.met
     preferStartFocusedReview: true,
     weakAyahNumber: 13,
   })
-  assert.equal(focusedCtas[0].labelKey, 'startFocusedReview')
-  assert.equal(focusedCtas[0].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(focusedCtas[0].labelKey, 'reviewAyahOnce')
+  assert.equal(focusedCtas[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(focusedCtas[0].variant, 'primary')
+  assert.equal(focusedCtas[1].labelKey, 'startFocusedReview')
+  assert.equal(focusedCtas[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(focusedCtas[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 }
 
 // Soft nudge: advance without AI check only

@@ -4603,6 +4603,7 @@ export default {
         understandingText: this.postSessionUnderstandingText || '',
         primaryWeakAyah,
         weakAyahRows: this.postSessionWeakSpotRows,
+        weakAyahNumbers: this.postSessionRevisionWeakAyahs,
         focusPhraseParts: this.postSessionFocusHighlightParts,
         focusAyahLabel: this.postSessionFocusHighlightMeta || '',
         surahName,
@@ -4972,132 +4973,53 @@ export default {
       return String(focus.ayahLabel || '').replace(/^Verse\b/i, 'Ayah')
     },
     postSessionFocusHighlightParts() {
-      if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
-      const focus = this.resolvePostSessionFocusPhrase?.() || null
-      const phrase = String(focus?.phrase || '').trim()
-      if (!phrase) return []
-      const tokens = phrase.split(/\s+/).filter(Boolean).slice(0, 12)
-      if (!tokens.length) return []
-
-      const toneRank = { omitted: 3, incorrect: 2, partial: 1 }
-      const markTone = (bag, index, tone) => {
-        if (!Number.isFinite(index) || index < 0 || index >= bag.length) return
-        const next = tone === 'omitted' || tone === 'partial' ? tone : 'incorrect'
-        const prev = bag[index]
-        if (!prev || (toneRank[next] || 0) >= (toneRank[prev] || 0)) bag[index] = next
-      }
-
-      const tonesByIndex = Array(tokens.length).fill(null)
-      const weakByNeedle = new Map()
-      const pushWeakText = (value, reason = 'pronunciation') => {
-        const text = this.normalizePracticeFocusWordText?.(value) || String(value || '').trim()
-        if (!text) return
-        const tone = reason === 'omission'
-          ? 'omitted'
-          : (reason === 'hesitation' ? 'partial' : 'incorrect')
-        const prev = weakByNeedle.get(text)
-        if (!prev || (toneRank[tone] || 0) >= (toneRank[prev] || 0)) weakByNeedle.set(text, tone)
-      }
-      const pushWeakWord = (word, reasonFallback = 'pronunciation') => {
-        if (!word || typeof word !== 'object') {
-          pushWeakText(word, reasonFallback)
-          return
-        }
-        if (focus?.ayahNumber && Number(word.ayahNumber || word.ayah_number)
-          && Number(word.ayahNumber || word.ayah_number) !== Number(focus.ayahNumber)) {
-          return
-        }
-        const status = String(
-          word.status || word.visualStatus || word.visual_status || word.severity || word.reason || '',
-        ).toLowerCase()
-        const isOmitted = ['omitted', 'omission', 'black', 'missing'].includes(status)
-          || reasonFallback === 'omission'
-        const isPartial = ['partial', 'minor_mistake', 'amber', 'hesitation', 'uncertain'].includes(status)
-          || reasonFallback === 'hesitation'
-        const isWrong = [
-          'incorrect', 'wrong', 'red',
-          'pronunciation', 'pending',
-        ].includes(status) || reasonFallback === 'pronunciation'
-        if (!isPartial && !isWrong && !isOmitted && !word.text && !word.word && !Number.isFinite(Number(word.wordIndex))) {
-          return
-        }
-        const reason = isOmitted ? 'omission' : (isPartial ? 'hesitation' : 'pronunciation')
-        pushWeakText(word.text || word.word || word.arabic || word.target_word || word.targetWord, reason)
-        const idx = Number(word.wordIndex ?? word.ayahWordIndex ?? word.ayah_word_index ?? word.index)
-        const phraseStart = Number(focus?.phraseStart || 0)
-        if (Number.isFinite(idx)) {
-          markTone(
-            tonesByIndex,
-            idx - phraseStart,
-            reason === 'omission' ? 'omitted' : (reason === 'hesitation' ? 'partial' : 'incorrect'),
-          )
-        }
-      }
-
-      const weakList = Array.isArray(this.postSessionRevisionWeakWords)
-        ? this.postSessionRevisionWeakWords
-        : []
-      weakList.forEach((word) => pushWeakWord(word, word.reason || 'pronunciation'))
-      if (focus?.weakWord) pushWeakWord(focus.weakWord, focus.weakWord.reason || 'pronunciation')
-      // Always mark the focus wordIndex even when text is empty / mismatched.
-      if (Number.isFinite(Number(focus?.wordIndex))) {
-        markTone(
-          tonesByIndex,
-          Number(focus.wordIndex) - Number(focus.phraseStart || 0),
-          focus?.weakWord?.reason === 'hesitation' ? 'partial' : 'incorrect',
-        )
-      }
-
-      const statuses = Array.isArray(this.recitationCheckResult?.wordStatuses)
-        ? this.recitationCheckResult.wordStatuses
-        : (Array.isArray(this.aiReciteFinalPlan?.wordStatuses) ? this.aiReciteFinalPlan.wordStatuses : [])
-      statuses.forEach((word) => {
-        const status = String(word.status || word.visualStatus || word.visual_status || '').toLowerCase()
-        if (![
-          'incorrect', 'wrong', 'omitted', 'omission', 'missing', 'partial', 'minor_mistake',
-          'uncertain', 'pending', 'red', 'black', 'amber',
-        ].includes(status)) return
-        const reason = (status === 'omitted' || status === 'omission' || status === 'black' || status === 'missing')
-          ? 'omission'
-          : ((status === 'partial' || status === 'minor_mistake' || status === 'amber' || status === 'uncertain')
-            ? 'hesitation'
-            : 'pronunciation')
-        pushWeakWord(word, reason)
-      })
-
-      const matched = tokens.map((text, index) => {
-        const needle = this.normalizePracticeFocusWordText?.(text) || text
-        const fromText = weakByNeedle.get(needle) || null
-        const fromIndex = tonesByIndex[index] || null
-        const tone = (toneRank[fromIndex] || 0) >= (toneRank[fromText] || 0)
-          ? (fromIndex || fromText)
-          : (fromText || fromIndex)
-        const resolvedTone = tone || 'ok'
-        const wordIndex = this.resolveGlobalRecitationWordIndex?.(focus, index) ?? -1
-        return {
-          text,
-          weak: !!tone,
-          tone: resolvedTone,
-          tokenIndex: index,
-          wordIndex,
-        }
-      })
-
-      if (!matched.some((part) => part.weak)) {
-        const ayahs = this.postSessionRevisionWeakAyahs || []
-        if (focus?.ayahNumber && ayahs.map(Number).includes(Number(focus.ayahNumber))) {
-          return tokens.map((text, index) => ({
-            text,
-            weak: true,
-            tone: 'incorrect',
-            tokenIndex: index,
-            wordIndex: this.resolveGlobalRecitationWordIndex?.(focus, index) ?? -1,
-          }))
-        }
-      }
-      return matched
+      const rows = this.postSessionFocusAyahRows
+      if (!rows.length) return []
+      return rows[0]?.parts || []
     },
-    postSessionGuidedMethodRows() {
+    /**
+     * One focus phrase row per weak ayah so Main focus mirrors Weak areas.
+     */
+    postSessionFocusAyahRows() {
+      if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
+      const ayahs = (Array.isArray(this.postSessionRevisionWeakAyahs)
+        ? this.postSessionRevisionWeakAyahs
+        : [])
+        .map(Number)
+        .filter((n) => Number.isFinite(n) && n > 0)
+      const unique = [...new Set(ayahs)]
+      if (!unique.length) {
+        const focus = this.resolvePostSessionFocusPhrase?.() || null
+        if (!focus?.phrase && !(focus?.ayahNumber > 0)) return []
+        const parts = this.buildPostSessionFocusPartsForAyah(focus.ayahNumber, focus)
+        if (!parts.length && !focus.ayahNumber) return []
+        return [{
+          ayah: Number(focus.ayahNumber || 0) || null,
+          ayahLabel: this.postSessionFocusHighlightMeta || '',
+          parts,
+          activatePayload: this.postSessionFocusActivatePayload,
+        }]
+      }
+      return unique.slice(0, 6).map((ayah) => {
+        const focus = this.resolvePostSessionFocusPhraseForAyah?.(ayah) || null
+        const parts = this.buildPostSessionFocusPartsForAyah(ayah, focus)
+        const ayahLabel = formatRecommendationAyahLabel(ayah, this.t?.bind?.(this))
+          || this.t('memorisation.postSession.recommendation.singleAyah', { ayah })
+          || `Ayah ${ayah}`
+        return {
+          ayah,
+          ayahLabel,
+          parts,
+          activatePayload: {
+            phrase: focus?.phrase || parts.map((p) => p.text).join(' '),
+            wordIndex: focus?.wordIndex ?? null,
+            ayahNumber: ayah,
+            verseKey: focus?.verseKey || '',
+          },
+        }
+      }).filter((row) => row.parts.length || row.ayah)
+    },
+        postSessionGuidedMethodRows() {
       if (!this.postSessionFocusHighlightParts.length) return []
       const reason = String(this.postSessionRecommendationReasonLine || '').toLowerCase()
       return (this.postSessionInlineRecommendationRows || [])
@@ -17217,6 +17139,199 @@ export default {
         weakWord: first,
         surahId: chapterId,
       }
+    },
+    resolvePostSessionFocusPhraseForAyah(ayahNumber) {
+      const ayah = Number(ayahNumber)
+      if (!(ayah > 0)) return this.resolvePostSessionFocusPhrase()
+      const plan = this.aiReciteFinalPlan || this.amdPracticePlan || null
+      const weakWords = normaliseWeakWordRecords(
+        Array.isArray(plan?.weakWords)
+          ? plan.weakWords
+          : (Array.isArray(plan?.weak_words)
+            ? plan.weak_words
+            : (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length
+              ? this.practiceFocusWeakWords
+              : (this.postSessionRecommendation?.settings?.practice_weak_words || []))),
+      )
+      const match = weakWords.find((word) => Number(word?.ayahNumber || word?.ayah || 0) === ayah)
+      if (!match) {
+        // Reuse resolver by temporarily preferring this ayah via a synthetic first word.
+        const primary = this.resolvePrimaryPostSessionWeakAyah?.()
+        if (primary === ayah) return this.resolvePostSessionFocusPhrase()
+      }
+      const chapterId = Number(
+        match?.surahId
+        || String(match?.verseKey || '').split(':')[0]
+        || this.postSessionSnapshot?.chapterId
+        || this.postSessionRecommendation?.surah?.id
+        || this.chapterId
+        || 0,
+      )
+      const verseKey = match?.verseKey || (chapterId ? `${chapterId}:${ayah}` : '')
+      const verse = (Array.isArray(this.verses) ? this.verses : []).find((v) => (
+        String(v.key) === String(verseKey)
+        || (Number(v.number) === ayah && (!chapterId || Number(v.surah || v.chapterId || 0) === chapterId || !v.surah))
+      ))
+      const canonical = verse ? (this.getCanonicalVerseForCheck?.(verse) || verse) : null
+      const arabicSource = canonical
+        ? (this.getPlainVerseArabicForCheck?.(canonical)
+          || this.cleanRecitationDisplayText?.(canonical.arabic || canonical.text || '')
+          || String(canonical.arabic || canonical.text || ''))
+        : ''
+      const tokens = arabicSource
+        ? (this.tokenizeRecitationDisplayWords?.(arabicSource)
+          || String(arabicSource).replace(/<[^>]+>/g, ' ').trim().split(/\s+/).filter(Boolean))
+        : []
+      const wordIndex = Number(match?.wordIndex)
+      let phraseStart = 0
+      let phrase = String(match?.phrase || match?.phraseText || match?.surroundingPhrase || '').trim()
+      if (!phrase && tokens.length) {
+        if (tokens.length <= 8) {
+          phrase = tokens.join(' ')
+          phraseStart = 0
+        } else if (Number.isFinite(wordIndex) && wordIndex >= 0 && wordIndex < tokens.length) {
+          phraseStart = Math.max(0, wordIndex - 2)
+          phrase = tokens.slice(phraseStart, Math.min(tokens.length, wordIndex + 3)).join(' ')
+        } else {
+          phrase = tokens.slice(0, 6).join(' ')
+        }
+      }
+      if (!phrase && match) phrase = String(match.text || match.word || '').trim()
+      return {
+        phrase,
+        phraseStart,
+        ayahNumber: ayah,
+        verseKey,
+        wordIndex: Number.isFinite(wordIndex) ? wordIndex : null,
+        ayahLabel: this.t('memorisation.postSession.coach.ayahLabel', { ayah }) || `Āyah ${ayah}`,
+        weakWord: match || null,
+        surahId: chapterId,
+      }
+    },
+    buildPostSessionFocusPartsForAyah(ayahNumber, focusInput = null) {
+      const focus = focusInput || this.resolvePostSessionFocusPhraseForAyah?.(ayahNumber) || null
+      const phrase = String(focus?.phrase || '').trim()
+      if (!phrase) return []
+      const tokens = phrase.split(/\s+/).filter(Boolean).slice(0, 12)
+      if (!tokens.length) return []
+      const ayah = Number(ayahNumber || focus?.ayahNumber || 0)
+
+      const toneRank = { omitted: 3, incorrect: 2, partial: 1 }
+      const markTone = (bag, index, tone) => {
+        if (!Number.isFinite(index) || index < 0 || index >= bag.length) return
+        const next = tone === 'omitted' || tone === 'partial' ? tone : 'incorrect'
+        const prev = bag[index]
+        if (!prev || (toneRank[next] || 0) >= (toneRank[prev] || 0)) bag[index] = next
+      }
+
+      const tonesByIndex = Array(tokens.length).fill(null)
+      const weakByNeedle = new Map()
+      const pushWeakText = (value, reason = 'pronunciation') => {
+        const text = this.normalizePracticeFocusWordText?.(value) || String(value || '').trim()
+        if (!text) return
+        const tone = reason === 'omission'
+          ? 'omitted'
+          : (reason === 'hesitation' ? 'partial' : 'incorrect')
+        const prev = weakByNeedle.get(text)
+        if (!prev || (toneRank[tone] || 0) >= (toneRank[prev] || 0)) weakByNeedle.set(text, tone)
+      }
+      const pushWeakWord = (word, reasonFallback = 'pronunciation') => {
+        if (!word || typeof word !== 'object') {
+          pushWeakText(word, reasonFallback)
+          return
+        }
+        const wordAyah = Number(word.ayahNumber || word.ayah_number || word.ayah || 0)
+        if (ayah > 0 && wordAyah > 0 && wordAyah !== ayah) return
+        const status = String(
+          word.status || word.visualStatus || word.visual_status || word.severity || word.reason || '',
+        ).toLowerCase()
+        const isOmitted = ['omitted', 'omission', 'black', 'missing'].includes(status)
+          || reasonFallback === 'omission'
+        const isPartial = ['partial', 'minor_mistake', 'amber', 'hesitation', 'uncertain'].includes(status)
+          || reasonFallback === 'hesitation'
+        const isWrong = ['incorrect', 'wrong', 'red', 'pronunciation'].includes(status)
+          || reasonFallback === 'pronunciation'
+        if (!isPartial && !isWrong && !isOmitted && !word.text && !word.word && !Number.isFinite(Number(word.wordIndex))) {
+          return
+        }
+        const reason = isOmitted ? 'omission' : (isPartial ? 'hesitation' : 'pronunciation')
+        pushWeakText(word.text || word.word || word.arabic || word.target_word || word.targetWord, reason)
+        const idx = Number(word.wordIndex ?? word.ayahWordIndex ?? word.ayah_word_index ?? word.index)
+        const phraseStart = Number(focus?.phraseStart || 0)
+        if (Number.isFinite(idx)) {
+          markTone(
+            tonesByIndex,
+            idx - phraseStart,
+            reason === 'omission' ? 'omitted' : (reason === 'hesitation' ? 'partial' : 'incorrect'),
+          )
+        }
+      }
+
+      const weakList = Array.isArray(this.postSessionRevisionWeakWords)
+        ? this.postSessionRevisionWeakWords
+        : []
+      weakList.forEach((word) => pushWeakWord(word, word.reason || 'pronunciation'))
+      if (focus?.weakWord) pushWeakWord(focus.weakWord, focus.weakWord.reason || 'hesitation')
+      // Prefer amber for the focus needle unless the word is a clear omission/wrong.
+      if (Number.isFinite(Number(focus?.wordIndex))) {
+        const focusReason = String(focus?.weakWord?.reason || focus?.weakWord?.status || '').toLowerCase()
+        const focusTone = ['omission', 'omitted', 'missing', 'black'].includes(focusReason)
+          ? 'omitted'
+          : (['incorrect', 'wrong', 'red', 'pronunciation'].includes(focusReason) ? 'incorrect' : 'partial')
+        markTone(
+          tonesByIndex,
+          Number(focus.wordIndex) - Number(focus.phraseStart || 0),
+          focusTone,
+        )
+      }
+
+      const statuses = Array.isArray(this.recitationCheckResult?.wordStatuses)
+        ? this.recitationCheckResult.wordStatuses
+        : (Array.isArray(this.aiReciteFinalPlan?.wordStatuses) ? this.aiReciteFinalPlan.wordStatuses : [])
+      statuses.forEach((word) => {
+        const status = String(word.status || word.visualStatus || word.visual_status || '').toLowerCase()
+        if (![
+          'incorrect', 'wrong', 'omitted', 'omission', 'missing', 'partial', 'minor_mistake',
+          'uncertain', 'pending', 'red', 'black', 'amber',
+        ].includes(status)) return
+        const reason = (status === 'omitted' || status === 'omission' || status === 'black' || status === 'missing')
+          ? 'omission'
+          : ((status === 'partial' || status === 'minor_mistake' || status === 'amber' || status === 'uncertain')
+            ? 'hesitation'
+            : 'pronunciation')
+        pushWeakWord(word, reason)
+      })
+
+      const matched = tokens.map((text, index) => {
+        const needle = this.normalizePracticeFocusWordText?.(text) || text
+        const fromText = weakByNeedle.get(needle) || null
+        const fromIndex = tonesByIndex[index] || null
+        const tone = (toneRank[fromIndex] || 0) >= (toneRank[fromText] || 0)
+          ? (fromIndex || fromText)
+          : (fromText || fromIndex)
+        return {
+          text,
+          weak: !!tone,
+          tone: tone || 'ok',
+          tokenIndex: index,
+          wordIndex: this.resolveGlobalRecitationWordIndex?.(focus, index) ?? -1,
+        }
+      })
+
+      if (!matched.some((part) => part.weak) && ayah > 0) {
+        // Mark only the known weak word needle as partial — never paint the whole ayah red.
+        const needle = this.normalizePracticeFocusWordText?.(
+          focus?.weakWord?.text || focus?.weakWord?.word || '',
+        )
+        if (needle) {
+          return matched.map((part) => {
+            const partNeedle = this.normalizePracticeFocusWordText?.(part.text) || part.text
+            if (partNeedle !== needle) return part
+            return { ...part, weak: true, tone: 'partial' }
+          })
+        }
+      }
+      return matched
     },
     resolvePostSessionMethodCopy(plan = null) {
       const approach = plan?.planDetail?.practiceApproach
@@ -34003,6 +34118,14 @@ export default {
               config: this.sessionConfig || this.mutqinState?.sessionState?.config || null,
             },
           })
+          if (pauseResult?.already_idle) {
+            // Server had nothing unfinished — local pause still stands for this sitting.
+            this.backendUnfinishedSession = !!this.backendSessionSnapshot?.id
+            this.sessionLifecycleError = null
+            this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+            if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
+            return true
+          }
           this.backendUnfinishedSession = true
           this.backendSessionSnapshot = {
             ...(this.backendSessionSnapshot || {}),

@@ -54726,6 +54726,9 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   align-items: baseline;
   gap: 0;
   padding: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
@@ -54737,10 +54740,10 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   -webkit-text-fill-color: #9f1239;
   font-weight: 650;
   text-decoration: none;
-  background: color-mix(in srgb, #dc2626 16%, #fff7f7);
-  border-radius: 0.28em;
-  padding-inline: 0.1em;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #b91c1c 50%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding-inline: 0;
   animation: none;
 }
 
@@ -54750,10 +54753,10 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   -webkit-text-fill-color: #9a3412;
   font-weight: 600;
   text-decoration: none;
-  background: color-mix(in srgb, #f59e0b 14%, #fffbeb);
-  border-radius: 0.28em;
-  padding-inline: 0.1em;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #d97706 42%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding-inline: 0;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-omitted {
@@ -54762,10 +54765,10 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   -webkit-text-fill-color: #111827;
   font-weight: 650;
   text-decoration: none;
-  background: color-mix(in srgb, #111827 10%, #f3f4f6);
-  border-radius: 0.28em;
-  padding-inline: 0.1em;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #111827 45%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  padding-inline: 0;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__beta-badge {
@@ -54817,8 +54820,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   --tajweed-colour: #15803d;
   color: #166534 !important;
   -webkit-text-fill-color: #166534;
-  background: color-mix(in srgb, #22c55e 14%, #f0fdf4);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #16a34a 40%, transparent);
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-block,
@@ -55528,7 +55531,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pills--next {
-  margin-top: 0.55rem;
+  display: none !important;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pill--set {
@@ -55736,17 +55739,74 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pills {
   display: flex;
   flex-wrap: wrap;
+  align-items: stretch;
   justify-content: flex-start;
+  gap: 0.45rem;
+  max-width: 36rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pills--next {
+  margin-top: 0.55rem;
+  display: none;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead {
+  margin: 0.45rem 0 0;
+  max-width: 36rem;
+  font-size: 0.9rem;
+  font-weight: 450;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--ps-ink) 72%, transparent);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta {
+  margin: 0.7rem 0 0;
+  padding: 0;
+  display: grid;
   gap: 0.4rem;
   max-width: 36rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.55rem 0.85rem;
+  margin: 0;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ps-line) 70%, transparent);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dt {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ps-muted);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dd {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 550;
+  line-height: 1.35;
+  color: var(--ps-ink);
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pill {
   display: inline-flex;
   align-items: center;
-  flex: 0 1 auto;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 2.15rem;
   max-width: 100%;
-  padding: 0.38rem 0.7rem;
+  padding: 0.42rem 0.75rem;
   border-radius: 999px;
   border: 1px solid var(--ps-line);
   background: color-mix(in srgb, var(--ps-card) 88%, #fff);
@@ -55754,22 +55814,36 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   font-size: 0.82rem;
   font-weight: 500;
   line-height: 1.3;
+  text-align: center;
   white-space: normal;
 }
 
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-link {
-  appearance: none;
-  display: inline-flex;
-  margin-top: 0.55rem;
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-list {
+  list-style: none;
+  margin: 0.55rem 0 0;
   padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ps-muted);
+  display: grid;
+  gap: 0.65rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-item {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-label {
+  margin: 0;
   font-size: 0.78rem;
-  font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 0.14em;
-  cursor: pointer;
+  font-weight: 600;
+  color: var(--ps-muted);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-link,
+.post-session-simple__adjust-link,
+.post-session-adjust-link {
+  display: none !important;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__stats {
