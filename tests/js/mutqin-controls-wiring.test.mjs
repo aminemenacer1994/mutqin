@@ -688,7 +688,8 @@ assert.doesNotMatch(
 includesAll('player dock waits for playback', [
   /showPlayerDock\(\) \{[\s\S]*showCountdownOverlay[\s\S]*SESSION_MUTATION\.STARTING[\s\S]*isSessionLive/,
   /preloadQueueEntryAudio\(preloadEntry, \{ playerVisible: false \}\)/,
-  /this\.playerVisible = true\n\s*\n\s*try \{\n\s*await this\.waitForAudioElementReady/,
+  /this\.playerVisible = true\n\s*\n\s*try \{\n\s*let sameAudioSource = false/,
+  /attachMainAudioSource\(audioUrl, playGeneration = this\.playGeneration\) \{[\s\S]*audioElement\.src = audioUrl/,
 ])
 
 includesAll('audio unlock flow', [

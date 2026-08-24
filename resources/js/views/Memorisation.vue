@@ -1,8 +1,9 @@
 <template>
-  <!-- mutqin-ui-build: v152 -->
+  <!-- mutqin-ui-build: v154 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
+    'workspace-tour-dashboard-active': workspaceTourActive && workspaceTourStep?.key === 'dashboard',
     'onboarding-post-session-active': showPostSessionModal,
     'onboarding-post-session-front': showPostSessionModal && !postSessionOffcanvasOpen && !postSessionAiReciteActive && !postSessionAdaptiveCheckActive && postSessionPrimarySurface !== 'builder',
     'post-session-ai-recite-open': postSessionAiReciteActive,
@@ -107,7 +108,7 @@
             <p>{{ t('dashboard.weak_empty_message') }}</p>
           </div>
 
-          <div class="workspace-tour__dash-card">
+          <div class="workspace-tour__dash-card" data-tour="tour-dashboard-activity">
             <div class="workspace-tour__dash-card-head">
               <span>{{ t('dashboard.activity_chart_title') }}</span>
             </div>

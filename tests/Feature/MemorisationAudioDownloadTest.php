@@ -82,4 +82,49 @@ class MemorisationAudioDownloadTest extends TestCase
             ]))
             ->assertBadRequest();
     }
+
+    public function test_play_mode_returns_inline_audio_with_length(): void
+    {
+        Http::fake([
+            self::ALLOWED_URL => Http::response('fake-audio-bytes', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('memorisation.audio-download', [
+                'url' => self::ALLOWED_URL,
+                'mode' => 'play',
+                'filename' => 'surah-1-ayah-1.mp3',
+            ]))
+            ->assertOk()
+            ->assertHeader('content-type', 'audio/mpeg')
+            ->assertHeader('content-disposition', 'inline; filename="surah-1-ayah-1.mp3"')
+            ->assertHeader('content-length', (string) strlen('fake-audio-bytes'));
+    }
+
+    public function test_play_mode_falls_back_when_primary_cdn_fails(): void
+    {
+        $fallback = 'https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/1';
+
+        Http::fake([
+            self::ALLOWED_URL => Http::response('missing', 404),
+            $fallback => Http::response('fallback-audio-bytes', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('memorisation.audio-download', [
+                'url' => self::ALLOWED_URL,
+                'mode' => 'play',
+                'filename' => 'surah-1-ayah-1.mp3',
+            ]))
+            ->assertOk()
+            ->assertSee('fallback-audio-bytes', false);
+    }
 }

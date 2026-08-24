@@ -82,30 +82,75 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/memorisation/audio-download', function (Request $request) {
         $url = (string) $request->query('url', '');
         $filename = (string) $request->query('filename', 'ayah.mp3');
+        $mode = (string) $request->query('mode', 'download');
 
         if (!$url) {
             abort(400, 'Missing audio URL');
         }
 
-        $parts = parse_url($url);
-        $host = $parts['host'] ?? '';
-        $scheme = $parts['scheme'] ?? '';
+        $allowedHosts = ['cdn.islamic.network', 'cdn.alquran.cloud'];
+        $candidates = [];
+        $pushCandidate = static function (string $candidate) use (&$candidates, $allowedHosts) {
+            $parts = parse_url($candidate);
+            $host = $parts['host'] ?? '';
+            $scheme = $parts['scheme'] ?? '';
+            if ($scheme !== 'https' || ! in_array($host, $allowedHosts, true)) {
+                return;
+            }
+            if (! in_array($candidate, $candidates, true)) {
+                $candidates[] = $candidate;
+            }
+        };
 
-        if ($scheme !== 'https' || $host !== 'cdn.islamic.network') {
+        $pushCandidate($url);
+        if (preg_match('#/(?:quran/audio/\d+|media/audio/ayah)/([a-z0-9.]+)/(\d+)(?:\.mp3)?#i', $url, $match)) {
+            $reciter = $match[1];
+            $ayah = $match[2];
+            $pushCandidate("https://cdn.islamic.network/quran/audio/128/{$reciter}/{$ayah}.mp3");
+            $pushCandidate("https://cdn.islamic.network/quran/audio/128/ar.alafasy/{$ayah}.mp3");
+            $pushCandidate("https://cdn.alquran.cloud/media/audio/ayah/{$reciter}/{$ayah}");
+            $pushCandidate("https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/{$ayah}");
+        }
+
+        if ($candidates === []) {
             abort(403, 'Unsupported audio host');
         }
 
-        $safeFilename = preg_replace('/[^A-Za-z0-9._-]/', '-', $filename) ?: 'ayah.mp3';
-        $response = Http::withOptions(['stream' => true])->get($url);
+        $response = null;
+        $lastStatus = 502;
+        foreach ($candidates as $candidate) {
+            $attempt = Http::timeout(20)
+                ->withOptions(['stream' => $mode !== 'play'])
+                ->get($candidate);
+            if ($attempt->successful()) {
+                $response = $attempt;
+                break;
+            }
+            $lastStatus = $attempt->status() ?: 502;
+        }
 
-        if (!$response->successful()) {
-            abort($response->status() ?: 502, 'Failed to fetch audio');
+        if (! $response) {
+            abort($lastStatus, 'Failed to fetch audio');
+        }
+
+        $safeFilename = preg_replace('/[^A-Za-z0-9._-]/', '-', $filename) ?: 'ayah.mp3';
+
+        if ($mode === 'play') {
+            $body = $response->body();
+
+            return response($body, 200, [
+                'Content-Type' => 'audio/mpeg',
+                'Content-Length' => (string) strlen($body),
+                'Content-Disposition' => 'inline; filename="'.$safeFilename.'"',
+                'Cache-Control' => 'public, max-age=86400',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
         }
 
         $stream = $response->toPsrResponse()->getBody();
 
         return response()->streamDownload(function () use ($stream) {
-            while (!$stream->eof()) {
+            while (! $stream->eof()) {
                 echo $stream->read(8192);
             }
         }, $safeFilename, [

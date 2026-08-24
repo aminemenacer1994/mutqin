@@ -62,6 +62,10 @@ describe('audio playback guards', () => {
       'https://verses.quran.com/wbw/foo.mp3'
     )
     assert.equal(
+      normalizeAudioUrl('/audio/ayah/ar.alafasy/1.mp3'),
+      '/audio/ayah/ar.alafasy/1.mp3'
+    )
+    assert.equal(
       normalizeAudioUrl('relative-without-host.mp3'),
       'relative-without-host.mp3'
     )
@@ -97,13 +101,42 @@ describe('audio playback guards', () => {
   it('attaches fallback ayah audio when Play is pressed without a source', () => {
     assert.match(memorisationSource, /ensureVerseAudioUrl\(verse/)
     assert.match(memorisationSource, /ensureLiveSessionAudioAttached\(\)/)
+    assert.match(memorisationSource, /toPlayableAudioUrl\(/)
+    assert.match(memorisationSource, /listAyahAudioCandidates\(/)
+    assert.match(memorisationSource, /attachMainAudioSource\(/)
     assert.match(
       memorisationSource,
-      /togglePlay\(\) \{[\s\S]*hasSrc[\s\S]*playQueueEntry\(entry, \{ force: true/,
+      /togglePlay\(\) \{[\s\S]*isMainAudioReady[\s\S]*playQueueEntry\(entry, \{ force: true/,
     )
     assert.match(
       memorisationSource,
-      /async playVerse\([\s\S]*const audioUrl = this\.ensureVerseAudioUrl\(verse\)/,
+      /async playVerse\([\s\S]*listAyahAudioCandidates\(verse\)/,
+    )
+  })
+
+  it('plays bundled Al-Fatihah audio first and keeps same-origin paths local', () => {
+    const normalizeAudioUrl = extractNormalizeAudioUrl()
+    assert.equal(
+      normalizeAudioUrl('/audio/ayah/ar.alafasy/1.mp3'),
+      '/audio/ayah/ar.alafasy/1.mp3',
+    )
+    assert.equal(
+      normalizeAudioUrl('/memorisation/audio-download?url=https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3'),
+      '/memorisation/audio-download?url=https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3',
+    )
+    assert.match(memorisationSource, /bundledAyahAudioUrl\(/)
+    assert.match(memorisationSource, /\/audio\/ayah\/ar\.alafasy\/\$\{n\}\.mp3/)
+    assert.match(
+      memorisationSource,
+      /audioLoadedMetadata = \(\) => \{[\s\S]*syncAudioUiState/,
+    )
+    assert.match(
+      memorisationSource,
+      /async playVerse\([\s\S]*await this\.audioElement\.play\(\)/,
+    )
+    assert.doesNotMatch(
+      memorisationSource,
+      /toPlayableAudioUrl\(url\) \{[\s\S]*mode=play/,
     )
   })
 

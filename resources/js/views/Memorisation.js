@@ -1369,6 +1369,7 @@ export default {
       audioPlaying: null,
       audioRateChange: null,
       audioLoadStart: null,
+      audioLoadedMetadata: null,
       lastAudioDebug: null,
       _lastAudioUiSyncAt: 0,
       uiAudioContext: null,
@@ -13442,7 +13443,7 @@ export default {
 
     preloadQueueEntryAudio(entry, options = {}) {
       const verse = entry?.verse || entry
-      const audioUrl = verse?.audio ? this.normalizeAudioUrl(verse.audio) : ''
+      const audioUrl = this.toPlayableAudioUrl(this.ensureVerseAudioUrl(verse))
       if (!audioUrl) return false
 
       const audio = this.audioElement || this.$refs.audio
@@ -14721,7 +14722,7 @@ export default {
       this.measureWorkspaceTourTarget({ allowScroll: true })
       window.setTimeout(() => {
         if (this.workspaceTourActive) this.measureWorkspaceTourTarget({ allowScroll: true })
-      }, ['weak', 'plan'].includes(step.key) ? 280 : 240)
+      }, ['weak', 'plan', 'dashboard'].includes(step.key) ? 280 : 240)
     },
     async closeWorkspaceTourOverlays({ keepAi = false, keepPostSession = false } = {}) {
       this.topCardMenuOpen = false
@@ -14944,6 +14945,12 @@ export default {
     shouldCoverWorkspaceTourPlanCards(step = null) {
       return (step?.key || this.workspaceTourStep?.key) === 'plan' && this.isWorkspaceTourMobileViewport()
     },
+    shouldCoverWorkspaceTourDashboardCards(step = null) {
+      return (step?.key || this.workspaceTourStep?.key) === 'dashboard' && this.isWorkspaceTourMobileViewport()
+    },
+    shouldExpandWorkspaceTourHole(step = null) {
+      return this.shouldCoverWorkspaceTourPlanCards(step) || this.shouldCoverWorkspaceTourDashboardCards(step)
+    },
     readWorkspaceTourTargetRect(el, step = null) {
       const base = el?.getBoundingClientRect?.()
       if (!base) return null
@@ -14964,6 +14971,17 @@ export default {
           rect.bottom = Math.max(rect.bottom, next.bottom)
         })
       }
+      if (this.shouldCoverWorkspaceTourDashboardCards(step)) {
+        const host = el.closest?.('[data-tour="tour-dashboard"]') || el
+        const cards = host.querySelectorAll?.('[data-tour="tour-dashboard-activity"], .workspace-tour__dash-card') || []
+        cards.forEach((card) => {
+          const next = card.getBoundingClientRect()
+          rect.top = Math.min(rect.top, next.top)
+          rect.left = Math.min(rect.left, next.left)
+          rect.right = Math.max(rect.right, next.right)
+          rect.bottom = Math.max(rect.bottom, next.bottom)
+        })
+      }
       return {
         ...rect,
         width: rect.right - rect.left,
@@ -14973,14 +14991,15 @@ export default {
     clampWorkspaceTourHole(rect, pad = 8, radius = 16, step = null) {
       const inset = this.readWorkspaceTourSafeInset()
       const coverPlanCards = this.shouldCoverWorkspaceTourPlanCards(step)
-      const maxHeight = coverPlanCards ? 0 : Number(step?.maxHeight || 0)
+      const expandHole = coverPlanCards || this.shouldExpandWorkspaceTourHole(step)
+      const maxHeight = expandHole ? 0 : Number(step?.maxHeight || 0)
       const edge = (typeof window !== 'undefined' && window.innerWidth <= 720) ? 10 : 8
       const vh = typeof window !== 'undefined' ? (window.innerHeight || 0) : 0
       let top = Math.max(inset.top, rect.top - pad)
       let left = Math.max(inset.left, rect.left - pad)
       let right = Math.min(inset.right, rect.right + pad)
       let bottom = Math.min(inset.bottom, rect.bottom + pad)
-      if (coverPlanCards) {
+      if (expandHole) {
         top = Math.min(top, Math.max(edge, rect.top - pad))
         bottom = Math.max(bottom, Math.min(Math.max(edge, vh - edge), rect.bottom + pad))
       }
@@ -15049,24 +15068,29 @@ export default {
         this.parkWorkspaceTourTooltipOutside(el.getBoundingClientRect())
       }
 
+      const activityEl = this.shouldCoverWorkspaceTourDashboardCards(step)
+        ? (el.querySelector?.('[data-tour="tour-dashboard-activity"]')
+          || document.querySelector('[data-tour="tour-dashboard-activity"]'))
+        : null
       const shouldScroll = allowScroll && (
         step?.key !== 'welcome'
         && (
           step?.scroll === 'center'
           || !this.isWorkspaceTourTargetFramed(el)
+          || (activityEl && !this.isWorkspaceTourTargetFramed(activityEl))
         )
       )
       if (shouldScroll) {
-        this.scrollWorkspaceTourTargetIntoView(el)
+        this.scrollWorkspaceTourTargetIntoView(activityEl || el)
       }
 
       window.setTimeout(() => {
         if (token !== this.workspaceTourMeasureToken || !this.workspaceTourActive) return
-        if (shouldScroll && !this.isWorkspaceTourTargetFramed(el)) {
-          this.scrollWorkspaceTourTargetIntoView(el)
+        if (shouldScroll && !this.isWorkspaceTourTargetFramed(activityEl || el)) {
+          this.scrollWorkspaceTourTargetIntoView(activityEl || el)
         }
         const rect = this.readWorkspaceTourTargetRect(el, step) || el.getBoundingClientRect()
-        const pad = Number(step?.pad ?? 8) + (this.shouldCoverWorkspaceTourPlanCards(step) ? 6 : 0)
+        const pad = Number(step?.pad ?? 8) + (this.shouldExpandWorkspaceTourHole(step) ? 6 : 0)
         const radius = Number(step?.radius) || this.readWorkspaceTourTargetRadius(el, 16)
         this.workspaceTourRect = this.clampWorkspaceTourHole(rect, pad, radius, step)
         this.positionWorkspaceTourTooltip({
@@ -31801,7 +31825,7 @@ export default {
 
       const verse = this.activeVerseRef
         || (this.verses || []).find(candidate => candidate?.key === this.effectiveActiveVerseKey)
-      const audioUrl = verse?.audio ? this.normalizeAudioUrl(verse.audio) : ''
+      const audioUrl = this.toPlayableAudioUrl(this.ensureVerseAudioUrl(verse))
       const audio = this.audioElement || this.$refs.audio
       if (!audio || !audioUrl) return
 
@@ -36942,6 +36966,7 @@ export default {
       this.audioElement.removeEventListener('playing', this.audioPlaying)
       this.audioElement.removeEventListener('ratechange', this.audioRateChange)
       this.audioElement.removeEventListener('loadstart', this.audioLoadStart)
+      this.audioElement.removeEventListener('loadedmetadata', this.audioLoadedMetadata)
 
       this.audioTimeUpdate = () => {
         const audio = this.audioElement
@@ -37136,6 +37161,12 @@ export default {
         this.stopWordHighlighting()
       }
 
+      this.audioLoadedMetadata = () => {
+        const audio = this.audioElement
+        if (!audio) return
+        this.syncAudioUiState(Number(audio.currentTime || 0), Number(audio.duration || 0))
+      }
+
       this.audioError = (e) => {
         const audio = e?.target || this.audioElement
         if (this.isAudioLoadAbortError(audio)) {
@@ -37181,6 +37212,7 @@ export default {
       this.audioElement.addEventListener('playing', this.audioPlaying)
       this.audioElement.addEventListener('ratechange', this.audioRateChange)
       this.audioElement.addEventListener('loadstart', this.audioLoadStart)
+      this.audioElement.addEventListener('loadedmetadata', this.audioLoadedMetadata)
       this.audioElement.addEventListener('waiting', this.audioWaiting)
       this.audioElement.addEventListener('stalled', this.audioStalled)
       this.audioElement.addEventListener('canplay', this.audioCanPlay)
@@ -37210,16 +37242,18 @@ export default {
         return
       }
 
-      const audioUrl = this.ensureVerseAudioUrl(verse)
-      if (!audioUrl) {
+      const sourceCandidates = this.listAyahAudioCandidates(verse)
+      if (!sourceCandidates.length) {
         this.showBanner(this.t('toasts.audioNotAvailableForVerse', { number: verse.number }), 'info', 2000)
         this.playRequestLocked = false
         return
       }
-      if (verse.audio !== audioUrl) verse.audio = audioUrl
+      if (verse.audio !== sourceCandidates[0]) verse.audio = sourceCandidates[0]
+      const playableCandidates = [...new Set(sourceCandidates.map((url) => this.toPlayableAudioUrl(url)).filter(Boolean))]
+      const audioUrl = playableCandidates[0] || ''
       this.manualOnlyPlayback = !!options.manualOnly
       const currentSrc = this.audioElement?.currentSrc ? this.normalizeAudioUrl(this.audioElement.currentSrc) : ''
-      const isSameSource = !!currentSrc && currentSrc === audioUrl
+      const isSameSource = !!currentSrc && playableCandidates.some((url) => this.normalizeAudioUrl(url) === currentSrc)
 
       // Toggle if same verse is playing
       if (!options.force && this.activeKey === verse.key && isSameSource) {
@@ -37258,23 +37292,6 @@ export default {
       }
       this.claimAudioElement(this.audioElement)
 
-      const activeSrc = this.audioElement?.currentSrc
-        ? this.normalizeAudioUrl(this.audioElement.currentSrc)
-        : this.normalizeAudioUrl(this.audioElement?.getAttribute?.('src') || '')
-      const sameAudioSource = !!activeSrc && activeSrc === audioUrl
-      if (!sameAudioSource) {
-        this.ignoreMainAudioPauseEvent = true
-        this.audioElement.src = audioUrl
-        this.audioElement.load()
-      } else if (Number(this.audioElement.readyState || 0) < 1) {
-        // Same URL but a prior abort left the element idle — re-kick without churning src.
-        this.ignoreMainAudioPauseEvent = true
-        try {
-          this.audioElement.src = audioUrl
-        } catch {
-          try { this.audioElement.load() } catch { }
-        }
-      }
       this.playerDismissed = false
       this.playerCompact = this.isMobileViewport() ? true : false
       // Reveal before play() — countdown autoplay is often blocked, and the
@@ -37282,16 +37299,39 @@ export default {
       this.playerVisible = true
 
       try {
-        await this.waitForAudioElementReady(this.audioElement)
+        let sameAudioSource = false
+        let attached = false
+        let playError = null
+        for (let index = 0; index < playableCandidates.length; index += 1) {
+          const candidate = playableCandidates[index]
+          if (playGeneration !== this.playGeneration) return
+          try {
+            sameAudioSource = await this.attachMainAudioSource(candidate, playGeneration)
+            const safeSpeed = this.normalizePlaybackSpeed(this.speed)
+            this.audioElement.defaultPlaybackRate = safeSpeed
+            this.audioElement.playbackRate = safeSpeed
+            try {
+              this.audioElement.muted = false
+              this.audioElement.volume = 1
+            } catch (_) { /* ignore */ }
+            if (sameAudioSource) {
+              try { this.audioElement.currentTime = 0 } catch (_) { /* ignore */ }
+            }
+            await this.audioElement.play()
+            attached = true
+            playError = null
+            break
+          } catch (error) {
+            playError = error
+            console.warn('Ayah audio candidate failed:', candidate, error)
+          }
+        }
+        if (!attached) throw (playError || new Error('Audio load timeout'))
         if (playGeneration !== this.playGeneration) return
 
         const safeSpeed = this.normalizePlaybackSpeed(this.speed)
         this.audioElement.defaultPlaybackRate = safeSpeed
         this.audioElement.playbackRate = safeSpeed
-        try {
-          this.audioElement.muted = false
-          this.audioElement.volume = 1
-        } catch (_) { /* ignore */ }
         const segment = options.segment || null
         const segmentTotal = Math.max(1, Number(segment?.sequenceTotal || segment?.total || 1))
         const segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number(segment?.index || 0)))
@@ -37402,7 +37442,7 @@ export default {
       }
       const src = String(this.audioElement?.src || this.audioElement?.getAttribute?.('src') || '').trim()
       const hasSrc = !!src && src !== 'about:blank' && !src.startsWith('data:')
-      if (!hasSrc) {
+      if (!hasSrc || !this.isMainAudioReady(this.audioElement)) {
         const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
         if (entry) {
           this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
@@ -38218,6 +38258,65 @@ export default {
       return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
     },
 
+    isMainAudioReady(audio = this.audioElement) {
+      if (!audio) return false
+      if (audio.error && !this.isAudioLoadAbortError(audio)) return false
+      const duration = Number(audio.duration || 0)
+      return Number(audio.readyState || 0) >= 1 && Number.isFinite(duration) && duration > 0
+    },
+    bundledAyahAudioUrl(reciter, globalAyahNumber) {
+      const n = Number(globalAyahNumber)
+      const id = String(reciter || 'ar.alafasy').trim() || 'ar.alafasy'
+      // Al-Fatihah is the default onboarding / smoke-test set. Keep it local so
+      // a blocked CDN cannot leave the dock at 00:00.
+      if (id === 'ar.alafasy' && n >= 1 && n <= 7) {
+        return `/audio/ayah/ar.alafasy/${n}.mp3`
+      }
+      return ''
+    },
+    listAyahAudioCandidates(verse = {}) {
+      const urls = []
+      const push = (url) => {
+        const normalized = this.normalizeAudioUrl(url)
+        if (normalized && !urls.includes(normalized)) urls.push(normalized)
+      }
+      const reciter = String(this.reciterId || verse.reciterId || 'ar.alafasy').trim() || 'ar.alafasy'
+      const global = this.resolveGlobalAyahNumber(verse)
+      push(this.bundledAyahAudioUrl(reciter, global))
+      push(this.resolveAyahAudioUrl(verse))
+      if (global > 0) {
+        push(`https://cdn.islamic.network/quran/audio/128/${reciter}/${global}.mp3`)
+        push(`https://cdn.islamic.network/quran/audio/128/ar.alafasy/${global}.mp3`)
+        push(`https://cdn.alquran.cloud/media/audio/ayah/${reciter}/${global}`)
+        push(`https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/${global}`)
+      }
+      return urls
+    },
+    toPlayableAudioUrl(url) {
+      return this.normalizeAudioUrl(url)
+    },
+    async attachMainAudioSource(audioUrl, playGeneration = this.playGeneration) {
+      if (!this.audioElement || !audioUrl) throw new Error('Audio source missing')
+      const activeSrc = this.audioElement.currentSrc
+        ? this.normalizeAudioUrl(this.audioElement.currentSrc)
+        : this.normalizeAudioUrl(this.audioElement.getAttribute?.('src') || '')
+      const target = this.normalizeAudioUrl(audioUrl)
+      const sameAudioSource = !!activeSrc && (activeSrc === target || activeSrc.endsWith(target))
+      const needsReload = !sameAudioSource
+        || Number(this.audioElement.readyState || 0) < 1
+        || !!this.audioElement.error
+      if (needsReload) {
+        this.ignoreMainAudioPauseEvent = true
+        this.audioElement.src = audioUrl
+        this.audioElement.load()
+      }
+      if (playGeneration !== this.playGeneration) throw new Error('Audio wait superseded')
+      this.syncAudioUiState(
+        Number(this.audioElement.currentTime || 0),
+        Number(this.audioElement.duration || 0),
+      )
+      return sameAudioSource
+    },
     normalizeAudioUrl(url) {
       if (!url || typeof url !== 'string') return ''
       const trimmed = url.trim()
@@ -38225,6 +38324,14 @@ export default {
       if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
       if (trimmed.startsWith('//')) return `https:${trimmed}`
       if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) return trimmed
+      // Same-origin app / bundled audio — never rewrite to verses.quran.com.
+      if (
+        trimmed.startsWith('/audio/')
+        || trimmed.startsWith('/memorisation/')
+        || trimmed.startsWith('/storage/')
+      ) {
+        return trimmed
+      }
 
       // AlQuran Cloud / islamic.network relative ayah audio paths.
       if (
@@ -38264,9 +38371,12 @@ export default {
       return offset + ayah
     },
     ensureVerseAudioUrl(verse = {}) {
+      const global = this.resolveGlobalAyahNumber(verse)
+      const bundled = this.bundledAyahAudioUrl(this.reciterId || verse.reciterId, global)
+      if (bundled) return bundled
       const resolved = this.resolveAyahAudioUrl(verse)
       if (resolved) return resolved
-      return this.buildFallbackAyahAudioUrl(this.resolveGlobalAyahNumber(verse))
+      return this.buildFallbackAyahAudioUrl(global)
     },
     ensureLiveSessionAudioAttached() {
       const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
@@ -38279,8 +38389,8 @@ export default {
     buildFallbackAyahAudioUrl(globalAyahNumber) {
       const n = Number(globalAyahNumber)
       if (!Number.isFinite(n) || n < 1) return ''
-      // CDN is already allowed via the existing audio-download proxy host allowlist.
-      return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${n}.mp3`
+      return this.bundledAyahAudioUrl('ar.alafasy', n)
+        || `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${n}.mp3`
     },
 
     getQueueItemAudioSeconds(item = {}, allowCurrentProgress = false) {

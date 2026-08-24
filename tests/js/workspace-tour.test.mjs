@@ -128,6 +128,7 @@ function sliceMethod(source, name) {
   assert.doesNotMatch(memorisationVue, /class="workspace"[^>]*data-tour="workspace-welcome"/)
   assert.doesNotMatch(memorisationVue, /workspace-shell-head"[^>]*data-tour="workspace-welcome"/)
   assert.match(memorisationVue, /data-tour="tour-dashboard"/)
+  assert.match(memorisationVue, /data-tour="tour-dashboard-activity"/)
   assert.match(memorisationVue, /'rec-start'/)
   assert.match(appBlade, /data-tour="nav-dashboard"/)
 }
@@ -263,21 +264,65 @@ function sliceMethod(source, name) {
   assert.match(sliceMethod(memorisationJs, 'isWorkspaceTourTargetFramed'), /scroll === 'start'/)
   assert.match(sliceMethod(memorisationJs, 'clampWorkspaceTourHole'), /readWorkspaceTourSafeInset/)
   assert.match(sliceMethod(memorisationJs, 'clampWorkspaceTourHole'), /shouldCoverWorkspaceTourPlanCards/)
-  assert.match(sliceMethod(memorisationJs, 'clampWorkspaceTourHole'), /coverPlanCards \? 0/)
+  assert.match(sliceMethod(memorisationJs, 'clampWorkspaceTourHole'), /shouldExpandWorkspaceTourHole/)
+  assert.match(sliceMethod(memorisationJs, 'clampWorkspaceTourHole'), /expandHole \? 0/)
   assert.match(sliceMethod(memorisationJs, 'shouldCoverWorkspaceTourPlanCards'), /key\) === 'plan'/)
   assert.match(sliceMethod(memorisationJs, 'shouldCoverWorkspaceTourPlanCards'), /isWorkspaceTourMobileViewport/)
+  assert.match(sliceMethod(memorisationJs, 'shouldCoverWorkspaceTourDashboardCards'), /key\) === 'dashboard'/)
+  assert.match(sliceMethod(memorisationJs, 'shouldCoverWorkspaceTourDashboardCards'), /isWorkspaceTourMobileViewport/)
+  assert.match(sliceMethod(memorisationJs, 'shouldExpandWorkspaceTourHole'), /shouldCoverWorkspaceTourDashboardCards/)
   assert.match(sliceMethod(memorisationJs, 'isWorkspaceTourMobileViewport'), /mutqin-pwa-mobile/)
   assert.match(sliceMethod(memorisationJs, 'isWorkspaceTourMobileViewport'), /mutqin-pwa-standalone/)
   assert.match(sliceMethod(memorisationJs, 'readWorkspaceTourTargetRect'), /post-session-simple__scope-card/)
+  assert.match(sliceMethod(memorisationJs, 'readWorkspaceTourTargetRect'), /tour-dashboard-activity/)
   assert.match(sliceMethod(memorisationJs, 'measureWorkspaceTourTarget'), /readWorkspaceTourTargetRect/)
+  assert.match(sliceMethod(memorisationJs, 'measureWorkspaceTourTarget'), /tour-dashboard-activity/)
   assert.match(memorisationVue, /workspace-tour-plan-active/)
+  assert.match(memorisationVue, /workspace-tour-dashboard-active/)
+  assert.match(memorisationVue, /data-tour="tour-dashboard-activity"/)
+  assert.match(memorisationCss, /tour-dashboard-activity/)
+  assert.match(memorisationCss, /data-tour-step="dashboard"[\s\S]*?max-height:\s*calc\(100dvh/)
+  assert.match(memorisationCss, /html\.mutqin-pwa-mobile[\s\S]*?workspace-tour__dashboard[\s\S]*?height:\s*auto/)
   assert.match(memorisationVue, /data-tour-step/)
+
+  const coverDash = new Function(`return function ${sliceMethod(memorisationJs, 'shouldCoverWorkspaceTourDashboardCards')}`)()
+  assert.equal(coverDash.call({
+    workspaceTourStep: { key: 'dashboard' },
+    isWorkspaceTourMobileViewport: () => true,
+  }), true)
+  assert.equal(coverDash.call({
+    workspaceTourStep: { key: 'dashboard' },
+    isWorkspaceTourMobileViewport: () => false,
+  }), false)
+  assert.equal(coverDash.call({
+    workspaceTourStep: { key: 'plan' },
+    isWorkspaceTourMobileViewport: () => true,
+  }), false)
+
+  const readRect = new Function(`return function ${sliceMethod(memorisationJs, 'readWorkspaceTourTargetRect')}`)()
+  const activityCard = {
+    getBoundingClientRect: () => ({ top: 410, left: 16, right: 360, bottom: 528 }),
+  }
+  const dashEl = {
+    getBoundingClientRect: () => ({ top: 72, left: 16, right: 360, bottom: 390 }),
+    closest: () => ({
+      querySelectorAll: () => [activityCard],
+    }),
+  }
+  const united = readRect.call({
+    shouldCoverWorkspaceTourPlanCards: () => false,
+    shouldCoverWorkspaceTourDashboardCards: () => true,
+  }, dashEl, { key: 'dashboard' })
+  assert.equal(united.top, 72)
+  assert.equal(united.bottom, 528)
+  assert.ok(united.height > 450)
   assert.match(memorisationCss, /workspace-tour-plan-active[\s\S]*?max-height:\s*min\(96dvh/)
   assert.match(memorisationCss, /html\.mutqin-pwa-mobile[\s\S]*?workspace-tour-plan-active[\s\S]*?96dvh/)
   assert.match(memorisationVue, /post-session-simple--sample'[\s\S]{0,180}workspace-tour-plan-active/)
 
   const apply = sliceMethod(memorisationJs, 'applyWorkspaceTourStep')
   assert.doesNotMatch(apply, /step\.key === 'welcome' && !this\.showWelcomeBackModal/)
+  assert.match(apply, /'weak', 'plan', 'dashboard'/)
 
   const prepare = sliceMethod(memorisationJs, 'prepareWorkspaceTourStep')
   assert.match(prepare, /ensureWorkspaceTourAiModal/)
