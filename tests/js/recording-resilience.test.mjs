@@ -47,6 +47,20 @@ import {
   const provider = classifyRecitationFailure({ message: 'Speechmatics websocket closed' })
   assert.equal(provider.kind, RECITATION_FAILURE_KIND.PROVIDER)
 
+  const usageCap = classifyRecitationFailure({
+    response: {
+      status: 429,
+      data: {
+        available: false,
+        reason: 'usage_cap',
+        message: 'You have reached today\'s AI voice-check limit. Please try again tomorrow.',
+      },
+    },
+  })
+  assert.equal(usageCap.kind, RECITATION_FAILURE_KIND.USAGE_CAP)
+  assert.equal(usageCap.retryable, false)
+  assert.equal(usageCap.messageKey, 'memorisation.aiCheck.usageCapReached')
+
   const timeout = classifyRecitationFailure({ message: 'Recording timed out before audio was ready' })
   assert.equal(timeout.kind, RECITATION_FAILURE_KIND.TIMEOUT)
 }
@@ -66,6 +80,16 @@ import {
   })
   assert.match(providerMessage, /temporarily unavailable/i)
   assert.doesNotMatch(providerMessage, /SPEECHMATICS_API_KEY/i)
+
+  const capMessage = userFacingTranscriptionFailure({
+    response: {
+      status: 429,
+      data: { reason: 'usage_cap', message: 'Speechmatics daily_user_token_mints exhausted' },
+    },
+  })
+  assert.match(capMessage, /voice-check limit/i)
+  assert.doesNotMatch(capMessage, /speechmatics/i)
+  assert.doesNotMatch(capMessage, /token_mints/i)
 }
 
 {

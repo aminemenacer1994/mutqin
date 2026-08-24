@@ -22,7 +22,9 @@
 
 /* Global theme tokens (light/sepia/dark) — WCAG AA contrast targets */
 :root {
+  color-scheme: light;
   --bg: #f6f3ee;
+  --theme-color: #8b5e3c;
   --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: rgba(255, 255, 255, 0.92);
   --border: rgba(78, 58, 38, 0.22);
@@ -75,7 +77,9 @@
 }
 
 html[data-theme="sepia"] {
+  color-scheme: light;
   --bg: #f1e7d8;
+  --theme-color: #8b5e3c;
   --surface: #fffaf3;
   --surface-strong: #fff8eb;
   --border: rgba(78, 58, 38, 0.26);
@@ -88,7 +92,9 @@ html[data-theme="sepia"] {
 }
 
 html[data-theme="dark"] {
-  --bg: #0f1115;
+  color-scheme: dark;
+  --bg: #14110f;
+  --theme-color: #14110f;
   --surface: #121212;
   --surface-strong: #121212;
   --border: rgba(255, 255, 255, 0.22);
@@ -122,6 +128,10 @@ html[data-theme="dark"] {
   --shadow-lg: -40px 0 120px rgba(0, 0, 0, 0.55);
   --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 58%, transparent);
   --focus-ring-color: var(--accent);
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
@@ -266,7 +276,7 @@ html[data-theme="dark"] .app-navbar {
 
 @media (max-width: 991.98px) {
   html[data-theme="dark"] .app-navbar {
-    background: #000000;
+    background: var(--bg);
     background-image: none;
   }
 
@@ -1433,6 +1443,7 @@ html.mutqin-ios-pwa-open {
     min-height: 100dvh;
     min-height: -webkit-fill-available;
     overscroll-behavior-y: none;
+    background: var(--bg);
   }
 
   html.mutqin-pwa-standalone #mainContent,

@@ -1,24 +1,25 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\WaitingListController as AdminWaitingListController;
+use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuranProxyController;
+use App\Services\SpeechmaticsUsageCap;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 
 // Authentication routes (from laravel/ui)
 Auth::routes(['verify' => true]);
 
-Route::post('/login/demo', \App\Http\Controllers\Auth\DemoLoginController::class)
+Route::post('/login/demo', DemoLoginController::class)
     ->middleware('guest')
     ->name('login.demo');
 
@@ -84,7 +85,7 @@ Route::middleware(['auth'])->group(function () {
         $filename = (string) $request->query('filename', 'ayah.mp3');
         $mode = (string) $request->query('mode', 'download');
 
-        if (!$url) {
+        if (! $url) {
             abort(400, 'Missing audio URL');
         }
 
@@ -159,10 +160,22 @@ Route::middleware(['auth'])->group(function () {
     })
         ->name('memorisation.audio-download');
 
-    Route::post('/memorisation/transcription-token', function () {
+    Route::post('/memorisation/transcription-token', function (SpeechmaticsUsageCap $usageCap) {
+        $userId = optional(request()->user())->id;
+        $cap = $usageCap->inspect($userId);
+        if (! $cap['allowed']) {
+            return response()->json([
+                'available' => false,
+                'reason' => SpeechmaticsUsageCap::REASON,
+                'message' => SpeechmaticsUsageCap::LEARNER_MESSAGE,
+                'speechmatics_status' => 429,
+            ]);
+        }
+
         $apiKey = trim((string) config('services.speechmatics.api_key', ''));
         $configuredRegion = strtolower(trim((string) config('services.speechmatics.region', '')));
         $keySuffix = strlen($apiKey) >= 6 ? substr($apiKey, -6) : $apiKey;
+        $tokenTtl = $usageCap->tokenTtlSeconds();
         $region = match ($configuredRegion) {
             'eu', 'eu1', 'europe' => [
                 'code' => 'eu',
@@ -175,7 +188,7 @@ Route::middleware(['auth'])->group(function () {
             default => null,
         };
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return response()->json([
                 'available' => false,
                 'message' => 'Speechmatics API key is not configured.',
@@ -183,7 +196,7 @@ Route::middleware(['auth'])->group(function () {
             ]);
         }
 
-        if (!$region) {
+        if (! $region) {
             return response()->json([
                 'available' => false,
                 'message' => 'Speechmatics region is not configured.',
@@ -196,9 +209,9 @@ Route::middleware(['auth'])->group(function () {
                 ->acceptJson()
                 ->timeout(12)
                 ->post('https://mp.speechmatics.com/v1/api_keys?type=rt', [
-                    'ttl' => 120,
+                    'ttl' => $tokenTtl,
                 ]);
-        } catch (\Throwable $error) {
+        } catch (Throwable $error) {
             Log::warning('Speechmatics token request failed before receiving a response.', [
                 'user_id' => optional(request()->user())->id,
                 'key_suffix' => $keySuffix ?: null,
@@ -212,9 +225,9 @@ Route::middleware(['auth'])->group(function () {
             ]);
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $payload = $response->json();
-            if (!is_array($payload)) {
+            if (! is_array($payload)) {
                 $payload = [
                     'raw_body' => trim((string) $response->body()),
                 ];
@@ -253,9 +266,11 @@ Route::middleware(['auth'])->group(function () {
             return response()->json(array_filter($errorPayload, fn ($value) => $value !== null && $value !== ''));
         }
 
+        $usageCap->recordSuccessfulMint($userId);
+
         return response()->json([
             'access_token' => $response->json('key_value'),
-            'expires_in' => 120,
+            'expires_in' => $tokenTtl,
             'region' => $region['code'],
             'websocket_host' => $region['host'],
         ]);

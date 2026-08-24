@@ -3,14 +3,16 @@
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
     $appThemePreference = $appThemePreference ?? (request()->cookie('mutqin_theme') ?: session('mutqin_theme', 'light-mode'));
     $appTheme = $appTheme ?? (str_starts_with((string) $appThemePreference, 'dark') ? 'dark' : (str_starts_with((string) $appThemePreference, 'sepia') ? 'sepia' : 'light'));
+    $appThemeColor = $appTheme === 'dark' ? '#14110f' : '#8b5e3c';
+    $appColorScheme = $appTheme === 'dark' ? 'dark' : 'light';
 @endphp
 <!doctype html>
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#8b5e3c" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="{{ $appThemeColor }}">
+    <meta name="color-scheme" content="{{ $appColorScheme }}">
     <title>@yield('title', __('ui.error_title')) · Mutqin</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
@@ -22,7 +24,7 @@
             padding: clamp(1.25rem, 4vw, 2.5rem);
             background:
                 radial-gradient(1200px 480px at 50% -10%, color-mix(in srgb, var(--accent, #8b5e3c) 16%, transparent), transparent 70%),
-                var(--bg, #f7f3ec);
+                var(--bg, #f6f3ee);
             color: var(--text, #1f1812);
         }
         .mutqin-error-card {
@@ -100,7 +102,7 @@
         [data-theme="dark"] .mutqin-error-page {
             background:
                 radial-gradient(1200px 480px at 50% -10%, color-mix(in srgb, var(--accent, #d4a574) 14%, transparent), transparent 70%),
-                var(--bg, #12100e);
+                var(--bg, #14110f);
         }
         [data-theme="dark"] .mutqin-error-btn--secondary {
             color: var(--text, #f3eee7);

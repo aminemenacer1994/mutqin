@@ -402,7 +402,13 @@ export function mapPostSessionCtas(state, options = {}) {
         Number(options.weakAyahNumber) > 0
           ? cta('revise_focus_phrase', 'secondary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
           : cta('check_again', 'secondary', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
-        returnToWorkspace,
+        // Tertiary escape hatch — ghost so the row stays primary / secondary / ghost.
+        cta(
+          'return_to_workspace',
+          'ghost',
+          LABEL_KEYS.returnToWorkspace,
+          POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
+        ),
       ]
 
     case POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED:

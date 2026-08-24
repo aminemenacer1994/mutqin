@@ -60,11 +60,32 @@ import {
   const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
   assert.equal(needsPractice.length, 3)
   assert.equal(needsPractice[0].variant, 'primary')
+  assert.equal(needsPractice[0].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
   assert.equal(needsPractice[0].labelKey, 'reviseFocusPhrase')
   assert.equal(needsPractice[1].variant, 'secondary')
-  assert.equal(needsPractice[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
-  assert.equal(needsPractice[1].labelKey, 'returnToWorkspace')
+  assert.equal(needsPractice[1].action, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN)
+  assert.equal(needsPractice[1].labelKey, 'retest')
   assert.equal(needsPractice[2].variant, 'ghost')
+  assert.equal(needsPractice[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(needsPractice[2].labelKey, 'returnToWorkspace')
+
+  const needsPracticeWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
+    weakAyahNumber: 4,
+  })
+  assert.equal(needsPracticeWeak.length, 3)
+  assert.equal(needsPracticeWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
+  assert.equal(needsPracticeWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+  assert.equal(needsPracticeWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+
+  const needsPracticeWithNextRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
+    nextRangeStart: 6,
+    nextRangeEnd: 8,
+  })
+  assert.equal(needsPracticeWithNextRange.length, 3)
+  assert.notEqual(needsPracticeWithNextRange[0].action, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN)
+  assert.equal(needsPracticeWithNextRange[1].action, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN)
+  assert.equal(needsPracticeWithNextRange[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+
   // Layout contract used by Memorisation.css / Memorisation.vue
   const desktopGridClass = 'post-session-simple__actions--3'
   const cardClass = 'post-session-simple__action-card'

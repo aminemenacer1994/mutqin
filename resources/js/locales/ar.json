@@ -294,6 +294,12 @@
         }
       }
     },
+    "demo": {
+      "session": "سورة الملك · الآية ٣",
+      "title": "فحص التلاوة",
+      "feedback": "كلمتان تحتاجان مزيداً من التدريب قبل المتابعة.",
+      "status": "جاري فحص التلاوة..."
+    },
     "steps": {
       "kicker": "Steps",
       "title": "ثلاث خطوات هادئة في طريق حفظك",
@@ -411,12 +417,6 @@
     "name": "الاسم",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
     "all_rights_reserved": "© جميع الحقوق محفوظة",
-    "demo": {
-      "session": "سورة الملك · الآية ٣",
-      "title": "فحص التلاوة",
-      "feedback": "كلمتان تحتاجان مزيداً من التدريب قبل المتابعة.",
-      "status": "جاري فحص التلاوة..."
-    },
     "testimonials": {
       "kicker": "طلاب ومعلّمون",
       "title": "ماذا يقول الناس",
@@ -563,10 +563,6 @@
           "label": "التدريب",
           "text": "اعمل على المجموعة بحضور، بلا استعجال."
         },
-        "result": {
-          "label": "نتيجتك",
-          "text": "انظر ما هو قوي، وما يحتاج عناية."
-        },
         "check": {
           "label": "فحص الاستذكار",
           "text": "اتلُ من حفظك ومتقن يتابع."
@@ -574,6 +570,10 @@
         "complete": {
           "label": "انتهت الجلسة",
           "text": "انظر ما أنهيته في هذه الجلسة."
+        },
+        "result": {
+          "label": "نتيجتك",
+          "text": "انظر ما هو قوي، وما يحتاج عناية."
         },
         "recommend": {
           "label": "التوصية",
@@ -626,6 +626,7 @@
       "statusContinue": "تابع من حيث توقفت",
       "hintReview": "راجع كل آية حتى تتدفق منك دون النظر.",
       "hintContinue": "استمع لكل آية، كرّرها، ثم جرّب من الذاكرة.",
+      "hintResume": "مكانك بانتظارك. تابع المجموعة التي توقفت عندها.",
       "hintStart": "ابدأ بمجموعة صغيرة, الخطوات الثابتة تبني حفظاً دائماً.",
       "leadRevise": "راجع ما تعرفه في {surah} قبل إضافة آيات جديدة.",
       "leadContinue": "تابع حفظ {surah} من حيث توقفت.",
@@ -650,8 +651,7 @@
       "guidanceStart": "اختر مجموعة قصيرة للبدء. تقدّمك يظهر في لوحة حفظك.",
       "guidanceContinue": "افتح لوحة حفظك لترى ما حفظته وما يلي.",
       "guidanceActive": "استمع، كرّر كل آية، ثم اختبر نفسك عندما تكون جاهزاً.",
-      "guidanceReview": "المراجعة تنتظر, راجع {surah} لتثبيتها.",
-      "hintResume": "مكانك بانتظارك. تابع المجموعة التي توقفت عندها."
+      "guidanceReview": "المراجعة تنتظر, راجع {surah} لتثبيتها."
     },
     "workspaceEmpty": {
       "kicker": "بسم الله",
@@ -1297,6 +1297,7 @@
       "recordingInvalid": "لا usable صوت التقط. جرّب تسجيل مجددًا.",
       "serviceNetworkError": "تعذّر connect إلى تلاوة service. جلسة safe. أعد المحاولة.",
       "serviceUnavailable": "فحص التلاوة غير متاح مؤقتًا. يمكنك متابعة التمرين وإعادة المحاولة لاحقًا.",
+      "usageCapReached": "لقد وصلت إلى حد فحص التلاوة بالذكاء الاصطناعي لهذا اليوم. يُرجى المحاولة غدًا.",
       "processingTimeout": "هذا taking longer than expected. أعد المحاولة.",
       "stageRecording": "تسجيل…",
       "stageProcessing": "جارٍ المعالجة…",
@@ -1444,14 +1445,7 @@
         "extraWordsAnalysis": "Extra wording اكتشف. Slow down و keep آية boundary tight.",
         "cleanMatch": "تطابق نظيف. احفظه وأبقِ هذه الآية على مراجعة خفيفة.",
         "mostlyClean": "Mostly clean. Recheck once قبل saving.",
-        "replayAyah": "Replay آية once, recite دون looking, ثم run another فحص التلاوة.",
-        "reviewWordsThenRetry": "راجع {count} كلمة، ثم أعد المحاولة ببطء.",
-        "reviewWordsThenRetryOther": "راجع {count} كلمات، ثم أعد المحاولة ببطء.",
-        "reviewWordsThenListen": "راجع {count} كلمة، ثم استمع مرة أخرى.",
-        "reviewWordsThenListenOther": "راجع {count} كلمات، ثم استمع مرة أخرى.",
-        "listenThenSave": "استمع مرة أخرى، ثم احفظه.",
-        "listenThenKeepOrReplace": "استمع مرة أخرى، ثم أبقِه أو استبدله.",
-        "listenThenSaveOrRetry": "استمع مرة أخرى، ثم احفظه أو أعد المحاولة."
+        "replayAyah": "Replay آية once, recite دون looking, ثم run another فحص التلاوة."
       },
       "sessionProgressReady": "جلسة تقدّم: جاهز",
       "reviewDueSoon": "مراجعة: due soon",
@@ -1719,6 +1713,24 @@
         }
       }
     },
+    "testerGuide": {
+      "kicker": "مسار المختبر",
+      "title": "إلى أين تذهب في متقن",
+      "intro": "اتبع هذه الخطوات بالترتيب. يمكنك تصغير الدليل في أي وقت، وتعيده شريحة البوصلة.",
+      "chip": "دليل",
+      "minimize": "تصغير الدليل",
+      "dismiss": "إغلاق الدليل",
+      "next": "الخطوة التالية",
+      "openDashboard": "فتح لوحة التقدم",
+      "steps": {
+        "workspace": "أنت في الحفظ، مساحة التمرين الرئيسية.",
+        "welcome": "إذا ظهرت «مرحبًا بعودتك»، اختر بدء جلسة جديدة.",
+        "setup": "افتح عناصر التحكم ← الإعداد، اختر الفاتحة ١–٣، ثم ابدأ الجلسة.",
+        "aiCheck": "تمرّن، أنهِ الجلسة، ثم افحص الحفظ (الذكاء الاصطناعي).",
+        "plan": "اختر خطة مقترحة واضغط بدء هذه الخطة، لا تتوقف عند الاختيار فقط.",
+        "keepGoing": "افتح لوحة التقدم للتقدّم والمراجعة، ثم عد إلى هنا للجلسة التالية."
+      }
+    },
     "onboarding": {
       "stepCounter": "الخطوة {current} من {total}",
       "intro": "اختر الآيات، تدرب بالأدوات، تحقق بالذكاء، ثم اتبع خطتك التالية.",
@@ -1852,7 +1864,7 @@
     "best_for_memorising_key_vocabulary": "الأفضل لـ: حفظ المفردات المفتاحية",
     "anchor_points_per_ayah": "نقاط التثبيت لكل آية",
     "saved_sessions": "الجلسات المحفوظة",
-    "saved_sessions_intro": "رحلات حفظك المحفوظة, تابع ختمًا مكتملًا أو نطاقًا قيد التقدم.",
+    "saved_sessions_intro": "رحلات حفظك المحفوظة — تابع ختمًا مكتملًا أو نطاقًا قيد التقدم.",
     "completed_sessions": "الجلسات المكتملة",
     "completed_sessions_desc": "جلسات وصلت فيها إلى نهاية نطاق الآيات. راجعها للمراجعة وتقوية الحفظ.",
     "incomplete_sessions": "الجلسات غير المكتملة",
@@ -1865,6 +1877,10 @@
     "no_completed_sessions_hint": "ستظهر النطاقات المنتهية هنا للمراجعة.",
     "session_completed_label": "مكتملة",
     "review_session": "مراجعة",
+    "ai_recite_review": "اختبار الاستذكار",
+    "saved_session_meta_completed": "Completed",
+    "saved_session_meta_opened": "Opened {date}",
+    "saved_session_meta_duration": "{duration} practised",
     "last_opened": "آخر فتح {date}",
     "no_surah_selected": "لم تُختر سورة",
     "each_session_keeps_only_the_essentials_what_it_is_": "كل جلسة تحتفظ بالأساسيات فقط: ما هي، أين هي، وكيف تعود إليها.",
@@ -1925,6 +1941,8 @@
       "actions": {
         "testWithAi": "تحقّق من الحفظ",
         "testWithAiAgain": "تحقّق مرة أخرى",
+        "checkNow": "اختبر الآن",
+        "continueWithoutTesting": "المتابعة دون اختبار",
         "chooseAnotherSession": "اختر جلسة أخرى",
         "continueToAyahsFallback": "تابع بالبركة",
         "retest": "تحقّق مرة أخرى",
@@ -1943,9 +1961,10 @@
         "reviewAyahOnce": "راجع الآية {ayah}",
         "chooseAnotherRange": "نطاق آخر",
         "chooseDifferentRange": "نطاق آخر",
-        "returnToWorkspace": "العودة إلى مساحة العمل",
-        "checkNow": "اختبر الآن",
-        "continueWithoutTesting": "المتابعة دون اختبار"
+        "returnToWorkspace": "العودة إلى مساحة العمل"
+      },
+      "memorisationCheckNudge": {
+        "title": "هل تختبر حفظك أولاً؟"
       },
       "coach": {
         "yourNextPractice": "الخطوة التالية",
@@ -2234,6 +2253,10 @@
         "repsDone": "{count} تكرارات",
         "aiFirstBodyShort": "فحص الحفظ التالي إلى افتح a tailored تمرين خطة.",
         "mainFocus": "التركيز الرئيسي",
+        "mainFocusExplanationAyah": "قوِّ الآية {ayah} في هذه المجموعة.",
+        "mainFocusExplanationWeakAreas": "قوِّ الآيات الضعيفة التي ظهرت في هذه المجموعة.",
+        "mainFocusExplanationStrong": "هذه المجموعة ثابتة, تابع إلى المجموعة التالية الموصى بها.",
+        "mainFocusExplanationRevision": "راجع هذه المجموعة قبل الانتقال.",
         "checkComplete": "فحص مكتمل",
         "yourResult": "نتيجتك",
         "whatNext": "ما الذي تتمرّن عليه بعد ذلك",
@@ -2309,6 +2332,38 @@
         "whyThisHelps": "لماذا هذه الخطة",
         "whatYouWillDo": "ماذا ستتمرّن",
         "howItWorks": "كيف ستتمرّن",
+        "practiceHow": {
+          "seeHowItWorks": "كيف يعمل",
+          "hide": "إخفاء",
+          "title": "كيف تتمرّن",
+          "steps": {
+            "talqin": {
+              "1": "شغّل الآية مرة واستمع بتركيز.",
+              "2": "كرّرها جهرًا وأنت تنظر.",
+              "3": "كرّرها مرة أخرى من الحفظ."
+            },
+            "focus": {
+              "1": "اعمل على آية واحدة فقط.",
+              "2": "لا تنتقل حتى تستقر.",
+              "3": "ثم انتقل إلى الآية التالية."
+            },
+            "blur": {
+              "1": "اقرأ الآية مرة والنص واضح.",
+              "2": "أخفِ المزيد من النص مع كل تكرار.",
+              "3": "اختم بالاستذكار دون النظر."
+            },
+            "chaining": {
+              "1": "تمرّن على الآية الأولى وحدها.",
+              "2": "أضف الآية التالية واربطهما.",
+              "3": "اتلُ السلسلة القصيرة بسلاسة."
+            },
+            "anchor": {
+              "1": "لاحظ الكلمات المفتاحية المعلّمة.",
+              "2": "انطق تلك الكلمات بوضوح أولًا.",
+              "3": "ثم اتلُ الآية كاملة."
+            }
+          }
+        },
         "paceAndSupport": "الإيقاع والدعم",
         "estimatedTime": "حول",
         "nextSetTitle": "خطة مقترحة",
@@ -2351,6 +2406,7 @@
         "retry": "أعد المحاولة",
         "retryRecommendation": "إعداد الاقتراح مجددًا",
         "loadError": "تم حفظ جلستك بنجاح. تعذّر تجهيز الاقتراح التالي. يمكنك إعادة المحاولة أو اختيار جلسة أخرى.",
+        "noWeakAyah": "لم تُحدَّد آية ضعيفة من هذا التقييم.",
         "startError": "تعذّر البدء. حاول مرة أخرى.",
         "settingsError": "تعذّر حفظ الإعدادات. حاول مرة أخرى.",
         "confidenceError": "تعذّر حفظ إجابتك. حاول مرة أخرى.",
@@ -2452,6 +2508,10 @@
         "aiResultLineMixedOrder": "جيد إجمالًا، لكن ترتيب الآيات اختل مرة أو مرتين.",
         "aiResultLineWeak": "يحتاج محاولة أخرى, مواضع عدة ما زالت تحتاج دعمًا.",
         "aiResultLineWeakAyah": "يحتاج محاولة أخرى, الآية {ayah} حملت معظم الصعوبة.",
+        "aiHighlightUncertain": "الكلمات الكهرمانية كانت غير واضحة للمستمع, ولم تُحسب كأخطاء قوية.",
+        "awaitingCheckNext": "اختبر من الذاكرة، أو تابع إلى الآيات {start}, {end}.",
+        "insufficientAudioNext": "أعد التسجيل. إذا طلب المتصفح، اسمح بالميكروفون.",
+        "needsPracticeNext": "راجع الكلمات المظللة، ثم افحص مجددًا.",
         "evidenceFromSessionAndConfidence": "بناءً على جلستك ومستوى ثقتك.",
         "checkAnswerQuizStrong": "يبدو جيدًا",
         "checkAnswerQuizMixed": "آمن في الغالب",
@@ -2621,18 +2681,7 @@
         "aiFocusWeakAyah": "خصص التمريرة التالية للآية {ayah} بوضع التركيز.",
         "aiFocusWeakAyahs": "راجع الآيات {ayahs} قبل المتابعة.",
         "aiWeakAyahsLabel": "آيات للتركيز",
-        "aiFirstBody": "اختبر بالتلاوة الذكية أولًا. ستظهر نتيجتك وخطة التدريب هنا بعد الاستماع إليك.",
-        "mainFocusExplanationAyah": "قوِّ الآية {ayah} في هذه المجموعة.",
-        "mainFocusExplanationWeakAreas": "قوِّ الآيات الضعيفة التي ظهرت في هذه المجموعة.",
-        "mainFocusExplanationStrong": "هذه المجموعة ثابتة, تابع إلى المجموعة التالية الموصى بها.",
-        "mainFocusExplanationRevision": "راجع هذه المجموعة قبل الانتقال.",
-        "needsPracticeNext": "راجع الكلمات المظللة، ثم افحص مجددًا.",
-        "aiHighlightUncertain": "الكلمات الكهرمانية كانت غير واضحة للمستمع, ولم تُحسب كأخطاء قوية.",
-        "awaitingCheckNext": "اختبر من الذاكرة، أو تابع إلى الآيات {start}, {end}.",
-        "insufficientAudioNext": "أعد التسجيل. إذا طلب المتصفح، اسمح بالميكروفون."
-      },
-      "memorisationCheckNudge": {
-        "title": "هل تختبر حفظك أولاً؟"
+        "aiFirstBody": "اختبر بالتلاوة الذكية أولًا. ستظهر نتيجتك وخطة التدريب هنا بعد الاستماع إليك."
       }
     },
     "aiRecitePlan": {
@@ -2820,7 +2869,7 @@
       "review": "يحتاج مراجعة",
       "excellentHint": "واثق ودقيق من الحفظ",
       "goodHint": "صحيح في الغالب مع تردد بسيط",
-      "fairHint": "قريب من الحفظ لكن بفجوات, يستحق تكرارًا آخر.",
+      "fairHint": "قريب من الحفظ لكن بفجوات — يستحق تكرارًا آخر.",
       "reviewHint": "راجع هذه الآية قبل المتابعة"
     },
     "selfCheckRecorder": {
@@ -2829,7 +2878,7 @@
       "assessmentHeading": "قيّم حفظك",
       "aiSessionReady": "عندما تكون مستعدًا، أَتِ نطاق الآيات ودع الذكاء الاصطناعي يوجّه مراجعتك.",
       "aiAyahReady": "عندما تكون مستعدًا، أَتِ الآية من الحفظ ودع الذكاء الاصطناعي يوجّه مراجعتك.",
-      "recordingActive": "الميكروفون نشط, أَتِ بالتجويد ثم اضغط إيقاف عند الانتهاء.",
+      "recordingActive": "الميكروفون نشط — أَتِ بالتجويد ثم اضغط إيقاف عند الانتهاء.",
       "reviewDraft": "استمع لتسجيلك، قيّم بصدق، ثم احفظ المحاولة.",
       "preparingMic": "جارٍ تجهيز الميكروفون لتسجيل واضح، إن شاء الله.",
       "unsupportedBrowser": "التسجيل يتطلب متصفحًا يدعم الميكروفون.",
@@ -3464,11 +3513,7 @@
       "toolMemorizing": "جارٍ الحفظ",
       "peekHint": "تحتاج تلميحًا؟ اطّلع على النص",
       "toolPeek": "معاينة النص"
-    },
-    "ai_recite_review": "Test recall",
-    "saved_session_meta_completed": "Completed",
-    "saved_session_meta_opened": "Opened {date}",
-    "saved_session_meta_duration": "{duration} practised"
+    }
   },
   "toasts": {
     "saved": "تم الحفظ بنجاح.",
@@ -3587,6 +3632,10 @@
     "sessionEndFailed": "تعذّر إنهاء الجلسة. يرجى المحاولة مرة أخرى.",
     "sessionPaused": "جلسة متوقف.  يمكن resume anytime.",
     "sessionPauseFailed": "Unable إلى pause جلسة. يرجى جرّب مجددًا.",
+    "sessionSaveFailed": "تعذّر حفظ هذه الجلسة. حاول مرة أخرى.",
+    "sessionSaveSyncFailed": "حُفظت الجلسة على هذا الجهاز. ستُعاد المزامنة قريبًا.",
+    "sessionSaveLimitReached": "بلغت حد الجلسات المحفوظة ({max}). احذف واحدة لتحفظ أخرى.",
+    "premiumTechniqueRequired": "هذه التقنية تحتاج Premium. رقِّ اشتراكك لفتحها.",
     "couldNotPlayRecording": "تعذّر تشغيل هذا التسجيل. أعد تحميله أو سجّل مرة أخرى.",
     "defaultSessionLoaded": "Default جلسة loaded: Al-Fatihah 1-7, Alafasy, standard سرعة, 1 repeat, لا الحفظ techniques.",
     "recordingRenamed": "تسجيل renamed إلى \"{name}\".",
@@ -4121,7 +4170,7 @@
     "analytics_week_ayahs_hint": "تمرّنت هذا الأسبوع",
     "analytics_active_days_hint": "هذا الأسبوع",
     "strengthen_title": "مراجعة",
-    "strengthen_subtitle": "",
+    "strengthen_subtitle": "مراجعة لتبقى الآيات المحفوظة راسخة في الذاكرة.",
     "view_all": "عرض الكل",
     "view_all_reviews": "كل المراجعة",
     "weak_empty_title": "الحمد لله",
@@ -4236,6 +4285,9 @@
     "journey_overall_ayahs": "{n} آية محفوظة",
     "journey_data_title": "حفظك في لمحة",
     "journey_data_subtitle": "اضغط على أي رقم لفتح القائمة الكاملة.",
+    "glance_memorised_label": "آيات محفوظة",
+    "glance_learning_label": "قيد التعلّم الآن",
+    "glance_quran_share": "نصيبك من القرآن كله",
     "view_memorised_ayahs": "كل الآيات المحفوظة",
     "view_saved_sessions": "الجلسات المحفوظة",
     "journey_progress_label": "هذه المجموعة",
@@ -4278,10 +4330,7 @@
     "sync_ready": "{when}",
     "sync_ready_now": "جاهز",
     "sync_error": "غير متصل",
-    "footnote": "",
-    "glance_memorised_label": "Memorised ayahs",
-    "glance_learning_label": "Currently learning",
-    "glance_quran_share": "Your share of the entire Qur'an"
+    "footnote": ""
   },
   "admin": {
     "loading": "جارٍ التحميل…",

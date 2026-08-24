@@ -32,5 +32,8 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="SPEECHMATICS_USAGE_CAP_ENABLED" value="true"/>
+        <env name="SPEECHMATICS_DAILY_USER_TOKEN_MINTS" value="30"/>
+        <env name="SPEECHMATICS_DAILY_GLOBAL_TOKEN_MINTS" value="200"/>
     </php>
 </phpunit>

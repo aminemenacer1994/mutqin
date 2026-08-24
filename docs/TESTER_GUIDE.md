@@ -227,6 +227,7 @@ These are expected in current builds — report them only if behaviour differs f
 
 - **Microphone required** — AI checks do not work without browser mic permission.
 - **Speech service dependency** — AI voice features need a configured Speechmatics API key on the server. If it is missing, checks may show as unavailable.
+- **Daily AI voice-check limit** — The server caps Speechmatics token mints per user and across all testers each UTC day. When the cap is reached, AI Recite / Check memorisation shows a “try again tomorrow” message (browser speech may still work). Ask the operator to raise `SPEECHMATICS_DAILY_*` in `.env` if the group is blocked too early.
 - **AI accuracy varies** — Results depend on accent, pace, background noise, and microphone quality. Scores are guidance, not a perfect tajweed audit.
 - **Google login** — Works only when Google OAuth credentials are set for that environment.
 - **Billing / Stripe** — Subscription checkout uses test keys in development; real charges do not apply locally.

@@ -3,7 +3,7 @@
     "on": "Aktif",
     "off": "Nonaktif",
     "reset": "Atur Ulang",
-    "startSession": "Mulai Sesi",
+    "startSession": "Mulai sesi",
     "pause": "Jeda",
     "settings": "Pengaturan",
     "controls": "Kontrol",
@@ -175,6 +175,7 @@
     "reciter": "Qari",
     "repetitions": "Pengulangan",
     "individualAyah": "Fokus one ayah",
+    "individualAyahOption": "Pilih ayah {number}",
     "individualAyahIntro": "Atur pengulangan khusus untuk satu ayah dalam rentang Anda. Ayah lain mengikuti pengaturan sesi di atas.",
     "individualAyahSelect": "Pilih ayah",
     "individualAyahSelectHint": "Only ayahs within Anda current rentang are listed.",
@@ -201,8 +202,7 @@
     "wordByWord": "Kata demi kata",
     "wordByWordDesc": "Chip kata individual beserta maknanya",
     "wordAudio": "Audio kata",
-    "wordAudioDesc": "Pemutaran audio dengan sorotan kata",
-    "individualAyahOption": "Pilih ayah {number}"
+    "wordAudioDesc": "Pemutaran audio dengan sorotan kata"
   },
   "homepage": {
     "hero": {
@@ -293,6 +293,12 @@
           "detail": "Satu rencana yang jelas, bi’idhnillāh, agar Anda tidak bingung apa yang dibuka selanjutnya."
         }
       }
+    },
+    "demo": {
+      "session": "سورة Al-Mulk · آية 3",
+      "title": "Tilawah AI",
+      "feedback": "2 Kata-kata perlu more practice sebelum Anda move aktif.",
+      "status": "periksaing recitation..."
     },
     "steps": {
       "kicker": "Your path",
@@ -411,12 +417,6 @@
     "name": "Nama",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
     "all_rights_reserved": "© Hak Cipta Dilindungi",
-    "demo": {
-      "session": "سورة Al-Mulk · آية 3",
-      "title": "Tilawah AI",
-      "feedback": "2 Kata-kata perlu more practice sebelum Anda move aktif.",
-      "status": "periksaing recitation..."
-    },
     "testimonials": {
       "kicker": "Students dan teachers",
       "title": "Apa people say",
@@ -563,10 +563,6 @@
           "label": "Latihan",
           "text": "Kerjakan set dengan kehadiran, tanpa terburu-buru."
         },
-        "result": {
-          "label": "Hasil Anda",
-          "text": "Lihat yang kuat, dan yang masih perlu perhatian."
-        },
         "check": {
           "label": "Cek hafalan",
           "text": "Tilawah dari hafalan sementara Mutqin mengikuti."
@@ -574,6 +570,10 @@
         "complete": {
           "label": "Sesi selesai",
           "text": "Lihat apa yang Anda selesaikan di sesi ini."
+        },
+        "result": {
+          "label": "Hasil Anda",
+          "text": "Lihat yang kuat, dan yang masih perlu perhatian."
         },
         "recommend": {
           "label": "Rekomendasi",
@@ -626,6 +626,7 @@
       "statusContinue": "Pick up where Anda left nonaktif",
       "hintReview": "Ulang each ayah until you can recite it smoothly without looking.",
       "hintContinue": "Dengarkan to each ayah, repeat it, then try from memory.",
+      "hintResume": "Tempat Anda menunggu. Lanjutkan set yang Anda tinggalkan.",
       "hintStart": "Mulai with a small set, steady steps build lasting hafalan.",
       "leadRevise": "Ulang what you know in {surah} before adding new ayahs.",
       "leadContinue": "Lanjutkan memorising {surah} from where you stopped.",
@@ -1296,6 +1297,7 @@
       "recordingInvalid": "No usable audio was captured. Try rekaman again.",
       "serviceNetworkError": "Kami tidak dapat connect to the recitation service. Your sesi is safe. Coba lagi.",
       "serviceUnavailable": "Recitation checking is temporarily unavailable. Anda can lanjutkan practising dan try the AI periksa again later.",
+      "usageCapReached": "Anda telah mencapai batas pemeriksaan suara AI hari ini. Coba lagi besok.",
       "processingTimeout": "This is taking longer than expected. Coba lagi.",
       "stageRecording": "rekaman…",
       "stageProcessing": "جارٍ المعالجة…",
@@ -1643,6 +1645,92 @@
     },
     "view_recording": "Lihat Rekaman",
     "revisitOnboarding": "Lihat tur lagi",
+    "workspaceTour": {
+      "stepCounter": "Langkah {current} dari {total}",
+      "next": "Berikutnya",
+      "skip": "Lewati",
+      "finish": "Selesai",
+      "steps": {
+        "welcome": {
+          "title": "Ini adalah Hafalan",
+          "body": "Ruang kerja hifz Anda. Kami mulai dengan Al-Fatiha 1–3 agar jalannya singkat dan jelas.",
+          "waitHint": ""
+        },
+        "controls": {
+          "title": "Buka Kontrol",
+          "body": "Ini membuka Pengaturan, alat latihan, dan set tersimpan.",
+          "waitHint": ""
+        },
+        "setup": {
+          "title": "Pengaturan",
+          "body": "Pilih surah dan rentang ayat di sini. Tinjauan terfokus dimulai di Al-Fatiha 1–3 dengan Alafasy dan 2 pengulangan.",
+          "waitHint": ""
+        },
+        "practice": {
+          "title": "Alat latihan",
+          "body": "Fokus, Blur, dan Talqin ada di sini. Gunakan satu alat saat Anda mendengar dan mengulang.",
+          "waitHint": ""
+        },
+        "saved": {
+          "title": "Set tersimpan",
+          "body": "Set yang Anda simpan kembali ke sini. Buka satu untuk lanjut, atau tetap pada tinjauan terfokus ini.",
+          "waitHint": ""
+        },
+        "start": {
+          "title": "Mulai sesi",
+          "body": "Ini memulai tinjauan terfokus: Al-Fatiha 1–3 dengan Alafasy dan 2 pengulangan.",
+          "waitHint": ""
+        },
+        "session": {
+          "title": "Latih ayat-ayat ini",
+          "body": "Al-Fatiha 1–3 tetap di halaman. Dengarkan dan ulangi di sini selama sesi.",
+          "waitHint": ""
+        },
+        "ai": {
+          "title": "Periksa dengan tilawah AI",
+          "body": "Ini pemeriksaan tilawah AI. AI mendengar dan menandai setiap kata. Tidak selesai sendiri.",
+          "waitHint": ""
+        },
+        "results": {
+          "title": "Lihat kata benar dan salah",
+          "body": "Kata hijau cocok. Beberapa kata yang ditandai masih perlu perhatian. Contoh ini menunjukkan hasil analisis.",
+          "waitHint": ""
+        },
+        "weak": {
+          "title": "Area lemah",
+          "body": "Ayat dan kata ini perlu lebih banyak perhatian. Mutqin menggunakannya untuk merancang rencana berikutnya.",
+          "waitHint": ""
+        },
+        "plan": {
+          "title": "Rencana yang disarankan",
+          "body": "Dua rencana mengikuti pemeriksaan ini: latih ayat lemah, atau ulang Al-Fatiha 1–3 dengan Alafasy sebanyak 2 pengulangan.",
+          "waitHint": ""
+        },
+        "dashboard": {
+          "title": "Tinjau kemajuan",
+          "body": "Ini dasbor Anda: rentetan, cakupan, dan muraja’ah.",
+          "waitHint": ""
+        }
+      }
+    },
+    "testerGuide": {
+      "kicker": "Jalur penguji",
+      "title": "Ke mana di Mutqin",
+      "intro": "Ikuti langkah ini berurutan. Kecilkan kapan saja; chip kompas membawanya kembali.",
+      "chip": "Panduan",
+      "minimize": "Kecilkan panduan",
+      "dismiss": "Tutup panduan",
+      "next": "Langkah berikutnya",
+      "openDashboard": "Buka dasbor",
+      "steps": {
+        "workspace": "Anda di Hafalan, ruang latihan utama.",
+        "welcome": "Jika Selamat datang kembali muncul, pilih Mulai sesi baru.",
+        "setup": "Buka Kontrol → Pengaturan, pilih Al-Fatiha 1–3, lalu Mulai sesi.",
+        "aiCheck": "Berlatih, akhiri sesi, lalu Periksa hafalan (AI).",
+        "plan": "Pilih rencana rekomendasi dan ketuk Mulai rencana ini; jangan berhenti di pemilihan saja.",
+        "keepGoing": "Buka Dasbor untuk kemajuan dan muraja’ah, lalu kembali ke sini untuk sesi berikutnya."
+      }
+    },
     "onboarding": {
       "stepCounter": "Langkah {current} dari {total}",
       "intro": "Pilih ayat, latihan dengan alat, cek dengan AI, lalu ikuti rencana berikutnya.",
@@ -1705,6 +1793,17 @@
             "Dapatkan rentang dan tujuan yang disarankan",
             "Gunakan alat yang cocok untuk sesi itu"
           ]
+        },
+        "continue": {
+          "title": "Lanjut setelah rencana",
+          "stepLabel": "Lanjut",
+          "body": "Mulai rencana yang Anda pilih, latih, lalu buka Dasbor untuk kemajuan dan muraja’ah. Kembali ke Hafalan untuk sesi berikutnya.",
+          "hint": "Hafalan adalah latihan. Dasbor adalah kemajuan dan tinjauan.",
+          "points": [
+            "Mulai rencana ini dan gunakan alat yang disarankan",
+            "Buka Dasbor untuk rentetan, kemajuan, dan muraja’ah",
+            "Kembali ke Hafalan saat siap untuk rentang berikutnya"
+          ]
         }
       }
     },
@@ -1765,7 +1864,7 @@
     "best_for_memorising_key_vocabulary": "Terbaik untuk: Menghafal kosakata kunci",
     "anchor_points_per_ayah": "Titik jangkar per ayah",
     "saved_sessions": "Sesi Tersimpan",
-    "saved_sessions_intro": "Perjalanan hafiz Anda, lanjutkan khatam selesai atau rentang yang sedang berjalan.",
+    "saved_sessions_intro": "Perjalanan hafiz Anda — lanjutkan khatam selesai atau rentang yang sedang berjalan.",
     "completed_sessions": "Sesi selesai",
     "completed_sessions_desc": "Sesi di mana Anda mencapai akhir rentang ayat. Kunjungi kembali untuk muraja'ah.",
     "incomplete_sessions": "Sesi belum selesai",
@@ -1778,6 +1877,10 @@
     "no_completed_sessions_hint": "Rentang yang selesai akan muncul di sini untuk muraja'ah.",
     "session_completed_label": "Selesai",
     "review_session": "Tinjau",
+    "ai_recite_review": "Uji hafalan",
+    "saved_session_meta_completed": "Completed",
+    "saved_session_meta_opened": "Opened {date}",
+    "saved_session_meta_duration": "{duration} practised",
     "last_opened": "Terakhir dibuka {date}",
     "no_surah_selected": "Belum ada surah dipilih",
     "each_session_keeps_only_the_essentials_what_it_is_": "Setiap sesi hanya menyimpan yang esensial: apa itu, di mana, dan cara kembali.",
@@ -1838,6 +1941,8 @@
       "actions": {
         "testWithAi": "Periksa hafalan",
         "testWithAiAgain": "Periksa lagi",
+        "checkNow": "Periksa sekarang",
+        "continueWithoutTesting": "Lanjut tanpa memeriksa",
         "chooseAnotherSession": "Pilih sesi lain",
         "continueToAyahsFallback": "Lanjutkan dengan barakah",
         "retest": "Periksa lagi",
@@ -1856,9 +1961,10 @@
         "reviewAyahOnce": "Ulang āyah {ayah}",
         "chooseAnotherRange": "Rentang lain",
         "chooseDifferentRange": "Rentang lain",
-        "returnToWorkspace": "Kembali ke ruang kerja",
-        "checkNow": "Periksa sekarang",
-        "continueWithoutTesting": "Lanjut tanpa memeriksa"
+        "returnToWorkspace": "Kembali ke ruang kerja"
+      },
+      "memorisationCheckNudge": {
+        "title": "Uji hafalan Anda dulu?"
       },
       "coach": {
         "yourNextPractice": "Berikutnya step",
@@ -2147,9 +2253,17 @@
         "repsDone": "{count} تكرارات",
         "aiFirstBodyShort": "Check your hafalan next to unlock a tailored practice plan.",
         "mainFocus": "Main Fokus",
+        "mainFocusExplanationAyah": "Perkuat Ayat {ayah} dalam set ini.",
+        "mainFocusExplanationWeakAreas": "Perkuat ayat lemah yang teridentifikasi dalam set ini.",
+        "mainFocusExplanationStrong": "Set ini sudah kokoh; lanjut ke set berikutnya yang disarankan.",
+        "mainFocusExplanationRevision": "Ulangi set ini sebelum maju.",
         "checkComplete": "Check selesai",
         "yourResult": "Anda hasil",
         "whatNext": "Apa ke practise Berikutnya",
+        "whatNextLead": "Berdasarkan sesi ini, latih set berikutnya dengan teknik di bawah.",
+        "nextMetaRange": "Fokus",
+        "nextMetaMethod": "Teknik",
+        "nextMetaTime": "Waktu",
         "whyRecommended": "Why Ini was Disarankan",
         "weakSpotsTitle": "Lemah areas",
         "weakSpotsLead": "Ayah āyahs dan Kata-kata perlu the most perhatian sebelum Anda lanjutkan.",
@@ -2189,7 +2303,20 @@
           "minorLocal": "Only a few Kata-kata perlu perhatian, focused practice akan be quicker dan clearer.",
           "focusedCluster": "Anda weak spots sit close together, so a short focused review is Disarankan.",
           "spreadWeakness": "Lemah areas appear across the sesi, so revisiting the full range with emphasis is recommended.",
-          "defaultFocus": "A focused pass aktif the weaker Kata-kata dan phrases is Disarankan dulu."
+          "defaultFocus": "A focused pass aktif the weaker Kata-kata dan phrases is Disarankan dulu.",
+          "strongContinue": "Set ini kokoh; lanjutkan dengan teknik yang disarankan pada set berikutnya."
+        },
+        "successFlow": {
+          "title": "Langkah berikutnya yang disarankan",
+          "strongLead": "Ingatan kuat; jaga alur dengan teknik yang disarankan.",
+          "mostlySecureLead": "Cukup kokoh; perkuat ayat lemah, lalu lanjut.",
+          "reinforceTitle": "Ulangi ayat lemah {ayah}",
+          "reinforceDetail": "Kuatkan Ayat {ayah} sekali sebelum maju.",
+          "reinforceWithTechnique": "Gunakan {technique} pada Ayat {ayah}, lalu lanjut.",
+          "continueAfterReinforce": "Lalu lanjut ke set berikutnya saat ayat lemah terasa stabil.",
+          "continueWithTechnique": "Lalu lanjutkan dengan {technique}.",
+          "strongDetail": "Set ini kokoh; lanjut ke set berikutnya yang disarankan.",
+          "strongWithTechnique": "Lanjutkan dengan {technique} pada set berikutnya."
         },
         "previousAttemptNote": "Previous related percobaan: {summary}",
         "previousAttemptsAvailable": "Previous related attempts are disimpan dengan Ini recommendation.",
@@ -2205,6 +2332,38 @@
         "whyThisHelps": "Why Ini helps",
         "whatYouWillDo": "Apa Anda akan practise",
         "howItWorks": "How Anda akan practise",
+        "practiceHow": {
+          "seeHowItWorks": "Lihat cara kerjanya",
+          "hide": "Sembunyikan",
+          "title": "Cara berlatih",
+          "steps": {
+            "talqin": {
+              "1": "Putar ayat sekali dan dengarkan dengan saksama.",
+              "2": "Ulangi dengan suara sambil melihat.",
+              "3": "Ulangi lagi dari hafalan."
+            },
+            "focus": {
+              "1": "Kerjakan satu ayat saja.",
+              "2": "Jangan pindah sampai terasa stabil.",
+              "3": "Lalu ke ayat berikutnya."
+            },
+            "blur": {
+              "1": "Baca ayat sekali dengan teks jelas.",
+              "2": "Sembunyikan lebih banyak teks di setiap pengulangan.",
+              "3": "Akhiri dengan mengingat tanpa melihat."
+            },
+            "chaining": {
+              "1": "Latih ayat pertama sendiri.",
+              "2": "Tambah ayat berikutnya dan gabungkan.",
+              "3": "Tilawah rantai pendek dengan lancar."
+            },
+            "anchor": {
+              "1": "Perhatikan kata kunci yang ditandai.",
+              "2": "Ucapkan kata itu dengan jelas dulu.",
+              "3": "Lalu tilawah ayat lengkap."
+            }
+          }
+        },
         "paceAndSupport": "kecepatan & support",
         "estimatedTime": "Tentang",
         "nextSetTitle": "Recommended plan",
@@ -2247,6 +2406,7 @@
         "retry": "Coba lagi",
         "retryRecommendation": "Siapkan rekomendasi lagi",
         "loadError": "Suggestion unavailable, your session is still saved.",
+        "noWeakAyah": "Tidak ada ayat lemah yang teridentifikasi dari penilaian ini.",
         "startError": "Tidak dapat start. Silakan try again.",
         "settingsError": "Tidak dapat save settings. Silakan try again.",
         "confidenceError": "Tidak dapat save your response. Silakan try again.",
@@ -2348,6 +2508,10 @@
         "aiResultLineMixedOrder": "Good overall, but the order of ayah slipped a little.",
         "aiResultLineWeak": "A few spots still perlu help.",
         "aiResultLineWeakAyah": "ayah {ayah} needs the most help.",
+        "aiHighlightUncertain": "Kata kuning belum jelas bagi pendengar, tidak dihitung sebagai kesalahan tegas.",
+        "awaitingCheckNext": "Uji dari hafalan, atau lanjut ke Ayat {start}, {end}.",
+        "insufficientAudioNext": "Coba rekaman lagi. Jika browser meminta, izinkan mikrofon.",
+        "needsPracticeNext": "Ulangi kata yang ditandai, lalu periksa lagi.",
         "evidenceFromSessionAndConfidence": "Based on your sesi and keyakinan.",
         "checkAnswerQuizStrong": "Siap to continue",
         "checkAnswerQuizMixed": "Sebagian besar aman",
@@ -2518,9 +2682,6 @@
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} sebelum continuing.",
         "aiWeakAyahsLabel": "Fokus ayahs",
         "aiFirstBody": "Uji dulu dengan AI. Skor dan rencana latihan muncul di sini setelah kami mendengar Anda."
-      },
-      "memorisationCheckNudge": {
-        "title": "Uji hafalan Anda dulu?"
       }
     },
     "aiRecitePlan": {
@@ -2708,7 +2869,7 @@
       "review": "Perlu Muraja'ah",
       "excellentHint": "Yakin dan akurat dari hafalan",
       "goodHint": "Sebagian besar benar dengan sedikit jeda",
-      "fairHint": "Hampir hafal tetapi masih ada celah, ulangi sekali lagi.",
+      "fairHint": "Hampir hafal tetapi masih ada celah — ulangi sekali lagi.",
       "reviewHint": "Muraja'ah ayah ini sebelum lanjut"
     },
     "selfCheckRecorder": {
@@ -2717,7 +2878,7 @@
       "assessmentHeading": "Nilai hafalan Anda",
       "aiSessionReady": "Saat siap, tilawah rentang ayat Anda dan biarkan AI memandu tinjauan.",
       "aiAyahReady": "Saat siap, tilawah ayat ini dari hafalan dan biarkan AI memandu tinjauan Anda.",
-      "recordingActive": "Mikrofon aktif, tilawah dengan tajwid, lalu tekan berhenti.",
+      "recordingActive": "Mikrofon aktif — tilawah dengan tajwid, lalu tekan berhenti.",
       "reviewDraft": "Dengarkan rekaman Anda, nilai dengan jujur, lalu simpan percobaan.",
       "preparingMic": "Menyiapkan mikrofon untuk rekaman yang jelas, insya Allah.",
       "unsupportedBrowser": "Rekaman membutuhkan browser dengan dukungan mikrofon.",
@@ -3352,11 +3513,7 @@
       "toolMemorizing": "جارٍ الحفظ",
       "peekHint": "perlu a hint? Peek at the text",
       "toolPeek": "معاينة النص"
-    },
-    "ai_recite_review": "Test recall",
-    "saved_session_meta_completed": "Completed",
-    "saved_session_meta_opened": "Opened {date}",
-    "saved_session_meta_duration": "{duration} practised"
+    }
   },
   "toasts": {
     "saved": "Berhasil disimpan.",
@@ -3475,6 +3632,10 @@
     "sessionEndFailed": "Unable to end sesi. Silakan try again.",
     "sessionPaused": "sesi dijeda. You can resume anytime.",
     "sessionPauseFailed": "Unable to pause sesi. Silakan try again.",
+    "sessionSaveFailed": "Tidak dapat menyimpan sesi ini. Coba lagi.",
+    "sessionSaveSyncFailed": "Sesi disimpan di perangkat ini. Sinkronisasi akan dicoba lagi sebentar lagi.",
+    "sessionSaveLimitReached": "Batas sesi tersimpan tercapai ({max}). Hapus satu untuk menyimpan yang lain.",
+    "premiumTechniqueRequired": "Teknik ini membutuhkan Premium. Tingkatkan untuk membukanya.",
     "couldNotPlayRecording": "We could not play this rekaman. Try reloading it or record again.",
     "defaultSessionLoaded": "Default sesi loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no hafalan techniques.",
     "recordingRenamed": "rekaman renamed to \"{name}\".",
@@ -4009,7 +4170,7 @@
     "analytics_week_ayahs_hint": "Practised Ini week",
     "analytics_active_days_hint": "Ini week",
     "strengthen_title": "muraja'ah",
-    "strengthen_subtitle": "",
+    "strengthen_subtitle": "Muraja’ah agar ayat yang sudah hafal tetap kuat dalam ingatan.",
     "view_all": "View semua",
     "view_all_reviews": "semua muraja'ah",
     "weak_empty_title": "Segala puji bagi Allah",
@@ -4124,6 +4285,9 @@
     "journey_overall_ayahs": "{n} ayahs dihafal",
     "journey_data_title": "Anda hifz at a glance",
     "journey_data_subtitle": "Lifetime hafalan kemajuan.",
+    "glance_memorised_label": "Ayat yang sudah hafal",
+    "glance_learning_label": "Sedang dipelajari",
+    "glance_quran_share": "Bagian Anda dari seluruh Al-Qur’an",
     "view_memorised_ayahs": "All dihafal ayahs",
     "view_saved_sessions": "disimpan sesi",
     "journey_progress_label": "Ini set",
@@ -4166,10 +4330,7 @@
     "sync_ready": "{when}",
     "sync_ready_now": "Siap",
     "sync_error": "غير متصل",
-    "footnote": "",
-    "glance_memorised_label": "Memorised ayahs",
-    "glance_learning_label": "Currently learning",
-    "glance_quran_share": "Your share of the entire Qur'an"
+    "footnote": ""
   },
   "admin": {
     "loading": "memuat…",

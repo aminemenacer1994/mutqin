@@ -3,7 +3,7 @@
     "on": "On",
     "off": "kapalı",
     "reset": "Sıfırla",
-    "startSession": "Start Session",
+    "startSession": "Oturumu başlat",
     "pause": "Duraklat",
     "settings": "Ayarlar",
     "controls": "Kontroller",
@@ -18,7 +18,7 @@
     "yes": "Evet",
     "no": "No",
     "home": "Ana sayfa",
-    "memorisation": "Memorisation",
+    "memorisation": "Hıfz",
     "delete": "Sil",
     "resume": "Devam et",
     "discard": "Vazgeç",
@@ -175,6 +175,7 @@
     "reciter": "okuyucu",
     "repetitions": "Tekrarlar",
     "individualAyah": "Odak one ayah",
+    "individualAyahOption": "Seçin ayah {number}",
     "individualAyahIntro": "Aralıktaki bir ayet için özel tekrar sayısı ayarlayın. Diğer ayetler yukarıdaki oturum ayarını kullanır.",
     "individualAyahSelect": "Seçin ayah",
     "individualAyahSelectHint": "Only ayahs within yeriniz current aralık are listed.",
@@ -201,8 +202,7 @@
     "wordByWord": "Kelime kelime",
     "wordByWordDesc": "Anlamlarıyla tek tek kelime kartları",
     "wordAudio": "Kelime sesi",
-    "wordAudioDesc": "Kelime vurgulamalı ses oynatma",
-    "individualAyahOption": "Seçin ayah {number}"
+    "wordAudioDesc": "Kelime vurgulamalı ses oynatma"
   },
   "homepage": {
     "hero": {
@@ -293,6 +293,12 @@
           "detail": "Bi’idhnillāh net bir plan, böylece sırada ne açacağını merak etmezsin."
         }
       }
+    },
+    "demo": {
+      "session": "سورة Al-Mulk · آية 3",
+      "title": "AI Recitation",
+      "feedback": "2 Kelimeler ihtiyaç duyar more practice önce sen move açık.",
+      "status": "kontroling recitation..."
     },
     "steps": {
       "kicker": "Your path",
@@ -411,12 +417,6 @@
     "name": "« Name»",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
     "all_rights_reserved": "© All Rights Reserved",
-    "demo": {
-      "session": "سورة Al-Mulk · آية 3",
-      "title": "AI Recitation",
-      "feedback": "2 Kelimeler ihtiyaç duyar more practice önce sen move açık.",
-      "status": "kontroling recitation..."
-    },
     "testimonials": {
       "kicker": "Students ve teachers",
       "title": "Ne people say",
@@ -563,10 +563,6 @@
           "label": "Pratik",
           "text": "Seti huzurla çalış, acele etme."
         },
-        "result": {
-          "label": "Sonucunuz",
-          "text": "Nelerin güçlü olduğunu ve nelere dikkat gerektiğini görün."
-        },
         "check": {
           "label": "Ezber kontrolü",
           "text": "Ezberden okuyun, Mutqin takip etsin."
@@ -574,6 +570,10 @@
         "complete": {
           "label": "Oturum bitti",
           "text": "Bu oturumda bitirdiğinizi görün."
+        },
+        "result": {
+          "label": "Sonucunuz",
+          "text": "Nelerin güçlü olduğunu ve nelere dikkat gerektiğini görün."
         },
         "recommend": {
           "label": "Öneri",
@@ -626,6 +626,7 @@
       "statusContinue": "Pick up where sen left kapalı",
       "hintReview": "Tekrar et each ayah until you can recite it smoothly without looking.",
       "hintContinue": "Dinle to each ayah, repeat it, then try from memory.",
+      "hintResume": "Yeriniz sizi bekliyor. Bıraktığınız sete devam edin.",
       "hintStart": "Başlat with a small set, steady steps build lasting ezber.",
       "leadRevise": "Tekrar et what you know in {surah} before adding new ayahs.",
       "leadContinue": "Devam et memorising {surah} from where you stopped.",
@@ -1296,6 +1297,7 @@
       "recordingInvalid": "No usable ses was captured. Try kayıt again.",
       "serviceNetworkError": "Yapamadık connect to the recitation service. Your oturum is safe. Tekrar dene.",
       "serviceUnavailable": "Recitation checking is temporarily unavailable. sen can devam practising ve try the AI kontrol again later.",
+      "usageCapReached": "Bugünkü yapay zeka ses kontrolü limitine ulaştınız. Lütfen yarın tekrar deneyin.",
       "processingTimeout": "This is taking longer than expected. Tekrar dene.",
       "stageRecording": "kayıt…",
       "stageProcessing": "جارٍ المعالجة…",
@@ -1643,6 +1645,92 @@
     },
     "view_recording": "View kayıt",
     "revisitOnboarding": "Turu bir daha göster",
+    "workspaceTour": {
+      "stepCounter": "Adım {current} / {total}",
+      "next": "İleri",
+      "skip": "Atla",
+      "finish": "Bitti",
+      "steps": {
+        "welcome": {
+          "title": "Burası Hıfz alanı",
+          "body": "Hıfz çalışma alanınız. Yol kısa kalsın diye Al-Fatiha 1–3 ile başlıyoruz.",
+          "waitHint": ""
+        },
+        "controls": {
+          "title": "Kontrolleri aç",
+          "body": "Kurulum, pratik araçları ve kayıtlı setler burada açılır.",
+          "waitHint": ""
+        },
+        "setup": {
+          "title": "Kurulum",
+          "body": "Sure ve ayet aralığını burada seçin. Odaklı tekrar Al-Fatiha 1–3, Alafasy ve 2 tekrar ile başlar.",
+          "waitHint": ""
+        },
+        "practice": {
+          "title": "Pratik araçları",
+          "body": "Odak, Bulanıklaştırma ve Talqin burada. Dinler ve tekrarlarken bir aracı kullanın.",
+          "waitHint": ""
+        },
+        "saved": {
+          "title": "Kayıtlı setler",
+          "body": "Kaydettiğiniz setler buraya döner. Devam etmek için birini açın veya mevcut tekrara devam edin.",
+          "waitHint": ""
+        },
+        "start": {
+          "title": "Oturumu başlat",
+          "body": "Bu, odaklı tekrarı başlatır: Al-Fatiha 1–3, Alafasy ve 2 tekrar.",
+          "waitHint": ""
+        },
+        "session": {
+          "title": "Bu ayetleri çalışın",
+          "body": "Al-Fatiha 1–3 sayfada kalır. Oturum sırasında burada dinleyin ve tekrarlayın.",
+          "waitHint": ""
+        },
+        "ai": {
+          "title": "Yapay zekâ tilavetiyle kontrol",
+          "body": "Bu yapay zekâ tilavet kontrolüdür. Dinler ve her kelimeyi işaretler. Kendi kendine bitmez.",
+          "waitHint": ""
+        },
+        "results": {
+          "title": "Doğru ve yanlış kelimeleri görün",
+          "body": "Yeşil kelimeler eşleşti. Vurgulanan bazı kelimeler hâlâ dikkat ister. Bu örnek analizi gösterir.",
+          "waitHint": ""
+        },
+        "weak": {
+          "title": "Zayıf alanlar",
+          "body": "Bu ayetler ve kelimeler daha fazla dikkat ister. Mutqin sonraki planları bunlara göre şekillendirir.",
+          "waitHint": ""
+        },
+        "plan": {
+          "title": "Önerilen planlar",
+          "body": "Bu kontrolden sonra iki plan var: zayıf ayetleri çalışın veya Al-Fatiha 1–3’ü Alafasy ile 2 kez tekrarlayın.",
+          "waitHint": ""
+        },
+        "dashboard": {
+          "title": "İlerlemeyi görün",
+          "body": "Bu sizin panonuz: seriler, kapsam ve muraja’ah.",
+          "waitHint": ""
+        }
+      }
+    },
+    "testerGuide": {
+      "kicker": "Test yolu",
+      "title": "Mutqin’de nereye gideceğiniz",
+      "intro": "Bu adımları sırayla izleyin. İstediğiniz zaman küçültün; pusula çipi geri getirir.",
+      "chip": "Rehber",
+      "minimize": "Rehberi küçült",
+      "dismiss": "Rehberi kapat",
+      "next": "Sonraki adım",
+      "openDashboard": "Panoyu aç",
+      "steps": {
+        "workspace": "Hıfz alanındasınız, ana pratik çalışma alanı.",
+        "welcome": "Tekrar hoş geldiniz görünürse Yeni oturum başlat’ı seçin.",
+        "setup": "Kontroller → Kurulum’u açın, Al-Fatiha 1–3’ü seçin, ardından Oturumu başlatın.",
+        "aiCheck": "Çalışın, oturumu bitirin, sonra Hıfzı kontrol et (YZ).",
+        "plan": "Bir öneri planı seçin ve Bu planı başlat’a dokunun; sadece seçmekle kalmayın.",
+        "keepGoing": "İlerleme ve muraja’ah için Panoyu açın, sonra sonraki oturum için buraya dönün."
+      }
+    },
     "onboarding": {
       "stepCounter": "Adım {current} / {total}",
       "intro": "Ayetleri seçin, araçlarla çalışın, AI ile kontrol edin, sonra sonraki planı izleyin.",
@@ -1705,6 +1793,17 @@
             "Önerilen sonraki aralığı ve hedefi alın",
             "O oturum için uygun araçları kullanın"
           ]
+        },
+        "continue": {
+          "title": "Plandan sonra devam",
+          "stepLabel": "Devam",
+          "body": "Seçtiğiniz planı başlatın, çalışın, ardından ilerleme ve muraja’ah için Panoyu açın. Sonraki oturum için Hıfz’a dönün.",
+          "hint": "Hıfz pratiktir. Pano ilerleme ve tekrardır.",
+          "points": [
+            "Bu planı başlatın ve önerilen araçları kullanın",
+            "Seriler, ilerleme ve muraja’ah için Panoyu açın",
+            "Sonraki aralık için hazır olunca Hıfz’a dönün"
+          ]
         }
       }
     },
@@ -1765,7 +1864,7 @@
     "best_for_memorising_key_vocabulary": "Best için: Memorising Anahtar kelimeler vocabulary",
     "anchor_points_per_ayah": "Ayah başına çapa noktaları",
     "saved_sessions": "kaydedilmiş oturumlar",
-    "saved_sessions_intro": "Hıfz yolculuklarınız, tamamlanan hatim veya devam eden aralığa dönün.",
+    "saved_sessions_intro": "Hıfz yolculuklarınız — tamamlanan hatim veya devam eden aralığa dönün.",
     "completed_sessions": "Tamamlanan oturumlar",
     "completed_sessions_desc": "Ayet aralığının sonuna ulaştığınız oturumlar. Muraja'ah için tekrar ziyaret edin.",
     "incomplete_sessions": "Tamamlanmayan oturumlar",
@@ -1778,6 +1877,10 @@
     "no_completed_sessions_hint": "Bitirilen aralıklar muraja'ah için burada görünür.",
     "session_completed_label": "Tamamlandı",
     "review_session": "Gözden geçir",
+    "ai_recite_review": "Ezber testi",
+    "saved_session_meta_completed": "Completed",
+    "saved_session_meta_opened": "Opened {date}",
+    "saved_session_meta_duration": "{duration} practised",
     "last_opened": "Son açılış {date}",
     "no_surah_selected": "Sure seçilmedi",
     "each_session_keeps_only_the_essentials_what_it_is_": "Each oturum keeps only the essentials: what it is, where it is, and how to get back in.",
@@ -1838,6 +1941,8 @@
       "actions": {
         "testWithAi": "Ezberi kontrol et",
         "testWithAiAgain": "Tekrar kontrol et",
+        "checkNow": "Şimdi kontrol et",
+        "continueWithoutTesting": "Kontrol etmeden devam et",
         "chooseAnotherSession": "Başka oturum seç",
         "continueToAyahsFallback": "Bereketle devam et",
         "retest": "Tekrar kontrol et",
@@ -1856,9 +1961,10 @@
         "reviewAyahOnce": "Tekrar et āyah {ayah}",
         "chooseAnotherRange": "Başka aralık",
         "chooseDifferentRange": "Başka aralık",
-        "returnToWorkspace": "Çalışma alanına dön",
-        "checkNow": "Şimdi kontrol et",
-        "continueWithoutTesting": "Kontrol etmeden devam et"
+        "returnToWorkspace": "Çalışma alanına dön"
+      },
+      "memorisationCheckNudge": {
+        "title": "Önce ezberinizi test edelim mi?"
       },
       "coach": {
         "yourNextPractice": "Sonraki step",
@@ -2147,9 +2253,17 @@
         "repsDone": "{count} تكرارات",
         "aiFirstBodyShort": "Check your ezber next to unlock a tailored practice plan.",
         "mainFocus": "Main Odak",
+        "mainFocusExplanationAyah": "Bu setteki {ayah}. ayeti güçlendirin.",
+        "mainFocusExplanationWeakAreas": "Bu sette tespit edilen zayıf ayetleri güçlendirin.",
+        "mainFocusExplanationStrong": "Bu set sağlam; önerilen sonraki sete geçin.",
+        "mainFocusExplanationRevision": "İlerlemeden önce bu seti tekrar edin.",
         "checkComplete": "Check tamamlandı",
         "yourResult": "yeriniz sonuç",
         "whatNext": "Ne to practise Sonraki",
+        "whatNextLead": "Bu oturuma göre, aşağıdaki teknikle sonraki seti çalışın.",
+        "nextMetaRange": "Odak",
+        "nextMetaMethod": "Teknik",
+        "nextMetaTime": "Süre",
         "whyRecommended": "Why Bu was Önerilen",
         "weakSpotsTitle": "Zayıf areas",
         "weakSpotsLead": "Bu āyahs ve Kelimeler ihtiyaç duyar the most dikkat önce sen devam.",
@@ -2189,7 +2303,20 @@
           "minorLocal": "Only a few Kelimeler ihtiyaç duyar dikkat, focused practice kalıcı olarak be quicker ve clearer.",
           "focusedCluster": "yeriniz weak spots sit close together, so a short focused review is Önerilen.",
           "spreadWeakness": "Zayıf areas appear across the oturum, so revisiting the full range with emphasis is recommended.",
-          "defaultFocus": "A focused pass açık the weaker Kelimeler ve phrases is Önerilen first."
+          "defaultFocus": "A focused pass açık the weaker Kelimeler ve phrases is Önerilen first.",
+          "strongContinue": "Bu set sağlam; önerilen teknikle sonraki sete devam edin."
+        },
+        "successFlow": {
+          "title": "Önerilen sonraki adımlar",
+          "strongLead": "Güçlü hatırlama; önerilen teknikle akışı koruyun.",
+          "mostlySecureLead": "Genel olarak sağlam; zayıf ayeti pekiştirin, sonra devam edin.",
+          "reinforceTitle": "Zayıf ayet {ayah} tekrar",
+          "reinforceDetail": "İlerlemeden önce {ayah}. ayeti bir kez pekiştirin.",
+          "reinforceWithTechnique": "{ayah}. ayette {technique} kullanın, sonra devam edin.",
+          "continueAfterReinforce": "Zayıf ayet oturunca sonraki sete geçin.",
+          "continueWithTechnique": "Sonra {technique} ile devam edin.",
+          "strongDetail": "Bu set sağlam; önerilen sonraki sete geçin.",
+          "strongWithTechnique": "Sonraki sette {technique} ile devam edin."
         },
         "previousAttemptNote": "Previous related deneme: {summary}",
         "previousAttemptsAvailable": "Previous related attempts are kaydedilmiş ile Bu recommendation.",
@@ -2205,6 +2332,38 @@
         "whyThisHelps": "Why Bu helps",
         "whatYouWillDo": "Ne sen kalıcı olarak practise",
         "howItWorks": "How sen kalıcı olarak practise",
+        "practiceHow": {
+          "seeHowItWorks": "Nasıl çalıştığını gör",
+          "hide": "Gizle",
+          "title": "Nasıl çalışılır",
+          "steps": {
+            "talqin": {
+              "1": "Ayeti bir kez dinleyin.",
+              "2": "Bakarak sesli tekrarlayın.",
+              "3": "Ezberden bir kez daha tekrarlayın."
+            },
+            "focus": {
+              "1": "Yalnızca bir ayet üzerinde çalışın.",
+              "2": "Oturmadan ilerlemeyin.",
+              "3": "Sonra sonraki ayete geçin."
+            },
+            "blur": {
+              "1": "Ayeti metin açıkken bir kez okuyun.",
+              "2": "Her tekrarda biraz daha metni gizleyin.",
+              "3": "Bakmadan hatırlayarak bitirin."
+            },
+            "chaining": {
+              "1": "Önce ilk ayeti tek çalışın.",
+              "2": "Sonraki ayeti ekleyip birleştirin.",
+              "3": "Kısa zinciri akıcı tilavet edin."
+            },
+            "anchor": {
+              "1": "İşaretli anahtar kelimeleri fark edin.",
+              "2": "Önce o kelimeleri net söyleyin.",
+              "3": "Sonra ayetin tamamını tilavet edin."
+            }
+          }
+        },
         "paceAndSupport": "hız & support",
         "estimatedTime": "Hakkında",
         "nextSetTitle": "Recommended plan",
@@ -2247,6 +2406,7 @@
         "retry": "Tekrar dene",
         "retryRecommendation": "Öneriyi yeniden hazırla",
         "loadError": "Suggestion unavailable, your session is still saved.",
+        "noWeakAyah": "Bu değerlendirmede zayıf bir ayet tespit edilmedi.",
         "startError": "Yapılamadı start. Lütfen try again.",
         "settingsError": "Yapılamadı save settings. Lütfen try again.",
         "confidenceError": "Yapılamadı save your response. Lütfen try again.",
@@ -2348,6 +2508,10 @@
         "aiResultLineMixedOrder": "Good overall, but the order of ayah slipped a little.",
         "aiResultLineWeak": "A few spots still ihtiyaç duyar help.",
         "aiResultLineWeakAyah": "ayah {ayah} needs the most help.",
+        "aiHighlightUncertain": "Kehribar kelimeler dinleyiciye belirsiz geldi; kesin hata sayılmaz.",
+        "awaitingCheckNext": "Ezberden test edin veya {start}, {end}. ayetlere devam edin.",
+        "insufficientAudioNext": "Kaydı tekrar deneyin. Tarayıcı isterse mikrofona izin verin.",
+        "needsPracticeNext": "Vurgulanan kelimeleri tekrar edin, sonra yeniden kontrol edin.",
         "evidenceFromSessionAndConfidence": "Based on your oturum and güven.",
         "checkAnswerQuizStrong": "Hazır to continue",
         "checkAnswerQuizMixed": "Çoğunlukla sağlam",
@@ -2518,9 +2682,6 @@
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} önce continuing.",
         "aiWeakAyahsLabel": "Odak ayahs",
         "aiFirstBody": "Önce yapay zeka ile test edin. Skorunuz ve planınız dinledikten sonra burada görünür."
-      },
-      "memorisationCheckNudge": {
-        "title": "Önce ezberinizi test edelim mi?"
       }
     },
     "aiRecitePlan": {
@@ -2708,7 +2869,7 @@
       "review": "Gözden Geçir",
       "excellentHint": "Ezberden güvenli ve doğru",
       "goodHint": "Küçük duraksamalarla çoğunlukla doğru",
-      "fairHint": "Çoğunlukla hazır ama boşluklar var, bir tekrar daha değer.",
+      "fairHint": "Çoğunlukla hazır ama boşluklar var — bir tekrar daha değer.",
       "reviewHint": "Devam etmeden önce bu ayeti tekrar gözden geçir"
     },
     "selfCheckRecorder": {
@@ -2717,7 +2878,7 @@
       "assessmentHeading": "Hıfznızı değerlendirin",
       "aiSessionReady": "Hazır olduğunuzda ayet aralığınızı tilavet edin ve AI incelemenizi yönlendirsin.",
       "aiAyahReady": "Hazır olduğunuzda bu ayeti hıfızdan tilavet edin ve AI incelemenizi yönlendirsin.",
-      "recordingActive": "Mikrofonunuz açık, tecvidle tilavet edin, bitince durdurun.",
+      "recordingActive": "Mikrofonunuz açık — tecvidle tilavet edin, bitince durdurun.",
       "reviewDraft": "Kaydınızı dinleyin, dürüstçe değerlendirin ve kaydedin.",
       "preparingMic": "Net bir kayıt için mikrofon hazırlanıyor, inşaallah.",
       "unsupportedBrowser": "Kayıt için mikrofon destekli bir tarayıcı gerekir.",
@@ -3352,11 +3513,7 @@
       "toolMemorizing": "جارٍ الحفظ",
       "peekHint": "ihtiyaç duyar a hint? Peek at the text",
       "toolPeek": "معاينة النص"
-    },
-    "ai_recite_review": "Test recall",
-    "saved_session_meta_completed": "Completed",
-    "saved_session_meta_opened": "Opened {date}",
-    "saved_session_meta_duration": "{duration} practised"
+    }
   },
   "toasts": {
     "saved": "kaydedilmiş successfully.",
@@ -3475,6 +3632,10 @@
     "sessionEndFailed": "Unable to end oturum. Lütfen try again.",
     "sessionPaused": "oturum duraklatıldı. You can resume anytime.",
     "sessionPauseFailed": "Unable to pause oturum. Lütfen try again.",
+    "sessionSaveFailed": "Bu oturum kaydedilemedi. Tekrar deneyin.",
+    "sessionSaveSyncFailed": "Oturum bu cihazda kaydedildi. Senkron birazdan yeniden denenecek.",
+    "sessionSaveLimitReached": "Kayıtlı oturum sınırına ulaşıldı ({max}). Başka kaydetmek için birini silin.",
+    "premiumTechniqueRequired": "Bu teknik Premium gerektirir. Açmak için yükseltin.",
     "couldNotPlayRecording": "We could not play this kayıt. Try reloading it or record again.",
     "defaultSessionLoaded": "Default oturum loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no ezber techniques.",
     "recordingRenamed": "kayıt renamed to \"{name}\".",
@@ -4009,7 +4170,7 @@
     "analytics_week_ayahs_hint": "Practised Bu week",
     "analytics_active_days_hint": "Bu week",
     "strengthen_title": "muraja'ah",
-    "strengthen_subtitle": "",
+    "strengthen_subtitle": "Ezberlenen ayetleri bellekte güçlü tutmak için tekrar.",
     "view_all": "View tüm",
     "view_all_reviews": "tüm muraja'ah",
     "weak_empty_title": "Elhamdülillah",
@@ -4124,6 +4285,9 @@
     "journey_overall_ayahs": "{n} ayahs ezberlenmiş",
     "journey_data_title": "yeriniz hifz at a glance",
     "journey_data_subtitle": "Lifetime ezber ilerleme.",
+    "glance_memorised_label": "Ezberlenen ayetler",
+    "glance_learning_label": "Şu an öğrenilen",
+    "glance_quran_share": "Tüm Kur’an’daki payınız",
     "view_memorised_ayahs": "All ezberlenmiş ayahs",
     "view_saved_sessions": "kaydedilmiş oturumlar",
     "journey_progress_label": "Bu set",
@@ -4166,10 +4330,7 @@
     "sync_ready": "{when}",
     "sync_ready_now": "Hazır",
     "sync_error": "Çevrimdışı",
-    "footnote": "",
-    "glance_memorised_label": "Memorised ayahs",
-    "glance_learning_label": "Currently learning",
-    "glance_quran_share": "Your share of the entire Qur'an"
+    "footnote": ""
   },
   "admin": {
     "loading": "yükleniyor…",

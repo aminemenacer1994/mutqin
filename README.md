@@ -86,11 +86,26 @@ Copy `.env.example` to `.env` and configure:
 | `APP_URL` | App URL (local: `http://127.0.0.1:8000`) |
 | `SPEECHMATICS_API_KEY` | Live transcription for AI recite (Pro) |
 | `SPEECHMATICS_REGION` | `eu` or `us` |
+| `SPEECHMATICS_USAGE_CAP_*` | Daily token-mint safety cap (see below) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth login |
 | `STRIPE_*` | Publishable/secret keys, webhook secret, price IDs |
 | `MUTQIN_ADMIN_EMAILS` | Reserved admin mailboxes (registration/profile deny-list). Admin privilege is `users.is_admin` — migration bootstraps matching emails once. |
 
 **Never commit real secrets.** Stripe keys in `.env.example` are placeholders only.
+
+### Speechmatics usage cap
+
+AI Recite and Check memorisation mint a short-lived Speechmatics realtime token on each start. A daily cache-backed cap stops unbounded spend. It is **not** a billing system: it counts successful token mints per UTC day (per user and globally). Failed mints do not count. Learners see a generic “try again tomorrow” message — no provider or config details.
+
+| Environment | Suggested starting point | Why |
+|-------------|--------------------------|-----|
+| Small tester group (about 5–15 people) | `SPEECHMATICS_USAGE_CAP_ENABLED=true`, `SPEECHMATICS_DAILY_USER_TOKEN_MINTS=30`, `SPEECHMATICS_DAILY_GLOBAL_TOKEN_MINTS=200` | About 60 minutes/user and 400 minutes total (each mint lasts 2 minutes). |
+| Production | Keep enabled. Raise after you see real traffic, e.g. `60` / `2000` | Protects the account if a client retries aggressively; tune global against your Speechmatics budget. |
+| Local hammering | `SPEECHMATICS_USAGE_CAP_ENABLED=false` | Avoids blocking yourself while iterating on AI Recite. |
+
+Optional: set `SPEECHMATICS_DAILY_USER_SESSION_MINUTES` / `SPEECHMATICS_DAILY_GLOBAL_SESSION_MINUTES` instead of (or as well as) mint counts. Minutes convert with the token TTL (default 120s). If both are set, the tighter limit wins. `0`, empty, or invalid numbers disable that axis and log a warning (fail open so testers are not locked out by a typo).
+
+Watch logs for `Speechmatics usage cap approaching.` and `Speechmatics usage cap reached.` After changing env vars: `php artisan config:clear`.
 
 ### Subscription tiers
 

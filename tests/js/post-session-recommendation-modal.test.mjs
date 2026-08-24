@@ -201,7 +201,7 @@ function t(key, params = {}) {
   assert.deepEqual(needsPractice.map((b) => [b.variant, b.action]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE],
     ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN],
-    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE],
+    ['ghost', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE],
   ])
   assert.match(completionModal, /data-testid="post-session-actions"/)
   assert.match(completionModal, /postSessionCtaButtons/)

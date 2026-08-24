@@ -38,6 +38,21 @@ return [
     'speechmatics' => [
         'api_key' => env('SPEECHMATICS_API_KEY'),
         'region' => env('SPEECHMATICS_REGION'),
+        // Realtime temporary token lifetime (seconds). Usage-cap minutes convert with this TTL.
+        'token_ttl' => env('SPEECHMATICS_TOKEN_TTL', 120),
+        /*
+         * Daily cost guard for AI Recite / Check memorisation token mints.
+         * Counts successful mints per UTC day (cache). Not a billing system.
+         * Tester defaults: 30 mints/user (~60 min) and 200 global (~400 min).
+         * See README "Speechmatics usage cap" and .env.example.
+         */
+        'usage_cap' => [
+            'enabled' => env('SPEECHMATICS_USAGE_CAP_ENABLED', true),
+            'daily_user_token_mints' => env('SPEECHMATICS_DAILY_USER_TOKEN_MINTS', 30),
+            'daily_global_token_mints' => env('SPEECHMATICS_DAILY_GLOBAL_TOKEN_MINTS', 200),
+            'daily_user_session_minutes' => env('SPEECHMATICS_DAILY_USER_SESSION_MINUTES'),
+            'daily_global_session_minutes' => env('SPEECHMATICS_DAILY_GLOBAL_SESSION_MINUTES'),
+        ],
     ],
 
     'google' => [

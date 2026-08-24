@@ -127,7 +127,7 @@ import {
   assert.deepEqual(needsPractice.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
     ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['ghost', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
   ])
 
   const needsPracticeWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
@@ -140,6 +140,8 @@ import {
   assert.equal(needsPracticeWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
   assert.equal(needsPracticeWeak[1].labelKey, 'startFocusedReview')
   assert.equal(needsPracticeWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(needsPracticeWeak[2].variant, 'ghost')
+  assert.equal(needsPracticeWeak.length, 3)
 
   const reviseRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
     preferReviseRange: true,

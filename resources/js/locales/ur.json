@@ -206,7 +206,7 @@
   },
   "homepage": {
     "hero": {
-      "badge": "حفظ کا ساتھی",
+      "badge": "اے آئی کے ساتھ قرآن حفظ",
       "title": "Keep your Hifz close, one calm session at a time.",
       "desc": "Practise a short range, check what you still hold, and know what to return to next, bi’idhnillāh.",
       "promiseLabel": "ضرورت اور جواب",
@@ -293,6 +293,12 @@
           "detail": "ایک واضح منصوبہ بإذن اللہ، تاکہ اگلا کیا کھولنا ہے اس میں الجھن نہ ہو۔"
         }
       }
+    },
+    "demo": {
+      "session": "سورة الملك · الآية ٣",
+      "title": "فحص التلاوة",
+      "feedback": "كلمتان تحتاجان مزيداً من التدريب قبل المتابعة.",
+      "status": "جاري فحص التلاوة..."
     },
     "steps": {
       "kicker": "Your path",
@@ -411,12 +417,6 @@
     "name": "الاسم",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
     "all_rights_reserved": "© جميع الحقوق محفوظة",
-    "demo": {
-      "session": "سورة الملك · الآية ٣",
-      "title": "فحص التلاوة",
-      "feedback": "كلمتان تحتاجان مزيداً من التدريب قبل المتابعة.",
-      "status": "جاري فحص التلاوة..."
-    },
     "testimonials": {
       "kicker": "طلاب ومعلّمون",
       "title": "ماذا يقول الناس",
@@ -563,10 +563,6 @@
           "label": "مشق",
           "text": "سیٹ پر توجہ سے کام کریں، جلدی نہیں۔"
         },
-        "result": {
-          "label": "آپ کا نتیجہ",
-          "text": "دیکھیں کیا مضبوط ہے، اور کیا اب بھی توجہ چاہتا ہے۔"
-        },
         "check": {
           "label": "یادداشت کی جانچ",
           "text": "حفظ سے پڑھیں جبکہ متقن ساتھ چلے۔"
@@ -574,6 +570,10 @@
         "complete": {
           "label": "نشست مکمل",
           "text": "اس نشست میں جو مکمل کیا دیکھیں۔"
+        },
+        "result": {
+          "label": "آپ کا نتیجہ",
+          "text": "دیکھیں کیا مضبوط ہے، اور کیا اب بھی توجہ چاہتا ہے۔"
         },
         "recommend": {
           "label": "تجویز",
@@ -626,6 +626,7 @@
       "statusContinue": "تابع من حيث توقفت",
       "hintReview": "راجع كل آية حتى تتدفق منك دون النظر.",
       "hintContinue": "استمع لكل آية، كرّرها، ثم جرّب من الذاكرة.",
+      "hintResume": "آپ کی جگہ منتظر ہے۔ جس سیٹ پر رکا تھا وہیں سے جاری رکھیں۔",
       "hintStart": "ابدأ بمجموعة صغيرة, الخطوات الثابتة تبني حفظاً دائماً.",
       "leadRevise": "راجع ما تعرفه في {surah} قبل إضافة آيات جديدة.",
       "leadContinue": "تابع حفظ {surah} من حيث توقفت.",
@@ -1296,6 +1297,7 @@
       "recordingInvalid": "لا usable صوت التقط. جرّب تسجيل مجددًا.",
       "serviceNetworkError": "تعذّر connect إلى تلاوة service. جلسة safe. أعد المحاولة.",
       "serviceUnavailable": "فحص التلاوة غير متاح مؤقتًا. يمكنك متابعة التمرين وإعادة المحاولة لاحقًا.",
+      "usageCapReached": "آج کی AI آواز جانچ کی حد پوری ہو چکی ہے۔ براہِ کرم کل دوبارہ کوشش کریں۔",
       "processingTimeout": "هذا taking longer than expected. أعد المحاولة.",
       "stageRecording": "تسجيل…",
       "stageProcessing": "جارٍ المعالجة…",
@@ -1643,6 +1645,92 @@
     },
     "view_recording": "عرض التسجيل",
     "revisitOnboarding": "إعادة جولة التعريف",
+    "workspaceTour": {
+      "stepCounter": "مرحلہ {current} از {total}",
+      "next": "اگلا",
+      "skip": "چھوڑیں",
+      "finish": "مکمل",
+      "steps": {
+        "welcome": {
+          "title": "یہ حفظ کا صفحہ ہے",
+          "body": "آپ کی حفظ کی جگہ۔ راستہ مختصر رکھنے کے لیے ہم الفاتحہ ۱–۳ سے شروع کرتے ہیں۔",
+          "waitHint": ""
+        },
+        "controls": {
+          "title": "کنٹرولز کھولیں",
+          "body": "یہاں سیٹ اپ، مشق کے اوزار اور محفوظ سیٹ کھلتے ہیں۔",
+          "waitHint": ""
+        },
+        "setup": {
+          "title": "سیٹ اپ",
+          "body": "یہاں سورت اور آیات کا دائرہ منتخب کریں۔ مرکوز دہرائی الفاتحہ ۱–۳، علافاسی اور ۲ دہرائی سے شروع ہوتی ہے۔",
+          "waitHint": ""
+        },
+        "practice": {
+          "title": "مشق کے اوزار",
+          "body": "فوکس، دھندلاپن اور تلقین یہاں ہیں۔ سنتے اور دہراتے ہوئے ایک اوزار استعمال کریں۔",
+          "waitHint": ""
+        },
+        "saved": {
+          "title": "محفوظ سیٹ",
+          "body": "جو سیٹ آپ محفوظ کرتے ہیں وہ یہاں واپس آتے ہیں۔ جاری رکھنے کے لیے ایک کھولیں، یا موجودہ دہرائی جاری رکھیں۔",
+          "waitHint": ""
+        },
+        "start": {
+          "title": "سیشن شروع کریں",
+          "body": "یہ مرکوز دہرائی شروع کرتا ہے: الفاتحہ ۱–۳، علافاسی اور ۲ دہرائیاں۔",
+          "waitHint": ""
+        },
+        "session": {
+          "title": "ان آیات کی مشق کریں",
+          "body": "الفاتحہ ۱–۳ صفحے پر رہتی ہے۔ سیشن کے دوران یہاں سنیں اور دہرائیں۔",
+          "waitHint": ""
+        },
+        "ai": {
+          "title": "اے آئی تلاوت سے جانچیں",
+          "body": "یہ اے آئی تلاوت کی جانچ ہے۔ یہ سنتی ہے اور ہر لفظ نشان زد کرتی ہے۔ خود ختم نہیں ہوتی۔",
+          "waitHint": ""
+        },
+        "results": {
+          "title": "درست اور غلط الفاظ دیکھیں",
+          "body": "سبز الفاظ مماثل تھے۔ کچھ نمایاں الفاظ اب بھی توجہ چاہتے ہیں۔ یہ نمونہ تجزیہ دکھاتا ہے۔",
+          "waitHint": ""
+        },
+        "weak": {
+          "title": "کمزور حصے",
+          "body": "یہ آیات اور الفاظ مزید توجہ چاہتے ہیں۔ متقن اگلی منصوبہ بندی ان سے بناتا ہے۔",
+          "waitHint": ""
+        },
+        "plan": {
+          "title": "تجویز کردہ منصوبے",
+          "body": "اس جانچ کے بعد دو منصوبے ہیں: کمزور آیات کی مشق، یا الفاتحہ ۱–۳ کو علافاسی کے ساتھ ۲ بار دہرائیں۔",
+          "waitHint": ""
+        },
+        "dashboard": {
+          "title": "پیش رفت دیکھیں",
+          "body": "یہ آپ کا ڈیش بورڈ ہے: سلسلے، احاطہ، اور مراجعہ۔",
+          "waitHint": ""
+        }
+      }
+    },
+    "testerGuide": {
+      "kicker": "آزمائشی راستہ",
+      "title": "متقن میں کہاں جائیں",
+      "intro": "ان مراحل کو ترتیب سے چلائیں۔ کسی بھی وقت چھوٹا کریں؛ قطب نما چپ اسے واپس لاتی ہے۔",
+      "chip": "رہنما",
+      "minimize": "رہنما چھوٹا کریں",
+      "dismiss": "رہنما بند کریں",
+      "next": "اگلا مرحلہ",
+      "openDashboard": "ڈیش بورڈ کھولیں",
+      "steps": {
+        "workspace": "آپ حفظ پر ہیں، مشق کی مرکزی جگہ۔",
+        "welcome": "اگر خوش آمدید نظر آئے تو نیا سیشن شروع کریں منتخب کریں۔",
+        "setup": "کنٹرولز ← سیٹ اپ کھولیں، الفاتحہ ۱–۳ چنیں، پھر سیشن شروع کریں۔",
+        "aiCheck": "مشق کریں، سیشن ختم کریں، پھر حفظ جانچیں (اے آئی)۔",
+        "plan": "تجویز کردہ منصوبہ چنیں اور اس منصوبے کو شروع کریں دبائیں؛ صرف انتخاب پر نہ رکیں۔",
+        "keepGoing": "پیش رفت اور مراجعہ کے لیے ڈیش بورڈ کھولیں، پھر اگلے سیشن کے لیے یہاں واپس آئیں۔"
+      }
+    },
     "onboarding": {
       "stepCounter": "الخطوة {current} من {total}",
       "intro": "اختر الآيات، تدرب بالأدوات، تحقق بالذكاء، ثم اتبع خطتك التالية.",
@@ -1704,6 +1792,17 @@
           "points": [
             "احصل على نطاق وهدف تالي مقترح",
             "استخدم الأدوات المناسبة لتلك الجلسة"
+          ]
+        },
+        "continue": {
+          "title": "منصوبے کے بعد جاری رکھیں",
+          "stepLabel": "جاری رکھیں",
+          "body": "منتخب منصوبہ شروع کریں، مشق کریں، پھر پیش رفت اور مراجعہ کے لیے ڈیش بورڈ کھولیں۔ اگلے سیشن کے لیے حفظ پر واپس آئیں۔",
+          "hint": "حفظ مشق ہے۔ ڈیش بورڈ پیش رفت اور دہرائی ہے۔",
+          "points": [
+            "یہ منصوبہ شروع کریں اور تجویز کردہ اوزار استعمال کریں",
+            "سلسلے، پیش رفت اور مراجعہ کے لیے ڈیش بورڈ کھولیں",
+            "اگلے دائرے کے لیے تیار ہوں تو حفظ پر واپس آئیں"
           ]
         }
       }
@@ -1778,6 +1877,10 @@
     "no_completed_sessions_hint": "ستظهر النطاقات المنتهية هنا للمراجعة.",
     "session_completed_label": "مكتملة",
     "review_session": "مراجعة",
+    "ai_recite_review": "حفظ کی جانچ",
+    "saved_session_meta_completed": "Completed",
+    "saved_session_meta_opened": "Opened {date}",
+    "saved_session_meta_duration": "{duration} practised",
     "last_opened": "آخر فتح {date}",
     "no_surah_selected": "لم تُختر سورة",
     "each_session_keeps_only_the_essentials_what_it_is_": "كل جلسة تحتفظ بالأساسيات فقط: ما هي، أين هي، وكيف تعود إليها.",
@@ -1838,6 +1941,8 @@
       "actions": {
         "testWithAi": "تحقّق من الحفظ",
         "testWithAiAgain": "تحقّق مرة أخرى",
+        "checkNow": "ابھی جانچیں",
+        "continueWithoutTesting": "بغیر جانچے جاری رکھیں",
         "chooseAnotherSession": "اختر جلسة أخرى",
         "continueToAyahsFallback": "تابع بالبركة",
         "retest": "تحقّق مرة أخرى",
@@ -1856,9 +1961,10 @@
         "reviewAyahOnce": "راجع الآية {ayah}",
         "chooseAnotherRange": "نطاق آخر",
         "chooseDifferentRange": "نطاق آخر",
-        "returnToWorkspace": "العودة إلى مساحة العمل",
-        "checkNow": "ابھی جانچیں",
-        "continueWithoutTesting": "بغیر جانچے جاری رکھیں"
+        "returnToWorkspace": "العودة إلى مساحة العمل"
+      },
+      "memorisationCheckNudge": {
+        "title": "پہلے اپنا حفظ جانچیں؟"
       },
       "coach": {
         "yourNextPractice": "الخطوة التالية",
@@ -2147,9 +2253,17 @@
         "repsDone": "{count} تكرارات",
         "aiFirstBodyShort": "فحص الحفظ التالي إلى افتح a tailored تمرين خطة.",
         "mainFocus": "التركيز الرئيسي",
+        "mainFocusExplanationAyah": "اس سیٹ میں آیت {ayah} کو مضبوط کریں۔",
+        "mainFocusExplanationWeakAreas": "اس سیٹ میں پہچانی گئی کمزور آیات کو مضبوط کریں۔",
+        "mainFocusExplanationStrong": "یہ سیٹ مستحکم ہے؛ تجویز کردہ اگلے سیٹ پر جائیں۔",
+        "mainFocusExplanationRevision": "آگے بڑھنے سے پہلے اس سیٹ کا دور کریں۔",
         "checkComplete": "فحص مكتمل",
         "yourResult": "نتيجتك",
         "whatNext": "ما الذي تتمرّن عليه بعد ذلك",
+        "whatNextLead": "اس سیشن کی بنیاد پر نیچے کی تکنیک سے اگلا سیٹ مشق کریں۔",
+        "nextMetaRange": "توجہ",
+        "nextMetaMethod": "طریقہ",
+        "nextMetaTime": "وقت",
         "whyRecommended": "لماذا اُقترح هذا",
         "weakSpotsTitle": "ضعيف مناطق",
         "weakSpotsLead": "هذه الآيات والكلمات تحتاج أكبر قدر من الاهتمام قبل المتابعة.",
@@ -2189,7 +2303,20 @@
           "minorLocal": "فقط a few كلمات يحتاج اهتمام, focused تمرين س be quicker و clearer.",
           "focusedCluster": "weak spots sit close together, so a short focused مراجعة موصى به.",
           "spreadWeakness": "ضعيف مناطق appear across جلسة, so revisiting كامل نطاق مع emphasis موصى به.",
-          "defaultFocus": "يُوصى أولًا بمرور مركّز على الكلمات والعبارات الأضعف."
+          "defaultFocus": "يُوصى أولًا بمرور مركّز على الكلمات والعبارات الأضعف.",
+          "strongContinue": "یہ سیٹ مستحکم ہے؛ تجویز کردہ تکنیک کے ساتھ اگلے سیٹ پر جاری رکھیں۔"
+        },
+        "successFlow": {
+          "title": "تجویز کردہ اگلے مراحل",
+          "strongLead": "یادداشت مضبوط ہے؛ تجویز کردہ تکنیک سے روانی برقرار رکھیں۔",
+          "mostlySecureLead": "مجموعی طور پر مستحکم؛ کمزور آیت مضبوط کریں، پھر آگے بڑھیں۔",
+          "reinforceTitle": "کمزور آیت {ayah} دہرائیں",
+          "reinforceDetail": "آگے بڑھنے سے پہلے آیت {ayah} ایک بار مضبوط کریں۔",
+          "reinforceWithTechnique": "آیت {ayah} پر {technique} استعمال کریں، پھر آگے بڑھیں۔",
+          "continueAfterReinforce": "جب کمزور آیت مستحکم لگے تو اگلے سیٹ پر جائیں۔",
+          "continueWithTechnique": "پھر {technique} کے ساتھ جاری رکھیں۔",
+          "strongDetail": "یہ سیٹ مستحکم ہے؛ تجویز کردہ اگلے سیٹ پر جائیں۔",
+          "strongWithTechnique": "اگلے سیٹ پر {technique} کے ساتھ جاری رکھیں۔"
         },
         "previousAttemptNote": "السابق ذات صلة محاولة: {summary}",
         "previousAttemptsAvailable": "محاولات سابقة ذات صلة محفوظة مع هذا الاقتراح.",
@@ -2205,6 +2332,38 @@
         "whyThisHelps": "لماذا هذه الخطة",
         "whatYouWillDo": "ماذا ستتمرّن",
         "howItWorks": "كيف ستتمرّن",
+        "practiceHow": {
+          "seeHowItWorks": "دیکھیں یہ کیسے کام کرتا ہے",
+          "hide": "چھپائیں",
+          "title": "مشق کیسے کریں",
+          "steps": {
+            "talqin": {
+              "1": "آیت ایک بار چلائیں اور غور سے سنیں۔",
+              "2": "دیکھتے ہوئے بلند آواز سے دہرائیں۔",
+              "3": "حفظ سے پھر دہرائیں۔"
+            },
+            "focus": {
+              "1": "صرف ایک آیت پر کام کریں۔",
+              "2": "مستحکم ہونے تک آگے نہ بڑھیں۔",
+              "3": "پھر اگلی آیت پر جائیں۔"
+            },
+            "blur": {
+              "1": "متن صاف دیکھتے ہوئے آیت ایک بار پڑھیں۔",
+              "2": "ہر دہرائی پر تھوڑا مزید متن چھپائیں۔",
+              "3": "بغیر دیکھے یاد کر کے ختم کریں۔"
+            },
+            "chaining": {
+              "1": "پہلی آیت اکیلے مشق کریں۔",
+              "2": "اگلی آیت شامل کر کے جوڑیں۔",
+              "3": "مختصر سلسلہ روانی سے پڑھیں۔"
+            },
+            "anchor": {
+              "1": "نشان زد کلیدی الفاظ دیکھیں۔",
+              "2": "پہلے وہ الفاظ صاف کہیں۔",
+              "3": "پھر پوری آیت پڑھیں۔"
+            }
+          }
+        },
         "paceAndSupport": "الإيقاع والدعم",
         "estimatedTime": "حول",
         "nextSetTitle": "خطة مقترحة",
@@ -2247,6 +2406,7 @@
         "retry": "أعد المحاولة",
         "retryRecommendation": "إعداد الاقتراح مجددًا",
         "loadError": "تم حفظ جلستك بنجاح. تعذّر تجهيز الاقتراح التالي. يمكنك إعادة المحاولة أو اختيار جلسة أخرى.",
+        "noWeakAyah": "اس تشخیص سے کوئی کمزور آیت نہیں ملی۔",
         "startError": "تعذّر البدء. حاول مرة أخرى.",
         "settingsError": "تعذّر حفظ الإعدادات. حاول مرة أخرى.",
         "confidenceError": "تعذّر حفظ إجابتك. حاول مرة أخرى.",
@@ -2348,6 +2508,10 @@
         "aiResultLineMixedOrder": "جيد إجمالًا، لكن ترتيب الآيات اختل مرة أو مرتين.",
         "aiResultLineWeak": "يحتاج محاولة أخرى, مواضع عدة ما زالت تحتاج دعمًا.",
         "aiResultLineWeakAyah": "يحتاج محاولة أخرى, الآية {ayah} حملت معظم الصعوبة.",
+        "aiHighlightUncertain": "سنہری الفاظ سننے والے کو واضح نہیں لگے؛ سخت غلطی نہیں گنے گئے۔",
+        "awaitingCheckNext": "حفظ سے آزمائیں، یا آیات {start}، {end} پر جاری رکھیں۔",
+        "insufficientAudioNext": "ریکارڈنگ دوبارہ آزمائیں۔ اگر براؤزر پوچھے تو مائیکروفون کی اجازت دیں۔",
+        "needsPracticeNext": "نمایاں الفاظ دہرائیں، پھر دوبارہ جانچیں۔",
         "evidenceFromSessionAndConfidence": "بناءً على جلستك ومستوى ثقتك.",
         "checkAnswerQuizStrong": "يبدو جيدًا",
         "checkAnswerQuizMixed": "آمن في الغالب",
@@ -2518,9 +2682,6 @@
         "aiFocusWeakAyahs": "راجع الآيات {ayahs} قبل المتابعة.",
         "aiWeakAyahsLabel": "آيات للتركيز",
         "aiFirstBody": "اختبر بالتلاوة الذكية أولًا. ستظهر نتيجتك وخطة التدريب هنا بعد الاستماع إليك."
-      },
-      "memorisationCheckNudge": {
-        "title": "پہلے اپنا حفظ جانچیں؟"
       }
     },
     "aiRecitePlan": {
@@ -2717,7 +2878,7 @@
       "assessmentHeading": "قيّم حفظك",
       "aiSessionReady": "عندما تكون مستعدًا، أَتِ نطاق الآيات ودع الذكاء الاصطناعي يوجّه مراجعتك.",
       "aiAyahReady": "عندما تكون مستعدًا، أَتِ الآية من الحفظ ودع الذكاء الاصطناعي يوجّه مراجعتك.",
-      "recordingActive": "مائیکروفون فعال ہے, تجوید کے ساتھ تلاوت کریں، پھر روک دبائیں۔",
+      "recordingActive": "مائیکروفون فعال ہے — تجوید کے ساتھ تلاوت کریں، پھر روک دبائیں۔",
       "reviewDraft": "استمع لتسجيلك، قيّم بصدق، ثم احفظ المحاولة.",
       "preparingMic": "جارٍ تجهيز الميكروفون لتسجيل واضح، إن شاء الله.",
       "unsupportedBrowser": "التسجيل يتطلب متصفحًا يدعم الميكروفون.",
@@ -3352,11 +3513,7 @@
       "toolMemorizing": "جارٍ الحفظ",
       "peekHint": "تحتاج تلميحًا؟ اطّلع على النص",
       "toolPeek": "معاينة النص"
-    },
-    "ai_recite_review": "Test recall",
-    "saved_session_meta_completed": "Completed",
-    "saved_session_meta_opened": "Opened {date}",
-    "saved_session_meta_duration": "{duration} practised"
+    }
   },
   "toasts": {
     "saved": "تم الحفظ بنجاح.",
@@ -3475,6 +3632,10 @@
     "sessionEndFailed": "تعذّر إنهاء الجلسة. يرجى المحاولة مرة أخرى.",
     "sessionPaused": "جلسة متوقف.  يمكن resume anytime.",
     "sessionPauseFailed": "Unable إلى pause جلسة. يرجى جرّب مجددًا.",
+    "sessionSaveFailed": "یہ سیشن محفوظ نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
+    "sessionSaveSyncFailed": "سیشن اس آلے پر محفوظ ہو گیا۔ ہم آہنگی جلد دوبارہ کوشش کرے گی۔",
+    "sessionSaveLimitReached": "محفوظ سیشن کی حد پوری ہو گئی ({max})۔ دوسرا محفوظ کرنے کے لیے ایک حذف کریں۔",
+    "premiumTechniqueRequired": "اس تکنیک کے لیے Premium درکار ہے۔ کھولنے کے لیے اپ گریڈ کریں۔",
     "couldNotPlayRecording": "تعذّر تشغيل هذا التسجيل. أعد تحميله أو سجّل مرة أخرى.",
     "defaultSessionLoaded": "Default جلسة loaded: Al-Fatihah 1-7, Alafasy, standard سرعة, 1 repeat, لا الحفظ techniques.",
     "recordingRenamed": "تسجيل renamed إلى \"{name}\".",
@@ -4009,7 +4170,7 @@
     "analytics_week_ayahs_hint": "تمرّنت هذا الأسبوع",
     "analytics_active_days_hint": "هذا الأسبوع",
     "strengthen_title": "مراجعة",
-    "strengthen_subtitle": "",
+    "strengthen_subtitle": "محفوظ آیات کو یادداشت میں مضبوط رکھنے کے لیے دور۔",
     "view_all": "عرض الكل",
     "view_all_reviews": "كل المراجعة",
     "weak_empty_title": "الحمد لله",
@@ -4124,6 +4285,9 @@
     "journey_overall_ayahs": "{n} آية محفوظة",
     "journey_data_title": "حفظك في لمحة",
     "journey_data_subtitle": "اضغط على أي رقم لفتح القائمة الكاملة.",
+    "glance_memorised_label": "محفوظ آیات",
+    "glance_learning_label": "ابھی زیرِ تعلم",
+    "glance_quran_share": "پورے قرآن میں آپ کا حصہ",
     "view_memorised_ayahs": "كل الآيات المحفوظة",
     "view_saved_sessions": "الجلسات المحفوظة",
     "journey_progress_label": "هذه المجموعة",
@@ -4166,10 +4330,7 @@
     "sync_ready": "{when}",
     "sync_ready_now": "جاهز",
     "sync_error": "غير متصل",
-    "footnote": "",
-    "glance_memorised_label": "Memorised ayahs",
-    "glance_learning_label": "Currently learning",
-    "glance_quran_share": "Your share of the entire Qur'an"
+    "footnote": ""
   },
   "admin": {
     "loading": "جارٍ التحميل…",

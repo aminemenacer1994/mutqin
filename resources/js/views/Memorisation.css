@@ -1158,7 +1158,9 @@
 }
 
 :root {
+  color-scheme: light;
   --bg: #f3eee6;
+  --theme-color: #8b5e3c;
   --surface: rgba(255, 250, 243, 0.88);
   --surface-strong: rgba(255, 255, 255, 0.92);
   --border: rgba(78, 58, 38, 0.22);
@@ -1245,7 +1247,9 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #14110f;
+  --theme-color: #14110f;
   --surface: rgba(31, 27, 24, 0.92);
   --surface-strong: rgba(43, 37, 32, 0.96);
   --border: rgba(255, 236, 216, 0.26);
@@ -11087,11 +11091,11 @@ body.memorisation-page nav.navbar.app-navbar {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Mobile dark: solid cool black nav (match app --bg #0f1115), keep gold/tan chrome colors */
+/* Mobile dark: solid nav matches workspace --bg so PWA status bar / safe-area stay warm */
 @media (max-width: 767.98px) {
   html[data-theme="dark"] body.memorisation-page nav.navbar.app-navbar,
   [data-theme="dark"] body.memorisation-page nav.navbar.app-navbar {
-    background: #0f1115 !important;
+    background: var(--bg, #14110f) !important;
     background-image: none !important;
   }
 }
@@ -60854,8 +60858,24 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 
 [data-theme="dark"] .workspace-tour__dashboard-preview,
 .workspace-tour[data-theme="dark"] .workspace-tour__dashboard-preview {
-  background: #141210;
+  background: #14110f;
   color: #f4ece3;
+}
+
+[data-theme="dark"] .workspace-tour__dash-chip,
+.workspace-tour[data-theme="dark"] .workspace-tour__dash-chip {
+  background: color-mix(in srgb, var(--accent, #d4a574) 18%, #1a1714);
+  color: var(--accent, #d4a574);
+}
+
+[data-theme="dark"] .workspace-tour__dash-bar,
+.workspace-tour[data-theme="dark"] .workspace-tour__dash-bar {
+  background: color-mix(in srgb, var(--accent, #d4a574) 16%, #1a1714);
+}
+
+[data-theme="dark"] .workspace-tour__dash-chart span,
+.workspace-tour[data-theme="dark"] .workspace-tour__dash-chart span {
+  background: color-mix(in srgb, var(--accent, #d4a574) 62%, #1a1714);
 }
 
 [data-theme="dark"] .workspace-tour__dash-stat,

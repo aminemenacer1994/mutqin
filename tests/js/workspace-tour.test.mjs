@@ -354,6 +354,18 @@ function sliceMethod(source, name) {
   assert.match(memorisationVue, /workspace-tour__dashboard-preview/)
   assert.doesNotMatch(memorisationVue, /workspace-tour__dashboard-frame/)
   assert.match(sliceMethod(memorisationJs, 'shouldDockWorkspaceTourTooltip'), /key === 'dashboard'/)
+  assert.match(
+    memorisationCss,
+    /\[data-theme="dark"\] \.workspace-tour__dashboard-preview[\s\S]*?background:\s*#14110f/,
+  )
+  assert.match(
+    memorisationCss,
+    /\[data-theme="dark"\] \.workspace-tour__dash-chip[\s\S]*?#1a1714/,
+  )
+  assert.match(
+    memorisationCss,
+    /\[data-theme="dark"\] \.workspace-tour__dash-bar[\s\S]*?#1a1714/,
+  )
 
   const complete = sliceMethod(memorisationJs, 'maybeCompleteAmdMemorisationTest')
   assert.match(complete, /workspaceTourActive/)

@@ -26586,6 +26586,10 @@ export default {
         return this.t('memorisation.recitationResult.speechmaticsKeyRejected', { suffix: suffixNote })
       }
 
+      if (data?.reason === 'usage_cap' || /voice-check limit|usage_cap/i.test(lowered)) {
+        return this.t('memorisation.aiCheck.usageCapReached')
+      }
+
       if (status === 429) {
         return this.t('memorisation.aiCheck.serviceUnavailable')
           || 'Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.'
@@ -26711,11 +26715,12 @@ export default {
         if (!ready) this.stopTranscriptionRecognition(kind)
         return !!ready
       } catch (error) {
-        const message = userFacingTranscriptionFailure(error)
+        const classification = classifyRecitationFailure(error, { context: 'transcription_token' })
+        const message = resolveRecitationFailureMessage((key) => this.t(key), classification)
         const fallbackAvailable = !!this.getSpeechRecognitionConstructor()
         console.warn('Unable to start Speechmatics streaming:', this.describeTranscriptionTokenFailure(error), error)
-        if (!fallbackAvailable) {
-          this.showBanner(message, 'warning', 5600)
+        if (!fallbackAvailable || classification.kind === RECITATION_FAILURE_KIND.USAGE_CAP) {
+          this.showBanner(message, 'warning', 7200)
         }
         this.stopTranscriptionRecognition(kind)
         return false

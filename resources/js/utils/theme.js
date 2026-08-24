@@ -2,6 +2,41 @@ const THEME_STORAGE_KEY = 'mutqin-theme';
 const THEME_PREFERENCE_KEY = 'mutqin-theme-preference';
 const THEME_COOKIE_KEY = 'mutqin_theme';
 
+/** PWA / browser chrome. Manifest splash stays light — OS cannot switch it with data-theme. */
+export const THEME_CHROME = {
+  light: { themeColor: '#8b5e3c', backgroundColor: '#f6f3ee', colorScheme: 'light' },
+  sepia: { themeColor: '#8b5e3c', backgroundColor: '#f1e7d8', colorScheme: 'light' },
+  dark: { themeColor: '#14110f', backgroundColor: '#14110f', colorScheme: 'dark' },
+};
+
+export function getThemeChrome(theme = 'light') {
+  return THEME_CHROME[normalizeThemeToken(theme)] || THEME_CHROME.light;
+}
+
+export function applyThemeChrome(theme = 'light') {
+  const chrome = getThemeChrome(theme);
+  if (typeof document === 'undefined') return chrome;
+
+  const root = document.documentElement;
+  root.style.colorScheme = chrome.colorScheme;
+
+  const metas = document.querySelectorAll('meta[name="theme-color"]');
+  let meta = metas[0];
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'theme-color');
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute('content', chrome.themeColor);
+  meta.removeAttribute('media');
+  for (let i = 1; i < metas.length; i += 1) metas[i].remove();
+
+  const colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+  if (colorSchemeMeta) colorSchemeMeta.setAttribute('content', chrome.colorScheme);
+
+  return chrome;
+}
+
 export function normalizeThemeToken(value = 'light') {
   const theme = String(value || 'light').toLowerCase();
   if (theme === 'dark' || theme === 'dark-mode') return 'dark';
@@ -66,6 +101,7 @@ export function setGlobalTheme(theme, options = {}) {
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', normalizedTheme);
     document.cookie = `${THEME_COOKIE_KEY}=${themePreference};path=/;max-age=31536000;samesite=lax`;
+    applyThemeChrome(normalizedTheme);
   }
 
   safeSet(THEME_STORAGE_KEY, normalizedTheme);

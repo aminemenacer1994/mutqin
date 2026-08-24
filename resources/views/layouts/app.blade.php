@@ -3,6 +3,8 @@
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
     $appThemePreference = $appThemePreference ?? session('mutqin_theme', 'light-mode');
     $appTheme = $appTheme ?? (str_starts_with($appThemePreference, 'dark') ? 'dark' : (str_starts_with($appThemePreference, 'sepia') ? 'sepia' : 'light'));
+    $appThemeColor = $appTheme === 'dark' ? '#14110f' : '#8b5e3c';
+    $appColorScheme = $appTheme === 'dark' ? 'dark' : 'light';
     $switcherLocales = ['en', 'fr', 'es'];
     $languageEndonyms = [
         'en' => 'English',
@@ -27,11 +29,32 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#8b5e3c" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="{{ $appThemeColor }}">
+    <meta name="color-scheme" content="{{ $appColorScheme }}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+      (function () {
+        var theme = '';
+        try { theme = localStorage.getItem('mutqin-theme') || ''; } catch (e) {}
+        if (!theme) theme = document.documentElement.getAttribute('data-theme') || 'light';
+        theme = String(theme).toLowerCase();
+        if (theme === 'dark' || theme === 'dark-mode') theme = 'dark';
+        else if (theme === 'sepia' || theme === 'sepia-mode') theme = 'sepia';
+        else theme = 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+        var color = theme === 'dark' ? '#14110f' : '#8b5e3c';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) {
+          meta.setAttribute('content', color);
+          meta.removeAttribute('media');
+        }
+        var scheme = document.querySelector('meta[name="color-scheme"]');
+        if (scheme) scheme.setAttribute('content', theme === 'dark' ? 'dark' : 'light');
+        document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
+      })();
+    </script>
     <meta name="apple-mobile-web-app-title" content="Mutqin">
     <meta name="application-name" content="Mutqin">
     <meta name="description" content="Quran memorisation and recitation workspace for focused hifz practice.">
@@ -2467,7 +2490,8 @@
         /* Theme Variables - NO SHADOWS */
         :root {
             color-scheme: light;
-            --bg: #fdf9f2;
+            --bg: #f6f3ee;
+            --theme-color: #8b5e3c;
             --surface: rgba(255, 255, 255, 0.96);
             --surface-strong: #ffffff;
             --surface-elevated: #fffaf4;
@@ -2506,7 +2530,8 @@
         html[data-theme="dark"],
         [data-theme="dark"] {
             color-scheme: dark;
-            --bg: #111315;
+            --bg: #14110f;
+            --theme-color: #14110f;
             --surface: #181614;
             --surface-strong: #121212;
             --surface-elevated: #24211d;
@@ -2531,7 +2556,8 @@
         }
 
         [data-theme="sepia"] {
-            --bg: #f4ecd8;
+            --bg: #f1e7d8;
+            --theme-color: #8b5e3c;
             --surface: #fff8eb;
             --surface-strong: #fff8eb;
             --surface-elevated: #fff4e3;
@@ -5689,9 +5715,19 @@
                 const themePreference = toThemePreference(normalizedTheme);
 
                 document.documentElement.setAttribute('data-theme', normalizedTheme);
+                document.documentElement.style.colorScheme = normalizedTheme === 'dark' ? 'dark' : 'light';
                 safeSet('mutqin-theme', normalizedTheme);
                 safeSet('mutqin-theme-preference', themePreference);
                 document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;
+                var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+                if (themeColorMeta) {
+                    themeColorMeta.setAttribute('content', normalizedTheme === 'dark' ? '#14110f' : '#8b5e3c');
+                    themeColorMeta.removeAttribute('media');
+                }
+                var colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+                if (colorSchemeMeta) {
+                    colorSchemeMeta.setAttribute('content', normalizedTheme === 'dark' ? 'dark' : 'light');
+                }
                 window.dispatchEvent(new CustomEvent('mutqin:theme-change', { detail: { theme: normalizedTheme } }));
                 
                 const button = document.getElementById('globalThemeToggle');

@@ -6,6 +6,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { CORE_LEARNER_PATCH } from './i18n-core-learner-patches.mjs'
 
 const PRUNE = process.argv.includes('--prune')
 
@@ -622,14 +623,17 @@ function syncLocale(locale, { baseClone = null, patch = null } = {}) {
   console.log(`${locale}: ${keys.length} keys, missing ${missing.length}`)
 }
 
-// Existing locales
-for (const locale of ['fr', 'ar', 'id', 'tr']) {
-  syncLocale(locale, { patch: mergePatches(MEMORISATION_PATCH[locale], COVERAGE_PATCH[locale]) })
+// Existing locales: merge missing keys from en, then apply known patches.
+// Never rebase es/ur from en/ar clones — that wipes real translations.
+for (const locale of ['fr', 'ar', 'id', 'tr', 'es', 'ur']) {
+  syncLocale(locale, {
+    patch: mergePatches(
+      MEMORISATION_PATCH[locale],
+      COVERAGE_PATCH[locale],
+      CORE_LEARNER_PATCH[locale],
+    ),
+  })
 }
-
-// New locales: es from en, ur from ar (RTL-friendly baseline)
-syncLocale('es', { baseClone: en, patch: mergePatches(MEMORISATION_PATCH.es, COVERAGE_PATCH.fr) })
-syncLocale('ur', { baseClone: JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'ar.json'), 'utf8')), patch: { ...MEMORISATION_PATCH.ar, ...MEMORISATION_PATCH.ur, ...COVERAGE_PATCH.ar } })
 
 syncShellLabels()
 

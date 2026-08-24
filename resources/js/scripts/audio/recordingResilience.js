@@ -20,6 +20,7 @@ export const RECITATION_FAILURE_KIND = Object.freeze({
   RECORDING: 'recording',
   NETWORK: 'network',
   PROVIDER: 'provider',
+  USAGE_CAP: 'usage_cap',
   TIMEOUT: 'timeout',
   PERMANENT: 'permanent',
   UNKNOWN: 'unknown',
@@ -39,6 +40,7 @@ const USER_MESSAGE_KEYS = Object.freeze({
   [RECITATION_FAILURE_KIND.RECORDING]: 'memorisation.aiCheck.recordingInvalid',
   [RECITATION_FAILURE_KIND.NETWORK]: 'memorisation.aiCheck.serviceNetworkError',
   [RECITATION_FAILURE_KIND.PROVIDER]: 'memorisation.aiCheck.serviceUnavailable',
+  [RECITATION_FAILURE_KIND.USAGE_CAP]: 'memorisation.aiCheck.usageCapReached',
   [RECITATION_FAILURE_KIND.TIMEOUT]: 'memorisation.aiCheck.processingTimeout',
   [RECITATION_FAILURE_KIND.PERMANENT]: 'memorisation.aiCheck.recitationCheckFailed',
   [RECITATION_FAILURE_KIND.UNKNOWN]: 'memorisation.aiCheck.recitationCheckFailed',
@@ -53,6 +55,8 @@ const USER_MESSAGE_FALLBACKS = Object.freeze({
     'We couldn\'t connect to the recitation service. Your session is safe. Try again.',
   [RECITATION_FAILURE_KIND.PROVIDER]:
     'Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.',
+  [RECITATION_FAILURE_KIND.USAGE_CAP]:
+    'You have reached today\'s AI voice-check limit. Please try again tomorrow.',
   [RECITATION_FAILURE_KIND.TIMEOUT]:
     'This is taking longer than expected. Try again.',
   [RECITATION_FAILURE_KIND.PERMANENT]:
@@ -174,7 +178,16 @@ export function classifyRecitationFailure(error, options = {}) {
     || '',
   ).trim()
   const status = Number(error?.response?.status || error?.cause?.response?.status || 0)
-  const combined = `${name} ${message}`.toLowerCase()
+  const reason = String(
+    error?.response?.data?.reason
+    || error?.cause?.response?.data?.reason
+    || '',
+  ).trim()
+  const combined = `${name} ${message} ${reason}`.toLowerCase()
+
+  if (reason === 'usage_cap' || /voice-check limit|usage_cap/i.test(combined)) {
+    return buildClassification(RECITATION_FAILURE_KIND.USAGE_CAP, false, error, options)
+  }
 
   if (/notallowed|permission|denied|micblocked|notfound|notreadable|notfounderror|overconstrained/i.test(combined)) {
     return buildClassification(RECITATION_FAILURE_KIND.MICROPHONE, false, error, options)
