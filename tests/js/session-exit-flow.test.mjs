@@ -255,7 +255,7 @@ const t = (key, params = {}) => {
 // End Session confirm copy keys remain exact product strings
 {
   const en = JSON.parse(readFileSync(new URL('../../resources/js/locales/en.json', import.meta.url), 'utf8'))
-  assert.equal(en.memorisation.sessionExit.confirmTitle, 'End this sitting?')
+  assert.equal(en.memorisation.sessionExit.confirmTitle, 'End this set?')
   assert.equal(
     en.memorisation.sessionExit.confirmDescription,
     'Your progress will be saved.'
