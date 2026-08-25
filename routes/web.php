@@ -238,7 +238,7 @@ Route::middleware(['auth'])->group(function () {
             $message = $upstreamMessage !== '' ? $upstreamMessage : 'Speechmatics token request failed.';
 
             if (in_array($status, [401, 403], true) || str_contains(strtolower($message), 'not author')) {
-                $message = 'Speechmatics rejected the configured server key for temporary token creation.';
+                $message = 'Voice checking could not start right now. Please try again later.';
             }
 
             Log::warning('Speechmatics token request was rejected.', [

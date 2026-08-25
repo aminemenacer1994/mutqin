@@ -1119,27 +1119,27 @@ export default {
     chartPalette() {
       if (this.darkTheme) {
         return {
-          ayahs: '#5a9a78',
-          ayahsHover: '#6cab88',
-          sessions: '#c49a6c',
-          sessionsHover: '#d4aa7c',
-          muted: '#d4c8bc',
-          ink: '#f4ede4',
-          tooltipBg: '#181614',
-          tooltipBorder: 'rgba(230, 207, 181, 0.14)',
-          grid: 'rgba(230, 207, 181, 0.08)',
+          ayahs: '#4ec798',
+          ayahsHover: '#6ad4a8',
+          sessions: '#e0c06a',
+          sessionsHover: '#edd08a',
+          muted: '#b8c4ce',
+          ink: '#f5f7f9',
+          tooltipBg: '#1a3d58',
+          tooltipBorder: 'rgba(245, 247, 249, 0.18)',
+          grid: 'rgba(245, 247, 249, 0.1)',
         }
       }
       return {
-        ayahs: '#2d6a4f',
-        ayahsHover: '#3a7d5f',
-        sessions: '#a0784c',
-        sessionsHover: '#8b653b',
-        muted: '#5c6b64',
-        ink: '#1a2e24',
+        ayahs: '#0f7a5c',
+        ayahsHover: '#0c634b',
+        sessions: '#a8871f',
+        sessionsHover: '#8f7219',
+        muted: '#5c6b78',
+        ink: '#12324a',
         tooltipBg: '#ffffff',
-        tooltipBorder: 'rgba(160, 120, 76, 0.12)',
-        grid: 'rgba(160, 120, 76, 0.08)',
+        tooltipBorder: 'rgba(18, 50, 74, 0.14)',
+        grid: 'rgba(18, 50, 74, 0.08)',
       }
     },
     chartInstanceKey() {

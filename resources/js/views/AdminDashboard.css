@@ -2,7 +2,7 @@
 .admin-console {
   --dash-cream: #efe6db;
   --dash-sand: #e3d6c7;
-  --dash-ink: #2f2924;
+  --dash-ink: #12324a;
   --dash-muted: #6a5f54;
   --dash-line: rgba(47, 41, 36, 0.24);
   --dash-line-strong: rgba(47, 41, 36, 0.38);
@@ -31,9 +31,9 @@
   --dash-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
   --dash-danger: #9a4f3f;
   --admin-blue: #4f7393;
-  --admin-green: #527352;
+  --admin-green: #0f7a5c;
   --admin-red: #9a4f3f;
-  --admin-gold: #c9973a;
+  --admin-gold: #a8871f;
   --admin-teal: #3f6f6d;
   --admin-amber: #b8923f;
   --border: var(--dash-line);
@@ -89,15 +89,15 @@
 }
 
 html[data-theme="dark"] .admin-console {
-  --dash-cream: #14110f;
-  --dash-sand: #2a241f;
-  --text-primary-dark: #f6f1ea;
+  --dash-cream: #12324a;
+  --dash-sand: #1a3d58;
+  --text-primary-dark: #f5f7f9;
   --dash-ink: var(--text-primary-dark);
-  --dash-muted: #c4b5a5;
-  --dash-line: rgba(246, 241, 234, 0.18);
-  --dash-line-strong: rgba(246, 241, 234, 0.3);
-  --dash-soft: #1c1915;
-  --dash-card: #302a24;
+  --dash-muted: #b8c4ce;
+  --dash-line: rgba(245, 247, 249, 0.18);
+  --dash-line-strong: rgba(245, 247, 249, 0.3);
+  --dash-soft: #163650;
+  --dash-card: #1f4562;
   --dash-highlight: rgba(255, 255, 255, 0.06);
   --dash-shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.28);
   --dash-shadow-soft:
@@ -113,10 +113,10 @@ html[data-theme="dark"] .admin-console {
   --dash-inset: inset 0 1px 0 var(--dash-highlight);
   --dash-danger: #f0a898;
   --admin-blue: #93b0c9;
-  --admin-green: #97b892;
+  --admin-green: #4ec798;
   --admin-red: #f0a898;
-  --admin-gold: #e0b45a;
-  --admin-teal: #84b0ad;
+  --admin-gold: #e0c06a;
+  --admin-teal: #6ad4a8;
   --admin-amber: #d9b878;
   --text-primary: var(--text-primary-dark);
   --text-warning: #d9b878;
@@ -2006,7 +2006,7 @@ html[data-theme="dark"] .admin-status-dot[data-status="inactive"] {
   /* Mirror console tokens so teleported drawer keeps the theme */
   --dash-cream: #efe6db;
   --dash-sand: #e3d6c7;
-  --dash-ink: #2f2924;
+  --dash-ink: #12324a;
   --dash-muted: #6a5f54;
   --dash-line: rgba(47, 41, 36, 0.24);
   --dash-line-strong: rgba(47, 41, 36, 0.38);
@@ -2035,9 +2035,9 @@ html[data-theme="dark"] .admin-status-dot[data-status="inactive"] {
   --dash-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
   --dash-danger: #9a4f3f;
   --admin-blue: #4f7393;
-  --admin-green: #527352;
+  --admin-green: #0f7a5c;
   --admin-red: #9a4f3f;
-  --admin-gold: #c9973a;
+  --admin-gold: #a8871f;
   --admin-teal: #3f6f6d;
   --admin-amber: #b8923f;
   --border: var(--dash-line);
@@ -2071,15 +2071,15 @@ html[data-theme="dark"] .admin-status-dot[data-status="inactive"] {
 }
 
 html[data-theme="dark"] .admin-drawer-root {
-  --dash-cream: #14110f;
-  --dash-sand: #2a241f;
-  --text-primary-dark: #f6f1ea;
+  --dash-cream: #12324a;
+  --dash-sand: #1a3d58;
+  --text-primary-dark: #f5f7f9;
   --dash-ink: var(--text-primary-dark);
-  --dash-muted: #c4b5a5;
-  --dash-line: rgba(246, 241, 234, 0.18);
-  --dash-line-strong: rgba(246, 241, 234, 0.3);
-  --dash-soft: #1c1915;
-  --dash-card: #302a24;
+  --dash-muted: #b8c4ce;
+  --dash-line: rgba(245, 247, 249, 0.18);
+  --dash-line-strong: rgba(245, 247, 249, 0.3);
+  --dash-soft: #163650;
+  --dash-card: #1f4562;
   --dash-highlight: rgba(255, 255, 255, 0.06);
   --dash-shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.28);
   --dash-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.28), 0 6px 16px rgba(0, 0, 0, 0.22);
@@ -2088,10 +2088,10 @@ html[data-theme="dark"] .admin-drawer-root {
   --dash-inset: inset 0 1px 0 var(--dash-highlight);
   --dash-danger: #f0a898;
   --admin-blue: #93b0c9;
-  --admin-green: #97b892;
+  --admin-green: #4ec798;
   --admin-red: #f0a898;
-  --admin-gold: #e0b45a;
-  --admin-teal: #84b0ad;
+  --admin-gold: #e0c06a;
+  --admin-teal: #6ad4a8;
   --admin-amber: #d9b878;
   --text-warning: #d9b878;
   --text-primary: var(--text-primary-dark);

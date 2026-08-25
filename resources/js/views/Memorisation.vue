@@ -68,60 +68,111 @@
         class="workspace-tour__dashboard"
         data-tour="tour-dashboard"
       >
+        <!--
+          BUG FIX: iframe removal previously shipped a hardcoded mock dashboard
+          (streak=1, learning=3, fake chart bars). Preview must use live account
+          state only — skeleton while loading, honest empty when there is no data.
+        -->
         <div class="workspace-tour__dashboard-preview" aria-hidden="true">
-          <header class="workspace-tour__dash-hero">
-            <p class="workspace-tour__dash-kicker">{{ t('dashboard.journey_kicker') }}</p>
-            <h3 class="workspace-tour__dash-title">{{ workspaceTourDashboardGreeting }}</h3>
-            <span class="workspace-tour__dash-chip">
-              <i class="bi bi-fire" aria-hidden="true"></i>
-              {{ t('dashboard.streak', { n: 1 }) }}
-            </span>
-          </header>
+          <template v-if="workspaceTourDashboardPreviewLoading">
+            <div class="workspace-tour__dash-skeleton" data-tour-dashboard-state="loading">
+              <span class="workspace-tour__dash-skel workspace-tour__dash-skel--title"></span>
+              <span class="workspace-tour__dash-skel workspace-tour__dash-skel--chip"></span>
+              <div class="workspace-tour__dash-stats">
+                <span class="workspace-tour__dash-skel workspace-tour__dash-skel--stat"></span>
+                <span class="workspace-tour__dash-skel workspace-tour__dash-skel--stat"></span>
+              </div>
+              <span class="workspace-tour__dash-skel workspace-tour__dash-skel--card"></span>
+              <span class="workspace-tour__dash-skel workspace-tour__dash-skel--card"></span>
+              <span class="workspace-tour__dash-skel workspace-tour__dash-skel--chart"></span>
+              <p class="workspace-tour__dash-loading-label">{{ t('dashboard.loading') }}</p>
+            </div>
+          </template>
 
-          <div class="workspace-tour__dash-stats">
-            <div class="workspace-tour__dash-stat">
-              <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>
-              <strong>0</strong>
-              <span>{{ t('dashboard.glance_memorised_label') }}</span>
-            </div>
-            <div class="workspace-tour__dash-stat">
-              <i class="bi bi-bookmark-plus" aria-hidden="true"></i>
-              <strong>3</strong>
-              <span>{{ t('dashboard.glance_learning_label') }}</span>
-            </div>
-          </div>
+          <template v-else>
+            <header class="workspace-tour__dash-hero">
+              <p class="workspace-tour__dash-kicker">{{ t('dashboard.journey_kicker') }}</p>
+              <h3 class="workspace-tour__dash-title">{{ workspaceTourDashboardGreeting }}</h3>
+              <span
+                v-if="workspaceTourDashboardStreakLabel"
+                class="workspace-tour__dash-chip"
+              >
+                <i class="bi bi-fire" aria-hidden="true"></i>
+                {{ workspaceTourDashboardStreakLabel }}
+              </span>
+            </header>
 
-          <div class="workspace-tour__dash-card">
-            <div class="workspace-tour__dash-card-head">
-              <span>{{ t('dashboard.journey_overall_label') }}</span>
-              <strong>0%</strong>
+            <div class="workspace-tour__dash-stats">
+              <div class="workspace-tour__dash-stat">
+                <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>
+                <strong>{{ journeyMemorisedCount }}</strong>
+                <span>{{ t('dashboard.glance_memorised_label') }}</span>
+              </div>
+              <div class="workspace-tour__dash-stat">
+                <i class="bi bi-bookmark-plus" aria-hidden="true"></i>
+                <strong>{{ workspaceTourDashboardLearningCount }}</strong>
+                <span>{{ t('dashboard.glance_learning_label') }}</span>
+              </div>
             </div>
-            <div class="workspace-tour__dash-bar">
-              <span></span>
-            </div>
-          </div>
 
-          <div class="workspace-tour__dash-card">
-            <div class="workspace-tour__dash-card-head">
-              <span>{{ t('dashboard.strengthen_title') }}</span>
+            <div class="workspace-tour__dash-card">
+              <div class="workspace-tour__dash-card-head">
+                <span>{{ t('dashboard.journey_overall_label') }}</span>
+                <strong>{{ workspaceTourDashboardOverallDisplay.percent }}%</strong>
+              </div>
+              <div class="workspace-tour__dash-bar">
+                <span
+                  :style="{ width: workspaceTourDashboardOverallDisplay.fillWidth }"
+                  :class="{ 'is-empty': !workspaceTourDashboardOverallDisplay.hasProgress }"
+                ></span>
+              </div>
             </div>
-            <p>{{ t('dashboard.weak_empty_message') }}</p>
-          </div>
 
-          <div class="workspace-tour__dash-card" data-tour="tour-dashboard-activity">
-            <div class="workspace-tour__dash-card-head">
-              <span>{{ t('dashboard.activity_chart_title') }}</span>
+            <div
+              v-if="workspaceTourDashboardWeakItems.length || workspaceTourDashboardShowWeakEmpty"
+              class="workspace-tour__dash-card"
+            >
+              <div class="workspace-tour__dash-card-head">
+                <span>{{ t('dashboard.strengthen_title') }}</span>
+              </div>
+              <ul
+                v-if="workspaceTourDashboardWeakItems.length"
+                class="workspace-tour__dash-weak-list"
+              >
+                <li
+                  v-for="item in workspaceTourDashboardWeakItems"
+                  :key="item.key || `${item.surah_number}-${item.ayah_number}`"
+                >
+                  {{ item.surah_name }}
+                  <template v-if="item.ayah_number">
+                    · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                  </template>
+                </li>
+              </ul>
+              <p v-else>{{ t('dashboard.weak_empty_message') }}</p>
             </div>
-            <div class="workspace-tour__dash-chart">
-              <span style="--h: 32%"></span>
-              <span style="--h: 48%"></span>
-              <span style="--h: 24%"></span>
-              <span style="--h: 70%"></span>
-              <span style="--h: 40%"></span>
-              <span style="--h: 86%"></span>
-              <span style="--h: 58%"></span>
+
+            <div class="workspace-tour__dash-card" data-tour="tour-dashboard-activity">
+              <div class="workspace-tour__dash-card-head">
+                <span>{{ t('dashboard.activity_chart_title') }}</span>
+              </div>
+              <div
+                v-if="!workspaceTourDashboardChartEmpty"
+                class="workspace-tour__dash-chart"
+              >
+                <span
+                  v-for="(bar, index) in workspaceTourDashboardChartBars"
+                  :key="`dash-bar-${index}`"
+                  :style="{ '--h': bar.height }"
+                  :class="{ 'is-quiet': !bar.active }"
+                ></span>
+              </div>
+              <div v-else class="workspace-tour__dash-empty">
+                <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
+                <span>{{ t('dashboard.weekly_empty_message') }}</span>
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </div>
 
@@ -1657,7 +1708,7 @@
                           ? (chainingMethod === 'cumulative'
                             ? t('memorisation.techniques.chainingCumulativeDescription')
                             : t('memorisation.techniques.chainingLinkingDescription'))
-                          : 'Select linking or cumulative to build the chaining queue.')
+                          : t('memorisation.techniques.chooseLinkingForPreview'))
                         : getTechniqueDisplayDescription('chaining') }}</span>
                     </div>
                     <div class="technique-best">

@@ -59,7 +59,7 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'available' => false,
-                'message' => 'Speechmatics rejected the configured server key for temporary token creation.',
+                'message' => 'Voice checking could not start right now. Please try again later.',
                 'speechmatics_status' => 401,
             ]);
 

@@ -865,9 +865,9 @@ export default {
   --plan-field: var(--field-bg, rgba(255, 255, 255, 0.9));
   --plan-text: var(--text, #1f1a17);
   --plan-muted: var(--text-muted, #6c6258);
-  --plan-accent: var(--accent, #9a6738);
-  --plan-accent-strong: var(--accent-strong, #6e4726);
-  --plan-accent-soft: var(--accent-light, rgba(154, 103, 56, 0.1));
+  --plan-accent: var(--accent, #0f7a5c);
+  --plan-accent-strong: var(--accent-strong, #0c634b);
+  --plan-accent-soft: var(--accent-light, rgba(15, 122, 92, 0.1));
   --plan-overlay: var(--overlay, rgba(14, 12, 10, 0.32));
 }
 

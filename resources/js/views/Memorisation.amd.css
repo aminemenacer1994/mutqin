@@ -35,7 +35,7 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #f7f4ef 0%, #fbfaf7 36%, #ffffff 100%);
-  color: #1c1917;
+  color: #163650;
   box-shadow: 0 24px 60px rgba(28, 25, 23, 0.18);
 }
 
@@ -77,7 +77,7 @@
   font-size: 1.28rem;
   font-weight: 650;
   letter-spacing: -0.02em;
-  color: #1c1917;
+  color: #163650;
 }
 
 .amd-range {
@@ -91,7 +91,7 @@
   font-size: 1.28rem;
   font-weight: 650;
   letter-spacing: -0.02em;
-  color: #1c1917;
+  color: #163650;
 }
 
 .amd-body {
@@ -142,7 +142,7 @@
 }
 
 .amd-meta span { color: #57534e; font-size: 0.9rem; }
-.amd-meta strong { color: #1c1917; font-weight: 600; }
+.amd-meta strong { color: #163650; font-weight: 600; }
 .amd-meta strong[data-status="denied"],
 .amd-meta strong[data-status="unsupported"] {
   color: #9a3412;
@@ -259,7 +259,7 @@
   flex: 1 1 auto;
 }
 
-.amd-live-banner strong { display: block; color: #1c1917; }
+.amd-live-banner strong { display: block; color: #163650; }
 .amd-live-banner p { margin: 0.2rem 0 0; color: #57534e; font-size: 0.92rem; line-height: 1.4; }
 .amd-timer {
   margin-inline-start: auto;
@@ -473,7 +473,7 @@
   font-size: clamp(1.2rem, 3vw, 1.35rem);
   font-weight: 650;
   letter-spacing: -0.025em;
-  color: #1c1917;
+  color: #163650;
 }
 
 .amd-header--compact {
@@ -591,7 +591,7 @@
   border-radius: 10px;
   border: 1px solid rgba(68, 64, 60, 0.16);
   background: #fff;
-  color: #1c1917;
+  color: #163650;
   font-size: 0.88rem;
 }
 
@@ -618,7 +618,7 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 600;
-  color: #1c1917;
+  color: #163650;
 }
 
 .amd-complete__body {
@@ -775,7 +775,7 @@
   gap: 0.5rem;
   padding: 0.55rem 0.85rem;
   border-radius: 999px;
-  background: #1c1917;
+  background: #163650;
   color: #fafaf9;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -790,7 +790,7 @@
   height: 3.1rem;
   border-radius: 999px;
   border: none;
-  background: #1c1917;
+  background: #163650;
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -813,7 +813,7 @@
 .amd-summary-title {
   font-size: 1.12rem;
   line-height: 1.45;
-  color: #1c1917;
+  color: #163650;
 }
 .amd-stats {
   display: grid;
@@ -829,7 +829,7 @@
   gap: 0.2rem;
 }
 .amd-stats span { color: #78716c; font-size: 0.8rem; }
-.amd-stats strong { font-size: 1.2rem; color: #1c1917; }
+.amd-stats strong { font-size: 1.2rem; color: #163650; }
 
 .amd-improvement {
   padding: 0.9rem 1rem;
@@ -885,7 +885,7 @@
 .amd-plan-card h3 {
   margin: 0.25rem 0 0;
   font-size: 1.2rem;
-  color: #1c1917;
+  color: #163650;
 }
 .amd-plan-why { margin: 0; color: #44403c; line-height: 1.5; }
 .amd-plan-grid {
@@ -935,7 +935,7 @@
   border-radius: 10px;
   padding: 0.55rem 0.7rem;
   background: #fff;
-  color: #1c1917;
+  color: #163650;
 }
 .amd-checkbox {
   display: flex !important;
@@ -954,7 +954,7 @@
   padding: 0.85rem 1rem;
   background: linear-gradient(180deg, #f7f4ef 0%, #fff 100%);
   border-bottom: 1px solid rgba(68, 64, 60, 0.1);
-  color: #1c1917;
+  color: #163650;
 }
 .amd-practice-hud-kicker {
   display: block;
@@ -971,16 +971,16 @@
   align-items: center;
 }
 
-/* Dark mode */
+/* Dark mode — Deep Navy surfaces + emerald accents via shared tokens */
 [data-theme="dark"] .amd-modal,
 .app[data-theme="dark"] .amd-modal {
-  background: linear-gradient(180deg, #1c1917 0%, #221f1c 45%, #292524 100%);
-  color: #f5f5f4;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 45%, var(--surface-strong) 100%);
+  color: var(--text);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme="dark"] .amd-header {
-  border-bottom-color: rgba(245, 245, 244, 0.08);
+  border-bottom-color: color-mix(in srgb, var(--border) 80%, transparent);
 }
 
 [data-theme="dark"] .amd-header-copy h2,
@@ -991,7 +991,7 @@
 [data-theme="dark"] .amd-stats strong,
 [data-theme="dark"] .amd-mushaf-ayah,
 [data-theme="dark"] .amd-range--title {
-  color: #fafaf9;
+  color: var(--text);
 }
 
 [data-theme="dark"] .amd-kicker,
@@ -1002,7 +1002,7 @@
 [data-theme="dark"] .amd-plan-why,
 [data-theme="dark"] .amd-techniques p,
 [data-theme="dark"] .amd-ayah-card p {
-  color: #d6d3d1;
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .amd-howto,
@@ -1016,32 +1016,32 @@
 [data-theme="dark"] .amd-weak-words,
 [data-theme="dark"] .amd-techniques article,
 [data-theme="dark"] .amd-adjust {
-  background: rgba(41, 37, 36, 0.92);
-  border-color: rgba(245, 245, 244, 0.1);
+  background: color-mix(in srgb, var(--surface-elevated, var(--surface-strong)) 92%, transparent);
+  border-color: var(--border);
 }
 
 [data-theme="dark"] .amd-tool {
-  background: rgba(41, 37, 36, 0.95);
-  border-color: rgba(245, 245, 244, 0.14);
-  color: #e7e5e4;
+  background: color-mix(in srgb, var(--surface-strong) 95%, transparent);
+  border-color: var(--border-strong, var(--border));
+  color: var(--text);
 }
 
 [data-theme="dark"] .amd-tool.active {
-  background: rgba(34, 197, 94, 0.16);
-  border-color: rgba(34, 197, 94, 0.35);
-  color: #86efac;
+  background: var(--accent-light);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent-strong);
 }
 
 [data-theme="dark"] .amd-tool.recording {
-  background: rgba(239, 68, 68, 0.16);
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #fca5a5;
+  background: var(--danger-soft, rgba(224, 138, 124, 0.16));
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  color: var(--danger-strong);
 }
 
 [data-theme="dark"] .amd-ayah-marker {
-  background: #1c1917;
-  border-color: rgba(245, 245, 244, 0.2);
-  color: #d6d3d1;
+  background: var(--bg);
+  border-color: var(--border-strong, var(--border));
+  color: var(--text-muted);
 }
 
 [data-theme="dark"] .amd-mushaf-ayah .amd-word-hidden,
@@ -1070,7 +1070,7 @@
 [data-theme="dark"] .amd-rec-pill,
 [data-theme="dark"] .amd-stop-btn {
   background: #fafaf9;
-  color: #1c1917;
+  color: #163650;
 }
 
 [data-theme="dark"] .amd-error {
@@ -1080,14 +1080,14 @@
 }
 
 [data-theme="dark"] .amd-practice-hud {
-  background: linear-gradient(180deg, #1c1917 0%, #292524 100%);
+  background: linear-gradient(180deg, #163650 0%, #292524 100%);
   border-bottom-color: rgba(245, 245, 244, 0.1);
   color: #fafaf9;
 }
 
 [data-theme="dark"] .amd-adjust input[type="number"],
 [data-theme="dark"] .amd-adjust select {
-  background: #1c1917;
+  background: #163650;
   color: #fafaf9;
   border-color: rgba(245, 245, 244, 0.18);
 }
@@ -1141,7 +1141,7 @@
   font-size: clamp(1.22rem, 3.2vw, 1.42rem);
   font-weight: 650;
   letter-spacing: -0.028em;
-  color: #1c1917;
+  color: #163650;
 }
 
 .amd-range--premium {
@@ -1635,9 +1635,9 @@
   min-height: 1.45rem;
   padding: 0.18rem 0.58rem;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent, #8b5e3c) 16%, #fff);
-  border: 1px solid color-mix(in srgb, var(--accent, #8b5e3c) 34%, transparent);
-  color: var(--accent-strong, #a86a3f);
+  background: color-mix(in srgb, var(--accent, #0f7a5c) 16%, #fff);
+  border: 1px solid color-mix(in srgb, var(--accent, #0f7a5c) 34%, transparent);
+  color: var(--accent-strong, #0c634b);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -1665,9 +1665,9 @@
   box-sizing: border-box;
   padding: 0.55rem 0.7rem;
   border-radius: 0.55rem;
-  background: color-mix(in srgb, var(--accent, #8b5e3c) 7%, var(--surface, #fff));
-  border: 1px solid color-mix(in srgb, var(--accent, #8b5e3c) 22%, transparent);
-  color: color-mix(in srgb, var(--text, #1c1917) 78%, var(--accent, #8b5e3c) 22%);
+  background: color-mix(in srgb, var(--accent, #0f7a5c) 7%, var(--surface, #fff));
+  border: 1px solid color-mix(in srgb, var(--accent, #0f7a5c) 22%, transparent);
+  color: color-mix(in srgb, var(--text, #163650) 78%, var(--accent, #0f7a5c) 22%);
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
@@ -1694,7 +1694,7 @@
   border: 0;
   border-radius: 1.25rem;
   background: color-mix(in srgb, var(--surface, #fff) 88%, #f6f3ee);
-  color: var(--text, #1c1917);
+  color: var(--text, #163650);
   cursor: pointer;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border, #e7e5e4) 80%, transparent);
   transition: transform 160ms ease, box-shadow 160ms ease;
@@ -1795,8 +1795,8 @@
   min-height: 3.4rem;
   padding: 0.7rem 0.95rem;
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, #1c1917 10%, transparent);
-  background: #1c1917;
+  border: 1px solid color-mix(in srgb, #163650 10%, transparent);
+  background: #163650;
   color: #fafaf9;
   text-align: start;
   cursor: pointer;
@@ -2088,7 +2088,7 @@
   font: inherit;
   font-size: 0.88rem;
   line-height: 1.35;
-  color: color-mix(in srgb, #57534e 88%, #0c0a09);
+  color: color-mix(in srgb, #57534e 88%, #0e2838);
   text-decoration: underline;
   text-underline-offset: 0.18em;
   cursor: pointer;
@@ -2097,7 +2097,7 @@
 .amd-peek-link:hover,
 .amd-stop-link:hover,
 .amd-peek-link.active {
-  color: #0c0a09;
+  color: #0e2838;
 }
 
 .amd-peek-link:disabled {
@@ -2106,7 +2106,7 @@
 }
 
 .amd-stop-link {
-  color: color-mix(in srgb, #78716c 90%, #0c0a09);
+  color: color-mix(in srgb, #78716c 90%, #0e2838);
   text-decoration: none;
 }
 
@@ -2421,7 +2421,7 @@
   font-size: 0.68rem;
   line-height: 1.25;
   font-weight: 500;
-  color: color-mix(in srgb, #78716c 92%, #1c1917);
+  color: color-mix(in srgb, #78716c 92%, #163650);
   padding-inline: 0.1rem;
 }
 
@@ -2538,7 +2538,7 @@
 
 [data-theme="dark"] .amd-tool-btn,
 .app[data-theme="dark"] .amd-tool-btn {
-  background: #1c1917;
+  background: #163650;
   border-color: rgba(245, 245, 244, 0.18);
   color: #e7e5e4;
 }
@@ -2935,7 +2935,7 @@
 [data-theme="dark"] .amd-follow-resume,
 .app[data-theme="dark"] .amd-follow-toggle,
 .app[data-theme="dark"] .amd-follow-resume {
-  background: #1c1917;
+  background: #163650;
   border-color: rgba(245, 245, 244, 0.16);
   color: #e7e5e4;
 }
@@ -3211,7 +3211,7 @@
 
 .amd-overlay[data-theme="dark"] .amd-help-popover,
 [data-theme="dark"] .amd-help-popover {
-  background: #1c1917;
+  background: #163650;
   border-color: rgba(245, 245, 244, 0.14);
   color: #e7e5e4;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
@@ -3238,7 +3238,7 @@
 
 .amd-overlay[data-theme="dark"] .amd-disclaimer--row,
 [data-theme="dark"] .amd-disclaimer--row {
-  background: color-mix(in srgb, #9a7350 12%, #1c1917);
+  background: color-mix(in srgb, #9a7350 12%, #163650);
   border-color: color-mix(in srgb, #9a7350 28%, transparent);
   color: #c4b5a5;
   overflow: visible;
@@ -3289,7 +3289,7 @@
 
 .amd-overlay[data-theme="dark"] .btn-secondary,
 [data-theme="dark"] .amd-footer .btn-secondary {
-  background: #1c1917;
+  background: #163650;
   border-color: rgba(245, 245, 244, 0.16);
   color: #f5f5f4;
 }
@@ -3783,13 +3783,13 @@
   border-radius: 0.75rem;
   border: 1px solid color-mix(in srgb, var(--tajweed-colour) 28%, transparent);
   background: color-mix(in srgb, var(--tajweed-colour) 10%, var(--surface, #fff));
-  color: #1c1917;
+  color: #163650;
 }
 
 .amd-tajweed-live-card__rule {
   font-size: 0.95rem;
   line-height: 1.25;
-  color: color-mix(in srgb, var(--tajweed-colour) 55%, #1c1917);
+  color: color-mix(in srgb, var(--tajweed-colour) 55%, #163650);
 }
 
 .amd-tajweed-live-card__instruction {
@@ -3805,7 +3805,7 @@
 }
 
 [data-theme="dark"] .amd-tajweed-live-card {
-  background: color-mix(in srgb, var(--tajweed-colour) 16%, #1c1917);
+  background: color-mix(in srgb, var(--tajweed-colour) 16%, #163650);
   color: #f5f5f4;
   border-color: color-mix(in srgb, var(--tajweed-colour) 35%, transparent);
 }
@@ -4054,7 +4054,7 @@
   font-size: clamp(1rem, 2.8vw, 1.14rem) !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em;
-  color: #1c1917 !important;
+  color: #163650 !important;
 }
 
 .amd-header--compact .amd-range--premium {
@@ -4339,7 +4339,7 @@
 
 [data-theme="dark"] .amd-modal--premium.amd-modal--spacious,
 .amd-overlay[data-theme="dark"] .amd-modal--premium.amd-modal--spacious {
-  background: linear-gradient(180deg, #171412 0%, #1c1917 42%, #141210 100%);
+  background: linear-gradient(180deg, #171412 0%, #163650 42%, #141210 100%);
   border-color: rgba(245, 245, 244, 0.1);
 }
 
@@ -4363,7 +4363,7 @@
 .amd-overlay[data-theme="dark"] .amd-tool-btn,
 .amd-overlay[data-theme="dark"] .amd-mic-status--compact,
 .amd-overlay[data-theme="dark"] .amd-icon-btn--close {
-  background: #1c1917;
+  background: #163650;
   border-color: rgba(245, 245, 244, 0.16);
   color: #e7e5e4;
 }
@@ -4498,7 +4498,7 @@
 
 [data-theme="dark"] .amd-toolbar--tools.amd-tools-bar,
 .amd-overlay[data-theme="dark"] .amd-toolbar--tools.amd-tools-bar {
-  background: color-mix(in srgb, #1c1917 88%, #000) !important;
+  background: color-mix(in srgb, #163650 88%, #000) !important;
   border-color: rgba(245, 245, 244, 0.12) !important;
   box-shadow: none !important;
 }
@@ -4528,7 +4528,7 @@
 
 [data-theme="dark"] .amd-tools-bar__timer[data-running="true"],
 .amd-overlay[data-theme="dark"] .amd-tools-bar__timer[data-running="true"] {
-  background: color-mix(in srgb, #6ec9a4 12%, #1c1917);
+  background: color-mix(in srgb, #6ec9a4 12%, #163650);
   border-color: color-mix(in srgb, #6ec9a4 36%, transparent);
   color: #b8e6cf;
 }
@@ -4917,7 +4917,7 @@
 
 [data-theme="dark"] .amd-overlay .amd-toolbar.amd-tools-bar,
 .amd-overlay[data-theme="dark"] .amd-toolbar.amd-tools-bar {
-  background: color-mix(in srgb, #1c1917 92%, #000) !important;
+  background: color-mix(in srgb, #163650 92%, #000) !important;
   border-color: rgba(245, 245, 244, 0.12) !important;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
@@ -5135,7 +5135,7 @@
 .amd-overlay[data-theme="dark"] .amd-icon-btn--close,
 [data-theme="dark"] .amd-overlay .amd-icon-btn--close,
 [data-theme="dark"] .amd-icon-btn--close {
-  background: #1c1917 !important;
+  background: #163650 !important;
   border-color: rgba(245, 245, 244, 0.16) !important;
   color: #e7e5e4 !important;
 }
@@ -5152,7 +5152,7 @@
 .amd-overlay[data-theme="dark"] .amd-tool-btn--sound.active,
 [data-theme="dark"] .amd-overlay .amd-tool-btn--sound.active,
 [data-theme="dark"] .amd-tool-btn--sound.active {
-  background: color-mix(in srgb, #6ec9a4 16%, #1c1917) !important;
+  background: color-mix(in srgb, #6ec9a4 16%, #163650) !important;
   border-color: color-mix(in srgb, #6ec9a4 40%, transparent) !important;
   color: #b8e6cf !important;
 }
@@ -5161,7 +5161,7 @@
 [data-theme="dark"] .amd-overlay .amd-tool-btn--sound:not(.active),
 [data-theme="dark"] .amd-tool-btn--sound:not(.active) {
   opacity: 0.9;
-  background: #1c1917 !important;
+  background: #163650 !important;
   border-color: rgba(245, 245, 244, 0.14) !important;
   color: #a8a29e !important;
 }
@@ -5204,7 +5204,7 @@
 
 .amd-overlay[data-theme="dark"] .amd-tools-bar__icon-btn.active,
 [data-theme="dark"] .amd-overlay .amd-tools-bar__icon-btn.active {
-  background: color-mix(in srgb, #6ec9a4 14%, #1c1917) !important;
+  background: color-mix(in srgb, #6ec9a4 14%, #163650) !important;
   border-color: color-mix(in srgb, #6ec9a4 36%, transparent) !important;
   color: #b8e6cf !important;
 }

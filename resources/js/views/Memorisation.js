@@ -579,6 +579,8 @@ export default {
       learnerJourney: null,
       learnerProgress: null,
       learnerDashboardContinue: null,
+      learnerDashboardChart: null,
+      learnerDashboardWeaknesses: null,
       learnerJourneyLoading: false,
       learnerJourneyHydrated: false,
       learnerStreakDays: 0,
@@ -6711,6 +6713,49 @@ export default {
     workspaceTourDashboardGreeting() {
       const name = this.welcomeBackDisplayName || this.t('dashboard.dear_friend')
       return this.t('dashboard.greeting', { name })
+    },
+    workspaceTourDashboardPreviewLoading() {
+      // Skeleton until the first real dashboard payload lands — never show mock numbers while waiting.
+      return !this.learnerJourneyHydrated
+    },
+    workspaceTourDashboardLearningCount() {
+      return Number(this.learnerProgress?.learning_ayah_count ?? 0)
+    },
+    workspaceTourDashboardOverallDisplay() {
+      return progressBarDisplay(this.journeyOverallPercent)
+    },
+    workspaceTourDashboardStreakLabel() {
+      const days = Number(this.learnerStreakDays || 0)
+      if (days <= 0) return ''
+      return days === 1
+        ? this.t('dashboard.streak_keep_going')
+        : this.t('dashboard.streak', { n: days })
+    },
+    workspaceTourDashboardWeakItems() {
+      const weaknesses = this.learnerDashboardWeaknesses
+      const all = weaknesses?.all_items
+      if (Array.isArray(all) && all.length) return all.slice(0, 2)
+      const items = weaknesses?.items
+      return Array.isArray(items) ? items.slice(0, 2) : []
+    },
+    workspaceTourDashboardShowWeakEmpty() {
+      if (this.workspaceTourDashboardWeakItems.length) return false
+      return this.journeyHasStarted || this.hasMemorisationHistory
+    },
+    workspaceTourDashboardChartBars() {
+      const points = this.learnerDashboardChart?.points
+      if (!Array.isArray(points) || !points.length) return []
+      const values = points.map((point) => Number(point?.primary ?? point?.ayahs_memorised ?? 0))
+      const max = Math.max(...values, 0)
+      if (max <= 0) return []
+      return values.map((value) => ({
+        height: value > 0 ? `${Math.max(8, Math.round((value / max) * 100))}%` : '0%',
+        active: value > 0,
+      }))
+    },
+    workspaceTourDashboardChartEmpty() {
+      if (this.learnerDashboardChart?.is_empty) return true
+      return this.workspaceTourDashboardChartBars.length === 0
     },
     workspaceTourSteps() {
       return [
@@ -14796,6 +14841,7 @@ export default {
         await this.closeWorkspaceTourOverlays()
         if (this.showTools) await this.closeToolsPanel()
         this.workspaceTourDashboardOpen = true
+        await this.ensureWorkspaceTourDashboardPreview()
       }
     },
     isWorkspaceTourTargetVisible(el) {
@@ -31902,8 +31948,23 @@ export default {
       this.pendingMainJourney = true
       this.openNewSessionSetup()
     },
+    async ensureWorkspaceTourDashboardPreview() {
+      // Keep the tour dashboard preview on the same live account payload as /dashboard.
+      await this.loadLearnerJourney()
+    },
     async loadLearnerJourney() {
       if (!this.learningBackendEnabled()) {
+        this.learnerJourney = this.learnerJourney || {
+          has_started: false,
+          continue: null,
+          overall: { memorised_ayah_count: 0 },
+        }
+        this.learnerDashboardChart = this.learnerDashboardChart || { points: [], is_empty: true }
+        this.learnerDashboardWeaknesses = this.learnerDashboardWeaknesses || {
+          items: [],
+          all_items: [],
+          total: 0,
+        }
         this.learnerJourneyHydrated = true
         return
       }
@@ -31920,11 +31981,23 @@ export default {
         this.learnerDashboardContinue = payload?.continue && typeof payload.continue === 'object'
           ? payload.continue
           : null
+        this.learnerDashboardChart = payload?.chart && typeof payload.chart === 'object'
+          ? payload.chart
+          : { points: [], is_empty: true }
+        this.learnerDashboardWeaknesses = payload?.weaknesses && typeof payload.weaknesses === 'object'
+          ? payload.weaknesses
+          : { items: [], all_items: [], total: 0 }
         this.learnerStreakDays = Number(payload?.retention?.streak_days || 0)
       } catch (error) {
         console.warn('Learner journey fetch failed', error)
         if (!this.learnerJourney) {
           this.learnerJourney = { has_started: false, continue: null, overall: { memorised_ayah_count: 0 } }
+        }
+        if (!this.learnerDashboardChart) {
+          this.learnerDashboardChart = { points: [], is_empty: true }
+        }
+        if (!this.learnerDashboardWeaknesses) {
+          this.learnerDashboardWeaknesses = { items: [], all_items: [], total: 0 }
         }
       } finally {
         this.learnerJourneyLoading = false

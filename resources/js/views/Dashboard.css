@@ -9,16 +9,16 @@
   --dash-accent: var(--accent);
   --dash-accent-strong: var(--accent-strong);
   --dash-accent-light: var(--accent-light);
-  --dash-border: rgba(78, 58, 38, 0.14);
-  --dash-border-strong: rgba(78, 58, 38, 0.22);
+  --dash-border: rgba(18, 50, 74, 0.14);
+  --dash-border-strong: rgba(18, 50, 74, 0.22);
   --dash-on-accent: var(--text-on-accent);
   --dash-overlay: var(--overlay);
   --dash-success: var(--success-text, #2d6a4f);
   --dash-success-bg: var(--success-bg, rgba(45, 106, 79, 0.11));
   --dash-radius: clamp(12px, 1.4vw, 16px);
   --dash-radius-sm: clamp(10px, 1.2vw, 12px);
-  --dash-shadow-sm: 0 1px 2px rgba(31, 24, 18, 0.04), 0 4px 10px rgba(31, 24, 18, 0.03);
-  --dash-shadow: 0 2px 6px rgba(31, 24, 18, 0.05), 0 10px 22px rgba(31, 24, 18, 0.04);
+  --dash-shadow-sm: 0 1px 2px rgba(18, 50, 74, 0.04), 0 4px 10px rgba(18, 50, 74, 0.03);
+  --dash-shadow: 0 2px 6px rgba(18, 50, 74, 0.05), 0 10px 22px rgba(18, 50, 74, 0.04);
   --dash-inset: inset 0 1px 0 rgba(255, 255, 255, 0.55);
   --dash-card-bg: var(--dash-surface);
   --dash-font: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif);
@@ -39,8 +39,8 @@
 }
 
 [data-theme="dark"] .user-dashboard {
-  --dash-border: rgba(230, 207, 181, 0.14);
-  --dash-border-strong: rgba(230, 207, 181, 0.22);
+  --dash-border: rgba(245, 247, 249, 0.14);
+  --dash-border-strong: rgba(245, 247, 249, 0.22);
   --dash-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16);
   --dash-shadow: 0 2px 6px rgba(0, 0, 0, 0.24), 0 12px 24px rgba(0, 0, 0, 0.18);
   --dash-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -1662,16 +1662,16 @@ body.dash-drawer-open {
   --dash-surface-muted: var(--surface-soft, var(--surface, #fff6eb));
   --dash-ink: var(--text, #1f1a17);
   --dash-muted: color-mix(in srgb, var(--text-muted, #6b5c4f) 92%, var(--text, #1f1a17));
-  --dash-accent: var(--accent, #9a6738);
+  --dash-accent: var(--accent, #0f7a5c);
   --dash-accent-strong: var(--accent-strong, #7a5228);
   --dash-accent-light: var(--accent-light, #f3e4d4);
-  --dash-border: rgba(78, 58, 38, 0.14);
-  --dash-border-strong: rgba(78, 58, 38, 0.22);
+  --dash-border: rgba(18, 50, 74, 0.14);
+  --dash-border-strong: rgba(18, 50, 74, 0.22);
   --dash-on-accent: var(--text-on-accent, #fffaf3);
   --dash-radius: clamp(12px, 1.4vw, 16px);
   --dash-radius-sm: clamp(10px, 1.2vw, 12px);
-  --dash-shadow-sm: 0 1px 2px rgba(31, 24, 18, 0.04), 0 4px 10px rgba(31, 24, 18, 0.03);
-  --dash-shadow: 0 2px 6px rgba(31, 24, 18, 0.05), 0 10px 22px rgba(31, 24, 18, 0.04);
+  --dash-shadow-sm: 0 1px 2px rgba(18, 50, 74, 0.04), 0 4px 10px rgba(18, 50, 74, 0.03);
+  --dash-shadow: 0 2px 6px rgba(18, 50, 74, 0.05), 0 10px 22px rgba(18, 50, 74, 0.04);
   --dash-inset: inset 0 1px 0 rgba(255, 255, 255, 0.55);
   --dash-tap: 44px;
   --dash-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -1694,8 +1694,8 @@ body.dash-drawer-open {
 }
 
 [data-theme="dark"] .dash-drawer-root {
-  --dash-border: rgba(230, 207, 181, 0.14);
-  --dash-border-strong: rgba(230, 207, 181, 0.22);
+  --dash-border: rgba(245, 247, 249, 0.14);
+  --dash-border-strong: rgba(245, 247, 249, 0.22);
   --dash-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16);
   --dash-shadow: 0 2px 6px rgba(0, 0, 0, 0.24), 0 12px 24px rgba(0, 0, 0, 0.18);
   --dash-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);

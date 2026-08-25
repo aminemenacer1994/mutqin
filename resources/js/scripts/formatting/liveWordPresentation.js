@@ -26,22 +26,22 @@ export const LIVE_WORD_STATUS_MARK = Object.freeze({
 })
 
 const LIGHT_PALETTE = Object.freeze({
-  correct: { color: '#146443', underline: 'rgba(20, 100, 67, 0.95)', chipBg: 'rgba(20, 100, 67, 0.14)', border: 'rgba(20, 100, 67, 0.5)' },
-  partial: { color: '#8a4f08', underline: 'rgba(138, 79, 8, 0.95)', chipBg: 'rgba(138, 79, 8, 0.14)', border: 'rgba(138, 79, 8, 0.52)' },
+  correct: { color: '#0c634b', underline: 'rgba(12, 99, 75, 0.95)', chipBg: 'rgba(15, 122, 92, 0.14)', border: 'rgba(15, 122, 92, 0.5)' },
+  partial: { color: '#8f7219', underline: 'rgba(143, 114, 25, 0.95)', chipBg: 'rgba(168, 135, 31, 0.14)', border: 'rgba(168, 135, 31, 0.52)' },
   incorrect: { color: '#9b2e27', underline: 'rgba(155, 46, 39, 0.95)', chipBg: 'rgba(155, 46, 39, 0.14)', border: 'rgba(155, 46, 39, 0.52)' },
-  omitted: { color: '#1f1a17', underline: 'rgba(31, 26, 23, 0.92)', chipBg: 'rgba(31, 26, 23, 0.1)', border: 'rgba(31, 26, 23, 0.45)' },
-  pending: { color: 'inherit', underline: 'rgba(69, 74, 82, 0.62)', chipBg: 'rgba(69, 74, 82, 0.1)', border: 'rgba(69, 74, 82, 0.4)' },
-  skipped: { color: 'inherit', underline: 'rgba(69, 74, 82, 0.52)', chipBg: 'rgba(69, 74, 82, 0.1)', border: 'rgba(69, 74, 82, 0.36)' },
+  omitted: { color: '#12324a', underline: 'rgba(18, 50, 74, 0.92)', chipBg: 'rgba(18, 50, 74, 0.1)', border: 'rgba(18, 50, 74, 0.45)' },
+  pending: { color: 'inherit', underline: 'rgba(92, 107, 120, 0.62)', chipBg: 'rgba(92, 107, 120, 0.1)', border: 'rgba(92, 107, 120, 0.4)' },
+  skipped: { color: 'inherit', underline: 'rgba(92, 107, 120, 0.52)', chipBg: 'rgba(92, 107, 120, 0.1)', border: 'rgba(92, 107, 120, 0.36)' },
   notAttempted: { color: 'inherit', underline: 'transparent', chipBg: 'transparent', border: 'transparent' },
 })
 
 const DARK_PALETTE = Object.freeze({
-  correct: { color: '#8fd4a8', underline: 'rgba(143, 212, 168, 0.95)', chipBg: 'rgba(143, 212, 168, 0.16)', border: 'rgba(143, 212, 168, 0.55)' },
-  partial: { color: '#f0c56e', underline: 'rgba(240, 197, 110, 0.95)', chipBg: 'rgba(240, 197, 110, 0.16)', border: 'rgba(240, 197, 110, 0.55)' },
+  correct: { color: '#6ad4a8', underline: 'rgba(106, 212, 168, 0.95)', chipBg: 'rgba(78, 199, 152, 0.16)', border: 'rgba(78, 199, 152, 0.55)' },
+  partial: { color: '#e0c06a', underline: 'rgba(224, 192, 106, 0.95)', chipBg: 'rgba(224, 192, 106, 0.16)', border: 'rgba(224, 192, 106, 0.55)' },
   incorrect: { color: '#f0a090', underline: 'rgba(240, 160, 144, 0.95)', chipBg: 'rgba(240, 160, 144, 0.16)', border: 'rgba(240, 160, 144, 0.55)' },
-  omitted: { color: '#f2ebe3', underline: 'rgba(242, 235, 227, 0.9)', chipBg: 'rgba(242, 235, 227, 0.1)', border: 'rgba(242, 235, 227, 0.45)' },
-  pending: { color: 'inherit', underline: 'rgba(200, 204, 210, 0.62)', chipBg: 'rgba(200, 204, 210, 0.12)', border: 'rgba(200, 204, 210, 0.42)' },
-  skipped: { color: 'inherit', underline: 'rgba(200, 204, 210, 0.52)', chipBg: 'rgba(200, 204, 210, 0.12)', border: 'rgba(200, 204, 210, 0.38)' },
+  omitted: { color: '#f5f7f9', underline: 'rgba(245, 247, 249, 0.9)', chipBg: 'rgba(245, 247, 249, 0.1)', border: 'rgba(245, 247, 249, 0.45)' },
+  pending: { color: 'inherit', underline: 'rgba(184, 196, 206, 0.62)', chipBg: 'rgba(184, 196, 206, 0.12)', border: 'rgba(184, 196, 206, 0.42)' },
+  skipped: { color: 'inherit', underline: 'rgba(184, 196, 206, 0.52)', chipBg: 'rgba(184, 196, 206, 0.12)', border: 'rgba(184, 196, 206, 0.38)' },
   notAttempted: { color: 'inherit', underline: 'transparent', chipBg: 'transparent', border: 'transparent' },
 })
 

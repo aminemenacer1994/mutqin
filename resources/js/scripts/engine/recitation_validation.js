@@ -142,8 +142,8 @@ export function buildValidationAggregate(reports = []) {
       passed: 0,
       failed: 0,
       replayCoverage: 0,
-      label: 'No validation report',
-      summary: 'No deterministic replay audit has been stored for this set yet.',
+      label: 'No consistency check yet',
+      summary: 'No consistency check has been saved for this set yet.',
       tone: 'tone-neutral'
     }
   }
@@ -156,10 +156,12 @@ export function buildValidationAggregate(reports = []) {
     passed,
     failed,
     replayCoverage,
-    label: failed ? `${failed} audit ${failed === 1 ? 'failure' : 'failures'}` : 'Replay stable',
+    label: failed
+      ? `${failed} consistency ${failed === 1 ? 'issue' : 'issues'}`
+      : 'Consistency looks steady',
     summary: failed
-      ? `${passed}/${validReports.length} stored checks reproduced their baseline output across replay variants.`
-      : `${passed}/${validReports.length} stored checks reproduced identical output across replay variants.`,
+      ? `${passed}/${validReports.length} saved checks did not fully match when reviewed again.`
+      : `${passed}/${validReports.length} saved checks matched when reviewed again.`,
     tone: failed ? 'tone-review' : 'tone-excellent'
   }
 }
