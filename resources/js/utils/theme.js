@@ -4,9 +4,9 @@ const THEME_COOKIE_KEY = 'mutqin_theme';
 
 /** PWA / browser chrome. Manifest splash stays light — OS cannot switch it with data-theme. */
 export const THEME_CHROME = {
-  light: { themeColor: '#0F7A5C', backgroundColor: '#F3F5F7', colorScheme: 'light' },
-  sepia: { themeColor: '#0F7A5C', backgroundColor: '#f1e7d8', colorScheme: 'light' },
-  dark: { themeColor: '#12324A', backgroundColor: '#12324A', colorScheme: 'dark' },
+  light: { themeColor: '#8b5e3c', backgroundColor: '#f6f3ee', colorScheme: 'light' },
+  sepia: { themeColor: '#8b5e3c', backgroundColor: '#f1e7d8', colorScheme: 'light' },
+  dark: { themeColor: '#14110f', backgroundColor: '#14110f', colorScheme: 'dark' },
 };
 
 export function getThemeChrome(theme = 'light') {

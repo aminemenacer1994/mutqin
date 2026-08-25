@@ -29,14 +29,14 @@ function sliceVariant(name) {
 
 // Shared semantic tokens exist — Bootstrap custom danger (#b55041), not plain #dc3545/#c0392b
 {
-  assert.match(css, /--accent:\s*#0f7a5c/)
-  assert.match(css, /--success:\s*#0f7a5c/)
+  assert.match(css, /--accent:\s*#9a6738/)
+  assert.match(css, /--success:\s*#2e7d64/)
   assert.match(css, /--bs-danger:\s*#b55041/)
   assert.match(css, /--danger:\s*#b55041/)
   assert.match(css, /--destructive:\s*var\(--danger\)/)
 }
 
-// Primary is brand emerald — not mixed with legacy mint green
+// Primary is gold/brown accent — not mixed with legacy mint green
 {
   const primary = sliceVariant('primary')
   assert.match(primary, /var\(--accent\)/)
@@ -90,7 +90,7 @@ function sliceVariant(name) {
   assert.doesNotMatch(lock.slice(0, 1200), /#c0392b|#e74c3c|#dc3545/)
 }
 
-// Dark-mode session primaries stay brand emerald via tokens
+// Dark-mode session primaries stay brand gold/brown
 {
   const darkPrimary = css.match(
     /\[data-theme="dark"\] \.action-btn\.primary \{([^}]+)\}/
@@ -112,7 +112,7 @@ function sliceVariant(name) {
   assert.match(hifz, /class="btn btn-primary"/)
   assert.match(hifz, /class="btn btn-primary hifz-plan-save-btn"/)
   assert.doesNotMatch(hifz, /btn-success/)
-  assert.match(hifz, /--plan-accent:\s*var\(--accent,\s*#0f7a5c\)/)
+  assert.match(hifz, /--plan-accent:\s*var\(--accent,\s*#9a6738\)/)
 }
 
 // Tools offcanvas tabs (Setup / Practice / Saved) use brand accent, not mint green

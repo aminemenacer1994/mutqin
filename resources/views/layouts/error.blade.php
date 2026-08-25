@@ -3,7 +3,7 @@
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
     $appThemePreference = $appThemePreference ?? (request()->cookie('mutqin_theme') ?: session('mutqin_theme', 'light-mode'));
     $appTheme = $appTheme ?? (str_starts_with((string) $appThemePreference, 'dark') ? 'dark' : (str_starts_with((string) $appThemePreference, 'sepia') ? 'sepia' : 'light'));
-    $appThemeColor = $appTheme === 'dark' ? '#12324A' : '#0F7A5C';
+    $appThemeColor = $appTheme === 'dark' ? '#14110f' : '#8b5e3c';
     $appColorScheme = $appTheme === 'dark' ? 'dark' : 'light';
 @endphp
 <!doctype html>
@@ -23,9 +23,9 @@
             place-items: center;
             padding: clamp(1.25rem, 4vw, 2.5rem);
             background:
-                radial-gradient(1200px 480px at 50% -10%, color-mix(in srgb, var(--accent, #0f7a5c) 16%, transparent), transparent 70%),
-                var(--bg, #F3F5F7);
-            color: var(--text, #12324A);
+                radial-gradient(1200px 480px at 50% -10%, color-mix(in srgb, var(--accent, #8b5e3c) 16%, transparent), transparent 70%),
+                var(--bg, #f6f3ee);
+            color: var(--text, #1f1812);
         }
         .mutqin-error-card {
             width: min(100%, 28rem);
@@ -90,22 +90,22 @@
             cursor: pointer;
         }
         .mutqin-error-btn--primary {
-            background: var(--accent, #0f7a5c);
-            border-color: color-mix(in srgb, var(--accent, #0f7a5c) 70%, #000);
+            background: var(--accent, #8b5e3c);
+            border-color: color-mix(in srgb, var(--accent, #8b5e3c) 70%, #000);
             color: #fff;
         }
         .mutqin-error-btn--secondary {
             background: transparent;
             border-color: color-mix(in srgb, var(--border, #d6d0c6) 90%, transparent);
-            color: var(--text, #12324A);
+            color: var(--text, #1f1812);
         }
         [data-theme="dark"] .mutqin-error-page {
             background:
-                radial-gradient(1200px 480px at 50% -10%, color-mix(in srgb, var(--accent, #4ec798) 14%, transparent), transparent 70%),
-                var(--bg, #12324a);
+                radial-gradient(1200px 480px at 50% -10%, color-mix(in srgb, var(--accent, #d4a574) 14%, transparent), transparent 70%),
+                var(--bg, #14110f);
         }
         [data-theme="dark"] .mutqin-error-btn--secondary {
-            color: var(--text, #f5f7f9);
+            color: var(--text, #f3eee7);
         }
     </style>
 </head>

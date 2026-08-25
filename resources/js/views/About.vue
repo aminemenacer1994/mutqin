@@ -131,7 +131,7 @@ button{
   min-width:0;
   border-radius:16px;
   background:color-mix(in srgb, var(--surface-strong, #fff) 92%, var(--surface-elevated, #fffaf4));
-  border:1px solid color-mix(in srgb, var(--accent, #0f7a5c) 12%, var(--border, rgba(160, 120, 76, 0.12)));
+  border:1px solid color-mix(in srgb, var(--accent, #a0784c) 12%, var(--border, rgba(160, 120, 76, 0.12)));
   backdrop-filter:blur(12px);
   transition:0.25s ease;
   box-shadow:var(--shadow-sm, 0 8px 24px rgba(0,0,0,0.06));
@@ -139,11 +139,11 @@ button{
 
 .card:hover{
   transform:translateY(-6px);
-  border-color:color-mix(in srgb, var(--accent, #0f7a5c) 34%, var(--border, rgba(160, 120, 76, 0.12)));
+  border-color:color-mix(in srgb, var(--accent, #a0784c) 34%, var(--border, rgba(160, 120, 76, 0.12)));
 }
 
 .highlight{
-  border-color:color-mix(in srgb, var(--accent, #0f7a5c) 44%, var(--border, rgba(160, 120, 76, 0.12)));
+  border-color:color-mix(in srgb, var(--accent, #a0784c) 44%, var(--border, rgba(160, 120, 76, 0.12)));
 }
 
 .verse{

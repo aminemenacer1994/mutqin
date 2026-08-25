@@ -49,8 +49,8 @@ function makeStyleNode() {
 {
   const lightCorrect = getLiveWordPresentation('correct', 'verse', 'light')
   const darkCorrect = getLiveWordPresentation('correct', 'verse', 'dark')
-  assert.equal(lightCorrect.color, '#0c634b')
-  assert.equal(darkCorrect.color, '#6ad4a8')
+  assert.equal(lightCorrect.color, '#146443')
+  assert.equal(darkCorrect.color, '#8fd4a8')
   assert.equal(lightCorrect.underlineStyle, 'solid')
   assert.equal(darkCorrect.underlineStyle, 'solid')
   assert.notEqual(lightCorrect.color, darkCorrect.color, 'dark theme must not reuse light status colours')
@@ -93,7 +93,7 @@ function makeStyleNode() {
   applyLiveWordPresentationStyles(node, presentation, 'chip')
   assert.equal(node.style.getPropertyValue('border-style'), 'dotted')
   assert.equal(node.style.getPropertyValue('text-decoration-style'), 'dotted')
-  assert.equal(node.style.getPropertyValue('color'), '#f5f7f9')
+  assert.equal(node.style.getPropertyValue('color'), '#f2ebe3')
   assert.ok(node.style.getPropertyValue('border-color'))
 }
 

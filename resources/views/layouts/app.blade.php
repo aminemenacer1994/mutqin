@@ -3,7 +3,7 @@
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
     $appThemePreference = $appThemePreference ?? session('mutqin_theme', 'light-mode');
     $appTheme = $appTheme ?? (str_starts_with($appThemePreference, 'dark') ? 'dark' : (str_starts_with($appThemePreference, 'sepia') ? 'sepia' : 'light'));
-    $appThemeColor = $appTheme === 'dark' ? '#12324A' : '#0F7A5C';
+    $appThemeColor = $appTheme === 'dark' ? '#14110f' : '#8b5e3c';
     $appColorScheme = $appTheme === 'dark' ? 'dark' : 'light';
     $switcherLocales = ['en', 'fr', 'es'];
     $languageEndonyms = [
@@ -44,7 +44,7 @@
         else if (theme === 'sepia' || theme === 'sepia-mode') theme = 'sepia';
         else theme = 'light';
         document.documentElement.setAttribute('data-theme', theme);
-        var color = theme === 'dark' ? '#12324A' : '#0F7A5C';
+        var color = theme === 'dark' ? '#14110f' : '#8b5e3c';
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta) {
           meta.setAttribute('content', color);
@@ -110,14 +110,14 @@
         min-height: 7.5rem !important;
         padding: 1.1rem 1.15rem !important;
         border-radius: 16px !important;
-        background: var(--surface-strong, #ffffff) !important;
-        border: 1px solid color-mix(in srgb, var(--border, rgba(18, 50, 74, 0.16)) 90%, transparent) !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(120, 80, 40, 0.12) !important;
       }
       .self-check-modal-overlay .self-check-modal-ayah,
       .self-check-modal-overlay .self-check-modal-ayah .session-evaluation-ayah {
         direction: rtl !important;
         text-align: right !important;
-        color: var(--text, #12324a) !important;
+        color: #2c1d12 !important;
         opacity: 1 !important;
         visibility: visible !important;
       }
@@ -185,22 +185,22 @@
          Canonical source for button semantics is resources/sass/app.scss (.btn-primary, etc.). --}}
     <style id="mutqin-button-colour-semantics">
       :root {
-        --bs-danger: #b55041;
-        --bs-danger-rgb: 181, 80, 65;
-        --success: #0f7a5c;
-        --success-strong: #0c634b;
-        --danger: #b55041;
-        --danger-strong: #9a4336;
+        --bs-danger: #dc2626;
+        --bs-danger-rgb: 220, 38, 38;
+        --success: #2e7d64;
+        --success-strong: #23624e;
+        --danger: #dc2626;
+        --danger-strong: #b91c1c;
         --destructive: var(--danger);
         --destructive-strong: var(--danger-strong);
       }
       [data-theme="dark"] {
-        --bs-danger: #e08a7c;
-        --bs-danger-rgb: 224, 138, 124;
-        --success: #4ec798;
-        --success-strong: #6ad4a8;
-        --danger: #e08a7c;
-        --danger-strong: #f0a090;
+        --bs-danger: #ef4444;
+        --bs-danger-rgb: 239, 68, 68;
+        --success: #3f8f6f;
+        --success-strong: #2f6f58;
+        --danger: #ef4444;
+        --danger-strong: #dc2626;
       }
       .app .mutqin-modal-btn--primary,
       .app .btn-primary,
@@ -213,14 +213,14 @@
       .app .self-check-action-btn.btn-primary,
       .app .recitation-check-actions .btn-primary,
       .app .saved-session-row-btn-primary {
-        color: var(--text-on-accent, #fff) !important;
+        color: #fff !important;
         background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
         border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
       }
-      /* Session Complete uses brand emerald accent */
+      /* Session Complete uses site bronze accent (same as onboarding / workspace) */
       .app .post-session-simple__btn--primary,
       .app .post-session-simple.post-session-simple--premium .post-session-simple__btn--primary {
-        color: var(--text-on-accent, #fff) !important;
+        color: #fff !important;
         background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
         border-color: color-mix(in srgb, var(--accent) 48%, transparent) !important;
         box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 22%, transparent) !important;
@@ -236,12 +236,8 @@
       [data-theme="dark"] .app .action-btn.btn-primary,
       [data-theme="dark"] .app .session-primary-action.btn-primary,
       [data-theme="dark"] .app .self-check-action-btn.btn-primary {
-        color: var(--text-on-accent, #0b1f18) !important;
+        color: #1a120c !important;
         background: linear-gradient(135deg, var(--accent), var(--accent-strong)) !important;
-      }
-      [data-theme="dark"] .app .post-session-simple__btn--primary,
-      [data-theme="dark"] .app .post-session-simple.post-session-simple--premium .post-session-simple__btn--primary {
-        color: var(--text-on-accent, #0b1f18) !important;
       }
       .app .mutqin-modal-btn--secondary {
         color: var(--text) !important;
@@ -1362,9 +1358,9 @@
         [data-theme="dark"] .app .top-card-icon-controls .top-card-controls-trigger,
         [data-theme="dark"] .app .top-card-icon-controls .top-card-dashboard-trigger,
         [data-theme="dark"] .app .top-card-icon-controls .top-card-ellipsis {
-          background: var(--toolbar-control-bg, #255070) !important;
+          background: var(--toolbar-control-bg, #2a2521) !important;
           border-color: var(--toolbar-control-border, rgba(245, 242, 234, 0.14)) !important;
-          color: var(--toolbar-control-fg, #f5f7f9) !important;
+          color: var(--toolbar-control-fg, #f7ebdf) !important;
         }
       }
       @media (min-width: 768px) {
@@ -1421,7 +1417,7 @@
           border-radius: 999px !important;
           background: var(--toolbar-control-bg, #ffffff) !important;
           border: 1px solid var(--toolbar-control-border, rgba(28, 25, 23, 0.1)) !important;
-          color: var(--toolbar-control-fg, #163650) !important;
+          color: var(--toolbar-control-fg, #1c1917) !important;
           box-shadow: none !important;
           transform: none !important;
           cursor: pointer !important;
@@ -1430,7 +1426,7 @@
         html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger:focus-visible {
           background: var(--toolbar-control-hover-bg, color-mix(in srgb, #f0e9de 70%, #ffffff)) !important;
           border-color: color-mix(in srgb, var(--toolbar-control-border, rgba(28, 25, 23, 0.1)) 55%, var(--accent, #c48a4a)) !important;
-          color: var(--toolbar-control-fg, #163650) !important;
+          color: var(--toolbar-control-fg, #1c1917) !important;
           outline: none;
         }
         html body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger i {
@@ -1444,9 +1440,9 @@
         html[data-theme="dark"] body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger,
         [data-theme="dark"] body .app .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger,
         body .app[data-theme="dark"] .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-trigger {
-          background: var(--toolbar-control-bg, #255070) !important;
+          background: var(--toolbar-control-bg, #2a2521) !important;
           border: 1px solid var(--toolbar-control-border, rgba(245, 242, 234, 0.14)) !important;
-          color: var(--toolbar-control-fg, #f5f7f9) !important;
+          color: var(--toolbar-control-fg, #f7ebdf) !important;
         }
         .app .main.mushaf-mode-active .mushaf-workspace {
           margin: 0.55rem auto 1rem !important;
@@ -1461,17 +1457,17 @@
           --mushaf-reading-surface: #f0e9de;
           --mushaf-reading-ink: #18181b;
           --workspace-card-surface:
-            radial-gradient(circle at top right, color-mix(in srgb, #0f7a5c 10%, transparent), transparent 34%),
+            radial-gradient(circle at top right, color-mix(in srgb, #9a6738 10%, transparent), transparent 34%),
             linear-gradient(165deg, color-mix(in srgb, #f0e9de 90%, white 10%), #f0e9de);
           --toolbar-header-bg: var(--workspace-card-surface);
           --toolbar-header-bg-solid: #f0e9de;
-          --toolbar-header-border: rgba(15, 122, 92, 0.18);
+          --toolbar-header-border: rgba(154, 103, 56, 0.18);
           --toolbar-control-bg: #ffffff;
           --toolbar-control-hover-bg: color-mix(in srgb, #f0e9de 70%, #ffffff);
-          --toolbar-control-active-bg: #12324a;
-          --toolbar-control-active-fg: #f5f7f9;
-          --toolbar-control-border: rgba(18, 50, 74, 0.12);
-          --toolbar-control-fg: #12324a;
+          --toolbar-control-active-bg: #1c1917;
+          --toolbar-control-active-fg: #fffaf3;
+          --toolbar-control-border: rgba(28, 25, 23, 0.1);
+          --toolbar-control-fg: #1c1917;
           --toolbar-control-muted-bg: rgba(255, 255, 255, 0.72);
         }
         .app .main.mushaf-mode-active .mushaf-shell,
@@ -1500,7 +1496,7 @@
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:hover:not(:disabled),
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:focus-visible {
           background: var(--toolbar-control-hover-bg) !important;
-          border-color: color-mix(in srgb, var(--toolbar-control-border) 55%, var(--accent, #0f7a5c)) !important;
+          border-color: color-mix(in srgb, var(--toolbar-control-border) 55%, var(--accent, #9a6738)) !important;
           color: var(--toolbar-control-fg) !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn.is-active {
@@ -1645,20 +1641,20 @@
         /* Dark UI: Mushaf paper matches Session Overview / workspace-shell card */
         [data-theme="dark"] {
           --workspace-card-surface-dark:
-            radial-gradient(circle at top right, color-mix(in srgb, #4ec798 10%, transparent), transparent 36%),
-            linear-gradient(180deg, #1a3d58, color-mix(in srgb, #1a3d58 88%, #163650 12%));
+            radial-gradient(circle at top right, color-mix(in srgb, #d4a574 10%, transparent), transparent 36%),
+            linear-gradient(180deg, #221d19, color-mix(in srgb, #221d19 88%, #1a1714 12%));
           --toolbar-header-bg: var(--workspace-card-surface-dark);
-          --toolbar-header-bg-solid: #1a3d58;
-          --toolbar-header-border: rgba(78, 199, 152, 0.22);
-          --toolbar-control-bg: #255070;
-          --toolbar-control-hover-bg: color-mix(in srgb, #255070 80%, #4ec798 20%);
-          --toolbar-control-active-bg: #4ec798;
-          --toolbar-control-active-fg: #0b1f18;
-          --toolbar-control-border: rgba(245, 247, 249, 0.14);
-          --toolbar-control-fg: #f5f7f9;
+          --toolbar-header-bg-solid: #221d19;
+          --toolbar-header-border: rgba(208, 160, 107, 0.22);
+          --toolbar-control-bg: #2a2521;
+          --toolbar-control-hover-bg: color-mix(in srgb, #2a2521 80%, #d4a574 20%);
+          --toolbar-control-active-bg: #d4a574;
+          --toolbar-control-active-fg: #1a1208;
+          --toolbar-control-border: rgba(245, 242, 234, 0.14);
+          --toolbar-control-fg: #f7ebdf;
           --toolbar-control-muted-bg: rgba(255, 255, 255, 0.06);
-          --mushaf-reading-surface: #1a3d58;
-          --mushaf-reading-ink: #f5f7f9;
+          --mushaf-reading-surface: #221d19;
+          --mushaf-reading-ink: #f7ebdf;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
@@ -1697,7 +1693,7 @@
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:hover:not(:disabled),
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn:focus-visible {
           background: var(--toolbar-control-hover-bg) !important;
-          border-color: color-mix(in srgb, var(--toolbar-control-border) 55%, #4ec798) !important;
+          border-color: color-mix(in srgb, var(--toolbar-control-border) 55%, #d4a574) !important;
           color: var(--toolbar-control-fg) !important;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn.is-active,
@@ -1774,28 +1770,28 @@
         /* FINAL: dark Mushaf must match workspace-shell (beat late Vue CSS) */
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
         html[data-theme="dark"] body .app .main.mushaf-mode-active .mushaf-shell {
-          background: var(--workspace-card-surface-dark, #1a3d58) !important;
-          background-color: #1a3d58 !important;
-          color: #f5f7f9 !important;
-          --mushaf-reading-surface: #1a3d58;
-          --mushaf-reading-ink: #f5f7f9;
-          --mushaf-bg: #1a3d58;
-          --mushaf-text: #f5f7f9;
+          background: var(--workspace-card-surface-dark, #221d19) !important;
+          background-color: #221d19 !important;
+          color: #f7ebdf !important;
+          --mushaf-reading-surface: #221d19;
+          --mushaf-reading-ink: #f7ebdf;
+          --mushaf-bg: #221d19;
+          --mushaf-text: #f7ebdf;
         }
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page,
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani {
-          background: #1a3d58 !important;
-          color: #f5f7f9 !important;
-          --mushaf-bg: #1a3d58;
-          --mushaf-text: #f5f7f9;
+          background: #221d19 !important;
+          color: #f7ebdf !important;
+          --mushaf-bg: #221d19;
+          --mushaf-text: #f7ebdf;
         }
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word:not(.highlighted):not(.phrase-highlighted),
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted) {
-          color: #f5f7f9 !important;
-          -webkit-text-fill-color: #f5f7f9 !important;
+          color: #f7ebdf !important;
+          -webkit-text-fill-color: #f7ebdf !important;
         }
                 [data-theme="dark"] .app .workspace-shell-metadata-pill,
         [data-theme="dark"] .app .workspace-shell-metadata-pill.is-readonly,
@@ -1939,7 +1935,7 @@
         --ps-ink: var(--text, #1f1a17) !important;
         --ps-muted: color-mix(in srgb, var(--text, #1f1a17) 62%, transparent) !important;
         --ps-label: var(--text, #1f1a17) !important;
-        --ps-accent: var(--accent, #0f7a5c) !important;
+        --ps-accent: var(--accent, #9a6738) !important;
         --ps-card: color-mix(in srgb, var(--surface, #fffaf3) 96%, #fff) !important;
         --ps-line: var(--border, rgba(78, 58, 38, 0.22)) !important;
         --ps-check-bg: color-mix(in srgb, var(--success, #2e7d64) 14%, #fff) !important;
@@ -2491,37 +2487,32 @@
     gtag('config', 'G-W4K8J2T0SG');
     </script>
     <style>
-        /* Theme Variables — brand Emerald / Deep Navy / gold (keep in sync with app.scss + theme.js) */
+        /* Theme Variables - NO SHADOWS */
         :root {
             color-scheme: light;
-            --brand-emerald: #0f7a5c;
-            --brand-navy: #12324a;
-            --brand-gold: #c9a227;
-            --bg: #f3f5f7;
-            --theme-color: #0f7a5c;
+            --bg: #f6f3ee;
+            --theme-color: #8b5e3c;
             --surface: rgba(255, 255, 255, 0.96);
             --surface-strong: #ffffff;
-            --surface-elevated: #f8fafb;
-            --surface-soft: rgba(243, 245, 247, 0.86);
-            --border: rgba(18, 50, 74, 0.16);
-            --text: #12324a;
-            --text-muted: #5c6b78;
-            --accent: #0f7a5c;
-            --accent-strong: #0c634b;
-            --accent-light: rgba(15, 122, 92, 0.12);
-            --gold: #a8871f;
-            --gold-strong: #8f7219;
-            --text-on-accent: #ffffff;
-            --text-on-accent-muted: rgba(255, 255, 255, 0.86);
+            --surface-elevated: #fffaf4;
+            --surface-soft: rgba(249, 242, 233, 0.78);
+            --border: rgba(160, 120, 76, 0.12);
+            --text: #1a2e24;
+            --text-muted: #6b7f76;
+            --accent: #a0784c;
+            --accent-strong: #8b653b;
+            --accent-light: rgba(160, 120, 76, 0.1);
+            --text-on-accent: #fffaf5;
+            --text-on-accent-muted: rgba(255, 250, 245, 0.82);
             --field-bg: rgba(255, 255, 255, 0.9);
             --field-bg-strong: rgba(255, 255, 255, 0.97);
-            --overlay: rgba(18, 50, 74, 0.36);
-            --success-bg: rgba(15, 122, 92, 0.12);
-            --success-text: #0c634b;
+            --overlay: rgba(17, 13, 10, 0.34);
+            --success-bg: rgba(24, 128, 86, 0.11);
+            --success-text: #146c46;
             --danger-bg: rgba(178, 59, 59, 0.1);
             --danger-text: #913232;
-            --warning-bg: rgba(168, 135, 31, 0.14);
-            --warning-text: #8f7219;
+            --warning-bg: rgba(196, 154, 108, 0.16);
+            --warning-text: #8b653b;
             
             /* Responsive system tokens */
             --nav-h: 64px;
@@ -2539,59 +2530,55 @@
         html[data-theme="dark"],
         [data-theme="dark"] {
             color-scheme: dark;
-            --bg: #12324a;
-            --theme-color: #12324a;
-            --surface: #1a3d58;
-            --surface-strong: #1f4562;
-            --surface-elevated: #255070;
-            --surface-soft: rgba(37, 80, 112, 0.42);
-            --border: rgba(245, 247, 249, 0.18);
-            --text: #f5f7f9;
-            --text-muted: #b8c4ce;
-            --accent: #4ec798;
-            --accent-strong: #6ad4a8;
-            --accent-light: rgba(78, 199, 152, 0.18);
-            --gold: #e0c06a;
-            --gold-strong: #edd08a;
-            --text-on-accent: #0b1f18;
-            --text-on-accent-muted: rgba(11, 31, 24, 0.82);
-            --field-bg: rgba(26, 61, 88, 0.96);
-            --field-bg-strong: rgba(31, 69, 98, 0.98);
-            --overlay: rgba(8, 20, 32, 0.56);
-            --success-bg: rgba(78, 199, 152, 0.18);
-            --success-text: #6ad4a8;
+            --bg: #14110f;
+            --theme-color: #14110f;
+            --surface: #181614;
+            --surface-strong: #121212;
+            --surface-elevated: #24211d;
+            --surface-soft: rgba(48, 40, 33, 0.42);
+            --border: rgba(230, 207, 181, 0.14);
+            --text: #f4ede4;
+            --text-muted: #c9bbac;
+            --accent: #c49a6c;
+            --accent-strong: #d4aa7c;
+            --accent-light: rgba(196, 154, 108, 0.15);
+            --text-on-accent: #fff4e6;
+            --text-on-accent-muted: rgba(255, 244, 230, 0.82);
+            --field-bg: rgba(34, 30, 27, 0.96);
+            --field-bg-strong: rgba(39, 34, 30, 0.98);
+            --overlay: rgba(4, 4, 4, 0.52);
+            --success-bg: rgba(63, 154, 114, 0.18);
+            --success-text: #b8f0d5;
             --danger-bg: rgba(175, 82, 82, 0.18);
             --danger-text: #ffd1ca;
-            --warning-bg: rgba(224, 192, 106, 0.18);
-            --warning-text: #edd08a;
+            --warning-bg: rgba(196, 154, 108, 0.18);
+            --warning-text: #ffd6a7;
         }
 
         [data-theme="sepia"] {
             --bg: #f1e7d8;
-            --theme-color: #0f7a5c;
+            --theme-color: #8b5e3c;
             --surface: #fff8eb;
             --surface-strong: #fff8eb;
             --surface-elevated: #fff4e3;
             --surface-soft: #efdfc8;
-            --border: rgba(18, 50, 74, 0.18);
-            --text: #1a2e24;
-            --text-muted: #5c6b5e;
-            --accent: #0f7a5c;
-            --accent-strong: #0c634b;
-            --accent-light: rgba(15, 122, 92, 0.12);
-            --gold: #a8871f;
-            --gold-strong: #8f7219;
-            --text-on-accent: #ffffff;
-            --text-on-accent-muted: rgba(255, 255, 255, 0.86);
+            --border: rgba(139, 94, 60, 0.15);
+            --text: #3d2b1f;
+            --text-muted: #8b7355;
+            --accent: #b87333;
+            --accent-strong: #9a5a2a;
+            --accent-light: rgba(184, 115, 51, 0.1);
+            --text-on-accent: #fff7ec;
+            --text-on-accent-muted: rgba(255, 247, 236, 0.82);
             --field-bg: rgba(255, 250, 241, 0.95);
             --field-bg-strong: rgba(255, 250, 241, 0.98);
-            --overlay: rgba(18, 50, 74, 0.24);
-            --success-bg: rgba(15, 122, 92, 0.12);
-            --success-text: #0c634b;
+            --overlay: rgba(44, 31, 20, 0.24);
+            --success-bg: rgba(38, 133, 88, 0.12);
+            --success-text: #1f7b50;
             --danger-bg: rgba(173, 76, 62, 0.12);
             --danger-text: #984336;
-            --warning-bg: rgba(168, 135, 31, 0.12);
-            --warning-text: #8f7219;
+            --warning-bg: rgba(184, 115, 51, 0.12);
+            --warning-text: #9a5a2a;
         }
 
         * {
@@ -5734,7 +5721,7 @@
                 document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;
                 var themeColorMeta = document.querySelector('meta[name="theme-color"]');
                 if (themeColorMeta) {
-                    themeColorMeta.setAttribute('content', normalizedTheme === 'dark' ? '#12324A' : '#0F7A5C');
+                    themeColorMeta.setAttribute('content', normalizedTheme === 'dark' ? '#14110f' : '#8b5e3c');
                     themeColorMeta.removeAttribute('media');
                 }
                 var colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');

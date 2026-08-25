@@ -382,7 +382,7 @@
 
   [data-theme="dark"] .workspace-shell-progress-pill {
     border-color: color-mix(in srgb, var(--border) 90%, transparent);
-    background: color-mix(in srgb, var(--surface) 88%, #163650);
+    background: color-mix(in srgb, var(--surface) 88%, #1a1613);
     color: color-mix(in srgb, var(--text) 78%, transparent);
   }
 
