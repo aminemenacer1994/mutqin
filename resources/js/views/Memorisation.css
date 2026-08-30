@@ -15813,6 +15813,11 @@ body.memorisation-page nav.navbar.app-navbar {
   cursor: default;
 }
 
+/* Mushaf layout must never paint neighbouring-page ayahs */
+.main.mushaf-mode-active .madani-word--out {
+  display: none !important;
+}
+
 .madani-word:hover,
 .madani-word.active,
 .madani-word.is-playing {
@@ -35494,7 +35499,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   gap: 0.35rem;
   min-height: 1.85rem;
   min-width: max-content;
-  padding: 0.28rem 0.85rem;
+  padding: 0.28rem 0.7rem;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -52725,7 +52730,8 @@ contained page (top session card untouched) —— */
 
 .main.mushaf-mode-active .madani-word--end.madani-word--unicode.madani-word--out,
 .main.mushaf-mode-active .madani-word--end.madani-word--fallback.madani-word--out {
-  opacity: 0.42 !important;
+  display: none !important;
+  opacity: 0 !important;
 }
 
 .main.mushaf-mode-active .madani-basmala {
@@ -52818,7 +52824,9 @@ contained page (top session card untouched) —— */
 }
 
 .main.mushaf-mode-active .madani-word--out {
-  opacity: 0.42 !important;
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .main.focus-mode-active.mushaf-mode-active .madani-word.is-focus-dim {
@@ -60569,6 +60577,49 @@ body.memorisation-page:not(.tools-panel-open) {
 
 html:has(body.memorisation-page:not(.tools-panel-open)) {
   overflow-y: auto !important;
+}
+
+/* Immersive reading fills the viewport without the Fullscreen API.
+   Native requestFullscreen() isolated the page (frozen UI, dead audio,
+   and some webviews apply script-src 'none'). */
+html.is-app-fullscreen,
+html.is-app-fullscreen body,
+body.memorisation-page.is-app-fullscreen:not(.tools-panel-open) {
+  overflow-x: clip !important;
+  overflow-y: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  pointer-events: auto !important;
+}
+
+html.is-app-fullscreen .app,
+.app.is-fullscreen {
+  pointer-events: auto !important;
+  overflow-x: clip;
+  min-height: 100dvh;
+}
+
+html.is-app-fullscreen body.memorisation-page nav.navbar.app-navbar,
+html.is-app-fullscreen footer.site-footer,
+html.is-app-fullscreen .app-footer {
+  display: none !important;
+}
+
+html.is-app-fullscreen body.memorisation-page {
+  --navbar-height: 0px;
+  --navbar-offset: 0px;
+}
+
+html.is-app-fullscreen .tools-backdrop:not(.open) {
+  pointer-events: none !important;
+}
+
+html.is-app-fullscreen .player-dock,
+html.is-app-fullscreen .player-dock > *,
+html.is-app-fullscreen .player-dock-card,
+html.is-app-fullscreen .player-bar,
+html.is-app-fullscreen .playback-pill {
+  pointer-events: auto !important;
 }
 
 body.memorisation-page.tools-panel-open {

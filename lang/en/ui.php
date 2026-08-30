@@ -60,6 +60,7 @@ return [
     'mutqin_brand' => 'Mutqin',
     'pwa_share_icon_title' => 'Share',
     'api_hifz_plan_not_ready' => 'Hifz plan storage is not ready yet. Run database migrations.',
+    'api_payload_too_large' => 'This payload is too large to save.',
     'api_sync_encode_failed' => 'Unable to encode sync state.',
     'api_migration_encode_failed' => 'Unable to encode migration payload.',
     'api_comparison_ids_required' => 'previous_assessment_id and follow_up_assessment_id are required.',

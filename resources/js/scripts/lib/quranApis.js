@@ -41,6 +41,7 @@ const quranComClient = createProxyClient('qurancom')
 const MADANI_MUSHAF_ID = 1
 const madaniPageCache = new Map()
 const madaniChapterPageCache = new Map()
+const madaniChapterVerseCache = new Map()
 
 export function getAyahTajweed(ayahNumber) {
   return alquranClient.get(`/ayah/${ayahNumber}/quran-tajweed`)
@@ -149,6 +150,48 @@ export async function getMadaniPageVerses(pageNumber, options = {}) {
 }
 
 /**
+ * Fetch Madani glyph verses for a chapter ayah range only.
+ * Never includes neighbouring-surah ayahs that share a printed page.
+ */
+export async function getMadaniChapterRangeVerses(chapterId, rangeStart = 1, rangeEnd = 286, options = {}) {
+  const chapter = Math.max(1, Math.min(114, Number(chapterId) || 1))
+  const start = Math.max(1, Number(rangeStart) || 1)
+  const end = Math.max(start, Number(rangeEnd) || start)
+  const mushaf = Number(options.mushaf) || MADANI_MUSHAF_ID
+  const cacheKey = `${mushaf}:${chapter}:${start}:${end}:verses`
+  if (!options.force && madaniChapterVerseCache.has(cacheKey)) {
+    return madaniChapterVerseCache.get(cacheKey)
+  }
+
+  const perPage = Math.max(1, Math.min(50, Number(options.perPage) || 50))
+  const startApiPage = Math.max(1, Math.ceil(start / perPage))
+  const endApiPage = Math.max(startApiPage, Math.ceil(end / perPage))
+  const collected = []
+
+  for (let apiPage = startApiPage; apiPage <= endApiPage; apiPage += 1) {
+    const response = await quranComClient.get(`/verses/by_chapter/${chapter}`, {
+      params: {
+        language: 'en',
+        words: true,
+        mushaf,
+        page: apiPage,
+        per_page: perPage,
+        word_fields: 'code_v2,text_qpc_hafs,text_uthmani,line_number,page_number,translation'
+      }
+    })
+    const verses = response.data?.verses || []
+    for (const verse of verses) {
+      const verseNumber = Number(verse?.verse_number)
+      if (!Number.isFinite(verseNumber) || verseNumber < start || verseNumber > end) continue
+      collected.push(verse)
+    }
+  }
+
+  madaniChapterVerseCache.set(cacheKey, collected)
+  return collected
+}
+
+/**
  * Resolve Madani page numbers covering a chapter ayah range.
  */
 export async function getMadaniPagesForChapterRange(chapterId, rangeStart = 1, rangeEnd = 286, options = {}) {
@@ -204,4 +247,5 @@ export async function getMadaniPagesForChapterRange(chapterId, rangeStart = 1, r
 export function clearMadaniPageCaches() {
   madaniPageCache.clear()
   madaniChapterPageCache.clear()
+  madaniChapterVerseCache.clear()
 }

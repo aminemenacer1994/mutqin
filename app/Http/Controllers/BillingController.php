@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\StripeWebhookEvent;
 use App\Support\MutqinLog;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 
@@ -103,15 +105,16 @@ class BillingController extends Controller
         $signature = (string) $request->header('Stripe-Signature', '');
         $webhookSecret = config('services.stripe.webhook_secret');
 
-        if (!app()->environment(['local', 'testing'])) {
-            if (!$webhookSecret) {
+        // Unsigned acceptance is testing-only. Local and every deployed env need a secret.
+        if (! app()->environment('testing')) {
+            if (! $webhookSecret) {
                 return response('Webhook secret not configured', 503);
             }
 
-            if (!$this->hasValidSignature($payload, $signature, $webhookSecret)) {
+            if (! $this->hasValidSignature($payload, $signature, $webhookSecret)) {
                 return response('Invalid signature', 400);
             }
-        } elseif ($webhookSecret && !$this->hasValidSignature($payload, $signature, $webhookSecret)) {
+        } elseif ($webhookSecret && ! $this->hasValidSignature($payload, $signature, $webhookSecret)) {
             return response('Invalid signature', 400);
         }
 
@@ -125,34 +128,34 @@ class BillingController extends Controller
         $eventId = (string) ($event['id'] ?? '');
         $eventType = (string) ($event['type'] ?? 'unknown');
 
-        if ($eventId !== '' && StripeWebhookEvent::where('stripe_event_id', $eventId)->exists()) {
+        try {
+            DB::transaction(function () use ($eventId, $eventType, $object): void {
+                if ($eventId !== '') {
+                    StripeWebhookEvent::create([
+                        'stripe_event_id' => $eventId,
+                        'event_type' => $eventType,
+                        'processed_at' => now(),
+                    ]);
+                }
+
+                MutqinLog::info('billing.webhook.received', [
+                    'event_type' => $eventType,
+                    'stripe_object_id' => $object['id'] ?? null,
+                    'stripe_event_id' => $eventId !== '' ? $eventId : null,
+                ]);
+
+                match ($eventType) {
+                    'checkout.session.completed' => $this->syncSubscriptionFromStripe((string) ($object['subscription'] ?? '')),
+                    'customer.subscription.created',
+                    'customer.subscription.updated',
+                    'customer.subscription.deleted' => $this->applySubscription($object),
+                    default => null,
+                };
+            });
+        } catch (UniqueConstraintViolationException) {
             MutqinLog::info('billing.webhook.duplicate', [
                 'event_id' => $eventId,
                 'event_type' => $eventType,
-            ]);
-
-            return response('OK');
-        }
-
-        MutqinLog::info('billing.webhook.received', [
-            'event_type' => $eventType,
-            'stripe_object_id' => $object['id'] ?? null,
-            'stripe_event_id' => $eventId !== '' ? $eventId : null,
-        ]);
-
-        match ($eventType) {
-            'checkout.session.completed' => $this->syncSubscriptionFromStripe((string) ($object['subscription'] ?? '')),
-            'customer.subscription.created',
-            'customer.subscription.updated',
-            'customer.subscription.deleted' => $this->applySubscription($object),
-            default => null,
-        };
-
-        if ($eventId !== '') {
-            StripeWebhookEvent::create([
-                'stripe_event_id' => $eventId,
-                'event_type' => $eventType,
-                'processed_at' => now(),
             ]);
         }
 

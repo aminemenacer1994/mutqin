@@ -22,6 +22,16 @@ class BillingWebhookTest extends TestCase
             ->assertSee('Webhook secret not configured');
     }
 
+    public function test_webhook_rejects_requests_when_secret_missing_in_local(): void
+    {
+        $this->app->detectEnvironment(fn () => 'local');
+        config(['services.stripe.webhook_secret' => '']);
+
+        $this->postJson(route('stripe.webhook'), ['type' => 'ping'])
+            ->assertStatus(503)
+            ->assertSee('Webhook secret not configured');
+    }
+
     public function test_webhook_rejects_invalid_signature_when_secret_configured(): void
     {
         config(['services.stripe.webhook_secret' => 'whsec_test_secret']);

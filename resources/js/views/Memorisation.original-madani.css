@@ -1,0 +1,747 @@
+.main.original-madani-mode-active .original-madani-workspace,
+.main.original-madani-mode-active .original-madani-workspace__fluid,
+.main.original-madani-mode-active .original-madani-shell,
+.main.original-madani-mode-active .original-madani-viewport {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.main.original-madani-mode-active {
+  --original-madani-chrome-offset: 13.5rem;
+}
+
+.main.original-madani-mode-active .original-madani-workspace {
+  --original-madani-desk: #f3eee3;
+  --original-madani-ink: #182418;
+  --original-madani-green: #1f5a32;
+  --original-madani-paper: #fffdf7;
+  --original-madani-gold: #c9a227;
+  --original-madani-frame-shadow: rgba(31, 24, 18, 0.16);
+  --madani-hit-hover: color-mix(in srgb, var(--original-madani-gold) 18%, transparent);
+  --madani-hit-active: color-mix(in srgb, var(--original-madani-gold) 26%, transparent);
+  --madani-hit-playing: color-mix(in srgb, var(--original-madani-gold) 34%, transparent);
+  --madani-hit-word: color-mix(in srgb, var(--original-madani-gold) 52%, transparent);
+  --madani-status-due: #c47a22;
+  --madani-status-mastered: #2e8b57;
+  --madani-status-weak: #b4533a;
+  --original-madani-zoom: 1;
+  --original-madani-page-ratio: 1024 / 1656;
+  --original-madani-nav-bg: color-mix(in srgb, var(--original-madani-paper) 88%, white);
+  --original-madani-nav-fg: var(--original-madani-ink);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0.35rem auto 0.85rem;
+  padding: 0 clamp(0.45rem, 1.6vw, 1.1rem);
+}
+
+.original-madani-shell__title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--toolbar-control-fg);
+  white-space: nowrap;
+}
+
+.original-madani-shell__session {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--toolbar-control-fg);
+  opacity: 0.82;
+}
+
+.main.original-madani-mode-active .original-madani-workspace__fluid,
+.main.original-madani-mode-active .original-madani-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.main.original-madani-mode-active .original-madani-shell {
+  background: var(--workspace-card-surface, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--original-madani-gold) 32%, var(--zone-divider, rgba(24, 24, 27, 0.1)));
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--original-madani-green) 14%, transparent),
+    0 12px 32px rgba(31, 24, 18, 0.08);
+  transition: box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.main.original-madani-mode-active .original-madani-shell .mushaf-shell__bar {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+  padding: 0.5rem 0.85rem;
+  background: var(--toolbar-header-bg-solid, var(--workspace-card-surface)) !important;
+  border-bottom: 1px solid var(--toolbar-header-border, var(--zone-divider)) !important;
+  backdrop-filter: blur(8px);
+}
+
+.main.original-madani-mode-active .original-madani-shell .btn-group .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  padding: 0.25rem 0.55rem;
+  border-color: color-mix(in srgb, var(--original-madani-gold) 42%, var(--zone-divider, rgba(24, 24, 27, 0.18)));
+  color: var(--original-madani-ink, #182418);
+  background: color-mix(in srgb, var(--original-madani-paper, #fffdf7) 88%, white);
+}
+
+.main.original-madani-mode-active .original-madani-shell .btn-group .btn:hover:not(:disabled),
+.main.original-madani-mode-active .original-madani-shell .btn-group .btn:focus-visible {
+  background: color-mix(in srgb, var(--original-madani-gold) 16%, var(--original-madani-paper, #fffdf7));
+  border-color: color-mix(in srgb, var(--original-madani-gold) 58%, transparent);
+  color: var(--original-madani-ink, #182418);
+  box-shadow: none;
+}
+
+.main.original-madani-mode-active .original-madani-shell .btn-group .btn:disabled,
+.main.original-madani-mode-active .original-madani-shell .original-madani-shell__page-label {
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.main.original-madani-mode-active .original-madani-shell .original-madani-shell__page-label {
+  min-width: 4.5rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.main.original-madani-mode-active .original-madani-shell .navbar-brand {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--original-madani-ink, #182418);
+}
+
+.original-madani-viewport {
+  --original-madani-fit-height: calc(100dvh - var(--original-madani-chrome-offset, 13.5rem) - var(--player-dock-offset, 0px));
+  position: relative;
+  display: grid;
+  place-items: center;
+  container-type: size;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 18rem;
+  height: var(--original-madani-fit-height);
+  max-height: var(--original-madani-fit-height);
+  padding: 0.55rem 0.75rem;
+  background:
+    radial-gradient(78% 52% at 50% 0%, color-mix(in srgb, var(--original-madani-gold) 12%, transparent), transparent 60%),
+    radial-gradient(68% 74% at 50% 100%, color-mix(in srgb, var(--original-madani-green) 9%, transparent), transparent 64%),
+    var(--original-madani-desk, #f3eee3);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
+  transition: background 0.35s ease;
+}
+
+.original-madani-spread {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 100%;
+  transform: scale(var(--original-madani-zoom, 1));
+  transform-origin: center center;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.original-madani-spread--single {
+  width: min(100%, calc(var(--original-madani-fit-height) * var(--original-madani-page-ratio, 1024 / 1656)));
+  height: auto;
+  aspect-ratio: var(--original-madani-page-ratio, 1024 / 1656);
+  max-height: 100%;
+}
+
+.original-madani-spread--pair {
+  /* Open-book spread: two Madani pages + spine, height-capped to the viewport. */
+  width: min(100%, calc(var(--original-madani-fit-height) * 2 * var(--original-madani-page-ratio, 1024 / 1656) + 0.55rem));
+  height: min(100%, var(--original-madani-fit-height));
+  aspect-ratio: auto;
+  max-height: 100%;
+  gap: 0;
+}
+
+@supports (width: 1cqi) {
+  .original-madani-spread--single {
+    width: min(92cqi, calc(100cqb * var(--original-madani-page-ratio, 1024 / 1656)));
+    max-height: 100cqb;
+  }
+
+  .original-madani-spread--pair {
+    width: min(98cqi, calc(100cqb * 2 * var(--original-madani-page-ratio, 1024 / 1656) + 0.55rem));
+    height: min(100cqb, var(--original-madani-fit-height));
+    max-height: 100cqb;
+  }
+}
+
+.original-madani-leaf {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  transition: transform 0.28s ease, filter 0.28s ease;
+}
+
+.original-madani-leaf:not(.is-current) {
+  cursor: pointer;
+}
+
+.original-madani-leaf:not(.is-current):hover {
+  filter: brightness(1.02);
+}
+
+.original-madani-leaf .original-madani-frame {
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: var(--original-madani-page-ratio, 1024 / 1656);
+}
+
+.original-madani-spine {
+  flex: 0 0 0.5rem;
+  align-self: stretch;
+  margin-block: 2.8%;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--original-madani-ink) 18%, transparent),
+      color-mix(in srgb, var(--original-madani-paper) 78%, transparent) 48%,
+      color-mix(in srgb, var(--original-madani-ink) 18%, transparent)
+    );
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--original-madani-gold) 18%, transparent);
+}
+
+.original-madani-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.65rem;
+  height: 2.65rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--original-madani-gold) 35%, transparent);
+  border-radius: 999px;
+  background: var(--original-madani-nav-bg);
+  color: var(--original-madani-nav-fg);
+  box-shadow: 0 8px 22px var(--original-madani-frame-shadow);
+  transform: translateY(-50%);
+  cursor: pointer;
+  opacity: 0.92;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.original-madani-nav--prev { left: 0.55rem; }
+.original-madani-nav--next { right: 0.55rem; }
+
+.original-madani-nav i {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.original-madani-nav:not(:disabled):hover,
+.original-madani-nav:not(:disabled):focus-visible {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: 0 10px 26px var(--original-madani-frame-shadow);
+  outline: none;
+}
+
+.original-madani-nav:not(:disabled):active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.original-madani-nav:disabled {
+  opacity: 0.28;
+  cursor: default;
+  box-shadow: none;
+}
+
+.original-madani-workspace--spread .original-madani-nav {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.original-madani-workspace--spread .original-madani-viewport:hover .original-madani-nav:not(:disabled),
+.original-madani-workspace--spread .original-madani-nav:focus-visible {
+  opacity: 0.9;
+  pointer-events: auto;
+}
+
+.original-madani-frame {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--original-madani-page-ratio, 1024 / 1656);
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--original-madani-paper);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--original-madani-gold) 30%, transparent),
+    0 16px 36px var(--original-madani-frame-shadow);
+  transition: box-shadow 0.28s ease;
+}
+
+.original-madani-spread--pair .original-madani-frame {
+  width: auto;
+  height: 100%;
+}
+
+.original-madani-spread--single .original-madani-frame {
+  width: 100%;
+  height: auto;
+}
+
+.original-madani-frame.is-active {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--original-madani-gold) 42%, transparent),
+    0 18px 42px var(--original-madani-frame-shadow);
+}
+
+.original-madani-frame__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  z-index: 1;
+  transition: filter 0.35s ease;
+}
+
+.original-madani-frame__meta {
+  position: absolute;
+  top: 1.15%;
+  left: 11%;
+  right: 11%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-ar, "Amiri", "Noto Naskh Arabic", serif);
+  font-size: clamp(0.62rem, 1.05cqi, 0.9rem);
+  font-weight: 800;
+  color: var(--original-madani-green);
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--original-madani-paper) 70%, transparent);
+}
+
+.original-madani-frame--opening .original-madani-frame__meta {
+  top: 3.6%;
+  left: 8%;
+  right: 8%;
+}
+
+.original-madani-frame--right .original-madani-frame__meta { flex-direction: row; }
+.original-madani-frame--left .original-madani-frame__meta { flex-direction: row-reverse; }
+
+.original-madani-frame__window {
+  position: absolute;
+  top: var(--madani-inset-top);
+  right: var(--madani-inset-right);
+  bottom: var(--madani-inset-bottom);
+  left: var(--madani-inset-left);
+  z-index: 3;
+  overflow: hidden;
+  background: var(--original-madani-paper, #f7f1e3);
+  container-type: size;
+}
+
+.original-madani-frame--opening .original-madani-frame__window {
+  border-radius: 50%;
+}
+
+/* Live QCF glyph sheet inside the ornate frame (page PNG retired). */
+.original-madani-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0.35% 0.6%;
+  overflow: hidden;
+  background: transparent;
+  color: var(--original-madani-ink, #182418);
+  font-size: var(--madani-glyph-size, calc(100cqh / var(--madani-line-count, 15) * 0.86));
+  line-height: 1;
+  --madani-page-font: inherit;
+}
+
+.original-madani-sheet.madani-page-sheet {
+  /* Override mushaf sheet page chrome — we already sit in the frame window. */
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.original-madani-sheet__line {
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  min-height: calc(100% / var(--madani-line-count, 15));
+  height: calc(100% / var(--madani-line-count, 15));
+}
+
+.original-madani-sheet .madani-line--glyphs {
+  /* Mushaf mode uses display:contents for continuous flow; Original needs real rows. */
+  display: flex !important;
+  flex-direction: row-reverse;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.original-madani-sheet .madani-word {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.original-madani-sheet .madani-word--glyph {
+  font-family: var(--madani-page-font);
+  font-size: 1em;
+  line-height: 1;
+}
+
+.original-madani-sheet .madani-word.highlighted,
+.original-madani-sheet .madani-word.phrase-highlighted,
+.original-madani-sheet .madani-word.is-playing {
+  background: color-mix(in srgb, var(--original-madani-gold) 42%, transparent);
+  border-radius: 0.18em;
+}
+
+.original-madani-sheet .madani-word.active:not(.highlighted) {
+  background: color-mix(in srgb, var(--original-madani-gold) 22%, transparent);
+  border-radius: 0.18em;
+}
+
+.original-madani-sheet .madani-word.is-focus-dim {
+  opacity: 0.28;
+}
+
+.original-madani-sheet .madani-word.blur-upcoming:not(.peek-revealed) {
+  filter: blur(calc(var(--recall-blur, 8px) * 0.55));
+  opacity: 0.55;
+}
+
+.original-madani-sheet .madani-word.madani-word--out {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.original-madani-sheet .madani-surah-name,
+.original-madani-sheet .madani-basmala {
+  width: 100%;
+  text-align: center;
+  color: var(--original-madani-green, #1f5a32);
+}
+
+.original-madani-frame__image-error {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 1rem;
+  color: color-mix(in srgb, var(--original-madani-ink) 55%, transparent);
+  font-family: var(--font-ar, "Amiri", "Noto Naskh Arabic", serif);
+  font-size: clamp(0.85rem, 2.4cqi, 1.1rem);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.original-madani-frame__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.05%;
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  font-family: var(--font-ar, "Amiri", "Noto Naskh Arabic", serif);
+  font-size: clamp(0.78rem, 1.35cqi, 1.1rem);
+  font-weight: 800;
+  color: var(--original-madani-green);
+  pointer-events: none;
+}
+
+.original-madani-frame__footer span {
+  min-width: 2.1rem;
+  padding: 0.08rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--original-madani-paper) 82%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--original-madani-gold) 28%, transparent);
+}
+
+.original-madani-frame--opening .original-madani-frame__footer {
+  bottom: 4.2%;
+}
+
+/* Page-turn transitions */
+.madani-turn-forward-enter-active,
+.madani-turn-forward-leave-active,
+.madani-turn-back-enter-active,
+.madani-turn-back-leave-active {
+  transition:
+    opacity 0.28s ease,
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.madani-turn-forward-enter-from {
+  opacity: 0;
+  transform: translateX(-18px) scale(0.985);
+}
+
+.madani-turn-forward-leave-to {
+  opacity: 0;
+  transform: translateX(18px) scale(0.985);
+}
+
+.madani-turn-back-enter-from {
+  opacity: 0;
+  transform: translateX(18px) scale(0.985);
+}
+
+.madani-turn-back-leave-to {
+  opacity: 0;
+  transform: translateX(-18px) scale(0.985);
+}
+
+/* Themes */
+[data-theme="light"] .original-madani-workspace,
+[data-theme="light"] .main.original-madani-mode-active .original-madani-workspace {
+  --original-madani-desk: #f6f3ee;
+  --original-madani-paper: #fffdf8;
+  --original-madani-ink: #182418;
+  --original-madani-green: #1b5a30;
+  --original-madani-gold: #c9a227;
+  --original-madani-frame-shadow: rgba(31, 24, 18, 0.14);
+  --original-madani-nav-bg: #fffdf8;
+  --original-madani-nav-fg: #1a2a18;
+}
+
+[data-theme="sepia"] .original-madani-workspace,
+[data-theme="sepia"] .main.original-madani-mode-active .original-madani-workspace {
+  --original-madani-desk: #ebe2cd;
+  --original-madani-paper: #f7f0de;
+  --original-madani-ink: #2a2214;
+  --original-madani-green: #2a5f36;
+  --original-madani-gold: #b8860b;
+  --original-madani-frame-shadow: rgba(58, 42, 18, 0.16);
+  --original-madani-nav-bg: #f7f0de;
+  --original-madani-nav-fg: #2a2214;
+}
+
+[data-theme="dark"] .original-madani-workspace,
+[data-theme="dark"] .main.original-madani-mode-active .original-madani-workspace {
+  --original-madani-desk: #12100e;
+  --original-madani-paper: #1b1713;
+  --original-madani-ink: #f1e6cf;
+  --original-madani-green: #d6c29a;
+  --original-madani-gold: #e0c36a;
+  --original-madani-frame-shadow: rgba(0, 0, 0, 0.45);
+  --original-madani-nav-bg: #221c16;
+  --original-madani-nav-fg: #f1e6cf;
+  --madani-hit-hover: color-mix(in srgb, var(--original-madani-gold) 22%, transparent);
+  --madani-hit-active: color-mix(in srgb, var(--original-madani-gold) 30%, transparent);
+  --madani-hit-playing: color-mix(in srgb, var(--original-madani-gold) 40%, transparent);
+  --madani-hit-word: color-mix(in srgb, var(--original-madani-gold) 58%, transparent);
+}
+
+[data-theme="sepia"] .original-madani-viewport {
+  background:
+    radial-gradient(90% 70% at 50% 0%, rgba(46, 90, 51, 0.1), transparent 58%),
+    var(--original-madani-desk);
+}
+
+[data-theme="dark"] .original-madani-viewport {
+  background:
+    radial-gradient(90% 70% at 50% 0%, rgba(212, 175, 110, 0.08), transparent 58%),
+    var(--original-madani-desk);
+}
+
+[data-theme="dark"] .original-madani-frame__art {
+  filter: brightness(0.52) saturate(0.78) contrast(1.06);
+}
+
+[data-theme="dark"] .original-madani-sheet {
+  color: color-mix(in srgb, var(--original-madani-paper) 88%, white);
+}
+
+[data-theme="sepia"] .original-madani-frame__art {
+  filter: sepia(0.12) contrast(1.02);
+}
+
+.original-madani-workspace:fullscreen,
+.original-madani-workspace:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  margin: 0 !important;
+  padding: 0.55rem clamp(0.4rem, 1.4vw, 1rem) !important;
+  background: var(--original-madani-desk);
+  overflow: hidden !important;
+  pointer-events: auto !important;
+  touch-action: pan-y pinch-zoom;
+}
+
+.original-madani-workspace:fullscreen .original-madani-shell,
+.original-madani-workspace:-webkit-full-screen .original-madani-shell,
+html:fullscreen .original-madani-workspace--fullscreen .original-madani-shell,
+html:-webkit-full-screen .original-madani-workspace--fullscreen .original-madani-shell,
+.app.is-fullscreen .original-madani-workspace--fullscreen .original-madani-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 14px;
+}
+
+.original-madani-workspace:fullscreen .original-madani-viewport,
+.original-madani-workspace:-webkit-full-screen .original-madani-viewport,
+.app.is-fullscreen .original-madani-workspace--fullscreen .original-madani-viewport,
+html.is-app-fullscreen .original-madani-viewport {
+  --original-madani-fit-height: calc(100dvh - 4.5rem);
+  flex: 1 1 auto;
+  min-height: 0;
+  height: var(--original-madani-fit-height);
+  max-height: var(--original-madani-fit-height);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+/* Live QCF glyphs inherit mushaf word styles; keep sheet interactive. */
+.main.original-madani-mode-active .original-madani-sheet .madani-word {
+  pointer-events: auto;
+}
+
+@media (max-width: 899.98px) {
+  .original-madani-spread--pair .original-madani-leaf:not(.is-current),
+  .original-madani-spread--pair .original-madani-spine {
+    display: none;
+  }
+
+  .original-madani-workspace--spread .original-madani-nav {
+    opacity: 0.92;
+    pointer-events: auto;
+  }
+
+  .main.original-madani-mode-active {
+    --original-madani-chrome-offset: 12.25rem;
+  }
+
+  .original-madani-viewport {
+    padding: 0.45rem 2.8rem;
+  }
+
+  .original-madani-shell__session,
+  .original-madani-shell__title {
+    display: none;
+  }
+
+  .original-madani-nav {
+    width: 2.45rem;
+    height: 2.45rem;
+  }
+
+  .original-madani-nav--prev { left: 0.25rem; }
+  .original-madani-nav--next { right: 0.25rem; }
+
+  .original-madani-frame__meta {
+    font-size: clamp(0.58rem, 2.4vw, 0.78rem);
+    left: 9%;
+    right: 9%;
+  }
+
+  .main.original-madani-mode-active .original-madani-shell .mushaf-shell__bar {
+    flex-wrap: wrap !important;
+    row-gap: 0.35rem;
+  }
+
+  .main.original-madani-mode-active .original-madani-shell .btn-group .btn {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .main.original-madani-mode-active {
+    --original-madani-chrome-offset: 11rem;
+  }
+
+  .main.original-madani-mode-active .original-madani-workspace {
+    margin: 0.1rem 0 0.45rem;
+    padding: 0;
+  }
+
+  .original-madani-viewport {
+    padding: 0.3rem 2.55rem;
+  }
+
+  .original-madani-frame {
+    border-radius: 0;
+  }
+
+  .original-madani-frame__footer {
+    font-size: clamp(0.72rem, 3.2vw, 0.95rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .original-madani-frame,
+  .original-madani-spread,
+  .original-madani-nav,
+  .original-madani-sheet,
+  .madani-turn-forward-enter-active,
+  .madani-turn-forward-leave-active,
+  .madani-turn-back-enter-active,
+  .madani-turn-back-leave-active,
+  .main.original-madani-mode-active .original-madani-shell .btn-group .btn {
+    transition: none !important;
+  }
+
+  .madani-turn-forward-enter-from,
+  .madani-turn-forward-leave-to,
+  .madani-turn-back-enter-from,
+  .madani-turn-back-leave-to {
+    transform: none;
+  }
+}

@@ -219,7 +219,7 @@ export function classifyRecitationFailure(error, options = {}) {
     return buildClassification(RECITATION_FAILURE_KIND.PERMANENT, false, error, options)
   }
 
-  if (status === 422 && /transcription|api key|speechmatics|region is not configured/i.test(combined)) {
+  if (status === 422 && /transcription|api key|speechmatics|region is not configured|voice checking could not start|unavailable/i.test(combined)) {
     return buildClassification(RECITATION_FAILURE_KIND.PROVIDER, true, error, options)
   }
 

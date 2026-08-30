@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,5 +26,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::define('access-admin', fn ($user) => $user->isAdmin());
         Paginator::useBootstrapFive();
+
+        RateLimiter::for('public-proxy', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Learning;
 
 use App\Http\Controllers\Controller;
 use App\Models\HifzPlan;
+use App\Rules\MaxJsonBytes;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -43,7 +44,7 @@ class HifzPlanController extends Controller
         }
 
         $validated = $request->validate([
-            'plan' => ['required', 'array'],
+            'plan' => ['required', 'array', new MaxJsonBytes(MaxJsonBytes::HIFZ_BYTES)],
             'client_id' => ['nullable', 'string', 'max:80'],
         ]);
 

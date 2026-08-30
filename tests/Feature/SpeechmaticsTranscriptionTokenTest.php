@@ -34,7 +34,8 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'available' => false,
-                'message' => 'Speechmatics API key is not configured.',
+                'reason' => 'unavailable',
+                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
                 'speechmatics_status' => 422,
             ]);
     }
@@ -59,7 +60,8 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'available' => false,
-                'message' => 'Voice checking could not start right now. Please try again later.',
+                'reason' => 'unavailable',
+                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
                 'speechmatics_status' => 401,
             ]);
 

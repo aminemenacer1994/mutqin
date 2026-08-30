@@ -15,6 +15,25 @@ function resolveEn(key) {
     return key.split('.').reduce((node, part) => (node && node[part] !== undefined ? node[part] : undefined), enLocale) ?? key;
 }
 
+// Watch/dev Mix emits stable chunk names (memorisation.js). Patch webpack's
+// chunk URL helper so the browser cannot keep a stale mushaf paint forever.
+(function patchMemorisationChunkBust() {
+    try {
+        if (typeof __webpack_require__ === 'undefined' || typeof __webpack_require__.u !== 'function') return;
+        const bust = (typeof document !== 'undefined' && (
+            document.documentElement?.dataset?.mutqinAssetBuild
+            || document.querySelector('meta[name="mutqin-asset-build"]')?.content
+        )) || 'v165';
+        const original = __webpack_require__.u.bind(__webpack_require__);
+        __webpack_require__.u = (chunkId) => {
+            const url = String(original(chunkId) || '');
+            if (!/memorisation/i.test(url)) return url;
+            const sep = url.includes('?') ? '&' : '?';
+            return `${url}${sep}id=${encodeURIComponent(bust)}`;
+        };
+    } catch (_) { /* best-effort */ }
+})();
+
 const Homepage = defineAsyncComponent(() =>
   import(/* webpackChunkName: "homepage" */ './views/Homepage.vue')
 );
@@ -143,7 +162,8 @@ function loadMemorisationChunk(attempt = 0) {
             document.documentElement.dataset.practiceCoach = 'v2';
             document.documentElement.dataset.aiReciteUi = 'v75';
             document.documentElement.dataset.stackedAyahEnd = 'v8-removed';
-            document.documentElement.dataset.mutqinUi = 'v121';
+            document.documentElement.dataset.mutqinUi = 'v124';
+            document.documentElement.dataset.sessionOnlyMushaf = 'v4';
             document.documentElement.dataset.amdTestGate = 'test-with-ai-only';
             document.documentElement.dataset.postSessionChoice = 'v15';
         }

@@ -6509,3 +6509,17 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(255, 236, 216, 0.12) !important;
 }
+
+.main.original-madani-mode-active .original-madani-workspace,
+.main.original-madani-mode-active .original-madani-workspace__fluid,
+.main.original-madani-mode-active .original-madani-shell {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 767.98px) {
+  .main.original-madani-mode-active {
+    --original-madani-chrome-offset: 11rem;
+  }
+}

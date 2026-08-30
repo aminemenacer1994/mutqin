@@ -76,7 +76,7 @@ import {
   assert.equal(micMessage, 'Microphone access is required for AI Recitation.')
 
   const providerMessage = userFacingTranscriptionFailure({
-    response: { status: 422, data: { message: 'Speechmatics API key is not configured' } },
+    response: { status: 422, data: { reason: 'unavailable', message: 'Voice checking could not start right now. Please try again later.' } },
   })
   assert.match(providerMessage, /temporarily unavailable/i)
   assert.doesNotMatch(providerMessage, /SPEECHMATICS_API_KEY/i)

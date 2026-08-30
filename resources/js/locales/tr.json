@@ -942,6 +942,12 @@
       "openAiRecite": "Aç AI recitation check for this ayah",
       "previousMushafPage": "Önceki mushaf sayfası",
       "nextMushafPage": "Sonraki mushaf sayfası",
+      "previousOriginalPage": "Önceki Medine Mushaf sayfası",
+      "nextOriginalPage": "Sonraki Medine Mushaf sayfası",
+      "originalMadaniPage": "Medine Mushaf sayfa {page}",
+      "originalMadaniTools": "Medine Mushaf araçları",
+      "enterOriginalFullScreen": "Tam ekran",
+      "exitOriginalFullScreen": "Tam ekrandan çık",
       "bismillah": "بسم الله",
       "playAyahAudio": "Play ayah ses",
       "pauseAyahAudio": "Pause ayah ses",
@@ -1487,8 +1493,20 @@
     "view": {
       "stacked": "Yığılmış",
       "mushaf": "« Mushaf»",
+      "original": "Medine Mushafı",
       "stackedHint": "Yığın: peş peşe ayet, kısa aralıklar için sakin.",
-      "mushafHint": "Mushaf: sayfa düzeni. Okuma yardımcıları ve tecvid Kontroller ve Yardım’da."
+      "mushafHint": "Mushaf: sayfa düzeni. Okuma yardımcıları ve tecvid Kontroller ve Yardım’da.",
+      "originalHint": "Medine Mushafı: orijinal basılı sayfalar, Medine çerçevesi, ayet işaretleri ve sure başlıklarıyla."
+    },
+    "originalMadani": {
+      "errorTitle": "Medine Mushaf sayfası yüklenemedi",
+      "errorDesc": "Orijinal sayfa görseli yüklenmedi. Yeniden deneyin veya Mushaf görünümüne dönün.",
+      "retry": "Yeniden dene",
+      "switchMushaf": "Mushaf görünümüne geç",
+      "pageSpread": "{right}–{left}",
+      "juz": "Cüz {number}",
+      "surahNumber": "Sure {number}",
+      "toolsHint": "Odak, bulanıklık, çapa noktaları ve yazı boyutu basılı sayfada uygulanır. Tecvid renkleri resmi baskıda zaten vardır."
     },
     "actions": {
       "newSession": "New Session",

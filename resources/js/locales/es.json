@@ -942,6 +942,12 @@
       "openAiRecite": "Abrir AI recitation check for this ayah",
       "previousMushafPage": "Página anterior del mushaf",
       "nextMushafPage": "Página siguiente del mushaf",
+      "previousOriginalPage": "Página anterior del Mushaf madaní",
+      "nextOriginalPage": "Página siguiente del Mushaf madaní",
+      "originalMadaniPage": "Página {page} del Mushaf madaní",
+      "originalMadaniTools": "Herramientas del Mushaf madaní",
+      "enterOriginalFullScreen": "Pantalla completa",
+      "exitOriginalFullScreen": "Salir de pantalla completa",
       "bismillah": "Prêt à commencer",
       "playAyahAudio": "Play آية صوت",
       "pauseAyahAudio": "Pause آية صوت",
@@ -1487,8 +1493,20 @@
     "view": {
       "stacked": "Apilado",
       "mushaf": "« Mushaf»",
+      "original": "Mushaf madaní",
       "stackedHint": "Empilé : une ayah après l’autre, calme pour les courtes plages.",
-      "mushafHint": "Mushaf : mise en page. Aides de lecture et tajweed dans Contrôles et Aide."
+      "mushafHint": "Mushaf : mise en page. Aides de lecture et tajweed dans Contrôles et Aide.",
+      "originalHint": "Mushaf madaní: páginas impresas originales con el marco de Medina, marcas de aleya y títulos de sura."
+    },
+    "originalMadani": {
+      "errorTitle": "No se pudo cargar la página del Mushaf madaní",
+      "errorDesc": "La imagen de la página original no cargó. Inténtalo de nuevo o vuelve a la vista Mushaf.",
+      "retry": "Reintentar",
+      "switchMushaf": "Cambiar a la vista Mushaf",
+      "pageSpread": "{right}–{left}",
+      "juz": "Yuz {number}",
+      "surahNumber": "Sura {number}",
+      "toolsHint": "El foco, el desenfoque, los anclajes y el tamaño de letra se aplican en la página impresa. Los colores de tajwid ya están en la edición oficial."
     },
     "actions": {
       "newSession": "Nouvelle sesión",

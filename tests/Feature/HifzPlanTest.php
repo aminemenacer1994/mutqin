@@ -56,6 +56,18 @@ class HifzPlanTest extends TestCase
         $this->assertSame(0, HifzPlan::query()->where('user_id', $user->id)->count());
     }
 
+    public function test_hifz_plan_rejects_oversized_payload(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->putJson('/api/hifz-plan', [
+                'plan' => ['notes' => str_repeat('x', 300_000)],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('plan');
+    }
+
     /**
      * @return array<string, mixed>
      */

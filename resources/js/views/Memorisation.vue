@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v154 -->
+  <!-- mutqin-ui-build: v159 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
@@ -13,7 +13,8 @@
     'post-session-choice-active': isPostSessionChoiceVisible,
     'post-session-choice-offcanvas-open': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen && showTools,
     'session-exit-flow-active': showSessionExitModal,
-    'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools
+    'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools,
+    'is-fullscreen': isAppFullscreen
   }" :style="appStyleVars" v-cloak>
     <div v-if="showAppBootLoader" class="app-boot-loading" role="status" aria-live="polite">
       <i class="bi bi-hourglass-split" aria-hidden="true"></i>
@@ -312,11 +313,17 @@
       'player-visible': playbackShellActive,
       'playback-pill-visible': playbackPillVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
+      'original-madani-mode-active': readingViewMode === 'original',
       'focus-mode-active': focusModeEnabled,
       'blur-mode-active': blurModeEnabled,
       'flow-practice': guidedUiStep === 'practice',
       'flow-recall': guidedUiStep === 'recall'
-    }">
+    }"
+      :data-session-chapter="Number(chapterId || currentConfig?.chapterId || 0) || null"
+      :data-session-start="Number(rangeStart || currentConfig?.rangeStart || 0) || null"
+      :data-session-end="Number(rangeEnd || currentConfig?.rangeEnd || 0) || null"
+      :data-session-signature="mushafSessionSignature || null"
+    >
       <div class="content">
         <!-- Verses Grid -->
         <div class="workspace">
@@ -480,16 +487,16 @@
               <button
                 type="button"
                 class="view-mode-btn workspace-layout-btn top-card-icon-control"
-                :class="{ active: readingViewMode === 'mushaf' }"
-                :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
-                @click.stop="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf')"
-                :title="readingViewMode === 'mushaf' ? t('memorisation.view.stackedHint') : t('memorisation.view.mushafHint')"
-                :aria-label="readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf')"
+                :class="{ active: readingViewMode !== 'stacked' }"
+                :aria-pressed="readingViewMode !== 'stacked' ? 'true' : 'false'"
+                @click.stop="cycleReadingViewMode"
+                :title="nextReadingViewModeHint"
+                :aria-label="nextReadingViewModeLabel"
               >
-                <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-view-stacked' : 'bi-journal-richtext'" aria-hidden="true"></i>
+                <i class="bi" :class="currentReadingViewModeIcon" aria-hidden="true"></i>
               </button>
             </div>
-            <div class="font-dropdown workspace-font-dropdown top-card-font-wrap">
+            <div v-if="readingViewMode !== 'original'" class="font-dropdown workspace-font-dropdown top-card-font-wrap">
               <button
                 class="font-dropdown-trigger top-card-icon-control"
                 type="button"
@@ -549,16 +556,39 @@
                   <button
                     type="button"
                     class="top-card-menu-toggle top-card-menu-toggle--layout"
+                    :class="{ active: readingViewMode === 'stacked' }"
+                    :aria-pressed="readingViewMode === 'stacked' ? 'true' : 'false'"
+                    @click.stop="setReadingViewMode('stacked'); topCardMenuOpen = false"
+                  >
+                    <i class="bi bi-view-stacked" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.view.stacked') }}</span>
+                    <i v-if="readingViewMode === 'stacked'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="top-card-menu-toggle top-card-menu-toggle--layout"
                     :class="{ active: readingViewMode === 'mushaf' }"
                     :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
-                    @click.stop="setReadingViewMode(readingViewMode === 'mushaf' ? 'stacked' : 'mushaf'); topCardMenuOpen = false"
+                    @click.stop="setReadingViewMode('mushaf'); topCardMenuOpen = false"
                   >
-                    <i class="bi" :class="readingViewMode === 'mushaf' ? 'bi-view-stacked' : 'bi-journal-richtext'" aria-hidden="true"></i>
-                    <span>{{ readingViewMode === 'mushaf' ? t('memorisation.view.stacked') : t('memorisation.view.mushaf') }}</span>
+                    <i class="bi bi-journal-richtext" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.view.mushaf') }}</span>
                     <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <button
-                    v-if="readingViewMode !== 'mushaf'"
+                    v-if="showOriginalMadaniViewToggle"
+                    type="button"
+                    class="top-card-menu-toggle top-card-menu-toggle--layout"
+                    :class="{ active: readingViewMode === 'original' }"
+                    :aria-pressed="readingViewMode === 'original' ? 'true' : 'false'"
+                    @click.stop="setReadingViewMode('original'); topCardMenuOpen = false"
+                  >
+                    <i class="bi bi-book" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.view.original') }}</span>
+                    <i v-if="readingViewMode === 'original'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    v-if="readingViewMode === 'stacked'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showTranslation }"
@@ -570,7 +600,7 @@
                     <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <button
-                    v-if="readingViewMode !== 'mushaf'"
+                    v-if="readingViewMode === 'stacked'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showTransliteration }"
@@ -582,7 +612,7 @@
                     <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <button
-                    v-if="readingViewMode !== 'mushaf'"
+                    v-if="readingViewMode === 'stacked'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showWordByWord }"
@@ -618,7 +648,7 @@
                     <i class="bi bi-compass" aria-hidden="true"></i>
                     <span>{{ t('memorisation.revisitOnboarding') }}</span>
                   </button>
-                  <button @click="toggleFullScreen" type="button">
+                  <button @click="toggleFullScreen(); topCardMenuOpen = false" type="button">
                     <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.fullScreen') }}</span>
                   </button>
@@ -859,6 +889,8 @@
                 v-for="item in topCardMetadataPills"
                 :key="item.key"
                 class="badge rounded-pill workspace-shell-metadata-pill is-readonly"
+                :data-session-chapter="item.key === 'surah' || item.key === 'range' ? (Number(chapterId || currentConfig?.chapterId || 0) || null) : null"
+                :data-ayah-range="item.key === 'range' ? `${Number(rangeStart || currentConfig?.rangeStart || 0) || ''}-${Number(rangeEnd || currentConfig?.rangeEnd || 0) || ''}` : null"
                 aria-disabled="true"
               >
                 <strong>{{ item.label }}:</strong>
@@ -896,6 +928,18 @@
               >
                 <i class="bi bi-journal-richtext" aria-hidden="true"></i>
                 <span>{{ t('memorisation.view.mushaf') }}</span>
+              </button>
+              <button
+                v-if="showOriginalMadaniViewToggle"
+                type="button"
+                class="view-mode-btn workspace-layout-btn"
+                :class="{ active: readingViewMode === 'original' }"
+                :aria-pressed="readingViewMode === 'original' ? 'true' : 'false'"
+                @click.stop="setReadingViewMode('original')"
+                :title="t('memorisation.view.originalHint')"
+              >
+                <i class="bi bi-book" aria-hidden="true"></i>
+                <span>{{ t('memorisation.view.original') }}</span>
               </button>
             </div>
           </div>
@@ -943,7 +987,52 @@
                 </div>
               </div>
             </section>
-            <div v-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace">
+            <OriginalMadaniMushaf
+              v-if="shouldShowReadingWorkspace && readingViewMode === 'original'"
+              :page-number="originalMadaniPageNumber"
+              :spread="originalMadaniHasPair"
+              :left-page="originalMadaniSpread.left"
+              :right-page="originalMadaniSpread.right"
+              :pagination-label="originalMadaniPaginationLabel"
+              :can-previous="canGoPreviousOriginalMadaniPage"
+              :can-next="canGoNextOriginalMadaniPage"
+              :error="!!originalMadaniError"
+              :offline="networkOnline === false"
+              :is-rtl="isRtlLocale"
+              :left-juz-label="originalMadaniLeftMeta.juz"
+              :left-surah-label="originalMadaniLeftMeta.surah"
+              :right-juz-label="originalMadaniRightMeta.juz"
+              :right-surah-label="originalMadaniRightMeta.surah"
+              :current-juz-label="originalMadaniCurrentMeta.juz"
+              :current-surah-label="originalMadaniCurrentMeta.surah"
+              :left-page-data="originalMadaniLeftPageData"
+              :right-page-data="originalMadaniRightPageData"
+              :current-page-data="originalMadaniCurrentPageData"
+              :font-size="defaultFontSize"
+              :min-font-size="minFontSize"
+              :max-font-size="maxFontSize"
+              :tajweed-enabled="tajweedEnabled"
+              :blur-enabled="blurModeEnabled"
+              :focus-enabled="focusModeEnabled"
+              :quran-font-family="quranFontFamily"
+              :surah-names-font-family="surahNamesFontFamily"
+              :session-label="topCardSessionLabel"
+              :fullscreen-active="isAppFullscreen"
+              @previous-page="goToPreviousOriginalMadaniPage"
+              @next-page="goToNextOriginalMadaniPage"
+              @select-page="onOriginalMadaniPageSelect"
+              @select-ayah="onOriginalMadaniAyahSelect"
+              @select-word="onOriginalMadaniWordSelect"
+              @peek-enter="onOriginalMadaniPeekEnter"
+              @peek-leave="onOriginalMadaniPeekLeave"
+              @open-controls="openAdvancedControls"
+              @retry="retryOriginalMadaniPages"
+              @switch-mushaf="setReadingViewMode('mushaf')"
+              @increase-font="increaseMushafFontSize"
+              @decrease-font="decreaseMushafFontSize"
+              @toggle-fullscreen="toggleFullScreen"
+            />
+            <div v-else-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="container-fluid mushaf-workspace__fluid px-0">
               <section
                 class="mushaf-shell"
@@ -988,28 +1077,6 @@
                     >
                       <i class="bi bi-sliders" aria-hidden="true"></i>
                     </button>
-
-                    <div v-if="mushafPages.length > 1" class="mushaf-shell__pager">
-                      <button
-                        type="button"
-                        class="mushaf-shell__btn mushaf-shell__btn--icon"
-                        :disabled="!canGoPreviousMushafPage"
-                        @click="goToPreviousMushafPage"
-                        :aria-label="t('memorisation.a11y.previousMushafPage')"
-                      >
-                        <i class="bi" :class="isRtlLocale ? 'bi-chevron-right' : 'bi-chevron-left'" aria-hidden="true"></i>
-                      </button>
-                      <span class="mushaf-shell__pager-label">{{ mushafPaginationLabel }}</span>
-                      <button
-                        type="button"
-                        class="mushaf-shell__btn mushaf-shell__btn--icon"
-                        :disabled="!canGoNextMushafPage"
-                        @click="goToNextMushafPage"
-                        :aria-label="t('memorisation.a11y.nextMushafPage')"
-                      >
-                        <i class="bi" :class="isRtlLocale ? 'bi-chevron-left' : 'bi-chevron-right'" aria-hidden="true"></i>
-                      </button>
-                    </div>
                   </div>
                 </header>
 
@@ -1034,7 +1101,7 @@
                   </div>
                   <article
                     v-else
-                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${defaultFontSize}-${tajweedEnabled}-${quranFont}`"
+                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${mushafSessionSignature}-${defaultFontSize}-${tajweedEnabled}-${quranFont}`"
                     class="mushaf-page mushaf-page--madani"
                     :style="{ '--verse-font-percent': String(defaultFontSize), '--mushaf-quran-font': quranFontFamily, '--mushaf-selected-font': quranFontFamily }"
                   >
@@ -1089,11 +1156,12 @@
                         </template>
                         <template v-else-if="line.type === 'ayah' || line.type === 'basmala_ayah'">
                           <span
-                            v-for="(word, wordIndex) in line.words"
+                            v-for="(word, wordIndex) in sessionMadaniLineWords(line)"
                             :key="`${line.key}-w-${word.position || wordIndex}-${word.verseKey}`"
                             class="madani-word"
                             :class="madaniWordClassList(word)"
                             :data-verse-key="word.verseKey"
+                            :data-session-word="'1'"
                             :data-word-index="word.wordIndex != null ? word.wordIndex : null"
                             :data-practice-focus="word.isPracticeFocus ? 'true' : null"
                             :title="word.meaningLabel || null"
@@ -2147,8 +2215,15 @@
               </button>
               <div class="sheet-content" v-show="sectionOpen.reading_settings">
 
+                <div v-if="readingViewMode === 'original'" class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">{{ t('memorisation.view.original') }}</div>
+                    <div class="setting-description">{{ t('memorisation.originalMadani.toolsHint') }}</div>
+                  </div>
+                </div>
+
                 <!-- Translation -->
-                <div v-if="readingViewMode !== 'mushaf'" class="setting-item">
+                <div v-if="readingViewMode === 'stacked'" class="setting-item">
                   <div class="setting-info">
                     <div class="setting-label">{{ t('memorisation.reading.translation') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.translationDesc') }}</div>
@@ -2160,7 +2235,7 @@
                 </div>
 
                 <!-- Transliteration -->
-                <div v-if="readingViewMode !== 'mushaf'" class="setting-item">
+                <div v-if="readingViewMode === 'stacked'" class="setting-item">
                   <div class="setting-info">
                     <div class="setting-label">{{ t('sessionSetup.transliteration') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.transliterationDesc') }}</div>
@@ -2172,7 +2247,7 @@
                 </div>
 
                 <!-- Word by word -->
-                <div v-if="readingViewMode !== 'mushaf'" class="setting-item">
+                <div v-if="readingViewMode === 'stacked'" class="setting-item">
                   <div class="setting-info">
                     <div class="setting-label">{{ t('sessionSetup.wordByWord') }}</div>
                     <div class="setting-description">{{ t('sessionSetup.wordByWordDesc') }}</div>
@@ -4041,7 +4116,7 @@
         <div
           v-else
           class="player-dock-card"
-          :class="{ 'is-talqin-only': playerDockShowsTalqinOnly, 'is-unified': talqinRecitationTurnActive && playerVisible }"
+          :class="{ 'is-talqin-only': playerDockShowsTalqinOnly, 'is-unified': talqinRecitationTurnActive && playerBarVisible }"
         >
           <div
             v-if="talqinRecitationTurnActive"
@@ -4062,7 +4137,7 @@
           </div>
 
         <div
-          v-if="playerVisible || isSessionLive"
+          v-if="playerBarVisible"
           class="player-bar"
           :class="{ compact: playerCompact, 'is-playing': isPlaying, 'has-talqin-strip': talqinRecitationTurnActive }"
           role="region"
@@ -4970,3 +5045,5 @@
 <style src="./Memorisation.css"></style>
 <style src="./Memorisation.mobile-grid.css"></style>
 <style src="./Memorisation.amd.css"></style>
+<!-- Must load last: shared mushaf rules use display:contents on .madani-line--glyphs -->
+<style src="./Memorisation.original-madani.css"></style>

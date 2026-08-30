@@ -33,6 +33,7 @@ import {
   getChapterWordByWordMeanings,
   getEditions,
   getMadaniPagesForChapterRange,
+  getMadaniChapterRangeVerses,
   getMadaniPageVerses,
   getQuranEdition,
   getSurahEdition,
@@ -50,7 +51,10 @@ import {
 } from '../scripts/quran/editions'
 import {
   buildMadaniPageLayout,
+  buildSessionVerseKeySet,
   chapterHasBismillahPre,
+  filterMadaniLinesToSession,
+  filterVersesToSession,
   formatMadaniAyahEndLabel,
   isVerseInteractiveOnPage,
   MADANI_LAYOUT_VERSION,
@@ -69,6 +73,23 @@ import {
   isQcfFontLoaded,
   SURAH_NAMES_FONT_FAMILY
 } from '../scripts/mushaf/qcfFontLoader'
+import {
+  arabicJuzLabel,
+  juzNumberFromMadaniPage,
+  canStepSessionMadaniPage,
+  clampMadaniPageNumber,
+  constrainMadaniPageToSet,
+  getSessionMadaniSpreadPages,
+  isOriginalMadaniSpreadViewport,
+  isOriginalMadaniView,
+  isReadingViewMode,
+  normalizeReadingViewMode,
+  originalMadaniPageImageUrl,
+  originalMadaniPagesToPrefetch,
+  preferredMadaniImageWidth,
+  ORIGINAL_MADANI_SPREAD_QUERY,
+  stepSessionMadaniPage,
+} from '../scripts/mushaf/originalMadaniMushaf'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -288,6 +309,9 @@ const AiMemorisationDetectionModal = defineAsyncComponent(() =>
 )
 const AyahNotesModal = defineAsyncComponent(() =>
   import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue')
+)
+const OriginalMadaniMushaf = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "original-madani" */ '../components/OriginalMadaniMushaf.vue')
 )
 import {
   buildActivePracticeSetup,
@@ -546,6 +570,7 @@ export default {
     AiMemorisationDetectionModal,
     AyahNotesModal,
     AppStatus,
+    OriginalMadaniMushaf,
   },
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) },
@@ -668,9 +693,16 @@ export default {
       isDataReady: false,
       fontDropdownOpen: false,
       topCardMenuOpen: false,
+      isAppFullscreen: false,
       openVerseActionKey: '',
       verseFontSizes: {},
-      defaultFontSize: 150,
+      defaultFontSize: 120,
+      // Per-layout sizes so zooming mushaf does not blow up stacked (and vice versa).
+      layoutFontSizes: {
+        stacked: 150,
+        mushaf: 120,
+        original: 150,
+      },
       fontSizeStep: 10,
       minFontSize: 70,
       maxFontSize: 280,
@@ -784,6 +816,10 @@ export default {
       showTools: false,
       toolsPanelMounted: false,
       readingViewMode: 'mushaf',
+      showOriginalMadaniViewToggle: false,
+      originalMadaniPageNumber: 1,
+      originalMadaniError: '',
+      originalMadaniViewportSpread: typeof window !== 'undefined' && isOriginalMadaniSpreadViewport(),
       mushafPageIndex: 0,
       mushafUiSkin: 'standard', // Paper/standard only; legacy skins remap here
       mushafBorder: 'classic',
@@ -979,6 +1015,8 @@ export default {
       // Session State
       activeVerseKey: null,
       isPlaying: false,
+      /** True after blocked autoplay / failed start — keep Play reachable until audio runs. */
+      playbackAwaitingGesture: false,
       manualOnlyPlayback: false,
       currentTime: 0,
       duration: 0,
@@ -1765,9 +1803,6 @@ export default {
     workspaceShellSubtitle() {
       if (this.isPostSessionChoiceVisible) {
         return this.t('memorisation.postSessionChoice.desc')
-      }
-      if (this.hasVerses && this.canResumePreviousSession) {
-        return this.t('memorisation.sessionExit.savedSessionHint')
       }
       return ''
     },
@@ -8551,6 +8586,8 @@ export default {
     },
 
     useMadaniQcfGlyphs() {
+      // Original Madani always uses authentic QCF page glyphs.
+      if (this.readingViewMode === 'original') return true
       return this.readingViewMode === 'mushaf' && normaliseQuranFontId(this.quranFont) === 'uthmanic'
     },
 
@@ -8745,7 +8782,62 @@ export default {
     },
 
     mushafSessionVerseKeys() {
-      return new Set((this.mushafDisplayVerses || []).map(verse => verse?.key).filter(Boolean))
+      // Always derive from the session range first so mushaf never paints
+      // neighbouring-page ayahs (e.g. Al-Alaq on Bayyinah's opening page).
+      const chapterId = Number(
+        this.chapterId
+        || this.currentConfig?.chapterId
+        || this.currentChapter?.id
+        || 0
+      )
+      const rangeStart = Number(
+        this.rangeStart
+        || this.currentConfig?.rangeStart
+        || 0
+      )
+      const rangeEnd = Number(
+        this.rangeEnd
+        || this.currentConfig?.rangeEnd
+        || 0
+      )
+      return buildSessionVerseKeySet(this.mushafDisplayVerses || [], {
+        chapterId,
+        rangeStart,
+        rangeEnd,
+      })
+    },
+
+    /** Plain array — safer for Vue computed invalidation than a Set. */
+    mushafSessionVerseKeyList() {
+      return [...this.mushafSessionVerseKeys].sort()
+    },
+
+    mushafSessionSignature() {
+      return this.mushafSessionVerseKeyList.join(',')
+    },
+
+    mushafSessionScrubAttrs() {
+      const chapterId = Number(
+        this.chapterId
+        || this.currentConfig?.chapterId
+        || this.currentChapter?.id
+        || 0
+      )
+      const rangeStart = Number(
+        this.rangeStart
+        || this.currentConfig?.rangeStart
+        || 0
+      )
+      const rangeEnd = Number(
+        this.rangeEnd
+        || this.currentConfig?.rangeEnd
+        || 0
+      )
+      return {
+        chapterId: chapterId > 0 ? chapterId : null,
+        rangeStart: rangeStart > 0 ? rangeStart : null,
+        rangeEnd: rangeEnd > 0 ? rangeEnd : null,
+      }
     },
 
     mushafPages() {
@@ -8768,19 +8860,25 @@ export default {
               number: item.number,
               chapterId: Number(String(item.key).split(':')[0]) || 0
             })))
+        const rawLines = Array.isArray(layout?.lines) ? layout.lines : []
+        const sessionLines = filterMadaniLinesToSession(rawLines, sessionKeys)
         return {
           id: `madani-${pageNumber}`,
           pageNumber,
-          layout,
-          lines: layout?.lines || [],
+          // Do not expose raw full-page lines to the render tree.
+          layout: layout
+            ? { ...layout, lines: sessionLines }
+            : null,
+          lines: sessionLines,
           fontFamily: layout?.fontFamily || `p${pageNumber}-v2`,
-          verseKeys: layout?.verseKeys || [...sessionKeys],
+          verseKeys: [...sessionKeys],
           juzNumber: layout?.juzNumber || null,
-          primaryChapterId: layout?.primaryChapterId || null,
+          primaryChapterId: Number(this.chapterId || this.currentConfig?.chapterId || layout?.primaryChapterId || 0) || null,
           verses,
-          startNumber: verses[0]?.number || layoutVerses[0]?.number || null,
-          endNumber: verses[verses.length - 1]?.number || layoutVerses[layoutVerses.length - 1]?.number || null,
-          loading: !layout && !!this.madaniPagesLoading
+          startNumber: verses[0]?.number || null,
+          endNumber: verses[verses.length - 1]?.number || null,
+          loading: !layout && !!this.madaniPagesLoading,
+          sessionSignature: this.mushafSessionSignature,
         }
       })
       // Strictly only pages that intersect the selected session range.
@@ -8861,6 +8959,146 @@ export default {
 
     canGoNextMushafPage() {
       return this.safeMushafPageIndex < this.mushafPages.length - 1
+    },
+
+    originalMadaniSessionPages() {
+      const fromMushaf = (this.mushafPages || [])
+        .map(page => Number(page?.pageNumber))
+        .filter(page => Number.isFinite(page) && page > 0)
+      if (fromMushaf.length) return [...new Set(fromMushaf)].sort((a, b) => a - b)
+      return (this.madaniPageNumbers || [])
+        .map(page => Number(page))
+        .filter(page => Number.isFinite(page) && page > 0)
+    },
+
+    originalMadaniSpreadActive() {
+      return this.originalMadaniViewportSpread === true
+        && (this.originalMadaniSessionPages || []).length >= 2
+    },
+
+    originalMadaniSpread() {
+      return getSessionMadaniSpreadPages(
+        this.originalMadaniPageNumber,
+        this.originalMadaniSessionPages,
+      )
+    },
+
+    originalMadaniHasPair() {
+      const { left, right } = this.originalMadaniSpread
+      return !!(this.originalMadaniSpreadActive && left && right)
+    },
+
+    originalMadaniImageWidth() {
+      if (typeof window === 'undefined') return 1024
+      return preferredMadaniImageWidth({
+        spread: this.originalMadaniHasPair,
+        viewportWidth: window.innerWidth || 1024,
+        devicePixelRatio: window.devicePixelRatio || 1,
+      })
+    },
+
+    originalMadaniPaginationLabel() {
+      const pages = this.originalMadaniSessionPages
+      const current = constrainMadaniPageToSet(this.originalMadaniPageNumber, pages)
+      const index = Math.max(0, pages.indexOf(current))
+      if (this.originalMadaniHasPair) {
+        const { left, right } = this.originalMadaniSpread
+        return this.t('memorisation.originalMadani.pageSpread', { left, right })
+      }
+      if (pages.length) return `${index + 1} / ${pages.length}`
+      return String(current)
+    },
+
+    canGoPreviousOriginalMadaniPage() {
+      return canStepSessionMadaniPage(this.originalMadaniPageNumber, -1, {
+        spread: this.originalMadaniHasPair,
+        allowedPages: this.originalMadaniSessionPages,
+      })
+    },
+
+    canGoNextOriginalMadaniPage() {
+      return canStepSessionMadaniPage(this.originalMadaniPageNumber, 1, {
+        spread: this.originalMadaniHasPair,
+        allowedPages: this.originalMadaniSessionPages,
+      })
+    },
+
+    originalMadaniLeftMeta() {
+      return this.originalMadaniPageMeta(this.originalMadaniSpread.left)
+    },
+
+    originalMadaniRightMeta() {
+      return this.originalMadaniPageMeta(this.originalMadaniSpread.right)
+    },
+
+    originalMadaniCurrentMeta() {
+      return this.originalMadaniPageMeta(this.originalMadaniPageNumber)
+    },
+
+    originalMadaniPageSignature() {
+      return [
+        this.effectiveActiveVerseKey,
+        this.activeVerseKey,
+        this.hasSessionStarted ? 1 : 0,
+        this.isPlaying ? 1 : 0,
+        this.blurModeEnabled ? 1 : 0,
+        this.focusModeEnabled ? 1 : 0,
+        this.anchorModeEnabled ? 1 : 0,
+        this.hoverPeekVerseKey || '',
+        this.touchPeekVerseKey || '',
+        this.blurPeekHoldingSpace ? 1 : 0,
+        this.currentHighlightedVerseKey || '',
+        this.currentWordIndex,
+        this.practiceFocusSignature || '',
+        this.mushafSessionVerseKeys.size,
+        this.originalMadaniPageNumber,
+        this.tajweedEnabled ? 1 : 0,
+        this.anchorCount,
+        this.showWordByWord ? 1 : 0,
+        Object.keys(this.madaniPageLayouts || {}).length,
+        Object.keys(this.madaniFontsReady || {}).length,
+      ].join('|')
+    },
+
+    originalMadaniLeftPageData() {
+      void this.originalMadaniPageSignature
+      return this.buildOriginalMadaniPageData(this.originalMadaniSpread.left)
+    },
+
+    originalMadaniRightPageData() {
+      void this.originalMadaniPageSignature
+      return this.buildOriginalMadaniPageData(this.originalMadaniSpread.right)
+    },
+
+    originalMadaniCurrentPageData() {
+      void this.originalMadaniPageSignature
+      return this.buildOriginalMadaniPageData(this.originalMadaniPageNumber)
+    },
+
+    nextReadingViewMode() {
+      if (this.readingViewMode === 'stacked') return 'mushaf'
+      if (this.readingViewMode === 'mushaf') {
+        return this.showOriginalMadaniViewToggle ? 'original' : 'stacked'
+      }
+      return 'stacked'
+    },
+
+    currentReadingViewModeIcon() {
+      if (this.readingViewMode === 'original') return 'bi-book'
+      if (this.readingViewMode === 'mushaf') return 'bi-journal-richtext'
+      return 'bi-view-stacked'
+    },
+
+    nextReadingViewModeLabel() {
+      if (this.nextReadingViewMode === 'original') return this.t('memorisation.view.original')
+      if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushaf')
+      return this.t('memorisation.view.stacked')
+    },
+
+    nextReadingViewModeHint() {
+      if (this.nextReadingViewMode === 'original') return this.t('memorisation.view.originalHint')
+      if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushafHint')
+      return this.t('memorisation.view.stackedHint')
     },
 
     workspaceLoadingLabel() {
@@ -9038,10 +9276,20 @@ export default {
       return !!src && src !== 'about:blank'
     },
 
+    playerBarVisible() {
+      if (!this.playerVisible) return false
+      if (this.isPlaying) return true
+      // Autoplay often fails after the 3-2-1 countdown; keep Play tappable so a
+      // live/paused sitting never looks "active" with no way to start audio.
+      return !!this.hasLoadedAudio
+        && !!this.playbackAwaitingGesture
+        && !this.showCountdownOverlay
+    },
+
     playbackPillVisible() {
       return this.playerDismissed
         && !this.playerVisible
-        && (this.isPlaying || this.hasLoadedAudio)
+        && (this.isPlaying || !!this.playbackAwaitingGesture)
     },
 
     showPlayerDock() {
@@ -9051,9 +9299,8 @@ export default {
         || this.sessionLifecycleMutation === SESSION_MUTATION.RESUMING
       ) return false
       return this.playbackPillVisible
-        || this.playerVisible
+        || this.playerBarVisible
         || this.talqinRecitationTurnActive
-        || this.isSessionLive
     },
 
     playbackShellActive() {
@@ -9062,14 +9309,13 @@ export default {
         this.sessionLifecycleMutation === SESSION_MUTATION.STARTING
         || this.sessionLifecycleMutation === SESSION_MUTATION.RESUMING
       ) return false
-      return this.playerVisible
+      return this.playerBarVisible
         || this.playbackPillVisible
         || this.talqinRecitationTurnActive
-        || this.isSessionLive
     },
 
     playerDockShowsTalqinOnly() {
-      return this.talqinRecitationTurnActive && !this.playerVisible
+      return this.talqinRecitationTurnActive && !this.playerBarVisible
     },
 
     mushafCornerSurahLabel() {
@@ -9093,10 +9339,13 @@ export default {
 
     currentMadaniLines() {
       const page = this.currentMushafPage
-      const lines = Array.isArray(page?.lines) ? page.lines : []
-      if (!lines.length) return []
+      // Only render session-filtered lines from mushafPages — never raw layout.
+      const sourceLines = Array.isArray(page?.lines) ? page.lines : []
+      if (!sourceLines.length) return []
       const sessionKeys = this.mushafSessionVerseKeys
-      const filterToSession = sessionKeys.size > 0
+      // Belt-and-suspenders: filter again even if page.lines was already trimmed.
+      const lines = filterMadaniLinesToSession(sourceLines, sessionKeys)
+      if (!lines.length) return []
       const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
       const effectiveKey = this.effectiveActiveVerseKey
       const fontFamily = page.fontFamily || `p${page.pageNumber}-v2`
@@ -9113,132 +9362,109 @@ export default {
       const showMeanings = !!this.showWordByWord
       const sessionVerseByKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
 
-      return lines
-        .filter(line => line && line.type !== 'empty' && line.type !== 'surah_name')
-        .map((line, lineIndex) => {
-          const words = (line.words || []).map(word => {
-            const verseKey = word.verseKey
-            const sessionVerse = sessionVerseByKey.get(verseKey)
-            const inSession = isVerseInteractiveOnPage(verseKey, sessionKeys)
-            const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
-            const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
-            const isPlayingAyah = inSession && this.activeVerseKey === verseKey && this.isPlaying
-            let useGlyph = useGlyphs && fontReady && !!word.codeV2
-            let html = useGlyph
-              ? (word.codeV2 || word.textQpc || '')
-              : (word.isEnd
-                ? formatMadaniAyahEndLabel(word)
-                : (word.textQpc || word.codeV2 || ''))
-            // Never leave ayah-end markers blank when a glyph slot is empty.
-            // End labels always resolve from verseKey (per-surah), not global ids.
-            if (word.isEnd && !String(html || '').trim()) {
-              html = formatMadaniAyahEndLabel(word)
-              useGlyph = false
-            }
-            const wordIndex = word.isEnd ? null : this.resolveMadaniAudioWordIndex(word, audioIndexMap)
-            const isHighlighted = inSession
-              && !word.isEnd
-              && wordIndex != null
-              && highlightVerseKey === verseKey
-              && highlightWordIndex === wordIndex
-            let isAnchor = false
-            if (anchorOn && inSession && !word.isEnd && wordIndex != null) {
-              if (!anchorIndexCache.has(verseKey)) {
-                const total = this.getVerseAudioWordCount(verseKey)
-                anchorIndexCache.set(verseKey, new Set(this.getAnchorIndices(total)))
-              }
-              isAnchor = anchorIndexCache.get(verseKey).has(wordIndex)
-            }
-            const sessionWord = Number.isFinite(wordIndex) ? sessionVerse?.words?.[wordIndex] : null
-            const meaningLabel = showMeanings && !word.isEnd
-              ? (resolveWordGlossFromVerse(
-                sessionVerse,
-                plainText,
-                Number.isFinite(wordIndex) ? wordIndex : 0
-              ) || String(sessionWord?.en || word.translation || '').trim())
-              : ''
-            const plainText = String(sessionWord?.ar || word.textQpc || '').trim()
-            const isPracticeFocus = inSession
-              && !word.isEnd
-              && wordIndex != null
-              && this.isPracticeFocusWeakWord(verseKey, wordIndex, plainText)
-            const emphasizeWeak = isPracticeFocus && (
-              this.postSessionPracticeEmphasizeWeakAreas
-              || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
-              || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
-              || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
-            )
-            const recitationStatus = inSession && !word.isEnd && wordIndex != null
-              ? this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, sessionVerse?.sessionTargetKey || '')
-              : ''
-            return {
-              ...word,
-              html,
-              useGlyph,
-              inSession,
-              wordIndex,
-              isActive,
-              isWeak: false,
-              isMastered: inSession && this.isMasteredAyah(verseKey),
-              isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
-              isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
-              isPlayingAyah,
-              isHighlighted,
-              isAnchor,
-              isPracticeFocus,
-              isPracticeFocusEmphasis: !!emphasizeWeak,
-              isPracticeFocusActive: isPracticeFocus && isHighlighted,
-              recitationStatus,
-              isFocusDimmed: focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
-              meaningLabel,
-              isNew: inSession && this.isNewHifzAyah(verseKey),
-              isDue: inSession && this.isDueHifzAyah(verseKey),
-              isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey),
-              hasAiReview: hasActiveReview
-            }
-          }).filter(word => !filterToSession || word.inSession !== false)
+      return lines.map((line, lineIndex) => {
+        if (line.type === 'basmala' || line.type === 'surah_name') {
           return {
             ...line,
             key: `madani-${page.pageNumber}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
             fontFamily,
             fontReady,
             useGlyphs,
-            words
+            words: [],
+          }
+        }
+        const words = (line.words || [])
+          .filter(word => isVerseInteractiveOnPage(word?.verseKey || word?.verse_key, sessionKeys))
+          .map(word => {
+          const verseKey = word.verseKey
+          const sessionVerse = sessionVerseByKey.get(verseKey)
+          const inSession = true
+          const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
+          const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
+          const isPlayingAyah = inSession && this.activeVerseKey === verseKey && this.isPlaying
+          let useGlyph = useGlyphs && fontReady && !!word.codeV2
+          let html = useGlyph
+            ? (word.codeV2 || word.textQpc || '')
+            : (word.isEnd
+              ? formatMadaniAyahEndLabel(word)
+              : (word.textQpc || word.codeV2 || ''))
+          // Never leave ayah-end markers blank when a glyph slot is empty.
+          // End labels always resolve from verseKey (per-surah), not global ids.
+          if (word.isEnd && !String(html || '').trim()) {
+            html = formatMadaniAyahEndLabel(word)
+            useGlyph = false
+          }
+          const wordIndex = word.isEnd ? null : this.resolveMadaniAudioWordIndex(word, audioIndexMap)
+          const isHighlighted = inSession
+            && !word.isEnd
+            && wordIndex != null
+            && highlightVerseKey === verseKey
+            && highlightWordIndex === wordIndex
+          let isAnchor = false
+          if (anchorOn && inSession && !word.isEnd && wordIndex != null) {
+            if (!anchorIndexCache.has(verseKey)) {
+              const total = this.getVerseAudioWordCount(verseKey)
+              anchorIndexCache.set(verseKey, new Set(this.getAnchorIndices(total)))
+            }
+            isAnchor = anchorIndexCache.get(verseKey).has(wordIndex)
+          }
+          const sessionWord = Number.isFinite(wordIndex) ? sessionVerse?.words?.[wordIndex] : null
+          const plainText = String(sessionWord?.ar || word.textQpc || '').trim()
+          const meaningLabel = showMeanings && !word.isEnd
+            ? (resolveWordGlossFromVerse(
+              sessionVerse,
+              plainText,
+              Number.isFinite(wordIndex) ? wordIndex : 0
+            ) || String(sessionWord?.en || word.translation || '').trim())
+            : ''
+          const isPracticeFocus = inSession
+            && !word.isEnd
+            && wordIndex != null
+            && this.isPracticeFocusWeakWord(verseKey, wordIndex, plainText)
+          const emphasizeWeak = isPracticeFocus && (
+            this.postSessionPracticeEmphasizeWeakAreas
+            || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
+            || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
+            || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
+          )
+          const recitationStatus = inSession && !word.isEnd && wordIndex != null
+            ? this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, sessionVerse?.sessionTargetKey || '')
+            : ''
+          return {
+            ...word,
+            html,
+            useGlyph,
+            inSession,
+            wordIndex,
+            isActive,
+            isWeak: false,
+            isMastered: inSession && this.isMasteredAyah(verseKey),
+            isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
+            isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
+            isPlayingAyah,
+            isHighlighted,
+            isAnchor,
+            isPracticeFocus,
+            isPracticeFocusEmphasis: !!emphasizeWeak,
+            isPracticeFocusActive: isPracticeFocus && isHighlighted,
+            recitationStatus,
+            isFocusDimmed: focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
+            meaningLabel,
+            isNew: inSession && this.isNewHifzAyah(verseKey),
+            isDue: inSession && this.isDueHifzAyah(verseKey),
+            isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey),
+            hasAiReview: hasActiveReview
           }
         })
-        .filter(line => {
-          if (!filterToSession) return true
-          if (line.type === 'ayah' || line.type === 'basmala_ayah') {
-            return Array.isArray(line.words) && line.words.length > 0
-          }
-          // Keep basmala only when that surah still has visible session ayah text.
-          return true
-        })
-        .filter((line, _idx, all) => {
-          if (line.type === 'ayah' || line.type === 'basmala_ayah') return true
-          if (line.type === 'basmala') {
-            const chapterId = Number(line.chapterId)
-            if (!Number.isFinite(chapterId) || chapterId < 2) return false
-            return all.some(other => (
-              (other.type === 'ayah' || other.type === 'basmala_ayah')
-              && Array.isArray(other.words)
-              && other.words.some(word => Number(String(word.verseKey || '').split(':')[0]) === chapterId)
-            ))
-          }
-          if (!filterToSession) return true
-          return all.some(other => (
-            (other.type === 'ayah' || other.type === 'basmala_ayah') && other.words?.length
-          ))
-        })
-        .filter((line, _idx, all) => {
-          // One basmala per surah — drop accidental duplicates.
-          if (line.type !== 'basmala') return true
-          const chapterId = Number(line.chapterId)
-          const firstIdx = all.findIndex(other => (
-            other.type === 'basmala' && Number(other.chapterId) === chapterId
-          ))
-          return firstIdx === _idx
-        })
+        return {
+          ...line,
+          key: `madani-${page.pageNumber}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
+          fontFamily,
+          fontReady,
+          useGlyphs,
+          words
+        }
+      })
     },
 
     mushafAidVerse() {
@@ -9266,10 +9492,9 @@ export default {
     },
 
     mushafPaginationLabel() {
+      // Session-scoped only — never advertise the full 604-page mushaf.
       const total = this.mushafPages.length
       if (!total) return ''
-      const pageNumber = this.currentMadaniPageNumber
-      if (pageNumber) return `${pageNumber} / 604`
       return `${this.safeMushafPageIndex + 1} / ${total}`
     },
 
@@ -9643,8 +9868,11 @@ export default {
     this.handlePracticeTurnCalloutResize = () => {
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
       this.scheduleMadaniPageFit()
+      this.syncOriginalMadaniViewportSpread()
       this.updateBackToTopVisibility()
     }
+    this.syncOriginalMadaniViewportSpread()
+    this.bindOriginalMadaniSpreadMedia()
     window.addEventListener('resize', this.handlePracticeTurnCalloutResize, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
     this.queueStatsVisualTick()
@@ -9666,6 +9894,8 @@ export default {
       }
     }
     document.addEventListener('click', this.handleMushafToolbarDocumentClick)
+    void this.leaveNativeFullscreen()
+    this.syncAppFullscreenClass()
   },
 
   beforeUnmount() {
@@ -9699,6 +9929,7 @@ export default {
       window.removeEventListener('resize', this.handlePracticeTurnCalloutResize)
       this.handlePracticeTurnCalloutResize = null
     }
+    this.unbindOriginalMadaniSpreadMedia()
     if (this.practiceTurnCalloutFrame) {
       if (typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(this.practiceTurnCalloutFrame)
       window.clearTimeout(this.practiceTurnCalloutFrame)
@@ -9761,6 +9992,9 @@ export default {
       document.removeEventListener('click', this.handleMushafToolbarDocumentClick)
       this.handleMushafToolbarDocumentClick = null
     }
+    document.documentElement.classList.remove('is-app-fullscreen')
+    document.body.classList.remove('is-app-fullscreen')
+    void this.leaveNativeFullscreen()
     this.cancelStatsVisualTick()
     this.cancelLiveWordDomPatchFrame()
     this.unbindWorkspaceTourListeners()
@@ -9789,10 +10023,14 @@ export default {
       this.$nextTick(() => this.refreshLiveWordPresentationForTheme())
     },
     readingViewMode(newVal) {
+      if (newVal === 'original' && !this.showOriginalMadaniViewToggle) {
+        this.readingViewMode = 'mushaf'
+        return
+      }
       if (newVal === 'mushaf') {
         this.wordByWordAudioEnabled = true
         this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
-        this.ensureMadaniPagesLoaded().then(() => {
+        this.ensureMadaniPagesLoaded({ force: true }).then(() => {
           this.syncMushafPageToActiveVerse()
           this.$nextTick(() => {
             this.scheduleMadaniPageFit()
@@ -9801,6 +10039,10 @@ export default {
             }
           })
         })
+      } else if (newVal === 'original') {
+        this.wordByWordAudioEnabled = true
+        this.syncOriginalMadaniViewportSpread()
+        this.enterOriginalMadaniView()
       }
       this.applyMobileLayoutFontDefault(newVal)
       if (this.isMobileViewport()) {
@@ -9814,6 +10056,22 @@ export default {
         this.$nextTick(() => this.schedulePracticeFocusWordDomSync())
       }
       this.$nextTick(() => this.scheduleMadaniPageFit())
+    },
+    mushafSessionSignature(newVal, oldVal) {
+      if (!newVal || newVal === oldVal) return
+      this.syncSessionScrubAttrsToDocument()
+      if (this.readingViewMode !== 'mushaf') return
+      this.ensureMadaniPagesLoaded({ force: true }).then(() => {
+        this.syncMushafPageToActiveVerse()
+        this.$nextTick(() => this.scheduleMadaniPageFit())
+      })
+    },
+    mushafSessionScrubAttrs: {
+      deep: true,
+      handler() {
+        this.syncSessionScrubAttrsToDocument()
+      },
+      immediate: true,
     },
     defaultFontSize() {
       this.$nextTick(() => this.scheduleMadaniPageFit())
@@ -9867,6 +10125,9 @@ export default {
       })
     },
     mushafDisplayVerses() {
+      if (this.readingViewMode === 'original' && this.hasVerses) {
+        this.enterOriginalMadaniView()
+      }
       if (!this.amdOpen) return
       this.$nextTick(() => {
         if (this.getRecitationTargetText(this.recitationCheckPendingTargets)?.trim()) {
@@ -10231,10 +10492,6 @@ export default {
           this.closePostSessionChoice()
           this._pendingPostSessionChoiceRestore = null
         }
-        // Countdown autoplay is often blocked; reveal the dock so Play is tappable.
-        if (!this.playerDismissed && !this.showCountdownOverlay) {
-          this.playerVisible = true
-        }
         this.ensureLiveSessionAudioAttached()
         if (this.practiceFocusWeakWords?.length) {
           this.restorePracticeFocusWeakWords()
@@ -10399,7 +10656,7 @@ export default {
 
     applyMobileLayoutFontDefault(mode = this.readingViewMode) {
       // Mushaf +/- controls own font size on every viewport — never force-pin it.
-      if (mode === 'mushaf') return
+      if (mode === 'mushaf' || mode === 'original') return
       const isMobile = this.isMobileViewport?.() === true
       if (!isMobile) return
       const target = 130
@@ -13664,18 +13921,27 @@ export default {
             // startSession already called playQueueEntry; avoid a second force-play
             // that races load()/abort and floods Audio load errors.
             const playbackStarted = await this.ensureSessionPlaybackStarted({ skipImmediatePlay: true })
-            if (!playbackStarted && this.queue?.length) {
-              this.ensureLiveSessionAudioAttached()
-              this.promptTapToPlay()
-            }
             // Wait for backend id before releasing the lock so pause/end can target it.
             if (startPromise) {
               await startPromise
             }
+            // Always land ACTIVE first (STARTING → PAUSED is not a legal transition).
             this.transitionSessionLifecycle(
               SESSION_STATUS.ACTIVE,
               SESSION_MUTATION.IDLE
             )
+            // Countdown breaks the user-gesture chain — browsers often block autoplay.
+            // Mirror that as a soft pause so the header shows Resume (not Pause) while
+            // nothing is actually playing.
+            if (!playbackStarted && this.queue?.length) {
+              this.ensureLiveSessionAudioAttached()
+              this.playerVisible = true
+              this.playbackAwaitingGesture = true
+              this.syncSessionControlsWithPlayback(false)
+              this.promptTapToPlay()
+            } else {
+              this.playbackAwaitingGesture = false
+            }
             this.sessionLifecycleError = this.sessionLifecycleError === 'start_persist_failed'
               ? 'start_persist_failed'
               : null
@@ -13757,6 +14023,10 @@ export default {
           return
         }
 
+        if (this.readingViewMode === 'original') {
+          await this.enterOriginalMadaniView()
+        }
+
         this.closePostSessionChoice()
         await this.closeToolsPanel()
         // closeToolsPanel already soft-flushed controls → workspace; avoid a second wipe.
@@ -13786,14 +14056,31 @@ export default {
       this.closeToolsPanel()
       void this.saveCurrentSessionSilentlyAsync()
     },
-    toggleFullScreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.log(`Full-screen error: ${err.message}`)
-        })
-      } else {
-        document.exitFullscreen()
+    nativeFullscreenElement() {
+      return document.fullscreenElement
+        || document.webkitFullscreenElement
+        || document.msFullscreenElement
+        || null
+    },
+    leaveNativeFullscreen() {
+      if (!this.nativeFullscreenElement()) return Promise.resolve()
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen
+      return exit ? Promise.resolve(exit.call(document)).catch(() => {}) : Promise.resolve()
+    },
+    syncAppFullscreenClass() {
+      const active = !!this.isAppFullscreen
+      document.documentElement.classList.toggle('is-app-fullscreen', active)
+      document.body.classList.toggle('is-app-fullscreen', active)
+      if (active && !this.showTools && !this.isAnyModalOverlayActive) {
+        document.body.style.removeProperty('overflow')
+        document.documentElement.style.removeProperty('overflow')
       }
+    },
+    toggleFullScreen() {
+      this.topCardMenuOpen = false
+      void this.leaveNativeFullscreen()
+      this.isAppFullscreen = !this.isAppFullscreen
+      this.syncAppFullscreenClass()
     },
 
     // Fix banner positioning - update CSS
@@ -13977,14 +14264,14 @@ export default {
       if (!payload?.config?.chapterId) return false
       const mode = payload.mode || this.currentMode || 'beginner'
       const target = mode === 'planner' ? 'planner' : (mode === 'beginner' ? 'beginner' : 'advanced')
-      const savedReadingViewMode = ['stacked', 'mushaf'].includes(payload.readingViewMode)
+      const savedReadingViewMode = isReadingViewMode(payload.readingViewMode)
         ? payload.readingViewMode
-        : (['stacked', 'mushaf'].includes(payload.config?.readingViewMode) ? payload.config.readingViewMode : null)
+        : (isReadingViewMode(payload.config?.readingViewMode) ? payload.config.readingViewMode : null)
       const savedMushafPageIndex = Number(payload.mushafPageIndex ?? payload.config?.mushafPageIndex)
 
       this.currentMode = mode
       this.tab = payload.tab || this.tab || 'tools'
-      if (savedReadingViewMode) this.readingViewMode = savedReadingViewMode
+      if (savedReadingViewMode) this.readingViewMode = this.clampReadingViewMode(savedReadingViewMode)
       if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0) {
         this.mushafPageIndex = savedMushafPageIndex
       }
@@ -14035,7 +14322,7 @@ export default {
       }
       this.showTools = false
       this.flowStep = 'learn'
-      this.playerVisible = payload.playerVisible ?? payload.config?.playerVisible ?? true
+      this.playerVisible = false
       const shouldResumePlayback = options.forcePlayback ?? payload.isPlaying ?? true
       this.restoredAudioState = {
         src: payload.audioSrc || payload.config?.audioSrc || '',
@@ -15295,7 +15582,7 @@ export default {
         reciterId: 'ar.alafasy',
         repetitionsPerStep: 2,
         selectedLoopCount: 2,
-        readingViewMode: this.readingViewMode === 'stacked' ? 'stacked' : 'mushaf',
+        readingViewMode: isReadingViewMode(this.readingViewMode) ? this.readingViewMode : 'mushaf',
       })
     },
     async applyWorkspaceTourPracticePreview() {
@@ -15307,7 +15594,7 @@ export default {
       this.reciterId = preview.reciterId
       this.repetitionsPerStep = preview.repetitionsPerStep
       this.selectedLoopCount = preview.selectedLoopCount
-      if (preview.readingViewMode) this.readingViewMode = preview.readingViewMode
+      if (preview.readingViewMode) this.readingViewMode = this.clampReadingViewMode(preview.readingViewMode)
       this.workspaceTourPreviewOwned = true
       try {
         await this.loadChapter(this.currentMode)
@@ -15531,7 +15818,7 @@ export default {
       this.reciterId = preview.reciterId
       this.repetitionsPerStep = preview.repetitionsPerStep
       this.selectedLoopCount = preview.selectedLoopCount
-      if (preview.readingViewMode) this.readingViewMode = preview.readingViewMode
+      if (preview.readingViewMode) this.readingViewMode = this.clampReadingViewMode(preview.readingViewMode)
       this.persistUiState()
       this.persistCentralSessionState()
       try {
@@ -20083,9 +20370,11 @@ export default {
       this.blurIntensity = snapshot.blurIntensity || this.blurIntensity
       this.anchorModeEnabled = snapshot.anchorModeEnabled
       this.anchorCount = snapshot.anchorCount
-      this.readingViewMode = ['stacked', 'mushaf'].includes(snapshot.readingViewMode)
-        ? snapshot.readingViewMode
-        : this.readingViewMode
+      this.readingViewMode = this.clampReadingViewMode(
+        isReadingViewMode(snapshot.readingViewMode)
+          ? snapshot.readingViewMode
+          : this.readingViewMode
+      )
       this.sectionOpen = deepClone(snapshot.sectionOpen || this.sectionOpen)
       this.persistUiState()
     },
@@ -21916,7 +22205,9 @@ export default {
       const currentSrc = audio
         ? this.normalizeAudioUrl(audio.currentSrc || audio.getAttribute('src') || '')
         : ''
-      const isActiveAyah = this.activeVerseKey === verse.key || this.activeKey === verse.key
+      const isActiveAyah = this.activeVerseKey === verse.key
+        || this.activeKey === verse.key
+        || this.effectiveActiveVerseKey === verse.key
       const isSameSource = !!currentSrc && currentSrc === audioUrl
 
       // Same ayah + loaded source → toggle pause/resume. Do not force-replay.
@@ -21926,17 +22217,25 @@ export default {
       }
 
       // Focus / blur / active ayah still track this card. Talqin + follow get their
-      // recite window after this listen; other modes stay a one-shot independent play.
+      // recite window after this listen; other modes stay a one-shot independent play
+      // — unless this is the session's active ayah (blocked autoplay / Resume path).
       const engageTechniqueTurn = this.talqinModeActive || this.playMode === 'follow'
+      const resumeSessionQueue = isActiveAyah && (
+        this.isSessionLive
+        || this.sessionPaused
+        || !!this.mutqinState?.sessionState?.active
+        || !!this.mutqinState?.sessionState?.paused
+      )
       return this.playVerse({ ...verse, audio: audioUrl }, {
         primePlayback: true,
         force: true,
-        manualOnly: !engageTechniqueTurn
+        manualOnly: !engageTechniqueTurn && !resumeSessionQueue
       })
     },
     isAyahCardPlaying(verse) {
       if (!verse?.key) return false
-      if (this.activeVerseKey !== verse.key && this.activeKey !== verse.key) return false
+      const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey || this.activeKey
+      if (activeKey !== verse.key) return false
       const audio = this.audioElement || this.$refs.audio
       if (audio && (audio.currentSrc || audio.getAttribute('src')) && !audio.paused && !audio.ended) {
         return true
@@ -26614,22 +26913,11 @@ export default {
       const data = source?.response?.data || {}
       const message = String(data?.message || error?.message || source?.message || '').trim()
       const providerMessage = String(data?.speechmatics_message || '').trim()
-      const keySuffix = String(data?.configured_key_suffix || '').trim()
       const lowered = `${message} ${providerMessage}`.toLowerCase()
 
-      if (status === 422 && lowered.includes('api key is not configured')) {
-        return this.t('memorisation.recitationResult.speechmaticsNotConfigured')
-      }
-
-      if (status === 422 && lowered.includes('region is not configured')) {
-        return this.t('memorisation.recitationResult.speechmaticsRegionNotConfigured')
-      }
-
-      if ([401, 403].includes(status) || lowered.includes('not author')) {
-        const suffixNote = keySuffix
-          ? this.t('memorisation.recitationResult.speechmaticsKeySuffixNote', { suffix: keySuffix })
-          : ''
-        return this.t('memorisation.recitationResult.speechmaticsKeyRejected', { suffix: suffixNote })
+      if (data?.reason === 'unavailable' || (status === 422 && /api key|region is not configured|voice checking could not start/i.test(lowered))) {
+        return this.t('memorisation.aiCheck.serviceUnavailable')
+          || this.t('memorisation.recitationResult.liveStreamingUnavailable')
       }
 
       if (data?.reason === 'usage_cap' || /voice-check limit|usage_cap/i.test(lowered)) {
@@ -31252,6 +31540,7 @@ export default {
         const playbackStarted = await this.ensureSessionPlaybackStarted()
         if (!playbackStarted && this.queue?.length) {
           this.promptTapToPlay()
+          this.syncSessionControlsWithPlayback(false)
         }
       })
     },
@@ -31728,6 +32017,8 @@ export default {
       this.openSessionExitModal()
     },
     promptTapToPlay(message = '') {
+      this.playbackAwaitingGesture = true
+      if (!this.playerDismissed) this.playerVisible = true
       this.showBanner(message || this.t('toasts.playbackTapToPlay'), 'warning', 9000, {
         key: 'resume-playback',
         label: this.t('memorisation.player.tapToPlay')
@@ -32457,19 +32748,31 @@ export default {
         + `</span>`
       )
     },
+    cycleReadingViewMode() {
+      this.setReadingViewMode(this.nextReadingViewMode)
+    },
+    clampReadingViewMode(mode) {
+      const next = normalizeReadingViewMode(mode, this.readingViewMode || 'mushaf')
+      if (next === 'original' && !this.showOriginalMadaniViewToggle) return 'mushaf'
+      return next
+    },
     setReadingViewMode(mode) {
-      const allowedModes = ['stacked', 'mushaf']
-      const nextMode = allowedModes.includes(mode) ? mode : 'mushaf'
+      const nextMode = this.clampReadingViewMode(mode)
       if (this.readingViewMode === nextMode) {
         this.topCardMenuOpen = false
         this.fontDropdownOpen = false
         return
       }
+      const previousMode = this.readingViewMode
+      this.rememberLayoutFontSize(previousMode)
       this.readingViewMode = nextMode
+      this.applyLayoutFontSize(nextMode)
+      this.clearMadaniInlineFontOverrides()
       if (nextMode === 'mushaf') {
         this.wordByWordAudioEnabled = true
         this.applyMobileLayoutFontDefault('mushaf')
-        this.ensureMadaniPagesLoaded({ force: false }).then(() => {
+        // Force rebuild so full-page caches are replaced with session-only layouts.
+        this.ensureMadaniPagesLoaded({ force: true }).then(() => {
           this.syncMushafPageToActiveVerse()
           this.$nextTick(() => {
             this.scheduleMadaniPageFit()
@@ -32483,6 +32786,10 @@ export default {
             }
           })
         })
+      } else if (nextMode === 'original') {
+        this.wordByWordAudioEnabled = true
+        this.syncOriginalMadaniViewportSpread()
+        this.enterOriginalMadaniView()
       } else {
         this.fontOpen = false
         this.bgOpen = false
@@ -32491,6 +32798,43 @@ export default {
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
       this.persistUiState()
+    },
+    rememberLayoutFontSize(mode = this.readingViewMode) {
+      const key = isReadingViewMode(mode) ? mode : 'mushaf'
+      const size = Math.max(
+        this.minFontSize,
+        Math.min(this.maxFontSize, Number(this.defaultFontSize || 150))
+      )
+      this.layoutFontSizes = {
+        ...this.layoutFontSizes,
+        [key]: size,
+      }
+    },
+    applyLayoutFontSize(mode = this.readingViewMode) {
+      const key = isReadingViewMode(mode) ? mode : 'mushaf'
+      const stored = Number(this.layoutFontSizes?.[key])
+      const fallback = key === 'stacked' ? 150 : 120
+      const next = Math.max(
+        this.minFontSize,
+        Math.min(this.maxFontSize, Number.isFinite(stored) && stored > 0 ? stored : fallback)
+      )
+      if (Number(this.defaultFontSize) !== next) this.defaultFontSize = next
+      if (this.settingsDraft && typeof this.settingsDraft === 'object') {
+        this.settingsDraft = {
+          ...this.settingsDraft,
+          defaultFontSize: next,
+        }
+      }
+    },
+    clearMadaniInlineFontOverrides() {
+      if (typeof document === 'undefined') return
+      const root = this.$refs.mushafViewport
+      const clearVar = (el) => {
+        if (!el?.style) return
+        el.style.removeProperty('--verse-font-percent')
+      }
+      clearVar(root)
+      root?.querySelectorAll?.('.mushaf-page, .madani-page-sheet').forEach(clearVar)
     },
     getDefaultMushafBackgroundForTheme() {
       return 'paper'
@@ -32531,6 +32875,360 @@ export default {
         return
       }
       this.mushafPageIndex = this.safeMushafPageIndex
+    },
+    syncOriginalMadaniViewportSpread() {
+      this.originalMadaniViewportSpread = isOriginalMadaniSpreadViewport()
+    },
+    bindOriginalMadaniSpreadMedia() {
+      if (typeof window === 'undefined' || !window.matchMedia) return
+      if (this._originalMadaniSpreadMql) return
+      const mql = window.matchMedia(ORIGINAL_MADANI_SPREAD_QUERY)
+      this._originalMadaniSpreadMql = mql
+      this._onOriginalMadaniSpreadChange = () => {
+        this.syncOriginalMadaniViewportSpread()
+        if (isOriginalMadaniView(this.readingViewMode)) {
+          this.prefetchOriginalMadaniPages(this.originalMadaniPageNumber)
+        }
+      }
+      if (typeof mql.addEventListener === 'function') {
+        mql.addEventListener('change', this._onOriginalMadaniSpreadChange)
+      } else if (typeof mql.addListener === 'function') {
+        mql.addListener(this._onOriginalMadaniSpreadChange)
+      }
+      this.syncOriginalMadaniViewportSpread()
+    },
+    unbindOriginalMadaniSpreadMedia() {
+      const mql = this._originalMadaniSpreadMql
+      const handler = this._onOriginalMadaniSpreadChange
+      if (!mql || !handler) return
+      if (typeof mql.removeEventListener === 'function') {
+        mql.removeEventListener('change', handler)
+      } else if (typeof mql.removeListener === 'function') {
+        mql.removeListener(handler)
+      }
+      this._originalMadaniSpreadMql = null
+      this._onOriginalMadaniSpreadChange = null
+    },
+    originalMadaniPageMeta(pageNumber) {
+      const page = Number(pageNumber)
+      if (!page) return { juz: '', surah: '' }
+      const layout = this.madaniPageLayouts?.[page]
+      const juz = Number(layout?.juzNumber || juzNumberFromMadaniPage(page) || 0)
+      const chapterId = Number(layout?.primaryChapterId || 0)
+        || (page === this.originalMadaniPageNumber
+          ? Number(this.currentChapter || this.chapterId || 0)
+          : 0)
+      const chapter = (this.chapters || []).find(item => Number(item?.id) === chapterId)
+      const surah = chapter?.name_arabic
+        || (chapterId ? this.t('memorisation.originalMadani.surahNumber', { number: chapterId }) : '')
+      return {
+        juz: juz ? arabicJuzLabel(juz) : '',
+        surah,
+      }
+    },
+    resolveOriginalMadaniPageForActiveVerse() {
+      const allowed = this.originalMadaniSessionPages
+      const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey
+      const mapped = Number(this.madaniPageByVerseKey?.[activeKey] || 0)
+      if (mapped > 0) return constrainMadaniPageToSet(mapped, allowed)
+      if (allowed.length) return constrainMadaniPageToSet(allowed[0], allowed)
+      return clampMadaniPageNumber(this.originalMadaniPageNumber || 1)
+    },
+    setOriginalMadaniPageNumber(pageNumber, { persist = true, loadMeta = true } = {}) {
+      const next = constrainMadaniPageToSet(pageNumber, this.originalMadaniSessionPages)
+      this.originalMadaniPageNumber = next
+      this.originalMadaniError = ''
+      if (loadMeta) this.ensureOriginalMadaniPageMeta(next)
+      this.prefetchOriginalMadaniPages(next)
+      if (persist) this.persistUiState()
+      return next
+    },
+    async enterOriginalMadaniView() {
+      this.originalMadaniError = ''
+      this.wordByWordAudioEnabled = true
+      this.syncOriginalMadaniViewportSpread()
+      try {
+        await this.ensureMadaniPagesLoaded({ force: false })
+        await loadSurahNamesFont()
+      } catch { /* session pages still constrain navigation when metadata is cached */ }
+      const page = this.resolveOriginalMadaniPageForActiveVerse()
+      this.setOriginalMadaniPageNumber(page, { persist: true, loadMeta: true })
+      this.$nextTick(() => {
+        const verse = this.activeVerseRef
+        if (verse?.key && this.isPlaying) this.startWordHighlighting(verse)
+      })
+    },
+    syncOriginalMadaniPageToActiveVerse() {
+      if (!isOriginalMadaniView(this.readingViewMode)) return
+      this.setOriginalMadaniPageNumber(this.resolveOriginalMadaniPageForActiveVerse(), { persist: false })
+    },
+    async ensureOriginalMadaniPageMeta(pageNumber) {
+      const page = clampMadaniPageNumber(pageNumber)
+      const cached = this.madaniPageLayouts?.[page]
+      if (
+        cached?.lines?.length
+        && Number(cached.layoutVersion) === MADANI_LAYOUT_VERSION
+      ) {
+        await this.ensureMadaniFontForPage(page)
+        return cached
+      }
+      try {
+        const layout = await this.ensureMadaniPageLoaded(page)
+        return layout
+      } catch (error) {
+        console.warn(`Original Madani page ${page} metadata failed`, error)
+        return null
+      }
+    },
+    prefetchOriginalMadaniPages(pageNumber = this.originalMadaniPageNumber) {
+      const allowed = this.originalMadaniSessionPages
+      const pages = originalMadaniPagesToPrefetch(pageNumber, {
+        spread: this.originalMadaniSpreadActive || this.originalMadaniHasPair,
+      })
+        .filter(page => !allowed.length || allowed.includes(page))
+      // Always include the visible pair so both framed pages hydrate together.
+      const pair = this.originalMadaniSpread || {}
+      ;[pair.left, pair.right, pageNumber].forEach((page) => {
+        const n = Number(page)
+        if (Number.isFinite(n) && n > 0 && (!allowed.length || allowed.includes(n)) && !pages.includes(n)) {
+          pages.push(n)
+        }
+      })
+      pages.forEach((page) => {
+        this.ensureOriginalMadaniPageMeta(page)
+      })
+    },
+    prefetchOriginalMadaniImages(pages = []) {
+      // Page PNGs are no longer the text layer (QCF glyphs render in-frame).
+      // Kept as a no-op for older call sites / tests.
+      void pages
+    },
+    onOriginalMadaniImageError(pageNumber) {
+      // Legacy image-layer error hook — Original now uses QCF glyphs.
+      void pageNumber
+    },
+    goToOriginalMadaniPage(pageNumber) {
+      this.setOriginalMadaniPageNumber(pageNumber)
+    },
+    goToNextOriginalMadaniPage() {
+      if (!this.canGoNextOriginalMadaniPage) return
+      this.goToOriginalMadaniPage(stepSessionMadaniPage(this.originalMadaniPageNumber, 1, {
+        spread: this.originalMadaniHasPair,
+        allowedPages: this.originalMadaniSessionPages,
+      }))
+    },
+    goToPreviousOriginalMadaniPage() {
+      if (!this.canGoPreviousOriginalMadaniPage) return
+      this.goToOriginalMadaniPage(stepSessionMadaniPage(this.originalMadaniPageNumber, -1, {
+        spread: this.originalMadaniHasPair,
+        allowedPages: this.originalMadaniSessionPages,
+      }))
+    },
+    onOriginalMadaniPageSelect(pageNumber) {
+      const page = clampMadaniPageNumber(pageNumber)
+      this.setOriginalMadaniPageNumber(page)
+      const sessionKeys = this.mushafSessionVerseKeys
+      const layoutKeys = this.madaniPageLayouts?.[page]?.verseKeys || []
+      const sessionMatch = layoutKeys.find(key => sessionKeys.has(key))
+        || Object.entries(this.madaniPageByVerseKey || {}).find(([key, mapped]) => Number(mapped) === page && sessionKeys.has(key))?.[0]
+      if (sessionMatch) {
+        this.setActiveVerse(sessionMatch, { scroll: false })
+      }
+    },
+    retryOriginalMadaniPages() {
+      this.originalMadaniError = ''
+      this.enterOriginalMadaniView()
+    },
+    buildOriginalMadaniPageData(pageNumber) {
+      const page = Number(pageNumber)
+      if (!Number.isFinite(page) || page < 1) {
+        return { lines: [], fontFamily: '', glyphsReady: false, pageNumber: null }
+      }
+      const layout = this.madaniPageLayouts?.[page]
+      const sourceLines = Array.isArray(layout?.lines) ? layout.lines : []
+      const sessionKeys = this.mushafSessionVerseKeys
+      // Session-only: strip neighbouring-page ayahs (same rule as Mushaf layout).
+      const sessionLines = filterMadaniLinesToSession(sourceLines, sessionKeys)
+      const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
+      const effectiveKey = this.effectiveActiveVerseKey
+      const fontFamily = layout?.fontFamily
+        || `p${page}${this.tajweedEnabled ? '-v4' : '-v2'}`
+      const useGlyphs = true
+      const fontReady = !!this.madaniFontsReady?.[page]
+        && isQcfFontLoaded(page, { tajweed: !!this.tajweedEnabled })
+      const audioIndexMap = this.madaniAudioIndexMap
+      const anchorIndexCache = new Map()
+      const highlightVerseKey = this.currentHighlightedVerseKey
+      const highlightWordIndex = Number(this.currentWordIndex)
+      const focusOn = !!this.focusModeEnabled
+      const anchorOn = !!this.anchorModeEnabled
+      const showMeanings = !!this.showWordByWord
+      const sessionVerseByKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
+
+      const lines = sessionLines
+        .filter(line => line && line.type !== 'empty')
+        .map((line, lineIndex) => {
+          if (line.type === 'surah_name' || line.type === 'basmala') {
+            return {
+              ...line,
+              key: `original-${page}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
+              fontFamily,
+              fontReady,
+              useGlyphs,
+              words: [],
+            }
+          }
+          const words = (line.words || [])
+            .filter(word => isVerseInteractiveOnPage(word?.verseKey || word?.verse_key, sessionKeys))
+            .map(word => {
+            const verseKey = word.verseKey
+            const sessionVerse = sessionVerseByKey.get(verseKey)
+            const inSession = true
+            const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
+            const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
+            const isPlayingAyah = inSession && this.activeVerseKey === verseKey && this.isPlaying
+            let useGlyph = useGlyphs && fontReady && !!word.codeV2
+            let html = useGlyph
+              ? (word.codeV2 || word.textQpc || '')
+              : (word.isEnd
+                ? formatMadaniAyahEndLabel(word)
+                : (word.textQpc || word.codeV2 || ''))
+            if (word.isEnd && !String(html || '').trim()) {
+              html = formatMadaniAyahEndLabel(word)
+              useGlyph = false
+            }
+            const wordIndex = word.isEnd ? null : this.resolveMadaniAudioWordIndex(word, audioIndexMap)
+            const isHighlighted = inSession
+              && !word.isEnd
+              && wordIndex != null
+              && highlightVerseKey === verseKey
+              && highlightWordIndex === wordIndex
+            let isAnchor = false
+            if (anchorOn && inSession && !word.isEnd && wordIndex != null) {
+              if (!anchorIndexCache.has(verseKey)) {
+                const total = this.getVerseAudioWordCount(verseKey)
+                anchorIndexCache.set(verseKey, new Set(this.getAnchorIndices(total)))
+              }
+              isAnchor = anchorIndexCache.get(verseKey).has(wordIndex)
+            }
+            const sessionWord = Number.isFinite(wordIndex) ? sessionVerse?.words?.[wordIndex] : null
+            const plainText = String(sessionWord?.ar || word.textQpc || '').trim()
+            const meaningLabel = showMeanings && !word.isEnd
+              ? (resolveWordGlossFromVerse(
+                sessionVerse,
+                plainText,
+                Number.isFinite(wordIndex) ? wordIndex : 0
+              ) || String(sessionWord?.en || word.translation || '').trim())
+              : ''
+            const isPracticeFocus = inSession
+              && !word.isEnd
+              && wordIndex != null
+              && this.isPracticeFocusWeakWord(verseKey, wordIndex, plainText)
+            const emphasizeWeak = isPracticeFocus && (
+              this.postSessionPracticeEmphasizeWeakAreas
+              || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
+              || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
+              || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
+            )
+            const recitationStatus = inSession && !word.isEnd && wordIndex != null
+              ? this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, sessionVerse?.sessionTargetKey || '')
+              : ''
+            const statusClass = recitationStatus ? `recitation-word-${recitationStatus}` : ''
+            return {
+              ...word,
+              html,
+              useGlyph,
+              inSession,
+              wordIndex,
+              isActive,
+              isWeak: false,
+              isMastered: inSession && this.isMasteredAyah(verseKey),
+              isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
+              isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
+              isPlayingAyah,
+              isHighlighted,
+              isAnchor,
+              isPracticeFocus,
+              isPracticeFocusEmphasis: !!emphasizeWeak,
+              isPracticeFocusActive: isPracticeFocus && isHighlighted,
+              recitationStatus,
+              isFocusDimmed: focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
+              meaningLabel,
+              isNew: inSession && this.isNewHifzAyah(verseKey),
+              isDue: inSession && this.isDueHifzAyah(verseKey),
+              isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey),
+              hasAiReview: hasActiveReview,
+              classes: {
+                'madani-word--end': !!word.isEnd,
+                'madani-word--glyph': !!useGlyph,
+                'madani-word--fallback': !useGlyph && useGlyphs,
+                'madani-word--unicode': !useGlyph && !useGlyphs,
+                'madani-word--out': false,
+                active: !!isActive,
+                'hifz-ayah-new': inSession && this.isNewHifzAyah(verseKey),
+                'hifz-ayah-due': inSession && this.isDueHifzAyah(verseKey),
+                'hifz-ayah-weak': false,
+                'hifz-ayah-mastered': inSession && this.isMasteredAyah(verseKey),
+                'blur-upcoming': inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
+                'peek-revealed': inSession && this.isVersePeekRevealed(verseKey),
+                'review-priority': inSession && this.isReviewPriorityAyah(verseKey),
+                'is-playing': !!isPlayingAyah,
+                highlighted: !!isHighlighted,
+                'phrase-highlighted': !!isHighlighted,
+                'anchor-highlight': !!isAnchor,
+                'anchor-pulse': !!isAnchor,
+                'is-focus-dim': focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
+                'practice-focus-word': !!isPracticeFocus,
+                'practice-focus-word--emphasis': !!emphasizeWeak,
+                'practice-focus-word--active': !!(isPracticeFocus && isHighlighted),
+                'ai-recitation-active': !!hasActiveReview,
+                [statusClass]: !!statusClass,
+              },
+            }
+          })
+
+          return {
+            ...line,
+            key: `original-${page}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
+            fontFamily,
+            fontReady,
+            useGlyphs,
+            words,
+          }
+        })
+
+      return {
+        pageNumber: page,
+        fontFamily,
+        glyphsReady: fontReady,
+        lines,
+      }
+    },
+    onOriginalMadaniWordSelect(word) {
+      const verseKey = word?.verseKey
+      if (!verseKey) return
+      this.onOriginalMadaniAyahSelect(verseKey)
+      this.onMadaniWordClick({
+        verseKey,
+        wordIndex: word.wordIndex,
+        inSession: word.inSession !== false,
+      })
+    },
+    onOriginalMadaniAyahSelect(verseKey) {
+      if (!verseKey) return
+      const mapped = Number(this.madaniPageByVerseKey?.[verseKey] || 0)
+      if (mapped) this.setOriginalMadaniPageNumber(mapped, { persist: true, loadMeta: true })
+      if (isVerseInteractiveOnPage(verseKey, this.mushafSessionVerseKeys)) {
+        this.setActiveVerse(verseKey, { scroll: false })
+      }
+    },
+    onOriginalMadaniPeekEnter(verseKey) {
+      if (verseKey) this.hoverPeekVerseKey = verseKey
+      if (this.blurModeEnabled) this.onVersePeekEnter?.(verseKey)
+    },
+    onOriginalMadaniPeekLeave() {
+      this.hoverPeekVerseKey = null
+      this.onVersePeekLeave?.()
     },
     goToMushafPage(index) {
       if (!this.mushafPages.length) {
@@ -32616,11 +33314,40 @@ export default {
     async ensureMadaniPageLoaded(pageNumber, options = {}) {
       const page = Math.max(1, Math.min(604, Number(pageNumber) || 0))
       if (!page) return null
+      const sessionKeys = this.mushafSessionVerseKeys
+      const sessionChapterId = Number(
+        this.chapterId
+        || this.currentConfig?.chapterId
+        || this.currentChapter?.id
+        || 0
+      )
+      const sessionRangeStart = Number(
+        this.rangeStart
+        || this.currentConfig?.rangeStart
+        || 0
+      )
+      const sessionRangeEnd = Number(
+        this.rangeEnd
+        || this.currentConfig?.rangeEnd
+        || 0
+      )
+      // Mushaf mode builds from the session chapter range only — never from the
+      // full printed Madani page (which includes prior/next surah spill).
+      const wantSessionOnly = this.readingViewMode === 'mushaf'
+        && sessionKeys.size > 0
+        && sessionChapterId >= 1
+        && sessionRangeStart >= 1
+        && sessionRangeEnd >= sessionRangeStart
+      const sessionSignature = wantSessionOnly
+        ? `${sessionChapterId}:${sessionRangeStart}-${sessionRangeEnd}:${[...sessionKeys].sort().join(',')}`
+        : ''
       const cached = this.madaniPageLayouts?.[page]
       if (
         !options.force
         && cached?.lines?.length
         && Number(cached.layoutVersion) === MADANI_LAYOUT_VERSION
+        && !!cached.sessionOnly === wantSessionOnly
+        && String(cached.sessionSignature || '') === sessionSignature
       ) {
         await this.ensureMadaniFontForPage(page)
         this.$nextTick(() => this.scheduleMadaniPageFit())
@@ -32628,8 +33355,30 @@ export default {
       }
 
       try {
-        const verses = await getMadaniPageVerses(page, { force: !!options.force })
-        const layout = buildMadaniPageLayout(page, verses, { tajweed: !!this.tajweedEnabled })
+        let layoutVerses
+        if (wantSessionOnly) {
+          const chapterVerses = await getMadaniChapterRangeVerses(
+            sessionChapterId,
+            sessionRangeStart,
+            sessionRangeEnd,
+            { force: !!options.force }
+          )
+          layoutVerses = (Array.isArray(chapterVerses) ? chapterVerses : []).filter((verse) => {
+            const pageFromVerse = Number(verse?.page_number)
+            const pageFromWord = Number(verse?.words?.[0]?.page_number)
+            const versePage = Number.isFinite(pageFromVerse) ? pageFromVerse : pageFromWord
+            if (Number(versePage) === page) return true
+            const key = String(verse?.verse_key || verse?.key || '')
+            return Number(this.madaniPageByVerseKey?.[key]) === page
+          })
+          // Absolute guard: never paint another chapter even if API metadata drifts.
+          layoutVerses = filterVersesToSession(layoutVerses, sessionKeys)
+        } else {
+          layoutVerses = await getMadaniPageVerses(page, { force: !!options.force })
+        }
+        const layout = buildMadaniPageLayout(page, layoutVerses, { tajweed: !!this.tajweedEnabled })
+        layout.sessionOnly = wantSessionOnly
+        layout.sessionSignature = sessionSignature
         this.madaniPageLayouts = {
           ...this.madaniPageLayouts,
           [page]: layout
@@ -32749,6 +33498,27 @@ export default {
         [status]: !!status
       }
     },
+    sessionMadaniLineWords(line = {}) {
+      const words = Array.isArray(line?.words) ? line.words : []
+      if (!words.length) return []
+      const sessionKeys = this.mushafSessionVerseKeys
+      if (!sessionKeys || sessionKeys.size === 0) return []
+      return words.filter(word => isVerseInteractiveOnPage(word?.verseKey || word?.verse_key, sessionKeys))
+    },
+    syncSessionScrubAttrsToDocument() {
+      if (typeof document === 'undefined') return
+      const attrs = this.mushafSessionScrubAttrs || {}
+      const root = document.documentElement
+      if (attrs.chapterId) root.dataset.sessionChapter = String(attrs.chapterId)
+      else delete root.dataset.sessionChapter
+      if (attrs.rangeStart) root.dataset.sessionStart = String(attrs.rangeStart)
+      else delete root.dataset.sessionStart
+      if (attrs.rangeEnd) root.dataset.sessionEnd = String(attrs.rangeEnd)
+      else delete root.dataset.sessionEnd
+      try {
+        window.__mutqinSessionOnlyMushafScrub?.()
+      } catch (_) { /* optional blade scrubber */ }
+    },
     onMadaniWordClick(word) {
       if (!word?.verseKey || word.inSession === false) return
       const verse = this.resolveVerseFromMadaniKey(word.verseKey)
@@ -32832,6 +33602,7 @@ export default {
         Math.min(this.maxFontSize, Number(this.defaultFontSize || 150))
       )
       this.defaultFontSize = nextSize
+      this.rememberLayoutFontSize(this.readingViewMode)
       // Clear per-ayah overrides so mushaf page follows the shared size.
       this.verseFontSizes = {}
       this.clearMushafAyahHtmlCache()
@@ -32845,17 +33616,9 @@ export default {
       this.syncSettingsDraft()
       this.persistVerseFontSizes()
       this.persistUiState()
-      this.$nextTick(() => {
-        const root = this.$refs.mushafViewport
-        const applyVar = (el) => {
-          if (!el?.style) return
-          el.style.setProperty('--verse-font-percent', String(nextSize), 'important')
-        }
-        applyVar(root)
-        applyVar(root?.querySelector?.('.madani-page-sheet, .mushaf-page'))
-        root?.querySelectorAll?.('.mushaf-page, .madani-page-sheet').forEach(applyVar)
-        this.scheduleMadaniPageFit()
-      })
+      // Prefer Vue :style bindings — avoid leaking !important inline vars across layouts.
+      this.clearMadaniInlineFontOverrides()
+      this.$nextTick(() => this.scheduleMadaniPageFit())
       if (!silent) {
         this.showBanner(this.t('toasts.fontSize', { defaultFontSize: nextSize }), 'info', 600)
       }
@@ -33093,6 +33856,8 @@ export default {
         this.queueIndex = store.queueIndex || 0
         if (this.readingViewMode === 'mushaf') {
           this.$nextTick(() => this.syncMushafPageToActiveVerse())
+        } else if (this.readingViewMode === 'original') {
+          this.$nextTick(() => this.syncOriginalMadaniPageToActiveVerse())
         }
       }
 
@@ -33361,6 +34126,12 @@ export default {
           this.showPlannerModal = false
           return
         }
+        if (this.isAppFullscreen) {
+          event.preventDefault()
+          this.isAppFullscreen = false
+          this.syncAppFullscreenClass()
+          return
+        }
       }
 
       if (event.key === ' ' || event.code === 'Space') {
@@ -33437,6 +34208,18 @@ export default {
       if (this.readingViewMode === 'mushaf' && (event.key === 'PageUp' || event.key === '[')) {
         event.preventDefault()
         this.goToPreviousMushafPage()
+        return
+      }
+
+      if (this.readingViewMode === 'original' && (event.key === 'PageDown' || event.key === ']')) {
+        event.preventDefault()
+        this.goToNextOriginalMadaniPage()
+        return
+      }
+
+      if (this.readingViewMode === 'original' && (event.key === 'PageUp' || event.key === '[')) {
+        event.preventDefault()
+        this.goToPreviousOriginalMadaniPage()
         return
       }
 
@@ -34025,7 +34808,6 @@ export default {
       if (activeAudio && restoredAudio && activeAudio !== restoredAudio) return
       this.audioElement.src = state.src
       this.audioElement.load()
-      this.playerVisible = !!state.playerVisible
       this.currentTime = Number(state.currentTime || 0)
       const restoredSpeed = this.normalizePlaybackSpeed(state.speed || this.speed || 1)
       this.speed = restoredSpeed
@@ -34037,6 +34819,7 @@ export default {
           if (autoplay) {
             this.audioElement.play().then(() => {
               this.isPlaying = true
+              this.playerVisible = true
             }).catch(() => {
               if (onAutoplayBlocked) onAutoplayBlocked()
             })
@@ -36902,7 +37685,7 @@ export default {
         nextNodes.add(node)
       })
       this.lastHighlightedWordNodes = Array.from(nextNodes)
-      if (this.readingViewMode === 'mushaf' && nextNodes.size) {
+      if ((this.readingViewMode === 'mushaf' || this.readingViewMode === 'original') && nextNodes.size) {
         const lead = this.lastHighlightedWordNodes[0]
         if (lead && typeof lead.scrollIntoView === 'function') {
           const rect = lead.getBoundingClientRect?.()
@@ -37209,16 +37992,23 @@ export default {
         this.isPlaying = false
         // Freeze state: stop the loop but retain the active word.
         if (this.wordSyncEngine) this.wordSyncEngine.pause()
+        // Do not mirror pause→session here: natural ayah end / gap timers race
+        // `ended` vs `pause` and would soft-pause the sitting mid-queue.
+        // User pause goes through togglePlay / pauseSessionFromPrimaryAction.
       }
 
       this.audioPlaying = () => {
         this.isPlaying = true
+        this.playbackAwaitingGesture = false
         this.audioBuffering = false
         this.clearAudioStallRecoveryTimer()
         if (this.audioElement) {
           const safeSpeed = this.normalizePlaybackSpeed(this.speed)
           this.audioElement.defaultPlaybackRate = safeSpeed
           this.audioElement.playbackRate = safeSpeed
+        }
+        if (!this.manualOnlyPlayback) {
+          this.syncSessionControlsWithPlayback(true)
         }
         const verse = this.activeVerseRef
         if (verse && this.wordByWordAudioEnabled) {
@@ -37372,9 +38162,6 @@ export default {
 
       this.playerDismissed = false
       this.playerCompact = this.isMobileViewport() ? true : false
-      // Reveal before play() — countdown autoplay is often blocked, and the
-      // dock must still be there so the learner can tap Play.
-      this.playerVisible = true
 
       try {
         let sameAudioSource = false
@@ -37436,6 +38223,10 @@ export default {
         }
         this.isPlaying = true
         this.playerVisible = true
+        this.playbackAwaitingGesture = false
+        if (!this.manualOnlyPlayback) {
+          this.syncSessionControlsWithPlayback(true)
+        }
         this.incrementVersePlayCount(verse.key)
         this.markPlaybackStart()
         this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
@@ -37452,6 +38243,11 @@ export default {
         if (playGeneration === this.playGeneration) {
           console.error('playVerse failed:', err)
           this.isPlaying = false
+          this.playerVisible = true
+          this.playbackAwaitingGesture = true
+          if (!this.manualOnlyPlayback) {
+            this.syncSessionControlsWithPlayback(false)
+          }
           this.promptTapToPlay()
         }
       } finally {
@@ -37489,6 +38285,8 @@ export default {
     /**
      * Keep the top Pause/Resume control aligned with the audio player.
      * Player pause → Resume Session; player play → Pause Session.
+     * Call only from user pause/play and blocked-autoplay recovery — not from
+     * natural ayah-end (gap / Talqin timers own that path).
      */
     syncSessionControlsWithPlayback(playing) {
       if (this.sessionCompleted || this.isSessionCompleted) return
@@ -37500,6 +38298,7 @@ export default {
       if (!practiceActive) return
 
       if (playing) {
+        this.playbackAwaitingGesture = false
         if (this.sessionPaused || !this.mutqinState?.sessionState?.active) {
           this.applyLocalActiveSessionState()
           this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
@@ -37543,6 +38342,7 @@ export default {
         this.audioElement.play()
           .then(() => {
             this.isPlaying = true
+            this.playbackAwaitingGesture = false
             this.syncSessionControlsWithPlayback(true)
             const verse = this.activeVerseRef
             if (verse && this.wordByWordAudioEnabled) {
@@ -38462,7 +39262,7 @@ export default {
       const url = this.ensureVerseAudioUrl(verse)
       if (!url || !verse) return false
       if (verse.audio !== url) verse.audio = url
-      return this.preloadQueueEntryAudio(entry || { verse }, { playerVisible: true })
+      return this.preloadQueueEntryAudio(entry || { verse }, { playerVisible: false })
     },
     buildFallbackAyahAudioUrl(globalAyahNumber) {
       const n = Number(globalAyahNumber)
@@ -39172,6 +39972,7 @@ export default {
       if (this.showWordByWord && this.fadingVerseEnabled) this.fadingVerseEnabled = false
       this.clearMushafAyahHtmlCache()
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(next.defaultFontSize || 150)))
+      this.rememberLayoutFontSize(this.readingViewMode)
       this.writeScopedStorageValue('defaultFontSize', 'mutqin.defaultFontSize', this.defaultFontSize)
       this.persistVerseFontSizes()
       this.persistUiState()
@@ -39206,9 +40007,12 @@ export default {
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = !!state.showWordByWord
           this.wordByWordAudioEnabled = true
-          this.readingViewMode = ['stacked', 'mushaf'].includes(state.readingViewMode)
-            ? state.readingViewMode
-            : 'mushaf'
+          this.readingViewMode = this.clampReadingViewMode(
+            isReadingViewMode(state.readingViewMode) ? state.readingViewMode : 'mushaf'
+          )
+          this.originalMadaniPageNumber = Number.isFinite(Number(state.originalMadaniPageNumber))
+            ? clampMadaniPageNumber(state.originalMadaniPageNumber)
+            : this.originalMadaniPageNumber
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0
@@ -39259,6 +40063,22 @@ export default {
             : this.gapBetweenVerses
           this.customGapSeconds = Math.max(0.5, Math.min(10, Number(state.customGapSeconds || this.customGapSeconds || 2)))
           this.defaultFontSize = Number(state.defaultFontSize ?? this.defaultFontSize ?? 150)
+          if (state.layoutFontSizes && typeof state.layoutFontSizes === 'object') {
+            this.layoutFontSizes = {
+              stacked: Number(state.layoutFontSizes.stacked || this.layoutFontSizes.stacked || 150),
+              mushaf: Number(state.layoutFontSizes.mushaf || this.layoutFontSizes.mushaf || 120),
+              original: Number(state.layoutFontSizes.original || this.layoutFontSizes.original || 150),
+            }
+          } else {
+            // Migrate single shared size into per-layout slots (cap mushaf to avoid overflow).
+            const seed = Math.max(this.minFontSize, Math.min(this.maxFontSize, this.defaultFontSize))
+            this.layoutFontSizes = {
+              stacked: seed,
+              mushaf: Math.min(seed, 150),
+              original: seed,
+            }
+          }
+          this.applyLayoutFontSize(this.readingViewMode)
           this.fontScale = Math.max(0.9, Math.min(1.2, Number(state.fontScale ?? this.fontScale ?? 1)))
           this.enScale = this.fontScale
           this.quizType = ['mixed', 'flashcard', 'mcq', 'audio_mcq', 'blank'].includes(state.quizType)
@@ -39353,6 +40173,7 @@ export default {
 	          hiddenRevealModeEnabled: false,
 	          aiRecallModeEnabled: this.aiRecallModeEnabled,
 	          readingViewMode: this.readingViewMode,
+        originalMadaniPageNumber: this.originalMadaniPageNumber,
         mushafPageIndex: this.mushafPageIndex,
         mushafBackground: this.mushafBackground,
         mushafBackgroundTouched: this.mushafBackgroundTouched,
@@ -39362,6 +40183,11 @@ export default {
           blurModeEnabled: this.blurModeEnabled,
           blurIntensity: this.blurIntensity,
           defaultFontSize: this.defaultFontSize,
+          layoutFontSizes: {
+            stacked: Number(this.layoutFontSizes?.stacked || 150),
+            mushaf: Number(this.layoutFontSizes?.mushaf || 120),
+            original: Number(this.layoutFontSizes?.original || 150),
+          },
           chainingEnabled: this.chainingEnabled,
           chainingMethod: this.chainingMethod,
           chainingRepetitions: this.chainingRepetitions,

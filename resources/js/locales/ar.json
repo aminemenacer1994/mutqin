@@ -942,6 +942,12 @@
       "openAiRecite": "افتح AI تلاوة فحص ل هذا آية",
       "previousMushafPage": "صفحة المصحف السابقة",
       "nextMushafPage": "صفحة المصحف التالية",
+      "previousOriginalPage": "صفحة المصحف المدني السابقة",
+      "nextOriginalPage": "صفحة المصحف المدني التالية",
+      "originalMadaniPage": "صفحة المصحف المدني {page}",
+      "originalMadaniTools": "أدوات المصحف المدني",
+      "enterOriginalFullScreen": "ملء الشاشة",
+      "exitOriginalFullScreen": "الخروج من ملء الشاشة",
       "bismillah": "بسم الله",
       "playAyahAudio": "شغّل آية صوت",
       "pauseAyahAudio": "Pause آية صوت",
@@ -1487,8 +1493,20 @@
     "view": {
       "stacked": "مكدّس",
       "mushaf": "المصحف",
+      "original": "المصحف المدني",
       "stackedHint": "مكدّس: آية تلو الأخرى, هادئ للنطاقات القصيرة.",
-      "mushafHint": "مصحف: تخطيط صفحة. مساعدات القراءة والتجويد في عناصر التحكم والمساعدة."
+      "mushafHint": "مصحف: تخطيط صفحة. مساعدات القراءة والتجويد في عناصر التحكم والمساعدة.",
+      "originalHint": "المصحف المدني: الصفحات الأصلية المطبوعة مع إطار المدينة وعلامات الآيات وعناوين السور."
+    },
+    "originalMadani": {
+      "errorTitle": "تعذّر تحميل صفحة المصحف المدني",
+      "errorDesc": "لم تُحمَّل صورة الصفحة الأصلية. أعد المحاولة أو ارجع إلى عرض المصحف.",
+      "retry": "إعادة المحاولة",
+      "switchMushaf": "الانتقال إلى عرض المصحف",
+      "pageSpread": "{right}–{left}",
+      "juz": "جزء {number}",
+      "surahNumber": "سورة {number}",
+      "toolsHint": "التركيز والضباب والمراسي وحجم الخط تُطبَّق على الصفحة المطبوعة. ألوان التجويد موجودة أصلًا في الطبعة الرسمية."
     },
     "actions": {
       "newSession": "مجموعة جديدة",

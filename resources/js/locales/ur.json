@@ -942,6 +942,12 @@
       "openAiRecite": "افتح AI تلاوة فحص ل هذا آية",
       "previousMushafPage": "صفحة المصحف السابقة",
       "nextMushafPage": "صفحة المصحف التالية",
+      "previousOriginalPage": "مدنی مصحف کا پچھلا صفحہ",
+      "nextOriginalPage": "مدنی مصحف کا اگلا صفحہ",
+      "originalMadaniPage": "مدنی مصحف صفحہ {page}",
+      "originalMadaniTools": "مدنی مصحف کے اوزار",
+      "enterOriginalFullScreen": "فل سکرین",
+      "exitOriginalFullScreen": "فل سکرین سے باہر نکلیں",
       "bismillah": "بسم الله",
       "playAyahAudio": "شغّل آية صوت",
       "pauseAyahAudio": "Pause آية صوت",
@@ -1487,8 +1493,20 @@
     "view": {
       "stacked": "مكدّس",
       "mushaf": "المصحف",
+      "original": "مدنی مصحف",
       "stackedHint": "مكدّس: آية تلو الأخرى, هادئ للنطاقات القصيرة.",
-      "mushafHint": "مصحف: تخطيط صفحة. مساعدات القراءة والتجويد في عناصر التحكم والمساعدة."
+      "mushafHint": "مصحف: تخطيط صفحة. مساعدات القراءة والتجويد في عناصر التحكم والمساعدة.",
+      "originalHint": "مدنی مصحف: اصل مطبوعہ صفحات، مدینہ کا فریم، آیات کے نشان اور سورت کے عنوانات کے ساتھ۔"
+    },
+    "originalMadani": {
+      "errorTitle": "مدنی مصحف کا صفحہ لوڈ نہیں ہو سکا",
+      "errorDesc": "اصل صفحے کی تصویر لوڈ نہیں ہوئی۔ دوبارہ کوشش کریں یا مصحف منظر پر واپس جائیں۔",
+      "retry": "دوبارہ کوشش کریں",
+      "switchMushaf": "مصحف منظر پر جائیں",
+      "pageSpread": "{right}–{left}",
+      "juz": "پارہ {number}",
+      "surahNumber": "سورة {number}",
+      "toolsHint": "فوکس، دھند، اینکر اور فانٹ سائز مطبوعہ صفحے پر لاگو ہوتے ہیں۔ تجوید کے رنگ سرکاری طباعت میں پہلے سے موجود ہیں۔"
     },
     "actions": {
       "newSession": "مجموعة جديدة",

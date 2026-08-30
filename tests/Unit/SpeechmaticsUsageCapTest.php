@@ -94,6 +94,40 @@ class SpeechmaticsUsageCapTest extends TestCase
         Log::shouldNotHaveReceived('warning', ['Speechmatics usage cap reached.', \Mockery::any()]);
     }
 
+    public function test_invalid_limits_fail_closed_in_production(): void
+    {
+        $this->app['env'] = 'production';
+
+        config([
+            'services.speechmatics.usage_cap.enabled' => true,
+            'services.speechmatics.usage_cap.daily_user_token_mints' => 'not-a-number',
+            'services.speechmatics.usage_cap.daily_global_token_mints' => -8,
+            'services.speechmatics.usage_cap.daily_user_session_minutes' => '',
+            'services.speechmatics.usage_cap.daily_global_session_minutes' => 0,
+        ]);
+
+        $decision = $this->cap->inspect(52);
+        $this->assertFalse($decision['allowed']);
+        $this->assertSame(SpeechmaticsUsageCap::REASON, $decision['reason']);
+        $this->assertSame('misconfig', $decision['scope']);
+    }
+
+    public function test_unrecognised_enabled_flag_fails_closed_in_production(): void
+    {
+        $this->app['env'] = 'production';
+
+        config([
+            'services.speechmatics.usage_cap.enabled' => 'sometimes',
+            'services.speechmatics.usage_cap.daily_user_token_mints' => 1,
+            'services.speechmatics.usage_cap.daily_global_token_mints' => 1,
+        ]);
+
+        $this->assertTrue($this->cap->isEnabled());
+        $this->assertTrue($this->cap->inspect(62)['allowed']);
+        $this->cap->recordSuccessfulMint(62);
+        $this->assertFalse($this->cap->inspect(62)['allowed']);
+    }
+
     public function test_unrecognised_enabled_flag_fails_open(): void
     {
         config([

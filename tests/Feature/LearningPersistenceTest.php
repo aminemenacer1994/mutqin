@@ -220,4 +220,16 @@ class LearningPersistenceTest extends TestCase
 
         $this->assertNotNull(MemorisationSyncState::query()->where('user_id', $user->id)->first());
     }
+
+    public function test_state_sync_rejects_oversized_payload(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/state', [
+                'state' => ['blob' => str_repeat('x', 2_200_000)],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('state');
+    }
 }

@@ -55,6 +55,16 @@ return [
         ],
     ],
 
+    'google_analytics' => [
+        // Public GA4 Measurement ID (not a secret). Empty disables the tag.
+        'measurement_id' => trim((string) env('GOOGLE_ANALYTICS_ID', 'G-W4K8J2T0SG')),
+        // Off in local/testing so localhost does not pollute production reports.
+        'enabled' => filter_var(
+            env('GOOGLE_ANALYTICS_ENABLED', env('APP_ENV') === 'production'),
+            FILTER_VALIDATE_BOOL
+        ),
+    ],
+
     'google' => [
         // Trim: Laravel Cloud / .env editors often leave trailing whitespace that
         // produces Google's "OAuth client was not found" (invalid_client).

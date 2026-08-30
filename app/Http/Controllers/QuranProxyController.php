@@ -104,7 +104,7 @@ class QuranProxyController extends Controller
             abort(502, __('ui.quran_api_upstream_unreachable'));
         } catch (\Throwable $exception) {
             report($exception);
-            abort(502, __('ui.quran_api_proxy_failed').' '.$exception->getMessage());
+            abort(502, __('ui.quran_api_proxy_failed'));
         }
 
         return response($payload['body'], (int) $payload['status'], [

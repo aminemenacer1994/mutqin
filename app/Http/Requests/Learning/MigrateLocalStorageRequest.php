@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Learning;
 
+use App\Rules\MaxJsonBytes;
 use Illuminate\Foundation\Http\FormRequest;
 
 class MigrateLocalStorageRequest extends FormRequest
@@ -14,8 +15,8 @@ class MigrateLocalStorageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'state' => ['required', 'array'],
-            'continue' => ['nullable', 'array'],
+            'state' => ['required', 'array', new MaxJsonBytes(MaxJsonBytes::STATE_BYTES)],
+            'continue' => ['nullable', 'array', new MaxJsonBytes(MaxJsonBytes::HIFZ_BYTES)],
             'meta' => ['nullable', 'array'],
             'meta.device_id' => ['nullable', 'string', 'max:120'],
             'meta.device_label' => ['nullable', 'string', 'max:255'],

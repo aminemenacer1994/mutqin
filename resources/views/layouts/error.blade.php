@@ -14,6 +14,7 @@
     <meta name="theme-color" content="{{ $appThemeColor }}">
     <meta name="color-scheme" content="{{ $appColorScheme }}">
     <title>@yield('title', __('ui.error_title')) · Mutqin</title>
+    @include('partials.google-analytics')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
     <style>

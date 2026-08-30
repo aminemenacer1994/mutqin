@@ -59,6 +59,7 @@
     <meta name="application-name" content="Mutqin">
     <meta name="description" content="Quran memorisation and recitation workspace for focused hifz practice.">
     <title>{{ __('ui.app_title') }}</title>
+    @include('partials.google-analytics')
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730c">
     <link id="appThemeFavicon" rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png?v=20260730c">
@@ -89,6 +90,10 @@
     </style>
     @endif
     <meta name="mutqin-build" content="v129">
+    <meta name="mutqin-asset-build" content="v165">
+    <script>
+      document.documentElement.dataset.mutqinAssetBuild = 'v165';
+    </script>
     <style id="mutqin-ai-recite-force-v125">
       #mutqin-build-stamp {
         display: none !important;
@@ -133,8 +138,8 @@
       (function () {
         // One-shot unfreeze per build. Older scripts marked "done" before refresh and
         // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v154';
-        var FORCE = '153';
+        var BUILD = 'v165';
+        var FORCE = '165';
         var STORE = 'mutqin.asset.build';
         var url = new URL(window.location.href);
         var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
@@ -159,6 +164,14 @@
             return Promise.all(keys.map(function (k) { return caches.delete(k); }));
           }));
         }
+        // Dev Mix emits a stable /js/memorisation.js name — hard-reload it so the
+        // browser HTTP cache cannot keep neighbouring-page mushaf paint forever.
+        ['/js/app.js', '/js/memorisation.js', '/css/app.css'].forEach(function (assetPath) {
+          tasks.push(fetch(assetPath + '?mutqin_force=' + FORCE, {
+            cache: 'reload',
+            credentials: 'same-origin'
+          }).catch(function () {}));
+        });
 
         var finish = function () {
           if (alreadyForced) {
@@ -180,7 +193,7 @@
         });
       })();
     </script>
-    @if(request()->routeIs('memorisation'))
+    @if(request()->routeIs('memorisation', 'memorisation.demo'))
     {{-- Survives stale memorisation JS chunks: HTML is network-first / not JS-chunk-cached.
          Canonical source for button semantics is resources/sass/app.scss (.btn-primary, etc.). --}}
     <style id="mutqin-button-colour-semantics">
@@ -2477,15 +2490,210 @@
         });
       })();
     </script>
-    @endif
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-W4K8J2T0SG"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-W4K8J2T0SG');
+    <script id="mutqin-session-only-mushaf-scrub">
+      /**
+       * Network-first: delete mushaf words outside the active session range.
+       * Survives stale memorisation.js that still paints neighbouring-page ayahs
+       * (e.g. Al-Alaq 13–15 before Bayyinah on page 598).
+       *
+       * Session is resolved from:
+       *  1) documentElement / .main data-session-* attrs
+       *  2) metadata pills ("Ayahs 1-6")
+       *  3) majority chapter among in-range verse keys
+       *
+       * Chapter is preferred, but ayah-range alone is enough to drop markers
+       * like ١٣–١٥ when the session is 1–6.
+       */
+      (function () {
+        var scheduled = false;
+        var locking = false;
+        var EASTERN = {'٠':0,'١':1,'٢':2,'٣':3,'٤':4,'٥':5,'٦':6,'٧':7,'٨':8,'٩':9};
+
+        function parseKey(verseKey) {
+          var parts = String(verseKey || '').split(':');
+          return {
+            chapter: Number(parts[0]) || 0,
+            ayah: Number(parts[1]) || 0
+          };
+        }
+
+        function easternToNumber(text) {
+          var raw = String(text || '').replace(/[^\u0660-\u0669]/g, '');
+          if (!raw) return 0;
+          var n = 0;
+          for (var i = 0; i < raw.length; i += 1) {
+            var d = EASTERN[raw.charAt(i)];
+            if (d == null) return 0;
+            n = (n * 10) + d;
+          }
+          return n;
+        }
+
+        function readSessionAttrs(el) {
+          if (!el || !el.getAttribute) {
+            return { chapter: 0, start: 0, end: 0 };
+          }
+          return {
+            chapter: Number(el.getAttribute('data-session-chapter') || el.dataset && el.dataset.sessionChapter || 0) || 0,
+            start: Number(el.getAttribute('data-session-start') || el.dataset && el.dataset.sessionStart || 0) || 0,
+            end: Number(el.getAttribute('data-session-end') || el.dataset && el.dataset.sessionEnd || 0) || 0
+          };
+        }
+
+        function resolveSession(root) {
+          var fromHtml = readSessionAttrs(document.documentElement);
+          var fromRoot = readSessionAttrs(root);
+          var chapter = fromRoot.chapter || fromHtml.chapter || 0;
+          var start = fromRoot.start || fromHtml.start || 0;
+          var end = fromRoot.end || fromHtml.end || 0;
+
+          if (!(chapter > 0)) {
+            document.querySelectorAll('[data-session-chapter]').forEach(function (el) {
+              var value = Number(el.getAttribute('data-session-chapter') || 0);
+              if (value > 0) chapter = value;
+            });
+          }
+
+          if (!(start > 0 && end >= start)) {
+            document.querySelectorAll('.workspace-shell-metadata-pill, .workspace-shell-metadata, .session-meta, [data-ayah-range]').forEach(function (pill) {
+              var text = String(pill.getAttribute('data-ayah-range') || pill.textContent || '');
+              if (!/ayah|ayat|آية|آيات|range|\d+\s*[-–—]\s*\d+/i.test(text)) return;
+              var m = text.match(/(\d+)\s*[-–—]\s*(\d+)/);
+              if (!m) return;
+              start = Number(m[1]) || start;
+              end = Number(m[2]) || end;
+            });
+          }
+
+          if (!(chapter > 0) && start > 0 && end >= start) {
+            var counts = {};
+            (root || document).querySelectorAll('.madani-word[data-verse-key]').forEach(function (el) {
+              var parsed = parseKey(el.getAttribute('data-verse-key'));
+              if (!parsed.chapter || parsed.ayah < start || parsed.ayah > end) return;
+              counts[parsed.chapter] = (counts[parsed.chapter] || 0) + 1;
+            });
+            var best = 0;
+            var bestCount = 0;
+            Object.keys(counts).forEach(function (key) {
+              if (counts[key] > bestCount) {
+                best = Number(key);
+                bestCount = counts[key];
+              }
+            });
+            chapter = best;
+          }
+
+          return { chapter: chapter, start: start, end: end };
+        }
+
+        function shouldDrop(chapter, ayah, session) {
+          if (!(session.start > 0 && session.end >= session.start)) return false;
+          // Chapter is mandatory when present on the word — never keep another
+          // surah's ayah just because its number falls inside the session range
+          // (e.g. Bayyinah 6–7 on an Adiyat 1–11 page).
+          if (session.chapter > 0 && chapter > 0 && chapter !== session.chapter) return true;
+          if (session.chapter > 0 && chapter > 0 && ayah > 0) {
+            return !(chapter === session.chapter && ayah >= session.start && ayah <= session.end);
+          }
+          // No chapter on the word: only drop clearly out-of-range end markers.
+          if (ayah > 0 && (ayah < session.start || ayah > session.end)) return true;
+          // With a known session chapter but unknown word chapter, drop unless
+          // marked as a session word by the current app build.
+          if (session.chapter > 0 && !chapter && ayah > 0) return true;
+          return false;
+        }
+
+        function removeEl(el) {
+          if (!el || !el.parentNode) return;
+          try { el.parentNode.removeChild(el); } catch (e) {}
+        }
+
+        function scrub() {
+          if (locking || !document.body) return;
+          var root = document.querySelector('.main.mushaf-mode-active, .main.original-madani-mode-active')
+            || document.querySelector('.madani-page-sheet, .mushaf-page--madani, .original-madani-sheet');
+          if (!root) return;
+          var session = resolveSession(root);
+          // Chapter is required. Range-only incorrectly keeps prior-surah ayahs
+          // whose numbers sit inside the session window (Bayyinah 6–7 on Adiyat 1–11).
+          if (!(session.chapter > 0 && session.start > 0 && session.end >= session.start)) return;
+
+          locking = true;
+          try {
+            var words = root.querySelectorAll('.madani-word');
+            words.forEach(function (el) {
+              var key = el.getAttribute('data-verse-key');
+              var chapter = 0;
+              var ayah = 0;
+              if (key) {
+                var parsed = parseKey(key);
+                chapter = parsed.chapter;
+                ayah = parsed.ayah;
+              } else if (el.classList.contains('madani-word--end')) {
+                ayah = easternToNumber(el.textContent || '');
+              }
+
+              if (shouldDrop(chapter, ayah, session)) {
+                removeEl(el);
+              }
+            });
+
+            root.querySelectorAll('.madani-line--ayah, .madani-line--basmala-ayah, .original-madani-sheet__line--ayah, .madani-line').forEach(function (line) {
+              if (line.classList.contains('madani-line--basmala') || line.classList.contains('madani-line--surah_name')) return;
+              var remaining = line.querySelectorAll('.madani-word');
+              if (!remaining.length && (line.classList.contains('madani-line--ayah') || line.classList.contains('madani-line--basmala-ayah') || line.classList.contains('madani-line--glyphs'))) {
+                removeEl(line);
+              }
+            });
+          } finally {
+            locking = false;
+          }
+        }
+
+        function schedule() {
+          if (scheduled) return;
+          scheduled = true;
+          requestAnimationFrame(function () {
+            scheduled = false;
+            scrub();
+          });
+        }
+
+        function start() {
+          scrub();
+          if (!window.MutationObserver || !document.body) return;
+          var obs = new MutationObserver(schedule);
+          obs.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: [
+              'data-verse-key',
+              'data-session-chapter',
+              'data-session-start',
+              'data-session-end',
+              'class'
+            ]
+          });
+          window.__mutqinSessionOnlyMushafScrub = scrub;
+          document.documentElement.dataset.mutqinSessionOnlyMushaf = 'v4';
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', start);
+        } else {
+          start();
+        }
+        window.addEventListener('load', function () {
+          scrub();
+          setTimeout(scrub, 200);
+          setTimeout(scrub, 800);
+          setTimeout(scrub, 2000);
+          setTimeout(scrub, 5000);
+        });
+      })();
     </script>
+    @endif
     <style>
         /* Theme Variables - NO SHADOWS */
         :root {

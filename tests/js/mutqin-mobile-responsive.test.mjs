@@ -248,6 +248,7 @@ async function setState(page, state) {
       vm.duration = 4
       vm.playerVisible = true
       vm.playerDismissed = false
+      vm.isPlaying = true
     } else if (state === 'shortcuts') {
       vm.activeKeyboardShortcutGroup = 'playback'
       vm.showKeyboardShortcuts = true

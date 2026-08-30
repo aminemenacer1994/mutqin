@@ -2,7 +2,7 @@ import { qcfFontFamily } from './qcfFontLoader.js'
 
 export const MADANI_LINES_PER_PAGE = 15
 export const MADANI_TOTAL_PAGES = 604
-export const MADANI_LAYOUT_VERSION = 5
+export const MADANI_LAYOUT_VERSION = 7
 
 /** Al-Fatihah ayah 1 is itself the basmala — isolate it onto its own row. */
 export function isFatihahBasmalaVerseKey(verseKey) {
@@ -350,11 +350,108 @@ export function resolveMadaniPagesForVerses(verses = [], pageByVerseKey = null) 
   return [...pages].sort((a, b) => a - b)
 }
 
+/**
+ * Build a Set of `chapter:ayah` keys for the active session range.
+ * The declared chapter + ayah range is the source of truth so neighbouring
+ * Madani-page ayahs never leak in via a broader verses array.
+ */
+export function buildSessionVerseKeySet(verses = [], { chapterId = 0, rangeStart = 0, rangeEnd = 0 } = {}) {
+  const chapter = Number(chapterId)
+  const start = Number(rangeStart)
+  const end = Number(rangeEnd)
+  if (Number.isFinite(chapter) && chapter >= 1 && Number.isFinite(start) && Number.isFinite(end) && end >= start && start >= 1) {
+    const keys = new Set()
+    for (let ayah = start; ayah <= end; ayah += 1) {
+      keys.add(`${chapter}:${ayah}`)
+    }
+    return keys
+  }
+
+  const fromVerses = (Array.isArray(verses) ? verses : [])
+    .map(verse => String(verse?.key || verse?.verse_key || '').trim())
+    .filter(Boolean)
+  return new Set(fromVerses)
+}
+
 export function isVerseInteractiveOnPage(verseKey, sessionKeys) {
-  if (!sessionKeys || sessionKeys === true) return true
-  if (sessionKeys instanceof Set) return sessionKeys.has(verseKey)
-  if (Array.isArray(sessionKeys)) return sessionKeys.includes(verseKey)
-  return true
+  // null / true = no session filter (show everything)
+  if (sessionKeys == null || sessionKeys === true) return true
+  const key = String(verseKey || '').trim()
+  if (!key) return false
+  if (sessionKeys instanceof Set) return sessionKeys.has(key)
+  if (Array.isArray(sessionKeys)) return sessionKeys.includes(key)
+  if (typeof sessionKeys?.has === 'function') return !!sessionKeys.has(key)
+  // Any session-shaped object without a working membership check is restrictive.
+  return false
+}
+
+/**
+ * Keep only verses whose keys are in the active session set.
+ */
+export function filterVersesToSession(verses = [], sessionKeys) {
+  if (sessionKeys == null || sessionKeys === true) return Array.isArray(verses) ? verses : []
+  const size = sessionKeys instanceof Set
+    ? sessionKeys.size
+    : (Array.isArray(sessionKeys) ? sessionKeys.length : Number(sessionKeys?.size || 0))
+  if (!size) return []
+  return (Array.isArray(verses) ? verses : []).filter(verse => (
+    isVerseInteractiveOnPage(verse?.verse_key || verse?.key, sessionKeys)
+  ))
+}
+
+/**
+ * Keep only session ayah words (+ the matching basmala) for mushaf layout.
+ * Out-of-range ayahs from the printed Madani page are removed entirely.
+ */
+export function filterMadaniLinesToSession(lines = [], sessionKeys) {
+  // null / true = no session filter (legacy full-page paint).
+  if (sessionKeys == null || sessionKeys === true) return Array.isArray(lines) ? lines : []
+  const size = sessionKeys instanceof Set
+    ? sessionKeys.size
+    : (Array.isArray(sessionKeys) ? sessionKeys.length : Number(sessionKeys?.size || 0))
+  // Empty session set must never fall back to the full Madani page.
+  if (!size) return []
+
+  const filtered = (Array.isArray(lines) ? lines : [])
+    .filter(line => line && line.type !== 'empty' && line.type !== 'surah_name')
+    .map((line) => {
+      if (line.type === 'basmala') return { ...line, words: [] }
+      const words = (line.words || []).filter(word => (
+        isVerseInteractiveOnPage(word?.verseKey || word?.verse_key, sessionKeys)
+      ))
+      return { ...line, words }
+    })
+    .filter((line) => {
+      if (line.type === 'ayah' || line.type === 'basmala_ayah') {
+        return Array.isArray(line.words) && line.words.length > 0
+      }
+      return true
+    })
+    .filter((line, _idx, all) => {
+      if (line.type === 'ayah' || line.type === 'basmala_ayah') return true
+      if (line.type === 'basmala') {
+        const chapterId = Number(line.chapterId)
+        if (!Number.isFinite(chapterId) || chapterId < 2) return false
+        return all.some(other => (
+          (other.type === 'ayah' || other.type === 'basmala_ayah')
+          && Array.isArray(other.words)
+          && other.words.some(word => Number(String(word.verseKey || word.verse_key || '').split(':')[0]) === chapterId)
+        ))
+      }
+      return all.some(other => (
+        (other.type === 'ayah' || other.type === 'basmala_ayah') && other.words?.length
+      ))
+    })
+    .filter((line, idx, all) => {
+      if (line.type !== 'basmala') return true
+      const chapterId = Number(line.chapterId)
+      const firstIdx = all.findIndex(other => (
+        other.type === 'basmala' && Number(other.chapterId) === chapterId
+      ))
+      return firstIdx === idx
+    })
+
+  return filtered
 }
 
 const EASTERN_ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩'

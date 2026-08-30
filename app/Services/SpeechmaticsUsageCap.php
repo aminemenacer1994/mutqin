@@ -17,6 +17,8 @@ class SpeechmaticsUsageCap
 {
     public const LEARNER_MESSAGE = 'You have reached today\'s AI voice-check limit. Please try again tomorrow.';
 
+    public const LEARNER_UNAVAILABLE = 'Voice checking could not start right now. Please try again later.';
+
     public const REASON = 'usage_cap';
 
     private const CACHE_PREFIX = 'mutqin:speechmatics:usage';
@@ -42,11 +44,16 @@ class SpeechmaticsUsageCap
 
         $limits = $this->resolvedLimits();
         if ($limits['user'] === null && $limits['global'] === null) {
+            $failClosed = $this->failsClosedOnMisconfig();
             $this->logMisconfigOnce('enabled_without_valid_limits', [
-                'detail' => 'Usage cap is on but no positive daily limit is configured; allowing mints.',
+                'detail' => $failClosed
+                    ? 'Usage cap is on but no positive daily limit is configured; denying mints.'
+                    : 'Usage cap is on but no positive daily limit is configured; allowing mints.',
             ]);
 
-            return $this->allow();
+            return $failClosed
+                ? $this->deny('misconfig', 0, 0)
+                : $this->allow();
         }
 
         $date = $this->usageDate();
@@ -127,12 +134,20 @@ class SpeechmaticsUsageCap
             return false;
         }
 
+        $failClosed = $this->failsClosedOnMisconfig();
         $this->logMisconfigOnce('enabled', [
             'value' => $normalized,
-            'detail' => 'Unrecognised SPEECHMATICS_USAGE_CAP_ENABLED value; treating as disabled.',
+            'detail' => $failClosed
+                ? 'Unrecognised SPEECHMATICS_USAGE_CAP_ENABLED value; treating as enabled.'
+                : 'Unrecognised SPEECHMATICS_USAGE_CAP_ENABLED value; treating as disabled.',
         ]);
 
-        return false;
+        return $failClosed;
+    }
+
+    public function failsClosedOnMisconfig(): bool
+    {
+        return ! app()->environment(['local', 'testing']);
     }
 
     public function tokenTtlSeconds(): int

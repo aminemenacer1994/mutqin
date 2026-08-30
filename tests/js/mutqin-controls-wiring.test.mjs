@@ -686,10 +686,17 @@ assert.doesNotMatch(
 }
 
 includesAll('player dock waits for playback', [
-  /showPlayerDock\(\) \{[\s\S]*showCountdownOverlay[\s\S]*SESSION_MUTATION\.STARTING[\s\S]*isSessionLive/,
+  /playerBarVisible\(\) \{[\s\S]*this\.isPlaying[\s\S]*playbackAwaitingGesture/,
+  /playbackPillVisible\(\) \{[\s\S]*playerDismissed[\s\S]*!this\.playerVisible[\s\S]*this\.isPlaying \|\| !!this\.playbackAwaitingGesture/,
+  /showPlayerDock\(\) \{[\s\S]*showCountdownOverlay[\s\S]*SESSION_MUTATION\.STARTING[\s\S]*return this\.playbackPillVisible[\s\S]*playerBarVisible[\s\S]*talqinRecitationTurnActive\n    \}/,
+  /playbackShellActive\(\) \{[\s\S]*showCountdownOverlay[\s\S]*SESSION_MUTATION\.STARTING[\s\S]*return this\.playerBarVisible[\s\S]*talqinRecitationTurnActive\n    \}/,
   /preloadQueueEntryAudio\(preloadEntry, \{ playerVisible: false \}\)/,
-  /this\.playerVisible = true\n\s*\n\s*try \{\n\s*let sameAudioSource = false/,
+  /ensureLiveSessionAudioAttached\(\) \{[\s\S]*preloadQueueEntryAudio\(entry \|\| \{ verse \}, \{ playerVisible: false \}\)/,
+  /await this\.audioElement\.play\(\)[\s\S]*this\.isPlaying = true\n\s*this\.playerVisible = true/,
   /attachMainAudioSource\(audioUrl, playGeneration = this\.playGeneration\) \{[\s\S]*audioElement\.src = audioUrl/,
+  /v-if="playerBarVisible"\n\s*class="player-bar"/,
+  /syncSessionControlsWithPlayback\(false\)/,
+  /playbackAwaitingGesture/,
 ])
 
 includesAll('audio unlock flow', [
@@ -698,7 +705,7 @@ includesAll('audio unlock flow', [
   /claimAudioElement\(audio\) \{/,
   /isAudioLoadAbortError\(audio = null\) \{/,
   /ensureSessionPlaybackStarted\(options = \{\}\) \{[\s\S]*skipImmediatePlay/,
-  /startSessionWithCountdown[\s\S]*ensureSessionPlaybackStarted\(\{ skipImmediatePlay: true \}\)/,
+  /startSessionWithCountdown[\s\S]*ensureSessionPlaybackStarted\(\{ skipImmediatePlay: true \}\)[\s\S]*syncSessionControlsWithPlayback\(false\)/,
   /startSessionWithCountdown[\s\S]*noteLearningBackendFailure\(error, 'start'\)[\s\S]*continuing locally/,
   /learningBackendEnabled\(\) \{\s*return !!this\.auth\?\.check && !this\.learningBackendUnavailable/,
   /preloadQueueEntryAudio\(entry, options = \{\}\) \{[\s\S]*this\.claimAudioElement\(audio\)/,

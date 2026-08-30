@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
 import {
   buildMadaniPageLayout,
+  buildSessionVerseKeySet,
   chapterHasBismillahPre,
+  filterMadaniLinesToSession,
+  filterVersesToSession,
   findSurahStartOnPage,
   formatMadaniAyahEndLabel,
   groupWordsByLine,
+  isVerseInteractiveOnPage,
   madaniPageRange,
   resolveMadaniPagesForVerses,
   surahNameGlyphText,
@@ -180,6 +184,62 @@ assert.equal(formatMadaniAyahEndLabel({ verseKey: '1:7', textQpc: '7' }), '\u06D
 assert.equal(
   formatMadaniAyahEndLabel({ verse_key: '99:1', text_qpc_hafs: '5980' }),
   '\u06DD١'
+)
+
+const sessionKeys = buildSessionVerseKeySet(
+  [{ key: '98:1' }, { key: '98:2' }, { key: '96:15' }],
+  { chapterId: 98, rangeStart: 1, rangeEnd: 6 }
+)
+assert.equal(sessionKeys.has('98:1'), true)
+assert.equal(sessionKeys.has('98:6'), true)
+assert.equal(sessionKeys.has('96:15'), false, 'declared range ignores neighbouring-page keys in verses')
+assert.equal(isVerseInteractiveOnPage('96:15', sessionKeys), false)
+assert.equal(isVerseInteractiveOnPage('98:1', sessionKeys), true)
+
+const mixedPageLines = [
+  {
+    type: 'ayah',
+    lineNumber: 1,
+    words: [
+      { verseKey: '96:15', textQpc: 'كلا' },
+      { verseKey: '96:15', isEnd: true, textQpc: '١٥' },
+    ],
+  },
+  { type: 'basmala', lineNumber: 2, chapterId: 98, words: [] },
+  {
+    type: 'ayah',
+    lineNumber: 3,
+    words: [
+      { verseKey: '98:1', textQpc: 'لم' },
+      { verseKey: '97:1', textQpc: 'انا' },
+    ],
+  },
+]
+const sessionOnly = filterMadaniLinesToSession(mixedPageLines, sessionKeys)
+assert.equal(sessionOnly.length, 2, 'basmala + session ayah line kept')
+assert.equal(sessionOnly[0].type, 'basmala')
+assert.equal(sessionOnly[1].type, 'ayah')
+assert.deepEqual(
+  sessionOnly[1].words.map(word => word.verseKey),
+  ['98:1'],
+  'out-of-session words stripped from mixed lines'
+)
+assert.deepEqual(
+  filterMadaniLinesToSession(mixedPageLines, new Set()),
+  [],
+  'empty session set must not paint the full Madani page'
+)
+
+const fromRange = buildSessionVerseKeySet([], { chapterId: 98, rangeStart: 1, rangeEnd: 2 })
+assert.deepEqual([...fromRange].sort(), ['98:1', '98:2'])
+
+assert.deepEqual(
+  filterVersesToSession(
+    [{ verse_key: '96:15' }, { verse_key: '98:1' }, { verse_key: '98:2' }],
+    sessionKeys
+  ).map(v => v.verse_key),
+  ['98:1', '98:2'],
+  'page verses filtered to session before layout build'
 )
 
 console.log('Madani page layout tests passed')

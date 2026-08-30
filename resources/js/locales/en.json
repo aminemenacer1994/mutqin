@@ -942,6 +942,12 @@
       "openAiRecite": "Open AI recitation check for this ayah",
       "previousMushafPage": "Previous mushaf page",
       "nextMushafPage": "Next mushaf page",
+      "previousOriginalPage": "Previous Madani Mushaf page",
+      "nextOriginalPage": "Next Madani Mushaf page",
+      "originalMadaniPage": "Madani Mushaf page {page}",
+      "originalMadaniTools": "Madani Mushaf tools",
+      "enterOriginalFullScreen": "Enter full screen",
+      "exitOriginalFullScreen": "Exit full screen",
       "bismillah": "Bismillah",
       "playAyahAudio": "Play ayah audio",
       "pauseAyahAudio": "Pause ayah audio",
@@ -1487,8 +1493,20 @@
     "view": {
       "stacked": "Stacked",
       "mushaf": "Mushaf",
+      "original": "Madani Mushaf",
       "stackedHint": "Stacked: one ayah after another, calm for short ranges.",
-      "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help."
+      "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help.",
+      "originalHint": "Madani Mushaf: original printed pages with the Madinah border, ayah markers, and surah headings."
+    },
+    "originalMadani": {
+      "errorTitle": "Madani Mushaf page couldn’t load",
+      "errorDesc": "The original page image didn’t load. Try again, or switch back to Mushaf view.",
+      "retry": "Try again",
+      "switchMushaf": "Switch to Mushaf view",
+      "pageSpread": "{right}–{left}",
+      "juz": "Juz {number}",
+      "surahNumber": "Surah {number}",
+      "toolsHint": "Focus, blur, anchors, and font size apply on the printed page. Tajweed colours are already in the official print."
     },
     "actions": {
       "newSession": "New set",

@@ -9,7 +9,7 @@ Mutqin is a Quran memorisation workspace: practise short ayah ranges, use memori
 - **Backend:** PHP 8.2, Laravel 12, Sanctum (SPA cookie auth)
 - **Frontend:** Vue 3, Bootstrap 5, Laravel Mix 6
 - **Speech:** Speechmatics (server-minted realtime tokens)
-- **Payments:** Stripe subscriptions (Free / Premium / Pro)
+- **Payments:** Stripe checkout is wired but unused — every signed-in feature is currently free
 
 ## Requirements
 
@@ -88,6 +88,8 @@ Copy `.env.example` to `.env` and configure:
 | `SPEECHMATICS_REGION` | `eu` or `us` |
 | `SPEECHMATICS_USAGE_CAP_*` | Daily token-mint safety cap (see below) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth login |
+| `GOOGLE_ANALYTICS_ID` | GA4 Measurement ID (default `G-W4K8J2T0SG`). Empty disables the tag. |
+| `GOOGLE_ANALYTICS_ENABLED` | Override GA on/off. Defaults to on only when `APP_ENV=production`. |
 | `STRIPE_*` | Publishable/secret keys, webhook secret, price IDs |
 | `MUTQIN_ADMIN_EMAILS` | Reserved admin mailboxes (registration/profile deny-list). Admin privilege is `users.is_admin` — migration bootstraps matching emails once. |
 
@@ -103,19 +105,19 @@ AI Recite and Check memorisation mint a short-lived Speechmatics realtime token 
 | Production | Keep enabled. Raise after you see real traffic, e.g. `60` / `2000` | Protects the account if a client retries aggressively; tune global against your Speechmatics budget. |
 | Local hammering | `SPEECHMATICS_USAGE_CAP_ENABLED=false` | Avoids blocking yourself while iterating on AI Recite. |
 
-Optional: set `SPEECHMATICS_DAILY_USER_SESSION_MINUTES` / `SPEECHMATICS_DAILY_GLOBAL_SESSION_MINUTES` instead of (or as well as) mint counts. Minutes convert with the token TTL (default 120s). If both are set, the tighter limit wins. `0`, empty, or invalid numbers disable that axis and log a warning (fail open so testers are not locked out by a typo).
+Optional: set `SPEECHMATICS_DAILY_USER_SESSION_MINUTES` / `SPEECHMATICS_DAILY_GLOBAL_SESSION_MINUTES` instead of (or as well as) mint counts. Minutes convert with the token TTL (default 120s). If both are set, the tighter limit wins. `0`, empty, or invalid numbers disable that axis and log a warning. Local/testing fail open so a typo does not lock testers out. Production fails closed (mints denied) until limits are valid.
 
 Watch logs for `Speechmatics usage cap approaching.` and `Speechmatics usage cap reached.` After changing env vars: `php artisan config:clear`.
 
 ### Subscription tiers
 
-Canonical feature lists live in `config/billing.php`:
+**All authenticated features are currently free.** `hasPremiumAccess` / `hasProAccess` and `EnsureSubscriptionTier` grant every signed-in user. Stripe checkout and webhooks stay wired for a later paid launch.
+
+Planned feature lists live in `config/billing.php`:
 
 - **Free** — Focus mode, basic sessions, limited saves
 - **Premium** — Blur, Chaining, Anchor, Hifz plan, spaced retention, adaptive revision
 - **Pro** — AI recitation check, AI memorisation checker, unlimited saves
-
-Server middleware enforces tiers on AI and premium API routes.
 
 ## Frontend build
 

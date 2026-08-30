@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MushafPageImageController;
 use App\Http\Controllers\QuranProxyController;
 use App\Services\SpeechmaticsUsageCap;
 use Illuminate\Http\Request;
@@ -58,9 +59,15 @@ Route::get('/memorisation/demo', function () {
 
 // Same-origin proxy — browsers cannot call alquran.cloud / quran.com due to CORS.
 Route::get('/memorisation/quran-proxy/{provider}/{path}', QuranProxyController::class)
+    ->middleware('throttle:public-proxy')
     ->where('provider', 'alquran|qurancom')
     ->where('path', '.*')
     ->name('memorisation.quran-proxy');
+
+Route::get('/memorisation/mushaf-page/{page}.png', MushafPageImageController::class)
+    ->middleware('throttle:public-proxy')
+    ->where('page', '[1-9][0-9]{0,2}')
+    ->name('memorisation.mushaf-page');
 
 Route::view('/about', 'content.about-us')->name('about');
 Route::view('/about-us', 'content.about-us')->name('about-us');
@@ -189,17 +196,27 @@ Route::middleware(['auth'])->group(function () {
         };
 
         if (! $apiKey) {
+            Log::warning('Speechmatics token request skipped: API key is not configured.', [
+                'user_id' => $userId,
+            ]);
+
             return response()->json([
                 'available' => false,
-                'message' => 'Speechmatics API key is not configured.',
+                'reason' => 'unavailable',
+                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
                 'speechmatics_status' => 422,
             ]);
         }
 
         if (! $region) {
+            Log::warning('Speechmatics token request skipped: region is not configured.', [
+                'user_id' => $userId,
+            ]);
+
             return response()->json([
                 'available' => false,
-                'message' => 'Speechmatics region is not configured.',
+                'reason' => 'unavailable',
+                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
                 'speechmatics_status' => 422,
             ]);
         }
@@ -220,7 +237,8 @@ Route::middleware(['auth'])->group(function () {
 
             return response()->json([
                 'available' => false,
-                'message' => 'Speechmatics token request failed before Speechmatics responded.',
+                'reason' => 'unavailable',
+                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
                 'speechmatics_status' => 502,
             ]);
         }
@@ -235,11 +253,6 @@ Route::middleware(['auth'])->group(function () {
 
             $status = $response->status() ?: 502;
             $upstreamMessage = trim((string) ($payload['detail'] ?? $payload['message'] ?? $payload['reason'] ?? ''));
-            $message = $upstreamMessage !== '' ? $upstreamMessage : 'Speechmatics token request failed.';
-
-            if (in_array($status, [401, 403], true) || str_contains(strtolower($message), 'not author')) {
-                $message = 'Voice checking could not start right now. Please try again later.';
-            }
 
             Log::warning('Speechmatics token request was rejected.', [
                 'user_id' => optional(request()->user())->id,
@@ -249,21 +262,12 @@ Route::middleware(['auth'])->group(function () {
                 'payload' => $payload,
             ]);
 
-            $errorPayload = [
+            return response()->json([
                 'available' => false,
-                'message' => $message,
+                'reason' => 'unavailable',
+                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
                 'speechmatics_status' => $status,
-            ];
-
-            if (config('app.debug')) {
-                $errorPayload['speechmatics_message'] = $upstreamMessage ?: null;
-                $errorPayload['configured_key_suffix'] = $keySuffix ?: null;
-                if (in_array($status, [401, 403], true)) {
-                    $errorPayload['hint'] = 'Use a Speechmatics API key that can create realtime temporary keys, then run php artisan config:clear so Laravel stops using any older cached key.';
-                }
-            }
-
-            return response()->json(array_filter($errorPayload, fn ($value) => $value !== null && $value !== ''));
+            ]);
         }
 
         $usageCap->recordSuccessfulMint($userId);
