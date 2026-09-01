@@ -97,7 +97,9 @@ Copy `.env.example` to `.env` and configure:
 
 ### Speechmatics usage cap
 
-AI Recite and Check memorisation mint a short-lived Speechmatics realtime token on each start. A daily cache-backed cap stops unbounded spend. It is **not** a billing system: it counts successful token mints per UTC day (per user and globally). Failed mints do not count. Learners see a generic “try again tomorrow” message — no provider or config details.
+AI Recite and Check memorisation mint a short-lived Speechmatics realtime token on each start. A daily cache-backed cap stops unbounded spend. It is **not** a billing system: it counts successful token mints per UTC day (per user and globally). Failed mints do not count. Learners see scope-specific messages (per-user vs global) — no provider or config details.
+
+**Before production:** raise the Speechmatics portal RT limit manually and configure env — see [docs/speechmatics-capacity.md](docs/speechmatics-capacity.md).
 
 | Environment | Suggested starting point | Why |
 |-------------|--------------------------|-----|
@@ -107,7 +109,7 @@ AI Recite and Check memorisation mint a short-lived Speechmatics realtime token 
 
 Optional: set `SPEECHMATICS_DAILY_USER_SESSION_MINUTES` / `SPEECHMATICS_DAILY_GLOBAL_SESSION_MINUTES` instead of (or as well as) mint counts. Minutes convert with the token TTL (default 120s). If both are set, the tighter limit wins. `0`, empty, or invalid numbers disable that axis and log a warning. Local/testing fail open so a typo does not lock testers out. Production fails closed (mints denied) until limits are valid.
 
-Watch logs for `Speechmatics usage cap approaching.` and `Speechmatics usage cap reached.` After changing env vars: `php artisan config:clear`.
+Watch logs for `speechmatics.usage.threshold.warning`, `speechmatics.usage.threshold.critical`, and `speechmatics.usage.cap.reached` (legacy: `Speechmatics usage cap approaching.` / `Speechmatics usage cap reached.`). Daily snapshot: `php artisan mutqin:speechmatics-usage-report`. After changing env vars: `php artisan config:clear`.
 
 ### Speechmatics rate limit
 

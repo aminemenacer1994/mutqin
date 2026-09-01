@@ -123,7 +123,7 @@ return [
     'error_not_found_title' => 'Sayfa bulunamadı',
     'error_not_found_message' => 'O sayfayı bulamadık. Devam etmek için ana sayfaya dönün.',
     'error_expired_title' => 'Oturum süresi doldu',
-    'error_expired_message' => 'Güvenlik için oturumunuz sona erdi. Sayfayı yenileyip tekrar deneyin.',
+    'error_expired_message' => 'Güvenlik için oturumunuz sona erdi. Devam etmek için ana sayfaya dönün.',
     'waiting_list_already_joined' => 'Zaten bekleme listesindesiniz.',
     'waiting_list_joined' => 'Bekleme listesine katıldınız.',
     'contact_message_sent' => 'Mesajınız başarıyla gönderildi.',

@@ -221,6 +221,8 @@ class PasswordResetFlowTest extends TestCase
 
     public function test_unverified_account_can_reset_but_stays_unverified(): void
     {
+        $this->requireEmailVerification();
+
         Notification::fake();
 
         $user = User::factory()->unverified()->create([

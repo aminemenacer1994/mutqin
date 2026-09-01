@@ -291,7 +291,7 @@
                                         <i class="bi bi-google" aria-hidden="true"></i>
                                         <span>{{ __('profile.connected_with_google', ['email' => $user->email]) }}</span>
                                     </li>
-                                @elseif ($user->email_verified_at)
+                                @elseif ($user->hasVerifiedEmail())
                                     <li>
                                         <i class="bi bi-google" aria-hidden="true"></i>
                                         <span>{{ __('profile.link_google_desc') }}</span>

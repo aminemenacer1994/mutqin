@@ -181,7 +181,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return response()->json([
                 'available' => false,
                 'reason' => SpeechmaticsUsageCap::REASON,
-                'message' => SpeechmaticsUsageCap::LEARNER_MESSAGE,
+                'message' => $usageCap->learnerMessageForScope($cap['scope']),
                 'speechmatics_status' => 429,
             ]);
         }

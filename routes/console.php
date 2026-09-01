@@ -15,3 +15,8 @@ Schedule::command('mutqin:purge-learning-history --soft-delete-assessments')
 // Always run temp-audio + sync scrub so temporary recordings cannot linger indefinitely.
 Schedule::command('mutqin:purge-learning-history --purge-temp-audio --strip-sync-audio')
     ->hourly();
+
+Schedule::command('mutqin:speechmatics-usage-report')
+    ->dailyAt('23:50')
+    ->timezone('UTC')
+    ->when(fn () => filter_var(config('services.speechmatics.usage_cap.enabled', true), FILTER_VALIDATE_BOOL));

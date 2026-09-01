@@ -123,7 +123,7 @@ return [
     'error_not_found_title' => 'Page introuvable',
     'error_not_found_message' => 'Nous n\'avons pas trouvé cette page. Retournez à l\'accueil pour continuer.',
     'error_expired_title' => 'Session expirée',
-    'error_expired_message' => 'Votre session a expiré pour des raisons de sécurité. Actualisez la page et réessayez.',
+    'error_expired_message' => 'Votre session a expiré pour des raisons de sécurité. Retournez à l’accueil pour continuer.',
     'pwa_chromium_install_title' => 'Installer Mutqin',
     'pwa_chromium_install_body' => 'Ajoutez Mutqin à votre écran d’accueil pour une expérience plus rapide, proche d’une application.',
     'pwa_chromium_install_cta' => 'Installer',

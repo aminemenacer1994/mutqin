@@ -23,11 +23,11 @@ class OnboardingTriggerTest extends TestCase
             'password_confirmation' => 'secret12',
         ]);
 
-        $response->assertRedirect(route('verification.notice'));
+        $response->assertRedirect(route('memorisation'));
         $this->assertAuthenticated();
 
         $user = User::where('email', 'new-student@example.com')->firstOrFail();
-        $this->verifyEmail($user);
+        $this->assertNotNull($user->email_verified_at);
 
         $page = $this->get(route('memorisation'));
         $page->assertOk();
@@ -113,10 +113,10 @@ class OnboardingTriggerTest extends TestCase
                 'password' => 'secret12',
                 'password_confirmation' => 'secret12',
             ])
-            ->assertRedirect(route('verification.notice'));
+            ->assertRedirect(route('memorisation'));
 
         $user = User::where('email', 'fresh-student@example.com')->firstOrFail();
-        $this->verifyEmail($user);
+        $this->assertNotNull($user->email_verified_at);
 
         $page = $this->get(route('memorisation'));
         $page->assertOk();
@@ -131,10 +131,7 @@ class OnboardingTriggerTest extends TestCase
             'email' => 'dashboard-stopover@example.com',
             'password' => 'secret12',
             'password_confirmation' => 'secret12',
-        ])->assertRedirect(route('verification.notice'));
-
-        $user = User::where('email', 'dashboard-stopover@example.com')->firstOrFail();
-        $this->verifyEmail($user);
+        ])->assertRedirect(route('memorisation'));
 
         $this->get(route('dashboard'))->assertOk();
 
@@ -150,10 +147,7 @@ class OnboardingTriggerTest extends TestCase
             'email' => 'one-shot-flag@example.com',
             'password' => 'secret12',
             'password_confirmation' => 'secret12',
-        ])->assertRedirect(route('verification.notice'));
-
-        $user = User::where('email', 'one-shot-flag@example.com')->firstOrFail();
-        $this->verifyEmail($user);
+        ])->assertRedirect(route('memorisation'));
 
         $this->get(route('memorisation'))->assertOk()->assertSee('just_registered":true', false);
 

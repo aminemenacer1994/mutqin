@@ -123,7 +123,7 @@ return [
     'error_not_found_title' => 'Halaman tidak ditemukan',
     'error_not_found_message' => 'Halaman itu tidak ditemukan. Kembali ke beranda untuk lanjut.',
     'error_expired_title' => 'Sesi berakhir',
-    'error_expired_message' => 'Sesi Anda berakhir demi keamanan. Segarkan halaman dan coba lagi.',
+    'error_expired_message' => 'Sesi Anda berakhir demi keamanan. Kembali ke beranda untuk melanjutkan.',
     'waiting_list_already_joined' => 'Anda sudah ada di daftar tunggu.',
     'waiting_list_joined' => 'Anda telah bergabung ke daftar tunggu.',
     'contact_message_sent' => 'Pesan Anda berhasil dikirim.',

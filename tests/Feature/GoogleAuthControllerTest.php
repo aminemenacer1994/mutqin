@@ -204,6 +204,8 @@ class GoogleAuthControllerTest extends TestCase
 
     public function test_attacker_preregister_unverified_email_does_not_block_victim_google_login(): void
     {
+        $this->requireEmailVerification();
+
         $this->post(route('register'), [
             'name' => 'Attacker',
             'email' => 'victim@example.com',

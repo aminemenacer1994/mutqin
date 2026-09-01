@@ -141,14 +141,14 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
             ->assertJson([
                 'available' => false,
                 'reason' => SpeechmaticsUsageCap::REASON,
-                'message' => SpeechmaticsUsageCap::LEARNER_MESSAGE,
+                'message' => SpeechmaticsUsageCap::LEARNER_USER_MESSAGE,
                 'speechmatics_status' => 429,
             ])
             ->assertJsonMissingPath('speechmatics_message')
             ->assertJsonMissingPath('configured_key_suffix');
 
         $payload = $response->json();
-        $this->assertSame(SpeechmaticsUsageCap::LEARNER_MESSAGE, $payload['message']);
+        $this->assertSame(SpeechmaticsUsageCap::LEARNER_USER_MESSAGE, $payload['message']);
         $this->assertStringNotContainsStringIgnoringCase('speechmatics', $payload['message']);
         $this->assertStringNotContainsStringIgnoringCase('api_key', json_encode($payload));
         $this->assertStringNotContainsStringIgnoringCase('token_mints', json_encode($payload));
@@ -183,7 +183,7 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
             ->assertJson([
                 'available' => false,
                 'reason' => SpeechmaticsUsageCap::REASON,
-                'message' => SpeechmaticsUsageCap::LEARNER_MESSAGE,
+                'message' => SpeechmaticsUsageCap::LEARNER_GLOBAL_MESSAGE,
             ]);
 
         Http::assertSentCount(1);
@@ -236,6 +236,32 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
         $this->assertStringNotContainsStringIgnoringCase('unlimited-please', json_encode($response->json()));
         Log::shouldHaveReceived('warning')
             ->with('Speechmatics usage cap misconfigured.', \Mockery::type('array'));
+    }
+
+    public function test_transcription_token_is_blocked_when_emergency_global_cap_is_exceeded(): void
+    {
+        $first = User::factory()->pro()->create();
+        $second = User::factory()->pro()->create();
+        $this->configureSpeechmatics();
+        $this->configureUsageCap(userMints: 20, globalMints: 10);
+        config(['services.speechmatics.usage_cap.emergency_global_token_mints' => 1]);
+        $this->fakeSuccessfulSpeechmaticsMint();
+
+        $this->actingAs($first)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk()
+            ->assertJsonPath('access_token', 'rt-test-token');
+
+        $this->actingAs($second)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk()
+            ->assertJson([
+                'available' => false,
+                'reason' => SpeechmaticsUsageCap::REASON,
+                'message' => SpeechmaticsUsageCap::LEARNER_GLOBAL_MESSAGE,
+            ]);
+
+        Http::assertSentCount(1);
     }
 
     private function configureSpeechmatics(): void

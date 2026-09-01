@@ -152,5 +152,5 @@ return [
     'contact_subject_required' => 'Please enter a subject.',
     'contact_message_required' => 'Please enter a message.',
     'subscription_upgrade_required' => 'This feature requires a Mutqin subscription upgrade.',
-    'error_expired_message' => 'Your session expired for security. Refresh the page and try again.',
+    'error_expired_message' => 'Your session expired for security. Return home to continue.',
 ];

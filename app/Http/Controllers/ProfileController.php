@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use App\Services\Auth\AiAudioConsentService;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Support\AdminEmails;
+use App\Support\EmailVerification;
 
 class ProfileController extends Controller
 {
@@ -52,15 +53,24 @@ class ProfileController extends Controller
 
         $emailChanged = strtolower($validated['email']) !== strtolower((string) $user->email);
 
+        $emailVerifiedAt = $user->email_verified_at;
+        if ($emailChanged && EmailVerification::required()) {
+            $emailVerifiedAt = null;
+        } elseif ($emailChanged) {
+            $emailVerifiedAt = now();
+        }
+
         $user->forceFill([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'email_verified_at' => $emailChanged ? null : $user->email_verified_at,
+            'email_verified_at' => $emailVerifiedAt,
         ])->save();
 
         if ($emailChanged) {
             $user->revaluateAdminEligibility();
-            $user->sendEmailVerificationNotification();
+            if (EmailVerification::required()) {
+                $user->sendEmailVerificationNotification();
+            }
         }
 
         return back()->with('profile_status', __('profile.saved_success'));

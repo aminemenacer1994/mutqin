@@ -123,7 +123,7 @@ return [
     'error_not_found_title' => 'الصفحة غير موجودة',
     'error_not_found_message' => 'تعذّر العثور على هذه الصفحة. عد إلى الرئيسية للمتابعة.',
     'error_expired_title' => 'انتهت الجلسة',
-    'error_expired_message' => 'انتهت جلستك لأسباب أمنية. حدّث الصفحة ثم أعد المحاولة.',
+    'error_expired_message' => 'انتهت جلستك لأسباب أمنية. عد إلى الصفحة الرئيسية للمتابعة.',
     'pwa_chromium_install_title' => 'تثبيت متقن',
     'pwa_chromium_install_body' => 'أضف متقن إلى الشاشة الرئيسية لتجربة أسرع تشبه التطبيق.',
     'pwa_chromium_install_cta' => 'تثبيت',

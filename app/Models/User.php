@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Support\AdminEmails;
+use App\Support\EmailVerification;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -70,6 +72,24 @@ class User extends Authenticatable implements MustVerifyEmail
             'subscription_current_period_ends_at' => 'datetime',
             'ai_audio_consent_at' => 'datetime',
         ];
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        if (! EmailVerification::required()) {
+            return true;
+        }
+
+        return $this->email_verified_at !== null;
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        if (! EmailVerification::required()) {
+            return;
+        }
+
+        $this->notify(new VerifyEmail);
     }
 
     public function hasSetPassword(): bool

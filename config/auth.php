@@ -114,4 +114,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification
+    |--------------------------------------------------------------------------
+    |
+    | When false, new sign-ups skip the verification notice, verified middleware
+    | passes, and verification emails are not sent. Set AUTH_REQUIRE_EMAIL_
+    | VERIFICATION=true when you are ready to enforce mailbox confirmation.
+    |
+    */
+
+    'require_email_verification' => env('AUTH_REQUIRE_EMAIL_VERIFICATION', false),
+
 ];

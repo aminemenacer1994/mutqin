@@ -133,7 +133,7 @@ return [
     'error_not_found_title' => 'صفحہ نہیں ملا',
     'error_not_found_message' => 'وہ صفحہ نہیں ملا۔ جاری رکھنے کے لیے ہوم پر واپس جائیں۔',
     'error_expired_title' => 'سیشن ختم ہو گیا',
-    'error_expired_message' => 'حفاظت کے لیے آپ کا سیشن ختم ہو گیا۔ صفحہ تازہ کریں اور دوبارہ کوشش کریں۔',
+    'error_expired_message' => 'حفاظت کے لیے آپ کا سیشن ختم ہو گیا۔ جاری رکھنے کے لیے ہوم پر واپس جائیں۔',
     'waiting_list_already_joined' => 'آپ پہلے سے انتظار کی فہرست میں ہیں۔',
     'waiting_list_joined' => 'آپ انتظار کی فہرست میں شامل ہو گئے۔',
     'contact_message_sent' => 'آپ کا پیغام کامیابی سے بھیج دیا گیا۔',

@@ -155,7 +155,7 @@ class SpeechmaticsUsageCapTest extends TestCase
             'services.speechmatics.usage_cap.daily_global_session_minutes' => null,
         ]);
 
-        $this->assertSame(['user' => 3, 'global' => null], $this->cap->resolvedLimits());
+        $this->assertSame(['user' => 3, 'global' => null, 'emergency' => null], $this->cap->resolvedLimits());
 
         $this->cap->recordSuccessfulMint(71);
         $this->cap->recordSuccessfulMint(71);
@@ -196,6 +196,96 @@ class SpeechmaticsUsageCapTest extends TestCase
             }));
         Log::shouldHaveReceived('warning')
             ->with('Speechmatics usage cap reached.', \Mockery::type('array'));
+    }
+
+    public function test_emergency_cap_blocks_before_global_cap(): void
+    {
+        config([
+            'services.speechmatics.token_ttl' => 120,
+            'services.speechmatics.usage_cap.enabled' => true,
+            'services.speechmatics.usage_cap.daily_user_token_mints' => 50,
+            'services.speechmatics.usage_cap.daily_global_token_mints' => 10,
+            'services.speechmatics.usage_cap.emergency_global_token_mints' => 3,
+        ]);
+
+        $this->cap->recordSuccessfulMint(91);
+        $this->cap->recordSuccessfulMint(92);
+        $this->cap->recordSuccessfulMint(93);
+
+        $decision = $this->cap->inspect(94);
+        $this->assertFalse($decision['allowed']);
+        $this->assertSame('emergency', $decision['scope']);
+        $this->assertSame(SpeechmaticsUsageCap::LEARNER_GLOBAL_MESSAGE, $this->cap->learnerMessageForScope('emergency'));
+    }
+
+    public function test_provider_reference_triggers_soft_cap_alerts(): void
+    {
+        config([
+            'services.speechmatics.token_ttl' => 120,
+            'services.speechmatics.usage_cap.enabled' => true,
+            'services.speechmatics.usage_cap.daily_user_token_mints' => 100,
+            'services.speechmatics.usage_cap.daily_global_token_mints' => 100,
+            'services.speechmatics.usage_cap.warn_percent' => 80,
+            'services.speechmatics.provider.reference_daily_token_mints' => 5,
+        ]);
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->cap->recordSuccessfulMint(101);
+        }
+
+        Log::shouldHaveReceived('warning')
+            ->with('Speechmatics usage cap approaching.', \Mockery::on(function (array $context): bool {
+                return ($context['scope'] ?? null) === 'provider_reference'
+                    && ($context['used'] ?? null) === 4;
+            }));
+    }
+
+    public function test_logs_when_application_global_cap_exceeds_provider_reference(): void
+    {
+        config([
+            'services.speechmatics.usage_cap.enabled' => true,
+            'services.speechmatics.usage_cap.daily_user_token_mints' => 10,
+            'services.speechmatics.usage_cap.daily_global_token_mints' => 500,
+            'services.speechmatics.provider.reference_daily_token_mints' => 200,
+        ]);
+
+        $this->cap->inspect(1);
+
+        Log::shouldHaveReceived('warning')
+            ->with('Speechmatics usage cap misconfigured.', \Mockery::on(function (array $context): bool {
+                return ($context['kind'] ?? null) === 'app_cap_exceeds_provider_reference';
+            }));
+    }
+
+    public function test_usage_snapshot_includes_global_and_provider_headroom(): void
+    {
+        $this->configureCap(userMints: 5, globalMints: 20);
+        config(['services.speechmatics.provider.reference_daily_token_mints' => 10]);
+
+        $this->cap->recordSuccessfulMint(111);
+        $this->cap->recordSuccessfulMint(111);
+
+        $snapshot = $this->cap->usageSnapshot(111);
+
+        $this->assertSame(2, $snapshot['user']['used']);
+        $this->assertSame(2, $snapshot['global']['used']);
+        $this->assertSame(10, $snapshot['provider_reference']['limit']);
+        $this->assertSame(8, $snapshot['provider_reference']['headroom_mints']);
+        $this->assertSame(4.0, $snapshot['global']['estimated_session_minutes']);
+    }
+
+    public function test_records_mint_metrics_after_successful_mint(): void
+    {
+        $this->configureCap(userMints: 5, globalMints: 20);
+
+        $this->cap->recordSuccessfulMint(121);
+
+        Log::shouldHaveReceived('info')
+            ->with('speechmatics.usage.mint_recorded', \Mockery::on(function (array $context): bool {
+                return ($context['global_mints_today'] ?? null) === 1
+                    && ($context['user_mints_today'] ?? null) === 1
+                    && isset($context['estimated_global_session_minutes']);
+            }));
     }
 
     private function configureCap(bool $enabled = true, int $userMints = 30, int $globalMints = 200): void

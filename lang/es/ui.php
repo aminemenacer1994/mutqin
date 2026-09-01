@@ -151,5 +151,5 @@ return [
     'error_not_found_title' => 'Página no encontrada',
     'error_not_found_message' => 'No encontramos esa página. Vuelve al inicio para continuar.',
     'error_expired_title' => 'Sesión expirada',
-    'error_expired_message' => 'Tu sesión expiró por seguridad. Actualiza la página e inténtalo de nuevo.',
+    'error_expired_message' => 'Tu sesión expiró por seguridad. Vuelve al inicio para continuar.',
 ];

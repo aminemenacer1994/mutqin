@@ -1986,7 +1986,6 @@
             </section>
 
             <section
-              v-if="savedSessions.length > 0"
               class="saved-sheet__groups"
               :aria-label="t('memorisation.a11y.savedSessions')"
             >
@@ -1998,6 +1997,8 @@
                 <button
                   type="button"
                   class="saved-sheet__group-toggle"
+                  :class="{ 'is-active': savedActiveSection === group.key }"
+                  :aria-selected="savedActiveSection === group.key ? 'true' : 'false'"
                   :aria-expanded="sectionOpen[group.key] ? 'true' : 'false'"
                   :aria-controls="`saved-group-${group.key}`"
                   @click="toggleSection(group.key)"
@@ -2100,14 +2101,6 @@
                     <span>{{ t(group.emptyHintKey) }}</span>
                   </div>
                 </div>
-              </div>
-            </section>
-
-            <section v-else class="saved-sheet__section" :aria-label="t('memorisation.a11y.savedSessions')">
-              <div class="saved-sheet__empty">
-                <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
-                <p>{{ t('memorisation.no_saved_sessions_yet') }}</p>
-                <span>{{ t('memorisation.save_your_current_session_to_get_started') }}</span>
               </div>
             </section>
           </div>

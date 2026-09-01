@@ -10,10 +10,7 @@
         <h1>{{ __('ui.error_expired_title') }}</h1>
         <p>{{ __('ui.error_expired_message') }}</p>
         <div class="mutqin-error-card__actions">
-            <button type="button" class="mutqin-error-btn--primary" onclick="window.location.reload()">
-                {{ __('ui.error_retry') }}
-            </button>
-            <a class="mutqin-error-btn--secondary" href="{{ url('/') }}">
+            <a class="mutqin-error-btn--primary" href="{{ url('/') }}">
                 {{ __('ui.error_return_home') }}
             </a>
         </div>

@@ -41,10 +41,21 @@ return [
         // Realtime temporary token lifetime (seconds). Usage-cap minutes convert with this TTL.
         'token_ttl' => env('SPEECHMATICS_TOKEN_TTL', 120),
         /*
+         * Informational provider budget (Speechmatics portal / account contract).
+         * Not enforced via API — set only after you raise the cap in the dashboard.
+         * Used for soft-cap alerts so ops see usage vs. the account limit before
+         * Speechmatics hard-stops traffic. See docs/speechmatics-capacity.md.
+         */
+        'provider' => [
+            'reference_daily_session_minutes' => env('SPEECHMATICS_PROVIDER_DAILY_SESSION_MINUTES'),
+            'reference_daily_token_mints' => env('SPEECHMATICS_PROVIDER_DAILY_TOKEN_MINTS'),
+        ],
+        /*
          * Daily cost guard for AI Recite / Check memorisation token mints.
          * Counts successful mints per UTC day (cache). Not a billing system.
+         * Keep application limits below SPEECHMATICS_PROVIDER_* reference values.
          * Tester defaults: 30 mints/user (~60 min) and 200 global (~400 min).
-         * See README "Speechmatics usage cap" and .env.example.
+         * See README "Speechmatics usage cap" and docs/speechmatics-capacity.md.
          */
         'usage_cap' => [
             'enabled' => env('SPEECHMATICS_USAGE_CAP_ENABLED', true),
@@ -52,6 +63,12 @@ return [
             'daily_global_token_mints' => env('SPEECHMATICS_DAILY_GLOBAL_TOKEN_MINTS', 200),
             'daily_user_session_minutes' => env('SPEECHMATICS_DAILY_USER_SESSION_MINUTES'),
             'daily_global_session_minutes' => env('SPEECHMATICS_DAILY_GLOBAL_SESSION_MINUTES'),
+            // Optional stricter kill-switch (defaults to daily_global_token_mints when unset).
+            'emergency_global_token_mints' => env('SPEECHMATICS_EMERGENCY_GLOBAL_TOKEN_MINTS'),
+            'emergency_global_session_minutes' => env('SPEECHMATICS_EMERGENCY_GLOBAL_SESSION_MINUTES'),
+            // Soft-cap log thresholds (% of the relevant limit). Hard deny still uses mint counts above.
+            'warn_percent' => env('SPEECHMATICS_USAGE_WARN_PERCENT', 80),
+            'critical_percent' => env('SPEECHMATICS_USAGE_CRITICAL_PERCENT', 95),
         ],
         /*
          * Burst / per-minute HTTP guard for POST /memorisation/transcription-token.

@@ -500,6 +500,8 @@ function waitForMediaRecorderChunks(getChunks, timeoutMs = 200) {
   })
 }
 
+const SAVED_SESSION_SECTION_KEYS = Object.freeze(['saved_in_progress', 'saved_completed'])
+
 const HELP_LEARNING_FALLBACKS = {
   title: 'Help & Learning',
   subtitle: 'Short guides for calm, steady Qur’an memorisation.',
@@ -836,6 +838,7 @@ export default {
         label: SWITCHER_LOCALE_LABELS[value] || value,
       })),
       tab: 'tools',
+      savedActiveSection: 'saved_in_progress',
       showTools: false,
       toolsPanelMounted: false,
       readingViewMode: 'mushaf',
@@ -1040,6 +1043,8 @@ export default {
       isPlaying: false,
       /** True after blocked autoplay / failed start — keep Play reachable until audio runs. */
       playbackAwaitingGesture: false,
+      /** Dedupes restored-session audio init for the same ayah/reciter/index. */
+      _restoredAudioPrepKey: null,
       manualOnlyPlayback: false,
       currentTime: 0,
       duration: 0,
@@ -12898,6 +12903,7 @@ export default {
         this.savedSessions = next
         this.selectedStatsSessionId = merged.id
         this.persistSavedSessions()
+        if (this.tab === 'saved') this.focusSavedSessionSectionForSession(merged)
         return { session: merged, reason: null }
       }
       if (Number.isFinite(max) && this.savedSessions.length >= max) {
@@ -12921,6 +12927,7 @@ export default {
       if (this.savedSessions.length > hardCap) this.savedSessions = this.savedSessions.slice(0, hardCap)
       if (!this.selectedStatsSessionId && this.savedSessions[0]?.id) this.selectedStatsSessionId = this.savedSessions[0].id
       this.persistSavedSessions()
+      if (this.tab === 'saved') this.focusSavedSessionSectionForSession(normalized)
       return { session: normalized, reason: null }
     },
 
@@ -14105,8 +14112,20 @@ export default {
     },
     saveCurrentSessionWithName() {
       // Auto-save with a generated name — do not open the naming modal.
-      this.closeToolsPanel()
-      void this.saveCurrentSessionSilentlyAsync()
+      const previousTab = this.tab
+      void this.saveCurrentSessionSilentlyAsync().then((session) => {
+        if (!session) return
+        this.tab = 'saved'
+        this.focusSavedSessionSectionForSession(session)
+        if (!this.showTools) this.showTools = true
+        if (previousTab !== 'saved') {
+          this.loadSavedSessions()
+          this.loadRecordingsLibrary()
+        }
+        this.centralSession.activeTab = 'saved'
+        this.persistUiState()
+        this.persistCentralSessionState()
+      })
     },
     nativeFullscreenElement() {
       return document.fullscreenElement
@@ -14374,8 +14393,7 @@ export default {
       }
       this.showTools = false
       this.flowStep = 'learn'
-      this.playerVisible = false
-      const shouldResumePlayback = options.forcePlayback ?? payload.isPlaying ?? true
+      const shouldResumePlayback = options.forcePlayback ?? payload.isPlaying ?? false
       this.restoredAudioState = {
         src: payload.audioSrc || payload.config?.audioSrc || '',
         currentTime: Number(payload.currentTime ?? payload.config?.currentTime ?? 0),
@@ -14383,7 +14401,8 @@ export default {
         speed: Number(payload.config?.speed || this.speed || 1),
         isPlaying: !!shouldResumePlayback
       }
-      this.$nextTick(() => {
+      this.playerVisible = false
+      this.$nextTick(async () => {
         if (this.readingViewMode === 'mushaf') {
           if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0 && this.mushafPages.length) {
             this.mushafPageIndex = Math.min(savedMushafPageIndex, this.mushafPages.length - 1)
@@ -14391,14 +14410,12 @@ export default {
             this.syncMushafPageToActiveVerse()
           }
         }
-        if (this.restoredAudioState?.src) {
-          this.applyRestoredAudioState({ autoplay: shouldResumePlayback })
-          return
-        }
-        if (shouldResumePlayback) {
-          const entry = store.queue?.[this.queueIndex]
-          if (entry) this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
-        }
+        await this.$nextTick()
+        this.prepareRestoredSessionAudio({
+          autoplay: false,
+          force: true,
+          onAutoplayBlocked: () => this.promptTapToPlay(),
+        })
       })
       this.persistAllState()
       this.markActiveSessionSnapshot()
@@ -14472,7 +14489,10 @@ export default {
                 : SESSION_STATUS.INTERRUPTED_RESUMABLE,
               SESSION_MUTATION.IDLE
             )
-            await this.resumeSessionFromPrimaryAction()
+            this.applyLocalActiveSessionState()
+            this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+            this.queueBackendResumeAfterWelcomeContinue(this.continueSessionPayload)
+            this.$nextTick(() => this.resumeRestoredSessionWithCountdown())
             return
           }
 
@@ -14506,7 +14526,10 @@ export default {
                 : SESSION_STATUS.INTERRUPTED_RESUMABLE,
               SESSION_MUTATION.IDLE
             )
-            await this.resumeSessionFromPrimaryAction()
+            this.applyLocalActiveSessionState()
+            this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+            this.queueBackendResumeAfterWelcomeContinue(this.continueSessionPayload)
+            this.$nextTick(() => this.resumeRestoredSessionWithCountdown())
             return
           }
 
@@ -14534,9 +14557,9 @@ export default {
           return
         }
 
-        this.$nextTick(() => {
-          this.startSessionWithCountdown({ skipPrime: true })
-        })
+        this.applyLocalActiveSessionState()
+        this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
+        this.$nextTick(() => this.resumeRestoredSessionWithCountdown())
       } catch (error) {
         console.error('loadSavedSession failed', error)
         this.showBanner(
@@ -14614,7 +14637,8 @@ export default {
         cancelLabel: this.t('memorisation.confirmModals.deleteSession.cancel'),
         tone: 'danger',
         action: 'delete-saved-session',
-        data: { sessionId }
+        data: { sessionId },
+        preserveToolsPanel: true,
       })
     },
 
@@ -14659,7 +14683,8 @@ export default {
         cancelLabel: this.t('memorisation.confirmModals.deleteSession.cancel'),
         tone: 'danger',
         action: 'delete-saved-sessions',
-        data: { sessionIds: ids }
+        data: { sessionIds: ids },
+        preserveToolsPanel: true,
       })
     },
 
@@ -31109,7 +31134,9 @@ export default {
       await this.applyWorkspaceControls({ reason, mode: this.currentMode })
     },
     openToolsPanel(options = {}) {
-      const { verseKey = null, mode = this.currentMode, scroll = false, tab = 'tools', preserveFreshSelection = false } = options
+      const { verseKey = null, mode = this.currentMode, scroll = false, preserveFreshSelection = false } = options
+      const hasExplicitTab = Object.prototype.hasOwnProperty.call(options, 'tab')
+      const tabOption = hasExplicitTab ? options.tab : this.tab
       if (this.showPostSessionModal) {
         this.postSessionOffcanvasOpen = true
       }
@@ -31117,10 +31144,11 @@ export default {
       this.startingFreshSessionSelection = !!preserveFreshSelection
       this.currentMode = mode
       // Insights tab button is currently hidden — avoid a blank offcanvas body.
-      const requestedTab = tab === 'stats' ? 'saved' : tab
+      const requestedTab = tabOption === 'stats' ? 'saved' : tabOption
       this.tab = ['tools', 'techniques', 'saved', 'stats'].includes(requestedTab) ? requestedTab : 'tools'
       this.syncSettingsDraft()
       if (this.tab === 'saved' || this.tab === 'stats') {
+        this.ensureSavedSectionVisible()
         this.loadSavedSessions()
         if (this.tab === 'stats' && !this.selectedStatsSessionId && this.savedSessions[0]?.id) {
           this.selectedStatsSessionId = this.savedSessions[0].id
@@ -31361,6 +31389,7 @@ export default {
       this.showTools = false
       this.queueSessionWorkspaceScrollReason(SESSION_WORKSPACE_SCROLL_REASON.DASHBOARD_RETURN)
       this.$nextTick(() => {
+        this.prepareRestoredSessionAudio({ autoplay: false })
         this.scrollToWorkspaceMain?.()
       })
     },
@@ -31386,8 +31415,27 @@ export default {
       this.queueSessionWorkspaceScrollReason(SESSION_WORKSPACE_SCROLL_REASON.DASHBOARD_RETURN)
       this.markPracticeSetupRestored()
       this.$nextTick(() => {
-        this.resumePlaybackFromRestoredState?.()
+        this.resumeRestoredSessionWithCountdown()
         this.scrollToWorkspaceMain?.()
+      })
+    },
+
+    resumeRestoredSessionWithCountdown() {
+      this.primeAudioPlaybackUnlock()
+      this.prepareRestoredSessionAudio({ autoplay: false, force: true })
+      this.showCountdown(async () => {
+        const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
+        if (entry) {
+          await this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
+        }
+        await this.$nextTick()
+        if (!this.isPlaybackActive() && this.queue?.length) {
+          this.promptTapToPlay()
+          this.syncSessionControlsWithPlayback(false)
+        } else {
+          this.playbackAwaitingGesture = false
+          this.syncSessionControlsWithPlayback(!!this.isPlaying)
+        }
       })
     },
 
@@ -31509,7 +31557,6 @@ export default {
         if (this.canSoftResumePausedSession() && (!payload || sessionRangesMatch(payload, loadedRange))) {
           this.restoreWorkspaceToContinuePayload(payload)
           this.revealLoadedPreviousSession()
-          this.softResumePausedSession()
           this.queueBackendResumeAfterWelcomeContinue(payload)
           return
         }
@@ -31744,13 +31791,19 @@ export default {
       this.sessionEndedEarly = false
     },
 
-    softResumePausedSession() {
+    softResumePausedSession(options = {}) {
+      const autoplay = options.autoplay !== false
       this.primeAudioPlaybackUnlock()
       this.applyLocalActiveSessionState()
       this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
-      this.resumePlaybackFromRestoredState()
+      if (autoplay) {
+        this.resumePlaybackFromRestoredState()
+      } else {
+        this.prepareRestoredSessionAudio({ autoplay: false })
+      }
       this.markPracticeSetupRestored()
       this.scheduleSessionWorkspaceScroll(SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION)
+      if (!autoplay) return
       this.$nextTick(async () => {
         const playbackStarted = await this.ensureSessionPlaybackStarted()
         if (!playbackStarted && this.queue?.length) {
@@ -31760,7 +31813,8 @@ export default {
       })
     },
 
-    async resumeSessionFromPrimaryAction() {
+    async resumeSessionFromPrimaryAction(options = {}) {
+      const prepareOnly = !!options.prepareOnly
       if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return false
       // Prefer unfinished backend / continue payload over a stale local completed flag.
       if (
@@ -31790,7 +31844,7 @@ export default {
         // Avoid PAUSING/RESUMING → LOADING label flicker; resume in place when possible.
         try {
           if (softResume) {
-            this.softResumePausedSession()
+            this.softResumePausedSession({ autoplay: !prepareOnly })
             this.sessionLifecycleError = null
             this.sessionBroadcast?.publish('session-resumed', { at: Date.now() })
             if (this.learningBackendEnabled()) {
@@ -31892,7 +31946,7 @@ export default {
             }
           }
           // Mid-session / primary Resume never uses the start-session countdown.
-          const continued = await this.continueLastSession({ skipCountdown: true })
+          const continued = await this.continueLastSession({ skipCountdown: true, prepareOnly })
           if (!continued) {
             this.sessionLifecycleError = 'resume_invalid'
             this.transitionSessionLifecycle(
@@ -32102,6 +32156,7 @@ export default {
       this.isPlaying = false
       this.playerVisible = false
       this.currentTime = 0
+      this._restoredAudioPrepKey = null
     },
 
     clearInMemorySessionLifecycleState() {
@@ -34959,7 +35014,7 @@ export default {
     },
 
     async continueLastSession(options = {}) {
-      const { skipCountdown = false } = options
+      const { skipCountdown = false, prepareOnly = false } = options
       const payload = this.continueSessionPayload
       if (!payload || !isResumableSessionPayload(payload, {
         backendStatus: this.backendSessionSnapshot?.status || null,
@@ -34985,19 +35040,21 @@ export default {
       })
       if (hydrated === false) return false
       this.showTools = false
+      if (prepareOnly) {
+        this.prepareRestoredSessionAudio({ autoplay: false, force: true })
+        return true
+      }
+      if (skipCountdown) {
+        this.resumePlaybackFromRestoredState()
+        return true
+      }
       this.$nextTick(() => {
         if (this.effectiveActiveVerseKey) {
           const el = document.querySelector(`.verse-card[data-verse-key="${this.effectiveActiveVerseKey}"]`)
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }
       })
-      if (skipCountdown) {
-        this.resumePlaybackFromRestoredState()
-        return true
-      }
-      this.showCountdown(() => {
-        this.resumePlaybackFromRestoredState()
-      })
+      this.resumeRestoredSessionWithCountdown()
       return true
     },
     toggleSessionEndedMetaCard(key = '') {
@@ -35021,34 +35078,121 @@ export default {
 
     applyRestoredAudioState(options = {}) {
       const state = this.restoredAudioState
-      if (!state || !this.audioElement || !state.src) return
-      const autoplay = typeof options.autoplay === 'boolean' ? options.autoplay : !!state.isPlaying
-      const onAutoplayBlocked = typeof options.onAutoplayBlocked === 'function' ? options.onAutoplayBlocked : null
-      const activeAudio = this.activeVerseRef?.audio ? this.normalizeAudioUrl(this.activeVerseRef.audio) : ''
-      const restoredAudio = this.normalizeAudioUrl(state.src)
-      if (activeAudio && restoredAudio && activeAudio !== restoredAudio) return
-      this.audioElement.src = state.src
-      this.audioElement.load()
-      this.currentTime = Number(state.currentTime || 0)
-      const restoredSpeed = this.normalizePlaybackSpeed(state.speed || this.speed || 1)
-      this.speed = restoredSpeed
-      const seekOnLoad = () => {
-        try {
-          this.audioElement.currentTime = Number(state.currentTime || 0)
-          this.audioElement.defaultPlaybackRate = restoredSpeed
-          this.audioElement.playbackRate = restoredSpeed
-          if (autoplay) {
+      if (!state) return false
+      return this.prepareRestoredSessionAudio({
+        autoplay: typeof options.autoplay === 'boolean' ? options.autoplay : !!state.isPlaying,
+        onAutoplayBlocked: options.onAutoplayBlocked,
+        playerVisible: state.playerVisible,
+      })
+    },
+
+    prepareRestoredSessionAudio(options = {}) {
+      const autoplay = !!options.autoplay
+      const force = !!options.force
+      const state = this.restoredAudioState || {}
+      const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
+      const verse = entry?.verse || entry || this.activeVerseRef
+      if (!verse) return false
+
+      const prepKey = `${this.reciterId || ''}:${verse.key || this.activeVerseKey || ''}:${this.queueIndex}`
+      if (!force && this._restoredAudioPrepKey === prepKey && this.hasLoadedAudio) {
+        const showPlayer = options.playerVisible ?? state.playerVisible ?? true
+        if (autoplay && !this.isPlaying) {
+          try {
             this.audioElement.play().then(() => {
               this.isPlaying = true
+              this.playbackAwaitingGesture = false
               this.playerVisible = true
             }).catch(() => {
-              if (onAutoplayBlocked) onAutoplayBlocked()
+              this.playbackAwaitingGesture = true
+              if (showPlayer && !this.playerDismissed) this.playerVisible = true
+              if (typeof options.onAutoplayBlocked === 'function') options.onAutoplayBlocked()
+            })
+          } catch {
+            this.playbackAwaitingGesture = true
+            if (showPlayer && !this.playerDismissed) this.playerVisible = true
+          }
+        } else if (!autoplay) {
+          this.isPlaying = false
+          this.playbackAwaitingGesture = true
+          if (showPlayer && !this.playerDismissed) this.playerVisible = true
+        }
+        return true
+      }
+
+      this.playGeneration += 1
+      const playGeneration = this.playGeneration
+      this.softPausePlayback()
+      if (!this.audioElement) this.initAudio()
+      if (!this.audioElement) return false
+      this.claimAudioElement(this.audioElement)
+
+      const resolvedUrl = this.toPlayableAudioUrl(this.ensureVerseAudioUrl(verse))
+      if (!resolvedUrl) {
+        this.showAudioUnavailableError()
+        return false
+      }
+      if (verse.audio !== resolvedUrl) verse.audio = resolvedUrl
+
+      const restoredTime = Math.max(0, Number(state.currentTime || 0))
+      const restoredSpeed = this.normalizePlaybackSpeed(state.speed || this.speed || 1)
+      const showPlayer = options.playerVisible ?? state.playerVisible ?? true
+
+      try {
+        this.attachMainAudioSource(resolvedUrl, playGeneration)
+      } catch {
+        this.preloadQueueEntryAudio(entry || { verse }, { playerVisible: false })
+      }
+
+      this.speed = restoredSpeed
+      this.applySpeed()
+      this.isPlaying = false
+      this.playbackAwaitingGesture = !autoplay
+      if (showPlayer && !this.playerDismissed) this.playerVisible = true
+
+      const finalizeLoaded = () => {
+        if (playGeneration !== this.playGeneration) return
+        try {
+          const duration = Number(this.audioElement?.duration || 0)
+          const seekTime = duration > 0
+            ? Math.min(restoredTime, Math.max(0, duration - 0.05))
+            : restoredTime
+          if (seekTime > 0) {
+            this.audioElement.currentTime = seekTime
+          }
+          this.syncAudioUiState(seekTime, duration)
+          if (autoplay) {
+            this.audioElement.play().then(() => {
+              if (playGeneration !== this.playGeneration) return
+              this.isPlaying = true
+              this.playbackAwaitingGesture = false
+              this.playerVisible = true
+            }).catch(() => {
+              if (playGeneration !== this.playGeneration) return
+              this.playbackAwaitingGesture = true
+              if (showPlayer && !this.playerDismissed) this.playerVisible = true
+              if (typeof options.onAutoplayBlocked === 'function') options.onAutoplayBlocked()
             })
           }
-        } catch (e) { }
-        this.audioElement.removeEventListener('loadedmetadata', seekOnLoad)
+        } catch { /* ignore seek errors */ }
       }
-      this.audioElement.addEventListener('loadedmetadata', seekOnLoad)
+
+      const onReady = () => {
+        if (playGeneration !== this.playGeneration) return
+        finalizeLoaded()
+        this.audioElement?.removeEventListener('loadedmetadata', onReady)
+        this.audioElement?.removeEventListener('canplay', onReady)
+      }
+
+      if (Number(this.audioElement?.readyState || 0) >= 1) {
+        finalizeLoaded()
+      } else {
+        this.audioElement.addEventListener('loadedmetadata', onReady)
+        this.audioElement.addEventListener('canplay', onReady)
+      }
+
+      this._restoredAudioPrepKey = prepKey
+      return true
     },
 
     buildSessionExitSnapshot() {
@@ -35297,11 +35441,10 @@ export default {
     },
 
     resumePlaybackFromRestoredState() {
-      if (this.restoredAudioState?.src) {
-        this.applyRestoredAudioState({
-          autoplay: true,
-          onAutoplayBlocked: () => this.promptTapToPlay()
-        })
+      if (this.prepareRestoredSessionAudio({
+        autoplay: true,
+        onAutoplayBlocked: () => this.promptTapToPlay()
+      })) {
         return
       }
       const entry = this.queue?.[this.queueIndex]
@@ -36132,7 +36275,9 @@ export default {
       }
       this.showPlannerModal = false
       this.showWelcomeBackModal = false
-      this.showTools = false
+      if (!options.preserveToolsPanel) {
+        this.showTools = false
+      }
       this.showConfirmModal = true
     },
 
@@ -36322,6 +36467,7 @@ export default {
         this.syncSettingsDraft()
       }
       if (this.tab === 'saved') {
+        this.ensureSavedSectionVisible()
         this.loadSavedSessions()
         this.loadRecordingsLibrary()
       }
@@ -36409,10 +36555,11 @@ export default {
             ...(saved.audio || {})
           }
         }
-        // Update to include 'techniques' as valid tab
-        this.tab = ['tools', 'techniques', 'saved', 'stats'].includes(this.centralSession.activeTab)
-          ? this.centralSession.activeTab
-          : 'tools'
+        if (!['tools', 'techniques', 'saved', 'stats'].includes(this.tab)) {
+          this.tab = ['tools', 'techniques', 'saved', 'stats'].includes(this.centralSession.activeTab)
+            ? this.centralSession.activeTab
+            : 'tools'
+        }
         this.tajweedEnabled = !!this.centralSession.tajweedEnabled
         this.focusModeEnabled = !!this.centralSession.focusModeEnabled
         this.blurModeEnabled = !!this.centralSession.blurModeEnabled
@@ -40167,7 +40314,53 @@ export default {
       this.persistUiState()
     },
 
+    isSavedSessionSectionKey(key) {
+      return SAVED_SESSION_SECTION_KEYS.includes(key)
+    },
+
+    syncSavedSectionOpenState() {
+      const active = this.isSavedSessionSectionKey(this.savedActiveSection)
+        ? this.savedActiveSection
+        : 'saved_in_progress'
+      this.savedActiveSection = active
+      SAVED_SESSION_SECTION_KEYS.forEach((sectionKey) => {
+        this.sectionOpen[sectionKey] = sectionKey === active
+      })
+    },
+
+    setSavedActiveSection(key) {
+      if (!this.isSavedSessionSectionKey(key)) return
+      this.savedActiveSection = key
+      this.syncSavedSectionOpenState()
+    },
+
+    ensureSavedSectionVisible() {
+      if (!this.isSavedSessionSectionKey(this.savedActiveSection)) {
+        this.savedActiveSection = 'saved_in_progress'
+      }
+      if (!this.sectionOpen[this.savedActiveSection]) {
+        this.syncSavedSectionOpenState()
+      }
+    },
+
+    focusSavedSessionSectionForSession(session) {
+      if (!session) return
+      const targetKey = this.isSavedSessionComplete(session) ? 'saved_completed' : 'saved_in_progress'
+      this.setSavedActiveSection(targetKey)
+    },
+
     toggleSection(key) {
+      if (this.isSavedSessionSectionKey(key)) {
+        const nextValue = !this.sectionOpen[key]
+        if (nextValue) {
+          this.savedActiveSection = key
+          const otherKey = key === 'saved_in_progress' ? 'saved_completed' : 'saved_in_progress'
+          this.sectionOpen[otherKey] = false
+        }
+        this.sectionOpen[key] = nextValue
+        return
+      }
+
       const nextValue = !this.sectionOpen[key];
       Object.keys(this.sectionOpen).forEach(sectionKey => {
         if (['session_tools', 'live_stats'].includes(sectionKey)) {
@@ -40326,6 +40519,14 @@ export default {
           applyQuranFontCssVariable(this.quranFont)
           this.script = state.script || this.script
           this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
+          if (this.isSavedSessionSectionKey(state.savedActiveSection)) {
+            this.savedActiveSection = state.savedActiveSection
+          } else if (state.sectionOpen?.saved_completed && state.sectionOpen?.saved_in_progress === false) {
+            this.savedActiveSection = 'saved_completed'
+          } else {
+            this.savedActiveSection = 'saved_in_progress'
+          }
+          this.syncSavedSectionOpenState()
           this.tajweedEnabled = state.tajweedEnabled ?? false
           this.mainCardCollapsed = !!state.mainCardCollapsed
           this.feedbackCollapsed = !!state.feedbackCollapsed
@@ -40430,6 +40631,7 @@ export default {
           quizFocus: this.quizFocus,
           quizLength: this.quizLength,
           sectionOpen: this.sectionOpen,
+          savedActiveSection: this.savedActiveSection,
           tajweedEnabled: this.tajweedEnabled,
           mainCardCollapsed: this.mainCardCollapsed,
           feedbackCollapsed: this.feedbackCollapsed,

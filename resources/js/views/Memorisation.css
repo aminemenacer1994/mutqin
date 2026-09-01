@@ -39826,6 +39826,14 @@ but not its destructive red. */
   background: color-mix(in srgb, var(--saved-accent) 6%, transparent);
 }
 
+.saved-sheet__group-toggle.is-active {
+  background: color-mix(in srgb, var(--saved-accent) 10%, transparent);
+}
+
+.saved-sheet__group-toggle.is-active .saved-sheet__group-title {
+  color: var(--saved-accent, var(--accent, #8b6914));
+}
+
 .saved-sheet__group-toggle:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--saved-accent) 45%, transparent);
   outline-offset: 2px;

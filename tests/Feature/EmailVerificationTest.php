@@ -13,6 +13,12 @@ class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->requireEmailVerification();
+    }
+
     public function test_registration_creates_unverified_user_and_sends_verification_email(): void
     {
         Notification::fake();
