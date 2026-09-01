@@ -9,16 +9,16 @@ class MemorisationAttemptComparisonPolicy
 {
     public function view(User $user, MemorisationAttemptComparison $comparison): bool
     {
-        return $user->isAdmin() || (int) $user->id === (int) $comparison->user_id;
+        return (int) $user->id === (int) $comparison->user_id;
     }
 
     public function update(User $user, MemorisationAttemptComparison $comparison): bool
     {
-        return $user->isAdmin();
+        return (int) $user->id === (int) $comparison->user_id;
     }
 
     public function delete(User $user, MemorisationAttemptComparison $comparison): bool
     {
-        return $user->isAdmin();
+        return (int) $user->id === (int) $comparison->user_id;
     }
 }

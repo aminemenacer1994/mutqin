@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
@@ -22,8 +23,11 @@ class OnboardingTriggerTest extends TestCase
             'password_confirmation' => 'secret12',
         ]);
 
-        $response->assertRedirect('/memorisation');
+        $response->assertRedirect(route('verification.notice'));
         $this->assertAuthenticated();
+
+        $user = User::where('email', 'new-student@example.com')->firstOrFail();
+        $this->verifyEmail($user);
 
         $page = $this->get(route('memorisation'));
         $page->assertOk();
@@ -88,6 +92,7 @@ class OnboardingTriggerTest extends TestCase
             'name' => 'Google Newbie',
             'email' => 'google-newbie@example.com',
             'avatar' => 'https://example.com/avatar.png',
+            'email_verified' => true,
         ]);
 
         $this->get(route('auth.google.callback'))
@@ -108,7 +113,10 @@ class OnboardingTriggerTest extends TestCase
                 'password' => 'secret12',
                 'password_confirmation' => 'secret12',
             ])
-            ->assertRedirect('/memorisation');
+            ->assertRedirect(route('verification.notice'));
+
+        $user = User::where('email', 'fresh-student@example.com')->firstOrFail();
+        $this->verifyEmail($user);
 
         $page = $this->get(route('memorisation'));
         $page->assertOk();
@@ -123,7 +131,10 @@ class OnboardingTriggerTest extends TestCase
             'email' => 'dashboard-stopover@example.com',
             'password' => 'secret12',
             'password_confirmation' => 'secret12',
-        ])->assertRedirect('/memorisation');
+        ])->assertRedirect(route('verification.notice'));
+
+        $user = User::where('email', 'dashboard-stopover@example.com')->firstOrFail();
+        $this->verifyEmail($user);
 
         $this->get(route('dashboard'))->assertOk();
 
@@ -139,22 +150,44 @@ class OnboardingTriggerTest extends TestCase
             'email' => 'one-shot-flag@example.com',
             'password' => 'secret12',
             'password_confirmation' => 'secret12',
-        ])->assertRedirect('/memorisation');
+        ])->assertRedirect(route('verification.notice'));
+
+        $user = User::where('email', 'one-shot-flag@example.com')->firstOrFail();
+        $this->verifyEmail($user);
 
         $this->get(route('memorisation'))->assertOk()->assertSee('just_registered":true', false);
 
         $this->get(route('memorisation'))->assertOk()->assertDontSee('just_registered":true', false);
     }
 
+    private function verifyEmail(User $user): void
+    {
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'id' => $user->id,
+                'hash' => sha1($user->getEmailForVerification()),
+            ]
+        );
+
+        $this->actingAs($user)->get($url)->assertRedirect('/memorisation');
+    }
+
     private function mockGoogleUser(array $attributes): void
     {
+        $raw = $attributes;
+        if (! array_key_exists('email_verified', $raw)) {
+            $raw['email_verified'] = true;
+        }
+
         $socialiteUser = (new SocialiteUser)->map([
             'id' => $attributes['id'],
             'nickname' => null,
             'name' => $attributes['name'],
             'email' => $attributes['email'],
             'avatar' => $attributes['avatar'],
-        ]);
+        ])->setRaw($raw);
 
         $provider = Mockery::mock();
         $provider->shouldReceive('redirectUrl')->andReturnSelf();

@@ -995,8 +995,13 @@ export function deriveBackendStatusFromEngine(sessionState = {}) {
 /**
  * Canonical storage key for dashboard deep-link intent across refresh.
  * Cleared only after the intent is consumed successfully (or explicitly discarded).
+ * Always namespaced per user so account switches cannot steal another profile's destination.
  */
 export const DASHBOARD_ENTRY_INTENT_STORAGE_KEY = 'mutqin.dashboardEntryIntent.v1'
+
+export function dashboardEntryIntentStorageKey(userId = null) {
+  return userScopedStorageKey(DASHBOARD_ENTRY_INTENT_STORAGE_KEY, userId)
+}
 
 /**
  * Normalize chapter + ayah window from a continue payload, backend session, or loaded workspace.
@@ -1186,25 +1191,29 @@ export function pickContinuePayloadForResume({
   return usable || null
 }
 
-export function stashDashboardEntryIntent(intent, storage = null) {
+export function stashDashboardEntryIntent(intent, storage = null, userId = null) {
   const store = storage || (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
   if (!intent || !store) return false
   try {
-    store.setItem(DASHBOARD_ENTRY_INTENT_STORAGE_KEY, JSON.stringify({
+    const key = dashboardEntryIntentStorageKey(userId)
+    store.setItem(key, JSON.stringify({
       ...intent,
       stashedAt: Date.now(),
     }))
+    // Drop legacy unscoped key so it cannot resurrect another profile's destination.
+    store.removeItem(DASHBOARD_ENTRY_INTENT_STORAGE_KEY)
     return true
   } catch {
     return false
   }
 }
 
-export function readStashedDashboardEntryIntent(storage = null) {
+export function readStashedDashboardEntryIntent(storage = null, userId = null) {
   const store = storage || (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
   if (!store) return null
   try {
-    const raw = store.getItem(DASHBOARD_ENTRY_INTENT_STORAGE_KEY)
+    const key = dashboardEntryIntentStorageKey(userId)
+    const raw = store.getItem(key)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (!parsed || typeof parsed !== 'object') return null
@@ -1227,10 +1236,11 @@ export function readStashedDashboardEntryIntent(storage = null) {
   }
 }
 
-export function clearStashedDashboardEntryIntent(storage = null) {
+export function clearStashedDashboardEntryIntent(storage = null, userId = null) {
   const store = storage || (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
   if (!store) return false
   try {
+    store.removeItem(dashboardEntryIntentStorageKey(userId))
     store.removeItem(DASHBOARD_ENTRY_INTENT_STORAGE_KEY)
     return true
   } catch {
@@ -1536,6 +1546,7 @@ export default {
   resolvePreferredSessionResumeGate,
   pickContinuePayloadForResume,
   buildContinuePayloadFromLastPosition,
+  dashboardEntryIntentStorageKey,
   stashDashboardEntryIntent,
   readStashedDashboardEntryIntent,
   clearStashedDashboardEntryIntent,

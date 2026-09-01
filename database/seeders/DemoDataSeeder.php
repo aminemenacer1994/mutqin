@@ -163,6 +163,7 @@ class DemoDataSeeder extends Seeder
                 array_merge([
                     'email_verified_at' => $now,
                     'remember_token' => Str::random(10),
+                    'is_admin' => $key === 'admin',
                 ], $attrs)
             );
         }

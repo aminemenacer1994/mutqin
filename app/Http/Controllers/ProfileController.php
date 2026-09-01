@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Services\Auth\AiAudioConsentService;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Support\AdminEmails;
 
@@ -34,7 +35,7 @@ class ProfileController extends Controller
             'max:255',
             Rule::unique('users', 'email')->ignore($user->id),
         ];
-        if (! $user->isAdmin()) {
+        if (! $user->hasPersistedAdminRole()) {
             $emailRules[] = Rule::notIn(AdminEmails::reserved());
         }
 
@@ -57,6 +58,11 @@ class ProfileController extends Controller
             'email_verified_at' => $emailChanged ? null : $user->email_verified_at,
         ])->save();
 
+        if ($emailChanged) {
+            $user->revaluateAdminEligibility();
+            $user->sendEmailVerificationNotification();
+        }
+
         return back()->with('profile_status', __('profile.saved_success'));
     }
 
@@ -73,6 +79,48 @@ class ProfileController extends Controller
         return response()->json([
             'locale' => $validated['locale'],
         ]);
+    }
+
+    public function updateTheme(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'theme' => ['required', 'string', Rule::in(['light-mode', 'sepia-mode', 'dark-mode', 'light', 'sepia', 'dark'])],
+        ]);
+
+        $aliases = [
+            'light' => 'light-mode',
+            'light-mode' => 'light-mode',
+            'sepia' => 'sepia-mode',
+            'sepia-mode' => 'sepia-mode',
+            'dark' => 'dark-mode',
+            'dark-mode' => 'dark-mode',
+        ];
+
+        $theme = $aliases[strtolower($validated['theme'])] ?? 'sepia-mode';
+
+        $request->user()->forceFill([
+            'theme' => $theme,
+        ])->save();
+
+        return response()->json([
+            'theme' => $theme,
+        ])->cookie('mutqin_theme', $theme, 60 * 24 * 365, null, null, false, false, false, 'lax');
+    }
+
+    public function showAiAudioConsent(Request $request, AiAudioConsentService $consent): JsonResponse
+    {
+        return response()->json($consent->snapshot($request->user()));
+    }
+
+    public function updateAiAudioConsent(Request $request, AiAudioConsentService $consent): JsonResponse
+    {
+        $validated = $request->validate([
+            'accepted' => ['required', 'boolean'],
+        ]);
+
+        return response()->json(
+            $consent->record($request->user(), (bool) $validated['accepted'])
+        );
     }
 
     public function updatePassword(Request $request): RedirectResponse
@@ -108,7 +156,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        if ($user->isAdmin()) {
+        if ($user->hasPersistedAdminRole()) {
             return back()->with('billing_error', __('profile.delete_admin_blocked'));
         }
 

@@ -507,6 +507,18 @@ includesAll('ai memorisation detection modal wiring', [
   /\.memorisation-checker-modal \.memorisation-checker-panel/,
 ])
 
+includesAll('ai audio consent and retention wiring', [
+  /AiAudioConsentModal/,
+  /maybeShowRegistrationAiAudioConsent\(/,
+  /ensureAiAudioConsent\(/,
+  /shouldPromptAiAudioConsent/,
+  /prepareAudioRetentionPayload/,
+  /stripRawAudioFields/,
+  /applyAudioRetentionToCacheEntry/,
+  /showAiAudioConsentModal/,
+  /\/privacy/,
+])
+
 {
   const amdVue = readFileSync(new URL('../../resources/js/components/AiMemorisationDetectionModal.vue', import.meta.url), 'utf8')
   const amdCss = readFileSync(new URL('../../resources/js/views/Memorisation.amd.css', import.meta.url), 'utf8')
@@ -740,9 +752,9 @@ includesAll('audio unlock flow', [
   )
 }
 
-includesAll('light theme default', [
-  /theme: 'light'/,
-  /this\.theme = document\.documentElement\.getAttribute\('data-theme'\) \|\| this\.theme \|\| 'light'/,
+includesAll('sepia theme default', [
+  /theme: 'sepia'/,
+  /this\.theme = document\.documentElement\.getAttribute\('data-theme'\) \|\| this\.theme \|\| 'sepia'/,
   /document\.documentElement\.setAttribute\('data-theme', this\.theme\)/
 ])
 

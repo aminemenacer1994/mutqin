@@ -121,6 +121,13 @@ assert.match(memorisationSource, /authenticatedWorkspace && !signupIsolated/, 's
 assert.match(memorisationSource, /if \(this\.isSignupIsolationActive\(\)\) return/, 'push/migration must refuse isolated signups')
 assert.match(memorisationSource, /mutqin\.signupIsolated\./, 'durable per-user isolation flag required')
 assert.match(memorisationSource, /activeSessionSnapshotStorageKey/, 'resume snapshots must be user-scoped')
+assert.match(memorisationSource, /clearSharedMutqinBrowserResidue/, 'logout must clear shared browser residue')
+assert.match(memorisationSource, /offlineScopedLocalKey/, 'offline writes must be user-scoped')
+assert.doesNotMatch(
+  memorisationSource,
+  /hydrateWorkspaceStateValueFromLocalStorage\('continueSession',\s*'mutqin\.continueSession'\)/,
+  'auth hydrate must not copy unscoped continueSession'
+)
 assert.doesNotMatch(
   memorisationSource,
   /allowGuestFallback:\s*true/,

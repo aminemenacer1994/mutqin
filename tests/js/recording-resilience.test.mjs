@@ -61,6 +61,21 @@ import {
   assert.equal(usageCap.retryable, false)
   assert.equal(usageCap.messageKey, 'memorisation.aiCheck.usageCapReached')
 
+  const rateLimit = classifyRecitationFailure({
+    response: {
+      status: 429,
+      data: {
+        available: false,
+        reason: 'rate_limit',
+        message: 'You are starting AI voice checks too quickly. Please wait a moment and try again.',
+        retry_after: 12,
+      },
+    },
+  })
+  assert.equal(rateLimit.kind, RECITATION_FAILURE_KIND.RATE_LIMIT)
+  assert.equal(rateLimit.retryable, false)
+  assert.equal(rateLimit.messageKey, 'memorisation.aiCheck.rateLimited')
+
   const timeout = classifyRecitationFailure({ message: 'Recording timed out before audio was ready' })
   assert.equal(timeout.kind, RECITATION_FAILURE_KIND.TIMEOUT)
 }
@@ -90,6 +105,20 @@ import {
   assert.match(capMessage, /voice-check limit/i)
   assert.doesNotMatch(capMessage, /speechmatics/i)
   assert.doesNotMatch(capMessage, /token_mints/i)
+
+  const rateLimitMessage = userFacingTranscriptionFailure({
+    response: {
+      status: 429,
+      data: {
+        reason: 'rate_limit',
+        message: 'Speechmatics rate_limit burst exceeded',
+        retry_after: 8,
+      },
+    },
+  })
+  assert.match(rateLimitMessage, /too quickly/i)
+  assert.doesNotMatch(rateLimitMessage, /speechmatics/i)
+  assert.doesNotMatch(rateLimitMessage, /burst/i)
 }
 
 {

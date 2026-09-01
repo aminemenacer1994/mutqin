@@ -30,9 +30,6 @@ Route::post('/waiting-list', [WaitingListController::class, 'store'])
 
 // Backend-driven learning persistence (Sanctum SPA cookie auth, user scoped).
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
-    Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');
-
     Route::middleware('can:access-admin')->group(function () {
         Route::get('/admin/dashboard', [AdminDashboardController::class, 'show'])->name('api.admin.dashboard.show');
         Route::get('/admin/users', [AdminDashboardController::class, 'users'])->name('api.admin.users');
@@ -53,96 +50,107 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.contacts.destroy');
     });
 
-    Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
-    Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');
-    Route::get('/sessions/history', [SessionController::class, 'history'])->name('api.sessions.history');
-    Route::post('/session', [SessionController::class, 'store'])->middleware('throttle:60,1')->name('api.session.store');
-    Route::post('/session/start', [SessionController::class, 'start'])->middleware('throttle:60,1')->name('api.session.start');
-    Route::post('/session/pause', [SessionController::class, 'pause'])->middleware('throttle:60,1')->name('api.session.pause');
-    Route::post('/session/resume', [SessionController::class, 'resume'])->middleware('throttle:60,1')->name('api.session.resume');
-    Route::post('/session/end', [SessionController::class, 'end'])->middleware('throttle:60,1')->name('api.session.end');
-
-    Route::get('/ai-recite-attempts', [AiReciteAttemptController::class, 'index'])->name('api.ai-recite-attempts.index');
-
-    Route::get('/continue', [ContinueController::class, 'show'])->name('api.continue.show');
-    Route::post('/continue', [ContinueController::class, 'store'])->name('api.continue.store');
-
-    Route::get('/progress', [ProgressController::class, 'index'])->name('api.progress.index');
-    Route::post('/progress', [ProgressController::class, 'store'])->name('api.progress.store');
-
-    Route::get('/hifz-plan', [HifzPlanController::class, 'show'])->name('api.hifz-plan.show');
-    Route::put('/hifz-plan', [HifzPlanController::class, 'upsert'])
-        ->name('api.hifz-plan.upsert');
-    Route::delete('/hifz-plan', [HifzPlanController::class, 'destroy'])
-        ->name('api.hifz-plan.destroy');
-
-    // Private per-āyah notes & reflections (user-scoped).
-    Route::get('/ayah-notes/counts', [AyahNoteController::class, 'counts'])->name('api.ayah-notes.counts');
-    Route::get('/ayah-notes', [AyahNoteController::class, 'index'])->name('api.ayah-notes.index');
-    Route::post('/ayah-notes', [AyahNoteController::class, 'store'])->name('api.ayah-notes.store');
-    Route::put('/ayah-notes/{ayahNote}', [AyahNoteController::class, 'update'])->name('api.ayah-notes.update');
-    Route::delete('/ayah-notes/{ayahNote}', [AyahNoteController::class, 'destroy'])->name('api.ayah-notes.destroy');
-
-    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('api.analytics.index');
-    Route::post('/analytics', [AnalyticsController::class, 'store'])->name('api.analytics.store');
-
-    // Personalised next-session recommendations.
-    Route::get('/recommendations/next', [RecommendationController::class, 'show'])->name('api.recommendations.next');
-    Route::get('/recommendations/history', [RecommendationController::class, 'history'])->name('api.recommendations.history');
-    Route::post('/recommendations/start', [RecommendationController::class, 'start'])->name('api.recommendations.start');
-    Route::post('/recommendations/reject', [RecommendationController::class, 'reject'])->name('api.recommendations.reject');
-    Route::post('/recommendations/confidence', [RecommendationController::class, 'confidence'])->name('api.recommendations.confidence');
-    Route::post('/recommendations/settings', [RecommendationController::class, 'settings'])->name('api.recommendations.settings');
-    Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])
-        ->name('api.recommendations.ai-assessment');
-    Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])
-        ->name('api.recommendations.adaptive-assessment');
-
-    // AI Memorisation Detection — assessment, personalised plan, practice execution.
-    Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
-        ->middleware('throttle:20,1')
-        ->name('api.memorisation.assessments.store');
-    Route::post('/memorisation/assessments/failed', [MemorisationDetectionController::class, 'storeFailedAssessment'])
-        ->middleware('throttle:20,1')
-        ->name('api.memorisation.assessments.failed');
-    Route::get('/memorisation/assessments', [MemorisationHistoryController::class, 'attemptIndex'])
-        ->name('api.memorisation.assessments.index');
-    Route::get('/memorisation/assessments/{assessment}', [MemorisationHistoryController::class, 'attemptShow'])
-        ->name('api.memorisation.assessments.show');
-    Route::get('/memorisation/sessions/history', [MemorisationHistoryController::class, 'sessionIndex'])
-        ->name('api.memorisation.sessions.history');
-    Route::get('/memorisation/weak-spots', [MemorisationHistoryController::class, 'weakSpots'])
-        ->name('api.memorisation.weak-spots');
-    Route::get('/memorisation/practice-plans', [MemorisationHistoryController::class, 'recommendations'])
-        ->name('api.memorisation.practice-plans.index');
-    Route::get('/memorisation/comparisons/lookup', [MemorisationHistoryController::class, 'comparisonLookup'])
-        ->name('api.memorisation.comparisons.lookup');
-    Route::get('/memorisation/comparisons/{comparison}', [MemorisationHistoryController::class, 'comparisonShow'])
-        ->name('api.memorisation.comparisons.show');
-    Route::get('/memorisation/history/dashboard', [MemorisationHistoryController::class, 'dashboard'])
-        ->name('api.memorisation.history.dashboard');
-    Route::patch('/memorisation/practice-plans/{practicePlan}', [MemorisationDetectionController::class, 'adjustPlan'])
-        ->name('api.memorisation.practice-plans.adjust');
-    Route::post('/memorisation/practice-plans/{practicePlan}/accept', [MemorisationDetectionController::class, 'acceptPlan'])
-        ->name('api.memorisation.practice-plans.accept');
-    Route::post('/memorisation/practice-plans/{practicePlan}/dismiss', [MemorisationDetectionController::class, 'dismissPlan'])
-        ->name('api.memorisation.practice-plans.dismiss');
-    Route::post('/memorisation/practice-plans/{practicePlan}/start', [MemorisationDetectionController::class, 'startPlan'])
-        ->name('api.memorisation.practice-plans.start');
-    Route::post('/memorisation/practice-plans/{practicePlan}/complete', [MemorisationDetectionController::class, 'completePlan'])
-        ->name('api.memorisation.practice-plans.complete');
-    Route::post('/memorisation/practice-plans/{practicePlan}/retest', [MemorisationDetectionController::class, 'retestPlan'])
-        ->name('api.memorisation.practice-plans.retest');
-
-    // Full-fidelity state blob used as the live persistence boundary.
-    Route::get('/state', [StateSyncController::class, 'show'])->name('api.state.show');
-    Route::post('/state', [StateSyncController::class, 'store'])
-        ->middleware('throttle:30,1')
-        ->name('api.state.store');
-
-    Route::post('/migrate-local-storage', [MigrateLocalStorageController::class, 'store'])
-        ->middleware('throttle:5,1')
-        ->name('api.migrate-local-storage');
-
+    // Preferences remain available while waiting to verify email.
     Route::patch('/profile/locale', [ProfileController::class, 'updateLocale'])->name('api.profile.locale');
+    Route::patch('/profile/theme', [ProfileController::class, 'updateTheme'])->name('api.profile.theme');
+    Route::get('/profile/ai-audio-consent', [ProfileController::class, 'showAiAudioConsent'])
+        ->name('api.profile.ai-audio-consent.show');
+    Route::patch('/profile/ai-audio-consent', [ProfileController::class, 'updateAiAudioConsent'])
+        ->name('api.profile.ai-audio-consent.update');
+
+    Route::middleware('verified')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
+        Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');
+
+        Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
+        Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');
+        Route::get('/sessions/history', [SessionController::class, 'history'])->name('api.sessions.history');
+        Route::post('/session', [SessionController::class, 'store'])->middleware('throttle:60,1')->name('api.session.store');
+        Route::post('/session/start', [SessionController::class, 'start'])->middleware('throttle:60,1')->name('api.session.start');
+        Route::post('/session/pause', [SessionController::class, 'pause'])->middleware('throttle:60,1')->name('api.session.pause');
+        Route::post('/session/resume', [SessionController::class, 'resume'])->middleware('throttle:60,1')->name('api.session.resume');
+        Route::post('/session/end', [SessionController::class, 'end'])->middleware('throttle:60,1')->name('api.session.end');
+
+        Route::get('/ai-recite-attempts', [AiReciteAttemptController::class, 'index'])->name('api.ai-recite-attempts.index');
+
+        Route::get('/continue', [ContinueController::class, 'show'])->name('api.continue.show');
+        Route::post('/continue', [ContinueController::class, 'store'])->name('api.continue.store');
+
+        Route::get('/progress', [ProgressController::class, 'index'])->name('api.progress.index');
+        Route::post('/progress', [ProgressController::class, 'store'])->name('api.progress.store');
+
+        Route::get('/hifz-plan', [HifzPlanController::class, 'show'])->name('api.hifz-plan.show');
+        Route::put('/hifz-plan', [HifzPlanController::class, 'upsert'])
+            ->name('api.hifz-plan.upsert');
+        Route::delete('/hifz-plan', [HifzPlanController::class, 'destroy'])
+            ->name('api.hifz-plan.destroy');
+
+        // Private per-āyah notes & reflections (user-scoped).
+        Route::get('/ayah-notes/counts', [AyahNoteController::class, 'counts'])->name('api.ayah-notes.counts');
+        Route::get('/ayah-notes', [AyahNoteController::class, 'index'])->name('api.ayah-notes.index');
+        Route::post('/ayah-notes', [AyahNoteController::class, 'store'])->name('api.ayah-notes.store');
+        Route::put('/ayah-notes/{ayahNote}', [AyahNoteController::class, 'update'])->name('api.ayah-notes.update');
+        Route::delete('/ayah-notes/{ayahNote}', [AyahNoteController::class, 'destroy'])->name('api.ayah-notes.destroy');
+
+        Route::get('/analytics', [AnalyticsController::class, 'index'])->name('api.analytics.index');
+        Route::post('/analytics', [AnalyticsController::class, 'store'])->name('api.analytics.store');
+
+        // Personalised next-session recommendations.
+        Route::get('/recommendations/next', [RecommendationController::class, 'show'])->name('api.recommendations.next');
+        Route::get('/recommendations/history', [RecommendationController::class, 'history'])->name('api.recommendations.history');
+        Route::post('/recommendations/start', [RecommendationController::class, 'start'])->name('api.recommendations.start');
+        Route::post('/recommendations/reject', [RecommendationController::class, 'reject'])->name('api.recommendations.reject');
+        Route::post('/recommendations/confidence', [RecommendationController::class, 'confidence'])->name('api.recommendations.confidence');
+        Route::post('/recommendations/settings', [RecommendationController::class, 'settings'])->name('api.recommendations.settings');
+        Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])
+            ->name('api.recommendations.ai-assessment');
+        Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])
+            ->name('api.recommendations.adaptive-assessment');
+
+        // AI Memorisation Detection — assessment, personalised plan, practice execution.
+        Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
+            ->middleware('throttle:20,1')
+            ->name('api.memorisation.assessments.store');
+        Route::post('/memorisation/assessments/failed', [MemorisationDetectionController::class, 'storeFailedAssessment'])
+            ->middleware('throttle:20,1')
+            ->name('api.memorisation.assessments.failed');
+        Route::get('/memorisation/assessments', [MemorisationHistoryController::class, 'attemptIndex'])
+            ->name('api.memorisation.assessments.index');
+        Route::get('/memorisation/assessments/{assessment}', [MemorisationHistoryController::class, 'attemptShow'])
+            ->name('api.memorisation.assessments.show');
+        Route::get('/memorisation/sessions/history', [MemorisationHistoryController::class, 'sessionIndex'])
+            ->name('api.memorisation.sessions.history');
+        Route::get('/memorisation/weak-spots', [MemorisationHistoryController::class, 'weakSpots'])
+            ->name('api.memorisation.weak-spots');
+        Route::get('/memorisation/practice-plans', [MemorisationHistoryController::class, 'recommendations'])
+            ->name('api.memorisation.practice-plans.index');
+        Route::get('/memorisation/comparisons/lookup', [MemorisationHistoryController::class, 'comparisonLookup'])
+            ->name('api.memorisation.comparisons.lookup');
+        Route::get('/memorisation/comparisons/{comparison}', [MemorisationHistoryController::class, 'comparisonShow'])
+            ->name('api.memorisation.comparisons.show');
+        Route::get('/memorisation/history/dashboard', [MemorisationHistoryController::class, 'dashboard'])
+            ->name('api.memorisation.history.dashboard');
+        Route::patch('/memorisation/practice-plans/{practicePlan}', [MemorisationDetectionController::class, 'adjustPlan'])
+            ->name('api.memorisation.practice-plans.adjust');
+        Route::post('/memorisation/practice-plans/{practicePlan}/accept', [MemorisationDetectionController::class, 'acceptPlan'])
+            ->name('api.memorisation.practice-plans.accept');
+        Route::post('/memorisation/practice-plans/{practicePlan}/dismiss', [MemorisationDetectionController::class, 'dismissPlan'])
+            ->name('api.memorisation.practice-plans.dismiss');
+        Route::post('/memorisation/practice-plans/{practicePlan}/start', [MemorisationDetectionController::class, 'startPlan'])
+            ->name('api.memorisation.practice-plans.start');
+        Route::post('/memorisation/practice-plans/{practicePlan}/complete', [MemorisationDetectionController::class, 'completePlan'])
+            ->name('api.memorisation.practice-plans.complete');
+        Route::post('/memorisation/practice-plans/{practicePlan}/retest', [MemorisationDetectionController::class, 'retestPlan'])
+            ->name('api.memorisation.practice-plans.retest');
+
+        // Full-fidelity state blob used as the live persistence boundary.
+        Route::get('/state', [StateSyncController::class, 'show'])->name('api.state.show');
+        Route::post('/state', [StateSyncController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('api.state.store');
+
+        Route::post('/migrate-local-storage', [MigrateLocalStorageController::class, 'store'])
+            ->middleware('throttle:5,1')
+            ->name('api.migrate-local-storage');
+    });
 });

@@ -9,16 +9,16 @@ class MemorisationWeakSpotPolicy
 {
     public function view(User $user, MemorisationWeakSpot $weakSpot): bool
     {
-        return $user->isAdmin() || (int) $user->id === (int) $weakSpot->user_id;
+        return (int) $user->id === (int) $weakSpot->user_id;
     }
 
     public function update(User $user, MemorisationWeakSpot $weakSpot): bool
     {
-        return $user->isAdmin();
+        return (int) $user->id === (int) $weakSpot->user_id;
     }
 
     public function delete(User $user, MemorisationWeakSpot $weakSpot): bool
     {
-        return $user->isAdmin();
+        return (int) $user->id === (int) $weakSpot->user_id;
     }
 }

@@ -230,10 +230,12 @@ const unfinishedIkhlas = {
 // --- Wiring contracts in Memorisation.js ---
 
 {
-  assert.match(source, /stashDashboardEntryIntent\(entry\)/)
-  assert.match(source, /readStashedDashboardEntryIntent\(/)
+  assert.match(source, /stashDashboardEntryIntent\(entry,\s*null,\s*this\.currentAuthUserId\(\)\)/)
+  assert.match(source, /readStashedDashboardEntryIntent\(null,\s*this\.currentAuthUserId\(\)\)/)
   assert.match(source, /markDashboardEntryIntentConsumed\(/)
-  assert.match(source, /clearStashedDashboardEntryIntent\(/)
+  assert.match(source, /clearStashedDashboardEntryIntent\(null,\s*this\.currentAuthUserId\(\)\)/)
+  assert.match(source, /clearSharedMutqinBrowserResidue/)
+  assert.match(source, /offlineScopedLocalKey/)
   assert.match(source, /resolvePreferredSessionResumeGate\(/)
   assert.match(source, /canSkipHydrateForContinue\(/)
   assert.match(source, /pickContinuePayloadForResume\(/)

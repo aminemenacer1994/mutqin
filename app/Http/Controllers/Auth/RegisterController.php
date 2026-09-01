@@ -87,7 +87,7 @@ class RegisterController extends Controller
     protected function registered(Request $request, $user)
     {
         // Match login/Google: login event id powers Welcome Back vs onboarding,
-        // and just_registered must survive the redirect into /memorisation.
+        // and just_registered must survive verification → /memorisation.
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
         // Persist until /memorisation consumes it so a dashboard stopover does not drop the flag.
         $request->session()->put('mutqin_just_registered', true);

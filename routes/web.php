@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MushafPageImageController;
 use App\Http\Controllers\QuranProxyController;
+use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,7 +52,7 @@ Route::get('/memorisation', function (Request $request) {
         'justRegistered' => $justRegistered,
         'justLoggedIn' => $justLoggedIn,
     ]);
-})->middleware('auth')->name('memorisation');
+})->middleware(['auth', 'verified'])->name('memorisation');
 
 Route::get('/memorisation/demo', function () {
     return view('memorisation', ['demoMode' => true]);
@@ -72,19 +73,25 @@ Route::get('/memorisation/mushaf-page/{page}.png', MushafPageImageController::cl
 Route::view('/about', 'content.about-us')->name('about');
 Route::view('/about-us', 'content.about-us')->name('about-us');
 Route::view('/pricing', 'content.pricing')->name('pricing');
+Route::view('/privacy', 'content.privacy')->name('privacy');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
 Route::view('/donate', 'content.donate')->name('donate');
 Route::view('/waiting-list', 'content.waiting-list')->name('waiting-list');
 
-// Protected routes (require authentication)
+// Profile stays auth-only so unverified users can update email / sign out.
 Route::middleware(['auth'])->group(function () {
-    Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
-    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Learner features require a verified email (Google OAuth users are marked verified
+// when the provider reports a verified email — see GoogleSignInService).
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
+    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
     Route::get('/memorisation/audio-download', function (Request $request) {
@@ -279,7 +286,7 @@ Route::middleware(['auth'])->group(function () {
             'websocket_host' => $region['host'],
         ]);
     })
-        ->middleware('throttle:40,1')
+        ->middleware('throttle:'.SpeechmaticsRateLimit::NAME)
         ->name('memorisation.transcription-token');
 });
 

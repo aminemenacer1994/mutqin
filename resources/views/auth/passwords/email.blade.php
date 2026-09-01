@@ -8,7 +8,11 @@
             <span>Mutqin</span>
         </a>
 
-        <h1 class="auth-heading">{{ __('ui.reset_title') }}</h1>
+        <header class="auth-greeting">
+            <p class="auth-greeting__arabic" lang="ar" dir="rtl">{{ __('ui.reset_kicker') }}</p>
+            <h1 class="auth-heading">{{ __('ui.reset_title') }}</h1>
+            <p class="auth-lede">{{ __('ui.reset_subtitle') }}</p>
+        </header>
 
         @if (session('status'))
             <div class="alert alert-success auth-alert" role="alert">{{ session('status') }}</div>
@@ -27,6 +31,8 @@
 
             <button type="submit" class="btn auth-submit">{{ __('ui.send_reset_link') }}</button>
         </form>
+
+        <p class="auth-footer">{{ __('ui.reset_oauth_hint') }}</p>
 
         <p class="auth-footer">
             <a href="{{ route('login') }}">{{ __('ui.auth_sign_in') }}</a>

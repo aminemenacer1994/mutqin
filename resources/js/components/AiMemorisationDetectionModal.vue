@@ -182,6 +182,10 @@
               role="alert"
             >
               <p>{{ displayErrorMessage }}</p>
+              <p
+                v-if="micGuidance"
+                class="amd-inline-error__guidance"
+              >{{ micGuidance }}</p>
             </section>
           </div>
 

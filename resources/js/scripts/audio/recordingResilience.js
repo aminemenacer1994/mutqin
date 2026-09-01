@@ -21,6 +21,7 @@ export const RECITATION_FAILURE_KIND = Object.freeze({
   NETWORK: 'network',
   PROVIDER: 'provider',
   USAGE_CAP: 'usage_cap',
+  RATE_LIMIT: 'rate_limit',
   TIMEOUT: 'timeout',
   PERMANENT: 'permanent',
   UNKNOWN: 'unknown',
@@ -41,6 +42,7 @@ const USER_MESSAGE_KEYS = Object.freeze({
   [RECITATION_FAILURE_KIND.NETWORK]: 'memorisation.aiCheck.serviceNetworkError',
   [RECITATION_FAILURE_KIND.PROVIDER]: 'memorisation.aiCheck.serviceUnavailable',
   [RECITATION_FAILURE_KIND.USAGE_CAP]: 'memorisation.aiCheck.usageCapReached',
+  [RECITATION_FAILURE_KIND.RATE_LIMIT]: 'memorisation.aiCheck.rateLimited',
   [RECITATION_FAILURE_KIND.TIMEOUT]: 'memorisation.aiCheck.processingTimeout',
   [RECITATION_FAILURE_KIND.PERMANENT]: 'memorisation.aiCheck.recitationCheckFailed',
   [RECITATION_FAILURE_KIND.UNKNOWN]: 'memorisation.aiCheck.recitationCheckFailed',
@@ -57,6 +59,8 @@ const USER_MESSAGE_FALLBACKS = Object.freeze({
     'Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.',
   [RECITATION_FAILURE_KIND.USAGE_CAP]:
     'You have reached today\'s AI voice-check limit. Please try again tomorrow.',
+  [RECITATION_FAILURE_KIND.RATE_LIMIT]:
+    'You are starting AI voice checks too quickly. Please wait a moment and try again.',
   [RECITATION_FAILURE_KIND.TIMEOUT]:
     'This is taking longer than expected. Try again.',
   [RECITATION_FAILURE_KIND.PERMANENT]:
@@ -131,6 +135,40 @@ export async function probeMicrophonePermission() {
 }
 
 /**
+ * Browser-specific guidance when the microphone permission is denied.
+ * Does not request permission — copy only.
+ *
+ * @param {(key: string, fallback?: string) => string} [t]
+ * @param {{ userAgent?: string }} [options]
+ * @returns {string}
+ */
+export function resolveMicDeniedGuidance(t, options = {}) {
+  const ua = String(options.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : '') || '')
+  const translate = (key, fallback) => {
+    if (typeof t !== 'function') return fallback
+    const value = String(t(key) || '').trim()
+    return value && value !== key ? value : fallback
+  }
+
+  if (/iPad|iPhone|iPod/.test(ua)) {
+    return translate(
+      'memorisation.aiCheck.micDeniedGuidanceSafari',
+      'On iPhone or iPad: Settings → Safari → Microphone → Allow for this site, then return and try again. Other memorisation tools still work without the microphone.',
+    )
+  }
+  if (/Chrome|CriOS|Edg\//.test(ua) && !/OPR\//.test(ua)) {
+    return translate(
+      'memorisation.aiCheck.micDeniedGuidanceChrome',
+      'In Chrome: site settings → Microphone → Allow, then reload and try again. Other memorisation tools still work without the microphone.',
+    )
+  }
+  return translate(
+    'memorisation.aiCheck.micDeniedGuidance',
+    'Allow microphone access for this site in your browser settings, then return here and try again. Other memorisation tools still work without the microphone.',
+  )
+}
+
+/**
  * @param {Blob|null|undefined} blob
  * @param {{ durationSeconds?: number|null, minRecordingSeconds?: number, mimeType?: string }} [options]
  * @returns {{ valid: boolean, reason?: string }}
@@ -189,6 +227,14 @@ export function classifyRecitationFailure(error, options = {}) {
     return buildClassification(RECITATION_FAILURE_KIND.USAGE_CAP, false, error, options)
   }
 
+  if (reason === 'rate_limit' || (status === 429 && /too quickly|rate_limit|retry.after/i.test(combined))) {
+    return buildClassification(RECITATION_FAILURE_KIND.RATE_LIMIT, false, error, options)
+  }
+
+  if (status === 429) {
+    return buildClassification(RECITATION_FAILURE_KIND.RATE_LIMIT, false, error, options)
+  }
+
   if (/notallowed|permission|denied|micblocked|notfound|notreadable|notfounderror|overconstrained/i.test(combined)) {
     return buildClassification(RECITATION_FAILURE_KIND.MICROPHONE, false, error, options)
   }
@@ -210,7 +256,6 @@ export function classifyRecitationFailure(error, options = {}) {
     || status === 502
     || status === 503
     || status === 504
-    || status === 429
   ) {
     return buildClassification(RECITATION_FAILURE_KIND.PROVIDER, true, error, options)
   }

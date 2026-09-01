@@ -66,7 +66,7 @@ const apiSource = readFileSync(new URL('../../resources/js/scripts/api/learning.
   assert.match(source, /preferredSessionId/)
   assert.match(source, /validateSessionLifecycleAgainstBackend\(\{\s*preferredSessionId/)
   assert.match(source, /resolvePreferredSessionResumeGate\(/)
-  assert.match(source, /stashDashboardEntryIntent\(entry\)/)
+  assert.match(source, /stashDashboardEntryIntent\(entry,\s*null,\s*this\.currentAuthUserId\(\)\)/)
   assert.match(source, /session_id:\s*sessionId/)
   assert.match(apiSource, /query\.id\s*=\s*id/)
   assert.equal(isBackendSessionUnfinished({ status: 'paused', id: 12 }), true)

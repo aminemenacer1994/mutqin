@@ -6,7 +6,8 @@ use App\Models\User;
 
 /**
  * Single post-auth destination for login / guest redirects.
- * Admins land on the admin dashboard. Learners go straight to practice so
+ * Admins land on the admin dashboard. Unverified learners go to the
+ * email verification notice. Verified learners go straight to practice so
  * Welcome Back / first-run onboarding can gate the workspace on arrival.
  */
 final class AuthRedirect
@@ -15,6 +16,12 @@ final class AuthRedirect
     {
         if ($user?->isAdmin() === true) {
             return 'admin.dashboard';
+        }
+
+        // Email/password accounts must verify before practice; Google users with a
+        // trusted provider-verified email already have email_verified_at set.
+        if ($user !== null && ! $user->hasVerifiedEmail()) {
+            return 'verification.notice';
         }
 
         return 'memorisation';

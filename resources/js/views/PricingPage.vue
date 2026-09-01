@@ -172,7 +172,7 @@ export default {
     const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/register'));
 
     onMounted(() => {
-      setGlobalTheme(getSavedTheme(), { dispatchEvent: false });
+      setGlobalTheme(getSavedTheme(), { dispatchEvent: false, persist: false });
       window.addEventListener('mutqin:theme-change', handleThemeChange);
     });
 
@@ -181,7 +181,7 @@ export default {
     });
 
     function handleThemeChange() {
-      setGlobalTheme(getSavedTheme(), { dispatchEvent: false });
+      setGlobalTheme(getSavedTheme(), { dispatchEvent: false, persist: false });
     }
 
     const valClass = (value) => {

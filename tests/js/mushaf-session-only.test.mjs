@@ -18,6 +18,11 @@ assert.match(
 )
 assert.match(memorisationJs, /filterVersesToSession/, 'page verses filtered before layout build')
 assert.match(memorisationJs, /wantSessionOnly/, 'mushaf mode bakes session-only layouts')
+assert.match(
+  memorisationJs,
+  /wantSessionOnly = this\.readingViewMode === 'mushaf'/,
+  'only classic mushaf uses session-only page builds'
+)
 assert.match(memorisationJs, /showOriginalMadaniViewToggle:\s*false/, 'Madani Mushaf switch hidden')
 assert.match(
   memorisationJs,

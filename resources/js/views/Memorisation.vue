@@ -385,7 +385,6 @@
           <template v-if="hasVerses || isPostSessionChoiceVisible">
           <div class="workspace-shell-head-toolbar">
           <div class="workspace-shell-copy">
-            <span class="workspace-shell-kicker">{{ workspaceShellKicker }}</span>
             <p v-if="workspaceShellSubtitle" class="workspace-shell-subtitle">{{ workspaceShellSubtitle }}</p>
             <h1 class="workspace-shell-main-title" :aria-label="topCardSessionLabel">
               <template v-if="topCardSurahArabic || topCardSurahLatin">
@@ -4077,6 +4076,7 @@
       :reciters="reciters"
       :speed-options="speedOptions"
       :backend-sync-enabled="learningBackendEnabled()"
+      :owner-user-id="auth?.id || null"
       @close="closeHifzPlanModal"
       @saved="handleHifzPlanSaved"
     />
@@ -4419,6 +4419,18 @@
       @done="doneAmdTest"
       @retry="retryAmdAssessment"
       @enable-mic="startAmdAssessment"
+    />
+
+    <AiAudioConsentModal
+      :open="showAiAudioConsentModal"
+      :title="aiAudioConsentTitle"
+      :lead="aiAudioConsentBody"
+      :privacy-policy-url="aiAudioConsentPrivacyUrl"
+      :privacy-policy-label="aiAudioConsentPrivacyLinkLabel"
+      :accept-label="aiAudioConsentAcceptLabel"
+      :decline-label="aiAudioConsentDeclineLabel"
+      @accept="onAiAudioConsentAccept"
+      @decline="onAiAudioConsentDecline"
     />
 
   <div

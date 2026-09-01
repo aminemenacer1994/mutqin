@@ -279,6 +279,7 @@
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
             <a href="#contact" @click.prevent="scrollToId('contact')">{{ t('homepage.footer.contact') }}</a>
+            <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
             <a href="/login">{{ t('homepage.footer.login') }}</a>
             <a href="/register">{{ t('homepage.footer.register') }}</a>
           </div>
@@ -400,7 +401,7 @@ export default {
 
     const applyTheme = () => {
       currentTheme.value = getSavedTheme();
-      setGlobalTheme(currentTheme.value, { dispatchEvent: false });
+      setGlobalTheme(currentTheme.value, { dispatchEvent: false, persist: false });
     };
 
     const onThemeChange = (event) => {

@@ -66,19 +66,27 @@ class SetLocale
 
     private function resolveThemePreference(Request $request): string
     {
+        $userTheme = $request->user()?->theme;
+        if (is_string($userTheme) && $userTheme !== '') {
+            $normalizedUserTheme = self::THEME_ALIASES[strtolower($userTheme)] ?? null;
+            if ($normalizedUserTheme !== null) {
+                return $normalizedUserTheme;
+            }
+        }
+
         $candidate = $request->session()->get('mutqin_theme')
             ?: $request->cookie('mutqin_theme')
-            ?: 'light-mode';
+            ?: 'sepia-mode';
 
-        return self::THEME_ALIASES[strtolower((string) $candidate)] ?? 'light-mode';
+        return self::THEME_ALIASES[strtolower((string) $candidate)] ?? 'sepia-mode';
     }
 
     private function themePreferenceToDataTheme(string $themePreference): string
     {
         return match ($themePreference) {
             'dark-mode' => 'dark',
-            'sepia-mode' => 'sepia',
-            default => 'light',
+            'light-mode' => 'light',
+            default => 'sepia',
         };
     }
 }

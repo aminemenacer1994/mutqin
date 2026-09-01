@@ -7,6 +7,8 @@ use App\Http\Requests\Learning\SyncStateRequest;
 use App\Models\MemorisationSyncState;
 use App\Services\DashboardService;
 use App\Services\LearningStateDeriver;
+use App\Services\Memorisation\LearningHistoryRetentionService;
+use App\Support\AudioPrivacy;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,10 +55,20 @@ class StateSyncController extends Controller
         ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
     }
 
-    public function store(SyncStateRequest $request, LearningStateDeriver $deriver): JsonResponse
-    {
+    public function store(
+        SyncStateRequest $request,
+        LearningStateDeriver $deriver,
+        LearningHistoryRetentionService $retention
+    ): JsonResponse {
         $user = $request->user();
         $validated = $request->validated();
+
+        // Never persist raw learner recordings into sync-state JSON unless retention is "retain".
+        $state = is_array($validated['state'] ?? null) ? $validated['state'] : [];
+        if (! AudioPrivacy::retainsRawAudio()) {
+            $state = $retention->stripRawAudioFromStateTree($state);
+        }
+        $validated['state'] = $state;
 
         $encodedState = json_encode($validated['state'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Support\AuthRedirect;
 use Illuminate\Foundation\Auth\VerifiesEmails;
+use Illuminate\Support\Facades\Auth;
 
 class VerificationController extends Controller
 {
@@ -38,6 +39,6 @@ class VerificationController extends Controller
      */
     protected function redirectTo(): string
     {
-        return AuthRedirect::path($this->guard()->user());
+        return AuthRedirect::path(Auth::user());
     }
 }

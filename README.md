@@ -109,6 +109,12 @@ Optional: set `SPEECHMATICS_DAILY_USER_SESSION_MINUTES` / `SPEECHMATICS_DAILY_GL
 
 Watch logs for `Speechmatics usage cap approaching.` and `Speechmatics usage cap reached.` After changing env vars: `php artisan config:clear`.
 
+### Speechmatics rate limit
+
+Token minting is also burst-limited on the server (`throttle:speechmatics-token`) so frontend retries cannot multiply Speechmatics calls. Defaults: **3 mints / 10s** and **10 / minute per user**, plus **30 / minute per IP**. Returns HTTP **429** with `Retry-After` and a learner-safe message. Admin/demo accounts are **not** exempt unless `SPEECHMATICS_RATE_LIMIT_BYPASS_ADMIN` / `SPEECHMATICS_RATE_LIMIT_BYPASS_DEMO` is explicitly true.
+
+Watch logs for `Speechmatics token rate limit hit.`
+
 ### Subscription tiers
 
 **All authenticated features are currently free.** `hasPremiumAccess` / `hasProAccess` and `EnsureSubscriptionTier` grant every signed-in user. Stripe checkout and webhooks stay wired for a later paid launch.

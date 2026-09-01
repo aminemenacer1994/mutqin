@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 
 class ForgotPasswordController extends Controller
@@ -22,24 +25,39 @@ class ForgotPasswordController extends Controller
 
     use SendsPasswordResetEmails;
 
-    protected function sendResetLinkResponse($request, $response): RedirectResponse
+    public function __construct()
     {
-        return back()->with('status', __($response));
+        $this->middleware('guest');
+        $this->middleware('throttle:6,1')->only('sendResetLinkEmail');
     }
 
-    protected function sendResetLinkFailedResponse($request, $response): RedirectResponse
+    /**
+     * Always return a generic success response. Reset mail is only created for
+     * local password accounts; unknown and OAuth-only emails are silent no-ops.
+     */
+    public function sendResetLinkEmail(Request $request): RedirectResponse|JsonResponse
     {
-        return back()
-            ->withInput($request->only('email'))
-            ->withErrors(['email' => $this->resetFailureMessage($response)]);
+        $this->validateEmail($request);
+
+        $email = (string) $request->input('email');
+        $user = User::query()->where('email', $email)->first();
+
+        // Password reset is for local password accounts only. Google-only users
+        // set a password from Profile while signed in with Google.
+        if ($user instanceof User && $user->hasSetPassword()) {
+            // Broker sends to the account's stored email and enforces token throttle.
+            $this->broker()->sendResetLink($this->credentials($request));
+        }
+
+        return $this->sendResetLinkResponse($request, Password::RESET_LINK_SENT);
     }
 
-    private function resetFailureMessage(string $response): string
+    protected function sendResetLinkResponse($request, $response): RedirectResponse|JsonResponse
     {
-        return match ($response) {
-            Password::INVALID_USER => 'We could not find an account with that email address.',
-            Password::RESET_THROTTLED => 'A reset link was sent recently. Please wait a moment and try again.',
-            default => 'Unable to send the reset link right now. Please try again.',
-        };
+        $message = __('passwords.sent');
+
+        return $request->wantsJson()
+            ? new JsonResponse(['message' => $message], 200)
+            : back()->with('status', $message);
     }
 }

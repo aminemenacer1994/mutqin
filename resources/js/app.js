@@ -8,11 +8,33 @@ import './styles/pricing-page.css';
 import { setupI18n, setLocale } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
+import { clearSharedMutqinBrowserResidue } from './utils/mutqinStorageKeys';
 import { isBrowserOffline } from './utils/networkStatus';
 import enLocale from './locales/en.json';
 
 function resolveEn(key) {
     return key.split('.').reduce((node, part) => (node && node[part] !== undefined ? node[part] : undefined), enLocale) ?? key;
+}
+
+function bindLogoutStorageCleanup() {
+    if (typeof document === 'undefined') return;
+    const clearResidue = () => {
+        try {
+            clearSharedMutqinBrowserResidue();
+        } catch (_) { /* ignore */ }
+    };
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        const action = String(form.getAttribute('action') || '');
+        if (!action.includes('/logout')) return;
+        clearResidue();
+    }, true);
+}
+
+bindLogoutStorageCleanup();
+if (typeof window !== 'undefined') {
+    window.mutqinClearSharedBrowserResidue = clearSharedMutqinBrowserResidue;
 }
 
 // Watch/dev Mix emits stable chunk names (memorisation.js). Patch webpack's
@@ -236,6 +258,9 @@ async function bootstrapApp() {
     app.component('our-mission-page', OurMissionPage);
     app.component('donation-page', DonationPage);
     app.component('waiting-list-page', WaitingListPage);
+    app.component('privacy-policy-page', defineAsyncComponent(() =>
+        import(/* webpackChunkName: "privacy" */ './views/PrivacyPolicy.vue')
+    ));
     app.mount('#app');
 }
 

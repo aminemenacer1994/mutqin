@@ -1,8 +1,8 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
-    $appThemePreference = $appThemePreference ?? (request()->cookie('mutqin_theme') ?: session('mutqin_theme', 'light-mode'));
-    $appTheme = $appTheme ?? (str_starts_with((string) $appThemePreference, 'dark') ? 'dark' : (str_starts_with((string) $appThemePreference, 'sepia') ? 'sepia' : 'light'));
+    $appThemePreference = $appThemePreference ?? (request()->cookie('mutqin_theme') ?: session('mutqin_theme', 'sepia-mode'));
+    $appTheme = $appTheme ?? (str_starts_with((string) $appThemePreference, 'dark') ? 'dark' : (str_starts_with((string) $appThemePreference, 'light') ? 'light' : 'sepia'));
     $appThemeColor = $appTheme === 'dark' ? '#14110f' : '#8b5e3c';
     $appColorScheme = $appTheme === 'dark' ? 'dark' : 'light';
 @endphp

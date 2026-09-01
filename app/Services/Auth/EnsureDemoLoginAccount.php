@@ -41,7 +41,8 @@ class EnsureDemoLoginAccount
             'subscription_status' => $user->subscription_status ?: 'free',
         ]);
 
-        if (! $user->email_verified_at) {
+        // Demo login always bypasses email verification.
+        if ($user->email_verified_at === null) {
             $user->email_verified_at = Carbon::now();
         }
 

@@ -249,7 +249,7 @@ class MemorisationHistoryQueryService
 
     private function assertOwned(User $user, int $ownerId): void
     {
-        if ((int) $user->id !== $ownerId && ! $user->isAdmin()) {
+        if ((int) $user->id !== $ownerId) {
             abort(404);
         }
     }

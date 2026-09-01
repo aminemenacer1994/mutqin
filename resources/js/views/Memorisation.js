@@ -8,7 +8,9 @@ import {
 } from '../utils/theme'
 import {
   ACTIVE_SESSION_SNAPSHOT_KEY,
+  clearSharedMutqinBrowserResidue,
   migrateTelawaLocalStorageKeys,
+  offlineScopedLocalKey,
   userScopedMutqinKey,
 } from '../utils/mutqinStorageKeys'
 import { migrateLegacyWorkspaceLocalStorage } from '../utils/mutqinLocalStorageMigration'
@@ -234,6 +236,7 @@ import {
   createRecitationAttemptId,
   isStaleRecitationAttempt,
   probeMicrophonePermission,
+  resolveMicDeniedGuidance,
   resolveRecitationFailureMessage,
   scheduleSlowProcessingNotice,
   userFacingTranscriptionFailure,
@@ -241,6 +244,22 @@ import {
   validateRecordingEnvironment,
   buildTechnicalLogContext,
 } from '../scripts/audio/recordingResilience'
+import {
+  aiAudioConsentMeta,
+  isAiAudioConsentDeclined,
+  readAudioPrivacyConfig,
+  resolveAiAudioConsentRecord,
+  shouldPromptAiAudioConsent,
+  writeLocalAiAudioConsent,
+  AI_AUDIO_CONSENT_STATUS,
+} from '../scripts/audio/aiAudioConsent'
+import {
+  prepareAudioRetentionPayload,
+  rawRecordingRetentionMode,
+  shouldDiscardAudioAfterProcessing,
+  stripRawAudioFields,
+  sanitizeAudioLogContext,
+} from '../scripts/audio/audioRetention'
 import {
   END_SESSION_CONFIRM_ACTION,
   PRIMARY_SESSION_ACTION,
@@ -306,6 +325,9 @@ const preloadAiMemorisationDetectionModal = () =>
   import(/* webpackChunkName: "amd-modal" */ '../components/AiMemorisationDetectionModal.vue')
 const AiMemorisationDetectionModal = defineAsyncComponent(() =>
   preloadAiMemorisationDetectionModal()
+)
+const AiAudioConsentModal = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue')
 )
 const AyahNotesModal = defineAsyncComponent(() =>
   import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue')
@@ -568,6 +590,7 @@ export default {
   components: {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
+    AiAudioConsentModal,
     AyahNotesModal,
     AppStatus,
     OriginalMadaniMushaf,
@@ -806,7 +829,7 @@ export default {
       // UI State
       currentMode: 'beginner',
       appState: createHifzAppState(),
-      theme: 'light',
+      theme: 'sepia',
       activeLocale: 'en',
       languageOptions: SWITCHER_LOCALES.map((value) => ({
         value,
@@ -1257,6 +1280,8 @@ export default {
       selfCheckRecordingMimeType: '',
       aiMemorisationCheckerRecordingMimeType: '',
       recordingsLibraryReturnToSelfCheckKey: '',
+      showAiAudioConsentModal: false,
+      aiAudioConsentSnapshot: typeof window !== 'undefined' ? (window.mutqinAiAudioConsent || null) : null,
       showAiMemorisationCheckerModal: false,
       aiMemorisationCheckerVerseRef: null,
       aiMemorisationCheckerVerseKey: '',
@@ -7261,21 +7286,33 @@ export default {
     },
     amdMicGuidance() {
       if (this.amdLearnerMicStatus === 'need_access') {
-        const isAppleWebKit = typeof navigator !== 'undefined'
-          && /iPad|iPhone|iPod/.test(navigator.userAgent || '')
-        if (isAppleWebKit) {
-          return this.t?.('memorisation.amd.micGuidanceSafari')
-            || this.t?.('memorisation.amd.micGuidanceDenied')
-            || 'Allow microphone access in Settings → Safari → Microphone, then try again.'
-        }
-        return this.t?.('memorisation.amd.micGuidanceDenied')
-          || 'Allow microphone access in your browser settings, then try again.'
+        return resolveMicDeniedGuidance(this.t?.bind(this))
       }
       if (this.amdLearnerMicStatus === 'unavailable' || this.amdLearnerMicStatus === 'unsupported') {
         return this.t?.('memorisation.amd.micGuidanceUnsupported')
           || 'Speech recognition is unavailable here. You can still use Peek.'
       }
       return ''
+    },
+    aiAudioConsentTitle() {
+      return this.t('memorisation.aiCheck.consentTitle') || 'AI voice checks'
+    },
+    aiAudioConsentBody() {
+      const meta = aiAudioConsentMeta()
+      return this.t('memorisation.aiCheck.consentBody', { processor: meta.processorName })
+        || `When you use AI Recite, Mutqin uses your microphone to assess Qur’an recitation. Audio may be processed by ${meta.processorName}. Listening and other tools work without it.`
+    },
+    aiAudioConsentPrivacyLinkLabel() {
+      return this.t('memorisation.aiCheck.consentPrivacyLink') || 'Privacy policy'
+    },
+    aiAudioConsentPrivacyUrl() {
+      return readAudioPrivacyConfig().privacy_policy_url || '/privacy'
+    },
+    aiAudioConsentAcceptLabel() {
+      return this.t('memorisation.aiCheck.consentAccept') || 'Agree'
+    },
+    aiAudioConsentDeclineLabel() {
+      return this.t('memorisation.aiCheck.consentDecline') || 'Not now'
     },
     amdErrorAction() {
       if (this.amdMicStatus === 'denied' || this.amdLearnerMicStatus === 'need_access') return 'enable-mic'
@@ -7991,6 +8028,7 @@ export default {
         || this.showAyahNotesModal
         || this.showAdvancedMetricsModal
         || this.postSessionAdaptiveCheckActive
+        || this.showAiAudioConsentModal
       )
     },
     chainingProgressLabel() {
@@ -9623,11 +9661,12 @@ export default {
     this.postSessionAiReciteBusy = false
     this.showAiMemorisationCheckerModal = false
     this.showSelfCheckModal = false
+    this.showAiAudioConsentModal = false
     this.syncBodyScrollLock(false)
     if (!AI_TEST_MODALS_ENABLED) {
       /* feature flag off — already closed above */
     }
-    this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'light'
+    this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'sepia'
     document.documentElement.setAttribute('data-theme', this.theme)
     this.enforceSubscriptionFeatureLimits()
     applyQuranFontCssVariable(this.quranFont)
@@ -9664,7 +9703,7 @@ export default {
         this.activeLocale = event?.detail?.locale || this.$i18n?.locale?.value || 'en'
       }
       this.handleGlobalThemeChange = (event) => {
-        const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || 'light'
+        const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || 'sepia'
         this.theme = this.normalizeThemeToken(nextTheme)
       }
       this.handleThemeStorageSync = (event) => {
@@ -9673,14 +9712,14 @@ export default {
           return
         }
         if (event?.key && event.key !== 'mutqin-theme') return
-        const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'light'
+        const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'sepia'
         this.syncGlobalTheme(nextTheme)
       }
       window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
       window.addEventListener('mutqin:locale-change', this.handleLocaleChange)
       window.addEventListener('storage', this.handleThemeStorageSync)
       this.themeObserver = new MutationObserver(() => {
-        const nextTheme = document.documentElement.getAttribute('data-theme') || 'light'
+        const nextTheme = document.documentElement.getAttribute('data-theme') || 'sepia'
         if (nextTheme !== this.theme) this.theme = this.normalizeThemeToken(nextTheme)
       })
       this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
@@ -9843,6 +9882,8 @@ export default {
       this.isWorkspaceRefreshing = false
       this.workspaceRefreshReason = ''
       this.appReady = true
+      // Consent before tour — tour overlay (z-index 32000) would swallow button clicks.
+      this.maybeShowRegistrationAiAudioConsent()
       // Never leave the header stuck on Loading if bootstrap skipped/aborted
       // before validateSessionLifecycleAgainstBackend ran.
       this.sessionLifecycleHydrated = true
@@ -10748,16 +10789,21 @@ export default {
       form.submit()
     },
 
-    normalizeThemeToken(value = 'light') {
+    currentAuthUserId() {
+      const id = this.auth?.id ?? this.auth?.user?.id ?? null
+      return id != null && String(id).trim() !== '' ? String(id) : null
+    },
+
+    normalizeThemeToken(value = 'sepia') {
       return normalizeThemeValue(value)
     },
 
-    toThemePreference(value = 'light') {
+    toThemePreference(value = 'sepia') {
       return toThemePref(value)
     },
 
     syncGlobalTheme(theme = this.theme) {
-      this.theme = setGlobalTheme(theme)
+      this.theme = setGlobalTheme(theme, { persist: false })
     },
 
     translateOrFallback(key, fallback, params = {}) {
@@ -10768,14 +10814,16 @@ export default {
     hydrateWorkspaceStateValueFromLocalStorage(workspaceKey, localKey) {
       if (!this.learningBackendEnabled()) return false
       if (this.readWorkspaceStateValue(workspaceKey, null) !== null) return false
+      // Authenticated hydrate must only read this owner's scoped keys — never shared globals.
+      const scopedKey = offlineScopedLocalKey(localKey, this.currentAuthUserId() || 'guest')
       try {
-        const raw = localStorage.getItem(localKey)
+        const raw = localStorage.getItem(scopedKey)
         if (!raw) return false
         this.writeWorkspaceStateValue(workspaceKey, JSON.parse(raw))
         return true
       } catch {
         try {
-          const raw = localStorage.getItem(localKey)
+          const raw = localStorage.getItem(scopedKey)
           if (!raw) return false
           this.writeWorkspaceStateValue(workspaceKey, raw)
           return true
@@ -10787,8 +10835,10 @@ export default {
 
     hydrateAuthenticatedWorkspaceStateFromLocalStorage() {
       if (!this.learningBackendEnabled()) return
+      if (!this.currentAuthUserId()) return
+      // Never copy unscoped mutqin.* keys into another account's workspace.
       this.hydrateWorkspaceStateValueFromLocalStorage('uiState', 'mutqin.uiState')
-      this.hydrateWorkspaceStateValueFromLocalStorage('continueSession', 'mutqin.continueSession')
+      this.hydrateWorkspaceStateValueFromLocalStorage('continueSession', this.continueSessionLocalStorageKey())
       this.hydrateWorkspaceStateValueFromLocalStorage('audioState', 'mutqin.audioState')
       this.hydrateWorkspaceStateValueFromLocalStorage('centralSession', CENTRAL_SESSION_STORAGE_KEY)
       ;['beginner', 'advanced', 'planner'].forEach(mode => {
@@ -10803,9 +10853,7 @@ export default {
       }
       try {
         const scoped = localStorage.getItem(this.continueSessionLocalStorageKey())
-        if (scoped) return JSON.parse(scoped)
-        const legacy = localStorage.getItem('mutqin.continueSession')
-        return legacy ? JSON.parse(legacy) : null
+        return scoped ? JSON.parse(scoped) : null
       } catch {
         return null
       }
@@ -10816,7 +10864,8 @@ export default {
         return this.readWorkspaceStateValue('centralSession', null)
       }
       try {
-        const raw = localStorage.getItem(CENTRAL_SESSION_STORAGE_KEY)
+        const key = offlineScopedLocalKey(CENTRAL_SESSION_STORAGE_KEY, this.currentAuthUserId() || 'guest')
+        const raw = localStorage.getItem(key)
         return raw ? JSON.parse(raw) : null
       } catch {
         return null
@@ -11013,9 +11062,9 @@ export default {
           }
         }
         // Refresh mid-consume: URL may already be cleaned; restore stashed destination.
-        return readStashedDashboardEntryIntent()
+        return readStashedDashboardEntryIntent(null, this.currentAuthUserId())
       } catch (_) {
-        return readStashedDashboardEntryIntent()
+        return readStashedDashboardEntryIntent(null, this.currentAuthUserId())
       }
     },
 
@@ -11031,7 +11080,7 @@ export default {
     },
 
     markDashboardEntryIntentConsumed() {
-      clearStashedDashboardEntryIntent()
+      clearStashedDashboardEntryIntent(null, this.currentAuthUserId())
     },
 
     async consumeDashboardEntryIntent(intent = null) {
@@ -11039,7 +11088,7 @@ export default {
       if (!entry) return false
 
       // Persist before clearing the URL so refresh keeps the intended destination.
-      stashDashboardEntryIntent(entry)
+      stashDashboardEntryIntent(entry, null, this.currentAuthUserId())
       this.clearDashboardEntryIntentFromUrl()
       if (this.welcomeBackRevealTimer) {
         window.clearTimeout(this.welcomeBackRevealTimer)
@@ -11489,7 +11538,8 @@ export default {
         return this.readWorkspaceStateValue(workspaceKey, fallback)
       }
       try {
-        const raw = localStorage.getItem(localKey)
+        const key = offlineScopedLocalKey(localKey, this.currentAuthUserId() || 'guest')
+        const raw = localStorage.getItem(key)
         return raw ? JSON.parse(raw) : fallback
       } catch {
         return fallback
@@ -11501,7 +11551,8 @@ export default {
         return this.writeWorkspaceStateValue(workspaceKey, value)
       }
       try {
-        localStorage.setItem(localKey, JSON.stringify(value))
+        const key = offlineScopedLocalKey(localKey, this.currentAuthUserId() || 'guest')
+        localStorage.setItem(key, JSON.stringify(value))
         return true
       } catch {
         return false
@@ -11513,7 +11564,8 @@ export default {
         return this.deleteWorkspaceStateValue(workspaceKey)
       }
       try {
-        localStorage.removeItem(localKey)
+        const key = offlineScopedLocalKey(localKey, this.currentAuthUserId() || 'guest')
+        localStorage.removeItem(key)
         return true
       } catch {
         return false
@@ -14958,6 +15010,11 @@ export default {
         this.workspaceTourActive = false
         return
       }
+      // Registration consent must finish before the spotlight tour steals clicks.
+      if (this.showAiAudioConsentModal) {
+        this.workspaceTourActive = false
+        return
+      }
       if (!this.shouldAutoStartWorkspaceTour()) {
         this.workspaceTourActive = false
         return
@@ -14968,10 +15025,15 @@ export default {
       }
       this._workspaceTourStartTimer = window.setTimeout(() => {
         this._workspaceTourStartTimer = null
+        if (this.showAiAudioConsentModal) return
         this.initWorkspaceTour()
       }, this.auth?.just_registered || this.showWelcomeBackModal ? 650 : 200)
     },
     initWorkspaceTour() {
+      if (this.showAiAudioConsentModal) {
+        this.workspaceTourActive = false
+        return
+      }
       if (!this.shouldAutoStartWorkspaceTour()) {
         this.workspaceTourActive = false
         return
@@ -14979,6 +15041,10 @@ export default {
       this.startWorkspaceTour(0)
     },
     async startWorkspaceTour(stepIndex = 0) {
+      if (this.showAiAudioConsentModal) {
+        this.workspaceTourActive = false
+        return
+      }
       this.workspaceTourActive = true
       this.workspaceTourStepIndex = Math.max(0, Number(stepIndex) || 0)
       this.showPostLoginOnboarding = false
@@ -16284,6 +16350,7 @@ export default {
       this.selectedPracticeWeakWordKey = ''
       try {
         if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem(this.practiceFocusWeakWordsStorageKey())
           sessionStorage.removeItem('mutqin.practiceFocusWeakWords')
         }
       } catch (_) { /* ignore */ }
@@ -19141,22 +19208,28 @@ export default {
       if (!words.length || !verseKey) return []
       return words.filter((word) => this.practiceFocusVerseKeyMatches(word, verseKey))
     },
+    practiceFocusWeakWordsStorageKey() {
+      return offlineScopedLocalKey('mutqin.practiceFocusWeakWords', this.currentAuthUserId() || 'guest')
+    },
     persistPracticeFocusWeakWords() {
       try {
         if (typeof sessionStorage === 'undefined') return
+        const key = this.practiceFocusWeakWordsStorageKey()
         const words = Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []
         if (!words.length) {
+          sessionStorage.removeItem(key)
           sessionStorage.removeItem('mutqin.practiceFocusWeakWords')
           return
         }
-        sessionStorage.setItem('mutqin.practiceFocusWeakWords', JSON.stringify(words))
+        sessionStorage.setItem(key, JSON.stringify(words))
+        sessionStorage.removeItem('mutqin.practiceFocusWeakWords')
       } catch (_) { /* ignore */ }
     },
     restorePracticeFocusWeakWords() {
       if (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length) return
       try {
         if (typeof sessionStorage === 'undefined') return
-        const raw = JSON.parse(sessionStorage.getItem('mutqin.practiceFocusWeakWords') || '[]')
+        const raw = JSON.parse(sessionStorage.getItem(this.practiceFocusWeakWordsStorageKey()) || '[]')
         if (Array.isArray(raw) && raw.length) {
           this.practiceFocusWeakWords = normaliseWeakWordRecords(raw)
         }
@@ -21002,8 +21075,6 @@ export default {
         this.userStorageKey('recordingsLibrary'),
         `mutqin.recordings.${uid}`,
         `mutqin.recordingsLibrary.${uid}`,
-        'mutqin.recordings',
-        'mutqin.recordingsLibrary'
       ])]
     },
     normalizeRecordingEntry(entry, index = 0) {
@@ -21107,35 +21178,48 @@ export default {
     },
     persistRecordingsLibrary() {
       try {
+        const forPersist = (this.recordingsLibrary || []).map(recording => this.pruneAiCheckRecordingForStorage(recording))
         if (this.learningBackendEnabled()) {
-          this.writeWorkspaceStateValue('recordingsLibrary', this.recordingsLibrary)
+          this.writeWorkspaceStateValue('recordingsLibrary', forPersist)
           return true
         }
-        localStorage.setItem(this.recordingsLibraryStorageKey(), JSON.stringify(this.recordingsLibrary))
+        localStorage.setItem(this.recordingsLibraryStorageKey(), JSON.stringify(forPersist))
         return true
       } catch (error) {
         if (this.learningBackendEnabled()) {
-          console.error('Failed to persist recordings library:', error)
+          console.error('Failed to persist recordings library:', sanitizeAudioLogContext({
+            name: error?.name,
+            message: error?.message,
+          }))
           return false
         }
         try {
           const compact = this.recordingsLibrary.map(recording => this.pruneAiCheckRecordingForStorage(recording))
           localStorage.setItem(this.recordingsLibraryStorageKey(), JSON.stringify(compact))
           this.recordingsLibrary = compact
-          console.warn('Persisted compact recordings library after storage pressure:', error)
+          console.warn('Persisted compact recordings library after storage pressure')
           return true
         } catch (compactError) {
-          console.error('Failed to persist recordings library:', compactError)
+          console.error('Failed to persist recordings library:', sanitizeAudioLogContext({
+            name: compactError?.name,
+            message: compactError?.message,
+          }))
           return false
         }
       }
     },
     pruneAiCheckRecordingForStorage(recording = {}) {
+      // Never sync/persist raw audio into workspace backups unless retention is intentionally "retain".
+      if (rawRecordingRetentionMode() !== 'retain') {
+        return stripRawAudioFields({
+          ...recording,
+          transcript: String(recording.transcript || '').slice(0, 2400),
+        })
+      }
       if (!this.isAiCheckRecording(recording)) return recording
       return {
         ...recording,
-        audioSrc: '',
-        transcript: String(recording.transcript || '').slice(0, 2400)
+        transcript: String(recording.transcript || '').slice(0, 2400),
       }
     },
     ensureSelectedRecordingsSelection() {
@@ -24141,6 +24225,14 @@ export default {
         this.recitationCheckPreparing = false
         try { this.cleanupRecitationCheckMedia?.() } catch { /* ignore */ }
       }
+      const consentOk = await this.ensureAiAudioConsent()
+      if (!consentOk) {
+        this.amdBusy = false
+        this.amdStage = AMD_STAGES.ERROR
+        this.amdError = this.t('memorisation.aiCheck.consentDeclined')
+          || 'AI voice checks are off until you agree to microphone processing. Listening, Peek, and other tools still work.'
+        return
+      }
       this.markAmdHowtoSeen()
       this.amdError = ''
       // Immediate Record feedback — do not wait on audio unlock / mushaf / STT.
@@ -24887,6 +24979,12 @@ export default {
         return
       }
       if (this.aiMemorisationCheckerRecording || this.aiMemorisationCheckerPreparing) return
+      const consentOk = await this.ensureAiAudioConsent()
+      if (!consentOk) {
+        this.aiMemorisationCheckerError = this.t('memorisation.aiCheck.consentDeclined')
+          || 'AI voice checks are off until you agree to microphone processing. Listening, Peek, and other tools still work.'
+        return
+      }
 	      this.aiMemorisationCheckerError = ''
 	      this.aiMemorisationCheckerResult = null
       this.resetReviewResultAudio({ revokeOwned: true })
@@ -24991,7 +25089,8 @@ export default {
         console.error('Failed to start memorisation check:', error)
         this.aiMemorisationCheckerPreparing = false
         this.aiMemorisationCheckerRecording = false
-        this.aiMemorisationCheckerError = this.t('memorisation.aiCheck.micBlocked')
+        this.aiMemorisationCheckerError = resolveMicDeniedGuidance(this.t?.bind(this))
+          || this.t('memorisation.aiCheck.micBlocked')
         this.cleanupAiMemorisationCheckerMedia()
       }
     },
@@ -25271,7 +25370,7 @@ export default {
       return this.t('memorisation.aiCheck.possibleIssues', { count: red + amber })
     },
     aiMemorisationCheckerStorageKey() {
-      return 'mutqin_ai_memorisation_checker'
+      return offlineScopedLocalKey('mutqin_ai_memorisation_checker', this.currentAuthUserId() || 'guest')
     },
     loadAiMemorisationCheckerHistory() {
       try {
@@ -26527,12 +26626,12 @@ export default {
     async writeRecitationSessionCache(entry = {}) {
       const db = await this.openRecitationSessionDb()
       if (!db || !entry?.sessionId || !entry?.audioHash) return null
-      const payload = prepareIndexedDbPayload({
+      const payload = prepareIndexedDbPayload(this.applyAudioRetentionToCacheEntry({
         ...entry,
         cacheKey: this.recitationSessionCacheKey(entry.sessionId, entry.audioHash),
         analysisVersion: entry.analysisVersion || RECITATION_ANALYSIS_VERSION,
         cachedAt: new Date().toISOString()
-      })
+      }, { failed: !!entry.failed }))
       return await new Promise(resolve => {
         try {
           const request = db.transaction(RECITATION_IDB_STORE, 'readwrite')
@@ -26541,7 +26640,10 @@ export default {
           request.onsuccess = () => resolve(payload)
           request.onerror = () => resolve(null)
         } catch (error) {
-          console.error('Failed to persist recitation session cache:', error)
+          console.error('Failed to persist recitation session cache:', sanitizeAudioLogContext({
+            name: error?.name,
+            message: error?.message,
+          }))
           resolve(null)
         }
       })
@@ -26549,13 +26651,13 @@ export default {
     async writeRecitationSessionHistory(entry = {}) {
       const db = await this.openRecitationSessionDb()
       if (!db || !entry?.sessionId) return null
-      const payload = prepareIndexedDbPayload({
+      const payload = prepareIndexedDbPayload(this.applyAudioRetentionToCacheEntry({
         ...entry,
         id: entry.id || `${entry.sessionId}-${entry.audioHash || 'no-audio'}-${entry.kind || 'recitation'}`,
         analysisVersion: entry.analysisVersion || RECITATION_ANALYSIS_VERSION,
         recordedAt: entry.recordedAt || entry.analysisResult?.timestamp || new Date().toISOString(),
         savedAt: new Date().toISOString()
-      })
+      }, { failed: !!entry.failed }))
       return await new Promise(resolve => {
         try {
           const request = db.transaction(RECITATION_HISTORY_IDB_STORE, 'readwrite')
@@ -26564,7 +26666,10 @@ export default {
           request.onsuccess = () => resolve(payload)
           request.onerror = () => resolve(null)
         } catch (error) {
-          console.error('Failed to persist recitation session history:', error)
+          console.error('Failed to persist recitation session history:', sanitizeAudioLogContext({
+            name: error?.name,
+            message: error?.message,
+          }))
           resolve(null)
         }
       })
@@ -26924,9 +27029,11 @@ export default {
         return this.t('memorisation.aiCheck.usageCapReached')
       }
 
-      if (status === 429) {
-        return this.t('memorisation.aiCheck.serviceUnavailable')
-          || 'Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.'
+      if (data?.reason === 'rate_limit' || status === 429) {
+        return data?.message
+          || this.t('memorisation.aiCheck.rateLimited')
+          || this.t('memorisation.aiCheck.serviceUnavailable')
+          || 'You are starting AI voice checks too quickly. Please wait a moment and try again.'
       }
 
       if (message) return message
@@ -27381,7 +27488,10 @@ export default {
         try {
           this.recitationCheckMediaStream.getTracks().forEach(track => track.stop())
         } catch (error) {
-          console.warn('Failed to stop recitation check media tracks:', error)
+          console.warn('Failed to stop recitation check media tracks:', sanitizeAudioLogContext({
+            name: error?.name,
+            message: error?.message,
+          }))
         }
       }
       this.recitationCheckMediaStream = null
@@ -27391,6 +27501,99 @@ export default {
       this.recitationCheckAutoStopArmed = false
       this.recitationInputSessionId = ''
       this.recitationInputAudioHash = ''
+    },
+    aiAudioConsentUserId() {
+      return this.auth?.id || this.auth?.user?.id || 'guest'
+    },
+    resolveCurrentAiAudioConsent() {
+      return resolveAiAudioConsentRecord({
+        userId: this.aiAudioConsentUserId(),
+        serverSnapshot: this.aiAudioConsentSnapshot || (typeof window !== 'undefined' ? window.mutqinAiAudioConsent : null),
+      })
+    },
+    /** Soft gate for AI mic: only an explicit decline blocks (registration modal is separate). */
+    ensureAiAudioConsent() {
+      if (isAiAudioConsentDeclined(this.resolveCurrentAiAudioConsent())) {
+        return false
+      }
+      return true
+    },
+    /**
+     * One-time modal after first registration only — never before AI Recite starts.
+     */
+    maybeShowRegistrationAiAudioConsent() {
+      if (this.showAiAudioConsentModal) return
+      if (!(this.auth?.just_registered || this._signupIsolationFreshlyActivated)) return
+      if (!shouldPromptAiAudioConsent({
+        userId: this.aiAudioConsentUserId(),
+        serverSnapshot: this.aiAudioConsentSnapshot || (typeof window !== 'undefined' ? window.mutqinAiAudioConsent : null),
+      })) {
+        return
+      }
+      // Consent must sit above the workspace tour (z-index 32000) and pause it.
+      if (this.workspaceTourActive) {
+        this.workspaceTourActive = false
+      }
+      if (this._workspaceTourStartTimer) {
+        window.clearTimeout(this._workspaceTourStartTimer)
+        this._workspaceTourStartTimer = null
+      }
+      this.showAiAudioConsentModal = true
+      this.syncBodyScrollLock(true)
+    },
+    async persistAiAudioConsent(accepted) {
+      const policyVersion = readAudioPrivacyConfig().policy_version
+      const status = accepted ? AI_AUDIO_CONSENT_STATUS.ACCEPTED : AI_AUDIO_CONSENT_STATUS.DECLINED
+      const record = {
+        status,
+        version: policyVersion,
+        acceptedAt: new Date().toISOString(),
+      }
+      writeLocalAiAudioConsent(this.aiAudioConsentUserId(), record)
+      this.aiAudioConsentSnapshot = {
+        status: record.status,
+        version: record.version,
+        accepted_at: record.acceptedAt,
+        policy_version: policyVersion,
+        needs_consent: false,
+      }
+      if (typeof window !== 'undefined') {
+        window.mutqinAiAudioConsent = this.aiAudioConsentSnapshot
+      }
+      if (!this.auth?.check && !this.learningBackendEnabled?.()) return
+      try {
+        const response = await window.axios.patch('/api/profile/ai-audio-consent', { accepted: !!accepted })
+        if (response?.data) {
+          this.aiAudioConsentSnapshot = response.data
+          window.mutqinAiAudioConsent = response.data
+        }
+      } catch (error) {
+        console.warn('Failed to persist AI audio consent', sanitizeAudioLogContext({
+          status: error?.response?.status,
+          name: error?.name,
+        }))
+      }
+    },
+    onAiAudioConsentAccept() {
+      this.showAiAudioConsentModal = false
+      this.syncBodyScrollLock(false)
+      void this.persistAiAudioConsent(true).finally(() => {
+        this.scheduleWorkspaceTourStart()
+      })
+    },
+    onAiAudioConsentDecline() {
+      this.showAiAudioConsentModal = false
+      this.syncBodyScrollLock(false)
+      void this.persistAiAudioConsent(false).finally(() => {
+        this.scheduleWorkspaceTourStart()
+      })
+    },
+    applyAudioRetentionToCacheEntry(entry = {}, { failed = false } = {}) {
+      const prepared = prepareAudioRetentionPayload(entry)
+      if (shouldDiscardAudioAfterProcessing({ failed })) {
+        return stripRawAudioFields(prepared)
+      }
+      return prepared
     },
     getSpeechRecognitionConstructor() {
       if (typeof window === 'undefined') return null
@@ -28436,6 +28639,15 @@ export default {
       }
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
 
+      const consentOk = await this.ensureAiAudioConsent()
+      if (!consentOk) {
+        this.reportRecitationCheckFailure(
+          this.t('memorisation.aiCheck.consentDeclined')
+          || 'AI voice checks are off until you agree to microphone processing. Listening, Peek, and other tools still work.',
+        )
+        return
+      }
+
       const attemptId = this.beginRecitationAttempt()
       // Fresh attempt owns the mic lifecycle — clear leftover discard from a prior cancel.
       this.recitationCheckDiscardOnStop = false
@@ -28446,10 +28658,11 @@ export default {
         return
       }
       if (micProbe.denied) {
-        const micMessage = this.resolveRecitationFailureText(
-          { name: 'NotAllowedError', message: 'permission_denied' },
-          { context: 'mic_permission_probe' },
-        )
+        const micMessage = resolveMicDeniedGuidance(this.t?.bind(this))
+          || this.resolveRecitationFailureText(
+            { name: 'NotAllowedError', message: 'permission_denied' },
+            { context: 'mic_permission_probe' },
+          )
         this.reportRecitationCheckFailure(micMessage)
         if (this.postSessionAiReciteActive || this.showPostSessionModal) {
           void this.applyInsufficientAudioAssessment(null, {
@@ -28776,7 +28989,9 @@ export default {
         const micDenied = /Permission|NotAllowed|denied|micBlocked|NotFound|NotReadable/i
           .test(String(error?.name || error?.message || ''))
         const failureText = micDenied
-          ? (this.t('memorisation.aiCheck.micRequired') || this.resolveRecitationFailureText(error, { context: 'mic_start' }))
+          ? (resolveMicDeniedGuidance(this.t?.bind(this))
+            || this.t('memorisation.aiCheck.micRequired')
+            || this.resolveRecitationFailureText(error, { context: 'mic_start' }))
           : this.resolveRecitationFailureText(error, { context: 'mic_start' })
         this.reportRecitationCheckFailure(failureText)
         if (micDenied && (this.postSessionAiReciteActive || this.showPostSessionModal)) {
@@ -30253,7 +30468,7 @@ export default {
       }
     },
     mutqinSessionsStorageKey() {
-      return 'mutqin_sessions'
+      return offlineScopedLocalKey('mutqin_sessions', this.currentAuthUserId() || 'guest')
     },
     getCurrentRecitationSessionId() {
       const chapter = Number(this.chapterId || this.currentChapter?.id || 0)
@@ -32008,6 +32223,12 @@ export default {
     prepareLogoutSessionCleanup() {
       this.stopSessionMediaResources()
       this.clearInMemorySessionLifecycleState()
+      clearSharedMutqinBrowserResidue()
+      clearStashedDashboardEntryIntent(null, this.currentAuthUserId())
+      this.practiceFocusWeakWords = []
+      try {
+        sessionStorage.removeItem(this.practiceFocusWeakWordsStorageKey())
+      } catch { /* ignore */ }
       this.sessionBroadcast?.publish('session-logout', { at: Date.now() })
     },
 
@@ -35182,8 +35403,8 @@ export default {
           this.deleteWorkspaceStateValue('continueSession')
           this.deleteWorkspaceStateValue('audioState')
         } else {
-          localStorage.removeItem('mutqin.continueSession')
-          localStorage.removeItem('mutqin.audioState')
+          localStorage.removeItem(this.continueSessionLocalStorageKey())
+          localStorage.removeItem(offlineScopedLocalKey('mutqin.audioState', this.currentAuthUserId() || 'guest'))
         }
       } catch (error) {
         console.error('Failed to clear exit-session storage:', error)
@@ -39942,7 +40163,7 @@ export default {
     },
 
     cycleTheme() {
-      this.syncGlobalTheme(cycleGlobalTheme())
+      this.theme = cycleGlobalTheme()
       this.persistUiState()
     },
 

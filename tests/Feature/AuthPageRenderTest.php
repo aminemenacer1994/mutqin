@@ -51,12 +51,35 @@ class AuthPageRenderTest extends TestCase
         config(['app.show_demo_accounts' => true]);
 
         $this->post(route('login.demo'))
-            ->assertRedirect();
+            ->assertRedirect('/memorisation');
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
             'email' => 'layla.beginner@mutqin.test',
         ]);
+
+        $user = \App\Models\User::where('email', 'layla.beginner@mutqin.test')->firstOrFail();
+        $this->assertNotNull($user->email_verified_at);
+        $this->get(route('memorisation'))->assertOk();
+    }
+
+    public function test_demo_login_verifies_stale_unverified_demo_account(): void
+    {
+        config(['app.show_demo_accounts' => true]);
+
+        \App\Models\User::factory()->unverified()->create([
+            'email' => 'layla.beginner@mutqin.test',
+            'name' => 'Stale Demo',
+            'password' => bcrypt('old-pass'),
+            'password_set_at' => now(),
+        ]);
+
+        $this->post(route('login.demo'))
+            ->assertRedirect('/memorisation');
+
+        $user = \App\Models\User::where('email', 'layla.beginner@mutqin.test')->firstOrFail();
+        $this->assertNotNull($user->email_verified_at);
+        $this->get(route('memorisation'))->assertOk();
     }
 
     public function test_demo_login_is_unavailable_when_disabled(): void
@@ -98,8 +121,10 @@ class AuthPageRenderTest extends TestCase
 
         $verifySource = file_get_contents(resource_path('views/auth/verify.blade.php'));
         $this->assertStringContainsString("__('ui.verify_title')", $verifySource);
-        $this->assertStringContainsString("__('ui.verify_message')", $verifySource);
+        $this->assertStringContainsString("__('ui.verify_subtitle')", $verifySource);
         $this->assertStringContainsString("__('ui.verify_resend_button')", $verifySource);
+        $this->assertStringContainsString('auth-link', $verifySource);
+        $this->assertStringNotContainsString('btn-link', $verifySource);
 
         $confirmSource = file_get_contents(resource_path('views/auth/passwords/confirm.blade.php'));
         $this->assertStringContainsString("__('ui.confirm_password')", $confirmSource);
@@ -131,6 +156,8 @@ class AuthPageRenderTest extends TestCase
             'mutqin_home',
             'verify_title',
             'verify_message',
+            'verify_resent',
+            'verify_resend_button',
             'confirm_password',
         ];
 

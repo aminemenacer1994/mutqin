@@ -718,7 +718,7 @@ class SessionLifecycleService
             'paused_at',
             'resumed_at',
             'ended_at',
-            'user_id',
+            // Never accept client/attribute user_id — ownership is forced by callers.
             'repeated_from_session_id',
             'attempt_number',
             'recommendation_id',
@@ -728,11 +728,17 @@ class SessionLifecycleService
         ];
 
         $merged = array_merge($defaults, $attributes);
+        unset($merged['user_id']);
         $filtered = [];
         foreach ($allowed as $key) {
             if (array_key_exists($key, $merged)) {
                 $filtered[$key] = $merged[$key];
             }
+        }
+
+        // Preserve ownership from defaults only (set by authenticated user paths).
+        if (array_key_exists('user_id', $defaults)) {
+            $filtered['user_id'] = $defaults['user_id'];
         }
 
         if (array_key_exists('metadata', $filtered) && is_array($filtered['metadata'])) {

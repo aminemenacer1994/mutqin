@@ -68,7 +68,7 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
         Http::assertSentCount(1);
     }
 
-    public function test_transcription_token_allows_repeated_recitation_starts_without_throttling(): void
+    public function test_transcription_token_allows_a_normal_session_burst_under_the_rate_limit(): void
     {
         $user = User::factory()->pro()->create();
 
@@ -76,6 +76,11 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
             'services.speechmatics.api_key' => 'speechmatics-test-key-123456',
             'services.speechmatics.region' => 'eu',
             'services.speechmatics.usage_cap.enabled' => false,
+            'services.speechmatics.rate_limit.enabled' => true,
+            'services.speechmatics.rate_limit.per_user_per_minute' => 10,
+            'services.speechmatics.rate_limit.per_ip_per_minute' => 30,
+            'services.speechmatics.rate_limit.burst_per_user' => 5,
+            'services.speechmatics.rate_limit.burst_seconds' => 10,
         ]);
 
         Http::fake([
@@ -86,7 +91,8 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
 
         $this->actingAs($user);
 
-        for ($attempt = 0; $attempt < 12; $attempt++) {
+        // Legitimate AMD start + soft-recover remints stay under the configured burst.
+        for ($attempt = 0; $attempt < 5; $attempt++) {
             $this->postJson(route('memorisation.transcription-token'))
                 ->assertOk()
                 ->assertJson([
@@ -94,6 +100,8 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
                     'websocket_host' => 'eu.rt.speechmatics.com',
                 ]);
         }
+
+        Http::assertSentCount(5);
     }
 
     public function test_transcription_token_is_minted_while_under_the_usage_cap(): void

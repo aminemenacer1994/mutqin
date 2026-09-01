@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\AdminEmails;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
@@ -36,6 +38,10 @@ class User extends Authenticatable
         'subscription_trial_ends_at',
         'subscription_current_period_ends_at',
         'locale',
+        'theme',
+        'ai_audio_consent_status',
+        'ai_audio_consent_version',
+        'ai_audio_consent_at',
     ];
 
     /**
@@ -62,6 +68,7 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
             'subscription_trial_ends_at' => 'datetime',
             'subscription_current_period_ends_at' => 'datetime',
+            'ai_audio_consent_at' => 'datetime',
         ];
     }
 
@@ -179,7 +186,47 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        // Privilege is an explicit DB flag — never granted by registering an admin mailbox.
+        // Privilege is the persisted role flag — never granted from a request email.
+        if (! $this->hasPersistedAdminRole()) {
+            return false;
+        }
+
+        // MVP allowlist: require a verified mailbox that still matches config.
+        if ($this->email_verified_at === null) {
+            return false;
+        }
+
+        return AdminEmails::matchesAllowlist($this->email);
+    }
+
+    /**
+     * Raw DB admin flag (ignores verification / allowlist). Used for profile rules
+     * and eligibility re-evaluation, not as the authorization boundary.
+     */
+    public function hasPersistedAdminRole(): bool
+    {
         return (bool) $this->is_admin;
+    }
+
+    /**
+     * After email changes, drop the admin flag if the mailbox is no longer eligible.
+     */
+    public function revaluateAdminEligibility(): void
+    {
+        if (! $this->hasPersistedAdminRole()) {
+            return;
+        }
+
+        if (AdminEmails::matchesAllowlist($this->email)) {
+            return;
+        }
+
+        $this->forceFill(['is_admin' => false])->save();
+
+        Log::warning('auth.security.admin_privilege_revoked', [
+            'user_id' => $this->id,
+            'email_hash' => hash('sha256', AdminEmails::normalize($this->email)),
+            'reason' => 'email_no_longer_allowlisted',
+        ]);
     }
 }

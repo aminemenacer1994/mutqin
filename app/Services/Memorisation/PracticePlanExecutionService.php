@@ -205,7 +205,7 @@ class PracticePlanExecutionService
 
     private function assertOwned(User $user, MemorisationPracticePlan $plan): void
     {
-        if ((int) $plan->user_id !== (int) $user->id && ! $user->isAdmin()) {
+        if ((int) $plan->user_id !== (int) $user->id) {
             abort(404);
         }
     }

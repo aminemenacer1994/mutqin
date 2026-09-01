@@ -2,13 +2,17 @@
 
 @section('content')
 <div class="auth-page">
-    <div class="auth-panel">
+    <div class="auth-panel auth-panel--verify">
         <a class="auth-brand" href="{{ route('home') }}" aria-label="{{ __('ui.mutqin_home') }}">
             <img src="/images/logo_main.png" alt="" class="auth-brand-img">
             <span>Mutqin</span>
         </a>
 
-        <h1 class="auth-heading">{{ __('ui.verify_title') }}</h1>
+        <header class="auth-greeting">
+            <p class="auth-greeting__arabic" lang="ar" dir="rtl">{{ __('ui.verify_kicker') }}</p>
+            <h1 class="auth-heading">{{ __('ui.verify_title') }}</h1>
+            <p class="auth-lede">{{ __('ui.verify_subtitle') }}</p>
+        </header>
 
         @if (session('resent'))
             <div class="alert alert-success auth-alert" role="alert">
@@ -16,14 +20,19 @@
             </div>
         @endif
 
-        <p class="auth-lede">
-            {{ __('ui.verify_message') }}
-        </p>
-
-        <form method="POST" action="{{ route('verification.resend') }}" class="auth-form">
+        <form method="POST" action="{{ route('verification.resend') }}" class="auth-form auth-form--solo">
             @csrf
             <button type="submit" class="btn auth-submit">{{ __('ui.verify_resend_button') }}</button>
         </form>
+
+        <p class="auth-footer auth-footer--meta">{{ __('ui.verify_spam') }}</p>
+
+        <div class="auth-footer">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="auth-link">{{ __('ui.logout') }}</button>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

@@ -1,6 +1,7 @@
 const THEME_STORAGE_KEY = 'mutqin-theme';
 const THEME_PREFERENCE_KEY = 'mutqin-theme-preference';
 const THEME_COOKIE_KEY = 'mutqin_theme';
+export const DEFAULT_THEME = 'sepia';
 
 /** PWA / browser chrome. Manifest splash stays light — OS cannot switch it with data-theme. */
 export const THEME_CHROME = {
@@ -9,11 +10,11 @@ export const THEME_CHROME = {
   dark: { themeColor: '#14110f', backgroundColor: '#14110f', colorScheme: 'dark' },
 };
 
-export function getThemeChrome(theme = 'light') {
-  return THEME_CHROME[normalizeThemeToken(theme)] || THEME_CHROME.light;
+export function getThemeChrome(theme = DEFAULT_THEME) {
+  return THEME_CHROME[normalizeThemeToken(theme)] || THEME_CHROME.sepia;
 }
 
-export function applyThemeChrome(theme = 'light') {
+export function applyThemeChrome(theme = DEFAULT_THEME) {
   const chrome = getThemeChrome(theme);
   if (typeof document === 'undefined') return chrome;
 
@@ -37,18 +38,19 @@ export function applyThemeChrome(theme = 'light') {
   return chrome;
 }
 
-export function normalizeThemeToken(value = 'light') {
-  const theme = String(value || 'light').toLowerCase();
+export function normalizeThemeToken(value = DEFAULT_THEME) {
+  const theme = String(value || DEFAULT_THEME).toLowerCase();
   if (theme === 'dark' || theme === 'dark-mode') return 'dark';
+  if (theme === 'light' || theme === 'light-mode') return 'light';
   if (theme === 'sepia' || theme === 'sepia-mode') return 'sepia';
-  return 'light';
+  return DEFAULT_THEME;
 }
 
-export function toThemePreference(value = 'light') {
+export function toThemePreference(value = DEFAULT_THEME) {
   const theme = normalizeThemeToken(value);
   if (theme === 'dark') return 'dark-mode';
-  if (theme === 'sepia') return 'sepia-mode';
-  return 'light-mode';
+  if (theme === 'light') return 'light-mode';
+  return 'sepia-mode';
 }
 
 function safeGet(key) {
@@ -71,7 +73,22 @@ function readCookieTheme() {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+function getServerInitialTheme() {
+  if (typeof window === 'undefined') return null;
+  if (window.mutqinInitialTheme) return normalizeThemeToken(window.mutqinInitialTheme);
+  if (window.mutqinInitialThemePreference) {
+    return normalizeThemeToken(window.mutqinInitialThemePreference);
+  }
+  return null;
+}
+
 export function getSavedTheme() {
+  // Authenticated users: account theme from the server wins over shared-device localStorage.
+  if (typeof window !== 'undefined' && window.mutqinAuthCheck) {
+    const serverTheme = getServerInitialTheme();
+    if (serverTheme) return serverTheme;
+  }
+
   const savedTheme = safeGet(THEME_STORAGE_KEY);
   if (savedTheme) return normalizeThemeToken(savedTheme);
 
@@ -86,15 +103,33 @@ export function getSavedTheme() {
   const cookieTheme = readCookieTheme();
   if (cookieTheme) return normalizeThemeToken(cookieTheme);
 
-  if (typeof window !== 'undefined' && window.mutqinInitialTheme) {
-    return normalizeThemeToken(window.mutqinInitialTheme);
-  }
+  const serverTheme = getServerInitialTheme();
+  if (serverTheme) return serverTheme;
 
-  return 'light';
+  return DEFAULT_THEME;
+}
+
+async function persistThemeToServer(themePreference) {
+  if (typeof window === 'undefined' || !window.mutqinAuthCheck) return;
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    await fetch('/api/profile/theme', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({ theme: themePreference }),
+    });
+  } catch {
+    // non-blocking: cookie/localStorage still persist preference
+  }
 }
 
 export function setGlobalTheme(theme, options = {}) {
-  const { dispatchEvent = true } = options;
+  const { dispatchEvent = true, persist = true } = options;
   const normalizedTheme = normalizeThemeToken(theme);
   const themePreference = toThemePreference(normalizedTheme);
 
@@ -106,6 +141,10 @@ export function setGlobalTheme(theme, options = {}) {
 
   safeSet(THEME_STORAGE_KEY, normalizedTheme);
   safeSet(THEME_PREFERENCE_KEY, themePreference);
+
+  if (persist) {
+    persistThemeToServer(themePreference);
+  }
 
   if (dispatchEvent && typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('mutqin:theme-change', {

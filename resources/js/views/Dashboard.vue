@@ -33,17 +33,6 @@
             <div class="dash-hero__greeting">
               <span class="dash-kicker">{{ t('dashboard.journey_kicker') }}</span>
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
-              <div v-if="retentionChips.length" class="dash-hero__chips">
-                <span
-                  v-for="chip in retentionChips"
-                  :key="chip.key"
-                  class="dash-chip"
-                  :class="chip.toneClass"
-                >
-                  <i v-if="chip.icon" :class="chip.icon" aria-hidden="true"></i>
-                  {{ chip.label }}
-                </span>
-              </div>
             </div>
             <button
               type="button"
@@ -1082,39 +1071,6 @@ export default {
         return this.completionBar(this.t('dashboard.plan_completion'), progress.active_plan_completion_percent)
       }
       return null
-    },
-    retentionChips() {
-      const retention = this.data?.retention
-      if (!retention) return []
-      const chips = []
-      const streakDays = Number(retention.streak_days || 0)
-      if (streakDays > 0) {
-        const label = streakDays === 1
-          ? this.t('dashboard.streak_keep_going')
-          : this.t('dashboard.streak', { n: streakDays })
-        chips.push({
-          key: 'streak',
-          label,
-          icon: 'bi bi-fire',
-          toneClass: streakDays >= 7 ? 'dash-chip--streak-strong' : 'dash-chip--streak',
-        })
-      } else if (retention.streak_broken || retention.streak_has_history) {
-        chips.push({
-          key: 'streak_restart',
-          label: this.t('dashboard.streak_restart'),
-          icon: null,
-          toneClass: 'dash-chip--streak-soft',
-        })
-      }
-      if (retention.incomplete_session) {
-        chips.push({
-          key: 'incomplete',
-          label: this.t('dashboard.incomplete_reminder'),
-          icon: null,
-          toneClass: '',
-        })
-      }
-      return chips.slice(0, 2)
     },
     chartPalette() {
       if (this.darkTheme) {

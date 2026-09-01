@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Services\Auth\GoogleSignInService;
 use App\Support\AuthRedirect;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +14,10 @@ use Throwable;
 
 class GoogleAuthController extends Controller
 {
+    public function __construct(
+        private readonly GoogleSignInService $googleSignIn
+    ) {}
+
     public function redirect(): RedirectResponse
     {
         if ($error = $this->googleConfigError()) {
@@ -23,6 +27,13 @@ class GoogleAuthController extends Controller
         }
 
         $this->syncGoogleConfig();
+
+        // Authenticated users start an explicit link flow (never email-only auto-link).
+        if (Auth::check()) {
+            request()->session()->put('google_link_intent', true);
+        } else {
+            request()->session()->forget('google_link_intent');
+        }
 
         return $this->googleProvider()->redirect();
     }
@@ -37,8 +48,6 @@ class GoogleAuthController extends Controller
 
         $this->syncGoogleConfig();
 
-        $created = false;
-
         try {
             $googleUser = $this->googleProvider()->user();
         } catch (Throwable $exception) {
@@ -48,54 +57,23 @@ class GoogleAuthController extends Controller
 
             return redirect()
                 ->route('login')
-                ->withErrors(['google' => 'Unable to sign in with Google. Please try again.']);
+                ->withErrors(['google' => GoogleSignInService::GENERIC_FAILURE]);
         }
 
-        $email = $googleUser->getEmail();
+        $result = $this->googleSignIn->resolve($googleUser, Auth::user());
 
-        if (! $email) {
+        if ($result['error'] !== null || $result['user'] === null) {
+            request()->session()->forget('google_link_intent');
+            $redirectTo = Auth::check() ? route('profile.show') : route('login');
+
             return redirect()
-                ->route('login')
-                ->withErrors(['google' => 'Google did not return an email address for this account.']);
+                ->to($redirectTo)
+                ->withErrors(['google' => $result['error'] ?? GoogleSignInService::GENERIC_FAILURE]);
         }
 
-        $user = User::where('google_id', $googleUser->getId())->first();
-
-        if (! $user) {
-            $user = User::where('email', $email)->first();
-
-            if ($user) {
-                // Do not auto-link Google onto an unverified password account — that is an
-                // account-takeover path (attacker registers victim@gmail.com first).
-                if ($user->email_verified_at === null) {
-                    return redirect()
-                        ->route('login')
-                        ->withErrors([
-                            'google' => 'This email already has an account that is not verified. Sign in with your password and verify the email before linking Google.',
-                        ]);
-                }
-
-                $user->forceFill([
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                ])->save();
-            } else {
-                $user = User::create([
-                    'name' => $googleUser->getName() ?: Str::before($email, '@'),
-                    'email' => $email,
-                    'email_verified_at' => now(),
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
-                    'password' => null,
-                    'password_set_at' => null,
-                ]);
-                $created = true;
-            }
-        } elseif ($googleUser->getAvatar() !== $user->avatar) {
-            $user->forceFill([
-                'avatar' => $googleUser->getAvatar(),
-            ])->save();
-        }
+        $user = $result['user'];
+        $created = $result['created'];
+        $linkingFromProfile = (bool) request()->session()->pull('google_link_intent');
 
         Auth::login($user, true);
         request()->session()->regenerate();
@@ -107,6 +85,13 @@ class GoogleAuthController extends Controller
         } else {
             // Put (not flash): survive any hop before /memorisation consumes it.
             request()->session()->put('mutqin_just_logged_in', true);
+            request()->session()->forget('mutqin_just_registered');
+        }
+
+        if ($linkingFromProfile && ! $created) {
+            return redirect()
+                ->route('profile.show')
+                ->with('profile_status', __('profile.google_linked_success'));
         }
 
         return redirect()->intended(AuthRedirect::to($user, justRegistered: $created));

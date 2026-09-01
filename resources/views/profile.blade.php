@@ -291,6 +291,17 @@
                                         <i class="bi bi-google" aria-hidden="true"></i>
                                         <span>{{ __('profile.connected_with_google', ['email' => $user->email]) }}</span>
                                     </li>
+                                @elseif ($user->email_verified_at)
+                                    <li>
+                                        <i class="bi bi-google" aria-hidden="true"></i>
+                                        <span>{{ __('profile.link_google_desc') }}</span>
+                                        <a href="{{ route('auth.google.redirect') }}" class="profile-link-google">{{ __('profile.link_google') }}</a>
+                                    </li>
+                                @else
+                                    <li>
+                                        <i class="bi bi-google" aria-hidden="true"></i>
+                                        <span>{{ __('profile.link_google_verify_first') }}</span>
+                                    </li>
                                 @endif
                                 @if ($isChangePassword)
                                     <li>
@@ -304,6 +315,9 @@
                                     </li>
                                 @endif
                             </ul>
+                            @error('google')
+                                <p class="profile-field-error" role="alert">{{ $message }}</p>
+                            @enderror
                         </div>
                     </article>
                 </div>

@@ -53,6 +53,22 @@ return [
             'daily_user_session_minutes' => env('SPEECHMATICS_DAILY_USER_SESSION_MINUTES'),
             'daily_global_session_minutes' => env('SPEECHMATICS_DAILY_GLOBAL_SESSION_MINUTES'),
         ],
+        /*
+         * Burst / per-minute HTTP guard for POST /memorisation/transcription-token.
+         * Runs before Speechmatics is contacted. Counts every attempt (including
+         * upstream failures) so retries cannot multiply provider calls. Defaults
+         * allow a normal AMD session + soft-recover without blocking learners.
+         * Admin/demo bypass is OFF unless explicitly enabled.
+         */
+        'rate_limit' => [
+            'enabled' => env('SPEECHMATICS_RATE_LIMIT_ENABLED', true),
+            'per_user_per_minute' => env('SPEECHMATICS_RATE_LIMIT_PER_USER_PER_MINUTE', 10),
+            'per_ip_per_minute' => env('SPEECHMATICS_RATE_LIMIT_PER_IP_PER_MINUTE', 30),
+            'burst_per_user' => env('SPEECHMATICS_RATE_LIMIT_BURST_PER_USER', 3),
+            'burst_seconds' => env('SPEECHMATICS_RATE_LIMIT_BURST_SECONDS', 10),
+            'bypass_admin' => env('SPEECHMATICS_RATE_LIMIT_BYPASS_ADMIN', false),
+            'bypass_demo' => env('SPEECHMATICS_RATE_LIMIT_BYPASS_DEMO', false),
+        ],
     ],
 
     'google_analytics' => [

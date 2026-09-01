@@ -1,8 +1,8 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
-    $appThemePreference = $appThemePreference ?? session('mutqin_theme', 'light-mode');
-    $appTheme = $appTheme ?? (str_starts_with($appThemePreference, 'dark') ? 'dark' : (str_starts_with($appThemePreference, 'sepia') ? 'sepia' : 'light'));
+    $appThemePreference = $appThemePreference ?? session('mutqin_theme', 'sepia-mode');
+    $appTheme = $appTheme ?? (str_starts_with($appThemePreference, 'dark') ? 'dark' : (str_starts_with($appThemePreference, 'light') ? 'light' : 'sepia'));
     $appThemeColor = $appTheme === 'dark' ? '#14110f' : '#8b5e3c';
     $appColorScheme = $appTheme === 'dark' ? 'dark' : 'light';
     $switcherLocales = ['en', 'fr', 'es'];
@@ -36,13 +36,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
       (function () {
-        var theme = '';
-        try { theme = localStorage.getItem('mutqin-theme') || ''; } catch (e) {}
-        if (!theme) theme = document.documentElement.getAttribute('data-theme') || 'light';
+        // Prefer SSR data-theme (user account / cookie / sepia default) to avoid FOUC fighting the server.
+        var theme = document.documentElement.getAttribute('data-theme') || '';
+        if (!theme) {
+          try { theme = localStorage.getItem('mutqin-theme') || ''; } catch (e) {}
+        }
+        if (!theme) theme = 'sepia';
         theme = String(theme).toLowerCase();
         if (theme === 'dark' || theme === 'dark-mode') theme = 'dark';
-        else if (theme === 'sepia' || theme === 'sepia-mode') theme = 'sepia';
-        else theme = 'light';
+        else if (theme === 'light' || theme === 'light-mode') theme = 'light';
+        else theme = 'sepia';
         document.documentElement.setAttribute('data-theme', theme);
         var color = theme === 'dark' ? '#14110f' : '#8b5e3c';
         var meta = document.querySelector('meta[name="theme-color"]');
@@ -5876,6 +5879,12 @@
         };
         window.mutqinInitialThemePreference = @json($appThemePreference);
         window.mutqinInitialTheme = @json($appTheme);
+        window.mutqinAudioPrivacy = @json(\App\Support\AudioPrivacy::clientConfig());
+        window.mutqinAiAudioConsent = @json(
+            Auth::check()
+                ? app(\App\Services\Auth\AiAudioConsentService::class)->snapshot(Auth::user())
+                : null
+        );
 
         function runWhenReady(fn) {
             if (document.readyState === 'loading') {
@@ -5896,14 +5905,14 @@
             }
             function normalizeTheme(value) {
                 if (value === 'dark' || value === 'dark-mode') return 'dark';
-                if (value === 'sepia' || value === 'sepia-mode') return 'sepia';
-                return 'light';
+                if (value === 'light' || value === 'light-mode') return 'light';
+                return 'sepia';
             }
             function toThemePreference(value) {
                 const theme = normalizeTheme(value);
                 if (theme === 'dark') return 'dark-mode';
-                if (theme === 'sepia') return 'sepia-mode';
-                return 'light-mode';
+                if (theme === 'light') return 'light-mode';
+                return 'sepia-mode';
             }
             const themes = ['light', 'sepia', 'dark'];
             const themeIcons = {
@@ -5917,8 +5926,24 @@
                 if (theme === 'sepia') return @json(__('ui.switch_dark'));
                 return @json(__('ui.switch_light'));
             }
+
+            function persistThemeToServer(themePreference) {
+                if (!window.mutqinAuthCheck) return;
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                fetch('/api/profile/theme', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ theme: themePreference }),
+                }).catch(function () {});
+            }
             
-            function setTheme(theme) {
+            function setTheme(theme, options) {
+                const persist = !options || options.persist !== false;
                 const normalizedTheme = normalizeTheme(theme);
                 const themePreference = toThemePreference(normalizedTheme);
 
@@ -5936,12 +5961,15 @@
                 if (colorSchemeMeta) {
                     colorSchemeMeta.setAttribute('content', normalizedTheme === 'dark' ? 'dark' : 'light');
                 }
+                if (persist) {
+                    persistThemeToServer(themePreference);
+                }
                 window.dispatchEvent(new CustomEvent('mutqin:theme-change', { detail: { theme: normalizedTheme } }));
                 
                 const button = document.getElementById('globalThemeToggle');
                 if (button) {
                     const icon = button.querySelector('i');
-                    icon.className = `bi ${themeIcons[normalizedTheme] || themeIcons.light}`;
+                    icon.className = `bi ${themeIcons[normalizedTheme] || themeIcons.sepia}`;
                     button.setAttribute('aria-label', themeToggleLabel(normalizedTheme));
                 }
 
@@ -5952,16 +5980,19 @@
             }
             
             function cycleTheme() {
-                const current = document.documentElement.getAttribute('data-theme') || 'light';
+                const current = document.documentElement.getAttribute('data-theme') || 'sepia';
                 const currentIndex = themes.indexOf(current);
                 const nextIndex = (currentIndex + 1) % themes.length;
                 setTheme(themes[nextIndex]);
             }
             
-            // Load saved theme
+            // Authenticated: account theme from server. Guests: device localStorage / cookie / sepia.
             const savedThemePreference = safeGet('mutqin-theme-preference');
             const savedTheme = safeGet('mutqin-theme');
-            setTheme(savedTheme || savedThemePreference || window.mutqinInitialThemePreference || window.mutqinInitialTheme || 'light-mode');
+            const initialTheme = window.mutqinAuthCheck
+                ? (window.mutqinInitialTheme || window.mutqinInitialThemePreference || 'sepia')
+                : (savedTheme || savedThemePreference || window.mutqinInitialThemePreference || window.mutqinInitialTheme || 'sepia');
+            setTheme(initialTheme, { persist: false });
             
             runWhenReady(function() {
                 const themeButton = document.getElementById('globalThemeToggle');

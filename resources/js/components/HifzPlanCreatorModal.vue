@@ -296,6 +296,7 @@
 <script>
 import { HIFZ_PLAN_STORAGE_KEY, calculatePlanForecast } from '../scripts/engine/hifz_session_engine'
 import learningApi from '../scripts/api/learning'
+import { offlineScopedLocalKey } from '../utils/mutqinStorageKeys'
 
 const STORAGE_KEY = HIFZ_PLAN_STORAGE_KEY
 
@@ -321,6 +322,7 @@ export default {
     reciters: { type: Array, default: () => [] },
     speedOptions: { type: Array, default: () => [0.5, 1, 1.25, 1.5, 2] },
     backendSyncEnabled: { type: Boolean, default: false },
+    ownerUserId: { type: [String, Number], default: null },
   },
   emits: ['close', 'saved'],
   data() {
@@ -594,7 +596,7 @@ export default {
         try {
           const remote = await learningApi.getHifzPlan()
           if (remote) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(remote))
+            this.writeLocalPlanCache(remote)
             return remote
           }
         } catch {
@@ -603,11 +605,32 @@ export default {
       }
 
       try {
-        const raw = localStorage.getItem(STORAGE_KEY)
-        return raw ? JSON.parse(raw) : null
+        const raw = this.readLocalPlanCache()
+        return raw
       } catch {
         return null
       }
+    },
+    ownerScopedStorageKey() {
+      return offlineScopedLocalKey(STORAGE_KEY, this.ownerUserId || 'guest')
+    },
+    readLocalPlanCache() {
+      if (typeof globalThis !== 'undefined' && globalThis.__MUTQIN_STORAGE_BRIDGE__) {
+        const bridged = globalThis.__MUTQIN_STORAGE_BRIDGE__.getItem(STORAGE_KEY)
+        return bridged ? JSON.parse(bridged) : null
+      }
+      const scoped = localStorage.getItem(this.ownerScopedStorageKey())
+      if (scoped) return JSON.parse(scoped)
+      return null
+    },
+    writeLocalPlanCache(payload) {
+      const raw = JSON.stringify(payload)
+      if (typeof globalThis !== 'undefined' && globalThis.__MUTQIN_STORAGE_BRIDGE__) {
+        globalThis.__MUTQIN_STORAGE_BRIDGE__.setItem(STORAGE_KEY, raw)
+        return
+      }
+      localStorage.setItem(this.ownerScopedStorageKey(), raw)
+      try { localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
     },
     planToDraft(plan) {
       if (!plan || typeof plan !== 'object') return this.createDefaultDraft()
@@ -833,7 +856,7 @@ export default {
     async savePlan() {
       if (!this.canSavePlan) return
       const payload = this.buildPlanPayload()
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+      this.writeLocalPlanCache(payload)
 
       if (this.backendSyncEnabled) {
         try {

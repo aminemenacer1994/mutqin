@@ -138,3 +138,130 @@ export function activeSessionSnapshotKey(userId = null) {
   const id = userId != null && String(userId).trim() !== '' ? String(userId) : 'guest'
   return `${ACTIVE_SESSION_SNAPSHOT_KEY}.${id}`
 }
+
+/**
+ * Unscoped legacy keys that must never bleed across accounts on the same browser.
+ * Scoped caches (`mutqin_state:{userId}`, `mutqin.*.{userId}`, `*.u.{userId}`) are kept.
+ */
+export const SHARED_MUTQIN_LOCAL_STORAGE_KEYS = Object.freeze([
+  STORAGE.uiState,
+  STORAGE.continueSession,
+  STORAGE.audioState,
+  CENTRAL_SESSION_STORAGE_KEY,
+  MODE_STORAGE_KEYS.beginner,
+  MODE_STORAGE_KEYS.advanced,
+  MODE_STORAGE_KEYS.planner,
+  SESSION_STORAGE_KEYS.beginner,
+  SESSION_STORAGE_KEYS.advanced,
+  SESSION_STORAGE_KEYS.planner,
+  STORAGE.defaultFontSize,
+  STORAGE.verseFontSizes,
+  STORAGE.masteredWeekly,
+  STORAGE.events,
+  STORAGE.planner,
+  STORAGE.todayPlan,
+  STORAGE.metrics,
+  STORAGE.analytics,
+  STORAGE.activity,
+  STORAGE.recordings,
+  STORAGE.recordingsLibrary,
+  'mutqin_hifz_plan',
+  'mutqin_hifz_app_state',
+  'mutqin_hifz_plan_archives',
+  'mutqin_ayah_progress',
+  'mutqin_spaced_repetition_memory',
+  'mutqin_sessions',
+  'mutqin_ai_memorisation_checker',
+  'mutqin.adaptiveAssessment.session',
+  'mutqin.adaptiveAssessment.mastery',
+  'mutqin.adaptiveAssessment.effectiveness',
+  'mutqin.adaptiveAssessment.events',
+  'mutqin.persistentWordWeakness',
+  'mutqin.tajweedPractice.weaknessCounts.v1',
+  'mutqin.practiceFocusWeakWords',
+  'mutqin.dashboardEntryIntent.v1',
+  'offline_surah_catalog',
+  'migration_complete',
+  'memorisation_state_v2',
+])
+
+export const SHARED_MUTQIN_SESSION_STORAGE_KEYS = Object.freeze([
+  ACTIVE_SESSION_SNAPSHOT_KEY,
+  'mutqin.practiceFocusWeakWords',
+  'mutqin.dashboardEntryIntent.v1',
+])
+
+/**
+ * Namespace a bare storage key for an owner. Already-scoped keys are returned unchanged.
+ * @param {string} localKey
+ * @param {string|number|null|undefined} userId
+ * @returns {string}
+ */
+export function offlineScopedLocalKey(localKey, userId = 'guest') {
+  if (!localKey || typeof localKey !== 'string') return localKey
+  const id = userId != null && String(userId).trim() !== '' ? String(userId) : 'guest'
+  if (localKey.endsWith(`.${id}`) || localKey.endsWith(`.u.${id}`)) return localKey
+  if (localKey.startsWith('mutqin_state:')) return localKey
+  return `${localKey}.${id}`
+}
+
+/**
+ * Clear shared (unscoped) browser residue on logout / account switch.
+ * Does NOT wipe per-user caches — User A's `mutqin_state:{id}` survives User B.
+ * @param {{ localStorage?: Storage|null, sessionStorage?: Storage|null }} [stores]
+ * @returns {{ localRemoved: number, sessionRemoved: number }}
+ */
+export function clearSharedMutqinBrowserResidue(stores = {}) {
+  const local = stores.localStorage
+    ?? (typeof localStorage !== 'undefined' ? localStorage : null)
+  const session = stores.sessionStorage
+    ?? (typeof sessionStorage !== 'undefined' ? sessionStorage : null)
+
+  let localRemoved = 0
+  let sessionRemoved = 0
+
+  const removeExact = (store, key) => {
+    if (!store || !key) return false
+    try {
+      if (store.getItem(key) == null) return false
+      store.removeItem(key)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  for (const key of SHARED_MUTQIN_LOCAL_STORAGE_KEYS) {
+    if (removeExact(local, key)) localRemoved += 1
+  }
+  for (const key of SHARED_MUTQIN_SESSION_STORAGE_KEYS) {
+    if (removeExact(session, key)) sessionRemoved += 1
+  }
+
+  // Drop ephemeral offline_* blobs that are not user-suffixed.
+  if (local) {
+    try {
+      const keys = []
+      for (let index = 0; index < local.length; index += 1) {
+        const key = local.key(index)
+        if (key) keys.push(key)
+      }
+      for (const key of keys) {
+        if (!key.startsWith('offline_surah_')) continue
+        if (/\.\d+$/.test(key) || key.endsWith('.guest')) continue
+        if (removeExact(local, key)) localRemoved += 1
+      }
+      for (const key of keys) {
+        if (!key.startsWith('mutqin.apiCache.')) continue
+        // Unscoped api cache entries look like mutqin.apiCache.{name} without a trailing user id.
+        // Keep mutqin.apiCache.*.{userId} / .guest.
+        if (/\.\d+$/.test(key) || key.endsWith('.guest')) continue
+        if (removeExact(local, key)) localRemoved += 1
+      }
+    } catch {
+      // ignore enumeration failures
+    }
+  }
+
+  return { localRemoved, sessionRemoved }
+}
