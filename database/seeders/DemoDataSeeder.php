@@ -19,12 +19,15 @@ use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use Database\Seeders\Concerns\GuardsDemoSeeding;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class DemoDataSeeder extends Seeder
 {
+    use GuardsDemoSeeding;
+
     private const RECITER_ALAFASY = 'ar.alafasy';
 
     /**
@@ -32,6 +35,8 @@ class DemoDataSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->guardAgainstProductionSeeding();
+
         $users = $this->seedUsers();
 
         foreach ($users as $key => $user) {
@@ -157,6 +162,9 @@ class DemoDataSeeder extends Seeder
         foreach ($definitions as $key => $attrs) {
             $email = $attrs['email'];
             unset($attrs['email']);
+
+            // Never updateOrCreate a real-user mailbox — demo domains only.
+            $this->assertSafeDemoEmail($email);
 
             $users[$key] = User::updateOrCreate(
                 ['email' => $email],

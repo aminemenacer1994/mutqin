@@ -5,6 +5,8 @@
  * recognition must resolve to `insufficient_audio` — never `needs_practice`.
  */
 
+import { RECITATION_THRESHOLDS } from '../engine/recitationThresholds.js'
+
 export const RECITATION_RESULT_STATE = Object.freeze({
   INSUFFICIENT_AUDIO: 'insufficient_audio',
   NEEDS_PRACTICE: 'needs_practice',
@@ -18,23 +20,25 @@ export const RECITATION_RESULT_STATE = Object.freeze({
  */
 export const RECITATION_AUDIO_THRESHOLDS = Object.freeze({
   /** Minimum MediaRecorder / attempt length before assessment is fair. */
-  minRecordingSeconds: 1.5,
+  minRecordingSeconds: RECITATION_THRESHOLDS.minRecordingSeconds,
   /** Minimum detected usable speech duration. */
-  minUsableSpeechSeconds: 0.8,
+  minUsableSpeechSeconds: RECITATION_THRESHOLDS.minUsableSpeechSeconds,
   /**
    * Mean recognition-word confidence below this is too low to assess fairly
    * (when speech was present). Overall evaluation confidence alone is not used
    * for empty recognition — that path is caught by spoken-evidence checks.
    */
-  minRecognitionConfidence: 0.35,
+  minRecognitionConfidence: RECITATION_THRESHOLDS.minRecognitionConfidence,
   /** Accuracy banding for scored attempts (labels: strong / developing / needs_practice). */
-  strongAccuracyMin: 80,
-  developingAccuracyMin: 55,
+  strongAccuracyMin: RECITATION_THRESHOLDS.strongAccuracyMin,
+  developingAccuracyMin: RECITATION_THRESHOLDS.developingAccuracyMin,
   /**
    * Advancement with residual hard errors (1 red/black word) requires this floor.
    * Clean strong (0 hard errors) may still advance from strongAccuracyMin.
    */
-  progressionWithErrorsMin: 85,
+  progressionWithErrorsMin: RECITATION_THRESHOLDS.progressionWithErrorsMin,
+  /** Do not band as strong when evaluation confidence is below this. */
+  minEvaluationConfidenceForStrong: RECITATION_THRESHOLDS.minEvaluationConfidenceForStrong,
 })
 
 export const INSUFFICIENT_AUDIO_REASONS = Object.freeze({
@@ -400,7 +404,26 @@ export function resolveRecitationResultState(result = null, extras = {}, options
 
   const accuracy = resolveAccuracyPercent(result, extras)
   if (accuracy != null) {
-    if (accuracy >= thresholds.strongAccuracyMin) return RECITATION_RESULT_STATE.STRONG
+    if (accuracy >= thresholds.strongAccuracyMin) {
+      // High accuracy with weak provider confidence must not become a fabricated strong.
+      const evaluationConfidence = finiteNumber(
+        extras.confidence
+        ?? extras.evaluationConfidence
+        ?? result?.confidence
+        ?? result?.evaluationConfidence
+        ?? result?.recognitionConfidence,
+      )
+      const strongConfidenceFloor = Number.isFinite(Number(thresholds.minEvaluationConfidenceForStrong))
+        ? Number(thresholds.minEvaluationConfidenceForStrong)
+        : RECITATION_THRESHOLDS.minEvaluationConfidenceForStrong
+      if (
+        evaluationConfidence != null
+        && evaluationConfidence < strongConfidenceFloor
+      ) {
+        return RECITATION_RESULT_STATE.DEVELOPING
+      }
+      return RECITATION_RESULT_STATE.STRONG
+    }
     if (accuracy >= thresholds.developingAccuracyMin) return RECITATION_RESULT_STATE.DEVELOPING
     return RECITATION_RESULT_STATE.NEEDS_PRACTICE
   }

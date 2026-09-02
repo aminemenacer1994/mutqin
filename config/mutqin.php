@@ -57,4 +57,30 @@ return [
         'high_confidence_threshold' => 0.72,
         'persistent_weak_attempts' => 2,
     ],
+
+    /*
+     | User-owned durable files (feedback screenshots). Not AI temp audio.
+     | Disk name must exist in config/filesystems.php (local | user_files | s3 | …).
+     */
+    'user_files' => [
+        'disk' => env('MUTQIN_USER_FILES_DISK', 'local'),
+        'screenshot_prefix' => 'feedback-screenshots',
+    ],
+
+    /*
+     | App-level encrypted backups (spatie/laravel-backup). Off by default until
+     | destination credentials + archive password + scheduler are configured.
+     | Laravel Cloud MySQL snapshots remain the primary DB recovery path.
+     | See docs/backups.md.
+     */
+    'backup' => [
+        'enabled' => filter_var(env('MUTQIN_BACKUP_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'disk' => env('BACKUP_DISK', 'backups'),
+        'require_encryption' => filter_var(env('BACKUP_REQUIRE_ENCRYPTION', true), FILTER_VALIDATE_BOOL),
+        'clean_at' => env('BACKUP_CLEAN_AT', '01:00'),
+        'run_at' => env('BACKUP_RUN_AT', '01:30'),
+        'monitor_at' => env('BACKUP_MONITOR_AT', '02:00'),
+        // Laravel Cloud MySQL automated snapshot retention (dashboard), documented for ops.
+        'cloud_mysql_retention_days' => (int) env('MUTQIN_CLOUD_MYSQL_BACKUP_RETENTION_DAYS', 30),
+    ],
 ];

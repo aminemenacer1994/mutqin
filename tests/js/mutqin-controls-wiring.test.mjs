@@ -499,7 +499,7 @@ assert.doesNotMatch(
 )
 
 includesAll('ai memorisation detection modal wiring', [
-  /defineAsyncComponent\(\(\) =>[\s\S]*AiMemorisationDetectionModal\.vue/,
+  /lazyWorkspaceChunk\([\s\S]*AiMemorisationDetectionModal\.vue|wrapChunkImport\([\s\S]*AiMemorisationDetectionModal\.vue/,
   /AiMemorisationDetectionModal,/,
   /aiTestModalsEnabled\(\) \{/,
   /saveAiMemorisationCheckerAssessment\(\)/,

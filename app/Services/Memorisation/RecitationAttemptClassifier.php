@@ -27,13 +27,13 @@ class RecitationAttemptClassifier
 
     public const CANCELLED_STALE = 'cancelled_stale';
 
-    public const MIN_RECORDING_SECONDS = 1.5;
+    public const MIN_RECORDING_SECONDS = RecitationScoringThresholds::MIN_RECORDING_SECONDS;
 
-    public const MIN_USABLE_SPEECH_SECONDS = 0.8;
+    public const MIN_USABLE_SPEECH_SECONDS = RecitationScoringThresholds::MIN_USABLE_SPEECH_SECONDS;
 
-    public const MIN_RECOGNITION_CONFIDENCE = 0.35;
+    public const MIN_RECOGNITION_CONFIDENCE = RecitationScoringThresholds::MIN_RECOGNITION_CONFIDENCE;
 
-    public const RELIABLE_WORD_CONFIDENCE = 0.55;
+    public const RELIABLE_WORD_CONFIDENCE = RecitationScoringThresholds::UNCERTAIN_CONFIDENCE;
 
     /**
      * @return list<string>

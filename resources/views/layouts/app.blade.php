@@ -141,20 +141,26 @@
     </style>
     <script>
       (function () {
-        // One-shot unfreeze per build. Older scripts marked "done" before refresh and
-        // trapped tabs on a stale memorisation shell (UI looked frozen / unchanged).
-        var BUILD = 'v165';
-        var FORCE = '165';
+        // When MUTQIN_ASSET_BUILD changes, drop SW/Cache Storage so the next
+        // navigation uses fresh HTML + Mix ?id= URLs. Do NOT force a navigation
+        // reload here — that caused refresh loops with stale HTML. ChunkLoadError
+        // recovery (resources/js/utils/chunkLoadRecovery.js) handles mid-session
+        // stale chunks with at most one controlled reload.
+        var BUILD = @json(config('error_tracking.asset_build', 'v165'));
         var STORE = 'mutqin.asset.build';
-        var url = new URL(window.location.href);
-        var alreadyForced = url.searchParams.get('mutqin_force') === FORCE;
         try {
-          if (localStorage.getItem(STORE) === BUILD) return;
+          if (localStorage.getItem(STORE) === BUILD) {
+            // Strip leftover force params from older recovery scripts.
+            var clean = new URL(window.location.href);
+            if (clean.searchParams.has('mutqin_force') || clean.searchParams.has('_')) {
+              clean.searchParams.delete('mutqin_force');
+              clean.searchParams.delete('_');
+              window.history.replaceState({}, '', clean.pathname + clean.search + clean.hash);
+            }
+            return;
+          }
           Object.keys(localStorage).forEach(function (k) {
             if (k.indexOf('mutqin.asset') === 0) localStorage.removeItem(k);
-          });
-          Object.keys(sessionStorage).forEach(function (k) {
-            if (k.indexOf('mutqin.force') === 0) sessionStorage.removeItem(k);
           });
         } catch (e) {}
 
@@ -162,32 +168,19 @@
         if ('serviceWorker' in navigator) {
           tasks.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
             return Promise.all(regs.map(function (r) { return r.unregister(); }));
-          }));
+          }).catch(function () {}));
         }
         if ('caches' in window) {
           tasks.push(caches.keys().then(function (keys) {
-            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-          }));
-        }
-        // Dev Mix emits a stable /js/memorisation.js name — hard-reload it so the
-        // browser HTTP cache cannot keep neighbouring-page mushaf paint forever.
-        ['/js/app.js', '/js/memorisation.js', '/css/app.css'].forEach(function (assetPath) {
-          tasks.push(fetch(assetPath + '?mutqin_force=' + FORCE, {
-            cache: 'reload',
-            credentials: 'same-origin'
+            return Promise.all(keys.filter(function (k) {
+              return k.indexOf('mutqin-') === 0;
+            }).map(function (k) { return caches.delete(k); }));
           }).catch(function () {}));
-        });
+        }
 
         var finish = function () {
-          if (alreadyForced) {
-            try { localStorage.setItem(STORE, BUILD); } catch (e) {}
-            return;
-          }
-          url.searchParams.set('mutqin_force', FORCE);
-          url.searchParams.set('_', String(Date.now()));
-          window.location.replace(url.toString());
+          try { localStorage.setItem(STORE, BUILD); } catch (e) {}
         };
-
         var watchdog = window.setTimeout(finish, 2500);
         Promise.all(tasks).then(function () {
           window.clearTimeout(watchdog);
@@ -2615,8 +2608,8 @@
 
         function scrub() {
           if (locking || !document.body) return;
-          var root = document.querySelector('.main.mushaf-mode-active, .main.original-madani-mode-active')
-            || document.querySelector('.madani-page-sheet, .mushaf-page--madani, .original-madani-sheet');
+          var root = document.querySelector('.main.mushaf-mode-active, .main.mushaf-mode-active')
+            || document.querySelector('.madani-page-sheet, .mushaf-page--madani');
           if (!root) return;
           var session = resolveSession(root);
           // Chapter is required. Range-only incorrectly keeps prior-surah ayahs
@@ -2643,7 +2636,7 @@
               }
             });
 
-            root.querySelectorAll('.madani-line--ayah, .madani-line--basmala-ayah, .original-madani-sheet__line--ayah, .madani-line').forEach(function (line) {
+            root.querySelectorAll('.madani-line--ayah, .madani-line--basmala-ayah__line--ayah, .madani-line').forEach(function (line) {
               if (line.classList.contains('madani-line--basmala') || line.classList.contains('madani-line--surah_name')) return;
               var remaining = line.querySelectorAll('.madani-word');
               if (!remaining.length && (line.classList.contains('madani-line--ayah') || line.classList.contains('madani-line--basmala-ayah') || line.classList.contains('madani-line--glyphs'))) {

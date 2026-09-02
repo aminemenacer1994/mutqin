@@ -942,12 +942,6 @@
       "openAiRecite": "Buka AI recitation check for this ayah",
       "previousMushafPage": "Halaman mushaf sebelumnya",
       "nextMushafPage": "Halaman mushaf berikutnya",
-      "previousOriginalPage": "Halaman Mushaf Madani sebelumnya",
-      "nextOriginalPage": "Halaman Mushaf Madani berikutnya",
-      "originalMadaniPage": "Halaman Mushaf Madani {page}",
-      "originalMadaniTools": "Alat Mushaf Madani",
-      "enterOriginalFullScreen": "Masuk layar penuh",
-      "exitOriginalFullScreen": "Keluar dari layar penuh",
       "bismillah": "بسم الله",
       "playAyahAudio": "Play آية صوت",
       "pauseAyahAudio": "Pause آية صوت",
@@ -1519,20 +1513,8 @@
     "view": {
       "stacked": "Bertumpuk",
       "mushaf": "« Mushaf»",
-      "original": "Mushaf Madani",
       "stackedHint": "Bertumpuk: satu ayat demi satu, tenang untuk rentang pendek.",
-      "mushafHint": "Mushaf: tata letak halaman. Bantuan baca dan tajwid ada di Kontrol dan Bantuan.",
-      "originalHint": "Mushaf Madani: halaman cetak asli dengan bingkai Madinah, penanda ayat, dan judul surah."
-    },
-    "originalMadani": {
-      "errorTitle": "Halaman Mushaf Madani tidak dapat dimuat",
-      "errorDesc": "Gambar halaman asli tidak dimuat. Coba lagi, atau kembali ke tampilan Mushaf.",
-      "retry": "Coba lagi",
-      "switchMushaf": "Beralih ke tampilan Mushaf",
-      "pageSpread": "{right}–{left}",
-      "juz": "Juz {number}",
-      "surahNumber": "Surah {number}",
-      "toolsHint": "Fokus, kabur, jangkar, dan ukuran huruf berlaku pada halaman cetak. Warna tajwid sudah ada pada cetakan resmi."
+      "mushafHint": "Mushaf: tata letak halaman. Bantuan baca dan tajwid ada di Kontrol dan Bantuan."
     },
     "actions": {
       "newSession": "Sesi Baru",

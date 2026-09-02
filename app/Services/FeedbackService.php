@@ -7,9 +7,9 @@ use App\Models\Feedback;
 use App\Models\MemorisationAssessment;
 use App\Models\SessionRecommendation;
 use App\Models\User;
+use App\Support\UserFilesDisk;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -223,8 +223,8 @@ class FeedbackService
 
         $feedback->delete();
 
-        if (is_string($screenshotPath) && $screenshotPath !== '' && Storage::disk('local')->exists($screenshotPath)) {
-            Storage::disk('local')->delete($screenshotPath);
+        if (is_string($screenshotPath) && $screenshotPath !== '' && UserFilesDisk::disk()->exists($screenshotPath)) {
+            UserFilesDisk::disk()->delete($screenshotPath);
         }
 
         AdminDashboardService::invalidateCaches();
@@ -252,14 +252,14 @@ class FeedbackService
 
     public function screenshotContents(Feedback $feedback): ?array
     {
-        if (! $feedback->screenshot_path || ! Storage::disk('local')->exists($feedback->screenshot_path)) {
+        if (! $feedback->screenshot_path || ! UserFilesDisk::disk()->exists($feedback->screenshot_path)) {
             return null;
         }
 
-        $mime = Storage::disk('local')->mimeType($feedback->screenshot_path) ?: 'application/octet-stream';
+        $mime = UserFilesDisk::disk()->mimeType($feedback->screenshot_path) ?: 'application/octet-stream';
 
         return [
-            'contents' => Storage::disk('local')->get($feedback->screenshot_path),
+            'contents' => UserFilesDisk::disk()->get($feedback->screenshot_path),
             'mime' => $mime,
         ];
     }
@@ -287,8 +287,8 @@ class FeedbackService
             default => 'bin',
         };
 
-        $filename = sprintf('feedback-screenshots/%d-%s.%s', $feedback->id, Str::uuid(), $extension);
-        Storage::disk('local')->put($filename, file_get_contents($file->getRealPath()));
+        $filename = sprintf('%s/%d-%s.%s', UserFilesDisk::screenshotPrefix(), $feedback->id, Str::uuid(), $extension);
+        UserFilesDisk::disk()->put($filename, file_get_contents($file->getRealPath()));
 
         return $filename;
     }

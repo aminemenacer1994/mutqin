@@ -52863,27 +52863,30 @@ contained page (top session card untouched) —— */
 
 .main.mushaf-mode-active .madani-word.highlighted,
 .main.mushaf-mode-active .madani-word.phrase-highlighted {
-  background: transparent !important;
+  /* Keep a clear amber plate — ink-only was invisible on light paper / tajweed COLR */
+  background: color-mix(in srgb, #f0b35a 28%, transparent) !important;
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309 !important;
-  border-radius: 0;
-  box-shadow: none !important;
-  padding-inline: 0;
+  border-radius: 0.18em;
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c47c1a 55%, transparent) !important;
+  padding-inline: 0.04em;
   z-index: 2;
 }
 
-/* Non-tajweed glyphs: tint only the ink */
+/* Non-tajweed glyphs: amber plate + ink tint */
 .main.mushaf-mode-active .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word.highlighted.madani-word--glyph,
 .main.mushaf-mode-active .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word.phrase-highlighted.madani-word--glyph {
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309 !important;
 }
 
-/* Tajweed COLR: tint ink only (no plate) — COLR ignores plain color fills */
+/* Tajweed COLR ignores plain color fills — plate + filter so the active word still reads */
 .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
 .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
   color: unset !important;
   -webkit-text-fill-color: unset !important;
+  background: color-mix(in srgb, #f0b35a 28%, transparent) !important;
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c47c1a 55%, transparent) !important;
   filter: sepia(1) saturate(6) hue-rotate(-18deg) brightness(0.82);
 }
 
@@ -55300,7 +55303,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-title {
   font-size: 0.95rem;
-  font-weight: 750;
+  font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text);
 }
@@ -55728,7 +55731,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading {
   margin: 0 0 0.28rem;
   font-size: 1.22rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.2;
   text-transform: none;
@@ -61519,33 +61522,108 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
 .post-session-simple__session-feedback {
   margin: 0;
   text-align: center;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
+  line-height: 1.35;
 }
 
 .post-session-simple__session-feedback {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.5rem;
+  align-items: center;
   justify-content: center;
-  padding: 0 0 0.65rem;
+  gap: 0.45rem 0.65rem;
+  padding: 0.1rem 0 0.55rem;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 92%, transparent);
+}
+
+.post-session-simple__session-feedback-prompt {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: inherit;
 }
 
 .post-session-simple__feedback-link {
-  border: 0;
-  background: transparent;
-  color: var(--accent, #8b5e3c);
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--accent, #8b5e3c) 22%, var(--border, #d9d0c4));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent, #8b5e3c) 6%, var(--surface, #fff));
+  color: var(--accent-strong, #6f4a2f);
+  text-decoration: none;
   font: inherit;
-  padding: 0;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  padding: 0.28rem 0.72rem 0.28rem 0.58rem;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.post-session-simple__feedback-link:hover,
+.post-session-simple__feedback-link .bi {
+  font-size: 0.92em;
+  line-height: 1;
+  opacity: 0.88;
+}
+
+.post-session-simple__feedback-link:hover {
+  color: var(--accent-strong, #6f4a2f);
+  border-color: color-mix(in srgb, var(--accent, #8b5e3c) 38%, var(--border, #d9d0c4));
+  background: color-mix(in srgb, var(--accent, #8b5e3c) 11%, var(--surface, #fff));
+}
+
 .post-session-simple__feedback-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent, #8b5e3c) 55%, transparent);
+  outline-offset: 2px;
   color: var(--accent-strong, #6f4a2f);
 }
 
+.post-session-simple__feedback-link-wrap .post-session-simple__feedback-link {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent, #8b5e3c) 45%, transparent);
+  text-underline-offset: 0.16em;
+  text-decoration-thickness: 1px;
+}
+
+.post-session-simple__feedback-link-wrap .post-session-simple__feedback-link:hover,
+.post-session-simple__feedback-link-wrap .post-session-simple__feedback-link:focus-visible {
+  background: transparent;
+  text-decoration-color: currentColor;
+}
+
+[data-theme="dark"] .post-session-simple__session-feedback {
+  color: color-mix(in srgb, #d9cbb8 72%, transparent);
+}
+
 [data-theme="dark"] .post-session-simple__feedback-link {
+  border-color: color-mix(in srgb, #d4b896 28%, transparent);
+  background: color-mix(in srgb, #d4b896 10%, transparent);
+  color: #e4d0b4;
+}
+
+[data-theme="dark"] .post-session-simple__feedback-link:hover,
+[data-theme="dark"] .post-session-simple__feedback-link:focus-visible {
+  border-color: color-mix(in srgb, #d4b896 42%, transparent);
+  background: color-mix(in srgb, #d4b896 16%, transparent);
+  color: #f0e2cc;
+}
+
+[data-theme="dark"] .post-session-simple__feedback-link-wrap .post-session-simple__feedback-link {
+  border: 0;
+  background: transparent;
   color: #d4b896;
 }
 

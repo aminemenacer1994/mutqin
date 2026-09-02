@@ -80,8 +80,10 @@ Expected failures are **not** reported as exceptions: validation `422`, auth `40
 
 ## Health vs probe
 
-- `GET /up` — Laravel health (liveness). Not an exception probe.
+- `GET /up` — Laravel shallow liveness. Not an exception probe.
+- `GET /health` — Public readiness (`status` only). See [monitoring.md](./monitoring.md).
 - `GET /internal/error-test` — authorized exception probe. Disabled entirely with `ERROR_TRACKING_PROBE_ENABLED=false`. In production it returns **404** unless the caller is a verified allowlisted admin.
+- `GET /internal/alert-test` — staging-only monitoring alert probe (log + Sentry). Never available in production.
 
 ## Dedup
 

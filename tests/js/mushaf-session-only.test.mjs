@@ -23,8 +23,10 @@ assert.match(
   /wantSessionOnly = this\.readingViewMode === 'mushaf'/,
   'only classic mushaf uses session-only page builds'
 )
-assert.match(memorisationJs, /showOriginalMadaniViewToggle:\s*false/, 'Printed scan switch hidden')
-assert.match(memorisationJs, /showMadaniMushafViewToggle:\s*false/, 'Madani Mushaf switch hidden')
+assert.doesNotMatch(memorisationJs, /showOriginalMadaniViewToggle/, 'Printed scan mode removed')
+assert.doesNotMatch(memorisationJs, /showMadaniMushafViewToggle/, 'Madani Mushaf mode removed')
+assert.doesNotMatch(memorisationVue, /MadaniMushafReader|OriginalMadaniMushaf/, 'Madani reader components removed')
+assert.doesNotMatch(memorisationVue, /madani_mushaf|readingViewMode === 'original'/, 'Madani/original view modes removed from UI')
 assert.match(
   memorisationJs,
   /Only render session-filtered lines from mushafPages/,
@@ -39,16 +41,6 @@ assert.match(
   memorisationVue,
   /workspace-shell-reading-toggles/,
   'Stacked/Mushaf switcher remains in session header'
-)
-assert.match(
-  memorisationVue,
-  /v-if="showOriginalMadaniViewToggle"/,
-  'Printed scan switch gated behind flag'
-)
-assert.match(
-  memorisationVue,
-  /v-if="showMadaniMushafViewToggle"/,
-  'Madani Mushaf switch gated behind flag'
 )
 assert.doesNotMatch(
   memorisationVue,

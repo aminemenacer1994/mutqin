@@ -28,11 +28,30 @@
     AddType application/manifest+json .webmanifest
 </IfModule>
 
-# Never let browsers keep a stale Mix bundle / lazy Memorisation chunk.
 <IfModule mod_headers.c>
-    <FilesMatch "\.(js|css)$">
-        Header set Cache-Control "no-cache, no-store, must-revalidate"
+    # Content-hashed Mix chunks (js/name.deadbeef.js) — long immutable cache.
+    <FilesMatch "\.[a-fA-F0-9]{8}\.(js|css)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # Entry bundles are rewritten in place; Mix busts via ?id= — always revalidate.
+    <FilesMatch "^(app\.js|app\.css)$">
+        Header set Cache-Control "no-cache, must-revalidate"
         Header set Pragma "no-cache"
-        Header set Expires "0"
+    </FilesMatch>
+
+    <Files "mix-manifest.json">
+        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Pragma "no-cache"
+    </Files>
+
+    <Files "sw.js">
+        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Pragma "no-cache"
+    </Files>
+
+    <FilesMatch "\.(html|webmanifest)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Pragma "no-cache"
     </FilesMatch>
 </IfModule>

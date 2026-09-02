@@ -62,6 +62,14 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            // Used by spatie/laravel-backup (mysqldump). Path is the directory only.
+            'dump' => array_filter([
+                'dump_binary_path' => env('BACKUP_DB_DUMP_BINARY_PATH') ?: null,
+                'use_single_transaction' => true,
+                'timeout' => (int) env('BACKUP_DB_DUMP_TIMEOUT', 900),
+                'skip_ssl' => filter_var(env('BACKUP_DB_DUMP_SKIP_SSL', false), FILTER_VALIDATE_BOOL) ?: null,
+                'add_extra_option' => env('BACKUP_DB_DUMP_EXTRA_OPTIONS') ?: null,
+            ], static fn ($value) => $value !== null && $value !== ''),
         ],
 
         'mariadb' => [
@@ -82,6 +90,13 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            'dump' => array_filter([
+                'dump_binary_path' => env('BACKUP_DB_DUMP_BINARY_PATH') ?: null,
+                'use_single_transaction' => true,
+                'timeout' => (int) env('BACKUP_DB_DUMP_TIMEOUT', 900),
+                'skip_ssl' => filter_var(env('BACKUP_DB_DUMP_SKIP_SSL', false), FILTER_VALIDATE_BOOL) ?: null,
+                'add_extra_option' => env('BACKUP_DB_DUMP_EXTRA_OPTIONS') ?: null,
+            ], static fn ($value) => $value !== null && $value !== ''),
         ],
 
         'pgsql' => [
@@ -97,6 +112,10 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'dump' => array_filter([
+                'dump_binary_path' => env('BACKUP_DB_DUMP_BINARY_PATH') ?: null,
+                'timeout' => (int) env('BACKUP_DB_DUMP_TIMEOUT', 900),
+            ], static fn ($value) => $value !== null && $value !== ''),
         ],
 
         'sqlsrv' => [

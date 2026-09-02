@@ -3,6 +3,7 @@
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureSubscriptionTier;
 use App\Http\Middleware\LogMutqinApiRequest;
+use App\Http\Middleware\PreventStaleHtmlCache;
 use App\Http\Middleware\SetLocale;
 use App\Models\User;
 use App\Support\AuthRedirect;
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             SetLocale::class,
+            PreventStaleHtmlCache::class,
         ]);
 
         // Enable Sanctum SPA (cookie-based) authentication for the API routes so

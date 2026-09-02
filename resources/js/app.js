@@ -10,6 +10,10 @@ import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
 import { clearSharedMutqinBrowserResidue } from './utils/mutqinStorageKeys';
 import { isBrowserOffline } from './utils/networkStatus';
+import {
+    clearChunkReloadFlag,
+    wrapChunkImport,
+} from './utils/chunkLoadRecovery';
 import { installErrorTracking, reportError } from './scripts/observability/errorTracking';
 import { openFeedbackModal } from './scripts/feedback/feedbackLauncher';
 import FeedbackModal from './components/FeedbackModal.vue';
@@ -60,50 +64,13 @@ if (typeof window !== 'undefined') {
     } catch (_) { /* best-effort */ }
 })();
 
-const Homepage = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "homepage" */ './views/Homepage.vue')
-);
-const About = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "about" */ './views/About.vue')
-);
-const AboutUsPage = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "about-us" */ './views/AboutUs.vue')
-);
-const PricingPage = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "pricing" */ './views/PricingPage.vue')
-);
-const OurMissionPage = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "our-mission" */ './views/OurMission.vue')
-);
-const DonationPage = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "donation" */ './views/DonationPage.vue')
-);
-const WaitingListPage = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "waiting-list" */ './views/WaitingList.vue')
-);
-
-const UserDashboard = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "dashboard" */ './views/Dashboard.vue')
-);
-
-const AdminDashboard = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "admin-dashboard" */ './views/AdminDashboard.vue')
-);
-
-const AdminFeedback = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "admin-feedback" */ './views/AdminFeedback.vue')
-);
-
-// The memorisation workspace is by far the heaviest component. It is only used
-// on the memorisation page, so load it as a separate async chunk to keep the
-// main bundle (and every other page) lean.
-const MemorisationBootFallback = {
+const PageBootFallback = {
     computed: {
         loadingTitle() {
-            return this.t('memorisation.a11y.workspaceLoading');
+            return this.t('common.status.loadingTitle');
         },
         loadingDesc() {
-            return this.t('memorisation.a11y.workspacePreparing');
+            return this.t('common.status.loadingDesc');
         },
     },
     template: `
@@ -121,7 +88,7 @@ const MemorisationBootFallback = {
     `,
 };
 
-const MemorisationLoadError = {
+const PageLoadError = {
     props: { error: { type: Object, default: null } },
     data() {
         return {
@@ -133,12 +100,12 @@ const MemorisationLoadError = {
         title() {
             return this.offline
                 ? this.t('common.status.offlineTitle')
-                : this.t('common.status.errorTitle');
+                : this.t('common.status.chunkErrorTitle');
         },
         description() {
             return this.offline
                 ? this.t('common.status.offlineDesc')
-                : this.t('common.status.errorDesc');
+                : this.t('common.status.chunkErrorDesc');
         },
         retryLabel() {
             return this.t('common.status.retry');
@@ -181,19 +148,106 @@ const MemorisationLoadError = {
     `,
     methods: {
         reload() {
+            clearChunkReloadFlag();
             window.location.reload();
         },
     },
 };
 
+const MemorisationBootFallback = {
+    computed: {
+        loadingTitle() {
+            return this.t('memorisation.a11y.workspaceLoading');
+        },
+        loadingDesc() {
+            return this.t('memorisation.a11y.workspacePreparing');
+        },
+    },
+    template: `
+        <div class="memorisation-boot-fallback" role="status" aria-live="polite">
+            <div class="memorisation-boot-card">
+                <div class="memorisation-boot-card__icon" aria-hidden="true">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="memorisation-boot-card__copy">
+                    <strong>{{ loadingTitle }}</strong>
+                    <p>{{ loadingDesc }}</p>
+                </div>
+            </div>
+        </div>
+    `,
+};
+
 /**
- * Mix watch rewrites public/js/memorisation.js while the browser may still be
- * requesting it — that surfaces as ChunkLoadError. Retry a few times before failing.
- * Chunk name is stable (see webpack.mix.cjs); cache busting comes from mix.version()
- * on app.js, which embeds the chunk mapping.
+ * Lazy page/component with loading + recoverable error UI and deploy-safe
+ * ChunkLoadError recovery (at most one controlled reload).
+ *
+ * @param {() => Promise<any>} importer
+ * @param {{ feature?: string, loadingComponent?: object, delay?: number }} [options]
  */
-function loadMemorisationChunk(attempt = 0) {
-    return import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').then((mod) => {
+function lazyPage(importer, options = {}) {
+    const feature = options.feature || 'page';
+    return defineAsyncComponent({
+        loader: () => wrapChunkImport(importer, {
+            feature,
+            noticeMessage: resolveEn('common.status.chunkUpdating'),
+            onGiveUp: (error) => {
+                reportError(error, { kind: 'chunk_load', feature });
+            },
+        }),
+        loadingComponent: options.loadingComponent || PageBootFallback,
+        errorComponent: PageLoadError,
+        delay: options.delay ?? 120,
+        timeout: 120000,
+    });
+}
+
+const Homepage = lazyPage(
+    () => import(/* webpackChunkName: "homepage" */ './views/Homepage.vue'),
+    { feature: 'homepage' }
+);
+const About = lazyPage(
+    () => import(/* webpackChunkName: "about" */ './views/About.vue'),
+    { feature: 'about' }
+);
+const AboutUsPage = lazyPage(
+    () => import(/* webpackChunkName: "about-us" */ './views/AboutUs.vue'),
+    { feature: 'about-us' }
+);
+const PricingPage = lazyPage(
+    () => import(/* webpackChunkName: "pricing" */ './views/PricingPage.vue'),
+    { feature: 'pricing' }
+);
+const OurMissionPage = lazyPage(
+    () => import(/* webpackChunkName: "our-mission" */ './views/OurMission.vue'),
+    { feature: 'our-mission' }
+);
+const DonationPage = lazyPage(
+    () => import(/* webpackChunkName: "donation" */ './views/DonationPage.vue'),
+    { feature: 'donation' }
+);
+const WaitingListPage = lazyPage(
+    () => import(/* webpackChunkName: "waiting-list" */ './views/WaitingList.vue'),
+    { feature: 'waiting-list' }
+);
+const UserDashboard = lazyPage(
+    () => import(/* webpackChunkName: "dashboard" */ './views/Dashboard.vue'),
+    { feature: 'dashboard' }
+);
+const AdminDashboard = lazyPage(
+    () => import(/* webpackChunkName: "admin-dashboard" */ './views/AdminDashboard.vue'),
+    { feature: 'admin-dashboard' }
+);
+const AdminFeedback = lazyPage(
+    () => import(/* webpackChunkName: "admin-feedback" */ './views/AdminFeedback.vue'),
+    { feature: 'admin-feedback' }
+);
+
+// The memorisation workspace is by far the heaviest component. It is only used
+// on the memorisation page, so load it as a separate async chunk to keep the
+// main bundle (and every other page) lean.
+const Memorisation = lazyPage(
+    () => import(/* webpackChunkName: "memorisation" */ './views/Memorisation.vue').then((mod) => {
         if (typeof window !== 'undefined') {
             window.__MUTQIN_PRACTICE_COACH__ = 'v24';
             window.__MUTQIN_AI_RECITE_UI__ = 'v75';
@@ -206,48 +260,9 @@ function loadMemorisationChunk(attempt = 0) {
             document.documentElement.dataset.postSessionChoice = 'v15';
         }
         return mod;
-    }).catch((error) => {
-        console.error('Memorisation chunk failed to load', error);
-        const name = String(error?.name || '');
-        const message = String(error?.message || '');
-        const isChunkError = name === 'ChunkLoadError'
-            || /Loading chunk \d+ failed/i.test(message)
-            || /memorisation/i.test(message);
-        if (isChunkError && attempt < 3) {
-            const delayMs = 400 * (attempt + 1);
-            return new Promise((resolve, reject) => {
-                window.setTimeout(() => {
-                    loadMemorisationChunk(attempt + 1).then(resolve, reject);
-                }, delayMs);
-            });
-        }
-        if (isChunkError && typeof window !== 'undefined') {
-            const url = new URL(window.location.href);
-            if (!url.searchParams.has('mutqin_force')) {
-                try {
-                    const notice = document.createElement('div')
-                    notice.setAttribute('role', 'status')
-                    notice.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.45);color:#fff;font:500 1rem/1.4 system-ui,sans-serif;text-align:center'
-                    notice.textContent = resolveEn('common.status.chunkUpdating')
-                    document.body?.appendChild(notice)
-                } catch (_) { /* best-effort */ }
-                url.searchParams.set('mutqin_force', String(Date.now()));
-                window.location.replace(url.toString());
-                return new Promise(() => {});
-            }
-        }
-        reportError(error, { kind: 'chunk_load', feature: 'memorisation' });
-        throw error;
-    });
-}
-
-const Memorisation = defineAsyncComponent({
-    loader: () => loadMemorisationChunk(),
-    loadingComponent: MemorisationBootFallback,
-    errorComponent: MemorisationLoadError,
-    delay: 0,
-    timeout: 120000,
-});
+    }),
+    { feature: 'memorisation', loadingComponent: MemorisationBootFallback, delay: 0 }
+);
 
 async function bootstrapApp() {
     const app = createApp({});
@@ -274,10 +289,12 @@ async function bootstrapApp() {
     app.component('our-mission-page', OurMissionPage);
     app.component('donation-page', DonationPage);
     app.component('waiting-list-page', WaitingListPage);
-    app.component('privacy-policy-page', defineAsyncComponent(() =>
-        import(/* webpackChunkName: "privacy" */ './views/PrivacyPolicy.vue')
+    app.component('privacy-policy-page', lazyPage(
+        () => import(/* webpackChunkName: "privacy" */ './views/PrivacyPolicy.vue'),
+        { feature: 'privacy' }
     ));
     app.mount('#app');
+    clearChunkReloadFlag();
 
     const feedbackRoot = document.createElement('div');
     feedbackRoot.id = 'mutqinFeedbackRoot';

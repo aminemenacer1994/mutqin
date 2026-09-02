@@ -3,15 +3,20 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\Concerns\GuardsDemoSeeding;
 use Illuminate\Database\Seeder;
 
 class PracticeAccountSeeder extends Seeder
 {
+    use GuardsDemoSeeding;
+
     /**
      * Seed 15 deterministic demo accounts for practice/testing.
      */
     public function run(): void
     {
+        $this->guardAgainstProductionSeeding();
+
         $accounts = [
             ['name' => 'Tester — Free (EN)', 'email' => 'practice01@example.com', 'password' => 'Practice01!', 'locale' => 'en', 'subscription_tier' => 'free', 'subscription_plan' => 'free', 'subscription_status' => 'free'],
             ['name' => 'Tester — Premium (FR)', 'email' => 'practice02@example.com', 'password' => 'Practice02!', 'locale' => 'fr', 'subscription_tier' => 'premium', 'subscription_plan' => 'premium_monthly', 'subscription_status' => 'active'],
@@ -31,6 +36,8 @@ class PracticeAccountSeeder extends Seeder
         ];
 
         foreach ($accounts as $account) {
+            $this->assertSafeDemoEmail($account['email']);
+
             $attrs = [
                 'name' => $account['name'],
                 'password' => $account['password'],

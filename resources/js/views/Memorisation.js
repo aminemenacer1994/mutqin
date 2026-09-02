@@ -31,6 +31,7 @@ import {
 } from '../utils/userFacingFeedback'
 import diff from 'fast-diff'
 import { defineAsyncComponent, markRaw } from 'vue'
+import { wrapChunkImport } from '../utils/chunkLoadRecovery'
 import {
   getChapters,
   getChapterWordByWordMeanings,
@@ -77,32 +78,9 @@ import {
   SURAH_NAMES_FONT_FAMILY
 } from '../scripts/mushaf/qcfFontLoader'
 import {
-  arabicJuzLabel,
-  juzNumberFromMadaniPage,
-  canStepSessionMadaniPage,
-  clampMadaniPageNumber,
-  constrainMadaniPageToSet,
-  getSessionMadaniSpreadPages,
-  isOriginalMadaniSpreadViewport,
-  isOriginalMadaniView,
-  isMadaniMushafView,
-  isMadaniMushafSpreadViewport,
   isReadingViewMode,
   normalizeReadingViewMode,
-  originalMadaniPageImageUrl,
-  originalMadaniPagesToPrefetch,
-  preferredMadaniImageWidth,
-  ORIGINAL_MADANI_SPREAD_QUERY,
-  stepSessionMadaniPage,
-} from '../scripts/mushaf/originalMadaniMushaf'
-import {
-  clearMadaniMushafPageCache,
-  fetchMadaniMushafPage,
-  prefetchMadaniMushafPages,
-  resolveMadaniMushafPage,
-} from '../scripts/mushaf/madaniMushafApi'
-import { madaniMushafPagesToPrefetch, buildMadaniMushafPageModel, consolidateMadaniMushafLinesToGrid, enrichMadaniMushafPageWithUnicode, mergeMadaniMushafDecorativeLines } from '../scripts/mushaf/madaniMushafLayout'
-import { enrichMadaniMushafLines } from '../scripts/mushaf/madaniMushafPresentation'
+} from '../scripts/mushaf/readingViewModes'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -253,6 +231,7 @@ import {
   validateRecordingBlob,
   validateRecordingEnvironment,
   buildTechnicalLogContext,
+  buildRecitationProviderLogMetadata,
 } from '../scripts/audio/recordingResilience'
 import {
   RECITATION_ATTEMPT_CLASS,
@@ -278,6 +257,12 @@ import {
   stripRawAudioFields,
   sanitizeAudioLogContext,
 } from '../scripts/audio/audioRetention'
+import {
+  SessionAudioPlayer,
+  SESSION_AUDIO_STATES,
+  describeMediaError as describeSessionMediaError,
+  isBenignMediaError as isSessionBenignMediaError,
+} from '../scripts/audio/sessionAudioPlayer'
 import {
   END_SESSION_CONFIRM_ACTION,
   PRIMARY_SESSION_ACTION,
@@ -336,28 +321,31 @@ import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
 import AppStatus from '../components/AppStatus.vue'
 
-const HifzPlanCreatorModal = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "hifz-plan-modal" */ '../components/HifzPlanCreatorModal.vue')
+const lazyWorkspaceChunk = (importer, feature) => defineAsyncComponent({
+  loader: () => wrapChunkImport(importer, { feature }),
+  delay: 120,
+  timeout: 120000,
+})
+
+const HifzPlanCreatorModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "hifz-plan-modal" */ '../components/HifzPlanCreatorModal.vue'),
+  'hifz-plan-modal'
 )
-const preloadAiMemorisationDetectionModal = () =>
-  import(/* webpackChunkName: "amd-modal" */ '../components/AiMemorisationDetectionModal.vue')
-const AiMemorisationDetectionModal = defineAsyncComponent(() =>
-  preloadAiMemorisationDetectionModal()
+const preloadAiMemorisationDetectionModal = () => wrapChunkImport(
+  () => import(/* webpackChunkName: "amd-modal" */ '../components/AiMemorisationDetectionModal.vue'),
+  { feature: 'amd-modal' }
 )
-const AiAudioConsentModal = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue')
+const AiMemorisationDetectionModal = lazyWorkspaceChunk(
+  () => preloadAiMemorisationDetectionModal(),
+  'amd-modal'
 )
-const AyahNotesModal = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue')
+const AiAudioConsentModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue'),
+  'ai-audio-consent'
 )
-const OriginalMadaniMushaf = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "original-madani" */ '../components/OriginalMadaniMushaf.vue')
-)
-const MadaniMushafReader = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "madani-mushaf" */ '../components/mushaf/MadaniMushafReader.vue')
-)
-const MushafNavigation = defineAsyncComponent(() =>
-  import(/* webpackChunkName: "madani-mushaf" */ '../components/mushaf/MushafNavigation.vue')
+const AyahNotesModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue'),
+  'ayah-notes-modal'
 )
 import {
   buildActivePracticeSetup,
@@ -620,9 +608,6 @@ export default {
     AiAudioConsentModal,
     AyahNotesModal,
     AppStatus,
-    OriginalMadaniMushaf,
-    MadaniMushafReader,
-    MushafNavigation,
   },
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) },
@@ -754,8 +739,6 @@ export default {
       layoutFontSizes: {
         stacked: 150,
         mushaf: 120,
-        madani_mushaf: 120,
-        original: 150,
       },
       fontSizeStep: 10,
       minFontSize: 70,
@@ -851,6 +834,8 @@ export default {
       playRequestLocked: false,
       /** Bumped on every playVerse start so stale awaits cannot clear locks or call play(). */
       playGeneration: 0,
+      /** Single owner for the main session <audio> element. */
+      sessionAudioPlayer: null,
       audioBuffering: false,
       audioStallRecoveryTimer: null,
       ignoreMainAudioPauseEvent: false,
@@ -871,11 +856,6 @@ export default {
       showTools: false,
       toolsPanelMounted: false,
       readingViewMode: 'mushaf',
-      showOriginalMadaniViewToggle: false,
-      showMadaniMushafViewToggle: false,
-      originalMadaniPageNumber: 1,
-      originalMadaniError: '',
-      originalMadaniViewportSpread: typeof window !== 'undefined' && isOriginalMadaniSpreadViewport(),
       mushafPageIndex: 0,
       mushafUiSkin: 'standard', // Paper/standard only; legacy skins remap here
       mushafBorder: 'classic',
@@ -887,14 +867,6 @@ export default {
       madaniPagesError: '',
       madaniLoadRequestId: 0,
       madaniFontsReady: {},
-      madaniMushafPageNumber: 1,
-      madaniMushafPages: {},
-      madaniMushafError: '',
-      madaniMushafLoading: false,
-      madaniMushafLoadRequestId: 0,
-      madaniMushafViewportSpread: typeof window !== 'undefined' && isMadaniMushafSpreadViewport(),
-      madaniMushafFontsReady: {},
-      madaniMushafPresentationRevision: 0,
       mushafBorderOptions: [
         { value: 'classic', label: 'Classic' },
         { value: 'fine', label: 'Fine' },
@@ -8734,9 +8706,6 @@ export default {
     },
 
     useMadaniQcfGlyphs() {
-      // Original Madani always uses authentic QCF page glyphs.
-      if (this.readingViewMode === 'original') return true
-      if (isMadaniMushafView(this.readingViewMode)) return true
       return this.readingViewMode === 'mushaf' && normaliseQuranFontId(this.quranFont) === 'uthmanic'
     },
 
@@ -9110,216 +9079,22 @@ export default {
       return this.safeMushafPageIndex < this.mushafPages.length - 1
     },
 
-    originalMadaniSessionPages() {
-      const fromMushaf = (this.mushafPages || [])
-        .map(page => Number(page?.pageNumber))
-        .filter(page => Number.isFinite(page) && page > 0)
-      if (fromMushaf.length) return [...new Set(fromMushaf)].sort((a, b) => a - b)
-      return (this.madaniPageNumbers || [])
-        .map(page => Number(page))
-        .filter(page => Number.isFinite(page) && page > 0)
-    },
-
-    originalMadaniSpreadActive() {
-      return this.originalMadaniViewportSpread === true
-        && (this.originalMadaniSessionPages || []).length >= 2
-    },
-
-    originalMadaniSpread() {
-      return getSessionMadaniSpreadPages(
-        this.originalMadaniPageNumber,
-        this.originalMadaniSessionPages,
-      )
-    },
-
-    originalMadaniHasPair() {
-      const { left, right } = this.originalMadaniSpread
-      return !!(this.originalMadaniSpreadActive && left && right)
-    },
-
-    originalMadaniImageWidth() {
-      if (typeof window === 'undefined') return 1024
-      return preferredMadaniImageWidth({
-        spread: this.originalMadaniHasPair,
-        viewportWidth: window.innerWidth || 1024,
-        devicePixelRatio: window.devicePixelRatio || 1,
-      })
-    },
-
-    originalMadaniPaginationLabel() {
-      const pages = this.originalMadaniSessionPages
-      const current = constrainMadaniPageToSet(this.originalMadaniPageNumber, pages)
-      const index = Math.max(0, pages.indexOf(current))
-      if (this.originalMadaniHasPair) {
-        const { left, right } = this.originalMadaniSpread
-        return this.t('memorisation.originalMadani.pageSpread', { left, right })
-      }
-      if (pages.length) return `${index + 1} / ${pages.length}`
-      return String(current)
-    },
-
-    canGoPreviousOriginalMadaniPage() {
-      return canStepSessionMadaniPage(this.originalMadaniPageNumber, -1, {
-        spread: this.originalMadaniHasPair,
-        allowedPages: this.originalMadaniSessionPages,
-      })
-    },
-
-    canGoNextOriginalMadaniPage() {
-      return canStepSessionMadaniPage(this.originalMadaniPageNumber, 1, {
-        spread: this.originalMadaniHasPair,
-        allowedPages: this.originalMadaniSessionPages,
-      })
-    },
-
-    originalMadaniLeftMeta() {
-      return this.originalMadaniPageMeta(this.originalMadaniSpread.left)
-    },
-
-    originalMadaniRightMeta() {
-      return this.originalMadaniPageMeta(this.originalMadaniSpread.right)
-    },
-
-    originalMadaniCurrentMeta() {
-      return this.originalMadaniPageMeta(this.originalMadaniPageNumber)
-    },
-
-    originalMadaniPageSignature() {
-      return [
-        this.effectiveActiveVerseKey,
-        this.activeVerseKey,
-        this.hasSessionStarted ? 1 : 0,
-        this.isPlaying ? 1 : 0,
-        this.blurModeEnabled ? 1 : 0,
-        this.focusModeEnabled ? 1 : 0,
-        this.anchorModeEnabled ? 1 : 0,
-        this.hoverPeekVerseKey || '',
-        this.touchPeekVerseKey || '',
-        this.blurPeekHoldingSpace ? 1 : 0,
-        this.currentHighlightedVerseKey || '',
-        this.currentWordIndex,
-        this.practiceFocusSignature || '',
-        this.mushafSessionVerseKeys.size,
-        this.originalMadaniPageNumber,
-        this.tajweedEnabled ? 1 : 0,
-        this.anchorCount,
-        this.showWordByWord ? 1 : 0,
-        Object.keys(this.madaniPageLayouts || {}).length,
-        Object.keys(this.madaniFontsReady || {}).length,
-      ].join('|')
-    },
-
-    originalMadaniLeftPageData() {
-      void this.originalMadaniPageSignature
-      return this.buildOriginalMadaniPageData(this.originalMadaniSpread.left)
-    },
-
-    originalMadaniRightPageData() {
-      void this.originalMadaniPageSignature
-      return this.buildOriginalMadaniPageData(this.originalMadaniSpread.right)
-    },
-
-    originalMadaniCurrentPageData() {
-      void this.originalMadaniPageSignature
-      return this.buildOriginalMadaniPageData(this.originalMadaniPageNumber)
-    },
-
-    madaniMushafSpreadActive() {
-      return this.madaniMushafViewportSpread === true
-    },
-
-    madaniMushafSpread() {
-      return getSessionMadaniSpreadPages(
-        this.madaniMushafPageNumber,
-        this.madaniMushafAllowedPages
-      )
-    },
-
-    madaniMushafHasPair() {
-      const { left, right } = this.madaniMushafSpread
-      return !!(this.madaniMushafSpreadActive && left && right)
-    },
-
-    madaniMushafAllowedPages() {
-      const fromSession = (this.madaniPageNumbers || []).filter(Boolean)
-      if (fromSession.length) return fromSession
-      const pages = []
-      for (let p = 1; p <= 604; p += 1) pages.push(p)
-      return pages
-    },
-
-    madaniMushafPaginationLabel() {
-      if (this.madaniMushafHasPair) {
-        const { left, right } = this.madaniMushafSpread
-        return this.t('memorisation.madaniMushaf.pageSpread', { left, right })
-      }
-      return this.t('memorisation.madaniMushaf.pageSingle', { page: this.madaniMushafPageNumber })
-    },
-
-    canGoPreviousMadaniMushafPage() {
-      return canStepSessionMadaniPage(this.madaniMushafPageNumber, -1, {
-        spread: this.madaniMushafHasPair,
-        allowedPages: this.madaniMushafAllowedPages,
-      })
-    },
-
-    canGoNextMadaniMushafPage() {
-      return canStepSessionMadaniPage(this.madaniMushafPageNumber, 1, {
-        spread: this.madaniMushafHasPair,
-        allowedPages: this.madaniMushafAllowedPages,
-      })
-    },
-
-    madaniMushafLeftPageView() {
-      void this.madaniMushafPresentationRevision
-      void this.madaniMushafPages
-      void this.madaniMushafFontsReady
-      return this.buildMadaniMushafPageViewFor(this.madaniMushafSpread.left)
-    },
-
-    madaniMushafRightPageView() {
-      void this.madaniMushafPresentationRevision
-      void this.madaniMushafPages
-      void this.madaniMushafFontsReady
-      return this.buildMadaniMushafPageViewFor(this.madaniMushafSpread.right)
-    },
-
-    madaniMushafCurrentPageView() {
-      void this.madaniMushafPresentationRevision
-      void this.madaniMushafPages
-      void this.madaniMushafFontsReady
-      return this.buildMadaniMushafPageViewFor(this.madaniMushafPageNumber)
-    },
-
     nextReadingViewMode() {
       if (this.readingViewMode === 'stacked') return 'mushaf'
-      if (this.readingViewMode === 'mushaf') {
-        if (this.showMadaniMushafViewToggle) return 'madani_mushaf'
-        return this.showOriginalMadaniViewToggle ? 'original' : 'stacked'
-      }
-      if (this.readingViewMode === 'madani_mushaf') {
-        return this.showOriginalMadaniViewToggle ? 'original' : 'stacked'
-      }
       return 'stacked'
     },
 
     currentReadingViewModeIcon() {
-      if (this.readingViewMode === 'madani_mushaf') return 'bi-book-half'
-      if (this.readingViewMode === 'original') return 'bi-book'
       if (this.readingViewMode === 'mushaf') return 'bi-journal-richtext'
       return 'bi-view-stacked'
     },
 
     nextReadingViewModeLabel() {
-      if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.madaniMushaf')
-      if (this.nextReadingViewMode === 'original') return this.t('memorisation.view.original')
       if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushaf')
       return this.t('memorisation.view.stacked')
     },
 
     nextReadingViewModeHint() {
-      if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.madaniMushafHint')
-      if (this.nextReadingViewMode === 'original') return this.t('memorisation.view.originalHint')
       if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushafHint')
       return this.t('memorisation.view.stackedHint')
     },
@@ -9933,7 +9708,6 @@ export default {
       })
       this.$watch('effectiveActiveVerseKey', () => {
         if (this.readingViewMode === 'mushaf') this.syncMushafPageToActiveVerse()
-        if (isMadaniMushafView(this.readingViewMode)) this.syncMadaniMushafPageToActiveVerse()
       })
       this.$watch(() => this.mushafPages.length, () => {
         this.syncMushafPageToActiveVerse()
@@ -10103,11 +9877,8 @@ export default {
     this.handlePracticeTurnCalloutResize = () => {
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
       this.scheduleMadaniPageFit()
-      this.syncOriginalMadaniViewportSpread()
       this.updateBackToTopVisibility()
     }
-    this.syncOriginalMadaniViewportSpread()
-    this.bindOriginalMadaniSpreadMedia()
     window.addEventListener('resize', this.handlePracticeTurnCalloutResize, { passive: true })
     document.addEventListener('click', this.handleClickOutside)
     this.queueStatsVisualTick()
@@ -10164,7 +9935,6 @@ export default {
       window.removeEventListener('resize', this.handlePracticeTurnCalloutResize)
       this.handlePracticeTurnCalloutResize = null
     }
-    this.unbindOriginalMadaniSpreadMedia()
     if (this.practiceTurnCalloutFrame) {
       if (typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(this.practiceTurnCalloutFrame)
       window.clearTimeout(this.practiceTurnCalloutFrame)
@@ -10188,6 +9958,14 @@ export default {
     this.clearRecitationWindowTimer()
     this.flushPlaybackTime()
     this.stopWordHighlighting()
+    try {
+      this.sessionAudioPlayer?.destroy?.()
+    } catch { /* ignore */ }
+    this.sessionAudioPlayer = null
+    this.audioElement = null
+    this.isPlaying = false
+    this.playRequestLocked = false
+    this.playGeneration = (Number(this.playGeneration) || 0) + 1
     this.sessionBroadcastUnsubscribe?.()
     this.sessionBroadcastUnsubscribe = null
     this.sessionBroadcast?.close?.()
@@ -10258,14 +10036,6 @@ export default {
       this.$nextTick(() => this.refreshLiveWordPresentationForTheme())
     },
     readingViewMode(newVal) {
-      if (newVal === 'original' && !this.showOriginalMadaniViewToggle) {
-        this.readingViewMode = 'mushaf'
-        return
-      }
-      if (newVal === 'madani_mushaf' && !this.showMadaniMushafViewToggle) {
-        this.readingViewMode = 'mushaf'
-        return
-      }
       if (newVal === 'mushaf') {
         this.wordByWordAudioEnabled = true
         this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
@@ -10273,15 +10043,13 @@ export default {
           this.syncMushafPageToActiveVerse()
           this.$nextTick(() => {
             this.scheduleMadaniPageFit()
-            if (!this.isMobileViewport() && this.isPlaying && this.activeVerseRef?.key) {
+            // Re-arm word highlighting after the page rebuild (mobile + desktop).
+            this.wordByWordAudioEnabled = true
+            if (this.isPlaying && this.activeVerseRef?.key) {
               this.startWordHighlighting(this.activeVerseRef)
             }
           })
         })
-      } else if (newVal === 'original') {
-        this.wordByWordAudioEnabled = true
-        this.syncOriginalMadaniViewportSpread()
-        this.enterOriginalMadaniView()
       }
       this.applyMobileLayoutFontDefault(newVal)
       if (this.isMobileViewport()) {
@@ -10364,9 +10132,6 @@ export default {
       })
     },
     mushafDisplayVerses() {
-      if (this.readingViewMode === 'original' && this.hasVerses) {
-        this.enterOriginalMadaniView()
-      }
       if (!this.amdOpen) return
       this.$nextTick(() => {
         if (this.getRecitationTargetText(this.recitationCheckPendingTargets)?.trim()) {
@@ -10601,6 +10366,7 @@ export default {
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     wordByWordAudioEnabled(val) {
+      // Product rule: word highlighting stays on whenever the reciter can support it.
       if (!val && this.currentReciterSupportsWordHighlighting) {
         this.wordByWordAudioEnabled = true
         return
@@ -10610,6 +10376,9 @@ export default {
         return
       }
       this.persistUiState()
+      if (val && this.isPlaying && this.activeVerseRef?.key) {
+        this.startWordHighlighting(this.activeVerseRef)
+      }
     },
     reciterId(newVal) {
       this.syncWordHighlightingForReciter(newVal)
@@ -10860,7 +10629,41 @@ export default {
       this.recitationProcessingSlowNotice = false
       this.clearRecitationSlowProcessingNotice()
       this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+      this._recitationAttemptStartedAt = typeof performance !== 'undefined' && performance.now
+        ? performance.now()
+        : Date.now()
+      this._recitationProviderMeta = {
+        attemptId: this.recitationAttemptId,
+        startedAt: this._recitationAttemptStartedAt,
+      }
       return this.recitationAttemptId
+    },
+    logRecitationProviderMetadata(extra = {}) {
+      const startedAt = Number(this._recitationAttemptStartedAt || this._recitationProviderMeta?.startedAt || 0)
+      const now = typeof performance !== 'undefined' && performance.now
+        ? performance.now()
+        : Date.now()
+      const latencyMs = startedAt > 0 ? Math.max(0, now - startedAt) : extra.latencyMs
+      const metadata = buildRecitationProviderLogMetadata({
+        attemptId: this.recitationAttemptId || this._recitationProviderMeta?.attemptId,
+        provider: extra.provider || 'speechmatics',
+        stage: extra.stage || RECITATION_PROCESSING_STAGE.PROCESSING,
+        failureKind: extra.failureKind,
+        errorName: extra.errorName,
+        httpStatus: extra.httpStatus,
+        latencyMs,
+        meanConfidence: extra.meanConfidence ?? extra.recognitionConfidence,
+        evaluationConfidence: extra.evaluationConfidence ?? extra.confidence,
+        wordCount: extra.wordCount,
+        resultState: extra.resultState,
+        retryable: extra.retryable,
+      })
+      if (extra.failureKind || extra.error) {
+        console.warn('Recitation provider metadata', metadata)
+      } else {
+        console.info('Recitation provider metadata', metadata)
+      }
+      return metadata
     },
     isActiveRecitationAttempt(attemptId = this.recitationAttemptId) {
       if (!this._recitationComponentActive) return false
@@ -10886,6 +10689,14 @@ export default {
     },
     resolveRecitationFailureText(error, options = {}) {
       const classification = classifyRecitationFailure(error, options)
+      this.logRecitationProviderMetadata({
+        stage: RECITATION_PROCESSING_STAGE.ERROR,
+        failureKind: classification.kind,
+        errorName: error?.name,
+        httpStatus: error?.response?.status,
+        retryable: classification.retryable,
+        error,
+      })
       console.warn('Recitation failure', buildTechnicalLogContext(error, {
         context: options.context || 'recitation',
         kind: classification.kind,
@@ -10921,7 +10732,7 @@ export default {
 
     applyMobileLayoutFontDefault(mode = this.readingViewMode) {
       // Mushaf +/- controls own font size on every viewport — never force-pin it.
-      if (mode === 'mushaf' || mode === 'original') return
+      if (mode === 'mushaf' || false) return
       const isMobile = this.isMobileViewport?.() === true
       if (!isMobile) return
       const target = 130
@@ -12826,18 +12637,28 @@ export default {
               audio.currentTime = resumeAt
             }
           } catch { /* ignore seek */ }
-          audio.play().then(() => {
+          const playGeneration = this.beginPlaybackGeneration()
+          const player = this.sessionAudioPlayer
+          const playPromise = player
+            ? player.play({ generation: playGeneration, rewindIfEnded: false })
+            : audio.play()
+          Promise.resolve(playPromise).then(() => {
+            if (playGeneration !== this.playGeneration) return
             this.isPlaying = true
             this.audioBuffering = false
-          }).catch(() => {
+          }).catch((error) => {
+            if (playGeneration !== this.playGeneration) return
             this.isPlaying = false
             this.audioBuffering = false
             this.playRequestLocked = false
             this.advanceLocked = false
-            this.promptTapToPlay()
+            const name = String(error?.name || '')
+            if (name === 'NotAllowedError') this.promptTapToPlay()
+            else this.promptAudioPlaybackRetry()
           }).finally(() => {
             window.setTimeout(() => {
               this.ignoreMainAudioPauseEvent = false
+              if (this.sessionAudioPlayer) this.sessionAudioPlayer.ignorePauseEvent = false
             }, 120)
           })
         }
@@ -14111,12 +13932,7 @@ export default {
       }
 
       if (!playbackStarted) {
-        playbackStarted = await this.attemptMutedAutoplayRecovery()
-      }
-
-      await this.$nextTick()
-
-      if (!playbackStarted) {
+        // Respect browser autoplay policy — never force muted autoplay.
         this.playbackAwaitingGesture = true
         if (showPlayer && !this.playerDismissed) this.playerVisible = true
         this.syncSessionControlsWithPlayback(false)
@@ -14130,7 +13946,7 @@ export default {
         }
       }
 
-      return playbackStarted
+      return this.isPlaybackActive()
     },
 
     clearToolsStartInFlight() {
@@ -14347,10 +14163,6 @@ export default {
           this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
           this.clearToolsStartInFlight()
           return
-        }
-
-        if (this.readingViewMode === 'original') {
-          await this.enterOriginalMadaniView()
         }
 
         this.closePostSessionChoice()
@@ -14676,8 +14488,6 @@ export default {
           } else {
             this.syncMushafPageToActiveVerse()
           }
-        } else if (isMadaniMushafView(this.readingViewMode)) {
-          this.syncMadaniMushafPageToActiveVerse()
         }
         await this.$nextTick()
         this.prepareRestoredSessionAudio({
@@ -29592,6 +29402,17 @@ export default {
       if (meanConfidence.length) {
         result.recognitionConfidence = meanConfidence.reduce((sum, value) => sum + value, 0) / meanConfidence.length
       }
+      this.logRecitationProviderMetadata({
+        stage: RECITATION_PROCESSING_STAGE.ASSESSING,
+        provider: this.getDominantRecognitionProvider(committedWords) || 'speechmatics',
+        meanConfidence: result.recognitionConfidence,
+        evaluationConfidence: result.confidence,
+        wordCount: committedWords.length,
+        resultState: resolveRecitationResultState(result, {
+          duration_seconds: recordingSeconds,
+          confidence: result.confidence,
+        }),
+      })
       const insufficientReason = resolveInsufficientAudioReason(result, {
         duration_seconds: recordingSeconds,
         transcript,
@@ -32123,9 +31944,7 @@ export default {
       this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
       this.markPracticeSetupRestored()
       this.scheduleSessionWorkspaceScroll(SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION)
-      if (isMadaniMushafView(this.readingViewMode)) {
-        this.syncMadaniMushafPageToActiveVerse()
-      } else if (this.readingViewMode === 'mushaf') {
+       else if (this.readingViewMode === 'mushaf') {
         this.syncMushafPageToActiveVerse()
       }
       if (!autoplay) {
@@ -32473,13 +32292,18 @@ export default {
         this.stopWordHighlighting?.()
       } catch (e) { console.error(e) }
       try {
-        if (this.audioElement) {
+        this.beginPlaybackGeneration()
+        if (this.sessionAudioPlayer) {
+          this.sessionAudioPlayer.stop({ clearSource: true, bump: false })
+        } else if (this.audioElement) {
           this.audioElement.pause()
           this.audioElement.removeAttribute('src')
           this.audioElement.load()
         }
       } catch (e) { console.error(e) }
       this.isPlaying = false
+      this.playRequestLocked = false
+      this.audioBuffering = false
       this.playerVisible = false
       this.currentTime = 0
       this._restoredAudioPrepKey = null
@@ -32626,45 +32450,66 @@ export default {
         label: this.t('memorisation.player.tapToPlay')
       }, { important: true })
     },
+
+    promptAudioPlaybackRetry(message = '') {
+      this.isPlaying = false
+      this.playbackAwaitingGesture = true
+      if (!this.playerDismissed) this.playerVisible = true
+      this.showBanner(message || this.t('toasts.audioPlaybackError'), 'error', 12000, {
+        key: 'resume-playback',
+        label: this.t('common.tryAgain')
+      }, { important: true })
+    },
+
+    beginPlaybackGeneration() {
+      const player = this.sessionAudioPlayer
+      const generation = player?.bumpGeneration?.() ?? ((Number(this.playGeneration) || 0) + 1)
+      this.playGeneration = generation
+      return generation
+    },
+
+    ensureSessionAudioPlayer() {
+      const audio = this.audioElement || this.$refs.audio
+      if (!audio) return null
+      this.audioElement = audio
+      if (this.sessionAudioPlayer?.element === audio) return this.sessionAudioPlayer
+      this.initAudio()
+      return this.sessionAudioPlayer
+    },
+
     claimAudioElement(audio) {
       if (!audio) return
       // Invalidate in-flight unlock restores so they cannot pause/clear after we take over.
+      // Do not bump playGeneration here — callers own beginPlaybackGeneration().
       audio._mutqinUnlockToken = (Number(audio._mutqinUnlockToken) || 0) + 1
       try { audio.muted = false } catch { }
+      this.ignoreMainAudioPauseEvent = true
+      if (this.sessionAudioPlayer && this.sessionAudioPlayer.element === audio) {
+        this.sessionAudioPlayer.ignorePauseEvent = true
+      }
+      window.setTimeout(() => {
+        this.ignoreMainAudioPauseEvent = false
+        if (this.sessionAudioPlayer) this.sessionAudioPlayer.ignorePauseEvent = false
+      }, 120)
     },
 
     isAudioLoadAbortError(audio = null) {
-      const code = Number(audio?.error?.code || 0)
-      // MEDIA_ERR_ABORTED (1): expected when src changes or a newer load() supersedes.
-      if (code === 1) return true
-      // MEDIA_ERR_SRC_NOT_SUPPORTED (4) with no src: expected after removeAttribute('src') + load()
-      // when stopping session/recording playback before AI Recite mic capture.
-      const src = String(audio?.getAttribute?.('src') || audio?.currentSrc || '').trim()
-      if (code === 4 && !src) return true
-      return false
+      return isSessionBenignMediaError(audio)
     },
 
     describeAudioMediaError(audio = null) {
-      const mediaError = audio?.error || null
-      const code = Number(mediaError?.code || 0)
-      const labels = {
-        1: 'MEDIA_ERR_ABORTED',
-        2: 'MEDIA_ERR_NETWORK',
-        3: 'MEDIA_ERR_DECODE',
-        4: 'MEDIA_ERR_SRC_NOT_SUPPORTED',
-      }
-      return {
-        code,
-        label: labels[code] || (code ? `MEDIA_ERR_${code}` : 'UNKNOWN'),
-        message: mediaError?.message || '',
-        src: String(audio?.currentSrc || audio?.getAttribute?.('src') || ''),
-      }
+      return describeSessionMediaError(audio)
     },
 
     waitForAudioElementReady(audio, timeoutMs = 15000) {
+      const player = this.ensureSessionAudioPlayer()
+      if (player && (!audio || player.element === audio)) {
+        return player.waitUntilReady({
+          generation: this.playGeneration,
+          timeoutMs,
+        })
+      }
       if (!audio) return Promise.reject(new Error('No audio element'))
-      // HAVE_METADATA (1) is enough for play(); requiring HAVE_CURRENT_DATA (2)
-      // falsely times out on some browsers/CDNs that hold metadata-only until play().
       const isReady = () => Number(audio.readyState || 0) >= 1
       const tokenAtStart = Number(audio._mutqinUnlockToken) || 0
       const isSuperseded = () => (Number(audio._mutqinUnlockToken) || 0) !== tokenAtStart
@@ -32697,8 +32542,6 @@ export default {
             finish(reject, new Error('Audio wait superseded'))
             return
           }
-          // Ignore aborts from concurrent src/load changes; keep waiting for the
-          // current source unless a real decode/network failure sticks.
           if (this.isAudioLoadAbortError(audio)) return
           if (isReady()) {
             finish(resolve)
@@ -32715,15 +32558,11 @@ export default {
           finish(reject, new Error('Audio load timeout'))
         }, timeoutMs)
 
-        // If a prior abort left the element idle with a valid src, re-kick once
-        // without calling load() on an in-flight fetch (that causes MEDIA_ERR_ABORTED).
         const nudge = setTimeout(() => {
           if (settled || isReady()) return
           const src = audio.getAttribute('src') || audio.currentSrc || ''
           if (!src || src.startsWith('data:')) return
           const networkState = Number(audio.networkState || 0)
-          // NETWORK_EMPTY (0) / NETWORK_IDLE (1) after an abort — reassign src.
-          // NETWORK_LOADING (2) must not be interrupted.
           if (networkState === 2) return
           try {
             audio.src = src
@@ -32747,44 +32586,17 @@ export default {
         audio.addEventListener('canplaythrough', onReady)
         audio.addEventListener('error', onError)
 
-        // Some browsers skip events when re-assigning the same cached URL.
         poll = setInterval(onReady, 200)
 
-        // In case the element became ready between the initial check and listener attach.
         if (isReady()) finish(resolve)
       })
     },
 
     async attemptMutedAutoplayRecovery() {
-      const audio = this.audioElement || this.$refs.audio
-      if (!audio) return false
-      const src = String(audio.currentSrc || audio.getAttribute('src') || '').trim()
-      if (!src || src === 'about:blank' || src.startsWith('data:')) return false
-      if (!this.isMainAudioReady(audio)) {
-        try {
-          await this.waitForAudioElementReady(audio, 5000)
-        } catch {
-          return false
-        }
-      }
-      try {
-        const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-        audio.defaultPlaybackRate = safeSpeed
-        audio.playbackRate = safeSpeed
-        audio.muted = true
-        await audio.play()
-        audio.muted = false
-        audio.volume = 1
-        this.isPlaying = true
-        this.playerVisible = true
-        this.playbackAwaitingGesture = false
-        this.markPlaybackStart()
-        this.syncSessionControlsWithPlayback(true)
-        return true
-      } catch {
-        try { audio.muted = false } catch { /* ignore */ }
-        return false
-      }
+      // Kept for API compatibility / source guards. Do not mute-autoplay —
+      // iOS and desktop browsers own gesture policy; prompt the learner instead.
+      this.isPlaying = false
+      return false
     },
 
     async resumePlaybackAfterGesture() {
@@ -32802,30 +32614,16 @@ export default {
       const verse = this.activeVerseRef
         || (this.verses || []).find(candidate => candidate?.key === this.effectiveActiveVerseKey)
       const audioUrl = this.toPlayableAudioUrl(this.ensureVerseAudioUrl(verse))
-      const audio = this.audioElement || this.$refs.audio
-      if (!audio || !audioUrl) return
-
-      if (!this.audioElement) {
-        this.audioElement = audio
-        this.initAudio()
+      if (!audioUrl) {
+        this.promptAudioPlaybackRetry(this.t('toasts.audioNotAvailableForThisAyah'))
+        return
       }
 
       try {
-        const currentSrc = audio.currentSrc ? this.normalizeAudioUrl(audio.currentSrc) : ''
-        if (currentSrc !== audioUrl) {
-          audio.src = audioUrl
-          audio.load()
-        }
-        await this.waitForAudioElementReady(audio)
-        const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-        audio.defaultPlaybackRate = safeSpeed
-        audio.playbackRate = safeSpeed
-        await audio.play()
-        this.isPlaying = true
-        this.playerVisible = true
-        this.markPlaybackStart()
+        await this.playVerse({ ...(verse || {}), audio: audioUrl }, { force: true, primePlayback: true })
       } catch (error) {
         console.error('Playback resume after gesture failed:', error)
+        this.promptAudioPlaybackRetry()
       }
     },
     openInsightsPanel() {
@@ -33386,10 +33184,7 @@ export default {
       this.setReadingViewMode(this.nextReadingViewMode)
     },
     clampReadingViewMode(mode) {
-      const next = normalizeReadingViewMode(mode, this.readingViewMode || 'mushaf')
-      if (next === 'original' && !this.showOriginalMadaniViewToggle) return 'mushaf'
-      if (next === 'madani_mushaf' && !this.showMadaniMushafViewToggle) return 'mushaf'
-      return next
+      return normalizeReadingViewMode(mode, this.readingViewMode || 'mushaf')
     },
     setReadingViewMode(mode) {
       const nextMode = this.clampReadingViewMode(mode)
@@ -33411,24 +33206,14 @@ export default {
           this.syncMushafPageToActiveVerse()
           this.$nextTick(() => {
             this.scheduleMadaniPageFit()
-            // Desktop mushaf: keep word-audio highlighting armed and restart if already playing.
-            if (!this.isMobileViewport()) {
-              this.wordByWordAudioEnabled = true
-              const verse = this.activeVerseRef
-              if (verse?.key && this.isPlaying) {
-                this.startWordHighlighting(verse)
-              }
+            // Keep word-audio highlighting armed and restart if already playing.
+            this.wordByWordAudioEnabled = true
+            const verse = this.activeVerseRef
+            if (verse?.key && this.isPlaying) {
+              this.startWordHighlighting(verse)
             }
           })
         })
-      } else if (nextMode === 'madani_mushaf') {
-        this.wordByWordAudioEnabled = true
-        this.syncMadaniMushafViewportSpread()
-        this.enterMadaniMushafView({ force: true })
-      } else if (nextMode === 'original') {
-        this.wordByWordAudioEnabled = true
-        this.syncOriginalMadaniViewportSpread()
-        this.enterOriginalMadaniView()
       } else {
         this.fontOpen = false
         this.bgOpen = false
@@ -33514,360 +33299,6 @@ export default {
         return
       }
       this.mushafPageIndex = this.safeMushafPageIndex
-    },
-    syncOriginalMadaniViewportSpread() {
-      this.originalMadaniViewportSpread = isOriginalMadaniSpreadViewport()
-    },
-    bindOriginalMadaniSpreadMedia() {
-      if (typeof window === 'undefined' || !window.matchMedia) return
-      if (this._originalMadaniSpreadMql) return
-      const mql = window.matchMedia(ORIGINAL_MADANI_SPREAD_QUERY)
-      this._originalMadaniSpreadMql = mql
-      this._onOriginalMadaniSpreadChange = () => {
-        this.syncOriginalMadaniViewportSpread()
-        if (isOriginalMadaniView(this.readingViewMode)) {
-          this.prefetchOriginalMadaniPages(this.originalMadaniPageNumber)
-        }
-      }
-      if (typeof mql.addEventListener === 'function') {
-        mql.addEventListener('change', this._onOriginalMadaniSpreadChange)
-      } else if (typeof mql.addListener === 'function') {
-        mql.addListener(this._onOriginalMadaniSpreadChange)
-      }
-      this.syncOriginalMadaniViewportSpread()
-    },
-    unbindOriginalMadaniSpreadMedia() {
-      const mql = this._originalMadaniSpreadMql
-      const handler = this._onOriginalMadaniSpreadChange
-      if (!mql || !handler) return
-      if (typeof mql.removeEventListener === 'function') {
-        mql.removeEventListener('change', handler)
-      } else if (typeof mql.removeListener === 'function') {
-        mql.removeListener(handler)
-      }
-      this._originalMadaniSpreadMql = null
-      this._onOriginalMadaniSpreadChange = null
-    },
-    originalMadaniPageMeta(pageNumber) {
-      const page = Number(pageNumber)
-      if (!page) return { juz: '', surah: '' }
-      const layout = this.madaniPageLayouts?.[page]
-      const juz = Number(layout?.juzNumber || juzNumberFromMadaniPage(page) || 0)
-      const chapterId = Number(layout?.primaryChapterId || 0)
-        || (page === this.originalMadaniPageNumber
-          ? Number(this.currentChapter || this.chapterId || 0)
-          : 0)
-      const chapter = (this.chapters || []).find(item => Number(item?.id) === chapterId)
-      const surah = chapter?.name_arabic
-        || (chapterId ? this.t('memorisation.originalMadani.surahNumber', { number: chapterId }) : '')
-      return {
-        juz: juz ? arabicJuzLabel(juz) : '',
-        surah,
-      }
-    },
-    resolveOriginalMadaniPageForActiveVerse() {
-      const allowed = this.originalMadaniSessionPages
-      const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey
-      const mapped = Number(this.madaniPageByVerseKey?.[activeKey] || 0)
-      if (mapped > 0) return constrainMadaniPageToSet(mapped, allowed)
-      if (allowed.length) return constrainMadaniPageToSet(allowed[0], allowed)
-      return clampMadaniPageNumber(this.originalMadaniPageNumber || 1)
-    },
-    setOriginalMadaniPageNumber(pageNumber, { persist = true, loadMeta = true } = {}) {
-      const next = constrainMadaniPageToSet(pageNumber, this.originalMadaniSessionPages)
-      this.originalMadaniPageNumber = next
-      this.originalMadaniError = ''
-      if (loadMeta) this.ensureOriginalMadaniPageMeta(next)
-      this.prefetchOriginalMadaniPages(next)
-      if (persist) this.persistUiState()
-      return next
-    },
-    async enterOriginalMadaniView() {
-      this.originalMadaniError = ''
-      this.wordByWordAudioEnabled = true
-      this.syncOriginalMadaniViewportSpread()
-      try {
-        await this.ensureMadaniPagesLoaded({ force: false })
-        await loadSurahNamesFont()
-      } catch { /* session pages still constrain navigation when metadata is cached */ }
-      const page = this.resolveOriginalMadaniPageForActiveVerse()
-      this.setOriginalMadaniPageNumber(page, { persist: true, loadMeta: true })
-      this.$nextTick(() => {
-        const verse = this.activeVerseRef
-        if (verse?.key && this.isPlaying) this.startWordHighlighting(verse)
-      })
-    },
-    syncOriginalMadaniPageToActiveVerse() {
-      if (!isOriginalMadaniView(this.readingViewMode)) return
-      this.setOriginalMadaniPageNumber(this.resolveOriginalMadaniPageForActiveVerse(), { persist: false })
-    },
-    async ensureOriginalMadaniPageMeta(pageNumber) {
-      const page = clampMadaniPageNumber(pageNumber)
-      const cached = this.madaniPageLayouts?.[page]
-      if (
-        cached?.lines?.length
-        && Number(cached.layoutVersion) === MADANI_LAYOUT_VERSION
-      ) {
-        await this.ensureMadaniFontForPage(page)
-        return cached
-      }
-      try {
-        const layout = await this.ensureMadaniPageLoaded(page)
-        return layout
-      } catch (error) {
-        console.warn(`Original Madani page ${page} metadata failed`, error)
-        return null
-      }
-    },
-    prefetchOriginalMadaniPages(pageNumber = this.originalMadaniPageNumber) {
-      const allowed = this.originalMadaniSessionPages
-      const pages = originalMadaniPagesToPrefetch(pageNumber, {
-        spread: this.originalMadaniSpreadActive || this.originalMadaniHasPair,
-      })
-        .filter(page => !allowed.length || allowed.includes(page))
-      // Always include the visible pair so both framed pages hydrate together.
-      const pair = this.originalMadaniSpread || {}
-      ;[pair.left, pair.right, pageNumber].forEach((page) => {
-        const n = Number(page)
-        if (Number.isFinite(n) && n > 0 && (!allowed.length || allowed.includes(n)) && !pages.includes(n)) {
-          pages.push(n)
-        }
-      })
-      pages.forEach((page) => {
-        this.ensureOriginalMadaniPageMeta(page)
-      })
-    },
-    prefetchOriginalMadaniImages(pages = []) {
-      // Page PNGs are no longer the text layer (QCF glyphs render in-frame).
-      // Kept as a no-op for older call sites / tests.
-      void pages
-    },
-    onOriginalMadaniImageError(pageNumber) {
-      // Legacy image-layer error hook — Original now uses QCF glyphs.
-      void pageNumber
-    },
-    goToOriginalMadaniPage(pageNumber) {
-      this.setOriginalMadaniPageNumber(pageNumber)
-    },
-    goToNextOriginalMadaniPage() {
-      if (!this.canGoNextOriginalMadaniPage) return
-      this.goToOriginalMadaniPage(stepSessionMadaniPage(this.originalMadaniPageNumber, 1, {
-        spread: this.originalMadaniHasPair,
-        allowedPages: this.originalMadaniSessionPages,
-      }))
-    },
-    goToPreviousOriginalMadaniPage() {
-      if (!this.canGoPreviousOriginalMadaniPage) return
-      this.goToOriginalMadaniPage(stepSessionMadaniPage(this.originalMadaniPageNumber, -1, {
-        spread: this.originalMadaniHasPair,
-        allowedPages: this.originalMadaniSessionPages,
-      }))
-    },
-    onOriginalMadaniPageSelect(pageNumber) {
-      const page = clampMadaniPageNumber(pageNumber)
-      this.setOriginalMadaniPageNumber(page)
-      const sessionKeys = this.mushafSessionVerseKeys
-      const layoutKeys = this.madaniPageLayouts?.[page]?.verseKeys || []
-      const sessionMatch = layoutKeys.find(key => sessionKeys.has(key))
-        || Object.entries(this.madaniPageByVerseKey || {}).find(([key, mapped]) => Number(mapped) === page && sessionKeys.has(key))?.[0]
-      if (sessionMatch) {
-        this.setActiveVerse(sessionMatch, { scroll: false })
-      }
-    },
-    retryOriginalMadaniPages() {
-      this.originalMadaniError = ''
-      this.enterOriginalMadaniView()
-    },
-    buildOriginalMadaniPageData(pageNumber) {
-      const page = Number(pageNumber)
-      if (!Number.isFinite(page) || page < 1) {
-        return { lines: [], fontFamily: '', glyphsReady: false, pageNumber: null }
-      }
-      const layout = this.madaniPageLayouts?.[page]
-      const sourceLines = Array.isArray(layout?.lines) ? layout.lines : []
-      const sessionKeys = this.mushafSessionVerseKeys
-      // Session-only: strip neighbouring-page ayahs (same rule as Mushaf layout).
-      const sessionLines = filterMadaniLinesToSession(sourceLines, sessionKeys)
-      const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
-      const effectiveKey = this.effectiveActiveVerseKey
-      const fontFamily = layout?.fontFamily
-        || `p${page}${this.tajweedEnabled ? '-v4' : '-v2'}`
-      const useGlyphs = true
-      const fontReady = !!this.madaniFontsReady?.[page]
-        && isQcfFontLoaded(page, { tajweed: !!this.tajweedEnabled })
-      const audioIndexMap = this.madaniAudioIndexMap
-      const anchorIndexCache = new Map()
-      const highlightVerseKey = this.currentHighlightedVerseKey
-      const highlightWordIndex = Number(this.currentWordIndex)
-      const focusOn = !!this.focusModeEnabled
-      const anchorOn = !!this.anchorModeEnabled
-      const showMeanings = !!this.showWordByWord
-      const sessionVerseByKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
-
-      const lines = sessionLines
-        .filter(line => line && line.type !== 'empty')
-        .map((line, lineIndex) => {
-          if (line.type === 'surah_name' || line.type === 'basmala') {
-            return {
-              ...line,
-              key: `original-${page}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
-              fontFamily,
-              fontReady,
-              useGlyphs,
-              words: [],
-            }
-          }
-          const words = (line.words || [])
-            .filter(word => isVerseInteractiveOnPage(word?.verseKey || word?.verse_key, sessionKeys))
-            .map(word => {
-            const verseKey = word.verseKey
-            const sessionVerse = sessionVerseByKey.get(verseKey)
-            const inSession = true
-            const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
-            const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
-            const isPlayingAyah = inSession && this.activeVerseKey === verseKey && this.isPlaying
-            let useGlyph = useGlyphs && fontReady && !!word.codeV2
-            let html = useGlyph
-              ? (word.codeV2 || word.textQpc || '')
-              : (word.isEnd
-                ? formatMadaniAyahEndLabel(word)
-                : (word.textQpc || word.codeV2 || ''))
-            if (word.isEnd && !String(html || '').trim()) {
-              html = formatMadaniAyahEndLabel(word)
-              useGlyph = false
-            }
-            const wordIndex = word.isEnd ? null : this.resolveMadaniAudioWordIndex(word, audioIndexMap)
-            const isHighlighted = inSession
-              && !word.isEnd
-              && wordIndex != null
-              && highlightVerseKey === verseKey
-              && highlightWordIndex === wordIndex
-            let isAnchor = false
-            if (anchorOn && inSession && !word.isEnd && wordIndex != null) {
-              if (!anchorIndexCache.has(verseKey)) {
-                const total = this.getVerseAudioWordCount(verseKey)
-                anchorIndexCache.set(verseKey, new Set(this.getAnchorIndices(total)))
-              }
-              isAnchor = anchorIndexCache.get(verseKey).has(wordIndex)
-            }
-            const sessionWord = Number.isFinite(wordIndex) ? sessionVerse?.words?.[wordIndex] : null
-            const plainText = String(sessionWord?.ar || word.textQpc || '').trim()
-            const meaningLabel = showMeanings && !word.isEnd
-              ? (resolveWordGlossFromVerse(
-                sessionVerse,
-                plainText,
-                Number.isFinite(wordIndex) ? wordIndex : 0
-              ) || String(sessionWord?.en || word.translation || '').trim())
-              : ''
-            const isPracticeFocus = inSession
-              && !word.isEnd
-              && wordIndex != null
-              && this.isPracticeFocusWeakWord(verseKey, wordIndex, plainText)
-            const emphasizeWeak = isPracticeFocus && (
-              this.postSessionPracticeEmphasizeWeakAreas
-              || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
-              || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
-              || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
-            )
-            const recitationStatus = inSession && !word.isEnd && wordIndex != null
-              ? this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, sessionVerse?.sessionTargetKey || '')
-              : ''
-            const statusClass = recitationStatus ? `recitation-word-${recitationStatus}` : ''
-            return {
-              ...word,
-              html,
-              useGlyph,
-              inSession,
-              wordIndex,
-              isActive,
-              isWeak: false,
-              isMastered: inSession && this.isMasteredAyah(verseKey),
-              isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
-              isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
-              isPlayingAyah,
-              isHighlighted,
-              isAnchor,
-              isPracticeFocus,
-              isPracticeFocusEmphasis: !!emphasizeWeak,
-              isPracticeFocusActive: isPracticeFocus && isHighlighted,
-              recitationStatus,
-              isFocusDimmed: focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
-              meaningLabel,
-              isNew: inSession && this.isNewHifzAyah(verseKey),
-              isDue: inSession && this.isDueHifzAyah(verseKey),
-              isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey),
-              hasAiReview: hasActiveReview,
-              classes: {
-                'madani-word--end': !!word.isEnd,
-                'madani-word--glyph': !!useGlyph,
-                'madani-word--fallback': !useGlyph && useGlyphs,
-                'madani-word--unicode': !useGlyph && !useGlyphs,
-                'madani-word--out': false,
-                active: !!isActive,
-                'hifz-ayah-new': inSession && this.isNewHifzAyah(verseKey),
-                'hifz-ayah-due': inSession && this.isDueHifzAyah(verseKey),
-                'hifz-ayah-weak': false,
-                'hifz-ayah-mastered': inSession && this.isMasteredAyah(verseKey),
-                'blur-upcoming': inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
-                'peek-revealed': inSession && this.isVersePeekRevealed(verseKey),
-                'review-priority': inSession && this.isReviewPriorityAyah(verseKey),
-                'is-playing': !!isPlayingAyah,
-                highlighted: !!isHighlighted,
-                'phrase-highlighted': !!isHighlighted,
-                'anchor-highlight': !!isAnchor,
-                'anchor-pulse': !!isAnchor,
-                'is-focus-dim': focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
-                'practice-focus-word': !!isPracticeFocus,
-                'practice-focus-word--emphasis': !!emphasizeWeak,
-                'practice-focus-word--active': !!(isPracticeFocus && isHighlighted),
-                'ai-recitation-active': !!hasActiveReview,
-                [statusClass]: !!statusClass,
-              },
-            }
-          })
-
-          return {
-            ...line,
-            key: `original-${page}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
-            fontFamily,
-            fontReady,
-            useGlyphs,
-            words,
-          }
-        })
-
-      return {
-        pageNumber: page,
-        fontFamily,
-        glyphsReady: fontReady,
-        lines,
-      }
-    },
-    onOriginalMadaniWordSelect(word) {
-      const verseKey = word?.verseKey
-      if (!verseKey) return
-      this.onOriginalMadaniAyahSelect(verseKey)
-      this.onMadaniWordClick({
-        verseKey,
-        wordIndex: word.wordIndex,
-        inSession: word.inSession !== false,
-      })
-    },
-    onOriginalMadaniAyahSelect(verseKey) {
-      if (!verseKey) return
-      const mapped = Number(this.madaniPageByVerseKey?.[verseKey] || 0)
-      if (mapped) this.setOriginalMadaniPageNumber(mapped, { persist: true, loadMeta: true })
-      if (isVerseInteractiveOnPage(verseKey, this.mushafSessionVerseKeys)) {
-        this.setActiveVerse(verseKey, { scroll: false })
-      }
-    },
-    onOriginalMadaniPeekEnter(verseKey) {
-      if (verseKey) this.hoverPeekVerseKey = verseKey
-      if (this.blurModeEnabled) this.onVersePeekEnter?.(verseKey)
-    },
-    onOriginalMadaniPeekLeave() {
-      this.hoverPeekVerseKey = null
-      this.onVersePeekLeave?.()
     },
     goToMushafPage(index) {
       if (!this.mushafPages.length) {
@@ -34070,319 +33501,6 @@ export default {
       })
     },
 
-    syncMadaniMushafViewportSpread() {
-      if (typeof window === 'undefined') return
-      this.madaniMushafViewportSpread = isMadaniMushafSpreadViewport()
-    },
-
-    madaniMushafPresentationContext() {
-      const sessionKeys = this.mushafSessionVerseKeys
-      return {
-        sessionKeys: sessionKeys?.size > 0 ? sessionKeys : null,
-        keepFullPage: true,
-        useGlyphs: true,
-        tajweedEnabled: !!this.tajweedEnabled,
-        audioIndexMap: this.madaniAudioIndexMap,
-        resolveAudioWordIndex: (word, map) => this.resolveMadaniAudioWordIndex(word, map),
-        getRecitationStatus: (verseKey, wordIndex) => (
-          this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, '')
-        ),
-        isVerseBlurred: (key) => this.blurModeEnabled && this.isVerseBlurred(key),
-        isVersePeekRevealed: (key) => this.isVersePeekRevealed(key),
-        isVerseActive: (key) => (
-          (this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback)
-          && this.effectiveActiveVerseKey === key
-        ) || this.shouldShowRecitationReviewHighlights(key),
-        isVersePlaying: (key) => this.activeVerseKey === key && this.isPlaying,
-        isWordHighlighted: (verseKey, wordIndex) => (
-          this.currentHighlightedVerseKey === verseKey
-          && Number(this.currentWordIndex) === Number(wordIndex)
-        ),
-        isPracticeFocusWord: (verseKey, wordIndex, plain) => (
-          this.isPracticeFocusWeakWord(verseKey, wordIndex, plain)
-        ),
-        isMasteredAyah: (key) => this.isMasteredAyah(key),
-        focusModeEnabled: !!this.focusModeEnabled,
-        anchorModeEnabled: !!this.anchorModeEnabled,
-        getAnchorIndices: (total) => this.getAnchorIndices(total),
-        getVerseAudioWordCount: (key) => this.getVerseAudioWordCount(key),
-        resolveWordGloss: (verseKey, wordIndex, plain) => {
-          const verse = this.resolveVerseFromMadaniKey(verseKey)
-          return resolveWordGlossFromVerse(verse, plain, wordIndex) || ''
-        },
-        resolvePlainArabic: (word) => {
-          const verseKey = String(word?.verseKey || '').trim()
-          if (!verseKey || word?.isEnd || word?.charType === 'end') return ''
-          const verse = this.resolveVerseFromMadaniKey(verseKey)
-          const wordIndex = this.resolveMadaniAudioWordIndex(word, this.madaniAudioIndexMap)
-          if (Number.isFinite(wordIndex) && verse?.words?.[wordIndex]?.ar) {
-            return String(verse.words[wordIndex].ar).trim()
-          }
-          const position = Math.max(0, Number(word?.position || 0) - 1)
-          if (verse?.words?.[position]?.ar) {
-            return String(verse.words[position].ar).trim()
-          }
-          return ''
-        },
-        showWordByWord: !!this.showWordByWord,
-        shouldShowAiReview: (key) => this.shouldShowRecitationReviewHighlights(key),
-        hideQuranText: !!this.hideQuranTextEnabled,
-        hiddenAyahKeys: this.hiddenAyahKeysSet || new Set(),
-        revealCurrentWordOnly: !!this.revealCurrentWordOnly,
-        effectiveActiveVerseKey: this.effectiveActiveVerseKey,
-        currentHighlightedVerseKey: this.currentHighlightedVerseKey,
-        currentWordIndex: this.currentWordIndex,
-      }
-    },
-
-    buildMadaniMushafPageViewFor(pageNumber) {
-      const page = Number(pageNumber)
-      if (!page) return null
-      const cached = this.madaniMushafPages?.[page]
-      const layout = cached?.layout
-      const meta = this.madaniMushafPageMeta(page)
-      const fontFamily = layout?.fontFamily || `p${page}-${this.tajweedEnabled ? 'v4' : 'v2'}`
-      const useGlyphs = this.useMadaniQcfGlyphs
-      const fontReady = useGlyphs
-        && !!this.madaniMushafFontsReady?.[page]
-        && isQcfFontLoaded(page, { tajweed: !!this.tajweedEnabled })
-      if (!layout?.lines?.length) {
-        return {
-          pageNumber: page,
-          lines: [],
-          fontFamily,
-          glyphsReady: false,
-          loading: !!this.madaniMushafLoading,
-          juzLabel: meta.juz,
-          surahLabel: meta.surah,
-          pageLabel: meta.page,
-        }
-      }
-      let lines = []
-      try {
-        const rawLines = consolidateMadaniMushafLinesToGrid(Array.isArray(layout.lines) ? layout.lines : [])
-        lines = enrichMadaniMushafLines(rawLines, {
-          ...this.madaniMushafPresentationContext(),
-          pageNumber: page,
-          fontFamily,
-          fontReady,
-          useGlyphs,
-        })
-      } catch (error) {
-        console.warn(`Madani Mushaf page ${page} presentation failed`, error)
-      }
-      return {
-        pageNumber: page,
-        lines,
-        fontFamily,
-        glyphsReady: fontReady,
-        loading: false,
-        juzLabel: meta.juz,
-        surahLabel: meta.surah,
-        pageLabel: meta.page,
-      }
-    },
-
-    madaniMushafPageMeta(pageNumber) {
-      const page = clampMadaniPageNumber(pageNumber)
-      const layout = this.madaniMushafPages?.[page]?.layout
-      const payload = layout || this.madaniMushafPages?.[page]?.raw || this.madaniMushafPages?.[page]
-      const juz = payload?.juzNumber || juzNumberFromMadaniPage(page)
-      const surah = payload?.primaryChapterId || payload?.primarySurahNumber || this.chapterId
-      return {
-        juz: arabicJuzLabel(juz),
-        surah: surah ? this.t('memorisation.originalMadani.surahNumber', { number: surah }) : '',
-        page: this.t('memorisation.madaniMushaf.pageSingle', { page }),
-      }
-    },
-
-    async enterMadaniMushafView(options = {}) {
-      this.madaniMushafError = ''
-      if (options.force) {
-        this.madaniMushafPages = {}
-        clearMadaniMushafPageCache()
-      }
-      this.syncMadaniMushafViewportSpread()
-      await this.ensureMadaniMushafSessionPageMap()
-      await this.syncMadaniMushafPageToActiveVerse()
-      await this.ensureMadaniMushafSpreadLoaded({ force: !!options.force })
-      this.$nextTick(() => {
-        const verse = this.activeVerseRef
-        if (verse?.key && this.isPlaying) this.startWordHighlighting(verse)
-      })
-    },
-
-    async ensureMadaniMushafSessionPageMap() {
-      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
-      if (!chapterId) return
-      const rangeStart = Number(this.rangeStart || this.currentConfig?.rangeStart || 1)
-      const rangeEnd = Number(this.rangeEnd || this.currentConfig?.rangeEnd || rangeStart)
-      try {
-        const { pageByVerseKey } = await getMadaniPagesForChapterRange(chapterId, rangeStart, rangeEnd)
-        if (pageByVerseKey instanceof Map) {
-          const pageMap = { ...this.madaniPageByVerseKey }
-          pageByVerseKey.forEach((page, key) => {
-            pageMap[key] = page
-          })
-          this.madaniPageByVerseKey = pageMap
-        }
-      } catch (error) {
-        console.warn('Madani Mushaf session page map failed', error)
-      }
-    },
-
-    async syncMadaniMushafPageToActiveVerse() {
-      const key = this.effectiveActiveVerseKey || this.activeVerseKey
-      if (!key) return
-      const fromMap = Number(this.madaniPageByVerseKey?.[key])
-      if (fromMap >= 1) {
-        this.goToMadaniMushafPage(fromMap, { persist: false })
-        return
-      }
-      const verse = this.resolveVerseFromMadaniKey(key)
-      const fromVerse = Number(verse?.page_number || verse?.madaniPage || 0)
-      if (fromVerse >= 1) {
-        this.goToMadaniMushafPage(fromVerse, { persist: false })
-        return
-      }
-      try {
-        const page = await resolveMadaniMushafPage({ verseKey: key })
-        if (page) this.goToMadaniMushafPage(page, { persist: false })
-      } catch { /* resolve optional */ }
-    },
-
-    goToMadaniMushafPage(pageNumber, options = {}) {
-      const allowed = this.madaniMushafAllowedPages
-      const next = constrainMadaniPageToSet(pageNumber, allowed.length === 604 ? [] : allowed)
-      this.madaniMushafPageNumber = clampMadaniPageNumber(next)
-      if (options.persist !== false) this.persistUiState()
-      this.ensureMadaniMushafSpreadLoaded(options)
-    },
-
-    goToPreviousMadaniMushafPage() {
-      const next = stepSessionMadaniPage(this.madaniMushafPageNumber, -1, {
-        spread: this.madaniMushafHasPair,
-        allowedPages: this.madaniMushafAllowedPages,
-      })
-      this.goToMadaniMushafPage(next)
-    },
-
-    goToNextMadaniMushafPage() {
-      const next = stepSessionMadaniPage(this.madaniMushafPageNumber, 1, {
-        spread: this.madaniMushafHasPair,
-        allowedPages: this.madaniMushafAllowedPages,
-      })
-      this.goToMadaniMushafPage(next)
-    },
-
-    async ensureMadaniMushafPageLoaded(pageNumber, options = {}) {
-      const page = clampMadaniPageNumber(pageNumber)
-      const cached = this.madaniMushafPages?.[page]
-      if (!options.force && cached?.layout?.lines?.length && cached?.layoutSource === 'qul') {
-        await this.ensureMadaniMushafFontForPage(page)
-        return cached.layout
-      }
-
-      try {
-        const [apiPayload, verses] = await Promise.all([
-          fetchMadaniMushafPage(page, { force: !!options.force }),
-          getMadaniPageVerses(page, { force: !!options.force }).catch(() => []),
-        ])
-        const enrichedPayload = enrichMadaniMushafPageWithUnicode(apiPayload, verses)
-        let model = buildMadaniMushafPageModel(enrichedPayload, { tajweed: !!this.tajweedEnabled })
-        const decorativeLayout = buildMadaniPageLayout(page, verses, { tajweed: !!this.tajweedEnabled })
-        const mergedLines = mergeMadaniMushafDecorativeLines(model.lines, decorativeLayout.lines)
-        const layout = {
-          ...model,
-          lines: mergedLines,
-          layoutVersion: MADANI_LAYOUT_VERSION,
-          juzNumber: model.juzNumber || decorativeLayout.juzNumber,
-          primaryChapterId: model.primaryChapterId || decorativeLayout.primaryChapterId,
-          verseKeys: [...new Set([
-            ...(model.verseKeys || []),
-            ...(decorativeLayout.verseKeys || []),
-          ])],
-        }
-        this.madaniMushafPages = {
-          ...this.madaniMushafPages,
-          [page]: { layout, layoutSource: 'qul', raw: apiPayload },
-        }
-        const nextMap = { ...this.madaniPageByVerseKey }
-        for (const key of layout.verseKeys || []) {
-          nextMap[key] = page
-        }
-        this.madaniPageByVerseKey = nextMap
-        await this.ensureMadaniMushafFontForPage(page)
-        this.madaniMushafPresentationRevision += 1
-        return layout
-      } catch (error) {
-        console.error(`Madani Mushaf page ${page} load failed:`, error)
-        return null
-      }
-    },
-
-    async ensureMadaniMushafSpreadLoaded(options = {}) {
-      const requestId = ++this.madaniMushafLoadRequestId
-      this.madaniMushafLoading = true
-      this.madaniMushafError = ''
-      try {
-        const spread = this.madaniMushafSpread
-        const pages = this.madaniMushafHasPair
-          ? [spread.right, spread.left].filter(Boolean)
-          : [this.madaniMushafPageNumber]
-        await Promise.all(pages.map(p => this.ensureMadaniMushafPageLoaded(p, options)))
-        if (requestId === this.madaniMushafLoadRequestId) {
-          this.prefetchMadaniMushafAdjacent(pages[0])
-        }
-      } catch (error) {
-        if (requestId === this.madaniMushafLoadRequestId) {
-          this.madaniMushafError = error?.message || this.t('memorisation.madaniMushaf.errorDesc')
-        }
-      } finally {
-        if (requestId === this.madaniMushafLoadRequestId) {
-          this.madaniMushafLoading = false
-        }
-      }
-    },
-
-    async ensureMadaniMushafFontForPage(pageNumber) {
-      const page = Number(pageNumber)
-      if (!page) return false
-      try {
-        await loadQcfPageFont(page, { tajweed: !!this.tajweedEnabled })
-        await loadSurahNamesFont()
-        if (!isQcfFontLoaded(page, { tajweed: !!this.tajweedEnabled })) {
-          throw new Error(`QCF font not registered after load for page ${page}`)
-        }
-        this.madaniMushafFontsReady = {
-          ...this.madaniMushafFontsReady,
-          [page]: true,
-        }
-        this.madaniMushafPresentationRevision += 1
-        return true
-      } catch (error) {
-        console.warn(`Madani Mushaf font load failed for page ${page}`, error)
-        const next = { ...this.madaniMushafFontsReady }
-        delete next[page]
-        this.madaniMushafFontsReady = next
-        return false
-      }
-    },
-
-    prefetchMadaniMushafAdjacent(pageNumber) {
-      if (this.isMobileViewport()) return
-      const pages = madaniMushafPagesToPrefetch(pageNumber, { spread: this.madaniMushafHasPair })
-      prefetchMadaniMushafPages(pages).catch(() => {})
-      prefetchQcfPageFonts(pages, { tajweed: !!this.tajweedEnabled }).catch(() => {})
-    },
-
-    retryMadaniMushafPages() {
-      this.ensureMadaniMushafSpreadLoaded({ force: true })
-    },
-
-    onMadaniMushafWordSelect(word) {
-      this.onMadaniWordClick(word)
-    },
     rebuildCurrentMadaniLayoutsForTajweed() {
       const pages = Object.keys(this.madaniPageLayouts || {}).map(Number).filter(Boolean)
       if (!pages.length) return
@@ -34571,7 +33689,6 @@ export default {
       this.persistUiState()
       // Prefer Vue :style bindings — avoid leaking !important inline vars across layouts.
       this.clearMadaniInlineFontOverrides()
-      this.madaniMushafPresentationRevision += 1
       this.$nextTick(() => this.scheduleMadaniPageFit())
       if (!silent) {
         this.showBanner(this.t('toasts.fontSize', { defaultFontSize: nextSize }), 'info', 600)
@@ -34810,10 +33927,6 @@ export default {
         this.queueIndex = store.queueIndex || 0
         if (this.readingViewMode === 'mushaf') {
           this.$nextTick(() => this.syncMushafPageToActiveVerse())
-        } else if (isMadaniMushafView(this.readingViewMode)) {
-          this.$nextTick(() => this.syncMadaniMushafPageToActiveVerse())
-        } else if (this.readingViewMode === 'original') {
-          this.$nextTick(() => this.syncOriginalMadaniPageToActiveVerse())
         }
       }
 
@@ -35164,18 +34277,6 @@ export default {
       if (this.readingViewMode === 'mushaf' && (event.key === 'PageUp' || event.key === '[')) {
         event.preventDefault()
         this.goToPreviousMushafPage()
-        return
-      }
-
-      if (this.readingViewMode === 'original' && (event.key === 'PageDown' || event.key === ']')) {
-        event.preventDefault()
-        this.goToNextOriginalMadaniPage()
-        return
-      }
-
-      if (this.readingViewMode === 'original' && (event.key === 'PageUp' || event.key === '[')) {
-        event.preventDefault()
-        this.goToPreviousOriginalMadaniPage()
         return
       }
 
@@ -35800,9 +34901,8 @@ export default {
         return true
       }
 
-      this.playGeneration += 1
-      const playGeneration = this.playGeneration
       this.softPausePlayback()
+      const playGeneration = this.beginPlaybackGeneration()
       if (!this.audioElement) this.initAudio()
       if (!this.audioElement) return false
       this.claimAudioElement(this.audioElement)
@@ -36048,7 +35148,12 @@ export default {
         this.segmentPlaybackTimer = null
       }
       this.stopWordHighlighting()
-      if (this.audioElement) {
+      // Cancel in-flight playVerse / attach work so a late play() cannot revive UI.
+      this.beginPlaybackGeneration()
+      this.playRequestLocked = false
+      if (this.sessionAudioPlayer) {
+        this.sessionAudioPlayer.pause({ bump: false })
+      } else if (this.audioElement) {
         try {
           this.audioElement.pause()
         } catch {}
@@ -38145,8 +37250,11 @@ export default {
 
     async loadAdaptiveAssessmentBundle() {
       if (this._adaptiveAssessmentBundle) return this._adaptiveAssessmentBundle
-      this._adaptiveAssessmentBundle = await import(
-        /* webpackChunkName: "adaptive-assessment" */ '../scripts/assessment/adaptiveAssessmentBundle'
+      this._adaptiveAssessmentBundle = await wrapChunkImport(
+        () => import(
+          /* webpackChunkName: "adaptive-assessment" */ '../scripts/assessment/adaptiveAssessmentBundle'
+        ),
+        { feature: 'adaptive-assessment' }
       )
       return this._adaptiveAssessmentBundle
     },
@@ -38643,6 +37751,7 @@ export default {
     },
 
     async startWordHighlighting(verse, options = {}) {
+      this.ensureWordAudioHighlighting()
       if (!verse?.key || !this.wordByWordAudioEnabled || !this.currentReciterSupportsWordHighlighting) return
       const timestamps = await this.ensureWordHighlightTrack(verse, options)
       if (!timestamps.length) return
@@ -38731,7 +37840,7 @@ export default {
         nextNodes.add(node)
       })
       this.lastHighlightedWordNodes = Array.from(nextNodes)
-      if ((this.readingViewMode === 'mushaf' || isMadaniMushafView(this.readingViewMode)) && nextNodes.size) {
+      if ((this.readingViewMode === 'mushaf') && nextNodes.size) {
         const lead = this.lastHighlightedWordNodes[0]
         if (lead && typeof lead.scrollIntoView === 'function') {
           const rect = lead.getBoundingClientRect?.()
@@ -38797,17 +37906,22 @@ export default {
       this.currentWordIndex = -1
       this.currentPhraseIndex = -1
 
-      const duration = Number(this.audioElement?.duration)
-      const timestamps = await this.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null)
-      if (requestId !== this.wordHighlightRequestId) return []
+      try {
+        const duration = Number(this.audioElement?.duration)
+        const timestamps = await this.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null)
+        if (requestId !== this.wordHighlightRequestId) return []
 
-      this.wordHighlightLoading = false
-      this.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : []
-      this.wordHighlightNodeRegistry.clear()
-      // Feed the normalised timeline into the sync engine (Timestamp Map Layer).
-      this.ensureWordSyncEngine().setTimeline(this.wordHighlightTimestamps, verse.key)
-      this.syncWordHighlightFromAudio(verse)
-      return this.wordHighlightTimestamps
+        this.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : []
+        this.wordHighlightNodeRegistry.clear()
+        // Feed the normalised timeline into the sync engine (Timestamp Map Layer).
+        this.ensureWordSyncEngine().setTimeline(this.wordHighlightTimestamps, verse.key)
+        this.syncWordHighlightFromAudio(verse)
+        return this.wordHighlightTimestamps
+      } finally {
+        if (requestId === this.wordHighlightRequestId) {
+          this.wordHighlightLoading = false
+        }
+      }
     },
 
     syncWordHighlightFromAudio(verse = this.activeVerseRef) {
@@ -38864,16 +37978,11 @@ export default {
       this.audioElement = this.$refs.audio
       if (!this.audioElement) return
 
-      this.audioElement.removeEventListener('timeupdate', this.audioTimeUpdate)
-      this.audioElement.removeEventListener('ended', this.audioEnded)
-      this.audioElement.removeEventListener('error', this.audioError)
-      this.audioElement.removeEventListener('seeking', this.audioSeeking)
-      this.audioElement.removeEventListener('seeked', this.audioSeeked)
-      this.audioElement.removeEventListener('pause', this.audioPaused)
-      this.audioElement.removeEventListener('playing', this.audioPlaying)
-      this.audioElement.removeEventListener('ratechange', this.audioRateChange)
-      this.audioElement.removeEventListener('loadstart', this.audioLoadStart)
-      this.audioElement.removeEventListener('loadedmetadata', this.audioLoadedMetadata)
+      // Tear down any prior owner so listeners cannot double-fire.
+      if (this.sessionAudioPlayer) {
+        try { this.sessionAudioPlayer.unbind({ keepElement: true, clearSource: false }) } catch { /* ignore */ }
+        this.sessionAudioPlayer = null
+      }
 
       this.audioTimeUpdate = () => {
         const audio = this.audioElement
@@ -39072,7 +38181,18 @@ export default {
       }
 
       this.audioLoadStart = () => {
+        // Clear stale word sync when a new source begins loading, then re-arm
+        // immediately if playback is already underway (avoids a dead highlight
+        // when loadstart races with play()/playing).
         this.stopWordHighlighting()
+        if (this.isPlaying && this.wordByWordAudioEnabled && this.activeVerseRef?.key) {
+          const verse = this.activeVerseRef
+          this.$nextTick(() => {
+            if (this.isPlaying && this.activeVerseRef?.key === verse.key) {
+              this.startWordHighlighting(verse)
+            }
+          })
+        }
       }
 
       this.audioLoadedMetadata = () => {
@@ -39081,7 +38201,7 @@ export default {
         this.syncAudioUiState(Number(audio.currentTime || 0), Number(audio.duration || 0))
       }
 
-      this.audioError = (e) => {
+      this.audioError = (e, detail = null) => {
         const audio = e?.target || this.audioElement
         if (this.isAudioLoadAbortError(audio)) {
           // Expected when unlock/preload/playVerse supersede an in-flight load,
@@ -39093,10 +38213,14 @@ export default {
           this.isPlaying = false
           return
         }
-        console.warn('Audio error:', this.describeAudioMediaError(audio), e)
+        const mediaDetail = detail || this.describeAudioMediaError(audio)
+        console.warn('Audio error:', mediaDetail, e)
         this.isPlaying = false
+        this.playRequestLocked = false
+        this.audioBuffering = false
         this.sessionErrorCount += 1
         this.stopWordHighlighting()
+        this.promptAudioPlaybackRetry()
       }
 
       
@@ -39117,24 +38241,45 @@ export default {
         this.clearAudioStallRecoveryTimer()
       }
 
-      this.audioElement.addEventListener('timeupdate', this.audioTimeUpdate)
-      this.audioElement.addEventListener('ended', this.audioEnded)
-      this.audioElement.addEventListener('error', this.audioError)
-      this.audioElement.addEventListener('seeking', this.audioSeeking)
-      this.audioElement.addEventListener('seeked', this.audioSeeked)
-      this.audioElement.addEventListener('pause', this.audioPaused)
-      this.audioElement.addEventListener('playing', this.audioPlaying)
-      this.audioElement.addEventListener('ratechange', this.audioRateChange)
-      this.audioElement.addEventListener('loadstart', this.audioLoadStart)
-      this.audioElement.addEventListener('loadedmetadata', this.audioLoadedMetadata)
-      this.audioElement.addEventListener('waiting', this.audioWaiting)
-      this.audioElement.addEventListener('stalled', this.audioStalled)
-      this.audioElement.addEventListener('canplay', this.audioCanPlay)
+      this.sessionAudioPlayer = new SessionAudioPlayer({
+        onTimeUpdate: () => this.audioTimeUpdate?.(),
+        onEnded: () => this.audioEnded?.(),
+        onError: (event, detail) => this.audioError?.(event, detail),
+        onSeeking: () => this.audioSeeking?.(),
+        onSeeked: () => this.audioSeeked?.(),
+        onPause: () => {
+          this.ignoreMainAudioPauseEvent = !!this.sessionAudioPlayer?.ignorePauseEvent
+          this.audioPaused?.()
+        },
+        onPlaying: () => this.audioPlaying?.(),
+        onRateChange: () => this.audioRateChange?.(),
+        onLoadStart: () => this.audioLoadStart?.(),
+        onLoadedMetadata: () => this.audioLoadedMetadata?.(),
+        onWaiting: () => this.audioWaiting?.(),
+        onStalled: () => this.audioStalled?.(),
+        onCanPlay: () => this.audioCanPlay?.(),
+        onStateChange: ({ state }) => {
+          // Buffering only — play/pause/ended handlers own isPlaying to avoid races.
+          if (state === SESSION_AUDIO_STATES.STALLED || state === SESSION_AUDIO_STATES.LOADING) {
+            this.audioBuffering = true
+          }
+          if (
+            state === SESSION_AUDIO_STATES.PLAYING
+            || state === SESSION_AUDIO_STATES.PAUSED
+            || state === SESSION_AUDIO_STATES.ENDED
+            || state === SESSION_AUDIO_STATES.ERROR
+          ) {
+            this.audioBuffering = false
+          }
+        },
+      })
+      this.sessionAudioPlayer.bind(this.audioElement)
+      this.playGeneration = Number(this.sessionAudioPlayer.generation) || this.playGeneration
     },
 
     async playVerse(verse, options = {}) {
       if (this.playRequestLocked && !options.force) return
-      const playGeneration = ++this.playGeneration
+      this.ensureSessionAudioPlayer()
       this.playRequestLocked = true
       this.clearRecitationWindowTimer()
       this.clearTalqinPauseTimer()
@@ -39169,16 +38314,20 @@ export default {
       const currentSrc = this.audioElement?.currentSrc ? this.normalizeAudioUrl(this.audioElement.currentSrc) : ''
       const isSameSource = !!currentSrc && playableCandidates.some((url) => this.normalizeAudioUrl(url) === currentSrc)
 
-      // Toggle if same verse is playing
+      // Toggle if same verse is already loaded (pause/resume). Do not start a second load.
       if (!options.force && this.activeKey === verse.key && isSameSource) {
-        this.togglePlay()
         this.playRequestLocked = false
+        this.togglePlay()
         return
       }
 
+      const playGeneration = this.beginPlaybackGeneration()
+
       // Stop current playback and highlighting
       this.stopWordHighlighting()
-      if (this.audioElement) {
+      if (this.sessionAudioPlayer) {
+        this.sessionAudioPlayer.pause({ bump: false })
+      } else if (this.audioElement) {
         try {
           this.audioElement.pause()
         } catch (e) {
@@ -39191,14 +38340,10 @@ export default {
         queueIndex: Number.isFinite(options.queueIndex) ? Number(options.queueIndex) : undefined
       })
 
-      if (!this.audioElement) {
-        this.audioElement = this.$refs.audio
-        if (!this.audioElement) {
-          this.showAudioUnavailableError('playback')
-          this.playRequestLocked = false
-          return
-        }
-        this.initAudio()
+      if (!this.ensureSessionAudioPlayer()) {
+        this.showAudioUnavailableError('playback')
+        this.playRequestLocked = false
+        return
       }
       if (options.primePlayback) {
         this.ignoreMainAudioPauseEvent = true
@@ -39213,60 +38358,50 @@ export default {
         let sameAudioSource = false
         let attached = false
         let playError = null
+        const player = this.sessionAudioPlayer
+
         for (let index = 0; index < playableCandidates.length; index += 1) {
           const candidate = playableCandidates[index]
           if (playGeneration !== this.playGeneration) return
           try {
             sameAudioSource = await this.attachMainAudioSource(candidate, playGeneration)
+            if (playGeneration !== this.playGeneration) return
             const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-            this.audioElement.defaultPlaybackRate = safeSpeed
-            this.audioElement.playbackRate = safeSpeed
+            player.setPlaybackRate(safeSpeed)
             try {
               this.audioElement.muted = false
               this.audioElement.volume = 1
             } catch (_) { /* ignore */ }
-            if (sameAudioSource) {
-              try { this.audioElement.currentTime = 0 } catch (_) { /* ignore */ }
+
+            const segment = options.segment || null
+            const segmentTotal = Math.max(1, Number(segment?.sequenceTotal || segment?.total || 1))
+            const segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number(segment?.index || 0)))
+
+            if (segment && Number.isFinite(this.audioElement.duration) && this.audioElement.duration > 0 && segmentTotal > 1) {
+              const duration = Number(this.audioElement.duration || 0)
+              const segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal))
+              const segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal))
+              this.segmentEndTime = segmentEnd
+              player.seek(segmentStart)
+            } else if (sameAudioSource) {
+              // Same-ayah repeats reuse the URL; without a rewind, play() stays at EOF and freezes.
+              player.seek(0)
             }
-            await this.audioElement.play()
+
+            if (playGeneration !== this.playGeneration) return
+            await player.play({ generation: playGeneration, rewindIfEnded: !segment })
             attached = true
             playError = null
             break
           } catch (error) {
             playError = error
+            if (String(error?.message || '').includes('superseded')) return
             console.warn('Ayah audio candidate failed:', candidate, error)
           }
         }
         if (!attached) throw (playError || new Error('Audio load timeout'))
         if (playGeneration !== this.playGeneration) return
 
-        const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-        this.audioElement.defaultPlaybackRate = safeSpeed
-        this.audioElement.playbackRate = safeSpeed
-        const segment = options.segment || null
-        const segmentTotal = Math.max(1, Number(segment?.sequenceTotal || segment?.total || 1))
-        const segmentIndex = Math.max(0, Math.min(segmentTotal - 1, Number(segment?.index || 0)))
-        let segmentEnd = 0
-
-        if (segment && Number.isFinite(this.audioElement.duration) && this.audioElement.duration > 0 && segmentTotal > 1) {
-          const duration = Number(this.audioElement.duration || 0)
-          const segmentStart = Math.max(0, duration * (segmentIndex / segmentTotal))
-          segmentEnd = Math.min(duration, duration * ((segmentIndex + 1) / segmentTotal))
-          this.segmentEndTime = segmentEnd
-          this.audioElement.currentTime = segmentStart
-        } else if (sameAudioSource) {
-          // Same-ayah repeats reuse the URL; without a rewind, play() stays at EOF and freezes.
-          try {
-            this.audioElement.currentTime = 0
-          } catch (_) { /* ignore seek errors */ }
-        }
-
-        if (playGeneration !== this.playGeneration) return
-        await this.audioElement.play()
-        if (playGeneration !== this.playGeneration) {
-          try { this.audioElement.pause() } catch { }
-          return
-        }
         this.isPlaying = true
         this.playerVisible = true
         this.playbackAwaitingGesture = false
@@ -39294,7 +38429,12 @@ export default {
           if (!this.manualOnlyPlayback) {
             this.syncSessionControlsWithPlayback(false)
           }
-          this.promptTapToPlay()
+          const name = String(err?.name || '')
+          if (name === 'NotAllowedError') {
+            this.promptTapToPlay()
+          } else {
+            this.promptAudioPlaybackRetry()
+          }
         }
       } finally {
         if (playGeneration === this.playGeneration) {
@@ -39302,6 +38442,7 @@ export default {
         }
         window.setTimeout(() => {
           this.ignoreMainAudioPauseEvent = false
+          if (this.sessionAudioPlayer) this.sessionAudioPlayer.ignorePauseEvent = false
         }, 120)
       }
     },
@@ -39363,9 +38504,11 @@ export default {
         this.playQueueEntry(this.activeQueueEntry, { force: true, queueIndex: this.queueIndex })
         return
       }
-      const src = String(this.audioElement?.src || this.audioElement?.getAttribute?.('src') || '').trim()
+      const player = this.ensureSessionAudioPlayer()
+      const audio = this.audioElement
+      const src = String(audio?.src || audio?.getAttribute?.('src') || '').trim()
       const hasSrc = !!src && src !== 'about:blank' && !src.startsWith('data:')
-      if (!hasSrc || !this.isMainAudioReady(this.audioElement)) {
+      if (!hasSrc || !this.isMainAudioReady(audio)) {
         const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
         if (entry) {
           this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
@@ -39373,20 +38516,20 @@ export default {
         return
       }
 
-      if (this.audioElement.paused) {
+      if (audio.paused) {
         const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-        this.audioElement.defaultPlaybackRate = safeSpeed
-        this.audioElement.playbackRate = safeSpeed
-        // Resume from EOF looks paused but play() is a no-op — rewind first.
-        try {
-          const duration = Number(this.audioElement.duration || 0)
-          const current = Number(this.audioElement.currentTime || 0)
-          if (this.audioElement.ended || (duration > 0 && current >= duration - 0.05)) {
-            this.audioElement.currentTime = 0
-          }
-        } catch { /* ignore seek */ }
-        this.audioElement.play()
+        const playGeneration = this.beginPlaybackGeneration()
+        if (player) player.setPlaybackRate(safeSpeed)
+        else {
+          audio.defaultPlaybackRate = safeSpeed
+          audio.playbackRate = safeSpeed
+        }
+        const playPromise = player
+          ? player.play({ generation: playGeneration, rewindIfEnded: true })
+          : audio.play()
+        Promise.resolve(playPromise)
           .then(() => {
+            if (playGeneration !== this.playGeneration) return
             this.isPlaying = true
             this.playbackAwaitingGesture = false
             this.syncSessionControlsWithPlayback(true)
@@ -39401,11 +38544,21 @@ export default {
             }
           })
           .catch(err => {
+            if (playGeneration !== this.playGeneration) return
             console.error('Failed to play:', err)
-            this.promptTapToPlay()
+            this.isPlaying = false
+            const name = String(err?.name || '')
+            if (name === 'NotAllowedError') this.promptTapToPlay()
+            else this.promptAudioPlaybackRetry()
           })
       } else {
-        this.audioElement.pause()
+        // Cancel any in-flight play() so it cannot flip isPlaying back to true.
+        this.beginPlaybackGeneration()
+        this.playRequestLocked = false
+        if (player) player.pause({ bump: false })
+        else {
+          try { audio.pause() } catch { /* ignore */ }
+        }
         this.isPlaying = false
         this.syncSessionControlsWithPlayback(false)
       }
@@ -39595,8 +38748,6 @@ export default {
           this.workspaceRefreshReason = ''
           if (this.readingViewMode === 'mushaf') {
             this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
-          } else if (isMadaniMushafView(this.readingViewMode)) {
-            this.ensureMadaniMushafSpreadLoaded({ force: true }).then(() => this.syncMadaniMushafPageToActiveVerse())
           }
           this.refreshAyahNoteCounts(chapterId)
           return
@@ -39737,8 +38888,6 @@ export default {
         this.isDataReady = true
         if (this.readingViewMode === 'mushaf') {
           this.ensureMadaniPagesLoaded({ force: true }).then(() => this.syncMushafPageToActiveVerse())
-        } else if (isMadaniMushafView(this.readingViewMode)) {
-          this.ensureMadaniMushafSpreadLoaded({ force: true }).then(() => this.syncMadaniMushafPageToActiveVerse())
         }
         this.refreshAyahNoteCounts(chapterId)
 
@@ -40229,26 +39378,27 @@ export default {
       return this.normalizeAudioUrl(url)
     },
     async attachMainAudioSource(audioUrl, playGeneration = this.playGeneration) {
-      if (!this.audioElement || !audioUrl) throw new Error('Audio source missing')
-      const activeSrc = this.audioElement.currentSrc
-        ? this.normalizeAudioUrl(this.audioElement.currentSrc)
-        : this.normalizeAudioUrl(this.audioElement.getAttribute?.('src') || '')
-      const target = this.normalizeAudioUrl(audioUrl)
-      const sameAudioSource = !!activeSrc && (activeSrc === target || activeSrc.endsWith(target))
-      const needsReload = !sameAudioSource
-        || Number(this.audioElement.readyState || 0) < 1
-        || !!this.audioElement.error
-      if (needsReload) {
-        this.ignoreMainAudioPauseEvent = true
-        this.audioElement.src = audioUrl
-        this.audioElement.load()
+      const player = this.ensureSessionAudioPlayer()
+      if (!player || !audioUrl) throw new Error('Audio source missing')
+      this.ignoreMainAudioPauseEvent = true
+      player.ignorePauseEvent = true
+      try {
+        const result = await player.attachSource(audioUrl, {
+          generation: playGeneration,
+          timeoutMs: 15000,
+        })
+        if (playGeneration !== this.playGeneration) throw new Error('Audio wait superseded')
+        this.syncAudioUiState(
+          Number(player.element?.currentTime || 0),
+          Number(player.element?.duration || 0),
+        )
+        return !!result.sameSource
+      } finally {
+        window.setTimeout(() => {
+          this.ignoreMainAudioPauseEvent = false
+          if (this.sessionAudioPlayer) this.sessionAudioPlayer.ignorePauseEvent = false
+        }, 120)
       }
-      if (playGeneration !== this.playGeneration) throw new Error('Audio wait superseded')
-      this.syncAudioUiState(
-        Number(this.audioElement.currentTime || 0),
-        Number(this.audioElement.duration || 0),
-      )
-      return sameAudioSource
     },
     normalizeAudioUrl(url) {
       if (!url || typeof url !== 'string') return ''
@@ -41111,12 +40261,6 @@ export default {
           this.readingViewMode = this.clampReadingViewMode(
             isReadingViewMode(state.readingViewMode) ? state.readingViewMode : 'mushaf'
           )
-          this.originalMadaniPageNumber = Number.isFinite(Number(state.originalMadaniPageNumber))
-            ? clampMadaniPageNumber(state.originalMadaniPageNumber)
-            : this.originalMadaniPageNumber
-          this.madaniMushafPageNumber = Number.isFinite(Number(state.madaniMushafPageNumber))
-            ? clampMadaniPageNumber(state.madaniMushafPageNumber)
-            : this.madaniMushafPageNumber
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0
@@ -41285,8 +40429,6 @@ export default {
 	          hiddenRevealModeEnabled: false,
 	          aiRecallModeEnabled: this.aiRecallModeEnabled,
 	          readingViewMode: this.readingViewMode,
-        originalMadaniPageNumber: this.originalMadaniPageNumber,
-        madaniMushafPageNumber: this.madaniMushafPageNumber,
         mushafPageIndex: this.mushafPageIndex,
         mushafBackground: this.mushafBackground,
         mushafBackgroundTouched: this.mushafBackgroundTouched,
@@ -41299,8 +40441,6 @@ export default {
           layoutFontSizes: {
             stacked: Number(this.layoutFontSizes?.stacked || 150),
             mushaf: Number(this.layoutFontSizes?.mushaf || 120),
-            madani_mushaf: Number(this.layoutFontSizes?.madani_mushaf || 120),
-            original: Number(this.layoutFontSizes?.original || 150),
           },
           chainingEnabled: this.chainingEnabled,
           chainingMethod: this.chainingMethod,
@@ -42393,43 +41533,41 @@ export default {
         return
       }
 
-      if (!this.audioElement) {
-        this.audioElement = this.$refs.audio
+      if (!this.ensureSessionAudioPlayer()) {
+        this.showAudioUnavailableError('playback')
+        return
       }
 
       if (directUrl) {
         try {
-          if (this.audioElement) {
-            this.segmentEndTime = 0
-            this.segmentPlaybackKind = ''
-            this.stopWordHighlighting()
-            if (targetVerse?.key) {
-              this.setActiveVerse(targetVerse.key, { scroll: false })
-              if (targetIndex >= 0) this.updateWordHighlight(targetVerse.key, targetIndex)
-            }
-            this.audioElement.pause()
-            this.audioElement.src = directUrl
-            this.audioElement.currentTime = 0
-            const safeSpeed = this.normalizePlaybackSpeed(this.speed)
-            this.audioElement.defaultPlaybackRate = safeSpeed
-            this.audioElement.playbackRate = safeSpeed
-            await this.audioElement.play()
-            if (targetVerse?.key && targetIndex >= 0) {
-              this.updateWordHighlight(targetVerse.key, targetIndex)
-            }
-            this.playerVisible = true
-            this.isPlaying = true
-            this.markPlaybackStart()
-            return
+          const playGeneration = this.beginPlaybackGeneration()
+          this.segmentEndTime = 0
+          this.segmentPlaybackKind = ''
+          this.stopWordHighlighting()
+          if (targetVerse?.key) {
+            this.setActiveVerse(targetVerse.key, { scroll: false })
+            if (targetIndex >= 0) this.updateWordHighlight(targetVerse.key, targetIndex)
           }
-        } catch { }
-
-        const fallbackAudio = new Audio(directUrl)
-        const fallbackSpeed = this.normalizePlaybackSpeed(this.speed)
-        fallbackAudio.defaultPlaybackRate = fallbackSpeed
-        fallbackAudio.playbackRate = fallbackSpeed
-        fallbackAudio.play().catch(() => { })
-        return
+          this.claimAudioElement(this.audioElement)
+          await this.attachMainAudioSource(directUrl, playGeneration)
+          if (playGeneration !== this.playGeneration) return
+          this.sessionAudioPlayer.setPlaybackRate(this.normalizePlaybackSpeed(this.speed))
+          this.sessionAudioPlayer.seek(0)
+          await this.sessionAudioPlayer.play({ generation: playGeneration, rewindIfEnded: false })
+          if (playGeneration !== this.playGeneration) return
+          if (targetVerse?.key && targetIndex >= 0) {
+            this.updateWordHighlight(targetVerse.key, targetIndex)
+          }
+          this.playerVisible = true
+          this.isPlaying = true
+          this.markPlaybackStart()
+          return
+        } catch (error) {
+          console.warn('Word audio playback failed:', error)
+          this.isPlaying = false
+          this.promptAudioPlaybackRetry(this.t('toasts.unableToPlayThisWordRight'))
+          return
+        }
       }
 
       if (!targetVerse?.audio || targetIndex < 0) {

@@ -81,6 +81,19 @@ function registerServiceWorker() {
         .register(serviceWorkerUrl)
         .then((registration) => {
             registration.update().catch(() => {});
+            // Ask waiting workers to activate immediately after deploy.
+            if (registration.waiting) {
+                registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+            registration.addEventListener('updatefound', () => {
+                const worker = registration.installing;
+                if (!worker) return;
+                worker.addEventListener('statechange', () => {
+                    if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                        worker.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                });
+            });
         })
         .catch((error) => {
             console.warn('Failed to register service worker:', error);
@@ -329,18 +342,17 @@ function syncDisplayModeClass() {
 export function initPwa() {
     syncDisplayModeClass();
 
-    // Always clear stale Mutqin caches on boot so local UI updates are not stuck.
-    unregisterServiceWorkers().catch(() => {});
-
-    // Listen for Chromium install immediately — do not wait for window.load
-    // (deferred bundles can miss that event).
-    setupInstallPrompt();
-
+    // Desktop: keep Mutqin free of SW shells. Mobile: register once and update
+    // on each boot (HTML is network-only in sw.js so deploys stay fresh).
     if (isMobileViewport()) {
         registerServiceWorker();
     } else {
         unregisterServiceWorkers().catch(() => {});
     }
+
+    // Listen for Chromium install immediately — do not wait for window.load
+    // (deferred bundles can miss that event).
+    setupInstallPrompt();
 
     setupIosInstallGuide();
     if (document.readyState === 'loading') {

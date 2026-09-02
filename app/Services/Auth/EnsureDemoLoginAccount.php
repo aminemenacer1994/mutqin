@@ -3,12 +3,14 @@
 namespace App\Services\Auth;
 
 use App\Models\User;
+use App\Support\DatabaseDeploySafety;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 /**
  * Ensures the one-click demo login account exists with a known password.
- * Deployments often enable SHOW_DEMO_ACCOUNTS without re-running DemoDataSeeder.
+ * Staging/local only — never create or overwrite accounts in production.
  */
 class EnsureDemoLoginAccount
 {
@@ -20,9 +22,21 @@ class EnsureDemoLoginAccount
 
     public function ensure(): User
     {
+        DatabaseDeploySafety::assertNotProtectedEnvironment(
+            'create or update the demo login account'
+        );
+
+        if (! config('app.show_demo_accounts')) {
+            throw new RuntimeException(
+                'Demo login is disabled (SHOW_DEMO_ACCOUNTS=false).'
+            );
+        }
+
         $email = (string) config('app.demo_login.email', self::DEFAULT_EMAIL);
         $password = (string) config('app.demo_login.password', self::DEFAULT_PASSWORD);
         $name = (string) config('app.demo_login.name', self::DEFAULT_NAME);
+
+        DatabaseDeploySafety::assertDemoEmail($email, 'demo login');
 
         $user = User::query()->where('email', $email)->first();
 

@@ -69,8 +69,6 @@ class ErrorReporting
 
         return match (true) {
             str_contains($path, 'transcription-token'), str_contains($path, 'speechmatics') => 'speechmatics',
-            str_contains($path, 'madani-mushaf') => 'mushaf',
-            str_contains($path, 'mushaf-page') => 'mushaf',
             str_contains($path, 'quran-proxy'), str_contains($path, 'quran/') => 'quran',
             str_contains($path, 'memorisation') => 'memorisation',
             str_contains($path, 'session') => 'session',
@@ -79,6 +77,7 @@ class ErrorReporting
             str_contains($path, 'login'), str_contains($path, 'register'), str_contains($path, 'auth') => 'auth',
             str_contains($path, 'dashboard') => 'dashboard',
             str_contains($path, 'client-errors'), str_contains($path, 'error-test') => 'error_tracking',
+            str_contains($path, 'health'), str_contains($path, 'alert-test') => 'monitoring',
             default => 'app',
         };
     }

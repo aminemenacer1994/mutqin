@@ -45,7 +45,7 @@
     "tryAgain": "Try again",
     "status": {
       "loadingTitle": "Loading…",
-      "loadingDesc": "Please wait a moment.",
+      "loadingDesc": "Preparing this page.",
       "emptyTitle": "Nothing here yet",
       "emptyDesc": "When you add something, it will show up here.",
       "noResultsTitle": "No matches found",
@@ -67,6 +67,8 @@
       "bootErrorTitle": "Something went wrong",
       "bootErrorDesc": "This screen didn’t load. Try again, or return home to continue.",
       "chunkUpdating": "Updating Mutqin…",
+      "chunkErrorTitle": "Update required",
+      "chunkErrorDesc": "Mutqin was updated. Reload to continue — if this keeps happening, return home and try again.",
       "clearFilters": "Clear filters",
       "startSession": "Start a session",
       "returnToSessions": "Return to sessions",
@@ -923,11 +925,6 @@
       "memorisationWorkspace": "Your mushaf",
       "sessionSetup": "Choose ayahs",
       "mushafTools": "Mushaf tools",
-      "madaniMushafTools": "Madani Mushaf tools",
-      "madaniMushafNav": "Madani Mushaf page navigation",
-      "previousMadaniMushafPage": "Previous Madani Mushaf page",
-      "nextMadaniMushafPage": "Next Madani Mushaf page",
-      "jumpMadaniMushafPage": "Jump to Madani Mushaf page",
       "chooseMushafFont": "Choose Mushaf text style",
       "decreaseFontSize": "Decrease font size",
       "increaseFontSize": "Increase font size",
@@ -947,12 +944,6 @@
       "openAiRecite": "Open AI recitation check for this ayah",
       "previousMushafPage": "Previous mushaf page",
       "nextMushafPage": "Next mushaf page",
-      "previousOriginalPage": "Previous Madani Mushaf page",
-      "nextOriginalPage": "Next Madani Mushaf page",
-      "originalMadaniPage": "Madani Mushaf page {page}",
-      "originalMadaniTools": "Madani Mushaf tools",
-      "enterOriginalFullScreen": "Enter full screen",
-      "exitOriginalFullScreen": "Exit full screen",
       "bismillah": "Bismillah",
       "playAyahAudio": "Play ayah audio",
       "pauseAyahAudio": "Pause ayah audio",
@@ -1524,30 +1515,8 @@
     "view": {
       "stacked": "Stacked",
       "mushaf": "Mushaf",
-      "madaniMushaf": "Madani Mushaf",
-      "original": "Printed scan",
       "stackedHint": "Stacked: one ayah after another, calm for short ranges.",
-      "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help.",
-      "madaniMushafHint": "Madani Mushaf: KFGQPC V2 1421H page-accurate spread with interactive words.",
-      "originalHint": "Printed scan: original page images with the Madinah border."
-    },
-    "madaniMushaf": {
-      "errorTitle": "Madani Mushaf couldn't load",
-      "errorDesc": "The page layout data isn't available. Import it on the server or try again.",
-      "retry": "Try again",
-      "switchMushaf": "Switch to Mushaf view",
-      "pageSpread": "{right}–{left}",
-      "pageSingle": "Page {page}"
-    },
-    "originalMadani": {
-      "errorTitle": "Madani Mushaf page couldn’t load",
-      "errorDesc": "The original page image didn’t load. Try again, or switch back to Mushaf view.",
-      "retry": "Try again",
-      "switchMushaf": "Switch to Mushaf view",
-      "pageSpread": "{right}–{left}",
-      "juz": "Juz {number}",
-      "surahNumber": "Surah {number}",
-      "toolsHint": "Focus, blur, anchors, and font size apply on the printed page. Tajweed colours are already in the official print."
+      "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help."
     },
     "actions": {
       "newSession": "New set",
@@ -3327,7 +3296,7 @@
       "wordNumber": "Word number"
     },
     "fonts": {
-      "uthmanic": "Madani Mushaf (QCF)",
+      "uthmanic": "Uthmanic Hafs (QCF)",
       "amiri": "Amiri Quran",
       "naskh": "Noto Naskh Arabic",
       "scheherazade": "Scheherazade New",
@@ -3662,7 +3631,7 @@
     "loadedFromOfflineStorage": "Loaded {surah} from saved offline reading",
     "failedToLoadOfflineSurah": "Failed to load offline surah",
     "offlineSurahRemoved": "Offline surah removed",
-    "audioPlaybackError": "Couldn't start the audio.",
+    "audioPlaybackError": "Couldn't start the audio. Tap Try again when you're ready.",
     "audioNotAvailableForVerse": "Audio not available for verse {number}",
     "failedToPlayAudio": "Couldn't play the audio.",
     "playbackFailed": "Couldn't start playback.",

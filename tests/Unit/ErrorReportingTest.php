@@ -27,9 +27,11 @@ class ErrorReportingTest extends TestCase
     public function test_maps_paths_to_feature_areas(): void
     {
         $this->assertSame('speechmatics', ErrorReporting::featureFromPath('memorisation/transcription-token'));
-        $this->assertSame('mushaf', ErrorReporting::featureFromPath('memorisation/madani-mushaf/pages/1'));
+        $this->assertSame('memorisation', ErrorReporting::featureFromPath('memorisation'));
         $this->assertSame('quran', ErrorReporting::featureFromPath('memorisation/quran-proxy/alquran/surah/1'));
         $this->assertSame('admin', ErrorReporting::featureFromPath('api/admin/users'));
+        $this->assertSame('monitoring', ErrorReporting::featureFromPath('health'));
+        $this->assertSame('monitoring', ErrorReporting::featureFromPath('internal/alert-test'));
         $this->assertSame('app', ErrorReporting::featureFromPath('about'));
     }
 

@@ -28,7 +28,7 @@ test('redacts passwords, tokens, audio, and scripture from client payloads', () 
 
 test('classifies feature areas and expected HTTP statuses', () => {
   assert.equal(sanitize.featureFromPath('/memorisation/transcription-token'), 'speechmatics')
-  assert.equal(sanitize.featureFromPath('/memorisation/madani-mushaf/pages/2'), 'mushaf')
+  assert.equal(sanitize.featureFromPath('/memorisation'), 'memorisation')
   assert.equal(sanitize.featureFromPath('/api/admin/users'), 'admin')
   assert.equal(sanitize.isExpectedHttpStatus(422), true)
   assert.equal(sanitize.isExpectedHttpStatus(401), true)

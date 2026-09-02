@@ -21,6 +21,11 @@ function extractNormalizeAudioUrl() {
 }
 
 describe('audio playback guards', () => {
+  const sessionAudioSource = readFileSync(
+    new URL('../../resources/js/scripts/audio/sessionAudioPlayer.js', import.meta.url),
+    'utf8'
+  )
+
   it('ignores MEDIA_ERR_ABORTED in wait/error handlers', () => {
     assert.match(memorisationSource, /isAudioLoadAbortError\(audio = null\) \{/)
     assert.match(
@@ -29,11 +34,11 @@ describe('audio playback guards', () => {
     )
     assert.match(
       memorisationSource,
-      /this\.audioError = \(e\) => \{[\s\S]*isAudioLoadAbortError\(audio\)/
+      /this\.audioError = \(e, detail = null\) => \{[\s\S]*isAudioLoadAbortError\(audio\)/
     )
     assert.match(
-      memorisationSource,
-      /code === 4 && !src/,
+      sessionAudioSource,
+      /code === MEDIA_ERR_SRC_NOT_SUPPORTED && !src/,
       'empty-src MEDIA_ERR_SRC_NOT_SUPPORTED must be treated as benign'
     )
     assert.match(
@@ -92,9 +97,10 @@ describe('audio playback guards', () => {
 
   it('cancels stale playVerse work with a generation token', () => {
     assert.match(memorisationSource, /playGeneration:\s*0/)
+    assert.match(memorisationSource, /beginPlaybackGeneration\(\)/)
     assert.match(
       memorisationSource,
-      /async playVerse\([\s\S]*playGeneration = \+\+this\.playGeneration[\s\S]*playGeneration !== this\.playGeneration/
+      /async playVerse\([\s\S]*playGeneration = this\.beginPlaybackGeneration\(\)[\s\S]*playGeneration !== this\.playGeneration/
     )
   })
 
@@ -132,7 +138,7 @@ describe('audio playback guards', () => {
     )
     assert.match(
       memorisationSource,
-      /async playVerse\([\s\S]*await this\.audioElement\.play\(\)/,
+      /async playVerse\([\s\S]*await player\.play\(/,
     )
     assert.doesNotMatch(
       memorisationSource,
@@ -141,12 +147,12 @@ describe('audio playback guards', () => {
   })
 
   it('recovers main-audio waiting/stalled freezes', () => {
-    assert.match(memorisationSource, /addEventListener\('waiting',\s*this\.audioWaiting\)/)
-    assert.match(memorisationSource, /addEventListener\('stalled',\s*this\.audioStalled\)/)
+    assert.match(memorisationSource, /onWaiting:\s*\(\) => this\.audioWaiting/)
+    assert.match(memorisationSource, /onStalled:\s*\(\) => this\.audioStalled/)
     assert.match(memorisationSource, /recoverStalledMainAudio\(\)/)
     assert.match(
       memorisationSource,
-      /togglePlay\(\) \{[\s\S]*audioElement\.ended[\s\S]*currentTime = 0/
+      /togglePlay\(\) \{[\s\S]*rewindIfEnded:\s*true/
     )
   })
 })

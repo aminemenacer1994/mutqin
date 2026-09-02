@@ -45,6 +45,8 @@ php artisan migrate --seed
 php artisan db:seed --class=DemoDataSeeder
 ```
 
+Seeders and demo login are blocked when `APP_ENV=production`. See [docs/database-deploy-safety.md](docs/database-deploy-safety.md).
+
 On `/login`, tap **Sign in with demo** (uses the Beginner tester account). After login, a floating **Where to go in Mutqin** guide appears on Memorisation and continues past starting a recommendation plan.
 
 See [docs/TESTER_GUIDE.md](docs/TESTER_GUIDE.md) for test flows, extra demo logins, and feature checklist.
@@ -140,13 +142,22 @@ Compiled files go to `public/js/` and `public/css/app.css`. These paths are **gi
 
 `public/mix-manifest.json` maps Mix entry points to hashed bundles.
 
+See [docs/ASSET_DEPLOYMENT.md](docs/ASSET_DEPLOYMENT.md) for cache headers, ChunkLoadError recovery, PWA behaviour, and the post-deploy verification checklist.
+
 ## Deployment (Laravel Cloud)
 
 1. Set production env vars in the Laravel Cloud dashboard (see comments in `.env.example`).
-2. Run migrations: `php artisan migrate --force`
-3. Build assets during deploy: `npm ci && npm run build`
+2. Run the production DB release stage (preflight → migrate --force → queue:restart):
+   `MUTQIN_DEPLOY_STAGE=production ./scripts/deploy/production-release.sh`
+   Or mirror those steps in the platform hook. **Never** run `migrate:fresh`, `db:wipe`, or seeders in production.
+3. Build assets during deploy: `npm ci && npm run build` — ship new `public/js`, `public/css`, and `mix-manifest.json` together; prefer keeping the previous release directory live until the new release is active (see asset deploy docs)
 4. Configure Stripe webhook: `POST /api/stripe/webhook`
-5. Enable scheduler if using learning-history retention (`routes/console.php`)
+5. Enable scheduler if using learning-history retention (`routes/console.php`) — also required for health heartbeats (`mutqin:health-heartbeat`) and optional `mutqin:backup`.
+6. **Backups:** enable Laravel Cloud MySQL daily snapshots; attach a **private** Object Storage disk for feedback screenshots; optionally enable encrypted Spatie archives — see [docs/backups.md](docs/backups.md)
+
+See [docs/database-deploy-safety.md](docs/database-deploy-safety.md) for expand/contract migrations, backup gates, rollback limits, and the deploy preflight checklist.
+See [docs/ASSET_DEPLOYMENT.md](docs/ASSET_DEPLOYMENT.md) for Mix hashing, HTML/asset cache headers, and stale-chunk recovery.
+See [docs/backups.md](docs/backups.md) for schedule, retention, restore, and staging verification.
 
 After env changes: `php artisan config:clear && php artisan config:cache`
 
@@ -161,10 +172,13 @@ API routes log structured JSON via `LogMutqinApiRequest` middleware and `App\Sup
 - Session lifecycle: `learning.session.started`, `learning.session.end`
 - Assessments: `memorisation.assessment.submitted`, `recommendation.ai_assessment.submitted`, `recommendation.adaptive_assessment.submitted`
 - Stripe: `billing.webhook.received`
+- Health: `monitoring.health.degraded` / `monitoring.health.unavailable` (rate-limited)
 
 Web and API responses include an `X-Request-Id` header for correlation.
 
 **Production error tracking:** [Sentry](https://sentry.io) is the single provider (`sentry/sentry-laravel`). Set `SENTRY_LARAVEL_DSN` in Laravel Cloud / staging — no DSN is committed. Frontend errors use the same project through the sanitized ingest endpoint (no second SDK). Validation `422`s are not reported. See [docs/ERROR_TRACKING.md](docs/ERROR_TRACKING.md) for where events appear and how to verify tracking in staging.
+
+**Uptime / readiness:** Point an external monitor at `GET /health` (alert on HTTP 503). Use Laravel Cloud Slack resource + deploy alerts and automatic SSL renewal — do not add a second in-app uptime stack. See [docs/monitoring.md](docs/monitoring.md).
 
 ## Project layout
 
@@ -176,7 +190,7 @@ Web and API responses include an `X-Request-Id` header for correlation.
 | `routes/api.php` | Authenticated learning + billing API |
 | `tests/Feature/` | PHP integration tests |
 | `tests/js/` | Node ESM unit tests |
-| `docs/` | Tester guide, error tracking, performance notes |
+| `docs/` | Tester guide, error tracking, monitoring, backups, performance notes, database deploy safety |
 
 ## Learning state API
 

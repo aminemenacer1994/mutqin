@@ -2,13 +2,23 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogBackupEvents;
+use App\Models\User;
+use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\SpeechmaticsRateLimit;
+use App\Support\DatabaseDeploySafety;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Backup\Events\BackupHasFailed;
+use Spatie\Backup\Events\BackupWasSuccessful;
+use Spatie\Backup\Events\CleanupHasFailed;
+use Spatie\Backup\Events\UnhealthyBackupWasFound;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,9 +35,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Block migrate:fresh / refresh / reset / rollback / db:wipe in production.
+        // Deployments must use php artisan migrate --force only (see docs/database-deploy-safety.md).
+        DB::prohibitDestructiveCommands(
+            DatabaseDeploySafety::isProtectedEnvironment()
+        );
+
         Gate::define('access-admin', function ($user) {
             // Authorization uses the authenticated persisted user only (never request email).
-            return $user instanceof \App\Models\User && $user->isAdmin();
+            return $user instanceof User && $user->isAdmin();
         });
         Paginator::useBootstrapFive();
 
@@ -42,11 +58,16 @@ class AppServiceProvider extends ServiceProvider
         // Ensure learner-audio temp dir exists with a .gitignore so backups/logs never
         // accidentally treat scratch recordings as durable assets.
         try {
-            app(\App\Services\Memorisation\LearningHistoryRetentionService::class)
+            app(LearningHistoryRetentionService::class)
                 ->ensureTemporaryAudioDirectory();
         } catch (\Throwable $e) {
             // Boot must not fail if storage is read-only in some environments.
             report($e);
         }
+
+        Event::listen(BackupHasFailed::class, [LogBackupEvents::class, 'handleBackupFailed']);
+        Event::listen(BackupWasSuccessful::class, [LogBackupEvents::class, 'handleBackupSucceeded']);
+        Event::listen(CleanupHasFailed::class, [LogBackupEvents::class, 'handleCleanupFailed']);
+        Event::listen(UnhealthyBackupWasFound::class, [LogBackupEvents::class, 'handleUnhealthy']);
     }
 }

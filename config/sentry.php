@@ -58,7 +58,10 @@ return [
 
     'ignore_transactions' => [
         '/up',
+        '/health',
+        '/internal/health',
         '/internal/error-test',
+        '/internal/alert-test',
     ],
 
     'before_send' => [ErrorReporting::class, 'beforeSend'],

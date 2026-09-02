@@ -3,12 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\Concerns\GuardsDemoSeeding;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
+    use GuardsDemoSeeding;
     use WithoutModelEvents;
 
     /**
@@ -16,10 +18,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->guardAgainstProductionSeeding();
+
         // Minimal factory account — see docs/TESTER_GUIDE.md for labelled demo accounts.
+        $email = 'test@example.com';
+        $this->assertSafeDemoEmail($email);
+
         User::factory()->create([
             'name' => 'Tester — Factory (minimal)',
-            'email' => 'test@example.com',
+            'email' => $email,
             'password' => Hash::make('password'),
             'locale' => 'en',
             'subscription_tier' => 'free',

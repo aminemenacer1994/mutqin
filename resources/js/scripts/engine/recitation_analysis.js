@@ -1,28 +1,30 @@
-export const DEFAULT_RECITATION_CONFIDENCE_THRESHOLD = 0.70
+import {
+  DEFAULT_RECITATION_CONFIDENCE_THRESHOLD,
+  RECITATION_AMD_UNCERTAIN_CONFIDENCE,
+  RECITATION_ASR_REEMIT_MAX_GAP_MS,
+  RECITATION_CORRECT_SIMILARITY,
+  RECITATION_LIVE_CORRECT_SIMILARITY,
+  RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT,
+  RECITATION_LIVE_PARTIAL_SIMILARITY,
+  RECITATION_SOFT_SIMILARITY_CAP,
+  RECITATION_THRESHOLDS,
+  RECITATION_UNCERTAIN_CONFIDENCE,
+} from './recitationThresholds.js'
+
+export {
+  DEFAULT_RECITATION_CONFIDENCE_THRESHOLD,
+  RECITATION_AMD_UNCERTAIN_CONFIDENCE,
+  RECITATION_ASR_REEMIT_MAX_GAP_MS,
+  RECITATION_CORRECT_SIMILARITY,
+  RECITATION_LIVE_CORRECT_SIMILARITY,
+  RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT,
+  RECITATION_LIVE_PARTIAL_SIMILARITY,
+  RECITATION_SOFT_SIMILARITY_CAP,
+  RECITATION_THRESHOLDS,
+  RECITATION_UNCERTAIN_CONFIDENCE,
+}
+
 export const DEFAULT_ANALYSIS_TIMESTAMP = '1970-01-01T00:00:00.000Z'
-/** Soft ASR letter conflation may lift near-misses toward amber, never alone to green. */
-export const RECITATION_SOFT_SIMILARITY_CAP = 0.74
-/**
- * Default floor for painting a word green.
- * Keep this just above the soft cap so soft letter swaps stay amber,
- * while normal ASR near-matches (hamza, tanween, slight noise) can still go green.
- */
-export const RECITATION_CORRECT_SIMILARITY = 0.79
-/** Below this (non-exact) recognition is uncertain — not a learner mistake. */
-export const RECITATION_UNCERTAIN_CONFIDENCE = 0.55
-/** AMD live: quieter / distant mics should defer to uncertain, not red. */
-export const RECITATION_AMD_UNCERTAIN_CONFIDENCE = 0.38
-/** Live AMD green floor — slightly softer than final scoring to absorb ASR jitter. */
-export const RECITATION_LIVE_CORRECT_SIMILARITY = 0.79
-/** Live AMD: do not require high STT confidence for a correct paint. */
-export const RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT = 0.35
-/** Live AMD partial (amber) floor. */
-export const RECITATION_LIVE_PARTIAL_SIMILARITY = 0.45
-/**
- * Same-word ASR re-emits / brief stutters within this gap are not learner repetitions.
- * Genuine pause-and-repeat (clear breath) sits above this window.
- */
-export const RECITATION_ASR_REEMIT_MAX_GAP_MS = 650
 
 export function createRecognitionState() {
   return {
@@ -42,8 +44,12 @@ export function normalizeArabicForRecitation(text) {
     // stripping marks, or العَٰلَمِين / الصِّرَٰط become العلمين / الصرط and
     // never match correct ASR العالمين / الصراط.
     .replace(/\u0670/g, 'ا')
+    // Harakat / tajweed marks — comparison only; display path keeps them.
     .replace(/[\u0610-\u061A\u064B-\u065F\u06D6-\u06ED]/g, '')
+    // Tatweel / kashida
     .replace(/\u0640/g, '')
+    // Arabic and Western punctuation / digits / symbols → space (never kept for compare)
+    .replace(/[\u060C\u061B\u061F\u06D4.,!?;:'"“”‘’()[\]{}<>«»…\-_/\\|]+/g, ' ')
     .replace(/([^\s])ٱ\s+(?=ل)/g, '$1 ٱ')
     .replace(/(^|\s)ٱ\s+(?=ل)/g, '$1ٱ')
     .replace(/[إأآٱ]/g, 'ا')
@@ -619,11 +625,13 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
   const partialScore = statuses.filter(word => word.status === 'partial').reduce((sum, word) => {
     const confidence = Number.isFinite(Number(word.confidence)) ? Number(word.confidence) : 1
     // Amber credit stays modest so soft/ASR near-misses do not inflate accuracy.
-    return sum + (0.4 * Math.max(0.4, Math.min(1, confidence)))
+    return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.4, Math.min(1, confidence)))
   }, 0)
-  const uncertainScore = statuses.filter(word => word.status === 'uncertain').length * 0.35
-  const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.2
-  const extraPenalty = (mistakes.extra.length || 0) * 0.2
+  const uncertainScore = statuses.filter(word => word.status === 'uncertain').length
+    * RECITATION_THRESHOLDS.uncertainAccuracyWeight
+  const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length
+    * RECITATION_THRESHOLDS.wrongOrderPenalty
+  const extraPenalty = (mistakes.extra.length || 0) * RECITATION_THRESHOLDS.extraPenalty
   const baseAccuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore + uncertainScore - wrongOrderPenalty - extraPenalty) / targetCount) * 100)))
   const structuralPenalty = getStructuralScorePenalty(alignment.structural || {})
   const accuracyScore = Math.max(0, Math.min(100, baseAccuracyScore - structuralPenalty))
@@ -1297,10 +1305,11 @@ function classifyWordMatch({
   targetIndex = 0,
   targetUnit = null,
   correctSimilarity = RECITATION_CORRECT_SIMILARITY,
-  partialSimilarity = 0.48,
+  partialSimilarity = RECITATION_THRESHOLDS.partialSimilarity,
   minConfidenceForCorrect = 0,
   allowArticleMatch = true,
   uncertainConfidence = RECITATION_UNCERTAIN_CONFIDENCE,
+  minConfidenceForSimilarityCorrect = RECITATION_THRESHOLDS.minConfidenceForSimilarityCorrect,
 }) {
   const expected = String(targetWord || '')
   const actual = String(heardWord.word || '')
@@ -1325,13 +1334,18 @@ function classifyWordMatch({
   const correctFloor = Number.isFinite(Number(correctSimilarity))
     ? Number(correctSimilarity)
     : RECITATION_CORRECT_SIMILARITY
-  const partialFloor = Number.isFinite(Number(partialSimilarity)) ? Number(partialSimilarity) : 0.48
+  const partialFloor = Number.isFinite(Number(partialSimilarity))
+    ? Number(partialSimilarity)
+    : RECITATION_THRESHOLDS.partialSimilarity
   const minCorrectConfidence = Number.isFinite(Number(minConfidenceForCorrect))
     ? Number(minConfidenceForCorrect)
     : 0
   const uncertainFloor = Number.isFinite(Number(uncertainConfidence))
     ? Number(uncertainConfidence)
     : RECITATION_UNCERTAIN_CONFIDENCE
+  const similarityCorrectFloor = Number.isFinite(Number(minConfidenceForSimilarityCorrect))
+    ? Number(minConfidenceForSimilarityCorrect)
+    : RECITATION_THRESHOLDS.minConfidenceForSimilarityCorrect
   const confidenceOk = confidence >= minCorrectConfidence
   // Exact match (or allowed article-only match) / high similarity → green.
   // When article matching is disabled, article-stripped equals must not sneak in via similarity=1.
@@ -1349,9 +1363,17 @@ function classifyWordMatch({
     && !exactOrArticle
     && Math.min(expected.length, actual.length) <= 2
     && expected.length === actual.length
-  // Single-edit near-misses stay below green via the soft similarity cap, but
-  // must not paint red when the learner is close / ASR jittered one letter.
-  if (expected && confidenceOk && (exactOrArticle || (!shortSubstitution && effectiveSimilarity >= correctFloor))) {
+  const similarityLooksCorrect = !shortSubstitution && effectiveSimilarity >= correctFloor
+  // Exact / orthographic equals may be green at any confidence. Similarity-only
+  // greens require enough provider confidence — never fabricate correct from noise.
+  if (
+    expected
+    && confidenceOk
+    && (
+      exactOrArticle
+      || (similarityLooksCorrect && confidence >= similarityCorrectFloor)
+    )
+  ) {
     return {
       text: displayText,
       targetWord: expected,
@@ -1591,6 +1613,7 @@ export function classifyRecitationWordColor(status) {
   }
   if (
     s === 'omitted'
+    || s === 'missing'
     || s === 'black'
     || s.includes('omission')
     || s === 'skipped-omitted'
@@ -1602,7 +1625,6 @@ export function classifyRecitationWordColor(status) {
     || s === 'red'
     || s === 'wrong'
     || s === 'missed'
-    || s === 'missing'
     || s === 'mismatch'
     || s.includes('word-incorrect')
   ) {
@@ -1610,6 +1632,7 @@ export function classifyRecitationWordColor(status) {
   }
   if (
     s.includes('partial')
+    || s.includes('minor')
     || s.includes('close')
     || s === 'amber'
     || s === 'yellow'

@@ -39,7 +39,10 @@ return [
     |
     */
 
-    'show_demo_accounts' => (bool) env('SHOW_DEMO_ACCOUNTS', env('APP_ENV', 'production') === 'local'),
+    // Hard-off in production even if SHOW_DEMO_ACCOUNTS is mistakenly set.
+    'show_demo_accounts' => env('APP_ENV', 'production') === 'production'
+        ? false
+        : (bool) env('SHOW_DEMO_ACCOUNTS', env('APP_ENV', 'production') === 'local'),
 
     /*
     |--------------------------------------------------------------------------
@@ -48,7 +51,8 @@ return [
     |
     | Used by POST /login/demo when show_demo_accounts is enabled. The account
     | is created/updated on demand so demos work after deploy without a full
-    | DemoDataSeeder run.
+    | DemoDataSeeder run. Emails must use a reserved demo domain (.test /
+    | example.com). Never point DEMO_LOGIN_EMAIL at a real user mailbox.
     |
     */
 

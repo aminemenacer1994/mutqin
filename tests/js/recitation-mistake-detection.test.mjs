@@ -403,13 +403,15 @@ function assertStatuses(result, expected) {
 {
   assert.equal(classifyRecitationWordColor('word-correct'), 'green')
   assert.equal(classifyRecitationWordColor('close'), 'amber')
-  assert.equal(classifyRecitationWordColor('missing'), 'red')
+  // API / server "missing" is an omission (black), not a substitution (red).
+  assert.equal(classifyRecitationWordColor('missing'), 'black')
   assert.equal(classifyRecitationWordColor('omission'), 'black')
+  assert.equal(classifyRecitationWordColor('minor_mistake'), 'amber')
   assert.equal(classifyRecitationWordColor('pending'), 'gray')
   const counts = getRecitationColorCounts([
     { status: 'correct', ayahNumber: 1 },
     { status: 'close', ayahNumber: 1 },
-    { status: 'missing', ayahNumber: 2 },
+    { status: 'incorrect', ayahNumber: 2 },
     { status: 'omitted', ayahNumber: 2 },
   ])
   assert.equal(counts.green, 1)

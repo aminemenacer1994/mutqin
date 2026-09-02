@@ -19,21 +19,9 @@ use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactSubmissionController;
-use App\Http\Controllers\MadaniMushafPageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WaitingListController;
 use Illuminate\Support\Facades\Route;
-
-// Public Quran Mushaf page API (immutable layout data, no credentials).
-Route::prefix('quran/mushaf')->group(function () {
-    Route::get('/pages/{page}', [MadaniMushafPageController::class, 'show'])
-        ->where('page', '[1-9][0-9]{0,2}')
-        ->name('api.quran.mushaf.page');
-    Route::get('/resolve', [MadaniMushafPageController::class, 'resolve'])
-        ->name('api.quran.mushaf.resolve');
-    Route::get('/manifest', [MadaniMushafPageController::class, 'manifest'])
-        ->name('api.quran.mushaf.manifest');
-});
 
 Route::post('/client-errors', [ClientErrorController::class, 'store'])
     ->middleware('throttle:20,1')

@@ -53,47 +53,44 @@ function pruneMissingManifestEntries(manifest) {
 function collectReferencedChunkFiles(appJs) {
     const keep = new Set();
 
-    for (const match of appJs.matchAll(/"([a-z0-9_-]+)":"([a-f0-9]{8})"/gi)) {
+    for (const match of appJs.matchAll(/([a-z][a-z0-9_-]*)\.([a-f0-9]{8})\.js/gi)) {
         keep.add(`${match[1]}.${match[2]}.js`);
     }
 
-    for (const match of appJs.matchAll(/([a-z0-9_-]+)\.([a-f0-9]{8})\.js/gi)) {
-        keep.add(`${match[1]}.${match[2]}.js`);
-    }
+    // Webpack 5 / Mix production templates look like:
+    //   "js/"+{131:"homepage",...}[e]+"."+{131:"20283d40",...}[e]+".js"
+    // Older builds used an extra paren: "js/"+({...}[e]||e)+"."+{...}
+    const chunkLoaderAnchors = ['js/"+({', 'js/"+{'];
+    for (const chunkLoaderAnchor of chunkLoaderAnchors) {
+        const chunkLoaderStart = appJs.indexOf(chunkLoaderAnchor);
+        if (chunkLoaderStart === -1) continue;
 
-    const chunkLoaderAnchor = 'js/"+({';
-    const chunkLoaderStart = appJs.indexOf(chunkLoaderAnchor);
-    if (chunkLoaderStart !== -1) {
-        const chunkLoaderEnd = appJs.indexOf('}[e]+".js"', chunkLoaderStart);
-        if (chunkLoaderEnd !== -1) {
-            const chunkLoader = appJs.slice(chunkLoaderStart, chunkLoaderEnd + 10);
-            const namesBody = chunkLoader.slice(
-                chunkLoader.indexOf('({') + 2,
-                chunkLoader.indexOf('}[e]||e)')
-            );
-            const hashesBody = chunkLoader.slice(
-                chunkLoader.indexOf('+{', chunkLoader.indexOf('}[e]||e)')) + 2,
-                chunkLoader.indexOf('}[e]+".js"')
-            );
-            const parseMap = (body) => {
-                const map = {};
-                for (const part of body.split(',')) {
-                    const entry = part.match(/(\d+):"([^"]+)"/);
-                    if (entry) map[entry[1]] = entry[2];
-                }
-                return map;
-            };
-            const names = parseMap(namesBody);
-            const hashes = parseMap(hashesBody);
-            for (const [id, hash] of Object.entries(hashes)) {
-                keep.add(`${names[id] || id}.${hash}.js`);
+        const namesOpen = appJs.indexOf('{', chunkLoaderStart);
+        const namesClose = appJs.indexOf('}[e]', namesOpen);
+        if (namesOpen === -1 || namesClose === -1) continue;
+
+        const hashesOpenMarker = appJs.indexOf('+{', namesClose);
+        if (hashesOpenMarker === -1) continue;
+        const hashesOpen = appJs.indexOf('{', hashesOpenMarker);
+        const hashesClose = appJs.indexOf('}[e]+".js"', hashesOpen);
+        if (hashesOpen === -1 || hashesClose === -1) continue;
+
+        const namesBody = appJs.slice(namesOpen + 1, namesClose);
+        const hashesBody = appJs.slice(hashesOpen + 1, hashesClose);
+        const parseMap = (body) => {
+            const map = {};
+            for (const part of body.split(',')) {
+                const entry = part.match(/(\d+):"([^"]+)"/);
+                if (entry) map[entry[1]] = entry[2];
             }
-            return keep;
+            return map;
+        };
+        const names = parseMap(namesBody);
+        const hashes = parseMap(hashesBody);
+        for (const [id, hash] of Object.entries(hashes)) {
+            keep.add(`${names[id] || id}.${hash}.js`);
         }
-    }
-
-    for (const match of appJs.matchAll(/(\d+):"([a-f0-9]{8})"/g)) {
-        keep.add(`${match[1]}.${match[2]}.js`);
+        return keep;
     }
 
     return keep;
@@ -177,7 +174,10 @@ mix.js('resources/js/app.js', 'public/js')
    .version();
 
 // Contenthash builds otherwise accumulate multi-GB orphans under public/js.
-// Keep app/css plus the newest file per hashed chunk family, prune the rest.
+// Keep app/css plus the newest N files per hashed chunk family so an in-place
+// deploy does not delete chunks still referenced by tabs on the previous HTML.
+const KEEP_CHUNK_GENERATIONS = 2;
+
 mix.then(() => {
     if (!fs.existsSync(manifestPath) || !fs.existsSync(jsDir)) return;
 
@@ -188,49 +188,47 @@ mix.then(() => {
         return;
     }
 
-    const newestByFamily = new Map();
     const alwaysKeepKeys = new Set();
-
-    for (const [key, value] of Object.entries(manifest)) {
-        if (!key.startsWith('/js/') && !key.startsWith('/css/')) continue;
+    for (const key of Object.keys(manifest)) {
         const base = path.basename(key.split('?')[0]);
         if (base === 'app.js' || base === 'app.css') {
             alwaysKeepKeys.add(key);
-            continue;
-        }
-        const family = base.replace(/\.[a-f0-9]{8}\.js$/i, '') || base;
-        const abs = path.join(publicDir, key.replace(/^\//, '').split('?')[0]);
-        let mtime = 0;
-        try {
-            mtime = fs.statSync(abs).mtimeMs;
-        } catch {
-            // Skip ghost entries so mix.version() is not fed missing paths next run.
-            continue;
-        }
-        const prev = newestByFamily.get(family);
-        if (!prev || mtime >= prev.mtime) {
-            newestByFamily.set(family, { key, value, mtime, base });
         }
     }
 
-    const pruned = {};
-    for (const key of alwaysKeepKeys) {
-        pruned[key] = manifest[key];
-    }
-    for (const entry of newestByFamily.values()) {
-        pruned[entry.key] = entry.value;
-    }
-
-    const keepNames = new Set(
-        Object.keys(pruned).map((key) => path.basename(key.split('?')[0]))
-    );
-    keepNames.add('app.js');
-
-    // Preserve every lazy chunk referenced by app.js and other manifest entries
-    // (e.g. memorisation -> amd-modal). Scanning only app.js prunes nested chunks.
-    let skipPrune = false;
+    /** @type {Map<string, Array<{ name: string, mtime: number }>>} */
+    const generationsByFamily = new Map();
     try {
-        const referenced = new Set();
+        for (const entry of fs.readdirSync(jsDir, { withFileTypes: true })) {
+            if (!entry.isFile()) continue;
+            if (!/\.[a-f0-9]{8}\.js$/i.test(entry.name)) continue;
+            const family = entry.name.replace(/\.[a-f0-9]{8}\.js$/i, '');
+            let mtime = 0;
+            try {
+                mtime = fs.statSync(path.join(jsDir, entry.name)).mtimeMs;
+            } catch {
+                continue;
+            }
+            const list = generationsByFamily.get(family) || [];
+            list.push({ name: entry.name, mtime });
+            generationsByFamily.set(family, list);
+        }
+    } catch {
+        /* ignore */
+    }
+
+    const keepNames = new Set(['app.js', 'app.css']);
+    for (const list of generationsByFamily.values()) {
+        list.sort((a, b) => b.mtime - a.mtime);
+        for (const entry of list.slice(0, KEEP_CHUNK_GENERATIONS)) {
+            keepNames.add(entry.name);
+        }
+    }
+
+    // Always keep every lazy chunk the current app.js runtime can request.
+    let skipPrune = false;
+    const referenced = new Set();
+    try {
         const scanChunkReferences = (filePath) => {
             try {
                 const content = fs.readFileSync(filePath, 'utf8');
@@ -243,11 +241,8 @@ mix.then(() => {
         };
 
         scanChunkReferences(path.join(jsDir, 'app.js'));
-        for (const key of Object.keys(manifest)) {
-            if (!key.startsWith('/js/')) continue;
-            const base = path.basename(key.split('?')[0]);
-            if (!base.endsWith('.js') || base === 'app.js') continue;
-            scanChunkReferences(path.join(jsDir, base));
+        for (const name of [...referenced]) {
+            scanChunkReferences(path.join(jsDir, name));
         }
 
         for (const name of referenced) {
@@ -267,6 +262,18 @@ mix.then(() => {
         /* ignore */
     }
 
+    // Rewrite manifest: entry points Mix versioned + live hashed chunks we keep.
+    const pruned = {};
+    for (const key of alwaysKeepKeys) {
+        pruned[key] = manifest[key];
+    }
+    for (const name of [...keepNames].sort()) {
+        if (name === 'app.js' || name === 'app.css') continue;
+        if (!/\.js$/i.test(name)) continue;
+        const key = `/js/${name}`;
+        pruned[key] = key;
+    }
+
     try {
         fs.writeFileSync(manifestPath, `${JSON.stringify(pruned, null, 4)}\n`);
     } catch {
@@ -277,11 +284,22 @@ mix.then(() => {
         for (const entry of fs.readdirSync(jsDir, { withFileTypes: true })) {
             if (!entry.isFile()) continue;
             const name = entry.name;
-            if (!/\.js(\.map)?$/.test(name)) continue;
-            const bare = name.replace(/\.map$/, '');
+            // Remove stale JS, maps, and webpack LICENSE sidecars.
+            const isJs = /\.js$/i.test(name);
+            const isMap = /\.js\.map$/i.test(name);
+            const isLicense = /\.js\.LICENSE\.txt$/i.test(name);
+            if (!isJs && !isMap && !isLicense) continue;
+
+            const bare = name
+                .replace(/\.LICENSE\.txt$/i, '')
+                .replace(/\.map$/i, '');
             if (keepNames.has(bare) || keepNames.has(name)) continue;
-            // Numeric split chunks are required by the webpack runtime.
-            if (/^\d+\.[a-f0-9]{8}\.js$/i.test(bare)) continue;
+            // Dev/watch stable names that are not contenthashed.
+            if (/^[a-z0-9_-]+\.js$/i.test(bare) && bare !== 'app.js') {
+                // Drop leftover watch-mode chunks in production builds only.
+                if (!mix.inProduction()) continue;
+            }
+
             try {
                 fs.unlinkSync(path.join(jsDir, name));
             } catch {

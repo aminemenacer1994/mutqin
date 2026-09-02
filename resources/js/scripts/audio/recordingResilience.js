@@ -325,6 +325,45 @@ export function buildTechnicalLogContext(error, options = {}) {
 }
 
 /**
+ * Provider attempt metadata for logs / audit — never includes raw audio or full transcripts.
+ *
+ * @param {Record<string, unknown>} [input]
+ * @returns {Record<string, unknown>}
+ */
+export function buildRecitationProviderLogMetadata(input = {}) {
+  const finite = (value) => {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : undefined
+  }
+  const meanConfidence = finite(input.meanConfidence ?? input.recognitionConfidence ?? input.confidence)
+  const latencyMs = finite(input.latencyMs ?? input.providerLatencyMs ?? input.durationMs)
+  const wordCount = finite(input.wordCount ?? input.committedWordCount)
+  const meta = {
+    attemptId: String(input.attemptId || '').trim() || undefined,
+    provider: String(input.provider || input.providerType || '').trim() || undefined,
+    stage: String(input.stage || '').trim() || undefined,
+    failureKind: String(input.failureKind || input.kind || '').trim() || undefined,
+    errorName: String(input.errorName || input.name || '').trim() || undefined,
+    httpStatus: finite(input.httpStatus ?? input.status),
+    latencyMs: latencyMs != null ? Math.round(latencyMs) : undefined,
+    meanConfidence: meanConfidence != null ? Number(meanConfidence.toFixed(3)) : undefined,
+    evaluationConfidence: (() => {
+      const value = finite(input.evaluationConfidence)
+      return value != null ? Number(value.toFixed(3)) : undefined
+    })(),
+    wordCount: wordCount != null ? Math.round(wordCount) : undefined,
+    resultState: String(input.resultState || '').trim() || undefined,
+    retryable: typeof input.retryable === 'boolean' ? input.retryable : undefined,
+    offline: typeof input.offline === 'boolean'
+      ? input.offline
+      : (typeof navigator !== 'undefined' ? navigator.onLine === false : undefined),
+  }
+  return Object.fromEntries(
+    Object.entries(meta).filter(([, value]) => value !== undefined && value !== ''),
+  )
+}
+
+/**
  * @param {(key: string) => string} t
  * @param {{ kind?: string, messageKey?: string }} classification
  * @returns {string}

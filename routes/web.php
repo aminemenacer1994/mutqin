@@ -10,8 +10,6 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Internal\ErrorTestController;
-use App\Http\Controllers\MadaniMushafPageController;
-use App\Http\Controllers\MushafPageImageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuranProxyController;
 use App\Services\SpeechmaticsRateLimit;
@@ -72,24 +70,6 @@ Route::get('/memorisation/quran-proxy/{provider}/{path}', QuranProxyController::
     ->where('provider', 'alquran|qurancom')
     ->where('path', '.*')
     ->name('memorisation.quran-proxy');
-
-Route::get('/memorisation/mushaf-page/{page}.png', MushafPageImageController::class)
-    ->middleware('throttle:public-proxy')
-    ->where('page', '[1-9][0-9]{0,2}')
-    ->name('memorisation.mushaf-page');
-
-Route::get('/memorisation/madani-mushaf/pages/{page}', [MadaniMushafPageController::class, 'show'])
-    ->middleware('throttle:public-proxy')
-    ->where('page', '[1-9][0-9]{0,2}')
-    ->name('memorisation.madani-mushaf.page');
-
-Route::get('/memorisation/madani-mushaf/resolve', [MadaniMushafPageController::class, 'resolve'])
-    ->middleware('throttle:public-proxy')
-    ->name('memorisation.madani-mushaf.resolve');
-
-Route::get('/memorisation/madani-mushaf/manifest', [MadaniMushafPageController::class, 'manifest'])
-    ->middleware('throttle:public-proxy')
-    ->name('memorisation.madani-mushaf.manifest');
 
 // Bundled onboarding ayah audio — local file when present, otherwise CDN proxy.
 Route::get('/audio/ayah/{reciter}/{ayah}.mp3', AyahAudioController::class)

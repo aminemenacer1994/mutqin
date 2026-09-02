@@ -110,7 +110,7 @@ export function redactPayload(payload, depth = 0) {
 export function featureFromPath(path) {
   const value = String(path || '').toLowerCase()
   if (value.includes('transcription-token') || value.includes('speechmatics')) return 'speechmatics'
-  if (value.includes('madani-mushaf') || value.includes('mushaf')) return 'mushaf'
+  if (value.includes('mushaf')) return 'mushaf'
   if (value.includes('quran-proxy') || value.includes('/quran')) return 'quran'
   if (value.includes('memorisation')) return 'memorisation'
   if (value.includes('session')) return 'session'
