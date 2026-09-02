@@ -38,6 +38,8 @@ class StoreFailedMemorisationAssessmentRequest extends FormRequest
             'model_version' => ['sometimes', 'nullable', 'string', 'max:64'],
             'algorithm_version' => ['sometimes', 'nullable', 'string', 'max:64'],
             'failure_reason' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'attempt_class' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'provider_status' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:599'],
             'started_at' => ['sometimes', 'nullable', 'date'],
             'device_metadata' => ['sometimes', 'nullable', 'array'],
         ];

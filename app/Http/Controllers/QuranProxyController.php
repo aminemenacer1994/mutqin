@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ErrorReporting;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -33,7 +34,7 @@ class QuranProxyController extends Controller
     public function __invoke(Request $request, string $provider, string $path = ''): Response
     {
         $config = self::PROVIDERS[$provider] ?? null;
-        if (!$config) {
+        if (! $config) {
             abort(404, __('ui.quran_api_unknown_provider'));
         }
 
@@ -52,7 +53,7 @@ class QuranProxyController extends Controller
         $cacheKey = 'quran_proxy:'.sha1($provider.'|'.$upstreamUrl);
 
         try {
-            $payload = Cache::remember($cacheKey, (int) $config['cache_ttl'], function () use ($upstreamUrl, $config) {
+            $payload = Cache::remember($cacheKey, (int) $config['cache_ttl'], function () use ($upstreamUrl) {
                 $response = null;
                 $attempts = 3;
                 for ($attempt = 1; $attempt <= $attempts; $attempt += 1) {
@@ -69,6 +70,7 @@ class QuranProxyController extends Controller
                             throw $exception;
                         }
                         usleep(250000 * $attempt);
+
                         continue;
                     }
 
@@ -79,13 +81,14 @@ class QuranProxyController extends Controller
                     // Upstream edge occasionally returns 503 — retry before failing.
                     if (in_array($response->status(), [429, 502, 503, 504], true) && $attempt < $attempts) {
                         usleep(300000 * $attempt);
+
                         continue;
                     }
 
                     break;
                 }
 
-                if (!$response || !$response->successful()) {
+                if (! $response || ! $response->successful()) {
                     throw new HttpException(
                         $response?->status() ?: 502,
                         'Upstream Quran API request failed'
@@ -99,8 +102,22 @@ class QuranProxyController extends Controller
                 ];
             });
         } catch (HttpException $exception) {
+            ErrorReporting::reportProviderFailure('quran', [
+                'feature' => 'quran',
+                'provider' => $provider,
+                'status' => $exception->getStatusCode(),
+                'reason' => 'upstream_http',
+                'host' => $config['host'],
+            ]);
             throw $exception;
         } catch (ConnectionException $exception) {
+            ErrorReporting::reportProviderFailure('quran', [
+                'feature' => 'quran',
+                'provider' => $provider,
+                'status' => 0,
+                'reason' => 'connection',
+                'host' => $config['host'],
+            ]);
             abort(502, __('ui.quran_api_upstream_unreachable'));
         } catch (\Throwable $exception) {
             report($exception);

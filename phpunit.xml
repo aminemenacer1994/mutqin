@@ -32,8 +32,18 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="SENTRY_LARAVEL_DSN" value=""/>
+        <env name="SENTRY_DSN" value=""/>
+        <env name="SENTRY_SEND_DEFAULT_PII" value="false"/>
         <env name="SPEECHMATICS_USAGE_CAP_ENABLED" value="true"/>
         <env name="SPEECHMATICS_DAILY_USER_TOKEN_MINTS" value="30"/>
         <env name="SPEECHMATICS_DAILY_GLOBAL_TOKEN_MINTS" value="200"/>
+        <env name="SPEECHMATICS_RATE_LIMIT_ENABLED" value="true"/>
+        <env name="SPEECHMATICS_RATE_LIMIT_PER_USER_PER_MINUTE" value="10"/>
+        <env name="SPEECHMATICS_RATE_LIMIT_PER_IP_PER_MINUTE" value="30"/>
+        <env name="SPEECHMATICS_RATE_LIMIT_BURST_PER_USER" value="3"/>
+        <env name="SPEECHMATICS_RATE_LIMIT_BURST_SECONDS" value="10"/>
+        <env name="SPEECHMATICS_RATE_LIMIT_BYPASS_ADMIN" value="false"/>
+        <env name="SPEECHMATICS_RATE_LIMIT_BYPASS_DEMO" value="false"/>
     </php>
 </phpunit>

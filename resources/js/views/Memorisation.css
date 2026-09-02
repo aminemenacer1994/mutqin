@@ -14726,6 +14726,58 @@ body.memorisation-page nav.navbar.app-navbar {
   line-height: 1.65;
 }
 
+.confirm-modal .modal-context-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0 0 0.4rem;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent, #b8874a) 18%, var(--border, #e4d8c8));
+  background: color-mix(in srgb, var(--accent, #b8874a) 8%, transparent);
+  font-size: 0.74rem;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.confirm-modal .confirm-copy {
+  margin: 0;
+  max-width: 38rem;
+}
+
+.confirm-subject {
+  margin: 0 0 0.9rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--surface-strong, #f3ece1) 88%, #fff);
+  border: 1px solid color-mix(in srgb, var(--border, #e4d8c8) 86%, transparent);
+}
+
+.confirm-subject-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.confirm-subject-detail {
+  margin: 0.28rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .confirm-subject,
+.dark-mode .confirm-subject {
+  background: color-mix(in srgb, #2a241d 86%, #000);
+  border-color: color-mix(in srgb, var(--border, #3b342c) 80%, transparent);
+}
+
 .btn-danger {
   --bs-btn-color: #fff;
   --bs-btn-bg: var(--bs-danger, #b55041);
@@ -40753,12 +40805,12 @@ but not its destructive red. */
 .mutqin-modal-surface.session-exit-modal .session-exit-progress-block,
 .mutqin-modal-surface.session-exit-modal .session-exit-progress-block.w-100 {
   display: grid !important;
-  gap: 0.28rem;
+  gap: 0.75rem;
   width: 100% !important;
   max-width: none !important;
   align-self: stretch !important;
   margin: 0 !important;
-  padding: 0.8rem 0.95rem;
+  padding: 0.85rem 0.95rem;
   border-radius: 12px;
   background: color-mix(in srgb, var(--surface-muted, #f3ebe0) 88%, transparent);
   border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
@@ -40766,10 +40818,51 @@ but not its destructive red. */
   box-sizing: border-box;
 }
 
+.mutqin-modal-surface.session-exit-modal .session-exit-scope {
+  display: grid;
+  gap: 0.18rem;
+  padding-bottom: 0.72rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-scope-surah {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 620;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-scope-range {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text) 68%, var(--text-muted));
+}
+
+.mutqin-modal-surface.session-exit-modal .session-exit-progress-metrics {
+  display: grid;
+  gap: 0.28rem;
+}
+
 .mutqin-modal-surface.session-exit-modal .session-exit-fluid > .modal-footer {
   padding: 0.85rem var(--session-exit-pad-x) 1.1rem !important;
   border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent) !important;
   background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+}
+
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-scope {
+  border-bottom-color: color-mix(in srgb, var(--border, #5a4a3a) 75%, transparent);
+}
+
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-scope-surah {
+  color: #f4f4f5;
+}
+
+[data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-scope-range {
+  color: rgba(244, 237, 228, 0.72);
 }
 
 [data-theme="dark"] .mutqin-modal-surface.session-exit-modal .session-exit-progress-block {

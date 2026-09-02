@@ -115,7 +115,7 @@ Watch logs for `speechmatics.usage.threshold.warning`, `speechmatics.usage.thres
 
 Token minting is also burst-limited on the server (`throttle:speechmatics-token`) so frontend retries cannot multiply Speechmatics calls. Defaults: **3 mints / 10s** and **10 / minute per user**, plus **30 / minute per IP**. Returns HTTP **429** with `Retry-After` and a learner-safe message. Admin/demo accounts are **not** exempt unless `SPEECHMATICS_RATE_LIMIT_BYPASS_ADMIN` / `SPEECHMATICS_RATE_LIMIT_BYPASS_DEMO` is explicitly true.
 
-Watch logs for `Speechmatics token rate limit hit.`
+Watch logs for `speechmatics.rate_limit.hit` (legacy: `Speechmatics token rate limit hit.`). Hits include sanitized metadata (`user_id`, IP fingerprint, configured limits) — never raw IPs or tokens.
 
 ### Subscription tiers
 
@@ -155,13 +155,16 @@ After env changes: `php artisan config:clear && php artisan config:cache`
 API routes log structured JSON via `LogMutqinApiRequest` middleware and `App\Support\MutqinLog`:
 
 - Every API request: `api.request.completed` (route, status, duration_ms, user_id)
+- Exceptions: `exception.reported` (environment, release, request_id, feature, user id only)
+- Browser errors: `client.exception.reported` via `POST /api/client-errors`
+- Provider failures: `provider.request.failed` (status / latency, no Qur'an or audio bodies)
 - Session lifecycle: `learning.session.started`, `learning.session.end`
 - Assessments: `memorisation.assessment.submitted`, `recommendation.ai_assessment.submitted`, `recommendation.adaptive_assessment.submitted`
 - Stripe: `billing.webhook.received`
 
-Responses include an `X-Request-Id` header for correlation.
+Web and API responses include an `X-Request-Id` header for correlation.
 
-**Production error tracking:** wire [Sentry](https://sentry.io) or Bugsnag to Laravel’s log channel in `.env` (`LOG_CHANNEL`, `SENTRY_LARAVEL_DSN`). No DSN is committed — add it in Laravel Cloud when ready.
+**Production error tracking:** [Sentry](https://sentry.io) is the single provider (`sentry/sentry-laravel`). Set `SENTRY_LARAVEL_DSN` in Laravel Cloud / staging — no DSN is committed. Frontend errors use the same project through the sanitized ingest endpoint (no second SDK). Validation `422`s are not reported. See [docs/ERROR_TRACKING.md](docs/ERROR_TRACKING.md) for where events appear and how to verify tracking in staging.
 
 ## Project layout
 
@@ -173,7 +176,7 @@ Responses include an `X-Request-Id` header for correlation.
 | `routes/api.php` | Authenticated learning + billing API |
 | `tests/Feature/` | PHP integration tests |
 | `tests/js/` | Node ESM unit tests |
-| `docs/` | Tester guide, performance notes |
+| `docs/` | Tester guide, error tracking, performance notes |
 
 ## Learning state API
 

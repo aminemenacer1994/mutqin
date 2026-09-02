@@ -87,6 +87,20 @@ class SpeechmaticsRateLimitTest extends TestCase
 
         Http::assertSentCount(2);
         Log::shouldHaveReceived('warning')
+            ->with('speechmatics.rate_limit.hit', \Mockery::on(function (array $context) use ($user): bool {
+                return ($context['service'] ?? null) === 'mutqin'
+                    && ($context['reason'] ?? null) === SpeechmaticsRateLimit::REASON
+                    && ($context['user_id'] ?? null) === $user->id
+                    && ($context['retry_after'] ?? 0) > 0
+                    && ($context['is_admin'] ?? null) === false
+                    && ($context['is_demo'] ?? null) === false
+                    && ! array_key_exists('ip', $context)
+                    && ! array_key_exists('email', $context)
+                    && isset($context['ip_fingerprint'])
+                    && is_array($context['limits'] ?? null)
+                    && ($context['limits']['per_user_per_minute'] ?? null) === 2;
+            }));
+        Log::shouldHaveReceived('warning')
             ->with('Speechmatics token rate limit hit.', \Mockery::on(function (array $context) use ($user): bool {
                 return ($context['reason'] ?? null) === SpeechmaticsRateLimit::REASON
                     && ($context['user_id'] ?? null) === $user->id
@@ -194,6 +208,92 @@ class SpeechmaticsRateLimitTest extends TestCase
             ->assertJsonPath('reason', SpeechmaticsRateLimit::REASON);
 
         Http::assertSentCount(1);
+    }
+
+    public function test_transcription_token_returns_429_when_per_ip_limit_is_exceeded_across_users(): void
+    {
+        $first = User::factory()->pro()->create();
+        $second = User::factory()->pro()->create();
+        $this->configureSpeechmatics();
+        $this->configureRateLimit(perUser: 50, perIp: 2, burst: 20, burstSeconds: 60);
+        $this->fakeSuccessfulSpeechmaticsMint();
+
+        $this->actingAs($first)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk();
+
+        $this->actingAs($second)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk();
+
+        $this->actingAs($first)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertStatus(429)
+            ->assertHeader('Retry-After')
+            ->assertJsonPath('reason', SpeechmaticsRateLimit::REASON)
+            ->assertJsonMissingPath('access_token');
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_guest_cannot_mint_a_transcription_token(): void
+    {
+        $this->configureSpeechmatics();
+        $this->configureRateLimit(perUser: 10, perIp: 30, burst: 5, burstSeconds: 60);
+        $this->fakeSuccessfulSpeechmaticsMint();
+
+        $this->postJson(route('memorisation.transcription-token'))
+            ->assertUnauthorized();
+
+        Http::assertSentCount(0);
+    }
+
+    public function test_demo_account_does_not_bypass_rate_limit_unless_explicitly_configured(): void
+    {
+        $demo = User::factory()->pro()->create([
+            'email' => 'fatima.reviser@mutqin.test',
+        ]);
+        $this->configureSpeechmatics();
+        $this->configureRateLimit(perUser: 1, perIp: 50, burst: 10, burstSeconds: 60);
+        $this->fakeSuccessfulSpeechmaticsMint();
+
+        $this->actingAs($demo)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk();
+
+        $this->actingAs($demo)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertStatus(429)
+            ->assertJsonPath('reason', SpeechmaticsRateLimit::REASON);
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_admin_bypass_applies_only_when_explicitly_enabled(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+            'email_verified_at' => now(),
+        ]);
+        config(['mutqin.admin_emails' => ['admin@example.com']]);
+
+        $this->configureSpeechmatics();
+        $this->configureRateLimit(perUser: 1, perIp: 50, burst: 10, burstSeconds: 60);
+        config(['services.speechmatics.rate_limit.bypass_admin' => true]);
+        $this->fakeSuccessfulSpeechmaticsMint();
+
+        $this->assertTrue($admin->isAdmin());
+
+        $this->actingAs($admin)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk();
+
+        $this->actingAs($admin)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk()
+            ->assertJsonPath('access_token', 'rt-test-token');
+
+        Http::assertSentCount(2);
     }
 
     public function test_burst_limit_blocks_rapid_duplicate_mints_without_calling_speechmatics(): void

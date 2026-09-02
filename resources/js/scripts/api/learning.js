@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { attachHttpErrorTracking } from '../observability/errorTracking'
 import { attachNetworkFailureEmitter } from '../../utils/networkStatus'
 
 /**
@@ -63,6 +64,7 @@ export const http = axios.create({
 })
 
 attachNetworkFailureEmitter(http)
+attachHttpErrorTracking(http)
 
 http.interceptors.request.use(async (config) => {
   const method = String(config.method || 'get').toLowerCase()

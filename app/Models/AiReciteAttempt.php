@@ -33,6 +33,16 @@ class AiReciteAttempt extends Model
         'plan_snapshot' => 'array',
     ];
 
+    /**
+     * Valid scored checks only — exclude provider/audio failures from accuracy denominators.
+     */
+    public function scopeValidScored($query)
+    {
+        return $query
+            ->whereNotNull('accuracy_percent')
+            ->whereIn('band', ['strong', 'mixed', 'weak']);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

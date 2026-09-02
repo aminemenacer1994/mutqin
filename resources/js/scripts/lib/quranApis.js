@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { attachHttpErrorTracking } from '../observability/errorTracking'
 
 /**
  * Quran text clients.
@@ -31,6 +32,8 @@ function createProxyClient(provider) {
     }
     return config
   })
+
+  attachHttpErrorTracking(client, { feature: 'quran' })
 
   return client
 }

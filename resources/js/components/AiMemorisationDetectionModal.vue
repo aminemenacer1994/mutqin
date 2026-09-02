@@ -345,7 +345,7 @@ export default {
     doneLabel: { type: String, default: 'Done' },
     enableMicLabel: { type: String, default: 'Enable microphone' },
     tryAgainLabel: { type: String, default: 'Try again' },
-    genericError: { type: String, default: 'Something went wrong. Please try again.' },
+    genericError: { type: String, default: 'Please try again in a moment.' },
     emptyAyahTitle: { type: String, default: 'Ayah text not ready' },
     emptyAyahDesc: { type: String, default: 'We could not show the ayah for this check. Close and try again.' },
   },

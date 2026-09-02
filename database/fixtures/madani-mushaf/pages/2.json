@@ -1,0 +1,518 @@
+{
+  "pageNumber": 2,
+  "juzNumber": 1,
+  "hizbNumber": 1,
+  "lines": [
+    {
+      "lineNumber": 3,
+      "lineType": "ayah",
+      "isCentered": false,
+      "firstWordId": 11,
+      "lastWordId": 1202,
+      "surahNumber": null,
+      "words": [
+        {
+          "id": 11,
+          "wordKey": "2:1:1",
+          "verseKey": "2:1",
+          "surahNumber": 2,
+          "ayahNumber": 1,
+          "position": 1,
+          "charType": "word",
+          "glyph": "ﱁ",
+          "textQpc": "الٓمٓ"
+        },
+        {
+          "id": 12,
+          "wordKey": "2:1:2",
+          "verseKey": "2:1",
+          "surahNumber": 2,
+          "ayahNumber": 1,
+          "position": 2,
+          "charType": "end",
+          "glyph": "ﱂ",
+          "textQpc": "١"
+        },
+        {
+          "id": 1195,
+          "wordKey": "2:2:1",
+          "verseKey": "2:2",
+          "surahNumber": 2,
+          "ayahNumber": 2,
+          "position": 1,
+          "charType": "word",
+          "glyph": "ﱃ",
+          "textQpc": "ذَٰلِكَ"
+        },
+        {
+          "id": 1196,
+          "wordKey": "2:2:2",
+          "verseKey": "2:2",
+          "surahNumber": 2,
+          "ayahNumber": 2,
+          "position": 2,
+          "charType": "word",
+          "glyph": "ﱄ",
+          "textQpc": "ٱلْكِتَـٰبُ"
+        },
+        {
+          "id": 1197,
+          "wordKey": "2:2:3",
+          "verseKey": "2:2",
+          "surahNumber": 2,
+          "ayahNumber": 2,
+          "position": 3,
+          "charType": "word",
+          "glyph": "ﱅ",
+          "textQpc": "لَا"
+        },
+        {
+          "id": 1198,
+          "wordKey": "2:2:4",
+          "verseKey": "2:2",
+          "surahNumber": 2,
+          "ayahNumber": 2,
+          "position": 4,
+          "charType": "word",
+          "glyph": "ﱆﱇ",
+          "textQpc": "رَيْبَ ۛ"
+        },
+        {
+          "id": 1200,
+          "wordKey": "2:2:5",
+          "verseKey": "2:2",
+          "surahNumber": 2,
+          "ayahNumber": 2,
+          "position": 5,
+          "charType": "word",
+          "glyph": "ﱈﱉ",
+          "textQpc": "فِيهِ ۛ"
+        },
+        {
+          "id": 1202,
+          "wordKey": "2:2:6",
+          "verseKey": "2:2",
+          "surahNumber": 2,
+          "ayahNumber": 2,
+          "position": 6,
+          "charType": "word",
+          "glyph": "ﱊ",
+          "textQpc": "هُدًۭى"
+        }
+      ]
+    },
+    {
+      "lineNumber": 4,
+      "lineType": "ayah",
+      "isCentered": false,
+      "firstWordId": 1203,
+      "lastWordId": 2634,
+      "surahNumber": null,
+      "words": [
+        {
+          "id": 1203,
+          "wordKey": "2:2:7",
+          "verseKey": "2:2",
+          "surahNumber": 2,
+          "ayahNumber": 2,
+          "position": 7,
+          "charType": "word",
+          "glyph": "ﱋ",
+          "textQpc": "لِّلْمُتَّقِينَ"
+        },
+        {
+          "id": 1204,
+          "wordKey": "2:2:8",
+          "verseKey": "2:2",
+          "surahNumber": 2,
+          "ayahNumber": 2,
+          "position": 8,
+          "charType": "end",
+          "glyph": "ﱌ",
+          "textQpc": "٢"
+        },
+        {
+          "id": 2630,
+          "wordKey": "2:3:1",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 1,
+          "charType": "word",
+          "glyph": "ﱍ",
+          "textQpc": "ٱلَّذِينَ"
+        },
+        {
+          "id": 2631,
+          "wordKey": "2:3:2",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 2,
+          "charType": "word",
+          "glyph": "ﱎ",
+          "textQpc": "يُؤْمِنُونَ"
+        },
+        {
+          "id": 2632,
+          "wordKey": "2:3:3",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 3,
+          "charType": "word",
+          "glyph": "ﱏ",
+          "textQpc": "بِٱلْغَيْبِ"
+        },
+        {
+          "id": 2633,
+          "wordKey": "2:3:4",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 4,
+          "charType": "word",
+          "glyph": "ﱐ",
+          "textQpc": "وَيُقِيمُونَ"
+        },
+        {
+          "id": 2634,
+          "wordKey": "2:3:5",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 5,
+          "charType": "word",
+          "glyph": "ﱑ",
+          "textQpc": "ٱلصَّلَوٰةَ"
+        }
+      ]
+    },
+    {
+      "lineNumber": 5,
+      "lineType": "ayah",
+      "isCentered": false,
+      "firstWordId": 2635,
+      "lastWordId": 4249,
+      "surahNumber": null,
+      "words": [
+        {
+          "id": 2635,
+          "wordKey": "2:3:6",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 6,
+          "charType": "word",
+          "glyph": "ﱒ",
+          "textQpc": "وَمِمَّا"
+        },
+        {
+          "id": 2636,
+          "wordKey": "2:3:7",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 7,
+          "charType": "word",
+          "glyph": "ﱓ",
+          "textQpc": "رَزَقْنَـٰهُمْ"
+        },
+        {
+          "id": 2637,
+          "wordKey": "2:3:8",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 8,
+          "charType": "word",
+          "glyph": "ﱔ",
+          "textQpc": "يُنفِقُونَ"
+        },
+        {
+          "id": 2638,
+          "wordKey": "2:3:9",
+          "verseKey": "2:3",
+          "surahNumber": 2,
+          "ayahNumber": 3,
+          "position": 9,
+          "charType": "end",
+          "glyph": "ﱕ",
+          "textQpc": "٣"
+        },
+        {
+          "id": 4246,
+          "wordKey": "2:4:1",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 1,
+          "charType": "word",
+          "glyph": "ﱖ",
+          "textQpc": "وَٱلَّذِينَ"
+        },
+        {
+          "id": 4247,
+          "wordKey": "2:4:2",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 2,
+          "charType": "word",
+          "glyph": "ﱗ",
+          "textQpc": "يُؤْمِنُونَ"
+        },
+        {
+          "id": 4248,
+          "wordKey": "2:4:3",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 3,
+          "charType": "word",
+          "glyph": "ﱘ",
+          "textQpc": "بِمَآ"
+        },
+        {
+          "id": 4249,
+          "wordKey": "2:4:4",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 4,
+          "charType": "word",
+          "glyph": "ﱙ",
+          "textQpc": "أُنزِلَ"
+        }
+      ]
+    },
+    {
+      "lineNumber": 6,
+      "lineType": "ayah",
+      "isCentered": false,
+      "firstWordId": 4250,
+      "lastWordId": 4258,
+      "surahNumber": null,
+      "words": [
+        {
+          "id": 4250,
+          "wordKey": "2:4:5",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 5,
+          "charType": "word",
+          "glyph": "ﱚ",
+          "textQpc": "إِلَيْكَ"
+        },
+        {
+          "id": 4251,
+          "wordKey": "2:4:6",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 6,
+          "charType": "word",
+          "glyph": "ﱛ",
+          "textQpc": "وَمَآ"
+        },
+        {
+          "id": 4252,
+          "wordKey": "2:4:7",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 7,
+          "charType": "word",
+          "glyph": "ﱜ",
+          "textQpc": "أُنزِلَ"
+        },
+        {
+          "id": 4253,
+          "wordKey": "2:4:8",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 8,
+          "charType": "word",
+          "glyph": "ﱝ",
+          "textQpc": "مِن"
+        },
+        {
+          "id": 4254,
+          "wordKey": "2:4:9",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 9,
+          "charType": "word",
+          "glyph": "ﱞ",
+          "textQpc": "قَبْلِكَ"
+        },
+        {
+          "id": 4255,
+          "wordKey": "2:4:10",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 10,
+          "charType": "word",
+          "glyph": "ﱟ",
+          "textQpc": "وَبِٱلْـَٔاخِرَةِ"
+        },
+        {
+          "id": 4256,
+          "wordKey": "2:4:11",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 11,
+          "charType": "word",
+          "glyph": "ﱠ",
+          "textQpc": "هُمْ"
+        },
+        {
+          "id": 4257,
+          "wordKey": "2:4:12",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 12,
+          "charType": "word",
+          "glyph": "ﱡ",
+          "textQpc": "يُوقِنُونَ"
+        },
+        {
+          "id": 4258,
+          "wordKey": "2:4:13",
+          "verseKey": "2:4",
+          "surahNumber": 2,
+          "ayahNumber": 4,
+          "position": 13,
+          "charType": "end",
+          "glyph": "ﱢ",
+          "textQpc": "٤"
+        }
+      ]
+    },
+    {
+      "lineNumber": 7,
+      "lineType": "ayah",
+      "isCentered": false,
+      "firstWordId": 5544,
+      "lastWordId": 5550,
+      "surahNumber": null,
+      "words": [
+        {
+          "id": 5544,
+          "wordKey": "2:5:1",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 1,
+          "charType": "word",
+          "glyph": "ﱣ",
+          "textQpc": "أُو۟لَـٰٓئِكَ"
+        },
+        {
+          "id": 5545,
+          "wordKey": "2:5:2",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 2,
+          "charType": "word",
+          "glyph": "ﱤ",
+          "textQpc": "عَلَىٰ"
+        },
+        {
+          "id": 5546,
+          "wordKey": "2:5:3",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 3,
+          "charType": "word",
+          "glyph": "ﱥ",
+          "textQpc": "هُدًۭى"
+        },
+        {
+          "id": 5547,
+          "wordKey": "2:5:4",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 4,
+          "charType": "word",
+          "glyph": "ﱦ",
+          "textQpc": "مِّن"
+        },
+        {
+          "id": 5548,
+          "wordKey": "2:5:5",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 5,
+          "charType": "word",
+          "glyph": "ﱧﱨ",
+          "textQpc": "رَّبِّهِمْ ۖ"
+        },
+        {
+          "id": 5550,
+          "wordKey": "2:5:6",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 6,
+          "charType": "word",
+          "glyph": "ﱩ",
+          "textQpc": "وَأُو۟لَـٰٓئِكَ"
+        }
+      ]
+    },
+    {
+      "lineNumber": 8,
+      "lineType": "ayah",
+      "isCentered": false,
+      "firstWordId": 5551,
+      "lastWordId": 5553,
+      "surahNumber": null,
+      "words": [
+        {
+          "id": 5551,
+          "wordKey": "2:5:7",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 7,
+          "charType": "word",
+          "glyph": "ﱪ",
+          "textQpc": "هُمُ"
+        },
+        {
+          "id": 5552,
+          "wordKey": "2:5:8",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 8,
+          "charType": "word",
+          "glyph": "ﱫ",
+          "textQpc": "ٱلْمُفْلِحُونَ"
+        },
+        {
+          "id": 5553,
+          "wordKey": "2:5:9",
+          "verseKey": "2:5",
+          "surahNumber": 2,
+          "ayahNumber": 5,
+          "position": 9,
+          "charType": "end",
+          "glyph": "ﱬ",
+          "textQpc": "٥"
+        }
+      ]
+    }
+  ]
+}

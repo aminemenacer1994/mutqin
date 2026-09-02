@@ -1,11 +1,8 @@
 <?php
 
-use App\Http\Controllers\ContactSubmissionController;
-use App\Http\Controllers\WaitingListController;
-use App\Http\Controllers\BillingController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Api\ClientErrorController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
@@ -18,7 +15,27 @@ use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\ContactSubmissionController;
+use App\Http\Controllers\MadaniMushafPageController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\WaitingListController;
 use Illuminate\Support\Facades\Route;
+
+// Public Quran Mushaf page API (immutable layout data, no credentials).
+Route::prefix('quran/mushaf')->group(function () {
+    Route::get('/pages/{page}', [MadaniMushafPageController::class, 'show'])
+        ->where('page', '[1-9][0-9]{0,2}')
+        ->name('api.quran.mushaf.page');
+    Route::get('/resolve', [MadaniMushafPageController::class, 'resolve'])
+        ->name('api.quran.mushaf.resolve');
+    Route::get('/manifest', [MadaniMushafPageController::class, 'manifest'])
+        ->name('api.quran.mushaf.manifest');
+});
+
+Route::post('/client-errors', [ClientErrorController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('api.client-errors.store');
 
 Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('stripe.webhook');
 Route::post('/contact', [ContactSubmissionController::class, 'store'])

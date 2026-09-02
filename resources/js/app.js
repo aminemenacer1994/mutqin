@@ -10,6 +10,7 @@ import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
 import { clearSharedMutqinBrowserResidue } from './utils/mutqinStorageKeys';
 import { isBrowserOffline } from './utils/networkStatus';
+import { installErrorTracking, reportError } from './scripts/observability/errorTracking';
 import enLocale from './locales/en.json';
 
 function resolveEn(key) {
@@ -101,9 +102,13 @@ const MemorisationBootFallback = {
     template: `
         <div class="memorisation-boot-fallback" role="status" aria-live="polite">
             <div class="memorisation-boot-card">
-                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                <strong>{{ loadingTitle }}</strong>
-                <span>{{ loadingDesc }}</span>
+                <div class="memorisation-boot-card__icon" aria-hidden="true">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="memorisation-boot-card__copy">
+                    <strong>{{ loadingTitle }}</strong>
+                    <p>{{ loadingDesc }}</p>
+                </div>
             </div>
         </div>
     `,
@@ -153,12 +158,16 @@ const MemorisationLoadError = {
     template: `
         <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
             <div class="memorisation-boot-card">
-                <i class="bi" :class="offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'" aria-hidden="true"></i>
-                <strong>{{ title }}</strong>
-                <span>{{ description }}</span>
+                <div class="memorisation-boot-card__icon" aria-hidden="true">
+                    <i class="bi" :class="offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'"></i>
+                </div>
+                <div class="memorisation-boot-card__copy">
+                    <strong>{{ title }}</strong>
+                    <p>{{ description }}</p>
+                </div>
                 <div class="memorisation-boot-actions">
-                    <button type="button" class="btn btn-sm btn-primary" @click="reload">{{ retryLabel }}</button>
-                    <a class="btn btn-sm btn-outline-secondary" href="/">{{ returnHomeLabel }}</a>
+                    <button type="button" class="memorisation-boot-btn memorisation-boot-btn--primary" @click="reload">{{ retryLabel }}</button>
+                    <a class="memorisation-boot-btn memorisation-boot-btn--secondary" href="/">{{ returnHomeLabel }}</a>
                 </div>
             </div>
         </div>
@@ -220,6 +229,7 @@ function loadMemorisationChunk(attempt = 0) {
                 return new Promise(() => {});
             }
         }
+        reportError(error, { kind: 'chunk_load', feature: 'memorisation' });
         throw error;
     });
 }
@@ -240,9 +250,7 @@ async function bootstrapApp() {
     app.use(i18n);
     app.mixin(i18nMixin);
     app.config.globalProperties.$setLocale = (locale) => setLocale(i18n, locale);
-    app.config.errorHandler = (error, instance, info) => {
-        console.error('Mutqin Vue error:', error, info);
-    };
+    installErrorTracking(app);
     window.mutqinSetLocale = (locale) => setLocale(i18n, locale);
     window.mutqinGetLocale = () => i18n.global.locale.value;
     window.dispatchEvent(new CustomEvent('mutqin:i18n-ready', { detail: { locale: i18n.global.locale.value } }));
@@ -265,7 +273,7 @@ async function bootstrapApp() {
 }
 
 function showBootstrapFailure(error) {
-    console.error('Mutqin app bootstrap failed:', error);
+    reportError(error, { kind: 'bootstrap', feature: 'shell' });
     const mountTarget = document.getElementById('app');
     if (!mountTarget) return;
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
@@ -279,12 +287,16 @@ function showBootstrapFailure(error) {
         <main id="mainContent" tabindex="-1">
             <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
                 <div class="memorisation-boot-card">
-                    <i class="bi ${offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'}" aria-hidden="true"></i>
-                    <strong>${title}</strong>
-                    <span>${description}</span>
+                    <div class="memorisation-boot-card__icon" aria-hidden="true">
+                        <i class="bi ${offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'}"></i>
+                    </div>
+                    <div class="memorisation-boot-card__copy">
+                        <strong>${title}</strong>
+                        <p>${description}</p>
+                    </div>
                     <div class="memorisation-boot-actions">
-                        <button type="button" class="btn btn-sm btn-primary" onclick="window.location.reload()">${retryLabel}</button>
-                        <a class="btn btn-sm btn-outline-secondary" href="/">${returnHomeLabel}</a>
+                        <button type="button" class="memorisation-boot-btn memorisation-boot-btn--primary" onclick="window.location.reload()">${retryLabel}</button>
+                        <a class="memorisation-boot-btn memorisation-boot-btn--secondary" href="/">${returnHomeLabel}</a>
                     </div>
                 </div>
             </div>

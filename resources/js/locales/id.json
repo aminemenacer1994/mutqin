@@ -51,7 +51,7 @@
       "noResultsTitle": "Tidak ada yang cocok",
       "noResultsDesc": "Try clearing filters atau searching dengan different Kata-kata.",
       "errorTitle": "Terjadi kesalahan",
-      "errorDesc": "Something went wrong. Silakan try again.",
+      "errorDesc": "Silakan coba lagi sebentar lagi.",
       "offlineTitle": "Anda appear ke be offline.",
       "offlineBanner": "No internet koneksi. Mutqin akan resume saat you're kembali online.",
       "offlineDesc": "periksa Anda koneksi, lalu try again. We’ll retry automatically saat Anda’re kembali online.",
@@ -65,7 +65,7 @@
       "unavailableTitle": "bukan available right saja",
       "unavailableDesc": "This feature isn’t available at the moment. Silakan try again later.",
       "bootErrorTitle": "Terjadi kesalahan",
-      "bootErrorDesc": "Something went wrong. Silakan try again.",
+      "bootErrorDesc": "Layar ini tidak dapat dimuat. Coba lagi, atau kembali ke beranda untuk lanjut.",
       "chunkUpdating": "Memperbarui Mutqin…",
       "clearFilters": "Hapus filter",
       "startSession": "Mulai a sesi",
@@ -1149,17 +1149,18 @@
         "confirm": "Simpan sesi",
         "cancel": "Jangan simpan"
       },
+      "contextBadge": "Hafalan · {surah} · ayah {ayah} dari {total}",
       "deleteSession": {
-        "title": "Hapus saved sesi?",
-        "message": "Ini akan menghapus \"{label}\" dan snapshot ekspor secara permanen dari perangkat ini.",
-        "messageFallback": "This will permanently remove this session and its saved export from this device.",
+        "title": "Hapus sesi ini?",
+        "message": "Sesi ini akan dihapus secara permanen dari perangkat ini. Tindakan ini tidak dapat dibatalkan.",
+        "progress": "Ayah {ayah} dari {total}",
         "confirm": "Hapus sesi",
-        "cancel": "Keep sesi"
+        "cancel": "Simpan sesi"
       },
       "deleteSessions": {
-        "title": "Hapus selected sessions?",
-        "message": "Ini akan menghapus {count} sesi tersimpan secara permanen dari perangkat ini.",
-        "confirm": "Hapus selected"
+        "title": "Hapus sesi yang dipilih?",
+        "message": "Ini akan menghapus {count} sesi tersimpan secara permanen dari perangkat ini. Tindakan ini tidak dapat dibatalkan.",
+        "confirm": "Hapus yang dipilih"
       },
       "deleteRecording": {
         "title": "Hapus rekaman?",
@@ -1305,6 +1306,15 @@
       "serviceUnavailable": "Recitation checking is temporarily unavailable. Anda can lanjutkan practising dan try the AI periksa again later.",
       "usageCapReached": "Anda telah mencapai batas pemeriksaan suara AI hari ini. Coba lagi besok.",
       "processingTimeout": "This is taking longer than expected. Coba lagi.",
+      "retry": {
+        "silence": "Kami tidak mendengar bacaan. Bacalah dengan jelas, lalu coba lagi.",
+        "tooShort": "Rekaman terlalu singkat. Bacalah sedikit lebih lama, lalu coba lagi.",
+        "microphone": "Akses mikrofon diblokir. Izinkan mikrofon, lalu coba lagi.",
+        "unusable": "Audio tidak cukup jelas. Bacalah lebih dekat ke mikrofon, lalu coba lagi.",
+        "emptyTranscript": "Kami tidak memahami bacaannya. Bacalah dengan jelas, lalu coba lagi.",
+        "provider": "Layanan bacaan tidak merespons. Sesi Anda aman — coba lagi.",
+        "cancelled": "Pemeriksaan ini dibatalkan. Mulai rekaman baru saat Anda siap."
+      },
       "stageRecording": "rekaman…",
       "stageProcessing": "جارٍ المعالجة…",
       "stageAssessing": "جارٍ التقييم…",

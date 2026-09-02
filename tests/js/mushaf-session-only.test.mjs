@@ -23,7 +23,8 @@ assert.match(
   /wantSessionOnly = this\.readingViewMode === 'mushaf'/,
   'only classic mushaf uses session-only page builds'
 )
-assert.match(memorisationJs, /showOriginalMadaniViewToggle:\s*false/, 'Madani Mushaf switch hidden')
+assert.match(memorisationJs, /showOriginalMadaniViewToggle:\s*false/, 'Printed scan switch hidden')
+assert.match(memorisationJs, /showMadaniMushafViewToggle:\s*false/, 'Madani Mushaf switch hidden')
 assert.match(
   memorisationJs,
   /Only render session-filtered lines from mushafPages/,
@@ -42,6 +43,11 @@ assert.match(
 assert.match(
   memorisationVue,
   /v-if="showOriginalMadaniViewToggle"/,
+  'Printed scan switch gated behind flag'
+)
+assert.match(
+  memorisationVue,
+  /v-if="showMadaniMushafViewToggle"/,
   'Madani Mushaf switch gated behind flag'
 )
 assert.doesNotMatch(

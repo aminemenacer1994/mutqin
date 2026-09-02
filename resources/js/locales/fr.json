@@ -51,7 +51,7 @@
       "noResultsTitle": "Aucun résultat",
       "noResultsDesc": "Essayez d’effacer les filtres ou de chercher avec d’autres mots.",
       "errorTitle": "Une erreur s’est produite",
-      "errorDesc": "Une erreur s’est produite. Veuillez réessayer.",
+      "errorDesc": "Veuillez réessayer dans un instant.",
       "offlineTitle": "Vous semblez hors ligne.",
       "offlineBanner": "Pas de connexion internet. Mutqin reprendra quand vous serez de nouveau en ligne.",
       "offlineDesc": "Vérifiez votre connexion, puis réessayez. Nous réessaierons automatiquement à votre retour.",
@@ -65,7 +65,7 @@
       "unavailableTitle": "Indisponible pour le moment",
       "unavailableDesc": "Cette fonction n’est pas disponible actuellement. Réessayez plus tard.",
       "bootErrorTitle": "Une erreur s’est produite",
-      "bootErrorDesc": "Une erreur s’est produite. Veuillez réessayer.",
+      "bootErrorDesc": "Cet écran n’a pas pu se charger. Réessayez, ou retournez à l’accueil pour continuer.",
       "chunkUpdating": "Mise à jour de Mutqin…",
       "clearFilters": "Effacer les filtres",
       "startSession": "Démarrer une session",
@@ -1149,17 +1149,18 @@
         "confirm": "Guardar sesión",
         "cancel": "No guardar"
       },
+      "contextBadge": "Mémorisation · {surah} · ayah {ayah} sur {total}",
       "deleteSession": {
-        "title": "Supprimer la session enregistrée ?",
-        "message": "Esto eliminará permanentemente \"{label}\" y su instantánea de exportación de este dispositivo.",
-        "messageFallback": "This will permanently remove this session and its saved export from this device.",
+        "title": "Supprimer cette session ?",
+        "message": "Cette session sera définitivement retirée de cet appareil. Cette action est irréversible.",
+        "progress": "Ayah {ayah} sur {total}",
         "confirm": "Supprimer la session",
         "cancel": "Conserver la session"
       },
       "deleteSessions": {
-        "title": "Eliminar selected sessions?",
-        "message": "Esto eliminará permanentemente {count} sesiones guardadas de este dispositivo.",
-        "confirm": "Eliminar selected"
+        "title": "Supprimer les sessions sélectionnées ?",
+        "message": "Cela retirera définitivement {count} sessions enregistrées de cet appareil. Cette action est irréversible.",
+        "confirm": "Supprimer la sélection"
       },
       "deleteRecording": {
         "title": "Supprimer l'enregistrement ?",
@@ -1305,6 +1306,15 @@
       "serviceUnavailable": "Recitation checking es temporarily unavailable. tú can continuar practising y try el IA comprobar again later.",
       "usageCapReached": "Vous avez atteint la limite quotidienne de vérification vocale par IA. Réessayez demain.",
       "processingTimeout": "This is taking longer than expected. Intentar de nuevo.",
+      "retry": {
+        "silence": "Nous n’avons entendu aucune récitation. Récitez clairement, puis réessayez.",
+        "tooShort": "L’enregistrement était trop court. Récitez un peu plus longtemps, puis réessayez.",
+        "microphone": "L’accès au microphone est bloqué. Autorisez le microphone, puis réessayez.",
+        "unusable": "L’audio n’était pas assez clair. Récitez plus près du microphone, puis réessayez.",
+        "emptyTranscript": "Nous n’avons pas compris la récitation. Récitez clairement, puis réessayez.",
+        "provider": "Le service de récitation n’a pas répondu. Votre session est en sécurité — réessayez.",
+        "cancelled": "Cette vérification a été annulée. Lancez un nouvel enregistrement quand vous êtes prêt."
+      },
       "stageRecording": "grabación…",
       "stageProcessing": "« Processing…»",
       "stageAssessing": "« Assessing…»",

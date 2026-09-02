@@ -12,9 +12,10 @@ use App\Models\MemorisationProgress;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
-use App\Support\QuranMetadata;
 use App\Services\Memorisation\LearningHistoryRetentionService;
+use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -911,6 +912,7 @@ class AdminDashboardService
             ->pluck('total', 'user_id');
 
         $accuracy = AiReciteAttempt::query()
+            ->validScored()
             ->selectRaw('user_id, AVG(accuracy_percent) as avg_accuracy')
             ->whereIn('user_id', $ids)
             ->where('created_at', '>=', $since)
@@ -948,7 +950,7 @@ class AdminDashboardService
             ->whereIn('status', ['learning', 'reviewing'])
             ->count();
         $assessments = MemorisationAssessment::query()->count();
-        $avgAccuracy = AiReciteAttempt::query()->avg('accuracy_percent');
+        $avgAccuracy = AiReciteAttempt::query()->validScored()->avg('accuracy_percent');
         $learnersWithProgress = MemorisationProgress::query()
             ->distinct()
             ->count('user_id');
@@ -980,7 +982,7 @@ class AdminDashboardService
             ->values()
             ->all();
 
-        $avg = AiReciteAttempt::query()->avg('accuracy_percent');
+        $avg = AiReciteAttempt::query()->validScored()->avg('accuracy_percent');
         $last7d = AiReciteAttempt::query()
             ->where('created_at', '>=', now()->subDays(7))
             ->count();
@@ -1038,8 +1040,8 @@ class AdminDashboardService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, User>  $users
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @param  Collection<int, User>  $users
+     * @return Collection<int, array<string, mixed>>
      */
     private function enrichUsersWithProgress($users)
     {
@@ -1078,6 +1080,7 @@ class AdminDashboardService
             ->pluck('total', 'user_id');
 
         $aiCounts = AiReciteAttempt::query()
+            ->validScored()
             ->selectRaw('user_id, COUNT(*) as total, AVG(accuracy_percent) as avg_accuracy, MAX(created_at) as last_at')
             ->whereIn('user_id', $ids)
             ->groupBy('user_id')

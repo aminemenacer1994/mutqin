@@ -313,6 +313,7 @@
       'player-visible': playbackShellActive,
       'playback-pill-visible': playbackPillVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
+      'madani-mushaf-mode-active': readingViewMode === 'madani_mushaf',
       'original-madani-mode-active': readingViewMode === 'original',
       'focus-mode-active': focusModeEnabled,
       'blur-mode-active': blurModeEnabled,
@@ -573,6 +574,18 @@
                     <i class="bi bi-journal-richtext" aria-hidden="true"></i>
                     <span>{{ t('memorisation.view.mushaf') }}</span>
                     <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    v-if="showMadaniMushafViewToggle"
+                    type="button"
+                    class="top-card-menu-toggle top-card-menu-toggle--layout"
+                    :class="{ active: readingViewMode === 'madani_mushaf' }"
+                    :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
+                    @click.stop="setReadingViewMode('madani_mushaf'); topCardMenuOpen = false"
+                  >
+                    <i class="bi bi-book-half" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.view.madaniMushaf') }}</span>
+                    <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <button
                     v-if="showOriginalMadaniViewToggle"
@@ -929,6 +942,18 @@
                 <span>{{ t('memorisation.view.mushaf') }}</span>
               </button>
               <button
+                v-if="showMadaniMushafViewToggle"
+                type="button"
+                class="view-mode-btn workspace-layout-btn"
+                :class="{ active: readingViewMode === 'madani_mushaf' }"
+                :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
+                @click.stop="setReadingViewMode('madani_mushaf')"
+                :title="t('memorisation.view.madaniMushafHint')"
+              >
+                <i class="bi bi-book-half" aria-hidden="true"></i>
+                <span>{{ t('memorisation.view.madaniMushaf') }}</span>
+              </button>
+              <button
                 v-if="showOriginalMadaniViewToggle"
                 type="button"
                 class="view-mode-btn workspace-layout-btn"
@@ -1031,6 +1056,93 @@
               @decrease-font="decreaseMushafFontSize"
               @toggle-fullscreen="toggleFullScreen"
             />
+            <div
+              v-else-if="shouldShowReadingWorkspace && readingViewMode === 'madani_mushaf'"
+              class="madani-mushaf-workspace mushaf-workspace"
+            >
+              <div class="container-fluid mushaf-workspace__fluid px-0">
+                <section class="mushaf-shell" :aria-label="t('memorisation.view.madaniMushaf')">
+                  <header class="mushaf-shell__bar" :aria-label="t('memorisation.a11y.madaniMushafTools')">
+                    <div class="mushaf-shell__bar-group">
+                      <MushafNavigation
+                        :page-number="madaniMushafPageNumber"
+                        :pagination-label="madaniMushafPaginationLabel"
+                        :can-previous="canGoPreviousMadaniMushafPage"
+                        :can-next="canGoNextMadaniMushafPage"
+                        :is-rtl="isRtlLocale"
+                        :aria-label="t('memorisation.a11y.madaniMushafNav')"
+                        :previous-label="t('memorisation.a11y.previousMadaniMushafPage')"
+                        :next-label="t('memorisation.a11y.nextMadaniMushafPage')"
+                        :page-jump-label="t('memorisation.a11y.jumpMadaniMushafPage')"
+                        @previous="goToPreviousMadaniMushafPage"
+                        @next="goToNextMadaniMushafPage"
+                        @jump="goToMadaniMushafPage"
+                      />
+                      <div class="mushaf-shell__size" role="group" :aria-label="t('common.fontSize')">
+                        <button
+                          type="button"
+                          class="mushaf-shell__btn mushaf-shell__btn--icon"
+                          @click.stop.prevent="decreaseMushafFontSize"
+                          :disabled="Number(defaultFontSize || 150) <= minFontSize"
+                          :aria-label="t('memorisation.a11y.decreaseFontSize')"
+                        >
+                          <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                        </button>
+                        <button
+                          type="button"
+                          class="mushaf-shell__btn mushaf-shell__btn--icon"
+                          @click.stop.prevent="increaseMushafFontSize"
+                          :disabled="Number(defaultFontSize || 150) >= maxFontSize"
+                          :aria-label="t('memorisation.a11y.increaseFontSize')"
+                        >
+                          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="mushaf-shell__bar-group mushaf-shell__bar-group--end">
+                      <button
+                        type="button"
+                        class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__controls-btn"
+                        @click.stop="openAdvancedControls"
+                        :aria-label="t('memorisation.open_controls')"
+                      >
+                        <i class="bi bi-sliders" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </header>
+                  <div class="madani-mushaf-viewport mushaf-viewport-scroll">
+                    <MadaniMushafReader
+                      :page-number="madaniMushafPageNumber"
+                      :spread="madaniMushafHasPair"
+                      :left-page="madaniMushafLeftPageView"
+                      :right-page="madaniMushafRightPageView"
+                      :current-page="madaniMushafCurrentPageView"
+                      :font-size="defaultFontSize"
+                      :tajweed-enabled="tajweedEnabled"
+                      :surah-names-font-family="surahNamesFontFamily"
+                      :loading="madaniMushafLoading"
+                      :error="!!madaniMushafError"
+                      :offline="networkOnline === false"
+                      :error-title="networkOnline === false ? t('common.status.offlineTitle') : t('memorisation.madaniMushaf.errorTitle')"
+                      :error-description="networkOnline === false ? t('common.status.offlineDesc') : (madaniMushafError || t('memorisation.madaniMushaf.errorDesc'))"
+                      :retry-label="t('memorisation.madaniMushaf.retry')"
+                      :switch-layout-label="t('memorisation.madaniMushaf.switchMushaf')"
+                      :bismillah-label="t('memorisation.a11y.bismillah')"
+                      @select-word="onMadaniMushafWordSelect"
+                      @peek-enter="onMadaniWordEnter"
+                      @peek-leave="onMadaniWordLeave"
+                      @touch-start="onMadaniWordTouchStart"
+                      @touch-end="onMadaniWordTouchEnd"
+                      @touch-cancel="clearTouchPeek"
+                      @retry="retryMadaniMushafPages"
+                      @switch-layout="setReadingViewMode('mushaf')"
+                      @swipe-previous="goToPreviousMadaniMushafPage"
+                      @swipe-next="goToNextMadaniMushafPage"
+                    />
+                  </div>
+                </section>
+              </div>
+            </div>
             <div v-else-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="container-fluid mushaf-workspace__fluid px-0">
               <section
@@ -2328,7 +2440,7 @@
 
     <div class="modal-overlay mutqin-modal-overlay confirm-modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
-      <div class="modal-content mutqin-modal-surface confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+      <div class="modal-content mutqin-modal-surface confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalMessage">
         <div class="modal-header">
           <div class="modal-header-text">
             <div class="modal-context-badge">{{ sessionContextBadge }}</div>
@@ -2338,7 +2450,11 @@
               class="bi bi-x-lg" aria-hidden="true"></i></button>
         </div>
         <div class="modal-body">
-          <p class="confirm-copy">{{ confirmModal.message }}</p>
+          <div v-if="confirmModal.subject" class="confirm-subject">
+            <p class="confirm-subject-title">{{ confirmModal.subject }}</p>
+            <p v-if="confirmModal.detail" class="confirm-subject-detail">{{ confirmModal.detail }}</p>
+          </div>
+          <p id="confirmModalMessage" class="confirm-copy">{{ confirmModal.message }}</p>
         </div>
         <div class="modal-footer mutqin-modal-footer">
           <div class="mutqin-modal-actions mutqin-modal-actions--end">
@@ -2501,9 +2617,6 @@
             <div class="container-fluid session-exit-fluid px-0 w-100">
               <div class="modal-header w-100">
                 <div class="modal-header-text w-100">
-                  <div v-if="sessionExitContextLabel" class="modal-context-badge">
-                    {{ sessionExitContextLabel }}
-                  </div>
                   <h2 id="sessionExitTitle" class="session-exit-title w-100">
                     {{ sessionExitModalTitle }}
                   </h2>
@@ -2515,18 +2628,31 @@
                   {{ sessionExitMotivationMessage }}
                 </p>
                 <div class="session-exit-progress-block w-100" role="status">
-                  <p
-                    v-if="sessionExitAyahProgressLabel"
-                    class="session-exit-progress-summary session-exit-progress-summary--ayah w-100"
+                  <div
+                    v-if="sessionExitSurahLabel || sessionExitRangeLabel"
+                    class="session-exit-scope"
                   >
-                    {{ sessionExitAyahProgressLabel }}
-                  </p>
-                  <p
-                    class="session-exit-progress-summary w-100"
-                    :aria-label="sessionExitRepetitionProgressLabel"
-                  >
-                    {{ sessionExitRepetitionProgressLabel }}
-                  </p>
+                    <p v-if="sessionExitSurahLabel" class="session-exit-scope-surah">
+                      {{ sessionExitSurahLabel }}
+                    </p>
+                    <p v-if="sessionExitRangeLabel" class="session-exit-scope-range">
+                      {{ sessionExitRangeLabel }}
+                    </p>
+                  </div>
+                  <div class="session-exit-progress-metrics">
+                    <p
+                      v-if="sessionExitAyahProgressLabel"
+                      class="session-exit-progress-summary session-exit-progress-summary--ayah w-100"
+                    >
+                      {{ sessionExitAyahProgressLabel }}
+                    </p>
+                    <p
+                      class="session-exit-progress-summary w-100"
+                      :aria-label="sessionExitRepetitionProgressLabel"
+                    >
+                      {{ sessionExitRepetitionProgressLabel }}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -5052,3 +5178,4 @@
 <style src="./Memorisation.amd.css"></style>
 <!-- Must load last: shared mushaf rules use display:contents on .madani-line--glyphs -->
 <style src="./Memorisation.original-madani.css"></style>
+<style src="./Memorisation.madani-mushaf.css"></style>

@@ -1,8 +1,10 @@
 import { MADANI_LINES_PER_PAGE, MADANI_TOTAL_PAGES } from './madaniPageLayout.js'
 
-export const READING_VIEW_MODES = Object.freeze(['stacked', 'mushaf', 'original'])
+export const READING_VIEW_MODES = Object.freeze(['stacked', 'mushaf', 'madani_mushaf', 'original'])
+export const MADANI_MUSHAF_VIEW = 'madani_mushaf'
 export const ORIGINAL_MADANI_VIEW = 'original'
 export const ORIGINAL_MADANI_SPREAD_QUERY = '(min-width: 900px)'
+export const MADANI_MUSHAF_SPREAD_QUERY = ORIGINAL_MADANI_SPREAD_QUERY
 export const ORIGINAL_MADANI_IMAGE_WIDTHS = Object.freeze([512, 800, 1024, 1260, 1920])
 export const ORIGINAL_MADANI_PAGE_ASPECT = 1024 / 1656
 
@@ -20,8 +22,17 @@ export function isOriginalMadaniView(mode) {
   return mode === ORIGINAL_MADANI_VIEW
 }
 
+export function isMadaniMushafView(mode) {
+  return mode === MADANI_MUSHAF_VIEW
+}
+
 export function isPageLayoutView(mode) {
-  return mode === 'mushaf' || mode === ORIGINAL_MADANI_VIEW
+  return mode === 'mushaf' || mode === MADANI_MUSHAF_VIEW || mode === ORIGINAL_MADANI_VIEW
+}
+
+export function isMadaniMushafSpreadViewport(media = typeof window !== 'undefined' ? window : null) {
+  if (!media?.matchMedia) return false
+  return media.matchMedia(MADANI_MUSHAF_SPREAD_QUERY).matches
 }
 
 export function clampMadaniPageNumber(pageNumber) {

@@ -165,8 +165,7 @@ class MemorisationHistoryQueryService
         $completed = (clone $assessmentBase)->where('status', MemorisationAssessment::STATUS_COMPLETED)->count();
         $failed = (clone $assessmentBase)->where('status', MemorisationAssessment::STATUS_FAILED)->count();
         $avgAccuracy = (clone $assessmentBase)
-            ->where('status', MemorisationAssessment::STATUS_COMPLETED)
-            ->whereNotNull('overall_accuracy')
+            ->validScored()
             ->avg('overall_accuracy');
 
         $activeWeak = MemorisationWeakSpot::query()

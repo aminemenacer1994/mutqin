@@ -492,8 +492,13 @@ function t(key, params = {}) {
   assert.match(css, /self-check-modal-overlay--above-post-session[\s\S]*z-index:\s*20000|amd-overlay[\s\S]*z-index:\s*30000/)
   assert.match(vue, /Teleport to="body"[\s\S]*AiMemorisationDetectionModal|Teleport to="body"[\s\S]*self-check-modal-overlay/)
   assert.match(js, /postSessionAiReciteActive = true[\s\S]*await this\.\$nextTick\(\)/)
-  assert.match(vue, /sessionExitContextLabel|modal-context-badge/)
-  assert.match(vue, /sessionExitAyahProgressLabel/)
+  assert.match(vue, /sessionExitSurahLabel/)
+  assert.match(vue, /sessionExitRangeLabel/)
+  assert.match(vue, /session-exit-scope/)
+  assert.doesNotMatch(
+    vue,
+    /showSessionExitModal[\s\S]{0,1200}sessionExitContextLabel[\s\S]{0,180}modal-context-badge/,
+  )
 }
 
 {

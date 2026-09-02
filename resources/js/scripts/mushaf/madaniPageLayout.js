@@ -72,6 +72,8 @@ export function groupWordsByLine(verses = []) {
 
 export function normalizeMadaniWord(word = {}, verseKey = '') {
   const charType = String(word?.char_type_name || 'word')
+  const textUthmani = String(word.text_uthmani || '').trim()
+  const textQpcHafs = String(word.text_qpc_hafs || '').trim()
   return {
     id: word.id ?? null,
     position: Number(word.position) || 0,
@@ -79,7 +81,8 @@ export function normalizeMadaniWord(word = {}, verseKey = '') {
     charType,
     isEnd: charType === 'end',
     codeV2: String(word.code_v2 || word.text || ''),
-    textQpc: String(word.text_qpc_hafs || word.text_uthmani || word.text || ''),
+    textUthmani,
+    textQpc: textUthmani || textQpcHafs || String(word.text || ''),
     pageNumber: Number(word.page_number) || null,
     lineNumber: Number(word.line_number) || null,
     translation: word.translation?.text || word.en || ''

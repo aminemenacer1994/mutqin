@@ -36,6 +36,15 @@ const vueSource = readFileSync(new URL('../../resources/js/views/Memorisation.vu
   )
 }
 
+// Explicit offcanvas save must not be blocked by the disabled auto-save flag.
+{
+  assert.match(source, /autoSaveSessionsEnabled:\s*false/)
+  assert.doesNotMatch(
+    source,
+    /saveCurrentSessionSilently[\s\S]{0,200}if\s*\(\s*!this\.autoSaveSessionsEnabled\s*\)\s*return null/,
+  )
+}
+
 // Delete confirm keeps the offcanvas open on Saved.
 {
   assert.match(source, /preserveToolsPanel:\s*true/)

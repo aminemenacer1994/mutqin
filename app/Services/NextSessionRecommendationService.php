@@ -14,10 +14,11 @@ use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use App\Services\Memorisation\RecitationAttemptClassifier;
+use App\Services\Memorisation\RecitationMasteryService;
 use App\Support\AyahWorkload;
 use App\Support\QuranMetadata;
 use App\Support\SessionDefaults;
-use App\Services\Memorisation\RecitationMasteryService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -52,8 +53,7 @@ class NextSessionRecommendationService
         private readonly SessionLifecycleService $lifecycle,
         private readonly MainMemorisationPositionService $mainPosition,
         private readonly RecitationMasteryService $recitationMastery,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -2235,7 +2235,6 @@ class NextSessionRecommendationService
     }
 
     /**
-     * @param  mixed  $counts
      * @return array{green: int, amber: int, red: int, black: int, gray: int}|null
      */
     private function normalizeColorCounts(mixed $counts): ?array
@@ -2711,6 +2710,10 @@ class NextSessionRecommendationService
     {
         $attempts = is_array($assessment['attempts'] ?? null) ? $assessment['attempts'] : [];
         if ($attempts === []) {
+            $result = strtolower((string) ($assessment['result'] ?? ''));
+            if ($this->isInvalidAiAttemptBand($result)) {
+                return;
+            }
             // Fallback: synthesise one row from the aggregate assessment.
             $attempts = [[
                 'attempt_number' => max(1, (int) ($assessment['attempt_count'] ?? 1)),
@@ -2726,6 +2729,10 @@ class NextSessionRecommendationService
 
         foreach (array_values($attempts) as $index => $attempt) {
             if (! is_array($attempt)) {
+                continue;
+            }
+            $band = strtolower((string) ($attempt['band'] ?? $assessment['result'] ?? ''));
+            if ($this->isInvalidAiAttemptBand($band)) {
                 continue;
             }
             $attemptNumber = max(1, (int) ($attempt['attempt_number'] ?? ($index + 1)));
@@ -2785,6 +2792,23 @@ class NextSessionRecommendationService
     private function rollupAiReciteProgress(User $user, SessionRecommendation $recommendation, array $assessment): void
     {
         $this->recitationMastery->applyFromAiPayload($user, $recommendation, $assessment);
+    }
+
+    private function isInvalidAiAttemptBand(string $band): bool
+    {
+        return in_array($band, [
+            RecitationAttemptClassifier::SILENCE_NO_SPEECH,
+            RecitationAttemptClassifier::RECORDING_TOO_SHORT,
+            RecitationAttemptClassifier::MICROPHONE_DENIED,
+            RecitationAttemptClassifier::UNUSABLE_AUDIO,
+            RecitationAttemptClassifier::EMPTY_LOW_CONFIDENCE_TRANSCRIPT,
+            RecitationAttemptClassifier::PROVIDER_NETWORK_ERROR,
+            RecitationAttemptClassifier::CANCELLED_STALE,
+            'failed',
+            'insufficient_audio',
+            'cancelled',
+            'stale',
+        ], true);
     }
 
     private function rangeHasReliableWeakSpots(User $user, int $surah, int $from, int $to): bool

@@ -93,9 +93,11 @@
     </style>
     @endif
     <meta name="mutqin-build" content="v129">
-    <meta name="mutqin-asset-build" content="v165">
+    <meta name="mutqin-asset-build" content="{{ config('error_tracking.asset_build', 'v165') }}">
+    <meta name="mutqin-release" content="{{ \App\Support\ErrorReporting::release() }}">
+    <meta name="mutqin-environment" content="{{ app()->environment() }}">
     <script>
-      document.documentElement.dataset.mutqinAssetBuild = 'v165';
+      document.documentElement.dataset.mutqinAssetBuild = @json(config('error_tracking.asset_build', 'v165'));
     </script>
     <style id="mutqin-ai-recite-force-v125">
       #mutqin-build-stamp {
@@ -5868,6 +5870,7 @@
         window.mutqinInitialDirection = @json($appDirection);
         window.mutqinForceInitialLocale = @json(request()->query('lang') ? true : false);
         window.mutqinAuthCheck = @json(Auth::check());
+        window.mutqinUserId = @json(Auth::id());
         window.mutqinUiLabels = {
             en: @json(trans('ui', [], 'en')),
             fr: @json(trans('ui', [], 'fr')),

@@ -4,6 +4,8 @@
  * so the UI does not infer section meaning from free-form copy.
  */
 
+import { formatContinueToAyahLabel } from '../formatting/ayahLabels.js'
+
 /**
  * @param {(key: string, params?: object) => string} [t]
  * @param {string} key
@@ -143,13 +145,22 @@ export function buildSuccessRecommendationFlow(input = {}) {
   const continueFromActions = (() => {
     if (typeof t === 'function') {
       if (from > 0) {
-        const value = t('memorisation.postSession.actions.continueToAyahs', { start: from, end: to })
-        if (value && !String(value).includes('continueToAyahs')) return value
+        const single = from === to
+        const value = t(
+          single
+            ? 'memorisation.postSession.actions.continueToAyah'
+            : 'memorisation.postSession.actions.continueToAyahs',
+          single ? { ayah: from } : { start: from, end: to },
+        )
+        if (value && !String(value).includes('continueToAyah')) return value
       }
       const value = t('memorisation.postSession.actions.continueToNextRange')
       if (value && !String(value).includes('continueToNextRange')) return value
     }
-    if (from > 0) return `Continue (${from}–${to})`
+    if (from > 0) {
+      return formatContinueToAyahLabel(from, to, t)
+        || (from === to ? `Next ayah ${from}` : `Next ayahs ${from}–${to}`)
+    }
     return 'Continue'
   })()
 

@@ -22,6 +22,7 @@ class ErrorPagesTest extends TestCase
         $html = view('errors.500')->render();
 
         $this->assertStringContainsString('Something went wrong', $html);
+        $this->assertStringContainsString('We couldn’t load this page', $html);
         $this->assertStringContainsString('Retry', $html);
         $this->assertStringContainsString('Return Home', $html);
         $this->assertStringNotContainsString('$exception', $html);

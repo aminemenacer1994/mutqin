@@ -140,6 +140,12 @@ class PruneMissingManifestEntriesPlugin {
     }
 }
 
+// Hidden production source maps (no sourceMappingURL in public JS).
+// mix.then() moves *.map out of public/ so browsers cannot fetch them.
+if (mix.inProduction()) {
+    mix.sourceMaps(false, 'hidden-source-map');
+}
+
 mix.js('resources/js/app.js', 'public/js')
    .vue()
    .sass('resources/sass/app.scss', 'public/css')
@@ -283,4 +289,44 @@ mix.then(() => {
             }
         }
     }
+
+    if (mix.inProduction()) {
+        relocateSourceMaps(publicDir, path.join(__dirname, 'storage/app/sourcemaps'));
+    }
 });
+
+function relocateSourceMaps(fromDir, destDir) {
+    try {
+        fs.mkdirSync(destDir, { recursive: true });
+    } catch {
+        return;
+    }
+
+    const walk = (dir) => {
+        let entries = [];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const entry of entries) {
+            const abs = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                walk(abs);
+                continue;
+            }
+            if (!entry.isFile() || !entry.name.endsWith('.map')) continue;
+            const rel = path.relative(fromDir, abs);
+            const target = path.join(destDir, rel);
+            try {
+                fs.mkdirSync(path.dirname(target), { recursive: true });
+                fs.renameSync(abs, target);
+            } catch {
+                /* ignore locked maps during watch */
+            }
+        }
+    };
+
+    walk(path.join(fromDir, 'js'));
+    walk(path.join(fromDir, 'css'));
+}

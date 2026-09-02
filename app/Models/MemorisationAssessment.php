@@ -77,6 +77,20 @@ class MemorisationAssessment extends Model
         ];
     }
 
+    /**
+     * Completed checks that may enter AI accuracy / complaint denominators.
+     */
+    public function scopeValidScored($query)
+    {
+        return $query
+            ->where('status', self::STATUS_COMPLETED)
+            ->whereNotNull('overall_accuracy')
+            ->where(function ($inner) {
+                $inner->whereNull('failure_reason')
+                    ->orWhere('failure_reason', '');
+            });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -3,10 +3,14 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Support\MutqinLog;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 /**
  * Burst / per-minute guard for Speechmatics realtime token mints.
@@ -22,6 +26,14 @@ class SpeechmaticsRateLimit
     public const REASON = 'rate_limit';
 
     public const LEARNER_MESSAGE = 'You are starting AI voice checks too quickly. Please wait a moment and try again.';
+
+    public const DEFAULT_PER_USER_PER_MINUTE = 10;
+
+    public const DEFAULT_PER_IP_PER_MINUTE = 30;
+
+    public const DEFAULT_BURST_PER_USER = 3;
+
+    public const DEFAULT_BURST_SECONDS = 10;
 
     /**
      * Named RateLimiter callback: per-user + per-IP (+ optional short burst).
@@ -44,30 +56,114 @@ class SpeechmaticsRateLimit
 
         $user = $request->user();
         $userId = $user instanceof User ? (int) $user->id : null;
-
-        $burstMax = $this->positiveInt(config('services.speechmatics.rate_limit.burst_per_user'), 3);
-        $burstSeconds = $this->positiveInt(config('services.speechmatics.rate_limit.burst_seconds'), 10);
-        $perUser = $this->positiveInt(config('services.speechmatics.rate_limit.per_user_per_minute'), 10);
-        $perIp = $this->positiveInt(config('services.speechmatics.rate_limit.per_ip_per_minute'), 30);
+        $configured = $this->configuredLimits();
 
         if ($userId !== null) {
             // Short window: stops double-submit / soft-recover storms from minting many RT keys.
-            $limits[] = Limit::perSecond($burstMax, $burstSeconds)
+            $limits[] = Limit::perSecond($configured['burst_per_user'], $configured['burst_seconds'])
                 ->by($this->key('burst', 'user', (string) $userId))
                 ->response($response);
 
-            $limits[] = Limit::perMinute($perUser)
+            $limits[] = Limit::perMinute($configured['per_user_per_minute'])
                 ->by($this->key('minute', 'user', (string) $userId))
                 ->response($response);
         }
 
         // IP safeguard for shared sessions, stolen cookies, and any future guest path.
         $ip = (string) ($request->ip() ?: 'unknown');
-        $limits[] = Limit::perMinute($perIp)
+        $limits[] = Limit::perMinute($configured['per_ip_per_minute'])
             ->by($this->key('minute', 'ip', $this->fingerprintIp($ip)))
             ->response($response);
 
         return $limits;
+    }
+
+    /**
+     * @return array{
+     *     per_user_per_minute: int,
+     *     per_ip_per_minute: int,
+     *     burst_per_user: int,
+     *     burst_seconds: int
+     * }
+     */
+    public function configuredLimits(): array
+    {
+        return [
+            'per_user_per_minute' => $this->positiveInt(
+                config('services.speechmatics.rate_limit.per_user_per_minute'),
+                self::DEFAULT_PER_USER_PER_MINUTE
+            ),
+            'per_ip_per_minute' => $this->positiveInt(
+                config('services.speechmatics.rate_limit.per_ip_per_minute'),
+                self::DEFAULT_PER_IP_PER_MINUTE
+            ),
+            'burst_per_user' => $this->positiveInt(
+                config('services.speechmatics.rate_limit.burst_per_user'),
+                self::DEFAULT_BURST_PER_USER
+            ),
+            'burst_seconds' => $this->positiveInt(
+                config('services.speechmatics.rate_limit.burst_seconds'),
+                self::DEFAULT_BURST_SECONDS
+            ),
+        ];
+    }
+
+    /**
+     * Serialize overlapping mints per user so a double-submit / in-flight retry
+     * cannot open a second Speechmatics HTTP call. Sequential callers after the
+     * lock is released always mint again (legitimate AMD recover / next attempt).
+     *
+     * @template T
+     *
+     * @param  callable(): T  $mint
+     * @return T|JsonResponse
+     */
+    public function runExclusiveMint(?int $userId, callable $mint): mixed
+    {
+        if ($userId === null || $userId < 1) {
+            return $mint();
+        }
+
+        $lock = Cache::lock($this->key('inflight', 'user', (string) $userId), 20);
+
+        if (! $lock->get()) {
+            $resultKey = $this->key('inflight-result', 'user', (string) $userId);
+            $shared = Cache::get($resultKey);
+            if ($this->isShareableTokenPayload($shared)) {
+                return response()->json($shared);
+            }
+
+            try {
+                $lock->block(12);
+            } catch (Throwable) {
+                // Lock timeout: fall through and look for a shared success payload.
+            }
+
+            $shared = Cache::get($resultKey);
+            try {
+                $lock->release();
+            } catch (Throwable) {
+                // Lock may already have been released by the owner.
+            }
+
+            if ($this->isShareableTokenPayload($shared)) {
+                return response()->json($shared);
+            }
+
+            return $mint();
+        }
+
+        try {
+            $result = $mint();
+            $payload = $result instanceof JsonResponse ? $result->getData(true) : null;
+            if ($this->isShareableTokenPayload($payload)) {
+                Cache::put($this->key('inflight-result', 'user', (string) $userId), $payload, 5);
+            }
+
+            return $result;
+        } finally {
+            $lock->release();
+        }
     }
 
     /**
@@ -163,8 +259,9 @@ class SpeechmaticsRateLimit
         $user = $request->user();
         $userId = $user instanceof User ? (int) $user->id : null;
         $ip = (string) ($request->ip() ?: '');
+        $configured = $this->configuredLimits();
 
-        Log::warning('Speechmatics token rate limit hit.', [
+        $context = [
             'reason' => self::REASON,
             'user_id' => $userId,
             'ip_fingerprint' => $ip !== '' ? substr($this->fingerprintIp($ip), 0, 16) : null,
@@ -173,7 +270,23 @@ class SpeechmaticsRateLimit
             'remaining' => isset($headers['X-RateLimit-Remaining']) ? (int) $headers['X-RateLimit-Remaining'] : null,
             'path' => '/memorisation/transcription-token',
             'is_admin' => $user instanceof User ? $user->isAdmin() : false,
-        ]);
+            'is_demo' => $user instanceof User ? $this->isDemoMailbox($user) : false,
+            'limits' => $configured,
+        ];
+
+        MutqinLog::warning('speechmatics.rate_limit.hit', $context);
+        // Legacy log line for existing alert rules / README references.
+        Log::warning('Speechmatics token rate limit hit.', $context);
+    }
+
+    private function isShareableTokenPayload(mixed $payload): bool
+    {
+        return is_array($payload)
+            && isset($payload['access_token'], $payload['websocket_host'])
+            && is_string($payload['access_token'])
+            && $payload['access_token'] !== ''
+            && is_string($payload['websocket_host'])
+            && $payload['websocket_host'] !== '';
     }
 
     private function positiveInt(mixed $value, int $fallback): int

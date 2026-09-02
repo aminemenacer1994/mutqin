@@ -24,6 +24,11 @@ import {
   resultStateToLegacyOutcome,
   hasSpokenRecitationEvidence,
 } from './recitationResultState.js'
+import {
+  RECITATION_ATTEMPT_CLASS,
+  attemptClassFromInsufficientReason,
+  resolveAttemptRetryGuidance,
+} from '../audio/recitationAttemptGuard.js'
 
 export { resolveAccuracyPercent } from './recitationResultState.js'
 
@@ -499,41 +504,14 @@ function legacyOutcomeToDisplayState(outcome) {
  * @returns {{ summaryLine: string, focus: string, showMicrophoneCheck: boolean }}
  */
 export function resolveInsufficientAudioCopy(t, reason = '') {
-  const value = String(reason || '').toLowerCase().trim()
-  const fallbackAssessMessage = 'We couldn’t assess this attempt. Check your microphone or connection and try again.'
-  if (value === 'mic_permission') {
-    return {
-      summaryLine: t('memorisation.postSession.recommendation.insufficientAudioMicSummary')
-        || 'Microphone access is blocked. Allow the microphone, then try recording again.',
-      focus: t('memorisation.postSession.recommendation.insufficientAudioFocus')
-        || 'Check your microphone, then try recording again.',
-      showMicrophoneCheck: true,
-    }
-  }
-  if (value === 'short_recording' || value === 'short_speech') {
-    return {
-      summaryLine: t('memorisation.postSession.recommendation.insufficientAudioShortSummary')
-        || 'That recording was too short to assess. Recite a little longer, then try again.',
-      focus: t('memorisation.postSession.recommendation.insufficientAudioHint')
-        || 'Recite clearly into the microphone, then try recording again.',
-      showMicrophoneCheck: false,
-    }
-  }
-  if (value === 'processing_failed') {
-    return {
-      summaryLine: t('memorisation.postSession.recommendation.insufficientAudioProcessingSummary')
-        || fallbackAssessMessage,
-      focus: t('memorisation.postSession.recommendation.insufficientAudioFocus')
-        || 'Check your microphone or connection, then try again.',
-      showMicrophoneCheck: false,
-    }
-  }
+  const attemptClass = Object.values(RECITATION_ATTEMPT_CLASS).includes(String(reason || '').trim())
+    ? String(reason || '').trim()
+    : attemptClassFromInsufficientReason(reason)
+  const guidance = resolveAttemptRetryGuidance(attemptClass, t)
   return {
-    summaryLine: t('memorisation.postSession.recommendation.insufficientAudioSummary')
-      || fallbackAssessMessage,
-    focus: t('memorisation.postSession.recommendation.insufficientAudioFocus')
-      || 'Check your microphone or connection, then try again.',
-    showMicrophoneCheck: false,
+    summaryLine: guidance,
+    focus: guidance,
+    showMicrophoneCheck: attemptClass === RECITATION_ATTEMPT_CLASS.MICROPHONE_DENIED,
   }
 }
 

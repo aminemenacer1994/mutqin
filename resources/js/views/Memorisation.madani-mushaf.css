@@ -1,0 +1,459 @@
+/* KFGQPC V2 Madani Mushaf reader — warm cream page, Mutqin chrome */
+
+.madani-mushaf-reader {
+  --mushaf-paper: #f5f0e6;
+  --mushaf-paper-border: rgba(120, 90, 40, 0.22);
+  --mushaf-ink: #1a1510;
+  --mushaf-gutter: rgba(80, 60, 30, 0.12);
+  width: 100%;
+  min-height: 0;
+}
+
+.madani-mushaf-reader--loading {
+  opacity: 0.92;
+}
+
+.madani-mushaf-spread {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 0.5rem 0;
+}
+
+.madani-mushaf-spread--single {
+  justify-content: center;
+}
+
+.madani-mushaf-spread--pair {
+  flex-direction: row;
+}
+
+.madani-mushaf-spread__leaf {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: min(520px, 48vw);
+  height: min(78vh, 880px);
+}
+
+.madani-mushaf-spread--single .madani-mushaf-spread__leaf {
+  max-width: min(560px, 96vw);
+}
+
+.madani-mushaf-spread__gutter {
+  flex: 0 0 clamp(8px, 1.2vw, 20px);
+  align-self: stretch;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--mushaf-gutter) 45%,
+    var(--mushaf-gutter) 55%,
+    transparent
+  );
+  margin-block: 0.75rem;
+}
+
+.madani-mushaf-page {
+  --madani-line-count: 15;
+  background: #fff;
+  color: #111;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: min(78vh, 880px);
+  min-height: min(78vh, 880px);
+  max-height: min(78vh, 880px);
+  overflow: hidden;
+}
+
+[data-theme="dark"] .madani-mushaf-page,
+[data-theme="sepia"] .madani-mushaf-page,
+[data-theme="light"] .madani-mushaf-page {
+  background: #fff;
+  color: #111;
+}
+
+.madani-mushaf-page.mushaf-page--madani {
+  padding: 0 !important;
+  height: min(78vh, 880px) !important;
+  min-height: min(78vh, 880px) !important;
+  max-height: min(78vh, 880px) !important;
+  background: #fff !important;
+  border-radius: 2px;
+}
+
+.madani-mushaf-page.mushaf-page--madani::before,
+.madani-mushaf-page.mushaf-page--madani::after {
+  display: none !important;
+}
+
+.madani-mushaf-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.75rem 0.15rem;
+  font-size: 0.72rem;
+  opacity: 0.75;
+  border-bottom: 1px solid rgba(120, 90, 40, 0.08);
+  flex: 0 0 auto;
+}
+
+/* KFGQPC V2 — same glyph-row layout as the printed Madani view */
+.madani-mushaf-mode-active .madani-mushaf-page__sheet,
+.madani-mushaf-mode-active .madani-mushaf-page .madani-page-sheet,
+.madani-mushaf-mode-active .madani-mushaf-page .mushaf-page-body {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  align-items: stretch !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0.55% 1.1% !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  overflow: hidden !important;
+  color: #111;
+  background: #fff !important;
+  font-family: var(--madani-page-font, var(--font-ar, 'Amiri Quran', 'Amiri', serif));
+  font-size: var(--madani-glyph-size, calc(100cqh / var(--madani-line-count, 15) * 0.86)) !important;
+  gap: 0 !important;
+  container-type: size;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-line,
+.madani-mushaf-mode-active .madani-mushaf-page .madani-line,
+.madani-mushaf-mode-active .madani-line--ayah,
+.madani-mushaf-mode-active .madani-line--glyphs,
+.madani-mushaf-mode-active .madani-line--basmala-ayah,
+.madani-mushaf-mode-active .madani-line--basmala,
+.madani-mushaf-mode-active .madani-line--basmala_ayah,
+.madani-mushaf-mode-active .madani-line--surah_name,
+.madani-mushaf-mode-active .madani-line--empty {
+  display: flex !important;
+  flex-direction: row-reverse !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  flex: 0 0 calc(100% / var(--madani-line-count, 15)) !important;
+  width: 100% !important;
+  height: calc(100% / var(--madani-line-count, 15)) !important;
+  min-height: calc(100% / var(--madani-line-count, 15)) !important;
+  max-height: calc(100% / var(--madani-line-count, 15)) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  line-height: 1 !important;
+}
+
+.madani-mushaf-mode-active .madani-line--empty {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.madani-mushaf-mode-active .madani-surah-name {
+  display: block;
+  width: 100%;
+  font-family: surahnames, serif !important;
+  font-size: 1.05em !important;
+  line-height: 1;
+  color: #111;
+  text-align: center;
+}
+
+.madani-mushaf-mode-active .madani-basmala {
+  display: block;
+  width: 100%;
+  font-family: var(--font-ar, 'Amiri Quran', 'Amiri', serif) !important;
+  font-size: 0.78em !important;
+  line-height: 1;
+  color: #111;
+  text-align: center;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-word,
+.madani-mushaf-mode-active .madani-word,
+.madani-mushaf-mode-active .madani-word--glyph,
+.madani-mushaf-mode-active .madani-word--unicode,
+.madani-mushaf-mode-active .madani-word--fallback {
+  display: block !important;
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  font-size: 1em !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important;
+  cursor: pointer;
+}
+
+.madani-mushaf-mode-active .madani-word--glyph {
+  font-family: var(--madani-page-font, var(--font-ar, 'Amiri', serif)) !important;
+}
+
+.madani-mushaf-mode-active .madani-word--unicode,
+.madani-mushaf-mode-active .madani-word--fallback {
+  font-family: var(--font-ar, 'Amiri Quran', 'Amiri', 'Scheherazade New', serif) !important;
+}
+
+.madani-mushaf-mode-active .madani-word--end,
+.madani-mushaf-mode-active .madani-word--end.madani-word--glyph {
+  color: #4f6edb !important;
+  -webkit-text-fill-color: #4f6edb !important;
+}
+
+.madani-mushaf-mode-active .madani-word--out {
+  opacity: 1;
+  pointer-events: none;
+}
+
+.madani-mushaf-mode-active .madani-word.highlighted,
+.madani-mushaf-mode-active .madani-word.phrase-highlighted {
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+  background: color-mix(in srgb, #f0b35a 24%, transparent) !important;
+  border-radius: 0.12em;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-page .madani-line--surah_name {
+  display: flex !important;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-page-header {
+  display: none;
+}
+
+.madani-mushaf-word.madani-word--hidden-width,
+.madani-word--hidden-width {
+  visibility: hidden;
+  color: transparent;
+  text-shadow: none;
+}
+
+.madani-mushaf-word.madani-word--hidden:not(.madani-word--hidden-width) {
+  filter: blur(6px);
+  user-select: none;
+}
+
+.madani-mushaf-page__footer {
+  text-align: center;
+  padding: 0.25rem;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  border-top: 1px solid rgba(120, 90, 40, 0.08);
+  flex: 0 0 auto;
+}
+
+/* Workspace shell — match mushaf mode polish */
+.madani-mushaf-mode-active .madani-mushaf-workspace {
+  width: 100%;
+  max-width: none;
+  margin: 0.35rem auto 0.85rem;
+  padding: 0 clamp(0.85rem, 2vw, 1.75rem);
+  box-sizing: border-box;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-workspace .mushaf-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  border-radius: 18px;
+  background: var(--workspace-card-surface, #fff);
+  border-color: var(--zone-divider, rgba(17, 24, 39, 0.12));
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-workspace .mushaf-shell__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 0.85rem;
+  background: var(--toolbar-header-bg, var(--workspace-card-surface, #fff));
+  background-color: var(--toolbar-header-bg-solid, var(--workspace-card-surface, #fff));
+  border-bottom: 1px solid var(--toolbar-header-border, rgba(17, 24, 39, 0.1));
+  color: var(--toolbar-control-fg, inherit);
+  margin-bottom: 0;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-workspace .mushaf-shell__bar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-workspace .mushaf-shell__bar-group--end {
+  margin-inline-start: auto;
+}
+
+.madani-mushaf-mode-active .madani-mushaf-workspace .mushaf-shell__size {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.15rem;
+  border-radius: 999px;
+  background: var(--toolbar-control-muted-bg, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--toolbar-control-border, rgba(17, 24, 39, 0.1));
+}
+
+.madani-mushaf-mode-active .madani-mushaf-viewport {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: color-mix(in srgb, var(--mushaf-paper, #f5f0e6) 42%, var(--workspace-card-surface, #fff));
+  padding: 0.5rem clamp(0.35rem, 1.5vw, 1rem) 0.75rem;
+}
+
+.madani-mushaf-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.madani-mushaf-nav__center {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.madani-mushaf-nav__label {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.madani-mushaf-nav__input {
+  width: 4.5rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .madani-mushaf-mode-active .madani-mushaf-workspace {
+    margin: 0.5rem auto 1rem;
+    padding: 0 clamp(1rem, 2.5vw, 2rem);
+  }
+
+  .madani-mushaf-mode-active .madani-mushaf-workspace .mushaf-shell {
+    border-radius: 20px;
+    box-shadow: 0 10px 28px rgba(24, 24, 27, 0.06);
+  }
+
+  .madani-mushaf-mode-active .madani-mushaf-viewport {
+    min-height: min(62vh, 740px);
+    padding: 0.65rem clamp(0.5rem, 2vw, 1.25rem) 0.85rem;
+  }
+
+  .madani-mushaf-spread--single .madani-mushaf-spread__leaf {
+    max-width: min(680px, 88vw);
+  }
+}
+
+.madani-mushaf-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0;
+  flex: 1;
+}
+
+.madani-mushaf-skeleton__line {
+  height: 1.6em;
+  border-radius: 4px;
+  background: rgba(120, 90, 40, 0.08);
+  overflow: hidden;
+}
+
+.madani-mushaf-skeleton__shimmer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+  animation: madani-mushaf-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes madani-mushaf-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .madani-mushaf-skeleton__shimmer {
+    animation: none;
+  }
+}
+
+@media (max-width: 899.98px) {
+  .madani-mushaf-spread--pair {
+    flex-direction: column;
+  }
+
+  .madani-mushaf-spread__leaf {
+    max-width: min(560px, 96vw);
+  }
+
+  .madani-mushaf-spread__gutter {
+    display: none;
+  }
+
+  .madani-mushaf-page,
+  .madani-mushaf-page.mushaf-page--madani {
+    height: min(72vh, 760px) !important;
+    min-height: min(72vh, 760px) !important;
+    max-height: min(72vh, 760px) !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .madani-mushaf-spread--pair .madani-mushaf-spread__leaf--right {
+    order: 1;
+  }
+
+  .madani-mushaf-spread--pair .madani-mushaf-spread__gutter {
+    order: 2;
+  }
+
+  .madani-mushaf-spread--pair .madani-mushaf-spread__leaf--left {
+    order: 3;
+  }
+}
+
+.madani-mushaf-word:focus-visible,
+.madani-word:focus-visible {
+  outline: 2px solid var(--bs-primary, #0d6efd);
+  outline-offset: 2px;
+}
+
+.madani-mushaf-mode-active .verses-grid {
+  display: none;
+}

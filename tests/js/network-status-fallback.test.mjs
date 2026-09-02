@@ -100,7 +100,7 @@ test('AppStatus and NetworkFallback expose offline/error UI with retry + home', 
 
   assert.equal(en.common.status.offlineBanner, "No internet connection. Mutqin will resume when you're back online.")
   assert.equal(en.common.status.offlineTitle, 'You appear to be offline.')
-  assert.match(en.common.status.errorDesc, /Something went wrong\. Please try again/)
+  assert.match(en.common.status.errorDesc, /Please try again in a moment/)
   assert.equal(en.common.status.returnHome, 'Return Home')
   assert.equal(en.common.status.retry, 'Retry')
 })
@@ -134,6 +134,6 @@ test('Laravel error pages stay friendly and avoid exception dumps', () => {
   assert.doesNotMatch(page500, /\$exception|getMessage\(|stack/)
   assert.match(offline, /ui\.error_offline_title/)
   assert.match(layout, /navigator\.onLine === false/)
-  assert.match(enUi, /Something went wrong\. Please try again/)
+  assert.match(enUi, /We couldn’t load this page/)
   assert.match(enUi, /You appear to be offline/)
 })

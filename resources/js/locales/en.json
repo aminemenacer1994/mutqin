@@ -51,7 +51,7 @@
       "noResultsTitle": "No matches found",
       "noResultsDesc": "Try clearing filters or searching with different words.",
       "errorTitle": "Something went wrong",
-      "errorDesc": "Something went wrong. Please try again.",
+      "errorDesc": "Please try again in a moment.",
       "offlineTitle": "You appear to be offline.",
       "offlineBanner": "No internet connection. Mutqin will resume when you're back online.",
       "offlineDesc": "Check your connection, then try again. We’ll retry automatically when you’re back online.",
@@ -65,7 +65,7 @@
       "unavailableTitle": "Not available right now",
       "unavailableDesc": "This feature isn’t available at the moment. Please try again later.",
       "bootErrorTitle": "Something went wrong",
-      "bootErrorDesc": "Something went wrong. Please try again.",
+      "bootErrorDesc": "This screen didn’t load. Try again, or return home to continue.",
       "chunkUpdating": "Updating Mutqin…",
       "clearFilters": "Clear filters",
       "startSession": "Start a session",
@@ -923,6 +923,11 @@
       "memorisationWorkspace": "Your mushaf",
       "sessionSetup": "Choose ayahs",
       "mushafTools": "Mushaf tools",
+      "madaniMushafTools": "Madani Mushaf tools",
+      "madaniMushafNav": "Madani Mushaf page navigation",
+      "previousMadaniMushafPage": "Previous Madani Mushaf page",
+      "nextMadaniMushafPage": "Next Madani Mushaf page",
+      "jumpMadaniMushafPage": "Jump to Madani Mushaf page",
       "chooseMushafFont": "Choose Mushaf text style",
       "decreaseFontSize": "Decrease font size",
       "increaseFontSize": "Increase font size",
@@ -1149,16 +1154,17 @@
         "confirm": "Save session",
         "cancel": "Don't save"
       },
+      "contextBadge": "Memorising · {surah} · Ayah {ayah} of {total}",
       "deleteSession": {
-        "title": "Delete saved session?",
-        "message": "This will permanently remove \"{label}\" and its saved export from this device.",
-        "messageFallback": "This will permanently remove this session and its saved export from this device.",
+        "title": "Delete this session?",
+        "message": "This will permanently remove this session from this device. This cannot be undone.",
+        "progress": "Ayah {ayah} of {total}",
         "confirm": "Delete session",
         "cancel": "Keep session"
       },
       "deleteSessions": {
         "title": "Delete selected sessions?",
-        "message": "This will permanently remove {count} saved sessions from this device.",
+        "message": "This will permanently remove {count} saved sessions from this device. This cannot be undone.",
         "confirm": "Delete selected"
       },
       "deleteRecording": {
@@ -1321,6 +1327,15 @@
       "usageCapReached": "You have reached today's AI voice-check limit. Please try again tomorrow.",
       "rateLimited": "You are starting AI voice checks too quickly. Please wait a moment and try again.",
       "processingTimeout": "This is taking longer than expected. Try again.",
+      "retry": {
+        "silence": "We didn’t hear any recitation. Recite clearly, then try again.",
+        "tooShort": "That recording was too short. Recite a little longer, then try again.",
+        "microphone": "Microphone access is blocked. Allow the microphone, then try again.",
+        "unusable": "The audio wasn’t clear enough to assess. Recite closer to the microphone, then try again.",
+        "emptyTranscript": "We couldn’t understand the recitation. Recite clearly, then try again.",
+        "provider": "The recitation service didn’t respond. Your session is safe — try again.",
+        "cancelled": "This check was cancelled. Start a new recording when you are ready."
+      },
       "stageRecording": "Recording…",
       "stageProcessing": "Processing…",
       "stageAssessing": "Assessing…",
@@ -1509,10 +1524,20 @@
     "view": {
       "stacked": "Stacked",
       "mushaf": "Mushaf",
-      "original": "Madani Mushaf",
+      "madaniMushaf": "Madani Mushaf",
+      "original": "Printed scan",
       "stackedHint": "Stacked: one ayah after another, calm for short ranges.",
       "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help.",
-      "originalHint": "Madani Mushaf: original printed pages with the Madinah border, ayah markers, and surah headings."
+      "madaniMushafHint": "Madani Mushaf: KFGQPC V2 1421H page-accurate spread with interactive words.",
+      "originalHint": "Printed scan: original page images with the Madinah border."
+    },
+    "madaniMushaf": {
+      "errorTitle": "Madani Mushaf couldn't load",
+      "errorDesc": "The page layout data isn't available. Import it on the server or try again.",
+      "retry": "Try again",
+      "switchMushaf": "Switch to Mushaf view",
+      "pageSpread": "{right}–{left}",
+      "pageSingle": "Page {page}"
     },
     "originalMadani": {
       "errorTitle": "Madani Mushaf page couldn’t load",
@@ -1989,7 +2014,8 @@
         "reviseFocusPhrase": "Review",
         "reviseThisRange": "Review",
         "continueToNextRange": "Continue",
-        "continueToAyahs": "Continue ({start}, {end})",
+        "continueToAyah": "Next ayah {ayah}",
+        "continueToAyahs": "Next ayahs {start}–{end}",
         "repeatThisSession": "Repeat session",
         "reviewOnceMore": "Review",
         "reviewAyahOnce": "Repeat Weak Ayah",

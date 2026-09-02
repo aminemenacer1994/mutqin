@@ -108,7 +108,7 @@ export function sanitizeUserFacingError(value, fallback = '') {
     || /^[\w./:-]+\.(js|php|vue|ts)(:\d+)?/i.test(text)
     || /[{}\[\]]/.test(text)
   ) {
-    return safeFallback || 'Something went wrong. Please try again.'
+    return safeFallback || 'Please try again in a moment.'
   }
   return text
 }

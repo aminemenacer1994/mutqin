@@ -45,10 +45,17 @@ class RecitationMasteryService
             return;
         }
 
+        if ($assessment->exists && $assessment->status === MemorisationAssessment::STATUS_FAILED) {
+            return;
+        }
+        if ($assessment->exists && $assessment->overall_accuracy === null && ! isset($aligned['accuracy'])) {
+            return;
+        }
+
         $accuracy = (int) ($aligned['accuracy'] ?? $assessment->overall_accuracy ?? 0);
         $outcome = strtolower($outcome);
         if (! in_array($outcome, ['strong', 'mixed', 'weak'], true)) {
-            $outcome = $accuracy >= 80 ? 'strong' : ($accuracy >= 55 ? 'mixed' : 'weak');
+            return;
         }
 
         $baseScore = $this->sessionScore($outcome, $accuracy);
@@ -117,15 +124,15 @@ class RecitationMasteryService
             return;
         }
 
+        $outcome = strtolower((string) ($assessment['result'] ?? ''));
+        if (! in_array($outcome, ['strong', 'mixed', 'weak'], true)) {
+            return;
+        }
         $accuracy = isset($assessment['average_accuracy']) && is_numeric($assessment['average_accuracy'])
             ? (int) round((float) $assessment['average_accuracy'])
             : (isset($assessment['accuracy_percent']) && is_numeric($assessment['accuracy_percent'])
                 ? (int) round((float) $assessment['accuracy_percent'])
                 : 0);
-        $outcome = strtolower((string) ($assessment['result'] ?? 'mixed'));
-        if (! in_array($outcome, ['strong', 'mixed', 'weak'], true)) {
-            $outcome = $accuracy >= 80 ? 'strong' : ($accuracy >= 55 ? 'mixed' : 'weak');
-        }
 
         $pseudo = new MemorisationAssessment([
             'surah_number' => $surah,

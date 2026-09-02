@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\ErrorReporting;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -54,6 +55,7 @@ class MushafPageImageController extends Controller
                                 throw $exception;
                             }
                             usleep(200000 * $attempt);
+
                             continue;
                         }
 
@@ -65,6 +67,7 @@ class MushafPageImageController extends Controller
                         $lastStatus = $attemptResponse->status() ?: 502;
                         if (in_array($attemptResponse->status(), [429, 502, 503, 504], true) && $attempt < $attempts) {
                             usleep(250000 * $attempt);
+
                             continue;
                         }
                         break;
@@ -81,8 +84,20 @@ class MushafPageImageController extends Controller
                 ];
             });
         } catch (HttpException $exception) {
+            ErrorReporting::reportProviderFailure('mushaf_image', [
+                'feature' => 'mushaf',
+                'status' => $exception->getStatusCode(),
+                'reason' => 'upstream_http',
+                'page' => $page,
+            ]);
             throw $exception;
         } catch (ConnectionException $exception) {
+            ErrorReporting::reportProviderFailure('mushaf_image', [
+                'feature' => 'mushaf',
+                'status' => 0,
+                'reason' => 'connection',
+                'page' => $page,
+            ]);
             abort(502, __('ui.quran_api_upstream_unreachable'));
         } catch (\Throwable $exception) {
             report($exception);

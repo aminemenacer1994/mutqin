@@ -305,8 +305,7 @@ const t = (key, params = {}) => {
   assert.equal(silence.progressPercent, null)
   assert.equal(silence.metrics.length, 0)
   assert.equal(silence.detailsMetrics.length, 0)
-  assert.match(silence.summaryLine, /couldn.?t assess this attempt/i)
-  assert.match(silence.summaryLine, /microphone or connection/i)
+  assert.match(silence.summaryLine, /didn.?t hear any recitation|recite clearly|try again/i)
   assert.equal(silence.showMicrophoneCheck, false)
   assert.doesNotMatch(JSON.stringify(silence), /"0%"/)
 }

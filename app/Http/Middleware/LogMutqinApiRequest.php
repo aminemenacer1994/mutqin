@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\ErrorReporting;
 use App\Support\MutqinLog;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class LogMutqinApiRequest
@@ -13,11 +13,17 @@ class LogMutqinApiRequest
     public function handle(Request $request, Closure $next): Response
     {
         $started = microtime(true);
-        $requestId = $request->headers->get('X-Request-Id') ?: (string) Str::uuid();
+        $requestId = ErrorReporting::requestId($request) ?: ErrorReporting::newRequestId();
         $request->attributes->set('mutqin.request_id', $requestId);
 
         /** @var Response $response */
         $response = $next($request);
+
+        if ($request->is('api/client-errors')) {
+            $response->headers->set('X-Request-Id', $requestId);
+
+            return $response;
+        }
 
         MutqinLog::info('api.request.completed', array_merge(
             MutqinLog::requestContext($request),

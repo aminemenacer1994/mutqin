@@ -23,6 +23,7 @@ export const RECITATION_FAILURE_KIND = Object.freeze({
   USAGE_CAP: 'usage_cap',
   RATE_LIMIT: 'rate_limit',
   TIMEOUT: 'timeout',
+  CANCELLED: 'cancelled',
   PERMANENT: 'permanent',
   UNKNOWN: 'unknown',
 })
@@ -44,6 +45,7 @@ const USER_MESSAGE_KEYS = Object.freeze({
   [RECITATION_FAILURE_KIND.USAGE_CAP]: 'memorisation.aiCheck.usageCapReached',
   [RECITATION_FAILURE_KIND.RATE_LIMIT]: 'memorisation.aiCheck.rateLimited',
   [RECITATION_FAILURE_KIND.TIMEOUT]: 'memorisation.aiCheck.processingTimeout',
+  [RECITATION_FAILURE_KIND.CANCELLED]: 'memorisation.aiCheck.retry.cancelled',
   [RECITATION_FAILURE_KIND.PERMANENT]: 'memorisation.aiCheck.recitationCheckFailed',
   [RECITATION_FAILURE_KIND.UNKNOWN]: 'memorisation.aiCheck.recitationCheckFailed',
 })
@@ -63,6 +65,8 @@ const USER_MESSAGE_FALLBACKS = Object.freeze({
     'You are starting AI voice checks too quickly. Please wait a moment and try again.',
   [RECITATION_FAILURE_KIND.TIMEOUT]:
     'This is taking longer than expected. Try again.',
+  [RECITATION_FAILURE_KIND.CANCELLED]:
+    'This check was cancelled. Start a new recording when you are ready.',
   [RECITATION_FAILURE_KIND.PERMANENT]:
     'The recitation check could not be completed.',
   [RECITATION_FAILURE_KIND.UNKNOWN]:
@@ -239,12 +243,24 @@ export function classifyRecitationFailure(error, options = {}) {
     return buildClassification(RECITATION_FAILURE_KIND.MICROPHONE, false, error, options)
   }
 
+  if (/aborterror|^abort\b|cancelled|canceled|stale.?attempt|superseded|discarded/i.test(combined) || name === 'AbortError') {
+    return buildClassification(RECITATION_FAILURE_KIND.CANCELLED, false, error, options)
+  }
+
   if (/no audio|noaudio|empty|short_recording|short recording|too short|invalid_mime|missing_blob|empty_blob/i.test(combined)) {
     return buildClassification(RECITATION_FAILURE_KIND.RECORDING, true, error, options)
   }
 
-  if (/timeout|timed out|taking longer|etimedout|aborted/i.test(combined)) {
+  if (/timeout|timed out|taking longer|etimedout/i.test(combined)) {
     return buildClassification(RECITATION_FAILURE_KIND.TIMEOUT, true, error, options)
+  }
+
+  if (status >= 500 && status <= 599) {
+    return buildClassification(RECITATION_FAILURE_KIND.PROVIDER, true, error, options)
+  }
+
+  if (status >= 400 && status <= 499 && status !== 422 && status !== 429) {
+    return buildClassification(RECITATION_FAILURE_KIND.PROVIDER, true, error, options)
   }
 
   if (offline || /network|fetch failed|failed to fetch|econn|enotfound|offline|internet/i.test(combined)) {

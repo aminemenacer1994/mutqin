@@ -35,8 +35,27 @@ class RecitationAssessmentService
                 ->with('practicePlan')
                 ->first();
             if ($existing) {
+                if ($existing->status === MemorisationAssessment::STATUS_FAILED) {
+                    return $this->buildInvalidAttemptResponse(
+                        $existing,
+                        RecitationAttemptClassifier::classifyPayload($payload)
+                    );
+                }
+
                 return $this->buildExistingResponse($existing);
             }
+        }
+
+        $classification = RecitationAttemptClassifier::classifyPayload($payload);
+        if (! RecitationAttemptClassifier::affectsScoring($classification)) {
+            $assessment = $this->recordFailed(
+                $user,
+                $payload,
+                $idempotencyKey,
+                (string) ($classification['reason'] ?? $classification['class'])
+            );
+
+            return $this->buildInvalidAttemptResponse($assessment, $classification);
         }
 
         $startedAt = microtime(true);
@@ -133,6 +152,7 @@ class RecitationAssessmentService
                     'recognition_words' => $recognitionWords,
                     'extra_words' => $aligned['extra_words'],
                     'provider' => $payload['provider'] ?? null,
+                    'attempt_class' => RecitationAttemptClassifier::VALID_CHECK,
                     'tajweed_practice_check' => $this->sanitizeTajweedPracticeCheck(
                         $payload['tajweed_practice_check'] ?? null
                     ),
@@ -278,6 +298,12 @@ class RecitationAssessmentService
             'surah_name' => $payload['surah_name'] ?? null,
             'recognition_data' => [
                 'provider' => $payload['provider'] ?? null,
+                'attempt_class' => RecitationAttemptClassifier::classFromToken(
+                    (string) ($payload['attempt_class'] ?? $failureReason)
+                ),
+                'provider_status' => isset($payload['provider_status']) && is_numeric($payload['provider_status'])
+                    ? (int) $payload['provider_status']
+                    : null,
             ],
             'word_results' => [],
             'ayah_results' => [],
@@ -323,6 +349,10 @@ class RecitationAssessmentService
             'duration_ms' => $assessment->duration_ms,
             'processing_duration_ms' => $assessment->processing_duration_ms,
             'failure_reason' => $assessment->failure_reason,
+            'attempt_class' => $this->resolveAttemptClass($assessment),
+            'retry_guidance' => $assessment->status === MemorisationAssessment::STATUS_FAILED
+                ? RecitationAttemptClassifier::retryGuidance($this->resolveAttemptClass($assessment))
+                : '',
             'friendly_summary' => $assessment->friendly_summary,
             'model_version' => $assessment->model_version,
             'algorithm_version' => $assessment->algorithm_version,
@@ -385,6 +415,56 @@ class RecitationAssessmentService
             'retest_metrics' => $plan->retest_metrics,
             'completion_data' => $plan->completion_data,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $classification
+     * @return array{
+     *   assessment: array<string, mixed>,
+     *   analysis: array<string, mixed>,
+     *   practice_plan: null,
+     *   improvement: null,
+     *   invalid_attempt: true,
+     *   attempt_class: string,
+     *   retry_guidance: string
+     * }
+     */
+    private function buildInvalidAttemptResponse(MemorisationAssessment $assessment, array $classification): array
+    {
+        return [
+            'assessment' => $this->transformAssessment($assessment),
+            'analysis' => [
+                'weak_ayahs' => [],
+                'strong_ayahs' => [],
+                'weak_words' => [],
+                'weak_phrases' => [],
+                'error_clusters' => [],
+                'error_pattern' => null,
+                'error_types' => [],
+                'priority' => null,
+                'confidence' => null,
+            ],
+            'practice_plan' => null,
+            'improvement' => null,
+            'invalid_attempt' => true,
+            'attempt_class' => (string) ($classification['class'] ?? RecitationAttemptClassifier::UNUSABLE_AUDIO),
+            'retry_guidance' => (string) ($classification['retry_guidance'] ?? ''),
+        ];
+    }
+
+    private function resolveAttemptClass(MemorisationAssessment $assessment): string
+    {
+        $fromData = is_array($assessment->recognition_data)
+            ? (string) ($assessment->recognition_data['attempt_class'] ?? '')
+            : '';
+        if ($fromData !== '') {
+            return RecitationAttemptClassifier::classFromToken($fromData);
+        }
+        if ($assessment->status === MemorisationAssessment::STATUS_FAILED) {
+            return RecitationAttemptClassifier::classFromToken((string) ($assessment->failure_reason ?: 'processing_failed'));
+        }
+
+        return RecitationAttemptClassifier::VALID_CHECK;
     }
 
     /**

@@ -4,11 +4,13 @@
 
 @section('content')
     <div class="mutqin-error-card" role="alert">
-        <div class="mutqin-error-card__icon" aria-hidden="true">
+        <div class="mutqin-error-card__icon is-info" aria-hidden="true">
             <i class="bi bi-hourglass-split"></i>
         </div>
-        <h1>{{ __('ui.error_unavailable_title') }}</h1>
-        <p>{{ __('ui.error_unavailable_message') }}</p>
+        <div class="mutqin-error-card__copy">
+            <h1>{{ __('ui.error_unavailable_title') }}</h1>
+            <p>{{ __('ui.error_unavailable_message') }}</p>
+        </div>
         <div class="mutqin-error-card__actions">
             <button type="button" class="mutqin-error-btn--primary" onclick="window.location.reload()">
                 {{ __('ui.error_retry') }}

@@ -32,6 +32,9 @@ class MemorisationAssessmentResource extends JsonResource
             'duration_ms' => $this->duration_ms,
             'processing_duration_ms' => $this->processing_duration_ms,
             'failure_reason' => $this->failure_reason,
+            'attempt_class' => is_array($this->recognition_data)
+                ? ($this->recognition_data['attempt_class'] ?? null)
+                : null,
             'model_version' => $this->model_version,
             'algorithm_version' => $this->algorithm_version,
             'previous_assessment_id' => $this->previous_assessment_id,

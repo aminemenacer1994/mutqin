@@ -13,6 +13,7 @@ import {
 } from '../engine/spaced_repetition_memory.js'
 import { normalisePlanWordSeverity } from './aiRecitePracticePlan.js'
 import { resultStateToLegacyOutcome, resolveRecitationResultState } from './recitationResultState.js'
+import { attemptAffectsScoring, classifyRecitationAttempt } from '../audio/recitationAttemptGuard.js'
 
 const PERSISTENT_WEAK_STORAGE_KEY = 'mutqin.persistentWordWeakness'
 
@@ -234,7 +235,11 @@ export function applyRecitationMasteryFromResult(input = {}) {
   const result = input.result || null
   if (!result) return []
 
-  const resultState = resolveRecitationResultState(result, input.extras || {})
+  const extras = input.extras || {}
+  const classification = classifyRecitationAttempt({ result, extras })
+  if (!attemptAffectsScoring(classification)) return []
+
+  const resultState = resolveRecitationResultState(result, extras)
   if (resultState === 'insufficient_audio') return []
 
   const outcome = input.outcome

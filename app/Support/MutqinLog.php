@@ -26,6 +26,14 @@ class MutqinLog
     /**
      * @param  array<string, mixed>  $context
      */
+    public static function error(string $event, array $context = []): void
+    {
+        Log::error($event, self::baseContext($context));
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
     public static function fromRequest(Request $request, string $event, array $context = []): void
     {
         self::info($event, array_merge(self::requestContext($request), $context));

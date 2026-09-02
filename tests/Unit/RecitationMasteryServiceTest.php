@@ -57,6 +57,46 @@ class RecitationMasteryServiceTest extends TestCase
         $this->assertLessThan(60, (int) $row->mastery_level);
     }
 
+    public function test_failed_assessments_do_not_change_mastery(): void
+    {
+        $user = User::factory()->create();
+        $service = app(RecitationMasteryService::class);
+
+        MemorisationProgress::query()->create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'status' => 'learning',
+            'mastery_level' => 40,
+            'repetitions' => 1,
+        ]);
+
+        $assessment = MemorisationAssessment::query()->create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'assessment_type' => 'memorisation_detection',
+            'status' => MemorisationAssessment::STATUS_FAILED,
+            'completion_state' => 'failed',
+            'overall_accuracy' => null,
+            'match_result' => 'failed',
+            'failure_reason' => 'no_speech',
+            'word_results' => [],
+            'ayah_results' => [],
+            'error_classifications' => [],
+            'weakness_analysis' => [],
+        ]);
+
+        $service->applyFromAssessment($user, $assessment, [
+            'weak_ayahs' => [1],
+            'ayah_results' => [['ayah_number' => 1, 'accuracy' => 0]],
+        ], ['accuracy' => 0], 'weak');
+
+        $row = MemorisationProgress::query()->where('user_id', $user->id)->where('ayah_number', 1)->first();
+        $this->assertSame(40, (int) $row->mastery_level);
+    }
+
     public function test_uncertain_words_are_not_persisted_as_weak_spots(): void
     {
         $user = User::factory()->create();

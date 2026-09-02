@@ -36,12 +36,14 @@ import {
 
 assert.equal(MADANI_TOTAL_PAGES, 604)
 assert.equal(isReadingViewMode('original'), true)
+assert.equal(isReadingViewMode('madani_mushaf'), true)
 assert.equal(isReadingViewMode('stacked'), true)
 assert.equal(isReadingViewMode('cards'), false)
 assert.equal(normalizeReadingViewMode('original'), 'original')
 assert.equal(normalizeReadingViewMode('nope'), 'mushaf')
 assert.equal(isOriginalMadaniView('original'), true)
 assert.equal(isPageLayoutView('mushaf'), true)
+assert.equal(isPageLayoutView('madani_mushaf'), true)
 assert.equal(isPageLayoutView('original'), true)
 assert.equal(isPageLayoutView('stacked'), false)
 

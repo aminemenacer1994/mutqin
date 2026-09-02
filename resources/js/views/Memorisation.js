@@ -84,6 +84,8 @@ import {
   getSessionMadaniSpreadPages,
   isOriginalMadaniSpreadViewport,
   isOriginalMadaniView,
+  isMadaniMushafView,
+  isMadaniMushafSpreadViewport,
   isReadingViewMode,
   normalizeReadingViewMode,
   originalMadaniPageImageUrl,
@@ -92,6 +94,14 @@ import {
   ORIGINAL_MADANI_SPREAD_QUERY,
   stepSessionMadaniPage,
 } from '../scripts/mushaf/originalMadaniMushaf'
+import {
+  clearMadaniMushafPageCache,
+  fetchMadaniMushafPage,
+  prefetchMadaniMushafPages,
+  resolveMadaniMushafPage,
+} from '../scripts/mushaf/madaniMushafApi'
+import { madaniMushafPagesToPrefetch, buildMadaniMushafPageModel, consolidateMadaniMushafLinesToGrid, enrichMadaniMushafPageWithUnicode, mergeMadaniMushafDecorativeLines } from '../scripts/mushaf/madaniMushafLayout'
+import { enrichMadaniMushafLines } from '../scripts/mushaf/madaniMushafPresentation'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -234,7 +244,6 @@ import {
   RECITATION_SUBMIT_TIMEOUT_MS,
   classifyRecitationFailure,
   createRecitationAttemptId,
-  isStaleRecitationAttempt,
   probeMicrophonePermission,
   resolveMicDeniedGuidance,
   resolveRecitationFailureMessage,
@@ -244,6 +253,14 @@ import {
   validateRecordingEnvironment,
   buildTechnicalLogContext,
 } from '../scripts/audio/recordingResilience'
+import {
+  RECITATION_ATTEMPT_CLASS,
+  classifyRecitationAttempt,
+  attemptAffectsScoring,
+  acceptRecitationProviderResponse,
+  attemptClassFromInsufficientReason,
+  resolveAttemptRetryGuidance,
+} from '../scripts/audio/recitationAttemptGuard'
 import {
   aiAudioConsentMeta,
   isAiAudioConsentDeclined,
@@ -334,6 +351,12 @@ const AyahNotesModal = defineAsyncComponent(() =>
 )
 const OriginalMadaniMushaf = defineAsyncComponent(() =>
   import(/* webpackChunkName: "original-madani" */ '../components/OriginalMadaniMushaf.vue')
+)
+const MadaniMushafReader = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "madani-mushaf" */ '../components/mushaf/MadaniMushafReader.vue')
+)
+const MushafNavigation = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "madani-mushaf" */ '../components/mushaf/MushafNavigation.vue')
 )
 import {
   buildActivePracticeSetup,
@@ -596,6 +619,8 @@ export default {
     AyahNotesModal,
     AppStatus,
     OriginalMadaniMushaf,
+    MadaniMushafReader,
+    MushafNavigation,
   },
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) },
@@ -726,6 +751,7 @@ export default {
       layoutFontSizes: {
         stacked: 150,
         mushaf: 120,
+        madani_mushaf: 120,
         original: 150,
       },
       fontSizeStep: 10,
@@ -843,6 +869,7 @@ export default {
       toolsPanelMounted: false,
       readingViewMode: 'mushaf',
       showOriginalMadaniViewToggle: false,
+      showMadaniMushafViewToggle: false,
       originalMadaniPageNumber: 1,
       originalMadaniError: '',
       originalMadaniViewportSpread: typeof window !== 'undefined' && isOriginalMadaniSpreadViewport(),
@@ -857,6 +884,14 @@ export default {
       madaniPagesError: '',
       madaniLoadRequestId: 0,
       madaniFontsReady: {},
+      madaniMushafPageNumber: 1,
+      madaniMushafPages: {},
+      madaniMushafError: '',
+      madaniMushafLoading: false,
+      madaniMushafLoadRequestId: 0,
+      madaniMushafViewportSpread: typeof window !== 'undefined' && isMadaniMushafSpreadViewport(),
+      madaniMushafFontsReady: {},
+      madaniMushafPresentationRevision: 0,
       mushafBorderOptions: [
         { value: 'classic', label: 'Classic' },
         { value: 'fine', label: 'Fine' },
@@ -996,6 +1031,8 @@ export default {
       sessionExitPreviewSnapshot: null,
       confirmModal: {
         title: '',
+        subject: '',
+        detail: '',
         message: '',
         confirmLabel: '',
         cancelLabel: '',
@@ -3072,7 +3109,7 @@ export default {
       const completed = Math.max(0, Math.min(total, fromEntry || fromQueue || Number(this.sessionExitPreviewSnapshot?.repetitionsCompleted || 0)))
       return buildRepetitionProgressSummary({ completed, total }, (key, params) => this.t(key, params))
     },
-    sessionExitContextLabel() {
+    resolveSessionExitScope() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
       const surah = snapshot.chapterName
         || this.currentChapter?.name_simple
@@ -3087,10 +3124,20 @@ export default {
           end: Math.max(rangeStart, rangeEnd),
         })
       }
+      return { surah, range }
+    },
+    sessionExitContextLabel() {
+      const { surah, range } = this.resolveSessionExitScope
       if (surah && range) {
         return this.t('memorisation.sessionExit.confirmContext', { surah, range })
       }
       return surah || range || this.sessionExitPositionLine || ''
+    },
+    sessionExitSurahLabel() {
+      return this.resolveSessionExitScope.surah
+    },
+    sessionExitRangeLabel() {
+      return this.resolveSessionExitScope.range
     },
     sessionExitAyahProgressLabel() {
       const snapshot = this.sessionExitPreviewSnapshot || {}
@@ -5777,13 +5824,25 @@ export default {
           && btn.action === POST_SESSION_CTA_ACTIONS.CONFIRM_START) {
           label = this.t(`memorisation.postSession.recommendation.confirm.${btn.labelKey}`)
             || this.postSessionConfirmationPrimaryLabel
+        } else if (btn.labelKey === 'continueToAyahs' && params.start && params.end) {
+          const single = Number(params.start) === Number(params.end)
+          label = this.t(
+            single
+              ? 'memorisation.postSession.actions.continueToAyah'
+              : 'memorisation.postSession.actions.continueToAyahs',
+            single ? { ayah: params.start } : params,
+          )
         } else {
           label = this.t(`memorisation.postSession.actions.${btn.labelKey}`, params)
         }
         if (!label || label === `memorisation.postSession.actions.${btn.labelKey}`
-          || label === `memorisation.postSession.recommendation.confirm.${btn.labelKey}`) {
+          || label === `memorisation.postSession.recommendation.confirm.${btn.labelKey}`
+          || (btn.labelKey === 'continueToAyahs' && label.includes('continueToAyah'))) {
           if (btn.labelKey === 'continueToAyahs' && params.start && params.end) {
-            label = `Continue (${params.start}–${params.end})`
+            label = formatContinueToAyahLabel(params.start, params.end, this.t.bind(this))
+              || (Number(params.start) === Number(params.end)
+                ? `Next ayah ${params.start}`
+                : `Next ayahs ${params.start}–${params.end}`)
           } else if (btn.labelKey === 'reviewAyahOnce') {
             label = Number(params.ayah) > 0
               ? `Repeat Weak Ayah (${params.ayah})`
@@ -8473,10 +8532,16 @@ export default {
     },
 
     sessionContextBadge() {
-      const chapterName = this.currentChapter?.name_simple || this.activeChapterName || 'Session'
+      const chapterName = this.currentChapter?.name_simple
+        || this.activeChapterName
+        || this.t('memorisation.saved_session')
       const total = Math.max(1, Number(this.totalVerses || 1))
       const ayah = Math.max(1, Math.min(total, Number(this.currentPosition || 1)))
-      return `Memorising - ${chapterName} - Ayah ${ayah}/${total}`
+      return this.t('memorisation.confirmModals.contextBadge', {
+        surah: chapterName,
+        ayah,
+        total,
+      })
     },
 
     remainingAyahs() {
@@ -8631,6 +8696,7 @@ export default {
     useMadaniQcfGlyphs() {
       // Original Madani always uses authentic QCF page glyphs.
       if (this.readingViewMode === 'original') return true
+      if (isMadaniMushafView(this.readingViewMode)) return true
       return this.readingViewMode === 'mushaf' && normaliseQuranFontId(this.quranFont) === 'uthmanic'
     },
 
@@ -9118,27 +9184,101 @@ export default {
       return this.buildOriginalMadaniPageData(this.originalMadaniPageNumber)
     },
 
+    madaniMushafSpreadActive() {
+      return this.madaniMushafViewportSpread === true
+    },
+
+    madaniMushafSpread() {
+      return getSessionMadaniSpreadPages(
+        this.madaniMushafPageNumber,
+        this.madaniMushafAllowedPages
+      )
+    },
+
+    madaniMushafHasPair() {
+      const { left, right } = this.madaniMushafSpread
+      return !!(this.madaniMushafSpreadActive && left && right)
+    },
+
+    madaniMushafAllowedPages() {
+      const fromSession = (this.madaniPageNumbers || []).filter(Boolean)
+      if (fromSession.length) return fromSession
+      const pages = []
+      for (let p = 1; p <= 604; p += 1) pages.push(p)
+      return pages
+    },
+
+    madaniMushafPaginationLabel() {
+      if (this.madaniMushafHasPair) {
+        const { left, right } = this.madaniMushafSpread
+        return this.t('memorisation.madaniMushaf.pageSpread', { left, right })
+      }
+      return this.t('memorisation.madaniMushaf.pageSingle', { page: this.madaniMushafPageNumber })
+    },
+
+    canGoPreviousMadaniMushafPage() {
+      return canStepSessionMadaniPage(this.madaniMushafPageNumber, -1, {
+        spread: this.madaniMushafHasPair,
+        allowedPages: this.madaniMushafAllowedPages,
+      })
+    },
+
+    canGoNextMadaniMushafPage() {
+      return canStepSessionMadaniPage(this.madaniMushafPageNumber, 1, {
+        spread: this.madaniMushafHasPair,
+        allowedPages: this.madaniMushafAllowedPages,
+      })
+    },
+
+    madaniMushafLeftPageView() {
+      void this.madaniMushafPresentationRevision
+      void this.madaniMushafPages
+      void this.madaniMushafFontsReady
+      return this.buildMadaniMushafPageViewFor(this.madaniMushafSpread.left)
+    },
+
+    madaniMushafRightPageView() {
+      void this.madaniMushafPresentationRevision
+      void this.madaniMushafPages
+      void this.madaniMushafFontsReady
+      return this.buildMadaniMushafPageViewFor(this.madaniMushafSpread.right)
+    },
+
+    madaniMushafCurrentPageView() {
+      void this.madaniMushafPresentationRevision
+      void this.madaniMushafPages
+      void this.madaniMushafFontsReady
+      return this.buildMadaniMushafPageViewFor(this.madaniMushafPageNumber)
+    },
+
     nextReadingViewMode() {
       if (this.readingViewMode === 'stacked') return 'mushaf'
       if (this.readingViewMode === 'mushaf') {
+        if (this.showMadaniMushafViewToggle) return 'madani_mushaf'
+        return this.showOriginalMadaniViewToggle ? 'original' : 'stacked'
+      }
+      if (this.readingViewMode === 'madani_mushaf') {
         return this.showOriginalMadaniViewToggle ? 'original' : 'stacked'
       }
       return 'stacked'
     },
 
     currentReadingViewModeIcon() {
+      if (this.readingViewMode === 'madani_mushaf') return 'bi-book-half'
       if (this.readingViewMode === 'original') return 'bi-book'
       if (this.readingViewMode === 'mushaf') return 'bi-journal-richtext'
       return 'bi-view-stacked'
     },
 
     nextReadingViewModeLabel() {
+      if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.madaniMushaf')
       if (this.nextReadingViewMode === 'original') return this.t('memorisation.view.original')
       if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushaf')
       return this.t('memorisation.view.stacked')
     },
 
     nextReadingViewModeHint() {
+      if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.madaniMushafHint')
       if (this.nextReadingViewMode === 'original') return this.t('memorisation.view.originalHint')
       if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushafHint')
       return this.t('memorisation.view.stackedHint')
@@ -9745,6 +9885,7 @@ export default {
       })
       this.$watch('effectiveActiveVerseKey', () => {
         if (this.readingViewMode === 'mushaf') this.syncMushafPageToActiveVerse()
+        if (isMadaniMushafView(this.readingViewMode)) this.syncMadaniMushafPageToActiveVerse()
       })
       this.$watch(() => this.mushafPages.length, () => {
         this.syncMushafPageToActiveVerse()
@@ -10070,6 +10211,10 @@ export default {
     },
     readingViewMode(newVal) {
       if (newVal === 'original' && !this.showOriginalMadaniViewToggle) {
+        this.readingViewMode = 'mushaf'
+        return
+      }
+      if (newVal === 'madani_mushaf' && !this.showMadaniMushafViewToggle) {
         this.readingViewMode = 'mushaf'
         return
       }
@@ -10649,7 +10794,7 @@ export default {
       const response = String(attemptId || '').trim()
       // Cleared / missing attempt ids must never accept late mic/onstop/submit work.
       if (!active || !response) return false
-      return !isStaleRecitationAttempt(active, response)
+      return acceptRecitationProviderResponse(active, response)
     },
     clearRecitationSlowProcessingNotice() {
       if (typeof this._recitationSlowNoticeDisposer === 'function') {
@@ -10695,7 +10840,7 @@ export default {
         this.t?.('memorisation.amd.noSpeech')
           || this.t?.('memorisation.aiCheck.noArabicWords')
           || this.t('common.status.errorDesc')
-          || 'Something went wrong. Please try again.'
+          || 'Please try again in a moment.'
       )
       if (toast && this.amdError) this.showBanner(this.amdError, 'error', 4200)
     },
@@ -10730,6 +10875,8 @@ export default {
     },
 
     fitMadaniPageToViewport() {
+      // Madani Mushaf uses a fixed 15-row grid. Never apply the mushaf
+      // display:contents fit — that collapses every line onto one pile.
       if (!this.isMobileViewport() || this.readingViewMode !== 'mushaf') return
       const viewport = this.$refs.mushafViewport
       const sheet = viewport?.querySelector?.('.madani-page-sheet')
@@ -12967,7 +13114,6 @@ export default {
     },
 
     saveCurrentSessionSilently(name = this.buildAutoSaveSessionName()) {
-      if (!this.autoSaveSessionsEnabled) return null
       if (!this.canSaveCurrentSession()) return null
       const key = [
         this.chapterId || this.sessionConfig?.chapterId || '',
@@ -14409,6 +14555,8 @@ export default {
           } else {
             this.syncMushafPageToActiveVerse()
           }
+        } else if (isMadaniMushafView(this.readingViewMode)) {
+          this.syncMadaniMushafPageToActiveVerse()
         }
         await this.$nextTick()
         this.prepareRestoredSessionAudio({
@@ -14624,15 +14772,13 @@ export default {
       }
     },
 
-    // Update deleteSavedSession method
     deleteSavedSession(sessionId) {
       const session = this.savedSessions.find(s => s.id === sessionId)
-      const label = session ? (session.name || this.getSessionPrimaryLabel(session)) : this.t('memorisation.confirmModals.deleteSession.messageFallback')
       this.openConfirmModal({
         title: this.t('memorisation.confirmModals.deleteSession.title'),
-        message: session
-          ? this.t('memorisation.confirmModals.deleteSession.message', { label })
-          : this.t('memorisation.confirmModals.deleteSession.messageFallback'),
+        subject: session ? this.getSavedSessionConfirmSubject(session) : '',
+        detail: session ? this.getSavedSessionConfirmDetail(session) : '',
+        message: this.t('memorisation.confirmModals.deleteSession.message'),
         confirmLabel: this.t('memorisation.confirmModals.deleteSession.confirm'),
         cancelLabel: this.t('memorisation.confirmModals.deleteSession.cancel'),
         tone: 'danger',
@@ -14675,8 +14821,7 @@ export default {
         title: this.t('memorisation.confirmModals.deleteSessions.title')
           || this.t('memorisation.confirmModals.deleteSession.title')
           || 'Delete sessions?',
-        message: this.t('memorisation.confirmModals.deleteSessions.message', { count: ids.length })
-          || `Delete ${ids.length} saved session${ids.length === 1 ? '' : 's'}? This cannot be undone.`,
+        message: this.t('memorisation.confirmModals.deleteSessions.message', { count: ids.length }),
         confirmLabel: this.t('memorisation.confirmModals.deleteSessions.confirm')
           || this.t('memorisation.confirmModals.deleteSession.confirm')
           || 'Delete',
@@ -14886,6 +15031,45 @@ export default {
     },
     getSavedSessionName(session) {
       return String(session?.name || this.getSessionPrimaryLabel(session) || this.t('memorisation.saved_session'))
+    },
+    getSavedSessionConfirmSubject(session) {
+      const primary = String(this.getSessionPrimaryLabel(session) || '').trim()
+      const name = String(session?.name || '').trim()
+      if (!name) return primary || this.t('memorisation.saved_session')
+      if (!primary || name === primary) return name
+      const chapter = String(session?.config?.chapterName || session?.chapterName || '').trim()
+      const start = Number(session?.config?.rangeStart || 0)
+      const end = Number(session?.config?.rangeEnd || 0)
+      if (chapter && start > 0 && end >= start && name.startsWith(`${chapter} ${start}-${end}`)) {
+        return primary
+      }
+      return name
+    },
+    getSavedSessionConfirmDetail(session) {
+      const parts = []
+      const config = session?.config || {}
+      const start = Number(config.rangeStart || 0)
+      const end = Number(config.rangeEnd || 0)
+      const total = start > 0 && end >= start ? (end - start + 1) : 0
+      const key = String(config.activeVerseKey || '')
+      const ayahNumber = Number(String(key).split(':')[1] || 0)
+      const positionFromKey = ayahNumber && start
+        ? Math.max(1, Math.min(total || ayahNumber, ayahNumber - start + 1))
+        : 0
+      const positionFromStats = Number(session?.stats?.current_ayah_index || 0)
+      const nameMatch = String(session?.name || '').match(/(?:Ayah|الآية|آیت)\s+(\d+)/i)
+      const positionFromName = Number(nameMatch?.[1] || 0)
+      const position = positionFromKey
+        || (total ? Math.max(0, Math.min(total, positionFromStats || positionFromName)) : 0)
+      if (position && total) {
+        parts.push(this.t('memorisation.confirmModals.deleteSession.progress', {
+          ayah: position,
+          total,
+        }))
+      }
+      const duration = this.getSavedSessionMetaLine(session)
+      if (duration) parts.push(duration)
+      return parts.join(' · ')
     },
     getSavedSessionSurah(session) {
       if (session?.config?.chapterName) {
@@ -24423,8 +24607,10 @@ export default {
       // Never persist unassessable / technical failures as scored assessments or weak words.
       const assessmentQuality = classifyRecitationAssessmentQuality(result)
       const resultState = resolveRecitationResultState(result)
+      const attemptGuard = classifyRecitationAttempt({ result })
       if (
-        assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+        !attemptAffectsScoring(attemptGuard)
+        || assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
         || resultState === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
       ) {
         console.warn('Skipping AMD assessment persist for unassessable attempt')
@@ -24500,6 +24686,21 @@ export default {
 
       try {
         const data = await memorisationDetectionApi.createAssessment(payload)
+        if (data?.invalid_attempt || data?.assessment?.status === 'failed') {
+          const attemptClass = data.attempt_class
+            || data.assessment?.attempt_class
+            || RECITATION_ATTEMPT_CLASS.UNUSABLE_AUDIO
+          await this.applyInsufficientAudioAssessment(result, {
+            reason: data.assessment?.failure_reason || attemptClass,
+            attemptClass,
+            durationSeconds,
+          })
+          if (!this._amdCompleting && !this.amdEndingSoon) {
+            this.amdError = data.retry_guidance
+              || resolveAttemptRetryGuidance(attemptClass, this.t.bind(this))
+          }
+          return null
+        }
         if (idempotencyKey) this.lastAmdAssessmentKey = idempotencyKey
         this.amdAssessment = data.assessment || null
         this.amdAnalysis = data.analysis || null
@@ -27857,18 +28058,29 @@ export default {
         duration_seconds: durationSeconds,
         wordStatuses,
       })
+      const attemptGuard = classifyRecitationAttempt({
+        result,
+        extras: {
+          color_counts: colorCounts,
+          accuracy_percent: accuracyPercent,
+          duration_seconds: durationSeconds,
+          wordStatuses,
+        },
+      })
 
-      // Silence / unusable audio never becomes a scored 0% weak result.
+      // Silence / unusable audio / provider failures never become a scored 0% weak result.
       if (
-        assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+        !attemptAffectsScoring(attemptGuard)
+        || assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
         || resultState === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
       ) {
         await this.applyInsufficientAudioAssessment(result, {
-          reason: resolveInsufficientAudioReason(result, {
+          reason: attemptGuard.reason || resolveInsufficientAudioReason(result, {
             accuracy_percent: accuracyPercent,
             duration_seconds: durationSeconds,
             wordStatuses,
           }),
+          attemptClass: attemptGuard.class,
           durationSeconds,
         })
         return
@@ -27928,8 +28140,10 @@ export default {
           processingFailed: !!options.processingFailed,
           noSpeech: options.noSpeech !== false,
         })
-      const copy = resolveInsufficientAudioCopy(this.t.bind(this), reason)
-      const summary = copy.summaryLine
+      const attemptClass = options.attemptClass
+        || attemptClassFromInsufficientReason(reason)
+      const copy = resolveInsufficientAudioCopy(this.t.bind(this), attemptClass || reason)
+      const summary = copy.summaryLine || resolveAttemptRetryGuidance(attemptClass, this.t.bind(this))
       this.postSessionAiFeedback = summary
       this.postSessionAiDetailsExpanded = false
       // Never create weak-word data or schedule review from unusable audio.
@@ -31796,19 +32010,41 @@ export default {
       this.primeAudioPlaybackUnlock()
       this.applyLocalActiveSessionState()
       this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
-      if (autoplay) {
-        this.resumePlaybackFromRestoredState()
-      } else {
-        this.prepareRestoredSessionAudio({ autoplay: false })
-      }
       this.markPracticeSetupRestored()
       this.scheduleSessionWorkspaceScroll(SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION)
-      if (!autoplay) return
-      this.$nextTick(async () => {
-        const playbackStarted = await this.ensureSessionPlaybackStarted()
-        if (!playbackStarted && this.queue?.length) {
+      if (isMadaniMushafView(this.readingViewMode)) {
+        this.syncMadaniMushafPageToActiveVerse()
+      } else if (this.readingViewMode === 'mushaf') {
+        this.syncMushafPageToActiveVerse()
+      }
+      if (!autoplay) {
+        this.prepareRestoredSessionAudio({ autoplay: false })
+        return
+      }
+      this.playerVisible = true
+      this.prepareRestoredSessionAudio({ autoplay: false, force: true })
+      this.showCountdown(async () => {
+        const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
+        if (entry) {
+          await this.playQueueEntry(entry, {
+            force: true,
+            queueIndex: this.queueIndex,
+            primePlayback: true,
+          })
+        } else {
+          await this.ensureSessionPlaybackStarted()
+        }
+        await this.$nextTick()
+        if (!this.isPlaybackActive() && this.queue?.length) {
           this.promptTapToPlay()
           this.syncSessionControlsWithPlayback(false)
+        } else {
+          this.playbackAwaitingGesture = false
+          this.syncSessionControlsWithPlayback(!!this.isPlaying)
+          const verse = this.activeVerseRef
+          if (verse?.key && this.isPlaying && this.wordByWordAudioEnabled) {
+            this.startWordHighlighting(verse)
+          }
         }
       })
     },
@@ -33030,6 +33266,7 @@ export default {
     clampReadingViewMode(mode) {
       const next = normalizeReadingViewMode(mode, this.readingViewMode || 'mushaf')
       if (next === 'original' && !this.showOriginalMadaniViewToggle) return 'mushaf'
+      if (next === 'madani_mushaf' && !this.showMadaniMushafViewToggle) return 'mushaf'
       return next
     },
     setReadingViewMode(mode) {
@@ -33062,6 +33299,10 @@ export default {
             }
           })
         })
+      } else if (nextMode === 'madani_mushaf') {
+        this.wordByWordAudioEnabled = true
+        this.syncMadaniMushafViewportSpread()
+        this.enterMadaniMushafView({ force: true })
       } else if (nextMode === 'original') {
         this.wordByWordAudioEnabled = true
         this.syncOriginalMadaniViewportSpread()
@@ -33706,6 +33947,320 @@ export default {
         }
       })
     },
+
+    syncMadaniMushafViewportSpread() {
+      if (typeof window === 'undefined') return
+      this.madaniMushafViewportSpread = isMadaniMushafSpreadViewport()
+    },
+
+    madaniMushafPresentationContext() {
+      const sessionKeys = this.mushafSessionVerseKeys
+      return {
+        sessionKeys: sessionKeys?.size > 0 ? sessionKeys : null,
+        keepFullPage: true,
+        useGlyphs: true,
+        tajweedEnabled: !!this.tajweedEnabled,
+        audioIndexMap: this.madaniAudioIndexMap,
+        resolveAudioWordIndex: (word, map) => this.resolveMadaniAudioWordIndex(word, map),
+        getRecitationStatus: (verseKey, wordIndex) => (
+          this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, '')
+        ),
+        isVerseBlurred: (key) => this.blurModeEnabled && this.isVerseBlurred(key),
+        isVersePeekRevealed: (key) => this.isVersePeekRevealed(key),
+        isVerseActive: (key) => (
+          (this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback)
+          && this.effectiveActiveVerseKey === key
+        ) || this.shouldShowRecitationReviewHighlights(key),
+        isVersePlaying: (key) => this.activeVerseKey === key && this.isPlaying,
+        isWordHighlighted: (verseKey, wordIndex) => (
+          this.currentHighlightedVerseKey === verseKey
+          && Number(this.currentWordIndex) === Number(wordIndex)
+        ),
+        isPracticeFocusWord: (verseKey, wordIndex, plain) => (
+          this.isPracticeFocusWeakWord(verseKey, wordIndex, plain)
+        ),
+        isMasteredAyah: (key) => this.isMasteredAyah(key),
+        focusModeEnabled: !!this.focusModeEnabled,
+        anchorModeEnabled: !!this.anchorModeEnabled,
+        getAnchorIndices: (total) => this.getAnchorIndices(total),
+        getVerseAudioWordCount: (key) => this.getVerseAudioWordCount(key),
+        resolveWordGloss: (verseKey, wordIndex, plain) => {
+          const verse = this.resolveVerseFromMadaniKey(verseKey)
+          return resolveWordGlossFromVerse(verse, plain, wordIndex) || ''
+        },
+        resolvePlainArabic: (word) => {
+          const verseKey = String(word?.verseKey || '').trim()
+          if (!verseKey || word?.isEnd || word?.charType === 'end') return ''
+          const verse = this.resolveVerseFromMadaniKey(verseKey)
+          const wordIndex = this.resolveMadaniAudioWordIndex(word, this.madaniAudioIndexMap)
+          if (Number.isFinite(wordIndex) && verse?.words?.[wordIndex]?.ar) {
+            return String(verse.words[wordIndex].ar).trim()
+          }
+          const position = Math.max(0, Number(word?.position || 0) - 1)
+          if (verse?.words?.[position]?.ar) {
+            return String(verse.words[position].ar).trim()
+          }
+          return ''
+        },
+        showWordByWord: !!this.showWordByWord,
+        shouldShowAiReview: (key) => this.shouldShowRecitationReviewHighlights(key),
+        hideQuranText: !!this.hideQuranTextEnabled,
+        hiddenAyahKeys: this.hiddenAyahKeysSet || new Set(),
+        revealCurrentWordOnly: !!this.revealCurrentWordOnly,
+        effectiveActiveVerseKey: this.effectiveActiveVerseKey,
+        currentHighlightedVerseKey: this.currentHighlightedVerseKey,
+        currentWordIndex: this.currentWordIndex,
+      }
+    },
+
+    buildMadaniMushafPageViewFor(pageNumber) {
+      const page = Number(pageNumber)
+      if (!page) return null
+      const cached = this.madaniMushafPages?.[page]
+      const layout = cached?.layout
+      const meta = this.madaniMushafPageMeta(page)
+      const fontFamily = layout?.fontFamily || `p${page}-${this.tajweedEnabled ? 'v4' : 'v2'}`
+      const useGlyphs = this.useMadaniQcfGlyphs
+      const fontReady = useGlyphs
+        && !!this.madaniMushafFontsReady?.[page]
+        && isQcfFontLoaded(page, { tajweed: !!this.tajweedEnabled })
+      if (!layout?.lines?.length) {
+        return {
+          pageNumber: page,
+          lines: [],
+          fontFamily,
+          glyphsReady: false,
+          loading: !!this.madaniMushafLoading,
+          juzLabel: meta.juz,
+          surahLabel: meta.surah,
+          pageLabel: meta.page,
+        }
+      }
+      let lines = []
+      try {
+        const rawLines = consolidateMadaniMushafLinesToGrid(Array.isArray(layout.lines) ? layout.lines : [])
+        lines = enrichMadaniMushafLines(rawLines, {
+          ...this.madaniMushafPresentationContext(),
+          pageNumber: page,
+          fontFamily,
+          fontReady,
+          useGlyphs,
+        })
+      } catch (error) {
+        console.warn(`Madani Mushaf page ${page} presentation failed`, error)
+      }
+      return {
+        pageNumber: page,
+        lines,
+        fontFamily,
+        glyphsReady: fontReady,
+        loading: false,
+        juzLabel: meta.juz,
+        surahLabel: meta.surah,
+        pageLabel: meta.page,
+      }
+    },
+
+    madaniMushafPageMeta(pageNumber) {
+      const page = clampMadaniPageNumber(pageNumber)
+      const layout = this.madaniMushafPages?.[page]?.layout
+      const payload = layout || this.madaniMushafPages?.[page]?.raw || this.madaniMushafPages?.[page]
+      const juz = payload?.juzNumber || juzNumberFromMadaniPage(page)
+      const surah = payload?.primaryChapterId || payload?.primarySurahNumber || this.chapterId
+      return {
+        juz: arabicJuzLabel(juz),
+        surah: surah ? this.t('memorisation.originalMadani.surahNumber', { number: surah }) : '',
+        page: this.t('memorisation.madaniMushaf.pageSingle', { page }),
+      }
+    },
+
+    async enterMadaniMushafView(options = {}) {
+      this.madaniMushafError = ''
+      if (options.force) {
+        this.madaniMushafPages = {}
+        clearMadaniMushafPageCache()
+      }
+      this.syncMadaniMushafViewportSpread()
+      await this.ensureMadaniMushafSessionPageMap()
+      await this.syncMadaniMushafPageToActiveVerse()
+      await this.ensureMadaniMushafSpreadLoaded({ force: !!options.force })
+      this.$nextTick(() => {
+        const verse = this.activeVerseRef
+        if (verse?.key && this.isPlaying) this.startWordHighlighting(verse)
+      })
+    },
+
+    async ensureMadaniMushafSessionPageMap() {
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      if (!chapterId) return
+      const rangeStart = Number(this.rangeStart || this.currentConfig?.rangeStart || 1)
+      const rangeEnd = Number(this.rangeEnd || this.currentConfig?.rangeEnd || rangeStart)
+      try {
+        const { pageByVerseKey } = await getMadaniPagesForChapterRange(chapterId, rangeStart, rangeEnd)
+        if (pageByVerseKey instanceof Map) {
+          const pageMap = { ...this.madaniPageByVerseKey }
+          pageByVerseKey.forEach((page, key) => {
+            pageMap[key] = page
+          })
+          this.madaniPageByVerseKey = pageMap
+        }
+      } catch (error) {
+        console.warn('Madani Mushaf session page map failed', error)
+      }
+    },
+
+    async syncMadaniMushafPageToActiveVerse() {
+      const key = this.effectiveActiveVerseKey || this.activeVerseKey
+      if (!key) return
+      const fromMap = Number(this.madaniPageByVerseKey?.[key])
+      if (fromMap >= 1) {
+        this.goToMadaniMushafPage(fromMap, { persist: false })
+        return
+      }
+      const verse = this.resolveVerseFromMadaniKey(key)
+      const fromVerse = Number(verse?.page_number || verse?.madaniPage || 0)
+      if (fromVerse >= 1) {
+        this.goToMadaniMushafPage(fromVerse, { persist: false })
+        return
+      }
+      try {
+        const page = await resolveMadaniMushafPage({ verseKey: key })
+        if (page) this.goToMadaniMushafPage(page, { persist: false })
+      } catch { /* resolve optional */ }
+    },
+
+    goToMadaniMushafPage(pageNumber, options = {}) {
+      const allowed = this.madaniMushafAllowedPages
+      const next = constrainMadaniPageToSet(pageNumber, allowed.length === 604 ? [] : allowed)
+      this.madaniMushafPageNumber = clampMadaniPageNumber(next)
+      if (options.persist !== false) this.persistUiState()
+      this.ensureMadaniMushafSpreadLoaded(options)
+    },
+
+    goToPreviousMadaniMushafPage() {
+      const next = stepSessionMadaniPage(this.madaniMushafPageNumber, -1, {
+        spread: this.madaniMushafHasPair,
+        allowedPages: this.madaniMushafAllowedPages,
+      })
+      this.goToMadaniMushafPage(next)
+    },
+
+    goToNextMadaniMushafPage() {
+      const next = stepSessionMadaniPage(this.madaniMushafPageNumber, 1, {
+        spread: this.madaniMushafHasPair,
+        allowedPages: this.madaniMushafAllowedPages,
+      })
+      this.goToMadaniMushafPage(next)
+    },
+
+    async ensureMadaniMushafPageLoaded(pageNumber, options = {}) {
+      const page = clampMadaniPageNumber(pageNumber)
+      const cached = this.madaniMushafPages?.[page]
+      if (!options.force && cached?.layout?.lines?.length && cached?.layoutSource === 'qul') {
+        await this.ensureMadaniMushafFontForPage(page)
+        return cached.layout
+      }
+
+      try {
+        const [apiPayload, verses] = await Promise.all([
+          fetchMadaniMushafPage(page, { force: !!options.force }),
+          getMadaniPageVerses(page, { force: !!options.force }).catch(() => []),
+        ])
+        const enrichedPayload = enrichMadaniMushafPageWithUnicode(apiPayload, verses)
+        let model = buildMadaniMushafPageModel(enrichedPayload, { tajweed: !!this.tajweedEnabled })
+        const decorativeLayout = buildMadaniPageLayout(page, verses, { tajweed: !!this.tajweedEnabled })
+        const mergedLines = mergeMadaniMushafDecorativeLines(model.lines, decorativeLayout.lines)
+        const layout = {
+          ...model,
+          lines: mergedLines,
+          layoutVersion: MADANI_LAYOUT_VERSION,
+          juzNumber: model.juzNumber || decorativeLayout.juzNumber,
+          primaryChapterId: model.primaryChapterId || decorativeLayout.primaryChapterId,
+          verseKeys: [...new Set([
+            ...(model.verseKeys || []),
+            ...(decorativeLayout.verseKeys || []),
+          ])],
+        }
+        this.madaniMushafPages = {
+          ...this.madaniMushafPages,
+          [page]: { layout, layoutSource: 'qul', raw: apiPayload },
+        }
+        const nextMap = { ...this.madaniPageByVerseKey }
+        for (const key of layout.verseKeys || []) {
+          nextMap[key] = page
+        }
+        this.madaniPageByVerseKey = nextMap
+        await this.ensureMadaniMushafFontForPage(page)
+        this.madaniMushafPresentationRevision += 1
+        return layout
+      } catch (error) {
+        console.error(`Madani Mushaf page ${page} load failed:`, error)
+        return null
+      }
+    },
+
+    async ensureMadaniMushafSpreadLoaded(options = {}) {
+      const requestId = ++this.madaniMushafLoadRequestId
+      this.madaniMushafLoading = true
+      this.madaniMushafError = ''
+      try {
+        const spread = this.madaniMushafSpread
+        const pages = this.madaniMushafHasPair
+          ? [spread.right, spread.left].filter(Boolean)
+          : [this.madaniMushafPageNumber]
+        await Promise.all(pages.map(p => this.ensureMadaniMushafPageLoaded(p, options)))
+        if (requestId === this.madaniMushafLoadRequestId) {
+          this.prefetchMadaniMushafAdjacent(pages[0])
+        }
+      } catch (error) {
+        if (requestId === this.madaniMushafLoadRequestId) {
+          this.madaniMushafError = error?.message || this.t('memorisation.madaniMushaf.errorDesc')
+        }
+      } finally {
+        if (requestId === this.madaniMushafLoadRequestId) {
+          this.madaniMushafLoading = false
+        }
+      }
+    },
+
+    async ensureMadaniMushafFontForPage(pageNumber) {
+      const page = Number(pageNumber)
+      if (!page) return false
+      try {
+        await loadQcfPageFont(page, { tajweed: !!this.tajweedEnabled })
+        await loadSurahNamesFont()
+        if (!isQcfFontLoaded(page, { tajweed: !!this.tajweedEnabled })) {
+          throw new Error(`QCF font not registered after load for page ${page}`)
+        }
+        this.madaniMushafFontsReady = {
+          ...this.madaniMushafFontsReady,
+          [page]: true,
+        }
+        this.madaniMushafPresentationRevision += 1
+        return true
+      } catch (error) {
+        console.warn(`Madani Mushaf font load failed for page ${page}`, error)
+        const next = { ...this.madaniMushafFontsReady }
+        delete next[page]
+        this.madaniMushafFontsReady = next
+        return false
+      }
+    },
+
+    prefetchMadaniMushafAdjacent(pageNumber) {
+      if (this.isMobileViewport()) return
+      const pages = madaniMushafPagesToPrefetch(pageNumber, { spread: this.madaniMushafHasPair })
+      prefetchMadaniMushafPages(pages).catch(() => {})
+      prefetchQcfPageFonts(pages, { tajweed: !!this.tajweedEnabled }).catch(() => {})
+    },
+
+    retryMadaniMushafPages() {
+      this.ensureMadaniMushafSpreadLoaded({ force: true })
+    },
+
+    onMadaniMushafWordSelect(word) {
+      this.onMadaniWordClick(word)
+    },
     rebuildCurrentMadaniLayoutsForTajweed() {
       const pages = Object.keys(this.madaniPageLayouts || {}).map(Number).filter(Boolean)
       if (!pages.length) return
@@ -33894,6 +34449,7 @@ export default {
       this.persistUiState()
       // Prefer Vue :style bindings — avoid leaking !important inline vars across layouts.
       this.clearMadaniInlineFontOverrides()
+      this.madaniMushafPresentationRevision += 1
       this.$nextTick(() => this.scheduleMadaniPageFit())
       if (!silent) {
         this.showBanner(this.t('toasts.fontSize', { defaultFontSize: nextSize }), 'info', 600)
@@ -34132,6 +34688,8 @@ export default {
         this.queueIndex = store.queueIndex || 0
         if (this.readingViewMode === 'mushaf') {
           this.$nextTick(() => this.syncMushafPageToActiveVerse())
+        } else if (isMadaniMushafView(this.readingViewMode)) {
+          this.$nextTick(() => this.syncMadaniMushafPageToActiveVerse())
         } else if (this.readingViewMode === 'original') {
           this.$nextTick(() => this.syncOriginalMadaniPageToActiveVerse())
         }
@@ -36266,6 +36824,8 @@ export default {
     openConfirmModal(options) {
       this.confirmModal = {
         title: options.title || this.t('memorisation.confirmModals.defaultTitle'),
+        subject: options.subject || '',
+        detail: options.detail || '',
         message: options.message || '',
         confirmLabel: options.confirmLabel || this.t('memorisation.confirmModals.confirm'),
         cancelLabel: options.cancelLabel || this.t('memorisation.confirmModals.cancel'),
@@ -38053,7 +38613,7 @@ export default {
         nextNodes.add(node)
       })
       this.lastHighlightedWordNodes = Array.from(nextNodes)
-      if ((this.readingViewMode === 'mushaf' || this.readingViewMode === 'original') && nextNodes.size) {
+      if ((this.readingViewMode === 'mushaf' || isMadaniMushafView(this.readingViewMode)) && nextNodes.size) {
         const lead = this.lastHighlightedWordNodes[0]
         if (lead && typeof lead.scrollIntoView === 'function') {
           const rect = lead.getBoundingClientRect?.()
@@ -38917,6 +39477,8 @@ export default {
           this.workspaceRefreshReason = ''
           if (this.readingViewMode === 'mushaf') {
             this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
+          } else if (isMadaniMushafView(this.readingViewMode)) {
+            this.ensureMadaniMushafSpreadLoaded({ force: true }).then(() => this.syncMadaniMushafPageToActiveVerse())
           }
           this.refreshAyahNoteCounts(chapterId)
           return
@@ -39057,6 +39619,8 @@ export default {
         this.isDataReady = true
         if (this.readingViewMode === 'mushaf') {
           this.ensureMadaniPagesLoaded({ force: true }).then(() => this.syncMushafPageToActiveVerse())
+        } else if (isMadaniMushafView(this.readingViewMode)) {
+          this.ensureMadaniMushafSpreadLoaded({ force: true }).then(() => this.syncMadaniMushafPageToActiveVerse())
         }
         this.refreshAyahNoteCounts(chapterId)
 
@@ -40427,6 +40991,9 @@ export default {
           this.originalMadaniPageNumber = Number.isFinite(Number(state.originalMadaniPageNumber))
             ? clampMadaniPageNumber(state.originalMadaniPageNumber)
             : this.originalMadaniPageNumber
+          this.madaniMushafPageNumber = Number.isFinite(Number(state.madaniMushafPageNumber))
+            ? clampMadaniPageNumber(state.madaniMushafPageNumber)
+            : this.madaniMushafPageNumber
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0
@@ -40596,6 +41163,7 @@ export default {
 	          aiRecallModeEnabled: this.aiRecallModeEnabled,
 	          readingViewMode: this.readingViewMode,
         originalMadaniPageNumber: this.originalMadaniPageNumber,
+        madaniMushafPageNumber: this.madaniMushafPageNumber,
         mushafPageIndex: this.mushafPageIndex,
         mushafBackground: this.mushafBackground,
         mushafBackgroundTouched: this.mushafBackgroundTouched,
@@ -40608,6 +41176,7 @@ export default {
           layoutFontSizes: {
             stacked: Number(this.layoutFontSizes?.stacked || 150),
             mushaf: Number(this.layoutFontSizes?.mushaf || 120),
+            madani_mushaf: Number(this.layoutFontSizes?.madani_mushaf || 120),
             original: Number(this.layoutFontSizes?.original || 150),
           },
           chainingEnabled: this.chainingEnabled,

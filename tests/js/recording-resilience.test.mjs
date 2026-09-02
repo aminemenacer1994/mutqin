@@ -78,6 +78,16 @@ import {
 
   const timeout = classifyRecitationFailure({ message: 'Recording timed out before audio was ready' })
   assert.equal(timeout.kind, RECITATION_FAILURE_KIND.TIMEOUT)
+
+  const cancelled = classifyRecitationFailure({ name: 'AbortError', message: 'The operation was aborted' })
+  assert.equal(cancelled.kind, RECITATION_FAILURE_KIND.CANCELLED)
+  assert.equal(cancelled.retryable, false)
+
+  const provider4xx = classifyRecitationFailure({ response: { status: 401, data: { message: 'not_authorised' } } })
+  assert.equal(provider4xx.kind, RECITATION_FAILURE_KIND.PROVIDER)
+
+  const provider5xx = classifyRecitationFailure({ response: { status: 503, data: { message: 'Speechmatics unavailable' } } })
+  assert.equal(provider5xx.kind, RECITATION_FAILURE_KIND.PROVIDER)
 }
 
 {

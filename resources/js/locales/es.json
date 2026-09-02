@@ -51,7 +51,7 @@
       "noResultsTitle": "No se encontraron coincidencias",
       "noResultsDesc": "Prueba a borrar filtros o buscar con otras palabras.",
       "errorTitle": "Algo salió mal",
-      "errorDesc": "Algo salió mal. Inténtalo de nuevo.",
+      "errorDesc": "Inténtalo de nuevo en un momento.",
       "offlineTitle": "Parece que estás sin conexión.",
       "offlineBanner": "Sin conexión a internet. Mutqin se reanudará cuando vuelvas a estar en línea.",
       "offlineDesc": "Comprueba tu conexión e inténtalo de nuevo. Reintentaremos automáticamente cuando vuelvas a estar en línea.",
@@ -65,7 +65,7 @@
       "unavailableTitle": "No disponible ahora",
       "unavailableDesc": "Esta función no está disponible en este momento. Inténtalo más tarde.",
       "bootErrorTitle": "Algo salió mal",
-      "bootErrorDesc": "Algo salió mal. Inténtalo de nuevo.",
+      "bootErrorDesc": "No se pudo cargar esta pantalla. Inténtalo de nuevo o vuelve al inicio para continuar.",
       "chunkUpdating": "Actualizando Mutqin…",
       "clearFilters": "Borrar filtros",
       "startSession": "Iniciar una sesión",
@@ -1149,17 +1149,18 @@
         "confirm": "Guardar sesión",
         "cancel": "No guardar"
       },
+      "contextBadge": "Memorización · {surah} · ayah {ayah} de {total}",
       "deleteSession": {
-        "title": "¿Eliminar la sesión guardada?",
-        "message": "Esto eliminará permanentemente \"{label}\" y su instantánea de exportación de este dispositivo.",
-        "messageFallback": "This will permanently remove this session and its saved export from this device.",
+        "title": "¿Eliminar esta sesión?",
+        "message": "Esta sesión se eliminará de forma permanente de este dispositivo. Esta acción no se puede deshacer.",
+        "progress": "Ayah {ayah} de {total}",
         "confirm": "Eliminar sesión",
         "cancel": "Conservar sesión"
       },
       "deleteSessions": {
-        "title": "Eliminar selected sessions?",
-        "message": "Esto eliminará permanentemente {count} sesiones guardadas de este dispositivo.",
-        "confirm": "Eliminar selected"
+        "title": "¿Eliminar las sesiones seleccionadas?",
+        "message": "Esto eliminará permanentemente {count} sesiones guardadas de este dispositivo. Esta acción no se puede deshacer.",
+        "confirm": "Eliminar seleccionadas"
       },
       "deleteRecording": {
         "title": "¿Eliminar la grabación?",
@@ -1305,6 +1306,15 @@
       "serviceUnavailable": "Recitation checking es temporarily unavailable. tú can continuar practising y try el IA comprobar again later.",
       "usageCapReached": "Has alcanzado el límite de comprobación de voz con IA de hoy. Inténtalo de nuevo mañana.",
       "processingTimeout": "This is taking longer than expected. Intentar de nuevo.",
+      "retry": {
+        "silence": "No oímos ninguna recitación. Recita con claridad e inténtalo de nuevo.",
+        "tooShort": "La grabación fue demasiado corta. Recita un poco más e inténtalo de nuevo.",
+        "microphone": "El micrófono está bloqueado. Permite el micrófono e inténtalo de nuevo.",
+        "unusable": "El audio no fue lo bastante claro. Recita más cerca del micrófono e inténtalo de nuevo.",
+        "emptyTranscript": "No pudimos entender la recitación. Recita con claridad e inténtalo de nuevo.",
+        "provider": "El servicio de recitación no respondió. Tu sesión está segura — inténtalo de nuevo.",
+        "cancelled": "Esta comprobación se canceló. Inicia una nueva grabación cuando estés listo."
+      },
       "stageRecording": "grabación…",
       "stageProcessing": "جارٍ المعالجة…",
       "stageAssessing": "جارٍ التقييم…",

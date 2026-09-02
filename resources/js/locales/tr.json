@@ -51,7 +51,7 @@
       "noResultsTitle": "Eşleşme bulunamadı",
       "noResultsDesc": "Try clearing filters veya searching ile different Kelimeler.",
       "errorTitle": "Bir şeyler ters gitti",
-      "errorDesc": "Something went wrong. Lütfen try again.",
+      "errorDesc": "Lütfen biraz sonra tekrar deneyin.",
       "offlineTitle": "sen appear to be offline.",
       "offlineBanner": "No internet bağlantı. Mutqin kalıcı olarak resume sonlandırdığınızda you're geri online.",
       "offlineDesc": "kontrol yeriniz bağlantı, sonra try again. We’ll retry automatically sonlandırdığınızda sen’re geri online.",
@@ -65,7 +65,7 @@
       "unavailableTitle": "değil available right önce",
       "unavailableDesc": "This feature isn’t available at the moment. Lütfen try again later.",
       "bootErrorTitle": "Bir şeyler ters gitti",
-      "bootErrorDesc": "Something went wrong. Lütfen try again.",
+      "bootErrorDesc": "Bu ekran yüklenemedi. Tekrar deneyin veya devam etmek için ana sayfaya dönün.",
       "chunkUpdating": "Mutqin güncelleniyor…",
       "clearFilters": "Filtreleri temizle",
       "startSession": "Başlat a oturum",
@@ -1149,17 +1149,18 @@
         "confirm": "Kaydet oturum",
         "cancel": "Kaydetme"
       },
+      "contextBadge": "Ezber · {surah} · ayah {ayah} / {total}",
       "deleteSession": {
-        "title": "Sil saved oturum?",
-        "message": "Bu, \"{label}\" ve dışa aktarma anlık görüntüsünü bu cihazdan kalıcı olarak kaldırır.",
-        "messageFallback": "This will permanently remove this session and its saved export from this device.",
-        "confirm": "Sil oturum",
-        "cancel": "Keep oturum"
+        "title": "Bu oturumu sil?",
+        "message": "Bu oturum bu cihazdan kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+        "progress": "Ayah {ayah} / {total}",
+        "confirm": "Oturumu sil",
+        "cancel": "Oturumu koru"
       },
       "deleteSessions": {
-        "title": "Sil selected sessions?",
-        "message": "Bu, {count} kayıtlı oturumu bu cihazdan kalıcı olarak kaldırır.",
-        "confirm": "Sil selected"
+        "title": "Seçilen oturumları sil?",
+        "message": "Bu, {count} kayıtlı oturumu bu cihazdan kalıcı olarak siler. Bu işlem geri alınamaz.",
+        "confirm": "Seçilenleri sil"
       },
       "deleteRecording": {
         "title": "Sil kayıt?",
@@ -1305,6 +1306,15 @@
       "serviceUnavailable": "Recitation checking is temporarily unavailable. sen can devam practising ve try the AI kontrol again later.",
       "usageCapReached": "Bugünkü yapay zeka ses kontrolü limitine ulaştınız. Lütfen yarın tekrar deneyin.",
       "processingTimeout": "This is taking longer than expected. Tekrar dene.",
+      "retry": {
+        "silence": "Hiç tilavet duymadık. Net okuyun, sonra tekrar deneyin.",
+        "tooShort": "Kayıt çok kısaydı. Biraz daha uzun okuyun, sonra tekrar deneyin.",
+        "microphone": "Mikrofon erişimi engellendi. Mikrofona izin verin, sonra tekrar deneyin.",
+        "unusable": "Ses değerlendirmek için yeterince net değildi. Mikrofona daha yakın okuyun, sonra tekrar deneyin.",
+        "emptyTranscript": "Tilaveti anlayamadık. Net okuyun, sonra tekrar deneyin.",
+        "provider": "Tilavet hizmeti yanıt vermedi. Oturumunuz güvende — tekrar deneyin.",
+        "cancelled": "Bu kontrol iptal edildi. Hazır olunca yeni bir kayıt başlatın."
+      },
       "stageRecording": "kayıt…",
       "stageProcessing": "جارٍ المعالجة…",
       "stageAssessing": "جارٍ التقييم…",

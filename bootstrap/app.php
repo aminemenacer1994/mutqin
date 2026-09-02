@@ -1,14 +1,22 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Request;
+use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureSubscriptionTier;
 use App\Http\Middleware\LogMutqinApiRequest;
 use App\Http\Middleware\SetLocale;
 use App\Models\User;
 use App\Support\AuthRedirect;
+use App\Support\ErrorReporting;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'mutqin_locale',
         ]);
 
+        $middleware->web(prepend: [
+            AssignRequestId::class,
+        ]);
+
         $middleware->web(append: [
             SetLocale::class,
         ]);
@@ -31,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
 
         $middleware->api(prepend: [
+            AssignRequestId::class,
             LogMutqinApiRequest::class,
         ]);
 
@@ -46,7 +59,46 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Keep API clients on friendly JSON; never leak exception internals when debug is off.
-        $exceptions->shouldRenderJsonWhen(static function (Request $request, \Throwable $e): bool {
+        $exceptions->shouldRenderJsonWhen(static function (Request $request, Throwable $e): bool {
             return $request->is('api/*') || $request->expectsJson();
+        });
+
+        $exceptions->dontReportWhen(static function (Throwable $e): bool {
+            return ErrorReporting::shouldIgnore($e);
+        });
+
+        $exceptions->reportable(static function (Throwable $e): void {
+            ErrorReporting::handleReported($e);
+        });
+
+        $exceptions->respond(static function (Response $response): Response {
+            return ErrorReporting::decorateResponse($response);
+        });
+
+        $exceptions->render(static function (Throwable $e, Request $request) {
+            if ($e instanceof ValidationException
+                || $e instanceof AuthenticationException
+                || $e instanceof AuthorizationException
+                || $e instanceof TokenMismatchException) {
+                return null;
+            }
+
+            $status = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
+            if ($status < 500) {
+                return null;
+            }
+
+            if (config('app.debug')) {
+                return null;
+            }
+
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
+                return null;
+            }
+
+            return response()->json([
+                'message' => __('ui.error_message'),
+                'request_id' => ErrorReporting::requestId($request),
+            ], $status);
         });
     })->create();

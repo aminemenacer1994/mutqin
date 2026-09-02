@@ -66,7 +66,8 @@ Mutqin emits structured logs via `MutqinLog` (search your log stack for `service
 | `speechmatics.usage.threshold.critical` | Usage crossed `SPEECHMATICS_USAGE_CRITICAL_PERCENT` |
 | `speechmatics.usage.cap.reached` | Hard deny (user, global, or emergency scope) |
 | `speechmatics.usage.daily_snapshot` | Scheduled UTC end-of-day snapshot |
-| `Speechmatics token rate limit hit.` | Per-minute / burst limit (HTTP 429) |
+| `speechmatics.rate_limit.hit` | Per-minute / burst limit (HTTP 429). Sanitized: `user_id`, IP fingerprint, configured limits, `retry_after`. No raw IP or secrets. |
+| `Speechmatics token rate limit hit.` | Legacy line for the same event |
 
 Legacy plain-text lines (`Speechmatics usage cap approaching.`, `Speechmatics usage cap reached.`) are kept for existing alert rules.
 

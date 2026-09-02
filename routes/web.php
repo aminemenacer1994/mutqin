@@ -7,11 +7,14 @@ use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Internal\ErrorTestController;
+use App\Http\Controllers\MadaniMushafPageController;
 use App\Http\Controllers\MushafPageImageController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuranProxyController;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
+use App\Support\ErrorReporting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -30,6 +33,9 @@ Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 Route::get('/auth/redirect', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/callback', [GoogleAuthController::class, 'callback']);
+
+Route::get('/internal/error-test', ErrorTestController::class)
+    ->name('internal.error-test');
 
 // Public routes
 Route::get('/', function () {
@@ -69,6 +75,19 @@ Route::get('/memorisation/mushaf-page/{page}.png', MushafPageImageController::cl
     ->middleware('throttle:public-proxy')
     ->where('page', '[1-9][0-9]{0,2}')
     ->name('memorisation.mushaf-page');
+
+Route::get('/memorisation/madani-mushaf/pages/{page}', [MadaniMushafPageController::class, 'show'])
+    ->middleware('throttle:public-proxy')
+    ->where('page', '[1-9][0-9]{0,2}')
+    ->name('memorisation.madani-mushaf.page');
+
+Route::get('/memorisation/madani-mushaf/resolve', [MadaniMushafPageController::class, 'resolve'])
+    ->middleware('throttle:public-proxy')
+    ->name('memorisation.madani-mushaf.resolve');
+
+Route::get('/memorisation/madani-mushaf/manifest', [MadaniMushafPageController::class, 'manifest'])
+    ->middleware('throttle:public-proxy')
+    ->name('memorisation.madani-mushaf.manifest');
 
 Route::view('/about', 'content.about-us')->name('about');
 Route::view('/about-us', 'content.about-us')->name('about-us');
@@ -174,117 +193,111 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })
         ->name('memorisation.audio-download');
 
-    Route::post('/memorisation/transcription-token', function (SpeechmaticsUsageCap $usageCap) {
+    Route::post('/memorisation/transcription-token', function (SpeechmaticsUsageCap $usageCap, SpeechmaticsRateLimit $rateLimit) {
         $userId = optional(request()->user())->id;
-        $cap = $usageCap->inspect($userId);
-        if (! $cap['allowed']) {
-            return response()->json([
-                'available' => false,
-                'reason' => SpeechmaticsUsageCap::REASON,
-                'message' => $usageCap->learnerMessageForScope($cap['scope']),
-                'speechmatics_status' => 429,
-            ]);
-        }
 
-        $apiKey = trim((string) config('services.speechmatics.api_key', ''));
-        $configuredRegion = strtolower(trim((string) config('services.speechmatics.region', '')));
-        $keySuffix = strlen($apiKey) >= 6 ? substr($apiKey, -6) : $apiKey;
-        $tokenTtl = $usageCap->tokenTtlSeconds();
-        $region = match ($configuredRegion) {
-            'eu', 'eu1', 'europe' => [
-                'code' => 'eu',
-                'host' => 'eu.rt.speechmatics.com',
-            ],
-            'us', 'us1', 'usa', 'united-states' => [
-                'code' => 'us',
-                'host' => 'us.rt.speechmatics.com',
-            ],
-            default => null,
-        };
-
-        if (! $apiKey) {
-            Log::warning('Speechmatics token request skipped: API key is not configured.', [
-                'user_id' => $userId,
-            ]);
-
-            return response()->json([
-                'available' => false,
-                'reason' => 'unavailable',
-                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
-                'speechmatics_status' => 422,
-            ]);
-        }
-
-        if (! $region) {
-            Log::warning('Speechmatics token request skipped: region is not configured.', [
-                'user_id' => $userId,
-            ]);
-
-            return response()->json([
-                'available' => false,
-                'reason' => 'unavailable',
-                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
-                'speechmatics_status' => 422,
-            ]);
-        }
-
-        try {
-            $response = Http::withToken($apiKey)
-                ->acceptJson()
-                ->timeout(12)
-                ->post('https://mp.speechmatics.com/v1/api_keys?type=rt', [
-                    'ttl' => $tokenTtl,
+        return $rateLimit->runExclusiveMint($userId === null ? null : (int) $userId, function () use ($usageCap, $userId) {
+            $cap = $usageCap->inspect($userId);
+            if (! $cap['allowed']) {
+                return response()->json([
+                    'available' => false,
+                    'reason' => SpeechmaticsUsageCap::REASON,
+                    'message' => $usageCap->learnerMessageForScope($cap['scope']),
+                    'speechmatics_status' => 429,
                 ]);
-        } catch (Throwable $error) {
-            Log::warning('Speechmatics token request failed before receiving a response.', [
-                'user_id' => optional(request()->user())->id,
-                'key_suffix' => $keySuffix ?: null,
-                'exception' => $error->getMessage(),
-            ]);
-
-            return response()->json([
-                'available' => false,
-                'reason' => 'unavailable',
-                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
-                'speechmatics_status' => 502,
-            ]);
-        }
-
-        if (! $response->successful()) {
-            $payload = $response->json();
-            if (! is_array($payload)) {
-                $payload = [
-                    'raw_body' => trim((string) $response->body()),
-                ];
             }
 
-            $status = $response->status() ?: 502;
-            $upstreamMessage = trim((string) ($payload['detail'] ?? $payload['message'] ?? $payload['reason'] ?? ''));
+            $apiKey = trim((string) config('services.speechmatics.api_key', ''));
+            $configuredRegion = strtolower(trim((string) config('services.speechmatics.region', '')));
+            $tokenTtl = $usageCap->tokenTtlSeconds();
+            $region = match ($configuredRegion) {
+                'eu', 'eu1', 'europe' => [
+                    'code' => 'eu',
+                    'host' => 'eu.rt.speechmatics.com',
+                ],
+                'us', 'us1', 'usa', 'united-states' => [
+                    'code' => 'us',
+                    'host' => 'us.rt.speechmatics.com',
+                ],
+                default => null,
+            };
 
-            Log::warning('Speechmatics token request was rejected.', [
-                'user_id' => optional(request()->user())->id,
-                'status' => $status,
-                'key_suffix' => $keySuffix ?: null,
-                'upstream_message' => $upstreamMessage ?: null,
-                'payload' => $payload,
-            ]);
+            if (! $apiKey) {
+                Log::warning('Speechmatics token request skipped: API key is not configured.', [
+                    'user_id' => $userId,
+                ]);
+
+                return response()->json([
+                    'available' => false,
+                    'reason' => 'unavailable',
+                    'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
+                    'speechmatics_status' => 422,
+                ]);
+            }
+
+            if (! $region) {
+                Log::warning('Speechmatics token request skipped: region is not configured.', [
+                    'user_id' => $userId,
+                ]);
+
+                return response()->json([
+                    'available' => false,
+                    'reason' => 'unavailable',
+                    'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
+                    'speechmatics_status' => 422,
+                ]);
+            }
+
+            try {
+                $response = Http::withToken($apiKey)
+                    ->acceptJson()
+                    ->timeout(12)
+                    ->post('https://mp.speechmatics.com/v1/api_keys?type=rt', [
+                        'ttl' => $tokenTtl,
+                    ]);
+            } catch (Throwable $error) {
+                ErrorReporting::reportProviderFailure('speechmatics', [
+                    'feature' => 'speechmatics',
+                    'status' => 0,
+                    'reason' => 'connection',
+                    'operation' => 'mint_token',
+                ]);
+
+                return response()->json([
+                    'available' => false,
+                    'reason' => 'unavailable',
+                    'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
+                    'speechmatics_status' => 502,
+                ]);
+            }
+
+            if (! $response->successful()) {
+                $status = $response->status() ?: 502;
+
+                ErrorReporting::reportProviderFailure('speechmatics', [
+                    'feature' => 'speechmatics',
+                    'status' => $status,
+                    'reason' => 'upstream_http',
+                    'operation' => 'mint_token',
+                ]);
+
+                return response()->json([
+                    'available' => false,
+                    'reason' => 'unavailable',
+                    'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
+                    'speechmatics_status' => $status,
+                ]);
+            }
+
+            $usageCap->recordSuccessfulMint($userId);
 
             return response()->json([
-                'available' => false,
-                'reason' => 'unavailable',
-                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
-                'speechmatics_status' => $status,
+                'access_token' => $response->json('key_value'),
+                'expires_in' => $tokenTtl,
+                'region' => $region['code'],
+                'websocket_host' => $region['host'],
             ]);
-        }
-
-        $usageCap->recordSuccessfulMint($userId);
-
-        return response()->json([
-            'access_token' => $response->json('key_value'),
-            'expires_in' => $tokenTtl,
-            'region' => $region['code'],
-            'websocket_host' => $region['host'],
-        ]);
+        });
     })
         ->middleware('throttle:'.SpeechmaticsRateLimit::NAME)
         ->name('memorisation.transcription-token');
