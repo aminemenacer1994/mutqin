@@ -3,6 +3,7 @@
 use App\Http\Controllers\AyahAudioController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\FeedbackController as AdminFeedbackPageController;
 use App\Http\Controllers\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
@@ -317,6 +318,7 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
     Route::patch('/contact-messages/{contactMessage}/resolve', [ContactMessageController::class, 'resolve'])->name('contact-messages.resolve');
     Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
     Route::get('/waiting-list', [AdminWaitingListController::class, 'index'])->name('waiting-list.index');
+    Route::get('/feedback', [AdminFeedbackPageController::class, 'index'])->name('feedback.index');
 });
 
 Route::get('/home', function () {

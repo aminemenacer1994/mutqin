@@ -6,6 +6,7 @@ import {
   setGlobalTheme,
   toThemePreference as toThemePref
 } from '../utils/theme'
+import { openFeedbackModal } from '../scripts/feedback/feedbackLauncher'
 import {
   ACTIVE_SESSION_SNAPSHOT_KEY,
   clearSharedMutqinBrowserResidue,
@@ -5467,6 +5468,43 @@ export default {
         this.postSessionConfidenceSelection
       )
     },
+    feedbackLinkedAiCheck() {
+      if (this.amdAssessment?.id) {
+        return {
+          aiCheckId: Number(this.amdAssessment.id),
+          aiCheckSource: 'assessment',
+        }
+      }
+
+      const candidates = []
+      const latestAttempt = Array.isArray(this.aiReciteAttempts) && this.aiReciteAttempts.length
+        ? this.aiReciteAttempts[this.aiReciteAttempts.length - 1]
+        : null
+      if (latestAttempt?.id) candidates.push(Number(latestAttempt.id))
+      if (this.revisionBaselineAttempt?.id) candidates.push(Number(this.revisionBaselineAttempt.id))
+      const settingsAttempt = Number(this.postSessionRecommendation?.settings?.source_attempt_id || 0)
+      if (settingsAttempt > 0) candidates.push(settingsAttempt)
+
+      const numericId = candidates.find((id) => Number.isFinite(id) && id > 0)
+      if (numericId) {
+        return {
+          aiCheckId: numericId,
+          aiCheckSource: 'ai_recite_attempt',
+        }
+      }
+
+      if (this.postSessionRecommendation?.id) {
+        return {
+          recommendationId: Number(this.postSessionRecommendation.id),
+          aiCheckSource: 'ai_recite_attempt',
+        }
+      }
+
+      return null
+    },
+    canOpenAiReciteFeedback() {
+      return Boolean(this.feedbackLinkedAiCheck) && Boolean(this.postSessionAiReviewDetails || this.recitationCheckResult || this.amdAssessment)
+    },
     postSessionFlowPhase() {
       return deriveCompletionFlowPhase({
         showPostSessionModal: this.showPostSessionModal,
@@ -10712,6 +10750,32 @@ export default {
   },
 
   methods: {
+    openFeedbackModal(options = {}) {
+      const mushafLayout = String(this.readingViewMode || this.sessionConfig?.readingViewMode || '').trim()
+      openFeedbackModal({
+        mushafLayout,
+        ...options,
+      })
+    },
+    openGeneralFeedback() {
+      this.openFeedbackModal({ type: 'suggestion' })
+    },
+    openSessionFeedback() {
+      this.openFeedbackModal({ type: 'suggestion' })
+    },
+    openAiReciteFeedback() {
+      const linked = this.feedbackLinkedAiCheck
+      if (!linked) return
+      const payload = {
+        type: 'ai_recitation',
+        aiCheckSource: linked.aiCheckSource,
+      }
+      if (linked.aiCheckId) payload.aiCheckId = linked.aiCheckId
+      if (linked.recommendationId) {
+        payload.context = { recommendation_id: linked.recommendationId }
+      }
+      this.openFeedbackModal(payload)
+    },
     isMobileViewport() {
       if (typeof window === 'undefined' || !window.matchMedia) return false
       return window.matchMedia('(max-width: 767.98px)').matches

@@ -12,6 +12,7 @@
                 <a class="billing-secondary-btn {{ $status !== 'resolved' ? 'admin-filter-active' : '' }}" href="{{ route('admin.contact-messages.index', ['status' => 'open']) }}">{{ __('admin.contact_messages.open') }}</a>
                 <a class="billing-secondary-btn {{ $status === 'resolved' ? 'admin-filter-active' : '' }}" href="{{ route('admin.contact-messages.index', ['status' => 'resolved']) }}">{{ __('admin.contact_messages.resolved') }}</a>
                 <a class="billing-secondary-btn" href="{{ route('admin.waiting-list.index') }}">{{ __('admin.contact_messages.waiting_list') }}</a>
+                <a class="billing-secondary-btn" href="{{ route('admin.feedback.index') }}">{{ __('admin.contact_messages.feedback') }}</a>
             </div>
         </div>
 

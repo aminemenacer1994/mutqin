@@ -3430,6 +3430,64 @@
             color: var(--accent);
         }
 
+        button.dropdown-item:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .dropdown-item--feedback,
+        .dropdown-item--feedback:hover,
+        .dropdown-item--feedback:focus,
+        .dropdown-item--feedback:focus-visible,
+        .dropdown-item--feedback:active,
+        .dropdown-item--feedback.active {
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            color: var(--text);
+        }
+
+        .dropdown-item--feedback:hover,
+        .dropdown-item--feedback:focus-visible {
+            color: var(--accent);
+        }
+
+        button.dropdown-item,
+        button.dropdown-item:hover,
+        button.dropdown-item:focus,
+        button.dropdown-item:focus-visible,
+        button.dropdown-item:active {
+            background: transparent;
+            color: var(--text);
+            box-shadow: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button.dropdown-item:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .app-navbar .offcanvas-body .mobile-nav-feedback {
+            grid-template-columns: 44px minmax(0, 1fr);
+            width: 100%;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            text-align: start;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-navbar .offcanvas-body .mobile-nav-feedback:active,
+        .app-navbar .offcanvas-body .mobile-nav-feedback:focus,
+        .app-navbar .offcanvas-body .mobile-nav-feedback:focus-visible {
+            background: color-mix(in srgb, var(--accent-light) 72%, transparent);
+            box-shadow: none;
+            outline: none;
+        }
+
         .dropdown-divider {
             height: 1px;
             margin: 8px 0;
@@ -5761,6 +5819,10 @@
                                 <span class="nav-link-copy"><strong>{{ __('ui.settings') }}</strong><small>{{ __('profile.change_password') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
                             </a>
+                            <button type="button" class="nav-link mobile-nav-feedback" data-feedback-trigger="menu">
+                                <i class="bi bi-chat-left-text nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>{{ __('ui.send_feedback') }}</strong></span>
+                            </button>
                             <form method="POST" action="{{ route('logout') }}" class="mobile-nav-logout-form">
                                 @csrf
                                 <button type="submit" class="nav-link mobile-nav-logout">
@@ -5827,6 +5889,17 @@
                                 </a>
                             </li>
                             <li>
+                                <button
+                                    type="button"
+                                    class="dropdown-item dropdown-item--feedback"
+                                    role="menuitem"
+                                    data-feedback-trigger="menu"
+                                >
+                                    <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                                    <span>{{ __('ui.send_feedback') }}</span>
+                                </button>
+                            </li>
+                            <li>
                                 <form method="POST" action="{{ route('logout') }}" id="logoutForm">
                                     @csrf
                                     <button type="submit" class="dropdown-item" role="menuitem">
@@ -5861,6 +5934,52 @@
             @yield('content')
         </main>
     </div>
+
+    @auth
+    <script>
+        window.mutqinFeedbackPendingOpen = false;
+        window.mutqinRequestFeedback = function (options) {
+            if (typeof window.mutqinOpenFeedback === 'function') {
+                window.mutqinOpenFeedback(options || {});
+                return;
+            }
+            window.mutqinFeedbackPendingOpen = options || true;
+        };
+        document.addEventListener('click', function (event) {
+            var trigger = event.target && event.target.closest
+                ? event.target.closest('[data-feedback-trigger]')
+                : null;
+            if (!trigger) return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (window.bootstrap && window.bootstrap.Dropdown) {
+                var dropdown = trigger.closest('.dropdown');
+                if (dropdown) {
+                    var toggle = dropdown.querySelector('[data-bs-toggle="dropdown"]');
+                    if (toggle) {
+                        var instance = window.bootstrap.Dropdown.getInstance(toggle)
+                            || window.bootstrap.Dropdown.getOrCreateInstance(toggle);
+                        if (instance && typeof instance.hide === 'function') instance.hide();
+                    }
+                }
+                var offcanvas = trigger.closest('.offcanvas');
+                if (offcanvas) {
+                    var offInstance = window.bootstrap.Offcanvas.getInstance(offcanvas);
+                    if (offInstance && typeof offInstance.hide === 'function') offInstance.hide();
+                }
+            }
+            window.mutqinRequestFeedback();
+        }, true);
+        window.addEventListener('mutqin:feedback-ready', function () {
+            if (!window.mutqinFeedbackPendingOpen) return;
+            var pending = window.mutqinFeedbackPendingOpen;
+            window.mutqinFeedbackPendingOpen = false;
+            if (typeof window.mutqinOpenFeedback === 'function') {
+                window.mutqinOpenFeedback(typeof pending === 'object' ? pending : {});
+            }
+        });
+    </script>
+    @endauth
 
     <script src="{{ mix('js/app.js') }}" defer></script>
     

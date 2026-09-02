@@ -6,6 +6,7 @@ use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\AyahNote;
 use App\Models\ContactSubmission;
+use App\Models\Feedback;
 use App\Models\LearningAnalytic;
 use App\Models\MemorisationAssessment;
 use App\Models\MemorisationProgress;
@@ -987,11 +988,16 @@ class AdminDashboardService
             ->where('created_at', '>=', now()->subDays(7))
             ->count();
 
+        $complaintMetrics = app(FeedbackService::class)->aiComplaintMetrics();
+
         return [
             'total' => $total,
             'last_7d' => $last7d,
             'avg_accuracy' => $avg !== null ? (int) round((float) $avg) : null,
             'bands' => $bands,
+            'complaints' => $complaintMetrics['complaints'],
+            'valid_scored_checks' => $complaintMetrics['valid_checks'],
+            'complaint_rate_percent' => $complaintMetrics['complaint_rate_percent'],
         ];
     }
 

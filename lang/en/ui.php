@@ -28,6 +28,7 @@ return [
     'settings' => 'Settings',
     'admin_dashboard' => 'Admin Dashboard',
     'contact_inbox' => 'Contact Inbox',
+    'send_feedback' => 'Send Feedback',
     'open_navigation' => 'Open navigation menu',
     'close_navigation' => 'Close navigation menu',
     'switch_dark' => 'Switch to dark theme',

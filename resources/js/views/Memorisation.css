@@ -61514,3 +61514,38 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   height: auto;
   max-height: calc(100dvh - 11.25rem - 4.1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
 }
+
+.post-session-simple__feedback-link-wrap,
+.post-session-simple__session-feedback {
+  margin: 0;
+  text-align: center;
+  font-size: 0.88rem;
+}
+
+.post-session-simple__session-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  justify-content: center;
+  padding: 0 0 0.65rem;
+}
+
+.post-session-simple__feedback-link {
+  border: 0;
+  background: transparent;
+  color: var(--accent, #8b5e3c);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  font: inherit;
+  padding: 0;
+}
+
+.post-session-simple__feedback-link:hover,
+.post-session-simple__feedback-link:focus-visible {
+  color: var(--accent-strong, #6f4a2f);
+}
+
+[data-theme="dark"] .post-session-simple__feedback-link {
+  color: #d4b896;
+}
+

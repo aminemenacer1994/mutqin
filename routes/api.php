@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Api\Admin\FeedbackController as AdminFeedbackController;
+use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\ClientErrorController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
@@ -65,6 +67,11 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.admin.contacts.resolve');
         Route::delete('/admin/contacts/{contactMessage}', [AdminDashboardController::class, 'destroyContact'])
             ->name('api.admin.contacts.destroy');
+        Route::get('/admin/feedback', [AdminFeedbackController::class, 'index'])->name('api.admin.feedback.index');
+        Route::get('/admin/feedback/metrics', [AdminFeedbackController::class, 'metrics'])->name('api.admin.feedback.metrics');
+        Route::get('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'show'])->name('api.admin.feedback.show');
+        Route::patch('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'update'])->name('api.admin.feedback.update');
+        Route::get('/admin/feedback/{feedback}/screenshot', [AdminFeedbackController::class, 'screenshot'])->name('api.admin.feedback.screenshot');
     });
 
     // Preferences remain available while waiting to verify email.
@@ -76,6 +83,10 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.profile.ai-audio-consent.update');
 
     Route::middleware('verified')->group(function () {
+        Route::post('/feedback', [FeedbackController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('api.feedback.store');
+
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
         Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');
 

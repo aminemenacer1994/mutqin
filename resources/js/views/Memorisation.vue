@@ -3617,6 +3617,17 @@
                   </ul>
                 </div>
 
+                <p v-if="canOpenAiReciteFeedback" class="post-session-simple__feedback-link-wrap">
+                  <button
+                    type="button"
+                    class="post-session-simple__feedback-link"
+                    data-testid="post-session-ai-feedback"
+                    @click="openAiReciteFeedback"
+                  >
+                    {{ t('feedback.aiIncorrectPrompt') }}
+                  </button>
+                </p>
+
                 <div
                   v-if="postSessionInfoArchitecture.mainFocus.explanation || postSessionFocusAyahRows.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"
@@ -4111,6 +4122,17 @@
           </div>
 
           <footer class="post-session-simple__footer">
+            <p v-if="!onboardingSampleSessionActive" class="post-session-simple__session-feedback">
+              <span>{{ t('feedback.sessionPrompt') }}</span>
+              <button
+                type="button"
+                class="post-session-simple__feedback-link"
+                data-testid="post-session-session-feedback"
+                @click="openSessionFeedback"
+              >
+                {{ t('feedback.sessionCta') }}
+              </button>
+            </p>
             <div
               class="post-session-simple__actions"
               :class="postSessionCtaButtons.length <= 2 ? 'post-session-simple__actions--2' : 'post-session-simple__actions--3'"

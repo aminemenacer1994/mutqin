@@ -11,6 +11,8 @@ import { initPwa } from './pwa';
 import { clearSharedMutqinBrowserResidue } from './utils/mutqinStorageKeys';
 import { isBrowserOffline } from './utils/networkStatus';
 import { installErrorTracking, reportError } from './scripts/observability/errorTracking';
+import { openFeedbackModal } from './scripts/feedback/feedbackLauncher';
+import FeedbackModal from './components/FeedbackModal.vue';
 import enLocale from './locales/en.json';
 
 function resolveEn(key) {
@@ -36,6 +38,7 @@ function bindLogoutStorageCleanup() {
 bindLogoutStorageCleanup();
 if (typeof window !== 'undefined') {
     window.mutqinClearSharedBrowserResidue = clearSharedMutqinBrowserResidue;
+    window.mutqinOpenFeedback = openFeedbackModal;
 }
 
 // Watch/dev Mix emits stable chunk names (memorisation.js). Patch webpack's
@@ -85,6 +88,10 @@ const UserDashboard = defineAsyncComponent(() =>
 
 const AdminDashboard = defineAsyncComponent(() =>
   import(/* webpackChunkName: "admin-dashboard" */ './views/AdminDashboard.vue')
+);
+
+const AdminFeedback = defineAsyncComponent(() =>
+  import(/* webpackChunkName: "admin-feedback" */ './views/AdminFeedback.vue')
 );
 
 // The memorisation workspace is by far the heaviest component. It is only used
@@ -260,6 +267,7 @@ async function bootstrapApp() {
     app.component('memorisation', Memorisation);
     app.component('user-dashboard', UserDashboard);
     app.component('admin-dashboard', AdminDashboard);
+    app.component('admin-feedback', AdminFeedback);
     app.component('about', About);
     app.component('about-us-page', AboutUsPage);
     app.component('pricing-page', PricingPage);
@@ -270,6 +278,21 @@ async function bootstrapApp() {
         import(/* webpackChunkName: "privacy" */ './views/PrivacyPolicy.vue')
     ));
     app.mount('#app');
+
+    const feedbackRoot = document.createElement('div');
+    feedbackRoot.id = 'mutqinFeedbackRoot';
+    document.body.appendChild(feedbackRoot);
+    const feedbackApp = createApp(FeedbackModal);
+    feedbackApp.use(i18n);
+    feedbackApp.mixin(i18nMixin);
+    feedbackApp.mount(feedbackRoot);
+
+    if (window.mutqinFeedbackPendingOpen) {
+        const pending = window.mutqinFeedbackPendingOpen;
+        window.mutqinFeedbackPendingOpen = false;
+        openFeedbackModal(typeof pending === 'object' ? pending : {});
+    }
+    window.dispatchEvent(new CustomEvent('mutqin:feedback-ready'));
 }
 
 function showBootstrapFailure(error) {
