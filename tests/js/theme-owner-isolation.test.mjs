@@ -133,7 +133,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const blade = readFileSync(join(root, 'resources/views/layouts/app.blade.php'), 'utf8')
 assert.match(blade, /ownerThemeKey|mutqin-theme\.\$\{/)
 assert.match(blade, /safeRemove\('mutqin-theme'\)/)
-assert.match(blade, /window\.mutqinAuthCheck\s*\?\s*\(window\.mutqinInitialTheme/)
+assert.match(blade, /window\.mutqinInitialTheme/)
 
 const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
 assert.match(memorisation, /isCurrentOwnerThemeStorageKey/)

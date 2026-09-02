@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Models\User;
 use App\Support\AdminEmails;
+use App\Support\Theme;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -276,6 +277,7 @@ class GoogleSignInService
             'password' => null,
             'password_set_at' => null,
             'is_admin' => $isAdmin,
+            'theme' => Theme::DEFAULT_PREFERENCE,
         ])->save();
 
         return $user;

@@ -467,7 +467,7 @@ class AdminDashboardTest extends TestCase
         $this->actingAs($learner)->getJson('/api/admin/contacts')->assertForbidden();
     }
 
-    public function test_admin_login_redirects_to_admin_dashboard(): void
+    public function test_admin_login_redirects_to_memorisation(): void
     {
         $admin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
@@ -477,7 +477,7 @@ class AdminDashboardTest extends TestCase
         $this->post(route('login'), [
             'email' => 'admin@example.com',
             'password' => 'secret12',
-        ])->assertRedirect(route('admin.dashboard'));
+        ])->assertRedirect(route('memorisation'));
 
         $this->assertAuthenticatedAs($admin);
     }
@@ -495,7 +495,22 @@ class AdminDashboardTest extends TestCase
         ])->assertRedirect(route('memorisation'));
     }
 
-    public function test_authenticated_admin_visiting_login_redirects_to_admin_dashboard(): void
+    public function test_login_ignores_intended_progress_page(): void
+    {
+        User::factory()->create([
+            'email' => 'learner@example.com',
+            'password' => bcrypt('secret12'),
+        ]);
+
+        $this->withSession(['url.intended' => route('dashboard')])
+            ->post(route('login'), [
+                'email' => 'learner@example.com',
+                'password' => 'secret12',
+            ])
+            ->assertRedirect(route('memorisation'));
+    }
+
+    public function test_authenticated_admin_visiting_login_redirects_to_memorisation(): void
     {
         $admin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
@@ -503,7 +518,7 @@ class AdminDashboardTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('login'))
-            ->assertRedirect(route('admin.dashboard'));
+            ->assertRedirect(route('memorisation'));
     }
 
     public function test_admin_visiting_customer_dashboard_is_sent_to_admin_dashboard(): void

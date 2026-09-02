@@ -26,7 +26,9 @@ class SetLocale
         View::share('appThemePreference', $themePreference);
         View::share('appTheme', Theme::toDataTheme($themePreference));
 
-        $request->session()->put('mutqin_theme', $themePreference);
+        if ($request->hasSession()) {
+            $request->session()->put('mutqin_theme', $themePreference);
+        }
 
         $response = $next($request);
 
@@ -35,7 +37,9 @@ class SetLocale
         $themePreference = $this->resolveThemePreference($request);
         View::share('appThemePreference', $themePreference);
         View::share('appTheme', Theme::toDataTheme($themePreference));
-        $request->session()->put('mutqin_theme', $themePreference);
+        if ($request->hasSession()) {
+            $request->session()->put('mutqin_theme', $themePreference);
+        }
 
         if ($request->query('lang') && $response instanceof Response) {
             $response->headers->setCookie(cookie('mutqin_locale', $locale, 60 * 24 * 365, null, null, false, false, false, 'lax'));
@@ -77,7 +81,7 @@ class SetLocale
             return Theme::DEFAULT_PREFERENCE;
         }
 
-        $candidate = $request->session()->get('mutqin_theme')
+        $candidate = ($request->hasSession() ? $request->session()->get('mutqin_theme') : null)
             ?: $request->cookie('mutqin_theme')
             ?: Theme::DEFAULT_PREFERENCE;
 

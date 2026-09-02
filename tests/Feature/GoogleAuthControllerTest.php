@@ -91,6 +91,28 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertSame('https://example.com/new-avatar.png', $user->fresh()->avatar);
     }
 
+    public function test_google_callback_ignores_intended_progress_page(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'existing@example.com',
+            'google_id' => 'google-123',
+        ]);
+
+        $this->mockGoogleUser([
+            'id' => 'google-123',
+            'name' => 'Existing User',
+            'email' => 'existing@example.com',
+            'avatar' => 'https://example.com/avatar.png',
+            'email_verified' => true,
+        ]);
+
+        $this->withSession(['url.intended' => route('dashboard')])
+            ->get(route('auth.google.callback'))
+            ->assertRedirect(route('memorisation'));
+
+        $this->assertAuthenticatedAs($user->fresh());
+    }
+
     public function test_existing_google_user_with_stale_unverified_flag_is_verified_and_enters_app(): void
     {
         $user = User::factory()->unverified()->create([
@@ -119,7 +141,7 @@ class GoogleAuthControllerTest extends TestCase
         $this->get(route('memorisation'))->assertOk();
     }
 
-    public function test_admin_google_user_is_redirected_to_admin_dashboard(): void
+    public function test_admin_google_user_is_redirected_to_memorisation(): void
     {
         config()->set('mutqin.admin_emails', ['admin@example.com']);
 
@@ -137,7 +159,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('admin.dashboard'));
+            ->assertRedirect(route('memorisation'));
 
         $this->assertAuthenticatedAs($admin->fresh());
     }
@@ -155,7 +177,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('admin.dashboard'));
+            ->assertRedirect(route('memorisation'));
 
         $user = User::query()->where('email', 'menacer72@gmail.com')->first();
         $this->assertNotNull($user);
@@ -184,7 +206,7 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('admin.dashboard'));
+            ->assertRedirect(route('memorisation'));
 
         $fresh = $user->fresh();
         $this->assertTrue($fresh->hasPersistedAdminRole());
@@ -378,6 +400,7 @@ class GoogleAuthControllerTest extends TestCase
 
         $user = User::where('google_id', 'google-dup')->firstOrFail();
         $this->assertSame(1, User::count());
+        $this->assertSame('light-mode', $user->theme);
 
         $this->post(route('logout'));
         $this->assertGuest();

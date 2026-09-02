@@ -36,6 +36,19 @@ class MemorisationRoutingTest extends TestCase
             ->assertRedirect(route('memorisation'));
     }
 
+    public function test_authenticated_admin_visiting_guest_auth_pages_redirect_to_memorisation(): void
+    {
+        config()->set('mutqin.admin_emails', ['admin@example.com']);
+
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('login'))
+            ->assertRedirect(route('memorisation'));
+    }
+
     public function test_logout_returns_to_memorisation_workspace(): void
     {
         $user = User::factory()->create();

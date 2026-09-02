@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Models\User;
 use App\Support\DatabaseDeploySafety;
+use App\Support\Theme;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -50,6 +51,7 @@ class EnsureDemoLoginAccount
             'password' => $password,
             'password_set_at' => $user->password_set_at ?? Carbon::now(),
             'locale' => $user->locale ?: 'en',
+            'theme' => $user->theme ?: Theme::DEFAULT_PREFERENCE,
             'subscription_tier' => $user->subscription_tier ?: 'free',
             'subscription_plan' => $user->subscription_plan ?: 'free',
             'subscription_status' => $user->subscription_status ?: 'free',

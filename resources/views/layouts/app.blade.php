@@ -39,10 +39,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
       (function () {
-        // Restore from SSR (accounts) or guest device cache before first paint.
+        // SSR/cookie is the source of truth (light by default). Device cache is
+        // only a fallback when the document has no theme yet — never override light.
         var modes = @json(\App\Support\Theme::clientCatalog());
         var defaultTheme = @json(\App\Support\Theme::DEFAULT);
-        var isAuth = @json(\Illuminate\Support\Facades\Auth::check());
         var byId = {};
         for (var i = 0; i < modes.length; i++) byId[modes[i].id] = modes[i];
         function normalize(value) {
@@ -54,11 +54,11 @@
           return defaultTheme;
         }
         var theme = document.documentElement.getAttribute('data-theme') || '';
-        if (!isAuth) {
+        if (!theme) {
           try {
             theme = localStorage.getItem('mutqin-theme.guest')
               || localStorage.getItem('mutqin-theme')
-              || theme;
+              || '';
           } catch (e) {}
         }
         if (!theme) theme = defaultTheme;
@@ -6587,16 +6587,16 @@
 
             window.mutqinSetTheme = setTheme;
 
-            // Authenticated: account theme from server only (never shared-device localStorage).
-            // Guests: owner-scoped cache, then legacy keys / SSR cookie / light.
+            // SSR/cookie wins (light by default). Device cache is a fallback only.
             const ownerId = themeOwnerId();
             const scopedTheme = safeGet(ownerThemeKey(ownerId));
             const scopedPreference = safeGet(ownerThemePreferenceKey(ownerId));
             const savedThemePreference = safeGet('mutqin-theme-preference');
             const savedTheme = safeGet('mutqin-theme');
-            const initialTheme = window.mutqinAuthCheck
-                ? (window.mutqinInitialTheme || window.mutqinInitialThemePreference || defaultTheme)
-                : (scopedTheme || scopedPreference || savedTheme || savedThemePreference || window.mutqinInitialThemePreference || window.mutqinInitialTheme || defaultTheme);
+            const initialTheme = window.mutqinInitialTheme
+                || window.mutqinInitialThemePreference
+                || (!window.mutqinAuthCheck && (scopedTheme || scopedPreference || savedTheme || savedThemePreference))
+                || defaultTheme;
             setTheme(initialTheme, { persist: false });
 
             function bindThemeDropdown() {

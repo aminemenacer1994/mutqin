@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\AdminEmails;
 use App\Support\AuthRedirect;
 use App\Support\EmailVerification;
+use App\Support\Theme;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -83,6 +84,7 @@ class RegisterController extends Controller
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'password_set_at' => now(),
+            'theme' => Theme::DEFAULT_PREFERENCE,
         ]);
 
         if (! EmailVerification::required()) {

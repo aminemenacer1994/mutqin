@@ -18,6 +18,39 @@ class ThemePreferenceTest extends TestCase
             ->assertCookie('mutqin_theme', 'light-mode');
     }
 
+    public function test_registration_persists_light_theme_as_default(): void
+    {
+        $this->post(route('register'), [
+            'name' => 'New Learner',
+            'email' => 'new-learner@example.com',
+            'password' => 'secret12',
+            'password_confirmation' => 'secret12',
+        ])->assertRedirect(route('memorisation'));
+
+        $user = User::where('email', 'new-learner@example.com')->firstOrFail();
+        $this->assertSame('light-mode', $user->theme);
+
+        $this->get(route('memorisation'))
+            ->assertOk()
+            ->assertSee('data-theme="light"', false);
+    }
+
+    public function test_login_persists_light_when_account_has_no_theme(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'plain@example.com',
+            'password' => bcrypt('secret12'),
+            'theme' => null,
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'plain@example.com',
+            'password' => 'secret12',
+        ])->assertRedirect(route('memorisation'));
+
+        $this->assertSame('light-mode', $user->fresh()->theme);
+    }
+
     public function test_authenticated_user_theme_overrides_cookie(): void
     {
         $user = User::factory()->create([

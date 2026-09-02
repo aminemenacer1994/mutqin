@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\AuthRedirect;
 use App\Support\Theme;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
@@ -39,11 +40,15 @@ class LoginController extends Controller
         return AuthRedirect::path($this->guard()->user());
     }
 
-    protected function authenticated(Request $request, $user): void
+    protected function authenticated(Request $request, $user): RedirectResponse
     {
-        if ($user instanceof \App\Models\User) {
+        if ($user instanceof User) {
             $user->touchLastLogin();
             \App\Services\AdminDashboardService::invalidateCaches();
+
+            if (! is_string($user->theme) || $user->theme === '') {
+                $user->forceFill(['theme' => Theme::DEFAULT_PREFERENCE])->save();
+            }
 
             // Bind session theme to this account immediately so a prior guest/other
             // user's cookie cannot bleed into the first authenticated responses.
@@ -54,8 +59,11 @@ class LoginController extends Controller
 
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
         // Put (not flash): Welcome Back is consumed on first /memorisation visit.
-        // Survive any intermediate hops (e.g. dashboard) before practice loads.
         $request->session()->put('mutqin_just_logged_in', true);
+        // Never honour a prior /dashboard visit — login always opens practice.
+        $request->session()->forget('url.intended');
+
+        return redirect()->to(AuthRedirect::to($user instanceof User ? $user : null));
     }
 
     /**

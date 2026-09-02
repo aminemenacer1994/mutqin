@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\Auth\GoogleSignInService;
 use App\Support\AuthRedirect;
+use App\Support\Theme;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -80,6 +82,9 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, true);
         request()->session()->regenerate();
+        if ($user instanceof User && (! is_string($user->theme) || $user->theme === '')) {
+            $user->forceFill(['theme' => Theme::DEFAULT_PREFERENCE])->save();
+        }
         request()->session()->put('mutqin_login_event_id', (string) Str::uuid());
         if ($created) {
             request()->session()->put('mutqin_just_registered', true);
@@ -97,7 +102,9 @@ class GoogleAuthController extends Controller
                 ->with('profile_status', __('profile.google_linked_success'));
         }
 
-        return redirect()->intended(AuthRedirect::to($user, justRegistered: $created));
+        request()->session()->forget('url.intended');
+
+        return redirect()->to(AuthRedirect::to($user, justRegistered: $created));
     }
 
     private function googleProvider()
