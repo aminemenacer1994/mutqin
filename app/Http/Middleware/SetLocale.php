@@ -37,6 +37,13 @@ class SetLocale
 
         $response = $next($request);
 
+        // Auth may change during the request (login/logout). Re-resolve so the
+        // response cookie matches the current account — never the previous one.
+        $themePreference = $this->resolveThemePreference($request);
+        View::share('appThemePreference', $themePreference);
+        View::share('appTheme', $this->themePreferenceToDataTheme($themePreference));
+        $request->session()->put('mutqin_theme', $themePreference);
+
         if ($request->query('lang') && $response instanceof Response) {
             $response->headers->setCookie(cookie('mutqin_locale', $locale, 60 * 24 * 365, null, null, false, false, false, 'lax'));
         }
@@ -66,12 +73,18 @@ class SetLocale
 
     private function resolveThemePreference(Request $request): string
     {
-        $userTheme = $request->user()?->theme;
-        if (is_string($userTheme) && $userTheme !== '') {
-            $normalizedUserTheme = self::THEME_ALIASES[strtolower($userTheme)] ?? null;
-            if ($normalizedUserTheme !== null) {
-                return $normalizedUserTheme;
+        $user = $request->user();
+        if ($user) {
+            $userTheme = $user->theme;
+            if (is_string($userTheme) && $userTheme !== '') {
+                $normalizedUserTheme = self::THEME_ALIASES[strtolower($userTheme)] ?? null;
+                if ($normalizedUserTheme !== null) {
+                    return $normalizedUserTheme;
+                }
             }
+
+            // Signed-in accounts never inherit another person's cookie/session from a shared device.
+            return 'sepia-mode';
         }
 
         $candidate = $request->session()->get('mutqin_theme')

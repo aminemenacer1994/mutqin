@@ -180,6 +180,8 @@ export const SHARED_MUTQIN_LOCAL_STORAGE_KEYS = Object.freeze([
   'mutqin.tajweedPractice.weaknessCounts.v1',
   'mutqin.practiceFocusWeakWords',
   'mutqin.dashboardEntryIntent.v1',
+  'mutqin-theme',
+  'mutqin-theme-preference',
   'offline_surah_catalog',
   'migration_complete',
   'memorisation_state_v2',

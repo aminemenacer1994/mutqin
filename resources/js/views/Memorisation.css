@@ -1159,7 +1159,7 @@
 
 :root {
   color-scheme: light;
-  --bg: #f3eee6;
+  --bg: #f6f3ee;
   --theme-color: #8b5e3c;
   --surface: rgba(255, 250, 243, 0.88);
   --surface-strong: rgba(255, 255, 255, 0.92);
@@ -1194,7 +1194,7 @@
   --control-disabled-opacity: 0.72;
   --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 48%, transparent);
   --focus-ring-color: var(--accent);
-  --zone-canvas: #f3eee6;
+  --zone-canvas: #f6f3ee;
   /* Light workspace card creams; dark Mushaf uses --workspace-card-surface-dark */
   --zone-reading-cream: #faf7f1;
   --zone-chrome-cream: #f0e9de;
@@ -1215,9 +1215,10 @@
   --toolbar-control-border: rgba(28, 25, 23, 0.1);
   --toolbar-control-fg: #1c1917;
   --toolbar-control-muted-bg: rgba(255, 255, 255, 0.72);
-  /* Cream reading surface stays theme-stable (including dark UI) */
+  /* Mushaf paper + ink follow the active theme (overridden in dark / sepia) */
   --mushaf-reading-surface: var(--zone-chrome-cream);
   --mushaf-reading-ink: #18181b;
+  --ayah-mark-ink: #1a1712;
   --zone-panel: #ece4d8;
   --zone-elevated: #fffaf3;
   --zone-action: #e8dfd0;
@@ -1289,11 +1290,15 @@
   --zone-elevated: #2a2521;
   --zone-action: #252019;
   --zone-divider: rgba(208, 160, 107, 0.22);
-  /* Same surface recipe as dark .workspace-shell */
+  /* Same surface recipe as dark .workspace-shell — also remap the light alias
+     so legacy `var(--workspace-card-surface)` / cream fallbacks stay dark */
   --workspace-card-surface-dark:
     radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 10%, transparent), transparent 36%),
     linear-gradient(180deg, var(--zone-chrome), color-mix(in srgb, var(--zone-chrome) 88%, var(--zone-reading) 12%));
-  --toolbar-header-bg: var(--workspace-card-surface-dark);
+  --workspace-card-surface: var(--workspace-card-surface-dark);
+  --zone-chrome-cream: var(--zone-chrome);
+  --zone-reading-cream: var(--zone-reading);
+  --toolbar-header-bg: var(--workspace-card-surface);
   --toolbar-header-bg-solid: var(--zone-chrome);
   --toolbar-header-border: var(--zone-divider);
   --toolbar-control-bg: var(--zone-elevated);
@@ -1306,6 +1311,7 @@
   /* Mushaf paper matches dark workspace-shell (not light cream) */
   --mushaf-reading-surface: var(--zone-chrome);
   --mushaf-reading-ink: #f7ebdf;
+  --ayah-mark-ink: #f0e6d4;
   --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.28);
   --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.34);
   --shadow-lg: 0 30px 80px rgba(0, 0, 0, 0.42);
@@ -1313,7 +1319,10 @@
 }
 
 [data-theme="sepia"] {
-  --bg: #efe2cb;
+  color-scheme: light;
+  /* Align canvas with app.scss / THEME_CHROME sepia */
+  --bg: #f1e7d8;
+  --theme-color: #8b5e3c;
   --surface: #faf1e3;
   --surface-strong: #fff8ed;
   --border: rgba(78, 58, 38, 0.26);
@@ -1326,13 +1335,31 @@
   --accent-soft: #dcc3a6;
   --accent-light: rgba(184, 130, 78, 0.12);
   --accent-wash: rgba(221, 194, 162, 0.35);
-  --zone-canvas: #efe2cb;
-  --zone-reading: #f7f0e3;
-  --zone-chrome: #eadcc6;
+  --zone-canvas: #f1e7d8;
+  --zone-reading-cream: #f7f0e3;
+  --zone-chrome-cream: #eadcc6;
+  --zone-reading: var(--zone-reading-cream);
+  --zone-chrome: var(--zone-chrome-cream);
   --zone-panel: #e4d4bc;
   --zone-elevated: #fdf6ea;
   --zone-action: #dfd0b8;
   --zone-divider: rgba(143, 96, 51, 0.2);
+  --workspace-card-surface:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
+    linear-gradient(165deg, color-mix(in srgb, var(--zone-chrome) 90%, white 10%), var(--zone-chrome));
+  --toolbar-header-bg: var(--workspace-card-surface);
+  --toolbar-header-bg-solid: var(--zone-chrome);
+  --toolbar-header-border: var(--zone-divider);
+  --toolbar-control-bg: #fff8ed;
+  --toolbar-control-hover-bg: color-mix(in srgb, var(--zone-chrome) 70%, #fff8ed);
+  --toolbar-control-active-bg: #352516;
+  --toolbar-control-active-fg: #fff8ed;
+  --toolbar-control-border: rgba(53, 37, 22, 0.12);
+  --toolbar-control-fg: #352516;
+  --toolbar-control-muted-bg: rgba(255, 248, 237, 0.75);
+  --mushaf-reading-surface: var(--zone-chrome);
+  --mushaf-reading-ink: #352516;
+  --ayah-mark-ink: #352516;
 }
 
 [v-cloak] {
@@ -5927,7 +5954,6 @@ body.has-navbar .tools-top {
 .verse-arabic .verse-ayah-end-number,
 .verse-arabic-with-end .verse-ayah-end-number {
   /* Pre-rendered ornate marker PNG — digit already centered in the asset */
-  --ayah-mark-ink: #1a1712;
   position: relative;
   display: inline-block !important;
   white-space: nowrap !important;
@@ -52492,9 +52518,9 @@ contained page (top session card untouched) —— */
   border-radius: 0 !important;
   box-shadow: none !important;
   background: transparent !important;
-  color: #18181b !important;
-  --mushaf-bg: var(--zone-chrome-cream);
-  --mushaf-text: #18181b;
+  color: var(--mushaf-reading-ink) !important;
+  --mushaf-bg: var(--mushaf-reading-surface);
+  --mushaf-text: var(--mushaf-reading-ink);
   --mushaf-line-rule: transparent;
   padding: clamp(1.1rem, 2.4vw, 1.8rem) clamp(1rem, 3vw, 2.4rem) clamp(1.4rem, 2.8vw, 2.2rem) !important;
   min-height: min(72vh, 860px);
@@ -52543,10 +52569,10 @@ contained page (top session card untouched) —— */
     border-radius: 0 !important;
     box-shadow: none !important;
     padding: 1rem clamp(1.25rem, 3.5vw, 2.75rem) 1.35rem !important;
-    --mushaf-bg: var(--zone-chrome-cream);
-    --mushaf-text: #18181b;
+    --mushaf-bg: var(--mushaf-reading-surface);
+    --mushaf-text: var(--mushaf-reading-ink);
     --mushaf-line-rule: rgba(24, 24, 27, 0.08);
-    color: #18181b !important;
+    color: var(--mushaf-reading-ink) !important;
     max-width: none !important;
     width: 100% !important;
     margin-inline: 0 !important;
@@ -52563,7 +52589,7 @@ contained page (top session card untouched) —— */
     z-index: 1;
     overflow: visible;
     background: transparent !important;
-    color: #18181b;
+    color: var(--mushaf-reading-ink);
     gap: 0 !important;
     width: 100% !important;
     max-width: none !important;
@@ -52631,8 +52657,8 @@ contained page (top session card untouched) —— */
 .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
 .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--fallback:not(.highlighted):not(.phrase-highlighted),
 .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph:not(.highlighted):not(.phrase-highlighted) {
-    color: #18181b !important;
-    -webkit-text-fill-color: #18181b;
+    color: var(--mushaf-reading-ink) !important;
+    -webkit-text-fill-color: var(--mushaf-reading-ink);
   }
 
   [data-theme="dark"] .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar,
@@ -52709,8 +52735,10 @@ contained page (top session card untouched) —— */
 [data-theme="dark"] .main.mushaf-mode-active .mushaf-shell,
 .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-shell {
   background: var(--workspace-card-surface) !important;
-  border-color: rgba(78, 58, 38, 0.22) !important;
+  background-color: var(--zone-chrome) !important;
+  border-color: var(--zone-divider) !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28) !important;
+  color: var(--mushaf-reading-ink) !important;
 }
 
 .main.mushaf-mode-active .madani-page-sheet {
@@ -52782,21 +52810,20 @@ contained page (top session card untouched) —— */
 
 .main.mushaf-mode-active .madani-surah-name {
   font-family: surahnames, serif !important;
-  color: #18181b !important;
+  color: var(--mushaf-reading-ink) !important;
   font-size: calc(clamp(1.7rem, 3.2vw, 2.7rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
 }
 
 .main.mushaf-mode-active .madani-basmala,
 .main.mushaf-mode-active .madani-word--unicode,
 .main.mushaf-mode-active .madani-word--fallback {
-  color: #18181b !important;
+  color: var(--mushaf-reading-ink) !important;
   font-family: var(--mushaf-selected-font) !important;
 }
 
 /* Unicode / fallback Quranic fonts: U+06DD ornate marker (QCF glyphs keep built-in markers) */
 .main.mushaf-mode-active .madani-word--end.madani-word--unicode,
 .main.mushaf-mode-active .madani-word--end.madani-word--fallback {
-  --ayah-mark-ink: #1a1712;
   display: inline !important;
   white-space: nowrap !important;
   box-sizing: content-box !important;
@@ -52851,7 +52878,7 @@ contained page (top session card untouched) —— */
 }
 
 .main.mushaf-mode-active .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-word--glyph {
-  color: #18181b;
+  color: var(--mushaf-reading-ink);
 }
 
 .main.mushaf-mode-active .madani-word:hover,
@@ -53879,7 +53906,7 @@ compact readable type (never clip) —— */
     border-radius: 20px !important;
     box-shadow: 0 10px 28px rgba(24, 24, 27, 0.06) !important;
     background: var(--workspace-card-surface) !important;
-    background-color: var(--zone-chrome-cream) !important;
+    background-color: var(--zone-chrome) !important;
     overflow: hidden !important;
   }
 
@@ -53913,9 +53940,9 @@ compact readable type (never clip) —— */
     box-shadow: none !important;
     overflow-x: hidden !important;
     background: transparent !important;
-    color: #18181b !important;
-    --mushaf-bg: var(--zone-chrome-cream);
-    --mushaf-text: #18181b;
+    color: var(--mushaf-reading-ink) !important;
+    --mushaf-bg: var(--mushaf-reading-surface);
+    --mushaf-text: var(--mushaf-reading-ink);
   }
 
   [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
@@ -56329,14 +56356,14 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .main.mushaf-mode-active .mushaf-shell,
 .main.mushaf-mode-active .mushaf-shell {
     background: var(--workspace-card-surface) !important;
-    background-color: var(--zone-chrome-cream) !important;
+    background-color: var(--zone-chrome) !important;
     border: 1px solid rgba(154, 103, 56, 0.18) !important;
     border-radius: 20px !important;
     box-shadow: 0 10px 28px rgba(63, 39, 18, 0.08) !important;
     overflow: hidden !important;
-    --mushaf-bg: var(--zone-chrome-cream);
-    --mushaf-text: #18181b;
-    color: #18181b !important;
+    --mushaf-bg: var(--mushaf-reading-surface);
+    --mushaf-text: var(--mushaf-reading-ink);
+    color: var(--mushaf-reading-ink) !important;
   }
 
   .app .main.mushaf-mode-active .mushaf-shell__bar,
@@ -56370,8 +56397,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .main.mushaf-mode-active .madani-word--glyph:not(.highlighted):not(.phrase-highlighted),
 .main.mushaf-mode-active .madani-word--unicode:not(.highlighted):not(.phrase-highlighted),
 .main.mushaf-mode-active .madani-word--fallback:not(.highlighted):not(.phrase-highlighted) {
-    color: #18181b !important;
-    -webkit-text-fill-color: #18181b !important;
+    color: var(--mushaf-reading-ink) !important;
+    -webkit-text-fill-color: var(--mushaf-reading-ink) !important;
   }
 
   .app .main.mushaf-mode-active .madani-word.highlighted,
@@ -56662,9 +56689,8 @@ then let rule spans use currentColor.
   box-shadow: none !important;
   --mushaf-bg: var(--mushaf-reading-surface);
   --mushaf-text: var(--mushaf-reading-ink);
-  --ayah-mark-ink: #1a1712;
   color: var(--mushaf-reading-ink) !important;
-  color-scheme: light;
+  color-scheme: inherit;
 }
 
 [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani,
@@ -57487,7 +57513,6 @@ never recolour tajweed text */
 .amd-mushaf-stream .verse-ayah-end-number,
 .amd-mushaf-ayah--premium .verse-ayah-end-number,
 .main:not(.mushaf-mode-active) .verses-grid .verse-arabic .verse-ayah-end-number {
-  --ayah-mark-ink: #1a1712;
   position: relative !important;
   display: inline-block !important;
   visibility: visible !important;

@@ -2,6 +2,7 @@ import { RTL_LOCALES, SWITCHER_LOCALES, SWITCHER_LOCALE_LABELS } from '../i18n'
 import {
   cycleGlobalTheme,
   getSavedTheme,
+  isCurrentOwnerThemeStorageKey,
   normalizeThemeToken as normalizeThemeValue,
   setGlobalTheme,
   toThemePreference as toThemePref
@@ -9679,7 +9680,8 @@ export default {
           this.refreshHifzJourneyState()
           return
         }
-        if (event?.key && event.key !== 'mutqin-theme') return
+        // Only mirror this account's theme bucket — ignore other users / legacy shared keys.
+        if (event?.key && !isCurrentOwnerThemeStorageKey(event.key)) return
         const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'sepia'
         this.syncGlobalTheme(nextTheme)
       }

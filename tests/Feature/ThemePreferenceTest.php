@@ -68,4 +68,32 @@ class ThemePreferenceTest extends TestCase
             ->assertOk()
             ->assertSee('data-theme="dark"', false);
     }
+
+    public function test_authenticated_user_without_saved_theme_does_not_inherit_shared_cookie(): void
+    {
+        $user = User::factory()->create([
+            'theme' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->withCookie('mutqin_theme', 'dark-mode')
+            ->withSession(['mutqin_theme' => 'dark-mode'])
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-theme="sepia"', false)
+            ->assertCookie('mutqin_theme', 'sepia-mode');
+    }
+
+    public function test_logout_resets_shared_theme_cookie_to_sepia(): void
+    {
+        $user = User::factory()->create([
+            'theme' => 'dark-mode',
+        ]);
+
+        $this->actingAs($user)
+            ->withCookie('mutqin_theme', 'dark-mode')
+            ->post(route('logout'))
+            ->assertRedirect(route('memorisation'))
+            ->assertCookie('mutqin_theme', 'sepia-mode');
+    }
 }

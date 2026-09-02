@@ -6018,6 +6018,9 @@
             function safeSet(key, value) {
                 try { localStorage.setItem(key, value); } catch (e) {}
             }
+            function safeRemove(key) {
+                try { localStorage.removeItem(key); } catch (e) {}
+            }
             function normalizeTheme(value) {
                 if (value === 'dark' || value === 'dark-mode') return 'dark';
                 if (value === 'light' || value === 'light-mode') return 'light';
@@ -6028,6 +6031,19 @@
                 if (theme === 'dark') return 'dark-mode';
                 if (theme === 'light') return 'light-mode';
                 return 'sepia-mode';
+            }
+            function themeOwnerId() {
+                if (!window.mutqinAuthCheck) return 'guest';
+                if (window.mutqinUserId != null && String(window.mutqinUserId).trim() !== '') {
+                    return String(window.mutqinUserId);
+                }
+                return 'guest';
+            }
+            function ownerThemeKey(ownerId) {
+                return `mutqin-theme.${ownerId || 'guest'}`;
+            }
+            function ownerThemePreferenceKey(ownerId) {
+                return `mutqin-theme-preference.${ownerId || 'guest'}`;
             }
             const themes = ['light', 'sepia', 'dark'];
             const themeIcons = {
@@ -6061,12 +6077,22 @@
                 const persist = !options || options.persist !== false;
                 const normalizedTheme = normalizeTheme(theme);
                 const themePreference = toThemePreference(normalizedTheme);
+                const ownerId = themeOwnerId();
 
                 document.documentElement.setAttribute('data-theme', normalizedTheme);
                 document.documentElement.style.colorScheme = normalizedTheme === 'dark' ? 'dark' : 'light';
-                safeSet('mutqin-theme', normalizedTheme);
-                safeSet('mutqin-theme-preference', themePreference);
+                safeSet(ownerThemeKey(ownerId), normalizedTheme);
+                safeSet(ownerThemePreferenceKey(ownerId), themePreference);
                 document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;
+                if (window.mutqinAuthCheck) {
+                    window.mutqinInitialTheme = normalizedTheme;
+                    window.mutqinInitialThemePreference = themePreference;
+                    safeRemove('mutqin-theme');
+                    safeRemove('mutqin-theme-preference');
+                } else {
+                    safeSet('mutqin-theme', normalizedTheme);
+                    safeSet('mutqin-theme-preference', themePreference);
+                }
                 var themeColorMeta = document.querySelector('meta[name="theme-color"]');
                 if (themeColorMeta) {
                     themeColorMeta.setAttribute('content', normalizedTheme === 'dark' ? '#14110f' : '#8b5e3c');
@@ -6079,7 +6105,9 @@
                 if (persist) {
                     persistThemeToServer(themePreference);
                 }
-                window.dispatchEvent(new CustomEvent('mutqin:theme-change', { detail: { theme: normalizedTheme } }));
+                window.dispatchEvent(new CustomEvent('mutqin:theme-change', {
+                    detail: { theme: normalizedTheme, ownerId: ownerId },
+                }));
                 
                 const button = document.getElementById('globalThemeToggle');
                 if (button) {
@@ -6101,12 +6129,16 @@
                 setTheme(themes[nextIndex]);
             }
             
-            // Authenticated: account theme from server. Guests: device localStorage / cookie / sepia.
+            // Authenticated: account theme from server only (never shared-device localStorage).
+            // Guests: owner-scoped cache, then legacy keys / SSR cookie / sepia.
+            const ownerId = themeOwnerId();
+            const scopedTheme = safeGet(ownerThemeKey(ownerId));
+            const scopedPreference = safeGet(ownerThemePreferenceKey(ownerId));
             const savedThemePreference = safeGet('mutqin-theme-preference');
             const savedTheme = safeGet('mutqin-theme');
             const initialTheme = window.mutqinAuthCheck
                 ? (window.mutqinInitialTheme || window.mutqinInitialThemePreference || 'sepia')
-                : (savedTheme || savedThemePreference || window.mutqinInitialThemePreference || window.mutqinInitialTheme || 'sepia');
+                : (scopedTheme || scopedPreference || savedTheme || savedThemePreference || window.mutqinInitialThemePreference || window.mutqinInitialTheme || 'sepia');
             setTheme(initialTheme, { persist: false });
             
             runWhenReady(function() {

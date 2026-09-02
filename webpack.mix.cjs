@@ -57,6 +57,15 @@ function collectReferencedChunkFiles(appJs) {
         keep.add(`${match[1]}.${match[2]}.js`);
     }
 
+    // Watch/dev runtime: __webpack_require__.e(/*! import() | dashboard */ "dashboard")
+    // → public/js/dashboard.js. Without these, a production prune + watch restart
+    // leaves app.js requesting stable names that no longer exist on disk.
+    for (const match of appJs.matchAll(
+        /__webpack_require__\.e\(\s*(?:\/\*[\s\S]*?\*\/\s*)?["']([a-z][a-z0-9_-]*)["']/gi
+    )) {
+        keep.add(`${match[1]}.js`);
+    }
+
     // Webpack 5 / Mix production templates look like:
     //   "js/"+{131:"homepage",...}[e]+"."+{131:"20283d40",...}[e]+".js"
     // Older builds used an extra paren: "js/"+({...}[e]||e)+"."+{...}

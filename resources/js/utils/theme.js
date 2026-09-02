@@ -3,6 +3,12 @@ const THEME_PREFERENCE_KEY = 'mutqin-theme-preference';
 const THEME_COOKIE_KEY = 'mutqin_theme';
 export const DEFAULT_THEME = 'sepia';
 
+/** Legacy unscoped keys — cleared on logout; never authoritative for signed-in users. */
+export const SHARED_THEME_STORAGE_KEYS = Object.freeze([
+  THEME_STORAGE_KEY,
+  THEME_PREFERENCE_KEY,
+]);
+
 /** PWA / browser chrome. Manifest splash stays light — OS cannot switch it with data-theme. */
 export const THEME_CHROME = {
   light: { themeColor: '#8b5e3c', backgroundColor: '#f6f3ee', colorScheme: 'light' },
@@ -67,10 +73,50 @@ function safeSet(key, value) {
   } catch {}
 }
 
+function safeRemove(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch {}
+}
+
 function readCookieTheme() {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(new RegExp(`(?:^|; )${THEME_COOKIE_KEY}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;
+}
+
+function isAuthenticated() {
+  return typeof window !== 'undefined' && !!window.mutqinAuthCheck;
+}
+
+/**
+ * Stable owner id for device cache. Guests share one bucket; accounts never share.
+ * @returns {string}
+ */
+export function getThemeOwnerId() {
+  if (typeof window === 'undefined') return 'guest';
+  if (!window.mutqinAuthCheck) return 'guest';
+  const id = window.mutqinUserId;
+  if (id != null && String(id).trim() !== '') return String(id);
+  return 'guest';
+}
+
+export function themeStorageKeyForOwner(ownerId = getThemeOwnerId()) {
+  const id = ownerId != null && String(ownerId).trim() !== '' ? String(ownerId) : 'guest';
+  return `${THEME_STORAGE_KEY}.${id}`;
+}
+
+export function themePreferenceStorageKeyForOwner(ownerId = getThemeOwnerId()) {
+  const id = ownerId != null && String(ownerId).trim() !== '' ? String(ownerId) : 'guest';
+  return `${THEME_PREFERENCE_KEY}.${id}`;
+}
+
+/** True when a storage event key belongs to the current owner's theme cache. */
+export function isCurrentOwnerThemeStorageKey(key) {
+  if (!key) return false;
+  const ownerId = getThemeOwnerId();
+  return key === themeStorageKeyForOwner(ownerId)
+    || key === themePreferenceStorageKeyForOwner(ownerId);
 }
 
 function getServerInitialTheme() {
@@ -82,23 +128,50 @@ function getServerInitialTheme() {
   return null;
 }
 
+function rememberLiveAccountTheme(normalizedTheme, themePreference) {
+  if (typeof window === 'undefined') return;
+  window.mutqinInitialTheme = normalizedTheme;
+  window.mutqinInitialThemePreference = themePreference;
+}
+
+function readOwnerScopedTheme(ownerId = getThemeOwnerId()) {
+  const scopedTheme = safeGet(themeStorageKeyForOwner(ownerId));
+  if (scopedTheme) return normalizeThemeToken(scopedTheme);
+  const scopedPreference = safeGet(themePreferenceStorageKeyForOwner(ownerId));
+  if (scopedPreference) return normalizeThemeToken(scopedPreference);
+  return null;
+}
+
 export function getSavedTheme() {
-  // Authenticated users: account theme from the server wins over shared-device localStorage.
-  if (typeof window !== 'undefined' && window.mutqinAuthCheck) {
+  // Live DOM is authoritative after the user toggles on this page (avoids stale
+  // cycle jumps when account snapshot hasn't refreshed yet).
+  if (typeof document !== 'undefined') {
+    const htmlTheme = document.documentElement.getAttribute('data-theme');
+    if (htmlTheme) return normalizeThemeToken(htmlTheme);
+  }
+
+  const ownerId = getThemeOwnerId();
+
+  // Authenticated: account theme from the server — never shared-device localStorage/cookie.
+  if (isAuthenticated()) {
     const serverTheme = getServerInitialTheme();
     if (serverTheme) return serverTheme;
+
+    const scoped = readOwnerScopedTheme(ownerId);
+    if (scoped) return scoped;
+
+    return DEFAULT_THEME;
   }
+
+  // Guests: owner-scoped cache, then legacy unscoped keys, cookie, server SSR, default.
+  const scoped = readOwnerScopedTheme(ownerId);
+  if (scoped) return scoped;
 
   const savedTheme = safeGet(THEME_STORAGE_KEY);
   if (savedTheme) return normalizeThemeToken(savedTheme);
 
   const savedPreference = safeGet(THEME_PREFERENCE_KEY);
   if (savedPreference) return normalizeThemeToken(savedPreference);
-
-  if (typeof document !== 'undefined') {
-    const htmlTheme = document.documentElement.getAttribute('data-theme');
-    if (htmlTheme) return normalizeThemeToken(htmlTheme);
-  }
 
   const cookieTheme = readCookieTheme();
   if (cookieTheme) return normalizeThemeToken(cookieTheme);
@@ -132,6 +205,7 @@ export function setGlobalTheme(theme, options = {}) {
   const { dispatchEvent = true, persist = true } = options;
   const normalizedTheme = normalizeThemeToken(theme);
   const themePreference = toThemePreference(normalizedTheme);
+  const ownerId = getThemeOwnerId();
 
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', normalizedTheme);
@@ -139,8 +213,21 @@ export function setGlobalTheme(theme, options = {}) {
     applyThemeChrome(normalizedTheme);
   }
 
-  safeSet(THEME_STORAGE_KEY, normalizedTheme);
-  safeSet(THEME_PREFERENCE_KEY, themePreference);
+  // Per-owner device cache — User A never overwrites User B's bucket.
+  safeSet(themeStorageKeyForOwner(ownerId), normalizedTheme);
+  safeSet(themePreferenceStorageKeyForOwner(ownerId), themePreference);
+
+  if (isAuthenticated()) {
+    // Keep live account snapshot in sync so getSavedTheme/cycle stay stable.
+    rememberLiveAccountTheme(normalizedTheme, themePreference);
+    // Drop legacy shared keys so the next guest/account cannot inherit them.
+    safeRemove(THEME_STORAGE_KEY);
+    safeRemove(THEME_PREFERENCE_KEY);
+  } else {
+    // Guests keep a legacy mirror for older FOUC helpers, still cleared on logout.
+    safeSet(THEME_STORAGE_KEY, normalizedTheme);
+    safeSet(THEME_PREFERENCE_KEY, themePreference);
+  }
 
   if (persist) {
     persistThemeToServer(themePreference);
@@ -148,7 +235,7 @@ export function setGlobalTheme(theme, options = {}) {
 
   if (dispatchEvent && typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('mutqin:theme-change', {
-      detail: { theme: normalizedTheme },
+      detail: { theme: normalizedTheme, ownerId },
     }));
   }
 
@@ -156,7 +243,10 @@ export function setGlobalTheme(theme, options = {}) {
 }
 
 export function cycleGlobalTheme(themes = ['light', 'sepia', 'dark']) {
-  const current = getSavedTheme();
+  // Always advance from the live attribute — never from a stale account snapshot.
+  const current = typeof document !== 'undefined'
+    ? normalizeThemeToken(document.documentElement.getAttribute('data-theme') || getSavedTheme())
+    : getSavedTheme();
   const idx = themes.indexOf(current);
   const next = themes[(idx + 1) % themes.length];
   return setGlobalTheme(next);
