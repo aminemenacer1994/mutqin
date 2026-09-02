@@ -652,13 +652,25 @@ includesAll('session completion success flow', [
 assert.match(
   source,
   /keepPractisingFromExitModal\(\)\s*\{[\s\S]*?continueSessionFromExitModal\(\)/,
-  'Keep practising must trigger the resume countdown via continueSessionFromExitModal'
+  'Keep practising must resume via continueSessionFromExitModal'
 )
 
 assert.match(
   source,
-  /continueSessionFromExitModal\(\)\s*\{[\s\S]*?showCountdown\(/,
-  'continueSessionFromExitModal must show the countdown before resuming playback'
+  /continueSessionFromExitModal\(\)\s*\{[\s\S]*?resumePausedPlaybackImmediately\(/,
+  'continueSessionFromExitModal must resume immediately without countdown'
+)
+
+assert.match(
+  source,
+  /softResumePausedSession\(options = \{\}\)[\s\S]*?resumePausedPlaybackImmediately\(/,
+  'soft resume after pause must continue immediately without countdown'
+)
+
+assert.doesNotMatch(
+  source,
+  /softResumePausedSession\(options = \{\}\)[\s\S]*?showCountdown\(/,
+  'soft resume must not show the 3-2-1 countdown'
 )
 
 assert.doesNotMatch(

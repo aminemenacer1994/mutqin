@@ -1278,7 +1278,7 @@ export function reconcileContinuePayloadWithBackend(localPayload, backendSession
 /**
  * Resolve End Session confirmation modal actions.
  * Keep practising dismisses the modal without mutating session completion state.
- * Playback may resume after a countdown (UI-only).
+ * Playback resumes immediately from the pause position (no countdown).
  *
  * Incomplete range ("Finish for now?") saves for later via pause — never completes.
  * Completed range ends the sitting and opens Session Complete.

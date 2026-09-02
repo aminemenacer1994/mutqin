@@ -37,7 +37,11 @@ assert.match(source, /loadSavedSession\(sessionId\)[\s\S]*resumeRestoredSessionW
 // Explicit header Resume also runs through countdown (same as start).
 assert.match(source, /continueLastSession\(\{ prepareOnly \}\)/)
 assert.doesNotMatch(source, /continueLastSession\(\{ skipCountdown: true/)
-assert.match(source, /softResumePausedSession\(options = \{\}\)[\s\S]*autoplay = options\.autoplay !== false/)
+assert.match(source, /softResumePausedSession\(options = \{\}\)[\s\S]*resumePausedPlaybackImmediately\(/)
+assert.doesNotMatch(
+  source,
+  /softResumePausedSession\(options = \{\}\)[\s\S]{0,800}?showCountdown\(/,
+)
 
 // Stale audio from prior session/user is cleared before attach.
 assert.match(

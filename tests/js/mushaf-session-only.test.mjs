@@ -23,6 +23,16 @@ assert.match(
   /wantSessionOnly = this\.readingViewMode === 'mushaf'/,
   'only classic mushaf uses session-only page builds'
 )
+assert.match(
+  memorisationJs,
+  /readingViewMode: 'mushaf'/,
+  'mushaf is the permanent default layout'
+)
+assert.match(
+  memorisationJs,
+  /\/\/ Mushaf is the permanent product default layout\.\s*this\.readingViewMode = 'mushaf'/,
+  'loadUiState always restores mushaf'
+)
 assert.doesNotMatch(memorisationJs, /showOriginalMadaniViewToggle/, 'Printed scan mode removed')
 assert.doesNotMatch(memorisationJs, /showMadaniMushafViewToggle/, 'Madani Mushaf mode removed')
 assert.doesNotMatch(memorisationVue, /MadaniMushafReader|OriginalMadaniMushaf/, 'Madani reader components removed')

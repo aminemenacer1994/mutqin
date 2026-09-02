@@ -14395,14 +14395,12 @@ export default {
       if (!payload?.config?.chapterId) return false
       const mode = payload.mode || this.currentMode || 'beginner'
       const target = mode === 'planner' ? 'planner' : (mode === 'beginner' ? 'beginner' : 'advanced')
-      const savedReadingViewMode = isReadingViewMode(payload.readingViewMode)
-        ? payload.readingViewMode
-        : (isReadingViewMode(payload.config?.readingViewMode) ? payload.config.readingViewMode : null)
       const savedMushafPageIndex = Number(payload.mushafPageIndex ?? payload.config?.mushafPageIndex)
 
       this.currentMode = mode
       this.tab = payload.tab || this.tab || 'tools'
-      if (savedReadingViewMode) this.readingViewMode = this.clampReadingViewMode(savedReadingViewMode)
+      // Mushaf is the permanent default — do not restore stacked from older sessions.
+      this.readingViewMode = 'mushaf'
       if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0) {
         this.mushafPageIndex = savedMushafPageIndex
       }
@@ -20591,11 +20589,11 @@ export default {
       const stepMeta = this.onboardingSteps[step] || {}
       this.applyOnboardingGoalPreset()
       const stepConfig = [
-        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'techniques', section: 'focus_mode', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'techniques', section: 'advanced_playback', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'advanced_setup', mode: 'stacked', blur: false, chaining: false, anchor: false }
+        { tab: 'tools', section: 'advanced_setup', mode: 'mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'techniques', section: 'focus_mode', mode: 'mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'techniques', section: 'advanced_playback', mode: 'mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_setup', mode: 'mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_setup', mode: 'mushaf', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       if (stepMeta.targetSection) stepConfig.section = stepMeta.targetSection
       this.tab = stepConfig.tab
@@ -31945,10 +31943,82 @@ export default {
         this.prepareRestoredSessionAudio({ autoplay: false })
         return
       }
+      // Pause → Resume: continue from the exact pause time — no 3-2-1 countdown.
+      this.resumePausedPlaybackImmediately()
+    },
+
+    /**
+     * Resume audio from the paused media time without countdown or verse restart.
+     */
+    async resumePausedPlaybackImmediately() {
+      this.primeAudioPlaybackUnlock()
       this.playerVisible = true
-      this.prepareRestoredSessionAudio({ autoplay: false, force: true })
-      this.showCountdown(async () => {
-        await this.finalizeCountdownPlayback()
+      const pauseTime = Math.max(0, Number(this.audioElement?.currentTime || this.currentTime || 0))
+      this.currentTime = pauseTime
+      this.restoredAudioState = {
+        ...(this.restoredAudioState || {}),
+        currentTime: pauseTime,
+        playerVisible: true,
+        speed: Number(this.speed || 1),
+        isPlaying: true,
+        src: this.audioElement?.currentSrc || this.audioElement?.getAttribute?.('src') || '',
+      }
+
+      const audio = this.audioElement
+      const src = String(audio?.currentSrc || audio?.getAttribute?.('src') || '').trim()
+      const hasSrc = !!src && src !== 'about:blank' && !src.startsWith('data:')
+      const canResumeInPlace = !!audio
+        && hasSrc
+        && !audio.ended
+        && Number(audio.readyState || 0) >= 2
+
+      if (canResumeInPlace) {
+        try {
+          if (pauseTime > 0 && Math.abs(Number(audio.currentTime || 0) - pauseTime) > 0.05) {
+            audio.currentTime = pauseTime
+          }
+        } catch { /* ignore seek */ }
+
+        const player = this.ensureSessionAudioPlayer?.()
+        const safeSpeed = this.normalizePlaybackSpeed(this.speed)
+        const playGeneration = this.beginPlaybackGeneration()
+        try {
+          if (player) player.setPlaybackRate(safeSpeed)
+          else {
+            audio.defaultPlaybackRate = safeSpeed
+            audio.playbackRate = safeSpeed
+          }
+          const playPromise = player
+            ? player.play({ generation: playGeneration, rewindIfEnded: false })
+            : audio.play()
+          await Promise.resolve(playPromise)
+          if (playGeneration !== this.playGeneration) return false
+          this.isPlaying = true
+          this.playbackAwaitingGesture = false
+          this.syncSessionControlsWithPlayback(true)
+          const verse = this.activeVerseRef
+          if (verse?.key && this.wordByWordAudioEnabled) {
+            this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
+              this.syncWordHighlightFromAudio(verse)
+              if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
+            }).catch(() => {})
+          }
+          return true
+        } catch (err) {
+          if (playGeneration !== this.playGeneration) return false
+          this.isPlaying = false
+          this.playbackAwaitingGesture = true
+          if (String(err?.name || '') === 'NotAllowedError') this.promptTapToPlay()
+          else this.promptAudioPlaybackRetry?.()
+          return false
+        }
+      }
+
+      // Fallback when the element was unloaded — still seek to pause time, no countdown.
+      return !!this.prepareRestoredSessionAudio({
+        autoplay: true,
+        force: true,
+        onAutoplayBlocked: () => this.promptTapToPlay(),
       })
     },
 
@@ -32084,7 +32154,7 @@ export default {
               }
             }
           }
-          // Always resume through the countdown so playback prep stays consistent.
+          // Soft-paused sits resume in place above; cold resume still uses continueLastSession.
           const continued = await this.continueLastSession({ prepareOnly })
           if (!continued) {
             this.sessionLifecycleError = 'resume_invalid'
@@ -35031,7 +35101,7 @@ export default {
       const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.KEEP_PRACTISING)
       if (!decision.closeModal || decision.mutateSession) return
       if (this.sessionExitEndingBusy) return
-      // Dismiss confirm without mutating session data, then countdown before resume.
+      // Dismiss confirm without mutating session data, then resume from pause time.
       this.continueSessionFromExitModal()
     },
 
@@ -35238,9 +35308,8 @@ export default {
       this.sessionExitPreviewSnapshot = null
       if (!snapshot) return
       this.restoreSessionFromSnapshot(snapshot, { autoplay: false })
-      this.showCountdown(async () => {
-        await this.finalizeCountdownPlayback()
-      })
+      // Keep practising after pause: pick up at the same time — no countdown.
+      this.resumePausedPlaybackImmediately()
     },
 
     prepareRangeRestart() {
@@ -40252,9 +40321,8 @@ export default {
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = !!state.showWordByWord
           this.wordByWordAudioEnabled = true
-          this.readingViewMode = this.clampReadingViewMode(
-            isReadingViewMode(state.readingViewMode) ? state.readingViewMode : 'mushaf'
-          )
+          // Mushaf is the permanent product default layout.
+          this.readingViewMode = 'mushaf'
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0
