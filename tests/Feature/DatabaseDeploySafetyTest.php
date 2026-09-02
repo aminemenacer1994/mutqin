@@ -96,15 +96,15 @@ class DatabaseDeploySafetyTest extends TestCase
         DatabaseDeploySafety::assertDemoEmail('learner@gmail.com');
     }
 
-    public function test_ensure_demo_login_refuses_production(): void
+    public function test_ensure_demo_login_creates_reserved_demo_account_in_production(): void
     {
         config(['app.show_demo_accounts' => true]);
         $this->app->detectEnvironment(fn () => 'production');
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('production');
+        $user = app(EnsureDemoLoginAccount::class)->ensure();
 
-        app(EnsureDemoLoginAccount::class)->ensure();
+        $this->assertSame(EnsureDemoLoginAccount::DEFAULT_EMAIL, $user->email);
+        $this->assertTrue(Hash::check(EnsureDemoLoginAccount::DEFAULT_PASSWORD, $user->password));
     }
 
     public function test_ensure_demo_login_refuses_non_demo_email(): void

@@ -46,7 +46,7 @@ class SetLocale
         }
 
         if ($response instanceof Response) {
-            $response->headers->setCookie(cookie('mutqin_theme', $themePreference, 60 * 24 * 365, null, null, false, false, false, 'lax'));
+            $response->headers->setCookie(cookie(Theme::COOKIE, $themePreference, 60 * 24 * 365, null, null, false, false, false, 'lax'));
         }
 
         return $response;
@@ -81,9 +81,19 @@ class SetLocale
             return Theme::DEFAULT_PREFERENCE;
         }
 
-        $candidate = ($request->hasSession() ? $request->session()->get('mutqin_theme') : null)
-            ?: $request->cookie('mutqin_theme')
-            ?: Theme::DEFAULT_PREFERENCE;
+        // Guests stay on light unless they actually picked a mode (mutqin_theme_set).
+        // Leftover sepia cookies/session from an older default must not stick.
+        $explicit = $request->cookie(Theme::CHOSEN_COOKIE);
+        $choseTheme = $explicit === '1'
+            || $explicit === 'true'
+            || $explicit === 'on'
+            || $explicit === 'yes';
+
+        if (! $choseTheme) {
+            return Theme::DEFAULT_PREFERENCE;
+        }
+
+        $candidate = $request->cookie(Theme::COOKIE) ?: Theme::DEFAULT_PREFERENCE;
 
         return Theme::normalizePreference((string) $candidate);
     }

@@ -44,16 +44,14 @@ class DeployPreflightCommand extends Command
         );
 
         $demoEnabled = (bool) config('app.show_demo_accounts');
-        $demoOk = ! (DatabaseDeploySafety::isProtectedEnvironment($env) && $demoEnabled);
         $checks[] = $this->check(
             'demo_accounts',
-            $demoOk,
+            true,
             $demoEnabled ? 'SHOW_DEMO_ACCOUNTS is enabled.' : 'SHOW_DEMO_ACCOUNTS is disabled.',
-            $demoOk ? null : 'Demo login/seed tooling must stay off on hosts with real users.'
+            $demoEnabled
+                ? 'Demo login is visible on /login. Disable with SHOW_DEMO_ACCOUNTS=false if this host should not offer it.'
+                : null
         );
-        if (! $demoOk) {
-            $failed = true;
-        }
 
         $backupConfirmed = filter_var(env('MUTQIN_BACKUP_CONFIRMED', false), FILTER_VALIDATE_BOOL);
         $requireBackup = (bool) $this->option('require-backup');

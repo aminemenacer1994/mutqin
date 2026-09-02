@@ -109,7 +109,9 @@ class ProfileController extends Controller
 
         return response()->json([
             'theme' => $theme,
-        ])->cookie('mutqin_theme', $theme, 60 * 24 * 365, null, null, false, false, false, 'lax');
+        ])
+            ->cookie(Theme::COOKIE, $theme, 60 * 24 * 365, null, null, false, false, false, 'lax')
+            ->cookie(Theme::CHOSEN_COOKIE, '1', 60 * 24 * 365, null, null, false, false, false, 'lax');
     }
 
     public function showAiAudioConsent(Request $request, AiAudioConsentService $consent): JsonResponse

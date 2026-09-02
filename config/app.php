@@ -35,14 +35,12 @@ return [
     |
     | When enabled, the login page shows a one-click demo login shortcut
     | and Memorisation shows a short tester start guide.
-    | Enable on staging/demo deployments via SHOW_DEMO_ACCOUNTS=true.
+    | Defaults on so staging and production testers see it. Set
+    | SHOW_DEMO_ACCOUNTS=false to hide it.
     |
     */
 
-    // Hard-off in production even if SHOW_DEMO_ACCOUNTS is mistakenly set.
-    'show_demo_accounts' => env('APP_ENV', 'production') === 'production'
-        ? false
-        : (bool) env('SHOW_DEMO_ACCOUNTS', env('APP_ENV', 'production') === 'local'),
+    'show_demo_accounts' => filter_var(env('SHOW_DEMO_ACCOUNTS', true), FILTER_VALIDATE_BOOL),
 
     /*
     |--------------------------------------------------------------------------

@@ -54,7 +54,7 @@ class LoginController extends Controller
             // user's cookie cannot bleed into the first authenticated responses.
             $theme = Theme::normalizePreference($user->theme);
             $request->session()->put('mutqin_theme', $theme);
-            cookie()->queue(cookie('mutqin_theme', $theme, 60 * 24 * 365, null, null, false, false, false, 'lax'));
+            cookie()->queue(cookie(Theme::COOKIE, $theme, 60 * 24 * 365, null, null, false, false, false, 'lax'));
         }
 
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
@@ -73,10 +73,12 @@ class LoginController extends Controller
     {
         // Reset guest theme so the next person on this device does not inherit this account.
         $request->session()->put('mutqin_theme', Theme::DEFAULT_PREFERENCE);
+        $request->session()->forget('mutqin_theme_set');
 
         return redirect()
             ->route('memorisation')
-            ->withCookie(cookie('mutqin_theme', Theme::DEFAULT_PREFERENCE, 60 * 24 * 365, null, null, false, false, false, 'lax'));
+            ->withCookie(cookie(Theme::COOKIE, Theme::DEFAULT_PREFERENCE, 60 * 24 * 365, null, null, false, false, false, 'lax'))
+            ->withCookie(cookie(Theme::CHOSEN_COOKIE, '', -2628000, null, null, false, false, false, 'lax'));
     }
 
     /**

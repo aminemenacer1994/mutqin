@@ -10,12 +10,24 @@ class ThemePreferenceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_defaults_to_light_theme(): void
+    public function test_guest_leftover_sepia_cookie_does_not_override_light_default(): void
     {
-        $this->get(route('home'))
+        $this->withCookie('mutqin_theme', 'sepia-mode')
+            ->withSession(['mutqin_theme' => 'sepia-mode'])
+            ->get(route('home'))
             ->assertOk()
             ->assertSee('data-theme="light"', false)
             ->assertCookie('mutqin_theme', 'light-mode');
+    }
+
+    public function test_guest_keeps_sepia_after_explicitly_choosing_it(): void
+    {
+        $this->withCookie('mutqin_theme', 'sepia-mode')
+            ->withCookie('mutqin_theme_set', '1')
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-theme="sepia"', false)
+            ->assertCookie('mutqin_theme', 'sepia-mode');
     }
 
     public function test_registration_persists_light_theme_as_default(): void

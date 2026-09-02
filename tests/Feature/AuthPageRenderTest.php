@@ -29,7 +29,10 @@ class AuthPageRenderTest extends TestCase
             ->assertOk()
             ->assertSee(__('ui.login'))
             ->assertSee(__('ui.continue_google'))
-            ->assertSee(__('ui.email_address'));
+            ->assertSee(__('ui.email_address'))
+            ->assertSee(__('ui.auth_demo_title'))
+            ->assertSee(__('ui.auth_demo_use'))
+            ->assertSee(route('login.demo'), false);
     }
 
     public function test_login_page_shows_single_demo_login_when_enabled(): void

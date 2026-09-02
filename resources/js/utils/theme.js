@@ -1,6 +1,7 @@
 const THEME_STORAGE_KEY = 'mutqin-theme';
 const THEME_PREFERENCE_KEY = 'mutqin-theme-preference';
 const THEME_COOKIE_KEY = 'mutqin_theme';
+const THEME_CHOSEN_COOKIE_KEY = 'mutqin_theme_set';
 export const DEFAULT_THEME = 'light';
 
 /** Legacy unscoped keys — cleared on logout; never authoritative for signed-in users. */
@@ -250,6 +251,9 @@ export function setGlobalTheme(theme, options = {}) {
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', normalizedTheme);
     document.cookie = `${THEME_COOKIE_KEY}=${themePreference};path=/;max-age=31536000;samesite=lax`;
+    if (persist) {
+      document.cookie = `${THEME_CHOSEN_COOKIE_KEY}=1;path=/;max-age=31536000;samesite=lax`;
+    }
     applyThemeChrome(normalizedTheme);
   }
 

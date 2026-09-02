@@ -11,7 +11,8 @@ use RuntimeException;
 
 /**
  * Ensures the one-click demo login account exists with a known password.
- * Staging/local only — never create or overwrite accounts in production.
+ * Allowed wherever SHOW_DEMO_ACCOUNTS is on, including production testers.
+ * Never overwrites a real-user mailbox — emails must stay on a reserved demo domain.
  */
 class EnsureDemoLoginAccount
 {
@@ -23,10 +24,6 @@ class EnsureDemoLoginAccount
 
     public function ensure(): User
     {
-        DatabaseDeploySafety::assertNotProtectedEnvironment(
-            'create or update the demo login account'
-        );
-
         if (! config('app.show_demo_accounts')) {
             throw new RuntimeException(
                 'Demo login is disabled (SHOW_DEMO_ACCOUNTS=false).'

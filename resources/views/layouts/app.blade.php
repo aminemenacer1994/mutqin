@@ -6551,6 +6551,9 @@
                 safeSet(ownerThemeKey(ownerId), normalizedTheme);
                 safeSet(ownerThemePreferenceKey(ownerId), themePreference);
                 document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;
+                if (persist) {
+                    document.cookie = `mutqin_theme_set=1;path=/;max-age=31536000;samesite=lax`;
+                }
                 if (window.mutqinAuthCheck) {
                     window.mutqinInitialTheme = normalizedTheme;
                     window.mutqinInitialThemePreference = themePreference;

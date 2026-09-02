@@ -12,6 +12,11 @@ final class Theme
 
     public const DEFAULT_PREFERENCE = 'light-mode';
 
+    public const COOKIE = 'mutqin_theme';
+
+    /** Set only when the visitor actually picks a mode (not leftover defaults). */
+    public const CHOSEN_COOKIE = 'mutqin_theme_set';
+
     /**
      * @var array<string, array{
      *     id: string,

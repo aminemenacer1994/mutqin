@@ -15,13 +15,6 @@ if [[ "${STAGE}" != "production" && "${STAGE}" != "prod" && "${STAGE}" != "stagi
   exit 1
 fi
 
-if [[ "${STAGE}" == "production" || "${STAGE}" == "prod" ]]; then
-  if [[ "${SHOW_DEMO_ACCOUNTS:-false}" == "true" || "${SHOW_DEMO_ACCOUNTS:-0}" == "1" ]]; then
-    echo "Refusing production migrate while SHOW_DEMO_ACCOUNTS is enabled." >&2
-    exit 1
-  fi
-fi
-
 echo "==> Deploy preflight (${STAGE})"
 php artisan mutqin:deploy-preflight
 
