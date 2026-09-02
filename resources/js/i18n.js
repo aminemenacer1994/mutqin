@@ -49,6 +49,10 @@ function getInitialLocale() {
 export function getSavedLocale() {
   try {
     if (typeof window !== 'undefined' && window.mutqinForceInitialLocale) return getInitialLocale()
+    // Signed-in accounts: server-resolved locale is the per-user source of truth.
+    if (typeof window !== 'undefined' && window.mutqinAuthCheck && window.mutqinInitialLocale) {
+      return getInitialLocale()
+    }
     return normalizeLocale(localStorage.getItem(STORAGE_KEY) || getInitialLocale())
   } catch (e) {
     return getInitialLocale()
@@ -112,6 +116,8 @@ export async function setupI18n() {
     globalInjection: true,
     locale: 'en',
     fallbackLocale: 'en',
+    missingWarn: false,
+    fallbackWarn: false,
     messages: { ...STATIC_MESSAGES },
   })
   await loadLocaleMessages(i18n, getSavedLocale())

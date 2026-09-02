@@ -67,11 +67,20 @@
       "bootErrorTitle": "Bir şeyler ters gitti",
       "bootErrorDesc": "Bu ekran yüklenemedi. Tekrar deneyin veya devam etmek için ana sayfaya dönün.",
       "chunkUpdating": "Mutqin güncelleniyor…",
+      "chunkErrorTitle": "Update required",
+      "chunkErrorDesc": "Mutqin was updated. Reload to continue — if this keeps happening, return home and try again.",
       "clearFilters": "Filtreleri temizle",
       "startSession": "Başlat a oturum",
       "returnToSessions": "dön to oturumlar",
       "logIn": "« Log in»",
       "createFirstNote": "Write yeriniz first not"
+    },
+    "filters": "Filters",
+    "relative": {
+      "justNow": "Just now",
+      "minutesAgo": "{n}m ago",
+      "hoursAgo": "{n}h ago",
+      "daysAgo": "{n}d ago"
     }
   },
   "auth": {
@@ -1295,10 +1304,26 @@
       "micStoppedUnexpectedly": "The mikrofon stopped unexpectedly.",
       "micBlocked": "mikrofon access was blocked. Allow mikrofon permission, then try again.",
       "micRequired": "mikrofon access is required for AI Recitation. Check your browser permissions and try again.",
+      "micDeniedTitle": "Microphone access blocked",
+      "micDeniedGuidance": "Allow microphone access for this site in your browser settings, then return here and try again. Other memorisation tools still work without the microphone.",
+      "micDeniedGuidanceSafari": "On iPhone or iPad: Settings → Safari → Microphone → Allow for this site, then return and try again. Other memorisation tools still work without the microphone.",
+      "micDeniedGuidanceChrome": "In Chrome: site settings → Microphone → Allow, then reload and try again. Other memorisation tools still work without the microphone.",
+      "consentTitle": "Microphone and AI processing",
+      "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
+      "consentProcessor": "Live transcription may be handled by {processor}.",
+      "consentRetentionNever": "Raw recordings are not saved after the check finishes.",
+      "consentRetentionTemporary": "Temporary audio may be kept briefly on this device for review, then deleted automatically.",
+      "consentRetentionRetain": "You can keep a local recording for your own replay. Mutqin does not sell your audio.",
+      "consentPrivacyLink": "Read the Privacy policy",
+      "consentAccept": "Allow and continue",
+      "consentDecline": "Not now",
+      "consentDeclined": "AI voice checks need microphone consent. You can keep practising with listening, Peek, and other non-AI tools.",
+      "consentContinueWithout": "You can decline and keep using memorisation tools that do not need the microphone.",
       "recordingInvalid": "No usable ses was captured. Try kayıt again.",
       "serviceNetworkError": "Yapamadık connect to the recitation service. Your oturum is safe. Tekrar dene.",
       "serviceUnavailable": "Recitation checking is temporarily unavailable. sen can devam practising ve try the AI kontrol again later.",
       "usageCapReached": "Bugünkü yapay zeka ses kontrolü limitine ulaştınız. Lütfen yarın tekrar deneyin.",
+      "rateLimited": "You are starting AI voice checks too quickly. Please wait a moment and try again.",
       "processingTimeout": "This is taking longer than expected. Tekrar dene.",
       "retry": {
         "silence": "Hiç tilavet duymadık. Net okuyun, sonra tekrar deneyin.",
@@ -1355,23 +1380,7 @@
       "colourCloseHint": "Cilalanması gereken yakın hatalar.",
       "colourIncorrectHint": "Kelimeler said incorrectly.",
       "colourSkippedHint": "Kelimeler değil recited.",
-      "colourWaitingHint": "değil evaluated yet.",
-      "micDeniedTitle": "Microphone access blocked",
-      "micDeniedGuidance": "Allow microphone access for this site in your browser settings, then return here and try again. Other memorisation tools still work without the microphone.",
-      "micDeniedGuidanceSafari": "On iPhone or iPad: Settings → Safari → Microphone → Allow for this site, then return and try again. Other memorisation tools still work without the microphone.",
-      "micDeniedGuidanceChrome": "In Chrome: site settings → Microphone → Allow, then reload and try again. Other memorisation tools still work without the microphone.",
-      "consentTitle": "Microphone and AI processing",
-      "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
-      "consentProcessor": "Live transcription may be handled by {processor}.",
-      "consentRetentionNever": "Raw recordings are not saved after the check finishes.",
-      "consentRetentionTemporary": "Temporary audio may be kept briefly on this device for review, then deleted automatically.",
-      "consentRetentionRetain": "You can keep a local recording for your own replay. Mutqin does not sell your audio.",
-      "consentPrivacyLink": "Read the Privacy policy",
-      "consentAccept": "Allow and continue",
-      "consentDecline": "Not now",
-      "consentDeclined": "AI voice checks need microphone consent. You can keep practising with listening, Peek, and other non-AI tools.",
-      "consentContinueWithout": "You can decline and keep using memorisation tools that do not need the microphone.",
-      "rateLimited": "You are starting AI voice checks too quickly. Please wait a moment and try again."
+      "colourWaitingHint": "değil evaluated yet."
     },
     "analyticsHeatmap": {
       "confidence": "güven: {value}%",
@@ -1981,6 +1990,7 @@
         "reviseFocusPhrase": "Gözden geçirmeye başla",
         "reviseThisRange": "Gözden geçirmeye başla",
         "continueToNextRange": "Sonraki oturuma geç",
+        "continueToAyah": "Next ayah {ayah}",
         "continueToAyahs": "Ayetler {start}, {end} ile devam et",
         "repeatThisSession": "Bu oturumu tekrarla",
         "reviewOnceMore": "Bir kez daha gözden geçir",
@@ -3151,7 +3161,9 @@
       "recallStrengthDesc": "Simple snapshot of how strong this oturum felt overall.",
       "reciteChecks": "Oku checks",
       "reciteChecksDesc": "kaydedilmiş checks in this range.",
-      "recallStrengthLow": "منخفض"
+      "recallStrengthLow": "منخفض",
+      "repeatsCompleted": "Repeats completed",
+      "runsCompleted": "Runs completed"
     },
     "toolsHeader": {
       "insights": "öngörüler",
@@ -3195,7 +3207,14 @@
       "rowReady": "Hazır",
       "noDataYet": "Henüz veri yok",
       "noDataDetail": "Başlat a oturum to build analitik",
-      "defaultInsight": "koru Bugün small ve consistent"
+      "defaultInsight": "koru Bugün small ve consistent",
+      "summaryReviewedOne": "You reviewed {count} ayah",
+      "summaryReviewedMany": "You reviewed {count} ayahs",
+      "summaryTime": "in {time}",
+      "summaryRepeatsOne": "with {count} repeat",
+      "summaryRepeatsMany": "with {count} repeats",
+      "summaryAttentionOne": "{count} ayah needed extra attention.",
+      "summaryAttentionMany": "{count} ayahs needed extra attention."
     },
     "guided": {
       "learn": "Öğren",
@@ -3539,6 +3558,121 @@
       "toolMemorizing": "جارٍ الحفظ",
       "peekHint": "ihtiyaç duyar a hint? Peek at the text",
       "toolPeek": "معاينة النص"
+    },
+    "exportReport": {
+      "saved": "Saved",
+      "exported": "Exported",
+      "sessionStats": "Session stats",
+      "footer": "Mutqin session export",
+      "versesRead": "Ayahs reviewed",
+      "timeSpent": "Time memorising",
+      "repetitions": "Repeats completed",
+      "sessionPlays": "Session plays",
+      "versePlays": "Verse plays",
+      "averageTime": "Average time per ayah",
+      "struggledAyahs": "Ayahs that needed extra care"
+    },
+    "helpLearning": {
+      "title": "Help & Öğreniliyor",
+      "subtitle": "Learn how to use Mutqin's tools to memorise more effectively.",
+      "bestFor": "Best için:",
+      "sections": {
+        "tajweed": {
+          "title": "Tajweed Rules",
+          "description": "Tajweed is the set of rules that helps you recite the Quran correctly and beautifully. Mutqin highlights these rules so you can recognise and practise them while memorising.",
+          "bestFor": "Students improving pronunciation and recitation quality.",
+          "legendTitle": "Ne her renk anlama gelir",
+          "legendIntro": "Kullan Bu legend while sen dinlerken ve tekrarlarken. It is a rehber, değil a replacement için a öğretmen.",
+          "colors": {
+            "gray": {
+              "label": "Sessiz / bağlantı işaretler",
+              "description": "Hamzat al-wasl ve Sessiz letters that are değil pronounced."
+            },
+            "green": {
+              "label": "Ghunnah / Idgham ile ghunnah",
+              "description": "Nasalisation ve joining ile a nasal sound."
+            },
+            "purple": {
+              "label": "الإخفاء / الإدغام بلا غنة",
+              "description": "Hidden noon sound ve non-nasal joining."
+            },
+            "orange": {
+              "label": "القلقلة",
+              "description": "Echoing stop açık ق ط ب ج د."
+            },
+            "red": {
+              "label": "المد",
+              "description": "Normal, obligatory, ve necessary lengthening."
+            },
+            "blue": {
+              "label": "الإدغام الشفوي",
+              "description": "Labial merging ile م."
+            }
+          }
+        },
+        "srs": {
+          "title": "Smart Revision (SRS)",
+          "description": "Mutqin automatically reminds you to review verses at the right time so they stay strong in your memory. Difficult verses appear more often, while stronger verses are reviewed less frequently.",
+          "bestFor": "Long-term retention and preventing memorisation loss."
+        },
+        "techniques": {
+          "title": "Memorisation Techniques",
+          "description": "Choose the method that helps you stay steady, then adjust it as your range becomes more familiar.",
+          "bestFor": "Students discovering which learning style works best for them.",
+          "details": {
+            "repetition": {
+              "label": "Repetition Method",
+              "text": "Repeat the same verse multiple times before moving on."
+            },
+            "linking": {
+              "label": "Linking Method",
+              "text": "Connect each verse to the next to improve flow and continuity."
+            },
+            "cumulative": {
+              "label": "Cumulative Method",
+              "text": "Continuously add new verses while revising previous ones."
+            }
+          }
+        },
+        "layouts": {
+          "title": "Reading Layouts",
+          "description": "Switch between two reading styles depending on the device and the kind of memorisation you want to do.",
+          "bestFor": "Choosing the reading experience that feels most natural to you.",
+          "details": {
+            "stacked": {
+              "label": "Stacked Layout",
+              "text": "Displays each verse in a simple vertical format that is easier to follow on mobile devices."
+            },
+            "mushaf": {
+              "label": "Mushaf Layout",
+              "text": "Displays verses in a traditional Mushaf-inspired style for students who prefer familiar page memorisation."
+            }
+          }
+        },
+        "aiRecitation": {
+          "title": "AI Recitation",
+          "description": "AI Recitation listens to your recitation and provides instant feedback to help you identify mistakes and improve accuracy while memorising.",
+          "bestFor": "Students who want guided practice and immediate feedback."
+        },
+        "talqinMode": {
+          "title": "Talqin Mode Guide",
+          "description": "Talqin Mode automates the listen, pause, repeat, and extend cycle after you submit a practice session, so the timing stays consistent without extra manual control.",
+          "bestFor": "Students building verse retention through guided listening and repetition.",
+          "workflowTitle": "Talqin Workflow Guide (Listen, Pause, Repeat, Extend)",
+          "workflowIntro": "Activated seamlessly right after you submit a practice session. The platform handles the timing so you can focus entirely on your retention:",
+          "workflowListen": "1. Listen Phase:",
+          "workflowListenText": "The app streams the correct pronunciation of the verse. Focus on Tajweed tracking.",
+          "workflowPause": "2. Pause & Repeat Phase:",
+          "workflowPauseText": "The audio pauses automatically. A live on-screen alert prompts you to recite what you just heard.",
+          "workflowExtend": "3. Extend Phase:",
+          "workflowExtendText": "The sequence systematically links verses together to build long-term memory capacity automatically."
+        },
+        "manualAssessment": {
+          "title": "Manual Assessment",
+          "description": "Manual Assessment allows you to evaluate your own memorisation after each session and track your confidence and progress over time.",
+          "bestFor": "Students who prefer self-reflection and independent revision."
+        }
+      }
     }
   },
   "toasts": {
@@ -3675,10 +3809,13 @@
     "progressSaved": "ilerleme saved",
     "recordingDeleted": "kayıt deleted",
     "recordingDeletedAyah": "Sild ayah {number} {type}",
-    "openSetup": "Aç setup"
+    "openSetup": "Aç setup",
+    "sessionStartFailed": "Unable to start this session. Please try again.",
+    "hifzRecoveryApplied": "Recovery plan applied"
   },
   "errors": {
-    "network": "ağ error. kontrol yeriniz bağlantı."
+    "network": "ağ error. kontrol yeriniz bağlantı.",
+    "genericRetry": "Something went wrong. Please retry."
   },
   "about": {
     "tag": "Mutqin",
@@ -4371,6 +4508,7 @@
     "metric_users": "« Users»",
     "metric_users_hint": "+{n} Bu week",
     "metric_active": "aktif (7d)",
+    "metric_feedback": "Feedback",
     "metric_sessions": "Sort: sessions",
     "metric_memorised": "Ezberlenmiş",
     "metric_ai": "AI kontrolleri",
@@ -4399,6 +4537,13 @@
     "learners_title": "Öğreners",
     "learners_subtitle": "Recent activity, ilerleme, and current position",
     "learners_empty": "« No learners to show yet.»",
+    "directory_tabs": "Directory sections",
+    "tab_learners": "Learners",
+    "tab_feedback": "Feedback",
+    "feedback_kicker": "Inbox",
+    "feedback_title": "Feedback",
+    "feedback_subtitle": "Suggestions, bugs, and AI complaints from learners",
+    "feedback_search": "Search feedback",
     "view_all_users": "عرض tüm users",
     "unnamed": "« Unnamed»",
     "not_started": "değil started",
@@ -4672,7 +4817,102 @@
     "tier_pro": "« Pro»",
     "notes_total": "{n} notlar",
     "view_all_notes": "عرض tüm notes",
-    "notes_hide": "Gizle notes"
+    "notes_hide": "Gizle notes",
+    "feedback": {
+      "title": "Feedback",
+      "description": "Review learner suggestions, bug reports, and AI recitation complaints.",
+      "complaintRate": "AI accuracy complaint rate",
+      "filterStatus": "Status",
+      "filterType": "Type",
+      "filterFrom": "From",
+      "filterTo": "To",
+      "allStatuses": "All statuses",
+      "allTypes": "All types",
+      "search": "Search",
+      "searchPlaceholder": "Message, name, or email",
+      "apply": "Apply",
+      "clear": "Clear",
+      "empty": "No feedback in this view.",
+      "results": "{count} result|{count} results",
+      "colType": "Type",
+      "colPreview": "Feedback",
+      "colUser": "User",
+      "colArea": "Area",
+      "colDevice": "Device",
+      "colDate": "Date",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "view": "View",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this feedback permanently?",
+      "bulkDelete": "Delete selected",
+      "bulkDeleteConfirm": "Delete {n} feedback items permanently?",
+      "bulkDeleted": "Deleted {n} feedback items.",
+      "deleting": "Deleting…",
+      "deleted": "Feedback deleted.",
+      "deleteError": "Could not delete feedback.",
+      "detailTitle": "Feedback",
+      "relatedAiCheck": "Related AI check",
+      "status": "Status",
+      "adminNote": "Internal note",
+      "theme": "Theme",
+      "mushafLayout": "Mushaf layout",
+      "message": "Message",
+      "language": "Language",
+      "aiReason": "AI reason",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "loadError": "Could not load feedback.",
+      "saveError": "Could not save feedback.",
+      "statuses": {
+        "new": "New",
+        "reviewing": "Reviewing",
+        "planned": "Planned",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      }
+    },
+    "kicker": "Admin",
+    "dashboard": "Dashboard"
+  },
+  "feedback": {
+    "title": "Share your thoughts",
+    "lead": "Tell us what is working, what is not, or how we can improve Mutqin.",
+    "typeLabel": "Type",
+    "messageLabel": "Your feedback",
+    "messagePlaceholder": "Describe your suggestion, issue, or experience…",
+    "screenshotLabel": "Screenshot",
+    "screenshotOptional": "Optional — PNG, JPG, WebP, or GIF up to 5 MB",
+    "screenshotPreviewAlt": "Screenshot preview",
+    "removeScreenshot": "Remove screenshot",
+    "screenshotInvalid": "Please upload a PNG, JPG, WebP, or GIF image.",
+    "screenshotTooLarge": "Screenshot must be 5 MB or smaller.",
+    "submit": "Submit feedback",
+    "submitting": "Sending…",
+    "submitError": "We could not send your feedback. Please try again.",
+    "success": "Thanks, your feedback has been sent.",
+    "aiReasonLabel": "What went wrong?",
+    "aiIncorrectPrompt": "Think this result is incorrect?",
+    "sessionPrompt": "How was this session?",
+    "sessionCta": "Share feedback",
+    "types": {
+      "suggestion": "Suggestion",
+      "bug": "Something isn't working",
+      "ai_recitation": "AI Recitation feedback",
+      "design": "Design / usability",
+      "other": "Other"
+    },
+    "aiReasons": {
+      "correct_marked_wrong": "I recited correctly but Mutqin marked a mistake",
+      "missed_mistake": "Mutqin missed a mistake",
+      "wrong_highlight": "Wrong word highlighted",
+      "recording_problem": "Recording/transcription problem",
+      "other": "Other"
+    },
+    "messageRequired": "Please enter your feedback.",
+    "messageMin": "Please enter at least a few characters.",
+    "typeRequired": "Please choose a feedback type.",
+    "typeInvalid": "That feedback type is not supported."
   },
   "privacyPolicy": {
     "kicker": "Privacy",
@@ -4697,5 +4937,8 @@
     "homeLink": "Home",
     "aboutLink": "About",
     "contactLink": "Contact"
+  },
+  "ui": {
+    "contact_inbox": "Contact Inbox"
   }
 }

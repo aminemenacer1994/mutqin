@@ -49,6 +49,10 @@ return Application::configure(basePath: dirname(__DIR__))
             LogMutqinApiRequest::class,
         ]);
 
+        $middleware->api(append: [
+            SetLocale::class,
+        ]);
+
         $middleware->alias([
             'plan' => EnsureSubscriptionTier::class,
         ]);

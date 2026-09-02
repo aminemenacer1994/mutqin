@@ -6,7 +6,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const LOCALES_DIR = path.resolve('resources/js/locales')
-const CHECK_LOCALES = ['ar', 'fr', 'id', 'tr']
+const CHECK_LOCALES = ['ar', 'fr', 'id', 'tr', 'es']
 const GUARD_NAMESPACES = ['memorisation', 'homepage', 'hifzPlan', 'aboutUs', 'mission', 'donate', 'common', 'toasts']
 
 function flatten(obj, prefix = '') {

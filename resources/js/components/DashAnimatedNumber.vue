@@ -15,7 +15,13 @@ export default {
   },
   computed: {
     formatted() {
-      return Math.round(this.display).toLocaleString()
+      return Math.round(this.display).toLocaleString(this.intlLocale)
+    },
+    intlLocale() {
+      const loc = this.$i18n?.locale
+      const value = loc && typeof loc === 'object' && 'value' in loc ? loc.value : loc
+      const map = { en: 'en-GB', fr: 'fr-FR', es: 'es-ES', ar: 'ar', id: 'id-ID', tr: 'tr-TR', ur: 'ur-PK' }
+      return map[String(value || 'en').slice(0, 2)] || 'en-GB'
     },
   },
   watch: {

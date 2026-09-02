@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <section class="afb-toolbar" aria-label="Filters">
+    <section class="afb-toolbar" :aria-label="t('common.filters')">
       <label class="afb-field">
         <span>{{ t('admin.feedback.filterStatus') }}</span>
         <select v-model="filters.status" class="afb-input" @change="loadList(1)">
@@ -132,7 +132,7 @@
       </div>
 
       <!-- Mobile cards -->
-      <div class="afb-cards" aria-label="Feedback list">
+      <div class="afb-cards" :aria-label="t('admin.feedback.title')">
         <article v-for="row in items" :key="`card-${row.id}`" class="afb-card">
           <header class="afb-card__head">
             <span class="afb-type" :data-type="row.type">{{ typeLabel(row.type) }}</span>
@@ -312,6 +312,8 @@
 </template>
 
 <script>
+import { formatAppDateTime, unwrapLocale } from '../utils/i18nFormat';
+
 const TYPES = ['suggestion', 'bug', 'ai_recitation', 'design', 'other'];
 const STATUSES = ['new', 'reviewing', 'planned', 'resolved', 'closed'];
 
@@ -467,7 +469,7 @@ export default {
     formatDate(value) {
       if (!value) return '—';
       try {
-        return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+        return formatAppDateTime(value, unwrapLocale(this.$i18n?.locale));
       } catch (_) {
         return value;
       }

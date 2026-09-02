@@ -74,6 +74,13 @@
       "returnToSessions": "Return to sessions",
       "logIn": "Log in",
       "createFirstNote": "Write your first note"
+    },
+    "filters": "Filters",
+    "relative": {
+      "justNow": "Just now",
+      "minutesAgo": "{n}m ago",
+      "hoursAgo": "{n}h ago",
+      "daysAgo": "{n}d ago"
     }
   },
   "auth": {
@@ -3154,7 +3161,9 @@
       "recallStrengthDesc": "A simple sense of how strong this session felt overall.",
       "reciteChecks": "Recite checks",
       "reciteChecksDesc": "Saved checks in this range.",
-      "recallStrengthLow": "Low"
+      "recallStrengthLow": "Low",
+      "repeatsCompleted": "Repeats completed",
+      "runsCompleted": "Runs completed"
     },
     "toolsHeader": {
       "insights": "Insights",
@@ -3198,7 +3207,14 @@
       "rowReady": "Ready",
       "noDataYet": "No data yet",
       "noDataDetail": "Start a session to build your insights",
-      "defaultInsight": "Keep today small and consistent"
+      "defaultInsight": "Keep today small and consistent",
+      "summaryReviewedOne": "You reviewed {count} ayah",
+      "summaryReviewedMany": "You reviewed {count} ayahs",
+      "summaryTime": "in {time}",
+      "summaryRepeatsOne": "with {count} repeat",
+      "summaryRepeatsMany": "with {count} repeats",
+      "summaryAttentionOne": "{count} ayah needed extra attention.",
+      "summaryAttentionMany": "{count} ayahs needed extra attention."
     },
     "guided": {
       "learn": "Learn",
@@ -3542,6 +3558,121 @@
       "toolMemorizing": "Memorizing",
       "peekHint": "Need a hint? Peek at the text",
       "toolPeek": "Peek at the text"
+    },
+    "exportReport": {
+      "saved": "Saved",
+      "exported": "Exported",
+      "sessionStats": "Session stats",
+      "footer": "Mutqin session export",
+      "versesRead": "Ayahs reviewed",
+      "timeSpent": "Time memorising",
+      "repetitions": "Repeats completed",
+      "sessionPlays": "Session plays",
+      "versePlays": "Verse plays",
+      "averageTime": "Average time per ayah",
+      "struggledAyahs": "Ayahs that needed extra care"
+    },
+    "helpLearning": {
+      "title": "Help & Learning",
+      "subtitle": "Short guides for calm, steady Qur’an memorisation.",
+      "bestFor": "Best for:",
+      "sections": {
+        "tajweed": {
+          "title": "Tajweed colours",
+          "description": "When Tajweed is on, Mutqin colours letters so you can notice pronunciation patterns while you listen and repeat.",
+          "bestFor": "Students improving pronunciation gently while memorising.",
+          "legendTitle": "What each colour means",
+          "legendIntro": "Use this legend while you listen and repeat. It is a guide, not a replacement for a teacher.",
+          "colors": {
+            "gray": {
+              "label": "Silent / connection marks",
+              "description": "Hamzat al-wasl and silent letters that are not pronounced."
+            },
+            "green": {
+              "label": "Ghunnah / Idgham with ghunnah",
+              "description": "Nasalisation and joining with a nasal sound."
+            },
+            "purple": {
+              "label": "Ikhfa / Idgham without ghunnah",
+              "description": "Hidden noon sound and non-nasal joining."
+            },
+            "orange": {
+              "label": "Qalqalah",
+              "description": "Echoing stop on ق ط ب ج د."
+            },
+            "red": {
+              "label": "Madd (elongation)",
+              "description": "Normal, obligatory, and necessary lengthening."
+            },
+            "blue": {
+              "label": "Idgham shafawi",
+              "description": "Labial merging with م."
+            }
+          }
+        },
+        "srs": {
+          "title": "Review scheduling",
+          "description": "Return to memorised ayahs before they begin to fade. Verses that need more care appear sooner.",
+          "bestFor": "Keeping earlier memorisation strong over time."
+        },
+        "techniques": {
+          "title": "Guided practice",
+          "description": "Listen, follow and repeat at a comfortable pace. Choose the method that helps you stay steady.",
+          "bestFor": "Students building a calm daily rhythm.",
+          "details": {
+            "repetition": {
+              "label": "Repetition",
+              "text": "Repeat the same verse a few times before moving on."
+            },
+            "linking": {
+              "label": "Linking",
+              "text": "Connect each verse to the next to improve flow."
+            },
+            "cumulative": {
+              "label": "Cumulative",
+              "text": "Add new verses while gently revising earlier ones."
+            }
+          }
+        },
+        "layouts": {
+          "title": "Reading layouts",
+          "description": "Switch between stacked cards and a Mushaf-style page depending on what feels easiest to follow.",
+          "bestFor": "Choosing a reading view that stays comfortable.",
+          "details": {
+            "stacked": {
+              "label": "Stacked layout",
+              "text": "Shows each ayah clearly, one after another — helpful on smaller screens."
+            },
+            "mushaf": {
+              "label": "Mushaf layout",
+              "text": "Shows ayahs in a familiar page-inspired style."
+            }
+          }
+        },
+        "aiRecitation": {
+          "title": "Recitation check",
+          "description": "Recite from memory and let Mutqin follow your progress. See which words may need a little more attention.",
+          "bestFor": "Students who want gentle feedback after practising aloud."
+        },
+        "talqinMode": {
+          "title": "Talqin mode",
+          "description": "Listen, pause, repeat, and extend at a steady pace so you can focus on the ayahs themselves.",
+          "bestFor": "Students building retention through guided listening and repetition.",
+          "workflowTitle": "How Talqin flows",
+          "workflowIntro": "After you begin, Mutqin keeps a steady listen–repeat rhythm so you can focus on the ayahs:",
+          "workflowListen": "1. Listen:",
+          "workflowListenText": "Hear the ayah clearly, then prepare to repeat.",
+          "workflowPause": "2. Pause and repeat:",
+          "workflowPauseText": "Playback pauses so you can recite what you just heard.",
+          "workflowExtend": "3. Extend:",
+          "workflowExtendText": "Join ayahs gradually so the passage stays connected."
+        },
+        "manualAssessment": {
+          "title": "Self assessment",
+          "description": "After a session, note how confident you felt so the next step can stay useful.",
+          "bestFor": "Students who prefer simple self-reflection."
+        }
+      }
     }
   },
   "toasts": {
@@ -3678,10 +3809,13 @@
     "progressSaved": "Progress saved",
     "recordingDeleted": "Recording deleted",
     "recordingDeletedAyah": "Deleted ayah {number} {type}",
-    "openSetup": "Open setup"
+    "openSetup": "Open setup",
+    "sessionStartFailed": "Unable to start this session. Please try again.",
+    "hifzRecoveryApplied": "Recovery plan applied"
   },
   "errors": {
-    "network": "Network error. Check your connection."
+    "network": "Network error. Check your connection.",
+    "genericRetry": "Something went wrong. Please retry."
   },
   "about": {
     "tag": "Mutqin",
@@ -4737,7 +4871,9 @@
         "resolved": "Resolved",
         "closed": "Closed"
       }
-    }
+    },
+    "kicker": "Admin",
+    "dashboard": "Dashboard"
   },
   "feedback": {
     "title": "Share your thoughts",
@@ -4772,7 +4908,11 @@
       "wrong_highlight": "Wrong word highlighted",
       "recording_problem": "Recording/transcription problem",
       "other": "Other"
-    }
+    },
+    "messageRequired": "Please enter your feedback.",
+    "messageMin": "Please enter at least a few characters.",
+    "typeRequired": "Please choose a feedback type.",
+    "typeInvalid": "That feedback type is not supported."
   },
   "privacyPolicy": {
     "kicker": "Privacy",
@@ -4797,5 +4937,8 @@
     "homeLink": "Home",
     "aboutLink": "About",
     "contactLink": "Contact"
+  },
+  "ui": {
+    "contact_inbox": "Contact Inbox"
   }
 }

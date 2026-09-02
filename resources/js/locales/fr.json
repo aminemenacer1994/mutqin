@@ -51,7 +51,7 @@
       "noResultsTitle": "Aucun résultat",
       "noResultsDesc": "Essayez d’effacer les filtres ou de chercher avec d’autres mots.",
       "errorTitle": "Une erreur s’est produite",
-      "errorDesc": "Veuillez réessayer dans un instant.",
+      "errorDesc": "Une erreur s’est produite. Veuillez réessayer.",
       "offlineTitle": "Vous semblez hors ligne.",
       "offlineBanner": "Pas de connexion internet. Mutqin reprendra quand vous serez de nouveau en ligne.",
       "offlineDesc": "Vérifiez votre connexion, puis réessayez. Nous réessaierons automatiquement à votre retour.",
@@ -65,13 +65,22 @@
       "unavailableTitle": "Indisponible pour le moment",
       "unavailableDesc": "Cette fonction n’est pas disponible actuellement. Réessayez plus tard.",
       "bootErrorTitle": "Une erreur s’est produite",
-      "bootErrorDesc": "Cet écran n’a pas pu se charger. Réessayez, ou retournez à l’accueil pour continuer.",
+      "bootErrorDesc": "Une erreur s’est produite. Veuillez réessayer.",
       "chunkUpdating": "Mise à jour de Mutqin…",
+      "chunkErrorTitle": "Mise à jour nécessaire",
+      "chunkErrorDesc": "Mutqin a été mis à jour. Rechargez pour continuer — si cela se répète, revenez à l’accueil et réessayez.",
       "clearFilters": "Effacer les filtres",
       "startSession": "Démarrer une session",
       "returnToSessions": "Retour aux sessions",
       "logIn": "Connexion",
       "createFirstNote": "Écrire une première note"
+    },
+    "filters": "Filtres",
+    "relative": {
+      "justNow": "À l’instant",
+      "minutesAgo": "il y a {n} min",
+      "hoursAgo": "il y a {n} h",
+      "daysAgo": "il y a {n} j"
     }
   },
   "auth": {
@@ -354,11 +363,11 @@
         },
         "accuracy": {
           "question": "Puis-je faire confiance à Mutqin pour mon Hifz ?",
-          "answer": "Mutqin est un compagnon de pratique, pas un substitut à un enseignant ou à une chaîne de transmission. Utilisez-le pour organiser de courtes sessions et repérer les points faibles, puis vérifiez l’essentiel avec un enseignant qualifié. Les contrôles de récitation sont un guide seulement."
+          "answer": "Mutqin est un compagnon de pratique, pas un substitut à un professeur ou à un sanad. Organisez de courtes sessions, repérez les points faibles, puis confirmez les passages importants avec un professeur qualifié. Les contrôles de récitation restent un guide."
         },
         "privacy": {
           "question": "Qu’advient-il de mes enregistrements et de mes données de Hifz ?",
-          "answer": "Vos données de pratique appartiennent à votre compte. L’audio des contrôles de rappel est traité pour le retour, et n’est pas vendu. Vous pouvez demander la suppression de votre compte et des données associées. Voir notre politique de confidentialité."
+          "answer": "Vos données de pratique appartiennent à votre compte. Pour AI Recite et Vérifier la mémorisation, l’audio du microphone sert à évaluer la récitation du Coran — y compris par Speechmatics lors de la transcription en direct. Mutqin ne vend pas votre audio. Les enregistrements bruts ne sont pas conservés sur les serveurs Mutqin ; les copies locales temporaires, s’il y en a, sont supprimées selon notre politique de conservation. La pratique sans IA fonctionne sans microphone. Consultez la Politique de confidentialité pour le détail."
         },
         "pricing": {
           "question": "Mutqin est-il gratuit ? Que coûte Pro ?",
@@ -415,7 +424,7 @@
       "register": "Créer un compte"
     },
     "name": "Nom",
-    "focused_quran_memorisation_tools_for_recitation_ch": "Un compagnon calme pour la pratique du Coran, les contrôles de rappel et le retour à votre place.",
+    "focused_quran_memorisation_tools_for_recitation_ch": "Un compagnon calme pour pratiquer le Coran, contrôler le rappel et retrouver votre place.",
     "all_rights_reserved": "© Tous droits réservés",
     "testimonials": {
       "kicker": "Élèves et enseignants",
@@ -520,19 +529,19 @@
     "a_short_loop_you_can_repeat_every_day_recite_diagn": "Pratiquez, repérez les points faibles, puis révisez ce qui en a besoin.",
     "start_free_upgrade_only_when_you_need_deeper_recit": "Commencez gratuitement. Passez à Pro quand vous voulez plus de retours et d’historique.",
     "free": "Gratuit",
-    "for_trying_the_workflow": "To try Mutqin",
-    "start_free": "Start free",
-    "most_useful": "Most useful",
-    "teacher_ready": "For teachers",
+    "for_trying_the_workflow": "Pour essayer Mutqin",
+    "start_free": "Commencer gratuitement",
+    "most_useful": "Les plus utiles",
+    "teacher_ready": "Pour les professeurs",
     "pro": "« Pro»",
     "feature_comparison": "Comparaison des fonctionnalités",
     "everything_included_in_each_subscription_at_a_glan": "Ce que chaque formule inclut.",
-    "a_quick_overview_of_how_mutqin_supports_recitation": "How Mutqin helps with recitation, memorisation, and review.",
+    "a_quick_overview_of_how_mutqin_supports_recitation": "Comment Mutqin aide à réciter, mémoriser et réviser.",
     "record_a_verse_review_the_highlighted_issues_and_k": "Enregistrez un verset, examinez les points faibles, et gardez la prochaine session ciblée.",
     "roadmap": "Roadmap",
-    "tajweed_guide": "Tajweed guide",
-    "memorization_tips": "Memorisation tips",
-    "help_center": "Help centre",
+    "tajweed_guide": "Guide Tajweed",
+    "memorization_tips": "Conseils de mémorisation",
+    "help_center": "Centre d’aide",
     "pillars": {
       "practice": {
         "title": "Pratique",
@@ -916,7 +925,7 @@
       }
     },
     "a11y": {
-      "sessionOverview": "Session overview",
+      "sessionOverview": "Aperçu de la session",
       "endSession": "End session",
       "openReadingOptions": "Open reading options",
       "sessionMetadata": "Session metadata",
@@ -957,7 +966,7 @@
       "changeQuranicFont": "Change Coranic font",
       "showTranslation": "Mostrar or hide the English translation",
       "showTransliteration": "Mostrar or hide transliteration",
-      "showTajweedText": "Use connected Tajweed colouring on the Mushaf text",
+      "showTajweedText": "Utiliser le coloriage Tajweed lié sur le texte Mushaf",
       "useFocusMode": "Use modo enfoque",
       "useBlurMode": "Use modo difuminado",
       "useTalqinMode": "Usa talqin mode",
@@ -1029,7 +1038,7 @@
       "close": "Cerrar Quran search",
       "inputPlaceholder": "Type at least 3 Palabras en Arabic o English",
       "voiceSearch": "« Voice search»",
-      "voiceSearchUnsupported": "Voice search es no supported en Esto browser",
+      "voiceSearchUnsupported": "La recherche vocale n’est pas prise en charge dans ce navigateur",
       "listening": "sesión de révision",
       "voice": "Voix",
       "searching": "« Searching»",
@@ -1089,18 +1098,18 @@
       "unavailable": "audio is not available for this ayah yet. Try another recitador or refresh the sesión."
     },
     "ayahNotes": {
-      "buttonHint": "notas & reflexiones para Esto ayah",
-      "title": "notas & reflexiones",
-      "subtitle": "Private a tú, only tú can see Estas notas.",
+      "buttonHint": "Notes et réflexions pour cette ayah",
+      "title": "Notes et réflexions",
+      "subtitle": "Privées : vous seul pouvez voir ces notes.",
       "privacyChip": "Privado",
       "contextBadge": "{surah} · ayah {ayah}",
       "surahFallback": "Sura {number}",
       "composeLabel": "Nueva reflexión",
       "editingLabel": "Editing nota",
       "titleLabel": "Título (opcional)",
-      "titlePlaceholder": "A short label para Esto reflection",
+      "titlePlaceholder": "Un court libellé pour cette réflexion",
       "bodyLabel": "Reflexión",
-      "bodyPlaceholder": "Write tu thoughts, reminders, o lessons de Esto ayah…",
+      "bodyPlaceholder": "Écrivez vos pensées, rappels ou leçons tirées de cette ayah…",
       "addNote": "Add nota",
       "submitNote": "Submit nota",
       "saveChanges": "Guardar changes",
@@ -1110,19 +1119,19 @@
       "expandNotes": "Expand tu notas",
       "collapseNotes": "Collapse tu notas",
       "bodyLimitReached": "reflexiones estás limited a 2,000 characters. Shorten tu nota a save it.",
-      "bodyMustShorten": "Esto nota es longer que 2,000 characters. Shorten it antes saving tu changes.",
+      "bodyMustShorten": "Cette note dépasse 2 000 caractères. Raccourcissez-la avant d’enregistrer.",
       "untitled": "Untitled nota",
       "emptyTitle": "No notas yet",
-      "empty": "Write a reflection above y it eliminará appear here para Esto ayah.",
+      "empty": "Écrivez une réflexion ci-dessus : elle restera ici pour cette ayah.",
       "loading": "cargando your notes…",
       "edit": "Editar",
       "editingBadge": "Editando",
       "delete": "Eliminar",
       "deleteConfirmTitle": "Eliminar this note?",
-      "deleteConfirm": "Esto eliminará permanentemente eliminar Esto private reflection de Esto ayah. Esto cannot be undone.",
-      "loadFailed": "No se pudo load your notes. Por favor try again.",
-      "saveFailed": "No se pudo save this note. Por favor try again.",
-      "deleteFailed": "No se pudo delete this note. Por favor try again.",
+      "deleteConfirm": "Cette réflexion privée sera retirée définitivement de cette ayah. L’action est irréversible.",
+      "loadFailed": "Impossible de charger vos notes. Veuillez réessayer.",
+      "saveFailed": "Impossible d’enregistrer cette note. Veuillez réessayer.",
+      "deleteFailed": "Impossible de supprimer cette note. Veuillez réessayer.",
       "savedSuccess": "nota guardado.",
       "updatedSuccess": "nota updated.",
       "deletedSuccess": "nota deleted."
@@ -1145,15 +1154,15 @@
       },
       "contextBadge": "Mémorisation · {surah} · ayah {ayah} sur {total}",
       "deleteSession": {
-        "title": "Supprimer cette session ?",
-        "message": "Cette session sera définitivement retirée de cet appareil. Cette action est irréversible.",
+        "title": "Supprimer la session enregistrée ?",
+        "message": "Cette session sera retirée définitivement de cet appareil. L’action est irréversible.",
         "progress": "Ayah {ayah} sur {total}",
         "confirm": "Supprimer la session",
         "cancel": "Conserver la session"
       },
       "deleteSessions": {
         "title": "Supprimer les sessions sélectionnées ?",
-        "message": "Cela retirera définitivement {count} sessions enregistrées de cet appareil. Cette action est irréversible.",
+        "message": "{count} sessions enregistrées seront retirées définitivement de cet appareil. L’action est irréversible.",
         "confirm": "Supprimer la sélection"
       },
       "deleteRecording": {
@@ -1167,9 +1176,9 @@
       },
       "deleteAyahRecordings": {
         "title": "Eliminar all recordings for this ayah?",
-        "message": "Esto permanentemente removes {count} grabaciones para ayah {number} de el biblioteca.",
+        "message": "Retire définitivement {count} enregistrements de l’ayah {number} de la bibliothèque.",
         "messageOne": "This permanently removes {count} grabación for ayah {number} from the library.",
-        "messageOther": "Esto permanentemente removes {count} grabaciones para ayah {number} de el biblioteca.",
+        "messageOther": "Retire définitivement {count} enregistrements de l’ayah {number} de la bibliothèque.",
         "confirm": "Eliminar all",
         "cancel": "Conservar",
         "done": "Deleted {count} grabaciones para ayah {number}.",
@@ -1182,11 +1191,11 @@
       },
       "discardContinue": {
         "title": "Discard saved sesión?",
-        "message": "Esto elimina la instantánea actual de continuar donde lo dejaste de este dispositivo."
+        "message": "Votre place enregistrée dans cette session sera retirée de cet appareil."
       },
       "removeOffline": {
         "title": "eliminar offline surah?",
-        "message": "Esto elimina las ayahs guardadas de este dispositivo."
+        "message": "Les versets enregistrés seront retirés de cet appareil."
       },
       "resetControls": {
         "title": "Reset sesión Controls?",
@@ -1268,7 +1277,7 @@
       "nextSession": "Next sesión",
       "revisionOnlyHint": "Revision only until el Siguiente ayahs estás due.",
       "listenFollowTitle": "Escucha carefully and follow along.",
-      "listenFollowBodyStart": "Mutqin eliminará inicio el timer, audio, y ayah highlighting together.",
+      "listenFollowBodyStart": "Mutqin démarrera ensemble le minuteur, l’audio et le surlignage des ayahs.",
       "listenFollowBodyDuring": "Watch el highlighted Palabras y guardar a El esfuerzo constante ritmo antes el Siguiente ayah.",
       "tryRecitingTitle": "« Try reciting without looking.»",
       "tryRecitingBody": "Say el ayah primero de memory, luego comprobar only Qué tú necesitan.",
@@ -1295,10 +1304,26 @@
       "micStoppedUnexpectedly": "The micrófono stopped unexpectedly.",
       "micBlocked": "micrófono access was blocked. Allow micrófono permission, then try again.",
       "micRequired": "micrófono access is required for AI Recitation. Check your browser permissions and try again.",
+      "micDeniedTitle": "Accès au microphone bloqué",
+      "micDeniedGuidance": "Autorisez le microphone pour ce site dans les réglages du navigateur, puis revenez ici et réessayez. Les autres outils de mémorisation fonctionnent encore sans microphone.",
+      "micDeniedGuidanceSafari": "Sur iPhone ou iPad : Réglages → Safari → Microphone → Autoriser pour ce site, puis revenez et réessayez. Les autres outils de mémorisation fonctionnent encore sans microphone.",
+      "micDeniedGuidanceChrome": "Dans Chrome : paramètres du site → Microphone → Autoriser, puis rechargez et réessayez. Les autres outils de mémorisation fonctionnent encore sans microphone.",
+      "consentTitle": "Microphone and AI processing",
+      "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
+      "consentProcessor": "La transcription en direct peut être assurée par {processor}.",
+      "consentRetentionNever": "Les enregistrements bruts ne sont pas conservés une fois le contrôle terminé.",
+      "consentRetentionTemporary": "Un audio temporaire peut rester un moment sur cet appareil pour la révision, puis être supprimé automatiquement.",
+      "consentRetentionRetain": "Vous pouvez garder un enregistrement local pour le réécouter. Mutqin ne vend pas votre audio.",
+      "consentPrivacyLink": "Read the Privacy policy",
+      "consentAccept": "Allow and continue",
+      "consentDecline": "Pas maintenant",
+      "consentDeclined": "AI voice checks need microphone consent. You can keep practising with listening, Peek, and other non-AI tools.",
+      "consentContinueWithout": "Vous pouvez refuser et continuer avec les outils de mémorisation qui n’ont pas besoin du microphone.",
       "recordingInvalid": "No usable audio was captured. Try grabación again.",
       "serviceNetworkError": "No pudimos connect to the recitation service. Your sesión is safe. Intentar de nuevo.",
       "serviceUnavailable": "Recitation checking es temporarily unavailable. tú can continuar practising y try el IA comprobar again later.",
       "usageCapReached": "Vous avez atteint la limite quotidienne de vérification vocale par IA. Réessayez demain.",
+      "rateLimited": "Vous lancez les contrôles vocaux IA trop vite. Patientez un instant, puis réessayez.",
       "processingTimeout": "This is taking longer than expected. Intentar de nuevo.",
       "retry": {
         "silence": "Nous n’avons entendu aucune récitation. Récitez clairement, puis réessayez.",
@@ -1314,7 +1339,7 @@
       "stageAssessing": "« Assessing…»",
       "stageComplete": "Completado",
       "stageError": "No se pudo completado",
-      "processingSlow": "Esto es taking longer que expected.",
+      "processingSlow": "Cela prend plus de temps que prévu.",
       "noArabicWords": "No clear Arabic words were detected. Record again closer to the micrófono.",
       "preparingMic": "Preparing micrófono…",
       "noWordMistake": "AI did not detect a word-level error. Still verify the ayah yourself before saving.",
@@ -1355,23 +1380,7 @@
       "colourCloseHint": "Casi aciertos por pulir.",
       "colourIncorrectHint": "Palabras said incorrectly.",
       "colourSkippedHint": "Palabras no recited.",
-      "colourWaitingHint": "no evaluated yet.",
-      "micDeniedTitle": "Microphone access blocked",
-      "micDeniedGuidance": "Allow microphone access for this site in your browser settings, then return here and try again. Other memorisation tools still work without the microphone.",
-      "micDeniedGuidanceSafari": "On iPhone or iPad: Settings → Safari → Microphone → Allow for this site, then return and try again. Other memorisation tools still work without the microphone.",
-      "micDeniedGuidanceChrome": "In Chrome: site settings → Microphone → Allow, then reload and try again. Other memorisation tools still work without the microphone.",
-      "consentTitle": "Microphone and AI processing",
-      "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
-      "consentProcessor": "Live transcription may be handled by {processor}.",
-      "consentRetentionNever": "Raw recordings are not saved after the check finishes.",
-      "consentRetentionTemporary": "Temporary audio may be kept briefly on this device for review, then deleted automatically.",
-      "consentRetentionRetain": "You can keep a local recording for your own replay. Mutqin does not sell your audio.",
-      "consentPrivacyLink": "Read the Privacy policy",
-      "consentAccept": "Allow and continue",
-      "consentDecline": "Not now",
-      "consentDeclined": "AI voice checks need microphone consent. You can keep practising with listening, Peek, and other non-AI tools.",
-      "consentContinueWithout": "You can decline and keep using memorisation tools that do not need the microphone.",
-      "rateLimited": "You are starting AI voice checks too quickly. Please wait a moment and try again."
+      "colourWaitingHint": "no evaluated yet."
     },
     "analyticsHeatmap": {
       "confidence": "confianza: {value}%",
@@ -1416,8 +1425,8 @@
       "qualityVerified": "« Quality verified»",
       "pleaseReviewAgain": "Por favor review again",
       "noQualityCheckYet": "No guardado quality comprobar yet.",
-      "checksAligned": "Consistent across both comprobaciones.",
-      "checksNotAligned": "el comprobaciones did no fully align.",
+      "checksAligned": "Cohérent sur les deux contrôles.",
+      "checksNotAligned": "Les contrôles ne correspondaient pas entièrement.",
       "noClearMistakes": "No clear mistakes found. Escucha once more before saving.",
       "recordingNow": "grabación now.",
       "reviewAttempt": "Revisa this intento.",
@@ -1430,15 +1439,15 @@
       "saveForLightReview": "Guardar this intento for light review.",
       "reviewWordsThenTry": "Revisa {words}, then try again.",
       "tightenWordsThenTry": "Tighten {words}, luego try again.",
-      "speechmaticsNotConfigured": "La vérification vocale n’est pas disponible pour le moment. Réessayez plus tard.",
-      "speechmaticsRegionNotConfigured": "La vérification vocale n’est pas disponible pour le moment. Réessayez plus tard.",
-      "liveStreamingUnavailable": "Unable to start voice checking right now.",
+      "speechmaticsNotConfigured": "Le contrôle vocal n’est pas disponible pour le moment. Réessayez plus tard.",
+      "speechmaticsRegionNotConfigured": "Le contrôle vocal n’est pas disponible pour le moment. Réessayez plus tard.",
+      "liveStreamingUnavailable": "Impossible de lancer le contrôle vocal pour le moment.",
       "sessionChoiceFresh": "Elige how you want to begin. Iniciar a fresh sesión now, or continue after you save a sesión snapshot later.",
       "sessionChoiceContinue": "Elige how you want to continue. You can start fresh, repeat the range from the beginning, continue from your last ayah, or save this sesión first.",
       "aiReviewReadyRange": "AI review is listo for this range.",
       "aiReviewReadyAyah": "AI review is listo for this ayah.",
-      "speechmaticsKeyRejected": "La vérification vocale n’a pas pu démarrer pour le moment.{suffix} Réessayez plus tard.",
-      "speechmaticsKeySuffixNote": "Laravel es currently using el Palabras clave ending en {suffix}.",
+      "speechmaticsKeyRejected": "Le contrôle vocal n’a pas pu démarrer pour le moment.{suffix} Réessayez plus tard.",
+      "speechmaticsKeySuffixNote": "",
       "surahLabel": "Sourate {name}",
       "surahNumberLabel": "Sura {number}",
       "recommendations": {
@@ -1704,7 +1713,7 @@
         },
         "start": {
           "title": "Démarrer la session",
-          "body": "Ceci lance la revue ciblée : Al-Fatiha 1–3, Alafasy, 2 répétitions.",
+          "body": "Cela lance la révision ciblée : Al-Fatiha 1–3 avec Alafasy et 2 répétitions.",
           "waitHint": ""
         },
         "session": {
@@ -1724,7 +1733,7 @@
         },
         "weak": {
           "title": "Zones faibles",
-          "body": "Ces ayahs et mots demandent plus de soin. Mutqin s’en sert pour former les plans suivants.",
+          "body": "Ces ayahs et ces mots demandent plus d’attention. Mutqin s’en sert pour façonner les plans suivants.",
           "waitHint": ""
         },
         "plan": {
@@ -1904,9 +1913,9 @@
     "session_completed_label": "Terminée",
     "review_session": "Revoir",
     "ai_recite_review": "Test de rappel",
-    "saved_session_meta_completed": "Completed",
-    "saved_session_meta_opened": "Opened {date}",
-    "saved_session_meta_duration": "{duration} practised",
+    "saved_session_meta_completed": "Terminée",
+    "saved_session_meta_opened": "Ouverte le {date}",
+    "saved_session_meta_duration": "{duration} de pratique",
     "last_opened": "Dernière ouverture {date}",
     "no_surah_selected": "Aucune sourate sélectionnée",
     "each_session_keeps_only_the_essentials_what_it_is_": "Chaque session ne garde que l'essentiel : ce qu'elle est, où elle en est et comment y revenir.",
@@ -1981,6 +1990,7 @@
         "reviseFocusPhrase": "Commencer la révision",
         "reviseThisRange": "Commencer la révision",
         "continueToNextRange": "Continuer vers la prochaine session",
+        "continueToAyah": "Ayah suivante {ayah}",
         "continueToAyahs": "Continuer vers les ayahs {start}, {end}",
         "repeatThisSession": "Répéter cette session",
         "reviewOnceMore": "Réviser encore une fois",
@@ -2004,19 +2014,19 @@
         "differentSession": "Other sesión",
         "nextHintAi": "Check your memorización to unlock your next plan.",
         "rangeCaption": {
-          "test": "comprobar Esto rango",
-          "retest": "comprobar Esto rango again",
-          "practice": "Practise Esto rango",
+          "test": "Contrôlez cet ensemble",
+          "retest": "Contrôlez à nouveau cet ensemble",
+          "practice": "Pratiquez cet ensemble",
           "next": "Listo for the next sesión"
         },
         "chooseWhenReady": "Elige a sesión when listo.",
-        "weakWordsFocus": "Palabras a Enfoque activado",
+        "weakWordsFocus": "Mots à travailler",
         "ayahLabel": "Ayah {ayah}",
         "ayahRangeLabel": "Ayahs {from}, {to}",
         "replayPhrase": "Reproducir frase circundante",
         "ayahNeededMore": "Āyah {آية} needs another slow pass.",
         "takeItSlow": "You en pausa often. Slow down on one āyah.",
-        "speedSettled": "guardar Esto ritmo cuando tú comprobar.",
+        "speedSettled": "Gardez ce rythme pour le contrôle.",
         "readyToTest": "Listo to check.",
         "firstPracticeDone": "Practica done. Check when listo.",
         "reason": {
@@ -2031,7 +2041,7 @@
         },
         "subtitles": {
           "practiceDone": "Check your memorización to unlock your next plan.",
-          "aiDone": "Enfoque activado Estas Palabras Siguiente.",
+          "aiDone": "Concentrez-vous ensuite sur ces mots.",
           "aiFirst": "Check your memorización first, then your plan appears here.",
           "retestAfterPractice": "Renforcez cette plage avant d’avancer.",
           "strongContinue": "Continuar while this still feels fresh.",
@@ -2051,43 +2061,43 @@
           "before": "Escucha once and follow the words.",
           "beforeTalqin": "Escucha once, then recite aloud.",
           "beforeFocus": "Escucha once, gold-marked words need extra care.",
-          "playing": "Follow el Palabras calmly, may Allah open tu corazón.",
-          "playingFocus": "Enfoque activado el highlighted word.",
-          "focusWord": "Enfoque activado el highlighted word: {word}",
-          "focusCueTitle": "Enfoque activado Esto word",
+          "playing": "Suivez les mots calmement, qu’Allah ouvre votre cœur.",
+          "playingFocus": "Concentrez-vous sur le mot surligné.",
+          "focusWord": "Concentrez-vous sur le mot surligné : {word}",
+          "focusCueTitle": "Concentrez-vous sur ce mot",
           "focusBadge": "Palabras a watch",
           "focusStripLabel": "Aferrarse a",
-          "hooksLabel": "tu Palabras clave Palabras",
-          "pause": "ahora repites Esto phrase aloud.",
+          "hooksLabel": "Vos mots d’ancrage",
+          "pause": "Répétez maintenant cette phrase à voix haute.",
           "pauseFocus": "Repite the gold-marked words aloud, then the full āyah.",
-          "difficulty": "Take it slower, try Esto āyah at {speed}×.",
+          "difficulty": "Allez plus lentement : essayez cette ayah à {speed}×.",
           "after": "Recita this āyah without looking.",
           "ready": "Mā shā’ Allāh. You are listo to test.",
           "ayahCue": "Ayah {ayah}",
           "talqin": {
             "before": "Escucha once and follow the words.",
             "playing": "Escucha carefully. Your turn comes after the audio.",
-            "pause": "ahora repites Esto phrase aloud."
+            "pause": "Répétez maintenant cette phrase à voix haute."
           },
           "focus": {
             "before": "We permanecen con one āyah. Do no prisa ahead.",
-            "playing": "Follow Esto āyah only. Let it settle.",
+            "playing": "Suivez seulement cette ayah. Laissez-la se poser.",
             "pause": "Repite this same āyah aloud before moving on."
           },
           "blur": {
-            "before": "Palabras eliminará hide gradually. Trust tu memory.",
+            "before": "Les mots se cacheront peu à peu. Faites confiance à votre mémoire.",
             "playing": "a medida que el text fades, recita de el corazón.",
             "pause": "Intentar de nuevo from memory. May Allah make it firm."
           },
           "chaining": {
-            "before": "We eliminará join Estas āyahs into one flujo.",
+            "before": "Nous relierons ces ayahs en un seul flux.",
             "playing": "Escucha for how this āyah links to the next.",
             "pause": "Recita what you just heard, then join the next āyah."
           },
           "anchor": {
             "before": "Gold Palabras estás tu anclas, notice them primero.",
-            "playing": "Watch el marked Palabras. They eliminará help tú remember.",
-            "pause": "Say el Palabras clave Palabras primero, luego el full āyah."
+            "playing": "Regardez les mots marqués. Ils vous aideront à vous souvenir.",
+            "pause": "Dites d’abord les mots d’ancrage, puis l’ayah entière."
           },
           "technique": {
             "talqin": {
@@ -2096,7 +2106,7 @@
             },
             "focus": {
               "label": "One āyah at a vez",
-              "hint": "permanecen con Esto āyah until it feels El esfuerzo constante en tu corazón."
+              "hint": "Restez avec cette ayah jusqu’à ce qu’elle soit stable dans votre cœur."
             },
             "blur": {
               "label": "Ocultar the text little by little",
@@ -2107,12 +2117,12 @@
               "hint": "Connect cada āyah a el Siguiente a medida que one smooth flujo."
             },
             "anchor": {
-              "label": "Hold onto Palabras clave Palabras",
+              "label": "Garder les mots d’ancrage",
               "hint": "Gold-marked Palabras estás tu anclas, say them clearly, luego el full āyah."
             },
             "listen": {
               "label": "Escucha with presence",
-              "hint": "Follow el Palabras calmly y recita con sincerity."
+              "hint": "Suivez les mots calmement et récitez avec sincérité."
             }
           }
         },
@@ -2176,7 +2186,7 @@
         "voiceOnlyCta": "Prefer a recita aloud only",
         "tryAgainCta": "Revérifier",
         "seeFullReview": "Ver revisión completa",
-        "resultShapedPlan": "tu plan below already uses Esto resultado.",
+        "resultShapedPlan": "Le plan ci-dessous tient déjà compte de ce résultat.",
         "quizAiTitle": "Cuestionario con IA",
         "aiReciteNotRun": "tú can still recita aloud if tú want.",
         "resultScoreLine": "{correct} de {total} respondidas bien",
@@ -2194,20 +2204,20 @@
         "progressHint": "Casi listo",
         "skillsLabel": "Cómo fue",
         "hint": "necesitan a hint?",
-        "hintFallback": "Think of el Palabras around it.",
+        "hintFallback": "Pensez aux mots autour.",
         "submit": "Continuar",
-        "skip": "Skip Esto one",
+        "skip": "Passer celui-ci",
         "selectAnswer": "Toca an answer to continue.",
         "typeAnswer": "Type Qué tú remember",
         "aiRecitePrompt": "When you are listo, recite this verse from memory.",
         "startAiRecite": "Recita with AI",
         "startError": "That comprobar No se pudo no inicio. tú can still continuar below.",
-        "answerError": "Por favor try that again.",
+        "answerError": "Veuillez réessayer.",
         "feedbackCorrect": "Bien, eso es correcto.",
         "feedbackAlmost": "Cerrar, keep going.",
-        "feedbackIncorrect": "no quite, we eliminará practise that.",
+        "feedbackIncorrect": "Pas tout à fait : nous allons le pratiquer.",
         "resultTitleStrong": "Se ve bien",
-        "resultTitleMixed": "A little más practice eliminará help",
+        "resultTitleMixed": "Un peu plus de pratique aidera",
         "resultTitleWeak": "Necesita otra revisión breve",
         "resultTipLabel": "Suivant",
         "resultFoundLabel": "Qué we found",
@@ -2219,21 +2229,21 @@
         "resultWhyWeakness": "{skill} aún necesita apoyo.",
         "resultWhyWeakAyah": "ayah {ayah} needs el más atención.",
         "resultWhyWeakAyahs": "A few ayahs still necesitan support.",
-        "resultHowGeneric": "We eliminará guardar Esto short y add a little más support.",
-        "resultHowTechnique": "We eliminará adjust el practice style para Esto pass.",
-        "resultHowPair": "We eliminará adjust el practice style para Esto pass.",
-        "resultHowReps": "A few extra repetitions eliminará help.",
-        "resultHowSlow": "We eliminará slow el ritmo a little.",
+        "resultHowGeneric": "Nous garderons cela court, avec un peu plus de soutien.",
+        "resultHowTechnique": "Nous ajusterons le style de pratique pour ce passage.",
+        "resultHowPair": "Nous ajusterons le style de pratique pour ce passage.",
+        "resultHowReps": "Quelques répétitions de plus aideront.",
+        "resultHowSlow": "Nous ralentirons un peu le rythme.",
         "continueToPlan": "Continuar",
         "doneCta": "Iniciar this plan",
-        "backToPlan": "devuelta a plan",
+        "backToPlan": "Retour au plan",
         "moveUp": "Up",
         "moveDown": "Abajo",
-        "reorderHint": "Put Estas en el right order",
+        "reorderHint": "Remettez-les dans le bon ordre",
         "skills": {
-          "recall": "Remembering el Palabras",
+          "recall": "Se souvenir des mots",
           "ayahSequence": "Mantener el orden",
-          "textualPrecision": "Getting el Palabras right",
+          "textualPrecision": "Dire les mots justes",
           "independentRecitation": "Recitar sin ayuda"
         },
         "bands": {
@@ -2242,26 +2252,26 @@
           "developing": "Needs work"
         },
         "explanations": {
-          "sessionIncomplete": "tú still tiene a few ayahs left en Esto rango.",
-          "lowRecall": "Some Palabras estás still settling, a short repites eliminará help.",
-          "sequenceErrors": "el order slipped a little. We eliminará practise linking el ayahs.",
-          "highHintDependency": "Hints helped a lot. Siguiente vez we eliminará show a little less text.",
-          "visualDependency": "Reading carried a lot. We eliminará practise con less text showing.",
-          "audioDependency": "Listening helped a lot. Siguiente vez we eliminará lean a bit más activado memory.",
-          "spokenHesitation": "el Palabras were close, but reciting felt hesitant. Slower practice eliminará help.",
-          "omissionErrors": "A few Palabras were missed. We eliminará go devuelta over them suavemente.",
-          "similarAyahConfusion": "Similar ayahs got mixed up. We eliminará compare them side by side.",
-          "lowDelayedRetention": "Earlier ayahs faded a little. We eliminará review them sooner.",
-          "highPerformance": "Esto rango feels El esfuerzo constante. tú can move activado mientras it es fresh.",
-          "lowConfidence": "tú wanted más practice, here es a short, reassuring pass.",
-          "overconfidence": "It felt strong, but one part still needs support. We eliminará Enfoque there.",
-          "reviewOverdue": "Some of Esto es due para review. Better a volver a it soon."
+          "sessionIncomplete": "Il vous reste encore quelques versets dans cette plage.",
+          "lowRecall": "Certains mots se posent encore : une courte répétition aidera.",
+          "sequenceErrors": "L’ordre a un peu glissé. Nous pratiquerons le lien entre les versets.",
+          "highHintDependency": "Les indices ont beaucoup aidé. La prochaine fois, nous afficherons un peu moins de texte.",
+          "visualDependency": "La lecture a beaucoup porté. Nous pratiquerons avec moins de texte visible.",
+          "audioDependency": "L’écoute a beaucoup aidé. La prochaine fois, nous nous appuierons un peu plus sur la mémoire.",
+          "spokenHesitation": "Les mots étaient proches, mais la récitation hésitait. Un rythme plus lent aidera.",
+          "omissionErrors": "Quelques mots ont manqué. Nous y reviendrons en douceur.",
+          "similarAyahConfusion": "Des versets proches se sont mélangés. Nous les comparerons côte à côte.",
+          "lowDelayedRetention": "Les versets plus anciens ont un peu pâli. Nous les réviserons plus tôt.",
+          "highPerformance": "Cette plage paraît stable. Vous pouvez avancer tant qu’elle est fraîche.",
+          "lowConfidence": "Vous vouliez plus de pratique : voici un passage court et rassurant.",
+          "overconfidence": "C’était solide, mais un passage demande encore du soutien. Nous nous y concentrerons.",
+          "reviewOverdue": "Une partie est due pour révision. Mieux vaut y revenir bientôt."
         },
         "nextSteps": {
           "continue": "Continuar to the next set.",
           "repeat_weak_ayahs": "Repite the harder verses with more support.",
           "start_focused_review": "Haz una revisión breve y enfocada.",
-          "review_tomorrow": "Come devuelta para a short review tomorrow."
+          "review_tomorrow": "Revenez demain pour une courte révision."
         },
         "actions": {
           "continue": "Continuar",
@@ -2433,9 +2443,9 @@
         "retryRecommendation": "Preparar recomendación de nuevo",
         "loadError": "Suggestion unavailable, your session is still saved.",
         "noWeakAyah": "Aucune ayah faible n’a été identifiée dans cette évaluation.",
-        "startError": "No se pudo start. Por favor try again.",
-        "settingsError": "No se pudo save settings. Por favor try again.",
-        "confidenceError": "No se pudo save your response. Por favor try again.",
+        "startError": "Impossible de démarrer. Veuillez réessayer.",
+        "settingsError": "Impossible d’enregistrer les réglages. Veuillez réessayer.",
+        "confidenceError": "Impossible d’enregistrer votre réponse. Veuillez réessayer.",
         "aiReciteError": "AI Recite unavailable. Your session is saved, choose confidence or continue.",
         "aiReciteOffline": "Connection lost during AI Recita. progreso is saved; retry later or continue below.",
         "aiReciteOptionalHint": "Optional, may Allah make the words firm for you.",
@@ -2446,13 +2456,13 @@
         "preparingRepeatSession": "Preparando revisión…",
         "savingSettings": "Guardando ajustes…",
         "completingSession": "Completing sesión…",
-        "techniqueLabel": "Try Esto combination",
-        "settingsSummaryLabel": "Try Esto combination",
+        "techniqueLabel": "Essayez cette combinaison",
+        "settingsSummaryLabel": "Essayez cette combinaison",
         "settingsTechnique": "Técnica",
         "settingsSpeed": "Lecture",
         "settingsRepetitions": "Répétitions",
         "settingsReciter": "Récitateur",
-        "settingsOutcome": "Estas settings estás intended a help tú Escucha cada phrase más clearly, repites it más consistently y strengthen recall antes progressing.",
+        "settingsOutcome": "Ces réglages visent à mieux entendre chaque phrase, à la répéter plus régulièrement et à renforcer le rappel avant d’avancer.",
         "repetitionsSummary": "{count} تكرارات",
         "repetitionsSummaryOne": "{count} repetición",
         "repetitionsSummaryOther": "{count} تكرارات",
@@ -2462,14 +2472,14 @@
           "mixed": "Necesita revisión",
           "weak": "Needs تمرين"
         },
-        "confidencePrompt": "How confident do tú feel con Esto rango?",
+        "confidencePrompt": "À quel point vous sentez-vous à l’aise avec cette plage ?",
         "confidenceConfident": "Seguro",
         "confidenceNeedsPractice": "Necesita más práctica",
         "confidenceLead": "tu plan softens o advances con tu answer, bi’idhnillāh.",
         "whyThisPlan": "Based on this session",
         "planDetail": {
           "headline": "tu Siguiente practice",
-          "whyForYou": "Why Esto plan",
+          "whyForYou": "Pourquoi ce plan",
           "practiceRange": "ayahs a practise",
           "howYouPractice": "Practica method",
           "setup": "ritmo & support",
@@ -2483,12 +2493,12 @@
           "singleAyah": "« Ayah {ayah}»",
           "colourMix": "{green} verde · {amber} ámbar · {red} rojo · {black} negro",
           "rangeExplain": "These are the verses your next sesión will open on.",
-          "methodExplain": "Esto method guides how text y audio appear mientras tú practise.",
+          "methodExplain": "Cette méthode guide l’affichage du texte et de l’audio pendant que vous pratiquez.",
           "setupExplain": "velocidad de reproducción and repetitions control how calmly you rehearse each verse.",
           "weakAyahRepeatOne": "Repite ayah {ayah} {count} times, extra passes on the words that slipped.",
           "weakAyahRepeatMany": "Repite each weak ayah {count} times ({ayahCount} ayahs) to strengthen the words that need care."
         },
-        "whatChangingDoes": "How Esto helps",
+        "whatChangingDoes": "En quoi cela aide",
         "paramHints": {
           "repetitionsHigh": "{count}× repetitions, more passes help challenging ayahs settle.",
           "repetitionsModerate": "{count} repetitions, another steady pass without overload.",
@@ -2525,7 +2535,7 @@
         "openFocusPhrase": "Ouvrir la phrase ciblée en pratique",
         "aiReciteShort": "AI Recite",
         "aiReciteHintShort": "Session de révision",
-        "aiResultLineStrong": "más of Esto sounded clear.",
+        "aiResultLineStrong": "L’essentiel sonnait clair.",
         "aiResultLineStrongHesitation": "Mostly clear, con a pequeñas pause en ayah {ayah}.",
         "aiResultLineStrongOneGap": "Mostly clear, con one pequeñas pause.",
         "aiResultLineMixed": "buen overall, con a few spots a tighten.",
@@ -2542,23 +2552,23 @@
         "checkAnswerQuizStrong": "Fuerte",
         "checkAnswerQuizMixed": "Mixto",
         "checkAnswerQuizWeak": "Needs work",
-        "combinedFromBothChecks": "de tu comprobaciones",
+        "combinedFromBothChecks": "D’après vos contrôles",
         "combinedFromAi": "de tu voice comprobar",
         "combinedFromQuiz": "de tu quiz",
         "combinedFromSession": "From this sesión",
-        "combinedRepeatWeakAyah": "ayah {ayah} still feels tricky. We eliminará practise Estas ayahs again.",
-        "combinedRepeatWeakAyahs": "Some ayahs still necesitan help. We eliminará practise Esto set again.",
-        "combinedRepeatBoth": "tu comprobaciones show a few hard spots. We eliminará practise Esto set again.",
-        "combinedRepeatOne": "Some parts still necesitan help. We eliminará practise Estas ayahs again.",
-        "combinedRepeatDespiteStrong": "tu comprobar looked buen. We estás still giving Estas ayahs one más calm pass.",
-        "combinedRepeatFallback": "We eliminará practise Estas ayahs again con a little más help.",
+        "combinedRepeatWeakAyah": "Le verset {ayah} reste délicat. Nous pratiquerons encore ces versets.",
+        "combinedRepeatWeakAyahs": "Certains versets demandent encore de l’aide. Nous pratiquerons encore cet ensemble.",
+        "combinedRepeatBoth": "Vos contrôles montrent quelques passages difficiles. Nous pratiquerons encore cet ensemble.",
+        "combinedRepeatOne": "Certaines parties demandent encore de l’aide. Nous pratiquerons encore ces versets.",
+        "combinedRepeatDespiteStrong": "Le contrôle était bon. Nous donnons encore à ces versets un passage calme.",
+        "combinedRepeatFallback": "Nous pratiquerons encore ces versets, avec un peu plus d’aide.",
         "combinedContinueBothOrder": "Nice work. Siguiente ayahs. guardar el order El esfuerzo constante.",
         "combinedContinueBoth": "Your checks look listo. Next verses while this still feels fresh.",
-        "combinedContinueNeedsSupport": "A few spots still necesitan help. Esto plan adds a little más support.",
+        "combinedContinueNeedsSupport": "Quelques passages demandent encore de l’aide. Ce plan ajoute un peu plus de soutien.",
         "combinedContinueOneOrder": "Nice work. Siguiente ayahs. guardar el order El esfuerzo constante.",
-        "combinedContinueOne": "Nice work. Siguiente ayahs mientras Esto still feels fresh.",
-        "combinedContinueFallback": "Siguiente ayahs mientras Esto still feels fresh.",
-        "whyThisPlanToggle": "Why Esto Siguiente step?",
+        "combinedContinueOne": "Bel effort. Les versets suivants, tant que c’est encore frais.",
+        "combinedContinueFallback": "Les versets suivants, tant que c’est encore frais.",
+        "whyThisPlanToggle": "Pourquoi cette prochaine étape ?",
         "aiReviewStrong": "Based on this session",
         "aiReviewWeakAyah": "Based on this session",
         "aiReviewWeakAyahs": "Based on this session",
@@ -2590,11 +2600,11 @@
         "zeroMatchProgressLabel": "Pas encore reconnu",
         "zeroMatchHint": "Une courte révision aidera les mots à se fixer avant de revérifier.",
         "zeroMatchFocus": "Révisez cette plage lentement, puis revérifiez.",
-        "insufficientAudioStatus": "Impossible d’évaluer cette tentative. Vérifiez votre microphone ou votre connexion, puis réessayez.",
-        "insufficientAudioSummary": "Impossible d’évaluer cette tentative. Vérifiez votre microphone ou votre connexion, puis réessayez.",
+        "insufficientAudioStatus": "Impossible d’évaluer cette tentative. Vérifiez le microphone ou la connexion, puis réessayez.",
+        "insufficientAudioSummary": "Impossible d’évaluer cette tentative. Vérifiez le microphone ou la connexion, puis réessayez.",
         "insufficientAudioMicSummary": "L’accès au microphone est bloqué. Autorisez le micro, puis réessayez.",
         "insufficientAudioShortSummary": "Cet enregistrement est trop court. Récitez un peu plus longtemps, puis réessayez.",
-        "insufficientAudioProcessingSummary": "Impossible d’évaluer cette tentative. Vérifiez votre microphone ou votre connexion, puis réessayez.",
+        "insufficientAudioProcessingSummary": "Impossible d’évaluer cette tentative. Vérifiez le microphone ou la connexion, puis réessayez.",
         "insufficientAudioHint": "Vérifiez votre microphone ou votre connexion, puis réessayez.",
         "insufficientAudioFocus": "Vérifiez votre microphone ou votre connexion, puis réessayez.",
         "aiMetricAccuracy": "Coincidencia",
@@ -2620,25 +2630,25 @@
         "aiReviewDuration": "{seconds}s comprobar",
         "resultStats": "comprobar results",
         "statMatched": "Coincidenciaed",
-        "statMatchedHint": "Palabras Mutqin clearly recognised en Esto comprobar",
+        "statMatchedHint": "Mots que Mutqin a clairement reconnus dans ce contrôle",
         "statNeedsWork": "« Needs work»",
         "statNeedsWorkHint": "Palabras that necesitan another calm pass",
         "statWrongCount": "{count} خطأ",
         "statCloseCount": "{count} قريب",
         "statRecitationTime": "Recitation vez",
-        "statRecitationTimeHint": "How tiempo Esto recitation took",
+        "statRecitationTimeHint": "Durée de cette récitation",
         "speedPill": "{speed}× vitesse",
         "techniques": {
           "blur": "Masquer le texte progressivement (Blur)",
           "focus": "Une ayah à la fois (Focus)",
           "talqin": "Écouter et répéter (Talqin)",
           "chaining": "Join ayahs together",
-          "anchor": "guardar a few Palabras clave Palabras showing",
+          "anchor": "Garder quelques mots d’ancrage visibles",
           "blurShort": "Masquer le texte progressivement (Blur)",
           "focusShort": "Une ayah à la fois (Focus)",
           "talqinShort": "Écouter et répéter (Talqin)",
           "chainingShort": "Join ayahs together",
-          "anchorShort": "guardar a few Palabras clave Palabras showing"
+          "anchorShort": "Garder quelques mots d’ancrage visibles"
         },
         "confirm": {
           "continueNextAyat": "Continue to the next ayat?",
@@ -2668,22 +2678,22 @@
           "confidenceConfident": "Based on this session",
           "confidenceNeedsPractice": "Based on this session",
           "sessionIncomplete": "You en pausa mid-range. This plan resumes from the ayahs you left unfinished.",
-          "lowRecall": "Phrase recall needs support. Esto plan rebuilds el rango con escuchas-y-repites.",
-          "sequenceErrors": "Ayah order was uncertain. Esto plan uses linking y phrase ordering antes moving activado.",
-          "highHintDependency": "Memory prompts were used often. Esto plan reduces hints con progressive Mushaf hiding.",
-          "visualDependency": "Recall leaned activado visibles text. Esto plan hides más of el Mushaf step by step.",
+          "lowRecall": "Le rappel des phrases demande du soutien. Ce plan reconstruit la plage en écoutant et répétant.",
+          "sequenceErrors": "L’ordre des ayahs était incertain. Ce plan relie et ordonne les phrases avant d’avancer.",
+          "highHintDependency": "Les indices ont beaucoup servi. Ce plan les réduit en cachant progressivement le Mushaf.",
+          "visualDependency": "Le rappel s’appuyait sur le texte visible. Ce plan cache progressivement davantage du Mushaf.",
           "audioDependency": "Replay was heavy. This plan shifts toward activo recall with lighter audio support.",
-          "spokenHesitation": "Your spoken recall hesitated. This plan uses short phrases, slower playback, and AI Recite.",
-          "omissionErrors": "Some Palabras were missed. Esto plan completes ayahs con escuchas-y-repites.",
-          "similarAyahConfusion": "Similar ayahs were mixed. Esto plan compares them side by side con anchors.",
-          "lowDelayedRetention": "Earlier material faded. Esto plan schedules an earlier murājaʿah.",
-          "highPerformance": "el comprobar looked strong. Mā shā’ todosāh. Esto plan continues suavemente mientras el ayahs estás fresh.",
+          "spokenHesitation": "Le rappel parlé hésitait. Ce plan utilise de courtes phrases, un débit plus lent et AI Recite.",
+          "omissionErrors": "Certains mots ont manqué. Ce plan complète les ayahs en écoutant et répétant.",
+          "similarAyahConfusion": "Des ayahs proches se sont mélangées. Ce plan les compare côte à côte, avec des ancrages.",
+          "lowDelayedRetention": "Le matériel plus ancien a pâli. Ce plan avance une muraja'ah plus tôt.",
+          "highPerformance": "Le contrôle était solide. Mā shā’ Allāh. Ce plan continue en douceur tant que les ayahs sont fraîches.",
           "lowConfidence": "You asked for reassurance. This plan offers a short confianza-building pass.",
           "overconfidence": "confianza was high, but the check found a weak spot. This plan reinforces that gap.",
-          "reviewOverdue": "Some ayahs estás due para murājaʿah. Esto plan returns a them soon.",
-          "adaptiveCheckStrong": "tu short comprobar looked strong. Esto plan continues mientras el ayahs estás still fresh.",
-          "adaptiveCheckMixed": "tu short comprobar was mostly solid, con a few gaps. Esto plan adds light support.",
-          "adaptiveCheckWeak": "tu short comprobar found parts that still necesitan practice. Esto plan keeps el same rango con más guidance.",
+          "reviewOverdue": "Certaines ayahs sont dues pour une muraja'ah. Ce plan y revient bientôt.",
+          "adaptiveCheckStrong": "Le court contrôle était solide. Ce plan continue tant que les ayahs sont encore fraîches.",
+          "adaptiveCheckMixed": "Le court contrôle était plutôt solide, avec quelques lacunes. Ce plan ajoute un soutien léger.",
+          "adaptiveCheckWeak": "Le court contrôle a trouvé des passages à retravailler. Ce plan garde le même ensemble, avec plus de guidage.",
           "simpleContinue": "Based on this session",
           "simpleRepeat": "Based on this session",
           "simpleNextSurah": "Based on this session"
@@ -2731,11 +2741,11 @@
       "masteryTitle": "rango achieved",
       "masterySubtitle": "Fuerte recall, listo for the next sesión.",
       "masteryBanner": "Achieved. You can continue to the next sesión.",
-      "simplerSubtitle": "no firm yet, practise Esto simpler plan, luego test again.",
+      "simplerSubtitle": "Pas encore solide : pratiquez ce plan plus simple, puis contrôlez à nouveau.",
       "simplerBanner": "Keep practising this simpler plan, then test with AI Recita again.",
       "returningToPlan": "Opening tu practice plan…",
-      "focusAyah": "Enfoque activado āyah {ayah}",
-      "focusAyahs": "Enfoque activado āyahs {ayahs}",
+      "focusAyah": "Se concentrer sur l’ayah {ayah}",
+      "focusAyahs": "Se concentrer sur les ayahs {ayahs}",
       "alsoWith": "También: {technique}",
       "alsoTip": "Consejo: {technique}",
       "beginner": {
@@ -2751,7 +2761,7 @@
         "kicker": "Surah completado",
         "title": "tú finished {surah}",
         "summary": "Here is a calm look at your progreso on this surah.",
-        "sessions": "tú practised Esto surah across {count} sesiones.",
+        "sessions": "Vous avez pratiqué cette sourate sur {count} sessions.",
         "accuracy": "Last AI Recita precisión: {score}%",
         "technique": "Técnica que ayudó: {technique}",
         "weakLeft": "Aún vigilar: {items}",
@@ -2761,7 +2771,7 @@
       "feedbackStrong": "Fuerte recall. A light review will keep it firm.",
       "feedbackFocused": "buen esfuerzo. Strengthen el weak Palabras Siguiente.",
       "feedbackGentle": "Take it slow. One step at a vez.",
-      "feedbackMixed": "A short focused plan eliminará help.",
+      "feedbackMixed": "Un court plan ciblé vous aidera.",
       "whyWeakWords": "precisión {precisión}% · {count} words · {techniques}",
       "whyStrong": "Votre rappel est solide. Une révision légère à un rythme régulier le maintiendra.",
       "whyDefault": "Built from your AI Recita result.",
@@ -2790,7 +2800,7 @@
     "emotional": {
       "postSession": {
         "encouragement1": "Small steps, repeated with sincerity, become lasting memorización.",
-        "encouragement2": "Qué tú revisaste Hoy tiene a lugar en tu corazón, volver a it suavemente.",
+        "encouragement2": "Ce que vous avez révisé aujourd’hui a une place dans votre cœur : y revenir en douceur.",
         "encouragement3": "La constancia importa más que ritmo. tú presentaste up, y that cuenta.",
         "encouragement4": "Each sesión is a quiet act of devotion. May it be accepted.",
         "encouragement5": "el Qur'an opens a those who volver a it, guardar coming devuelta.",
@@ -2806,7 +2816,7 @@
       },
       "consistency": {
         "nudgeShort": "Por mucho tiempo it's haya pasado, Hoy es a buen día a volver.",
-        "nudgeMedium": "A few días away, pick up suavemente, one ayah at a vez.",
+        "nudgeMedium": "Quelques jours d’absence : reprenez doucement, une ayah à la fois.",
         "nudgeLong": "Bienvenido devuelta. There es no prisa; comienza donde tú estás."
       }
     },
@@ -2821,7 +2831,7 @@
     "recite_check_results": "Résultats du contrôle de récitation",
     "saved_word_checks_for_this_session_range": "Contrôles de mots enregistrés pour la plage de cette session.",
     "what_next": "Et ensuite ?",
-    "deterministic_replay": "Vérification de cohérence",
+    "deterministic_replay": "Contrôle de cohérence",
     "recitation_confidence_heatmap": "Carte thermique de confiance en récitation",
     "most_improved": "Le plus amélioré :",
     "needs_focus": "Nécessite de l'attention :",
@@ -2942,9 +2952,9 @@
       "chainingOffPreview": "Flux : ayahs dans l'ordre, chaque ayah répétée {count} fois.",
       "chainingOffPreviewOne": "flujo: seleccionado ayahs en order, cada ayah repeated {count} vez.",
       "chainingCumulativePreview": "Flux cumulatif : répéter 1, puis 1-2, puis 1-2-3. Chaque bloc répété {count} fois.",
-      "chainingCumulativePreviewOne": "Acumulativo flujo: repites 1, luego 1-2, luego 1-2-3. cada bloque repeats {count} vez.",
+      "chainingCumulativePreviewOne": "Flux cumulatif : répétez 1, puis 1-2, puis 1-2-3. Chaque bloc se répète {count} fois.",
       "chainingLinkingPreview": "Flux de liaison : répéter l'ayah actuelle, la suivante, puis les deux. Chaque étape répétée {count} fois.",
-      "chainingLinkingPreviewOne": "Linking flujo: repites el current ayah, el Siguiente ayah, luego both together. cada step repeats {count} vez.",
+      "chainingLinkingPreviewOne": "Flux de liaison : répétez l’ayah actuelle, l’ayah suivante, puis les deux ensemble. Chaque étape se répète {count} fois.",
       "chainingOffLabel": "Enchaînement off · {count} répétitions",
       "chainingCumulativeLabel": "Cumulatif · {count} répétitions",
       "chainingLinkingLabel": "Liaison · {count} répétitions",
@@ -3014,7 +3024,7 @@
     "hifzJourney": {
       "setTarget": "Set tu target",
       "ayahsPerDay": "{min}-{max} ayahs/día",
-      "ayahsPerDayMax": "{max} ayahs/día",
+      "ayahsPerDayMax": "{max} ayahs/jour",
       "learningStyle": {
         "light": "Léger",
         "balanced": "Équilibré",
@@ -3045,7 +3055,7 @@
       "schedule": {
         "dueToday": "À réviser Today",
         "tomorrow": "Demain",
-        "thisWeek": "Esto Semana",
+        "thisWeek": "Cette semaine",
         "overdue": "Overdue Révisers",
         "recentlyMastered": "Recently Maîtrisé",
         "notScheduled": "Not planifié"
@@ -3063,7 +3073,7 @@
         "aheadDetail": "Planned memorización is ahead of completed progreso.",
         "singleOverdue": "{count} review es overdue.",
         "multipleOverdue": "{count} révisions are overdue.",
-        "slightAdjustment": "A pequeñas adjustment eliminará bring el plan devuelta activado track.",
+        "slightAdjustment": "Un petit ajustement remettra le plan sur les rails.",
         "matchingPlan": "progreso and revision are matching the plan.",
         "pausedMessage": "Your plan is en pausa. Resume when you are listo to continue.",
         "statusMessage": "{percent}% completado. previsión finish: {date}."
@@ -3113,7 +3123,7 @@
       },
       "insights": {
         "scheduleStartsAfterFirst": "Your memory schedule will begin after the first terminé ayah.",
-        "retentionImproving": "Your memory of recent ayahs is growing steadier.",
+        "retentionImproving": "Votre mémoire des ayahs récentes se stabilise.",
         "retentionNeedsReview": "tu retention needs más El esfuerzo constante review.",
         "consistentRemember": "tú consistently remember {count} recently learned ayah.",
         "consistentRememberOther": "tú consistently remember {count} recently learned ayahs.",
@@ -3151,7 +3161,9 @@
       "recallStrengthDesc": "Simple snapshot of how strong this sesión felt overall.",
       "reciteChecks": "Recita checks",
       "reciteChecksDesc": "Enregistré checks in this range.",
-      "recallStrengthLow": "« Low»"
+      "recallStrengthLow": "« Low»",
+      "repeatsCompleted": "Répétitions terminées",
+      "runsCompleted": "Passages terminés"
     },
     "toolsHeader": {
       "insights": "Analyses",
@@ -3195,7 +3207,14 @@
       "rowReady": "Prêt",
       "noDataYet": "Pas encore de données",
       "noDataDetail": "Démarrez une session pour générer des analyses",
-      "defaultInsight": "Gardez aujourd'hui petit et régulier"
+      "defaultInsight": "Gardez aujourd'hui petit et régulier",
+      "summaryReviewedOne": "Vous avez révisé {count} ayah",
+      "summaryReviewedMany": "Vous avez révisé {count} ayahs",
+      "summaryTime": "en {time}",
+      "summaryRepeatsOne": "avec {count} répétition",
+      "summaryRepeatsMany": "avec {count} répétitions",
+      "summaryAttentionOne": "{count} ayah a besoin d’un peu plus d’attention.",
+      "summaryAttentionMany": "{count} ayahs ont besoin d’un peu plus d’attention."
     },
     "guided": {
       "learn": "Apprendre",
@@ -3347,10 +3366,10 @@
     "tajweedPracticeCheck": {
       "title": "Tajweed practice comprobar",
       "legendTitle": "Colores del tajwid explicados",
-      "legendIntro": "Estas Mutqin colours mark common Tajweed rules en el ayah. Usa them a medida que practice reminders, no a medida que a maestro’s ruling.",
+      "legendIntro": "Ces couleurs Mutqin marquent des règles Tajweed courantes dans l’ayah. Servez-vous-en comme rappels de pratique, pas comme un jugement de professeur.",
       "disclaimer": "Practica aid only, not a teacher’s ruling. Holds are shown as ranges, not exact targets.",
       "summaryStrong": "guardar colours activado: green/purple = soft nasal hold, red = stretch, orange = light bounce.",
-      "summaryIssues": "Enfoque activado one coloured mark at a vez, hold suavemente, luego escuchas once if needed.",
+      "summaryIssues": "Travaillez une marque colorée à la fois, tenez en douceur, puis réécoutez une fois si besoin.",
       "summaryUnable": "Usa el colours mientras tú practise. We’ll comprobar holds cuando timing es clearer.",
       "viewDetails": "Voir les détails",
       "labels": {
@@ -3391,7 +3410,7 @@
       },
       "bands": {
         "strong": {
-          "headline": "Coloured marcas look El esfuerzo constante, guardar practising suavemente.",
+          "headline": "Les marques colorées paraissent stables : continuez à pratiquer en douceur.",
           "label": "El esfuerzo constante practice"
         },
         "average": {
@@ -3403,7 +3422,7 @@
           "label": "Needs atención"
         },
         "unable": {
-          "headline": "Timing wasn’t clear suficientes a comprobar holds Esto vez.",
+          "headline": "Le rythme n’était pas assez clair pour contrôler les tenues cette fois.",
           "label": "No se pudo’t fully comprobar"
         }
       },
@@ -3451,13 +3470,13 @@
       "hintListening": "Le microphone est actif, récitez de mémoire. Les mots se colorent au fur et à mesure.",
       "hintListeningLive": "Le microphone est actif, récitez de mémoire. Les mots se colorent au fur et à mesure.",
       "hintProcessing": "Finalisation…",
-      "hintProcessingSlow": "Esto es taking longer que expected.",
+      "hintProcessingSlow": "Cela prend plus de temps que prévu.",
       "hintAnalysing": "Comparing with the Quran text…",
       "startFailed": "Could not start assessment.",
-      "analyseFailed": "Could not analyse this recitation. Please try again.",
+      "analyseFailed": "Impossible d’évaluer cette tentative. Vérifiez le microphone ou la connexion, puis réessayez.",
       "sessionExpired": "Your sesión expired. Refresh the page, then try again.",
-      "noSpeech": "No speech was detected. Please try again.",
-      "recognitionStopped": "Listening en pausa. Por favor try again.",
+      "noSpeech": "Impossible d’évaluer cette tentative. Vérifiez le microphone ou la connexion, puis réessayez.",
+      "recognitionStopped": "Écoute en pause. Veuillez réessayer.",
       "guestSummary": "May Allah strengthen what you have memorizado.",
       "tools": "Memorización tools",
       "toolBlur": "« Blur»",
@@ -3473,7 +3492,7 @@
       "peekHintShort": "Hold a reveal",
       "wordsShownShort": "« Shown»",
       "elapsedTimer": "Recitation vez",
-      "elapsedTimerHint": "How tiempo Esto recitation tiene taken, used a personalise tu Siguiente plan",
+      "elapsedTimerHint": "Durée de cette récitation, utilisée pour personnaliser le plan suivant",
       "textSizeShort": "Texte size",
       "textSmallerShort": "« Smaller text»",
       "textLargerShort": "نtext أكبر",
@@ -3497,7 +3516,7 @@
       "autoFollowResume": "Resume seguimiento automático",
       "autoFollowHint": "Keep the activo word near eye level during longer checks",
       "completeTitle": "Mā shā’ Allāh, check completado",
-      "completeBody": "tú recalled Esto rango successfully.",
+      "completeBody": "Vous avez bien rappelé cette plage.",
       "sessionEnded": "sesión completado",
       "sessionEndedBody": "Retouring…",
       "testAgain": "Revérifier",
@@ -3539,6 +3558,121 @@
       "toolMemorizing": "« Memorizing»",
       "peekHint": "necesitan a hint? Peek at el text",
       "toolPeek": "Peek at el text"
+    },
+    "exportReport": {
+      "saved": "Enregistrée",
+      "exported": "Exportée",
+      "sessionStats": "Statistiques de session",
+      "footer": "Export de session Mutqin",
+      "versesRead": "Ayahs révisées",
+      "timeSpent": "Temps de mémorisation",
+      "repetitions": "Répétitions terminées",
+      "sessionPlays": "Lectures de session",
+      "versePlays": "Lectures d’ayahs",
+      "averageTime": "Temps moyen par ayah",
+      "struggledAyahs": "Ayahs qui ont demandé plus d’attention"
+    },
+    "helpLearning": {
+      "title": "Aide et apprentissage",
+      "subtitle": "De courts guides pour une mémorisation du Coran calme et régulière.",
+      "bestFor": "Idéal pour",
+      "sections": {
+        "tajweed": {
+          "title": "Couleurs du tajweed",
+          "description": "Lorsque le tajweed est activé, Mutqin colore les lettres pour que vous remarquiez les schémas de prononciation en écoutant et en répétant.",
+          "bestFor": "Ceux qui veulent affiner la prononciation en mémorisant, sans se presser.",
+          "legendTitle": "Ce que signifie chaque couleur",
+          "legendIntro": "Servez-vous de cette légende en écoutant et en répétant. C’est un guide, pas un remplacement d’un professeur.",
+          "colors": {
+            "gray": {
+              "label": "Lettres silencieuses / de liaison",
+              "description": "Hamzat al-wasl et lettres silencieuses qui ne se prononcent pas."
+            },
+            "green": {
+              "label": "Ghunnah / Idgham avec ghunnah",
+              "description": "Nasalisation et jonction avec un son nasal."
+            },
+            "purple": {
+              "label": "Ikhfa / Idgham sans ghunnah",
+              "description": "Noon caché et jonction non nasale."
+            },
+            "orange": {
+              "label": "Qalqalah",
+              "description": "Écho d’arrêt sur ق ط ب ج د."
+            },
+            "red": {
+              "label": "Madd (allongement)",
+              "description": "Allongement normal, obligatoire et nécessaire."
+            },
+            "blue": {
+              "label": "Idgham shafawi",
+              "description": "Fusion labiale avec م."
+            }
+          }
+        },
+        "srs": {
+          "title": "Planification des révisions",
+          "description": "Revenez aux ayahs mémorisées avant qu’elles ne s’estompent. Celles qui demandent plus de soin reviennent plus tôt.",
+          "bestFor": "Garder solide, dans le temps, ce qui a déjà été mémorisé."
+        },
+        "techniques": {
+          "title": "Pratique guidée",
+          "description": "Écoutez, suivez et répétez à un rythme confortable. Choisissez la méthode qui vous aide à rester régulier.",
+          "bestFor": "Ceux qui construisent un rythme quotidien calme.",
+          "details": {
+            "repetition": {
+              "label": "Répétition",
+              "text": "Répétez le même verset quelques fois avant de continuer."
+            },
+            "linking": {
+              "label": "Liaison",
+              "text": "Reliez chaque verset au suivant pour fluidifier le passage."
+            },
+            "cumulative": {
+              "label": "Cumul",
+              "text": "Ajoutez de nouveaux versets tout en révisant doucement les précédents."
+            }
+          }
+        },
+        "layouts": {
+          "title": "Mises en page de lecture",
+          "description": "Passez des cartes empilées à une page de style Mushaf selon ce qui est le plus facile à suivre.",
+          "bestFor": "Choisir une vue de lecture qui reste confortable.",
+          "details": {
+            "stacked": {
+              "label": "Vue empilée",
+              "text": "Montre chaque ayah clairement, l’une après l’autre — pratique sur petit écran."
+            },
+            "mushaf": {
+              "label": "Vue Mushaf",
+              "text": "Montre les ayahs dans un style inspiré de la page du Mushaf."
+            }
+          }
+        },
+        "aiRecitation": {
+          "title": "Vérification de récitation",
+          "description": "Récitez de mémoire et laissez Mutqin suivre votre progression. Voyez quels mots demandent un peu plus d’attention.",
+          "bestFor": "Ceux qui veulent un retour doux après avoir pratiqué à voix haute."
+        },
+        "talqinMode": {
+          "title": "Mode talqin",
+          "description": "Écoutez, faites une pause, répétez et allongez à un rythme régulier pour rester concentré sur les ayahs.",
+          "bestFor": "Ceux qui renforcent la rétention par l’écoute guidée et la répétition.",
+          "workflowTitle": "Comment se déroule un tour de talqin",
+          "workflowIntro": "Chaque tour suit les mêmes trois étapes, pour que vous sachiez toujours ce qui vient.",
+          "workflowListen": "Écouter.",
+          "workflowListenText": "Le récitateur lit une courte portion pendant que vous suivez.",
+          "workflowPause": "Répéter.",
+          "workflowPauseText": "La lecture se met en pause pour que vous répétiez la même portion à voix haute.",
+          "workflowExtend": "Allonger.",
+          "workflowExtendText": "Quand c’est posé, la portion s’allonge pour la relier à ce qui précède."
+        },
+        "manualAssessment": {
+          "title": "Auto-évaluation",
+          "description": "Après une session, notez votre aisance pour que l’étape suivante reste utile.",
+          "bestFor": "Ceux qui préfèrent une réflexion simple, par eux-mêmes."
+        }
+      }
     }
   },
   "toasts": {
@@ -3570,7 +3704,7 @@
     "nothingReadyToSave": "Nothing is listo to save yet. Load a surah range or start a sesión first.",
     "sessionSavedSuccess": "sesión saved successfully.",
     "pleaseSelectAValidSurahAnd": "Por favor select a valid surah and ayah range first",
-    "failedToStartSession": "No se pudo start the sesión. Por favor try again.",
+    "failedToStartSession": "Impossible de démarrer la session. Veuillez réessayer.",
     "sessionBusyTryAgain": "A sesión action is already in progreso. Por favor wait a moment and try again.",
     "noActiveSessionToSave": "No activo sesión to save",
     "sessionSaved2": "sesión saved",
@@ -3578,7 +3712,7 @@
     "sessionExportBlockedIncompleteSessionData": "sesión export blocked: incomplete sesión data.",
     "downloadReady": "descargar listo ✓",
     "exportFailedRetry": "« Export failed, retry»",
-    "thisResultDoesNotHaveEnough": "Ce résultat n’a pas assez de détails enregistrés pour vérifier à nouveau la cohérence.",
+    "thisResultDoesNotHaveEnough": "Ce résultat n’a pas assez de détail enregistré pour contrôler à nouveau la cohérence.",
     "unableToPlayThisRecordingRight": "We could not play this grabación. Try reloading it or record again.",
     "audioSystemNotReady": "Audio system not ready",
     "audioElementNotReady": "Playback could not start because the audio player did not finish loading. Refresh the page, then press play again.",
@@ -3599,7 +3733,7 @@
     "memorisationAssessmentDeleted": "Memorización assessment deleted.",
     "memorisationCheckerReset": "Memorización checker reset.",
     "memorisationAssessmentDiscarded": "Memorización assessment discarded.",
-    "thisRecordingDoesNotHaveEnough": "Cet enregistrement n’a pas assez de détails enregistrés pour vérifier à nouveau la cohérence.",
+    "thisRecordingDoesNotHaveEnough": "Cet enregistrement n’a pas assez de détail enregistré pour contrôler à nouveau la cohérence.",
     "reciteCheckComplete": "Recita Check completado.",
     "displayedAyahReviewReset": "Displayed آية مراجعة reset.",
     "reciteCheckCouldNotBeSaved": "Recita Check could not be saved on this device right now.",
@@ -3625,7 +3759,7 @@
     "couldNotIdentifySurah": "No se pudo identify surah",
     "savedVersesFromForOfflineReading": "guardado {length} ayahs de {p0} para offline reading.",
     "failedToDownloadVerses": "Failed to descargar verses",
-    "loadedFromOfflineStorage": "Loaded {surah} from saved offline reading",
+    "loadedFromOfflineStorage": "{surah} chargé depuis la lecture hors ligne enregistrée",
     "failedToLoadOfflineSurah": "Failed a cargar offline surah",
     "offlineSurahRemoved": "Sin conexión surah removed",
     "audioPlaybackError": "Audio playback error",
@@ -3637,7 +3771,7 @@
     "pleaseSelectASurahFirst": "Por favor select a surah first",
     "noVersesLoadedCheckYourNetwork": "No ayahs loaded. comprobar tu red conexión.",
     "nothingToPlayCheckTheSelected": "Nada a play. comprobar el seleccionado rango.",
-    "backOnlineLiveApisAreAvailable": "Vous êtes de nouveau en ligne. Les fonctions en direct sont disponibles.",
+    "backOnlineLiveApisAreAvailable": "Vous êtes de nouveau en ligne. Les fonctions en direct sont de nouveau disponibles.",
     "offlineModeActiveReadingFallsBack": "Vous êtes hors ligne. La lecture utilisera les sourates enregistrées sur cet appareil.",
     "settingsIssue": "مشكلة في الإعدادات: {join}",
     "fontSize": "حجم الخط: {defaultFontSize}%",
@@ -3648,16 +3782,16 @@
     "reciterUpdatedForThisSession": "recitador updated for this sesión.",
     "noVersesToQuizOn": "No ayahs a quiz activado",
     "enableWordAudioToPreviewIndividual": "Enable Word audio a preview individual Palabras.",
-    "wordAudioIsNotAvailableFor": "Word audio es no available para Esto word.",
-    "wordTimingUnavailableForThisAyah": "Word timing unavailable para Esto ayah.",
-    "unableToPlayThisWordRight": "Unable a play Esto word right ahora.",
+    "wordAudioIsNotAvailableFor": "L’audio de ce mot n’est pas disponible.",
+    "wordTimingUnavailableForThisAyah": "Le rythme des mots n’est pas disponible pour cette ayah.",
+    "unableToPlayThisWordRight": "Impossible de lire ce mot pour le moment.",
     "unableToPlayAyahNow": "Unable to play this ayah right now.",
     "textSizePercent": "حجم النص: {percent}%",
-    "sessionResumeFailed": "Unable to resume sesión. Por favor try again.",
+    "sessionResumeFailed": "Impossible de reprendre la session. Veuillez réessayer.",
     "sessionResumeUnavailable": "Esta sesión can no longer be resumed. Iniciar a new sesión.",
-    "sessionEndFailed": "Unable to end sesión. Por favor try again.",
+    "sessionEndFailed": "Impossible de terminer la session. Veuillez réessayer.",
     "sessionPaused": "sesión en pausa. You can resume anytime.",
-    "sessionPauseFailed": "Unable to pause sesión. Por favor try again.",
+    "sessionPauseFailed": "Impossible de mettre la session en pause. Veuillez réessayer.",
     "sessionSaveFailed": "Impossible d’enregistrer cette session. Réessayez.",
     "sessionSaveSyncFailed": "Session enregistrée sur cet appareil. La synchronisation réessaiera sous peu.",
     "sessionSaveLimitReached": "Limite de sessions enregistrées atteinte ({max}). Supprimez-en une pour en enregistrer une autre.",
@@ -3670,15 +3804,18 @@
     "sessionRestarted": "sesión restarted from the beginning.",
     "recordingQualityVerified": "grabación quality verified.",
     "recordingNeedsReview": "The grabación needs another review.",
-    "auditRerunFailed": "Impossible de vérifier la cohérence de cet enregistrement pour le moment.",
+    "auditRerunFailed": "Impossible de contrôler la cohérence de cet enregistrement pour le moment.",
     "markedForReview": "Marked para review",
     "progressSaved": "Progression enregistrée",
     "recordingDeleted": "grabación deleted",
     "recordingDeletedAyah": "Eliminard ayah {number} {type}",
-    "openSetup": "Abrir setup"
+    "openSetup": "Abrir setup",
+    "sessionStartFailed": "Impossible de démarrer cette session. Réessayez.",
+    "hifzRecoveryApplied": "Plan de rattrapage appliqué"
   },
   "errors": {
-    "network": "Erreur réseau. Vérifiez votre connexion."
+    "network": "Erreur réseau. Vérifiez votre connexion.",
+    "genericRetry": "Une erreur s’est produite. Veuillez réessayer."
   },
   "about": {
     "tag": "« Mutqin»",
@@ -3761,7 +3898,7 @@
       "continue": "Continuar",
       "return": "Retour"
     },
-    "heroDesc": "Help people inicio memorising, guardar going, y come devuelta cada día, mientras still learning con a real maestro.",
+    "heroDesc": "Aider à commencer la mémorisation, à tenir le rythme et à revenir chaque jour, tout en apprenant encore avec un vrai professeur.",
     "ctaStartSession": "Iniciar a sesión",
     "ctaGetHelp": "« Get help»",
     "sections": {
@@ -3770,7 +3907,7 @@
         "desc": "Escucha, repeat, and check your recitation so what you memorise stays with you beyond one sitting."
       },
       "daily": {
-        "title": "Come devuelta cada día",
+        "title": "Revenir chaque jour",
         "desc": "After every sesión you get a clear next step, so ayahs do not fade between days."
       },
       "respect": {
@@ -3836,9 +3973,9 @@
     "alreadyJoined": "tú’volver a already activado el lista",
     "successHint": "We’ll email you when Mutqin is listo for you.",
     "joinAnother": "Usa a different email",
-    "privacyNote": "We’ll only Usa Esto a notify tú. No spam.",
+    "privacyNote": "Nous l’utiliserons seulement pour vous prévenir. Pas de spam.",
     "errorFields": "Vérifiez les champs signalés y réessayez.",
-    "errorSend": "Something went wrong. Por favor try again in a moment.",
+    "errorSend": "Une erreur s’est produite. Réessayez dans un instant.",
     "errors": {
       "name": "Por favor entrer tu nom.",
       "email": "Por favor entrer tu adresse e-mail.",
@@ -4005,103 +4142,103 @@
     },
     "helpLearning": {
       "title": "Aide et apprentissage",
-      "subtitle": "Apprenez à utiliser les outils Mutqin pour mieux mémoriser.",
-      "bestFor": "Idéal pour :",
+      "subtitle": "De courts guides pour une mémorisation du Coran calme et régulière.",
+      "bestFor": "Idéal pour",
       "sections": {
         "tajweed": {
-          "title": "Règles de tajweed",
-          "description": "Le tajweed est l'ensemble des règles qui vous aident à réciter le Coran correctement et avec beauté. Mutqin met en évidence ces règles pour que vous les reconnaissiez et les pratiquiez pendant la mémorisation.",
-          "bestFor": "Les étudiants qui améliorent la prononciation et la qualité de récitation.",
-          "legendTitle": "Qué cada color significa",
-          "legendIntro": "Usa Esto legend mientras tú escuchas y repites. It es a guía, no a sustituto para a maestro.",
+          "title": "Couleurs du tajweed",
+          "description": "Lorsque le tajweed est activé, Mutqin colore les lettres pour que vous remarquiez les schémas de prononciation en écoutant et en répétant.",
+          "bestFor": "Ceux qui veulent affiner la prononciation en mémorisant, sans se presser.",
+          "legendTitle": "Ce que signifie chaque couleur",
+          "legendIntro": "Servez-vous de cette légende en écoutant et en répétant. C’est un guide, pas un remplacement d’un professeur.",
           "colors": {
             "gray": {
-              "label": "Silenciosas / conexión marcas",
-              "description": "Hamzat al-wasl y Silenciosas letters that estás no pronounced."
+              "label": "Lettres silencieuses / de liaison",
+              "description": "Hamzat al-wasl et lettres silencieuses qui ne se prononcent pas."
             },
             "green": {
-              "label": "Ghunnah / Idgham con ghunnah",
-              "description": "Nasalisation y joining con a nasal sound."
+              "label": "Ghunnah / Idgham avec ghunnah",
+              "description": "Nasalisation et jonction avec un son nasal."
             },
             "purple": {
-              "label": "« Ikhfa / Idgham without ghunnah»",
-              "description": "Hidden noon sound y non-nasal joining."
+              "label": "Ikhfa / Idgham sans ghunnah",
+              "description": "Noon caché et jonction non nasale."
             },
             "orange": {
-              "label": "« Qalqalah»",
-              "description": "Echoing stop activado ق ط ب ج د."
+              "label": "Qalqalah",
+              "description": "Écho d’arrêt sur ق ط ب ج د."
             },
             "red": {
-              "label": "« Madd (elongation)»",
-              "description": "Normal, obligatory, y necessary lengthening."
+              "label": "Madd (allongement)",
+              "description": "Allongement normal, obligatoire et nécessaire."
             },
             "blue": {
-              "label": "« Idgham shafawi»",
-              "description": "Labial merging con م."
+              "label": "Idgham shafawi",
+              "description": "Fusion labiale avec م."
             }
           }
         },
         "srs": {
-          "title": "Révision intelligente (SRS)",
-          "description": "Mutqin vous rappelle automatiquement de réviser les versets au bon moment pour qu'ils restent solides en mémoire. Les versets difficiles apparaissent plus souvent, les plus solides moins.",
-          "bestFor": "La rétention à long terme et la prévention des oublis."
+          "title": "Planification des révisions",
+          "description": "Revenez aux ayahs mémorisées avant qu’elles ne s’estompent. Celles qui demandent plus de soin reviennent plus tôt.",
+          "bestFor": "Garder solide, dans le temps, ce qui a déjà été mémorisé."
         },
         "techniques": {
-          "title": "Techniques de mémorisation",
-          "description": "Choisissez la méthode qui vous aide à rester régulier, puis ajustez-la à mesure que la plage devient familière.",
-          "bestFor": "Les étudiants qui découvrent leur style d'apprentissage.",
+          "title": "Pratique guidée",
+          "description": "Écoutez, suivez et répétez à un rythme confortable. Choisissez la méthode qui vous aide à rester régulier.",
+          "bestFor": "Ceux qui construisent un rythme quotidien calme.",
           "details": {
             "repetition": {
-              "label": "Méthode de répétition",
-              "text": "Répétez le même verset plusieurs fois avant de passer au suivant."
+              "label": "Répétition",
+              "text": "Répétez le même verset quelques fois avant de continuer."
             },
             "linking": {
-              "label": "Méthode de liaison",
-              "text": "Reliez chaque verset au suivant pour améliorer le flux et la continuité."
+              "label": "Liaison",
+              "text": "Reliez chaque verset au suivant pour fluidifier le passage."
             },
             "cumulative": {
-              "label": "Méthode cumulative",
-              "text": "Ajoutez continuellement de nouveaux versets tout en révisant les précédents."
+              "label": "Cumul",
+              "text": "Ajoutez de nouveaux versets tout en révisant doucement les précédents."
             }
           }
         },
         "layouts": {
-          "title": "Dispositions de lecture",
-          "description": "Basculez entre deux styles de lecture selon l'appareil et le type de mémorisation.",
-          "bestFor": "Choisir l'expérience de lecture la plus naturelle.",
+          "title": "Mises en page de lecture",
+          "description": "Passez des cartes empilées à une page de style Mushaf selon ce qui est le plus facile à suivre.",
+          "bestFor": "Choisir une vue de lecture qui reste confortable.",
           "details": {
             "stacked": {
-              "label": "Disposition empilée",
-              "text": "Affiche chaque verset verticalement, plus facile à suivre sur mobile."
+              "label": "Vue empilée",
+              "text": "Montre chaque ayah clairement, l’une après l’autre — pratique sur petit écran."
             },
             "mushaf": {
-              "label": "Disposition mushaf",
-              "text": "Affiche les versets dans un style mushaf traditionnel pour ceux qui préfèrent la mémorisation par page."
+              "label": "Vue Mushaf",
+              "text": "Montre les ayahs dans un style inspiré de la page du Mushaf."
             }
           }
         },
         "aiRecitation": {
-          "title": "Récitation IA",
-          "description": "La récitation IA écoute votre récitation et fournit un retour instantané pour identifier les erreurs et améliorer la précision.",
-          "bestFor": "Les étudiants qui veulent une pratique guidée et un retour immédiat."
+          "title": "Vérification de récitation",
+          "description": "Récitez de mémoire et laissez Mutqin suivre votre progression. Voyez quels mots demandent un peu plus d’attention.",
+          "bestFor": "Ceux qui veulent un retour doux après avoir pratiqué à voix haute."
         },
         "talqinMode": {
-          "title": "Talqin Mode Guide",
-          "description": "Talqin Mode automates the listen, pause, repeat, and extend cycle after you submit a practice session, so the timing stays consistent without extra manual control.",
-          "bestFor": "Students building verse retention through guided listening and repetition.",
-          "workflowTitle": "Talqin Workflow Guide (Listen, Pause, Repeat, Extend)",
-          "workflowIntro": "Activated seamlessly right after you submit a practice session. The platform handles the timing so you can focus entirely on your retention:",
-          "workflowListen": "1. Listen Phase:",
-          "workflowListenText": "The app streams the correct pronunciation of the verse. Focus on Tajweed tracking.",
-          "workflowPause": "2. Pause & Repeat Phase:",
-          "workflowPauseText": "The audio pauses automatically. A live on-screen alert prompts you to recite what you just heard.",
-          "workflowExtend": "3. Extend Phase:",
-          "workflowExtendText": "The sequence systematically links verses together to build long-term memory capacity automatically."
+          "title": "Mode talqin",
+          "description": "Écoutez, faites une pause, répétez et allongez à un rythme régulier pour rester concentré sur les ayahs.",
+          "bestFor": "Ceux qui renforcent la rétention par l’écoute guidée et la répétition.",
+          "workflowTitle": "Comment se déroule un tour de talqin",
+          "workflowIntro": "Chaque tour suit les mêmes trois étapes, pour que vous sachiez toujours ce qui vient.",
+          "workflowListen": "Écouter.",
+          "workflowListenText": "Le récitateur lit une courte portion pendant que vous suivez.",
+          "workflowPause": "Répéter.",
+          "workflowPauseText": "La lecture se met en pause pour que vous répétiez la même portion à voix haute.",
+          "workflowExtend": "Allonger.",
+          "workflowExtendText": "Quand c’est posé, la portion s’allonge pour la relier à ce qui précède."
         },
         "manualAssessment": {
-          "title": "Évaluation manuelle",
-          "description": "Permet d'évaluer votre propre mémorisation après chaque session et de suivre votre confiance et vos progrès.",
-          "bestFor": "Les étudiants qui préfèrent l'auto-réflexion et la révision indépendante."
+          "title": "Auto-évaluation",
+          "description": "Après une session, notez votre aisance pour que l’étape suivante reste utile.",
+          "bestFor": "Ceux qui préfèrent une réflexion simple, par eux-mêmes."
         }
       }
     },
@@ -4180,7 +4317,7 @@
     "chart_empty_title": "Aucune session pour l'instant",
     "chart_empty_message": "Votre première session apparaîtra ici.",
     "week_summary": "Cette semaine : {sessions} sessions · {ayahs} ayahs.",
-    "week_summary_empty": "Aucune pratique cette semaine pour l'instant.",
+    "week_summary_empty": "Aucune pratique cette semaine pour l’instant.",
     "strength_fragile": "Fragile",
     "strength_building": "En construction",
     "strength_strong": "Solide",
@@ -4258,9 +4395,9 @@
     "drawer_loading": "Chargement…",
     "drawer_load_error": "Impossible de charger cette liste.",
     "drawer_count": "{n} éléments",
-    "drawer_activity_subtitle": "Votre pratique récente, vos vérifications et vos notes.",
+    "drawer_activity_subtitle": "Vos pratiques, contrôles et notes récents.",
     "drawer_sessions_subtitle": "Sessions que vous avez terminées ou enregistrées.",
-    "drawer_ai_subtitle": "Comment se sont passées vos vérifications de récitation.",
+    "drawer_ai_subtitle": "Comment se sont passés vos contrôles de récitation.",
     "drawer_notes_subtitle": "Réflexions que vous avez écrites sur des ayahs.",
     "drawer_hifz_subtitle": "Ce que vous avez conservé, sourate par sourate.",
     "drawer_murajaah_subtitle": "Ayahs qui pourraient bénéficier d'un rafraîchissement rapide.",
@@ -4371,6 +4508,7 @@
     "metric_users": "Utilisateurs",
     "metric_users_hint": "+{n} cette semaine",
     "metric_active": "Actifs (7 j)",
+    "metric_feedback": "Retours",
     "metric_sessions": "Sessions",
     "metric_memorised": "Mémorisées",
     "metric_ai": "Vérifications IA",
@@ -4381,7 +4519,7 @@
     "trend_vs_last_week": "{arrow} {n} % vs la semaine dernière",
     "days_range": "Période",
     "top_learners_title": "Meilleurs apprenants",
-    "top_learners_empty": "Aucune session sur cette période pour l'instant.",
+    "top_learners_empty": "Aucune session sur cette période pour l’instant.",
     "top_learners_sort": "Tri des meilleurs apprenants",
     "top_learners_sort_sessions": "Par sessions",
     "top_learners_sort_accuracy": "Par précision",
@@ -4399,6 +4537,13 @@
     "learners_title": "Apprenants",
     "learners_subtitle": "Activité récente, progression et position actuelle",
     "learners_empty": "Aucun apprenant à afficher pour l'instant.",
+    "directory_tabs": "Sections de l’annuaire",
+    "tab_learners": "Apprenants",
+    "tab_feedback": "Retours",
+    "feedback_kicker": "Boîte de réception",
+    "feedback_title": "Retours",
+    "feedback_subtitle": "Suggestions, anomalies et plaintes IA des apprenants",
+    "feedback_search": "Rechercher un retour",
     "view_all_users": "Voir tous les utilisateurs",
     "unnamed": "Sans nom",
     "not_started": "Pas commencé",
@@ -4418,7 +4563,7 @@
     "learning_assessments": "Évaluations",
     "ai_title": "Santé AI Recite",
     "ai_subtitle": "Précision et solidité des vérifications",
-    "ai_total": "Vérifications totales",
+    "ai_total": "Total des vérifications",
     "ai_week": "7 derniers jours",
     "ai_avg": "Précision",
     "ai_empty": "Aucune vérification IA pour l'instant.",
@@ -4448,7 +4593,7 @@
     "chart_sessions": "Sessions",
     "chart_tooltip": "{date} · {ayahs} ayahs · {sessions} sessions",
     "week_summary": "Cette semaine : {sessions} sessions · {ai_checks} vérifications IA · {ayahs} ayahs · {new_users} nouveaux utilisateurs.",
-    "week_summary_empty": "Aucune activité plateforme cette semaine pour l'instant.",
+    "week_summary_empty": "Aucune activité sur la plateforme cette semaine pour l’instant.",
     "contacts_title": "Nécessite attention",
     "contacts_subtitle": "Messages de contact en attente",
     "contacts_empty": "Aucun message en attente.",
@@ -4571,7 +4716,7 @@
     "field_user_id": "ID utilisateur",
     "copy_user_id": "Copier l'ID utilisateur",
     "copied": "Copié.",
-    "delete_user_warning": "La suppression de ce compte est définitive et irréversible.",
+    "delete_user_warning": "Supprimer ce compte est définitif et irréversible.",
     "delete_account": "Supprimer le compte",
     "add_user": "Ajouter un utilisateur",
     "create_user": "Créer un utilisateur",
@@ -4591,7 +4736,7 @@
     "form_error": "Impossible d'enregistrer ces modifications.",
     "danger_zone": "Zone dangereuse",
     "delete_user": "Supprimer l'utilisateur",
-    "delete_user_help": "Supprime définitivement ce compte et ses données d'apprentissage.",
+    "delete_user_help": "Retire définitivement ce compte et ses données d’apprentissage.",
     "delete_user_prompt": "Supprimer {name} ? Cette action est irréversible.",
     "delete_user_confirm": "Supprimer cet utilisateur et toutes ses données d'apprentissage ?",
     "delete_self_blocked": "Vous ne pouvez pas supprimer votre propre compte admin.",
@@ -4672,30 +4817,128 @@
     "tier_pro": "Pro",
     "notes_total": "{n} notes",
     "view_all_notes": "Voir toutes les notes",
-    "notes_hide": "Masquer les notes"
+    "notes_hide": "Masquer les notes",
+    "feedback": {
+      "title": "Retours",
+      "description": "Parcourez les suggestions, les anomalies et les plaintes de récitation IA.",
+      "complaintRate": "Taux de plaintes sur la précision IA",
+      "filterStatus": "Statut",
+      "filterType": "Type",
+      "filterFrom": "Du",
+      "filterTo": "Au",
+      "allStatuses": "Tous les statuts",
+      "allTypes": "Tous les types",
+      "search": "Rechercher",
+      "searchPlaceholder": "Message, nom ou e-mail",
+      "apply": "Appliquer",
+      "clear": "Effacer",
+      "empty": "Aucun retour dans cette vue.",
+      "results": "{count} résultat|{count} résultats",
+      "colType": "Type",
+      "colPreview": "Retour",
+      "colUser": "Utilisateur",
+      "colArea": "Zone",
+      "colDevice": "Appareil",
+      "colDate": "Date",
+      "colStatus": "Statut",
+      "colActions": "Actions",
+      "view": "Voir",
+      "delete": "Supprimer",
+      "deleteConfirm": "Supprimer définitivement ce retour ?",
+      "bulkDelete": "Supprimer la sélection",
+      "bulkDeleteConfirm": "Supprimer définitivement {n} retours ?",
+      "bulkDeleted": "{n} retours supprimés.",
+      "deleting": "Suppression…",
+      "deleted": "Retour supprimé.",
+      "deleteError": "Impossible de supprimer ce retour.",
+      "detailTitle": "Retour",
+      "relatedAiCheck": "Vérification IA liée",
+      "status": "Statut",
+      "adminNote": "Note interne",
+      "theme": "Thème",
+      "mushafLayout": "Mise en page Mushaf",
+      "message": "Message",
+      "language": "Langue",
+      "aiReason": "Motif IA",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement…",
+      "loadError": "Impossible de charger les retours.",
+      "saveError": "Impossible d’enregistrer ce retour.",
+      "statuses": {
+        "new": "Nouveau",
+        "reviewing": "En examen",
+        "planned": "Planifié",
+        "resolved": "Résolu",
+        "closed": "Fermé"
+      }
+    },
+    "kicker": "Admin",
+    "dashboard": "Tableau de bord"
+  },
+  "feedback": {
+    "title": "Partagez votre avis",
+    "lead": "Dites-nous ce qui fonctionne, ce qui bloque, ou comment améliorer Mutqin.",
+    "typeLabel": "Type",
+    "messageLabel": "Votre retour",
+    "messagePlaceholder": "Décrivez votre suggestion, le problème ou votre expérience…",
+    "screenshotLabel": "Capture d’écran",
+    "screenshotOptional": "Facultatif — PNG, JPG, WebP ou GIF jusqu’à 5 Mo",
+    "screenshotPreviewAlt": "Aperçu de la capture",
+    "removeScreenshot": "Retirer la capture",
+    "screenshotInvalid": "Envoyez une image PNG, JPG, WebP ou GIF.",
+    "screenshotTooLarge": "La capture doit faire 5 Mo ou moins.",
+    "submit": "Envoyer le retour",
+    "submitting": "Envoi…",
+    "submitError": "Impossible d’envoyer votre retour. Veuillez réessayer.",
+    "success": "Merci, votre retour a bien été envoyé.",
+    "aiReasonLabel": "Que s’est-il passé ?",
+    "aiIncorrectPrompt": "Ce résultat vous semble incorrect ?",
+    "sessionPrompt": "Comment s’est passée cette session ?",
+    "sessionCta": "Partager un retour",
+    "types": {
+      "suggestion": "Suggestion",
+      "bug": "Quelque chose ne fonctionne pas",
+      "ai_recitation": "Retour AI Recite",
+      "design": "Design / ergonomie",
+      "other": "Autre"
+    },
+    "aiReasons": {
+      "correct_marked_wrong": "J’ai bien récité, mais Mutqin a marqué une erreur",
+      "missed_mistake": "Mutqin a manqué une erreur",
+      "wrong_highlight": "Mauvais mot surligné",
+      "recording_problem": "Problème d’enregistrement ou de transcription",
+      "other": "Autre"
+    },
+    "messageRequired": "Veuillez saisir votre avis.",
+    "messageMin": "Veuillez saisir au moins quelques caractères.",
+    "typeRequired": "Veuillez choisir un type d’avis.",
+    "typeInvalid": "Ce type d’avis n’est pas pris en charge."
   },
   "privacyPolicy": {
     "kicker": "Privacy",
-    "title": "Privacy policy",
-    "heroDesc": "How Mutqin handles practice data, microphone audio, and AI recitation checks.",
-    "updated": "Policy version {version}",
-    "overviewTitle": "What we collect",
-    "overviewBody": "Mutqin stores account details and structured practice data such as progress, scores, and session history so you can continue where you left off.",
-    "microphoneTitle": "Microphone use",
-    "microphoneBody": "The microphone is used only when you start an AI Recite or Check memorisation action. We do not open the microphone on page load. If you decline microphone access, listening, Peek, and other non-AI memorisation tools still work.",
-    "processorTitle": "AI processing",
-    "processorBody": "When you run an AI voice check, audio is processed to assess Qur’an recitation. Live transcription may be handled by {processor}. Mutqin does not sell your audio.",
-    "retentionTitle": "Recording retention",
-    "retentionNever": "Raw learner recordings are not kept after a check finishes. Mutqin servers store structured results (for example scores and word feedback), not raw audio files.",
-    "retentionTemporary": "Raw learner recordings are not stored on Mutqin servers. A temporary copy may remain briefly on this device for review and is deleted within about {hours} hours, or sooner after processing or failure. Cleanup jobs remove leftover temporary files.",
-    "retentionRetain": "You may keep a local recording for your own replay. Mutqin servers still store structured results rather than selling or publishing raw audio.",
-    "accountTitle": "Account deletion",
-    "accountBody": "You can delete your account from profile settings. That removes associated practice data and any optional recordings stored with your account sync state.",
-    "nonAiTitle": "Practising without AI",
-    "nonAiBody": "Memorisation listening, Peek, techniques, and session planning do not require microphone consent or AI audio processing.",
+    "title": "Politique de confidentialité",
+    "heroDesc": "Comment Mutqin traite les données de pratique, l’audio du microphone et les contrôles de récitation IA.",
+    "updated": "Version de la politique {version}",
+    "overviewTitle": "Ce que nous collectons",
+    "overviewBody": "Mutqin conserve les informations de compte et des données de pratique structurées — progrès, scores et historique des sessions — pour que vous puissiez reprendre là où vous vous êtes arrêté.",
+    "microphoneTitle": "Usage du microphone",
+    "microphoneBody": "Le microphone n’est utilisé que lorsque vous lancez AI Recite ou Vérifier la mémorisation. Nous ne l’ouvrons pas au chargement de la page. Si vous refusez l’accès, l’écoute, Peek et les autres outils de mémorisation sans IA restent disponibles.",
+    "processorTitle": "Traitement IA",
+    "processorBody": "Lors d’un contrôle vocal IA, l’audio sert à évaluer la récitation du Coran. La transcription en direct peut être assurée par {processor}. Mutqin ne vend pas votre audio.",
+    "retentionTitle": "Conservation des enregistrements",
+    "retentionNever": "Les enregistrements bruts ne sont pas conservés une fois le contrôle terminé. Les serveurs Mutqin stockent des résultats structurés (scores et retours sur les mots), pas les fichiers audio bruts.",
+    "retentionTemporary": "Les enregistrements bruts ne sont pas stockés sur les serveurs Mutqin. Une copie temporaire peut rester un moment sur cet appareil pour la révision, puis être supprimée en environ {hours} heures, ou plus tôt après traitement ou échec. Des tâches de nettoyage retirent les fichiers temporaires restants.",
+    "retentionRetain": "Vous pouvez garder un enregistrement local pour le réécouter. Les serveurs Mutqin conservent des résultats structurés, sans vendre ni publier l’audio brut.",
+    "accountTitle": "Suppression du compte",
+    "accountBody": "Vous pouvez supprimer votre compte depuis les réglages du profil. Cela retire les données de pratique associées et les éventuels enregistrements optionnels liés à l’état de synchronisation.",
+    "nonAiTitle": "Pratiquer sans IA",
+    "nonAiBody": "L’écoute de mémorisation, Peek, les techniques et la planification de session n’exigent ni consentement microphone ni traitement audio IA.",
     "relatedLabel": "Related",
     "homeLink": "Home",
     "aboutLink": "About",
     "contactLink": "Contact"
+  },
+  "ui": {
+    "contact_inbox": "Boîte de contact"
   }
 }

@@ -1,10 +1,11 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
-    $appThemePreference = $appThemePreference ?? (request()->cookie('mutqin_theme') ?: session('mutqin_theme', 'sepia-mode'));
-    $appTheme = $appTheme ?? (str_starts_with((string) $appThemePreference, 'dark') ? 'dark' : (str_starts_with((string) $appThemePreference, 'light') ? 'light' : 'sepia'));
-    $appThemeColor = $appTheme === 'dark' ? '#14110f' : '#8b5e3c';
-    $appColorScheme = $appTheme === 'dark' ? 'dark' : 'light';
+    $appThemePreference = $appThemePreference ?? (request()->cookie('mutqin_theme') ?: session('mutqin_theme', \App\Support\Theme::DEFAULT_PREFERENCE));
+    $appTheme = $appTheme ?? \App\Support\Theme::toDataTheme($appThemePreference);
+    $appThemeChrome = \App\Support\Theme::chrome($appTheme);
+    $appThemeColor = $appThemeChrome['theme_color'];
+    $appColorScheme = $appThemeChrome['color_scheme'];
 @endphp
 <!doctype html>
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">

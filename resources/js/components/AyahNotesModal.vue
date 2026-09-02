@@ -280,6 +280,7 @@
 <script>
 import learningApi from '../scripts/api/learning'
 import AppStatus from './AppStatus.vue'
+import { formatAppDate, formatAppNumber, unwrapLocale } from '../utils/i18nFormat'
 
 const BODY_MAX_LENGTH = 2000
 const NOTES_COLLAPSE_THRESHOLD = 3
@@ -328,8 +329,9 @@ export default {
       return this.draftLength >= BODY_MAX_LENGTH
     },
     formattedCharCount() {
-      const current = this.draftLength.toLocaleString()
-      const max = BODY_MAX_LENGTH.toLocaleString()
+      const locale = unwrapLocale(this.$i18n?.locale)
+      const current = formatAppNumber(this.draftLength, locale)
+      const max = formatAppNumber(BODY_MAX_LENGTH, locale)
       return `${current} / ${max}`
     },
     textareaMaxLength() {
@@ -401,12 +403,12 @@ export default {
     formatNoteDate(value) {
       if (!value) return ''
       try {
-        return new Intl.DateTimeFormat(undefined, {
+        return formatAppDate(value, unwrapLocale(this.$i18n?.locale), {
           day: 'numeric',
           month: 'short',
           hour: '2-digit',
           minute: '2-digit',
-        }).format(new Date(value))
+        })
       } catch (_) {
         return String(value)
       }

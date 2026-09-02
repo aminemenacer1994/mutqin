@@ -67,11 +67,20 @@
       "bootErrorTitle": "Terjadi kesalahan",
       "bootErrorDesc": "Layar ini tidak dapat dimuat. Coba lagi, atau kembali ke beranda untuk lanjut.",
       "chunkUpdating": "Memperbarui Mutqin…",
+      "chunkErrorTitle": "Update required",
+      "chunkErrorDesc": "Mutqin was updated. Reload to continue — if this keeps happening, return home and try again.",
       "clearFilters": "Hapus filter",
       "startSession": "Mulai a sesi",
       "returnToSessions": "kembali ke sesi",
       "logIn": "Log di",
       "createFirstNote": "Write Anda dulu catatan"
+    },
+    "filters": "Filters",
+    "relative": {
+      "justNow": "Just now",
+      "minutesAgo": "{n}m ago",
+      "hoursAgo": "{n}h ago",
+      "daysAgo": "{n}d ago"
     }
   },
   "auth": {
@@ -1295,10 +1304,26 @@
       "micStoppedUnexpectedly": "The mikrofon stopped unexpectedly.",
       "micBlocked": "mikrofon access was blocked. Allow mikrofon permission, then try again.",
       "micRequired": "mikrofon access is required for AI Recitation. Check your browser permissions and try again.",
+      "micDeniedTitle": "Microphone access blocked",
+      "micDeniedGuidance": "Allow microphone access for this site in your browser settings, then return here and try again. Other memorisation tools still work without the microphone.",
+      "micDeniedGuidanceSafari": "On iPhone or iPad: Settings → Safari → Microphone → Allow for this site, then return and try again. Other memorisation tools still work without the microphone.",
+      "micDeniedGuidanceChrome": "In Chrome: site settings → Microphone → Allow, then reload and try again. Other memorisation tools still work without the microphone.",
+      "consentTitle": "Microphone and AI processing",
+      "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
+      "consentProcessor": "Live transcription may be handled by {processor}.",
+      "consentRetentionNever": "Raw recordings are not saved after the check finishes.",
+      "consentRetentionTemporary": "Temporary audio may be kept briefly on this device for review, then deleted automatically.",
+      "consentRetentionRetain": "You can keep a local recording for your own replay. Mutqin does not sell your audio.",
+      "consentPrivacyLink": "Read the Privacy policy",
+      "consentAccept": "Allow and continue",
+      "consentDecline": "Not now",
+      "consentDeclined": "AI voice checks need microphone consent. You can keep practising with listening, Peek, and other non-AI tools.",
+      "consentContinueWithout": "You can decline and keep using memorisation tools that do not need the microphone.",
       "recordingInvalid": "No usable audio was captured. Try rekaman again.",
       "serviceNetworkError": "Kami tidak dapat connect to the recitation service. Your sesi is safe. Coba lagi.",
       "serviceUnavailable": "Recitation checking is temporarily unavailable. Anda can lanjutkan practising dan try the AI periksa again later.",
       "usageCapReached": "Anda telah mencapai batas pemeriksaan suara AI hari ini. Coba lagi besok.",
+      "rateLimited": "You are starting AI voice checks too quickly. Please wait a moment and try again.",
       "processingTimeout": "This is taking longer than expected. Coba lagi.",
       "retry": {
         "silence": "Kami tidak mendengar bacaan. Bacalah dengan jelas, lalu coba lagi.",
@@ -1355,23 +1380,7 @@
       "colourCloseHint": "Hampir benar, perlu diasah.",
       "colourIncorrectHint": "Kata-kata said incorrectly.",
       "colourSkippedHint": "Kata-kata bukan recited.",
-      "colourWaitingHint": "bukan evaluated yet.",
-      "micDeniedTitle": "Microphone access blocked",
-      "micDeniedGuidance": "Allow microphone access for this site in your browser settings, then return here and try again. Other memorisation tools still work without the microphone.",
-      "micDeniedGuidanceSafari": "On iPhone or iPad: Settings → Safari → Microphone → Allow for this site, then return and try again. Other memorisation tools still work without the microphone.",
-      "micDeniedGuidanceChrome": "In Chrome: site settings → Microphone → Allow, then reload and try again. Other memorisation tools still work without the microphone.",
-      "consentTitle": "Microphone and AI processing",
-      "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
-      "consentProcessor": "Live transcription may be handled by {processor}.",
-      "consentRetentionNever": "Raw recordings are not saved after the check finishes.",
-      "consentRetentionTemporary": "Temporary audio may be kept briefly on this device for review, then deleted automatically.",
-      "consentRetentionRetain": "You can keep a local recording for your own replay. Mutqin does not sell your audio.",
-      "consentPrivacyLink": "Read the Privacy policy",
-      "consentAccept": "Allow and continue",
-      "consentDecline": "Not now",
-      "consentDeclined": "AI voice checks need microphone consent. You can keep practising with listening, Peek, and other non-AI tools.",
-      "consentContinueWithout": "You can decline and keep using memorisation tools that do not need the microphone.",
-      "rateLimited": "You are starting AI voice checks too quickly. Please wait a moment and try again."
+      "colourWaitingHint": "bukan evaluated yet."
     },
     "analyticsHeatmap": {
       "confidence": "keyakinan: {value}%",
@@ -1981,6 +1990,7 @@
         "reviseFocusPhrase": "Mulai revisi",
         "reviseThisRange": "Mulai revisi",
         "continueToNextRange": "Lanjut ke sesi berikutnya",
+        "continueToAyah": "Next ayah {ayah}",
         "continueToAyahs": "Lanjut ke ayat {start}, {end}",
         "repeatThisSession": "Ulangi sesi ini",
         "reviewOnceMore": "Tinjau sekali lagi",
@@ -3151,7 +3161,9 @@
       "recallStrengthDesc": "Simple snapshot of how strong this sesi felt overall.",
       "reciteChecks": "Tilawah checks",
       "reciteChecksDesc": "disimpan checks in this range.",
-      "recallStrengthLow": "منخفض"
+      "recallStrengthLow": "منخفض",
+      "repeatsCompleted": "Repeats completed",
+      "runsCompleted": "Runs completed"
     },
     "toolsHeader": {
       "insights": "wawasan",
@@ -3195,7 +3207,14 @@
       "rowReady": "Siap",
       "noDataYet": "Belum ada data",
       "noDataDetail": "Mulai sesi untuk membangun analitik",
-      "defaultInsight": "Jaga hari ini kecil dan konsisten"
+      "defaultInsight": "Jaga hari ini kecil dan konsisten",
+      "summaryReviewedOne": "You reviewed {count} ayah",
+      "summaryReviewedMany": "You reviewed {count} ayahs",
+      "summaryTime": "in {time}",
+      "summaryRepeatsOne": "with {count} repeat",
+      "summaryRepeatsMany": "with {count} repeats",
+      "summaryAttentionOne": "{count} ayah needed extra attention.",
+      "summaryAttentionMany": "{count} ayahs needed extra attention."
     },
     "guided": {
       "learn": "Pelajari",
@@ -3539,6 +3558,121 @@
       "toolMemorizing": "جارٍ الحفظ",
       "peekHint": "perlu a hint? Peek at the text",
       "toolPeek": "معاينة النص"
+    },
+    "exportReport": {
+      "saved": "Saved",
+      "exported": "Exported",
+      "sessionStats": "Session stats",
+      "footer": "Mutqin session export",
+      "versesRead": "Ayahs reviewed",
+      "timeSpent": "Time memorising",
+      "repetitions": "Repeats completed",
+      "sessionPlays": "Session plays",
+      "versePlays": "Verse plays",
+      "averageTime": "Average time per ayah",
+      "struggledAyahs": "Ayahs that needed extra care"
+    },
+    "helpLearning": {
+      "title": "Bantuan & Pembelajaran",
+      "subtitle": "Pelajari cara menggunakan alat Mutqin untuk menghafal lebih efektif.",
+      "bestFor": "Terbaik untuk:",
+      "sections": {
+        "tajweed": {
+          "title": "Aturan Tajwid",
+          "description": "Tajwid adalah kumpulan aturan yang membantu Anda tilawah Al-Quran dengan benar dan indah. Mutqin menyorot aturan ini agar Anda dapat mengenali dan berlatih saat menghafal.",
+          "bestFor": "Siswa yang meningkatkan pelafalan dan kualitas tilawah.",
+          "legendTitle": "Apa setiap warna berarti",
+          "legendIntro": "Gunakan Ini legend saat Anda mendengar dan mengulang. It is a panduan, bukan a replacement untuk a guru.",
+          "colors": {
+            "gray": {
+              "label": "Huruf / koneksi tanda",
+              "description": "Hamzat al-wasl dan Huruf letters that are bukan pronounced."
+            },
+            "green": {
+              "label": "Ghunnah / Idgham dengan ghunnah",
+              "description": "Nasalisation dan joining dengan a nasal sound."
+            },
+            "purple": {
+              "label": "الإخفاء / الإدغام بلا غنة",
+              "description": "Hidden noon sound dan non-nasal joining."
+            },
+            "orange": {
+              "label": "القلقلة",
+              "description": "Echoing stop aktif ق ط ب ج د."
+            },
+            "red": {
+              "label": "المد",
+              "description": "Normal, obligatory, dan necessary lengthening."
+            },
+            "blue": {
+              "label": "الإدغام الشفوي",
+              "description": "Labial merging dengan م."
+            }
+          }
+        },
+        "srs": {
+          "title": "Muraja'ah Cerdas (SRS)",
+          "description": "Mutqin otomatis mengingatkan Anda untuk muraja'ah ayat pada waktu tepat agar tetap kuat dalam hafalan. Ayat sulit muncul lebih sering, sementara ayat kuat dimuraja'ahi lebih jarang.",
+          "bestFor": "Retensi jangka panjang dan mencegah kehilangan hafalan."
+        },
+        "techniques": {
+          "title": "Teknik Hafalan",
+          "description": "Pilih metode yang membantu Anda tetap stabil, lalu sesuaikan saat rentang menjadi lebih familiar.",
+          "bestFor": "Siswa yang menemukan gaya belajar terbaik untuk mereka.",
+          "details": {
+            "repetition": {
+              "label": "Metode Pengulangan",
+              "text": "Ulangi ayat yang sama beberapa kali sebelum lanjut."
+            },
+            "linking": {
+              "label": "Metode Linking",
+              "text": "Hubungkan setiap ayat ke berikutnya untuk meningkatkan alur dan kontinuitas."
+            },
+            "cumulative": {
+              "label": "Metode Kumulatif",
+              "text": "Terus tambah ayat baru sambil muraja'ahi yang sebelumnya."
+            }
+          }
+        },
+        "layouts": {
+          "title": "Tata Letak Baca",
+          "description": "Beralih antara dua gaya baca tergantung perangkat dan jenis hafalan yang ingin dilakukan.",
+          "bestFor": "Memilih pengalaman membaca yang paling natural untuk Anda.",
+          "details": {
+            "stacked": {
+              "label": "Tata Letak Stacked",
+              "text": "Menampilkan setiap ayat dalam format vertikal sederhana yang lebih mudah diikuti di perangkat mobile."
+            },
+            "mushaf": {
+              "label": "Tata Letak Mushaf",
+              "text": "Menampilkan ayat dalam gaya mushaf tradisional untuk siswa yang lebih suka hafalan halaman familiar."
+            }
+          }
+        },
+        "aiRecitation": {
+          "title": "Tilawah AI",
+          "description": "Tilawah AI mendengarkan tilawah Anda dan memberi umpan balik instan untuk membantu mengidentifikasi kesalahan dan meningkatkan akurasi saat menghafal.",
+          "bestFor": "Siswa yang ingin latihan terpandu dan umpan balik segera."
+        },
+        "talqinMode": {
+          "title": "Talqin Mode Guide",
+          "description": "Talqin Mode automates the listen, pause, repeat, and extend cycle after you submit a practice session, so the timing stays consistent without extra manual control.",
+          "bestFor": "Students building verse retention through guided listening and repetition.",
+          "workflowTitle": "Talqin Workflow Guide (Listen, Pause, Repeat, Extend)",
+          "workflowIntro": "Activated seamlessly right after you submit a practice session. The platform handles the timing so you can focus entirely on your retention:",
+          "workflowListen": "1. Listen Phase:",
+          "workflowListenText": "The app streams the correct pronunciation of the verse. Focus on Tajweed tracking.",
+          "workflowPause": "2. Pause & Repeat Phase:",
+          "workflowPauseText": "The audio pauses automatically. A live on-screen alert prompts you to recite what you just heard.",
+          "workflowExtend": "3. Extend Phase:",
+          "workflowExtendText": "The sequence systematically links verses together to build long-term memory capacity automatically."
+        },
+        "manualAssessment": {
+          "title": "Penilaian Manual",
+          "description": "Penilaian Manual memungkinkan Anda mengevaluasi hafalan sendiri setelah setiap sesi dan melacak kepercayaan diri serta progres dari waktu ke waktu.",
+          "bestFor": "Siswa yang lebih suka refleksi diri dan muraja'ah mandiri."
+        }
+      }
     }
   },
   "toasts": {
@@ -3675,10 +3809,13 @@
     "progressSaved": "kemajuan saved",
     "recordingDeleted": "rekaman deleted",
     "recordingDeletedAyah": "Hapusd ayah {number} {type}",
-    "openSetup": "Buka setup"
+    "openSetup": "Buka setup",
+    "sessionStartFailed": "Unable to start this session. Please try again.",
+    "hifzRecoveryApplied": "Recovery plan applied"
   },
   "errors": {
-    "network": "Kesalahan jaringan. Periksa koneksi Anda."
+    "network": "Kesalahan jaringan. Periksa koneksi Anda.",
+    "genericRetry": "Something went wrong. Please retry."
   },
   "about": {
     "tag": "« Mutqin»",
@@ -4371,6 +4508,7 @@
     "metric_users": "« Users»",
     "metric_users_hint": "+{n} Ini week",
     "metric_active": "aktif (7d)",
+    "metric_feedback": "Feedback",
     "metric_sessions": "Sort: sessions",
     "metric_memorised": "Dihafal",
     "metric_ai": "Pemeriksaan AI",
@@ -4399,6 +4537,13 @@
     "learners_title": "Pelajariers",
     "learners_subtitle": "Recent activity, kemajuan, and current position",
     "learners_empty": "No learners ke show yet.",
+    "directory_tabs": "Directory sections",
+    "tab_learners": "Learners",
+    "tab_feedback": "Feedback",
+    "feedback_kicker": "Inbox",
+    "feedback_title": "Feedback",
+    "feedback_subtitle": "Suggestions, bugs, and AI complaints from learners",
+    "feedback_search": "Search feedback",
     "view_all_users": "عرض semua users",
     "unnamed": "« Unnamed»",
     "not_started": "bukan started",
@@ -4672,7 +4817,102 @@
     "tier_pro": "« Pro»",
     "notes_total": "{n} catatan",
     "view_all_notes": "عرض semua notes",
-    "notes_hide": "Sembunyikan notes"
+    "notes_hide": "Sembunyikan notes",
+    "feedback": {
+      "title": "Feedback",
+      "description": "Review learner suggestions, bug reports, and AI recitation complaints.",
+      "complaintRate": "AI accuracy complaint rate",
+      "filterStatus": "Status",
+      "filterType": "Type",
+      "filterFrom": "From",
+      "filterTo": "To",
+      "allStatuses": "All statuses",
+      "allTypes": "All types",
+      "search": "Search",
+      "searchPlaceholder": "Message, name, or email",
+      "apply": "Apply",
+      "clear": "Clear",
+      "empty": "No feedback in this view.",
+      "results": "{count} result|{count} results",
+      "colType": "Type",
+      "colPreview": "Feedback",
+      "colUser": "User",
+      "colArea": "Area",
+      "colDevice": "Device",
+      "colDate": "Date",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "view": "View",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this feedback permanently?",
+      "bulkDelete": "Delete selected",
+      "bulkDeleteConfirm": "Delete {n} feedback items permanently?",
+      "bulkDeleted": "Deleted {n} feedback items.",
+      "deleting": "Deleting…",
+      "deleted": "Feedback deleted.",
+      "deleteError": "Could not delete feedback.",
+      "detailTitle": "Feedback",
+      "relatedAiCheck": "Related AI check",
+      "status": "Status",
+      "adminNote": "Internal note",
+      "theme": "Theme",
+      "mushafLayout": "Mushaf layout",
+      "message": "Message",
+      "language": "Language",
+      "aiReason": "AI reason",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "loadError": "Could not load feedback.",
+      "saveError": "Could not save feedback.",
+      "statuses": {
+        "new": "New",
+        "reviewing": "Reviewing",
+        "planned": "Planned",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      }
+    },
+    "kicker": "Admin",
+    "dashboard": "Dashboard"
+  },
+  "feedback": {
+    "title": "Share your thoughts",
+    "lead": "Tell us what is working, what is not, or how we can improve Mutqin.",
+    "typeLabel": "Type",
+    "messageLabel": "Your feedback",
+    "messagePlaceholder": "Describe your suggestion, issue, or experience…",
+    "screenshotLabel": "Screenshot",
+    "screenshotOptional": "Optional — PNG, JPG, WebP, or GIF up to 5 MB",
+    "screenshotPreviewAlt": "Screenshot preview",
+    "removeScreenshot": "Remove screenshot",
+    "screenshotInvalid": "Please upload a PNG, JPG, WebP, or GIF image.",
+    "screenshotTooLarge": "Screenshot must be 5 MB or smaller.",
+    "submit": "Submit feedback",
+    "submitting": "Sending…",
+    "submitError": "We could not send your feedback. Please try again.",
+    "success": "Thanks, your feedback has been sent.",
+    "aiReasonLabel": "What went wrong?",
+    "aiIncorrectPrompt": "Think this result is incorrect?",
+    "sessionPrompt": "How was this session?",
+    "sessionCta": "Share feedback",
+    "types": {
+      "suggestion": "Suggestion",
+      "bug": "Something isn't working",
+      "ai_recitation": "AI Recitation feedback",
+      "design": "Design / usability",
+      "other": "Other"
+    },
+    "aiReasons": {
+      "correct_marked_wrong": "I recited correctly but Mutqin marked a mistake",
+      "missed_mistake": "Mutqin missed a mistake",
+      "wrong_highlight": "Wrong word highlighted",
+      "recording_problem": "Recording/transcription problem",
+      "other": "Other"
+    },
+    "messageRequired": "Please enter your feedback.",
+    "messageMin": "Please enter at least a few characters.",
+    "typeRequired": "Please choose a feedback type.",
+    "typeInvalid": "That feedback type is not supported."
   },
   "privacyPolicy": {
     "kicker": "Privacy",
@@ -4697,5 +4937,8 @@
     "homeLink": "Home",
     "aboutLink": "About",
     "contactLink": "Contact"
+  },
+  "ui": {
+    "contact_inbox": "Contact Inbox"
   }
 }

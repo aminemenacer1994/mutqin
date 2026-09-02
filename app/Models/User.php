@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
+        'pending_email',
         'google_id',
         'avatar',
         'password',
@@ -96,6 +97,27 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $this->notify(new VerifyEmail);
+    }
+
+    public function getEmailForVerification(): string
+    {
+        return $this->hasPendingEmailChange()
+            ? (string) $this->pending_email
+            : (string) $this->email;
+    }
+
+    public function routeNotificationForMail(mixed $notification = null): array|string
+    {
+        if ($notification instanceof VerifyEmail && $this->hasPendingEmailChange()) {
+            return (string) $this->pending_email;
+        }
+
+        return (string) $this->email;
+    }
+
+    public function hasPendingEmailChange(): bool
+    {
+        return filled($this->pending_email);
     }
 
     public function hasSetPassword(): bool

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Support\AuthRedirect;
+use App\Support\Theme;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,16 +47,7 @@ class LoginController extends Controller
 
             // Bind session theme to this account immediately so a prior guest/other
             // user's cookie cannot bleed into the first authenticated responses.
-            $aliases = [
-                'light' => 'light-mode',
-                'light-mode' => 'light-mode',
-                'sepia' => 'sepia-mode',
-                'sepia-mode' => 'sepia-mode',
-                'dark' => 'dark-mode',
-                'dark-mode' => 'dark-mode',
-            ];
-            $raw = is_string($user->theme) ? strtolower($user->theme) : '';
-            $theme = $aliases[$raw] ?? 'sepia-mode';
+            $theme = Theme::normalizePreference($user->theme);
             $request->session()->put('mutqin_theme', $theme);
             cookie()->queue(cookie('mutqin_theme', $theme, 60 * 24 * 365, null, null, false, false, false, 'lax'));
         }
@@ -72,11 +64,11 @@ class LoginController extends Controller
     protected function loggedOut($request): RedirectResponse
     {
         // Reset guest theme so the next person on this device does not inherit this account.
-        $request->session()->put('mutqin_theme', 'sepia-mode');
+        $request->session()->put('mutqin_theme', Theme::DEFAULT_PREFERENCE);
 
         return redirect()
             ->route('memorisation')
-            ->withCookie(cookie('mutqin_theme', 'sepia-mode', 60 * 24 * 365, null, null, false, false, false, 'lax'));
+            ->withCookie(cookie('mutqin_theme', Theme::DEFAULT_PREFERENCE, 60 * 24 * 365, null, null, false, false, false, 'lax'));
     }
 
     /**

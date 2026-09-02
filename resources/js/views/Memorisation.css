@@ -2487,7 +2487,10 @@ html body .verse-arabic word.anchor-highlight {
 .app.post-session-ai-recite-open .onboarding-post-session-flow,
 .app.post-session-ai-recite-open .onboarding-post-session-backdrop,
 .app.post-session-ai-recite-open .onboarding-post-session-modal-wrap,
+.app.post-session-ai-recite-open .viewport-confetti,
+.app.post-session-ai-recite-open .viewport-confetti-canvas,
 .app.post-session-ai-recite-open .onboarding-post-session-confetti-layer,
+body:has(.app.post-session-ai-recite-open) > .viewport-confetti-canvas,
 .app.post-session-ai-recite-open .post-session-simple,
 .post-session-simple--under-ai,
 .post-session-simple--under-ai .post-session-simple__backdrop,
@@ -13197,10 +13200,20 @@ body.memorisation-page nav.navbar.app-navbar {
   color: #1a120c;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-post-session-confetti-layer,
+  .onboarding-post-session-confetti-piece,
+  .viewport-confetti,
+  .viewport-confetti-canvas {
+    display: none !important;
+    animation: none !important;
+  }
+}
+
 .onboarding-post-session-confetti-layer {
   position: fixed;
   inset: 0;
-  z-index: 12620;
+  z-index: 14150;
   overflow: hidden;
   pointer-events: none;
 }
@@ -45902,7 +45915,17 @@ body.memorisation-page .tools {
     0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
     0 24px 64px color-mix(in srgb, #14231c 16%, transparent);
   overflow: hidden;
+  position: relative;
   animation: mutqinModalEnter var(--mutqin-modal-enter-duration) var(--mutqin-modal-enter-ease) both;
+}
+
+.post-session-simple__dialog > .viewport-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none !important;
+  z-index: 6;
 }
 
 .post-session-simple__header {
@@ -47254,15 +47277,6 @@ body.memorisation-page .tools {
 .post-session-simple__dialog--lg {
   width: min(920px, calc(100vw - 1rem));
   max-width: min(920px, calc(100vw - 1rem));
-}
-
-.post-session-simple__dialog--lg .onboarding-post-session-confetti-layer {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 2;
-  border-radius: inherit;
 }
 
 .post-session-simple__btn {

@@ -116,8 +116,8 @@ const publicRoutes = [
 const authenticatedRoutes = [
   {
     path: '/profile',
-    selectors: ['.profile-page', '.profile-stage', '.profile-hero-card', '.profile-grid', '.profile-pane', '.profile-subscription-grid'],
-    gridSelectors: ['.navbar-shell', '.profile-stage', '.profile-hero-card', '.profile-grid', '.profile-subscription-grid']
+    selectors: ['.profile-page', '.profile-stage', '.profile-hero-card', '.profile-grid', '.profile-pane', '#personal-details', '#memorisation-preferences', '#app-preferences', '#settings'],
+    gridSelectors: ['.navbar-shell', '.profile-stage', '.profile-hero-card', '.profile-grid', '.profile-pref-grid']
   }
 ]
 

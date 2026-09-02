@@ -7,21 +7,30 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Models\User;
 use App\Services\Auth\AiAudioConsentService;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Support\AdminEmails;
 use App\Support\EmailVerification;
+use App\Support\Theme;
 
 class ProfileController extends Controller
 {
-    public function show(Request $request)
-    {
+    public function show(
+        Request $request,
+        AiAudioConsentService $consent
+    ) {
         $user = $request->user();
 
         return view('profile', [
             'user' => $user,
             'isAdmin' => $user->isAdmin(),
             'planLabels' => $this->planLabels(),
+            'aiAudioConsent' => $consent->snapshot($user),
+            'verificationRequired' => EmailVerification::required(),
+            'supportedLocales' => ['en', 'fr', 'ar'],
+            'themeModes' => Theme::modes(),
+            'currentTheme' => Theme::toDataTheme($user->theme),
         ]);
     }
 
@@ -35,6 +44,7 @@ class ProfileController extends Controller
             'email',
             'max:255',
             Rule::unique('users', 'email')->ignore($user->id),
+            Rule::unique('users', 'pending_email')->ignore($user->id),
         ];
         if (! $user->hasPersistedAdminRole()) {
             $emailRules[] = Rule::notIn(AdminEmails::reserved());
@@ -45,41 +55,35 @@ class ProfileController extends Controller
             'email' => $emailRules,
         ], [
             'name.required' => __('profile.name_required'),
+            'name.max' => __('profile.name_max'),
             'email.required' => __('profile.email_required'),
             'email.email' => __('profile.email_invalid'),
             'email.unique' => __('profile.email_taken'),
-            'email.not_in' => __('profile.email_reserved') ?: 'This email address is reserved.',
+            'email.not_in' => __('profile.email_reserved'),
         ]);
 
-        $emailChanged = strtolower($validated['email']) !== strtolower((string) $user->email);
+        $user->forceFill(['name' => $validated['name']])->save();
 
-        $emailVerifiedAt = $user->email_verified_at;
-        if ($emailChanged && EmailVerification::required()) {
-            $emailVerifiedAt = null;
-        } elseif ($emailChanged) {
-            $emailVerifiedAt = now();
+        return back()->with('profile_status', $this->applyEmailChange($user, $validated['email']));
+    }
+
+    public function destroyPendingEmail(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user->hasPendingEmailChange()) {
+            return back()->with('profile_status', __('profile.saved_success'));
         }
 
-        $user->forceFill([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'email_verified_at' => $emailVerifiedAt,
-        ])->save();
+        $user->forceFill(['pending_email' => null])->save();
 
-        if ($emailChanged) {
-            $user->revaluateAdminEligibility();
-            if (EmailVerification::required()) {
-                $user->sendEmailVerificationNotification();
-            }
-        }
-
-        return back()->with('profile_status', __('profile.saved_success'));
+        return back()->with('profile_status', __('profile.email_change_cancelled'));
     }
 
     public function updateLocale(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'locale' => ['required', 'string', Rule::in(['en', 'ar', 'fr', 'id', 'tr', 'es'])],
+            'locale' => ['required', 'string', Rule::in(['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'])],
         ]);
 
         $request->user()->forceFill([
@@ -94,19 +98,10 @@ class ProfileController extends Controller
     public function updateTheme(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'theme' => ['required', 'string', Rule::in(['light-mode', 'sepia-mode', 'dark-mode', 'light', 'sepia', 'dark'])],
+            'theme' => ['required', 'string', Rule::in(Theme::acceptedInput())],
         ]);
 
-        $aliases = [
-            'light' => 'light-mode',
-            'light-mode' => 'light-mode',
-            'sepia' => 'sepia-mode',
-            'sepia-mode' => 'sepia-mode',
-            'dark' => 'dark-mode',
-            'dark-mode' => 'dark-mode',
-        ];
-
-        $theme = $aliases[strtolower($validated['theme'])] ?? 'sepia-mode';
+        $theme = Theme::normalizePreference($validated['theme']);
 
         $request->user()->forceFill([
             'theme' => $theme,
@@ -162,6 +157,50 @@ class ProfileController extends Controller
         return back()->with('password_status', __('profile.password_updated'));
     }
 
+    /**
+     * Never silently replace a verified mailbox. When verification is on, the
+     * current address stays active until the new one is confirmed.
+     */
+    private function applyEmailChange(User $user, string $nextEmail): string
+    {
+        $nextEmail = strtolower(trim($nextEmail));
+        $currentEmail = strtolower((string) $user->email);
+        $pendingEmail = strtolower((string) ($user->pending_email ?? ''));
+
+        if ($nextEmail === $currentEmail) {
+            return __('profile.saved_success');
+        }
+
+        if ($pendingEmail !== '' && $nextEmail === $pendingEmail) {
+            if (EmailVerification::required()) {
+                $user->sendEmailVerificationNotification();
+            }
+
+            return __('profile.email_change_pending', ['email' => $user->pending_email]);
+        }
+
+        if (EmailVerification::required() && $user->email_verified_at !== null) {
+            $user->forceFill(['pending_email' => $nextEmail])->save();
+            $user->sendEmailVerificationNotification();
+
+            return __('profile.email_change_pending', ['email' => $nextEmail]);
+        }
+
+        $user->forceFill([
+            'email' => $nextEmail,
+            'pending_email' => null,
+            'email_verified_at' => null,
+        ])->save();
+
+        $user->revaluateAdminEligibility();
+
+        if (EmailVerification::required()) {
+            $user->sendEmailVerificationNotification();
+        }
+
+        return __('profile.saved_success');
+    }
+
     public function destroy(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -193,11 +232,11 @@ class ProfileController extends Controller
     private function planLabels(): array
     {
         return [
-            'free' => 'Free access',
-            'premium_monthly' => 'Premium monthly',
-            'premium_yearly' => 'Premium yearly',
-            'pro_monthly' => 'Pro monthly',
-            'pro_yearly' => 'Pro yearly',
+            'free' => __('profile.free_access'),
+            'premium_monthly' => __('profile.plan_premium_monthly'),
+            'premium_yearly' => __('profile.plan_premium_yearly'),
+            'pro_monthly' => __('profile.plan_pro_monthly'),
+            'pro_yearly' => __('profile.plan_pro_yearly'),
         ];
     }
 }

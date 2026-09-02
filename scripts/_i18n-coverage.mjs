@@ -18,7 +18,18 @@ const UNIVERSAL_TERMS = new Set([
   'Mutqin',
   'Tajweed',
   'Premium',
+  'Qalqalah',
+  'Idgham shafawi',
 ])
+
+function isProductTermOnly(value) {
+  if (!value) return true
+  const stripped = String(value)
+    .replace(/\{[a-z_]+\}/gi, '')
+    .replace(/\b(ayahs?|sessions?|Ayahs?|notes|Sessions)\b/gi, '')
+    .replace(/[\s«»"'`–—\-·.,:;!?()[\]/\\+&@#%*>0-9]/g, '')
+  return stripped.length === 0
+}
 
 /**
  * Whether a locale value still needs translation relative to English.
@@ -35,9 +46,11 @@ export function needsTranslationFill(enValue, localeValue) {
 /** Audit-only skips (author names, CSS-ish tokens, known product keys). */
 export function shouldSkipUntranslatedKey(key, value) {
   if (/\.author$/.test(key)) return true
+  if (/^Assalamu alaikum\b/.test(value)) return true
   if (/^[A-Z][a-z]+ [A-Z][a-z]+$/.test(value)) return true
   if (value.length <= 10 && !value.includes(' ')) return true
   if (isInterpolationOnly(value)) return true
+  if (isProductTermOnly(value)) return true
   if (UNIVERSAL_TERMS.has(value)) return true
   if ([
     'memorisation.fonts.naskh',

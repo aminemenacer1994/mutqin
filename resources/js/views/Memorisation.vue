@@ -971,48 +971,6 @@
                 class="mushaf-shell"
                 :aria-label="t('memorisation.view.mushaf')"
               >
-                <header
-                  class="mushaf-shell__bar"
-                  :aria-label="t('memorisation.a11y.mushafTools')"
-                >
-                  <div class="mushaf-shell__bar-group">
-                    <div class="mushaf-shell__size" role="group" :aria-label="t('common.fontSize')">
-                      <button
-                        type="button"
-                        class="mushaf-shell__btn mushaf-shell__btn--icon"
-                        @click.stop.prevent="decreaseMushafFontSize"
-                        :disabled="Number(defaultFontSize || 150) <= minFontSize"
-                        :title="t('memorisation.a11y.decreaseFontSize')"
-                        :aria-label="t('memorisation.a11y.decreaseFontSize')"
-                      >
-                        <i class="bi bi-dash-lg" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        type="button"
-                        class="mushaf-shell__btn mushaf-shell__btn--icon"
-                        @click.stop.prevent="increaseMushafFontSize"
-                        :disabled="Number(defaultFontSize || 150) >= maxFontSize"
-                        :title="t('memorisation.a11y.increaseFontSize')"
-                        :aria-label="t('memorisation.a11y.increaseFontSize')"
-                      >
-                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="mushaf-shell__bar-group mushaf-shell__bar-group--end">
-                    <button
-                      type="button"
-                      class="mushaf-shell__btn mushaf-shell__btn--icon mushaf-shell__controls-btn"
-                      @click.stop="openAdvancedControls"
-                      :title="t('memorisation.open_controls')"
-                      :aria-label="t('memorisation.open_controls')"
-                    >
-                      <i class="bi bi-sliders" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </header>
-
                 <div ref="mushafViewport" class="mushaf-viewport-scroll">
                   <div v-if="madaniPagesError" class="mushaf-empty-page mushaf-empty-page--error">
                     <AppStatus
@@ -3304,20 +3262,9 @@
         aria-labelledby="postSessionTitle"
       >
         <div class="post-session-simple__dialog post-session-simple__dialog--lg">
-          <div
-            v-if="showPostSessionConfetti && !workspaceTourActive && !onboardingSampleSessionActive"
-            class="onboarding-post-session-confetti-layer"
-            :class="{ 'onboarding-post-session-confetti-layer--sample': onboardingSampleSessionActive }"
-            aria-hidden="true"
-          >
-            <span
-              v-for="piece in postSessionConfettiPieces"
-              :key="piece.id"
-              :class="piece.className"
-              :style="piece.style"
-            ></span>
-          </div>
-
+          <ViewportConfetti
+            v-if="showPostSessionConfetti && !workspaceTourActive && !onboardingSampleSessionActive && !postSessionAiReciteActive"
+          />
           <header class="post-session-simple__header post-session-simple__header--calm">
             <span class="post-session-simple__check" aria-hidden="true">
               <i class="bi bi-check-lg"></i>

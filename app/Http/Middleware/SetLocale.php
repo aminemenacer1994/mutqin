@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Theme;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -12,14 +13,6 @@ class SetLocale
 {
     private const SUPPORTED_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'];
     private const RTL_LOCALES = ['ar', 'ur'];
-    private const THEME_ALIASES = [
-        'light' => 'light-mode',
-        'light-mode' => 'light-mode',
-        'dark' => 'dark-mode',
-        'dark-mode' => 'dark-mode',
-        'sepia' => 'sepia-mode',
-        'sepia-mode' => 'sepia-mode',
-    ];
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -31,7 +24,7 @@ class SetLocale
         View::share('appLocale', $locale);
         View::share('appDirection', $direction);
         View::share('appThemePreference', $themePreference);
-        View::share('appTheme', $this->themePreferenceToDataTheme($themePreference));
+        View::share('appTheme', Theme::toDataTheme($themePreference));
 
         $request->session()->put('mutqin_theme', $themePreference);
 
@@ -41,7 +34,7 @@ class SetLocale
         // response cookie matches the current account — never the previous one.
         $themePreference = $this->resolveThemePreference($request);
         View::share('appThemePreference', $themePreference);
-        View::share('appTheme', $this->themePreferenceToDataTheme($themePreference));
+        View::share('appTheme', Theme::toDataTheme($themePreference));
         $request->session()->put('mutqin_theme', $themePreference);
 
         if ($request->query('lang') && $response instanceof Response) {
@@ -77,29 +70,17 @@ class SetLocale
         if ($user) {
             $userTheme = $user->theme;
             if (is_string($userTheme) && $userTheme !== '') {
-                $normalizedUserTheme = self::THEME_ALIASES[strtolower($userTheme)] ?? null;
-                if ($normalizedUserTheme !== null) {
-                    return $normalizedUserTheme;
-                }
+                return Theme::normalizePreference($userTheme);
             }
 
             // Signed-in accounts never inherit another person's cookie/session from a shared device.
-            return 'sepia-mode';
+            return Theme::DEFAULT_PREFERENCE;
         }
 
         $candidate = $request->session()->get('mutqin_theme')
             ?: $request->cookie('mutqin_theme')
-            ?: 'sepia-mode';
+            ?: Theme::DEFAULT_PREFERENCE;
 
-        return self::THEME_ALIASES[strtolower((string) $candidate)] ?? 'sepia-mode';
-    }
-
-    private function themePreferenceToDataTheme(string $themePreference): string
-    {
-        return match ($themePreference) {
-            'dark-mode' => 'dark',
-            'light-mode' => 'light',
-            default => 'sepia',
-        };
+        return Theme::normalizePreference((string) $candidate);
     }
 }

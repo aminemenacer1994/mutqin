@@ -753,9 +753,9 @@ includesAll('audio unlock flow', [
   )
 }
 
-includesAll('sepia theme default', [
-  /theme: 'sepia'/,
-  /this\.theme = document\.documentElement\.getAttribute\('data-theme'\) \|\| this\.theme \|\| 'sepia'/,
+includesAll('light theme default', [
+  /theme: DEFAULT_THEME/,
+  /this\.theme = document\.documentElement\.getAttribute\('data-theme'\) \|\| this\.theme \|\| DEFAULT_THEME/,
   /document\.documentElement\.setAttribute\('data-theme', this\.theme\)/
 ])
 

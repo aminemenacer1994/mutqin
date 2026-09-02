@@ -263,11 +263,34 @@ export default {
         }
       } catch (error) {
         const data = error?.response?.data;
-        this.formError = data?.message || this.t('feedback.submitError');
-        this.fieldErrors = data?.errors || {};
+        this.formError = this.localizeFeedbackMessage(data?.message) || this.t('feedback.submitError');
+        this.fieldErrors = this.localizeFeedbackFieldErrors(data?.errors);
       } finally {
         this.submitting = false;
       }
+    },
+    localizeFeedbackMessage(message) {
+      const text = String(message || '').trim();
+      if (!text) return '';
+      const map = {
+        'Please enter your feedback.': 'feedback.messageRequired',
+        'Please enter at least a few characters.': 'feedback.messageMin',
+        'Please choose a feedback type.': 'feedback.typeRequired',
+        'That feedback type is not supported.': 'feedback.typeInvalid',
+        'Thanks, your feedback has been sent.': 'feedback.success',
+        'We could not send your feedback. Please try again.': 'feedback.submitError',
+      };
+      const key = map[text];
+      return key ? this.t(key) : text;
+    },
+    localizeFeedbackFieldErrors(errors) {
+      const source = errors && typeof errors === 'object' ? errors : {};
+      const out = {};
+      Object.entries(source).forEach(([field, messages]) => {
+        const list = Array.isArray(messages) ? messages : [messages];
+        out[field] = list.map((item) => this.localizeFeedbackMessage(item));
+      });
+      return out;
     },
   },
 };

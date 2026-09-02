@@ -26,10 +26,12 @@ const UNTRANSLATED_LOCALES = ['ar', 'fr', 'id', 'tr', 'es', 'ur']
 const GUARD_NAMESPACES = [
   'common', 'auth', 'nav', 'homepage', 'memorisation', 'hifzPlan',
   'aboutUs', 'about', 'mission', 'donate', 'waitingList', 'dashboard',
-  'admin', 'toasts', 'errors', 'pricingPage',
+  'admin', 'toasts', 'errors', 'pricingPage', 'feedback', 'ui',
 ]
-const PHP_GROUPS = ['ui', 'profile', 'billing', 'onboarding', 'admin']
-const PHP_LOCALES = ['en', 'fr', 'ar']
+const PHP_GROUPS = ['ui', 'profile', 'billing', 'onboarding', 'admin', 'feedback']
+const PHP_LOCALES = ['en', 'fr', 'es', 'ar']
+const PRODUCTION_LOCALES = ['fr', 'es']
+const GARBAGE_RE = /eliminará|el Palabras|Palabras clave|Por favor try|Voice search es |Write a reflection above|letters that estás|Echoing stop activado|Nasalisation y joining/
 
 const VUE_SCAN_GLOBS = ['views', 'components'].map(d => path.join(JS_ROOT, d))
 
@@ -241,6 +243,20 @@ function scanMemorisationComputedGuards() {
   return findings
 }
 
+function checkGarbageCopy() {
+  /** @type {{ locale: string, key: string, text: string }[]} */
+  const findings = []
+  for (const locale of PRODUCTION_LOCALES) {
+    const flat = loadFlatLocale(locale)
+    for (const [key, value] of Object.entries(flat)) {
+      if (GARBAGE_RE.test(value)) {
+        findings.push({ locale, key, text: value.slice(0, 80) })
+      }
+    }
+  }
+  return findings
+}
+
 function checkUntranslated(enFlat) {
   /** @type {{ locale: string, key: string }[]} */
   const untranslated = []
@@ -307,12 +323,16 @@ export function runI18nAudit(options = {}) {
   const hardcodedJs = scanMemorisationComputedGuards()
   const untranslated = checkUntranslated(enFlat)
   const phpParity = checkPhpParity()
+  const garbage = checkGarbageCopy()
 
   const hardcoded = [...hardcodedVue, ...hardcodedApp, ...hardcodedJs]
+  const productionUntranslated = untranslated.filter(item => PRODUCTION_LOCALES.includes(item.locale))
 
   const criticalCount = missingKeys.length
     + localeParity.reduce((n, i) => n + i.missing.length, 0)
     + hardcoded.length
+    + garbage.length
+    + productionUntranslated.length
 
   const report = {
     ok: criticalCount === 0 && (options.warnUntranslated ? untranslated.length === 0 : true),
@@ -322,12 +342,16 @@ export function runI18nAudit(options = {}) {
       localeParityIssues: localeParity.length,
       hardcodedStrings: hardcoded.length,
       untranslatedKeys: untranslated.length,
+      productionUntranslatedKeys: productionUntranslated.length,
+      garbageCopy: garbage.length,
       phpParityIssues: phpParity.length,
     },
     missingKeys,
     localeParity,
     hardcoded,
     untranslated,
+    productionUntranslated,
+    garbage,
     phpParity,
   }
 
@@ -386,6 +410,17 @@ function printReport(report) {
     console.log('✓ No hardcoded user-facing strings in Vue / boot surfaces')
   }
 
+  if (report.garbage?.length) {
+    console.log(`✗ Broken FR/ES copy (${report.garbage.length}):`)
+    report.garbage.slice(0, 15).forEach(({ locale, key, text }) => {
+      console.log(`  ${locale}:${key}: "${text}"`)
+    })
+    if (report.garbage.length > 15) console.log(`  … and ${report.garbage.length - 15} more`)
+    console.log('')
+  } else {
+    console.log('✓ French and Spanish copy has no known machine-translation leftovers')
+  }
+
   if (report.phpParity.length) {
     console.log(`⚠ PHP lang file parity (${report.phpParity.length} issues — backend only):`)
     report.phpParity.forEach(({ group, locale, missing, extra, fileMissing }) => {
@@ -395,6 +430,17 @@ function printReport(report) {
     console.log('')
   } else {
     console.log('✓ PHP lang files in sync')
+  }
+
+  if (report.productionUntranslated?.length) {
+    console.log(`✗ French/Spanish keys still matching English (${report.productionUntranslated.length}):`)
+    report.productionUntranslated.slice(0, 15).forEach(({ locale, key }) => {
+      console.log(`  ${locale}:${key}`)
+    })
+    if (report.productionUntranslated.length > 15) {
+      console.log(`  … and ${report.productionUntranslated.length - 15} more`)
+    }
+    console.log('')
   }
 
   if (report.untranslated.length) {

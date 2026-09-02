@@ -4,7 +4,10 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   DEFAULT_THEME,
+  THEME_MODE_IDS,
+  THEME_MODES,
   getSavedTheme,
+  getThemeMode,
   getThemeOwnerId,
   isCurrentOwnerThemeStorageKey,
   setGlobalTheme,
@@ -120,7 +123,11 @@ assert.equal(store.has('mutqin-theme-preference'), false)
 assert.equal(store.get('mutqin-theme.7'), 'dark')
 assert.equal(store.get('mutqin-theme.99'), 'sepia')
 
-assert.equal(DEFAULT_THEME, 'sepia')
+assert.equal(DEFAULT_THEME, 'light')
+assert.deepEqual(THEME_MODE_IDS, ['light', 'sepia', 'dark'])
+assert.equal(getThemeMode('sepia-mode').id, 'sepia')
+assert.equal(getThemeMode('night').id, 'light')
+assert.equal(THEME_MODES.length, 3)
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const blade = readFileSync(join(root, 'resources/views/layouts/app.blade.php'), 'utf8')
@@ -139,7 +146,7 @@ const setLocale = readFileSync(join(root, 'app/Http/Middleware/SetLocale.php'), 
 assert.match(setLocale, /Signed-in accounts never inherit another person's cookie\/session/)
 
 const login = readFileSync(join(root, 'app/Http/Controllers/Auth/LoginController.php'), 'utf8')
-assert.match(login, /withCookie\(cookie\('mutqin_theme', 'sepia-mode'/)
+assert.match(login, /withCookie\(cookie\('mutqin_theme', Theme::DEFAULT_PREFERENCE/)
 assert.match(login, /session\(\)->put\('mutqin_theme', \$theme\)/)
 
 console.log('theme-owner-isolation: ok')

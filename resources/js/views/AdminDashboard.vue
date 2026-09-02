@@ -1300,6 +1300,7 @@
 import { adminApi } from '../scripts/api/admin'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
+import { formatAppDate, unwrapLocale } from '../utils/i18nFormat'
 import './AdminDashboard.css'
 
 const emptyEdit = () => ({
@@ -2688,7 +2689,7 @@ export default {
       if (!value) return ''
       const date = new Date(value)
       if (Number.isNaN(date.getTime())) return ''
-      return date.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })
+      return formatAppDate(date, unwrapLocale(this.$i18n?.locale))
     },
     formatRelative(value) {
       if (!value) return ''
@@ -2702,7 +2703,7 @@ export default {
       const days = Math.round(hours / 24)
       if (days === 1) return this.t('admin.yesterday')
       if (days < 8) return this.t('admin.days_ago', { n: days })
-      return date.toLocaleDateString([], { day: 'numeric', month: 'short' })
+      return formatAppDate(date, unwrapLocale(this.$i18n?.locale), { day: 'numeric', month: 'short' })
     },
     memorisedLabel(value) {
       const n = Number(value || 0)

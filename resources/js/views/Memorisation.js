@@ -1,6 +1,7 @@
 import { RTL_LOCALES, SWITCHER_LOCALES, SWITCHER_LOCALE_LABELS } from '../i18n'
 import {
   cycleGlobalTheme,
+  DEFAULT_THEME,
   getSavedTheme,
   isCurrentOwnerThemeStorageKey,
   normalizeThemeToken as normalizeThemeValue,
@@ -30,6 +31,7 @@ import {
   sanitizeRecitationReviewNote,
   sanitizeUserFacingFeedback,
 } from '../utils/userFacingFeedback'
+import { formatAppDate, formatRelativeTime, unwrapLocale } from '../utils/i18nFormat'
 import diff from 'fast-diff'
 import { defineAsyncComponent, markRaw } from 'vue'
 import { wrapChunkImport } from '../utils/chunkLoadRecovery'
@@ -321,6 +323,8 @@ import { scoreRetention } from '../scripts/composables/useRetentionZones'
 import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
 import AppStatus from '../components/AppStatus.vue'
+import ViewportConfetti from '../components/ViewportConfetti.vue'
+import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
 
 const lazyWorkspaceChunk = (importer, feature) => defineAsyncComponent({
   loader: () => wrapChunkImport(importer, { feature }),
@@ -609,6 +613,7 @@ export default {
     AiAudioConsentModal,
     AyahNotesModal,
     AppStatus,
+    ViewportConfetti,
   },
   props: {
     auth: { type: Object, default: () => ({ check: false, id: null }) },
@@ -846,7 +851,7 @@ export default {
       // UI State
       currentMode: 'beginner',
       appState: createHifzAppState(),
-      theme: 'sepia',
+      theme: DEFAULT_THEME,
       activeLocale: 'en',
       languageOptions: SWITCHER_LOCALES.map((value) => ({
         value,
@@ -917,6 +922,7 @@ export default {
       currentSessionRecommendationMeta: null,
       postSessionActionsUnlocked: false,
       showPostSessionConfetti: false,
+      postSessionConfettiTimer: null,
       postSessionSnapshot: null,
       postSessionOffcanvasOpen: false,
       postSessionStatsExpanded: false,
@@ -3587,43 +3593,6 @@ export default {
           '--session-quiz-confetti-duration': `${1400 + ((index % 6) * 90)}ms`,
           '--session-quiz-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (18 + (index * 6))}deg`,
           '--session-quiz-confetti-color': ['rgba(244, 206, 157, 0.9)', 'rgba(255, 241, 220, 0.92)', 'rgba(194, 235, 214, 0.88)', 'rgba(255, 255, 255, 0.94)'][index % 4]
-        }
-      }))
-    },
-    postSessionConfettiPieces() {
-      if (this.onboardingSampleSessionActive) {
-        const colors = ['#d4a24f', '#f4ce9d', '#b8723c', '#58b68e', '#2f6f58', '#c49a6c', '#ef8d62', '#74d99e', '#fff4df']
-        const shapes = ['circle', 'rect', 'streamer', 'diamond', 'ring', 'star']
-        return Array.from({ length: 148 }, (_, index) => ({
-          id: `sample-post-session-confetti-${index}`,
-          className: `onboarding-post-session-confetti-piece post-session-confetti--${shapes[index % shapes.length]} post-session-confetti--sample`,
-          style: {
-            '--onboarding-post-session-confetti-left': `${(index * 1.75 + ((index % 8) * 6.2) + (index < 40 ? 20 : 0)) % 100}%`,
-            '--onboarding-post-session-confetti-delay': `${(index % 28) * 28}ms`,
-            '--onboarding-post-session-confetti-duration': `${2800 + ((index % 12) * 210)}ms`,
-            '--onboarding-post-session-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (32 + ((index * 17) % 260))}deg`,
-            '--onboarding-post-session-confetti-drift': `${((index % 11) - 5) * 26}px`,
-            '--onboarding-post-session-confetti-rise': `${8 + (index % 6) * 3}vh`,
-            '--onboarding-post-session-confetti-color': colors[index % colors.length],
-            '--onboarding-post-session-confetti-size': `${4 + (index % 7) * 2}px`,
-            '--onboarding-post-session-confetti-opacity': `${0.68 + ((index % 5) * 0.06)}`
-          }
-        }))
-      }
-      const colors = ['#2f6f58', '#b8723c', '#d4a24f', '#c49a6c', '#74d99e', '#f4ce9d', '#8b5e3c', '#58b68e']
-      const shapes = ['circle', 'rect', 'streamer', 'diamond', 'ring']
-      return Array.from({ length: 118 }, (_, index) => ({
-        id: `post-session-confetti-${index}`,
-        className: `onboarding-post-session-confetti-piece post-session-confetti--${shapes[index % shapes.length]}`,
-        style: {
-          '--onboarding-post-session-confetti-left': `${(index * 2.15 + ((index % 6) * 9.5)) % 100}%`,
-          '--onboarding-post-session-confetti-delay': `${(index % 24) * 32}ms`,
-          '--onboarding-post-session-confetti-duration': `${2600 + ((index % 10) * 190)}ms`,
-          '--onboarding-post-session-confetti-rotate': `${(index % 2 === 0 ? 1 : -1) * (28 + ((index * 13) % 220))}deg`,
-          '--onboarding-post-session-confetti-drift': `${((index % 9) - 4) * 22}px`,
-          '--onboarding-post-session-confetti-color': colors[index % colors.length],
-          '--onboarding-post-session-confetti-size': `${5 + (index % 6) * 2}px`,
-          '--onboarding-post-session-confetti-opacity': `${0.72 + ((index % 4) * 0.07)}`
         }
       }))
     },
@@ -7693,7 +7662,12 @@ export default {
       const session = this.analyticsModalRecord
       if (!session) return ''
       const stats = this.normalizeSessionStats(session.stats || {}, session.config || {})
-      return `Saved ${this.formatDate(session.savedAt)} · Duration ${this.formatTime(stats.time_spent_seconds || 0)}`
+      const date = this.formatDate(session.savedAt)
+      const duration = this.formatTime(stats.time_spent_seconds || 0)
+      return [
+        this.t('memorisation.saved_session_meta_opened', { date }),
+        this.t('memorisation.saved_session_meta_duration', { duration }),
+      ].join(' · ')
     },
     analyticsReportLabel() {
       if (this.analyticsReportState.loading) return this.t('memorisation.analyticsReport.generating')
@@ -8326,7 +8300,7 @@ export default {
       const saved = this.resumeSavedAtLabel
         || (Number(payload.timestamp || 0)
           ? this.t('memorisation.common.savedAt', {
-            date: new Date(Number(payload.timestamp)).toLocaleString(this.$i18n?.locale || 'en-GB', {
+            date: formatAppDate(Number(payload.timestamp), unwrapLocale(this.$i18n?.locale), {
               year: 'numeric',
               month: 'short',
               day: '2-digit',
@@ -8365,7 +8339,7 @@ export default {
     resumeSavedAtLabel() {
       const ts = Number(this.continueSessionPayload?.timestamp || 0)
       if (!ts || !Number.isFinite(ts)) return ''
-      return new Date(ts).toLocaleString('en-GB', {
+      return formatAppDate(ts, unwrapLocale(this.$i18n?.locale), {
         year: 'numeric',
         month: 'short',
         day: '2-digit',
@@ -9635,7 +9609,7 @@ export default {
     if (!AI_TEST_MODALS_ENABLED) {
       /* feature flag off — already closed above */
     }
-    this.theme = document.documentElement.getAttribute('data-theme') || this.theme || 'sepia'
+    this.theme = document.documentElement.getAttribute('data-theme') || this.theme || DEFAULT_THEME
     document.documentElement.setAttribute('data-theme', this.theme)
     this.enforceSubscriptionFeatureLimits()
     applyQuranFontCssVariable(this.quranFont)
@@ -9672,7 +9646,7 @@ export default {
         this.activeLocale = event?.detail?.locale || this.$i18n?.locale?.value || 'en'
       }
       this.handleGlobalThemeChange = (event) => {
-        const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || 'sepia'
+        const nextTheme = event?.detail?.theme || document.documentElement.getAttribute('data-theme') || DEFAULT_THEME
         this.theme = this.normalizeThemeToken(nextTheme)
       }
       this.handleThemeStorageSync = (event) => {
@@ -9682,14 +9656,14 @@ export default {
         }
         // Only mirror this account's theme bucket — ignore other users / legacy shared keys.
         if (event?.key && !isCurrentOwnerThemeStorageKey(event.key)) return
-        const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || 'sepia'
+        const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || DEFAULT_THEME
         this.syncGlobalTheme(nextTheme)
       }
       window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
       window.addEventListener('mutqin:locale-change', this.handleLocaleChange)
       window.addEventListener('storage', this.handleThemeStorageSync)
       this.themeObserver = new MutationObserver(() => {
-        const nextTheme = document.documentElement.getAttribute('data-theme') || 'sepia'
+        const nextTheme = document.documentElement.getAttribute('data-theme') || DEFAULT_THEME
         if (nextTheme !== this.theme) this.theme = this.normalizeThemeToken(nextTheme)
       })
       this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
@@ -9957,6 +9931,7 @@ export default {
     if (this.audioStallRecoveryTimer) clearTimeout(this.audioStallRecoveryTimer)
     if (this.segmentPlaybackTimer) clearTimeout(this.segmentPlaybackTimer)
     if (this.sessionQuizConfettiTimer) clearTimeout(this.sessionQuizConfettiTimer)
+    this.clearPostSessionConfettiTimer()
     this.clearRecitationWindowTimer()
     this.flushPlaybackTime()
     this.stopWordHighlighting()
@@ -10108,6 +10083,9 @@ export default {
     },
     showPlannerCompletionModal(newVal) {
       this.syncBodyScrollLock(newVal)
+    },
+    showPostSessionConfetti(next) {
+      if (!next) this.clearPostSessionConfettiTimer()
     },
     showPostLoginOnboarding(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -10833,11 +10811,11 @@ export default {
       return id != null && String(id).trim() !== '' ? String(id) : null
     },
 
-    normalizeThemeToken(value = 'sepia') {
+    normalizeThemeToken(value = DEFAULT_THEME) {
       return normalizeThemeValue(value)
     },
 
-    toThemePreference(value = 'sepia') {
+    toThemePreference(value = DEFAULT_THEME) {
       return toThemePref(value)
     },
 
@@ -14097,6 +14075,7 @@ export default {
           } catch (error) {
             console.error(error)
             this.sessionLifecycleError = 'start_failed'
+            this.showBanner(this.t('toasts.sessionStartFailed'), 'danger', 4200)
             this.transitionSessionLifecycle(SESSION_STATUS.READY, SESSION_MUTATION.IDLE)
             return false
           }
@@ -16361,6 +16340,7 @@ export default {
         })
         this.postSessionRecommendationStatus = 'ready'
       }
+      this.clearPostSessionConfettiTimer()
       this.showPostSessionConfetti = !(
         this.workspaceTourActive
         || this.workspaceTourPreviewOwned
@@ -16455,9 +16435,21 @@ export default {
           this.loadPostSessionRecommendation()
         }
       }
-      window.setTimeout(() => {
+      this.schedulePostSessionConfettiHide()
+    },
+    clearPostSessionConfettiTimer() {
+      if (this.postSessionConfettiTimer) {
+        window.clearTimeout(this.postSessionConfettiTimer)
+        this.postSessionConfettiTimer = null
+      }
+    },
+    schedulePostSessionConfettiHide() {
+      this.clearPostSessionConfettiTimer()
+      if (!this.showPostSessionConfetti) return
+      this.postSessionConfettiTimer = window.setTimeout(() => {
+        this.postSessionConfettiTimer = null
         this.showPostSessionConfetti = false
-      }, this.onboardingSampleSessionActive ? 6600 : 5600)
+      }, VIEWPORT_CONFETTI_DURATION_MS)
     },
     resetPostSessionRecommendationState() {
       this.postSessionRecommendationRequestId += 1
@@ -20767,9 +20759,9 @@ export default {
     },
     validateAnalyticsReportPayload(payload) {
       const metrics = payload?.metrics || {}
-      if (!payload?.session?.id) return { ok: false, message: 'Missing session id.' }
-      if (!payload?.session?.savedAt) return { ok: false, message: 'Missing session date.' }
-      if (!Number.isFinite(Number(metrics.verses_read))) return { ok: false, message: 'Missing verses read.' }
+      if (!payload?.session?.id) return { ok: false, message: this.t('memorisation.analyticsReport.exportError') }
+      if (!payload?.session?.savedAt) return { ok: false, message: this.t('memorisation.analyticsReport.exportError') }
+      if (!Number.isFinite(Number(metrics.verses_read))) return { ok: false, message: this.t('memorisation.analyticsReport.exportError') }
       return { ok: true, message: '' }
     },
     async downloadSessionAnalyticsReport() {
@@ -20839,17 +20831,17 @@ export default {
         this.analyticsReportState = { loading: false, success: true, error: '' }
       } catch (error) {
         console.error('Analytics report export failed:', error)
-        this.analyticsReportState = { loading: false, success: false, error: String(error?.message || 'Export failed') }
+        this.analyticsReportState = { loading: false, success: false, error: String(error?.message || this.t('memorisation.analyticsReport.exportFailed')) }
       }
     },
 
     buildStatsBreakdown(session) {
       const stats = this.normalizeSessionStats(session?.stats || {}, session?.config || {})
       return [
-        { key: 'verses_read', label: 'Ayahs you reviewed', value: `${stats.verses_read}`, icon: 'bi-book' },
-        { key: 'time_spent', label: 'Time memorising', value: this.formatTime(stats.time_spent_seconds), icon: 'bi-clock-history' },
-        { key: 'repetitions_completed', label: 'Repeats completed', value: `${stats.repetitions_completed}`, icon: 'bi-arrow-repeat' },
-        { key: 'sessions_completed', label: 'Runs completed', value: `${stats.sessions_completed}`, icon: 'bi-check2-circle' }
+        { key: 'verses_read', label: this.t('memorisation.analyticsReport.versesReviewed'), value: `${stats.verses_read}`, icon: 'bi-book' },
+        { key: 'time_spent', label: this.t('memorisation.analyticsReport.timeMemorising'), value: this.formatTime(stats.time_spent_seconds), icon: 'bi-clock-history' },
+        { key: 'repetitions_completed', label: this.t('memorisation.analyticsReport.repeatsCompleted'), value: `${stats.repetitions_completed}`, icon: 'bi-arrow-repeat' },
+        { key: 'sessions_completed', label: this.t('memorisation.analyticsReport.runsCompleted'), value: `${stats.sessions_completed}`, icon: 'bi-check2-circle' }
       ]
     },
 
@@ -20861,13 +20853,29 @@ export default {
       const struggled = Number(stats.weak_verses_encountered || 0)
       const parts = []
 
-      if (verses > 0) parts.push(`You reviewed ${verses} ayah${verses === 1 ? '' : 's'}`)
-      if (time > 0) parts.push(`in ${this.formatTime(time)}`)
-      if (reps > 0) parts.push(`with ${reps} repeat${reps === 1 ? '' : 's'}`)
+      if (verses > 0) {
+        parts.push(this.t(
+          verses === 1 ? 'memorisation.analytics.summaryReviewedOne' : 'memorisation.analytics.summaryReviewedMany',
+          { count: verses },
+        ))
+      }
+      if (time > 0) parts.push(this.t('memorisation.analytics.summaryTime', { time: this.formatTime(time) }))
+      if (reps > 0) {
+        parts.push(this.t(
+          reps === 1 ? 'memorisation.analytics.summaryRepeatsOne' : 'memorisation.analytics.summaryRepeatsMany',
+          { count: reps },
+        ))
+      }
       if (!parts.length) return this.t('memorisation.recitationResult.practiceAndSaveSummary')
 
       const base = parts.join(' ')
-      if (struggled > 0) return `${base}. ${struggled} ayah${struggled === 1 ? '' : 's'} needed extra attention.`
+      if (struggled > 0) {
+        const attention = this.t(
+          struggled === 1 ? 'memorisation.analytics.summaryAttentionOne' : 'memorisation.analytics.summaryAttentionMany',
+          { count: struggled },
+        )
+        return `${base}. ${attention}`
+      }
       return `${base}.`
     },
 
@@ -20916,11 +20924,11 @@ export default {
 
     validateSessionForExport(session) {
       const errors = []
-      if (!session?.id) errors.push('Missing session id.')
-      if (!session?.name) errors.push('Missing session name.')
-      if (!session?.config?.chapterId) errors.push('Missing surah selection.')
-      if (!Number(session?.config?.rangeStart) || !Number(session?.config?.rangeEnd)) errors.push('Missing ayah range.')
-      if (!session?.savedAt) errors.push('Missing saved timestamp.')
+      if (!session?.id) errors.push(this.t('memorisation.analyticsReport.exportError'))
+      if (!session?.name) errors.push(this.t('memorisation.analyticsReport.exportError'))
+      if (!session?.config?.chapterId) errors.push(this.t('memorisation.analyticsReport.exportError'))
+      if (!Number(session?.config?.rangeStart) || !Number(session?.config?.rangeEnd)) errors.push(this.t('memorisation.analyticsReport.exportError'))
+      if (!session?.savedAt) errors.push(this.t('memorisation.analyticsReport.exportError'))
       return {
         ok: errors.length === 0,
         message: errors[0] || ''
@@ -21064,19 +21072,20 @@ export default {
       ].filter(Boolean)
       const subtitle = this.escapeHtml(subtitleParts.join(' · '))
 
+      const locale = unwrapLocale(this.$i18n?.locale)
       const rows = [
-        { label: 'Verses read', value: `${stats.verses_read}` },
-        { label: 'Time spent', value: this.formatTime(stats.time_spent_seconds) },
-        { label: 'Repetitions completed', value: `${stats.repetitions_completed}` },
-        { label: 'Session plays', value: `${stats.session_play_count || 0}` },
-        { label: 'Total verse plays', value: `${stats.total_verse_play_count || 0}` },
-        { label: 'Average time per verse', value: this.formatTime(stats.average_time_per_verse_seconds) },
-        { label: 'Struggled ayahs', value: `${stats.weak_verses_encountered}` }
+        { label: this.t('memorisation.exportReport.versesRead'), value: `${stats.verses_read}` },
+        { label: this.t('memorisation.exportReport.timeSpent'), value: this.formatTime(stats.time_spent_seconds) },
+        { label: this.t('memorisation.exportReport.repetitions'), value: `${stats.repetitions_completed}` },
+        { label: this.t('memorisation.exportReport.sessionPlays'), value: `${stats.session_play_count || 0}` },
+        { label: this.t('memorisation.exportReport.versePlays'), value: `${stats.total_verse_play_count || 0}` },
+        { label: this.t('memorisation.exportReport.averageTime'), value: this.formatTime(stats.average_time_per_verse_seconds) },
+        { label: this.t('memorisation.exportReport.struggledAyahs'), value: `${stats.weak_verses_encountered}` }
       ]
 
       const meta = [
-        { label: 'Saved', value: session?.savedAt ? new Date(session.savedAt).toLocaleString('en-GB') : '' },
-        { label: 'Exported', value: payload?.exportedAt ? new Date(payload.exportedAt).toLocaleString('en-GB') : '' }
+        { label: this.t('memorisation.exportReport.saved'), value: session?.savedAt ? formatAppDate(session.savedAt, locale, { dateStyle: 'medium', timeStyle: 'short' }) : '' },
+        { label: this.t('memorisation.exportReport.exported'), value: payload?.exportedAt ? formatAppDate(payload.exportedAt, locale, { dateStyle: 'medium', timeStyle: 'short' }) : '' }
       ].filter(r => r.value)
 
       const rowsHtml = rows.map(r => `<tr><td>${this.escapeHtml(r.label)}</td><td>${this.escapeHtml(r.value)}</td></tr>`).join('')
@@ -21108,13 +21117,13 @@ export default {
     ${subtitle ? `<p>${subtitle}</p>` : ''}
     ${metaHtml ? `<div class="meta">${metaHtml}</div>` : ''}
     <div class="card">
-      <table aria-label="Session stats">
+      <table aria-label="${this.escapeHtml(this.t('memorisation.exportReport.sessionStats'))}">
         <tbody>
           ${rowsHtml}
         </tbody>
       </table>
     </div>
-    <div class="foot">Mutqin session export</div>
+    <div class="foot">${this.escapeHtml(this.t('memorisation.exportReport.footer'))}</div>
   </body>
 </html>`
     },
@@ -21176,7 +21185,7 @@ export default {
           successFormat: '',
           errorSessionId: sessionId,
           errorFormat: format,
-          errorMessage: 'Something went wrong. Please retry.'
+          errorMessage: this.t('errors.genericRetry')
         }
         this.showBanner(this.t('toasts.exportFailedRetry'), 'error', 2600)
       }
@@ -21188,24 +21197,7 @@ export default {
     },
 
     formatDate(dateString) {
-      if (!dateString) return ''
-      const date = new Date(dateString)
-      const now = new Date()
-      const diffMs = now - date
-      const diffMins = Math.floor(diffMs / 60000)
-      const diffHours = Math.floor(diffMs / 3600000)
-      const diffDays = Math.floor(diffMs / 86400000)
-
-      if (diffMins < 1) return 'Just now'
-      if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`
-      if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
-      if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
-
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      })
+      return formatRelativeTime(dateString, this.t.bind(this), unwrapLocale(this.$i18n?.locale))
     },
     recordingsLibraryStorageKey() {
       return this.userStorageKey('recordings')
@@ -31228,7 +31220,7 @@ export default {
             min: nextTarget,
             max: nextTarget,
             exact: nextTarget,
-            label: `${nextTarget} ayahs/day`
+            label: this.t('memorisation.hifzJourney.ayahsPerDayMax', { max: nextTarget })
           }
         }
       } else if (strategy === 'reduce') {
@@ -31239,7 +31231,7 @@ export default {
             min: nextTarget,
             max: nextTarget,
             exact: nextTarget,
-            label: `${nextTarget} ayahs/day`
+            label: this.t('memorisation.hifzJourney.ayahsPerDayMax', { max: nextTarget })
           }
         }
       } else if (strategy === 'extend') {
@@ -31247,7 +31239,7 @@ export default {
         nextPlan.completionAdjustmentDays = Number(nextPlan.completionAdjustmentDays || 0) + nextPlan.recovery.extendedByDays
       }
 
-      this.persistHifzPlan(nextPlan, 'Recovery plan applied')
+      this.persistHifzPlan(nextPlan, this.t('toasts.hifzRecoveryApplied'))
     },
 
     focusLinkedAyah(verseKey, options = {}) {

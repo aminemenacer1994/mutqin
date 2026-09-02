@@ -10,7 +10,7 @@ export const MEM_STATE_KEY = 'memorisation_state_v2'
 export function defaultMemorisationState() {
   return {
     version: 2,
-    theme: 'sepia',
+    theme: 'light',
     arabicFont: 'system',
     features: {},
     selectedArabicEdition: 'quran-simple',

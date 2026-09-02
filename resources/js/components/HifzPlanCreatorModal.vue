@@ -297,6 +297,7 @@
 import { HIFZ_PLAN_STORAGE_KEY, calculatePlanForecast } from '../scripts/engine/hifz_session_engine'
 import learningApi from '../scripts/api/learning'
 import { offlineScopedLocalKey } from '../utils/mutqinStorageKeys'
+import { formatAppNumber, unwrapLocale } from '../utils/i18nFormat'
 
 const STORAGE_KEY = HIFZ_PLAN_STORAGE_KEY
 
@@ -458,7 +459,7 @@ export default {
     },
     dailyGoalLabel() {
       const exact = Number(this.draft.dailyNewAyahs?.exact)
-      if (Number.isFinite(exact) && exact > 0) return `${exact} ayahs/day`
+      if (Number.isFinite(exact) && exact > 0) return this.t('memorisation.hifzJourney.ayahsPerDayMax', { max: exact })
       return `${this.selectedGoalOption.title} (${this.selectedGoalOption.subtitle})`
     },
     journeyForecast() {
@@ -477,10 +478,10 @@ export default {
     forecastItems() {
       const forecast = this.journeyForecast
       return [
-        { label: this.t('hifzPlan.wizard.forecast.totalAyahs'), value: forecast.totalAyahs.toLocaleString(), icon: 'bi-book' },
-        { label: this.t('hifzPlan.wizard.forecast.totalPages'), value: forecast.totalPages.toLocaleString(), icon: 'bi-file-earmark-text' },
-        { label: this.t('hifzPlan.wizard.forecast.totalHizb'), value: forecast.totalHizb.toLocaleString(), icon: 'bi-bookmarks' },
-        { label: this.t('hifzPlan.wizard.forecast.totalJuz'), value: forecast.totalJuz.toLocaleString(), icon: 'bi-journal-bookmark' },
+        { label: this.t('hifzPlan.wizard.forecast.totalAyahs'), value: formatAppNumber(forecast.totalAyahs, unwrapLocale(this.$i18n?.locale)), icon: 'bi-book' },
+        { label: this.t('hifzPlan.wizard.forecast.totalPages'), value: formatAppNumber(forecast.totalPages, unwrapLocale(this.$i18n?.locale)), icon: 'bi-file-earmark-text' },
+        { label: this.t('hifzPlan.wizard.forecast.totalHizb'), value: formatAppNumber(forecast.totalHizb, unwrapLocale(this.$i18n?.locale)), icon: 'bi-bookmarks' },
+        { label: this.t('hifzPlan.wizard.forecast.totalJuz'), value: formatAppNumber(forecast.totalJuz, unwrapLocale(this.$i18n?.locale)), icon: 'bi-journal-bookmark' },
         { label: this.t('hifzPlan.wizard.forecast.dailyTarget'), value: this.t('hifzPlan.wizard.forecast.dailyTargetValue', { count: forecast.dailyTarget }), icon: 'bi-bullseye' },
         { label: this.t('hifzPlan.wizard.forecast.estimatedDuration'), value: forecast.estimatedDuration, icon: 'bi-hourglass-split' },
         { label: this.t('hifzPlan.wizard.forecast.estimatedCompletion'), value: forecast.estimatedCompletionDate, icon: 'bi-calendar-check' }
@@ -651,7 +652,7 @@ export default {
               min: exactDailyAyahs,
               max: exactDailyAyahs,
               exact: exactDailyAyahs,
-              label: `${exactDailyAyahs} ayahs/day`
+              label: this.t('memorisation.hifzJourney.ayahsPerDayMax', { max: exactDailyAyahs })
             }
           : { ...selectedGoal.range },
         selectedSurah: plan.selectedSurah || plan.surah || '',
@@ -731,7 +732,7 @@ export default {
         min: safeCount,
         max: safeCount,
         exact: safeCount,
-        label: `${safeCount} ayahs/day`
+        label: this.t('memorisation.hifzJourney.ayahsPerDayMax', { max: safeCount })
       }
       if (safeCount <= 3) this.draft.goal = 'light'
       else if (safeCount <= 5) this.draft.goal = 'balanced'
@@ -782,7 +783,7 @@ export default {
             min: Number(this.draft.dailyNewAyahs.exact),
             max: Number(this.draft.dailyNewAyahs.exact),
             exact: Number(this.draft.dailyNewAyahs.exact),
-            label: `${Number(this.draft.dailyNewAyahs.exact)} ayahs/day`
+            label: this.t('memorisation.hifzJourney.ayahsPerDayMax', { max: Number(this.draft.dailyNewAyahs.exact) })
           }
         : {
             min: goalOption.range.min,

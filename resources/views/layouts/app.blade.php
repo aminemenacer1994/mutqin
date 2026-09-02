@@ -1,10 +1,13 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
-    $appThemePreference = $appThemePreference ?? session('mutqin_theme', 'sepia-mode');
-    $appTheme = $appTheme ?? (str_starts_with($appThemePreference, 'dark') ? 'dark' : (str_starts_with($appThemePreference, 'light') ? 'light' : 'sepia'));
-    $appThemeColor = $appTheme === 'dark' ? '#14110f' : '#8b5e3c';
-    $appColorScheme = $appTheme === 'dark' ? 'dark' : 'light';
+    $appThemePreference = $appThemePreference ?? session('mutqin_theme', \App\Support\Theme::DEFAULT_PREFERENCE);
+    $appTheme = $appTheme ?? \App\Support\Theme::toDataTheme($appThemePreference);
+    $appThemeChrome = \App\Support\Theme::chrome($appTheme);
+    $appThemeColor = $appThemeChrome['theme_color'];
+    $appColorScheme = $appThemeChrome['color_scheme'];
+    $appThemeModes = \App\Support\Theme::modes();
+    $activeThemeMode = \App\Support\Theme::mode($appTheme);
     $switcherLocales = ['en', 'fr', 'es'];
     $languageEndonyms = [
         'en' => 'English',
@@ -36,26 +39,40 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
       (function () {
-        // Prefer SSR data-theme (user account / cookie / sepia default) to avoid FOUC fighting the server.
-        var theme = document.documentElement.getAttribute('data-theme') || '';
-        if (!theme) {
-          try { theme = localStorage.getItem('mutqin-theme') || ''; } catch (e) {}
+        // Restore from SSR (accounts) or guest device cache before first paint.
+        var modes = @json(\App\Support\Theme::clientCatalog());
+        var defaultTheme = @json(\App\Support\Theme::DEFAULT);
+        var isAuth = @json(\Illuminate\Support\Facades\Auth::check());
+        var byId = {};
+        for (var i = 0; i < modes.length; i++) byId[modes[i].id] = modes[i];
+        function normalize(value) {
+          var raw = String(value || '').toLowerCase();
+          if (byId[raw]) return raw;
+          for (var j = 0; j < modes.length; j++) {
+            if (modes[j].preference === raw) return modes[j].id;
+          }
+          return defaultTheme;
         }
-        if (!theme) theme = 'sepia';
-        theme = String(theme).toLowerCase();
-        if (theme === 'dark' || theme === 'dark-mode') theme = 'dark';
-        else if (theme === 'light' || theme === 'light-mode') theme = 'light';
-        else theme = 'sepia';
+        var theme = document.documentElement.getAttribute('data-theme') || '';
+        if (!isAuth) {
+          try {
+            theme = localStorage.getItem('mutqin-theme.guest')
+              || localStorage.getItem('mutqin-theme')
+              || theme;
+          } catch (e) {}
+        }
+        if (!theme) theme = defaultTheme;
+        theme = normalize(theme);
         document.documentElement.setAttribute('data-theme', theme);
-        var color = theme === 'dark' ? '#14110f' : '#8b5e3c';
+        var chrome = byId[theme] || byId[defaultTheme];
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) {
-          meta.setAttribute('content', color);
+        if (meta && chrome) {
+          meta.setAttribute('content', chrome.themeColor);
           meta.removeAttribute('media');
         }
         var scheme = document.querySelector('meta[name="color-scheme"]');
-        if (scheme) scheme.setAttribute('content', theme === 'dark' ? 'dark' : 'light');
-        document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
+        if (scheme && chrome) scheme.setAttribute('content', chrome.colorScheme);
+        if (chrome) document.documentElement.style.colorScheme = chrome.colorScheme;
       })();
     </script>
     <meta name="apple-mobile-web-app-title" content="Mutqin">
@@ -3157,6 +3174,11 @@
             box-shadow: none !important;
         }
 
+        .global-theme-switcher {
+            position: relative;
+            flex: 0 0 auto;
+        }
+
         .app-theme-toggle {
             width: var(--nav-icon);
             height: var(--nav-icon);
@@ -3168,16 +3190,101 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.2s ease, color 0.2s ease;
             min-width: var(--tap);
             min-height: var(--tap);
             padding: 0;
         }
 
-        .app-theme-toggle:hover {
+        .app-theme-toggle:hover,
+        .app-theme-toggle[aria-expanded="true"] {
             background: var(--accent-light);
             color: var(--accent);
-            transform: rotate(15deg);
+        }
+
+        .app-theme-toggle:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .app-theme-menu {
+            margin-top: 12px !important;
+            min-width: 12.75rem;
+            width: max-content;
+            max-width: min(18rem, calc(100vw - 1.5rem));
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface-strong);
+            color: var(--text);
+            z-index: 5200;
+        }
+
+        .app-theme-menu .theme-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            width: 100%;
+            min-height: var(--tap);
+            border-radius: 12px;
+            padding: 0.55rem 0.7rem;
+        }
+
+        .app-theme-menu .theme-btn-swatch {
+            width: 0.9rem;
+            height: 0.9rem;
+            border-radius: 999px;
+            border: 1px solid var(--border-strong);
+            flex-shrink: 0;
+            box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent);
+        }
+
+        .app-theme-menu .theme-btn-label {
+            flex: 1 1 auto;
+            text-align: start;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .app-theme-menu .theme-btn-check {
+            margin-inline-start: auto;
+            font-size: 1rem;
+            opacity: 0;
+            color: var(--accent);
+        }
+
+        .app-theme-menu .theme-btn.active .theme-btn-check,
+        .app-theme-menu .theme-btn[aria-checked="true"] .theme-btn-check {
+            opacity: 1;
+        }
+
+        .app-theme-menu .theme-btn.active,
+        .app-theme-menu .theme-btn[aria-checked="true"],
+        .app-theme-menu .theme-btn:hover,
+        .app-theme-menu .theme-btn:focus-visible {
+            background: var(--accent-light) !important;
+            color: var(--accent) !important;
+        }
+
+        .app-theme-menu .theme-btn:focus-visible {
+            outline: 2px solid var(--accent) !important;
+            outline-offset: 1px;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-quick-actions .global-theme-switcher .dropdown-menu {
+                position: fixed !important;
+                inset: auto 12px auto auto !important;
+                transform: none !important;
+                margin-top: 8px;
+                max-height: min(60vh, 360px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            html[dir="rtl"] .navbar-quick-actions .global-theme-switcher .dropdown-menu {
+                inset: auto auto auto 12px !important;
+            }
         }
 
         .global-lang-switcher {
@@ -3263,7 +3370,8 @@
         }
 
         html[dir="rtl"] .app-user-menu,
-        html[dir="rtl"] .app-lang-menu {
+        html[dir="rtl"] .app-lang-menu,
+        html[dir="rtl"] .app-theme-menu {
             text-align: right;
         }
 
@@ -3706,7 +3814,235 @@
 
         .profile-stage {
             display: grid;
+            gap: 20px;
+        }
+
+        .profile-layout {
+            display: grid;
             gap: 16px;
+        }
+
+        .profile-hero-identity {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .profile-avatar {
+            flex: 0 0 auto;
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            object-fit: cover;
+            background: var(--accent-light);
+            border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+        }
+
+        .profile-avatar--initials {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-strong);
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .profile-field-label-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 750;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .profile-badge--verified {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .profile-badge--unverified,
+        .profile-badge--pending {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .profile-inline-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            margin-top: 12px;
+        }
+
+        .profile-inline-actions form {
+            margin: 0;
+        }
+
+        .profile-text-btn {
+            min-height: 44px;
+            padding: 0 4px;
+            border: 0;
+            background: transparent;
+            color: var(--accent-strong);
+            font-size: 0.88rem;
+            font-weight: 650;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+        }
+
+        .profile-text-btn:hover,
+        .profile-text-btn:focus-visible {
+            color: var(--text);
+            outline: none;
+        }
+
+        .profile-text-btn:focus-visible {
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+            border-radius: 8px;
+        }
+
+        .profile-pref-stack,
+        .profile-pref-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .profile-pref-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .profile-pref-block {
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
+
+        .profile-pref-title {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 750;
+            letter-spacing: -0.01em;
+        }
+
+        .profile-pref-value {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 650;
+            letter-spacing: -0.02em;
+            line-height: 1.4;
+        }
+
+        .profile-empty {
+            display: grid;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: color-mix(in srgb, var(--surface-elevated) 80%, transparent);
+            border: 1px dashed color-mix(in srgb, var(--border) 85%, transparent);
+        }
+
+        .profile-empty p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+
+        .profile-choice-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+            gap: 8px;
+        }
+
+        .profile-choice-grid--wrap {
+            grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+        }
+
+        .profile-choice {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            min-height: 44px;
+            padding: 8px 12px;
+            border-radius: 14px;
+            border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+            background: var(--field-bg);
+            color: var(--text);
+            font-size: 0.88rem;
+            font-weight: 650;
+            cursor: pointer;
+            transition:
+                background 160ms ease,
+                border-color 160ms ease,
+                color 160ms ease,
+                box-shadow 160ms ease;
+        }
+
+        .profile-choice:hover {
+            border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+        }
+
+        .profile-choice:focus-visible,
+        .profile-form .form-control:focus-visible,
+        .profile-password-toggle:focus-visible,
+        .profile-submit-btn:focus-visible,
+        .profile-action-btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .profile-choice[aria-pressed="true"],
+        .profile-choice[aria-checked="true"],
+        .profile-choice.is-selected {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: var(--text-on-accent);
+            box-shadow: none;
+        }
+
+        .profile-choice[aria-pressed="true"]:hover,
+        .profile-choice[aria-checked="true"]:hover,
+        .profile-choice.is-selected:hover {
+            border-color: var(--accent-strong);
+            background: var(--accent-strong);
+            color: var(--text-on-accent);
+        }
+
+        .profile-choice:disabled {
+            opacity: 0.55;
+            cursor: wait;
+        }
+
+        .profile-security {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 16px 32px;
+            align-items: start;
+        }
+
+        .profile-link-google {
+            color: var(--accent-strong);
+            font-weight: 650;
+            text-underline-offset: 3px;
+        }
+
+        .profile-link-google:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: 4px;
         }
 
         .profile-account {
@@ -3735,15 +4071,16 @@
         }
 
         .profile-signin-methods {
-            margin-top: 20px;
-            padding-top: 16px;
-            border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+            margin: 0;
+            padding: 2px 0 0;
+            flex: 0 1 17.5rem;
+            min-width: 0;
         }
 
         .profile-signin-methods__title {
-            margin: 0 0 10px;
-            font-size: 0.92rem;
-            font-weight: 750;
+            margin: 0 0 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
             letter-spacing: -0.01em;
         }
 
@@ -3757,16 +4094,28 @@
 
         .profile-signin-methods__list li {
             display: flex;
-            gap: 10px;
-            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
             color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.5;
+            font-size: 0.82rem;
+            line-height: 1.4;
         }
 
         .profile-signin-methods__list i {
-            margin-top: 0.15em;
+            flex: 0 0 auto;
             color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .profile-signin-methods__list span {
+            flex: 1 1 8rem;
+            min-width: 0;
+        }
+
+        .profile-signin-methods .profile-link-google {
+            margin-inline-start: 0;
+            font-size: 0.82rem;
         }
 
         .profile-danger {
@@ -4127,12 +4476,66 @@
             align-self: start;
         }
 
-        .profile-card--password .profile-password-form {
-            flex: 0 0 auto;
+        .profile-card--password {
+            padding: 16px 18px;
+            width: fit-content;
+            max-width: 100%;
+            justify-self: start;
         }
 
-        .profile-card--password .profile-signin-methods {
-            margin-top: auto;
+        .profile-card--password .profile-card-head {
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+        }
+
+        .profile-card--password .profile-card-head h2 {
+            margin-bottom: 2px;
+            font-size: 1.05rem;
+        }
+
+        .profile-card--password .profile-card-head p {
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .profile-card--password .profile-password-form {
+            display: grid;
+            gap: 8px;
+            flex: 0 0 20rem;
+            width: 20rem;
+            max-width: 100%;
+        }
+
+        .profile-card--password .profile-field {
+            gap: 0.2rem;
+        }
+
+        .profile-card--password .profile-form .form-label {
+            font-size: 0.8rem;
+            font-weight: 650;
+            margin-bottom: 0;
+        }
+
+        .profile-card--password .profile-form .form-control,
+        .profile-card--password .profile-form .profile-password-input.form-control {
+            min-height: 40px;
+            border-radius: 10px;
+            padding-inline: 12px;
+        }
+
+        .profile-card--password .profile-password-toggle {
+            width: 34px;
+            height: 34px;
+        }
+
+        .profile-card--password .profile-submit-btn {
+            justify-self: start;
+            width: auto;
+            min-width: 0;
+            min-height: 40px;
+            padding-inline: 14px;
+            border-radius: 10px;
+            font-size: 0.86rem;
         }
 
         .profile-card-wide {
@@ -4190,42 +4593,27 @@
         .profile-form .form-control {
             min-height: 50px;
             border-radius: 16px;
-            border: 1px solid #e5e0db;
-            background: #f9f7f4;
+            border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+            background: var(--field-bg);
             color: var(--text);
             padding-inline: 15px;
             box-shadow: none;
         }
 
         .profile-form .form-control:hover {
-            border-color: #d8d1c9;
-            background: #f7f4f0;
-        }
-
-        .profile-form .form-control:focus {
-            border-color: var(--accent);
-            background: #fffdfb;
-            box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 18%, transparent);
-        }
-
-        .profile-form .form-control.is-invalid {
-            border-color: color-mix(in srgb, #a35a4a 55%, #e5e0db);
-        }
-
-        html[data-theme="dark"] .profile-form .form-control {
-            border-color: color-mix(in srgb, var(--border) 90%, transparent);
-            background: var(--field-bg);
-        }
-
-        html[data-theme="dark"] .profile-form .form-control:hover {
             border-color: color-mix(in srgb, var(--border) 70%, var(--text-muted));
             background: color-mix(in srgb, var(--field-bg) 88%, var(--surface-elevated));
         }
 
-        html[data-theme="dark"] .profile-form .form-control:focus {
+        .profile-form .form-control:focus {
             border-color: var(--accent);
-            background: color-mix(in srgb, var(--field-bg) 92%, var(--surface-elevated));
+            background: var(--field-bg-strong);
             box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 18%, transparent);
+            outline: none;
+        }
+
+        .profile-form .form-control.is-invalid {
+            border-color: color-mix(in srgb, var(--danger-text) 55%, var(--border));
         }
 
         .profile-field {
@@ -4240,8 +4628,8 @@
 
         .profile-password-input,
         .profile-form .profile-password-input.form-control {
-            border: 1px solid #e5e0db;
-            background: #f9f7f4;
+            border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+            background: var(--field-bg);
             color: var(--text);
             padding-inline-end: 2.85rem;
             box-shadow: none;
@@ -4249,38 +4637,21 @@
 
         .profile-password-input:hover,
         .profile-form .profile-password-input.form-control:hover {
-            border-color: #d8d1c9;
-            background: #f7f4f0;
+            border-color: color-mix(in srgb, var(--border) 70%, var(--text-muted));
+            background: color-mix(in srgb, var(--field-bg) 88%, var(--surface-elevated));
         }
 
         .profile-password-input:focus,
         .profile-form .profile-password-input.form-control:focus {
             border-color: var(--accent);
-            background: #fffdfb;
+            background: var(--field-bg-strong);
             box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 18%, transparent);
+            outline: none;
         }
 
         .profile-password-input.is-invalid,
         .profile-form .profile-password-input.form-control.is-invalid {
-            border-color: color-mix(in srgb, var(--danger, #8b4a3c) 55%, #e5e0db);
-        }
-
-        html[data-theme="dark"] .profile-password-input,
-        html[data-theme="dark"] .profile-form .profile-password-input.form-control {
-            border-color: color-mix(in srgb, var(--border) 90%, transparent);
-            background: var(--field-bg);
-        }
-
-        html[data-theme="dark"] .profile-password-input:hover,
-        html[data-theme="dark"] .profile-form .profile-password-input.form-control:hover {
-            border-color: color-mix(in srgb, var(--border) 70%, var(--text-muted));
-            background: color-mix(in srgb, var(--field-bg) 88%, var(--surface-elevated));
-        }
-
-        html[data-theme="dark"] .profile-password-input:focus,
-        html[data-theme="dark"] .profile-form .profile-password-input.form-control:focus {
-            border-color: var(--accent);
-            background: color-mix(in srgb, var(--field-bg) 92%, var(--surface-elevated));
+            border-color: color-mix(in srgb, var(--danger-text) 55%, var(--border));
         }
 
         .profile-submit-btn--save {
@@ -4957,9 +5328,23 @@
 
             .profile-hero-card,
             .profile-grid,
+            .profile-pref-grid,
             .billing-hero,
             .billing-grid {
                 grid-template-columns: minmax(0, 1fr);
+            }
+
+            .profile-security {
+                flex-wrap: wrap;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .profile-card--password .profile-password-form,
+            .profile-signin-methods {
+                flex: 1 1 auto;
+                max-width: none;
+                width: 100%;
             }
 
             .profile-hero-card {
@@ -5036,10 +5421,12 @@
             .admin-message-actions form,
             .profile-action-btn,
             .profile-submit-btn,
+            .profile-card--password .profile-submit-btn,
             .billing-confirmation-actions,
             .billing-confirmation-actions form {
                 width: 100%;
                 min-width: 0;
+                justify-self: stretch;
             }
 
             .profile-hero-actions .profile-action-btn,
@@ -5140,13 +5527,21 @@
                 overflow: visible;
             }
 
-            .navbar-quick-actions > .dropdown:not(.global-lang-switcher),
+            .navbar-quick-actions > .dropdown:not(.global-lang-switcher):not(.global-theme-switcher),
             .navbar-quick-actions > button:not(.app-lang-toggle) {
                 flex: 0 0 auto;
                 width: var(--tap);
                 min-width: var(--tap);
                 max-width: var(--tap);
                 box-sizing: border-box;
+            }
+
+            .navbar-quick-actions > .global-theme-switcher {
+                flex: 0 0 auto;
+                width: var(--tap);
+                min-width: var(--tap);
+                max-width: var(--tap);
+                overflow: visible;
             }
 
             .navbar-quick-actions > .global-lang-switcher {
@@ -5448,6 +5843,7 @@
             .profile-submit-btn {
                 width: 100%;
                 min-width: 0;
+                justify-self: stretch;
             }
 
             .profile-card-head-split {
@@ -5567,6 +5963,22 @@
                 flex-direction: column !important;
                 gap: 16px !important;
                 grid-template-columns: unset !important;
+            }
+
+            .profile-pref-grid {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) !important;
+                gap: 16px !important;
+            }
+
+            .profile-security {
+                flex-wrap: wrap;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .profile-hero-identity {
+                align-items: center;
             }
 
             .profile-grid > * {
@@ -5853,9 +6265,45 @@
                     </ul>
                 </div>
 
-                <button id="globalThemeToggle" class="btn app-theme-toggle" type="button" aria-label="{{ __('ui.switch_dark') }}">
-                    <i class="bi bi-sun"></i>
-                </button>
+                <div class="global-theme-switcher dropdown" id="globalThemeSwitcher">
+                    <button
+                        id="globalThemeToggle"
+                        class="btn app-theme-toggle"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        data-bs-offset="0,8"
+                        aria-expanded="false"
+                        aria-haspopup="menu"
+                        aria-controls="globalThemeMenu"
+                        aria-label="{{ __('ui.theme_switcher') }}: {{ __('ui.'.$activeThemeMode['label_key']) }}"
+                    >
+                        <i class="bi {{ $activeThemeMode['icon'] }} app-theme-toggle-icon" aria-hidden="true"></i>
+                        <span class="visually-hidden" data-theme-current-label>{{ __('ui.'.$activeThemeMode['label_key']) }}</span>
+                    </button>
+                    <ul
+                        class="dropdown-menu dropdown-menu-end app-theme-menu"
+                        id="globalThemeMenu"
+                        role="menu"
+                        aria-label="{{ __('ui.theme_switcher') }}"
+                    >
+                        @foreach ($appThemeModes as $mode)
+                        <li role="none">
+                            <button
+                                type="button"
+                                class="dropdown-item theme-btn{{ $mode['id'] === $appTheme ? ' active' : '' }}"
+                                role="menuitemradio"
+                                aria-checked="{{ $mode['id'] === $appTheme ? 'true' : 'false' }}"
+                                data-theme-id="{{ $mode['id'] }}"
+                            >
+                                <span class="theme-btn-swatch" style="background: {{ $mode['background_color'] }}" aria-hidden="true"></span>
+                                <i class="bi {{ $mode['icon'] }}" aria-hidden="true"></i>
+                                <span class="theme-btn-label" data-i18n="{{ $mode['label_key'] }}">{{ __('ui.'.$mode['label_key']) }}</span>
+                                <i class="bi bi-check2 theme-btn-check" aria-hidden="true"></i>
+                            </button>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
 
                 @auth
                     {{-- Desktop/tablet account menu; hidden on phone where the offcanvas owns account actions. --}}
@@ -5994,6 +6442,8 @@
         };
         window.mutqinInitialThemePreference = @json($appThemePreference);
         window.mutqinInitialTheme = @json($appTheme);
+        window.mutqinThemeModes = @json(\App\Support\Theme::clientCatalog());
+        window.mutqinDefaultTheme = @json(\App\Support\Theme::DEFAULT);
         window.mutqinAudioPrivacy = @json(\App\Support\AudioPrivacy::clientConfig());
         window.mutqinAiAudioConsent = @json(
             Auth::check()
@@ -6009,8 +6459,8 @@
             fn();
         }
 
-        // Theme management (light → sepia → dark). Vue workspace uses resources/js/utils/theme.js;
-        // keep this inline script in sync when changing cycle order or storage keys.
+        // Theme management. Vue workspace uses resources/js/utils/theme.js;
+        // keep this inline script in sync with App\Support\Theme / THEME_MODES.
         (function() {
             function safeGet(key) {
                 try { return localStorage.getItem(key); } catch (e) { return null; }
@@ -6021,17 +6471,26 @@
             function safeRemove(key) {
                 try { localStorage.removeItem(key); } catch (e) {}
             }
-            function normalizeTheme(value) {
-                if (value === 'dark' || value === 'dark-mode') return 'dark';
-                if (value === 'light' || value === 'light-mode') return 'light';
-                return 'sepia';
+            const themeModes = Array.isArray(window.mutqinThemeModes) ? window.mutqinThemeModes : [];
+            const defaultTheme = window.mutqinDefaultTheme || 'light';
+
+            function findThemeMode(value) {
+                const raw = String(value || '').toLowerCase();
+                return themeModes.find((mode) => mode.id === raw || mode.preference === raw)
+                    || themeModes.find((mode) => mode.id === defaultTheme)
+                    || themeModes[0]
+                    || { id: defaultTheme, preference: defaultTheme + '-mode', icon: 'bi-sun', labelKey: 'theme_light', themeColor: '#8b5e3c', colorScheme: 'light' };
             }
-            function toThemePreference(value) {
-                const theme = normalizeTheme(value);
-                if (theme === 'dark') return 'dark-mode';
-                if (theme === 'light') return 'light-mode';
-                return 'sepia-mode';
+
+            function currentLocale() {
+                return document.documentElement.getAttribute('lang') || window.mutqinInitialLocale || 'en';
             }
+
+            function uiLabel(key, fallback) {
+                const pack = (window.mutqinUiLabels && (window.mutqinUiLabels[currentLocale()] || window.mutqinUiLabels.en)) || {};
+                return pack[key] || fallback || key;
+            }
+
             function themeOwnerId() {
                 if (!window.mutqinAuthCheck) return 'guest';
                 if (window.mutqinUserId != null && String(window.mutqinUserId).trim() !== '') {
@@ -6044,18 +6503,6 @@
             }
             function ownerThemePreferenceKey(ownerId) {
                 return `mutqin-theme-preference.${ownerId || 'guest'}`;
-            }
-            const themes = ['light', 'sepia', 'dark'];
-            const themeIcons = {
-                light: 'bi-sun',
-                sepia: 'bi-book',
-                dark: 'bi-moon-stars'
-            };
-
-            function themeToggleLabel(theme) {
-                if (theme === 'light') return @json(__('ui.switch_sepia'));
-                if (theme === 'sepia') return @json(__('ui.switch_dark'));
-                return @json(__('ui.switch_light'));
             }
 
             function persistThemeToServer(themePreference) {
@@ -6072,15 +6519,35 @@
                     body: JSON.stringify({ theme: themePreference }),
                 }).catch(function () {});
             }
-            
+
+            function syncThemeDropdown(theme) {
+                const mode = findThemeMode(theme);
+                const switcherLabel = uiLabel('theme_switcher', 'Colour mode');
+                const modeLabel = uiLabel(mode.labelKey, mode.id);
+                const button = document.getElementById('globalThemeToggle');
+                if (button) {
+                    const icon = button.querySelector('.app-theme-toggle-icon') || button.querySelector('i');
+                    if (icon) icon.className = `bi ${mode.icon || 'bi-sun'} app-theme-toggle-icon`;
+                    button.setAttribute('aria-label', `${switcherLabel}: ${modeLabel}`);
+                    const currentLabel = button.querySelector('[data-theme-current-label]');
+                    if (currentLabel) currentLabel.textContent = modeLabel;
+                }
+                document.querySelectorAll('#globalThemeMenu .theme-btn[data-theme-id]').forEach((item) => {
+                    const selected = item.getAttribute('data-theme-id') === mode.id;
+                    item.classList.toggle('active', selected);
+                    item.setAttribute('aria-checked', selected ? 'true' : 'false');
+                });
+            }
+
             function setTheme(theme, options) {
                 const persist = !options || options.persist !== false;
-                const normalizedTheme = normalizeTheme(theme);
-                const themePreference = toThemePreference(normalizedTheme);
+                const mode = findThemeMode(theme);
+                const normalizedTheme = mode.id;
+                const themePreference = mode.preference;
                 const ownerId = themeOwnerId();
 
                 document.documentElement.setAttribute('data-theme', normalizedTheme);
-                document.documentElement.style.colorScheme = normalizedTheme === 'dark' ? 'dark' : 'light';
+                document.documentElement.style.colorScheme = mode.colorScheme || 'light';
                 safeSet(ownerThemeKey(ownerId), normalizedTheme);
                 safeSet(ownerThemePreferenceKey(ownerId), themePreference);
                 document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;
@@ -6095,57 +6562,87 @@
                 }
                 var themeColorMeta = document.querySelector('meta[name="theme-color"]');
                 if (themeColorMeta) {
-                    themeColorMeta.setAttribute('content', normalizedTheme === 'dark' ? '#14110f' : '#8b5e3c');
+                    themeColorMeta.setAttribute('content', mode.themeColor || '#8b5e3c');
                     themeColorMeta.removeAttribute('media');
                 }
                 var colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
                 if (colorSchemeMeta) {
-                    colorSchemeMeta.setAttribute('content', normalizedTheme === 'dark' ? 'dark' : 'light');
+                    colorSchemeMeta.setAttribute('content', mode.colorScheme || 'light');
                 }
+                syncThemeDropdown(normalizedTheme);
                 if (persist) {
                     persistThemeToServer(themePreference);
                 }
                 window.dispatchEvent(new CustomEvent('mutqin:theme-change', {
                     detail: { theme: normalizedTheme, ownerId: ownerId },
                 }));
-                
-                const button = document.getElementById('globalThemeToggle');
-                if (button) {
-                    const icon = button.querySelector('i');
-                    icon.className = `bi ${themeIcons[normalizedTheme] || themeIcons.sepia}`;
-                    button.setAttribute('aria-label', themeToggleLabel(normalizedTheme));
-                }
 
                 const favicon = document.getElementById('appThemeFavicon');
                 if (favicon) {
                     favicon.setAttribute('href', '/favicon-512.png?v=20260730c');
                 }
+
+                return normalizedTheme;
             }
-            
-            function cycleTheme() {
-                const current = document.documentElement.getAttribute('data-theme') || 'sepia';
-                const currentIndex = themes.indexOf(current);
-                const nextIndex = (currentIndex + 1) % themes.length;
-                setTheme(themes[nextIndex]);
-            }
-            
+
+            window.mutqinSetTheme = setTheme;
+
             // Authenticated: account theme from server only (never shared-device localStorage).
-            // Guests: owner-scoped cache, then legacy keys / SSR cookie / sepia.
+            // Guests: owner-scoped cache, then legacy keys / SSR cookie / light.
             const ownerId = themeOwnerId();
             const scopedTheme = safeGet(ownerThemeKey(ownerId));
             const scopedPreference = safeGet(ownerThemePreferenceKey(ownerId));
             const savedThemePreference = safeGet('mutqin-theme-preference');
             const savedTheme = safeGet('mutqin-theme');
             const initialTheme = window.mutqinAuthCheck
-                ? (window.mutqinInitialTheme || window.mutqinInitialThemePreference || 'sepia')
-                : (scopedTheme || scopedPreference || savedTheme || savedThemePreference || window.mutqinInitialThemePreference || window.mutqinInitialTheme || 'sepia');
+                ? (window.mutqinInitialTheme || window.mutqinInitialThemePreference || defaultTheme)
+                : (scopedTheme || scopedPreference || savedTheme || savedThemePreference || window.mutqinInitialThemePreference || window.mutqinInitialTheme || defaultTheme);
             setTheme(initialTheme, { persist: false });
-            
-            runWhenReady(function() {
-                const themeButton = document.getElementById('globalThemeToggle');
-                if (themeButton) {
-                    themeButton.addEventListener('click', cycleTheme);
+
+            function bindThemeDropdown() {
+                const toggle = document.getElementById('globalThemeToggle');
+                if (!toggle) return false;
+                if (!window.bootstrap?.Dropdown) return false;
+                window.bootstrap.Dropdown.getOrCreateInstance(toggle);
+                document.querySelectorAll('#globalThemeMenu .theme-btn[data-theme-id]').forEach((btn) => {
+                    if (btn.dataset.themeBound) return;
+                    btn.dataset.themeBound = '1';
+                    btn.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setTheme(btn.getAttribute('data-theme-id'));
+                        window.bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
+                    });
+                });
+                return true;
+            }
+
+            function initThemeDropdown() {
+                document.querySelectorAll('#globalThemeMenu .theme-btn[data-theme-id]').forEach((btn) => {
+                    if (btn.dataset.themeBound) return;
+                    btn.dataset.themeBound = '1';
+                    btn.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setTheme(btn.getAttribute('data-theme-id'));
+                        const toggle = document.getElementById('globalThemeToggle');
+                        if (toggle && window.bootstrap?.Dropdown) {
+                            window.bootstrap.Dropdown.getOrCreateInstance(toggle).hide();
+                        }
+                    });
+                });
+                if (!bindThemeDropdown()) {
+                    window.addEventListener('load', bindThemeDropdown, { once: true });
                 }
+            }
+
+            runWhenReady(initThemeDropdown);
+            window.addEventListener('mutqin:theme-change', function (event) {
+                const next = event?.detail?.theme || document.documentElement.getAttribute('data-theme');
+                if (next) syncThemeDropdown(next);
+            });
+            window.addEventListener('mutqin:locale-change', function () {
+                syncThemeDropdown(document.documentElement.getAttribute('data-theme') || defaultTheme);
             });
         })();
 
@@ -6442,5 +6939,6 @@
             });
         })();
     </script>
+    @stack('page-scripts')
 </body>
 </html>
