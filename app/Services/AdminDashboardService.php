@@ -27,19 +27,32 @@ use Illuminate\Support\Str;
  */
 class AdminDashboardService
 {
-    private const BUILD_CACHE_TTL_SECONDS = 90;
+    private const BUILD_CACHE_TTL_SECONDS = 20;
+
+    private const CACHE_VERSION_KEY = 'admin-dashboard:version';
+
+    /**
+     * Bust all admin dashboard snapshot caches (KPI / chart payload).
+     * Call after user signup, auth, feedback, or admin mutations.
+     */
+    public static function invalidateCaches(): void
+    {
+        $current = (int) Cache::get(self::CACHE_VERSION_KEY, 1);
+        Cache::forever(self::CACHE_VERSION_KEY, $current + 1);
+    }
 
     /**
      * @return array<string, mixed>
      */
-    public function build(User $admin, int $chartDays = 30): array
+    public function build(User $admin, int $chartDays = 30, bool $fresh = false): array
     {
         $chartDays = in_array($chartDays, [7, 30], true) ? $chartDays : 30;
-        if (app()->runningUnitTests()) {
+        if ($fresh || app()->runningUnitTests()) {
             return $this->buildFresh($admin, $chartDays);
         }
 
-        $cacheKey = 'admin-dashboard:v1:'.$admin->id.':'.$chartDays;
+        $version = (int) Cache::get(self::CACHE_VERSION_KEY, 1);
+        $cacheKey = 'admin-dashboard:v'.$version.':'.$admin->id.':'.$chartDays;
 
         return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($admin, $chartDays) {
             return $this->buildFresh($admin, $chartDays);
@@ -136,6 +149,7 @@ class AdminDashboardService
             'subscription_tier',
             'subscription_current_period_ends_at',
             'created_at',
+            'last_login_at',
         ]);
 
         if ($search !== '') {
@@ -160,44 +174,59 @@ class AdminDashboardService
         }
 
         if ($activity === 'today') {
-            $query->whereIn('id', function ($sub) {
-                $sub->select('user_id')
-                    ->from('user_sessions')
-                    ->where('is_onboarding_example', false)
-                    ->whereNotNull('user_id')
-                    ->where('last_activity_at', '>=', now()->startOfDay());
+            $query->where(function ($outer) {
+                $outer->where('last_login_at', '>=', now()->startOfDay())
+                    ->orWhereIn('id', function ($sub) {
+                        $sub->select('user_id')
+                            ->from('user_sessions')
+                            ->where('is_onboarding_example', false)
+                            ->whereNotNull('user_id')
+                            ->where('last_activity_at', '>=', now()->startOfDay());
+                    });
             });
         } elseif ($activity === 'active_7d') {
-            $query->whereIn('id', function ($sub) {
-                $sub->select('user_id')
-                    ->from('user_sessions')
-                    ->where('is_onboarding_example', false)
-                    ->whereNotNull('user_id')
-                    ->where('last_activity_at', '>=', now()->subDays(7));
+            $query->where(function ($outer) {
+                $outer->where('last_login_at', '>=', now()->subDays(7))
+                    ->orWhereIn('id', function ($sub) {
+                        $sub->select('user_id')
+                            ->from('user_sessions')
+                            ->where('is_onboarding_example', false)
+                            ->whereNotNull('user_id')
+                            ->where('last_activity_at', '>=', now()->subDays(7));
+                    });
             });
         } elseif ($activity === 'active_30d') {
-            $query->whereIn('id', function ($sub) {
-                $sub->select('user_id')
-                    ->from('user_sessions')
-                    ->where('is_onboarding_example', false)
-                    ->whereNotNull('user_id')
-                    ->where('last_activity_at', '>=', now()->subDays(30));
+            $query->where(function ($outer) {
+                $outer->where('last_login_at', '>=', now()->subDays(30))
+                    ->orWhereIn('id', function ($sub) {
+                        $sub->select('user_id')
+                            ->from('user_sessions')
+                            ->where('is_onboarding_example', false)
+                            ->whereNotNull('user_id')
+                            ->where('last_activity_at', '>=', now()->subDays(30));
+                    });
             });
         } elseif ($activity === 'never') {
-            $query->whereNotIn('id', function ($sub) {
-                $sub->select('user_id')
-                    ->from('user_sessions')
-                    ->where('is_onboarding_example', false)
-                    ->whereNotNull('user_id');
-            });
+            $query->whereNull('last_login_at')
+                ->whereNotIn('id', function ($sub) {
+                    $sub->select('user_id')
+                        ->from('user_sessions')
+                        ->where('is_onboarding_example', false)
+                        ->whereNotNull('user_id');
+                });
         } elseif ($activity === 'inactive_30d') {
             $activeIds = UserSession::query()
                 ->where('is_onboarding_example', false)
                 ->whereNotNull('user_id')
                 ->where('last_activity_at', '>=', now()->subDays(30))
                 ->distinct()
-                ->pluck('user_id');
-            $query->whereNotIn('id', $activeIds->all());
+                ->pluck('user_id')
+                ->all();
+            $loginActiveIds = User::query()
+                ->where('last_login_at', '>=', now()->subDays(30))
+                ->pluck('id')
+                ->all();
+            $query->whereNotIn('id', array_values(array_unique(array_merge($activeIds, $loginActiveIds))));
         }
 
         if ($progress === 'has') {
@@ -316,6 +345,8 @@ class AdminDashboardService
                 ->whereIn('id', $ids->all())
                 ->update(['subscription_status' => $status]);
 
+            self::invalidateCaches();
+
             return [
                 'updated' => (int) $updated,
                 'deleted' => 0,
@@ -339,6 +370,8 @@ class AdminDashboardService
                 app(LearningHistoryRetentionService::class)->deleteUserAccount($user, $actor);
                 $deleted++;
             }
+
+            self::invalidateCaches();
 
             return compact('updated', 'deleted', 'skipped');
         }
@@ -365,6 +398,8 @@ class AdminDashboardService
             'subscription_status' => $this->normalizeSubscriptionStatus($data['subscription_status'] ?? 'none'),
             'subscription_tier' => $this->normalizeSubscriptionTier($data['subscription_tier'] ?? 'none'),
         ]);
+
+        self::invalidateCaches();
 
         return $this->enrichUsersWithProgress(collect([$user]))->first()
             ?? ['id' => (int) $user->id, 'email' => $user->email];
@@ -400,6 +435,7 @@ class AdminDashboardService
 
         if ($payload !== []) {
             $user->fill($payload)->save();
+            self::invalidateCaches();
         }
 
         return $this->enrichUsersWithProgress(collect([$user->fresh()]))->first()
@@ -413,6 +449,7 @@ class AdminDashboardService
         }
 
         app(LearningHistoryRetentionService::class)->deleteUserAccount($user, $actor);
+        self::invalidateCaches();
     }
 
     public function deleteNote(AyahNote $note): void
@@ -758,19 +795,44 @@ class AdminDashboardService
             ->where('created_at', '<', $now->copy()->subDays(7))
             ->count();
 
-        $active7d = (int) UserSession::query()
+        $active7dSessions = (int) UserSession::query()
             ->where('is_onboarding_example', false)
             ->where('last_activity_at', '>=', $now->copy()->subDays(7))
             ->whereNotNull('user_id')
             ->selectRaw('COUNT(DISTINCT user_id) as aggregate')
             ->value('aggregate');
-        $activePrev7d = (int) UserSession::query()
-            ->where('is_onboarding_example', false)
-            ->where('last_activity_at', '>=', $now->copy()->subDays(14))
-            ->where('last_activity_at', '<', $now->copy()->subDays(7))
-            ->whereNotNull('user_id')
-            ->selectRaw('COUNT(DISTINCT user_id) as aggregate')
-            ->value('aggregate');
+        $active7dLogins = User::query()
+            ->where('last_login_at', '>=', $now->copy()->subDays(7))
+            ->count();
+        // Distinct union approximation: prefer max of session-active and login-active counts
+        // when overlap is unknown at query cost; exact distinct via subquery:
+        $active7d = (int) User::query()
+            ->where(function ($outer) use ($now) {
+                $outer->where('last_login_at', '>=', $now->copy()->subDays(7))
+                    ->orWhereIn('id', function ($sub) use ($now) {
+                        $sub->select('user_id')
+                            ->from('user_sessions')
+                            ->where('is_onboarding_example', false)
+                            ->whereNotNull('user_id')
+                            ->where('last_activity_at', '>=', $now->copy()->subDays(7));
+                    });
+            })
+            ->count();
+        $activePrev7d = (int) User::query()
+            ->where(function ($outer) use ($now) {
+                $outer->where(function ($inner) use ($now) {
+                    $inner->where('last_login_at', '>=', $now->copy()->subDays(14))
+                        ->where('last_login_at', '<', $now->copy()->subDays(7));
+                })->orWhereIn('id', function ($sub) use ($now) {
+                    $sub->select('user_id')
+                        ->from('user_sessions')
+                        ->where('is_onboarding_example', false)
+                        ->whereNotNull('user_id')
+                        ->where('last_activity_at', '>=', $now->copy()->subDays(14))
+                        ->where('last_activity_at', '<', $now->copy()->subDays(7));
+                });
+            })
+            ->count();
 
         $sessionsCompleted = UserSession::query()
             ->where('is_onboarding_example', false)
@@ -826,12 +888,30 @@ class AdminDashboardService
             ->where('created_at', '<', $now->copy()->subDays(7))
             ->count();
 
+        $feedbackOpen = Feedback::query()
+            ->whereIn('status', [Feedback::STATUS_NEW, Feedback::STATUS_REVIEWING])
+            ->count();
+        $feedbackLast7d = Feedback::query()
+            ->where('created_at', '>=', $now->copy()->subDays(7))
+            ->count();
+        $feedbackPrev7d = Feedback::query()
+            ->where('created_at', '>=', $now->copy()->subDays(14))
+            ->where('created_at', '<', $now->copy()->subDays(7))
+            ->count();
+        $feedbackTotal = Feedback::query()->count();
+
         return [
             'users_total' => [
                 'key' => 'users_total',
                 'value' => $usersTotal,
                 'delta_7d' => $usersNew7d,
                 'trend_percent' => $this->trendPercent($usersNew7d, $usersPrev7d),
+            ],
+            'feedback_open' => [
+                'key' => 'feedback_open',
+                'value' => $feedbackOpen,
+                'total' => $feedbackTotal,
+                'trend_percent' => $this->trendPercent($feedbackLast7d, $feedbackPrev7d),
             ],
             'active_users' => [
                 'key' => 'active_users',
@@ -1110,6 +1190,19 @@ class AdminDashboardService
             $position = $positions->get($user->id);
             $surah = (int) ($position?->surah_number ?? 0);
 
+            $sessionActivity = isset($lastActivity[$user->id])
+                ? Carbon::parse($lastActivity[$user->id])
+                : null;
+            $loginActivity = $user->last_login_at
+                ? Carbon::parse($user->last_login_at)
+                : null;
+            $bestActivity = null;
+            if ($sessionActivity && $loginActivity) {
+                $bestActivity = $sessionActivity->greaterThan($loginActivity) ? $sessionActivity : $loginActivity;
+            } else {
+                $bestActivity = $sessionActivity ?: $loginActivity;
+            }
+
             return [
                 'id' => (int) $user->id,
                 'name' => (string) $user->name,
@@ -1120,6 +1213,7 @@ class AdminDashboardService
                 'subscription_tier' => $user->subscription_tier,
                 'subscription_current_period_ends_at' => optional($user->subscription_current_period_ends_at)->toIso8601String(),
                 'created_at' => optional($user->created_at)->toIso8601String(),
+                'last_login_at' => optional($user->last_login_at)->toIso8601String(),
                 'sessions_completed' => (int) ($sessionCounts[$user->id] ?? 0),
                 'memorised_ayahs' => (int) ($memorisedCounts[$user->id] ?? 0),
                 'learning_ayahs' => (int) ($learningCounts[$user->id] ?? 0),
@@ -1130,9 +1224,7 @@ class AdminDashboardService
                 'last_ai_check_at' => $ai?->last_at
                     ? Carbon::parse($ai->last_at)->toIso8601String()
                     : null,
-                'last_activity_at' => isset($lastActivity[$user->id])
-                    ? Carbon::parse($lastActivity[$user->id])->toIso8601String()
-                    : null,
+                'last_activity_at' => $bestActivity?->toIso8601String(),
                 'current_surah_number' => $surah ?: null,
                 'current_surah_name' => $surah > 0 ? QuranMetadata::name($surah) : null,
                 'current_ayah' => $position?->ayah_number ? (int) $position->ayah_number : null,

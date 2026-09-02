@@ -2,7 +2,7 @@
   <main
     id="mainContent"
     class="admin-console"
-    :class="{ 'has-bulkbar': selectedIds.length > 0 }"
+    :class="{ 'has-bulkbar': selectedIds.length > 0 || selectedFeedbackIds.length > 0 }"
     tabindex="-1"
     @keydown="onConsoleKeydown"
   >
@@ -100,21 +100,44 @@
           </div>
         </header>
 
-        <!-- USERS -->
-        <section ref="usersSection" class="admin-users admin-reveal" style="--admin-delay: 120ms" :aria-label="t('admin.users_title')">
+        <!-- DIRECTORY -->
+        <section ref="usersSection" class="admin-users admin-reveal" style="--admin-delay: 120ms" :aria-label="directoryTab === 'feedback' ? t('admin.feedback_title') : t('admin.users_title')">
           <header class="admin-users__header">
             <div class="admin-users__title-block">
-              <p class="admin-eyebrow">{{ t('admin.learners_title') }}</p>
+              <p class="admin-eyebrow">{{ directoryTab === 'feedback' ? t('admin.feedback_kicker') : t('admin.learners_title') }}</p>
               <div class="admin-users__title-row">
                 <span class="admin-users__title-icon" aria-hidden="true">
-                  <i class="bi bi-people-fill" aria-hidden="true"></i>
+                  <i class="bi" :class="directoryTab === 'feedback' ? 'bi-chat-left-text-fill' : 'bi-people-fill'" aria-hidden="true"></i>
                 </span>
-                <h2 class="admin-users__title">{{ t('admin.users_title') }}</h2>
-                <span class="admin-users__count">{{ usersTotal }}</span>
+                <h2 class="admin-users__title">{{ directoryTab === 'feedback' ? t('admin.feedback_title') : t('admin.users_title') }}</h2>
+                <span class="admin-users__count">{{ directoryTab === 'feedback' ? feedbackTotal : usersTotal }}</span>
               </div>
-              <p class="admin-users__subtitle">{{ t('admin.users_subtitle') }}</p>
+              <p class="admin-users__subtitle">{{ directoryTab === 'feedback' ? t('admin.feedback_subtitle') : t('admin.users_subtitle') }}</p>
+              <div class="admin-directory-tabs" role="tablist" :aria-label="t('admin.directory_tabs')">
+                <button
+                  type="button"
+                  role="tab"
+                  class="admin-directory-tab"
+                  :class="{ 'is-active': directoryTab === 'learners' }"
+                  :aria-selected="directoryTab === 'learners' ? 'true' : 'false'"
+                  @click="setDirectoryTab('learners')"
+                >
+                  {{ t('admin.tab_learners') }}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  class="admin-directory-tab"
+                  :class="{ 'is-active': directoryTab === 'feedback' }"
+                  :aria-selected="directoryTab === 'feedback' ? 'true' : 'false'"
+                  @click="setDirectoryTab('feedback')"
+                >
+                  {{ t('admin.tab_feedback') }}
+                  <span v-if="feedbackOpenCount > 0" class="admin-directory-tab__badge">{{ feedbackOpenCount }}</span>
+                </button>
+              </div>
             </div>
-            <div class="admin-users__actions mobile-actions">
+            <div v-if="directoryTab === 'learners'" class="admin-users__actions mobile-actions">
               <button type="button" class="admin-btn admin-btn--primary admin-users__action" @click="openCreateModal">
                 <i class="bi bi-plus-lg" aria-hidden="true"></i>
                 <span>{{ t('admin.add_user') }}</span>
@@ -126,6 +149,7 @@
             </div>
           </header>
 
+          <template v-if="directoryTab === 'learners'">
           <div class="admin-toolbar">
             <div class="admin-toolbar__row">
               <div class="admin-toolbar__search-wrap">
@@ -166,9 +190,10 @@
               <select
                 v-model="sortKey"
                 class="admin-toolbar__select admin-toolbar__select--sort"
-                :aria-label="t('admin.sort_last_active')"
+                :aria-label="t('admin.sort_created')"
                 @change="onFilterChange"
               >
+                <option value="created">{{ t('admin.sort_created') }}</option>
                 <option value="last_active">{{ t('admin.sort_last_active') }}</option>
                 <option value="sessions">{{ t('admin.sort_sessions') }}</option>
                 <option value="memorised">{{ t('admin.sort_memorised') }}</option>
@@ -391,16 +416,16 @@
                           <span class="admin-table__email" :title="row.email">{{ row.email }}</span>
                         </div>
                       </td>
-                      <td class="admin-num" :class="{ 'is-empty': !Number(row.memorised_ayahs) }">
+                      <td class="admin-num admin-num--memorised" :class="{ 'is-empty': !Number(row.memorised_ayahs) }">
                         {{ memorisedLabel(row.memorised_ayahs) }}
                       </td>
-                      <td class="admin-num" :class="{ 'is-empty': !Number(row.sessions_completed) }">
+                      <td class="admin-num admin-num--sessions" :class="{ 'is-empty': !Number(row.sessions_completed) }">
                         {{ sessionsLabel(row.sessions_completed) }}
                       </td>
-                      <td class="admin-num" :class="{ 'is-empty': !Number(row.learning_ayahs) }">
+                      <td class="admin-num admin-num--learning" :class="{ 'is-empty': !Number(row.learning_ayahs) }">
                         {{ learningLabel(row.learning_ayahs) }}
                       </td>
-                      <td class="admin-num" :class="{ 'is-empty': !row.last_activity_at }">
+                      <td class="admin-num admin-num--active" :class="{ 'is-empty': !row.last_activity_at }">
                         <span :title="row.last_activity_at ? (formatDateShort(row.last_activity_at) || undefined) : undefined">
                           {{ lastActiveLabel(row.last_activity_at) }}
                         </span>
@@ -413,39 +438,19 @@
                           :aria-label="activityStatusLabel(row)"
                         ></i>
                       </td>
-                      <td class="admin-table__actions" @click.stop>
-                        <div class="admin-row-menu" :class="{ 'is-open': rowMenuId === row.id }">
-                          <button
-                            type="button"
-                            class="admin-row-menu__btn"
-                            :aria-label="t('admin.row_actions')"
-                            :aria-expanded="rowMenuId === row.id ? 'true' : 'false'"
-                            @click="toggleRowMenu(row.id)"
-                          >
-                            <span aria-hidden="true">⋮</span>
-                          </button>
-                          <div v-if="rowMenuId === row.id" class="admin-row-menu__panel" role="menu">
-                            <button type="button" role="menuitem" @click="askResetPassword(row)">
-                              {{ t('admin.action_reset_password') }}
-                            </button>
-                            <a role="menuitem" :href="`mailto:${row.email}`" @click="rowMenuId = null">
-                              {{ t('admin.action_send_email') }}
-                            </a>
+                        <td class="admin-table__actions" @click.stop>
+                          <div class="admin-row-menu" :class="{ 'is-open': rowMenuId === row.id }">
                             <button
                               type="button"
-                              role="menuitem"
-                              class="is-danger"
-                              :disabled="Number(row.id) === ownerId || row.subscription_status === 'canceled'"
-                              @click="askDeactivate(row)"
+                              class="admin-row-menu__btn"
+                              :aria-label="t('admin.row_actions')"
+                              :aria-expanded="rowMenuId === row.id ? 'true' : 'false'"
+                              @click="toggleRowMenu(row.id, $event)"
                             >
-                              {{ t('admin.action_deactivate') }}
-                            </button>
-                            <button type="button" role="menuitem" @click="viewAsLearner">
-                              {{ t('admin.action_view_as_learner') }}
+                              <span aria-hidden="true">⋮</span>
                             </button>
                           </div>
-                        </div>
-                      </td>
+                        </td>
                     </tr>
                   </tbody>
                 </table>
@@ -484,6 +489,231 @@
               </button>
             </div>
           </div>
+          </template>
+
+          <template v-else>
+            <div class="admin-toolbar">
+              <div class="admin-toolbar__row">
+                <div class="admin-toolbar__search-wrap">
+                  <i class="bi bi-search admin-toolbar__search-icon" aria-hidden="true"></i>
+                  <input
+                    v-model.trim="feedbackFilters.q"
+                    type="search"
+                    class="admin-toolbar__search"
+                    :placeholder="t('admin.feedback_search')"
+                    @input="onFeedbackSearchInput"
+                  >
+                </div>
+                <div class="admin-toolbar__controls">
+                  <select
+                    v-model="feedbackFilters.status"
+                    class="admin-toolbar__select"
+                    :aria-label="t('admin.feedback.filterStatus')"
+                    @change="onFeedbackFilterChange"
+                  >
+                    <option value="">{{ t('admin.feedback.allStatuses') }}</option>
+                    <option v-for="status in feedbackStatuses" :key="status" :value="status">
+                      {{ feedbackStatusLabel(status) }}
+                    </option>
+                  </select>
+                  <select
+                    v-model="feedbackFilters.type"
+                    class="admin-toolbar__select"
+                    :aria-label="t('admin.feedback.filterType')"
+                    @change="onFeedbackFilterChange"
+                  >
+                    <option value="">{{ t('admin.feedback.allTypes') }}</option>
+                    <option v-for="type in feedbackTypes" :key="type" :value="type">
+                      {{ feedbackTypeLabel(type) }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <p class="admin-results-count">
+                {{ t('admin.showing_x_of_y', { shown: feedbackItems.length, total: feedbackTotal }) }}
+              </p>
+            </div>
+
+            <p v-if="feedbackLoading" class="admin-empty">{{ t('admin.drawer_loading') }}</p>
+            <p v-else-if="feedbackError" class="admin-empty" role="alert">{{ feedbackError }}</p>
+            <div v-else-if="!feedbackItems.length" class="admin-users-empty" role="status">
+              <i class="bi bi-chat-left admin-users-empty__icon" aria-hidden="true"></i>
+              <p class="admin-users-empty__title">{{ t('admin.feedback.empty') }}</p>
+            </div>
+            <div v-else class="admin-users-list">
+              <ul class="admin-user-cards" role="list" :aria-label="t('admin.feedback_title')">
+                <li
+                  v-for="row in feedbackItems"
+                  :key="`fb-card-${row.id}`"
+                  class="admin-user-card admin-feedback-mobile-card"
+                  :class="{ 'is-selected': selectedFeedbackIds.includes(row.id) }"
+                >
+                  <div class="admin-user-card__row">
+                    <label class="admin-user-card__check" @click.stop>
+                      <input
+                        type="checkbox"
+                        :checked="selectedFeedbackIds.includes(row.id)"
+                        :aria-label="row.user?.name || t('admin.unnamed')"
+                        @change="toggleFeedbackSelect(row.id)"
+                      >
+                    </label>
+                    <button
+                      type="button"
+                      class="admin-user-card__main"
+                      @click="openFeedbackDetail(row.id)"
+                    >
+                      <div class="admin-user-card__top">
+                        <div class="admin-user-card__who">
+                          <strong>{{ row.user?.name || t('admin.unnamed') }}</strong>
+                          <span class="admin-user-card__email">{{ row.user?.email || '' }}</span>
+                        </div>
+                        <span class="admin-feedback-status" :data-status="row.status">
+                          {{ feedbackStatusLabel(row.status) }}
+                        </span>
+                      </div>
+                      <p class="admin-feedback-mobile-card__preview">{{ row.message_preview }}</p>
+                      <div class="admin-user-card__footer">
+                        <span class="admin-feedback-type" :data-type="row.type">{{ feedbackTypeLabel(row.type) }}</span>
+                        <span class="admin-user-card__active">{{ formatDateShort(row.created_at) || '—' }}</span>
+                      </div>
+                    </button>
+                  </div>
+                </li>
+              </ul>
+
+              <div class="admin-table-shell">
+                <div class="admin-table-wrap" role="listbox" :aria-label="t('admin.feedback_title')">
+                  <table class="admin-table admin-feedback-table">
+                    <colgroup>
+                      <col class="admin-col-check">
+                      <col class="admin-col-learner">
+                      <col class="admin-col-fb-type">
+                      <col class="admin-col-fb-preview">
+                      <col class="admin-col-date">
+                      <col class="admin-col-status">
+                      <col class="admin-col-actions">
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th class="admin-table__check">
+                          <input
+                            type="checkbox"
+                            :checked="allVisibleFeedbackSelected"
+                            :aria-label="t('admin.select_all')"
+                            @change="toggleSelectAllFeedback"
+                          >
+                        </th>
+                        <th class="admin-table__learner">{{ t('admin.feedback.colUser') }}</th>
+                        <th>{{ t('admin.feedback.colType') }}</th>
+                        <th>{{ t('admin.feedback.colPreview') }}</th>
+                        <th>{{ t('admin.feedback.colDate') }}</th>
+                        <th class="admin-table__status" :title="t('admin.feedback.colStatus')">
+                          <span class="visually-hidden">{{ t('admin.feedback.colStatus') }}</span>
+                        </th>
+                        <th class="admin-table__actions"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="row in feedbackItems"
+                        :key="row.id"
+                        :class="{
+                          'is-selected': selectedFeedbackIds.includes(row.id),
+                          'has-menu-open': feedbackMenuId === row.id,
+                        }"
+                        tabindex="0"
+                        @click="openFeedbackDetail(row.id)"
+                        @keydown.enter.prevent="openFeedbackDetail(row.id)"
+                      >
+                        <td class="admin-table__check" @click.stop>
+                          <input
+                            type="checkbox"
+                            :checked="selectedFeedbackIds.includes(row.id)"
+                            @change="toggleFeedbackSelect(row.id)"
+                          >
+                        </td>
+                        <td class="admin-table__learner">
+                          <div class="admin-table__who">
+                            <strong :title="row.user?.name || t('admin.unnamed')">
+                              {{ row.user?.name || t('admin.unnamed') }}
+                            </strong>
+                            <span class="admin-table__email" :title="row.user?.email || ''">
+                              {{ row.user?.email || '' }}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="admin-feedback-type" :data-type="row.type">
+                            {{ feedbackTypeLabel(row.type) }}
+                          </span>
+                        </td>
+                        <td>
+                          <span class="admin-feedback-preview-text" :title="row.message_preview">
+                            {{ row.message_preview }}
+                          </span>
+                        </td>
+                        <td class="admin-num">
+                          {{ formatDateShort(row.created_at) || '—' }}
+                        </td>
+                        <td class="admin-table__status">
+                          <i
+                            class="admin-status-dot"
+                            :data-feedback-status="row.status"
+                            :title="feedbackStatusLabel(row.status)"
+                            :aria-label="feedbackStatusLabel(row.status)"
+                          ></i>
+                        </td>
+                        <td class="admin-table__actions" @click.stop>
+                          <div class="admin-row-menu" :class="{ 'is-open': feedbackMenuId === row.id }">
+                            <button
+                              type="button"
+                              class="admin-row-menu__btn"
+                              :aria-label="t('admin.row_actions')"
+                              :aria-expanded="feedbackMenuId === row.id ? 'true' : 'false'"
+                              @click="toggleFeedbackMenu(row.id, $event)"
+                            >
+                              <span aria-hidden="true">⋮</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div v-if="feedbackTotalPages > 1" class="admin-pagination">
+              <div class="admin-pagination__controls">
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--ghost admin-btn--sm"
+                  :disabled="feedbackPage <= 1 || feedbackLoading"
+                  @click="loadFeedback(feedbackPage - 1)"
+                >
+                  {{ t('admin.pagination_prev') }}
+                </button>
+                <button
+                  v-for="page in feedbackPageNumbers"
+                  :key="`fb-p-${page}`"
+                  type="button"
+                  class="admin-btn admin-btn--ghost admin-btn--sm admin-pagination__page"
+                  :class="{ 'is-active': page === feedbackPage }"
+                  :disabled="feedbackLoading"
+                  @click="loadFeedback(page)"
+                >
+                  {{ page }}
+                </button>
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--ghost admin-btn--sm"
+                  :disabled="feedbackPage >= feedbackTotalPages || feedbackLoading"
+                  @click="loadFeedback(feedbackPage + 1)"
+                >
+                  {{ t('admin.pagination_next') }}
+                </button>
+              </div>
+            </div>
+          </template>
         </section>
       </template>
     </div>
@@ -797,36 +1027,11 @@
       </div>
     </div>
 
-    <!-- Action confirm modal (reset / deactivate) -->
-    <div v-if="confirmOpen" class="admin-modal-root" role="dialog" aria-modal="true" :aria-label="confirmTitle">
-      <button type="button" class="admin-modal__backdrop" :aria-label="t('admin.drawer_close')" @click="closeConfirmModal"></button>
-      <div class="admin-modal">
-        <header class="admin-modal__head">
-          <h2>{{ confirmTitle }}</h2>
-          <button type="button" class="admin-icon-btn" :aria-label="t('admin.drawer_close')" @click="closeConfirmModal">
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
-        </header>
-        <p class="admin-muted">{{ confirmMessage }}</p>
-        <div class="admin-form__actions">
-          <button type="button" class="admin-btn admin-btn--ghost" @click="closeConfirmModal">{{ t('admin.cancel') }}</button>
-          <button
-            type="button"
-            class="admin-btn"
-            :class="confirmKind === 'deactivate' ? 'admin-btn--danger' : 'admin-btn--primary'"
-            :disabled="confirmBusy"
-            @click="runConfirmAction"
-          >
-            {{ confirmBusy ? t('admin.saving') : confirmTitle }}
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- Floating bulk actions (fixed; kept in console for theme tokens) -->
-    <Transition name="admin-bulkbar">
+    <Transition name="admin-bulkbar" mode="out-in">
       <div
-        v-if="selectedIds.length"
+        v-if="directoryTab === 'learners' && selectedIds.length"
+        key="learners-bulk"
         class="admin-bulkbar-float"
         role="toolbar"
         :aria-label="t('admin.bulk_selected', { n: selectedIds.length })"
@@ -890,12 +1095,204 @@
           </button>
         </div>
       </div>
+      <div
+        v-else-if="directoryTab === 'feedback' && selectedFeedbackIds.length"
+        key="feedback-bulk"
+        class="admin-bulkbar-float"
+        role="toolbar"
+        :aria-label="t('admin.bulk_selected', { n: selectedFeedbackIds.length })"
+      >
+        <div class="admin-bulkbar-float__inner">
+          <span class="admin-bulkbar-float__count">
+            {{ t('admin.bulk_selected', { n: selectedFeedbackIds.length }) }}
+          </span>
+          <div class="admin-bulkbar-float__actions">
+            <button
+              type="button"
+              class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn"
+              :disabled="bulkBusy || !!feedbackDeletingId"
+              @click="askBulkDeleteFeedback"
+            >
+              {{ t('admin.feedback.bulkDelete') }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="admin-bulkbar-float__close"
+            :aria-label="t('admin.bulk_dismiss')"
+            @click="selectedFeedbackIds = []"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
     </Transition>
 
     <!-- Toast -->
     <div v-if="toastMessage" class="admin-toast" role="status" aria-live="polite">
       {{ toastMessage }}
     </div>
+
+    <!-- Feedback detail modal (inherits admin-console theme tokens) -->
+    <div
+      v-if="feedbackDetail"
+      class="admin-modal-root"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="t('admin.feedback.detailTitle')"
+    >
+      <button type="button" class="admin-modal__backdrop" :aria-label="t('common.close')" @click="closeFeedbackDetail"></button>
+      <div class="admin-modal admin-modal--feedback">
+        <header class="admin-modal__head">
+          <div class="admin-modal__head-copy">
+            <h2>{{ t('admin.feedback.detailTitle') }} #{{ feedbackDetail.id }}</h2>
+            <p class="admin-muted">
+              {{ feedbackTypeLabel(feedbackDetail.type) }}
+              · {{ feedbackDetail.user?.name || feedbackDetail.user?.email || t('admin.unnamed') }}
+            </p>
+          </div>
+          <button type="button" class="admin-icon-btn" :aria-label="t('common.close')" @click="closeFeedbackDetail">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="admin-feedback-detail">
+          <p class="admin-feedback-detail__message">{{ feedbackDetail.message }}</p>
+
+          <dl class="admin-feedback-detail__meta">
+            <div>
+              <dt>{{ t('admin.feedback.colArea') }}</dt>
+              <dd>{{ feedbackDetail.route || '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ t('admin.feedback.colDevice') }}</dt>
+              <dd>{{ feedbackDetail.device || '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ t('admin.feedback.theme') }}</dt>
+              <dd>{{ feedbackDetail.theme || '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ t('admin.feedback.colDate') }}</dt>
+              <dd>{{ formatDateShort(feedbackDetail.created_at) || '—' }}</dd>
+            </div>
+          </dl>
+
+          <form class="admin-form" @submit.prevent="saveFeedbackDetail">
+            <label>
+              <span>{{ t('admin.feedback.status') }}</span>
+              <select v-model="feedbackDetailForm.status">
+                <option v-for="status in feedbackStatuses" :key="status" :value="status">
+                  {{ feedbackStatusLabel(status) }}
+                </option>
+              </select>
+            </label>
+            <label>
+              <span>{{ t('admin.feedback.adminNote') }}</span>
+              <textarea v-model="feedbackDetailForm.admin_note" rows="3"></textarea>
+            </label>
+            <p v-if="feedbackDetailError" class="admin-form__error" role="alert">{{ feedbackDetailError }}</p>
+            <div class="admin-form__actions admin-form__actions--split">
+              <button
+                type="button"
+                class="admin-btn admin-btn--danger"
+                :disabled="feedbackDeletingId === feedbackDetail.id || confirmBusy"
+                @click="askDeleteFeedback(feedbackDetail, true)"
+              >
+                {{ t('admin.feedback.delete') }}
+              </button>
+              <div class="admin-form__actions-end">
+                <button type="button" class="admin-btn admin-btn--ghost" @click="closeFeedbackDetail">
+                  {{ t('common.close') }}
+                </button>
+                <button type="submit" class="admin-btn admin-btn--primary" :disabled="feedbackDetailSaving">
+                  {{ feedbackDetailSaving ? t('admin.feedback.saving') : t('admin.feedback.save') }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action confirm modal (reset / deactivate / delete feedback) -->
+    <div v-if="confirmOpen" class="admin-modal-root" role="dialog" aria-modal="true" :aria-label="confirmTitle">
+      <button type="button" class="admin-modal__backdrop" :aria-label="t('admin.drawer_close')" @click="closeConfirmModal"></button>
+      <div class="admin-modal">
+        <header class="admin-modal__head">
+          <h2>{{ confirmTitle }}</h2>
+          <button type="button" class="admin-icon-btn" :aria-label="t('admin.drawer_close')" @click="closeConfirmModal">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+        <p class="admin-muted">{{ confirmMessage }}</p>
+        <div class="admin-form__actions">
+          <button type="button" class="admin-btn admin-btn--ghost" @click="closeConfirmModal">{{ t('admin.cancel') }}</button>
+          <button
+            type="button"
+            class="admin-btn"
+            :class="confirmIsDanger ? 'admin-btn--danger' : 'admin-btn--primary'"
+            :disabled="confirmBusy"
+            @click="runConfirmAction"
+          >
+            {{ confirmBusy ? t('admin.saving') : confirmConfirmLabel }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <Teleport to="body">
+      <div
+        v-if="rowMenuId && rowMenuRow"
+        class="admin-row-menu__panel admin-row-menu__panel--float"
+        role="menu"
+        :style="floatMenuStyle"
+        @click.stop
+      >
+        <button type="button" role="menuitem" @click="askResetPassword(rowMenuRow)">
+          {{ t('admin.action_reset_password') }}
+        </button>
+        <a role="menuitem" :href="`mailto:${rowMenuRow.email}`" @click="rowMenuId = null">
+          {{ t('admin.action_send_email') }}
+        </a>
+        <button
+          type="button"
+          role="menuitem"
+          class="is-danger"
+          :disabled="Number(rowMenuRow.id) === ownerId || rowMenuRow.subscription_status === 'canceled'"
+          @click="askDeactivate(rowMenuRow)"
+        >
+          {{ t('admin.action_deactivate') }}
+        </button>
+        <button type="button" role="menuitem" @click="viewAsLearner">
+          {{ t('admin.action_view_as_learner') }}
+        </button>
+      </div>
+      <div
+        v-else-if="feedbackMenuId && feedbackMenuRow"
+        class="admin-row-menu__panel admin-row-menu__panel--float"
+        role="menu"
+        :style="floatMenuStyle"
+        @click.stop
+      >
+        <button
+          type="button"
+          role="menuitem"
+          @click="openFeedbackDetail(feedbackMenuRow.id); feedbackMenuId = null"
+        >
+          {{ t('admin.feedback.view') }}
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          class="is-danger"
+          :disabled="feedbackDeletingId === feedbackMenuRow.id"
+          @click="askDeleteFeedback(feedbackMenuRow)"
+        >
+          {{ t('admin.feedback.delete') }}
+        </button>
+      </div>
+    </Teleport>
   </main>
 </template>
 
@@ -944,8 +1341,29 @@ export default {
       usersRequestId: 0,
       searchTimer: null,
       filters: { q: '', activity: '', progress: '' },
-      sortKey: 'last_active',
+      sortKey: 'created',
       sortDir: 'desc',
+      directoryTab: 'learners',
+      feedbackItems: [],
+      feedbackTotal: 0,
+      feedbackPage: 1,
+      feedbackTotalPages: 1,
+      feedbackLoading: false,
+      feedbackError: '',
+      feedbackFilters: { q: '', status: '', type: '' },
+      feedbackSearchTimer: null,
+      feedbackDetail: null,
+      feedbackDetailForm: { status: 'new', admin_note: '' },
+      feedbackDetailSaving: false,
+      feedbackDetailError: '',
+      feedbackDeletingId: null,
+      feedbackMenuId: null,
+      selectedFeedbackIds: [],
+      floatMenuStyle: { top: '0px', left: '0px' },
+      feedbackDeleteFromModal: false,
+      feedbackTypes: ['suggestion', 'bug', 'ai_recitation', 'design', 'other'],
+      feedbackStatuses: ['new', 'reviewing', 'planned', 'resolved', 'closed'],
+      syncTimer: null,
       rowMenuId: null,
       selectedUserId: null,
       selectedIds: [],
@@ -996,19 +1414,11 @@ export default {
     },
     snapshotCards() {
       const snapshot = this.data?.snapshot || {}
-      const usersTotal = Number(snapshot.users_total?.value || 0)
-      const activeShare = Number(snapshot.active_users?.share_of_users ?? (
-        usersTotal > 0 ? (Number(snapshot.active_users?.value || 0) / usersTotal) * 100 : 0
-      ))
-      let activeTone = 'admin-kpi--active-mid'
-      if (activeShare >= 50) activeTone = 'admin-kpi--active-high'
-      else if (activeShare < 10) activeTone = 'admin-kpi--active-low'
-
       return [
         {
           key: 'users_total',
           label: this.t('admin.metric_users'),
-          value: usersTotal,
+          value: Number(snapshot.users_total?.value || 0),
           action: 'users',
           toneClass: 'admin-kpi--users',
           icon: 'bi bi-people-fill',
@@ -1016,14 +1426,14 @@ export default {
           trendDir: this.trendDir(snapshot.users_total?.trend_percent),
         },
         {
-          key: 'active_users',
-          label: this.t('admin.metric_active'),
-          value: Number(snapshot.active_users?.value || 0),
-          action: 'users_active',
-          toneClass: activeTone,
-          icon: 'bi bi-person-check-fill',
-          trendLabel: this.formatTrend(snapshot.active_users?.trend_percent),
-          trendDir: this.trendDir(snapshot.active_users?.trend_percent),
+          key: 'feedback_open',
+          label: this.t('admin.metric_feedback'),
+          value: Number(snapshot.feedback_open?.value || 0),
+          action: 'feedback',
+          toneClass: 'admin-kpi--feedback',
+          icon: 'bi bi-chat-left-text-fill',
+          trendLabel: this.formatTrend(snapshot.feedback_open?.trend_percent),
+          trendDir: this.trendDir(snapshot.feedback_open?.trend_percent),
         },
         {
           key: 'memorised_ayahs',
@@ -1047,6 +1457,9 @@ export default {
         },
       ]
     },
+    feedbackOpenCount() {
+      return Number(this.data?.snapshot?.feedback_open?.value || 0)
+    },
     allVisibleSelected() {
       return this.users.length > 0 && this.users.every((row) => this.selectedIds.includes(row.id))
     },
@@ -1058,7 +1471,7 @@ export default {
       if (this.filters.q) count += 1
       if (this.filters.activity) count += 1
       if (this.filters.progress) count += 1
-      if (this.sortKey !== 'last_active' || this.sortDir !== 'desc') count += 1
+      if (this.sortKey !== 'created' || this.sortDir !== 'desc') count += 1
       return count
     },
     selectedListRow() {
@@ -1111,6 +1524,8 @@ export default {
     confirmTitle() {
       if (this.confirmKind === 'reset') return this.t('admin.action_reset_password')
       if (this.confirmKind === 'deactivate') return this.t('admin.action_deactivate')
+      if (this.confirmKind === 'delete_feedback') return this.t('admin.feedback.delete')
+      if (this.confirmKind === 'bulk_delete_feedback') return this.t('admin.feedback.bulkDelete')
       return ''
     },
     confirmMessage() {
@@ -1121,7 +1536,32 @@ export default {
       if (this.confirmKind === 'deactivate') {
         return this.t('admin.action_deactivate_confirm', { email })
       }
+      if (this.confirmKind === 'delete_feedback') {
+        return this.t('admin.feedback.deleteConfirm')
+      }
+      if (this.confirmKind === 'bulk_delete_feedback') {
+        return this.t('admin.feedback.bulkDeleteConfirm', { n: this.selectedFeedbackIds.length })
+      }
       return ''
+    },
+    confirmIsDanger() {
+      return ['deactivate', 'delete_feedback', 'bulk_delete_feedback'].includes(this.confirmKind)
+    },
+    confirmConfirmLabel() {
+      if (this.confirmKind === 'delete_feedback' || this.confirmKind === 'bulk_delete_feedback') {
+        return this.t('admin.feedback.delete')
+      }
+      return this.confirmTitle
+    },
+    rowMenuRow() {
+      return this.users.find((row) => row.id === this.rowMenuId) || null
+    },
+    feedbackMenuRow() {
+      return this.feedbackItems.find((row) => row.id === this.feedbackMenuId) || null
+    },
+    allVisibleFeedbackSelected() {
+      return this.feedbackItems.length > 0
+        && this.feedbackItems.every((row) => this.selectedFeedbackIds.includes(row.id))
     },
     editFormDirty() {
       const baseline = this.editFormBaseline
@@ -1149,21 +1589,37 @@ export default {
       start = Math.max(1, end - 6)
       return Array.from({ length: end - start + 1 }, (_, index) => start + index)
     },
+    feedbackPageNumbers() {
+      const total = this.feedbackTotalPages
+      const current = this.feedbackPage
+      if (total <= 7) {
+        return Array.from({ length: total }, (_, index) => index + 1)
+      }
+      let start = Math.max(1, current - 3)
+      let end = Math.min(total, start + 6)
+      start = Math.max(1, end - 6)
+      return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+    },
   },
   mounted() {
-    this.boot()
+    this.boot(true)
+    this.startLiveSync()
     document.addEventListener('click', this.onDocumentClick)
     document.addEventListener('keydown', this.onDocumentKeydown)
+    document.addEventListener('visibilitychange', this.onVisibilityChange)
     this.unsubscribeNetwork = subscribeNetworkStatus((online) => {
       if (online && this.bootError && !this.data) this.boot(true)
     })
   },
   beforeUnmount() {
     if (this.searchTimer) clearTimeout(this.searchTimer)
+    if (this.feedbackSearchTimer) clearTimeout(this.feedbackSearchTimer)
     if (this.toastTimer) clearTimeout(this.toastTimer)
+    this.stopLiveSync()
     if (typeof this.unsubscribeNetwork === 'function') this.unsubscribeNetwork()
     document.removeEventListener('click', this.onDocumentClick)
     document.removeEventListener('keydown', this.onDocumentKeydown)
+    document.removeEventListener('visibilitychange', this.onVisibilityChange)
   },
   methods: {
     sanitizePayload(payload) {
@@ -1172,19 +1628,45 @@ export default {
       if (this.ownerId && owner && owner !== this.ownerId) return null
       return payload
     },
+    startLiveSync() {
+      this.stopLiveSync()
+      this.syncTimer = window.setInterval(() => {
+        if (document.visibilityState === 'hidden') return
+        this.syncQuiet()
+      }, 20000)
+    },
+    stopLiveSync() {
+      if (this.syncTimer) {
+        window.clearInterval(this.syncTimer)
+        this.syncTimer = null
+      }
+    },
+    onVisibilityChange() {
+      if (document.visibilityState === 'visible') this.syncQuiet()
+    },
+    async syncQuiet() {
+      try {
+        const payload = await adminApi.getDashboard(this.chartDays, { fresh: true })
+        const sanitized = this.sanitizePayload(payload)
+        if (sanitized) this.data = sanitized
+        if (this.directoryTab === 'learners') await this.reloadUsers()
+        else await this.loadFeedback(this.feedbackPage)
+      } catch (_) {
+        /* ignore quiet sync errors */
+      }
+    },
     async boot(force = false) {
       this.bootLoading = !this.data || force
       this.bootError = false
       try {
-        if (!this.data || force) {
-          const payload = await adminApi.getDashboard(this.chartDays)
-          const sanitized = this.sanitizePayload(payload)
-          if (!sanitized) throw new Error('owner mismatch')
-          this.data = sanitized
-          this.failureKind = 'failure'
-          this.chartDays = Number(sanitized?.meta?.chart_days) === 7 ? 7 : 30
-        }
+        const payload = await adminApi.getDashboard(this.chartDays, { fresh: true })
+        const sanitized = this.sanitizePayload(payload)
+        if (!sanitized) throw new Error('owner mismatch')
+        this.data = sanitized
+        this.failureKind = 'failure'
+        this.chartDays = Number(sanitized?.meta?.chart_days) === 7 ? 7 : 30
         await this.reloadUsers()
+        if (this.directoryTab === 'feedback') await this.loadFeedback(1)
       } catch (error) {
         console.error(error)
         if (!this.data) {
@@ -1198,13 +1680,14 @@ export default {
     async refreshAll() {
       this.refreshing = true
       try {
-        const payload = await adminApi.getDashboard(this.chartDays)
+        const payload = await adminApi.getDashboard(this.chartDays, { fresh: true })
         const sanitized = this.sanitizePayload(payload)
         if (sanitized) {
           this.data = sanitized
           this.chartDays = Number(sanitized?.meta?.chart_days) === 7 ? 7 : 30
         }
         await this.reloadUsers()
+        if (this.directoryTab === 'feedback') await this.loadFeedback(this.feedbackPage)
         if (this.selectedUserId) {
           delete this.detailCache[this.selectedUserId]
           await this.loadDetail(this.selectedUserId)
@@ -1218,11 +1701,15 @@ export default {
         window.location.href = this.contactInboxUrl
         return
       }
-      if (metric.action === 'users_active') {
+      if (metric.action === 'feedback') {
+        this.setDirectoryTab('feedback')
+      } else if (metric.action === 'users_active') {
+        this.setDirectoryTab('learners')
         this.filters.activity = 'active_7d'
         this.usersPage = 1
         this.reloadUsers()
       } else if (metric.action === 'users') {
+        this.setDirectoryTab('learners')
         this.clearFilters()
       }
       this.$nextTick(() => {
@@ -1231,6 +1718,177 @@ export default {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
       })
+    },
+    setDirectoryTab(tab) {
+      this.directoryTab = tab === 'feedback' ? 'feedback' : 'learners'
+      this.rowMenuId = null
+      this.feedbackMenuId = null
+      if (this.directoryTab === 'feedback') {
+        this.selectedIds = []
+        this.loadFeedback(1)
+      } else {
+        this.selectedFeedbackIds = []
+        this.reloadUsers()
+      }
+    },
+    onFeedbackFilterChange() {
+      this.loadFeedback(1)
+    },
+    onFeedbackSearchInput() {
+      if (this.feedbackSearchTimer) clearTimeout(this.feedbackSearchTimer)
+      this.feedbackSearchTimer = setTimeout(() => this.loadFeedback(1), 220)
+    },
+    async loadFeedback(page = 1) {
+      this.feedbackLoading = true
+      this.feedbackError = ''
+      try {
+        const data = await adminApi.getFeedback({
+          page,
+          per_page: 20,
+          q: this.feedbackFilters.q,
+          status: this.feedbackFilters.status,
+          type: this.feedbackFilters.type,
+        })
+        this.feedbackItems = data.items
+        this.feedbackTotal = data.total
+        this.feedbackPage = data.page
+        this.feedbackTotalPages = data.total_pages
+        this.selectedFeedbackIds = this.selectedFeedbackIds.filter((id) => (
+          this.feedbackItems.some((row) => row.id === id)
+        ))
+      } catch (error) {
+        this.feedbackError = error?.response?.data?.message || this.t('admin.feedback.loadError')
+      } finally {
+        this.feedbackLoading = false
+      }
+    },
+    toggleFeedbackSelect(id) {
+      if (this.selectedFeedbackIds.includes(id)) {
+        this.selectedFeedbackIds = this.selectedFeedbackIds.filter((row) => row !== id)
+      } else {
+        this.selectedFeedbackIds = [...this.selectedFeedbackIds, id]
+      }
+    },
+    toggleSelectAllFeedback() {
+      if (this.allVisibleFeedbackSelected) {
+        this.selectedFeedbackIds = []
+      } else {
+        this.selectedFeedbackIds = this.feedbackItems.map((row) => row.id)
+      }
+    },
+    positionFloatMenu(anchor) {
+      if (!anchor || typeof anchor.getBoundingClientRect !== 'function') return
+      const rect = anchor.getBoundingClientRect()
+      const panelW = 196
+      const panelH = 140
+      let left = rect.right - panelW
+      left = Math.min(Math.max(8, left), window.innerWidth - panelW - 8)
+      let top = rect.bottom + 6
+      if (top + panelH > window.innerHeight - 8) {
+        top = Math.max(8, rect.top - panelH - 6)
+      }
+      this.floatMenuStyle = {
+        top: `${Math.round(top)}px`,
+        left: `${Math.round(left)}px`,
+      }
+    },
+    async openFeedbackDetail(id) {
+      this.feedbackMenuId = null
+      this.rowMenuId = null
+      this.feedbackDetailError = ''
+      try {
+        this.feedbackDetail = await adminApi.getFeedbackDetail(id)
+        this.feedbackDetailForm = {
+          status: this.feedbackDetail?.status || 'new',
+          admin_note: this.feedbackDetail?.admin_note || '',
+        }
+      } catch (error) {
+        this.feedbackDetailError = error?.response?.data?.message || this.t('admin.feedback.loadError')
+      }
+    },
+    closeFeedbackDetail() {
+      if (this.confirmOpen && (this.confirmKind === 'delete_feedback' || this.confirmKind === 'bulk_delete_feedback')) {
+        return
+      }
+      this.feedbackDetail = null
+      this.feedbackDetailError = ''
+      this.feedbackDeleteFromModal = false
+    },
+    async saveFeedbackDetail() {
+      if (!this.feedbackDetail?.id || this.feedbackDetailSaving) return
+      this.feedbackDetailSaving = true
+      this.feedbackDetailError = ''
+      try {
+        this.feedbackDetail = await adminApi.updateFeedback(this.feedbackDetail.id, this.feedbackDetailForm)
+        await this.loadFeedback(this.feedbackPage)
+        await this.refreshSnapshotQuiet()
+        this.showToast(this.t('admin.toast_saved'))
+      } catch (error) {
+        this.feedbackDetailError = error?.response?.data?.message || this.t('admin.feedback.saveError')
+      } finally {
+        this.feedbackDetailSaving = false
+      }
+    },
+    askDeleteFeedback(row, fromModal = false) {
+      this.feedbackMenuId = null
+      if (!row?.id) return
+      this.feedbackDeleteFromModal = !!fromModal
+      this.confirmKind = 'delete_feedback'
+      this.confirmRow = row
+      this.confirmOpen = true
+    },
+    askBulkDeleteFeedback() {
+      if (!this.selectedFeedbackIds.length) return
+      this.confirmKind = 'bulk_delete_feedback'
+      this.confirmRow = { id: 'bulk' }
+      this.confirmOpen = true
+    },
+    async deleteFeedbackRow(row, fromModal = false) {
+      if (!row?.id || this.feedbackDeletingId) return
+      this.feedbackDeletingId = row.id
+      try {
+        await adminApi.deleteFeedback(row.id)
+        this.selectedFeedbackIds = this.selectedFeedbackIds.filter((id) => id !== row.id)
+        if (fromModal || this.feedbackDetail?.id === row.id) this.closeFeedbackDetail()
+        await this.loadFeedback(this.feedbackPage)
+        await this.refreshSnapshotQuiet()
+        this.showToast(this.t('admin.feedback.deleted'))
+      } catch (error) {
+        this.feedbackError = error?.response?.data?.message || this.t('admin.feedback.deleteError')
+        this.showToast(this.feedbackError)
+      } finally {
+        this.feedbackDeletingId = null
+      }
+    },
+    async bulkDeleteFeedback() {
+      const ids = [...this.selectedFeedbackIds]
+      if (!ids.length) return
+      this.bulkBusy = true
+      try {
+        for (const id of ids) {
+          await adminApi.deleteFeedback(id)
+        }
+        this.selectedFeedbackIds = []
+        if (this.feedbackDetail && ids.includes(this.feedbackDetail.id)) this.closeFeedbackDetail()
+        await this.loadFeedback(this.feedbackPage)
+        await this.refreshSnapshotQuiet()
+        this.showToast(this.t('admin.feedback.bulkDeleted', { n: ids.length }))
+      } catch (error) {
+        this.showToast(error?.response?.data?.message || this.t('admin.feedback.deleteError'))
+        await this.loadFeedback(this.feedbackPage)
+      } finally {
+        this.bulkBusy = false
+      }
+    },
+    feedbackTypeLabel(type) {
+      const key = `feedback.types.${type}`
+      const translated = this.t(key)
+      return translated === key ? type : translated
+    },
+    feedbackStatusLabel(status) {
+      const key = `admin.feedback.statuses.${status}`
+      const translated = this.t(key)
+      return translated === key ? status : translated
     },
     onFilterChange() {
       this.usersPage = 1
@@ -1260,7 +1918,7 @@ export default {
     },
     clearFilters() {
       this.filters = { q: '', activity: '', progress: '' }
-      this.sortKey = 'last_active'
+      this.sortKey = 'created'
       this.sortDir = 'desc'
       this.usersPage = 1
       this.reloadUsers()
@@ -1271,7 +1929,7 @@ export default {
       this.chartDays = next
       this.refreshing = true
       try {
-        const payload = await adminApi.getDashboard(next)
+        const payload = await adminApi.getDashboard(next, { fresh: true })
         const sanitized = this.sanitizePayload(payload)
         if (sanitized) this.data = sanitized
       } finally {
@@ -1465,20 +2123,51 @@ export default {
         this.showToast(this.formErrorFrom(error))
       }
     },
-    toggleRowMenu(id) {
+    toggleRowMenu(id, event) {
       const num = Number(id)
-      this.rowMenuId = this.rowMenuId === num ? null : num
+      this.feedbackMenuId = null
+      if (this.rowMenuId === num) {
+        this.rowMenuId = null
+        return
+      }
+      this.rowMenuId = num
+      this.$nextTick(() => this.positionFloatMenu(event?.currentTarget))
+    },
+    toggleFeedbackMenu(id, event) {
+      const num = Number(id)
+      this.rowMenuId = null
+      if (this.feedbackMenuId === num) {
+        this.feedbackMenuId = null
+        return
+      }
+      this.feedbackMenuId = num
+      this.$nextTick(() => this.positionFloatMenu(event?.currentTarget))
     },
     onDocumentClick(event) {
-      if (!this.rowMenuId) return
+      if (!this.rowMenuId && !this.feedbackMenuId) return
       const target = event.target
-      if (target && typeof target.closest === 'function' && target.closest('.admin-row-menu')) return
+      if (
+        target
+        && typeof target.closest === 'function'
+        && (target.closest('.admin-row-menu') || target.closest('.admin-row-menu__panel--float'))
+      ) {
+        return
+      }
       this.rowMenuId = null
+      this.feedbackMenuId = null
     },
     onDocumentKeydown(event) {
       if (event.key !== 'Escape') return
       if (this.confirmOpen) {
         this.closeConfirmModal()
+        return
+      }
+      if (this.feedbackDetail) {
+        this.closeFeedbackDetail()
+        return
+      }
+      if (this.feedbackMenuId) {
+        this.feedbackMenuId = null
         return
       }
       if (this.deleteOpen) {
@@ -1493,7 +2182,7 @@ export default {
         this.closeDrawer()
         return
       }
-      this.rowMenuId = null
+      if (this.rowMenuId) this.rowMenuId = null
     },
     askResetPassword(row) {
       this.rowMenuId = null
@@ -1514,19 +2203,26 @@ export default {
       this.confirmOpen = false
       this.confirmKind = ''
       this.confirmRow = null
+      this.feedbackDeleteFromModal = false
     },
     async runConfirmAction() {
-      if (!this.confirmRow?.id || !this.confirmKind) return
+      if (!this.confirmKind) return
+      if (this.confirmKind !== 'bulk_delete_feedback' && !this.confirmRow?.id) return
       this.confirmBusy = true
       try {
         if (this.confirmKind === 'reset') {
           await this.resetPassword(this.confirmRow)
         } else if (this.confirmKind === 'deactivate') {
           await this.deactivateAccount(this.confirmRow)
+        } else if (this.confirmKind === 'delete_feedback') {
+          await this.deleteFeedbackRow(this.confirmRow, this.feedbackDeleteFromModal)
+        } else if (this.confirmKind === 'bulk_delete_feedback') {
+          await this.bulkDeleteFeedback()
         }
         this.confirmOpen = false
         this.confirmKind = ''
         this.confirmRow = null
+        this.feedbackDeleteFromModal = false
       } finally {
         this.confirmBusy = false
       }
@@ -1761,7 +2457,7 @@ export default {
     },
     async refreshSnapshotQuiet() {
       try {
-        const payload = await adminApi.getDashboard(7)
+        const payload = await adminApi.getDashboard(this.chartDays, { fresh: true })
         const sanitized = this.sanitizePayload(payload)
         if (sanitized) this.data = sanitized
       } catch (error) {

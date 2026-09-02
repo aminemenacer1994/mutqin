@@ -328,7 +328,7 @@ class SessionLifecycleService
     {
         $attributes = $this->normaliseIdempotencyAttributes($attributes, 'end');
 
-        return DB::transaction(function () use ($user, $attributes) {
+        $session = DB::transaction(function () use ($user, $attributes) {
             $now = now();
             $endKey = isset($attributes['end_idempotency_key'])
                 ? (string) $attributes['end_idempotency_key']
@@ -442,6 +442,10 @@ class SessionLifecycleService
 
             return $session->fresh();
         });
+
+        AdminDashboardService::invalidateCaches();
+
+        return $session;
     }
 
     /**

@@ -71,6 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/feedback/metrics', [AdminFeedbackController::class, 'metrics'])->name('api.admin.feedback.metrics');
         Route::get('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'show'])->name('api.admin.feedback.show');
         Route::patch('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'update'])->name('api.admin.feedback.update');
+        Route::delete('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'destroy'])->name('api.admin.feedback.destroy');
         Route::get('/admin/feedback/{feedback}/screenshot', [AdminFeedbackController::class, 'screenshot'])->name('api.admin.feedback.screenshot');
     });
 

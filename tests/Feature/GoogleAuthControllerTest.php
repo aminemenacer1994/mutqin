@@ -142,6 +142,55 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertAuthenticatedAs($admin->fresh());
     }
 
+    public function test_allowlisted_google_mailbox_is_created_as_permanent_admin(): void
+    {
+        config()->set('mutqin.admin_emails', ['menacer72@gmail.com']);
+
+        $this->mockGoogleUser([
+            'id' => 'google-primary-admin',
+            'name' => 'Primary Admin',
+            'email' => 'menacer72@gmail.com',
+            'avatar' => 'https://example.com/admin.png',
+            'email_verified' => true,
+        ]);
+
+        $this->get(route('auth.google.callback'))
+            ->assertRedirect(route('admin.dashboard'));
+
+        $user = User::query()->where('email', 'menacer72@gmail.com')->first();
+        $this->assertNotNull($user);
+        $this->assertTrue($user->hasPersistedAdminRole());
+        $this->assertTrue($user->isAdmin());
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_allowlisted_google_sign_in_restores_missing_admin_flag(): void
+    {
+        config()->set('mutqin.admin_emails', ['menacer72@gmail.com']);
+
+        $user = User::factory()->create([
+            'email' => 'menacer72@gmail.com',
+            'google_id' => 'google-primary-admin',
+            'is_admin' => false,
+            'email_verified_at' => now(),
+        ]);
+
+        $this->mockGoogleUser([
+            'id' => 'google-primary-admin',
+            'name' => 'Primary Admin',
+            'email' => 'menacer72@gmail.com',
+            'avatar' => 'https://example.com/admin.png',
+            'email_verified' => true,
+        ]);
+
+        $this->get(route('auth.google.callback'))
+            ->assertRedirect(route('admin.dashboard'));
+
+        $fresh = $user->fresh();
+        $this->assertTrue($fresh->hasPersistedAdminRole());
+        $this->assertTrue($fresh->isAdmin());
+    }
+
     public function test_verified_local_account_is_not_auto_linked_by_email_alone(): void
     {
         $user = User::factory()->create([

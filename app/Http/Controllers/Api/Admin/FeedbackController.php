@@ -48,6 +48,17 @@ class FeedbackController extends Controller
         ]);
     }
 
+    public function destroy(Request $request, Feedback $feedback, FeedbackService $service): JsonResponse
+    {
+        $this->admin($request);
+
+        $service->destroyAdmin($feedback);
+
+        return response()->json([
+            'message' => __('admin.feedback.deleted'),
+        ]);
+    }
+
     public function screenshot(Request $request, Feedback $feedback, FeedbackService $service): Response
     {
         $this->admin($request);

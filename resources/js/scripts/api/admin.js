@@ -1,11 +1,14 @@
 import { http, withRetry } from './learning'
 
 export const adminApi = {
-  async getDashboard(days = 30) {
+  async getDashboard(days = 30, { fresh = false } = {}) {
     const safeDays = days === 7 ? 7 : 30
     const { data } = await withRetry(() =>
       http.get('/admin/dashboard', {
-        params: { days: safeDays },
+        params: {
+          days: safeDays,
+          fresh: fresh ? 1 : undefined,
+        },
         headers: {
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',
@@ -13,6 +16,56 @@ export const adminApi = {
       })
     )
     return data?.data && typeof data.data === 'object' ? data.data : data
+  },
+
+  async getFeedback({
+    page = 1,
+    per_page = 20,
+    q = '',
+    status = '',
+    type = '',
+    date_from = '',
+    date_to = '',
+  } = {}) {
+    const { data } = await withRetry(() =>
+      http.get('/admin/feedback', {
+        params: {
+          page,
+          per_page,
+          q: q || undefined,
+          status: status || undefined,
+          type: type || undefined,
+          date_from: date_from || undefined,
+          date_to: date_to || undefined,
+        },
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      })
+    )
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      total: Number(data?.total || 0),
+      page: Number(data?.page || page || 1),
+      per_page: Number(data?.per_page || per_page || 20),
+      total_pages: Number(data?.total_pages || 1),
+    }
+  },
+
+  async getFeedbackDetail(id) {
+    const { data } = await withRetry(() => http.get(`/admin/feedback/${id}`))
+    return data?.feedback || null
+  },
+
+  async updateFeedback(id, payload) {
+    const { data } = await http.patch(`/admin/feedback/${id}`, payload)
+    return data?.feedback || null
+  },
+
+  async deleteFeedback(id) {
+    const { data } = await http.delete(`/admin/feedback/${id}`)
+    return !!data?.message
   },
 
   async getUsers({

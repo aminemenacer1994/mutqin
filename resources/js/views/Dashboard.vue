@@ -99,6 +99,7 @@
                   v-for="stat in hifzGlanceStats"
                   :key="stat.key"
                   class="dash-glance-stat"
+                  :class="`dash-glance-stat--${stat.key}`"
                   role="listitem"
                 >
                   <span class="dash-glance-stat__icon" aria-hidden="true">

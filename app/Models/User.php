@@ -68,10 +68,16 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'password_set_at' => 'datetime',
             'is_admin' => 'boolean',
+            'last_login_at' => 'datetime',
             'subscription_trial_ends_at' => 'datetime',
             'subscription_current_period_ends_at' => 'datetime',
             'ai_audio_consent_at' => 'datetime',
         ];
+    }
+
+    public function touchLastLogin(): void
+    {
+        $this->forceFill(['last_login_at' => now()])->save();
     }
 
     public function hasVerifiedEmail(): bool

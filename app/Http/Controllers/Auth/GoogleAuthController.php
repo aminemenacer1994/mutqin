@@ -75,6 +75,9 @@ class GoogleAuthController extends Controller
         $created = $result['created'];
         $linkingFromProfile = (bool) request()->session()->pull('google_link_intent');
 
+        $user->touchLastLogin();
+        \App\Services\AdminDashboardService::invalidateCaches();
+
         Auth::login($user, true);
         request()->session()->regenerate();
         request()->session()->put('mutqin_login_event_id', (string) Str::uuid());

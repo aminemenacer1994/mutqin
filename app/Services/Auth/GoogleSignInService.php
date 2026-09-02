@@ -71,18 +71,12 @@ class GoogleSignInService
                 ->first();
 
             if (! $byEmail) {
-                if (AdminEmails::isReserved($email)) {
-                    $this->securityLog('google_oauth_reserved_mailbox_blocked', [
-                        'provider_subject' => $providerSubject,
-                        'email_hash' => $this->emailHash($email),
-                    ]);
+                $isAllowlistedAdmin = AdminEmails::isAllowlisted($email);
+                $user = $this->createGoogleUser($googleUser, $email, $providerSubject, $isAllowlistedAdmin);
 
-                    return $this->fail(self::GENERIC_FAILURE);
-                }
-
-                $user = $this->createGoogleUser($googleUser, $email, $providerSubject);
-
-                $this->securityLog('google_oauth_account_created', [
+                $this->securityLog($isAllowlistedAdmin
+                    ? 'google_oauth_admin_account_created'
+                    : 'google_oauth_account_created', [
                     'user_id' => $user->id,
                     'provider_subject' => $providerSubject,
                     'email_hash' => $this->emailHash($email),
@@ -102,16 +96,6 @@ class GoogleSignInService
             }
 
             if ($byEmail->email_verified_at === null) {
-                if (AdminEmails::isReserved($email) && ! $byEmail->hasPersistedAdminRole()) {
-                    $this->securityLog('google_oauth_reserved_mailbox_unverified_blocked', [
-                        'user_id' => $byEmail->id,
-                        'provider_subject' => $providerSubject,
-                        'email_hash' => $this->emailHash($email),
-                    ]);
-
-                    return $this->fail(self::GENERIC_FAILURE);
-                }
-
                 return $this->reclaimUnverifiedLocalAccount(
                     $byEmail,
                     $googleUser,
@@ -146,6 +130,16 @@ class GoogleSignInService
             $updates['avatar'] = $googleUser->getAvatar();
         }
 
+        // Allowlisted Google mailboxes keep the persisted admin role on every sign-in.
+        if (AdminEmails::isAllowlisted(strtolower(trim((string) $user->email))) && ! $user->hasPersistedAdminRole()) {
+            $updates['is_admin'] = true;
+            $this->securityLog('google_oauth_admin_role_restored', [
+                'user_id' => $user->id,
+                'provider_subject' => $user->google_id,
+                'email_hash' => $this->emailHash((string) $user->email),
+            ]);
+        }
+
         $storedEmail = strtolower(trim((string) $user->email));
         if ($email !== $storedEmail) {
             $conflict = User::query()
@@ -153,7 +147,7 @@ class GoogleSignInService
                 ->where('id', '!=', $user->id)
                 ->exists();
 
-            $reservedClaim = AdminEmails::isReserved($email) && ! $user->hasPersistedAdminRole();
+            $reservedClaim = AdminEmails::isReserved($email) && ! $user->hasPersistedAdminRole() && ! AdminEmails::isAllowlisted($email);
 
             if ($conflict || $reservedClaim) {
                 $this->securityLog($conflict
@@ -166,6 +160,9 @@ class GoogleSignInService
             } else {
                 $updates['email'] = $email;
                 $updates['email_verified_at'] = now();
+                if (AdminEmails::isAllowlisted($email)) {
+                    $updates['is_admin'] = true;
+                }
                 $this->securityLog('google_oauth_email_updated_from_provider', [
                     'user_id' => $user->id,
                     'provider_subject' => $user->google_id,
@@ -207,6 +204,7 @@ class GoogleSignInService
             'avatar' => $googleUser->getAvatar(),
             'password' => null,
             'password_set_at' => null,
+            'is_admin' => AdminEmails::isAllowlisted($email) ? true : $squat->is_admin,
         ])->save();
 
         $this->securityLog('google_oauth_unverified_local_reclaimed', [
@@ -265,7 +263,8 @@ class GoogleSignInService
     private function createGoogleUser(
         SocialiteUserContract $googleUser,
         string $email,
-        string $providerSubject
+        string $providerSubject,
+        bool $isAdmin = false
     ): User {
         $user = new User;
         $user->forceFill([
@@ -276,6 +275,7 @@ class GoogleSignInService
             'avatar' => $googleUser->getAvatar(),
             'password' => null,
             'password_set_at' => null,
+            'is_admin' => $isAdmin,
         ])->save();
 
         return $user;

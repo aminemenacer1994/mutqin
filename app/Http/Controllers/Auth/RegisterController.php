@@ -93,6 +93,11 @@ class RegisterController extends Controller
 
     protected function registered(Request $request, $user)
     {
+        if ($user instanceof \App\Models\User) {
+            $user->touchLastLogin();
+            \App\Services\AdminDashboardService::invalidateCaches();
+        }
+
         // Match login/Google: login event id powers Welcome Back vs onboarding,
         // and just_registered must survive verification → /memorisation.
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());

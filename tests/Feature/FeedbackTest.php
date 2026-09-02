@@ -209,6 +209,7 @@ class FeedbackTest extends TestCase
         $this->actingAs($user)->patchJson("/api/admin/feedback/{$feedback->id}", [
             'status' => 'resolved',
         ])->assertForbidden();
+        $this->actingAs($user)->deleteJson("/api/admin/feedback/{$feedback->id}")->assertForbidden();
         $this->get(route('admin.feedback.index'))->assertForbidden();
     }
 
@@ -259,6 +260,30 @@ class FeedbackTest extends TestCase
         $this->actingAs($admin)
             ->get("/api/admin/feedback/{$feedback->id}/screenshot")
             ->assertOk();
+    }
+
+    public function test_admin_can_delete_feedback(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+        $learner = User::factory()->create();
+
+        $feedback = Feedback::query()->create([
+            'user_id' => $learner->id,
+            'type' => 'bug',
+            'message' => 'Delete me please.',
+            'status' => 'new',
+            'screenshot_path' => 'feedback-screenshots/delete-me.png',
+        ]);
+        Storage::disk('local')->put('feedback-screenshots/delete-me.png', 'fake-image');
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/feedback/{$feedback->id}")
+            ->assertOk()
+            ->assertJsonPath('message', __('admin.feedback.deleted'));
+
+        $this->assertDatabaseMissing('feedbacks', ['id' => $feedback->id]);
+        Storage::disk('local')->assertMissing('feedback-screenshots/delete-me.png');
     }
 
     public function test_ai_complaint_metrics_use_valid_scored_denominator(): void

@@ -24,7 +24,9 @@ class DashboardController extends Controller
             $days = 30;
         }
 
-        return (new AdminDashboardResource($dashboard->build($user, $days)))
+        $fresh = $request->boolean('fresh');
+
+        return (new AdminDashboardResource($dashboard->build($user, $days, $fresh)))
             ->response()
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate')
             ->header('Pragma', 'no-cache')

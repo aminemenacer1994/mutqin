@@ -48,6 +48,11 @@ class LoginController extends Controller
 
     protected function authenticated(Request $request, $user): void
     {
+        if ($user instanceof \App\Models\User) {
+            $user->touchLastLogin();
+            \App\Services\AdminDashboardService::invalidateCaches();
+        }
+
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
         // Put (not flash): Welcome Back is consumed on first /memorisation visit.
         // Survive any intermediate hops (e.g. dashboard) before practice loads.

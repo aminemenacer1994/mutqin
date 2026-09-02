@@ -151,6 +151,8 @@ class AdminDashboardTest extends TestCase
         $this->assertGreaterThanOrEqual(2, $seven->json('data.snapshot.users_total.value'));
         $this->assertSame(1, $seven->json('data.snapshot.active_users.value'));
         $this->assertArrayHasKey('trend_percent', $seven->json('data.snapshot.users_total'));
+        $this->assertArrayHasKey('feedback_open', $seven->json('data.snapshot'));
+        $this->assertSame(0, $seven->json('data.snapshot.feedback_open.value'));
         $this->assertSame(1, $seven->json('data.snapshot.ai_recite_attempts.value'));
         $this->assertNotEmpty($seven->json('data.chart.points'));
         $this->assertCount(7, $seven->json('data.chart.points'));

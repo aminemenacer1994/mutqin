@@ -26,4 +26,9 @@ class FeedbackPolicy
     {
         return $user->isAdmin();
     }
+
+    public function delete(User $user, Feedback $feedback): bool
+    {
+        return $user->isAdmin();
+    }
 }

@@ -81,7 +81,7 @@ class FeedbackService
             }
         }
 
-        return DB::transaction(function () use ($user, $type, $message, $context, $aiCheckId, $aiCheckSource, $aiReason, $screenshot) {
+        $feedback = DB::transaction(function () use ($user, $type, $message, $context, $aiCheckId, $aiCheckSource, $aiReason, $screenshot) {
             $feedback = Feedback::query()->create([
                 'user_id' => $user->id,
                 'type' => $type,
@@ -101,6 +101,10 @@ class FeedbackService
 
             return $feedback->fresh(['user:id,name,email']);
         });
+
+        AdminDashboardService::invalidateCaches();
+
+        return $feedback;
     }
 
     /**
@@ -207,9 +211,23 @@ class FeedbackService
 
         if ($updates !== []) {
             $feedback->forceFill($updates)->save();
+            AdminDashboardService::invalidateCaches();
         }
 
         return $this->adminShow($feedback->fresh(['user:id,name,email']));
+    }
+
+    public function destroyAdmin(Feedback $feedback): void
+    {
+        $screenshotPath = $feedback->screenshot_path;
+
+        $feedback->delete();
+
+        if (is_string($screenshotPath) && $screenshotPath !== '' && Storage::disk('local')->exists($screenshotPath)) {
+            Storage::disk('local')->delete($screenshotPath);
+        }
+
+        AdminDashboardService::invalidateCaches();
     }
 
     /**
