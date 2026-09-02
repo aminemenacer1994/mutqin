@@ -18,14 +18,14 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 assert.equal(DEFAULT_SESSION_REPETITIONS, 1, 'new sessions default to 1x')
-assert.equal(DEFAULT_TAJWEED_ENABLED, true, 'tajweed is on until the learner turns it off')
+assert.equal(DEFAULT_TAJWEED_ENABLED, false, 'tajweed is off until the learner turns it on')
 
 // Fresh workspace / reset config
 {
   const defaults = buildDefaultWorkspaceSessionConfig()
   assert.equal(defaults.repetitionsPerStep, 1)
   assert.equal(defaults.selectedLoopCount, 1)
-  assert.equal(defaults.tajweedEnabled, true)
+  assert.equal(defaults.tajweedEnabled, false)
 }
 
 // First onboarding session uses a short Fatihah window

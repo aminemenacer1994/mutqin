@@ -31073,7 +31073,7 @@ export default {
         showTransliteration: false,
         showWordByWord: false,
         wordByWordAudioEnabled: true,
-        tajweedEnabled: true,
+        tajweedEnabled: DEFAULT_TAJWEED_ENABLED,
         focusModeEnabled: false,
         blurModeEnabled: false,
         anchorModeEnabled: false,
@@ -31944,7 +31944,7 @@ export default {
       this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
       this.markPracticeSetupRestored()
       this.scheduleSessionWorkspaceScroll(SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION)
-       else if (this.readingViewMode === 'mushaf') {
+      if (this.readingViewMode === 'mushaf') {
         this.syncMushafPageToActiveVerse()
       }
       if (!autoplay) {
