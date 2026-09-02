@@ -29,13 +29,14 @@ assert.match(
 // Login / saved restore: 3-2-1 countdown then audio plays.
 assert.match(
   source,
-  /resumeRestoredSessionWithCountdown\(\) \{[\s\S]*showCountdown\(async \(\) => \{[\s\S]*playQueueEntry\(entry, \{ force: true, queueIndex: this\.queueIndex \}\)/,
+  /resumeRestoredSessionWithCountdown\(\) \{[\s\S]*showCountdown\(async \(\) => \{[\s\S]*finalizeCountdownPlayback\(\)/,
 )
 assert.match(source, /revealLoadedPreviousSession\(\)[\s\S]*resumeRestoredSessionWithCountdown\(\)/)
 assert.match(source, /loadSavedSession\(sessionId\)[\s\S]*resumeRestoredSessionWithCountdown\(\)/)
 
-// Explicit header Resume (mid-session) skips countdown.
-assert.match(source, /continueLastSession\(\{ skipCountdown: true, prepareOnly \}\)/)
+// Explicit header Resume also runs through countdown (same as start).
+assert.match(source, /continueLastSession\(\{ prepareOnly \}\)/)
+assert.doesNotMatch(source, /continueLastSession\(\{ skipCountdown: true/)
 assert.match(source, /softResumePausedSession\(options = \{\}\)[\s\S]*autoplay = options\.autoplay !== false/)
 
 // Stale audio from prior session/user is cleared before attach.

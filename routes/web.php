@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AyahAudioController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\WaitingListController as AdminWaitingListController;
@@ -88,6 +89,13 @@ Route::get('/memorisation/madani-mushaf/resolve', [MadaniMushafPageController::c
 Route::get('/memorisation/madani-mushaf/manifest', [MadaniMushafPageController::class, 'manifest'])
     ->middleware('throttle:public-proxy')
     ->name('memorisation.madani-mushaf.manifest');
+
+// Bundled onboarding ayah audio — local file when present, otherwise CDN proxy.
+Route::get('/audio/ayah/{reciter}/{ayah}.mp3', AyahAudioController::class)
+    ->middleware('throttle:public-proxy')
+    ->where('reciter', '[a-z0-9._-]+')
+    ->where('ayah', '[1-9][0-9]{0,3}')
+    ->name('memorisation.ayah-audio');
 
 Route::view('/about', 'content.about-us')->name('about');
 Route::view('/about-us', 'content.about-us')->name('about-us');

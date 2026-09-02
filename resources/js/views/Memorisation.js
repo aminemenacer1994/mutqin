@@ -366,6 +366,7 @@ import {
 } from '../scripts/session/activePracticeSetup'
 import {
   DEFAULT_SESSION_REPETITIONS,
+  DEFAULT_TAJWEED_ENABLED,
   buildDefaultWorkspaceSessionConfig,
   buildFirstOnboardingSessionConfig,
   freshSessionRepetitionDefaults,
@@ -730,6 +731,7 @@ export default {
       showCountdownOverlay: false,
       countdownValue: 3,
       countdownInterval: null,
+      countdownGeneration: 0,
       talqinPauseTimer: null,
       talqinPauseSettleTimer: null,
       practiceTurnCalloutStyle: {},
@@ -757,7 +759,7 @@ export default {
       fontSizeStep: 10,
       minFontSize: 70,
       maxFontSize: 280,
-      tajweedEnabled: false,
+      tajweedEnabled: DEFAULT_TAJWEED_ENABLED,
       beginner: createBeginnerState(),
       advanced: createAdvancedState(),
       planner: createPlannerState(),
@@ -1166,7 +1168,7 @@ export default {
 
       // Audio playback settings
       settingsDraft: {
-        tajweedEnabled: false,
+        tajweedEnabled: DEFAULT_TAJWEED_ENABLED,
         showTranslation: true,
         showTransliteration: false,
         showWordByWord: false,
@@ -9462,11 +9464,11 @@ export default {
     playerBarVisible() {
       if (!this.playerVisible) return false
       if (this.isPlaying) return true
-      // Autoplay often fails after the 3-2-1 countdown; keep Play tappable so a
-      // live/paused sitting never looks "active" with no way to start audio.
-      return !!this.hasLoadedAudio
-        && !!this.playbackAwaitingGesture
-        && !this.showCountdownOverlay
+      if (this.showCountdownOverlay) return false
+      // Keep the dock tappable whenever a live session is waiting on autoplay,
+      // even if preload has not finished attaching a src yet.
+      if (this.isSessionLive && this.playbackAwaitingGesture) return true
+      return !!this.hasLoadedAudio && !!this.playbackAwaitingGesture
     },
 
     playbackPillVisible() {
@@ -9477,6 +9479,14 @@ export default {
 
     showPlayerDock() {
       if (this.showCountdownOverlay) return false
+      if (
+        this.playerVisible
+        && this.isSessionLive
+        && !this.playerDismissed
+        && (this.isPlaying || this.playbackAwaitingGesture || this.hasLoadedAudio)
+      ) {
+        return true
+      }
       if (
         this.sessionLifecycleMutation === SESSION_MUTATION.STARTING
         || this.sessionLifecycleMutation === SESSION_MUTATION.RESUMING
@@ -13686,17 +13696,26 @@ export default {
       }
     },
     showCountdown(callback) {
+      this.countdownGeneration = (Number(this.countdownGeneration) || 0) + 1
+      const generation = this.countdownGeneration
       this.showCountdownOverlay = true
       this.countdownValue = 3
 
       if (this.countdownInterval) {
         clearInterval(this.countdownInterval)
+        this.countdownInterval = null
       }
 
       this.countdownInterval = setInterval(() => {
-        this.countdownValue--
+        if (generation !== this.countdownGeneration) {
+          clearInterval(this.countdownInterval)
+          this.countdownInterval = null
+          return
+        }
 
-        if (this.countdownValue < 0) {
+        this.countdownValue -= 1
+
+        if (this.countdownValue <= 0) {
           clearInterval(this.countdownInterval)
           this.countdownInterval = null
           this.showCountdownOverlay = false
@@ -13979,13 +13998,6 @@ export default {
       await this.$nextTick()
       if (this.isPlaybackActive()) return true
 
-      // startSession already attempted playback; only re-try when callers did not
-      // (resume / soft-resume), or when autoplay was blocked after a successful load.
-      if (options.skipImmediatePlay) {
-        await this.$nextTick()
-        return this.isPlaybackActive()
-      }
-
       const entry = this.queue?.[this.queueIndex]
       if (entry) {
         await this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
@@ -13996,6 +14008,65 @@ export default {
       await this.resumePlaybackAfterGesture()
       await this.$nextTick()
       return this.isPlaybackActive()
+    },
+
+    async finalizeCountdownPlayback(options = {}) {
+      const showPlayer = options.playerVisible !== false
+      if (showPlayer && !this.playerDismissed) {
+        this.playerVisible = true
+      }
+
+      this.ensureLiveSessionAudioAttached()
+
+      const audio = this.audioElement || this.$refs.audio
+      if (audio && !this.isMainAudioReady(audio)) {
+        try {
+          await this.waitForAudioElementReady(audio, 8000)
+        } catch {
+          // playQueueEntry will retry with CDN fallbacks
+        }
+      }
+
+      const entry = this.queue?.[this.queueIndex] ?? this.queue?.[0] ?? this.activeQueueEntry
+      if (entry) {
+        try {
+          await this.playQueueEntry(entry, {
+            force: true,
+            queueIndex: this.queueIndex,
+          })
+        } catch (error) {
+          console.warn('Countdown playback via queue entry failed:', error)
+        }
+      }
+
+      await this.$nextTick()
+
+      let playbackStarted = this.isPlaybackActive()
+      if (!playbackStarted) {
+        playbackStarted = await this.ensureSessionPlaybackStarted()
+      }
+
+      if (!playbackStarted) {
+        playbackStarted = await this.attemptMutedAutoplayRecovery()
+      }
+
+      await this.$nextTick()
+
+      if (!playbackStarted) {
+        this.playbackAwaitingGesture = true
+        if (showPlayer && !this.playerDismissed) this.playerVisible = true
+        this.syncSessionControlsWithPlayback(false)
+        this.promptTapToPlay()
+      } else {
+        this.playbackAwaitingGesture = false
+        this.syncSessionControlsWithPlayback(true)
+        const verse = this.activeVerseRef
+        if (verse?.key && this.isPlaying && this.wordByWordAudioEnabled) {
+          this.startWordHighlighting(verse)
+        }
+      }
+
+      return playbackStarted
     },
 
     clearToolsStartInFlight() {
@@ -14122,10 +14193,8 @@ export default {
                 return null
               })
             }
-            await this.startSession()
-            // startSession already called playQueueEntry; avoid a second force-play
-            // that races load()/abort and floods Audio load errors.
-            const playbackStarted = await this.ensureSessionPlaybackStarted({ skipImmediatePlay: true })
+            await this.startSession({ deferPlayback: true })
+            await this.finalizeCountdownPlayback()
             // Wait for backend id before releasing the lock so pause/end can target it.
             if (startPromise) {
               await startPromise
@@ -14135,18 +14204,6 @@ export default {
               SESSION_STATUS.ACTIVE,
               SESSION_MUTATION.IDLE
             )
-            // Countdown breaks the user-gesture chain — browsers often block autoplay.
-            // Mirror that as a soft pause so the header shows Resume (not Pause) while
-            // nothing is actually playing.
-            if (!playbackStarted && this.queue?.length) {
-              this.ensureLiveSessionAudioAttached()
-              this.playerVisible = true
-              this.playbackAwaitingGesture = true
-              this.syncSessionControlsWithPlayback(false)
-              this.promptTapToPlay()
-            } else {
-              this.playbackAwaitingGesture = false
-            }
             this.sessionLifecycleError = this.sessionLifecycleError === 'start_persist_failed'
               ? 'start_persist_failed'
               : null
@@ -31636,20 +31693,10 @@ export default {
 
     resumeRestoredSessionWithCountdown() {
       this.primeAudioPlaybackUnlock()
+      this.playerVisible = true
       this.prepareRestoredSessionAudio({ autoplay: false, force: true })
       this.showCountdown(async () => {
-        const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
-        if (entry) {
-          await this.playQueueEntry(entry, { force: true, queueIndex: this.queueIndex })
-        }
-        await this.$nextTick()
-        if (!this.isPlaybackActive() && this.queue?.length) {
-          this.promptTapToPlay()
-          this.syncSessionControlsWithPlayback(false)
-        } else {
-          this.playbackAwaitingGesture = false
-          this.syncSessionControlsWithPlayback(!!this.isPlaying)
-        }
+        await this.finalizeCountdownPlayback()
       })
     },
 
@@ -32024,28 +32071,7 @@ export default {
       this.playerVisible = true
       this.prepareRestoredSessionAudio({ autoplay: false, force: true })
       this.showCountdown(async () => {
-        const entry = this.queue?.[this.queueIndex] || this.activeQueueEntry
-        if (entry) {
-          await this.playQueueEntry(entry, {
-            force: true,
-            queueIndex: this.queueIndex,
-            primePlayback: true,
-          })
-        } else {
-          await this.ensureSessionPlaybackStarted()
-        }
-        await this.$nextTick()
-        if (!this.isPlaybackActive() && this.queue?.length) {
-          this.promptTapToPlay()
-          this.syncSessionControlsWithPlayback(false)
-        } else {
-          this.playbackAwaitingGesture = false
-          this.syncSessionControlsWithPlayback(!!this.isPlaying)
-          const verse = this.activeVerseRef
-          if (verse?.key && this.isPlaying && this.wordByWordAudioEnabled) {
-            this.startWordHighlighting(verse)
-          }
-        }
+        await this.finalizeCountdownPlayback()
       })
     },
 
@@ -32181,8 +32207,8 @@ export default {
               }
             }
           }
-          // Mid-session / primary Resume never uses the start-session countdown.
-          const continued = await this.continueLastSession({ skipCountdown: true, prepareOnly })
+          // Always resume through the countdown so playback prep stays consistent.
+          const continued = await this.continueLastSession({ prepareOnly })
           if (!continued) {
             this.sessionLifecycleError = 'resume_invalid'
             this.transitionSessionLifecycle(
@@ -32663,6 +32689,38 @@ export default {
         // In case the element became ready between the initial check and listener attach.
         if (isReady()) finish(resolve)
       })
+    },
+
+    async attemptMutedAutoplayRecovery() {
+      const audio = this.audioElement || this.$refs.audio
+      if (!audio) return false
+      const src = String(audio.currentSrc || audio.getAttribute('src') || '').trim()
+      if (!src || src === 'about:blank' || src.startsWith('data:')) return false
+      if (!this.isMainAudioReady(audio)) {
+        try {
+          await this.waitForAudioElementReady(audio, 5000)
+        } catch {
+          return false
+        }
+      }
+      try {
+        const safeSpeed = this.normalizePlaybackSpeed(this.speed)
+        audio.defaultPlaybackRate = safeSpeed
+        audio.playbackRate = safeSpeed
+        audio.muted = true
+        await audio.play()
+        audio.muted = false
+        audio.volume = 1
+        this.isPlaying = true
+        this.playerVisible = true
+        this.playbackAwaitingGesture = false
+        this.markPlaybackStart()
+        this.syncSessionControlsWithPlayback(true)
+        return true
+      } catch {
+        try { audio.muted = false } catch { /* ignore */ }
+        return false
+      }
     },
 
     async resumePlaybackAfterGesture() {
@@ -34809,7 +34867,7 @@ export default {
         ? config.chainingMethod
         : this.chainingMethod
       this.chainingRepetitions = Math.max(1, Math.min(5, Number(config.chainingRepetitions || this.chainingRepetitions || 1)))
-      this.tajweedEnabled = !!config.tajweedEnabled
+      this.tajweedEnabled = config.tajweedEnabled ?? DEFAULT_TAJWEED_ENABLED
       this.quranFont = normaliseQuranFontId(config.quranFont || this.quranFont)
       applyQuranFontCssVariable(this.quranFont)
       this.fontScale = Number(config.fontScale || 1)
@@ -36018,11 +36076,7 @@ export default {
       if (!snapshot) return
       this.restoreSessionFromSnapshot(snapshot, { autoplay: false })
       this.showCountdown(async () => {
-        this.resumePlaybackFromRestoredState()
-        const playbackStarted = await this.ensureSessionPlaybackStarted()
-        if (!playbackStarted && this.queue?.length) {
-          this.promptTapToPlay()
-        }
+        await this.finalizeCountdownPlayback()
       })
     },
 
@@ -37120,7 +37174,7 @@ export default {
             ? this.centralSession.activeTab
             : 'tools'
         }
-        this.tajweedEnabled = !!this.centralSession.tajweedEnabled
+        this.tajweedEnabled = this.centralSession.tajweedEnabled ?? DEFAULT_TAJWEED_ENABLED
         this.focusModeEnabled = !!this.centralSession.focusModeEnabled
         this.blurModeEnabled = !!this.centralSession.blurModeEnabled
         this.blurIntensity = Math.max(4, Math.min(18, Number(this.centralSession.blurIntensity || 10)))
@@ -39919,7 +39973,8 @@ export default {
       }
     },
 
-    async startSession() {
+    async startSession(options = {}) {
+      const deferPlayback = !!options.deferPlayback
       const config = this.sessionConfig
       const mode = config.mode || this.currentMode
 
@@ -40006,7 +40061,11 @@ export default {
           this.audioElement.playbackRate = this.normalizePlaybackSpeed(this.speed)
         }
 
-        await this.playQueueEntry(first, { force: true, queueIndex: playbackIndex })
+        if (deferPlayback) {
+          this.preloadQueueEntryAudio(first, { playerVisible: false })
+        } else {
+          await this.playQueueEntry(first, { force: true, queueIndex: playbackIndex })
+        }
       }
 
       this.showTools = false
@@ -41074,7 +41133,7 @@ export default {
           this.anchorModeEnabled = state.anchorModeEnabled ?? false
           this.anchorCount = state.anchorCount ?? 2
           this.settingsDraft = {
-            tajweedEnabled: state.tajweedEnabled ?? this.tajweedEnabled ?? false,
+            tajweedEnabled: state.tajweedEnabled ?? this.tajweedEnabled ?? DEFAULT_TAJWEED_ENABLED,
             showTranslation: state.showTranslation ?? this.showTranslation,
             showTransliteration: state.showTransliteration ?? this.showTransliteration,
             showWordByWord: state.showWordByWord ?? this.showWordByWord,
@@ -41094,7 +41153,7 @@ export default {
             this.savedActiveSection = 'saved_in_progress'
           }
           this.syncSavedSectionOpenState()
-          this.tajweedEnabled = state.tajweedEnabled ?? false
+          this.tajweedEnabled = state.tajweedEnabled ?? DEFAULT_TAJWEED_ENABLED
           this.mainCardCollapsed = !!state.mainCardCollapsed
           this.feedbackCollapsed = !!state.feedbackCollapsed
           this.playerCompact = !!state.playerCompact

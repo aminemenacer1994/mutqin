@@ -16,6 +16,7 @@ import {
   SESSION_STORAGE_KEYS,
   CENTRAL_SESSION_STORAGE_KEY,
 } from '../utils/mutqinStorageKeys'
+import { DEFAULT_TAJWEED_ENABLED } from './session/sessionDefaults'
 
 export { MODE_STORAGE_KEYS, SESSION_STORAGE_KEYS, CENTRAL_SESSION_STORAGE_KEY }
 
@@ -373,7 +374,7 @@ export function createCentralSessionState() {
     sessionStatus: 'idle',
     sessionCompletedAt: null,
     repetitionTimes: 0,
-    tajweedEnabled: false,
+    tajweedEnabled: DEFAULT_TAJWEED_ENABLED,
     focusModeEnabled: false,
     blurModeEnabled: false,
     blurIntensity: 10,
