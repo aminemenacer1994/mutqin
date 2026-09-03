@@ -1655,7 +1655,7 @@ export default {
         } else if (mode === 'ai_checks') {
           items = await learningApi.getAiReciteAttempts()
         } else if (mode === 'hifz') {
-          const progress = await learningApi.getProgress()
+          const progress = await learningApi.getProgress({ limit: 2000 })
           items = this.groupHifzProgress(progress)
         }
         if (requestId !== this.drawerRequestId) return

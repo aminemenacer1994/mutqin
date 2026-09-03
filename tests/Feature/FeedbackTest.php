@@ -321,4 +321,181 @@ class FeedbackTest extends TestCase
             ->assertJsonPath('ai_complaints.valid_checks', 1)
             ->assertJsonPath('ai_complaints.complaint_rate_percent', 100);
     }
+
+    public function test_ai_complaint_metrics_zero_checks_return_null_rate(): void
+    {
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/feedback/metrics')
+            ->assertOk()
+            ->assertJsonPath('ai_complaints.complaints', 0)
+            ->assertJsonPath('ai_complaints.valid_checks', 0)
+            ->assertJsonPath('ai_complaints.complaint_rate_percent', null);
+    }
+
+    public function test_ai_complaint_metrics_checks_without_complaints_are_zero_percent(): void
+    {
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+        $user = User::factory()->create();
+
+        AiReciteAttempt::query()->create([
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 91,
+            'band' => 'strong',
+        ]);
+        AiReciteAttempt::query()->create([
+            'user_id' => $user->id,
+            'attempt_number' => 2,
+            'accuracy_percent' => 70,
+            'band' => 'mixed',
+        ]);
+        MemorisationAssessment::query()->create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 2,
+            'status' => MemorisationAssessment::STATUS_COMPLETED,
+            'overall_accuracy' => 80,
+            'completed_at' => now(),
+        ]);
+        // Failed / cancelled style rows must stay out of the denominator.
+        AiReciteAttempt::query()->create([
+            'user_id' => $user->id,
+            'attempt_number' => 3,
+            'accuracy_percent' => null,
+            'band' => 'cancelled',
+        ]);
+        MemorisationAssessment::query()->create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'status' => MemorisationAssessment::STATUS_FAILED,
+            'overall_accuracy' => null,
+            'failure_reason' => 'provider_error',
+        ]);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/feedback/metrics')
+            ->assertOk()
+            ->assertJsonPath('ai_complaints.complaints', 0)
+            ->assertJsonPath('ai_complaints.valid_checks', 3)
+            ->assertJsonPath('ai_complaints.complaint_rate_percent', 0);
+    }
+
+    public function test_ai_complaint_metrics_known_percentage_and_date_window(): void
+    {
+        $admin = User::factory()->admin()->create(['email' => 'admin@example.com']);
+        $user = User::factory()->create();
+
+        $oldAttempt = AiReciteAttempt::query()->create([
+            'user_id' => $user->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 88,
+            'band' => 'mixed',
+            'created_at' => now()->subDays(20),
+            'updated_at' => now()->subDays(20),
+        ]);
+        $recentA = AiReciteAttempt::query()->create([
+            'user_id' => $user->id,
+            'attempt_number' => 2,
+            'accuracy_percent' => 92,
+            'band' => 'strong',
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(2),
+        ]);
+        $recentB = AiReciteAttempt::query()->create([
+            'user_id' => $user->id,
+            'attempt_number' => 3,
+            'accuracy_percent' => 61,
+            'band' => 'weak',
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDay(),
+        ]);
+        $recentC = AiReciteAttempt::query()->create([
+            'user_id' => $user->id,
+            'attempt_number' => 4,
+            'accuracy_percent' => 77,
+            'band' => 'mixed',
+            'created_at' => now()->subHours(3),
+            'updated_at' => now()->subHours(3),
+        ]);
+
+        $oldComplaint = Feedback::query()->create([
+            'user_id' => $user->id,
+            'type' => 'ai_recitation',
+            'message' => 'Old complaint outside window.',
+            'status' => 'new',
+            'ai_check_id' => $oldAttempt->id,
+            'ai_check_source' => Feedback::AI_CHECK_AI_RECITE,
+        ]);
+        $oldComplaint->forceFill([
+            'created_at' => now()->subDays(20),
+            'updated_at' => now()->subDays(20),
+        ])->saveQuietly();
+
+        Feedback::query()->create([
+            'user_id' => $user->id,
+            'type' => 'ai_recitation',
+            'message' => 'Recent complaint A.',
+            'status' => 'new',
+            'ai_check_id' => $recentA->id,
+            'ai_check_source' => Feedback::AI_CHECK_AI_RECITE,
+        ]);
+
+        // Ensure attempt timestamps survive model defaults.
+        $oldAttempt->forceFill([
+            'created_at' => now()->subDays(20),
+            'updated_at' => now()->subDays(20),
+        ])->saveQuietly();
+        $recentA->forceFill([
+            'created_at' => now()->subDays(2),
+            'updated_at' => now()->subDays(2),
+        ])->saveQuietly();
+        $recentB->forceFill([
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDay(),
+        ])->saveQuietly();
+        $recentC->forceFill([
+            'created_at' => now()->subHours(3),
+            'updated_at' => now()->subHours(3),
+        ])->saveQuietly();
+
+        // 1 complaint / 3 recent eligible checks = 33.3%
+        $this->actingAs($admin)
+            ->getJson('/api/admin/feedback/metrics?days=7')
+            ->assertOk()
+            ->assertJsonPath('ai_complaints.complaints', 1)
+            ->assertJsonPath('ai_complaints.valid_checks', 3)
+            ->assertJsonPath('ai_complaints.complaint_rate_percent', 33.3);
+
+        // Explicit calendar range still works for the admin feedback filters.
+        $from = now()->subDays(3)->toDateString();
+        $to = now()->toDateString();
+        $this->actingAs($admin)
+            ->getJson("/api/admin/feedback/metrics?date_from={$from}&date_to={$to}")
+            ->assertOk()
+            ->assertJsonPath('ai_complaints.complaints', 1)
+            ->assertJsonPath('ai_complaints.valid_checks', 3)
+            ->assertJsonPath('ai_complaints.complaint_rate_percent', 33.3);
+
+        // All-time: 2 complaints / 4 eligible checks = 50%
+        $this->actingAs($admin)
+            ->getJson('/api/admin/feedback/metrics')
+            ->assertOk()
+            ->assertJsonPath('ai_complaints.complaints', 2)
+            ->assertJsonPath('ai_complaints.valid_checks', 4)
+            ->assertJsonPath('ai_complaints.complaint_rate_percent', 50);
+    }
+
+    public function test_non_admin_cannot_access_feedback_metrics(): void
+    {
+        $user = User::factory()->create(['email' => 'learner@example.com']);
+
+        $this->actingAs($user)
+            ->getJson('/api/admin/feedback/metrics')
+            ->assertForbidden();
+    }
 }

@@ -3773,6 +3773,7 @@
     "nothingToPlayCheckTheSelected": "لا شيء للتشغيل. تحقق من النطاق المحدد.",
     "backOnlineLiveApisAreAvailable": "عدت متصلاً. الميزات المباشرة متاحة مرة أخرى.",
     "offlineModeActiveReadingFallsBack": "أنت دون اتصال. ستُستخدم السور المحفوظة على هذا الجهاز للقراءة.",
+    "sessionSyncExpired": "انتهت صلاحية تسجيل الدخول. حدّث الصفحة للمزامنة. يمكنك متابعة التسميع على هذا الجهاز حتى ذلك الحين.",
     "settingsIssue": "مشكلة في الإعدادات: {join}",
     "fontSize": "حجم الخط: {defaultFontSize}%",
     "message": "{p0} {p1}",

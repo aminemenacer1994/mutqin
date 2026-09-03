@@ -2496,6 +2496,7 @@ html body .verse-arabic word.anchor-highlight {
 .app.post-session-ai-recite-open .viewport-confetti,
 .app.post-session-ai-recite-open .viewport-confetti-canvas,
 .app.post-session-ai-recite-open .onboarding-post-session-confetti-layer,
+body:has(.app.post-session-ai-recite-open) > .viewport-confetti,
 body:has(.app.post-session-ai-recite-open) > .viewport-confetti-canvas,
 .app.post-session-ai-recite-open .post-session-simple,
 .post-session-simple--under-ai,
@@ -17891,7 +17892,9 @@ body.memorisation-page nav.navbar.app-navbar {
 .app.is-rtl .verse-transliteration,
 .app.is-rtl .word-meaning,
 .app.is-rtl kbd,
-.app.is-rtl .mushaf-click-guide {
+.app.is-rtl .mushaf-click-guide,
+.app.is-rtl .mutqin-surah-bilingual,
+.app.is-rtl .workspace-shell-main-title.mutqin-surah-bilingual {
   direction: ltr;
 }
 
@@ -45966,13 +45969,18 @@ body.memorisation-page .tools {
   animation: mutqinModalEnter var(--mutqin-modal-enter-duration) var(--mutqin-modal-enter-ease) both;
 }
 
-.post-session-simple__dialog > .viewport-confetti {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
+body > .viewport-confetti,
+body > .viewport-confetti-canvas,
+.post-session-simple > .viewport-confetti {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100dvh !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
   pointer-events: none !important;
-  z-index: 6;
+  z-index: 14150 !important;
 }
 
 .post-session-simple__header {
@@ -46244,6 +46252,35 @@ body.memorisation-page .tools {
 }
 
 .post-session-simple__ai-details-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.post-session-simple__ai-feedback {
+  margin: 0.35rem 0 0;
+}
+
+.post-session-simple__ai-feedback-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--text) 62%, transparent);
+  font-size: 0.8rem;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  text-align: start;
+  padding: 0.15rem 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.post-session-simple__ai-feedback-btn:hover {
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+}
+
+.post-session-simple__ai-feedback-btn:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 2px;
   border-radius: 4px;
@@ -55397,15 +55434,19 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow {
   display: grid;
-  gap: 0.45rem;
-  margin: 0.35rem 0 0.15rem;
+  gap: 0.55rem;
+  margin: 0.45rem 0 0.15rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--ps-line) 88%, transparent);
+  background: color-mix(in srgb, var(--ps-card) 94%, #fff);
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow-lead {
   margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.45;
-  color: color-mix(in srgb, var(--ps-muted) 94%, transparent);
+  font-size: clamp(0.84rem, 2.2vw, 0.9rem);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--ps-muted) 94%, var(--ps-ink));
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-steps {
@@ -55474,9 +55515,25 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-detail {
-  font-size: 0.84rem;
-  line-height: 1.4;
-  color: color-mix(in srgb, var(--ps-muted) 96%, transparent);
+  font-size: clamp(0.8rem, 2.1vw, 0.86rem);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--ps-muted) 96%, var(--ps-ink));
+}
+
+@media (max-width: 480px) {
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    grid-template-columns: 1fr !important;
+    gap: 0.45rem !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-row {
+    gap: 0.3rem 0.45rem;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow {
+    padding: 0.65rem 0.75rem;
+  }
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-technique {
@@ -55806,33 +55863,38 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-target {
   display: grid;
-  gap: 0.2rem;
+  gap: 0.35rem;
   min-width: 0;
 }
 
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-arabic {
-  margin: 0;
-  font-family: var(--quran-font, var(--font-ar, "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif));
-  font-size: clamp(1.35rem, 3.4vw, 1.7rem);
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--ps-ink);
-  letter-spacing: 0;
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35em 0.45em;
+  min-width: 0;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
 }
 
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-separator {
+  flex: 0 0 auto;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-arabic,
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-latin {
   margin: 0;
-  font-size: 0.92rem;
-  font-weight: 550;
-  line-height: 1.35;
-  color: color-mix(in srgb, var(--ps-ink) 72%, transparent);
+  flex: 0 1 auto;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-latin--solo {
   font-size: clamp(1.05rem, 2.7vw, 1.22rem);
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  color: var(--ps-ink);
+  letter-spacing: 0.01em;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-prompt-range .mutqin-surah-bilingual {
+  font-weight: 400;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pills--next {
@@ -55894,11 +55956,11 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading {
-  margin: 0 0 0.28rem;
-  font-size: 1.22rem;
-  font-weight: 600;
+  margin: 0 0 0.35rem;
+  font-size: clamp(1rem, 2.6vw, 1.12rem);
+  font-weight: 650;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.25;
   text-transform: none;
   color: var(--ps-ink, #2a2118);
 }
@@ -55907,14 +55969,18 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__reason,
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__reason--compact {
   margin: 0;
-  font-size: 0.84rem;
-  line-height: 1.45;
+  font-size: clamp(0.84rem, 2.2vw, 0.9rem);
+  line-height: 1.55;
   font-weight: 450;
-  color: var(--ps-muted, #7a6a58);
+  color: color-mix(in srgb, var(--ps-muted, #7a6a58) 92%, var(--ps-ink));
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan {
   margin-top: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--ps-line) 88%, transparent);
+  background: color-mix(in srgb, var(--ps-card) 92%, #fff);
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-colours {
@@ -58679,6 +58745,17 @@ never recolour tajweed text */
   }
 }
 
+.mutqin-surah-bilingual {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35em 0.45em;
+  max-width: 100%;
+  text-align: left;
+}
+
 .workspace-shell .workspace-shell-main-title,
 .workspace-shell .workspace-shell-copy h1.workspace-shell-main-title,
 html body .app .workspace-shell-main-title {
@@ -58691,11 +58768,12 @@ html body .app .workspace-shell-main-title {
   max-width: 100% !important;
   margin: 0 !important;
   padding-bottom: 0.35rem !important;
+  direction: ltr !important;
   color: color-mix(in srgb, var(--text, #1f1a17) 78%, var(--accent, #8b5e3c) 22%) !important;
-  font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif !important;
+  font-family: "Amiri", "Georgia", "Times New Roman", serif !important;
   font-size: clamp(1.2rem, 0.95rem + 1.2vw, 1.6rem) !important;
   font-weight: 400 !important;
-  letter-spacing: 0 !important;
+  letter-spacing: 0.01em !important;
   line-height: 1.35 !important;
   unicode-bidi: isolate;
   text-wrap: balance;
@@ -58706,15 +58784,18 @@ html body .app .workspace-shell-main-title {
 .workspace-shell-surah-ar {
   font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic", serif;
   font-size: 1.08em;
+  font-weight: 400;
   line-height: 1.2;
   direction: rtl;
   unicode-bidi: isolate;
+  color: color-mix(in srgb, var(--text, #1f1a17) 82%, var(--accent, #8b5e3c) 18%);
 }
 
 .workspace-shell-surah-sep {
   opacity: 0.45;
   font-weight: 400;
   user-select: none;
+  color: color-mix(in srgb, var(--text-muted, #8a7f74) 88%, transparent);
 }
 
 .workspace-shell-surah-en {
@@ -58722,9 +58803,9 @@ html body .app .workspace-shell-main-title {
   font-size: 0.92em;
   font-weight: 400;
   letter-spacing: 0.01em;
-  opacity: 0.88;
   direction: ltr;
   unicode-bidi: isolate;
+  color: color-mix(in srgb, var(--text, #1f1a17) 82%, var(--accent, #8b5e3c) 18%);
 }
 
 .workspace-shell .workspace-shell-main-title::after,
@@ -60086,6 +60167,13 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 
 /* Recommended next-step cards: stay on the dark surface */
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-flow {
+  background: #221c19 !important;
+  border: 1px solid rgba(246, 239, 230, 0.14) !important;
+}
+
 html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step,
 [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step,
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step {

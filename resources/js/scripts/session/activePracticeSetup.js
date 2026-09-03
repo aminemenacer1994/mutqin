@@ -347,61 +347,8 @@ export function buildActivePracticeSetup(input = {}, t = null) {
     })
   }
 
-  const mistakeMode = String(input.mistakeHandlingMode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
-  const mistakePause = mistakeMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
-  items.push({
-    id: 'mistake_handling',
-    kind: 'ai',
-    icon: mistakePause ? 'bi-pause-circle' : 'bi-arrow-repeat',
-    label: translate(t, 'memorisation.activePracticeSetup.mistakeHandling', 'Mistake handling'),
-    value: mistakePause
-      ? translate(t, 'memorisation.activePracticeSetup.mistakePause', 'Pause on mistake')
-      : translate(t, 'memorisation.activePracticeSetup.mistakeContinue', 'Continue and review'),
-    shortValue: mistakePause
-      ? translate(t, 'memorisation.activePracticeSetup.mistakePauseShort', 'Pause')
-      : translate(t, 'memorisation.activePracticeSetup.mistakeContinueShort', 'Continue'),
-    state: resolveToolState({
-      enabled: !!input.aiCheckSurface,
-      selected: true,
-      sessionPhase: input.aiCheckSurface ? sessionPhase : 'setup',
-    }),
-    stateLabel: stateLabel(resolveToolState({
-      enabled: !!input.aiCheckSurface,
-      selected: true,
-      sessionPhase: input.aiCheckSurface ? sessionPhase : 'setup',
-    }), t),
-    description: explainActiveTool({ id: mistakePause ? 'mistake_pause' : 'mistake_continue' }, t),
-    explanation: explainActiveTool({ id: mistakePause ? 'mistake_pause' : 'mistake_continue' }, t),
-    recommended: false,
-    tooltip: translate(t, 'memorisation.activePracticeSetup.tooltips.mistakeHandling', 'What happens when a mistake is confirmed during an AI check.'),
-    canChangeDuringSession: canChangePracticeSetting('mistake_handling', input),
-  })
-
-  // Auto-follow is always on by default — omit from practice-setup pills.
-  const mistakeSoundOn = !!input.mistakeSoundEnabled
-  items.push({
-    id: 'mistake_sound',
-    kind: 'ai',
-    icon: mistakeSoundOn ? 'bi-volume-up' : 'bi-volume-mute',
-    label: translate(t, 'memorisation.activePracticeSetup.mistakeSound', 'Mistake sound'),
-    value: mistakeSoundOn ? translate(t, 'common.on', 'On') : translate(t, 'common.off', 'Off'),
-    shortValue: mistakeSoundOn ? translate(t, 'common.on', 'On') : translate(t, 'common.off', 'Off'),
-    state: resolveToolState({
-      enabled: mistakeSoundOn,
-      selected: true,
-      sessionPhase: input.aiCheckSurface ? sessionPhase : 'setup',
-    }),
-    stateLabel: stateLabel(resolveToolState({
-      enabled: mistakeSoundOn,
-      selected: true,
-      sessionPhase: input.aiCheckSurface ? sessionPhase : 'setup',
-    }), t),
-    description: explainActiveTool({ id: 'mistake_sound' }, t),
-    explanation: explainActiveTool({ id: 'mistake_sound' }, t),
-    recommended: false,
-    tooltip: translate(t, 'memorisation.activePracticeSetup.tooltips.mistakeSound', 'Soft sound when a mistake is confirmed.'),
-    canChangeDuringSession: canChangePracticeSetting('mistake_sound', input),
-  })
+  // Mistake handling / sound live under AI Recite & AMD settings — not practice-setup chips.
+  // (AMD always continues on confirmed mistakes; sound is a persisted AMD preference.)
 
   const activeOrSelected = items.filter((item) => (
     item.state === TOOL_STATE.ACTIVE_NOW
@@ -411,7 +358,7 @@ export function buildActivePracticeSetup(input = {}, t = null) {
   ))
 
   // Compact summary prefers techniques/settings the learner cares about most.
-  const compactPriority = ['talqin', 'focus', 'blur', 'repetitions', 'playback_speed', 'visibility', 'weak_focus', 'full_range', 'chaining', 'linking', 'cumulative', 'anchor', 'mistake_handling', 'mistake_sound']
+  const compactPriority = ['talqin', 'focus', 'blur', 'repetitions', 'playback_speed', 'visibility', 'weak_focus', 'full_range', 'chaining', 'linking', 'cumulative', 'anchor']
   const ranked = [...activeOrSelected].sort((a, b) => {
     const ai = compactPriority.indexOf(a.id)
     const bi = compactPriority.indexOf(b.id)
@@ -491,20 +438,6 @@ export function buildSessionConfirmationPanel(input = {}, items = [], t = null) 
       label: translate(t, 'memorisation.activePracticeSetup.confirm.visibility', 'Text visibility'),
       value: formatVisibility(input.blurEnabled, input.blurIntensity, input.focusDimPercent)
         || translate(t, 'memorisation.activePracticeSetup.confirm.visibilityFull', 'Full text visible'),
-    },
-    {
-      id: 'ai_behaviour',
-      label: translate(t, 'memorisation.activePracticeSetup.confirm.aiBehaviour', 'AI-check behaviour'),
-      value: String(input.mistakeHandlingMode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW) === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
-        ? translate(t, 'memorisation.activePracticeSetup.mistakePause', 'Pause on mistake')
-        : translate(t, 'memorisation.activePracticeSetup.mistakeContinue', 'Continue and review'),
-    },
-    {
-      id: 'mistake_feedback',
-      label: translate(t, 'memorisation.activePracticeSetup.confirm.mistakeFeedback', 'Mistake feedback'),
-      value: input.mistakeSoundEnabled
-        ? translate(t, 'memorisation.activePracticeSetup.confirm.mistakeSoundOn', 'Soft sound on')
-        : translate(t, 'memorisation.activePracticeSetup.confirm.mistakeSoundOff', 'Sound off'),
     },
   ]
 

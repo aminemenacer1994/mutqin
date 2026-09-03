@@ -99,6 +99,25 @@ class StateSyncController extends Controller
             ]);
         }
 
+        // Reject strictly older client clocks so a late/stale autosave cannot
+        // overwrite newer progress that already landed on the server.
+        if (
+            $existing
+            && $existing->state_updated_at
+            && isset($validated['meta']['local_updated_at'])
+            && $localUpdatedAt->lt($existing->state_updated_at)
+        ) {
+            return response()->json([
+                'saved' => false,
+                'stale' => true,
+                'meta' => [
+                    'owner_id' => $user->id,
+                    'state_updated_at' => $existing->state_updated_at->toIso8601String(),
+                    'payload_hash' => $existing->payload_hash,
+                ],
+            ], 409);
+        }
+
         $syncPayload = [
             'state' => $encodedState,
             'device_id' => $validated['meta']['device_id'] ?? null,

@@ -17,10 +17,27 @@ class ProgressController extends Controller
         $validated = $request->validate([
             'surah_number' => ['nullable', 'integer', 'min:1', 'max:114'],
             'updated_since' => ['nullable', 'date'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:2000'],
+            'offset' => ['nullable', 'integer', 'min:0', 'max:100000'],
         ]);
 
-        $query = MemorisationProgress::query()
-            ->where('user_id', $request->user()->id)
+        $limit = (int) ($validated['limit'] ?? 500);
+        $offset = (int) ($validated['offset'] ?? 0);
+
+        $baseQuery = MemorisationProgress::query()
+            ->where('user_id', $request->user()->id);
+
+        if (isset($validated['surah_number'])) {
+            $baseQuery->where('surah_number', (int) $validated['surah_number']);
+        }
+
+        if (! empty($validated['updated_since'])) {
+            $baseQuery->where('updated_at', '>=', $validated['updated_since']);
+        }
+
+        $total = (clone $baseQuery)->count();
+
+        $progress = (clone $baseQuery)
             ->select([
                 'id',
                 'surah_number',
@@ -30,19 +47,11 @@ class ProgressController extends Controller
                 'repetitions',
                 'completed_at',
                 'updated_at',
-            ]);
-
-        if (isset($validated['surah_number'])) {
-            $query->where('surah_number', (int) $validated['surah_number']);
-        }
-
-        if (! empty($validated['updated_since'])) {
-            $query->where('updated_at', '>=', $validated['updated_since']);
-        }
-
-        $progress = $query
+            ])
             ->orderBy('surah_number')
             ->orderBy('ayah_number')
+            ->offset($offset)
+            ->limit($limit)
             ->get()
             ->map(function (MemorisationProgress $row) {
                 $surah = (int) $row->surah_number;
@@ -61,7 +70,15 @@ class ProgressController extends Controller
             })
             ->values();
 
-        return response()->json(['progress' => $progress]);
+        return response()->json([
+            'progress' => $progress,
+            'meta' => [
+                'total' => $total,
+                'limit' => $limit,
+                'offset' => $offset,
+                'has_more' => ($offset + $progress->count()) < $total,
+            ],
+        ]);
     }
 
     public function store(SaveProgressRequest $request): JsonResponse

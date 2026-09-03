@@ -3773,6 +3773,7 @@
     "nothingToPlayCheckTheSelected": "Nada a play. comprobar el seleccionado rango.",
     "backOnlineLiveApisAreAvailable": "Vous êtes de nouveau en ligne. Les fonctions en direct sont de nouveau disponibles.",
     "offlineModeActiveReadingFallsBack": "Vous êtes hors ligne. La lecture utilisera les sourates enregistrées sur cet appareil.",
+    "sessionSyncExpired": "Votre connexion a expiré. Actualisez la page pour synchroniser. La pratique continue sur cet appareil en attendant.",
     "settingsIssue": "مشكلة في الإعدادات: {join}",
     "fontSize": "حجم الخط: {defaultFontSize}%",
     "message": "{p0} {p1}",

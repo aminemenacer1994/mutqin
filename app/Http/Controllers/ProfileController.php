@@ -8,7 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Models\User;
+use App\Http\Requests\UpdateAiSessionSettingsRequest;
 use App\Services\Auth\AiAudioConsentService;
+use App\Services\Auth\AiSessionSettingsService;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Support\AdminEmails;
 use App\Support\EmailVerification;
@@ -127,6 +129,20 @@ class ProfileController extends Controller
 
         return response()->json(
             $consent->record($request->user(), (bool) $validated['accepted'])
+        );
+    }
+
+    public function showAiSessionSettings(Request $request, AiSessionSettingsService $settings): JsonResponse
+    {
+        return response()->json($settings->snapshot($request->user()));
+    }
+
+    public function updateAiSessionSettings(
+        UpdateAiSessionSettingsRequest $request,
+        AiSessionSettingsService $settings
+    ): JsonResponse {
+        return response()->json(
+            $settings->update($request->user(), $request->settingsPatch())
         );
     }
 

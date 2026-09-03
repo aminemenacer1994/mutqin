@@ -124,7 +124,7 @@ function createFakeWindow({
   return win
 }
 
-test('desktop profile uses a fuller burst; mobile is lighter; both last 4s; reduced-motion skips', () => {
+test('desktop profile uses a fuller burst; mobile is lighter; both last 3s; reduced-motion skips', () => {
   assert.equal(confetti.resolveViewportConfettiProfile({ reducedMotion: true }).skip, true)
   assert.equal(confetti.resolveViewportConfettiProfile({ reducedMotion: true }).particleCount, 0)
 
@@ -134,9 +134,9 @@ test('desktop profile uses a fuller burst; mobile is lighter; both last 4s; redu
   assert.ok(desktop.particleCount > mobile.particleCount)
   assert.equal(desktop.durationMs, confetti.VIEWPORT_CONFETTI_DURATION_MS)
   assert.equal(mobile.durationMs, confetti.VIEWPORT_CONFETTI_DURATION_MS)
-  assert.equal(confetti.VIEWPORT_CONFETTI_DURATION_MS, 4000)
-  assert.ok(mobile.particleCount >= 24)
-  assert.ok(mobile.particleCount < 50)
+  assert.equal(confetti.VIEWPORT_CONFETTI_DURATION_MS, 3000)
+  assert.ok(mobile.particleCount >= 48)
+  assert.ok(mobile.particleCount < 90)
 
   assert.equal(confetti.prefersReducedMotion(() => ({ matches: true })), true)
   assert.equal(confetti.prefersReducedMotion(() => ({ matches: false })), false)
@@ -255,12 +255,12 @@ test('mobile burst uses fewer particles than desktop', () => {
   })
   assert.ok(desktop.particleCount > mobile.particleCount)
   assert.equal(mobile.profile.durationMs, desktop.profile.durationMs)
-  assert.equal(desktop.profile.durationMs, 4000)
+  assert.equal(desktop.profile.durationMs, 3000)
   desktop.stop()
   mobile.stop()
 })
 
-test('canvas is sized to the host card, not the viewport', () => {
+test('host card size is ignored; canvas always covers the viewport', () => {
   const win = createFakeWindow({ width: 1440, height: 900, dpr: 2 })
   const host = { clientWidth: 480, clientHeight: 360 }
   win._canvas.clientWidth = 480
@@ -274,13 +274,34 @@ test('canvas is sized to the host card, not the viewport', () => {
     now: () => win.now(),
   })
 
-  assert.equal(burst.viewport.width, 480)
-  assert.equal(burst.viewport.height, 360)
-  assert.equal(win._canvas.width, 960)
-  assert.equal(win._canvas.height, 720)
-  assert.equal(win._canvas.style.width, '480px')
-  assert.equal(win._canvas.style.height, '360px')
-  assert.equal(win._canvas.style.position, 'absolute')
+  assert.equal(burst.viewport.width, 1440)
+  assert.equal(burst.viewport.height, 900)
+  assert.equal(win._canvas.width, 2880)
+  assert.equal(win._canvas.height, 1800)
+  assert.equal(win._canvas.style.width, '1440px')
+  assert.equal(win._canvas.style.height, '900px')
+  assert.equal(win._canvas.style.position, 'fixed')
+  assert.equal(win._canvas.style.inset, '0')
+  burst.stop()
+})
+
+test('mobile canvas is sized to the full phone viewport, not a modal card', () => {
+  const win = createFakeWindow({ width: 390, height: 844, dpr: 2 })
+  win._canvas.clientWidth = 320
+  win._canvas.clientHeight = 280
+  const burst = confetti.startViewportConfetti({
+    window: win,
+    document: win.document,
+    canvas: win._canvas,
+    host: { clientWidth: 320, clientHeight: 280 },
+    random: () => 0.5,
+    now: () => win.now(),
+  })
+
+  assert.equal(burst.viewport.width, 390)
+  assert.equal(burst.viewport.height, 844)
+  assert.equal(win._canvas.style.position, 'fixed')
+  assert.equal(win._canvas.style.pointerEvents, 'none')
   burst.stop()
 })
 
@@ -303,21 +324,22 @@ test('animation completes and removes listeners without leaving a click overlay'
   assert.equal(win._listeners.get('resize')?.size || 0, 0)
 })
 
-test('completion modal owns confetti clipped to the dialog card for 4s', () => {
+test('completion confetti teleports to the full viewport for 3s and is never clipped to the dialog', () => {
   const dialog = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>/)?.[0] || ''
   assert.ok(dialog.length > 0)
   assert.doesNotMatch(dialog, /onboarding-post-session-confetti-layer/)
   assert.doesNotMatch(dialog, /postSessionConfettiPieces/)
-  assert.match(dialog, /<ViewportConfetti/)
+  assert.doesNotMatch(dialog, /<ViewportConfetti/)
   assert.match(
     vue,
     /<ViewportConfetti\s+v-if="showPostSessionConfetti && !workspaceTourActive && !onboardingSampleSessionActive && !postSessionAiReciteActive"/,
   )
-  assert.doesNotMatch(component, /Teleport to="body"/)
-  assert.match(component, /position:\s*absolute/)
-  assert.match(component, /overflow:\s*hidden/)
+  assert.match(component, /Teleport to="body"/)
+  assert.match(component, /position:\s*fixed/)
+  assert.match(component, /overflow:\s*visible/)
   assert.match(component, /pointer-events: none/)
   assert.match(component, /prefers-reduced-motion: reduce/)
+  assert.match(component, /100dvh/)
   assert.match(js, /import ViewportConfetti from '\.\.\/components\/ViewportConfetti\.vue'/)
   assert.match(js, /VIEWPORT_CONFETTI_DURATION_MS/)
   assert.match(js, /ViewportConfetti,/)
@@ -326,7 +348,8 @@ test('completion modal owns confetti clipped to the dialog card for 4s', () => {
   assert.match(js, /postSessionConfettiTimer: null/)
   assert.match(js, /VIEWPORT_CONFETTI_DURATION_MS\)/)
   assert.doesNotMatch(css, /post-session-simple__dialog--lg \.onboarding-post-session-confetti-layer/)
-  assert.match(css, /post-session-simple__dialog > \.viewport-confetti/)
+  assert.doesNotMatch(css, /post-session-simple__dialog > \.viewport-confetti/)
+  assert.match(css, /body > \.viewport-confetti/)
   assert.match(css, /prefers-reduced-motion: reduce[\s\S]*viewport-confetti-canvas/)
 })
 

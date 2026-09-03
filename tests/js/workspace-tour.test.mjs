@@ -164,7 +164,7 @@ function sliceMethod(source, name) {
   assert.match(auto, /hasCompletedOnboarding/)
   assert.match(auto, /isDemoWorkspaceAccount\(\)\) return true/)
   assert.match(auto, /just_logged_in && !this\.auth\?\.just_registered/)
-  assert.match(auto, /isSignupIsolationActive/)
+  assert.match(auto, /isRegistrationSession/)
 
   const schedule = sliceMethod(memorisationJs, 'scheduleWorkspaceTourStart')
   assert.match(schedule, /shouldAutoStartWorkspaceTour\(\)/)
@@ -178,8 +178,14 @@ function sliceMethod(source, name) {
   const firstRun = sliceMethod(memorisationJs, 'requiresFirstTimeOnboarding')
   assert.match(firstRun, /just_logged_in && !this\.auth\?\.just_registered/)
   assert.match(firstRun, /just_registered \|\| this\._signupIsolationFreshlyActivated/)
+  assert.match(firstRun, /isRegistrationSession/)
   assert.match(firstRun, /isDemoWorkspaceAccount/)
   assert.match(firstRun, /hasDismissedWorkspaceTour/)
+
+  assert.match(memorisationJs, /finalizeRegistrationOnboardingForReturningLogin\(\)/)
+  assert.match(memorisationJs, /markRegistrationSession\(\)/)
+  assert.match(memorisationJs, /getRegistrationSessionStorageKey\(\)/)
+  assert.match(sliceMethod(memorisationJs, 'maybeShowRegistrationAiAudioConsent'), /isRegistrationSession\(\)/)
 
   const run = (name, ctx) => {
     const fn = new Function(`return function ${sliceMethod(memorisationJs, name)}`)()
@@ -191,7 +197,8 @@ function sliceMethod(source, name) {
     hasCompletedOnboarding: () => false,
     _signupIsolationFreshlyActivated: false,
     isDemoWorkspaceAccount: () => false,
-    isSignupIsolationActive: () => false,
+    isRegistrationSession: () => false,
+    isSignupIsolationActive: () => true,
   }
   const firstRunCtx = {
     ...existingLogin,
@@ -225,6 +232,18 @@ function sliceMethod(source, name) {
     ...firstRunCtx,
     isDemoWorkspaceAccount: () => true,
     hasDismissedWorkspaceTour: () => true,
+  }), false)
+  assert.equal(run('shouldAutoStartWorkspaceTour', {
+    ...existingLogin,
+    auth: { check: true, just_logged_in: false, just_registered: false },
+    isSignupIsolationActive: () => true,
+    isRegistrationSession: () => false,
+  }), false)
+  assert.equal(run('requiresFirstTimeOnboarding', {
+    ...firstRunCtx,
+    auth: { check: true, just_logged_in: false, just_registered: false },
+    isRegistrationSession: () => false,
+    readWorkspaceStateValue: () => true,
   }), false)
   // New signup: first time only.
   assert.equal(run('shouldAutoStartWorkspaceTour', {

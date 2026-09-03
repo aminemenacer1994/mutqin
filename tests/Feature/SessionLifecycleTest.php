@@ -1036,4 +1036,173 @@ class SessionLifecycleTest extends TestCase
             ->assertJsonPath('session.metadata.config.rangeStart', 1)
             ->assertJsonPath('session.metadata.config.rangeEnd', 10);
     }
+
+    public function test_mid_session_checkpoint_updates_progress_without_completing(): void
+    {
+        $user = User::factory()->create();
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'current_step' => 0,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'repetitions_completed' => 0,
+            'last_activity_at' => now()->subMinute(),
+            'started_at' => now()->subMinutes(5),
+            'metadata' => [
+                'active' => true,
+                'client_revision' => 1,
+                'config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session', [
+                'action' => 'save',
+                'session_id' => $session->id,
+                'surah_number' => 1,
+                'ayah_number' => 4,
+                'current_step' => 3,
+                'repetitions_completed' => 2,
+                'client_revision' => 2,
+                'last_activity_at' => now()->toIso8601String(),
+                'metadata' => [
+                    'active' => true,
+                    'paused' => false,
+                    'completed' => false,
+                    'config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('saved', true)
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.ayah_number', 4)
+            ->assertJsonPath('session.current_step', 3)
+            ->assertJsonPath('session.repetitions_completed', 2)
+            ->assertJsonPath('session.status', UserSessionStatus::Active->value);
+
+        $fresh = $session->fresh();
+        $this->assertSame(UserSessionStatus::Active, $fresh->status);
+        $this->assertNull($fresh->ended_at);
+        $this->assertSame(2, (int) ($fresh->metadata['client_revision'] ?? 0));
+    }
+
+    public function test_mid_session_save_does_not_create_session_when_none_unfinished(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/session', [
+                'action' => 'save',
+                'ayah_number' => 2,
+                'client_revision' => 1,
+            ])
+            ->assertOk()
+            ->assertJsonPath('saved', false)
+            ->assertJsonPath('unfinished', false)
+            ->assertJsonPath('session', null);
+
+        $this->assertSame(0, UserSession::where('user_id', $user->id)->count());
+    }
+
+    public function test_mid_session_save_rejects_stale_client_revision(): void
+    {
+        $user = User::factory()->create();
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 10,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinutes(3),
+            'metadata' => [
+                'active' => true,
+                'client_revision' => 5,
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session', [
+                'action' => 'save',
+                'session_id' => $session->id,
+                'ayah_number' => 1,
+                'client_revision' => 3,
+            ])
+            ->assertStatus(409)
+            ->assertJsonPath('saved', false)
+            ->assertJsonPath('stale', true);
+
+        $this->assertSame(10, (int) $session->fresh()->ayah_number);
+    }
+
+    public function test_mid_session_save_conflicts_on_invalid_session_id(): void
+    {
+        $user = User::factory()->create();
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now(),
+            'metadata' => ['active' => true],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session', [
+                'action' => 'save',
+                'session_id' => 999999,
+                'ayah_number' => 2,
+                'client_revision' => 1,
+            ])
+            ->assertStatus(409)
+            ->assertJsonPath('saved', false)
+            ->assertJsonPath('conflict', true);
+
+        $this->assertSame(1, UserSession::where('user_id', $user->id)->count());
+    }
+
+    public function test_keepalive_style_pause_leaves_resumable_unfinished_session(): void
+    {
+        $user = User::factory()->create();
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 18,
+            'ayah_number' => 2,
+            'status' => UserSessionStatus::Active,
+            'is_onboarding_example' => false,
+            'last_activity_at' => now(),
+            'started_at' => now()->subMinute(),
+            'metadata' => [
+                'active' => true,
+                'config' => ['chapterId' => 18, 'rangeStart' => 1, 'rangeEnd' => 10],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/api/session/pause', [
+                'session_id' => $session->id,
+                'ayah_number' => 5,
+                'current_step' => 4,
+                'metadata' => [
+                    'active' => false,
+                    'paused' => true,
+                    'completed' => false,
+                    'config' => ['chapterId' => 18, 'rangeStart' => 1, 'rangeEnd' => 10],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.status', UserSessionStatus::Paused->value);
+
+        $this->actingAs($user)
+            ->getJson('/api/session/current')
+            ->assertOk()
+            ->assertJsonPath('unfinished', true)
+            ->assertJsonPath('session.id', $session->id)
+            ->assertJsonPath('session.status', UserSessionStatus::Paused->value);
+    }
 }

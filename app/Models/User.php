@@ -45,6 +45,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'ai_audio_consent_status',
         'ai_audio_consent_version',
         'ai_audio_consent_at',
+        'ai_session_settings',
     ];
 
     /**
@@ -73,6 +74,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'subscription_trial_ends_at' => 'datetime',
             'subscription_current_period_ends_at' => 'datetime',
             'ai_audio_consent_at' => 'datetime',
+            'ai_session_settings' => 'array',
         ];
     }
 

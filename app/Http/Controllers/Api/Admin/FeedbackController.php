@@ -76,8 +76,14 @@ class FeedbackController extends Controller
     {
         $this->admin($request);
 
+        $validated = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'days' => ['nullable', 'integer', 'min:1', 'max:365'],
+        ]);
+
         return response()->json([
-            'ai_complaints' => $service->aiComplaintMetrics(),
+            'ai_complaints' => $service->aiComplaintMetrics($validated),
         ]);
     }
 

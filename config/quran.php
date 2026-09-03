@@ -4,6 +4,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Content integrity
+    |--------------------------------------------------------------------------
+    |
+    | Canonical Arabic / mapping pins live under resources/quran/integrity/.
+    | Do not edit Uthmani text by hand. Intentional updates: see UPDATE.md.
+    | CI: composer test:quran-integrity && npm run test:quran-integrity
+    |
+    */
+
+    'integrity' => [
+        'arabic_edition' => 'quran-uthmani',
+        'fixture_relative' => 'quran/integrity',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Translation editions (Al Quran Cloud)
     |--------------------------------------------------------------------------
     */

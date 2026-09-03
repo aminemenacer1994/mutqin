@@ -1,0 +1,135 @@
+{
+    "generated_at": "2026-09-03T16:14:34+00:00",
+    "environment": "local",
+    "base_url": "https://app.mutqin.ai",
+    "user_id": 25,
+    "iterations": 5,
+    "endpoints": {
+        "dashboard": {
+            "status": 200,
+            "query_count": 49,
+            "response_bytes": 6679,
+            "latency_ms": {
+                "p50": 2.16,
+                "p95": 94.45,
+                "p99": 94.45,
+                "min": 1.72,
+                "max": 94.45
+            }
+        },
+        "state_show": {
+            "status": 200,
+            "query_count": 2,
+            "response_bytes": 4647,
+            "latency_ms": {
+                "p50": 1.97,
+                "p95": 7.9,
+                "p99": 7.9,
+                "min": 1.72,
+                "max": 7.9
+            }
+        },
+        "session_current": {
+            "status": 200,
+            "query_count": 1,
+            "response_bytes": 752,
+            "latency_ms": {
+                "p50": 2.47,
+                "p95": 7,
+                "p99": 7,
+                "min": 2.32,
+                "max": 7
+            }
+        },
+        "progress_index": {
+            "status": 200,
+            "query_count": 2,
+            "response_bytes": 23292,
+            "latency_ms": {
+                "p50": 9.98,
+                "p95": 19.26,
+                "p99": 19.26,
+                "min": 8.19,
+                "max": 19.26
+            }
+        },
+        "sessions_history": {
+            "status": 200,
+            "query_count": 1,
+            "response_bytes": 3467,
+            "latency_ms": {
+                "p50": 4.32,
+                "p95": 6.64,
+                "p99": 6.64,
+                "min": 4.18,
+                "max": 6.64
+            }
+        },
+        "ai_recite_attempts": {
+            "status": 200,
+            "query_count": 1,
+            "response_bytes": 1906,
+            "latency_ms": {
+                "p50": 2.93,
+                "p95": 4.28,
+                "p99": 4.28,
+                "min": 2.45,
+                "max": 4.28
+            }
+        },
+        "recommendations_next": {
+            "status": 200,
+            "query_count": 10,
+            "response_bytes": 2296,
+            "latency_ms": {
+                "p50": 2.94,
+                "p95": 21.45,
+                "p99": 21.45,
+                "min": 2.63,
+                "max": 21.45
+            }
+        },
+        "ayah_notes": {
+            "status": 200,
+            "query_count": 1,
+            "response_bytes": 1550,
+            "latency_ms": {
+                "p50": 3.85,
+                "p95": 5.88,
+                "p99": 5.88,
+                "min": 3.35,
+                "max": 5.88
+            }
+        },
+        "analytics": {
+            "status": 200,
+            "query_count": 1,
+            "response_bytes": 3753,
+            "latency_ms": {
+                "p50": 5.2,
+                "p95": 6.74,
+                "p99": 6.74,
+                "min": 5.07,
+                "max": 6.74
+            }
+        }
+    },
+    "bundles": {
+        "memorisation.js": 6293887,
+        "memorisation.3fad3013.js": 3876015,
+        "memorisation.783da762.js": 3873365,
+        "app.js": 2046450,
+        "dashboard.ab7d884c.js": 306105,
+        "dashboard.47a7dc1d.js": 306029,
+        "admin-dashboard.0e799997.js": 239546,
+        "admin-dashboard.d3baa3c4.js": 239481,
+        "936.01762d22.js": 228723,
+        "936.f18a6578.js": 228039,
+        "584.c5c22c85.js": 223608,
+        "584.9d12d9c9.js": 223452,
+        "52.e7e05907.js": 194642,
+        "52.c89e0ea3.js": 192946,
+        "863.3a0e226c.js": 192369
+    },
+    "memory_peak_mb": 30
+}

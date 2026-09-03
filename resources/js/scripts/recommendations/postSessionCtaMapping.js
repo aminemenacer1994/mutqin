@@ -344,6 +344,21 @@ function cta(id, variant, labelKey, action, extra = {}) {
   return { id, variant, labelKey, action, dataAction: action, ...extra }
 }
 
+function practiceRangeLabelParams(options = {}) {
+  const start = Number(options.practiceRangeStart || 0)
+  const end = Number(options.practiceRangeEnd || start)
+  if (!(start > 0)) return null
+  return { start, end: end >= start ? end : start }
+}
+
+function withPracticeRange(labelKey, id, variant, action, options, extra = {}) {
+  const labelParams = practiceRangeLabelParams(options)
+  return cta(id, variant, labelKey, action, {
+    ...extra,
+    ...(labelParams ? { labelParams } : {}),
+  })
+}
+
 /**
  * Map a CTA state to ordered primary → secondary → tertiary buttons.
  *
@@ -358,6 +373,8 @@ function cta(id, variant, labelKey, action, extra = {}) {
  *   weakAyahNumber?: number|null,
  *   nextRangeStart?: number|null,
  *   nextRangeEnd?: number|null,
+ *   practiceRangeStart?: number|null,
+ *   practiceRangeEnd?: number|null,
  * }=} options
  */
 export function mapPostSessionCtas(state, options = {}) {
@@ -398,9 +415,21 @@ export function mapPostSessionCtas(state, options = {}) {
           ? cta('review_weak_ayah', 'primary', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
             labelParams: { ayah: options.weakAyahNumber },
           })
-          : cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
+          : withPracticeRange(
+            reviseLabelKey,
+            'revise_focus_phrase',
+            'primary',
+            POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
+            options,
+          ),
         Number(options.weakAyahNumber) > 0
-          ? cta('revise_focus_phrase', 'secondary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+          ? withPracticeRange(
+            reviseLabelKey,
+            'revise_focus_phrase',
+            'secondary',
+            POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
+            options,
+          )
           : cta('check_again', 'secondary', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
         // Tertiary escape hatch — ghost so the row stays primary / secondary / ghost.
         cta(
@@ -417,9 +446,21 @@ export function mapPostSessionCtas(state, options = {}) {
           ? cta('review_weak_ayah', 'primary', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
             labelParams: { ayah: options.weakAyahNumber },
           })
-          : cta('revise_focus_phrase', 'primary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE),
+          : withPracticeRange(
+            reviseLabelKey,
+            'revise_focus_phrase',
+            'primary',
+            POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
+            options,
+          ),
         Number(options.weakAyahNumber) > 0
-          ? cta('revise_focus_phrase', 'secondary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+          ? withPracticeRange(
+            reviseLabelKey,
+            'revise_focus_phrase',
+            'secondary',
+            POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
+            options,
+          )
           : cta('continue_next_range', 'secondary', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
             labelParams: nextSessionLabelParams,
           }),
@@ -433,14 +474,21 @@ export function mapPostSessionCtas(state, options = {}) {
           ? cta('review_weak_ayah', 'primary', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
             labelParams: { ayah: options.weakAyahNumber },
           })
-          : cta(
+          : withPracticeRange(
+            options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
             'review_once_more',
             'primary',
-            options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
             POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE,
+            options,
           ),
         Number(options.weakAyahNumber) > 0
-          ? cta('revise_focus_phrase', 'secondary', reviseLabelKey, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
+          ? withPracticeRange(
+            reviseLabelKey,
+            'revise_focus_phrase',
+            'secondary',
+            POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
+            options,
+          )
           : cta('continue_next_range', 'secondary', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
             labelParams: nextSessionLabelParams,
           }),
@@ -467,11 +515,12 @@ export function mapPostSessionCtas(state, options = {}) {
         }),
         returnToWorkspace,
         // Alternate: stay on the current range (not the recommended advance).
-        cta(
+        withPracticeRange(
+          options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
           'review_once_more',
           'ghost',
-          options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
           POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE,
+          options,
         ),
       ]
 
@@ -501,18 +550,31 @@ export function mapPostSessionCtas(state, options = {}) {
       return buttons
     }
 
-    case POST_SESSION_CTA_STATES.CONFIRM:
+    case POST_SESSION_CTA_STATES.CONFIRM: {
+      const confirmLabelKey = options.confirmLabelKey
+        || (options.isRepeat ? 'startRevision' : 'startSession')
+      const confirmNeedsRange = confirmLabelKey === 'startRevision'
+        || confirmLabelKey === 'startFocusedReview'
+        || confirmLabelKey === 'reviseThisRange'
       return [
-        cta(
-          'confirm_start',
-          'primary',
-          options.confirmLabelKey
-            || (options.isRepeat ? 'startRevision' : 'startSession'),
-          POST_SESSION_CTA_ACTIONS.CONFIRM_START,
-        ),
+        confirmNeedsRange
+          ? withPracticeRange(
+            confirmLabelKey,
+            'confirm_start',
+            'primary',
+            POST_SESSION_CTA_ACTIONS.CONFIRM_START,
+            options,
+          )
+          : cta(
+            'confirm_start',
+            'primary',
+            confirmLabelKey,
+            POST_SESSION_CTA_ACTIONS.CONFIRM_START,
+          ),
         returnToWorkspace,
         otherRange,
       ]
+    }
 
     case POST_SESSION_CTA_STATES.MEMORISATION_CHECK_NUDGE:
       // Soft nudge only — Check now leads; continue without testing stays available.
@@ -539,7 +601,9 @@ export function mapPostSessionCtas(state, options = {}) {
           options.isRepeat
             ? POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING
             : POST_SESSION_CTA_ACTIONS.SKIP_FOR_NOW,
-          options.isRepeat ? {} : { labelParams: nextSessionLabelParams },
+          options.isRepeat
+            ? (practiceRangeLabelParams(options) ? { labelParams: practiceRangeLabelParams(options) } : {})
+            : { labelParams: nextSessionLabelParams },
         ),
       ]
   }

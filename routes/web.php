@@ -9,7 +9,10 @@ use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HealthController;
+use App\Http\Controllers\Internal\AlertTestController;
 use App\Http\Controllers\Internal\ErrorTestController;
+use App\Http\Controllers\Internal\HealthController as InternalHealthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuranProxyController;
 use App\Services\SpeechmaticsRateLimit;
@@ -33,6 +36,14 @@ Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 Route::get('/auth/redirect', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/callback', [GoogleAuthController::class, 'callback']);
+
+Route::get('/health', HealthController::class)->name('health');
+
+Route::get('/internal/health', InternalHealthController::class)
+    ->name('internal.health');
+
+Route::get('/internal/alert-test', AlertTestController::class)
+    ->name('internal.alert-test');
 
 Route::get('/internal/error-test', ErrorTestController::class)
     ->name('internal.error-test');

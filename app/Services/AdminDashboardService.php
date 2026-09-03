@@ -79,7 +79,7 @@ class AdminDashboardService
             ],
             'snapshot' => $this->buildSnapshot(),
             'learning' => $this->buildLearningOverview(),
-            'ai_health' => $this->buildAiHealth(),
+            'ai_health' => $this->buildAiHealth($chartDays),
             'learners' => $this->buildLearnerRoster(20),
             'top_learners' => $this->buildTopLearners($chartDays),
             'mix' => $this->buildMix(),
@@ -1048,7 +1048,7 @@ class AdminDashboardService
     /**
      * @return array<string, mixed>
      */
-    private function buildAiHealth(): array
+    private function buildAiHealth(int $chartDays = 30): array
     {
         $total = AiReciteAttempt::query()->count();
         $bands = AiReciteAttempt::query()
@@ -1068,7 +1068,9 @@ class AdminDashboardService
             ->where('created_at', '>=', now()->subDays(7))
             ->count();
 
-        $complaintMetrics = app(FeedbackService::class)->aiComplaintMetrics();
+        $complaintMetrics = app(FeedbackService::class)->aiComplaintMetrics([
+            'days' => $chartDays,
+        ]);
 
         return [
             'total' => $total,

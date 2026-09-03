@@ -16,13 +16,13 @@
             <div class="auth-field">
                 <label for="password" class="form-label">{{ __('ui.password') }}</label>
                 <div class="auth-password-wrap">
-                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" autofocus>
+                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password" autofocus @if($errors->has('password')) aria-invalid="true" aria-describedby="confirmPasswordError" @endif>
                     <button type="button" class="auth-password-toggle" data-password-toggle="password" aria-label="{{ __('ui.show_password') }}">
                         <i class="bi bi-eye" aria-hidden="true"></i>
                     </button>
                 </div>
                 @error('password')
-                    <span class="invalid-feedback" role="alert">{{ $message }}</span>
+                    <span id="confirmPasswordError" class="invalid-feedback" role="alert">{{ $message }}</span>
                 @enderror
             </div>
 

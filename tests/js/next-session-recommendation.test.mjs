@@ -396,7 +396,7 @@ function t(key, params = {}) {
   assert.match(js, /clampCursorToPaceLimit/, 'pace guard keeps colouring with the reciter')
   assert.match(js, /buildRealtimePreviewAlignment\(targetText, committedWords/)
   assert.match(js, /preferVisible/)
-  assert.match(js, /amdDifficultyPercent = readStoredDifficultyPercent\(\)/)
+  assert.match(js, /amdDifficultyPercent = normaliseDifficultyPercent\(/)
   assert.match(js, /rebuildAmdHiddenWordMask\(\)/)
   assert.match(js, /ensureAmdTajweedMarkup/)
   assert.match(js, /postSessionCtaState/, 'confirm step available when needed')

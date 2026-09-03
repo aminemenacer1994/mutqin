@@ -105,8 +105,11 @@ export function isValidRecitationCheck(value) {
 export function attemptAffectsScoring(classification) {
   if (classification == null) return false
   if (typeof classification === 'string') return isValidRecitationCheck(classification)
-  return classification.validCheck === true
-    || isValidRecitationCheck(classification.class)
+  if (classification.affectsScoring === false || classification.validCheck === false) return false
+  if (classification.affectsScoring === true || classification.validCheck === true) {
+    return isValidRecitationCheck(classification.class || RECITATION_ATTEMPT_CLASS.VALID_CHECK)
+  }
+  return isValidRecitationCheck(classification.class)
 }
 
 /**

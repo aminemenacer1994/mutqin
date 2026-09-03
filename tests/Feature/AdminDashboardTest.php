@@ -146,6 +146,9 @@ class AdminDashboardTest extends TestCase
             ->assertJsonPath('data.snapshot.memorised_ayahs.value', 1)
             ->assertJsonPath('data.learning.memorised_ayahs', 1)
             ->assertJsonPath('data.ai_health.total', 1)
+            ->assertJsonPath('data.ai_health.complaints', 0)
+            ->assertJsonPath('data.ai_health.valid_scored_checks', 1)
+            ->assertJsonPath('data.ai_health.complaint_rate_percent', 0)
             ->assertJsonPath('data.contacts.items.0.subject', 'Help with session');
 
         $this->assertGreaterThanOrEqual(2, $seven->json('data.snapshot.users_total.value'));

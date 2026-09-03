@@ -3760,6 +3760,7 @@
     "nothingToPlayCheckTheSelected": "Nada a play. comprobar el seleccionado rango.",
     "backOnlineLiveApisAreAvailable": "Has vuelto a estar en línea. Las funciones en vivo ya están disponibles.",
     "offlineModeActiveReadingFallsBack": "Estás sin conexión. La lectura usará las suras guardadas en este dispositivo.",
+    "sessionSyncExpired": "Tu sesión caducó. Actualiza la página para volver a sincronizar. Puedes seguir practicando en este dispositivo.",
     "settingsIssue": "مشكلة في الإعدادات: {join}",
     "fontSize": "حجم الخط: {defaultFontSize}%",
     "message": "{p0} {p1}",

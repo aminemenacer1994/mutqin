@@ -1,4 +1,8 @@
-import { updateAyahProgress } from './spaced_repetition_memory'
+import { updateAyahProgress } from './spaced_repetition_memory.js'
+import {
+  attemptAffectsScoring,
+  classifyRecitationAttempt,
+} from '../audio/recitationAttemptGuard.js'
 
 const DEFAULT_HESITATION_SECONDS = 2.25
 
@@ -146,6 +150,28 @@ export function evaluateRecitationSilently(payload = {}) {
 }
 
 export function evaluateMemorisationSilently(payload = {}) {
+  const classification = classifyRecitationAttempt({
+    result: payload.result && typeof payload.result === 'object' ? payload.result : payload,
+    extras: payload,
+    error: payload.error,
+    cancelled: payload.cancelled === true,
+    stale: payload.stale === true,
+  })
+  // Invalid audio / provider failures must never mutate spaced-retention scheduling.
+  if (!attemptAffectsScoring(classification)) {
+    return {
+      kind: 'memorisation',
+      silent: true,
+      recallAccuracy: null,
+      strength: 'insufficient_audio',
+      feedback: classification.retryGuidance || 'Try the check again when audio is ready.',
+      spacedRepetitionUpdated: false,
+      progress: null,
+      attemptClass: classification.class,
+      validCheck: false,
+    }
+  }
+
   const accuracy = getRecallAccuracy(payload)
   const strength = classifyStrength(accuracy)
   const spacedRepetitionScore = scoreForSpacedRepetition(accuracy)
@@ -161,7 +187,9 @@ export function evaluateMemorisationSilently(payload = {}) {
     strength,
     feedback: getGentleFeedback({ accuracy }),
     spacedRepetitionUpdated: !!progress,
-    progress
+    progress,
+    attemptClass: classification.class,
+    validCheck: true,
   }
 }
 

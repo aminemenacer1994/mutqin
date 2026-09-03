@@ -20,6 +20,19 @@ test('averageAttemptAccuracy averages finite scores', () => {
   assert.equal(averageAttemptAccuracy([]), null)
 })
 
+test('averageAttemptAccuracy excludes invalid audio and provider failures', () => {
+  assert.equal(averageAttemptAccuracy([
+    { accuracy: 80, attemptClass: 'valid_check', validCheck: true },
+    { accuracy: 0, attemptClass: 'silence_no_speech', validCheck: false },
+    { accuracy: 0, attemptClass: 'provider_network_error', affectsScoring: false },
+    { accuracy: 90, result: { noSpeech: true, transcript: '', committedWords: [], durationSeconds: 4 } },
+  ]), 80)
+  assert.equal(averageAttemptAccuracy([
+    { accuracy: 0, insufficient_audio: true },
+    { accuracy: 10, attempt_class: 'microphone_denied' },
+  ]), null)
+})
+
 test('accuracyPracticeBand matches thresholds', () => {
   assert.equal(accuracyPracticeBand(90), ACCURACY_BAND.STRONG)
   assert.equal(accuracyPracticeBand(80), ACCURACY_BAND.STRONG)
@@ -65,11 +78,13 @@ test('different mistake patterns produce different techniques', () => {
       ayahKey: '93:1',
       ayahNumber: 1,
       accuracyScore: 92,
+      durationSeconds: 6,
+      transcript: 'a b c d',
       wordStatuses: [
-        { text: 'a', status: 'correct', index: 0 },
-        { text: 'b', status: 'correct', index: 1 },
-        { text: 'c', status: 'partial', index: 2 },
-        { text: 'd', status: 'correct', index: 3 },
+        { text: 'a', status: 'correct', index: 0, confidence: 0.95 },
+        { text: 'b', status: 'correct', index: 1, confidence: 0.94 },
+        { text: 'c', status: 'partial', index: 2, confidence: 0.9 },
+        { text: 'd', status: 'correct', index: 3, confidence: 0.93 },
       ],
     }],
   })
@@ -79,12 +94,14 @@ test('different mistake patterns produce different techniques', () => {
       ayahKey: '93:1',
       ayahNumber: 1,
       accuracyScore: 40,
+      durationSeconds: 6,
+      transcript: 'a b c d e',
       wordStatuses: [
-        { text: 'a', status: 'pending', index: 0 },
-        { text: 'b', status: 'incorrect', index: 1 },
-        { text: 'c', status: 'pending', index: 2 },
-        { text: 'd', status: 'partial', index: 3 },
-        { text: 'e', status: 'incorrect', index: 4 },
+        { text: 'a', status: 'pending', index: 0, confidence: 0.9 },
+        { text: 'b', status: 'incorrect', index: 1, confidence: 0.92 },
+        { text: 'c', status: 'pending', index: 2, confidence: 0.9 },
+        { text: 'd', status: 'partial', index: 3, confidence: 0.88 },
+        { text: 'e', status: 'incorrect', index: 4, confidence: 0.91 },
       ],
       weakAyahs: [1],
     }],
@@ -209,11 +226,13 @@ test('buildAiReciteDynamicPlan returns Laravel-ready settings and weak words', (
       ayahKey: '93:1',
       ayahNumber: 1,
       accuracyScore: 48,
+      durationSeconds: 6,
+      transcript: 'وَالضُّحَىٰ وَاللَّيْلِ إِذَا سَجَىٰ',
       wordStatuses: [
-        { text: 'وَالضُّحَىٰ', status: 'incorrect', index: 0 },
-        { text: 'وَاللَّيْلِ', status: 'omitted', index: 1 },
-        { text: 'إِذَا', status: 'partial', index: 2 },
-        { text: 'سَجَىٰ', status: 'correct', index: 3 },
+        { text: 'وَالضُّحَىٰ', status: 'incorrect', index: 0, confidence: 0.93 },
+        { text: 'وَاللَّيْلِ', status: 'omitted', index: 1, confidence: 0.9 },
+        { text: 'إِذَا', status: 'partial', index: 2, confidence: 0.88 },
+        { text: 'سَجَىٰ', status: 'correct', index: 3, confidence: 0.95 },
       ],
       weakAyahs: [1],
     }],

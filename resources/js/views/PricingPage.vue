@@ -18,6 +18,7 @@
           <button
             type="button"
             :class="{ 'is-active': billingCycle === 'monthly' }"
+            :aria-pressed="billingCycle === 'monthly' ? 'true' : 'false'"
             @click="billingCycle = 'monthly'"
           >
             {{ t('homepage.pricing.monthly') }}
@@ -25,6 +26,7 @@
           <button
             type="button"
             :class="{ 'is-active': billingCycle === 'annual' }"
+            :aria-pressed="billingCycle === 'annual' ? 'true' : 'false'"
             @click="billingCycle = 'annual'"
           >
             {{ t('homepage.pricing.yearly') }}

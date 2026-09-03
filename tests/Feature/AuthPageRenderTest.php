@@ -173,4 +173,12 @@ class AuthPageRenderTest extends TestCase
             }
         }
     }
+
+    public function test_pricing_and_legal_pages_render(): void
+    {
+        $this->get(route('pricing'))->assertOk();
+        $this->get(route('privacy'))->assertOk();
+        $this->get(route('about'))->assertOk();
+        $this->get(route('our-mission'))->assertOk();
+    }
 }

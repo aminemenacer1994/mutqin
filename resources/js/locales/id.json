@@ -3773,6 +3773,7 @@
     "nothingToPlayCheckTheSelected": "Tidak ada yang diputar. Periksa rentang terpilih.",
     "backOnlineLiveApisAreAvailable": "Kembali online. API langsung tersedia lagi.",
     "offlineModeActiveReadingFallsBack": "Mode offline aktif. Membaca kembali ke rentang cache.",
+    "sessionSyncExpired": "Sesi masuk Anda berakhir. Segarkan halaman untuk menyinkronkan lagi. Latihan tetap berjalan di perangkat ini.",
     "settingsIssue": "Masalah pengaturan: {join}",
     "fontSize": "Ukuran font: {defaultFontSize}%",
     "message": "{p0} {p1}",

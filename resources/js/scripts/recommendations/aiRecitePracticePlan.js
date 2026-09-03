@@ -12,6 +12,10 @@ import {
   filterReliableWeakWords,
   mergePersistentWeakWords,
 } from './recitationMastery.js'
+import {
+  attemptAffectsScoring,
+  classifyRecitationAttempt,
+} from '../audio/recitationAttemptGuard.js'
 
 export const AI_RECITE_MAX_ATTEMPTS = 3
 export const MAX_PRACTICE_AYAH_SPAN = 3
@@ -140,10 +144,42 @@ export function normalisePlanWordSeverity(raw = '') {
 }
 
 /**
+ * Only valid-check attempts may enter AI accuracy averages / plan denominators.
+ *
+ * @param {object|null|undefined} attempt
+ * @returns {boolean}
+ */
+export function attemptCountsTowardAccuracy(attempt = null) {
+  if (!attempt || typeof attempt !== 'object') return false
+  if (attempt.validCheck === false || attempt.affectsScoring === false) return false
+  if (attempt.insufficient_audio === true || attempt.insufficientAudio === true) return false
+
+  const explicitClass = attempt.attemptClass || attempt.attempt_class || attempt.class || null
+  if (explicitClass) {
+    return attemptAffectsScoring(explicitClass)
+  }
+
+  const result = attempt.result && typeof attempt.result === 'object' ? attempt.result : null
+  if (result || attempt.noSpeech || attempt.failureReason || attempt.error) {
+    return attemptAffectsScoring(classifyRecitationAttempt({
+      result: result || attempt,
+      extras: attempt,
+      error: attempt.error,
+      cancelled: attempt.cancelled === true,
+      stale: attempt.stale === true,
+    }))
+  }
+
+  const score = Number(attempt.accuracy ?? attempt.accuracyPercent ?? attempt.accuracyScore)
+  return Number.isFinite(score)
+}
+
+/**
  * @param {Array<{ accuracy?: number }>} attempts
  */
 export function averageAttemptAccuracy(attempts = []) {
   const scores = (Array.isArray(attempts) ? attempts : [])
+    .filter((a) => attemptCountsTowardAccuracy(a))
     .map((a) => Number(a?.accuracy ?? a?.accuracyPercent ?? a?.accuracyScore))
     .filter((n) => Number.isFinite(n))
     .map((n) => (n <= 1 ? n * 100 : n))
@@ -528,15 +564,17 @@ export function selectPracticeTechniques(input = {}) {
  * }} input
  */
 export function buildAiReciteDynamicPlan(input = {}) {
-  const attempts = Array.isArray(input.attempts) ? input.attempts : []
-  const results = Array.isArray(input.results) && input.results.length
+  const rawAttempts = Array.isArray(input.attempts) ? input.attempts : []
+  const attempts = rawAttempts.filter((a) => attemptCountsTowardAccuracy(a))
+  const rawResults = Array.isArray(input.results) && input.results.length
     ? input.results
-    : attempts.map((a) => a?.result).filter(Boolean)
+    : rawAttempts.map((a) => a?.result).filter(Boolean)
+  const results = rawResults.filter((result) => attemptCountsTowardAccuracy({ result }))
 
   let averageAccuracy = averageAttemptAccuracy(
     attempts.length
       ? attempts
-      : results.map((r) => ({ accuracy: r?.accuracyScore ?? r?.accuracy ?? r?.accuracyPercent })),
+      : results.map((r) => ({ accuracy: r?.accuracyScore ?? r?.accuracy ?? r?.accuracyPercent, result: r })),
   )
   const colorCounts = aggregateColorCounts(results)
   if (!Number.isFinite(Number(averageAccuracy))) {

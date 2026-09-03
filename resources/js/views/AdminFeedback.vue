@@ -4,19 +4,22 @@
       <div>
         <span class="profile-kicker">{{ t('admin.kicker') }}</span>
         <h1>{{ t('admin.feedback.title') }}</h1>
-        <p>{{ t('admin.feedback.description') }}</p>
+        <p>
+          {{ t('admin.feedback.description') }}
+          <span
+            v-if="metrics"
+            class="afb-metrics-inline"
+            data-testid="ai-complaint-rate"
+          >
+            · {{ t('admin.feedback.complaintRate') }}:
+            {{ complaintRateLabel }}
+            <span class="afb-metrics-inline__counts">({{ metrics.complaints }} / {{ metrics.valid_checks }})</span>
+          </span>
+        </p>
       </div>
       <div class="admin-filter-tabs">
         <a class="billing-secondary-btn" :href="auth.dashboard_url">{{ t('admin.dashboard') }}</a>
         <a class="billing-secondary-btn" :href="auth.contact_inbox_url">{{ t('ui.contact_inbox') }}</a>
-      </div>
-    </div>
-
-    <div v-if="metrics" class="afb-metrics">
-      <div class="afb-metrics__label">{{ t('admin.feedback.complaintRate') }}</div>
-      <div class="afb-metrics__value">
-        <strong>{{ metrics.complaint_rate_percent != null ? `${metrics.complaint_rate_percent}%` : '—' }}</strong>
-        <span>({{ metrics.complaints }} / {{ metrics.valid_checks }})</span>
       </div>
     </div>
 
@@ -39,12 +42,12 @@
 
       <label class="afb-field">
         <span>{{ t('admin.feedback.filterFrom') }}</span>
-        <input v-model="filters.date_from" type="date" class="afb-input" @change="loadList(1)" />
+        <input v-model="filters.date_from" type="date" class="afb-input" @change="onDateFilterChange" />
       </label>
 
       <label class="afb-field">
         <span>{{ t('admin.feedback.filterTo') }}</span>
-        <input v-model="filters.date_to" type="date" class="afb-input" @change="loadList(1)" />
+        <input v-model="filters.date_to" type="date" class="afb-input" @change="onDateFilterChange" />
       </label>
 
       <label class="afb-field afb-field--search">
@@ -60,7 +63,7 @@
 
       <div class="afb-toolbar__actions">
         <button type="button" class="afb-btn afb-btn--ghost" @click="clearFilters">{{ t('admin.feedback.clear') }}</button>
-        <button type="button" class="afb-btn afb-btn--primary" @click="loadList(1)">{{ t('admin.feedback.apply') }}</button>
+        <button type="button" class="afb-btn afb-btn--primary" @click="applyFilters">{{ t('admin.feedback.apply') }}</button>
       </div>
     </section>
 
@@ -352,6 +355,11 @@ export default {
       }
       return String(raw).replace('{count}', String(count));
     },
+    complaintRateLabel() {
+      const rate = this.metrics?.complaint_rate_percent;
+      if (rate == null || Number.isNaN(Number(rate))) return '—';
+      return `${Number(Number(rate).toFixed(1))}%`;
+    },
   },
   mounted() {
     this.loadMetrics();
@@ -373,11 +381,26 @@ export default {
     },
     clearFilters() {
       this.filters = { status: '', type: '', q: '', date_from: '', date_to: '' };
+      this.loadMetrics();
+      this.loadList(1);
+    },
+    applyFilters() {
+      this.loadMetrics();
+      this.loadList(1);
+    },
+    onDateFilterChange() {
+      this.loadMetrics();
       this.loadList(1);
     },
     async loadMetrics() {
       try {
-        const { data } = await window.axios.get(`${this.apiBase()}/metrics`);
+        const params = new URLSearchParams();
+        if (this.filters.date_from) params.set('date_from', this.filters.date_from);
+        if (this.filters.date_to) params.set('date_to', this.filters.date_to);
+        const query = params.toString();
+        const { data } = await window.axios.get(
+          `${this.apiBase()}/metrics${query ? `?${query}` : ''}`
+        );
         this.metrics = data?.ai_complaints || null;
       } catch (_) {
         this.metrics = null;
@@ -498,7 +521,6 @@ export default {
   gap: 1rem;
 }
 
-.afb-metrics,
 .afb-toolbar,
 .afb-panel,
 .afb-state,
@@ -509,33 +531,14 @@ export default {
   box-shadow: var(--afb-shadow);
 }
 
-.afb-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.75rem 1.25rem;
-  padding: 1rem 1.15rem;
-}
-
-.afb-metrics__label {
+.afb-metrics-inline {
   color: var(--afb-muted);
-  font-size: 0.9rem;
+  font-size: 0.92em;
+  white-space: nowrap;
 }
 
-.afb-metrics__value {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  color: var(--afb-text);
-}
-
-.afb-metrics__value strong {
-  font-size: 1.2rem;
-}
-
-.afb-metrics__value span {
-  color: var(--afb-muted);
-  font-size: 0.85rem;
+.afb-metrics-inline__counts {
+  opacity: 0.85;
 }
 
 .afb-toolbar {

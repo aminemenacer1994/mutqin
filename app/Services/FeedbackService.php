@@ -231,23 +231,74 @@ class FeedbackService
     }
 
     /**
+     * complaint_rate = complained_ai_checks / eligible_completed_ai_checks * 100
+     *
+     * Eligible checks are successfully scored attempts only (provider failures /
+     * cancelled / insufficient audio are excluded via validScored scopes).
+     *
+     * @param  array{date_from?: string, date_to?: string, days?: int}  $filters
      * @return array{complaints: int, valid_checks: int, complaint_rate_percent: float|null}
      */
-    public function aiComplaintMetrics(): array
+    public function aiComplaintMetrics(array $filters = []): array
     {
-        $complaints = Feedback::query()->aiRecitationComplaints()->count();
+        [$dateFrom, $dateTo, $since] = $this->resolveMetricsWindow($filters);
 
-        $assessmentChecks = MemorisationAssessment::query()->validScored()->count();
-        $reciteChecks = AiReciteAttempt::query()->validScored()->count();
-        $validChecks = $assessmentChecks + $reciteChecks;
+        $complaintsQuery = Feedback::query()->aiRecitationComplaints();
+        $this->applyMetricsWindow($complaintsQuery, 'created_at', $dateFrom, $dateTo, $since);
+
+        $assessmentQuery = MemorisationAssessment::query()->validScored();
+        $this->applyMetricsWindow($assessmentQuery, 'completed_at', $dateFrom, $dateTo, $since);
+
+        $reciteQuery = AiReciteAttempt::query()->validScored();
+        $this->applyMetricsWindow($reciteQuery, 'created_at', $dateFrom, $dateTo, $since);
+
+        $complaints = (int) $complaintsQuery->count();
+        $validChecks = (int) $assessmentQuery->count() + (int) $reciteQuery->count();
 
         return [
             'complaints' => $complaints,
             'valid_checks' => $validChecks,
             'complaint_rate_percent' => $validChecks > 0
-                ? round(($complaints / $validChecks) * 100, 2)
+                ? round(($complaints / $validChecks) * 100, 1)
                 : null,
         ];
+    }
+
+    /**
+     * @param  array{date_from?: string, date_to?: string, days?: int}  $filters
+     * @return array{0: string, 1: string, 2: \Illuminate\Support\Carbon|null}
+     */
+    private function resolveMetricsWindow(array $filters): array
+    {
+        $dateFrom = trim((string) ($filters['date_from'] ?? ''));
+        $dateTo = trim((string) ($filters['date_to'] ?? ''));
+        $days = isset($filters['days']) ? (int) $filters['days'] : 0;
+
+        if ($dateFrom === '' && $dateTo === '' && $days > 0) {
+            return ['', '', now()->subDays($days)];
+        }
+
+        return [$dateFrom, $dateTo, null];
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<\Illuminate\Database\Eloquent\Model>  $query
+     */
+    private function applyMetricsWindow($query, string $column, string $dateFrom, string $dateTo, $since): void
+    {
+        if ($since !== null) {
+            $query->where($column, '>=', $since);
+
+            return;
+        }
+
+        if ($dateFrom !== '') {
+            $query->whereDate($column, '>=', $dateFrom);
+        }
+
+        if ($dateTo !== '') {
+            $query->whereDate($column, '<=', $dateTo);
+        }
     }
 
     public function screenshotContents(Feedback $feedback): ?array

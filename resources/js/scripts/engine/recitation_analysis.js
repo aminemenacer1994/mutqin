@@ -39,6 +39,8 @@ export function createRecognitionState() {
 }
 
 export function normalizeArabicForRecitation(text) {
+  // Compare-only: returns a NEW string. Never write this back over stored/display
+  // Uthmani Arabic — canonical text must remain exactly as sourced.
   return String(text || '')
     // Dagger alef (ٰ) is a real alef in mushaf orthography — expand before
     // stripping marks, or العَٰلَمِين / الصِّرَٰط become العلمين / الصرط and

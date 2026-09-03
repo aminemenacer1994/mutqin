@@ -1,11 +1,13 @@
 <template>
-  <div class="viewport-confetti" aria-hidden="true">
-    <canvas
-      ref="canvas"
-      class="viewport-confetti-canvas"
-      role="presentation"
-    ></canvas>
-  </div>
+  <Teleport to="body">
+    <div class="viewport-confetti" aria-hidden="true">
+      <canvas
+        ref="canvas"
+        class="viewport-confetti-canvas"
+        role="presentation"
+      ></canvas>
+    </div>
+  </Teleport>
 </template>
 
 <script>
@@ -36,7 +38,6 @@ export default {
       if (!canvas) return
       this.burst = startViewportConfetti({
         canvas,
-        host: this.$el,
         zIndex: this.zIndex,
         onComplete: () => {
           this.burst = null
@@ -52,22 +53,28 @@ export default {
 </script>
 
 <style>
-.viewport-confetti {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  pointer-events: none !important;
-  z-index: 6;
-}
-
+.viewport-confetti,
 .viewport-confetti-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  min-height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
   pointer-events: none !important;
-  z-index: 6;
+  z-index: 14150 !important;
+  contain: none !important;
+  clip: auto !important;
+  clip-path: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

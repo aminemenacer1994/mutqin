@@ -70,6 +70,10 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.profile.ai-audio-consent.show');
     Route::patch('/profile/ai-audio-consent', [ProfileController::class, 'updateAiAudioConsent'])
         ->name('api.profile.ai-audio-consent.update');
+    Route::get('/profile/ai-session-settings', [ProfileController::class, 'showAiSessionSettings'])
+        ->name('api.profile.ai-session-settings.show');
+    Route::patch('/profile/ai-session-settings', [ProfileController::class, 'updateAiSessionSettings'])
+        ->name('api.profile.ai-session-settings.update');
 
     Route::middleware('verified')->group(function () {
         Route::post('/feedback', [FeedbackController::class, 'store'])

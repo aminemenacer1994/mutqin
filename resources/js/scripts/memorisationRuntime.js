@@ -140,26 +140,33 @@ export function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
-// toRaw only unwraps the top level, so nested reactive proxies still reach
-// structuredClone, which rejects proxies. The JSON path handles them; logging
-// every occurrence buried real errors under dozens of warnings per session.
-let warnedStructuredCloneFallback = false
+function deepUnwrap(value) {
+  const raw = toRaw(value)
+  if (raw === null || typeof raw !== 'object') return raw
+  if (raw instanceof Date) return new Date(raw.getTime())
+  if (typeof Blob !== 'undefined' && raw instanceof Blob) return raw
+  if (typeof ArrayBuffer !== 'undefined' && raw instanceof ArrayBuffer) return raw.slice(0)
+  if (ArrayBuffer.isView(raw)) return new raw.constructor(raw)
+  if (Array.isArray(raw)) return raw.map((item) => deepUnwrap(item))
+  const out = {}
+  for (const [key, nested] of Object.entries(raw)) {
+    out[key] = deepUnwrap(nested)
+  }
+  return out
+}
 
 export function deepClone(value) {
-  const rawValue = toRaw(value)
+  const plain = deepUnwrap(value)
 
   if (typeof structuredClone === 'function') {
     try {
-      return structuredClone(rawValue)
-    } catch (error) {
-      if (!warnedStructuredCloneFallback) {
-        warnedStructuredCloneFallback = true
-        console.warn('structuredClone unsupported for this value; using JSON clone', error)
-      }
+      return structuredClone(plain)
+    } catch {
+      // Fall through to JSON clone for exotic values structuredClone rejects.
     }
   }
 
-  return JSON.parse(JSON.stringify(rawValue))
+  return JSON.parse(JSON.stringify(plain))
 }
 
 export function sanitizeForIndexedDb(value, seen = new WeakMap()) {

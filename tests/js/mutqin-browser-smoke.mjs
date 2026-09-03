@@ -1,7 +1,30 @@
 import assert from 'node:assert/strict'
 import { chromium, devices } from 'playwright'
 
-const url = process.env.MUTQIN_BASE_URL || 'http://localhost:8001/memorisation'
+const baseUrl = (process.env.MUTQIN_BASE_URL || 'http://localhost:8001').replace(/\/memorisation(\/demo)?\/?$/, '')
+
+async function ensureWorkspace(page) {
+  await page.goto(`${baseUrl}/memorisation`, { waitUntil: 'domcontentloaded', timeout: 60000 })
+  await page.waitForTimeout(1500)
+
+  const onLoginGate = await page.locator('.auth-tester-notice, .workspace-shell-idle-cta').count()
+  const needsAuth = await page.locator('text=Sign in to continue').count()
+
+  if (needsAuth || (onLoginGate && !(await page.locator('.workspace-shell').count()))) {
+    await page.goto(`${baseUrl}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    const demoButton = page.getByRole('button', { name: /sign in with demo/i })
+    if (await demoButton.count()) {
+      await demoButton.click()
+    } else {
+      await page.locator('input[name="email"]').fill(process.env.MUTQIN_TEST_EMAIL || 'practice01@example.com')
+      await page.locator('input[name="password"]').fill(process.env.MUTQIN_TEST_PASSWORD || 'Practice01!')
+      await page.getByRole('button', { name: /^login$/i }).click()
+    }
+    await page.waitForLoadState('domcontentloaded')
+    await page.goto(`${baseUrl}/memorisation`, { waitUntil: 'domcontentloaded', timeout: 60000 })
+    await page.waitForTimeout(2500)
+  }
+}
 
 async function smokePage(name, contextOptions) {
   const browser = await chromium.launch({ headless: true })
@@ -16,12 +39,11 @@ async function smokePage(name, contextOptions) {
   })
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
-    await page.waitForTimeout(3500)
+    await ensureWorkspace(page)
 
     const result = await page.evaluate(() => ({
       ready: !!document.querySelector('.main'),
-      hasSetup: !!document.querySelector('.setup-start-card, .session-rail'),
+      hasSetup: !!document.querySelector('.setup-start-card, .session-rail, .workspace-shell-idle, .workspace-shell-idle-cta, .top-card-session-actions, .action-btn.primary'),
       hasWorkspaceShell: !!document.querySelector('.workspace-shell, .session-progress-rail'),
       horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
       bodyText: document.body.innerText.slice(0, 300)

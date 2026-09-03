@@ -4,7 +4,8 @@ namespace App\Support;
 
 /**
  * Canonical Qur'an surah metadata used for recommendation logic.
- * Mirrors the frontend SURAH_AYAH_COUNTS / SURAH_NAMES source of truth.
+ * Mirrors resources/quran/integrity/surah-metadata.json (approved source of truth).
+ * Keep in sync with frontend SURAH_AYAH_COUNTS / SURAH_NAMES (alias-aware for Al-Fatihah).
  */
 final class QuranMetadata
 {
@@ -149,5 +150,43 @@ final class QuranMetadata
         $count = self::ayahCount($surah);
 
         return $count !== null && $ayah >= 1 && $ayah <= $count;
+    }
+
+    /**
+     * 1-based global ayah index (1..6236) used for audio CDN paths.
+     */
+    public static function globalAyahNumber(int $surah, int $ayah): ?int
+    {
+        if (! self::isValidAyah($surah, $ayah)) {
+            return null;
+        }
+
+        $offset = 0;
+        for ($i = 1; $i < $surah; $i++) {
+            $offset += self::AYAH_COUNTS[$i - 1];
+        }
+
+        return $offset + $ayah;
+    }
+
+    /**
+     * @return array{surah: int, ayah: int}|null
+     */
+    public static function fromGlobalAyahNumber(int $global): ?array
+    {
+        if ($global < 1 || $global > self::totalAyahCount()) {
+            return null;
+        }
+
+        $remaining = $global;
+        for ($surah = 1; $surah <= 114; $surah++) {
+            $count = self::AYAH_COUNTS[$surah - 1];
+            if ($remaining <= $count) {
+                return ['surah' => $surah, 'ayah' => $remaining];
+            }
+            $remaining -= $count;
+        }
+
+        return null;
     }
 }

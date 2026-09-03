@@ -1,24 +1,24 @@
 /**
- * Host-bound canvas confetti. Renders inside a positioned parent (the session
- * complete card) so overflow + border-radius clip the burst to that area.
+ * Full-viewport canvas confetti. Always paints across the visual screen
+ * (desktop and mobile). Never clips to a modal, card, or transformed parent.
  */
 
-export const VIEWPORT_CONFETTI_Z_INDEX = 6
-export const VIEWPORT_CONFETTI_DURATION_MS = 4000
+export const VIEWPORT_CONFETTI_Z_INDEX = 14150
+export const VIEWPORT_CONFETTI_DURATION_MS = 3000
 export const VIEWPORT_CONFETTI_RUN_KEY = '__mutqinViewportConfetti'
 
 const COLORS = [
+  '#1A5336',
   '#2f6f58',
-  '#b8723c',
-  '#d4a24f',
-  '#c49a6c',
-  '#74d99e',
-  '#f4ce9d',
-  '#8b5e3c',
-  '#58b68e',
+  '#4a8a6e',
+  '#a8d4bc',
+  '#c9a86c',
+  '#d4b87a',
+  '#efe6d4',
+  '#8b7355',
 ]
 
-const SHAPES = ['rect', 'circle', 'streamer', 'diamond']
+const SHAPES = ['rect', 'circle', 'streamer']
 
 export function prefersReducedMotion(matchMedia) {
   const query = typeof matchMedia === 'function'
@@ -42,24 +42,26 @@ export function isMobileViewport(win = globalThis) {
 }
 
 export function measureViewport(win = globalThis) {
+  const docEl = win?.document?.documentElement
+  const vv = win?.visualViewport
   return {
-    width: Math.max(1, Math.floor(Number(win?.innerWidth) || 1)),
-    height: Math.max(1, Math.floor(Number(win?.innerHeight) || 1)),
+    width: Math.max(
+      1,
+      Math.floor(Number(vv?.width) || 0),
+      Math.floor(Number(win?.innerWidth) || 0),
+      Math.floor(Number(docEl?.clientWidth) || 0),
+    ),
+    height: Math.max(
+      1,
+      Math.floor(Number(vv?.height) || 0),
+      Math.floor(Number(win?.innerHeight) || 0),
+      Math.floor(Number(docEl?.clientHeight) || 0),
+    ),
     dpr: Math.min(2, Math.max(1, Number(win?.devicePixelRatio) || 1)),
   }
 }
 
-export function measureConfettiBounds({ host, canvas, window: win = globalThis } = {}) {
-  const el = host || canvas
-  const width = Math.max(0, Math.floor(Number(el?.clientWidth) || 0))
-  const height = Math.max(0, Math.floor(Number(el?.clientHeight) || 0))
-  if (width > 0 && height > 0) {
-    return {
-      width,
-      height,
-      dpr: Math.min(2, Math.max(1, Number(win?.devicePixelRatio) || 1)),
-    }
-  }
+export function measureConfettiBounds({ window: win = globalThis } = {}) {
   return measureViewport(win)
 }
 
@@ -71,16 +73,42 @@ export function resolveViewportConfettiProfile({
     return { skip: true, particleCount: 0, durationMs: 0 }
   }
   if (mobile) {
-    return { skip: false, particleCount: 36, durationMs: VIEWPORT_CONFETTI_DURATION_MS }
+    return { skip: false, particleCount: 72, durationMs: VIEWPORT_CONFETTI_DURATION_MS }
   }
-  return { skip: false, particleCount: 84, durationMs: VIEWPORT_CONFETTI_DURATION_MS }
+  return { skip: false, particleCount: 168, durationMs: VIEWPORT_CONFETTI_DURATION_MS }
 }
 
-export function applyCanvasViewportSize(canvas, viewport, ctx) {
+export function applyFullViewportCanvasStyle(canvas, zIndex = VIEWPORT_CONFETTI_Z_INDEX) {
+  if (!canvas?.style) return canvas
+  Object.assign(canvas.style, {
+    position: 'fixed',
+    inset: '0',
+    top: '0',
+    right: '0',
+    bottom: '0',
+    left: '0',
+    width: '100%',
+    height: '100%',
+    minWidth: '100%',
+    minHeight: '100%',
+    maxWidth: 'none',
+    maxHeight: 'none',
+    pointerEvents: 'none',
+    zIndex: String(zIndex),
+    overflow: 'visible',
+  })
+  return canvas
+}
+
+export function applyCanvasViewportSize(canvas, viewport, ctx, zIndex) {
   if (!canvas) return viewport
   const { width, height, dpr } = viewport
   canvas.width = Math.max(1, Math.floor(width * dpr))
   canvas.height = Math.max(1, Math.floor(height * dpr))
+  applyFullViewportCanvasStyle(
+    canvas,
+    zIndex || Number(canvas.style?.zIndex) || VIEWPORT_CONFETTI_Z_INDEX,
+  )
   if (canvas.style) {
     canvas.style.width = `${width}px`
     canvas.style.height = `${height}px`
@@ -95,42 +123,30 @@ function createPortalCanvas(doc, zIndex) {
   canvas.className = 'viewport-confetti-canvas'
   canvas.setAttribute?.('aria-hidden', 'true')
   canvas.setAttribute?.('role', 'presentation')
-  Object.assign(canvas.style, {
-    position: 'fixed',
-    inset: '0',
-    width: '100vw',
-    height: '100vh',
-    pointerEvents: 'none',
-    zIndex: String(zIndex),
-  })
+  applyFullViewportCanvasStyle(canvas, zIndex)
   doc.body.appendChild(canvas)
   return canvas
 }
 
 function spawnParticles({ width, height, count, mobile, random }) {
-  const origins = mobile
-    ? [{ x: 0.5, y: 0.08 }]
-    : [{ x: 0.18, y: 0.08 }, { x: 0.82, y: 0.08 }, { x: 0.5, y: 0.04 }]
-
-  const spread = Math.max(4.5, Math.min(mobile ? 7 : 11, width / 70))
-  const lift = Math.max(2.2, Math.min(mobile ? 3.2 : 4.2, height / 90))
+  const columns = mobile ? 8 : 12
 
   return Array.from({ length: count }, (_, index) => {
-    const origin = origins[index % origins.length]
+    const column = (index % columns + 0.25 + random() * 0.5) / columns
     return {
-      x: origin.x * width + (random() - 0.5) * Math.min(24, width * 0.06),
-      y: origin.y * height,
-      vx: (random() - 0.5) * spread,
-      vy: -lift - random() * lift,
-      gravity: mobile ? 0.11 : 0.085,
+      x: column * width,
+      y: random() * height,
+      vx: (random() - 0.5) * (mobile ? 1.8 : 2.4),
+      vy: 0.45 + random() * 1.6,
+      gravity: mobile ? 0.05 : 0.042,
       rot: random() * Math.PI * 2,
-      vr: (random() - 0.5) * 0.22,
-      w: 4 + random() * (mobile ? 4 : 6),
-      h: 6 + random() * (mobile ? 5 : 8),
+      vr: (random() - 0.5) * 0.12,
+      w: 2.6 + random() * (mobile ? 2.4 : 3.2),
+      h: 4.4 + random() * (mobile ? 3.4 : 4.8),
       color: COLORS[index % COLORS.length],
       shape: SHAPES[index % SHAPES.length],
-      opacity: 0.78 + random() * 0.18,
-      drift: (random() - 0.5) * 0.28,
+      opacity: 0.62 + random() * 0.26,
+      drift: (random() - 0.5) * 0.16,
     }
   })
 }
@@ -144,13 +160,10 @@ function drawParticle(ctx, particle) {
 
   if (particle.shape === 'circle') {
     ctx.beginPath()
-    ctx.arc(0, 0, particle.w * 0.55, 0, Math.PI * 2)
+    ctx.arc(0, 0, particle.w * 0.48, 0, Math.PI * 2)
     ctx.fill()
   } else if (particle.shape === 'streamer') {
-    ctx.fillRect(-particle.w * 0.18, -particle.h, particle.w * 0.36, particle.h * 1.8)
-  } else if (particle.shape === 'diamond') {
-    ctx.rotate(Math.PI / 4)
-    ctx.fillRect(-particle.w * 0.45, -particle.w * 0.45, particle.w * 0.9, particle.w * 0.9)
+    ctx.fillRect(-particle.w * 0.14, -particle.h, particle.w * 0.28, particle.h * 1.65)
   } else {
     ctx.fillRect(-particle.w / 2, -particle.h / 2, particle.w, particle.h)
   }
@@ -158,9 +171,21 @@ function drawParticle(ctx, particle) {
   ctx.restore()
 }
 
+function bindViewportResize(win, onResize) {
+  win.addEventListener?.('resize', onResize)
+  const vv = win.visualViewport
+  vv?.addEventListener?.('resize', onResize)
+  vv?.addEventListener?.('scroll', onResize)
+  return () => {
+    win.removeEventListener?.('resize', onResize)
+    vv?.removeEventListener?.('resize', onResize)
+    vv?.removeEventListener?.('scroll', onResize)
+  }
+}
+
 /**
- * Start a one-shot confetti burst. A second call on the same canvas
- * is ignored while a burst is already running.
+ * Start a one-shot full-viewport confetti burst. A second call on the same
+ * canvas is ignored while a burst is already running.
  */
 export function startViewportConfetti(options = {}) {
   const win = options.window || (typeof window !== 'undefined' ? window : globalThis)
@@ -175,7 +200,6 @@ export function startViewportConfetti(options = {}) {
   const zIndex = Number(options.zIndex || VIEWPORT_CONFETTI_Z_INDEX)
   const createdCanvas = !options.canvas
   const canvas = options.canvas || createPortalCanvas(doc, zIndex)
-  const host = options.host || null
   const random = typeof options.random === 'function' ? options.random : Math.random
   const nowFn = typeof options.now === 'function'
     ? options.now
@@ -185,24 +209,15 @@ export function startViewportConfetti(options = {}) {
     return canvas[VIEWPORT_CONFETTI_RUN_KEY]
   }
 
-  if (canvas.style) {
-    canvas.style.pointerEvents = 'none'
-    canvas.style.zIndex = String(zIndex)
-    if (host) {
-      canvas.style.position = 'absolute'
-      canvas.style.inset = '0'
-    } else {
-      canvas.style.position = canvas.style.position || 'fixed'
-    }
-  }
+  applyFullViewportCanvasStyle(canvas, zIndex)
 
   const ctx = canvas.getContext?.('2d')
-  const readBounds = () => measureConfettiBounds({ host, canvas, window: win })
-  let viewport = applyCanvasViewportSize(canvas, readBounds(), ctx)
+  const readBounds = () => measureViewport(win)
+  let viewport = applyCanvasViewportSize(canvas, readBounds(), ctx, zIndex)
   let frameId = 0
   let stopped = false
   let particles = []
-  let resizeObserver = null
+  let unbindResize = null
 
   const stop = () => {
     if (stopped) return
@@ -213,9 +228,8 @@ export function startViewportConfetti(options = {}) {
       if (typeof cancel === 'function') cancel(frameId)
       frameId = 0
     }
-    win.removeEventListener?.('resize', onResize)
-    try { resizeObserver?.disconnect?.() } catch { /* ignore */ }
-    resizeObserver = null
+    unbindResize?.()
+    unbindResize = null
     if (createdCanvas && canvas.parentNode) {
       canvas.parentNode.removeChild(canvas)
     } else if (ctx && viewport) {
@@ -226,7 +240,7 @@ export function startViewportConfetti(options = {}) {
   }
 
   const onResize = () => {
-    viewport = applyCanvasViewportSize(canvas, readBounds(), ctx)
+    viewport = applyCanvasViewportSize(canvas, readBounds(), ctx, zIndex)
   }
 
   const handle = {
@@ -256,16 +270,7 @@ export function startViewportConfetti(options = {}) {
   })
 
   handle.running = true
-  win.addEventListener?.('resize', onResize)
-  const ResizeObserverImpl = win.ResizeObserver || globalThis.ResizeObserver
-  if (typeof ResizeObserverImpl === 'function' && (host || canvas)) {
-    try {
-      resizeObserver = new ResizeObserverImpl(onResize)
-      resizeObserver.observe(host || canvas)
-    } catch {
-      resizeObserver = null
-    }
-  }
+  unbindResize = bindViewportResize(win, onResize)
 
   const startedAt = nowFn()
   const tick = () => {
@@ -273,14 +278,6 @@ export function startViewportConfetti(options = {}) {
     const elapsed = nowFn() - startedAt
     const t = Math.min(1, elapsed / profile.durationMs)
     ctx.clearRect(0, 0, viewport.width, viewport.height)
-    ctx.save()
-    ctx.beginPath()
-    if (typeof ctx.roundRect === 'function') {
-      ctx.roundRect(0, 0, viewport.width, viewport.height, 18)
-    } else {
-      ctx.rect(0, 0, viewport.width, viewport.height)
-    }
-    ctx.clip()
 
     for (const particle of particles) {
       particle.vy += particle.gravity
@@ -288,19 +285,17 @@ export function startViewportConfetti(options = {}) {
       particle.x += particle.vx
       particle.y += particle.vy
       particle.rot += particle.vr
-      particle.opacity = particle.opacity * (t > 0.72 ? 0.96 : 1)
+      particle.opacity = particle.opacity * (t > 0.68 ? 0.95 : 1)
       if (
-        particle.x > -40
-        && particle.x < viewport.width + 40
-        && particle.y > -40
-        && particle.y < viewport.height + 40
+        particle.x > -48
+        && particle.x < viewport.width + 48
+        && particle.y > -48
+        && particle.y < viewport.height + 48
         && particle.opacity > 0.04
       ) {
         drawParticle(ctx, particle)
       }
     }
-
-    ctx.restore()
 
     if (t >= 1) {
       stop()
@@ -314,7 +309,6 @@ export function startViewportConfetti(options = {}) {
   const raf = win.requestAnimationFrame || globalThis.requestAnimationFrame
   frameId = typeof raf === 'function' ? raf(tick) : 0
   if (!frameId) {
-    // Tests / environments without rAF still expose a sized canvas + particles.
     ctx.clearRect(0, 0, viewport.width, viewport.height)
   }
 

@@ -181,7 +181,7 @@ export function buildSuccessRecommendationFlow(input = {}) {
       : translate(
         t,
         'successFlow.reinforceDetail',
-        `Consolidate Ayah ${weakAyah} once before advancing.`,
+        `Spend one focused pass on Ayah ${weakAyah}. Repeating a weak spot right away helps move it from short-term recall into firm memory.`,
         { ayah: weakAyah },
       )
     const continueDetail = complementaryTitle || methodTitle
@@ -194,7 +194,7 @@ export function buildSuccessRecommendationFlow(input = {}) {
       : translate(
         t,
         'successFlow.continueAfterReinforce',
-        'Then continue to the next set when the weak ayah feels steady.',
+        'Once the weak ayah feels steady, continue to the next set while the rest is still fresh.',
       )
     return {
       visible: true,
@@ -202,7 +202,7 @@ export function buildSuccessRecommendationFlow(input = {}) {
       lead: translate(
         t,
         'successFlow.mostlySecureLead',
-        'Secure overall — reinforce the weak ayah, then continue.',
+        'You did well overall, with one ayah that needs a little extra care. Follow these two steps before moving on.',
       ),
       steps: [
         {
@@ -236,7 +236,7 @@ export function buildSuccessRecommendationFlow(input = {}) {
       : translate(
         t,
         'successFlow.strongDetail',
-        'This set is secure — continue to the next recommended set.',
+        'Your recall on this set is strong. Continuing now, while the ayahs are still fresh, is the best time to learn the next passage.',
       )
     return {
       visible: true,
@@ -244,7 +244,7 @@ export function buildSuccessRecommendationFlow(input = {}) {
       lead: translate(
         t,
         'successFlow.strongLead',
-        'Strong recall — keep the flow going with the recommended technique.',
+        'Your recitation matched well. Here is a simple path forward — each step explains what to do and why it helps your memorisation stick.',
       ),
       steps: [
         {

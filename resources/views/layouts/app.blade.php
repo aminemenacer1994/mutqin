@@ -6450,6 +6450,11 @@
                 ? app(\App\Services\Auth\AiAudioConsentService::class)->snapshot(Auth::user())
                 : null
         );
+        window.mutqinAiSessionSettings = @json(
+            Auth::check()
+                ? app(\App\Services\Auth\AiSessionSettingsService::class)->snapshot(Auth::user())
+                : null
+        );
 
         function runWhenReady(fn) {
             if (document.readyState === 'loading') {

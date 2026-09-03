@@ -232,24 +232,24 @@
             <div class="contact__grid">
               <div class="contact__field">
                 <label class="form-label" for="contactName">{{ t('homepage.name') }}</label>
-                <input id="contactName" v-model.trim="contactForm.name" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.name }" autocomplete="name">
-                <div v-if="contactErrors.name" class="invalid-feedback d-block">{{ contactErrors.name }}</div>
+                <input id="contactName" v-model.trim="contactForm.name" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.name }" autocomplete="name" :aria-invalid="contactErrors.name ? 'true' : 'false'" :aria-describedby="contactErrors.name ? 'contactNameError' : undefined">
+                <div v-if="contactErrors.name" id="contactNameError" class="invalid-feedback d-block" role="alert">{{ contactErrors.name }}</div>
               </div>
               <div class="contact__field">
                 <label class="form-label" for="contactEmail">{{ t('homepage.contact.email') }}</label>
-                <input id="contactEmail" v-model.trim="contactForm.email" type="email" class="form-control" :class="{ 'is-invalid': contactErrors.email }" autocomplete="email">
-                <div v-if="contactErrors.email" class="invalid-feedback d-block">{{ contactErrors.email }}</div>
+                <input id="contactEmail" v-model.trim="contactForm.email" type="email" class="form-control" :class="{ 'is-invalid': contactErrors.email }" autocomplete="email" :aria-invalid="contactErrors.email ? 'true' : 'false'" :aria-describedby="contactErrors.email ? 'contactEmailError' : undefined">
+                <div v-if="contactErrors.email" id="contactEmailError" class="invalid-feedback d-block" role="alert">{{ contactErrors.email }}</div>
               </div>
             </div>
             <div class="contact__field">
               <label class="form-label" for="contactSubject">{{ t('homepage.contact.subject') }}</label>
-              <input id="contactSubject" v-model.trim="contactForm.subject" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.subject }" autocomplete="off" required>
-              <div v-if="contactErrors.subject" class="invalid-feedback d-block">{{ contactErrors.subject }}</div>
+              <input id="contactSubject" v-model.trim="contactForm.subject" type="text" class="form-control" :class="{ 'is-invalid': contactErrors.subject }" autocomplete="off" required :aria-invalid="contactErrors.subject ? 'true' : 'false'" :aria-describedby="contactErrors.subject ? 'contactSubjectError' : undefined">
+              <div v-if="contactErrors.subject" id="contactSubjectError" class="invalid-feedback d-block" role="alert">{{ contactErrors.subject }}</div>
             </div>
             <div class="contact__field">
               <label class="form-label" for="contactMessage">{{ t('homepage.contact.message') }}</label>
-              <textarea id="contactMessage" v-model.trim="contactForm.message" class="form-control contact__message" :class="{ 'is-invalid': contactErrors.message }" rows="3"></textarea>
-              <div v-if="contactErrors.message" class="invalid-feedback d-block">{{ contactErrors.message }}</div>
+              <textarea id="contactMessage" v-model.trim="contactForm.message" class="form-control contact__message" :class="{ 'is-invalid': contactErrors.message }" rows="3" :aria-invalid="contactErrors.message ? 'true' : 'false'" :aria-describedby="contactErrors.message ? 'contactMessageError' : undefined"></textarea>
+              <div v-if="contactErrors.message" id="contactMessageError" class="invalid-feedback d-block" role="alert">{{ contactErrors.message }}</div>
             </div>
             <button type="submit" class="btn btn--primary contact__submit" :disabled="contactSubmitting">
               <i class="bi" :class="contactSubmitting ? 'bi-arrow-repeat contact__spin' : 'bi-send'" aria-hidden="true"></i>

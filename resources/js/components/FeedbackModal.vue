@@ -7,11 +7,12 @@
         @click.self="onBackdropClick"
       >
         <div
+          ref="dialog"
           class="feedback-modal-shell"
           role="dialog"
           aria-modal="true"
           aria-labelledby="feedbackModalTitle"
-          @keydown.esc.prevent="close"
+          @keydown="onDialogKeydown"
         >
           <div v-if="success" class="feedback-modal__success" role="status">
             <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
@@ -87,7 +88,9 @@
                     :disabled="submitting"
                     :placeholder="t('feedback.messagePlaceholder')"
                     :aria-invalid="Boolean(fieldErrors.message) ? 'true' : 'false'"
+                    :aria-describedby="fieldErrors.message ? 'feedbackMessageError' : undefined"
                   ></textarea>
+                  <span v-if="fieldErrors.message" id="feedbackMessageError" class="sr-only" role="alert">{{ fieldErrors.message }}</span>
                 </label>
 
                 <div v-if="formError" class="feedback-modal__alert" role="alert">
@@ -135,12 +138,19 @@ import {
   registerFeedbackModalHandler,
   unregisterFeedbackModalHandler,
 } from '../scripts/feedback/feedbackLauncher';
+import {
+  captureReturnFocus,
+  focusInitialElement,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../utils/modalFocus';
 
 export default {
   name: 'FeedbackModal',
   data() {
     return {
       visible: false,
+      _returnFocusEl: null,
       submitting: false,
       success: false,
       formError: '',
@@ -183,8 +193,17 @@ export default {
   },
   beforeUnmount() {
     unregisterFeedbackModalHandler();
+    restoreReturnFocus(this._returnFocusEl);
+    this._returnFocusEl = null;
   },
   methods: {
+    onDialogKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.dialog,
+        open: this.visible,
+        onEscape: () => this.close(),
+      });
+    },
     openFromEvent(options = {}) {
       this.reset(false);
       if (options.type) {
@@ -199,14 +218,22 @@ export default {
       if (options.context && typeof options.context === 'object') {
         this.form.extraContext = { ...options.context };
       }
+      this._returnFocusEl = captureReturnFocus(this.$refs.dialog);
       this.visible = true;
       this.$nextTick(() => {
-        this.$refs.messageInput?.focus?.();
+        const input = this.$refs.messageInput;
+        if (input && typeof input.focus === 'function') {
+          input.focus({ preventScroll: true });
+          return;
+        }
+        focusInitialElement(this.$refs.dialog, '#feedbackModalTitle');
       });
     },
     close() {
       if (this.submitting) return;
       this.visible = false;
+      restoreReturnFocus(this._returnFocusEl);
+      this._returnFocusEl = null;
       if (this.success) {
         this.reset(true);
       }

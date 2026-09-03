@@ -240,15 +240,15 @@ function t(key, params = {}) {
     /discardSet/,
     'queue cleanup must be discard-gated so Back to mushaf keeps the set',
   )
-  assert.match(en, /"reviseFocusPhrase":\s*"Review"/)
+  assert.match(en, /"reviseFocusPhrase":\s*"Practise Ayahs \{start\}–\{end\}"/)
   assert.match(en, /"continueToNextRange":\s*"Continue"/)
   assert.match(en, /"continueToAyahs":\s*"Next ayahs \{start\}–\{end\}"/)
-  assert.match(en, /"repeatThisSession":\s*"Repeat session"/)
+  assert.match(en, /"repeatThisSession":\s*"Repeat Ayahs \{start\}–\{end\}"/)
   assert.match(en, /"returnToWorkspace":\s*"Back to mushaf"/)
   assert.match(en, /"retest":\s*"Check again"/)
   assert.match(en, /"reviewAyahOnce":\s*"Repeat Weak Ayah"/)
   assert.match(en, /"startSession":\s*"Continue"/)
-  assert.match(en, /"startRevision":\s*"Review"/)
+  assert.match(en, /"startRevision":\s*"Practise Ayahs \{start\}–\{end\}"/)
   assert.match(
     en.match(/"actions"\s*:\s*\{[\s\S]*?"continueToNextRange":\s*"[^"]+"/)?.[0] || '',
     /"continueToNextRange":\s*"Continue"/,

@@ -146,12 +146,20 @@ async function nextPaint(page) {
 
 async function login(page) {
   await page.goto(`${baseUrl}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 })
-  await page.locator('input[name="email"]').fill(email)
-  await page.locator('input[name="password"]').fill(password)
-  await Promise.all([
-    page.waitForLoadState('domcontentloaded'),
-    page.locator('button[type="submit"]').click()
-  ])
+  const demoButton = page.getByRole('button', { name: /sign in with demo/i })
+  if (await demoButton.count()) {
+    await Promise.all([
+      page.waitForLoadState('domcontentloaded'),
+      demoButton.click(),
+    ])
+  } else {
+    await page.locator('input[name="email"]').fill(email)
+    await page.locator('input[name="password"]').fill(password)
+    await Promise.all([
+      page.waitForLoadState('domcontentloaded'),
+      page.getByRole('button', { name: /^login$/i }).click(),
+    ])
+  }
   await page.goto(`${baseUrl}/memorisation`, { waitUntil: 'domcontentloaded', timeout: 60000 })
   await page.waitForSelector('#app .app', { timeout: 60000 })
   await page.waitForTimeout(1200)

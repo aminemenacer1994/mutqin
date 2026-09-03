@@ -164,6 +164,7 @@ class QuranAlignmentService
 
     public function normalizeArabic(string $text): string
     {
+        // Compare-only: never persist this over stored/display Uthmani Arabic.
         // Dagger alef (ٰ) is a real alef in mushaf orthography — expand before
         // stripping marks, or العَٰلَمِين / الصِّرَٰط become العلمين / الصرط.
         $value = str_replace("\u{0670}", 'ا', $text);

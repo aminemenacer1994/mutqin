@@ -232,4 +232,32 @@ class LearningPersistenceTest extends TestCase
             ->assertStatus(422)
             ->assertJsonValidationErrors('state');
     }
+
+    public function test_state_sync_rejects_older_local_updated_at_as_stale(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson('/api/state', [
+                'state' => $this->sampleState(),
+                'meta' => ['local_updated_at' => now()->toIso8601String()],
+            ])
+            ->assertOk()
+            ->assertJsonPath('saved', true);
+
+        $this->actingAs($user)
+            ->postJson('/api/state', [
+                'state' => array_replace_recursive($this->sampleState(), [
+                    'sessionState' => ['current_index' => 0],
+                ]),
+                'meta' => ['local_updated_at' => now()->subMinutes(5)->toIso8601String()],
+            ])
+            ->assertStatus(409)
+            ->assertJsonPath('saved', false)
+            ->assertJsonPath('stale', true);
+
+        $record = MemorisationSyncState::query()->where('user_id', $user->id)->first();
+        $decoded = json_decode((string) $record->state, true);
+        $this->assertSame(1, (int) ($decoded['sessionState']['current_index'] ?? -1));
+    }
 }

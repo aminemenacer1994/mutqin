@@ -55,6 +55,7 @@ async function ensureCsrfCookie({ force = false } = {}) {
 export const http = axios.create({
   baseURL: '/api',
   withCredentials: true,
+  timeout: 30000,
   headers: {
     'X-Requested-With': 'XMLHttpRequest',
     Accept: 'application/json',
@@ -233,6 +234,15 @@ export const learningApi = {
     const { data } = await http.post('/session', payload)
     return data
   },
+  /**
+   * Mid-session progress checkpoint (action=save). Never completes a session.
+   * Server rejects stale client_revision and will not create a new row.
+   */
+  async checkpointSession(payload = {}) {
+    const body = { ...(payload || {}), action: 'save' }
+    const { data } = await http.post('/session', body)
+    return data
+  },
   async startSession(payload = {}) {
     const { data } = await http.post('/session/start', payload)
     return data
@@ -265,8 +275,8 @@ export const learningApi = {
   },
 
   // Progress --------------------------------------------------------------
-  async getProgress() {
-    const { data } = await http.get('/progress')
+  async getProgress(params = {}) {
+    const { data } = await http.get('/progress', { params })
     return data?.progress ?? []
   },
   async saveProgress(items) {

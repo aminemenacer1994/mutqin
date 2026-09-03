@@ -3773,6 +3773,7 @@
     "nothingToPlayCheckTheSelected": "Bu listede bir şey yok to play. kontrol the seçili aralık.",
     "backOnlineLiveApisAreAvailable": "You are back online. Live features are available again.",
     "offlineModeActiveReadingFallsBack": "You are offline. Reading will use saved surahs on this device.",
+    "sessionSyncExpired": "Your sign-in expired. Refresh the page to sync again. Practice continues locally until then.",
     "settingsIssue": "مشكلة في الإعدادات: {join}",
     "fontSize": "حجم الخط: {defaultFontSize}%",
     "message": "{p0} {p1}",

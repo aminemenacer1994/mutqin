@@ -19,7 +19,9 @@
             'pricing_url' => route('pricing'),
             'dashboard_url' => route('dashboard'),
             'locale' => Auth::user()?->locale ?? 'en',
-            'ai_recall_mode_enabled' => Auth::user()?->ai_recall_mode_enabled ?? false,
+            'ai_session_settings' => Auth::check()
+                ? app(\App\Services\Auth\AiSessionSettingsService::class)->snapshot($memorisationUser)
+                : null,
             'created_at' => Auth::user()?->created_at?->toIso8601String(),
             'login_event_id' => session('mutqin_login_event_id'),
             'just_registered' => !empty($justRegistered),

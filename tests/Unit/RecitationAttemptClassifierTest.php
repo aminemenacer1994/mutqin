@@ -129,6 +129,28 @@ class RecitationAttemptClassifierTest extends TestCase
         $this->assertSame('', $classification['retry_guidance']);
     }
 
+    public function test_provider_http_errors_and_unusable_tokens_are_not_scored(): void
+    {
+        $fourXx = RecitationAttemptClassifier::classifyPayload([
+            'failure_reason' => 'provider',
+            'provider_status' => 401,
+        ]);
+        $this->assertSame(RecitationAttemptClassifier::PROVIDER_NETWORK_ERROR, $fourXx['class']);
+        $this->assertFalse($fourXx['affects_scoring']);
+
+        $fiveXx = RecitationAttemptClassifier::classifyPayload([
+            'failure_reason' => 'speechmatics_5xx',
+            'provider_status' => 503,
+        ]);
+        $this->assertSame(RecitationAttemptClassifier::PROVIDER_NETWORK_ERROR, $fiveXx['class']);
+
+        $unusable = RecitationAttemptClassifier::classifyPayload([
+            'failure_reason' => 'invalid_mime',
+        ]);
+        $this->assertSame(RecitationAttemptClassifier::UNUSABLE_AUDIO, $unusable['class']);
+        $this->assertStringContainsString('clear enough', $unusable['retry_guidance']);
+    }
+
     public function test_unknown_failure_reason_does_not_discard_spoken_audio(): void
     {
         $classification = RecitationAttemptClassifier::classifyPayload([

@@ -195,6 +195,10 @@ function baseInput(overrides = {}) {
   assert.ok(setup.confirmation.rows.some((row) => row.id === 'playback_speed' && String(row.value).includes('0.75')))
   assert.ok(!setup.confirmation.rows.some((row) => row.id === 'auto_follow'))
   assert.ok(!setup.items.some((item) => item.id === 'auto_follow'))
+  assert.ok(!setup.items.some((item) => item.id === 'mistake_handling'))
+  assert.ok(!setup.items.some((item) => item.id === 'mistake_sound'))
+  assert.ok(!setup.confirmation.rows.some((row) => row.id === 'ai_behaviour'))
+  assert.ok(!setup.confirmation.rows.some((row) => row.id === 'mistake_feedback'))
   assert.ok(setup.confirmation.primaryLabel)
   assert.ok(setup.confirmation.secondaryLabel)
 }

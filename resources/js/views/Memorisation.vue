@@ -46,6 +46,8 @@
       role="dialog"
       aria-modal="true"
       :aria-label="workspaceTourStepCopy.title"
+      tabindex="-1"
+      @keydown="onWorkspaceTourKeydown"
     >
       <div
         v-for="(blocker, index) in workspaceTourBlockers"
@@ -288,6 +290,16 @@
       </div>
     </aside>
 
+    <div
+      v-if="recitationCheckPanelOpen || recitationCheckRecording || recitationCheckPreparing"
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {{ aiRecallModeAnnouncement }}
+    </div>
+
     <!-- Main Content -->
     <div
       v-if="appReady && !isLoggedIn"
@@ -385,9 +397,9 @@
           <div class="workspace-shell-head-toolbar">
           <div class="workspace-shell-copy">
             <p v-if="workspaceShellSubtitle" class="workspace-shell-subtitle">{{ workspaceShellSubtitle }}</p>
-            <h1 class="workspace-shell-main-title" :aria-label="topCardSessionLabel">
+            <h1 class="workspace-shell-main-title mutqin-surah-bilingual" :aria-label="topCardSessionLabel">
               <template v-if="topCardSurahArabic || topCardSurahLatin">
-                <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en">{{ topCardSurahLatin }}</span>
+                <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en" dir="ltr">{{ topCardSurahLatin }}</span>
                 <span
                   v-if="topCardSurahArabic && topCardSurahLatin && topCardSurahArabic !== topCardSurahLatin"
                   class="workspace-shell-surah-sep"
@@ -1209,7 +1221,7 @@
         'session-exit-tools': showSessionExitModal && sessionExitOffcanvasOpen
       }"
         @click.stop role="dialog" aria-modal="true" aria-labelledby="memorisationToolsTitle"
-        :aria-hidden="showTools ? 'false' : 'true'" tabindex="-1" @keydown.esc.prevent="closeToolsPanel">
+        :aria-hidden="showTools ? 'false' : 'true'" tabindex="-1" @keydown="onToolsPanelKeydown">
         <div class="tools-top">
         <div class="tools-topbar">
           <div id="memorisationToolsTitle" class="tools-title">
@@ -2140,6 +2152,100 @@
                 <!-- Word Audio: always enabled — toggle removed -->
               </div>
             </section>
+
+            <!-- AI Recite settings -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('ai_recite_settings')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-mic"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">{{ t('sessionSetup.aiRecite.title') }}</span>
+                    <span class="st-sub">{{ t('sessionSetup.aiRecite.subtitle') }}</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.ai_recite_settings }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.ai_recite_settings">
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">{{ t('sessionSetup.aiRecite.recallMode') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.aiRecite.recallModeDesc') }}</div>
+                  </div>
+                  <button class="toggle-chip" :class="{ active: aiRecallModeEnabled }"
+                    @click="setAiRecallModeEnabled(!aiRecallModeEnabled)">
+                    {{ aiRecallModeEnabled ? t('common.on') : t('common.off') }}
+                  </button>
+                </div>
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">{{ t('sessionSetup.aiRecite.strictProgression') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.aiRecite.strictProgressionDesc') }}</div>
+                  </div>
+                  <button class="toggle-chip" :class="{ active: aiRecitationStrictProgression }"
+                    @click="setAiReciteStrictProgressionEnabled(!aiRecitationStrictProgression)">
+                    {{ aiRecitationStrictProgression ? t('common.on') : t('common.off') }}
+                  </button>
+                </div>
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">{{ t('sessionSetup.aiRecite.persistMistakes') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.aiRecite.persistMistakesDesc') }}</div>
+                  </div>
+                  <button class="toggle-chip" :class="{ active: aiRecitationPersistMistakes }"
+                    @click="setAiRecitePersistMistakesEnabled(!aiRecitationPersistMistakes)">
+                    {{ aiRecitationPersistMistakes ? t('common.on') : t('common.off') }}
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- Check memorisation (AMD) settings -->
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('amd_settings')" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-eye-slash"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">{{ t('sessionSetup.amd.title') }}</span>
+                    <span class="st-sub">{{ t('sessionSetup.amd.subtitle') }}</span>
+                  </span>
+                </span>
+                <span class="st-chev" :class="{ open: sectionOpen.amd_settings }"><i
+                    class="bi bi-chevron-down"></i></span>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.amd_settings">
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">{{ t('sessionSetup.amd.wordsShown') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.amd.wordsShownDesc') }}</div>
+                  </div>
+                  <select
+                    class="select amd-settings-select"
+                    :value="amdSettingsHidePercent"
+                    :aria-label="t('sessionSetup.amd.wordsShown')"
+                    @change="setAmdHidePercentFromSettings(Number($event.target.value))"
+                  >
+                    <option
+                      v-for="option in amdWordsShownSettingsOptions"
+                      :key="option.hidePercent"
+                      :value="option.hidePercent"
+                    >
+                      {{ t('sessionSetup.amd.wordsShownValue', { percent: option.shownPercent }) }}
+                    </option>
+                  </select>
+                </div>
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <div class="setting-label">{{ t('sessionSetup.amd.mistakeSound') }}</div>
+                    <div class="setting-description">{{ t('sessionSetup.amd.mistakeSoundDesc') }}</div>
+                  </div>
+                  <button class="toggle-chip" :class="{ active: amdMistakeSoundEnabled }"
+                    @click="setAmdMistakeSoundEnabled(!amdMistakeSoundEnabled)">
+                    {{ amdMistakeSoundEnabled ? t('common.on') : t('common.off') }}
+                  </button>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
 
@@ -2213,9 +2319,9 @@
       </div>
     </div>
 
-    <div class="modal-overlay mutqin-modal-overlay confirm-modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal">
+    <div class="modal-overlay mutqin-modal-overlay confirm-modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal" @keydown="onModalOverlayKeydown($event, { containerRef: 'confirmModalDialog', onClose: closeConfirmModal })">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
-      <div class="modal-content mutqin-modal-surface confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalMessage">
+      <div ref="confirmModalDialog" class="modal-content mutqin-modal-surface confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalMessage">
         <div class="modal-header">
           <div class="modal-header-text">
             <div class="modal-context-badge">{{ sessionContextBadge }}</div>
@@ -3253,6 +3359,9 @@
       :data-theme="theme"
       aria-live="polite"
     >
+      <ViewportConfetti
+        v-if="showPostSessionConfetti && !workspaceTourActive && !onboardingSampleSessionActive && !postSessionAiReciteActive"
+      />
       <div class="post-session-simple__backdrop" aria-hidden="true"></div>
 
       <div
@@ -3262,9 +3371,6 @@
         aria-labelledby="postSessionTitle"
       >
         <div class="post-session-simple__dialog post-session-simple__dialog--lg">
-          <ViewportConfetti
-            v-if="showPostSessionConfetti && !workspaceTourActive && !onboardingSampleSessionActive && !postSessionAiReciteActive"
-          />
           <header class="post-session-simple__header post-session-simple__header--calm">
             <span class="post-session-simple__check" aria-hidden="true">
               <i class="bi bi-check-lg"></i>
@@ -3623,26 +3729,40 @@
                       id="postSessionRecTitle"
                       data-testid="post-session-next-target"
                     >
-                      <p
-                        v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName"
-                        class="post-session-simple__surah-arabic"
-                        lang="ar"
-                        dir="rtl"
+                      <div
+                        v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName
+                          || postSessionInfoArchitecture.whatToPractiseNext.surahName"
+                        class="post-session-simple__surah-row mutqin-surah-bilingual"
                       >
-                        {{ postSessionInfoArchitecture.whatToPractiseNext.surahArabicName }}
-                      </p>
+                        <p
+                          v-if="postSessionInfoArchitecture.whatToPractiseNext.surahName"
+                          class="post-session-simple__surah-latin workspace-shell-surah-en"
+                          lang="en"
+                          dir="ltr"
+                          :class="{
+                            'post-session-simple__surah-latin--solo':
+                              !postSessionInfoArchitecture.whatToPractiseNext.surahArabicName,
+                          }"
+                        >
+                          {{ postSessionInfoArchitecture.whatToPractiseNext.surahName }}
+                        </p>
+                        <span
+                          v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName
+                            && postSessionInfoArchitecture.whatToPractiseNext.surahName"
+                          class="post-session-simple__surah-separator workspace-shell-surah-sep"
+                          aria-hidden="true"
+                        >·</span>
+                        <p
+                          v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName"
+                          class="post-session-simple__surah-arabic workspace-shell-surah-ar"
+                          lang="ar"
+                          dir="rtl"
+                        >
+                          {{ postSessionInfoArchitecture.whatToPractiseNext.surahArabicName }}
+                        </p>
+                      </div>
                       <p
-                        v-if="postSessionInfoArchitecture.whatToPractiseNext.surahName"
-                        class="post-session-simple__surah-latin"
-                        :class="{
-                          'post-session-simple__surah-latin--solo':
-                            !postSessionInfoArchitecture.whatToPractiseNext.surahArabicName,
-                        }"
-                      >
-                        {{ postSessionInfoArchitecture.whatToPractiseNext.surahName }}
-                      </p>
-                      <p
-                        v-else-if="!postSessionInfoArchitecture.whatToPractiseNext.surahArabicName"
+                        v-else
                         class="post-session-simple__action-label"
                       >
                         {{ postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
@@ -3687,6 +3807,16 @@
                         <dd>{{ row.value }}</dd>
                       </div>
                     </dl>
+                    <button
+                      v-if="postSessionRecommendationActionable"
+                      type="button"
+                      class="post-session-simple__link post-session-simple__adjust-plan"
+                      data-testid="post-session-adjust-plan"
+                      :disabled="postSessionActionsBusy"
+                      @click="openPostSessionAdjustPlan"
+                    >
+                      {{ t('memorisation.postSession.recommendation.adjustPlan') || 'Adjust plan' }}
+                    </button>
                   </div>
 
                   <div
@@ -3835,12 +3965,37 @@
                   {{ translateOrFallback('memorisation.postSession.recommendation.justFinished', 'Just finished') }}
                 </p>
                 <p
-                  v-if="postSessionJustFinishedSummary.surah || postSessionJustFinishedSummary.range"
+                  v-if="postSessionJustFinishedSummary.surahLatin
+                    || postSessionJustFinishedSummary.surahArabic
+                    || postSessionJustFinishedSummary.range"
                   class="post-session-simple__plan-prompt-range"
                 >
-                  <strong v-if="postSessionJustFinishedSummary.surah">{{ postSessionJustFinishedSummary.surah }}</strong>
+                  <span
+                    v-if="postSessionJustFinishedSummary.surahLatin || postSessionJustFinishedSummary.surahArabic"
+                    class="mutqin-surah-bilingual"
+                  >
+                    <span
+                      v-if="postSessionJustFinishedSummary.surahLatin"
+                      class="workspace-shell-surah-en"
+                      lang="en"
+                      dir="ltr"
+                    >{{ postSessionJustFinishedSummary.surahLatin }}</span>
+                    <span
+                      v-if="postSessionJustFinishedSummary.surahLatin
+                        && postSessionJustFinishedSummary.surahArabic
+                        && postSessionJustFinishedSummary.surahLatin !== postSessionJustFinishedSummary.surahArabic"
+                      class="workspace-shell-surah-sep"
+                      aria-hidden="true"
+                    >·</span>
+                    <span
+                      v-if="postSessionJustFinishedSummary.surahArabic"
+                      class="workspace-shell-surah-ar"
+                      lang="ar"
+                      dir="rtl"
+                    >{{ postSessionJustFinishedSummary.surahArabic }}</span>
+                  </span>
                   <span v-if="postSessionJustFinishedSummary.range">
-                    <template v-if="postSessionJustFinishedSummary.surah"> · </template>{{ postSessionJustFinishedSummary.range }}
+                    <template v-if="postSessionJustFinishedSummary.surahLatin || postSessionJustFinishedSummary.surahArabic"> · </template>{{ postSessionJustFinishedSummary.range }}
                   </span>
                 </p>
                 <ul
@@ -4857,9 +5012,10 @@
     </div>
   </div>
 
-  <div v-if="showKeyboardShortcuts" class="modal-overlay mutqin-modal-overlay keyboard-shortcuts-overlay" @click.self="closeKeyboardShortcuts">
+  <div v-if="showKeyboardShortcuts" class="modal-overlay mutqin-modal-overlay keyboard-shortcuts-overlay" @click.self="closeKeyboardShortcuts" @keydown="onModalOverlayKeydown($event, { containerRef: 'keyboardShortcutsDialog', onClose: closeKeyboardShortcuts })">
     <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
     <div
+      ref="keyboardShortcutsDialog"
       class="modal-content mutqin-modal-surface keyboard-shortcuts-modal"
       role="dialog"
       aria-modal="true"

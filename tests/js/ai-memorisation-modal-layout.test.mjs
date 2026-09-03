@@ -62,16 +62,16 @@ assertMatch(
   /@media \(max-width:\s*1024px\) and \(min-width:\s*721px\)[\s\S]*?--amd-modal-width:\s*min\(96vw,\s*calc\(100vw - 1\.5rem\)\)/
 )
 
-// Mobile near-full width with safe margins
+// Mobile: fit-size mode fills the viewport without horizontal overflow
 assertMatch(
   'mobile dialog width uses safe viewport margins',
   css,
-  /@media \(max-width:\s*720px\)[\s\S]*?width:\s*min\(100%,\s*calc\(100vw - 1\.25rem\)\)\s*!important/
+  /@media \(max-width:\s*767\.98px\)[\s\S]*?width:\s*100%\s*!important/
 )
 assertMatch(
   'mobile dialog max height respects dynamic viewport',
   css,
-  /@media \(max-width:\s*720px\)[\s\S]*?max-height:\s*min\(94dvh,\s*calc\(100dvh - 1\.5rem\)\)\s*!important/
+  /--amd-modal-max-height:\s*min\(94dvh,\s*calc\(100vh - 1rem\)\)/
 )
 assertMatch(
   'mobile overlay keeps safe-area padding',

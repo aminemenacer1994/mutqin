@@ -68,6 +68,10 @@ npm run watch
 # PHP (203+ tests, in-memory SQLite)
 composer test
 
+# Qur'an content integrity (pinned Uthmani/metadata checksums — offline)
+composer test:quran-integrity
+npm run test:quran-integrity
+
 # JavaScript unit tests
 npm run test:mutqin
 node tests/js/billing.test.mjs
@@ -77,7 +81,9 @@ npm run test:mutqin:browser
 npm run test:mutqin:mobile
 ```
 
-CI runs PHPUnit, JS tests, and a production asset build on push/PR (see `.github/workflows/test.yml`).
+Protected Qur'an fixtures live under `resources/quran/integrity/`. Intentional corpus updates must follow [`resources/quran/integrity/UPDATE.md`](resources/quran/integrity/UPDATE.md) — never edit Uthmani text by hand or regenerate silently in CI.
+
+CI runs PHPUnit, JS tests, Qur'an integrity checks, and a production asset build on push/PR (see `.github/workflows/test.yml`).
 
 ## Environment variables
 

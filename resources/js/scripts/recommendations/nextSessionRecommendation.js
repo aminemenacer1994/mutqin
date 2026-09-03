@@ -1757,7 +1757,7 @@ export function buildCombinedCheckInsight({
     } else if (checksLookStrong) {
       summary = translate(
         'combinedRepeatDespiteStrong',
-        'Your check looked good — we are still giving these verses one more calm pass.',
+        'Your recitation matched well. We still recommend one more gentle practice on the same ayahs — this helps lock them into memory before you advance.',
       )
     } else {
       summary = translate(

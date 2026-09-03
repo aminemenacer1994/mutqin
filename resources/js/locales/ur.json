@@ -3773,6 +3773,7 @@
     "nothingToPlayCheckTheSelected": "لا شيء للتشغيل. تحقق من النطاق المحدد.",
     "backOnlineLiveApisAreAvailable": "عدت متصلًا. واجهات API المباشرة متاحة مجددًا.",
     "offlineModeActiveReadingFallsBack": "You are offline. Reading will use saved surahs on this device.",
+    "sessionSyncExpired": "Your sign-in expired. Refresh the page to sync again. Practice continues locally until then.",
     "settingsIssue": "مشكلة في الإعدادات: {join}",
     "fontSize": "حجم الخط: {defaultFontSize}%",
     "message": "{p0} {p1}",

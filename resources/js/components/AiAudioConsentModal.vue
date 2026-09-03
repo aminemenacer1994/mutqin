@@ -2,13 +2,15 @@
   <Teleport to="body">
     <div
       v-if="open"
+      ref="overlay"
       class="ai-audio-consent-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="aiAudioConsentTitle"
       aria-describedby="aiAudioConsentBody"
+      @keydown="onOverlayKeydown"
     >
-      <div class="ai-audio-consent-card" @click.stop>
+      <div ref="dialog" class="ai-audio-consent-card" @click.stop>
         <h2 id="aiAudioConsentTitle" class="ai-audio-consent-title">{{ title }}</h2>
         <p id="aiAudioConsentBody" class="ai-audio-consent-lead">{{ lead }}</p>
         <p class="ai-audio-consent-privacy">
@@ -41,6 +43,13 @@
 </template>
 
 <script>
+import {
+  captureReturnFocus,
+  focusInitialElement,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../utils/modalFocus'
+
 export default {
   name: 'AiAudioConsentModal',
   props: {
@@ -53,7 +62,34 @@ export default {
     declineLabel: { type: String, default: '' },
   },
   emits: ['accept', 'decline'],
+  data() {
+    return {
+      _returnFocusEl: null,
+    }
+  },
+  watch: {
+    open(next) {
+      if (next) {
+        this._returnFocusEl = captureReturnFocus(this.$refs.overlay)
+        this.$nextTick(() => focusInitialElement(this.$refs.dialog, '#aiAudioConsentTitle'))
+      } else {
+        restoreReturnFocus(this._returnFocusEl)
+        this._returnFocusEl = null
+      }
+    },
+  },
+  beforeUnmount() {
+    restoreReturnFocus(this._returnFocusEl)
+    this._returnFocusEl = null
+  },
   methods: {
+    onOverlayKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.dialog,
+        open: this.open,
+        onEscape: () => this.onDecline(),
+      })
+    },
     onAccept() {
       this.$emit('accept')
     },
@@ -148,6 +184,11 @@ export default {
   cursor: pointer;
   pointer-events: auto;
   touch-action: manipulation;
+}
+
+.ai-audio-consent-btn:focus-visible {
+  outline: 3px solid var(--focus-ring-color, #8b5e3c);
+  outline-offset: 3px;
 }
 
 .ai-audio-consent-btn--ghost {

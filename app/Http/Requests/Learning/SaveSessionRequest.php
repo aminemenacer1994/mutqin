@@ -31,6 +31,7 @@ class SaveSessionRequest extends FormRequest
             'metadata' => ['nullable', 'array'],
             'idempotency_key' => ['nullable', 'string', 'max:128'],
             'session_id' => ['nullable', 'integer', 'min:1'],
+            'client_revision' => ['nullable', 'integer', 'min:0'],
             'range_complete' => ['nullable', 'boolean'],
             'completion_settings' => ['nullable', 'array'],
         ];

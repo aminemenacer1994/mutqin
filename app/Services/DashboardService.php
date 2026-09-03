@@ -50,7 +50,8 @@ class DashboardService
     public function build(User $user, int $chartDays = 30): array
     {
         $chartDays = in_array($chartDays, [7, 30], true) ? $chartDays : 30;
-        if (app()->runningUnitTests()) {
+        $skipCache = app()->runningUnitTests() && ! config('mutqin.perf_benchmarks', false);
+        if ($skipCache) {
             return $this->buildFresh($user, $chartDays);
         }
 
@@ -972,49 +973,57 @@ class DashboardService
     {
         $sevenDaysAgo = now()->subDays(7)->startOfDay();
 
-        $completedTotal = UserSession::query()
+        $sessionAgg = UserSession::query()
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
-            ->where('status', UserSessionStatus::Completed->value)
-            ->count();
+            ->selectRaw(
+                'SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed_total,
+                 SUM(CASE WHEN status = ? AND ended_at >= ? THEN 1 ELSE 0 END) as completed_recent',
+                [UserSessionStatus::Completed->value, UserSessionStatus::Completed->value, $sevenDaysAgo]
+            )
+            ->first();
 
-        $completedRecent = UserSession::query()
-            ->where('user_id', $user->id)
-            ->where('is_onboarding_example', false)
-            ->where('status', UserSessionStatus::Completed->value)
-            ->where('ended_at', '>=', $sevenDaysAgo)
-            ->count();
-
+        $completedTotal = (int) ($sessionAgg->completed_total ?? 0);
+        $completedRecent = (int) ($sessionAgg->completed_recent ?? 0);
         $savedTotal = $this->countSavedSessions($user);
 
-        $memorisedTotal = MemorisationProgress::query()
+        $progressAgg = MemorisationProgress::query()
             ->where('user_id', $user->id)
-            ->whereIn('status', ['memorised', 'mastered'])
-            ->count();
+            ->selectRaw(
+                "SUM(CASE WHEN status IN ('memorised', 'mastered') THEN 1 ELSE 0 END) as memorised_total,
+                 SUM(CASE WHEN status IN ('memorised', 'mastered')
+                      AND (completed_at >= ? OR (completed_at IS NULL AND updated_at >= ?))
+                      THEN 1 ELSE 0 END) as memorised_recent",
+                [$sevenDaysAgo, $sevenDaysAgo]
+            )
+            ->first();
 
-        $memorisedRecent = MemorisationProgress::query()
-            ->where('user_id', $user->id)
-            ->whereIn('status', ['memorised', 'mastered'])
-            ->where(function ($query) use ($sevenDaysAgo) {
-                $query->where('completed_at', '>=', $sevenDaysAgo)
-                    ->orWhere(function ($inner) use ($sevenDaysAgo) {
-                        $inner->whereNull('completed_at')
-                            ->where('updated_at', '>=', $sevenDaysAgo);
-                    });
-            })
-            ->count();
+        $memorisedTotal = (int) ($progressAgg->memorised_total ?? 0);
+        $memorisedRecent = (int) ($progressAgg->memorised_recent ?? 0);
 
-        $aiReciteTotal = AiReciteAttempt::query()->where('user_id', $user->id)->count();
-        $aiReciteRecent = AiReciteAttempt::query()
+        $aiAgg = AiReciteAttempt::query()
             ->where('user_id', $user->id)
-            ->where('created_at', '>=', $sevenDaysAgo)
-            ->count();
+            ->selectRaw(
+                'COUNT(*) as total,
+                 SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as recent',
+                [$sevenDaysAgo]
+            )
+            ->first();
 
-        $notesTotal = AyahNote::query()->where('user_id', $user->id)->count();
-        $notesRecent = AyahNote::query()
+        $aiReciteTotal = (int) ($aiAgg->total ?? 0);
+        $aiReciteRecent = (int) ($aiAgg->recent ?? 0);
+
+        $notesAgg = AyahNote::query()
             ->where('user_id', $user->id)
-            ->where('created_at', '>=', $sevenDaysAgo)
-            ->count();
+            ->selectRaw(
+                'COUNT(*) as total,
+                 SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as recent',
+                [$sevenDaysAgo]
+            )
+            ->first();
+
+        $notesTotal = (int) ($notesAgg->total ?? 0);
+        $notesRecent = (int) ($notesAgg->recent ?? 0);
 
         return [
             'completed_sessions' => [

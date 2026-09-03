@@ -54,6 +54,12 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "test:quran-integrity": [
+            "@php artisan quran:integrity-check"
+        ],
+        "test:perf": [
+            "@php artisan test --filter=PerformanceBaselineTest"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

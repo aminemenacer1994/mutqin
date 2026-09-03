@@ -179,6 +179,56 @@ class RecitationAttemptGuardTest extends TestCase
         $this->assertGreaterThan(0, MemorisationProgress::query()->where('user_id', $user->id)->count());
     }
 
+    public function test_provider_4xx_5xx_and_unusable_audio_do_not_score(): void
+    {
+        $user = User::factory()->pro()->create();
+
+        $clientError = $this->actingAs($user)->postJson('/api/memorisation/assessments/failed', [
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'failure_reason' => 'provider',
+            'provider' => 'speechmatics',
+            'provider_status' => 401,
+        ]);
+        $clientError->assertCreated()
+            ->assertJsonPath('assessment.status', 'failed')
+            ->assertJsonPath('assessment.attempt_class', RecitationAttemptClassifier::PROVIDER_NETWORK_ERROR)
+            ->assertJsonPath('assessment.accuracy', null);
+
+        $serverError = $this->actingAs($user)->postJson('/api/memorisation/assessments/failed', [
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'failure_reason' => 'provider',
+            'provider_status' => 503,
+        ]);
+        $serverError->assertCreated()
+            ->assertJsonPath('assessment.attempt_class', RecitationAttemptClassifier::PROVIDER_NETWORK_ERROR);
+
+        $unusable = $this->actingAs($user)->postJson('/api/memorisation/assessments/failed', [
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'failure_reason' => 'invalid_mime',
+        ]);
+        $unusable->assertCreated()
+            ->assertJsonPath('assessment.attempt_class', RecitationAttemptClassifier::UNUSABLE_AUDIO)
+            ->assertJsonPath('assessment.accuracy', null);
+
+        $stale = $this->actingAs($user)->postJson('/api/memorisation/assessments/failed', [
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 1,
+            'failure_reason' => 'stale',
+        ]);
+        $stale->assertCreated()
+            ->assertJsonPath('assessment.attempt_class', RecitationAttemptClassifier::CANCELLED_STALE);
+
+        $this->assertSame(0, MemorisationProgress::query()->where('user_id', $user->id)->count());
+        $this->assertSame(0, MemorisationPracticePlan::query()->where('user_id', $user->id)->count());
+    }
+
     public function test_history_accuracy_excludes_failed_checks(): void
     {
         $user = User::factory()->pro()->create();

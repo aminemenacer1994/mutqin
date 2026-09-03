@@ -1,11 +1,14 @@
 <template>
   <div
     v-if="visible"
+    ref="overlay"
     class="modal-overlay mutqin-modal-overlay ayah-notes-modal-overlay"
     @click.self="close"
+    @keydown="onOverlayKeydown"
   >
     <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog ayah-notes-dialog">
       <div
+        ref="dialog"
         class="modal-content mutqin-modal-surface ayah-notes-modal"
         role="dialog"
         aria-modal="true"
@@ -222,11 +225,14 @@
   <Teleport to="body">
     <div
       v-if="visible && pendingDeleteNote"
+      ref="deleteOverlay"
       class="modal-overlay mutqin-modal-overlay ayah-notes-delete-overlay"
       @click.self="cancelDelete"
+      @keydown="onDeleteOverlayKeydown"
     >
       <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog ayah-notes-delete-dialog">
         <div
+          ref="deleteDialog"
           class="modal-content mutqin-modal-surface confirm-modal ayah-notes-delete-modal"
           role="dialog"
           aria-modal="true"
@@ -281,6 +287,12 @@
 import learningApi from '../scripts/api/learning'
 import AppStatus from './AppStatus.vue'
 import { formatAppDate, formatAppNumber, unwrapLocale } from '../utils/i18nFormat'
+import {
+  captureReturnFocus,
+  focusInitialElement,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../utils/modalFocus'
 
 const BODY_MAX_LENGTH = 2000
 const NOTES_COLLAPSE_THRESHOLD = 3
@@ -309,6 +321,8 @@ export default {
       notesExpanded: true,
       /** When editing a legacy note over the limit, allow viewing full text until shortened. */
       allowOversizedDraft: false,
+      _returnFocusEl: null,
+      _deleteReturnFocusEl: null,
     }
   },
   computed: {
@@ -347,12 +361,15 @@ export default {
   watch: {
     visible(next) {
       if (next) {
+        this._returnFocusEl = captureReturnFocus(this.$refs.overlay)
         this.resetDraft()
         this.pendingDeleteNote = null
         this.loadNotes()
         this.$nextTick(() => this.focusComposerIfAppropriate())
       } else {
         this.pendingDeleteNote = null
+        restoreReturnFocus(this._returnFocusEl)
+        this._returnFocusEl = null
       }
     },
     draftBody(next) {
@@ -361,7 +378,27 @@ export default {
       }
     },
   },
+  beforeUnmount() {
+    restoreReturnFocus(this._returnFocusEl)
+    restoreReturnFocus(this._deleteReturnFocusEl)
+    this._returnFocusEl = null
+    this._deleteReturnFocusEl = null
+  },
   methods: {
+    onOverlayKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.dialog,
+        open: this.visible && !this.pendingDeleteNote,
+        onEscape: () => this.close(),
+      })
+    },
+    onDeleteOverlayKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.deleteDialog,
+        open: this.visible && !!this.pendingDeleteNote,
+        onEscape: () => this.cancelDelete(),
+      })
+    },
     t(key, params) {
       return this.$t ? this.$t(key, params) : key
     },
@@ -521,10 +558,14 @@ export default {
     },
     requestDelete(note) {
       if (!note?.id || this.busy) return
+      this._deleteReturnFocusEl = captureReturnFocus(this.$refs.deleteOverlay)
       this.pendingDeleteNote = note
+      this.$nextTick(() => focusInitialElement(this.$refs.deleteDialog, '#ayahNotesDeleteTitle'))
     },
     cancelDelete() {
       this.pendingDeleteNote = null
+      restoreReturnFocus(this._deleteReturnFocusEl)
+      this._deleteReturnFocusEl = null
     },
     async confirmDelete() {
       const note = this.pendingDeleteNote

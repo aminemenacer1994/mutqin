@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "authority": "Al Quran Cloud quran-uthmani (Uthmani / Hafs) with Madani page metadata; Quran.com mushaf=1 for QCF glyphs at runtime",
+  "local_pins": [
+    "canonical-corpus.json",
+    "surah-metadata.json",
+    "checksums.json"
+  ],
+  "runtime_sources": {
+    "arabic": "alquran.cloud edition quran-uthmani",
+    "translation_default": "en.asad",
+    "transliteration_default": "en.transliteration",
+    "madani_glyphs": "quran.com v4 mushaf=1",
+    "audio_global_ayah": "cdn.islamic.network keyed by global ayah 1..6236"
+  },
+  "policy": {
+    "never_edit_uthmani_by_hand": true,
+    "never_correct_from_ai": true,
+    "normalization_is_compare_only": true,
+    "intentional_updates": "See UPDATE.md"
+  }
+}
