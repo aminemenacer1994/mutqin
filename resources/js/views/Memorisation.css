@@ -1915,26 +1915,32 @@
   /* inline (not inline-block) preserves Arabic cursive joining */
   display: inline;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
-  border-radius: 0;
-  padding: 0;
+  border-radius: 0.12em;
+  padding-inline: 0.04em;
   cursor: pointer;
 }
 
-.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
-  background: transparent;
-  color: inherit;
+/* Clear audio cursor on tajweed text — keep rule colours on letters */
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+.verse-arabic.tajweed-enabled.word-highlight-enabled word.wbw-word.highlighted {
+  background: color-mix(in srgb, var(--accent) 32%, transparent) !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit;
   transform: none;
-  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--accent) 68%, transparent);
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, var(--accent) 88%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  border-radius: 0.12em;
+  padding-inline: 0.06em;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {
-  background: transparent;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"],
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
-  /* Keep rule colours while a word is highlighted */
-  color: unset;
+  /* Keep tajweed rule colours under the audio plate */
   background: transparent;
 }
 
@@ -6045,29 +6051,30 @@ body.has-navbar .tools-top {
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word {
   display: inline;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
-  border-radius: 0;
-  padding: 0;
+  border-radius: 0.12em;
+  padding-inline: 0.04em;
   cursor: pointer;
 }
 
-.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
-  background: transparent;
-  color: inherit;
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+.verse-arabic.tajweed-enabled.word-highlight-enabled word.wbw-word.highlighted {
+  background: color-mix(in srgb, var(--accent) 32%, transparent) !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit;
   transform: none;
-  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, var(--accent) 68%, transparent);
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, var(--accent) 88%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  border-radius: 0.12em;
+  padding-inline: 0.06em;
 }
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word:hover {
-  background: transparent;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark {
-  color: unset;
-  background: transparent;
-}
-
+.verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted .tajweed-mark,
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted [class*="tajweed-"] {
-  color: unset;
   background: transparent;
 }
 
@@ -16331,12 +16338,23 @@ body.memorisation-page nav.navbar.app-navbar {
   white-space: normal;
 }
 
+.mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted,
+.mushaf-ayah-text.tajweed-enabled word.highlighted,
 .mushaf-ayah-text .wbw-word.highlighted,
 .mushaf-ayah-text word.highlighted {
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-  color: inherit;
-  box-shadow: inset 0 -0.08em 0 var(--accent);
+  background: color-mix(in srgb, var(--accent) 32%, transparent) !important;
+  color: inherit !important;
+  box-shadow:
+    inset 0 -0.14em 0 color-mix(in srgb, var(--accent) 85%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent) !important;
   transform: none;
+  border-radius: 0.12em;
+  padding-inline: 0.05em;
+}
+
+.mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"],
+.mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted .tajweed-mark {
+  background: transparent;
 }
 
 .mushaf-ayah-text .word-audio-btn {
@@ -23907,10 +23925,7 @@ never mint green */
   font-size: 0.8rem;
 }
 
-.verse-arabic:not(.amd-mushaf-stream) .wbw-word.highlighted,
-.verse-arabic:not(.amd-mushaf-stream) word.highlighted,
-.mushaf-ayah-text .wbw-word.highlighted,
-.mushaf-ayah-text word.highlighted,
+/* Recitation review statuses stay ink-only; audio .highlighted is styled separately. */
 .verse-arabic:not(.amd-mushaf-stream) .recitation-word-correct,
 .verse-arabic:not(.amd-mushaf-stream) .recitation-word-partial,
 .verse-arabic:not(.amd-mushaf-stream) .recitation-word-incorrect,
@@ -24565,11 +24580,17 @@ never mint green */
   transform: none;
 }
 
-.verse-arabic .wbw-word.highlighted .tajweed-mark,
-.verse-arabic word.highlighted .tajweed-mark,
-.verse-arabic .wbw-word.highlighted [class*="tajweed-"],
-.verse-arabic word.highlighted [class*="tajweed-"] {
+.verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted .tajweed-mark,
+.verse-arabic:not(.tajweed-enabled) word.highlighted .tajweed-mark,
+.verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted [class*="tajweed-"],
+.verse-arabic:not(.tajweed-enabled) word.highlighted [class*="tajweed-"] {
   color: inherit;
+  background: transparent;
+}
+
+.verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark,
+.verse-arabic.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"] {
+  /* Preserve tajweed rule colours under the audio plate */
   background: transparent;
 }
 
@@ -25761,9 +25782,14 @@ never mint green */
 
 .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
 .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
-  background: transparent;
-  color: inherit;
-  box-shadow: none;
+  background: color-mix(in srgb, var(--accent) 32%, transparent) !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit;
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, var(--accent) 88%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  border-radius: 0.12em;
+  padding-inline: 0.06em;
   transform: none;
 }
 
@@ -33586,16 +33612,14 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   box-shadow: 0 4px 14px rgba(120, 216, 164, 0.18);
 }
 
-[data-theme="light"] .verse-arabic:not(.word-by-word-meanings) .wbw-word.highlighted,
-[data-theme="light"] .verse-arabic:not(.word-by-word-meanings) word.highlighted,
-[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.highlighted,
-[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) word.highlighted,
-[data-theme="light"] .verse-arabic:not(.word-by-word-meanings).tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
-[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings).tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
-[data-theme="light"] .verse-arabic:not(.word-by-word-meanings) .wbw-word.phrase-highlighted,
-[data-theme="light"] .verse-arabic:not(.word-by-word-meanings) word.phrase-highlighted,
-[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) .wbw-word.phrase-highlighted,
-[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings) word.phrase-highlighted {
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings):not(.tajweed-enabled) .wbw-word.highlighted,
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings):not(.tajweed-enabled) word.highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings):not(.tajweed-enabled) .wbw-word.highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings):not(.tajweed-enabled) word.highlighted,
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings):not(.tajweed-enabled) .wbw-word.phrase-highlighted,
+[data-theme="light"] .verse-arabic:not(.word-by-word-meanings):not(.tajweed-enabled) word.phrase-highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings):not(.tajweed-enabled) .wbw-word.phrase-highlighted,
+[data-theme="light"] .mushaf-ayah-text:not(.word-by-word-meanings):not(.tajweed-enabled) word.phrase-highlighted {
   background: transparent !important;
   background-image: none !important;
   color: #b45309 !important;
@@ -33607,15 +33631,38 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   padding-inline: 0;
 }
 
-[data-theme="light"] .verse-arabic .wbw-word.highlighted .tajweed-mark,
-[data-theme="light"] .verse-arabic word.highlighted .tajweed-mark,
-[data-theme="light"] .verse-arabic .wbw-word.highlighted [class*="tajweed-"],
-[data-theme="light"] .verse-arabic word.highlighted [class*="tajweed-"],
-[data-theme="light"] .mushaf-ayah-text .wbw-word.highlighted .tajweed-mark,
-[data-theme="light"] .mushaf-ayah-text word.highlighted .tajweed-mark,
-[data-theme="light"] .mushaf-ayah-text .wbw-word.highlighted [class*="tajweed-"],
-[data-theme="light"] .mushaf-ayah-text word.highlighted [class*="tajweed-"] {
+/* Light + tajweed: keep rule colours and show a clear audio plate */
+[data-theme="light"] .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+[data-theme="light"] .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+  background: color-mix(in srgb, var(--accent) 32%, transparent) !important;
+  background-image: none !important;
   color: inherit !important;
+  -webkit-text-fill-color: inherit;
+  border-radius: 0.12em;
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, var(--accent) 88%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  outline: none;
+  padding-inline: 0.06em;
+}
+
+[data-theme="light"] .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted .tajweed-mark,
+[data-theme="light"] .verse-arabic:not(.tajweed-enabled) word.highlighted .tajweed-mark,
+[data-theme="light"] .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted [class*="tajweed-"],
+[data-theme="light"] .verse-arabic:not(.tajweed-enabled) word.highlighted [class*="tajweed-"],
+[data-theme="light"] .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted .tajweed-mark,
+[data-theme="light"] .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted .tajweed-mark,
+[data-theme="light"] .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted [class*="tajweed-"],
+[data-theme="light"] .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted [class*="tajweed-"] {
+  color: inherit !important;
+  background: transparent !important;
+}
+
+/* Tajweed letters keep their rule colours under the audio highlight plate */
+[data-theme="light"] .verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark,
+[data-theme="light"] .verse-arabic.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"],
+[data-theme="light"] .mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted .tajweed-mark,
+[data-theme="light"] .mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"] {
   background: transparent !important;
 }
 
@@ -52059,12 +52106,16 @@ html body .mushaf-ayah-text.word-by-word-meanings .wbw-word.highlighted,
 html body .mushaf-ayah-text.word-by-word-meanings word.highlighted,
 html body [data-theme="light"] .verse-arabic.word-by-word-meanings .wbw-word.highlighted,
 html body [data-theme="light"] .verse-arabic.word-by-word-meanings word.highlighted,
-html body [data-theme="light"] .verse-arabic.word-by-word-meanings.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
-  background: transparent !important;
+html body [data-theme="light"] .verse-arabic.word-by-word-meanings.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+html body [data-theme="light"] .mushaf-ayah-text.word-by-word-meanings.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+  background: color-mix(in srgb, var(--accent) 28%, transparent) !important;
   background-image: none !important;
-  color: #b45309 !important;
-  -webkit-text-fill-color: #b45309;
-  border-radius: 0 !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit;
+  border-radius: 0.12em !important;
+  box-shadow:
+    inset 0 -0.14em 0 color-mix(in srgb, var(--accent) 80%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent) !important;
 }
 
 html body .verse-arabic.word-by-word-meanings .wbw-word.highlighted .word-arabic-text,
@@ -52921,14 +52972,29 @@ contained page (top session card untouched) —— */
   -webkit-text-fill-color: #b45309 !important;
 }
 
-/* Tajweed COLR ignores plain color fills — plate + filter so the active word still reads */
+/* Tajweed COLR glyphs keep their rule colours; strengthen the audio plate + underline */
 .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
 .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
   color: unset !important;
   -webkit-text-fill-color: unset !important;
-  background: color-mix(in srgb, #f0b35a 28%, transparent) !important;
-  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c47c1a 55%, transparent) !important;
-  filter: sepia(1) saturate(6) hue-rotate(-18deg) brightness(0.82);
+  background: color-mix(in srgb, #f0b35a 46%, transparent) !important;
+  box-shadow:
+    inset 0 -0.18em 0 color-mix(in srgb, #c47c1a 78%, transparent),
+    0 0 0 1.5px color-mix(in srgb, #c47c1a 42%, transparent) !important;
+  border-radius: 0.2em;
+  padding-inline: 0.06em;
+  filter: none;
+  outline: 2px solid color-mix(in srgb, #c47c1a 55%, transparent);
+  outline-offset: 1px;
+  z-index: 3;
+}
+
+.main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.highlighted:not(.madani-word--glyph),
+.main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.phrase-highlighted:not(.madani-word--glyph) {
+  background: color-mix(in srgb, #f0b35a 42%, transparent) !important;
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, #c47c1a 72%, transparent),
+    0 0 0 1px color-mix(in srgb, #c47c1a 36%, transparent) !important;
 }
 
 .main.mushaf-mode-active .madani-word.anchor-highlight {
@@ -53358,48 +53424,86 @@ contained page (top session card untouched) —— */
   display: none !important;
 }
 
-html body .verse-arabic .wbw-word.highlighted .word-arabic-text,
-html body .verse-arabic word.highlighted .word-arabic-text,
-html body .mushaf-ayah-text .wbw-word.highlighted .word-arabic-text,
-html body .mushaf-ayah-text word.highlighted .word-arabic-text,
-html body .verse-arabic .wbw-word.highlighted .tajweed-mark,
-html body .verse-arabic word.highlighted .tajweed-mark,
-html body .verse-arabic .wbw-word.highlighted [class*="tajweed-"],
-html body .verse-arabic word.highlighted [class*="tajweed-"],
-html body .mushaf-ayah-text .wbw-word.highlighted .tajweed-mark,
-html body .mushaf-ayah-text word.highlighted .tajweed-mark,
-html body .mushaf-ayah-text .wbw-word.highlighted [class*="tajweed-"],
-html body .mushaf-ayah-text word.highlighted [class*="tajweed-"] {
+html body .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted .word-arabic-text,
+html body .verse-arabic:not(.tajweed-enabled) word.highlighted .word-arabic-text,
+html body .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted .word-arabic-text,
+html body .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted .word-arabic-text,
+html body .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted .tajweed-mark,
+html body .verse-arabic:not(.tajweed-enabled) word.highlighted .tajweed-mark,
+html body .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted [class*="tajweed-"],
+html body .verse-arabic:not(.tajweed-enabled) word.highlighted [class*="tajweed-"],
+html body .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted .tajweed-mark,
+html body .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted .tajweed-mark,
+html body .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted [class*="tajweed-"],
+html body .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted [class*="tajweed-"] {
   background: transparent !important;
   color: #b45309 !important;
   -webkit-text-fill-color: #b45309 !important;
   box-shadow: none !important;
 }
 
-html[data-theme="dark"] body .verse-arabic .wbw-word.highlighted,
-html[data-theme="dark"] body .verse-arabic word.highlighted,
-html[data-theme="dark"] body .verse-arabic .wbw-word.phrase-highlighted,
-html[data-theme="dark"] body .verse-arabic word.phrase-highlighted,
-html[data-theme="dark"] body .mushaf-ayah-text .wbw-word.highlighted,
-html[data-theme="dark"] body .mushaf-ayah-text word.highlighted,
-html[data-theme="dark"] body .mushaf-ayah-text .wbw-word.phrase-highlighted,
-html[data-theme="dark"] body .mushaf-ayah-text word.phrase-highlighted,
+/* Tajweed on: keep rule colours; plate comes from the word container */
+html body .verse-arabic.tajweed-enabled .wbw-word.highlighted .word-arabic-text,
+html body .mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted .word-arabic-text,
+html body .verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark,
+html body .verse-arabic.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"],
+html body .mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted .tajweed-mark,
+html body .mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+html body .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+  background: color-mix(in srgb, var(--accent) 32%, transparent) !important;
+  background-image: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  border-radius: 0.12em !important;
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, var(--accent) 88%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent) !important;
+  padding-inline: 0.06em;
+}
+
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted,
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) word.highlighted,
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) .wbw-word.phrase-highlighted,
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) word.phrase-highlighted,
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted,
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted,
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.phrase-highlighted,
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) word.phrase-highlighted,
 html[data-theme="dark"] body .self-check-modal-ayah .wbw-word.highlighted,
 html[data-theme="dark"] body .self-check-modal-ayah word.highlighted,
 html[data-theme="dark"] body .memorisation-checker-ayah .wbw-word.highlighted,
 html[data-theme="dark"] body .memorisation-checker-ayah word.highlighted,
-html body .app[data-theme="dark"] .verse-arabic .wbw-word.highlighted,
-html body .app[data-theme="dark"] .verse-arabic word.highlighted,
-html body .app[data-theme="dark"] .verse-arabic .wbw-word.phrase-highlighted,
-html body .app[data-theme="dark"] .verse-arabic word.phrase-highlighted,
-html body .app[data-theme="dark"] .mushaf-ayah-text .wbw-word.highlighted,
-html body .app[data-theme="dark"] .mushaf-ayah-text word.highlighted {
+html body .app[data-theme="dark"] .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted,
+html body .app[data-theme="dark"] .verse-arabic:not(.tajweed-enabled) word.highlighted,
+html body .app[data-theme="dark"] .verse-arabic:not(.tajweed-enabled) .wbw-word.phrase-highlighted,
+html body .app[data-theme="dark"] .verse-arabic:not(.tajweed-enabled) word.phrase-highlighted,
+html body .app[data-theme="dark"] .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted,
+html body .app[data-theme="dark"] .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted {
   background: transparent !important;
   background-image: none !important;
   color: #fbbf24 !important;
   -webkit-text-fill-color: #fbbf24 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+}
+
+html[data-theme="dark"] body .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+html[data-theme="dark"] body .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+html body .app[data-theme="dark"] .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted,
+html body .app[data-theme="dark"] .mushaf-ayah-text.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
+  background: color-mix(in srgb, var(--accent) 36%, transparent) !important;
+  background-image: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  border-radius: 0.12em !important;
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, var(--accent) 80%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 32%, transparent) !important;
 }
 
 /* Cream Mushaf paper in dark theme: amber wash (not bright amber text) */
@@ -53415,46 +53519,66 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
   box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c47c1a 55%, transparent) !important;
 }
 
-html[data-theme="dark"] body .verse-arabic .wbw-word.highlighted .word-arabic-text,
-html[data-theme="dark"] body .verse-arabic word.highlighted .word-arabic-text,
-html[data-theme="dark"] body .mushaf-ayah-text .wbw-word.highlighted .word-arabic-text,
-html[data-theme="dark"] body .mushaf-ayah-text word.highlighted .word-arabic-text,
-html body .app[data-theme="dark"] .verse-arabic .wbw-word.highlighted .word-arabic-text,
-html body .app[data-theme="dark"] .verse-arabic word.highlighted .word-arabic-text,
-html[data-theme="dark"] body .verse-arabic .wbw-word.highlighted .tajweed-mark,
-html[data-theme="dark"] body .verse-arabic word.highlighted .tajweed-mark,
-html[data-theme="dark"] body .verse-arabic .wbw-word.highlighted [class*="tajweed-"],
-html[data-theme="dark"] body .verse-arabic word.highlighted [class*="tajweed-"],
-html[data-theme="dark"] body .mushaf-ayah-text .wbw-word.highlighted .tajweed-mark,
-html[data-theme="dark"] body .mushaf-ayah-text word.highlighted .tajweed-mark,
-html[data-theme="dark"] body .mushaf-ayah-text .wbw-word.highlighted [class*="tajweed-"],
-html[data-theme="dark"] body .mushaf-ayah-text word.highlighted [class*="tajweed-"],
-html body .app[data-theme="dark"] .verse-arabic .wbw-word.highlighted .tajweed-mark,
-html body .app[data-theme="dark"] .verse-arabic .wbw-word.highlighted [class*="tajweed-"] {
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted .word-arabic-text,
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) word.highlighted .word-arabic-text,
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted .word-arabic-text,
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted .word-arabic-text,
+html body .app[data-theme="dark"] .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted .word-arabic-text,
+html body .app[data-theme="dark"] .verse-arabic:not(.tajweed-enabled) word.highlighted .word-arabic-text,
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted .tajweed-mark,
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) word.highlighted .tajweed-mark,
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted [class*="tajweed-"],
+html[data-theme="dark"] body .verse-arabic:not(.tajweed-enabled) word.highlighted [class*="tajweed-"],
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted .tajweed-mark,
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted .tajweed-mark,
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) .wbw-word.highlighted [class*="tajweed-"],
+html[data-theme="dark"] body .mushaf-ayah-text:not(.tajweed-enabled) word.highlighted [class*="tajweed-"],
+html body .app[data-theme="dark"] .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted .tajweed-mark,
+html body .app[data-theme="dark"] .verse-arabic:not(.tajweed-enabled) .wbw-word.highlighted [class*="tajweed-"] {
   background: transparent !important;
   color: #fbbf24 !important;
   -webkit-text-fill-color: #fbbf24 !important;
 }
 
-/* QCF COLR tajweed: tint glyphs without a plate (light + dark ornate; dark standard inverted below) */
+html[data-theme="dark"] body .verse-arabic.tajweed-enabled .wbw-word.highlighted .word-arabic-text,
+html[data-theme="dark"] body .mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted .word-arabic-text,
+html[data-theme="dark"] body .verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark,
+html[data-theme="dark"] body .verse-arabic.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"],
+html[data-theme="dark"] body .mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted .tajweed-mark,
+html[data-theme="dark"] body .mushaf-ayah-text.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"],
+html body .app[data-theme="dark"] .verse-arabic.tajweed-enabled .wbw-word.highlighted .tajweed-mark,
+html body .app[data-theme="dark"] .verse-arabic.tajweed-enabled .wbw-word.highlighted [class*="tajweed-"] {
+  background: transparent !important;
+}
+
+/* QCF COLR tajweed: keep rule colours; clear amber plate for the audio cursor */
 html body .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.highlighted.madani-word--glyph,
 html body .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
   color: unset !important;
   -webkit-text-fill-color: unset !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  filter: sepia(1) saturate(6) hue-rotate(-18deg) brightness(0.82);
+  background: color-mix(in srgb, #f0b35a 46%, transparent) !important;
+  box-shadow:
+    inset 0 -0.18em 0 color-mix(in srgb, #c47c1a 78%, transparent),
+    0 0 0 1.5px color-mix(in srgb, #c47c1a 42%, transparent) !important;
+  border-radius: 0.2em;
+  padding-inline: 0.06em;
+  filter: none !important;
+  outline: 2px solid color-mix(in srgb, #c47c1a 55%, transparent);
+  outline-offset: 1px;
+  z-index: 3;
 }
 
 html[data-theme="dark"] body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet--tajweed .madani-word.highlighted,
 html[data-theme="dark"] body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet--tajweed .madani-word.phrase-highlighted,
 html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet--tajweed .madani-word.highlighted,
 html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet--tajweed .madani-word.phrase-highlighted {
-  background: color-mix(in srgb, #f0b35a 28%, transparent) !important;
-  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c47c1a 55%, transparent) !important;
+  background: color-mix(in srgb, #f0b35a 40%, transparent) !important;
+  box-shadow:
+    inset 0 -0.16em 0 color-mix(in srgb, #c47c1a 72%, transparent),
+    0 0 0 1.5px color-mix(in srgb, #c47c1a 40%, transparent) !important;
   color: unset !important;
   -webkit-text-fill-color: unset !important;
-  filter: sepia(1) saturate(6) hue-rotate(-18deg) brightness(0.82);
+  filter: none !important;
 }
 
 /* Top-card icon controls — four equal icons on one perfect row */
@@ -56430,7 +56554,13 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
     color: unset !important;
     -webkit-text-fill-color: unset !important;
-    filter: sepia(1) saturate(6) hue-rotate(-18deg) brightness(0.82);
+    background: color-mix(in srgb, #f0b35a 46%, transparent) !important;
+    box-shadow:
+      inset 0 -0.18em 0 color-mix(in srgb, #c47c1a 78%, transparent),
+      0 0 0 1.5px color-mix(in srgb, #c47c1a 42%, transparent) !important;
+    filter: none !important;
+    outline: 2px solid color-mix(in srgb, #c47c1a 55%, transparent);
+    outline-offset: 1px;
   }
 
   [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell,
@@ -56524,7 +56654,13 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 [data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-word.phrase-highlighted.madani-word--glyph {
     color: unset !important;
     -webkit-text-fill-color: unset !important;
-    filter: sepia(1) saturate(6) hue-rotate(-18deg) brightness(0.82);
+    background: color-mix(in srgb, #f0b35a 40%, transparent) !important;
+    box-shadow:
+      inset 0 -0.16em 0 color-mix(in srgb, #c47c1a 72%, transparent),
+      0 0 0 1.5px color-mix(in srgb, #c47c1a 40%, transparent) !important;
+    filter: none !important;
+    outline: 2px solid color-mix(in srgb, #c47c1a 50%, transparent);
+    outline-offset: 1px;
   }
 }
 
@@ -57375,10 +57511,14 @@ never recolour tajweed text */
   }
 
   .verse-arabic.tajweed-enabled.word-highlight-enabled .wbw-word.highlighted {
-    background: color-mix(in srgb, var(--accent, #c48a4a) 20%, transparent);
+    background: color-mix(in srgb, var(--accent, #c48a4a) 32%, transparent) !important;
     color: inherit !important;
-    -webkit-text-fill-color: unset !important;
-    box-shadow: inset 0 -0.12em 0 color-mix(in srgb, var(--accent, #c48a4a) 50%, transparent);
+    -webkit-text-fill-color: inherit !important;
+    box-shadow:
+      inset 0 -0.16em 0 color-mix(in srgb, var(--accent, #c48a4a) 88%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent, #c48a4a) 28%, transparent) !important;
+    border-radius: 0.12em;
+    padding-inline: 0.06em;
     transform: none;
   }
 

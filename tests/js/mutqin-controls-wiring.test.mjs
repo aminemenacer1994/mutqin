@@ -196,6 +196,7 @@ includesAll('welcome back continue session flow', [
   /resolveWelcomeBackContinuePayload/,
   /buildPayloadFromLoadedWorkspaceSession/,
   /revealLoadedPreviousSession/,
+  /resumeRestoredSessionWithCountdown/,
   /dismissWelcomeBackAfterContinue\(\)/,
   /hydrateSessionFromPayload\(payload/,
   /queueBackendResumeAfterWelcomeContinue/,
@@ -212,7 +213,6 @@ includesAll('welcome back continue session flow', [
   /welcomeBackWorkspaceHidden = true/,
   /restoreContinueFromLastPosition/,
   /hasRestorableLastPlace/,
-  /revealRestoredLastPlace/,
   /returningUserChoicePending/,
   /shouldGateWorkspaceForResumeChoice\(\) \{\s*return !!\(this\.isLoggedIn && this\.returningUserChoicePending\)/,
 ])
@@ -248,7 +248,12 @@ includesAll('welcome back continue session flow', [
   assert.ok(continueFn, 'welcomeBackContinueSession body not found')
   assert.match(continueFn, /dismissWelcomeBackAfterContinue\(\)/)
   assert.match(continueFn, /restoreWorkspaceToContinuePayload/)
-  assert.match(continueFn, /revealLoadedPreviousSession|hydrateSessionFromPayload\(payload/)
+  assert.match(continueFn, /revealLoadedPreviousSession\(\)/)
+  assert.doesNotMatch(
+    continueFn,
+    /revealRestoredLastPlace\(\)/,
+    'welcomeBackContinueSession must countdown into the set, not idle last-place reveal',
+  )
   assert.doesNotMatch(
     continueFn,
     /openToolsPanel/,

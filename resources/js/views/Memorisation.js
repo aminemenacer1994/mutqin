@@ -6348,8 +6348,12 @@ export default {
     },
     isExistingUserLogin() {
       // Welcome Back is for returning learners after their first-time tour.
+      // Same rule for learner, admin, and demo tester accounts.
       if (this.shouldSuppressWelcomeBackModal()) return false
-      return !!(this.auth?.just_logged_in && !this.auth?.just_registered && this.hasCompletedOnboarding())
+      if (!(this.auth?.just_logged_in && !this.auth?.just_registered)) return false
+      return this.hasCompletedOnboarding()
+        || this.hasDismissedWorkspaceTour()
+        || this.hasPostOnboardingPracticeEvidence()
     },
     hasMeaningfulSessionCompletionData() {
       if (!this.isSessionCompleted || !this.hasVerses) return false
@@ -9678,9 +9682,28 @@ export default {
       })
       // Re-apply highlights when anchor/tajweed toggles affect word layout
       this.$watch('tajweedEnabled', () => {
+        this.clearDisplayArabicCache?.()
+        this.clearMushafAyahHtmlCache?.()
+        this.wordHighlightNodeRegistry?.clear?.()
+        this.lastHighlightedWordNodes = []
         if (this.anchorModeEnabled) {
           this.scheduleAnchorHighlights()
         }
+        this.$nextTick(() => {
+          if (this.anchorModeEnabled) this.scheduleAnchorHighlights()
+          const verse = this.activeVerseRef
+          if (!verse?.key || !this.wordByWordAudioEnabled) return
+          if (this.isPlaying || this.sessionPaused || this.isSessionLive) {
+            this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
+              this.syncWordHighlightFromAudio(verse)
+              if (this.isPlaying && !this.audioElement?.paused) {
+                this.queueWordHighlightFrame(verse)
+              }
+            }).catch(() => {})
+          } else if (this.currentHighlightedVerseKey === verse.key && this.currentWordIndex >= 0) {
+            this.applyWordHighlightClasses(verse.key, this.currentWordIndex)
+          }
+        })
       })
       this.$watch('effectiveActiveVerseKey', () => {
         if (this.readingViewMode === 'mushaf') this.syncMushafPageToActiveVerse()
@@ -9749,14 +9772,16 @@ export default {
         authenticatedWorkspace
         && !this.hasCompletedOnboarding()
         && !this.shouldAutoStartWorkspaceTour()
-        && !this.isDemoWorkspaceAccount()
         && (
-          this.hasPostOnboardingPracticeEvidence()
-          || (this.auth?.just_logged_in && !this.auth?.just_registered)
+          this.hasDismissedWorkspaceTour()
+          || this.hasPostOnboardingPracticeEvidence()
+          || (this.auth?.just_logged_in && !this.auth?.just_registered && !this.isDemoWorkspaceAccount())
+          || (this.isDemoWorkspaceAccount() && this.hasDismissedWorkspaceTour())
         )
       ) {
         // Returning accounts (or users already practising) must not stick on
         // Start Onboarding after owner-scoped storage migration.
+        // Demo testers who finished/skipped the tour also count as existing.
         this.markOnboardingCompleted()
       }
       const needsFirstTimeOnboarding = authenticatedWorkspace && this.requiresFirstTimeOnboarding
@@ -31678,15 +31703,11 @@ export default {
           payload,
           loaded: loadedRange,
         })
-        const lastPlaceOnly = !!(payload?.fromLastPosition && !this.backendUnfinishedSession)
 
-        // Fast path: previous session is already loaded behind the welcome gate.
+        // Permanent contract (user / admin / demo): restore that exact set, then 3-2-1 countdown.
+        // Never use the "last place only" reveal that skips countdown and leaves the session idle.
         if (canFastPath) {
           this.restoreWorkspaceToContinuePayload(payload)
-          if (lastPlaceOnly) {
-            this.revealRestoredLastPlace()
-            return
-          }
           this.revealLoadedPreviousSession()
           this.queueBackendResumeAfterWelcomeContinue(payload)
           return
@@ -31757,10 +31778,6 @@ export default {
           throw new Error('continue restored without verses')
         }
 
-        if (lastPlaceOnly) {
-          this.revealRestoredLastPlace()
-          return
-        }
         this.revealLoadedPreviousSession()
         this.queueBackendResumeAfterWelcomeContinue(payload)
       } catch (error) {

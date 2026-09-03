@@ -246,7 +246,8 @@ const unfinishedIkhlas = {
   assert.match(source, /restoreContinueFromLastPosition\(/)
   assert.match(source, /hasRestorableLastPlace/)
   assert.match(source, /getContinuePosition\(/)
-  assert.match(source, /revealRestoredLastPlace\(/)
+  assert.match(source, /revealLoadedPreviousSession\(/)
+  assert.match(source, /resumeRestoredSessionWithCountdown\(/)
   assert.match(source, /fromLastPosition/)
   assert.match(source, /sessionRangesMatch\(restorePayload,\s*live\.session\)/)
   assert.match(source, /That session is no longer available to resume/)
@@ -260,6 +261,32 @@ const unfinishedIkhlas = {
   )
   // Fast path no longer trusts hasVerses alone
   assert.doesNotMatch(source, /if \(this\.hasVerses && chapterReady\)/)
+
+  // Welcome Back "Return to your place": always countdown into the exact previous set.
+  const welcomeContinue = source.match(
+    /async welcomeBackContinueSession\(options = \{\}\) \{[\s\S]*?\n    \},\n\n    logoutFromWelcomeBack/
+  )?.[0] || ''
+  assert.ok(welcomeContinue, 'welcomeBackContinueSession body not found')
+  assert.match(
+    welcomeContinue,
+    /revealLoadedPreviousSession\(\)/,
+    'Return to your place must reveal the restored set through the live resume path',
+  )
+  assert.match(
+    source,
+    /revealLoadedPreviousSession\(\) \{[\s\S]*?resumeRestoredSessionWithCountdown\(\)/,
+    'restored welcome-back set must auto-run the 3-2-1 countdown',
+  )
+  assert.doesNotMatch(
+    welcomeContinue,
+    /revealRestoredLastPlace\(\)/,
+    'Return to your place must not skip countdown via last-place-only reveal',
+  )
+  assert.doesNotMatch(
+    welcomeContinue,
+    /isAdmin|isDemoWorkspaceAccount|isDemoMode/,
+    'Return to your place must use the same resume path for user, admin, and demo',
+  )
 }
 
 console.log('return-to-set-resume.test.mjs: ok')

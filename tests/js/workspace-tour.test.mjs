@@ -245,6 +245,8 @@ function sliceMethod(source, name) {
   assert.match(welcome, /shouldSuppressWelcomeBackModal\(\)/)
   const existing = sliceMethod(memorisationJs, 'isExistingUserLogin')
   assert.match(existing, /shouldSuppressWelcomeBackModal\(\)/)
+  assert.match(existing, /hasDismissedWorkspaceTour\(\)/)
+  assert.match(existing, /hasPostOnboardingPracticeEvidence\(\)/)
   const suppress = sliceMethod(memorisationJs, 'shouldSuppressWelcomeBackModal')
   assert.match(suppress, /just_registered/)
   assert.match(suppress, /shouldAutoStartWorkspaceTour\(\)/)
