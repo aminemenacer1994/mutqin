@@ -1,5 +1,6 @@
 import { mutateMutqinState } from './useMutqinPersistence'
 import { runSilentAiEvaluation } from '../engine/silent_ai_evaluation'
+import { slimSessionQueueItem } from '../session/slimSessionQueue.js'
 
 function queueKey(item = {}) {
   return [
@@ -21,19 +22,20 @@ function sessionSignature({ mode = 'beginner', queue = [], config = null } = {})
 }
 
 function normaliseQueueItem(item = {}) {
-  const verse = item.verse || null
-  const phase = item.phase === 'Review' ? 'Retention' : (item.phase || 'Takrar')
+  const slim = slimSessionQueueItem(item) || {}
+  const phase = slim.phase === 'Review' ? 'Retention' : (slim.phase || 'Takrar')
   return {
     phase,
-    ayahId: item.ayahId || verse?.key || null,
-    verse,
-    segment: item.segment || null,
-    chainKey: item.chainKey || null,
-    sequencePosition: Math.max(1, Number(item.sequencePosition || 1)),
-    sequenceTotal: Math.max(1, Number(item.sequenceTotal || 1)),
-    repeatCount: Math.max(1, Number(item.repeatCount || 1)),
-    totalRepeats: Math.max(1, Number(item.totalRepeats || 1)),
-    prompt: item.prompt || ''
+    ayahId: slim.ayahId || null,
+    segment: slim.segment || null,
+    chainKey: slim.chainKey || null,
+    sequencePosition: Math.max(1, Number(slim.sequencePosition || 1)),
+    sequenceTotal: Math.max(1, Number(slim.sequenceTotal || 1)),
+    repeatCount: Math.max(1, Number(slim.repeatCount || 1)),
+    totalRepeats: Math.max(1, Number(slim.totalRepeats || 1)),
+    prompt: slim.prompt || '',
+    plannerType: slim.plannerType || null,
+    chainStage: slim.chainStage || null,
   }
 }
 

@@ -75,21 +75,6 @@
                 {{ primaryContinueAction.cta }}
               </span>
             </a>
-            <button
-              type="button"
-              class="dash-ai-recite-cta"
-              :class="{ 'is-animated': !reduceMotion }"
-              @click="openAiRecite"
-            >
-              <span class="dash-ai-recite-cta__icon" aria-hidden="true">
-                <i class="bi bi-stars"></i>
-              </span>
-              <span class="dash-ai-recite-cta__copy">
-                <strong>{{ t('dashboard.ai_recite.cta_label') }}</strong>
-                <small>{{ t('dashboard.ai_recite.cta_hint') }}</small>
-              </span>
-              <span class="dash-ai-recite-cta__action">{{ t('dashboard.ai_recite.cta_action') }}</span>
-            </button>
           </div>
         </header>
 
@@ -636,22 +621,11 @@
       @close="closeSessionAnalysis"
       @retry="retrySessionAnalysis"
     />
-
-    <DashboardAiReciteModal
-      v-if="aiReciteReady"
-      :open="aiReciteOpen"
-      :user-id="ownerId"
-      :progress="data?.progress || null"
-      @close="closeAiRecite"
-      @saved="onAiReciteSaved"
-    />
   </main>
 </template>
 
 <script>
-import { defineAsyncComponent } from 'vue'
 import { Bar } from 'vue-chartjs'
-import { wrapChunkImport } from '../utils/chunkLoadRecovery'
 import {
   BarElement,
   CategoryScale,
@@ -669,15 +643,6 @@ import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/network
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import './Dashboard.css'
-
-const DashboardAiReciteModal = defineAsyncComponent({
-  loader: () => wrapChunkImport(
-    () => import(/* webpackChunkName: "dash-ai-recite" */ '../components/DashboardAiReciteModal.vue'),
-    { feature: 'dash-ai-recite' },
-  ),
-  delay: 80,
-  timeout: 120000,
-})
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -725,7 +690,7 @@ const DRAWER_ICONS = {
 
 export default {
   name: 'UserDashboard',
-  components: { Bar, NetworkFallback, DashAnimatedNumber, SessionAnalysisModal, DashboardAiReciteModal },
+  components: { Bar, NetworkFallback, DashAnimatedNumber, SessionAnalysisModal },
   props: {
     auth: { type: Object, default: () => ({}) },
     initialData: { type: Object, default: null },
@@ -768,8 +733,6 @@ export default {
       analysisSourceId: null,
       analysisSourceKey: '',
       analysisRequestId: 0,
-      aiReciteOpen: false,
-      aiReciteReady: false,
     }
   },
   computed: {
@@ -1442,16 +1405,6 @@ export default {
     this.syncDrawerBodyLock(false)
   },
   methods: {
-    openAiRecite() {
-      this.aiReciteReady = true
-      this.aiReciteOpen = true
-    },
-    closeAiRecite() {
-      this.aiReciteOpen = false
-    },
-    onAiReciteSaved() {
-      this.fetchDashboard(this.chartDays, { quiet: true, force: true })
-    },
     t(key, params) {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key

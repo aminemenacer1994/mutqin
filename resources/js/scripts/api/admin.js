@@ -79,6 +79,7 @@ export const adminApi = {
     sessions = '',
     sort = 'created',
     dir = 'desc',
+    account = 'all',
   } = {}) {
     const { data } = await withRetry(() =>
       http.get('/admin/users', {
@@ -93,6 +94,7 @@ export const adminApi = {
           sessions: sessions || undefined,
           sort: sort || undefined,
           dir: dir || undefined,
+          account: account || undefined,
         },
       })
     )
@@ -128,6 +130,11 @@ export const adminApi = {
   async deleteUser(id) {
     const { data } = await http.delete(`/admin/users/${id}`)
     return !!data?.deleted
+  },
+
+  async restoreUser(id) {
+    const { data } = await http.post(`/admin/users/${id}/restore`)
+    return !!data?.restored
   },
 
   async deleteNote(id) {

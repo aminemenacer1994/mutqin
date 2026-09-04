@@ -260,4 +260,44 @@ class LearningPersistenceTest extends TestCase
         $decoded = json_decode((string) $record->state, true);
         $this->assertSame(1, (int) ($decoded['sessionState']['current_index'] ?? -1));
     }
+
+    public function test_state_show_and_store_strip_verse_blobs_from_queue(): void
+    {
+        $user = User::factory()->create();
+        $fatState = $this->sampleState();
+        $fatState['sessionState']['queue'][0]['verse'] = [
+            'key' => '2:255',
+            'arabic' => str_repeat('ayah ', 80),
+            'words' => [['ar' => 'الله']],
+            'audio' => 'https://example.test/2-255.mp3',
+        ];
+        $fatState['sessionState']['config']['verses'] = [['key' => '2:255']];
+
+        MemorisationSyncState::query()->create([
+            'user_id' => $user->id,
+            'state' => json_encode($fatState, JSON_UNESCAPED_UNICODE),
+            'payload_hash' => 'fat',
+            'state_updated_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/state')
+            ->assertOk()
+            ->assertJsonPath('state.sessionState.queue.0.ayahId', '2:255')
+            ->assertJsonMissingPath('state.sessionState.queue.0.verse')
+            ->assertJsonMissingPath('state.sessionState.config.verses');
+
+        $this->actingAs($user)
+            ->postJson('/api/state', [
+                'state' => $fatState,
+                'meta' => ['local_updated_at' => now()->addSecond()->toIso8601String()],
+            ])
+            ->assertOk()
+            ->assertJsonPath('saved', true);
+
+        $stored = json_decode((string) MemorisationSyncState::query()->where('user_id', $user->id)->value('state'), true);
+        $this->assertSame('2:255', $stored['sessionState']['queue'][0]['ayahId'] ?? null);
+        $this->assertArrayNotHasKey('verse', $stored['sessionState']['queue'][0]);
+        $this->assertArrayNotHasKey('verses', $stored['sessionState']['config']);
+    }
 }

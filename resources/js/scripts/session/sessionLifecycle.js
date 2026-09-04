@@ -16,8 +16,10 @@
  * - saved_for_later   — named bookmark sitting (Saved Sessions); distinct from Resume
  * - ended_early       — terminal incomplete (explicit discard / API end); NOT resumable
  *
- * Soft exit ("Finish for now?" / "You can return later") MUST map to paused/unfinished,
- * never to ended_early. Resume is available iff unfinished backend (or guest continue).
+ * Pause / back-to-mushaf park maps to paused/unfinished (Resume).
+ * End session is always terminal: completed (range done) or ended_early (left early).
+ * After End, the primary CTA is Start session — never Resume.
+ * Resume is available iff unfinished backend (or guest continue) from Pause / park.
  *
  * Practice set states (product language):
  * ACTIVE SET → currently working
@@ -396,16 +398,29 @@ export function resolvePracticeSessionPersistence(input = {}) {
 }
 
 /**
- * Soft exit ("return later") vs genuine completion vs explicit discard.
- * Soft exit must keep unfinished + resumable; completion and discard must not.
+ * Soft exit ("return later") vs genuine completion vs explicit End / discard.
+ * Pause / park must keep unfinished + resumable; End and discard must not.
  */
 export function resolveSessionExitTransition({
   rangeComplete = false,
   discard = false,
+  endEarly = false,
 } = {}) {
   if (discard) {
     return {
       kind: 'discard',
+      persistence: PRACTICE_SESSION_PERSISTENCE.ENDED_EARLY,
+      backendStatus: BACKEND_SESSION_STATUS.ENDED_EARLY,
+      unfinished: false,
+      resumable: false,
+      clearContinue: true,
+      pauseSession: false,
+      completeSession: false,
+    }
+  }
+  if (endEarly) {
+    return {
+      kind: 'end_early',
       persistence: PRACTICE_SESSION_PERSISTENCE.ENDED_EARLY,
       backendStatus: BACKEND_SESSION_STATUS.ENDED_EARLY,
       unfinished: false,
@@ -1280,8 +1295,9 @@ export function reconcileContinuePayloadWithBackend(localPayload, backendSession
  * Keep practising dismisses the modal without mutating session completion state.
  * Playback resumes immediately from the pause position (no countdown).
  *
- * Incomplete range ("Finish for now?") saves for later via pause — never completes.
- * Completed range ends the sitting and opens Session Complete.
+ * End session is always terminal: completed range opens Session Complete;
+ * incomplete range ends early (Start session, not Resume).
+ * Pause / "save for later" remain the only resumable leave.
  */
 export function resolveEndSessionConfirmDecision(action, options = {}) {
   const rangeComplete = options.rangeComplete === true
@@ -1293,6 +1309,7 @@ export function resolveEndSessionConfirmDecision(action, options = {}) {
       completeSession: false,
       pauseSession: false,
       saveForLater: false,
+      endEarly: false,
     }
   }
   if (action === END_SESSION_CONFIRM_ACTION.SAVE_FOR_LATER) {
@@ -1303,17 +1320,19 @@ export function resolveEndSessionConfirmDecision(action, options = {}) {
       completeSession: false,
       pauseSession: true,
       saveForLater: true,
+      endEarly: false,
     }
   }
   if (action === END_SESSION_CONFIRM_ACTION.END_SESSION) {
     if (!rangeComplete) {
       return {
-        action: END_SESSION_CONFIRM_ACTION.SAVE_FOR_LATER,
+        action: END_SESSION_CONFIRM_ACTION.END_SESSION,
         closeModal: true,
         mutateSession: true,
         completeSession: false,
-        pauseSession: true,
-        saveForLater: true,
+        pauseSession: false,
+        saveForLater: false,
+        endEarly: true,
       }
     }
     return {
@@ -1323,6 +1342,7 @@ export function resolveEndSessionConfirmDecision(action, options = {}) {
       completeSession: true,
       pauseSession: false,
       saveForLater: false,
+      endEarly: false,
     }
   }
   return {
@@ -1332,6 +1352,7 @@ export function resolveEndSessionConfirmDecision(action, options = {}) {
     completeSession: false,
     pauseSession: false,
     saveForLater: false,
+    endEarly: false,
   }
 }
 

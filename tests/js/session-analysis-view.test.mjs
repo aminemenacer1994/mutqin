@@ -102,3 +102,20 @@ assert.equal(hasSavedAnalysis({}), false)
 
 const empty = buildSessionAnalysisView({ has_analysis: false, session: { id: 3 } }, t)
 assert.equal(empty.hasContent, false)
+
+const noExtras = buildSessionAnalysisView({
+  has_analysis: true,
+  assessment: { accuracy: 72, surah_name: 'Al-Fatiha', start_ayah: 1, end_ayah: 3 },
+  ai_attempt: {
+    accuracy_percent: 72,
+    word_statuses: [{ text: 'بسم', status: 'correct', ayah_number: 1 }],
+  },
+  practice_plan: { title: 'Repeat weak ayah', why: 'Focus here' },
+  recommendation: { recommended_technique: 'slow_repeat' },
+  retention: { weak_spots: [{ id: 1, ayah_number: 2, severity: 'high', status: 'active' }] },
+}, t, { includeRecommendations: false, includeRetention: false })
+assert.equal(noExtras.recommendations.length, 0)
+assert.equal(noExtras.retention.length, 0)
+assert.ok(noExtras.aiReview)
+
+console.log('session-analysis-view.test.mjs: ok')

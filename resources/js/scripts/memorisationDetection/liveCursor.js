@@ -193,6 +193,44 @@ export function clampStatusesToConfirmedCursor(statuses = [], confirmedWordIndex
   })
 }
 
+export function isBlockingMistakeStatus(status = '') {
+  const value = String(status || '').toLowerCase()
+  return value === 'incorrect' || value === 'omitted' || value === 'skipped'
+}
+
+export function findFirstBlockingMistakeIndex(statuses = [], maxIndex = Infinity) {
+  const list = Array.isArray(statuses) ? statuses : []
+  const limit = Number.isFinite(Number(maxIndex))
+    ? Math.min(list.length - 1, Math.max(0, Number(maxIndex)))
+    : list.length - 1
+  for (let index = 0; index <= limit; index += 1) {
+    if (isBlockingMistakeStatus(list[index]?.status)) return index
+  }
+  return -1
+}
+
+/**
+ * Stop-on-mistake: keep paint at/before the freeze index only.
+ */
+export function clampStatusesToFreezePoint(statuses = [], freezeAt = null) {
+  if (!Number.isFinite(Number(freezeAt))) return Array.isArray(statuses) ? statuses : []
+  const freeze = Math.max(0, Number(freezeAt))
+  return (Array.isArray(statuses) ? statuses : []).map((word, index) => {
+    if (index <= freeze) return word || { status: 'pending' }
+    if (!isPaintedLiveStatus(word?.status)) return word || { status: 'pending' }
+    return {
+      ...(word || {}),
+      status: 'pending',
+      note: '',
+      actual: undefined,
+      similarity: undefined,
+      confidence: undefined,
+      interim: false,
+      hypothesis: false,
+    }
+  })
+}
+
 /**
  * Merge committed + interim display statuses.
  * When `confirmedOnly` is true (AMD live), interim never paints — including the

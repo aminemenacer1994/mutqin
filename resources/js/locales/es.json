@@ -293,7 +293,8 @@
           "title": "Traducción y tajweed",
           "description": "Mantén el significado y el tajweed cerca mientras memorizas."
         }
-      }
+      },
+      "carouselLabel": "Feature screenshots"
     },
     "how": {
       "kicker": "Cómo funciona",
@@ -3567,7 +3568,20 @@
       "toolAudio": "audio help",
       "toolMemorizing": "جارٍ الحفظ",
       "peekHint": "necesitan a hint? Peek at el text",
-      "toolPeek": "Peek at el text"
+      "toolPeek": "Peek at el text",
+      "tryAgain": "Try again",
+      "reciteMode": {
+        "title": "Recitation style",
+        "fullSession": {
+          "label": "Full session",
+          "desc": "Keep going even when a word slips. Review everything at the end."
+        },
+        "stopOnMistake": {
+          "label": "Stop on mistake",
+          "desc": "Hear a cue, see the word turn red, then say it correctly before continuing.",
+          "blocked": "Recite this word correctly to continue."
+        }
+      }
     },
     "exportReport": {
       "saved": "Guardada",
@@ -4618,7 +4632,7 @@
     "col_sessions": "Sort: sessions",
     "col_ai": "AI",
     "col_active": "Sort: last active",
-    "col_status": "« Status»",
+    "col_status": "Estado",
     "learning_title": "Aprendiendo progreso",
     "learning_subtitle": "Memorización across the whole platform",
     "learning_memorised": "Ayahs memorizado",
@@ -4771,6 +4785,17 @@
     "status_active_today": "activo today",
     "status_active_n_days_ago": "activo {n} days ago",
     "status_never_sessioned": "« Never sessioned»",
+    "status_deleted": "Eliminado",
+    "status_deleted_help": "Oculto para los alumnos — se puede restaurar",
+    "status_chip_active": "Activo",
+    "status_chip_recent": "Reciente",
+    "status_chip_inactive": "Inactivo",
+    "filter_account": "Estado de la cuenta",
+    "filter_account_all": "Todas las cuentas",
+    "filter_account_active": "Cuentas activas",
+    "filter_account_deleted": "Cuentas eliminadas",
+    "action_restore": "Restaurar cuenta",
+    "toast_restored": "Cuenta restaurada.",
     "col_streak": "Série",
     "user_surahs_empty_soft": "Sin surahs started yet.",
     "outcome_session_incomplete": "« Incomplete»",
@@ -4780,7 +4805,7 @@
     "field_user_id": "« User ID»",
     "copy_user_id": "« Copy user ID»",
     "copied": "« Copied.»",
-    "delete_user_warning": "Borrar esta cuenta es permanente e irreversible.",
+    "delete_user_warning": "La cuenta se oculta en Mutqin. Puedes restaurarla desde Cuentas eliminadas.",
     "delete_account": "Eliminar account",
     "add_user": "« Add user»",
     "create_user": "« Create user»",
@@ -4800,9 +4825,9 @@
     "form_error": "No se pudo’t save those changes.",
     "danger_zone": "« Danger zone»",
     "delete_user": "Eliminar user",
-    "delete_user_help": "Quita de forma permanente esta cuenta y sus datos de aprendizaje.",
-    "delete_user_prompt": "Eliminar {name}? This cannot be undone.",
-    "delete_user_confirm": "Eliminar this user and all of their learning data?",
+    "delete_user_help": "Oculta esta cuenta. El historial se conserva y la cuenta se puede restaurar.",
+    "delete_user_prompt": "¿Eliminar a {name}? Desaparecerá de la app hasta que lo restaures.",
+    "delete_user_confirm": "¿Ocultar esta cuenta? Podrás restaurarla después.",
     "delete_self_blocked": "tú can’t delete tu own admin account.",
     "delete_note_confirm": "Eliminar this note?",
     "delete_contact_confirm": "Eliminar this contact message?",

@@ -305,7 +305,7 @@ class AdminDashboardTest extends TestCase
             ->assertJsonPath('skipped', 1);
 
         $this->assertDatabaseHas('users', ['id' => $admin->id]);
-        $this->assertDatabaseMissing('users', ['id' => $idle->id]);
+        $this->assertSoftDeleted('users', ['id' => $idle->id]);
     }
 
     public function test_admin_can_view_user_detail(): void
@@ -436,7 +436,31 @@ class AdminDashboardTest extends TestCase
             ->assertOk()
             ->assertJsonPath('deleted', true);
 
-        $this->assertDatabaseMissing('users', ['id' => $userId]);
+        $this->assertSoftDeleted('users', ['id' => $userId]);
+
+        $deletedList = $this->actingAs($admin)
+            ->getJson('/api/admin/users?account=deleted')
+            ->assertOk();
+        $deletedRow = collect($deletedList->json('users'))->firstWhere('id', $userId);
+        $this->assertNotNull($deletedRow);
+        $this->assertTrue($deletedRow['is_deleted']);
+        $this->assertSame('new.learner@example.com', $deletedRow['email']);
+
+        $this->actingAs($admin)
+            ->getJson("/api/admin/users/{$userId}")
+            ->assertOk()
+            ->assertJsonPath('user.is_deleted', true);
+
+        $this->actingAs($admin)
+            ->postJson("/api/admin/users/{$userId}/restore")
+            ->assertOk()
+            ->assertJsonPath('restored', true);
+
+        $this->assertNull(User::withTrashed()->find($userId)?->deleted_at);
+        $this->assertDatabaseHas('users', [
+            'id' => $userId,
+            'email' => 'new.learner@example.com',
+        ]);
     }
 
     public function test_admin_dashboard_nav_replaces_user_dashboard_for_admins(): void

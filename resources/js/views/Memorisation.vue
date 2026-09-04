@@ -452,9 +452,26 @@
               </div>
               <div
                 v-else
-                class="top-card-session-actions"
+                class="top-card-session-cluster"
                 :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
               >
+                <button
+                  v-if="showWorkspaceAiReciteCta"
+                  type="button"
+                  class="action-btn workspace-ai-recite-cta top-card-action-trigger"
+                  :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                  data-testid="workspace-ai-recite"
+                  :title="t('dashboard.ai_recite.cta_hint')"
+                  :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                  @click="openWorkspaceAiRecite"
+                >
+                  <i class="bi bi-stars" aria-hidden="true"></i>
+                  <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                </button>
+                <div
+                  class="top-card-session-actions"
+                  :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
+                >
                 <div
                   v-if="showHeaderSessionAction"
                   class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
@@ -485,6 +502,7 @@
                   <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                   <span>{{ t('sessionStatus.end') }}</span>
                 </button>
+                </div>
               </div>
             </div>
           </div>
@@ -657,25 +675,6 @@
             </div>
           </div>
           </div>
-          <button
-            v-if="showWorkspaceAiReciteCta"
-            type="button"
-            class="workspace-ai-recite-cta"
-            data-testid="workspace-ai-recite"
-            :title="t('dashboard.ai_recite.cta_hint')"
-            :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-            @click="openWorkspaceAiRecite"
-          >
-            <span class="workspace-ai-recite-cta__shimmer" aria-hidden="true"></span>
-            <span class="workspace-ai-recite-cta__icon" aria-hidden="true">
-              <i class="bi bi-stars"></i>
-            </span>
-            <span class="workspace-ai-recite-cta__copy">
-              <strong>{{ t('dashboard.ai_recite.cta_label') }}</strong>
-              <small>{{ t('dashboard.ai_recite.cta_hint') }}</small>
-            </span>
-            <span class="workspace-ai-recite-cta__action">{{ t('dashboard.ai_recite.cta_action') }}</span>
-          </button>
           </div>
           <div
             v-if="mobileProgressPills.length && !isPostSessionChoiceVisible"
@@ -776,8 +775,21 @@
                   </div>
                   <div
                     v-else-if="showHeaderSessionAction"
-                    class="workspace-shell-idle-actions__start workspace-shell-idle-actions__start--inline"
+                    class="workspace-shell-idle-actions__start workspace-shell-idle-actions__start--inline top-card-session-cluster"
                   >
+                    <button
+                      v-if="showWorkspaceAiReciteCta"
+                      type="button"
+                      class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
+                      :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                      data-testid="workspace-ai-recite-idle"
+                      :title="t('dashboard.ai_recite.cta_hint')"
+                      :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                      @click="openWorkspaceAiRecite"
+                    >
+                      <i class="bi bi-stars" aria-hidden="true"></i>
+                      <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                    </button>
                     <div
                       class="action-btn primary session-idle-action session-primary-action"
                       role="button"
@@ -794,25 +806,6 @@
                       <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
                       <span>{{ headerSessionActionLabel }}</span>
                     </div>
-                    <button
-                      v-if="showWorkspaceAiReciteCta"
-                      type="button"
-                      class="workspace-ai-recite-cta workspace-ai-recite-cta--idle"
-                      data-testid="workspace-ai-recite-idle"
-                      :title="t('dashboard.ai_recite.cta_hint')"
-                      :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                      @click="openWorkspaceAiRecite"
-                    >
-                      <span class="workspace-ai-recite-cta__shimmer" aria-hidden="true"></span>
-                      <span class="workspace-ai-recite-cta__icon" aria-hidden="true">
-                        <i class="bi bi-stars"></i>
-                      </span>
-                      <span class="workspace-ai-recite-cta__copy">
-                        <strong>{{ t('dashboard.ai_recite.cta_label') }}</strong>
-                        <small>{{ t('dashboard.ai_recite.cta_hint') }}</small>
-                      </span>
-                      <span class="workspace-ai-recite-cta__action">{{ t('dashboard.ai_recite.cta_action') }}</span>
-                    </button>
                   </div>
                   <nav
                     v-if="isLoggedIn && (shouldShowWorkspaceJourney || showIdleQuickStartChoices)"
@@ -880,8 +873,21 @@
                 </div>
                 <div
                   v-if="!showIdleQuickStartChoices && showHeaderSessionAction"
-                  class="workspace-shell-idle-aside-cta"
+                  class="workspace-shell-idle-aside-cta top-card-session-cluster"
                 >
+                  <button
+                    v-if="showWorkspaceAiReciteCta"
+                    type="button"
+                    class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
+                    :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                    data-testid="workspace-ai-recite-aside"
+                    :title="t('dashboard.ai_recite.cta_hint')"
+                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                    @click="openWorkspaceAiRecite"
+                  >
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                  </button>
                   <div
                     class="action-btn primary session-idle-action session-primary-action"
                     role="button"
@@ -898,25 +904,6 @@
                     <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
                     <span>{{ headerSessionActionLabel }}</span>
                   </div>
-                  <button
-                    v-if="showWorkspaceAiReciteCta"
-                    type="button"
-                    class="workspace-ai-recite-cta workspace-ai-recite-cta--idle"
-                    data-testid="workspace-ai-recite-aside"
-                    :title="t('dashboard.ai_recite.cta_hint')"
-                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                    @click="openWorkspaceAiRecite"
-                  >
-                    <span class="workspace-ai-recite-cta__shimmer" aria-hidden="true"></span>
-                    <span class="workspace-ai-recite-cta__icon" aria-hidden="true">
-                      <i class="bi bi-stars"></i>
-                    </span>
-                    <span class="workspace-ai-recite-cta__copy">
-                      <strong>{{ t('dashboard.ai_recite.cta_label') }}</strong>
-                      <small>{{ t('dashboard.ai_recite.cta_hint') }}</small>
-                    </span>
-                    <span class="workspace-ai-recite-cta__action">{{ t('dashboard.ai_recite.cta_action') }}</span>
-                  </button>
                 </div>
               </aside>
             </div>
@@ -2817,6 +2804,31 @@
           </template>
     </SessionAnalysisModal>
 
+    <WorkspaceAiReciteResultModal
+      :open="workspaceReciteAnalysisOpen"
+      :loading="workspaceReciteAnalysisLoading"
+      :error="workspaceReciteAnalysisError"
+      :empty="!workspaceReciteAnalysisLoading && !workspaceReciteAnalysisError && workspaceReciteAnalysisOpen && !workspaceReciteAnalysisView?.hasContent"
+      :view="workspaceReciteAnalysisView"
+      :title="workspaceReciteAnalysisView?.headerTitle || t('memorisation.recite_check_results')"
+      :subtitle="workspaceReciteAnalysisView?.headerLead || ''"
+      :close-label="t('common.close')"
+      :try-again-label="translateOrFallback('memorisation.amd.tryAgain', translateOrFallback('common.tryAgain', 'Try again'))"
+      :your-result-label="translateOrFallback('memorisation.postSession.recommendation.yourResult', 'Your result')"
+      :beta-badge-label="translateOrFallback('memorisation.postSession.recommendation.aiRecitationBeta', 'Audio recitation · Beta')"
+      :details-section-label="translateOrFallback('memorisation.postSession.recommendation.viewDetails', 'Details')"
+      :result-stats-aria-label="translateOrFallback('memorisation.postSession.recommendation.resultStats', 'Check results')"
+      :ai-results-aria-label="translateOrFallback('memorisation.a11y.aiMemorisationResult', 'AI memorisation result')"
+      :colour-meter-aria-label="translateOrFallback('memorisation.aiCheck.colourMeterAria', 'Word colour breakdown')"
+      :audio-title="translateOrFallback('dashboard.analysis_audio_title', 'Your recording')"
+      :error-title="translateOrFallback('memorisation.analyticsEmpty.modalErrorTitle', 'Could not load results')"
+      :error-desc="translateOrFallback('memorisation.analyticsEmpty.modalErrorDesc', 'Please close and try again.')"
+      :empty-title="translateOrFallback('memorisation.analyticsEmpty.modalEmptyTitle', 'No results yet')"
+      :empty-desc="translateOrFallback('memorisation.analyticsEmpty.modalEmptyDesc', 'Complete a recitation check to see your results here.')"
+      @close="closeWorkspaceReciteAnalysis"
+      @try-again="retryWorkspaceAiRecite"
+    />
+
     <div v-if="showAdvancedMetricsModal" class="modal-overlay mutqin-modal-overlay session-analytics-overlay advanced-metrics-overlay"
       @click.self="closeAdvancedMetricsModal">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide">
@@ -4212,16 +4224,6 @@
 
   </div>
 
-    <DashboardAiReciteModal
-      v-if="dashboardAiReciteReady"
-      :open="dashboardAiReciteOpen"
-      :user-id="workspaceAiReciteUserId"
-      :progress="workspaceAiReciteProgress"
-      :preferred-location="workspaceAiRecitePreferredLocation"
-      @close="closeWorkspaceAiRecite"
-      @saved="onWorkspaceAiReciteSaved"
-    />
-
     <AiMemorisationDetectionModal
       v-if="aiTestModalsEnabled && amdOpen && isAmdEntryActive(amdEntrySource)"
       ref="amdModal"
@@ -4263,6 +4265,10 @@
       :theme="theme"
       :mistake-visual-active="amdMistakeVisualActive"
       :mistake-visual-label="amdLabels.mistakeVisualLabel"
+      :recite-mode="amdMistakeHandlingMode"
+      :recite-mode-options="amdReciteModeOptions"
+      :recite-mode-title="amdLabels.reciteModeTitle"
+      :recite-blocked-hint="amdReciteBlockedHint"
       :auto-follow-label="amdLabels.autoFollow"
       :auto-follow-on-label="amdLabels.autoFollowOn"
       :auto-follow-off-label="amdLabels.autoFollowOff"
@@ -4286,6 +4292,7 @@
       @peek-end="stopAmdPeek"
       @reset="resetAmdLiveSurface"
       @set-difficulty="setAmdDifficulty"
+      @set-recite-mode="setAmdMistakeHandlingMode"
       @start="startAmdAssessment"
       @stop="stopAmdAndAssess"
       @test-again="resetAmdLiveSurface"

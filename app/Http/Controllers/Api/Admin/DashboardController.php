@@ -48,6 +48,7 @@ class DashboardController extends Controller
             'sessions' => $request->query('sessions'),
             'sort' => $request->query('sort'),
             'dir' => $request->query('dir'),
+            'account' => $request->query('account'),
         ]);
 
         return response()
@@ -81,12 +82,13 @@ class DashboardController extends Controller
         );
     }
 
-    public function userShow(Request $request, User $user, AdminDashboardService $dashboard): JsonResponse
+    public function userShow(Request $request, int $user, AdminDashboardService $dashboard): JsonResponse
     {
         $this->admin($request);
+        $model = $this->findUser($user);
 
         return response()
-            ->json($dashboard->userDetail($user))
+            ->json($dashboard->userDetail($model))
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
     }
 
@@ -108,13 +110,14 @@ class DashboardController extends Controller
         ], 201);
     }
 
-    public function userUpdate(Request $request, User $user, AdminDashboardService $dashboard): JsonResponse
+    public function userUpdate(Request $request, int $user, AdminDashboardService $dashboard): JsonResponse
     {
         $this->admin($request);
+        $model = $this->findUser($user);
 
         $validated = $request->validate([
             'name' => ['sometimes', 'required', 'string', 'max:120'],
-            'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($model->id)],
             'password' => ['nullable', 'string', Password::defaults()],
             'locale' => ['nullable', 'string', Rule::in(['en', 'ar', 'fr', 'es', 'tr', 'id', 'ur'])],
             'subscription_status' => ['nullable', 'string', Rule::in(['none', 'trialing', 'active', 'canceled', 'past_due'])],
@@ -122,17 +125,25 @@ class DashboardController extends Controller
         ]);
 
         return response()->json([
-            'user' => $dashboard->updateUser($user, $validated),
-            'detail' => $dashboard->userDetail($user->fresh()),
+            'user' => $dashboard->updateUser($model, $validated),
+            'detail' => $dashboard->userDetail($model->fresh()),
         ]);
     }
 
-    public function userDestroy(Request $request, User $user, AdminDashboardService $dashboard): JsonResponse
+    public function userDestroy(Request $request, int $user, AdminDashboardService $dashboard): JsonResponse
     {
         $actor = $this->admin($request);
-        $dashboard->deleteUser($actor, $user);
+        $dashboard->deleteUser($actor, $this->findUser($user));
 
         return response()->json(['deleted' => true]);
+    }
+
+    public function userRestore(Request $request, int $user, AdminDashboardService $dashboard): JsonResponse
+    {
+        $this->admin($request);
+        $dashboard->restoreUser($this->findUser($user));
+
+        return response()->json(['restored' => true]);
     }
 
     public function noteDestroy(Request $request, AyahNote $note, AdminDashboardService $dashboard): JsonResponse
@@ -230,5 +241,10 @@ class DashboardController extends Controller
         abort_unless($user !== null && $user->can('access-admin'), 403);
 
         return $user;
+    }
+
+    private function findUser(int $id): User
+    {
+        return User::query()->withTrashed()->findOrFail($id);
     }
 }

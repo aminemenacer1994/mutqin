@@ -230,7 +230,7 @@ class AdminPrivilegeTest extends TestCase
         ]);
         $this->assertTrue($verified->isAdmin());
 
-        $verified->delete();
+        $verified->forceDelete();
 
         $unverified = User::factory()->admin()->unverified()->create([
             'email' => 'admin@example.com',

@@ -240,12 +240,16 @@ class MemorisationLearningHistoryTest extends TestCase
         ]);
 
         $userId = $user->id;
+        $email = $user->email;
         app(LearningHistoryRetentionService::class)->deleteUserAccount($user);
 
-        $this->assertDatabaseMissing('users', ['id' => $userId]);
-        $this->assertSame(0, MemorisationAssessment::withTrashed()->where('user_id', $userId)->count());
+        $this->assertSoftDeleted('users', ['id' => $userId]);
+        $this->assertNull(User::query()->find($userId));
+        $this->assertDatabaseMissing('users', ['email' => $email]);
+        $this->assertSame(0, MemorisationAssessment::query()->where('user_id', $userId)->count());
+        $this->assertGreaterThan(0, MemorisationAssessment::withTrashed()->where('user_id', $userId)->count());
         $this->assertDatabaseHas('learning_history_audit_logs', [
-            'subject_user_id' => null,
+            'subject_user_id' => $userId,
             'action' => 'delete_user_account',
         ]);
         $this->assertTrue(

@@ -5990,13 +5990,19 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   min-width: 0 !important;
 }
 
-.workspace-shell-head-toolbar > .workspace-ai-recite-cta {
-  display: grid !important;
+.workspace-shell-head-utility-row .top-card-session-cluster {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: stretch !important;
+  gap: 0.4rem !important;
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  height: auto !important;
-  min-height: 2.85rem !important;
+}
+
+.workspace-shell-head-utility-row .top-card-session-cluster .top-card-session-actions {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
 }
 
 .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
@@ -6085,6 +6091,16 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   .workspace-shell-head:not(.is-idle) {
     grid-template-columns: minmax(0, 1fr) !important;
     grid-template-rows: auto auto !important;
+  }
+
+  .workspace-shell-head-utility-row .top-card-session-cluster {
+    flex-flow: row nowrap !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  .workspace-shell-head-utility-row .top-card-session-cluster .workspace-ai-recite-cta {
+    order: -1 !important;
   }
 
   .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
@@ -6362,6 +6378,54 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     overflow-x: clip !important;
     padding: 0.05rem 0 0 !important;
     margin: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: stretch !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) .workspace-ai-recite-cta,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) .top-card-session-actions {
+    flex: 1 1 50% !important;
+    width: 50% !important;
+    max-width: 50% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) .top-card-session-actions .session-primary-action,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) .top-card-session-actions .top-card-action-trigger {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions:has(.workspace-ai-recite-cta) {
+    display: flex !important;
+    flex-flow: column nowrap !important;
+    align-items: stretch !important;
+    gap: 0.35rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions:has(.workspace-ai-recite-cta) .top-card-session-actions {
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions:has(.workspace-ai-recite-cta) .workspace-ai-recite-cta {
+    order: 2 !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
 
   html body .app .workspace-shell-bottom,

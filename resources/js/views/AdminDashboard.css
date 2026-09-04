@@ -1574,34 +1574,6 @@ html[data-theme="dark"] .admin-toolbar__select {
   position: relative;
 }
 
-.admin-table-shell::after {
-  content: "";
-  position: absolute;
-  top: 1px;
-  right: 1px;
-  bottom: 1px;
-  width: 2.5rem;
-  pointer-events: none;
-  border-radius: 0 var(--dash-radius-sm) var(--dash-radius-sm) 0;
-  background: linear-gradient(
-    to left,
-    color-mix(in srgb, var(--dash-card) 94%, transparent),
-    transparent
-  );
-  z-index: 6;
-}
-
-[dir="rtl"] .admin-table-shell::after {
-  right: auto;
-  left: 1px;
-  border-radius: var(--dash-radius-sm) 0 0 var(--dash-radius-sm);
-  background: linear-gradient(
-    to right,
-    color-mix(in srgb, var(--dash-card) 94%, transparent),
-    transparent
-  );
-}
-
 [dir="rtl"] .admin-table__check {
   left: auto;
   right: 0;
@@ -1629,7 +1601,7 @@ html[data-theme="dark"] .admin-toolbar__select {
 
 .admin-table {
   width: 100%;
-  min-width: 780px;
+  min-width: 860px;
   max-width: none;
   border-collapse: separate;
   border-spacing: 0;
@@ -1641,7 +1613,7 @@ html[data-theme="dark"] .admin-toolbar__select {
 .admin-col-num { width: 128px; }
 .admin-col-sessions { width: 128px; }
 .admin-col-date { width: 140px; }
-.admin-col-status { width: 52px; }
+.admin-col-status { width: 156px; min-width: 156px; }
 .admin-col-actions { width: 56px; }
 .admin-col-fb-type { width: 150px; }
 .admin-col-fb-preview { width: auto; }
@@ -1745,9 +1717,11 @@ html[data-theme="dark"] .admin-toolbar__select {
 }
 
 .admin-table__status {
-  width: 44px;
-  text-align: center;
-  padding-inline: 6px !important;
+  width: 156px;
+  min-width: 156px;
+  text-align: start;
+  padding-inline: 10px !important;
+  overflow: visible;
 }
 
 .admin-table__actions {
@@ -1960,6 +1934,23 @@ html[data-theme="dark"] .admin-row-menu__panel--float button.is-danger {
   min-width: 0;
 }
 
+.admin-table__who-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.admin-table__who-line strong,
+.admin-user-card__who .admin-table__who-line strong {
+  display: block;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .admin-table__who strong {
   display: block;
   min-width: 0;
@@ -1973,8 +1964,102 @@ html[data-theme="dark"] .admin-row-menu__panel--float button.is-danger {
 }
 
 .admin-table__status .admin-status-dot {
-  display: block;
-  margin-inline: auto;
+  display: inline-block;
+  margin: 0;
+}
+
+.admin-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.65rem;
+  max-width: 100%;
+  padding: 0.18rem 0.55rem 0.18rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--dash-soft) 82%, transparent);
+  white-space: nowrap;
+}
+
+.admin-status-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-status-chip[data-status="hot"] {
+  color: color-mix(in srgb, var(--fill-success) 78%, var(--dash-ink));
+  background: color-mix(in srgb, var(--fill-success) 14%, transparent);
+}
+
+.admin-status-chip[data-status="warm"] {
+  color: color-mix(in srgb, var(--fill-warning) 80%, var(--dash-ink));
+  background: color-mix(in srgb, var(--fill-warning) 16%, transparent);
+}
+
+.admin-status-chip[data-status="inactive"] {
+  color: color-mix(in srgb, var(--fill-danger) 72%, var(--dash-ink));
+  background: color-mix(in srgb, var(--fill-danger) 12%, transparent);
+}
+
+.admin-status-chip[data-status="deleted"] {
+  color: #7a5a3a;
+  background: color-mix(in srgb, #c4a574 22%, var(--dash-soft));
+}
+
+.admin-status-dot[data-status="deleted"] {
+  background: #8a6a45;
+  color: #8a6a45;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #8a6a45 18%, transparent);
+}
+
+html[data-theme="dark"] .admin-status-chip[data-status="deleted"] {
+  color: #e6c89a;
+  background: color-mix(in srgb, #8a6a45 28%, transparent);
+}
+
+.admin-deleted-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.1rem 0.42rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #7a5a3a;
+  background: color-mix(in srgb, #c4a574 28%, var(--dash-soft));
+}
+
+html[data-theme="dark"] .admin-deleted-badge {
+  color: #e6c89a;
+  background: color-mix(in srgb, #8a6a45 30%, transparent);
+}
+
+.admin-table tbody tr.is-deleted td,
+.admin-user-card.is-deleted {
+  background: color-mix(in srgb, #c4a574 8%, var(--dash-card));
+}
+
+.admin-table tbody tr.is-deleted:hover td,
+.admin-table tbody tr.is-deleted.is-selected td,
+.admin-user-card.is-deleted:hover {
+  background: color-mix(in srgb, #c4a574 14%, var(--dash-card));
+}
+
+.admin-table tbody tr.is-deleted .admin-table__who strong,
+.admin-user-card.is-deleted .admin-user-card__who strong {
+  color: var(--text-secondary);
+}
+
+.admin-table__email.is-deleted,
+.admin-user-card__email.is-deleted {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
 }
 
 .admin-status-dot {

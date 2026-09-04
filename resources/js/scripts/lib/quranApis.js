@@ -45,6 +45,21 @@ const MADANI_MUSHAF_ID = 1
 const madaniPageCache = new Map()
 const madaniChapterPageCache = new Map()
 const madaniChapterVerseCache = new Map()
+const surahEditionCache = new Map()
+const surahEditionsCache = new Map()
+
+function cachedRequest(cache, key, factory) {
+  const hit = cache.get(key)
+  if (hit) return hit
+  const pending = Promise.resolve()
+    .then(factory)
+    .catch((error) => {
+      cache.delete(key)
+      throw error
+    })
+  cache.set(key, pending)
+  return pending
+}
 
 export function getAyahTajweed(ayahNumber) {
   return alquranClient.get(`/ayah/${ayahNumber}/quran-tajweed`)
@@ -63,7 +78,8 @@ export function getChapterRecitation(recitationId, normalizedSurah) {
 }
 
 export function getSurahEdition(surahNumber, edition) {
-  return alquranClient.get(`/surah/${surahNumber}/${edition}`)
+  const key = `${Number(surahNumber) || 0}:${edition || ''}`
+  return cachedRequest(surahEditionCache, key, () => alquranClient.get(`/surah/${surahNumber}/${edition}`))
 }
 
 /** Quran.com chapter list via same-origin proxy (avoids browser CORS). */
@@ -73,7 +89,8 @@ export function getChapters(params = { language: 'en' }) {
 
 export function getSurahEditions(surahNumber, reciterEdition) {
   const editions = `${reciterEdition},quran-tajweed`
-  return alquranClient.get(`/surah/${surahNumber}/editions/${editions}`)
+  const key = `${Number(surahNumber) || 0}:${editions}`
+  return cachedRequest(surahEditionsCache, key, () => alquranClient.get(`/surah/${surahNumber}/editions/${editions}`))
 }
 
 export function getSurahTransliteration(surahNumber, transliterationIdentifier) {
@@ -95,17 +112,20 @@ export async function getChapterWordByWordMeanings(chapterId, rangeStart = 1, ra
   const startPage = Math.max(1, Math.ceil(start / perPage))
   const endPage = Math.max(startPage, Math.ceil(end / perPage))
   const byVerseNumber = new Map()
+  const pageNumbers = []
+  for (let page = startPage; page <= endPage; page += 1) pageNumbers.push(page)
 
-  for (let page = startPage; page <= endPage; page += 1) {
-    const response = await quranComClient.get(`/verses/by_chapter/${chapterId}`, {
-      params: {
-        language: 'en',
-        words: true,
-        word_fields: 'text_uthmani,transliteration,translation',
-        page,
-        per_page: perPage
-      }
-    })
+  const responses = await Promise.all(pageNumbers.map((page) => quranComClient.get(`/verses/by_chapter/${chapterId}`, {
+    params: {
+      language: 'en',
+      words: true,
+      word_fields: 'text_uthmani,transliteration,translation',
+      page,
+      per_page: perPage
+    }
+  })))
+
+  for (const response of responses) {
     const verses = response.data?.verses || []
     for (const verse of verses) {
       const verseNumber = Number(verse?.verse_number)
@@ -170,18 +190,21 @@ export async function getMadaniChapterRangeVerses(chapterId, rangeStart = 1, ran
   const startApiPage = Math.max(1, Math.ceil(start / perPage))
   const endApiPage = Math.max(startApiPage, Math.ceil(end / perPage))
   const collected = []
+  const pageNumbers = []
+  for (let apiPage = startApiPage; apiPage <= endApiPage; apiPage += 1) pageNumbers.push(apiPage)
 
-  for (let apiPage = startApiPage; apiPage <= endApiPage; apiPage += 1) {
-    const response = await quranComClient.get(`/verses/by_chapter/${chapter}`, {
-      params: {
-        language: 'en',
-        words: true,
-        mushaf,
-        page: apiPage,
-        per_page: perPage,
-        word_fields: 'code_v2,text_qpc_hafs,text_uthmani,line_number,page_number,translation'
-      }
-    })
+  const responses = await Promise.all(pageNumbers.map((apiPage) => quranComClient.get(`/verses/by_chapter/${chapter}`, {
+    params: {
+      language: 'en',
+      words: true,
+      mushaf,
+      page: apiPage,
+      per_page: perPage,
+      word_fields: 'code_v2,text_qpc_hafs,text_uthmani,line_number,page_number,translation'
+    }
+  })))
+
+  for (const response of responses) {
     const verses = response.data?.verses || []
     for (const verse of verses) {
       const verseNumber = Number(verse?.verse_number)
@@ -212,18 +235,21 @@ export async function getMadaniPagesForChapterRange(chapterId, rangeStart = 1, r
   const endApiPage = Math.max(startApiPage, Math.ceil(end / perPage))
   const pageNumbers = new Set()
   const pageByVerseKey = new Map()
+  const apiPages = []
+  for (let apiPage = startApiPage; apiPage <= endApiPage; apiPage += 1) apiPages.push(apiPage)
 
-  for (let apiPage = startApiPage; apiPage <= endApiPage; apiPage += 1) {
-    const response = await quranComClient.get(`/verses/by_chapter/${chapter}`, {
-      params: {
-        language: 'en',
-        words: true,
-        mushaf,
-        page: apiPage,
-        per_page: perPage,
-        word_fields: 'page_number,line_number,code_v2'
-      }
-    })
+  const responses = await Promise.all(apiPages.map((apiPage) => quranComClient.get(`/verses/by_chapter/${chapter}`, {
+    params: {
+      language: 'en',
+      words: true,
+      mushaf,
+      page: apiPage,
+      per_page: perPage,
+      word_fields: 'page_number,line_number,code_v2'
+    }
+  })))
+
+  for (const response of responses) {
     const verses = response.data?.verses || []
     for (const verse of verses) {
       const verseNumber = Number(verse?.verse_number)
@@ -245,6 +271,11 @@ export async function getMadaniPagesForChapterRange(chapterId, rangeStart = 1, r
   }
   madaniChapterPageCache.set(cacheKey, result)
   return result
+}
+
+export function clearQuranApiCaches() {
+  surahEditionCache.clear()
+  surahEditionsCache.clear()
 }
 
 export function clearMadaniPageCaches() {

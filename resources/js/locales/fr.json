@@ -293,7 +293,8 @@
           "title": "Traduction et tajweed",
           "description": "Gardez le sens et le tajweed proches pendant que vous mémorisez."
         }
-      }
+      },
+      "carouselLabel": "Feature screenshots"
     },
     "how": {
       "kicker": "Comment ça marche",
@@ -3580,7 +3581,20 @@
       "toolAudio": "audio help",
       "toolMemorizing": "« Memorizing»",
       "peekHint": "necesitan a hint? Peek at el text",
-      "toolPeek": "Peek at el text"
+      "toolPeek": "Peek at el text",
+      "tryAgain": "Try again",
+      "reciteMode": {
+        "title": "Recitation style",
+        "fullSession": {
+          "label": "Full session",
+          "desc": "Keep going even when a word slips. Review everything at the end."
+        },
+        "stopOnMistake": {
+          "label": "Stop on mistake",
+          "desc": "Hear a cue, see the word turn red, then say it correctly before continuing.",
+          "blocked": "Recite this word correctly to continue."
+        }
+      }
     },
     "exportReport": {
       "saved": "Enregistrée",
@@ -4784,6 +4798,17 @@
     "status_active_today": "Actif aujourd'hui",
     "status_active_n_days_ago": "Actif il y a {n} jours",
     "status_never_sessioned": "Jamais en session",
+    "status_deleted": "Supprimé",
+    "status_deleted_help": "Masqué pour les apprenants — peut être restauré",
+    "status_chip_active": "Actif",
+    "status_chip_recent": "Récent",
+    "status_chip_inactive": "Inactif",
+    "filter_account": "État du compte",
+    "filter_account_all": "Tous les comptes",
+    "filter_account_active": "Comptes actifs",
+    "filter_account_deleted": "Comptes supprimés",
+    "action_restore": "Restaurer le compte",
+    "toast_restored": "Compte restauré.",
     "col_streak": "Série",
     "user_surahs_empty_soft": "Aucune sourate commencée pour l'instant.",
     "outcome_session_incomplete": "Incomplète",
@@ -4793,7 +4818,7 @@
     "field_user_id": "ID utilisateur",
     "copy_user_id": "Copier l'ID utilisateur",
     "copied": "Copié.",
-    "delete_user_warning": "Supprimer ce compte est définitif et irréversible.",
+    "delete_user_warning": "Le compte est masqué dans Mutqin. Vous pourrez le restaurer depuis Comptes supprimés.",
     "delete_account": "Supprimer le compte",
     "add_user": "Ajouter un utilisateur",
     "create_user": "Créer un utilisateur",
@@ -4813,9 +4838,9 @@
     "form_error": "Impossible d'enregistrer ces modifications.",
     "danger_zone": "Zone dangereuse",
     "delete_user": "Supprimer l'utilisateur",
-    "delete_user_help": "Retire définitivement ce compte et ses données d’apprentissage.",
-    "delete_user_prompt": "Supprimer {name} ? Cette action est irréversible.",
-    "delete_user_confirm": "Supprimer cet utilisateur et toutes ses données d'apprentissage ?",
+    "delete_user_help": "Masque ce compte. L'historique d'apprentissage est conservé et le compte peut être restauré.",
+    "delete_user_prompt": "Supprimer {name} ? Il disparaîtra de l'application jusqu'à restauration.",
+    "delete_user_confirm": "Masquer ce compte ? Vous pourrez le restaurer plus tard.",
     "delete_self_blocked": "Vous ne pouvez pas supprimer votre propre compte admin.",
     "delete_note_confirm": "Supprimer cette note ?",
     "delete_contact_confirm": "Supprimer ce message de contact ?",

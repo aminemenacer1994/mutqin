@@ -45,7 +45,7 @@ class StateSyncController extends Controller
         }
 
         return response()->json([
-            'state' => $decoded,
+            'state' => $this->slimEngineState($decoded),
             'meta' => [
                 'owner_id' => $user->id,
                 'state_updated_at' => $record?->state_updated_at?->toIso8601String(),
@@ -68,7 +68,7 @@ class StateSyncController extends Controller
         if (! AudioPrivacy::retainsRawAudio()) {
             $state = $retention->stripRawAudioFromStateTree($state);
         }
-        $validated['state'] = $state;
+        $validated['state'] = $this->slimEngineState($state) ?? [];
 
         $encodedState = json_encode($validated['state'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
@@ -154,5 +154,59 @@ class StateSyncController extends Controller
                 'payload_hash' => $payloadHash,
             ],
         ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $state
+     * @return array<string, mixed>|null
+     */
+    private function slimEngineState(?array $state): ?array
+    {
+        if ($state === null) {
+            return null;
+        }
+
+        $sessionState = $state['sessionState'] ?? null;
+        if (! is_array($sessionState)) {
+            return $state;
+        }
+
+        if (isset($sessionState['queue']) && is_array($sessionState['queue'])) {
+            $sessionState['queue'] = array_map(
+                fn ($item) => $this->slimEngineQueueItem($item),
+                $sessionState['queue']
+            );
+        }
+
+        if (isset($sessionState['config']) && is_array($sessionState['config'])) {
+            unset($sessionState['config']['verses'], $sessionState['config']['queue']);
+        }
+
+        $state['sessionState'] = $sessionState;
+
+        return $state;
+    }
+
+    private function slimEngineQueueItem(mixed $item): mixed
+    {
+        if (! is_array($item)) {
+            return $item;
+        }
+
+        $ayahId = $item['ayahId'] ?? ($item['verse']['key'] ?? ($item['key'] ?? null));
+
+        return [
+            'phase' => $item['phase'] ?? null,
+            'ayahId' => $ayahId,
+            'chainKey' => $item['chainKey'] ?? null,
+            'sequencePosition' => $item['sequencePosition'] ?? null,
+            'sequenceTotal' => $item['sequenceTotal'] ?? null,
+            'repeatCount' => $item['repeatCount'] ?? null,
+            'totalRepeats' => $item['totalRepeats'] ?? null,
+            'prompt' => $item['prompt'] ?? '',
+            'segment' => $item['segment'] ?? null,
+            'plannerType' => $item['plannerType'] ?? null,
+            'chainStage' => $item['chainStage'] ?? null,
+        ];
     }
 }

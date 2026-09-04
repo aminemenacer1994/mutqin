@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\RecommendationStatus;
+use App\Enums\RecommendationType;
 use App\Enums\UserSessionStatus;
 use App\Models\AiReciteAttempt;
 use App\Models\AyahNote;
@@ -15,10 +16,10 @@ use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
-use App\Enums\RecommendationType;
 use App\Services\Learning\SessionAnalysisQueryService;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -33,8 +34,7 @@ class DashboardService
         private readonly SessionLifecycleService $lifecycle,
         private readonly MainMemorisationPositionService $mainPosition,
         private readonly SessionAnalysisQueryService $sessionAnalysis,
-    ) {
-    }
+    ) {}
 
     public static function forgetForUser(User $user): void
     {
@@ -1357,6 +1357,7 @@ class DashboardService
             $activeDays = (int) $weekSessions
                 ->map(function (UserSession $session) {
                     $at = $session->ended_at ?? $session->last_activity_at;
+
                     return $at ? $at->toDateString() : null;
                 })
                 ->filter()
@@ -1745,7 +1746,7 @@ class DashboardService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, AiReciteAttempt>  $attempts
+     * @param  Collection<int, AiReciteAttempt>  $attempts
      */
     private function resolveAyahStrengthLabel(int $surah, int $ayah, $attempts): ?string
     {
@@ -2637,4 +2638,3 @@ class DashboardService
         return $base.'?'.http_build_query($clean);
     }
 }
-

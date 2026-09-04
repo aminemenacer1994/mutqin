@@ -270,6 +270,7 @@ import {
   stripRawAudioFields,
   sanitizeAudioLogContext,
 } from '../scripts/audio/audioRetention'
+import { playRecordingStartBeep } from '../scripts/audio/recordingStartBeep.js'
 import {
   SessionAudioPlayer,
   SESSION_AUDIO_STATES,
@@ -362,6 +363,8 @@ import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
 import AppStatus from '../components/AppStatus.vue'
 import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
+import WorkspaceAiReciteResultModal from '../components/WorkspaceAiReciteResultModal.vue'
+import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
 import ViewportConfetti from '../components/ViewportConfetti.vue'
 import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
 
@@ -386,10 +389,6 @@ const AiMemorisationDetectionModal = lazyWorkspaceChunk(
 const AiAudioConsentModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue'),
   'ai-audio-consent'
-)
-const DashboardAiReciteModal = lazyWorkspaceChunk(
-  () => import(/* webpackChunkName: "dash-ai-recite" */ '../components/DashboardAiReciteModal.vue'),
-  'dash-ai-recite'
 )
 const AyahNotesModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue'),
@@ -433,11 +432,14 @@ import {
   memorisationDetectionApi,
   MISTAKE_HANDLING_MODES,
   MISTAKE_VISUAL_MS,
+  isConfirmedMistakeStatus,
   normaliseDifficultyPercent,
   selectHiddenWordIndexes,
   buildLiveRecitationCursor,
   clampCursorToPaceLimit,
   clampStatusesToConfirmedCursor,
+  clampStatusesToFreezePoint,
+  findFirstBlockingMistakeIndex,
   LIVE_PACE_DRIP_MS,
   resolveLivePaceLimit,
   mergeLiveRecitationStatuses as mergeConfirmedLiveRecitationStatuses,
@@ -658,9 +660,9 @@ export default {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
     AiAudioConsentModal,
-    DashboardAiReciteModal,
     AyahNotesModal,
     SessionAnalysisModal,
+    WorkspaceAiReciteResultModal,
     AppStatus,
     ViewportConfetti,
   },
@@ -1281,6 +1283,10 @@ export default {
         success: false,
         error: ''
       },
+      workspaceReciteAnalysisOpen: false,
+      workspaceReciteAnalysisLoading: false,
+      workspaceReciteAnalysisError: false,
+      workspaceReciteAnalysisView: null,
       selectedSessionId: '',
       sessionName: '',
       showRecordingsLibrary: false,
@@ -1296,11 +1302,9 @@ export default {
       recordingsAudioElement: null,
       recordingsAudioBound: false,
       ignoreRecordingsAudioPauseEvent: false,
-      dashboardAiReciteReady: false,
-      dashboardAiReciteOpen: false,
       // AI Memorisation Detection (post-session "Test with AI" only)
       amdOpen: false,
-      amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | 'saved-session-review' | null
+      amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | 'saved-session-review' | 'workspace-ai-recite' | null
       savedSessionReviewMode: false,
       dashboardAiCheckReturnTo: null,
       amdStage: AMD_STAGES.IDLE,
@@ -1325,6 +1329,7 @@ export default {
       amdHiddenTextEnabled: false,
       amdTajweedEnabled: false,
       amdPeekActive: false,
+      amdPeekUsed: false,
       amdDifficultyPercent: DEFAULT_AI_SESSION_SETTINGS.amd.hide_percent,
       amdMistakeSoundEnabled: DEFAULT_AI_SESSION_SETTINGS.amd.mistake_sound_enabled,
       amdPendingHidePercent: null,
@@ -2988,30 +2993,15 @@ export default {
     },
     showWorkspaceAiReciteCta() {
       if (!this.isLoggedIn) return false
+      if (!this.aiTestModalsEnabled) return false
       if (this.isPostSessionChoiceVisible) return false
       if (this.isOnboardingExperienceActive) return false
       if (this.amdOpen) return false
       return !!(this.hasVerses || this.showSessionOverviewIdleActions)
     },
-    workspaceAiReciteUserId() {
-      return this.auth?.id || this.auth?.user?.id || 0
-    },
-    workspaceAiRecitePreferredLocation() {
-      const surah = Number(this.chapterId || this.currentChapter?.id || 0)
-      const ayah = Number(this.activeAyahNumber || this.rangeStart || 1)
-      if (surah < 1) return null
-      return {
-        surah_number: surah,
-        ayah: ayah > 0 ? ayah : 1,
-        surah_name: this.topCardSurahLatin || '',
-      }
-    },
-    workspaceAiReciteProgress() {
-      return {
-        current_surah_number: Number(this.chapterId || this.currentChapter?.id || 0),
-        current_ayah: Number(this.activeAyahNumber || this.rangeStart || 1),
-        current_surah_name: this.topCardSurahLatin || '',
-      }
+    workspaceAiReciteAnimated() {
+      if (typeof window === 'undefined' || !window.matchMedia) return false
+      return !window.matchMedia('(prefers-reduced-motion: reduce)').matches
     },
     showHeaderSessionAction() {
       if (this.isPostSessionChoiceVisible) return false
@@ -7678,7 +7668,41 @@ export default {
         done: this.t?.('memorisation.amd.done') || 'Done',
         enableMic: this.t?.('memorisation.amd.enableMic') || 'Enable microphone',
         retry: this.t?.('memorisation.aiCheck.tryAgain') || 'Try again',
+        reciteModeTitle: this.t?.('memorisation.amd.reciteMode.title') || 'Recitation style',
+        reciteModeFullSession: this.t?.('memorisation.amd.reciteMode.fullSession.label') || 'Full session',
+        reciteModeFullSessionShort: this.t?.('memorisation.amd.reciteMode.fullSession.short') || 'Full',
+        reciteModeFullSessionDesc: this.t?.('memorisation.amd.reciteMode.fullSession.desc')
+          || 'Keep going even when a word slips. Review everything at the end.',
+        reciteModeStopOnMistake: this.t?.('memorisation.amd.reciteMode.stopOnMistake.label') || 'Stop on mistake',
+        reciteModeStopOnMistakeShort: this.t?.('memorisation.amd.reciteMode.stopOnMistake.short') || 'Stop',
+        reciteModeStopOnMistakeDesc: this.t?.('memorisation.amd.reciteMode.stopOnMistake.desc')
+          || 'Hear a cue, see the word turn red, then say it correctly before continuing.',
+        reciteModeBlocked: this.t?.('memorisation.amd.reciteMode.stopOnMistake.blocked')
+          || 'Recite this word correctly to continue.',
       }
+    },
+    amdReciteModeOptions() {
+      return [
+        {
+          id: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
+          label: this.amdLabels.reciteModeFullSession,
+          shortLabel: this.amdLabels.reciteModeFullSessionShort,
+          description: this.amdLabels.reciteModeFullSessionDesc,
+          icon: 'bi bi-play-circle',
+        },
+        {
+          id: MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE,
+          label: this.amdLabels.reciteModeStopOnMistake,
+          shortLabel: this.amdLabels.reciteModeStopOnMistakeShort,
+          description: this.amdLabels.reciteModeStopOnMistakeDesc,
+          icon: 'bi bi-shield-exclamation',
+        },
+      ]
+    },
+    amdReciteBlockedHint() {
+      if (!this.amdOpen || !Number.isFinite(this.amdFrozenAtWordIndex)) return ''
+      if (this.amdMistakeHandlingMode !== MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) return ''
+      return this.amdLabels.reciteModeBlocked
     },
     amdPracticeHudVisible() {
       // Practice bootstrap HUD disabled in all states
@@ -10782,15 +10806,67 @@ export default {
     openSessionFeedback() {
       this.openFeedbackModal({ type: 'suggestion' })
     },
-    openWorkspaceAiRecite() {
-      this.dashboardAiReciteReady = true
-      this.dashboardAiReciteOpen = true
+    closeWorkspaceReciteAnalysis() {
+      this.workspaceReciteAnalysisOpen = false
+      this.workspaceReciteAnalysisLoading = false
+      this.workspaceReciteAnalysisError = false
+      this.workspaceReciteAnalysisView = null
     },
-    closeWorkspaceAiRecite() {
-      this.dashboardAiReciteOpen = false
+    presentWorkspaceReciteAnalysis(submitData, result, audioUrl = '') {
+      const view = buildWorkspaceAiReciteResultView({
+        submitData,
+        result,
+        audioUrl,
+        surahName: this.currentChapter?.name_simple || this.topCardSurahLatin || '',
+        rangeStart: Number(this.rangeStart || 1),
+        rangeEnd: Number(this.rangeEnd || this.rangeStart || 1),
+        durationSeconds: Number(
+          result?.durationSeconds
+          ?? submitData?.assessment?.duration_seconds
+          ?? this.amdElapsedSeconds
+          ?? 0,
+        ),
+      }, this.t.bind(this))
+      if (!view?.hasContent) {
+        this.showBanner?.(
+          this.t?.('memorisation.analyticsEmpty.modalEmptyDesc') || 'Analysis is not ready yet.',
+          'info',
+          2800,
+        )
+        return
+      }
+      this.workspaceReciteAnalysisView = view
+      this.workspaceReciteAnalysisError = false
+      this.workspaceReciteAnalysisLoading = false
+      this.workspaceReciteAnalysisOpen = true
     },
-    onWorkspaceAiReciteSaved() {
-      // Standalone attempts persist on the server; the workspace stays on the current session.
+    async retryWorkspaceAiRecite() {
+      this.closeWorkspaceReciteAnalysis()
+      await this.openWorkspaceAiRecite()
+    },
+    async openWorkspaceAiRecite() {
+      if (this.amdOpen || this.postSessionAiReciteGateBusy) return
+      void preloadAiMemorisationDetectionModal().catch(() => {})
+      try {
+        await this.openAiMemorisationDetection({
+          scope: 'session',
+          fromWorkspaceAiRecite: true,
+        })
+        if (!this.amdOpen || this.amdEntrySource !== 'workspace-ai-recite') {
+          this.showBanner?.(
+            this.t?.('memorisation.amd.startFailed') || 'Could not open the memory check.',
+            'error',
+            3200,
+          )
+        }
+      } catch (error) {
+        console.error('Workspace AI Recite failed', error)
+        this.showBanner?.(
+          this.t?.('memorisation.amd.startFailed') || 'Could not open the memory check.',
+          'error',
+          3200,
+        )
+      }
     },
     openAiReciteFeedback() {
       const linked = this.feedbackLinkedAiCheck
@@ -12757,33 +12833,7 @@ export default {
       this.showBanner(this.t('memorisation.start_reciting_prompt'), 'info', 3200)
     },
     playRecitationStartBeep() {
-      if (typeof window === 'undefined') return
-      // Single short cue only — never a two-note chime (heard as a double beep).
-      if (this._amdStartBeepAt && (Date.now() - this._amdStartBeepAt) < 1200) return
-      this._amdStartBeepAt = Date.now()
-      try {
-        const context = this.ensureUiAudioContext()
-        if (!context) return
-        const resume = context.state === 'suspended' ? context.resume?.() : null
-        const play = () => {
-          const oscillator = context.createOscillator()
-          const gain = context.createGain()
-          const start = context.currentTime
-          oscillator.type = 'sine'
-          oscillator.frequency.setValueAtTime(880, start)
-          gain.gain.setValueAtTime(0.0001, start)
-          gain.gain.exponentialRampToValueAtTime(0.2, start + 0.012)
-          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.16)
-          oscillator.connect(gain)
-          gain.connect(context.destination)
-          oscillator.start(start)
-          oscillator.stop(start + 0.18)
-        }
-        if (resume?.then) resume.then(play).catch(play)
-        else play()
-      } catch (error) {
-        console.warn('Recitation start beep failed:', error)
-      }
+      playRecordingStartBeep()
     },
     ensureUiAudioContext() {
       if (typeof window === 'undefined') return null
@@ -15042,19 +15092,23 @@ export default {
       if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0) {
         this.mushafPageIndex = savedMushafPageIndex
       }
-      this.applySessionConfig({ ...(payload.config || {}), mode })
+      const incomingConfig = { ...(payload.config || {}), mode }
+      delete incomingConfig.verses
+      delete incomingConfig.queue
+      this.applySessionConfig(incomingConfig)
       if (payload.appliedPracticeSetup && typeof payload.appliedPracticeSetup === 'object') {
         this.appliedPracticeSetupSnapshot = payload.appliedPracticeSetup
       }
       this[target] = {
         ...(target === 'planner' ? createPlannerState() : (target === 'beginner' ? createBeginnerState() : createAdvancedState())),
-        ...this.cloneModeState(payload.config || {})
+        ...incomingConfig,
       }
 
       await this.loadChapter(mode)
-      this.buildQueue(mode)
-
       const store = this.getModeStore(mode)
+      if (!store.queue?.length && store.verses?.length) {
+        this.buildQueue(mode)
+      }
       const targetKey = payload.activeVerseKey || payload.activeKey || payload.config?.activeVerseKey || null
       let restoredQueueIndex = Math.max(0, Number(payload.queueIndex ?? payload.config?.queueIndex ?? 0))
 
@@ -15113,7 +15167,7 @@ export default {
           onAutoplayBlocked: () => this.promptTapToPlay(),
         })
       })
-      this.persistAllState()
+      this.persistHydratedSession()
       this.markActiveSessionSnapshot()
       if (options.banner !== false) this.showBanner(options.bannerText || this.t('toasts.sessionRestored'), 'success', 2200)
       return true
@@ -23785,9 +23839,10 @@ export default {
       fromTestWithAi = false,
       fromDashboardReview = false,
       fromSavedSessionReview = false,
+      fromWorkspaceAiRecite = false,
     } = {}) {
-      // Hard gate: Session Complete → Test with AI, dashboard Needs Review, or saved-session review.
-      if (!fromTestWithAi && !fromDashboardReview && !fromSavedSessionReview) {
+      // Hard gate: Session Complete → Test with AI, dashboard Needs Review, saved-session review, or workspace AI Recite.
+      if (!fromTestWithAi && !fromDashboardReview && !fromSavedSessionReview && !fromWorkspaceAiRecite) {
         console.warn('Blocked openAiMemorisationDetection — authorised entry required.')
         return
       }
@@ -23862,11 +23917,14 @@ export default {
       // AMD Tajweed colouring / practice check temporarily disabled.
       this.amdTajweedEnabled = false
       this.amdPeekActive = false
-      // Recommended plan / AI check: never pause the mic on a red word.
-      this.setAmdMistakeHandlingMode(MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
-      this.amdFrozenAtWordIndex = null
-      // Respect the learner's saved AMD "Words shown" preference.
+      this.amdPeekUsed = false
+      // Respect the learner's saved AMD preferences.
       const amdPrefs = normaliseAiSessionSettings(this.aiSessionSettings).amd
+      this.setAmdMistakeHandlingMode(
+        amdPrefs.mistake_handling_mode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
+        { persist: false },
+      )
+      this.amdFrozenAtWordIndex = null
       this.amdDifficultyPercent = Number.isFinite(this.amdPendingHidePercent)
         ? normaliseDifficultyPercent(this.amdPendingHidePercent)
         : normaliseDifficultyPercent(amdPrefs.hide_percent)
@@ -23921,7 +23979,9 @@ export default {
       this.amdStage = AMD_STAGES.READY
       this.amdEntrySource = fromDashboardReview
         ? 'dashboard-review'
-        : (fromSavedSessionReview ? 'saved-session-review' : 'test-with-ai')
+        : (fromSavedSessionReview
+          ? 'saved-session-review'
+          : (fromWorkspaceAiRecite ? 'workspace-ai-recite' : 'test-with-ai'))
       this.amdOpen = true
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
@@ -23933,6 +23993,7 @@ export default {
       return source === 'test-with-ai'
         || source === 'dashboard-review'
         || source === 'saved-session-review'
+        || source === 'workspace-ai-recite'
     },
     rebuildAmdHiddenWordMask({ bumpAttempt = false } = {}) {
       this._amdAyahBoundsSig = null
@@ -24715,6 +24776,8 @@ export default {
     },
     async completeAmdTestAndReturnToRecommendation({ reason = 'complete' } = {}) {
       if (!this.amdOpen || this._amdCompleting) return
+      const isWorkspaceRecite = this.amdEntrySource === 'workspace-ai-recite'
+      const capturedAudioUrl = String(this.reviewResultObjectUrl || '').trim()
       this._amdCompleting = true
       this.amdEndingSoon = true
       this.amdBusy = true
@@ -24778,25 +24841,37 @@ export default {
           console.warn('AMD insufficient-audio handoff failed', error)
         }
       } else {
-        try { this.recordAiReciteAttempt?.(result) } catch (_) { /* ignore */ }
+        let submitData = null
+        if (isWorkspaceRecite) {
+          try {
+            submitData = await this.submitAmdAssessmentToBackend(result)
+          } catch (error) {
+            console.error('Workspace AI Recite assessment persist failed', error)
+          }
+        } else {
+          try { this.recordAiReciteAttempt?.(result) } catch (_) { /* ignore */ }
 
-        // Recommendation sync + Laravel persist in parallel (previously sequential lag).
-        const syncTasks = [
-          this.maybeApplyPostSessionAiAssessmentFromResult(result).catch((error) => {
-            console.warn('AMD → recommendation sync failed', error)
-          }),
-          this.submitAmdAssessmentToBackend(result).catch((error) => {
-            // Persist failure must not invent Quran mistakes or a weak score — live result stands.
-            console.error('AMD assessment persist failed', error)
-          }),
-        ]
-        await Promise.all(syncTasks)
-        try { await this.buildAndPersistAiReciteFinalPlan?.() } catch (_) { /* ignore */ }
+          // Recommendation sync + Laravel persist in parallel (previously sequential lag).
+          const syncTasks = [
+            this.maybeApplyPostSessionAiAssessmentFromResult(result).catch((error) => {
+              console.warn('AMD → recommendation sync failed', error)
+            }),
+            this.submitAmdAssessmentToBackend(result).catch((error) => {
+              // Persist failure must not invent Quran mistakes or a weak score — live result stands.
+              console.error('AMD assessment persist failed', error)
+            }),
+          ]
+          await Promise.all(syncTasks)
+          try { await this.buildAndPersistAiReciteFinalPlan?.() } catch (_) { /* ignore */ }
+        }
+        if (isWorkspaceRecite) {
+          this.presentWorkspaceReciteAnalysis(submitData, result, capturedAudioUrl)
+        }
         this.playUiTone?.('complete')
       }
 
       this.closeAmdModal({
-        returnToCompletion: this.amdEntrySource !== 'saved-session-review',
+        returnToCompletion: !isWorkspaceRecite && this.amdEntrySource !== 'saved-session-review',
       })
       this.amdStage = AMD_STAGES.IDLE
       this._amdCompleting = false
@@ -24936,12 +25011,31 @@ export default {
         ai_recite: { persist_mistakes: next },
       })
     },
-    setAmdMistakeHandlingMode(mode) {
+    setAmdMistakeHandlingMode(mode, { persist = true } = {}) {
       const next = Object.values(MISTAKE_HANDLING_MODES).includes(mode)
         ? mode
         : MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW
       this.amdMistakeHandlingMode = next
       this.ensureAmdMistakeFeedbackController().setMode(next)
+      if (next === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
+        this.amdMistakeSoundEnabled = true
+        this.ensureAmdMistakeFeedbackController().setEnabled(true, { persist: false })
+      }
+      if (persist) {
+        void this.persistAiSessionSettingsPatch({
+          amd: { mistake_handling_mode: next },
+        })
+      }
+    },
+    releaseAmdFrozenWord(wordIndex) {
+      const frozen = Number(this.amdFrozenAtWordIndex)
+      const resolved = Number(wordIndex)
+      if (!Number.isFinite(frozen) || !Number.isFinite(resolved) || resolved !== frozen) return
+      this.amdFrozenAtWordIndex = null
+      this._amdPaceHeld = false
+      this.releaseAmdPaceHold?.()
+      this.recitationLiveAlignmentSignature = ''
+      void this.updateLiveWordsFromCommittedRecognition?.('recitation')
     },
     clearAmdMistakeVisual() {
       if (this.amdMistakeVisualTimer) {
@@ -24975,6 +25069,37 @@ export default {
       }
       try { this.cancelLiveWordsUpdate?.('recitation') } catch (_) { /* ignore */ }
       try { this.cancelLiveWordDomPatchFrame?.() } catch (_) { /* ignore */ }
+      this.recitationLiveAlignmentSignature = ''
+    },
+    applyAmdStopOnMistakeClamp(statuses = [], cursor = {}) {
+      if (this.amdMistakeHandlingMode !== MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
+        return Array.isArray(statuses) ? statuses : []
+      }
+      const list = Array.isArray(statuses) ? statuses : []
+      if (!list.length) return list
+      const wasFrozen = Number.isFinite(this.amdFrozenAtWordIndex)
+      const confirmedCap = Math.max(0, Number(cursor?.confirmedWordIndex) || 0)
+      const searchLimit = wasFrozen
+        ? Number(this.amdFrozenAtWordIndex)
+        : Math.min(list.length - 1, confirmedCap + 1)
+      const mistakeAt = findFirstBlockingMistakeIndex(list, searchLimit)
+      if (mistakeAt >= 0 && (!wasFrozen || mistakeAt <= Number(this.amdFrozenAtWordIndex))) {
+        if (!wasFrozen) {
+          const mistakeWord = list[mistakeAt] || {}
+          this.freezeAmdLiveWordColoring(mistakeAt)
+          const cue = this.maybeNotifyAmdConfirmedMistake({
+            wordIndex: mistakeAt,
+            previousStatus: 'pending',
+            nextStatus: mistakeWord.status || 'incorrect',
+            confidence: mistakeWord.confidence,
+          })
+          if (cue?.visual) this.flashAmdMistakeVisual()
+        } else if (mistakeAt < Number(this.amdFrozenAtWordIndex)) {
+          this.freezeAmdLiveWordColoring(mistakeAt)
+        }
+      }
+      if (!Number.isFinite(this.amdFrozenAtWordIndex)) return list
+      return clampStatusesToFreezePoint(list, this.amdFrozenAtWordIndex)
     },
     maybeNotifyAmdConfirmedMistake({
       wordIndex,
@@ -24984,7 +25109,9 @@ export default {
       interim = false,
     } = {}) {
       if (!this.amdOpen) return null
-      if (Number.isFinite(this.amdFrozenAtWordIndex)) {
+      const frozenAt = Number(this.amdFrozenAtWordIndex)
+      const atIndex = Number(wordIndex)
+      if (Number.isFinite(frozenAt) && Number.isFinite(atIndex) && atIndex !== frozenAt) {
         return { played: false, visual: false, shouldStop: true, reason: 'already_frozen' }
       }
       const reviewing = this.amdStage === AMD_STAGES.COMPLETE
@@ -25003,15 +25130,11 @@ export default {
         interim,
       })
       if (result?.visual) this.flashAmdMistakeVisual()
-      if (result?.shouldStop && this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
-        // Freeze coloring immediately so later words in this same status batch stay pending.
-        this.freezeAmdLiveWordColoring(wordIndex)
-        try { this.stopAmdAndAssess?.() } catch (_) { /* ignore */ }
-      }
       return result
     },
     startAmdPeek() {
       if (this.amdStage === AMD_STAGES.COMPLETE || this.amdEndingSoon) return
+      this.amdPeekUsed = true
       this.amdPeekActive = true
       this.syncAmdMushafSurface({ force: true })
     },
@@ -25037,6 +25160,7 @@ export default {
       this.amdImprovement = null
       this.amdError = ''
       this.amdPeekActive = false
+      this.amdPeekUsed = false
       this.amdEndingSoon = false
       this._amdCompleting = false
       this._amdLastExpectedIndex = null
@@ -25101,6 +25225,7 @@ export default {
       try { this.amdMistakeFeedback?.resetSessionSignals?.() } catch (_) { /* ignore */ }
       this.restoreSessionAudioAfterAmd()
       this.amdPeekActive = false
+      this.amdPeekUsed = false
       this.amdEndingSoon = false
       this.amdLiveTajweedCoach = null
       this.amdLiveCursor = {
@@ -25180,7 +25305,6 @@ export default {
       this.amdBusy = true
       this.amdStage = AMD_STAGES.STARTING
       this.resetAmdElapsedTimer()
-      this.setAmdMistakeHandlingMode(MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
       this.amdFrozenAtWordIndex = null
       // Unlock UI audio + start beep in the same user gesture (Safari needs this
       // before any await). Later playRecitationStartCue must not play a second beep.
@@ -25229,6 +25353,10 @@ export default {
         if (this.recitationCheckRecording) {
           this.amdStage = AMD_STAGES.LISTENING
           this.amdMicStatus = 'granted'
+          if (!this._amdRecordStartBeepConsumed) {
+            this.playRecitationStartBeep?.()
+            this._amdRecordStartBeepConsumed = true
+          }
           this.rebuildAmdHiddenWordMask()
           this.syncAmdMushafSurface({ force: true })
           this.noteAmdRecognitionActivity?.()
@@ -25400,7 +25528,9 @@ export default {
         surah_name: this.currentChapter?.name_simple || this.activeChapterName || '',
         start_ayah: numbers[0] || Number(this.rangeStart || 1),
         end_ayah: numbers[numbers.length - 1] || Number(this.rangeEnd || numbers[0] || 1),
-        assessment_type: 'memorisation_detection',
+        assessment_type: this.amdEntrySource === 'workspace-ai-recite'
+          ? 'dashboard_ai_recite'
+          : 'memorisation_detection',
         ayahs,
         recognition_words: recognitionWords,
         transcript: result?.transcript || wordsToTranscript(committed),
@@ -25409,11 +25539,17 @@ export default {
           ? new Date(this.amdStartedAt).toISOString()
           : undefined,
         provider,
-        session_recommendation_id: this.amdRecommendationId || undefined,
+        session_recommendation_id: this.amdEntrySource === 'workspace-ai-recite'
+          ? undefined
+          : (this.amdRecommendationId || undefined),
         previous_assessment_id: this.amdPreviousAssessmentId || undefined,
         user_session_id: this.mutqinState?.sessionState?.backendSessionId || undefined,
         tajweed_practice_check: tajweedPracticeCheck || undefined,
         idempotency_key: idempotencyKey,
+      }
+      if (this.amdEntrySource === 'workspace-ai-recite') {
+        payload.source = 'dashboard_ai_recite'
+        payload.peek_used = !!this.amdPeekUsed
       }
 
       try {
@@ -25436,7 +25572,9 @@ export default {
         if (idempotencyKey) this.lastAmdAssessmentKey = idempotencyKey
         this.amdAssessment = data.assessment || null
         this.amdAnalysis = data.analysis || null
-        this.amdPracticePlan = data.practice_plan || null
+        this.amdPracticePlan = this.amdEntrySource === 'workspace-ai-recite'
+          ? null
+          : (data.practice_plan || null)
         this.amdImprovement = data.improvement || null
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
@@ -27022,21 +27160,41 @@ export default {
         if (next === current) next = current.slice()
         next[index] = nextWord
         changedWords.push({ index, word: nextWord })
+        if (
+          this.amdOpen
+          && targetKey === 'recitationLiveWords'
+          && Number.isFinite(this.amdFrozenAtWordIndex)
+          && index === Number(this.amdFrozenAtWordIndex)
+          && String(nextWord.status || '').toLowerCase() === 'correct'
+        ) {
+          this.releaseAmdFrozenWord(index)
+        }
         if (this.amdOpen && targetKey === 'recitationLiveWords') {
-          const cue = this.maybeNotifyAmdConfirmedMistake({
-            wordIndex: index,
-            previousStatus: word.status || 'pending',
-            nextStatus: nextWord.status || 'pending',
-            confidence: nextWord.confidence,
-            interim: status.interim === true || status.hypothesis === true,
-          })
           const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
-          // Continue-and-review: never freeze or break the live batch on a red.
-          if (stopOnMistake && (cue?.shouldStop || Number.isFinite(this.amdFrozenAtWordIndex))) {
-            const stopAt = Number.isFinite(this.amdFrozenAtWordIndex)
-              ? Number(this.amdFrozenAtWordIndex)
-              : index
-            this.freezeAmdLiveWordColoring(stopAt)
+          const becameBlockingMistake = isConfirmedMistakeStatus(nextWord.status)
+            && !isConfirmedMistakeStatus(word.status)
+          if (stopOnMistake && becameBlockingMistake && !Number.isFinite(this.amdFrozenAtWordIndex)) {
+            this.freezeAmdLiveWordColoring(index)
+            const cue = this.maybeNotifyAmdConfirmedMistake({
+              wordIndex: index,
+              previousStatus: word.status || 'pending',
+              nextStatus: nextWord.status || 'pending',
+              confidence: nextWord.confidence,
+              interim: status.interim === true || status.hypothesis === true,
+            })
+            if (cue?.visual) this.flashAmdMistakeVisual()
+          } else if (!stopOnMistake || !becameBlockingMistake) {
+            const cue = this.maybeNotifyAmdConfirmedMistake({
+              wordIndex: index,
+              previousStatus: word.status || 'pending',
+              nextStatus: nextWord.status || 'pending',
+              confidence: nextWord.confidence,
+              interim: status.interim === true || status.hypothesis === true,
+            })
+            if (cue?.visual) this.flashAmdMistakeVisual()
+          }
+          if (stopOnMistake && Number.isFinite(this.amdFrozenAtWordIndex)) {
+            const stopAt = Number(this.amdFrozenAtWordIndex)
             for (let j = stopAt + 1; j < current.length; j += 1) {
               const later = (next === current ? current : next)[j] || current[j] || {}
               const laterStatus = String(later.status || 'pending').toLowerCase()
@@ -27154,8 +27312,8 @@ export default {
         // Exact-only skip window (not fuzzy): detect skipped phrases without
         // soft lookahead. Always on so missing words paint as omitted.
         liveAlignmentOptions.lookahead = 0
-        liveAlignmentOptions.exactSkipLookahead = 3
-        liveAlignmentOptions.partialAdvances = true
+        liveAlignmentOptions.exactSkipLookahead = stopOnMistake ? 0 : 3
+        liveAlignmentOptions.partialAdvances = !stopOnMistake
         liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
         liveAlignmentOptions.allowArticleMatch = true
         // Soft ASR letter conflation is capped below the final green floor.
@@ -27167,8 +27325,8 @@ export default {
         liveAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
         livePreviewAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.lookahead = 0
-        livePreviewAlignmentOptions.exactSkipLookahead = 3
-        livePreviewAlignmentOptions.partialAdvances = true
+        livePreviewAlignmentOptions.exactSkipLookahead = stopOnMistake ? 0 : 3
+        livePreviewAlignmentOptions.partialAdvances = !stopOnMistake
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
         livePreviewAlignmentOptions.correctSimilarity = RECITATION_LIVE_CORRECT_SIMILARITY
@@ -27240,6 +27398,15 @@ export default {
         },
       )
       statuses = clampStatusesToConfirmedCursor(statuses, cursor.confirmedWordIndex)
+      if (this.amdOpen && kind === 'recitation' && this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
+        statuses = this.applyAmdStopOnMistakeClamp(statuses, cursor)
+        cursor = buildLiveRecitationCursor({
+          committedStatuses: statuses,
+          candidateStatuses: candidateStatuses,
+          frozenAt: this.amdFrozenAtWordIndex,
+        })
+        this.amdLiveCursor = cursor
+      }
       if (this.recitationCheckRecording) {
         const targetUnits = buildTargetUnits()
         statuses = applyRecitationTimingBuffer(statuses, {
@@ -27257,9 +27424,8 @@ export default {
           tajweedHeavy: paceContext?.tajweedHeavy,
         })
       }
-      // Live AMD: only demote soft-letter near-miss reds to amber — never inflate greens
-      // or forgive hard single-letter substitutions (those stay red).
-      if (preferVisible) {
+      // Live AMD: only demote soft-letter near-miss reds to amber in continue mode.
+      if (preferVisible && this.amdMistakeHandlingMode !== MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
         statuses = statuses.map((status) => {
           if (!status || String(status.status || '').toLowerCase() !== 'incorrect') return status
           const similarity = Number(status.similarity || 0)
@@ -34690,7 +34856,7 @@ export default {
     getCachedVerses(mode = this.currentMode, config = null) {
       const key = this.getVerseCacheKey(mode, config)
       const memoryHit = this.verseDataCache[key]
-      if (memoryHit) return this.cloneModeState(memoryHit)
+      if (memoryHit) return memoryHit
       try {
         const raw = localStorage.getItem(`mutqin.verseCache.${key}`)
         if (!raw) return null
@@ -34698,7 +34864,7 @@ export default {
         const ts = Number(parsed?.ts || 0)
         if (ts && Date.now() - ts > 6 * 60 * 60 * 1000) return null
         this.verseDataCache[key] = parsed
-        return this.cloneModeState(parsed)
+        return parsed
       } catch (e) {
         return null
       }
@@ -34708,10 +34874,17 @@ export default {
       if (!payload) return
       const key = this.getVerseCacheKey(mode, config)
       const wrapped = { ...payload, ts: Date.now() }
-      this.verseDataCache[key] = this.cloneModeState(wrapped)
-      try {
-        localStorage.setItem(`mutqin.verseCache.${key}`, JSON.stringify(wrapped))
-      } catch (e) { }
+      this.verseDataCache[key] = wrapped
+      const persist = () => {
+        try {
+          localStorage.setItem(`mutqin.verseCache.${key}`, JSON.stringify(wrapped))
+        } catch (e) { /* quota / private mode */ }
+      }
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(persist, { timeout: 2000 })
+      } else {
+        setTimeout(persist, 0)
+      }
     },
 
     scheduleLoadVerses(mode = this.currentMode) {
@@ -34884,10 +35057,22 @@ export default {
     },
 
     buildSessionConfig(mode = this.currentMode) {
-      const config = this.getModeStore(mode)
-      return this.cloneModeState({
-        ...config,
+      const config = this.getModeStore(mode) || {}
+      return {
         mode,
+        chapterId: Number(config.chapterId || 0),
+        rangeStart: Number(config.rangeStart || 1),
+        rangeEnd: Number(config.rangeEnd || config.rangeStart || 1),
+        reciterId: typeof config.reciterId === 'string' && config.reciterId
+          ? config.reciterId
+          : DEFAULT_ALQURAN_RECITER,
+        speed: Number(config.speed || 1),
+        delay: Number.isFinite(Number(config.delay)) ? Number(config.delay) : 2,
+        playMode: ['auto', 'manual', 'follow'].includes(config.playMode) ? config.playMode : 'auto',
+        order: config.order || 'seq',
+        activeKey: config.activeKey || null,
+        queueIndex: Number(config.queueIndex || 0),
+        sessionActive: !!config.sessionActive,
         repetitionsPerStep: Math.max(1, Math.min(50, Number(this.repetitionsPerStep || 1))),
         selectedLoopCount: this.selectedLoopCount,
         talqinModeEnabled: !!this.talqinModeEnabled,
@@ -34912,7 +35097,7 @@ export default {
         chainingMethod: this.chainingMethod,
         chainingRepetitions: this.chainingRepetitions,
         theme: this.theme
-      })
+      }
     },
 
     applySessionConfig(config) {
@@ -35448,8 +35633,7 @@ export default {
       const mutqinIndex = Math.max(0, Number(mutqinSession.current_index || 0))
       const mutqinItem = mutqinSession.queue?.[mutqinIndex]
       const verse = mutqinItem?.ayahId || this.verses[this.activeVerseIndex >= 0 ? this.activeVerseIndex : this.queueIndex]?.key || this.activeVerseKey
-      const source = this.currentMode === 'beginner' ? this.beginner : this.advanced
-      const config = this.cloneModeState(source)
+      const config = this.buildSessionConfig(this.currentMode)
       const rangeStart = Math.max(1, Number(config.rangeStart || 1))
       const fallbackAyah = Math.min(
         Math.max(rangeStart, Number(config.rangeEnd || rangeStart)),
@@ -35957,16 +36141,17 @@ export default {
       const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION, {
         rangeComplete,
       })
-      // Incomplete range ("Finish for now?") must pause + keep Resume — never terminal-end.
+      // Explicit End is always terminal (completed or ended_early) so the
+      // header CTA becomes Start session — never Resume. Pause / save-for-later
+      // remain the only resumable leave.
       if (decision.saveForLater || decision.pauseSession) {
         await this.saveSessionForLaterFromExitModal()
         return
       }
-      if (!decision.completeSession) return
-      // Range finished: End Session opens Session Complete.
+      if (!decision.completeSession && !decision.endEarly) return
       await this.confirmSessionExit({
         showSummary: false,
-        openCompletion: true,
+        openCompletion: !!decision.completeSession,
         openPostSessionChoice: false,
       })
     },
@@ -36361,7 +36546,7 @@ export default {
       } else if (endedSnapshot) {
         this.showBanner(
           this.t('memorisation.sessionExit.confirmDescriptionEarly')
-            || 'Your progress was saved. You can return later.',
+            || 'Your progress was saved.',
           'info',
           3200,
         )
@@ -36527,12 +36712,7 @@ export default {
         endedManually: true,
       }
       const rangeComplete = !!endedSnapshot.completedAll
-      // Incomplete range must soft-exit (pause), never terminal ended_early.
-      // That keeps Resume / Return-to-this-set consistent with "You can return later".
-      if (!rangeComplete) {
-        return this.saveSessionForLaterFromExitModal().then((ok) => (ok ? endedSnapshot : null))
-      }
-      const endStatus = 'completed'
+      const endStatus = rangeComplete ? 'completed' : 'ended_early'
       const wasSample = !!this.onboardingSampleSessionActive
       const backendSessionId = this.backendSessionSnapshot?.id
         || this.mutqinState?.sessionState?.backendSessionId
@@ -36566,13 +36746,14 @@ export default {
                   endResult = await learningApi.endSession({
                     idempotency_key: `end-${backendSessionId || 'current'}`,
                     session_id: Number(backendSessionId || 0) || undefined,
-                    range_complete: true,
+                    range_complete: rangeComplete,
                     ayah_number: absoluteAyah,
                     metadata: {
-                      completed: true,
-                      range_complete: true,
-                      ended_early: false,
+                      completed: rangeComplete,
+                      range_complete: rangeComplete,
+                      ended_early: !rangeComplete,
                       active: false,
+                      paused: false,
                       ended_manually: true,
                       covered_through: absoluteAyah || null,
                       config: {
@@ -36646,15 +36827,19 @@ export default {
             return null
           }
 
-          this.sessionCompleted = true
-          this.sessionEndedEarly = false
+          this.sessionCompleted = rangeComplete
+          this.sessionEndedEarly = !rangeComplete
           this.sessionCompletedAt = new Date().toISOString()
-          this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
           this.centralSession.sessionStatus = endStatus
           this.centralSession.sessionCompletedAt = this.sessionCompletedAt
           this._startAttemptNonce = null
-          completeMutqinSession(this.mutqinState)
-          this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+          if (rangeComplete) {
+            this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
+            completeMutqinSession(this.mutqinState)
+            this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+          } else {
+            this.addActivityEvent({ ts: Date.now(), type: 'session_ended_early' })
+          }
           // Keep sample flag through the post-session modal so Finish / sample CTAs
           // still render; exitOnboardingSampleMode clears it when leaving that flow.
           this.sessionPaused = false
@@ -36666,7 +36851,7 @@ export default {
           // Snapshot the named save BEFORE cleanup clears verses / continue payload.
           if (!wasSample) {
             try {
-              this.upsertAutosavedSession({ completed: true, immediate: true })
+              this.upsertAutosavedSession({ completed: rangeComplete, immediate: true })
             } catch (error) {
               console.warn('Post-end autosave bookmark failed', error)
             }
@@ -36676,36 +36861,49 @@ export default {
           this.clearActiveSessionSnapshot()
           this.sessionExitEndingBusy = false
           this.closeSessionExitModal({ restore: false })
-          this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
+          this.transitionSessionLifecycle(
+            rangeComplete ? gate.status : SESSION_STATUS.COMPLETED,
+            SESSION_MUTATION.IDLE
+          )
           this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
 
           try {
             this.recomputeAnalytics()
-            this.finishSessionCleanup({ endedEarly: false })
+            this.finishSessionCleanup({ endedEarly: !rangeComplete })
           } catch (_) { /* completion UI still opens below */ }
 
           this.showPostSessionChoice = false
 
-          // Session complete modal is the only success surface — never replace it
-          // with the legacy post-session choice workspace actions.
+          // Session complete modal only after a finished range. Early End
+          // returns to the workspace with Start session (not Resume).
           if (
-            (openCompletion || showSummary)
+            rangeComplete
+            && (openCompletion || showSummary)
             && gate.openCompletionScreen
             && gate.showPostCompletionActions
           ) {
             this.postSessionActionsUnlocked = true
             this.openPostSessionModal(endedSnapshot, { previousStreak })
+          } else if (!rangeComplete) {
+            this.showBanner(
+              this.t('memorisation.sessionExit.confirmDescriptionEarly')
+                || 'Your progress was saved.',
+              'info',
+              2800,
+            )
           }
 
-          const finalizeAfterOpen = () => {
-            try {
-              this.promptSaveSessionAfterEnd({ wasSample })
-            } catch (_) { /* completion UI already open */ }
-          }
-          if (typeof requestIdleCallback === 'function') {
-            requestIdleCallback(finalizeAfterOpen, { timeout: 500 })
-          } else {
-            setTimeout(finalizeAfterOpen, 0)
+          if (rangeComplete) {
+            const finalizeAfterOpen = () => {
+              try {
+                this.promptSaveSessionAfterEnd({ wasSample })
+              } catch (_) { /* completion UI already open */ }
+            }
+            if (typeof requestIdleCallback === 'function') {
+              requestIdleCallback(finalizeAfterOpen, { timeout: 500 })
+            } else {
+              setTimeout(finalizeAfterOpen, 0)
+            }
           }
           return endedSnapshot
         } catch (error) {
@@ -38172,6 +38370,50 @@ export default {
         { feature: 'adaptive-assessment' }
       )
       return this._adaptiveAssessmentBundle
+    },
+
+    async refreshVerseEditionText(kind, mode = this.currentMode) {
+      const field = kind === 'transliteration' ? 'transliteration' : 'translation'
+      const store = this.getModeStore(mode)
+      const chapterId = Number(store?.chapterId || 0)
+      const verses = Array.isArray(store?.verses) ? store.verses : []
+      if (!chapterId || !verses.length) return false
+      if (verses.some((verse) => String(verse?.[field] || '').trim())) return true
+
+      const editionId = field === 'transliteration'
+        ? this.transliterationEditionId
+        : this.translationEditionId
+      try {
+        const res = await getSurahEdition(chapterId, editionId)
+        const byNumber = new Map((res?.data?.data?.ayahs || []).map((ayah) => [ayah.numberInSurah, ayah.text || '']))
+        store.verses = verses.map((verse) => {
+          const text = byNumber.get(verse.numberInSurah || verse.number) || ''
+          if (field === 'translation') {
+            return { ...verse, translation: this.cleanTranslationText(text) }
+          }
+          const translitWords = String(text).split(/\s+/).filter(Boolean)
+          return {
+            ...verse,
+            transliteration: text,
+            words: Array.isArray(verse.words)
+              ? verse.words.map((word, index) => ({
+                ...word,
+                transliteration: word.transliteration || translitWords[index] || '',
+              }))
+              : verse.words,
+          }
+        })
+        this.setCachedVerses(mode, this.buildSessionConfig(mode), {
+          verses: store.verses,
+          loadedConfig: store.loadedConfig,
+        })
+        this.clearMushafAyahHtmlCache()
+        this.clearDisplayArabicCache()
+        return true
+      } catch (error) {
+        console.warn(`${field} refresh failed:`, error)
+        return false
+      }
     },
 
     async refreshWordByWordMeaningsForCurrentVerses(mode = this.currentMode) {
@@ -39669,12 +39911,18 @@ export default {
         }
 
         // One editions call covers audio + tajweed (avoids a duplicate reciter round-trip).
-        // Word-by-word meanings are deferred until the WBW toggle is on.
+        // Translation / transliteration / WBW wait until those overlays are actually on.
         const wantsWbw = !!this.showWordByWord
+        const wantsTranslation = !!this.showTranslation
+        const wantsTransliteration = !!this.showTransliteration
         const settled = await Promise.allSettled([
           getSurahEditions(chapterId, reciterId),
-          getSurahEdition(chapterId, this.translationEditionId),
-          getSurahEdition(chapterId, this.transliterationEditionId),
+          wantsTranslation
+            ? getSurahEdition(chapterId, this.translationEditionId)
+            : Promise.resolve(null),
+          wantsTransliteration
+            ? getSurahEdition(chapterId, this.transliterationEditionId)
+            : Promise.resolve(null),
           getSurahEdition(chapterId, 'quran-uthmani'),
           wantsWbw
             ? getChapterWordByWordMeanings(chapterId, rangeStart, rangeEnd)
@@ -40090,7 +40338,11 @@ export default {
     persistModeState(mode) {
       const source = this.getModeStore(mode)
       try {
-        const snapshot = this.cloneModeState(source)
+        const snapshot = {
+          ...this.buildSessionConfig(mode),
+          activeKey: source?.activeKey || null,
+          queueIndex: Number(source?.queueIndex || 0),
+        }
         if (this.learningBackendEnabled()) {
           this.writeWorkspaceStateValue(`modeState:${mode}`, snapshot)
         } else {
@@ -40502,7 +40754,6 @@ export default {
         return {
           phase: item?.phase || 'Takrar',
           ayahId: verse?.key || item?.ayahId || null,
-          verse,
           segment: item?.segment || null,
           chainKey: item?.chainKey || null,
           sequencePosition: item?.sequencePosition || 1,
@@ -40513,10 +40764,12 @@ export default {
       }).filter(item => item.ayahId)
       const uniqueVerses = []
       const seen = new Set()
-      playbackQueue.forEach(item => {
-        if (seen.has(item.ayahId)) return
-        seen.add(item.ayahId)
-        if (item.verse) uniqueVerses.push(item.verse)
+      ;(queue || []).forEach((item) => {
+        const verse = item?.verse || item
+        const ayahId = verse?.key || item?.ayahId || null
+        if (!ayahId || seen.has(ayahId) || !verse?.key) return
+        seen.add(ayahId)
+        uniqueVerses.push(verse)
       })
       const planner = createDailyPlan(this.mutqinState, uniqueVerses, {
         repetitions: 1,
@@ -40529,13 +40782,11 @@ export default {
       const plannerQueue = uniqueVerses.slice(0, 1).map(verse => ({
         phase: 'Planner',
         ayahId: verse.key,
-        verse,
         prompt: `${this.currentChapter?.name_simple || 'Session'} ayahs ${this.rangeStart}-${this.rangeEnd}`
       }))
       const recallQueue = uniqueVerses.map(verse => ({
         phase: 'Recall',
         ayahId: verse.key,
-        verse,
         prompt: `Recite ayah ${verse.number}`
       }))
       const reviewQueue = planner.reviews.map(ayah => ({ phase: 'Retention', ayahId: ayah.id }))
@@ -41031,6 +41282,9 @@ export default {
       } else {
         return
       }
+      if ((kind === 'translation' || kind === 'transliteration') && nextState) {
+        void this.refreshVerseEditionText(kind, this.currentMode)
+      }
       this.syncSettingsDraft()
       this.persistUiState()
       this.showBanner(this.t('toasts.message', { p0: kind, p1: nextState ? 'enabled' : 'disabled' }), 'info', 2800)
@@ -41047,6 +41301,9 @@ export default {
         this.clearDisplayArabicCache()
         if (nextState) void this.refreshWordByWordMeaningsForCurrentVerses(this.currentMode)
       } else return
+      if ((kind === 'translation' || kind === 'transliteration') && nextState) {
+        void this.refreshVerseEditionText(kind, this.currentMode)
+      }
       this.syncSettingsDraft()
       this.persistUiState()
     },
@@ -41491,6 +41748,14 @@ export default {
         console.error('Failed to persist audio state:', e)
       }
       this.persistContinueSession()
+    },
+
+    persistHydratedSession() {
+      this.persistSessionState()
+      this.persistCentralSessionState()
+      this.persistContinueSession()
+      this.persistMutqinStateLocally()
+      this.scheduleLearningSync()
     },
 
     persistAllState() {

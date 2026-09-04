@@ -12,6 +12,7 @@ import {
 } from '../memorisationDetection/hiddenWords.js'
 import {
   AMD_MISTAKE_SOUND_PREF_KEY,
+  MISTAKE_HANDLING_MODES,
   normaliseMistakeSoundEnabled,
 } from '../memorisationDetection/mistakeFeedback.js'
 
@@ -28,6 +29,7 @@ export const DEFAULT_AI_SESSION_SETTINGS = Object.freeze({
   amd: Object.freeze({
     hide_percent: DEFAULT_DIFFICULTY_PERCENT,
     mistake_sound_enabled: true,
+    mistake_handling_mode: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
   }),
 })
 
@@ -63,6 +65,7 @@ function toBool(value, fallback) {
  *   amd: {
  *     hide_percent: 10|25|50|75|100,
  *     mistake_sound_enabled: boolean,
+ *     mistake_handling_mode: string,
  *   },
  * }}
  */
@@ -86,6 +89,11 @@ export function normaliseAiSessionSettings(raw) {
         amd.mistake_sound_enabled,
         defaults.amd.mistake_sound_enabled,
       ),
+      mistake_handling_mode: Object.values(MISTAKE_HANDLING_MODES).includes(
+        String(amd.mistake_handling_mode || '').trim(),
+      )
+        ? String(amd.mistake_handling_mode).trim()
+        : defaults.amd.mistake_handling_mode,
     },
   }
 }
@@ -123,6 +131,12 @@ export function mergeAiSessionSettings(existing, patch) {
         amd.mistake_sound_enabled,
         base.amd.mistake_sound_enabled,
       )
+    }
+    if (Object.prototype.hasOwnProperty.call(amd, 'mistake_handling_mode')) {
+      const nextMode = String(amd.mistake_handling_mode || '').trim()
+      if (Object.values(MISTAKE_HANDLING_MODES).includes(nextMode)) {
+        base.amd.mistake_handling_mode = nextMode
+      }
     }
   }
   return base

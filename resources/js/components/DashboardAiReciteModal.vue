@@ -284,6 +284,7 @@ import { isAiAudioConsentDeclined, resolveAiAudioConsentRecord } from '../script
 import { buildAssessmentAyahs, buildRecognitionWords } from '../scripts/memorisationDetection/api'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
 import { resolveMicDeniedGuidance } from '../scripts/audio/recordingResilience'
+import { playRecordingStartBeep } from '../scripts/audio/recordingStartBeep.js'
 import { loadAyah } from '../scripts/dashboardAiRecite/ayahText'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import {
@@ -500,6 +501,7 @@ export default {
       this.audioUrl = ''
       this.savedAttemptId = null
       this.submitKey = `dash-ai-${this.userId || 'user'}-${this.surah}-${this.ayah}-${Date.now()}`
+      playRecordingStartBeep()
       this.ensureRecorder()
       try {
         await this.recorder.start()

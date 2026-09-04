@@ -293,7 +293,8 @@
           "title": "Meal ve tecvid",
           "description": "Ezberlerken anlamı ve tecvidi yakın tutun, kalp ve dil birlikte hareket etsin."
         }
-      }
+      },
+      "carouselLabel": "Feature screenshots"
     },
     "how": {
       "kicker": "How it works",
@@ -3580,7 +3581,20 @@
       "toolAudio": "ses help",
       "toolMemorizing": "جارٍ الحفظ",
       "peekHint": "ihtiyaç duyar a hint? Peek at the text",
-      "toolPeek": "معاينة النص"
+      "toolPeek": "معاينة النص",
+      "tryAgain": "Try again",
+      "reciteMode": {
+        "title": "Recitation style",
+        "fullSession": {
+          "label": "Full session",
+          "desc": "Keep going even when a word slips. Review everything at the end."
+        },
+        "stopOnMistake": {
+          "label": "Stop on mistake",
+          "desc": "Hear a cue, see the word turn red, then say it correctly before continuing.",
+          "blocked": "Recite this word correctly to continue."
+        }
+      }
     },
     "exportReport": {
       "saved": "Saved",
@@ -4631,7 +4645,7 @@
     "col_sessions": "Sort: sessions",
     "col_ai": "AI",
     "col_active": "Last aktif",
-    "col_status": "« Status»",
+    "col_status": "Durum",
     "learning_title": "Öğreniliyor ilerleme",
     "learning_subtitle": "Ezber across the whole platform",
     "learning_memorised": "Ayahs ezberlenmiş",
@@ -4784,6 +4798,17 @@
     "status_active_today": "aktif today",
     "status_active_n_days_ago": "aktif {n} days ago",
     "status_never_sessioned": "« Never sessioned»",
+    "status_deleted": "Silindi",
+    "status_deleted_help": "Öğrencilerden gizlendi — geri yüklenebilir",
+    "status_chip_active": "Aktif",
+    "status_chip_recent": "Yakın",
+    "status_chip_inactive": "Pasif",
+    "filter_account": "Hesap durumu",
+    "filter_account_all": "Tüm hesaplar",
+    "filter_account_active": "Aktif hesaplar",
+    "filter_account_deleted": "Silinen hesaplar",
+    "action_restore": "Hesabı geri yükle",
+    "toast_restored": "Hesap geri yüklendi.",
     "col_streak": "Seri",
     "user_surahs_empty_soft": "Sure yoks started yet.",
     "outcome_session_incomplete": "« Incomplete»",
@@ -4793,7 +4818,7 @@
     "field_user_id": "« User ID»",
     "copy_user_id": "« Copy user ID»",
     "copied": "« Copied.»",
-    "delete_user_warning": "Deleting Bu account is permanent ve cannot be undone.",
+    "delete_user_warning": "Hesap Mutqin'den gizlenir. Silinen hesaplardan geri yükleyebilirsiniz.",
     "delete_account": "Sil account",
     "add_user": "« Add user»",
     "create_user": "« Create user»",
@@ -4813,9 +4838,9 @@
     "form_error": "« Couldn’t save those changes.»",
     "danger_zone": "« Danger zone»",
     "delete_user": "Sil user",
-    "delete_user_help": "kalıcı olarak removes Bu account ve their learning data.",
-    "delete_user_prompt": "Sil {name}? This cannot be undone.",
-    "delete_user_confirm": "Sil this user and all of their learning data?",
+    "delete_user_help": "Bu hesabı gizler. Öğrenme geçmişi saklanır ve hesap geri yüklenebilir.",
+    "delete_user_prompt": "{name} silinsin mi? Geri yükleyene kadar uygulamadan kaybolur.",
+    "delete_user_confirm": "Bu hesap gizlensin mi? Daha sonra geri yükleyebilirsiniz.",
     "delete_self_blocked": "sen can’t delete yeriniz own admin account.",
     "delete_note_confirm": "Sil this note?",
     "delete_contact_confirm": "Sil this contact message?",

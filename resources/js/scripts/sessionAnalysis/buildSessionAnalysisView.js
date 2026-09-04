@@ -170,8 +170,9 @@ function retentionItems(payload, t) {
 /**
  * @param {Record<string, unknown>|null} payload
  * @param {(key: string, params?: Record<string, unknown>) => string} t
+ * @param {{ includeRecommendations?: boolean, includeRetention?: boolean }} [options]
  */
-export function buildSessionAnalysisView(payload, t = (key) => key) {
+export function buildSessionAnalysisView(payload, t = (key) => key, options = {}) {
   if (!payload || typeof payload !== 'object') {
     return {
       hasContent: false,
@@ -268,8 +269,10 @@ export function buildSessionAnalysisView(payload, t = (key) => key) {
     }, t)
     : null
 
-  const recommendations = recommendationLines(payload)
-  const retention = retentionItems(payload, t)
+  const includeRecommendations = options.includeRecommendations !== false
+  const includeRetention = options.includeRetention !== false
+  const recommendations = includeRecommendations ? recommendationLines(payload) : []
+  const retention = includeRetention ? retentionItems(payload, t) : []
   const ayahRows = groupWordsByAyah(words, t)
   const hasContent = Boolean(
     summaryCards.length

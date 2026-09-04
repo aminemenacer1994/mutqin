@@ -102,8 +102,14 @@ const t = (key) => key
   const decision = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION, {
     rangeComplete: false,
   })
-  assert.equal(decision.saveForLater, true)
+  assert.equal(decision.endEarly, true)
+  assert.equal(decision.saveForLater, false)
   assert.equal(decision.completeSession, false)
+
+  const endedEarly = resolveSessionExitTransition({ endEarly: true })
+  assert.equal(endedEarly.kind, 'end_early')
+  assert.equal(endedEarly.resumable, false)
+  assert.equal(endedEarly.clearContinue, true)
 
   const afterSoftExit = reconcileBootstrapSessionState({
     backendUnfinished: true,
@@ -256,7 +262,7 @@ const t = (key) => key
   )
   assert.match(
     source,
-    /if \(!rangeComplete\) \{\s*return this\.saveSessionForLaterFromExitModal/,
+    /const endStatus = rangeComplete \? 'completed' : 'ended_early'/,
   )
   assert.match(source, /demoteSoftExitedSitting/)
   assert.match(
@@ -332,11 +338,12 @@ const t = (key) => key
     mutqinSessionActive: true,
   }), false)
 
-  // Soft-exit decision for live 1-ayah "100%" looks incomplete.
+  // End on a live sitting (including 1-ayah "100%") is terminal, not Resume.
   const early = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION, {
     rangeComplete: resolveExitRangeComplete({ mutqinSessionActive: true }),
   })
-  assert.equal(early.saveForLater, true)
+  assert.equal(early.endEarly, true)
+  assert.equal(early.saveForLater, false)
   assert.equal(early.completeSession, false)
 }
 

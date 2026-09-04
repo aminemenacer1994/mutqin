@@ -22,12 +22,12 @@ class QuranProxyController extends Controller
         'alquran' => [
             'base' => 'https://api.alquran.cloud/v1/',
             'host' => 'api.alquran.cloud',
-            'cache_ttl' => 3600,
+            'cache_ttl' => 86400,
         ],
         'qurancom' => [
             'base' => 'https://api.quran.com/api/v4/',
             'host' => 'api.quran.com',
-            'cache_ttl' => 3600,
+            'cache_ttl' => 86400,
         ],
     ];
 
@@ -126,7 +126,7 @@ class QuranProxyController extends Controller
 
         return response($payload['body'], (int) $payload['status'], [
             'Content-Type' => $payload['content_type'],
-            'Cache-Control' => 'private, max-age=300',
+            'Cache-Control' => 'public, max-age=86400, stale-while-revalidate=604800',
             'X-Quran-Proxy' => $provider,
         ]);
     }

@@ -285,8 +285,10 @@ includesAll('workspace AI Recite companion', [
   /data-testid="workspace-ai-recite"/,
   /showWorkspaceAiReciteCta/,
   /openWorkspaceAiRecite/,
-  /class="workspace-ai-recite-cta"/,
-  /webpackChunkName: "dash-ai-recite"/,
+  /fromWorkspaceAiRecite:\s*true/,
+  /class="[^"]*workspace-ai-recite-cta/,
+  /top-card-session-cluster/,
+  /webpackChunkName: "amd-modal"/,
 ])
 
 includesAll('top toolbar feature spacing', [
@@ -595,10 +597,14 @@ includesAll('ai audio consent and retention wiring', [
   assert.match(source, /createSessionTimer/)
   assert.match(source, /normalizeArabicForRecitationEngine/)
   assert.match(source, /phraseStart/)
-  assert.match(source, /_amdStartBeepAt/)
+  assert.match(source, /playRecordingStartBeep/)
   assert.match(source, /_amdRecordStartBeepConsumed/)
   assert.match(source, /skipBeep/)
   assert.match(source, /ensureUiAudioContext\(/)
+  assert.match(amdVue, /playRecordingStartBeep/)
+  assert.match(amdVue, /amd-recite-mode--toolbar/)
+  assert.match(amdVue, /amd-tools-bar__leading/)
+  assert.match(amdVue, /set-recite-mode/)
   assert.match(amdVue, /recordingActiveLabel/)
   assert.match(amdVue, /displayMicStatusLabel/)
   // One Recording status pill — starting must not show a separate listening label.
@@ -639,8 +645,8 @@ includesAll('session completion success flow', [
   /confirmEndSessionFromExitModal\(\)/,
   /saveSessionForLaterFromExitModal\(\)/,
   /resolveSessionExitTransition/,
-  /confirmSessionExit\(\{\s*showSummary: false,\s*openCompletion: true,\s*openPostSessionChoice: false,\s*\}\)/,
-  /if \(!rangeComplete\) \{\s*return this\.saveSessionForLaterFromExitModal/,
+  /confirmSessionExit\(\{\s*showSummary: false,\s*openCompletion: !!decision\.completeSession,\s*openPostSessionChoice: false,\s*\}\)/,
+  /const endStatus = rangeComplete \? 'completed' : 'ended_early'/,
   /openPostSessionModal\(endedSnapshot/,
   /confirmDescriptionEarly/,
   /openPostSessionChoice\(/,
@@ -1045,6 +1051,17 @@ includesAll('centralised session lifecycle wiring', [
   /exitOnboardingSampleMode/,
   /sampleSession:\s*true/,
   /onboardingSampleSessionActive && !options\.sampleSession/,
+])
+
+includesAll('long session load stays slim', [
+  /persistHydratedSession\(\)/,
+  /hydrateSessionFromPayload\(payload[\s\S]*persistHydratedSession\(\)/,
+  /delete incomingConfig\.verses/,
+  /delete incomingConfig\.queue/,
+  /wantsTranslation[\s\S]*getSurahEdition\(chapterId, this\.translationEditionId\)/,
+  /wantsTransliteration[\s\S]*getSurahEdition\(chapterId, this\.transliterationEditionId\)/,
+  /refreshVerseEditionText\(kind, mode = this\.currentMode\)/,
+  /buildSessionConfig\(mode = this\.currentMode\) \{[\s\S]*chapterId: Number\(config\.chapterId \|\| 0\)/,
 ])
 
 includesAll('workspace idle returning-user journey context', [

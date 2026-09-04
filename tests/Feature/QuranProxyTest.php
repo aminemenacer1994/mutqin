@@ -27,10 +27,14 @@ class QuranProxyTest extends TestCase
             ], 200, ['Content-Type' => 'application/json']),
         ]);
 
-        $this->get('/memorisation/quran-proxy/alquran/surah/1/quran-uthmani')
+        $response = $this->get('/memorisation/quran-proxy/alquran/surah/1/quran-uthmani')
             ->assertOk()
             ->assertJsonPath('code', 200)
             ->assertJsonPath('data.number', 1);
+
+        $cacheControl = strtolower((string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('public', $cacheControl);
+        $this->assertStringContainsString('max-age=86400', $cacheControl);
     }
 
     public function test_authenticated_user_can_proxy_alquran_surah(): void

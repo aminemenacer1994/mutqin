@@ -103,7 +103,8 @@ class AdminDashboardService
      *   progress?: string|null,
      *   sessions?: string|null,
      *   sort?: string|null,
-     *   dir?: string|null
+     *   dir?: string|null,
+     *   account?: string|null
      * }  $filters
      * @return array{users: list<array<string, mixed>>, total: int, page: int, per_page: int, total_pages: int}
      */
@@ -119,6 +120,10 @@ class AdminDashboardService
         $sessions = strtolower(trim((string) ($filters['sessions'] ?? '')));
         $sort = strtolower(trim((string) ($filters['sort'] ?? 'created')));
         $dir = strtolower(trim((string) ($filters['dir'] ?? 'desc'))) === 'asc' ? 'asc' : 'desc';
+        $account = strtolower(trim((string) ($filters['account'] ?? 'all')));
+        if (! in_array($account, ['all', 'active', 'deleted'], true)) {
+            $account = 'all';
+        }
 
         if (! in_array($status, ['none', 'trialing', 'active', 'canceled', 'past_due', 'free'], true)) {
             $status = '';
@@ -139,7 +144,7 @@ class AdminDashboardService
             $sort = 'created';
         }
 
-        $query = User::query()->select([
+        $query = User::query()->withTrashed()->select([
             'id',
             'name',
             'email',
@@ -150,7 +155,14 @@ class AdminDashboardService
             'subscription_current_period_ends_at',
             'created_at',
             'last_login_at',
+            'deleted_at',
         ]);
+
+        if ($account === 'deleted') {
+            $query->onlyTrashed();
+        } elseif ($account === 'active') {
+            $query->whereNull('deleted_at');
+        }
 
         if ($search !== '') {
             $like = '%'.$search.'%';
@@ -449,6 +461,16 @@ class AdminDashboardService
         }
 
         app(LearningHistoryRetentionService::class)->deleteUserAccount($user, $actor);
+        self::invalidateCaches();
+    }
+
+    public function restoreUser(User $user): void
+    {
+        if (! $user->trashed()) {
+            return;
+        }
+
+        $user->restore();
         self::invalidateCaches();
     }
 
@@ -1230,6 +1252,8 @@ class AdminDashboardService
                 'current_surah_number' => $surah ?: null,
                 'current_surah_name' => $surah > 0 ? QuranMetadata::name($surah) : null,
                 'current_ayah' => $position?->ayah_number ? (int) $position->ayah_number : null,
+                'deleted_at' => optional($user->deleted_at)->toIso8601String(),
+                'is_deleted' => $user->trashed(),
             ];
         });
     }

@@ -329,7 +329,8 @@ class ProfileControllerTest extends TestCase
             ->assertRedirect(route('home'));
 
         $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
+        $this->assertDatabaseMissing('users', ['email' => 'learner@example.com']);
     }
 
     public function test_learner_can_delete_account_by_typing_email(): void
@@ -345,7 +346,36 @@ class ProfileControllerTest extends TestCase
             ->assertRedirect(route('home'));
 
         $this->assertGuest();
-        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
+        $this->assertDatabaseMissing('users', ['email' => 'learner@example.com']);
+    }
+
+    public function test_deleted_account_email_can_be_registered_again(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'learner@example.com',
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('profile.destroy'), [
+                'confirmation' => 'DELETE',
+            ])
+            ->assertRedirect(route('home'));
+
+        $this->post(route('register'), [
+            'name' => 'Returning Learner',
+            'email' => 'learner@example.com',
+            'password' => 'secret12',
+            'password_confirmation' => 'secret12',
+        ])->assertRedirect();
+
+        $this->assertAuthenticated();
+        $this->assertNotSame($user->id, (int) auth()->id());
+        $this->assertDatabaseHas('users', [
+            'email' => 'learner@example.com',
+            'name' => 'Returning Learner',
+        ]);
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
     }
 
     public function test_admin_cannot_delete_own_account_from_profile(): void

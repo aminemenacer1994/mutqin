@@ -13,12 +13,14 @@ import {
   reconcileBootstrapSessionState,
   resolveCompletionGate,
   resolveEndSessionConfirmDecision,
+  resolveSessionExitTransition,
 } from '../../resources/js/scripts/session/sessionLifecycle.js'
 
 const t = (key, params = {}) => {
   const map = {
     'common.pauseSession': 'Pause Session',
     'common.resumeSession': 'Resume Session',
+    'common.startSession': 'Start session',
     'common.pausingSession': 'Pausing…',
     'common.endingSession': 'Ending…',
     'memorisation.sessionExit.repetitionsProgress': `${params.completed} of ${params.total} repetitions completed`,
@@ -88,15 +90,34 @@ const t = (key, params = {}) => {
   assert.equal(endDecision.saveForLater, false)
 }
 
-// Early exit confirm must save-for-later (pause), never complete
+// Early End confirm is terminal (ended_early) — Start session, not Resume
 {
   const early = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION, {
     rangeComplete: false,
   })
-  assert.equal(early.saveForLater, true)
-  assert.equal(early.pauseSession, true)
+  assert.equal(early.endEarly, true)
+  assert.equal(early.saveForLater, false)
+  assert.equal(early.pauseSession, false)
   assert.equal(early.completeSession, false)
   assert.equal(early.mutateSession, true)
+
+  const endedEarly = resolveSessionExitTransition({ endEarly: true })
+  assert.equal(endedEarly.kind, 'end_early')
+  assert.equal(endedEarly.resumable, false)
+  assert.equal(endedEarly.clearContinue, true)
+  assert.equal(endedEarly.backendStatus, BACKEND_SESSION_STATUS.ENDED_EARLY)
+
+  const afterEnd = buildSessionLifecycleViewModel({
+    authHydrated: true,
+    sessionHydrated: true,
+    sessionCompleted: true,
+    backendUnfinished: false,
+    backendStatus: BACKEND_SESSION_STATUS.ENDED_EARLY,
+    hasValidatedContinuePayload: false,
+    t,
+  })
+  assert.equal(afterEnd.status, SESSION_STATUS.COMPLETED)
+  assert.equal(afterEnd.action, PRIMARY_SESSION_ACTION.START_SESSION)
 }
 
 // Failed completion keeps session recoverable and hides completion CTAs
@@ -262,39 +283,39 @@ const t = (key, params = {}) => {
   )
   assert.equal(
     en.memorisation.sessionExit.confirmDescriptionEarly,
-    'Your progress will be saved. You can return later.'
+    'Your progress will be saved.'
   )
   assert.equal(en.memorisation.sessionExit.keepPractising, 'Keep going')
   assert.equal(en.memorisation.sessionExit.confirmEnd, 'End')
 }
 
-// Early exit must soft-save (pause) — never open Session Complete or clear resume
+// End session is terminal — Start session after, Session Complete only on finished range
 {
   const source = readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
   assert.match(
     source,
-    /saveSessionForLaterFromExitModal/,
-    'Early exit must route through save-for-later (pause)'
+    /const endStatus = rangeComplete \? 'completed' : 'ended_early'/,
+    'confirmSessionExit must terminal-end incomplete ranges as ended_early'
   )
   assert.match(
+    source,
+    /!decision\.completeSession && !decision\.endEarly/,
+    'Exit modal End must terminal-end (complete or ended_early)'
+  )
+  assert.match(
+    source,
+    /this\.sessionEndedEarly = !rangeComplete/,
+    'Early End must mark the sitting ended_early so Resume does not return'
+  )
+  assert.match(
+    source,
+    /rangeComplete\s*\n?\s*&& \(openCompletion \|\| showSummary\)/,
+    'Session Complete modal must only open on the completed-range path'
+  )
+  assert.doesNotMatch(
     source,
     /if \(!rangeComplete\) \{\s*return this\.saveSessionForLaterFromExitModal/,
-    'confirmSessionExit must soft-exit incomplete ranges'
-  )
-  assert.match(
-    source,
-    /decision\.saveForLater \|\| decision\.pauseSession/,
-    'Exit modal End on incomplete range must save for later'
-  )
-  assert.match(
-    source,
-    /confirmDescriptionEarly/,
-    'Soft exit must keep the return-later copy'
-  )
-  assert.match(
-    source,
-    /\(openCompletion \|\| showSummary\)\s*\n?\s*&& gate\.openCompletionScreen/,
-    'Session Complete modal must only open on the completed-range path'
+    'End session must not park incomplete ranges as Resume'
   )
 }
 

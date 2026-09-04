@@ -20,7 +20,6 @@ const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.vu
   + '\n'
   + readFileSync(join(root, 'resources/js/views/Memorisation.mobile-grid.css'), 'utf8')
 const modal = readFileSync(join(root, 'resources/js/components/DashboardAiReciteModal.vue'), 'utf8')
-const css = readFileSync(join(root, 'resources/js/views/Dashboard.css'), 'utf8')
 const modalCss = readFileSync(join(root, 'resources/js/components/DashboardAiReciteModal.css'), 'utf8')
 const en = JSON.parse(readFileSync(join(root, 'resources/js/locales/en.json'), 'utf8'))
 
@@ -32,33 +31,44 @@ function t(key, params = {}) {
   return cursor.replace(/\{(\w+)\}/g, (_, name) => (params[name] == null ? `{${name}}` : String(params[name])))
 }
 
-assert.match(dashboard, /dash-ai-recite-cta/, 'dashboard exposes the AI Recite CTA')
-assert.match(dashboard, /openAiRecite/, 'CTA opens the standalone modal')
-assert.match(dashboard, /DashboardAiReciteModal/, 'dashboard mounts the AI Recite modal')
-assert.match(dashboard, /webpackChunkName: "dash-ai-recite"/, 'heavy modal is lazy-loaded')
-assert.doesNotMatch(dashboard, /createSpeechmaticsRealtimeProvider/, 'dashboard render does not import Speechmatics')
-assert.match(css, /dash-ai-recite-glow/, 'CTA has a subtle AI glow')
-assert.match(css, /prefers-reduced-motion/, 'dashboard glow respects reduced motion')
+assert.doesNotMatch(dashboard, /dash-ai-recite-cta/, 'progress page does not expose the AI Recite CTA')
+assert.doesNotMatch(dashboard, /openAiRecite/, 'progress page does not open the standalone modal')
+assert.doesNotMatch(dashboard, /DashboardAiReciteModal/, 'progress page does not mount the AI Recite modal')
 assert.match(modalCss, /prefers-reduced-motion/, 'modal animation respects reduced motion')
 
 assert.match(memorisation, /workspace-ai-recite-cta/, 'session card exposes the AI Recite CTA')
-assert.match(memorisation, /openWorkspaceAiRecite/, 'session card opens the standalone modal')
-assert.match(memorisation, /DashboardAiReciteModal/, 'memorisation mounts the AI Recite modal')
-assert.match(memorisation, /webpackChunkName: "dash-ai-recite"/, 'session-card modal is lazy-loaded')
-assert.match(memorisation, /preferred-location="workspaceAiRecitePreferredLocation"/, 'session card passes the current ayah')
-assert.match(memorisation, /workspace-ai-recite-glow/, 'session card CTA has a glow')
-assert.match(memorisation, /workspace-ai-recite-shimmer/, 'session card CTA has a shimmer')
-assert.match(memorisation, /workspace-ai-recite-spark/, 'session card CTA has a spark animation')
+assert.match(memorisation, /openWorkspaceAiRecite/, 'session card opens the memory check modal')
+assert.match(memorisation, /fromWorkspaceAiRecite:\s*true/, 'session card uses the workspace AI Recite entry')
+assert.match(memorisation, /AiMemorisationDetectionModal/, 'memorisation mounts the memory check modal')
+assert.doesNotMatch(memorisation, /DashboardAiReciteModal/, 'session card does not mount the dashboard AI Recite modal')
+assert.match(memorisation, /presentWorkspaceReciteAnalysis/, 'workspace recite opens analysis after completion')
+assert.match(memorisation, /workspaceReciteAnalysisOpen/, 'memorisation mounts the recite analysis modal')
+assert.match(memorisation, /WorkspaceAiReciteResultModal/, 'workspace recite uses the post-session-style result modal')
+assert.match(memorisation, /buildWorkspaceAiReciteResultView/, 'workspace recite builds guided AI review view')
+assert.match(memorisation, /dashboard_ai_recite/, 'workspace recite saves standalone attempts')
+assert.match(memorisation, /border-radius:\s*8px/, 'session card CTA uses 8px radius')
+assert.match(memorisation, /workspace-ai-gold-pulse/, 'session card CTA has gold glow')
+assert.match(memorisation, /workspace-ai-shimmer/, 'session card CTA has AI shimmer')
+assert.match(memorisation, /workspace-ai-icon-spark/, 'session card CTA sparkles the stars icon')
+assert.match(memorisation, /\[data-theme="light"\] \.workspace-ai-recite-cta/, 'light theme gold palette')
+assert.match(memorisation, /\[data-theme="sepia"\] \.workspace-ai-recite-cta/, 'sepia theme gold palette')
+assert.match(memorisation, /\[data-theme="dark"\] \.workspace-ai-recite-cta/, 'dark theme gold palette')
+assert.match(memorisation, /is-animated/, 'session card CTA supports animation toggle')
 assert.match(memorisation, /prefers-reduced-motion/, 'session card glow respects reduced motion')
 assert.match(
   memorisation,
-  /workspace-shell-head-toolbar[\s\S]*?data-testid="workspace-ai-recite"[\s\S]*?workspace-shell-progress-pills/,
-  'AI Recite sits on its own toolbar row below session actions',
+  /top-card-session-cluster[\s\S]*?has-paired-actions[\s\S]*?workspace-ai-recite-cta/,
+  'cluster toggles paired layout when Pause/End are visible',
 )
-assert.doesNotMatch(
+assert.match(
   memorisation,
-  /class="action-buttons-group"[\s\S]{0,1800}workspace-ai-recite-cta/,
-  'AI Recite is not crammed into the Pause/End action group',
+  /max-width:\s*767\.98px[\s\S]*?has-paired-actions:has\(\.workspace-ai-recite-cta\)[\s\S]*?width:\s*100%/,
+  'mobile paired layout puts AI Recite full width below session controls',
+)
+assert.match(
+  memorisation,
+  /max-width:\s*767\.98px[\s\S]*?not\(\.has-paired-actions\):has\(\.workspace-ai-recite-cta\)[\s\S]*?width:\s*50%/,
+  'mobile idle layout splits AI Recite and Resume fifty-fifty',
 )
 
 assert.match(modal, /Start Recording|ai_recite.start_recording/)

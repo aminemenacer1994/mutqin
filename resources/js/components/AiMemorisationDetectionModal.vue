@@ -60,10 +60,11 @@
           <div class="amd-body amd-body--premium amd-body--scroll">
             <div v-if="!isComplete" class="amd-tools-container">
               <div
-                class="amd-toolbar amd-toolbar--icons amd-toolbar--tools amd-tools-bar"
+                class="amd-toolbar amd-toolbar--icons amd-toolbar--tools amd-tools-bar amd-tools-bar--full"
                 role="toolbar"
                 :aria-label="toolsLabel"
               >
+                <div class="amd-tools-bar__leading">
                 <button
                   type="button"
                   class="amd-tools-bar__btn"
@@ -113,6 +114,39 @@
                 >
                   <i class="bi bi-stopwatch" aria-hidden="true"></i>
                   <span class="amd-tools-bar__timer-value">{{ elapsedLabel }}</span>
+                </div>
+                </div>
+
+                <div
+                  v-if="reciteModeOptions.length"
+                  class="amd-recite-mode amd-recite-mode--toolbar"
+                  role="radiogroup"
+                  :aria-label="reciteModeTitle"
+                  data-testid="amd-recite-mode"
+                >
+                  <div class="amd-recite-mode__segmented">
+                    <button
+                      v-for="option in reciteModeOptions"
+                      :key="`amd-recite-mode-${option.id}`"
+                      type="button"
+                      class="amd-recite-mode__pill"
+                      role="radio"
+                      :aria-checked="reciteMode === option.id ? 'true' : 'false'"
+                      :aria-label="option.label"
+                      :class="{ 'is-selected': reciteMode === option.id }"
+                      :disabled="busy || isListening"
+                      :data-mode="option.id"
+                      :title="option.description || option.label"
+                      @click.stop="$emit('set-recite-mode', option.id)"
+                    >
+                      <i
+                        v-if="option.icon"
+                        :class="option.icon"
+                        aria-hidden="true"
+                      ></i>
+                      <span class="visually-hidden">{{ option.label }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -191,6 +225,16 @@
 
           <footer class="amd-footer amd-footer--sticky" data-amd-footer>
             <div class="amd-footer__inner">
+              <p
+                v-if="reciteBlockedHint && isListening"
+                class="amd-footer__blocked-hint"
+                role="status"
+                aria-live="polite"
+                data-testid="amd-recite-blocked-hint"
+              >
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                <span>{{ reciteBlockedHint }}</span>
+              </p>
               <div
                 v-if="isReady && !isComplete && !isError && !showInlineError"
                 class="amd-start-wrap amd-start-wrap--inline amd-start-wrap--footer"
@@ -267,6 +311,7 @@
 </template>
 
 <script>
+import { playRecordingStartBeep } from '../scripts/audio/recordingStartBeep.js'
 import {
   createLiveAutoFollowController,
   prefersReducedMotion,
@@ -331,6 +376,13 @@ export default {
     theme: { type: String, default: '' },
     mistakeVisualActive: { type: Boolean, default: false },
     mistakeVisualLabel: { type: String, default: 'Mistake confirmed' },
+    reciteMode: { type: String, default: 'continue_and_review' },
+    reciteModeOptions: {
+      type: Array,
+      default: () => [],
+    },
+    reciteModeTitle: { type: String, default: 'Recitation style' },
+    reciteBlockedHint: { type: String, default: '' },
     autoFollowLabel: { type: String, default: 'Auto-follow' },
     autoFollowOnLabel: { type: String, default: 'Auto-follow on' },
     autoFollowOffLabel: { type: String, default: 'Auto-follow off' },
@@ -356,6 +408,7 @@ export default {
     'peek-end',
     'reset',
     'set-difficulty',
+    'set-recite-mode',
     'start',
     'stop',
     'test-again',
@@ -557,6 +610,7 @@ export default {
   methods: {
     onStart() {
       if (this.busy || this.endingSoon || this.isProcessing || this.isListening) return
+      playRecordingStartBeep()
       this.$emit('start')
     },
     onStop() {

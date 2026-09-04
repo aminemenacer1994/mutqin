@@ -14,6 +14,8 @@
  * - stale response ordering → client_revision ignore
  */
 
+import { slimSessionQueue } from './slimSessionQueue.js'
+
 /** @typedef {'pause'|'save'|null} LifecycleFlushAction */
 
 /**
@@ -85,7 +87,7 @@ export function buildCheckpointPayload(ctx = {}) {
     completed: false,
     completed_at: null,
     config,
-    queue: Array.isArray(sessionState.queue) ? sessionState.queue : undefined,
+    queue: Array.isArray(sessionState.queue) ? slimSessionQueue(sessionState.queue) : undefined,
     current_index: Number.isFinite(Number(ctx.currentStep))
       ? Number(ctx.currentStep)
       : sessionState.current_index,

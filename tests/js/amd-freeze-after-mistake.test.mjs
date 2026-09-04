@@ -166,14 +166,21 @@ function applyLiveStatusUpdateWithFreeze({
   assert.match(js, /amdFrozenAtWordIndex/)
   assert.match(js, /freezeAmdLiveWordColoring\(/)
   assert.match(js, /advanceOnIncorrect\s*=\s*!stopOnMistake/)
-  assert.match(
+  assert.match(js, /applyAmdStopOnMistakeClamp\(/)
+  assert.match(js, /clampStatusesToFreezePoint/)
+  assert.match(js, /partialAdvances\s*=\s*!stopOnMistake/)
+  assert.match(js, /isConfirmedMistakeStatus\(nextWord\.status\)/)
+  assert.doesNotMatch(
     js,
-    /maybeNotifyAmdConfirmedMistake\([\s\S]*?freezeAmdLiveWordColoring\(wordIndex\)[\s\S]*?stopAmdAndAssess/,
+    /maybeNotifyAmdConfirmedMistake\([\s\S]*?freezeAmdLiveWordColoring\(wordIndex\)/,
   )
-  assert.match(
+  assert.doesNotMatch(
     js,
-    /stopOnMistake && \(cue\?\.shouldStop \|\| Number\.isFinite\(this\.amdFrozenAtWordIndex\)\)/,
+    /freezeAmdLiveWordColoring\(wordIndex\)[\s\S]{0,160}?stopAmdAndAssess/,
   )
+  assert.match(js, /releaseAmdFrozenWord\(/)
+  assert.match(js, /becameBlockingMistake/)
+  assert.match(js, /stopOnMistake && Number\.isFinite\(this\.amdFrozenAtWordIndex\)/)
   assert.match(js, /CONTINUE_AND_REVIEW/)
   assert.match(
     js,

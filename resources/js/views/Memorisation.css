@@ -30056,6 +30056,7 @@ ayah cards and the mushaf scale from phone to desktop without any
 }
 
 .workspace-shell-actions .session-primary-action span,
+.workspace-shell-actions .workspace-ai-recite-cta span,
 .workspace-shell-actions .action-btn-exit span,
 .workspace-shell-actions .post-session-choice-custom span,
 .workspace-shell-actions .post-session-choice-return span {
@@ -30381,6 +30382,7 @@ and review
 .workspace-shell-actions .action-btn.primary span,
 .workspace-shell-actions .action-btn.btn-primary span,
 .workspace-shell-actions .session-primary-action span,
+.workspace-shell-actions .workspace-ai-recite-cta span,
 .workspace-shell-actions .action-btn-exit span,
 .workspace-shell-actions .post-session-choice-custom span,
 .workspace-shell-actions .post-session-choice-return span {
@@ -37481,209 +37483,336 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   box-sizing: border-box;
 }
 
-/* AI Recite lives on its own toolbar row — never in the Pause/End pair. */
-.workspace-shell-head-toolbar > .workspace-ai-recite-cta {
-  flex: 0 0 auto;
-  width: 100%;
-  margin-top: 0.15rem;
+/* AI Recite — neon compact control, same track as session primary actions. */
+.top-card-session-cluster {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
 }
 
-.workspace-ai-recite-cta {
-  --ai-recite-gold: #c4a056;
-  --ai-recite-ink: #5c3d1f;
+.top-card-session-cluster .top-card-session-actions {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.top-card-session-cluster.has-paired-actions .top-card-session-actions {
+  min-width: min(100%, 18rem);
+}
+
+.workspace-shell-actions .workspace-ai-recite-cta.top-card-action-trigger,
+.workspace-shell-idle-actions__start .workspace-ai-recite-cta.session-idle-action,
+.workspace-shell-idle-aside-cta .workspace-ai-recite-cta.session-idle-action {
+  --ai-recite-bg: #1c1917;
+  --ai-recite-border: #a87338;
+  --ai-recite-text: #c49354;
+  --ai-recite-icon: #d4a574;
+  --ai-recite-glow: rgba(168, 115, 56, 0.28);
+  --ai-recite-spark: rgba(56, 189, 248, 0.55);
+  --ai-recite-spark-alt: rgba(232, 121, 249, 0.45);
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.7rem;
-  width: 100%;
-  min-height: 2.85rem;
-  padding: 0.55rem 0.8rem 0.55rem 0.65rem;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--ai-recite-gold) 58%, var(--border));
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  flex: 0 0 auto;
+  min-width: auto !important;
+  width: auto !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  max-height: 38px !important;
+  padding: 0 0.95rem !important;
+  border: 1.5px solid var(--ai-recite-border) !important;
+  border-radius: 8px !important;
   background:
     linear-gradient(
-      118deg,
-      color-mix(in srgb, var(--ai-recite-gold) 38%, #fff6df) 0%,
-      color-mix(in srgb, var(--accent-light, #f3e4c8) 70%, #fff) 46%,
-      color-mix(in srgb, var(--ai-recite-gold) 22%, var(--workspace-card-surface, var(--surface))) 100%
-    );
-  color: var(--ai-recite-ink);
-  text-align: start;
+      180deg,
+      color-mix(in srgb, var(--ai-recite-bg) 88%, #ffffff 12%) 0%,
+      var(--ai-recite-bg) 100%
+    ) !important;
+  color: var(--ai-recite-text) !important;
+  font-size: 0.8rem !important;
+  font-weight: 650 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
   cursor: pointer;
   box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
-    0 6px 18px color-mix(in srgb, var(--ai-recite-gold) 22%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--ai-recite-border) 22%, transparent),
+    0 2px 10px color-mix(in srgb, #000 18%, transparent),
+    0 0 16px var(--ai-recite-glow);
 }
 
-.workspace-ai-recite-cta__shimmer {
+.workspace-ai-recite-cta::before {
+  content: "";
   position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
+  inset: -40% -60%;
   background: linear-gradient(
     105deg,
-    transparent 18%,
-    color-mix(in srgb, #fff 55%, transparent) 42%,
-    transparent 64%
+    transparent 38%,
+    color-mix(in srgb, var(--ai-recite-spark) 18%, transparent) 46%,
+    color-mix(in srgb, #fff 75%, var(--ai-recite-spark) 25%) 50%,
+    color-mix(in srgb, var(--ai-recite-spark-alt) 22%, transparent) 54%,
+    transparent 62%
   );
-  transform: translateX(-120%);
+  transform: translateX(-115%) rotate(8deg);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
 }
 
-.workspace-ai-recite-cta__icon,
-.workspace-ai-recite-cta__copy,
-.workspace-ai-recite-cta__action,
-.workspace-ai-recite-cta__label {
+.workspace-ai-recite-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 18% 28%, color-mix(in srgb, var(--ai-recite-spark) 55%, transparent), transparent 42%),
+    radial-gradient(circle at 82% 72%, color-mix(in srgb, var(--ai-recite-spark-alt) 48%, transparent), transparent 38%);
+}
+
+.workspace-shell-idle-actions__start .workspace-ai-recite-cta.session-idle-action,
+.workspace-shell-idle-aside-cta .workspace-ai-recite-cta.session-idle-action {
+  min-height: 2.35rem !important;
+  height: 2.35rem !important;
+  max-height: 2.35rem !important;
+  padding: 0.45rem 1.05rem !important;
+  font-size: 0.875rem !important;
+}
+
+.workspace-ai-recite-cta i,
+.workspace-ai-recite-cta span {
   position: relative;
   z-index: 1;
 }
 
-.workspace-ai-recite-cta__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 2.05rem;
-  height: 2.05rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--ai-recite-gold) 55%, transparent);
-  background:
-    radial-gradient(circle at 30% 25%, #fff8e6 0%, color-mix(in srgb, var(--ai-recite-gold) 42%, #f6e7c2) 70%);
-  color: var(--ai-recite-ink);
-  font-size: 1.05rem;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ai-recite-gold) 16%, transparent);
+.workspace-ai-recite-cta i {
+  font-size: 0.88rem;
+  margin: 0 !important;
+  color: var(--ai-recite-icon, var(--ai-recite-text)) !important;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--ai-recite-spark) 40%, transparent));
 }
 
-.workspace-ai-recite-cta__copy {
-  display: grid;
-  gap: 0.08rem;
-  min-width: 0;
-}
-
-.workspace-ai-recite-cta__copy strong,
-.workspace-ai-recite-cta__label {
-  font-size: 0.95rem;
-  font-weight: 750;
-  letter-spacing: 0.01em;
-  line-height: 1.15;
-}
-
-.workspace-ai-recite-cta__copy small {
-  font-size: 0.72rem;
-  font-weight: 550;
-  color: color-mix(in srgb, var(--ai-recite-ink) 68%, var(--text-muted));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.workspace-ai-recite-cta__action {
-  display: inline-flex;
+.workspace-ai-recite-cta span {
+  display: inline-flex !important;
   align-items: center;
-  justify-content: center;
-  min-height: 1.85rem;
-  padding: 0.28rem 0.75rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--ai-recite-ink) 92%, #000);
-  color: #fff8e8;
-  font-size: 0.75rem;
-  font-weight: 700;
-  white-space: nowrap;
+  line-height: 1.15;
+  color: inherit;
+}
+
+.workspace-ai-recite-cta.is-animated {
+  animation: workspace-ai-gold-pulse 2.4s ease-in-out infinite;
+}
+
+.workspace-ai-recite-cta.is-animated::before {
+  opacity: 1;
+  animation: workspace-ai-shimmer 2.6s ease-in-out infinite;
+}
+
+.workspace-ai-recite-cta.is-animated::after {
+  opacity: 1;
+  animation: workspace-ai-sparkle-field 3.2s ease-in-out infinite;
+}
+
+.workspace-ai-recite-cta.is-animated i {
+  animation: workspace-ai-icon-spark 1.8s ease-in-out infinite;
 }
 
 .workspace-ai-recite-cta:hover,
 .workspace-ai-recite-cta:focus-visible {
-  border-color: color-mix(in srgb, var(--ai-recite-gold) 78%, var(--border));
   outline: none;
+  border-color: color-mix(in srgb, var(--ai-recite-border) 62%, var(--ai-recite-spark) 38%) !important;
+  color: color-mix(in srgb, var(--ai-recite-text) 78%, #fff4dc 22%) !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--ai-recite-border) 32%, transparent),
+    0 4px 14px color-mix(in srgb, #000 22%, transparent),
+    0 0 20px var(--ai-recite-glow),
+    0 0 28px color-mix(in srgb, var(--ai-recite-spark) 35%, transparent);
 }
 
 .workspace-ai-recite-cta:focus-visible {
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--ai-recite-gold) 46%, transparent),
-    0 8px 20px color-mix(in srgb, var(--ai-recite-gold) 24%, transparent);
-}
-
-.workspace-ai-recite-cta--idle {
-  margin-top: 0.55rem;
-}
-
-@media (max-width: 419px) {
-  .workspace-ai-recite-cta {
-    gap: 0.55rem;
-    padding-inline: 0.55rem 0.6rem;
-  }
-
-  .workspace-ai-recite-cta__copy small {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .workspace-ai-recite-cta {
-    animation: workspace-ai-recite-glow 2.8s ease-in-out infinite;
-  }
-
-  .workspace-ai-recite-cta__shimmer {
-    animation: workspace-ai-recite-shimmer 3.4s ease-in-out infinite;
-  }
-
-  .workspace-ai-recite-cta__icon {
-    animation: workspace-ai-recite-spark 2.2s ease-in-out infinite;
-  }
+    0 0 0 2px color-mix(in srgb, var(--ai-recite-border) 42%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--ai-recite-border) 32%, transparent),
+    0 4px 14px color-mix(in srgb, #000 22%, transparent),
+    0 0 22px color-mix(in srgb, var(--ai-recite-glow) 140%, transparent),
+    0 0 30px color-mix(in srgb, var(--ai-recite-spark) 38%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .workspace-ai-recite-cta,
-  .workspace-ai-recite-cta__shimmer,
-  .workspace-ai-recite-cta__icon {
-    animation: none;
+  .workspace-ai-recite-cta.is-animated,
+  .workspace-ai-recite-cta.is-animated::before,
+  .workspace-ai-recite-cta.is-animated::after,
+  .workspace-ai-recite-cta.is-animated i {
+    animation: none !important;
+  }
+
+  .workspace-ai-recite-cta.is-animated::before,
+  .workspace-ai-recite-cta.is-animated::after {
+    opacity: 0;
   }
 }
 
-@keyframes workspace-ai-recite-glow {
+@keyframes workspace-ai-gold-pulse {
   0%, 100% {
     box-shadow:
-      0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
-      0 0 0 0 color-mix(in srgb, var(--ai-recite-gold) 0%, transparent),
-      0 6px 18px color-mix(in srgb, var(--ai-recite-gold) 18%, transparent);
+      inset 0 1px 0 color-mix(in srgb, var(--ai-recite-border) 22%, transparent),
+      0 2px 10px color-mix(in srgb, #000 18%, transparent),
+      0 0 14px var(--ai-recite-glow),
+      0 0 0 color-mix(in srgb, var(--ai-recite-spark) 0%, transparent);
   }
   50% {
     box-shadow:
-      0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
-      0 0 0 6px color-mix(in srgb, var(--ai-recite-gold) 18%, transparent),
-      0 10px 24px color-mix(in srgb, var(--ai-recite-gold) 28%, transparent);
+      inset 0 1px 0 color-mix(in srgb, var(--ai-recite-border) 34%, transparent),
+      0 4px 14px color-mix(in srgb, #000 22%, transparent),
+      0 0 22px color-mix(in srgb, var(--ai-recite-glow) 165%, transparent),
+      0 0 18px color-mix(in srgb, var(--ai-recite-spark) 42%, transparent);
   }
 }
 
-@keyframes workspace-ai-recite-shimmer {
-  0%, 28% { transform: translateX(-120%); }
-  58%, 100% { transform: translateX(130%); }
+@keyframes workspace-ai-shimmer {
+  0%, 18% {
+    transform: translateX(-115%) rotate(8deg);
+    opacity: 0;
+  }
+  28%, 52% {
+    opacity: 1;
+  }
+  68%, 100% {
+    transform: translateX(115%) rotate(8deg);
+    opacity: 0;
+  }
 }
 
-@keyframes workspace-ai-recite-spark {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  40% { transform: scale(1.08) rotate(-8deg); }
-  70% { transform: scale(1.02) rotate(6deg); }
+@keyframes workspace-ai-sparkle-field {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes workspace-ai-icon-spark {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--ai-recite-spark) 35%, transparent));
+  }
+  35% {
+    transform: scale(1.12) rotate(-8deg);
+    filter:
+      drop-shadow(0 0 6px color-mix(in srgb, var(--ai-recite-spark) 70%, transparent))
+      drop-shadow(0 0 10px color-mix(in srgb, var(--ai-recite-spark-alt) 55%, transparent));
+  }
+  70% {
+    transform: scale(1.04) rotate(6deg);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ai-recite-spark-alt) 60%, transparent));
+  }
+}
+
+[data-theme="light"] .workspace-ai-recite-cta {
+  --ai-recite-bg: #1a1512;
+  --ai-recite-border: #9a6738;
+  --ai-recite-text: #c49354;
+  --ai-recite-icon: #d4a574;
+  --ai-recite-glow: rgba(154, 103, 56, 0.26);
+  --ai-recite-spark: rgba(14, 165, 233, 0.5);
+  --ai-recite-spark-alt: rgba(168, 85, 247, 0.42);
+}
+
+[data-theme="sepia"] .workspace-ai-recite-cta {
+  --ai-recite-bg: #2f241c;
+  --ai-recite-border: #c89a58;
+  --ai-recite-text: #e0b878;
+  --ai-recite-icon: #ecc992;
+  --ai-recite-glow: rgba(200, 154, 88, 0.3);
+  --ai-recite-spark: rgba(217, 168, 96, 0.62);
+  --ai-recite-spark-alt: rgba(147, 197, 253, 0.38);
 }
 
 [data-theme="dark"] .workspace-ai-recite-cta {
-  --ai-recite-gold: #e6c36a;
-  --ai-recite-ink: #f4e3b8;
-  background:
-    linear-gradient(
-      118deg,
-      color-mix(in srgb, var(--ai-recite-gold) 28%, #3a2c16) 0%,
-      color-mix(in srgb, var(--workspace-card-surface, #2a2218) 78%, #e6c36a) 100%
-    );
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 8%, transparent) inset,
-    0 8px 22px color-mix(in srgb, var(--ai-recite-gold) 16%, transparent);
+  --ai-recite-bg: #080706;
+  --ai-recite-border: #d4a574;
+  --ai-recite-text: #efc18d;
+  --ai-recite-icon: #f5d4a8;
+  --ai-recite-glow: rgba(212, 165, 116, 0.34);
+  --ai-recite-spark: rgba(56, 189, 248, 0.62);
+  --ai-recite-spark-alt: rgba(232, 121, 249, 0.52);
 }
 
-[data-theme="dark"] .workspace-ai-recite-cta__action {
-  background: color-mix(in srgb, var(--ai-recite-gold) 88%, #fff);
-  color: #2b2112;
+/* Mobile-only session cluster layout for AI Recite + session controls. */
+@media (max-width: 767.98px) {
+  .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: stretch;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) .workspace-ai-recite-cta,
+  .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) .top-card-session-actions {
+    flex: 1 1 50%;
+    width: 50%;
+    max-width: 50%;
+    min-width: 0;
+  }
+
+  .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) .top-card-session-actions .session-primary-action,
+  .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) .top-card-session-actions .top-card-action-trigger {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .top-card-session-cluster.has-paired-actions:has(.workspace-ai-recite-cta) {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
+    gap: 0.4rem;
+    width: 100%;
+  }
+
+  .top-card-session-cluster.has-paired-actions:has(.workspace-ai-recite-cta) .top-card-session-actions {
+    order: 1;
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .top-card-session-cluster.has-paired-actions:has(.workspace-ai-recite-cta) .workspace-ai-recite-cta {
+    order: 2;
+    flex: 1 1 auto;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .workspace-shell-idle-actions__start.top-card-session-cluster:has(.workspace-ai-recite-cta),
+  .workspace-shell-idle-aside-cta.top-card-session-cluster:has(.workspace-ai-recite-cta) {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: stretch;
+    gap: 0.55rem;
+    width: 100%;
+  }
+
+  .workspace-shell-idle-actions__start.top-card-session-cluster:has(.workspace-ai-recite-cta) .workspace-ai-recite-cta,
+  .workspace-shell-idle-actions__start.top-card-session-cluster:has(.workspace-ai-recite-cta) .session-primary-action,
+  .workspace-shell-idle-aside-cta.top-card-session-cluster:has(.workspace-ai-recite-cta) .workspace-ai-recite-cta,
+  .workspace-shell-idle-aside-cta.top-card-session-cluster:has(.workspace-ai-recite-cta) .session-primary-action {
+    flex: 1 1 50%;
+    width: 50%;
+    max-width: 50%;
+    min-width: 0;
+  }
 }
 
 /* Post-session choice: desktop content-sized (like Start/End); mobile/tablet equal 2-col. */
@@ -62115,5 +62244,39 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   border: 0;
   background: transparent;
   color: #d4b896;
+}
+
+.workspace-recite-result .post-session-simple__header {
+  position: relative;
+  padding-inline-end: 3.25rem;
+}
+
+.workspace-recite-result .post-session-simple__close {
+  position: absolute;
+  top: 1rem;
+  inset-inline-end: 1rem;
+  margin: 0;
+}
+
+.workspace-recite-result .post-session-simple__audio-player {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
+.workspace-recite-result .post-session-simple__audio-review {
+  margin-top: 0.85rem;
+}
+
+.workspace-recite-result .post-session-simple__quran-focus--static {
+  cursor: default;
+  pointer-events: none;
+}
+
+.workspace-recite-result .post-session-simple__quran-focus--static .post-session-simple__focus-phrase-icon {
+  display: none;
+}
+
+.workspace-recite-result .post-session-simple__ai-details--open .post-session-simple__ai-details-body {
+  display: block;
 }
 

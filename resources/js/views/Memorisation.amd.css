@@ -2737,10 +2737,212 @@
 .amd-footer__error-actions {
   width: 100%;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.amd-recite-mode {
+  width: 100%;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.amd-tools-bar--full,
+.amd-overlay .amd-toolbar.amd-tools-bar.amd-tools-bar--full,
+.amd-modal .amd-toolbar.amd-tools-bar.amd-tools-bar--full,
+.amd-overlay .amd-modal--spacious .amd-toolbar--tools.amd-tools-bar.amd-tools-bar--full,
+.amd-modal--spacious .amd-toolbar--tools.amd-tools-bar.amd-tools-bar--full {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.45rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.amd-tools-bar__leading {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  gap: inherit;
+}
+
+.amd-recite-mode.amd-recite-mode--toolbar {
+  width: auto !important;
+  display: flex !important;
+  flex: 0 0 auto;
+  gap: 0;
+  margin-inline-start: auto;
+}
+
+.amd-recite-mode__segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+  padding: 0.14rem;
+  border-radius: 0.62rem;
+  border: 1px solid color-mix(in srgb, #a8a29e 20%, transparent);
+  background: color-mix(in srgb, #fff 70%, #f5f0e8);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 80%, transparent);
+}
+
+.amd-recite-mode__pill {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
+  width: 2.35rem;
+  min-width: 2.35rem;
+  height: 2.35rem;
+  min-height: 2.35rem;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0.48rem;
+  background: transparent;
+  color: #78716c;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.amd-recite-mode__pill i {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.amd-recite-mode__pill:hover:not(:disabled),
+.amd-recite-mode__pill:focus-visible {
+  background: color-mix(in srgb, #a8a29e 10%, transparent);
+  color: #44403c;
+}
+
+.amd-recite-mode__pill.is-selected {
+  background: color-mix(in srgb, #1e633f 12%, #fff);
+  color: #1e633f;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #1e633f 16%, transparent);
+}
+
+.amd-recite-mode__pill:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.amd-recite-mode__title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 88%, transparent);
+}
+
+.amd-recite-mode__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.amd-recite-mode__card {
+  display: grid;
+  gap: 0.28rem;
+  min-height: 4.35rem;
+  padding: 0.72rem 0.78rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, #d4c8b6 62%, transparent);
+  background: color-mix(in srgb, #fff 88%, #f7f3eb);
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.amd-recite-mode__card:hover:not(:disabled),
+.amd-recite-mode__card:focus-visible {
+  border-color: color-mix(in srgb, var(--accent, #8b5e3c) 42%, #d4c8b6);
+}
+
+.amd-recite-mode__card.is-selected {
+  border-color: color-mix(in srgb, var(--accent, #8b5e3c) 58%, #d4c8b6);
+  background: color-mix(in srgb, var(--accent, #8b5e3c) 8%, #fff);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #8b5e3c) 18%, transparent);
+}
+
+.amd-recite-mode__card:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.amd-recite-mode__card-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.amd-recite-mode__card-desc {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text-muted, #6b6258) 92%, transparent);
+}
+
+.amd-recite-blocked-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.55rem;
+  padding: 0.55rem 0.72rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, #c65d5d 28%, transparent);
+  background: color-mix(in srgb, #c65d5d 10%, #fff);
+  color: color-mix(in srgb, #8f2f2f 88%, #3c3530);
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.amd-footer__blocked-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  margin: 0 0 0.45rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, #8f2f2f 82%, #57534e);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.amd-footer__blocked-hint i {
+  font-size: 0.88rem;
+  color: color-mix(in srgb, #c65d5d 78%, #8f2f2f);
+}
+
+@media (max-width: 640px) {
+  .amd-recite-mode__cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.amd-start-wrap--footer .amd-record-btn--inline {
+  align-self: center;
 }
 
 .amd-footer-stop-btn,
@@ -4401,6 +4603,12 @@
   grid-template-columns: none !important;
 }
 
+.amd-toolbar--tools.amd-tools-bar.amd-tools-bar--full {
+  flex-wrap: nowrap !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
 .amd-tools-bar__icon-btn.amd-tool-btn,
 .amd-tools-bar .amd-tools-bar__icon-select.amd-tool-btn {
   flex: 0 0 auto !important;
@@ -4769,6 +4977,103 @@
   box-sizing: border-box !important;
 }
 
+.amd-overlay .amd-toolbar.amd-tools-bar.amd-tools-bar--full,
+.amd-modal .amd-toolbar.amd-tools-bar.amd-tools-bar--full {
+  flex-wrap: nowrap !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.amd-overlay .amd-tools-bar__leading,
+.amd-modal .amd-tools-bar__leading {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  gap: 0.45rem !important;
+}
+
+.amd-overlay .amd-recite-mode.amd-recite-mode--toolbar,
+.amd-modal .amd-recite-mode.amd-recite-mode--toolbar {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  margin-inline-start: auto !important;
+}
+
+.amd-overlay .amd-recite-mode__segmented,
+.amd-modal .amd-recite-mode__segmented {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.12rem !important;
+  padding: 0.14rem !important;
+  border-radius: 0.62rem !important;
+  border: 1px solid color-mix(in srgb, #a8a29e 20%, transparent) !important;
+  background: color-mix(in srgb, #fff 70%, #f5f0e8) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 80%, transparent) !important;
+}
+
+.amd-overlay .amd-recite-mode__pill,
+.amd-modal .amd-recite-mode__pill {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 2.35rem !important;
+  min-width: 2.35rem !important;
+  height: 2.35rem !important;
+  min-height: 2.35rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0.48rem !important;
+  background: transparent !important;
+  color: #78716c !important;
+  font: inherit !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease !important;
+}
+
+.amd-overlay .amd-recite-mode__pill i,
+.amd-modal .amd-recite-mode__pill i {
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  color: inherit !important;
+}
+
+.amd-overlay .amd-recite-mode__pill:hover:not(:disabled),
+.amd-modal .amd-recite-mode__pill:hover:not(:disabled),
+.amd-overlay .amd-recite-mode__pill:focus-visible,
+.amd-modal .amd-recite-mode__pill:focus-visible {
+  background: color-mix(in srgb, #a8a29e 10%, transparent) !important;
+  color: #44403c !important;
+}
+
+.amd-overlay .amd-recite-mode__pill.is-selected,
+.amd-modal .amd-recite-mode__pill.is-selected {
+  background: color-mix(in srgb, #1e633f 12%, #fff) !important;
+  color: #1e633f !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #1e633f 16%, transparent) !important;
+}
+
+.amd-overlay .amd-recite-mode__pill:disabled,
+.amd-modal .amd-recite-mode__pill:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+.amd-overlay .amd-recite-mode__pill:focus-visible,
+.amd-modal .amd-recite-mode__pill:focus-visible {
+  outline: 2px solid color-mix(in srgb, #1e633f 45%, transparent) !important;
+  outline-offset: 1px !important;
+}
+
 .amd-overlay .amd-toolbar.amd-tools-bar::-webkit-scrollbar,
 .amd-modal .amd-toolbar.amd-tools-bar::-webkit-scrollbar {
   display: none !important;
@@ -4948,11 +5253,50 @@
   color: #b8e6cf !important;
 }
 
+[data-theme="dark"] .amd-overlay .amd-recite-mode__segmented,
+[data-theme="dark"] .amd-modal .amd-recite-mode__segmented,
+.amd-overlay[data-theme="dark"] .amd-recite-mode__segmented {
+  border-color: rgba(245, 245, 244, 0.1) !important;
+  background: color-mix(in srgb, #1c1917 88%, #000) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme="dark"] .amd-overlay .amd-recite-mode__pill,
+[data-theme="dark"] .amd-modal .amd-recite-mode__pill,
+.amd-overlay[data-theme="dark"] .amd-recite-mode__pill {
+  color: #a8a29e !important;
+}
+
+[data-theme="dark"] .amd-overlay .amd-recite-mode__pill:hover:not(:disabled),
+[data-theme="dark"] .amd-modal .amd-recite-mode__pill:hover:not(:disabled),
+.amd-overlay[data-theme="dark"] .amd-recite-mode__pill:hover:not(:disabled) {
+  background: rgba(245, 245, 244, 0.06) !important;
+  color: #e7e5e4 !important;
+}
+
+[data-theme="dark"] .amd-overlay .amd-recite-mode__pill.is-selected,
+[data-theme="dark"] .amd-modal .amd-recite-mode__pill.is-selected,
+.amd-overlay[data-theme="dark"] .amd-recite-mode__pill.is-selected {
+  background: color-mix(in srgb, #6ec9a4 14%, #1c1917) !important;
+  color: #b8e6cf !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #6ec9a4 24%, transparent) !important;
+}
+
 @media (max-width: 640px) {
   .amd-overlay .amd-toolbar.amd-tools-bar,
   .amd-modal .amd-toolbar.amd-tools-bar {
     gap: 0.4rem !important;
     padding: 0.35rem 0.45rem !important;
+  }
+
+  .amd-overlay .amd-toolbar.amd-tools-bar.amd-tools-bar--full,
+  .amd-modal .amd-toolbar.amd-tools-bar.amd-tools-bar--full {
+    flex-wrap: nowrap !important;
+  }
+
+  .amd-overlay .amd-tools-bar__leading,
+  .amd-modal .amd-tools-bar__leading {
+    gap: 0.35rem !important;
   }
 
   .amd-overlay .amd-tools-bar__btn,
@@ -4969,6 +5313,19 @@
   .amd-modal .amd-tools-bar__btn {
     width: 2.15rem !important;
     min-width: 2.15rem !important;
+  }
+
+  .amd-overlay .amd-recite-mode__pill,
+  .amd-modal .amd-recite-mode__pill {
+    width: 2.15rem !important;
+    min-width: 2.15rem !important;
+    height: 2.15rem !important;
+    min-height: 2.15rem !important;
+  }
+
+  .amd-overlay .amd-recite-mode__pill i,
+  .amd-modal .amd-recite-mode__pill i {
+    font-size: 0.92rem !important;
   }
 
   .amd-overlay .amd-body--premium,

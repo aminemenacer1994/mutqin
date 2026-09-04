@@ -1,4 +1,5 @@
 import { computed, reactive, toRaw, toRefs, watch } from 'vue'
+import { slimSessionQueueItem } from '../session/slimSessionQueue.js'
 
 export const MUTQIN_STATE_KEY = 'mutqin_state'
 const MUTQIN_DEFAULT_OWNER = 'guest'
@@ -32,16 +33,15 @@ function queueRecordKey(item = {}) {
 }
 
 function normaliseQueueRecord(item = {}) {
-  const verse = item.verse || null
-  const phase = item.phase === 'Review' ? 'Retention' : (item.phase || 'Takrar')
+  const slim = slimSessionQueueItem(item) || {}
+  const phase = slim.phase === 'Review' ? 'Retention' : (slim.phase || 'Takrar')
   return {
-    ...item,
+    ...slim,
     phase,
-    ayahId: item.ayahId || verse?.key || null,
-    verse,
-    repeatCount: Math.max(1, Number(item.repeatCount || 1)),
-    totalRepeats: Math.max(1, Number(item.totalRepeats || 1)),
-    prompt: item.prompt || ''
+    ayahId: slim.ayahId || null,
+    repeatCount: Math.max(1, Number(slim.repeatCount || 1)),
+    totalRepeats: Math.max(1, Number(slim.totalRepeats || 1)),
+    prompt: slim.prompt || ''
   }
 }
 

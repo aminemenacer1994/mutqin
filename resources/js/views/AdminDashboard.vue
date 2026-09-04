@@ -165,6 +165,16 @@
               </div>
               <div class="admin-toolbar__controls">
                 <select
+                  v-model="filters.account"
+                  class="admin-toolbar__select"
+                  :aria-label="t('admin.filter_account')"
+                  @change="onFilterChange"
+                >
+                  <option value="all">{{ t('admin.filter_account_all') }}</option>
+                  <option value="active">{{ t('admin.filter_account_active') }}</option>
+                  <option value="deleted">{{ t('admin.filter_account_deleted') }}</option>
+                </select>
+                <select
                   v-model="filters.activity"
                   class="admin-toolbar__select admin-toolbar__select--active"
                   :aria-label="t('admin.filter_last_active')"
@@ -263,6 +273,7 @@
                 :class="{
                   'is-selected': selectedUserId === row.id,
                   'is-expanded': isCardExpanded(row.id),
+                  'is-deleted': isDeleted(row),
                 }"
               >
                 <div class="admin-user-card__row">
@@ -284,8 +295,11 @@
                   >
                     <div class="admin-user-card__top">
                       <div class="admin-user-card__who">
-                        <strong :title="row.name || t('admin.unnamed')">{{ row.name || t('admin.unnamed') }}</strong>
-                        <span class="admin-user-card__email" :title="row.email">{{ row.email }}</span>
+                        <div class="admin-table__who-line">
+                          <strong :title="row.name || t('admin.unnamed')">{{ row.name || t('admin.unnamed') }}</strong>
+                          <span v-if="isDeleted(row)" class="admin-deleted-badge">{{ t('admin.status_deleted') }}</span>
+                        </div>
+                        <span class="admin-user-card__email" :class="{ 'is-deleted': isDeleted(row) }" :title="row.email">{{ row.email }}</span>
                       </div>
                       <i
                         class="bi bi-chevron-down admin-user-card__chevron"
@@ -308,12 +322,14 @@
                       >
                         {{ lastActivePill(row) }}
                       </span>
-                      <i
-                        class="admin-status-dot"
+                      <span
+                        class="admin-status-chip"
                         :data-status="activityStatus(row)"
                         :title="activityStatusLabel(row)"
-                        :aria-label="activityStatusLabel(row)"
-                      ></i>
+                      >
+                        <i class="admin-status-dot" :data-status="activityStatus(row)" aria-hidden="true"></i>
+                        <span class="admin-status-chip__label">{{ statusChipLabel(row) }}</span>
+                      </span>
                     </div>
                   </button>
                 </div>
@@ -388,9 +404,7 @@
                           {{ t('admin.col_active') }}
                         </button>
                       </th>
-                      <th class="admin-table__status" :title="t('admin.col_status')">
-                        <span class="visually-hidden">{{ t('admin.col_status') }}</span>
-                      </th>
+                      <th class="admin-table__status">{{ t('admin.col_status') }}</th>
                       <th class="admin-table__actions"></th>
                     </tr>
                   </thead>
@@ -398,7 +412,7 @@
                     <tr
                       v-for="row in users"
                       :key="row.id"
-                      :class="{ 'is-selected': selectedUserId === row.id, 'has-menu-open': rowMenuId === row.id }"
+                      :class="{ 'is-selected': selectedUserId === row.id, 'has-menu-open': rowMenuId === row.id, 'is-deleted': isDeleted(row) }"
                       tabindex="0"
                       @click="selectUser(row.id)"
                       @keydown.enter.prevent="selectUser(row.id)"
@@ -412,8 +426,11 @@
                       </td>
                       <td class="admin-table__learner">
                         <div class="admin-table__who">
-                          <strong :title="row.name || t('admin.unnamed')">{{ row.name || t('admin.unnamed') }}</strong>
-                          <span class="admin-table__email" :title="row.email">{{ row.email }}</span>
+                          <div class="admin-table__who-line">
+                            <strong :title="row.name || t('admin.unnamed')">{{ row.name || t('admin.unnamed') }}</strong>
+                            <span v-if="isDeleted(row)" class="admin-deleted-badge">{{ t('admin.status_deleted') }}</span>
+                          </div>
+                          <span class="admin-table__email" :class="{ 'is-deleted': isDeleted(row) }" :title="row.email">{{ row.email }}</span>
                         </div>
                       </td>
                       <td class="admin-num admin-num--memorised" :class="{ 'is-empty': !Number(row.memorised_ayahs) }">
@@ -431,12 +448,14 @@
                         </span>
                       </td>
                       <td class="admin-table__status">
-                        <i
-                          class="admin-status-dot"
+                        <span
+                          class="admin-status-chip"
                           :data-status="activityStatus(row)"
                           :title="activityStatusLabel(row)"
-                          :aria-label="activityStatusLabel(row)"
-                        ></i>
+                        >
+                          <i class="admin-status-dot" :data-status="activityStatus(row)" aria-hidden="true"></i>
+                          <span class="admin-status-chip__label">{{ statusChipLabel(row) }}</span>
+                        </span>
                       </td>
                         <td class="admin-table__actions" @click.stop>
                           <div class="admin-row-menu" :class="{ 'is-open': rowMenuId === row.id }">
@@ -760,12 +779,18 @@
                   </label>
                 </div>
                 <div class="admin-drawer__meta">
-                  <i
-                    class="admin-status-dot"
+                  <span
+                    class="admin-status-chip"
                     :data-status="activityStatus(detail?.user || selectedListRow || {})"
                     :title="activityStatusLabel(detail?.user || selectedListRow || {})"
-                    :aria-label="activityStatusLabel(detail?.user || selectedListRow || {})"
-                  ></i>
+                  >
+                    <i
+                      class="admin-status-dot"
+                      :data-status="activityStatus(detail?.user || selectedListRow || {})"
+                      aria-hidden="true"
+                    ></i>
+                    <span class="admin-status-chip__label">{{ statusChipLabel(detail?.user || selectedListRow || {}) }}</span>
+                  </span>
                   <span class="admin-drawer__status-label">{{ activityStatusLabel(detail?.user || selectedListRow || {}) }}</span>
                   <button
                     v-if="editFormDirty"
@@ -802,23 +827,35 @@
                 </div>
                 <div class="admin-drawer__quick admin-drawer__quick--danger" role="group" :aria-label="t('admin.danger_zone')">
                   <button
+                    v-if="isDeleted(detail.user || selectedListRow)"
                     type="button"
-                    class="admin-quick-btn admin-quick-btn--danger"
-                    :disabled="isSelfSelected || (detail.user || selectedListRow)?.subscription_status === 'canceled'"
-                    @click="askDeactivate(detail.user || selectedListRow)"
+                    class="admin-quick-btn"
+                    :disabled="restoringUser"
+                    @click="confirmRestoreUser(detail.user || selectedListRow)"
                   >
-                    <i class="bi bi-pause-circle" aria-hidden="true"></i>
-                    <span>{{ t('admin.action_deactivate') }}</span>
+                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    <span>{{ t('admin.action_restore') }}</span>
                   </button>
-                  <button
-                    type="button"
-                    class="admin-quick-btn admin-quick-btn--danger"
-                    :disabled="deletingUser || isSelfSelected"
-                    @click="openDeleteModal"
-                  >
-                    <i class="bi bi-trash" aria-hidden="true"></i>
-                    <span>{{ t('admin.delete_account') }}</span>
-                  </button>
+                  <template v-else>
+                    <button
+                      type="button"
+                      class="admin-quick-btn admin-quick-btn--danger"
+                      :disabled="isSelfSelected || (detail.user || selectedListRow)?.subscription_status === 'canceled'"
+                      @click="askDeactivate(detail.user || selectedListRow)"
+                    >
+                      <i class="bi bi-pause-circle" aria-hidden="true"></i>
+                      <span>{{ t('admin.action_deactivate') }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="admin-quick-btn admin-quick-btn--danger"
+                      :disabled="deletingUser || isSelfSelected"
+                      @click="openDeleteModal"
+                    >
+                      <i class="bi bi-trash" aria-hidden="true"></i>
+                      <span>{{ t('admin.delete_account') }}</span>
+                    </button>
+                  </template>
                 </div>
               </section>
 
@@ -1256,6 +1293,15 @@
           {{ t('admin.action_send_email') }}
         </a>
         <button
+          v-if="isDeleted(rowMenuRow)"
+          type="button"
+          role="menuitem"
+          @click="confirmRestoreUser(rowMenuRow)"
+        >
+          {{ t('admin.action_restore') }}
+        </button>
+        <button
+          v-else
           type="button"
           role="menuitem"
           class="is-danger"
@@ -1341,7 +1387,7 @@ export default {
       usersError: false,
       usersRequestId: 0,
       searchTimer: null,
-      filters: { q: '', activity: '', progress: '' },
+      filters: { q: '', activity: '', progress: '', account: 'all' },
       sortKey: 'created',
       sortDir: 'desc',
       directoryTab: 'learners',
@@ -1382,6 +1428,7 @@ export default {
       formSaving: false,
       formError: '',
       deletingUser: false,
+      restoringUser: false,
       drawerOpen: false,
       createOpen: false,
       createForm: emptyCreate(),
@@ -1470,6 +1517,7 @@ export default {
     activeFilterCount() {
       let count = 0
       if (this.filters.q) count += 1
+      if (this.filters.account && this.filters.account !== 'all') count += 1
       if (this.filters.activity) count += 1
       if (this.filters.progress) count += 1
       if (this.sortKey !== 'created' || this.sortDir !== 'desc') count += 1
@@ -1918,7 +1966,7 @@ export default {
       this.reloadUsers()
     },
     clearFilters() {
-      this.filters = { q: '', activity: '', progress: '' }
+      this.filters = { q: '', activity: '', progress: '', account: 'all' }
       this.sortKey = 'created'
       this.sortDir = 'desc'
       this.usersPage = 1
@@ -1952,7 +2000,11 @@ export default {
       if (n < 0) return 'down'
       return 'flat'
     },
+    isDeleted(row) {
+      return !!(row && (row.is_deleted || row.deleted_at))
+    },
     activityStatus(row) {
+      if (this.isDeleted(row)) return 'deleted'
       const at = row?.last_activity_at
       if (!at) return 'inactive'
       const date = new Date(at)
@@ -1962,7 +2014,15 @@ export default {
       if (days <= 30) return 'warm'
       return 'inactive'
     },
+    statusChipLabel(row) {
+      const status = this.activityStatus(row)
+      if (status === 'deleted') return this.t('admin.status_deleted')
+      if (status === 'hot') return this.t('admin.status_chip_active')
+      if (status === 'warm') return this.t('admin.status_chip_recent')
+      return this.t('admin.status_chip_inactive')
+    },
     activityStatusLabel(row) {
+      if (this.isDeleted(row)) return this.t('admin.status_deleted_help')
       const at = row?.last_activity_at
       if (!at) return this.t('admin.status_never_sessioned')
       const date = new Date(at)
@@ -2099,6 +2159,7 @@ export default {
           q: this.filters.q,
           activity: this.filters.activity,
           progress: this.filters.progress,
+          account: this.filters.account,
           sort: this.sortKey,
           dir: this.sortDir,
         })
@@ -2316,6 +2377,7 @@ export default {
           q: this.filters.q,
           activity: this.filters.activity,
           progress: this.filters.progress,
+          account: this.filters.account,
           sort: this.sortKey,
           dir: this.sortDir,
         })
@@ -2575,6 +2637,25 @@ export default {
         this.formError = this.formErrorFrom(error)
       } finally {
         this.deletingUser = false
+      }
+    },
+    async confirmRestoreUser(row) {
+      const id = Number(row?.id || this.selectedUserId || 0)
+      if (!id) return
+      this.rowMenuId = null
+      this.restoringUser = true
+      try {
+        await adminApi.restoreUser(id)
+        delete this.detailCache[id]
+        await this.reloadUsers()
+        if (this.selectedUserId === id) {
+          await this.selectUser(id)
+        }
+        this.showToast(this.t('admin.toast_restored'))
+      } catch (error) {
+        this.showToast(this.formErrorFrom(error) || this.t('admin.drawer_load_error'))
+      } finally {
+        this.restoringUser = false
       }
     },
     async deleteNote(row) {

@@ -12,15 +12,39 @@ use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+
+    /**
+     * Free unique login/billing keys so a soft-deleted mailbox can register again.
+     */
+    public function releaseUniqueIdentifiers(): void
+    {
+        if (str_contains((string) $this->email, '@deleted.invalid')) {
+            return;
+        }
+
+        $this->forceFill([
+            'name' => 'Deleted user',
+            'email' => sprintf('deleted+%d-%s@deleted.invalid', $this->id, Str::lower(Str::random(10))),
+            'pending_email' => null,
+            'google_id' => null,
+            'avatar' => null,
+            'stripe_customer_id' => null,
+            'stripe_subscription_id' => null,
+            'remember_token' => null,
+            'is_admin' => false,
+        ])->saveQuietly();
+    }
 
     /**
      * The attributes that are mass assignable.

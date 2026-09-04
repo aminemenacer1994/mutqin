@@ -27,6 +27,7 @@ export const UNCERTAIN_STATUSES = Object.freeze([
 ])
 
 export const MISTAKE_CUE_MIN_CONFIDENCE = 0.28
+export const STOP_ON_MISTAKE_CUE_MIN_CONFIDENCE = 0.12
 export const MISTAKE_CUE_DEBOUNCE_MS = 180
 export const MISTAKE_CUE_PEAK_GAIN = 0.14
 export const MISTAKE_VISUAL_MS = 900
@@ -76,6 +77,7 @@ export function shouldPlayMistakeCue({
   muted = false,
   alreadySignalled = false,
   interim = false,
+  minConfidence = MISTAKE_CUE_MIN_CONFIDENCE,
 } = {}) {
   if (muted) return { play: false, reason: 'muted' }
   if (reviewing) return { play: false, reason: 'reviewing' }
@@ -90,7 +92,8 @@ export function shouldPlayMistakeCue({
     // (partial itself never cues; the upgrade to incorrect may cue.)
   }
   if (isUncertainWordStatus(nextStatus)) return { play: false, reason: 'uncertain' }
-  if (confidence != null && Number.isFinite(Number(confidence)) && Number(confidence) < MISTAKE_CUE_MIN_CONFIDENCE) {
+  const floor = Number.isFinite(Number(minConfidence)) ? Number(minConfidence) : MISTAKE_CUE_MIN_CONFIDENCE
+  if (confidence != null && Number.isFinite(Number(confidence)) && Number(confidence) < floor) {
     return { play: false, reason: 'low_confidence' }
   }
   return { play: true, reason: 'confirmed_mistake' }
@@ -260,6 +263,9 @@ export function createMistakeFeedbackController(options = {}) {
       muted: !enabled,
       alreadySignalled: hasSignalled(wordIndex),
       interim,
+      minConfidence: mode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
+        ? STOP_ON_MISTAKE_CUE_MIN_CONFIDENCE
+        : MISTAKE_CUE_MIN_CONFIDENCE,
     })
     if (!gate.play) {
       return { played: false, visual: false, shouldStop: false, reason: gate.reason }

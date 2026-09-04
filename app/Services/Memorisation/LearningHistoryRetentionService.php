@@ -5,6 +5,7 @@ namespace App\Services\Memorisation;
 use App\Models\LearningHistoryAuditLog;
 use App\Models\MemorisationAssessment;
 use App\Models\MemorisationAssessmentWord;
+use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationSyncState;
 use App\Models\User;
 use App\Support\AudioPrivacy;
@@ -330,23 +331,45 @@ class LearningHistoryRetentionService
     }
 
     /**
-     * Account deletion path: scrub optional media, audit, then hard-delete the user
-     * (FK cascades remove owned learning rows).
+     * Account deletion path: scrub media, hide structured history, then soft-delete
+     * the user so the row remains recoverable without blocking re-registration.
      */
     public function deleteUserAccount(User $user, ?User $actor = null): void
     {
-        $this->purgeOptionalRecordings($user, $actor);
-        $this->audit($actor, $user, 'delete_user_account', 'user', $user->id, [
-            'mode' => 'hard_delete_with_cascade',
-        ]);
+        DB::transaction(function () use ($user, $actor) {
+            $this->purgeOptionalRecordings($user, $actor);
+
+            MemorisationAssessment::query()
+                ->where('user_id', $user->id)
+                ->delete();
+            MemorisationPracticePlan::query()
+                ->where('user_id', $user->id)
+                ->delete();
+
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+
+            $isSelfDelete = $actor === null || (int) $actor->id === (int) $user->id;
+            if ($isSelfDelete) {
+                $user->releaseUniqueIdentifiers();
+            }
+
+            $this->audit($actor, $user, 'delete_user_account', 'user', $user->id, [
+                'mode' => 'soft_delete',
+                'anonymised' => $isSelfDelete,
+            ]);
+
+            $user->delete();
+        });
 
         // Avoid logging emails or notes — only the numeric id is retained in audit.
         Log::info('Learning history account deletion processed', [
             'subject_user_id' => $user->id,
             'actor_user_id' => $actor?->id,
         ]);
-
-        $user->delete();
     }
 
     /**

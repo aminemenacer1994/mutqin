@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Support\GoogleOAuthRedirect;
 use App\Support\PublicAppUrl;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
@@ -118,7 +119,7 @@ class GoogleOAuthRedirectTest extends TestCase
             'REMOTE_ADDR' => '10.0.0.1',
         ]);
 
-        app(\Illuminate\Contracts\Http\Kernel::class)->handle($request);
+        app(Kernel::class)->handle($request);
 
         $this->assertTrue($request->isSecure());
         $this->assertSame('https', $request->getScheme());

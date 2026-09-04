@@ -87,6 +87,26 @@ const learningSource = readFileSync(join(root, 'resources/js/scripts/api/learnin
   assert.equal('audioRecording' in payload.metadata, false)
 }
 
+{
+  const payload = buildCheckpointPayload({
+    sessionId: 8,
+    surahNumber: 2,
+    ayahNumber: 1,
+    currentStep: 0,
+    active: true,
+    sessionState: {
+      queue: [{
+        ayahId: '2:1',
+        phase: 'Cumulative',
+        verse: { key: '2:1', arabic: 'الم', words: [{ ar: 'الم' }], audio: 'https://example.test/a.mp3' },
+      }],
+    },
+    nowIso: '2026-09-04T12:00:00.000Z',
+  })
+  assert.equal(payload.metadata.queue[0].ayahId, '2:1')
+  assert.equal(payload.metadata.queue[0].verse, undefined)
+}
+
 // --- shouldAutosave ---
 {
   assert.equal(shouldAutosave({
