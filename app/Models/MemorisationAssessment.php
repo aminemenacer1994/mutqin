@@ -20,6 +20,8 @@ class MemorisationAssessment extends Model
 
     public const STATUS_FAILED = 'failed';
 
+    public const TYPE_DASHBOARD_AI_RECITE = 'dashboard_ai_recite';
+
     protected $fillable = [
         'user_id',
         'user_session_id',

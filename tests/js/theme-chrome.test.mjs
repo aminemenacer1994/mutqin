@@ -91,6 +91,11 @@ assert.match(
   memorisationCss,
   /html\[data-theme="dark"\] body\.memorisation-page nav\.navbar\.app-navbar[\s\S]*?var\(--bg/,
 )
+assert.match(appBlade, /\.app-navbar \.navbar-toggler \{[\s\S]*?appearance:\s*none/)
+assert.match(appBlade, /\.app-navbar \.navbar-toggler \{[\s\S]*?background:\s*transparent/)
+assert.doesNotMatch(appBlade, /\.navbar-toggler \{[\s\S]*?isolation:\s*isolate/)
+assert.doesNotMatch(appBlade, /html\[data-theme="dark"\] \.app-navbar,\s*\[data-theme="dark"\] \.app-navbar \{\s*background:\s*#000000/)
+assert.doesNotMatch(appScss, /--bs-offcanvas-bg:\s*#000000/)
 
 assert.match(
   appBlade,
@@ -100,7 +105,6 @@ assert.match(
   appBlade,
   /\.profile-choice\.is-selected[\s\S]*?color:\s*var\(--text-on-accent\)/,
 )
-assert.match(appBlade, /\.profile-security\b/)
 assert.doesNotMatch(appBlade, /\.profile-choice-grid--pair/)
 assert.doesNotMatch(
   appBlade,

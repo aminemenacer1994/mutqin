@@ -156,7 +156,10 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    // Empty string must be null: a blank Domain attribute breaks host-only cookies
+    // on Laravel Cloud custom domains. Do not set SESSION_DOMAIN=.mutqin.ai unless
+    // you intentionally share auth across subdomains.
+    'domain' => env('SESSION_DOMAIN') ?: null,
 
     /*
     |--------------------------------------------------------------------------

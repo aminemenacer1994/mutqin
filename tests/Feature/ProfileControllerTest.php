@@ -258,26 +258,25 @@ class ProfileControllerTest extends TestCase
             ->assertOk()
             ->assertSee(__('profile.personal_details'), false)
             ->assertDontSee(__('profile.memorisation_prefs'), false)
-            ->assertSee(__('profile.app_preferences'), false)
+            ->assertDontSee(__('profile.app_preferences'), false)
             ->assertDontSee(__('profile.ai_audio'), false)
             ->assertDontSee('data-consent-choice', false)
-            ->assertSee(__('profile.account_security'), false)
-            ->assertSee(__('profile.email_verified'), false)
-            ->assertSee(__('profile.theme_dark'), false)
-            ->assertSee(__('ui.french'), false)
-            ->assertSee('data-locale-choice="en"', false)
-            ->assertSee('data-locale-choice="fr"', false)
-            ->assertSee('data-locale-choice="ar"', false)
-            ->assertDontSee('data-locale-choice="id"', false)
-            ->assertDontSee('data-locale-choice="tr"', false)
-            ->assertDontSee('data-locale-choice="es"', false)
+            ->assertDontSee(__('profile.account_security'), false)
+            ->assertDontSee(__('profile.current_plan'), false)
+            ->assertDontSee(__('profile.upgrade_plan'), false)
+            ->assertSee(__('profile.change_password'), false)
+            ->assertSee('id="currentPassword"', false)
+            ->assertSee(__('profile.delete_account'), false)
+            ->assertDontSee('data-locale-choice="en"', false)
+            ->assertDontSee('id="app-preferences"', false)
+            ->assertDontSee('id="danger-zone"', false)
             ->assertDontSee('cus_hidden_internal', false)
             ->assertDontSee('google-hidden-id', false)
             ->assertDontSee('is_admin', false)
             ->assertDontSee('id="subscription"', false);
     }
 
-    public function test_profile_security_section_is_compact_and_hides_ai_recitation_checks(): void
+    public function test_profile_hides_security_plan_and_ai_recitation_checks(): void
     {
         $user = User::factory()->create([
             'ai_audio_consent_status' => 'accepted',
@@ -286,7 +285,9 @@ class ProfileControllerTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.show'))
             ->assertOk()
-            ->assertSee('profile-security', false)
+            ->assertDontSee(__('profile.account_security'), false)
+            ->assertDontSee(__('profile.current_plan'), false)
+            ->assertDontSee('id="settings"', false)
             ->assertSee('mutqin:app-mounted', false)
             ->assertDontSee('profile-choice-grid--pair', false)
             ->assertDontSee('data-consent-block', false)
@@ -296,7 +297,7 @@ class ProfileControllerTest extends TestCase
             ->assertDontSee(__('profile.ai_audio_decline'), false);
     }
 
-    public function test_unverified_profile_shows_status_and_app_preferences(): void
+    public function test_unverified_profile_shows_status_and_name_email(): void
     {
         $this->requireEmailVerification();
 
@@ -308,7 +309,8 @@ class ProfileControllerTest extends TestCase
             ->get(route('profile.show'))
             ->assertOk()
             ->assertSee(__('profile.email_unverified'), false)
-            ->assertSee(__('profile.app_preferences'), false)
+            ->assertSee(__('profile.personal_details'), false)
+            ->assertDontSee(__('profile.app_preferences'), false)
             ->assertDontSee(__('profile.ai_audio_not_set'), false)
             ->assertSee(__('profile.resend_verification'), false)
             ->assertSee('profile-badge--unverified', false);
@@ -376,10 +378,10 @@ class ProfileControllerTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.show'))
             ->assertOk()
-            ->assertSee(__('profile.kicker_admin'), false)
-            ->assertSee(__('profile.org_plan'), false)
-            ->assertSee(__('profile.open_admin_console'), false)
-            ->assertSee(__('profile.connected_with_google', ['email' => $user->email]), false)
+            ->assertSee(__('profile.title'), false)
+            ->assertDontSee(__('profile.org_plan'), false)
+            ->assertDontSee(__('profile.open_admin_console'), false)
+            ->assertDontSee(__('profile.connected_with_google', ['email' => $user->email]), false)
             ->assertDontSee(__('profile.danger_zone'), false)
             ->assertDontSee(__('profile.upgrade_plan'), false)
             ->assertDontSee('Log out of all devices', false)

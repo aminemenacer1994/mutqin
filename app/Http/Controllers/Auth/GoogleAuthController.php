@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AdminDashboardService;
 use App\Services\Auth\GoogleSignInService;
 use App\Support\AuthRedirect;
+use App\Support\GoogleOAuthRedirect;
 use App\Support\Theme;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -78,7 +80,7 @@ class GoogleAuthController extends Controller
         $linkingFromProfile = (bool) request()->session()->pull('google_link_intent');
 
         $user->touchLastLogin();
-        \App\Services\AdminDashboardService::invalidateCaches();
+        AdminDashboardService::invalidateCaches();
 
         Auth::login($user, true);
         request()->session()->regenerate();
@@ -181,33 +183,6 @@ class GoogleAuthController extends Controller
 
     private function googleRedirectUrl(): string
     {
-        $configured = trim((string) (
-            $this->runtimeEnv('GOOGLE_REDIRECT_URI')
-            ?: config('services.google.redirect', '')
-        ));
-
-        if ($configured !== '' && ! str_contains($configured, '${')) {
-            if ($requestHost = request()?->getHost()) {
-                $configuredHost = parse_url($configured, PHP_URL_HOST);
-                // Browser host must match redirect host exactly (localhost vs 127.0.0.1,
-                // or the request host vs APP_URL when they differ during domain migration).
-                if (is_string($configuredHost) && strcasecmp($configuredHost, $requestHost) !== 0) {
-                    return $this->callbackUrlForRequest();
-                }
-            }
-
-            return $configured;
-        }
-
-        if (request()?->getHttpHost()) {
-            return $this->callbackUrlForRequest();
-        }
-
-        return route('auth.google.callback');
-    }
-
-    private function callbackUrlForRequest(): string
-    {
-        return rtrim((string) request()->getSchemeAndHttpHost(), '/').'/auth/google/callback';
+        return GoogleOAuthRedirect::uri(request());
     }
 }

@@ -230,6 +230,28 @@ export const learningApi = {
     const { data } = await http.get('/ai-recite-attempts')
     return Array.isArray(data?.attempts) ? data.attempts : []
   },
+  async getDashboardAiReciteStats() {
+    const { data } = await http.get('/ai-recite-attempts/stats')
+    return data?.stats && typeof data.stats === 'object' ? data.stats : null
+  },
+  async markAiReciteAttemptPeek(attemptId) {
+    const id = Number(attemptId || 0)
+    if (id <= 0) throw new Error('attempt_id required')
+    const { data } = await http.patch(`/ai-recite-attempts/${id}/peek`)
+    return data?.attempt || data
+  },
+  async getSessionAnalysis(sessionId) {
+    const id = Number(sessionId || 0)
+    if (id <= 0) throw new Error('session_id required')
+    const { data } = await http.get(`/sessions/${id}/analysis`)
+    return data
+  },
+  async getAiReciteAttemptAnalysis(attemptId) {
+    const id = Number(attemptId || 0)
+    if (id <= 0) throw new Error('attempt_id required')
+    const { data } = await http.get(`/ai-recite-attempts/${id}`)
+    return data
+  },
   async saveSession(payload) {
     const { data } = await http.post('/session', payload)
     return data

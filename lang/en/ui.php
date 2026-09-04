@@ -45,6 +45,7 @@ return [
     'nav_dashboard_sub' => 'Your memorisation overview',
     'nav_admin_dashboard_sub' => 'Platform overview',
     'nav_about_sub' => 'What Mutqin is',
+    'nav_settings_sub' => 'Account, reading, and practice preferences',
     'auth_login_kicker' => 'Assalamu alaikum',
     'auth_login_arabic' => 'ٱلسَّلَامُ عَلَيْكُمْ',
     'auth_login_heading' => 'Assalamu alaikum',

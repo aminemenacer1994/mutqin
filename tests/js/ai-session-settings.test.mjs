@@ -128,7 +128,6 @@ class MemoryStorage {
 // Workspace wiring uses persisted AI session settings
 {
   const js = readFileSync(new URL('../../resources/js/views/Memorisation.js', import.meta.url), 'utf8')
-  const vue = readFileSync(new URL('../../resources/js/views/Memorisation.vue', import.meta.url), 'utf8')
   assert.match(js, /hydrateAiSessionSettings\(/)
   assert.match(js, /persistAiSessionSettingsPatch\(/)
   assert.match(js, /shouldApplyAmdHidePercentImmediately\(/)
@@ -136,9 +135,6 @@ class MemoryStorage {
   assert.doesNotMatch(js, /readStoredDifficultyPercent\(\)/)
   assert.doesNotMatch(js, /storeDifficultyPercent\(/)
   assert.doesNotMatch(js, /persistAiRecallModeToServer/)
-  assert.match(vue, /sessionSetup\.aiRecite\.title/)
-  assert.match(vue, /sessionSetup\.amd\.title/)
-  assert.match(vue, /setAmdHidePercentFromSettings/)
 }
 
 assert.deepEqual(DEFAULT_AI_SESSION_SETTINGS.amd.hide_percent, 100)

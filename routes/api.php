@@ -2,9 +2,9 @@
 
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\FeedbackController as AdminFeedbackController;
-use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\ClientErrorController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
 use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
@@ -86,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');
         Route::get('/session/current', [SessionController::class, 'current'])->name('api.session.current');
         Route::get('/sessions/history', [SessionController::class, 'history'])->name('api.sessions.history');
+        Route::get('/sessions/{session}/analysis', [SessionController::class, 'analysis'])
+            ->whereNumber('session')
+            ->name('api.sessions.analysis');
         Route::post('/session', [SessionController::class, 'store'])->middleware('throttle:60,1')->name('api.session.store');
         Route::post('/session/start', [SessionController::class, 'start'])->middleware('throttle:60,1')->name('api.session.start');
         Route::post('/session/pause', [SessionController::class, 'pause'])->middleware('throttle:60,1')->name('api.session.pause');
@@ -93,6 +96,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/session/end', [SessionController::class, 'end'])->middleware('throttle:60,1')->name('api.session.end');
 
         Route::get('/ai-recite-attempts', [AiReciteAttemptController::class, 'index'])->name('api.ai-recite-attempts.index');
+        Route::get('/ai-recite-attempts/stats', [AiReciteAttemptController::class, 'stats'])
+            ->name('api.ai-recite-attempts.stats');
+        Route::get('/ai-recite-attempts/{attempt}', [AiReciteAttemptController::class, 'show'])
+            ->whereNumber('attempt')
+            ->name('api.ai-recite-attempts.show');
+        Route::patch('/ai-recite-attempts/{attempt}/peek', [AiReciteAttemptController::class, 'markPeek'])
+            ->whereNumber('attempt')
+            ->name('api.ai-recite-attempts.peek');
 
         Route::get('/continue', [ContinueController::class, 'show'])->name('api.continue.show');
         Route::post('/continue', [ContinueController::class, 'store'])->name('api.continue.store');

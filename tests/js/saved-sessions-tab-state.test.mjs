@@ -60,7 +60,7 @@ const vueSource = readFileSync(new URL('../../resources/js/views/Memorisation.vu
   assert.match(source, /focusSavedSessionSectionForSession\s*\(/)
   assert.match(source, /ensureSavedSectionVisible\s*\(/)
   assert.match(source, /syncSavedSectionOpenState\s*\(/)
-  assert.match(source, /if \(this\.tab === 'saved'\) this\.focusSavedSessionSectionForSession/)
+  assert.match(source, /if \((?:!silent && )?this\.tab === 'saved'\) this\.focusSavedSessionSectionForSession/)
 }
 
 // uiState tab wins over centralSession on boot (avoid stale overwrite).

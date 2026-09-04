@@ -79,7 +79,13 @@ assertMatch(
   /@media \(max-width:\s*720px\)[\s\S]*?\.amd-overlay\s*\{[\s\S]*?padding:/
 )
 
-// Close behaviour: Escape, cancel emit, focus restore + trap
+// Close behaviour: intentional only — Escape, X/Done emit cancel. Backdrop must not dismiss.
+assert.doesNotMatch(
+  vue,
+  /@click\.self(?:=|"onCancel"|='onCancel')/,
+  'backdrop / outside click must not close the analysis modal'
+)
+assertMatch('backdrop click is consumed without dismiss', vue, /@click\.self\.prevent\.stop/)
 assertMatch('escape closes via overlay keydown handler', vue, /onOverlayKeydown/)
 assertMatch('escape key triggers cancel', vue, /event\.key === 'Escape'[\s\S]*?onCancel\(/)
 assertMatch('cancel emits cancel', vue, /onCancel\(\)\s*\{[\s\S]*?\$emit\('cancel'\)/)

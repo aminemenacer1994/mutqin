@@ -44,6 +44,7 @@ return [
     'nav_dashboard_sub' => 'نظرة على حفظك',
     'nav_admin_dashboard_sub' => 'نظرة على المنصة',
     'nav_about_sub' => 'ما هو متقن',
+    'nav_settings_sub' => 'الحساب والقراءة وتفضيلات الممارسة',
     'auth_login_kicker' => 'السلام عليكم',
     'auth_login_arabic' => 'ٱلسَّلَامُ عَلَيْكُمْ',
     'auth_login_heading' => 'مرحبًا بك',

@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\GoogleOAuthRedirect;
+
 return [
 
     /*
@@ -104,10 +106,11 @@ return [
         'client_id' => trim((string) env('GOOGLE_CLIENT_ID', '')),
         'client_secret' => trim((string) env('GOOGLE_CLIENT_SECRET', '')),
         // Must exactly match an Authorized redirect URI in Google Cloud Console.
-        'redirect' => trim((string) (
-            env('GOOGLE_REDIRECT_URI')
-            ?: rtrim((string) env('APP_URL', 'http://localhost'), '/').'/auth/google/callback'
-        )),
+        // Laravel Cloud does not interpolate ${APP_URL}; PHP expands it here.
+        'redirect' => GoogleOAuthRedirect::fromEnvironment(
+            env('GOOGLE_REDIRECT_URI'),
+            env('APP_URL', 'http://localhost')
+        ),
     ],
 
     'stripe' => [

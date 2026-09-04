@@ -7,6 +7,7 @@ use App\Services\Auth\GoogleSignInService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
@@ -33,6 +34,38 @@ class GoogleAuthControllerTest extends TestCase
 
         $this->get(route('auth.google.redirect'))
             ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
+    }
+
+    public function test_google_redirect_keeps_canonical_uri_when_request_host_is_cloud_hostname(): void
+    {
+        config([
+            'services.google.redirect' => 'https://app.mutqin.ai/auth/google/callback',
+        ]);
+
+        $this->mockGoogleRedirect('https://app.mutqin.ai/auth/google/callback');
+
+        $this->get('https://mutqin-abc.laravel.cloud/auth/google/redirect')
+            ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
+    }
+
+    public function test_google_callback_keeps_canonical_uri_when_request_host_is_cloud_hostname(): void
+    {
+        config([
+            'services.google.redirect' => 'https://app.mutqin.ai/auth/google/callback',
+        ]);
+
+        $this->mockGoogleUser([
+            'id' => 'google-cloud-1',
+            'name' => 'Cloud User',
+            'email' => 'cloud@example.com',
+            'avatar' => 'https://example.com/cloud.png',
+            'email_verified' => true,
+        ], expectedRedirectUrl: 'https://app.mutqin.ai/auth/google/callback');
+
+        $this->get('https://mutqin-abc.laravel.cloud/auth/google/callback')
+            ->assertRedirect(route('memorisation'));
+
+        $this->assertAuthenticated();
     }
 
     public function test_google_redirect_fails_clearly_when_client_id_missing(): void
@@ -544,7 +577,7 @@ class GoogleAuthControllerTest extends TestCase
 
         $this->assertNull($user->fresh()->google_id);
 
-        $token = \Illuminate\Support\Facades\Password::broker()->createToken($user);
+        $token = Password::broker()->createToken($user);
 
         $this->post(route('password.update'), [
             'token' => $token,
@@ -559,7 +592,7 @@ class GoogleAuthControllerTest extends TestCase
     /**
      * @param  array<string, mixed>  $attributes
      */
-    private function mockGoogleUser(array $attributes, bool $includeEmailVerified = true): void
+    private function mockGoogleUser(array $attributes, bool $includeEmailVerified = true, ?string $expectedRedirectUrl = null): void
     {
         if ($includeEmailVerified && ! array_key_exists('email_verified', $attributes)) {
             $attributes['email_verified'] = true;
@@ -580,7 +613,7 @@ class GoogleAuthControllerTest extends TestCase
         $provider = Mockery::mock();
         $provider->shouldReceive('redirectUrl')
             ->once()
-            ->with($this->expectedGoogleRedirectUrl())
+            ->with($expectedRedirectUrl ?? $this->expectedGoogleRedirectUrl())
             ->andReturnSelf();
         $provider->shouldReceive('stateless')
             ->once()
@@ -597,12 +630,12 @@ class GoogleAuthControllerTest extends TestCase
             ->andReturn($provider);
     }
 
-    private function mockGoogleRedirect(): void
+    private function mockGoogleRedirect(?string $expectedRedirectUrl = null): void
     {
         $provider = Mockery::mock();
         $provider->shouldReceive('redirectUrl')
             ->once()
-            ->with($this->expectedGoogleRedirectUrl())
+            ->with($expectedRedirectUrl ?? $this->expectedGoogleRedirectUrl())
             ->andReturnSelf();
         $provider->shouldReceive('stateless')
             ->once()

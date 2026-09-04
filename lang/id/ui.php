@@ -102,6 +102,7 @@ return [
     'nav_dashboard_sub' => 'Ringkasan hafalan Anda',
     'nav_admin_dashboard_sub' => 'Ikhtisar platform',
     'nav_about_sub' => 'Apa itu Mutqin',
+    'nav_settings_sub' => 'Akun, bacaan, dan preferensi latihan',
     'auth_register_arabic' => 'ٱلسَّلَامُ عَلَيْكُمْ',
     'auth_register_heading' => 'Buat akun Anda',
     'auth_sign_in' => 'Masuk',

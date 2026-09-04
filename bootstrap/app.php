@@ -27,6 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Laravel Cloud (and any TLS terminator) forwards proto/host. Trust the
+        // proxy so request()->isSecure() and URL generation stay on HTTPS.
+        $middleware->trustProxies(at: '*');
+
         $middleware->encryptCookies(except: [
             'mutqin_locale',
         ]);

@@ -112,6 +112,7 @@ return [
     'nav_dashboard_sub' => 'آپ کے حفظ کا خلاصہ',
     'nav_admin_dashboard_sub' => 'پلیٹ فارم کا جائزہ',
     'nav_about_sub' => 'متقن کیا ہے',
+    'nav_settings_sub' => 'اکاؤنٹ، تلاوت اور مشق کی ترجیحات',
     'auth_register_arabic' => 'ٱلسَّلَامُ عَلَيْكُمْ',
     'auth_register_heading' => 'اپنا اکاؤنٹ بنائیں',
     'auth_sign_in' => 'داخل ہوں',

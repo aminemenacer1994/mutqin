@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Services\SpeechmaticsRateLimit;
 use App\Support\DatabaseDeploySafety;
+use App\Support\PublicAppUrl;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
@@ -43,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Password::defaults(static fn () => Password::min(8));
+
+        PublicAppUrl::apply();
 
         Gate::define('access-admin', function ($user) {
             // Authorization uses the authenticated persisted user only (never request email).

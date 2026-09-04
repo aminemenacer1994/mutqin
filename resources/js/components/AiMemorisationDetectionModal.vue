@@ -5,7 +5,7 @@
       ref="overlay"
       class="modal-overlay mutqin-modal-overlay amd-overlay"
       :data-theme="themeAttr"
-      @click.self="onCancel"
+      @click.self.prevent.stop
       @keydown="onOverlayKeydown"
     >
       <div

@@ -174,6 +174,10 @@ import {
   resolveQuranFontFamily,
 } from '../scripts/quran/quranFonts'
 import {
+  applyAudioDefaultsToModeState,
+  applyWorkspacePreferenceOverlay,
+} from '../scripts/settings/workspacePreferences'
+import {
   ASSESSMENT_QUALITY,
   buildAiReviewDetails,
   classifyRecitationAssessmentQuality,
@@ -318,6 +322,19 @@ import {
   shouldAutosave,
 } from '../scripts/session/sessionAutosave'
 import {
+  AUTOSAVED_SESSION_STATUS,
+  SAVED_SESSION_AUTOSAVE_DEBOUNCE_MS,
+  buildAutosavedSessionFingerprint,
+  buildStableAutosaveSessionName,
+  findReusableAutosavedSessionIndex,
+  hasMeaningfulSessionActivity,
+  mergeAutosavedSessionRecord,
+  readSavedSessionBackendId,
+  resolveAutosavedSessionStatus,
+  shouldAutosaveNamedSession,
+  shouldSkipAutosavedSessionWrite,
+} from '../scripts/session/savedSessionAutosave'
+import {
   isSessionAutomationHalted,
   shouldRunDeferredTalqinAdvance,
 } from '../scripts/session/pausePlaybackGuards'
@@ -344,6 +361,7 @@ import { scoreRetention } from '../scripts/composables/useRetentionZones'
 import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
 import AppStatus from '../components/AppStatus.vue'
+import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
 import ViewportConfetti from '../components/ViewportConfetti.vue'
 import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
 
@@ -368,6 +386,10 @@ const AiMemorisationDetectionModal = lazyWorkspaceChunk(
 const AiAudioConsentModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue'),
   'ai-audio-consent'
+)
+const DashboardAiReciteModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "dash-ai-recite" */ '../components/DashboardAiReciteModal.vue'),
+  'dash-ai-recite'
 )
 const AyahNotesModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue'),
@@ -636,7 +658,9 @@ export default {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
     AiAudioConsentModal,
+    DashboardAiReciteModal,
     AyahNotesModal,
+    SessionAnalysisModal,
     AppStatus,
     ViewportConfetti,
   },
@@ -835,6 +859,12 @@ export default {
         generation: 0,
         lastFlushAt: 0,
         lastCheckpointHash: '',
+      },
+      // Silent Saved Sessions bookmark (one in_progress/completed row per sitting).
+      savedSessionAutosave: {
+        scheduler: null,
+        lastFingerprint: '',
+        localId: null,
       },
       playerDismissed: false,
       isWorkspaceRefreshing: false,
@@ -1266,6 +1296,8 @@ export default {
       recordingsAudioElement: null,
       recordingsAudioBound: false,
       ignoreRecordingsAudioPauseEvent: false,
+      dashboardAiReciteReady: false,
+      dashboardAiReciteOpen: false,
       // AI Memorisation Detection (post-session "Test with AI" only)
       amdOpen: false,
       amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | 'saved-session-review' | null
@@ -1494,10 +1526,6 @@ export default {
         presets: true,
         repetitions: false,
         gap_between: false,
-        display_settings: false,
-        reading_settings: false,
-        ai_recite_settings: false,
-        amd_settings: false,
       },
 
       // Audio event handlers
@@ -2956,6 +2984,33 @@ export default {
             }),
           },
         ]
+      }
+    },
+    showWorkspaceAiReciteCta() {
+      if (!this.isLoggedIn) return false
+      if (this.isPostSessionChoiceVisible) return false
+      if (this.isOnboardingExperienceActive) return false
+      if (this.amdOpen) return false
+      return !!(this.hasVerses || this.showSessionOverviewIdleActions)
+    },
+    workspaceAiReciteUserId() {
+      return this.auth?.id || this.auth?.user?.id || 0
+    },
+    workspaceAiRecitePreferredLocation() {
+      const surah = Number(this.chapterId || this.currentChapter?.id || 0)
+      const ayah = Number(this.activeAyahNumber || this.rangeStart || 1)
+      if (surah < 1) return null
+      return {
+        surah_number: surah,
+        ayah: ayah > 0 ? ayah : 1,
+        surah_name: this.topCardSurahLatin || '',
+      }
+    },
+    workspaceAiReciteProgress() {
+      return {
+        current_surah_number: Number(this.chapterId || this.currentChapter?.id || 0),
+        current_ayah: Number(this.activeAyahNumber || this.rangeStart || 1),
+        current_surah_name: this.topCardSurahLatin || '',
       }
     },
     showHeaderSessionAction() {
@@ -7422,18 +7477,6 @@ export default {
     amdDifficultyOptions() {
       return DIFFICULTY_PERCENTS.slice()
     },
-    amdSettingsHidePercent() {
-      if (Number.isFinite(this.amdPendingHidePercent)) {
-        return normaliseDifficultyPercent(this.amdPendingHidePercent)
-      }
-      return normaliseDifficultyPercent(this.amdDifficultyPercent)
-    },
-    amdWordsShownSettingsOptions() {
-      return this.amdDifficultyOptions.map((hidePercent) => ({
-        hidePercent,
-        shownPercent: this.amdHidePercentToWordsShown(hidePercent),
-      }))
-    },
     postSessionContinueToAyahsLabel() {
       if (this.postSessionIsRepeatRecommendation) {
         return this.t('memorisation.postSession.recommendation.startRecommendedRevision')
@@ -8983,7 +9026,6 @@ export default {
 
     toolsHeaderTitle() {
       if (this.tab === 'stats') return this.t('memorisation.toolsHeader.insights')
-      if (this.tab === 'settings') return this.t('memorisation.toolsHeader.settings')
       if (this.tab === 'advanced') return this.t('memorisation.toolsHeader.advanced')
       return this.t('memorisation.toolsHeader.guidedSetup')
     },
@@ -9873,6 +9915,7 @@ export default {
         () => {
           this.scheduleLearningSync()
           this.scheduleSessionCheckpoint()
+          this.scheduleSavedSessionAutosave()
         }
       )
       this.refreshHifzJourneyState()
@@ -10738,6 +10781,16 @@ export default {
     },
     openSessionFeedback() {
       this.openFeedbackModal({ type: 'suggestion' })
+    },
+    openWorkspaceAiRecite() {
+      this.dashboardAiReciteReady = true
+      this.dashboardAiReciteOpen = true
+    },
+    closeWorkspaceAiRecite() {
+      this.dashboardAiReciteOpen = false
+    },
+    onWorkspaceAiReciteSaved() {
+      // Standalone attempts persist on the server; the workspace stays on the current session.
     },
     openAiReciteFeedback() {
       const linked = this.feedbackLinkedAiCheck
@@ -13229,23 +13282,35 @@ export default {
     },
 
     buildSessionRecord(name, options = {}) {
-      const { archived = false, autoSaved = false, existingId = null } = options
+      const { archived = false, autoSaved = false, existingId = null, completed = false } = options
       const backendSessionId = this.backendSessionSnapshot?.id
         || this.mutqinState?.sessionState?.backendSessionId
         || this.continueSessionPayload?.backendSessionId
         || null
+      const status = completed
+        ? AUTOSAVED_SESSION_STATUS.COMPLETED
+        : AUTOSAVED_SESSION_STATUS.IN_PROGRESS
       const continuePayload = {
         ...(this.buildContinueSessionPayload() || {}),
         backendSessionId,
-        backendStatus: this.backendSessionSnapshot?.status
-          || this.continueSessionPayload?.backendStatus
-          || null,
+        backendStatus: completed
+          ? 'completed'
+          : (this.backendSessionSnapshot?.status
+            || this.continueSessionPayload?.backendStatus
+            || status),
+        completed: !!completed,
       }
+      const completedAt = completed
+        ? (this.sessionCompletedAt || this.centralSession?.sessionCompletedAt || new Date().toISOString())
+        : null
       return {
         id: existingId || Date.now().toString(),
         name,
         archived: !!archived,
         autoSaved: !!autoSaved,
+        status,
+        completedAt,
+        sessionStartedAt: Number(this.sessionStartedAt || 0) || null,
         backendSessionId: backendSessionId || null,
         fromRecommendation: !!this.currentSessionRecommendationMeta,
         recommendationId: this.currentSessionRecommendationMeta?.recommendationId || null,
@@ -13293,7 +13358,11 @@ export default {
           exportedAt: new Date().toISOString(),
           continueSession: continuePayload,
           sessionExitSnapshot: this.buildSessionExitSnapshot(),
-          centralSession: deepClone(this.centralSession),
+          centralSession: {
+            ...deepClone(this.centralSession),
+            sessionStatus: completed ? 'completed' : (this.centralSession?.sessionStatus || status),
+            sessionCompletedAt: completedAt,
+          },
           currentMode: this.currentMode,
           theme: this.theme
         }
@@ -13328,16 +13397,25 @@ export default {
     },
 
     addSavedSession(session, options = {}) {
-      const { replaceOldestWhenFull = !!session?.autoSaved } = options
+      const {
+        replaceOldestWhenFull = !!session?.autoSaved,
+        silent = false,
+        preserveName = false,
+      } = options
       const max = this.maxSavedSessionsAllowed
       const normalized = this.normalizeSavedSessionRecord(session)
       if (!normalized) return { session: null, reason: 'invalid' }
       const existingIdx = this.findSavedSessionDuplicateIndex(normalized)
       if (existingIdx >= 0) {
+        const previous = this.savedSessions[existingIdx]
+        if (this.isSavedSessionComplete(previous) && !this.isSavedSessionComplete(normalized)) {
+          return { session: previous, reason: 'completed_locked' }
+        }
         const merged = {
-          ...this.savedSessions[existingIdx],
+          ...previous,
           ...normalized,
-          id: this.savedSessions[existingIdx].id,
+          id: previous.id,
+          name: preserveName && previous.name ? previous.name : normalized.name,
         }
         const next = [...this.savedSessions]
         next.splice(existingIdx, 1)
@@ -13345,7 +13423,7 @@ export default {
         this.savedSessions = next
         this.selectedStatsSessionId = merged.id
         this.persistSavedSessions()
-        if (this.tab === 'saved') this.focusSavedSessionSectionForSession(merged)
+        if (!silent && this.tab === 'saved') this.focusSavedSessionSectionForSession(merged)
         return { session: merged, reason: null }
       }
       if (Number.isFinite(max) && this.savedSessions.length >= max) {
@@ -13369,7 +13447,7 @@ export default {
       if (this.savedSessions.length > hardCap) this.savedSessions = this.savedSessions.slice(0, hardCap)
       if (!this.selectedStatsSessionId && this.savedSessions[0]?.id) this.selectedStatsSessionId = this.savedSessions[0].id
       this.persistSavedSessions()
-      if (this.tab === 'saved') this.focusSavedSessionSectionForSession(normalized)
+      if (!silent && this.tab === 'saved') this.focusSavedSessionSectionForSession(normalized)
       return { session: normalized, reason: null }
     },
 
@@ -13393,6 +13471,142 @@ export default {
       if (this.continueSessionPayload?.config?.chapterId) return true
       if (Number(this.sessionStartedAt || 0) > 0 && config.chapterId) return true
       return false
+    },
+
+    buildSavedSessionAutosaveContext(options = {}) {
+      const completed = !!options.completed
+        || !!this.sessionCompleted
+        || this.centralSession?.sessionStatus === 'completed'
+      const stats = typeof this.buildCurrentSessionStatsSnapshot === 'function'
+        ? this.buildCurrentSessionStatsSnapshot()
+        : null
+      const sessionState = this.mutqinState?.sessionState || {}
+      const lastEval = sessionState.lastSilentEvaluation || null
+      return {
+        backendEnabled: this.learningBackendEnabled(),
+        onboardingSample: !!this.onboardingSampleSessionActive,
+        signupIsolation: typeof this.isSignupIsolationActive === 'function' && this.isSignupIsolationActive(),
+        isBootstrapping: !!this.isBootstrapping && !completed,
+        completed,
+        lifecycleMutation: this.sessionLifecycleMutation,
+        lifecycleStatus: this.sessionLifecycleStatus,
+        isLive: !!this.isSessionLive,
+        isPausedUnfinished: !!this.sessionPaused || !!this.backendUnfinishedSession,
+        hasUnfinished: !!this.backendUnfinishedSession || !!this.isSessionLive || !!this.sessionPaused,
+        sessionStartedAt: Number(this.sessionStartedAt || this.continueSessionPayload?.sessionStartedAt || 0),
+        chapterId: Number(this.chapterId || this.sessionConfig?.chapterId || 0),
+        chapterName: this.currentChapter?.name_simple || this.sessionConfig?.chapterName || '',
+        rangeStart: Number(this.rangeStart || this.sessionConfig?.rangeStart || 0),
+        rangeEnd: Number(this.rangeEnd || this.sessionConfig?.rangeEnd || 0),
+        queueIndex: Number(this.queueIndex || 0),
+        ayahNumber: Number(this.resolveLiveAbsoluteAyahNumber?.() || this.currentPosition || 0),
+        phase: sessionState.phase || this.continueSessionPayload?.mutqinPhase || '',
+        repetitionsCompleted: Number(stats?.repetitions_completed || 0),
+        progressPercent: Number(stats?.verses_read || 0),
+        reciterId: this.reciterId,
+        showTranslation: !!this.showTranslation,
+        showTransliteration: !!this.showTransliteration,
+        readingViewMode: this.readingViewMode,
+        aiAttemptCount: Number(lastEval?.attemptCount || lastEval?.attempts || (lastEval ? 1 : 0)),
+        aiLastResult: lastEval?.result || lastEval?.status || '',
+        weakAyahCount: Number(stats?.weak_verses_encountered || 0),
+        backendSessionId: readSavedSessionBackendId({
+          backendSessionId: this.backendSessionSnapshot?.id
+            || sessionState.backendSessionId
+            || this.continueSessionPayload?.backendSessionId,
+        }),
+        config: this.sessionConfig || {},
+        status: resolveAutosavedSessionStatus({ completed }),
+      }
+    },
+
+    scheduleSavedSessionAutosave(options = {}) {
+      if (options.immediate || options.completed) {
+        this.savedSessionAutosave?.scheduler?.cancel?.()
+        return this.upsertAutosavedSession(options)
+      }
+      if (!this.savedSessionAutosave.scheduler) {
+        this.savedSessionAutosave.scheduler = createDebouncer(() => {
+          this.upsertAutosavedSession()
+        }, SAVED_SESSION_AUTOSAVE_DEBOUNCE_MS)
+      }
+      this.savedSessionAutosave.scheduler()
+      return null
+    },
+
+    flushSavedSessionAutosave() {
+      if (this.savedSessionAutosave?.scheduler?.pending?.()) {
+        this.savedSessionAutosave.scheduler.flush()
+        return
+      }
+      this.upsertAutosavedSession()
+    },
+
+    upsertAutosavedSession(options = {}) {
+      const completed = !!options.completed
+      const ctx = this.buildSavedSessionAutosaveContext({ completed })
+      if (!shouldAutosaveNamedSession(ctx) && !completed) return null
+      if (!completed && !hasMeaningfulSessionActivity(ctx)) return null
+      if (!this.canSaveCurrentSession() && !completed) return null
+      if (this.onboardingSampleSessionActive) return null
+
+      const fingerprint = buildAutosavedSessionFingerprint(ctx)
+      if (!completed && shouldSkipAutosavedSessionWrite(this.savedSessionAutosave.lastFingerprint, fingerprint)) {
+        return this.savedSessions.find((row) => String(row?.id || '') === String(this.savedSessionAutosave.localId || '')) || null
+      }
+
+      const probe = {
+        id: this.savedSessionAutosave.localId,
+        backendSessionId: ctx.backendSessionId || null,
+        completed,
+        status: ctx.status,
+        sessionStartedAt: ctx.sessionStartedAt,
+        config: {
+          chapterId: ctx.chapterId,
+          rangeStart: ctx.rangeStart,
+          rangeEnd: ctx.rangeEnd,
+        },
+        restore: {
+          continueSession: {
+            backendSessionId: ctx.backendSessionId || null,
+            sessionStartedAt: ctx.sessionStartedAt,
+            completed,
+          },
+        },
+      }
+      const existingIdx = findReusableAutosavedSessionIndex(this.savedSessions, probe)
+      let existing = existingIdx >= 0 ? this.savedSessions[existingIdx] : null
+      if (existing && this.isSavedSessionComplete(existing) && !completed) {
+        this.savedSessionAutosave.localId = null
+        existing = null
+      }
+
+      let record
+      try {
+        record = this.buildSessionRecord(
+          existing?.name || buildStableAutosaveSessionName(ctx),
+          {
+            autoSaved: true,
+            existingId: existing?.id || this.savedSessionAutosave.localId || null,
+            completed,
+          },
+        )
+      } catch (error) {
+        console.warn('autosave bookmark snapshot failed', error)
+        return null
+      }
+
+      const incoming = mergeAutosavedSessionRecord(existing, record)
+      const { session } = this.addSavedSession(incoming, {
+        replaceOldestWhenFull: true,
+        silent: true,
+        preserveName: true,
+      })
+      if (session?.id) {
+        this.savedSessionAutosave.localId = session.id
+        this.savedSessionAutosave.lastFingerprint = fingerprint
+      }
+      return session
     },
 
     async ensureSaveableWorkspaceState() {
@@ -14383,6 +14597,7 @@ export default {
       if (unfinished) {
         this._startAttemptNonce = null
       }
+      this.scheduleSavedSessionAutosave({ immediate: true })
     },
 
     startSessionWithCountdown(options = {}) {
@@ -14490,6 +14705,7 @@ export default {
               ? 'start_persist_failed'
               : null
             this.sessionBroadcast?.publish('session-started', { at: Date.now() })
+            this.scheduleSavedSessionAutosave({ immediate: true })
             this.scheduleSessionWorkspaceScroll(
               this.pendingSessionWorkspaceScrollReason || SESSION_WORKSPACE_SCROLL_REASON.NEW_SESSION
             )
@@ -14918,6 +15134,7 @@ export default {
         await this.reviewCompletedSavedSession(sessionId)
         return
       }
+      this.savedSessionAutosave.localId = session.id || sessionId
       this.loadingSessionId = sessionId
       this.primeAudioPlaybackUnlock()
       try {
@@ -15169,6 +15386,10 @@ export default {
       const ids = Array.isArray(sessionIds) ? sessionIds.filter(Boolean) : []
       if (!ids.length) return
       this.cancelSessionAutosave({ bumpGeneration: true })
+      if (ids.includes(this.savedSessionAutosave?.localId)) {
+        this.savedSessionAutosave.localId = null
+        this.savedSessionAutosave.lastFingerprint = ''
+      }
       this.savedSessions = this.savedSessions.filter((session) => !ids.includes(session.id))
       if (ids.includes(this.selectedStatsSessionId)) {
         this.selectedStatsSessionId = this.savedSessions[0]?.id || ''
@@ -15181,6 +15402,10 @@ export default {
 
     performDeleteSavedSession(sessionId) {
       this.cancelSessionAutosave({ bumpGeneration: true })
+      if (String(this.savedSessionAutosave?.localId || '') === String(sessionId || '')) {
+        this.savedSessionAutosave.localId = null
+        this.savedSessionAutosave.lastFingerprint = ''
+      }
       this.savedSessions = this.savedSessions.filter(s => s.id !== sessionId)
       this.selectedSavedSessionIds = this.selectedSavedSessionIds.filter((id) => id !== sessionId)
       if (this.selectedStatsSessionId === sessionId) {
@@ -21039,8 +21264,6 @@ export default {
         const openMap = {
           advanced_setup: true,
           advanced_playback: false,
-          reading_settings: false,
-          display_settings: false,
           focus_mode: false,
           blur_mode: false,
           chaining: false,
@@ -22333,7 +22556,7 @@ export default {
       ).toLowerCase().trim()
 
       if (status === 'completed') return true
-      if (['active', 'paused', 'interrupted', 'ended_early', 'abandoned', 'none', 'idle'].includes(status)) {
+      if (['in_progress', 'active', 'paused', 'interrupted', 'ended_early', 'abandoned', 'none', 'idle'].includes(status)) {
         return false
       }
 
@@ -24674,14 +24897,6 @@ export default {
       try {
         this.ensureAmdMistakeFeedbackController().setEnabled(next, { persist: false })
       } catch { /* ignore */ }
-    },
-    setAmdHidePercentFromSettings(percent) {
-      this.setAmdDifficulty(percent)
-    },
-    amdHidePercentToWordsShown(hidePercent) {
-      const hide = Number(hidePercent)
-      if (!Number.isFinite(hide)) return 0
-      return hide >= 100 ? 0 : Math.max(0, Math.min(100, 100 - hide))
     },
     setAiRecallModeEnabled(enabled) {
       const next = !!enabled
@@ -34770,7 +34985,10 @@ export default {
           })()
         if (!saved) return this.cloneModeState(defaults)
 
-        const merged = { ...defaults, ...this.cloneModeState(saved) }
+        const merged = applyAudioDefaultsToModeState(
+          { ...defaults, ...this.cloneModeState(saved) },
+          this.currentAuthUserId?.() || this.auth?.id,
+        )
         if (Array.isArray(merged.verses)) {
           merged.verses = this.sanitizeVersesDisplayText(merged.verses)
         }
@@ -35793,9 +36011,11 @@ export default {
             'info',
             3200,
           )
-          // Named Saved Sessions are optional bookmarks — distinct from Resume unfinished state.
+          // Keep the same Saved Sessions row as in_progress when leaving early.
           try {
-            this.promptSaveSessionAfterEnd({ wasSample: !!this.onboardingSampleSessionActive })
+            if (!this.onboardingSampleSessionActive) {
+              this.upsertAutosavedSession({ immediate: true })
+            }
           } catch (_) { /* resume state already preserved */ }
         }
         return !!paused
@@ -36444,19 +36664,14 @@ export default {
             status: endStatus,
           }
           // Snapshot the named save BEFORE cleanup clears verses / continue payload.
-          if (this.autoSaveSessionsEnabled && !wasSample) {
+          if (!wasSample) {
             try {
-              this._pendingPostEndSaveRecord = this.buildSessionRecord(
-                this.buildAutoSaveSessionName(),
-                { autoSaved: true },
-              )
+              this.upsertAutosavedSession({ completed: true, immediate: true })
             } catch (error) {
-              console.warn('Post-end save snapshot failed', error)
-              this._pendingPostEndSaveRecord = null
+              console.warn('Post-end autosave bookmark failed', error)
             }
-          } else {
-            this._pendingPostEndSaveRecord = null
           }
+          this._pendingPostEndSaveRecord = null
           this.clearContinueSessionQuietly()
           this.clearActiveSessionSnapshot()
           this.sessionExitEndingBusy = false
@@ -36543,6 +36758,7 @@ export default {
 
         if (!this.learningBackendEnabled()) {
           this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+          this.upsertAutosavedSession({ immediate: true })
           if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
           return true
         }
@@ -36575,6 +36791,7 @@ export default {
             this.backendUnfinishedSession = !!this.backendSessionSnapshot?.id
             this.sessionLifecycleError = null
             this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+            this.upsertAutosavedSession({ immediate: true })
             if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
             return true
           }
@@ -36586,6 +36803,7 @@ export default {
           }
           this.sessionLifecycleError = null
           this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+          this.upsertAutosavedSession({ immediate: true })
           if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
           return true
         } catch (error) {
@@ -36603,6 +36821,7 @@ export default {
             if (options.reason === 'save_for_later' || options.reason === 'park_set') {
               this.backendUnfinishedSession = true
               this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+              this.upsertAutosavedSession({ immediate: true })
               return true
             }
             this.backendUnfinishedSession = false
@@ -36614,12 +36833,14 @@ export default {
               )
             }
             this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+            this.upsertAutosavedSession({ immediate: true })
             return true
           } else {
             this.noteLearningBackendFailure?.(error, 'pause')
             if (!quiet) this.showBanner(this.t('toasts.sessionPaused'), 'info', 2800)
           }
           this.sessionBroadcast?.publish('session-paused', { at: Date.now() })
+          this.upsertAutosavedSession({ immediate: true })
           return true
         } finally {
           if (this.sessionLifecycleMutation === SESSION_MUTATION.PAUSING) {
@@ -36943,10 +37164,6 @@ export default {
         return
       }
 
-      // Force re-render if needed
-      if (this.tab === 'settings') {
-        this.syncSettingsDraft()
-      }
       if (this.tab === 'saved') {
         this.ensureSavedSectionVisible()
         this.loadSavedSessions()
@@ -40555,6 +40772,9 @@ export default {
         this.centralSession.sessionCompletedAt = this.sessionCompletedAt
         completeMutqinSession(this.mutqinState)
         this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+        try {
+          this.upsertAutosavedSession({ completed: true, immediate: true })
+        } catch (_) { /* local bookmark is best-effort */ }
         this.recomputeAnalytics()
         this.finishSessionCleanup()
         this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)
@@ -40597,6 +40817,9 @@ export default {
           completeMutqinSession(this.mutqinState)
           this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
           this.sessionPaused = false
+          try {
+            this.upsertAutosavedSession({ completed: true, immediate: true })
+          } catch (_) { /* completion UI still opens below */ }
           this.clearContinueSessionQuietly()
           this.clearActiveSessionSnapshot()
           this.sessionExitEndingBusy = false
@@ -40613,7 +40836,6 @@ export default {
               this.recomputeAnalytics()
               this.finishSessionCleanup()
             } catch (_) { /* completion UI already open */ }
-            this.promptSaveSessionAfterEnd()
           }
           if (typeof requestIdleCallback === 'function') {
             requestIdleCallback(finalizeAfterOpen, { timeout: 500 })
@@ -40946,6 +41168,7 @@ export default {
           const raw = localStorage.getItem('mutqin.uiState')
           state = raw ? JSON.parse(raw) : null
         }
+        state = applyWorkspacePreferenceOverlay(state, this.currentAuthUserId?.() || this.auth?.id)
 
         if (state) {
           const keepWorkspaceVisible = this.hasLocalInProgressSessionEvidence()
@@ -41174,6 +41397,7 @@ export default {
           showPostSessionChoice: !!this.showPostSessionChoice,
           postSessionChoiceJustEndedTemplate: this.postSessionChoiceJustEndedTemplate || null,
           autoSaveSessionsEnabled: !!this.autoSaveSessionsEnabled,
+          prefsAppliedAt: Date.now(),
         }
 
         if (this.learningBackendEnabled()) {
@@ -41272,6 +41496,9 @@ export default {
     persistAllState() {
       // Used on teardown / beforeunload: write everything synchronously and
       // drop any pending debounced writes so nothing is lost.
+      try {
+        this.flushSavedSessionAutosave()
+      } catch (_) { /* continue-session flush below remains authoritative */ }
       this._uiPersistDebouncer?.cancel?.()
       this._audioPersistDebouncer?.cancel?.()
       this.cancelSessionAutosave({ bumpGeneration: false })
@@ -41313,6 +41540,7 @@ export default {
 
       // Always persist locally first — Safari may kill the network request.
       try {
+        this.flushSavedSessionAutosave()
         this._uiPersistDebouncer?.cancel?.()
         this._audioPersistDebouncer?.cancel?.()
         this.cancelSessionAutosave({ bumpGeneration: false })

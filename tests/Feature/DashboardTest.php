@@ -16,6 +16,7 @@ use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use App\Services\MainMemorisationPositionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -391,7 +392,7 @@ class DashboardTest extends TestCase
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        UserSession::create([
+        $session = UserSession::create([
             'user_id' => $user->id,
             'surah_number' => 112,
             'ayah_number' => 4,
@@ -453,11 +454,17 @@ class DashboardTest extends TestCase
         $this->assertSame('ai_result', $items[1]['outcome_key']);
         $this->assertSame('strong', $items[1]['outcome_params']['band']);
         $this->assertSame(81, $items[1]['outcome_params']['accuracy']);
+        $this->assertSame('attempt', $items[1]['analysis_kind']);
+        $this->assertTrue((bool) $items[1]['has_analysis']);
+        $this->assertSame($ai->id, $items[1]['source_id']);
         $this->assertSame('session', $items[2]['type']);
         $this->assertSame('session_completed', $items[2]['outcome_key']);
         $this->assertSame(112, $items[2]['surah_number']);
         $this->assertSame(1, $items[2]['ayah_start']);
         $this->assertSame(4, $items[2]['ayah_end']);
+        $this->assertSame('session', $items[2]['analysis_kind']);
+        $this->assertFalse((bool) $items[2]['has_analysis']);
+        $this->assertSame($session->id, $items[2]['source_id']);
     }
 
     public function test_memorised_count_increments_when_range_marked_memorised(): void
@@ -966,10 +973,10 @@ class DashboardTest extends TestCase
             'status' => RecommendationStatus::Generated,
         ]);
 
-        \Illuminate\Support\Facades\DB::table('user_sessions')
+        DB::table('user_sessions')
             ->where('id', $session->id)
             ->update(['status' => 'Active']);
-        \Illuminate\Support\Facades\DB::table('session_recommendations')
+        DB::table('session_recommendations')
             ->where('id', $recommendation->id)
             ->update(['status' => 'Generated']);
 
@@ -1249,5 +1256,208 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.journey.continue.surah_number', 2)
             ->assertJsonPath('data.journey.continue.ayah_start', 31)
             ->assertJsonPath('data.journey.continue.ayah_end', 33);
+    }
+
+    public function test_session_history_marks_only_sessions_with_saved_analysis(): void
+    {
+        $user = User::factory()->create();
+
+        $withAnalysis = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subHour(),
+            'last_activity_at' => now()->subHour(),
+            'session_duration_seconds' => 180,
+            'repetitions_completed' => 2,
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 112, 'rangeStart' => 1, 'rangeEnd' => 4],
+            ],
+        ]);
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 114,
+            'ayah_number' => 6,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subMinutes(20),
+            'last_activity_at' => now()->subMinutes(20),
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 114, 'rangeStart' => 1, 'rangeEnd' => 6],
+            ],
+        ]);
+
+        MemorisationAssessment::create([
+            'user_id' => $user->id,
+            'user_session_id' => $withAnalysis->id,
+            'surah_number' => 112,
+            'start_ayah' => 1,
+            'end_ayah' => 4,
+            'surah_name' => 'Al-Ikhlas',
+            'status' => 'completed',
+            'overall_accuracy' => 84,
+            'word_results' => [
+                ['text' => 'قل', 'status' => 'correct', 'ayah_number' => 1],
+                ['text' => 'هو', 'status' => 'minor_mistake', 'ayah_number' => 1],
+            ],
+            'weakness_analysis' => ['weak_ayahs' => [1]],
+            'friendly_summary' => 'Review the opening calmly.',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/sessions/history')
+            ->assertOk();
+
+        $sessions = collect($response->json('sessions'));
+        $this->assertTrue((bool) $sessions->firstWhere('id', $withAnalysis->id)['has_analysis']);
+        $this->assertFalse((bool) $sessions->firstWhere('surah_number', 114)['has_analysis']);
+    }
+
+    public function test_session_analysis_returns_persisted_data_for_that_session_only(): void
+    {
+        $user = User::factory()->create();
+
+        $first = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subHours(2),
+            'last_activity_at' => now()->subHours(2),
+            'session_duration_seconds' => 240,
+            'repetitions_completed' => 3,
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 112, 'rangeStart' => 1, 'rangeEnd' => 4],
+            ],
+        ]);
+
+        $second = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 1,
+            'ayah_number' => 7,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subHour(),
+            'last_activity_at' => now()->subHour(),
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 7],
+            ],
+        ]);
+
+        MemorisationAssessment::create([
+            'user_id' => $user->id,
+            'user_session_id' => $first->id,
+            'surah_number' => 112,
+            'start_ayah' => 1,
+            'end_ayah' => 4,
+            'surah_name' => 'Al-Ikhlas',
+            'status' => 'completed',
+            'overall_accuracy' => 77,
+            'friendly_summary' => 'First session analysis',
+            'word_results' => [
+                ['text' => 'الله', 'status' => 'correct', 'ayah_number' => 1],
+            ],
+        ]);
+
+        MemorisationAssessment::create([
+            'user_id' => $user->id,
+            'user_session_id' => $second->id,
+            'surah_number' => 1,
+            'start_ayah' => 1,
+            'end_ayah' => 7,
+            'surah_name' => 'Al-Fatihah',
+            'status' => 'completed',
+            'overall_accuracy' => 41,
+            'friendly_summary' => 'Latest session analysis',
+        ]);
+
+        AiReciteAttempt::create([
+            'user_id' => $user->id,
+            'user_session_id' => $first->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 77,
+            'band' => 'mixed',
+            'ayah_range' => ['surah' => 112, 'from' => 1, 'to' => 4],
+            'color_counts' => ['green' => 8, 'amber' => 2, 'red' => 1, 'black' => 0, 'gray' => 0],
+            'weak_words' => [['ayahNumber' => 2, 'text' => 'الصمد']],
+            'word_statuses' => [
+                ['text' => 'قل', 'status' => 'correct', 'ayah_number' => 1],
+                ['text' => 'الصمد', 'status' => 'wrong', 'ayah_number' => 2],
+            ],
+            'plan_snapshot' => ['title' => 'Repeat the weak ayah slowly'],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/sessions/'.$first->id.'/analysis')
+            ->assertOk()
+            ->assertJsonPath('has_analysis', true)
+            ->assertJsonPath('session.id', $first->id)
+            ->assertJsonPath('session.surah_number', 112)
+            ->assertJsonPath('session.ayah_start', 1)
+            ->assertJsonPath('session.ayah_end', 4)
+            ->assertJsonPath('session.duration_seconds', 240)
+            ->assertJsonPath('assessment.accuracy', 77)
+            ->assertJsonPath('assessment.friendly_summary', 'First session analysis')
+            ->assertJsonPath('ai_attempt.accuracy_percent', 77)
+            ->assertJsonPath('ai_attempt.band', 'mixed');
+
+        $this->assertNotSame('Latest session analysis', $response->json('assessment.friendly_summary'));
+        $this->assertSame(112, $response->json('ai_attempt.surah_number'));
+        $this->assertSame('الصمد', $response->json('ai_attempt.weak_words.0.text'));
+    }
+
+    public function test_session_and_attempt_analysis_are_scoped_to_the_owner(): void
+    {
+        $owner = User::factory()->create();
+        $intruder = User::factory()->create();
+
+        $session = UserSession::create([
+            'user_id' => $owner->id,
+            'surah_number' => 112,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now(),
+            'last_activity_at' => now(),
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 112, 'rangeStart' => 1, 'rangeEnd' => 4],
+            ],
+        ]);
+
+        $attempt = AiReciteAttempt::create([
+            'user_id' => $owner->id,
+            'user_session_id' => $session->id,
+            'attempt_number' => 1,
+            'accuracy_percent' => 90,
+            'band' => 'strong',
+            'ayah_range' => ['surah' => 112, 'from' => 1, 'to' => 4],
+            'word_statuses' => [
+                ['text' => 'قل', 'status' => 'correct', 'ayah_number' => 1],
+            ],
+        ]);
+
+        $this->actingAs($intruder)
+            ->getJson('/api/sessions/'.$session->id.'/analysis')
+            ->assertNotFound();
+
+        $this->actingAs($intruder)
+            ->getJson('/api/ai-recite-attempts/'.$attempt->id)
+            ->assertNotFound();
+
+        $this->actingAs($owner)
+            ->getJson('/api/ai-recite-attempts/'.$attempt->id)
+            ->assertOk()
+            ->assertJsonPath('has_analysis', true)
+            ->assertJsonPath('ai_attempt.id', $attempt->id)
+            ->assertJsonPath('session.id', $session->id);
     }
 }

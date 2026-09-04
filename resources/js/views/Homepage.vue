@@ -141,7 +141,7 @@
           <p class="section-sub">{{ t('homepage.features.subtitle') }}</p>
         </header>
 
-        <div class="features__grid">
+        <div v-if="!isFeaturesMobile" class="features__grid">
           <article
             v-for="(feature, idx) in features"
             :key="feature.id"
@@ -168,6 +168,58 @@
               <p>{{ feature.description }}</p>
             </div>
           </article>
+        </div>
+
+        <div
+          v-if="isFeaturesMobile"
+          id="featuresCarousel"
+          ref="featuresCarouselEl"
+          class="carousel slide features__carousel"
+          data-bs-interval="false"
+          data-bs-touch="true"
+          data-bs-wrap="true"
+          :aria-label="t('homepage.features.carouselLabel')"
+        >
+          <div class="carousel-inner">
+            <div
+              v-for="(feature, idx) in features"
+              :key="`feature-slide-${feature.id}`"
+              class="carousel-item"
+              :class="{ active: idx === FEATURES_CAROUSEL_START_INDEX }"
+            >
+              <div class="features__carousel-media">
+                <div class="device device--sm features__device">
+                  <div class="device__island" aria-hidden="true"></div>
+                  <div class="device__screen">
+                    <img
+                      class="shot"
+                      :src="feature.image"
+                      :alt="feature.shotAlt"
+                      width="444"
+                      height="929"
+                      :loading="idx === FEATURES_CAROUSEL_START_INDEX ? 'eager' : 'lazy'"
+                      decoding="async"
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-indicators features__carousel-indicators">
+            <button
+              v-for="(feature, idx) in features"
+              :key="`feature-indicator-${feature.id}`"
+              type="button"
+              data-bs-target="#featuresCarousel"
+              :data-bs-slide-to="idx"
+              :class="{ active: idx === FEATURES_CAROUSEL_START_INDEX }"
+              :aria-label="feature.title"
+            ></button>
+          </div>
+        </div>
+        <div v-if="isFeaturesMobile" class="features__copy features__copy--carousel">
+          <h3>{{ activeFeature.title }}</h3>
+          <p>{{ activeFeature.description }}</p>
         </div>
       </div>
     </section>
@@ -294,7 +346,7 @@
 </template>
 
 <script>
-import { reactive, ref, computed, onMounted, onUnmounted } from 'vue';
+import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 
@@ -303,7 +355,17 @@ export default {
   setup() {
     const { t, locale } = useI18n();
     const currentTheme = ref(getSavedTheme());
+    const FEATURES_CAROUSEL_START_INDEX = 2;
+    const FEATURES_MOBILE_MQ = '(max-width: 767.98px)';
     const featuresSection = ref(null);
+    const featuresCarouselEl = ref(null);
+    const isFeaturesMobile = ref(
+      typeof window !== 'undefined' ? window.matchMedia(FEATURES_MOBILE_MQ).matches : false,
+    );
+    const featuresCarouselIndex = ref(FEATURES_CAROUSEL_START_INDEX);
+    let featuresCarousel = null;
+    let featuresMobileMq = null;
+    let featuresCarouselSlideHandler = null;
     const demoPlaying = ref(false);
     const demoActiveIndex = ref(0);
     const demoProgress = ref(0);
@@ -398,6 +460,49 @@ export default {
 
     let revealObserver = null;
     let demoObserver = null;
+
+    const syncFeaturesMobile = () => {
+      isFeaturesMobile.value = featuresMobileMq?.matches ?? false;
+    };
+
+    const onFeaturesCarouselSlide = (event) => {
+      if (typeof event?.to === 'number') {
+        featuresCarouselIndex.value = event.to;
+      }
+    };
+
+    const initFeaturesCarousel = async () => {
+      if (!isFeaturesMobile.value) return;
+      await nextTick();
+      const el = featuresCarouselEl.value;
+      if (!el || !window.bootstrap?.Carousel) return;
+      disposeFeaturesCarousel();
+      featuresCarouselSlideHandler = onFeaturesCarouselSlide;
+      el.addEventListener('slid.bs.carousel', featuresCarouselSlideHandler);
+      featuresCarousel = window.bootstrap.Carousel.getOrCreateInstance(el, {
+        interval: false,
+        touch: true,
+        wrap: true,
+      });
+      featuresCarouselIndex.value = FEATURES_CAROUSEL_START_INDEX;
+      featuresCarousel.to(FEATURES_CAROUSEL_START_INDEX);
+    };
+
+    const disposeFeaturesCarousel = () => {
+      const el = featuresCarouselEl.value;
+      if (el && featuresCarouselSlideHandler) {
+        el.removeEventListener('slid.bs.carousel', featuresCarouselSlideHandler);
+      }
+      featuresCarouselSlideHandler = null;
+      featuresCarousel?.dispose?.();
+      featuresCarousel = null;
+    };
+
+    const onFeaturesMobileChange = () => {
+      syncFeaturesMobile();
+      if (isFeaturesMobile.value) initFeaturesCarousel();
+      else disposeFeaturesCarousel();
+    };
 
     const applyTheme = () => {
       currentTheme.value = getSavedTheme();
@@ -529,6 +634,10 @@ export default {
       ];
     });
 
+    const activeFeature = computed(() => (
+      features.value[featuresCarouselIndex.value] ?? features.value[FEATURES_CAROUSEL_START_INDEX] ?? features.value[0]
+    ));
+
     const faqItems = computed(() => {
       void locale.value;
       return [
@@ -566,6 +675,11 @@ export default {
         });
       }
 
+      featuresMobileMq = window.matchMedia(FEATURES_MOBILE_MQ);
+      syncFeaturesMobile();
+      featuresMobileMq.addEventListener('change', onFeaturesMobileChange);
+      initFeaturesCarousel();
+
       const howSection = document.getElementById('how-it-works');
       if (howSection) {
         demoObserver = new IntersectionObserver((entries) => {
@@ -586,6 +700,8 @@ export default {
       window.removeEventListener('mutqin:theme-change', onThemeChange);
       revealObserver?.disconnect();
       demoObserver?.disconnect();
+      featuresMobileMq?.removeEventListener('change', onFeaturesMobileChange);
+      disposeFeaturesCarousel();
       clearDemoTimer();
     });
 
@@ -593,7 +709,12 @@ export default {
       t,
       currentTheme,
       startFreeHref,
+      FEATURES_CAROUSEL_START_INDEX,
+      isFeaturesMobile,
+      featuresCarouselIndex,
+      activeFeature,
       featuresSection,
+      featuresCarouselEl,
       scrollToFeatures,
       scrollToId,
       heroShots,

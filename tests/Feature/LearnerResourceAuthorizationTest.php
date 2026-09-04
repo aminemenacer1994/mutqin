@@ -251,6 +251,24 @@ class LearnerResourceAuthorizationTest extends TestCase
         $this->actingAs($intruder)
             ->getJson('/api/memorisation/assessments/'.$assessment->id)
             ->assertForbidden();
+
+        $session = UserSession::create([
+            'user_id' => $owner->id,
+            'surah_number' => 1,
+            'ayah_number' => 1,
+            'status' => UserSessionStatus::Completed,
+            'is_onboarding_example' => false,
+            'ended_at' => now(),
+            'last_activity_at' => now(),
+            'metadata' => [
+                'completed' => true,
+                'config' => ['chapterId' => 1, 'rangeStart' => 1, 'rangeEnd' => 1],
+            ],
+        ]);
+
+        $this->actingAs($intruder)
+            ->getJson('/api/sessions/'.$session->id.'/analysis')
+            ->assertNotFound();
     }
 
     public function test_demo_accounts_remain_isolated_after_account_switch_simulation(): void

@@ -102,6 +102,7 @@ return [
     'nav_dashboard_sub' => 'Hıfz özetiniz',
     'nav_admin_dashboard_sub' => 'Platform özeti',
     'nav_about_sub' => 'Mutqin nedir',
+    'nav_settings_sub' => 'Hesap, okuma ve pratik tercihleri',
     'auth_register_arabic' => 'ٱلسَّلَامُ عَلَيْكُمْ',
     'auth_register_heading' => 'Hesabınızı oluşturun',
     'auth_sign_in' => 'Giriş yap',

@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use App\Enums\RecommendationType;
+use App\Services\Learning\SessionAnalysisQueryService;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -31,6 +32,7 @@ class DashboardService
     public function __construct(
         private readonly SessionLifecycleService $lifecycle,
         private readonly MainMemorisationPositionService $mainPosition,
+        private readonly SessionAnalysisQueryService $sessionAnalysis,
     ) {
     }
 
@@ -292,6 +294,9 @@ class DashboardService
                 $events->push($this->activityEvent([
                     'id' => 'session-'.$session->id,
                     'type' => 'session',
+                    'source_id' => (int) $session->id,
+                    'analysis_kind' => 'session',
+                    'has_analysis' => false,
                     'surah_number' => $surah ?: null,
                     'surah_name' => $surah ? QuranMetadata::name($surah) : null,
                     'ayah_start' => $start > 0 ? $start : null,
@@ -323,6 +328,9 @@ class DashboardService
                 $events->push($this->activityEvent([
                     'id' => 'ai-'.$attempt->id,
                     'type' => 'ai_check',
+                    'source_id' => (int) $attempt->id,
+                    'analysis_kind' => 'attempt',
+                    'has_analysis' => true,
                     'surah_number' => $surah ?: null,
                     'surah_name' => $surah ? QuranMetadata::name($surah) : null,
                     'ayah_start' => $from > 0 ? $from : null,
@@ -371,11 +379,36 @@ class DashboardService
                 ]));
             });
 
-        return $events
+        $events = $events
             ->filter(fn ($event) => ! empty($event['occurred_at']))
             ->sortByDesc('occurred_at')
             ->take($limit)
+            ->values();
+
+        $sessionIds = $events
+            ->filter(fn ($event) => ($event['analysis_kind'] ?? '') === 'session')
+            ->pluck('source_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
             ->values()
+            ->all();
+        $sessionModels = $sessionIds === []
+            ? collect()
+            : UserSession::query()
+                ->where('user_id', $user->id)
+                ->whereIn('id', $sessionIds)
+                ->get();
+        $flags = $this->sessionAnalysis->analysisFlagsForSessions($user, $sessionModels);
+
+        return $events
+            ->map(function (array $event) use ($flags) {
+                if (($event['analysis_kind'] ?? '') === 'session') {
+                    $event['has_analysis'] = (bool) ($flags[(int) ($event['source_id'] ?? 0)] ?? false);
+                }
+
+                return $event;
+            })
             ->all();
     }
 

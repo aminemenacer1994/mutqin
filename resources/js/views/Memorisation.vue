@@ -657,6 +657,25 @@
             </div>
           </div>
           </div>
+          <button
+            v-if="showWorkspaceAiReciteCta"
+            type="button"
+            class="workspace-ai-recite-cta"
+            data-testid="workspace-ai-recite"
+            :title="t('dashboard.ai_recite.cta_hint')"
+            :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+            @click="openWorkspaceAiRecite"
+          >
+            <span class="workspace-ai-recite-cta__shimmer" aria-hidden="true"></span>
+            <span class="workspace-ai-recite-cta__icon" aria-hidden="true">
+              <i class="bi bi-stars"></i>
+            </span>
+            <span class="workspace-ai-recite-cta__copy">
+              <strong>{{ t('dashboard.ai_recite.cta_label') }}</strong>
+              <small>{{ t('dashboard.ai_recite.cta_hint') }}</small>
+            </span>
+            <span class="workspace-ai-recite-cta__action">{{ t('dashboard.ai_recite.cta_action') }}</span>
+          </button>
           </div>
           <div
             v-if="mobileProgressPills.length && !isPostSessionChoiceVisible"
@@ -775,6 +794,25 @@
                       <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
                       <span>{{ headerSessionActionLabel }}</span>
                     </div>
+                    <button
+                      v-if="showWorkspaceAiReciteCta"
+                      type="button"
+                      class="workspace-ai-recite-cta workspace-ai-recite-cta--idle"
+                      data-testid="workspace-ai-recite-idle"
+                      :title="t('dashboard.ai_recite.cta_hint')"
+                      :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                      @click="openWorkspaceAiRecite"
+                    >
+                      <span class="workspace-ai-recite-cta__shimmer" aria-hidden="true"></span>
+                      <span class="workspace-ai-recite-cta__icon" aria-hidden="true">
+                        <i class="bi bi-stars"></i>
+                      </span>
+                      <span class="workspace-ai-recite-cta__copy">
+                        <strong>{{ t('dashboard.ai_recite.cta_label') }}</strong>
+                        <small>{{ t('dashboard.ai_recite.cta_hint') }}</small>
+                      </span>
+                      <span class="workspace-ai-recite-cta__action">{{ t('dashboard.ai_recite.cta_action') }}</span>
+                    </button>
                   </div>
                   <nav
                     v-if="isLoggedIn && (shouldShowWorkspaceJourney || showIdleQuickStartChoices)"
@@ -860,6 +898,25 @@
                     <i class="bi" :class="headerSessionActionIcon" aria-hidden="true"></i>
                     <span>{{ headerSessionActionLabel }}</span>
                   </div>
+                  <button
+                    v-if="showWorkspaceAiReciteCta"
+                    type="button"
+                    class="workspace-ai-recite-cta workspace-ai-recite-cta--idle"
+                    data-testid="workspace-ai-recite-aside"
+                    :title="t('dashboard.ai_recite.cta_hint')"
+                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                    @click="openWorkspaceAiRecite"
+                  >
+                    <span class="workspace-ai-recite-cta__shimmer" aria-hidden="true"></span>
+                    <span class="workspace-ai-recite-cta__icon" aria-hidden="true">
+                      <i class="bi bi-stars"></i>
+                    </span>
+                    <span class="workspace-ai-recite-cta__copy">
+                      <strong>{{ t('dashboard.ai_recite.cta_label') }}</strong>
+                      <small>{{ t('dashboard.ai_recite.cta_hint') }}</small>
+                    </span>
+                    <span class="workspace-ai-recite-cta__action">{{ t('dashboard.ai_recite.cta_action') }}</span>
+                  </button>
                 </div>
               </aside>
             </div>
@@ -1257,7 +1314,6 @@
               type="button">
               <i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}
             </button> -->
-            <!-- Settings tab hidden permanently; display/reading controls live in Setup and Techniques -->
           </div>
         </div>
 
@@ -2041,215 +2097,9 @@
             </div>
           </div>
 
-          <!-- SETTINGS TAB - Same layout as Techniques tab -->
-          <div v-if="tab === 'settings'" class="sheet">
-
-            <!-- Display Settings Section -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('display_settings')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-display"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">{{ t('sessionSetup.display') }}</span>
-                    <span class="st-sub">{{ t('sessionSetup.displaySub') }}</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.display_settings }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.display_settings">
-
-                <!-- Tajweed -->
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.tajweed') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.tajweedDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: tajweedEnabled }" @click="toggleTajweed">
-                    {{ tajweedEnabled ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-
-                <!-- Font Size -->
-                <div class="setting-item setting-item-range">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.fontSize') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.fontSizeDesc') }}</div>
-                  </div>
-                  <div class="range-control-compact">
-                    <span class="range-value-badge">{{ defaultFontSize }}%</span>
-                    <input type="range" min="70" max="280" step="10" v-model.number="defaultFontSize"
-                      @input="updateDefaultFontSize" class="input range-slider">
-                  </div>
-                </div>
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('common.language') }}</div>
-                    <div class="setting-description">{{ t('memorisation.english_arabic_or_french_ui') }}</div>
-                  </div>
-                  <select class="select language-select" :value="activeLocale"
-                    @change="onLanguageChange($event.target.value)">
-                    <option v-for="option in languageOptions" :key="option.value" :value="option.value">{{ option.label
-                      }}</option>
-                  </select>
-                </div>
-              </div>
-            </section>
-
-            <!-- Reading Aids Section -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('reading_settings')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-book-half"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">{{ t('sessionSetup.readingAids') }}</span>
-                    <span class="st-sub">{{ t('sessionSetup.readingAidsSub') }}</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.reading_settings }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.reading_settings">
-
-                
-
-                <!-- Translation -->
-                <div v-if="readingViewMode === 'stacked'" class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('memorisation.reading.translation') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.translationDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: showTranslation }"
-                    @click="toggleReadingOption('translation')">
-                    {{ showTranslation ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-
-                <!-- Transliteration -->
-                <div v-if="readingViewMode === 'stacked'" class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.transliteration') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.transliterationDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: showTransliteration }"
-                    @click="toggleReadingOption('transliteration')">
-                    {{ showTransliteration ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-
-                <!-- Word by word -->
-                <div v-if="readingViewMode === 'stacked'" class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.wordByWord') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.wordByWordDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: showWordByWord }"
-                    @click="toggleReadingOption('wbw')">
-                    {{ showWordByWord ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-
-                <!-- Word Audio: always enabled — toggle removed -->
-              </div>
-            </section>
-
-            <!-- AI Recite settings -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('ai_recite_settings')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-mic"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">{{ t('sessionSetup.aiRecite.title') }}</span>
-                    <span class="st-sub">{{ t('sessionSetup.aiRecite.subtitle') }}</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.ai_recite_settings }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.ai_recite_settings">
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.aiRecite.recallMode') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.aiRecite.recallModeDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: aiRecallModeEnabled }"
-                    @click="setAiRecallModeEnabled(!aiRecallModeEnabled)">
-                    {{ aiRecallModeEnabled ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.aiRecite.strictProgression') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.aiRecite.strictProgressionDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: aiRecitationStrictProgression }"
-                    @click="setAiReciteStrictProgressionEnabled(!aiRecitationStrictProgression)">
-                    {{ aiRecitationStrictProgression ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.aiRecite.persistMistakes') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.aiRecite.persistMistakesDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: aiRecitationPersistMistakes }"
-                    @click="setAiRecitePersistMistakesEnabled(!aiRecitationPersistMistakes)">
-                    {{ aiRecitationPersistMistakes ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <!-- Check memorisation (AMD) settings -->
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('amd_settings')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-eye-slash"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title">{{ t('sessionSetup.amd.title') }}</span>
-                    <span class="st-sub">{{ t('sessionSetup.amd.subtitle') }}</span>
-                  </span>
-                </span>
-                <span class="st-chev" :class="{ open: sectionOpen.amd_settings }"><i
-                    class="bi bi-chevron-down"></i></span>
-              </button>
-              <div class="sheet-content" v-show="sectionOpen.amd_settings">
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.amd.wordsShown') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.amd.wordsShownDesc') }}</div>
-                  </div>
-                  <select
-                    class="select amd-settings-select"
-                    :value="amdSettingsHidePercent"
-                    :aria-label="t('sessionSetup.amd.wordsShown')"
-                    @change="setAmdHidePercentFromSettings(Number($event.target.value))"
-                  >
-                    <option
-                      v-for="option in amdWordsShownSettingsOptions"
-                      :key="option.hidePercent"
-                      :value="option.hidePercent"
-                    >
-                      {{ t('sessionSetup.amd.wordsShownValue', { percent: option.shownPercent }) }}
-                    </option>
-                  </select>
-                </div>
-                <div class="setting-item">
-                  <div class="setting-info">
-                    <div class="setting-label">{{ t('sessionSetup.amd.mistakeSound') }}</div>
-                    <div class="setting-description">{{ t('sessionSetup.amd.mistakeSoundDesc') }}</div>
-                  </div>
-                  <button class="toggle-chip" :class="{ active: amdMistakeSoundEnabled }"
-                    @click="setAmdMistakeSoundEnabled(!amdMistakeSoundEnabled)">
-                    {{ amdMistakeSoundEnabled ? t('common.on') : t('common.off') }}
-                  </button>
-                </div>
-              </div>
-            </section>
-          </div>
         </div>
 
-        <div class="tools-footer" :class="{ 'settings-footer': tab === 'settings' }">
+        <div class="tools-footer">
           <button
             type="button"
             class="tools-btn btn btn-primary session-primary-action"
@@ -2776,53 +2626,31 @@
       </div>
     </div>
 
-    <div v-if="showSessionAnalyticsModal" class="modal-overlay mutqin-modal-overlay session-analytics-overlay"
-      @click.self="closeSessionAnalyticsModal">
-      <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide">
-      <div class="modal-content mutqin-modal-surface session-analytics-modal" role="dialog" aria-modal="true"
-        aria-labelledby="sessionAnalyticsTitle">
-        <div class="modal-header session-analytics-header">
-          <div class="session-analytics-head-copy">
-            <h2 id="sessionAnalyticsTitle">{{ t('memorisation.session_analytics_overview') }}</h2>
-            <p v-if="analyticsModalSessionLabel">{{ analyticsModalSessionLabel }}</p>
-            <small v-if="analyticsModalSessionMeta">{{ analyticsModalSessionMeta }}</small>
-          </div>
-          <div class="session-analytics-head-actions">
-            <button type="button" class="session-export-btn session-analytics-download"
-              :disabled="analyticsReportState.loading || !analyticsModalRecord" @click="downloadSessionAnalyticsReport">
-              <i class="bi" :class="analyticsReportIcon"></i>
-              <span>{{ analyticsReportLabel }}</span>
-            </button>
-            <button class="modal-close-btn" @click="closeSessionAnalyticsModal" :aria-label="t('common.close')">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-        </div>
-        <div class="modal-body session-analytics-body">
-          <div v-if="!analyticsModalLoaded" class="analytics-loading">
-            <i class="bi bi-hourglass-split"></i>
-            <span>{{ t('memorisation.preparing_analytics') }}</span>
-          </div>
-          <AppStatus
-            v-else-if="analyticsModalError"
-            variant="error"
-            fill
-            :title="t('memorisation.analyticsEmpty.modalErrorTitle')"
-            :description="t('memorisation.analyticsEmpty.modalErrorDesc')"
-            :action-label="t('common.close')"
-            @action="closeSessionAnalyticsModal"
-          />
-          <AppStatus
-            v-else-if="!analyticsModalData || !analyticsModalHasContent"
-            variant="empty"
-            fill
-            icon="bi-graph-up"
-            :title="t('memorisation.analyticsEmpty.modalEmptyTitle')"
-            :description="t('memorisation.analyticsEmpty.modalEmptyDesc')"
-            :action-label="t('common.close')"
-            @action="closeSessionAnalyticsModal"
-          />
-          <template v-else-if="analyticsModalData">
+    <SessionAnalysisModal
+      :open="showSessionAnalyticsModal"
+      :loading="!analyticsModalLoaded"
+      :error="analyticsModalError"
+      :empty="analyticsModalLoaded && !analyticsModalError && (!analyticsModalData || !analyticsModalHasContent)"
+      :title="t('memorisation.session_analytics_overview')"
+      :session-label="analyticsModalSessionLabel"
+      :session-meta="analyticsModalSessionMeta"
+      :close-label="t('common.close')"
+      :loading-label="t('memorisation.preparing_analytics')"
+      :error-title="t('memorisation.analyticsEmpty.modalErrorTitle')"
+      :error-desc="t('memorisation.analyticsEmpty.modalErrorDesc')"
+      :error-action-label="t('common.close')"
+      :empty-title="t('memorisation.analyticsEmpty.modalEmptyTitle')"
+      :empty-desc="t('memorisation.analyticsEmpty.modalEmptyDesc')"
+      @close="closeSessionAnalyticsModal"
+    >
+      <template #header-actions>
+        <button type="button" class="session-export-btn session-analytics-download"
+          :disabled="analyticsReportState.loading || !analyticsModalRecord" @click="downloadSessionAnalyticsReport">
+          <i class="bi" :class="analyticsReportIcon"></i>
+          <span>{{ analyticsReportLabel }}</span>
+        </button>
+      </template>
+      <template v-if="analyticsModalData">
             <section class="session-analytics-section">
               <div class="session-analytics-summary-grid">
                 <article v-for="item in analyticsSummaryCards" :key="item.key" class="session-analytics-summary-card">
@@ -2987,10 +2815,7 @@
               </article>
             </section>
           </template>
-        </div>
-      </div>
-      </div>
-    </div>
+    </SessionAnalysisModal>
 
     <div v-if="showAdvancedMetricsModal" class="modal-overlay mutqin-modal-overlay session-analytics-overlay advanced-metrics-overlay"
       @click.self="closeAdvancedMetricsModal">
@@ -4386,6 +4211,16 @@
     </div>
 
   </div>
+
+    <DashboardAiReciteModal
+      v-if="dashboardAiReciteReady"
+      :open="dashboardAiReciteOpen"
+      :user-id="workspaceAiReciteUserId"
+      :progress="workspaceAiReciteProgress"
+      :preferred-location="workspaceAiRecitePreferredLocation"
+      @close="closeWorkspaceAiRecite"
+      @saved="onWorkspaceAiReciteSaved"
+    />
 
     <AiMemorisationDetectionModal
       v-if="aiTestModalsEnabled && amdOpen && isAmdEntryActive(amdEntrySource)"

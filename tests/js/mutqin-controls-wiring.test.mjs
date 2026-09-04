@@ -81,12 +81,10 @@ includesAll('technique controls', [
 ])
 
 includesAll('reading settings controls', [
-  /v-model\.number="defaultFontSize"/,
-  /@input="updateDefaultFontSize"/,
-  /@click="toggleReadingOption\('translation'\)"/,
-  /@click="toggleReadingOption\('transliteration'\)"/,
-  /@click="toggleReadingOption\('wbw'\)"/,
-  /Word Audio: always enabled/,
+  /@click\.stop="toggleReadingOption\('translation'\)"/,
+  /@click\.stop="toggleReadingOption\('transliteration'\)"/,
+  /@click\.stop="toggleReadingOption\('wbw'\)"/,
+  /@click\.stop="toggleTajweed"/,
   /applySettingsChanges\(\{ silent: true \}\)/,
   /syncSettingsDraft\(\)/,
   /toggleSettingsOption\(key\)/,
@@ -283,6 +281,14 @@ includesAll('desktop control group swap', [
   /class="workspace-shell-head-utility-row"/,
 ])
 
+includesAll('workspace AI Recite companion', [
+  /data-testid="workspace-ai-recite"/,
+  /showWorkspaceAiReciteCta/,
+  /openWorkspaceAiRecite/,
+  /class="workspace-ai-recite-cta"/,
+  /webpackChunkName: "dash-ai-recite"/,
+])
+
 includesAll('top toolbar feature spacing', [
   /\.top-card-icon-controls \{[\s\S]*--top-card-toolbar-gap:\s*0\.5rem;/,
   /\.top-card-icon-controls \{[\s\S]*gap:\s*var\(--top-card-toolbar-gap\)\s*!important;/,
@@ -326,8 +332,8 @@ includesAll('top toolbar feature spacing', [
   )
   assert.match(
     mobileGridCss,
-    /\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?grid-row:\s*2\s*!important[\s\S]*?overflow-x:\s*auto/,
-    'mobile-grid must place progress pills on row 2 with horizontal scroll'
+    /\.workspace-shell-head > \.workspace-shell-progress-pills \{[\s\S]*?grid-row:\s*2\s*!important[\s\S]*?overflow-x:\s*(?:hidden|clip)/,
+    'mobile-grid must place progress pills on row 2 without horizontal scroll'
   )
   assert.match(
     mobileGridCss,

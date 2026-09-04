@@ -3,14 +3,6 @@
 @section('content')
     @php
         $isAdmin = $isAdmin ?? $user->isAdmin();
-        $planKey = strtolower((string) ($user->subscription_plan ?: 'free'));
-        $planLabel = $isAdmin
-            ? __('profile.org_plan')
-            : ($planLabels[$planKey] ?? __('profile.free_access'));
-        $renewalEndsAt = $user->subscription_current_period_ends_at;
-        $isFreeLike = in_array($planKey, ['free', ''], true)
-            || in_array(strtolower((string) ($user->subscription_status ?: 'free')), ['free', 'none', ''], true);
-        $isChangePassword = $user->hasSetPassword();
         $verificationRequired = $verificationRequired ?? false;
         $pendingEmail = $user->pending_email;
         $emailVerified = $user->email_verified_at !== null;
@@ -19,23 +11,12 @@
         if ($initials === '') {
             $initials = mb_strtoupper(mb_substr((string) $user->email, 0, 1));
         }
-        $localeLabels = [
-            'en' => __('ui.english'),
-            'fr' => __('ui.french'),
-            'ar' => __('ui.arabic'),
-        ];
-        $currentLocale = in_array($user->locale, $supportedLocales ?? [], true) ? $user->locale : 'en';
-        $currentTheme = $currentTheme ?? 'light';
-        $themeModes = $themeModes ?? [];
     @endphp
 
     <section class="container-fluid shell profile-page">
         <div class="profile-stage">
             <div class="profile-hero-card">
                 <div class="profile-hero-copy">
-                    <div class="profile-kicker-row">
-                        <span class="profile-kicker">{{ $isAdmin ? __('profile.kicker_admin') : __('profile.kicker') }}</span>
-                    </div>
                     <div class="profile-hero-identity">
                         @if ($user->avatar)
                             <img class="profile-avatar" src="{{ $user->avatar }}" alt="" width="56" height="56">
@@ -44,53 +25,9 @@
                         @endif
                         <div>
                             <h1>{{ __('profile.title') }}</h1>
-                            <p>{{ $isAdmin ? __('profile.hero_desc_admin') : __('profile.hero_desc') }}</p>
                         </div>
                     </div>
                 </div>
-
-                <aside
-                    class="profile-hero-summary"
-                    aria-label="{{ $isAdmin ? __('profile.org_snapshot') : __('profile.subscription_snapshot') }}"
-                >
-                    <div class="profile-summary-copy">
-                        <span class="profile-summary-label">
-                            {{ $isAdmin ? __('profile.org_plan_label') : __('profile.current_plan') }}
-                        </span>
-                        <strong class="profile-summary-plan">{{ $planLabel }}</strong>
-                        @unless ($isAdmin)
-                            <p class="profile-summary-meta">
-                                @if ($renewalEndsAt)
-                                    {{ __('profile.renewal_on', ['date' => $renewalEndsAt->format('j M Y')]) }}
-                                @elseif ($isFreeLike)
-                                    {{ __('profile.renewal_free_never') }}
-                                @else
-                                    {{ __('profile.renewal_not_scheduled') }}
-                                @endif
-                            </p>
-                            @if ($user->subscription_trial_ends_at)
-                                <p class="profile-summary-meta">{{ __('profile.trial_ends', ['date' => $user->subscription_trial_ends_at->format('j M Y')]) }}</p>
-                            @endif
-                        @endunless
-                    </div>
-
-                    <div class="profile-hero-actions">
-                        @if ($isAdmin)
-                            <a class="billing-primary-btn profile-action-btn profile-upgrade-btn" href="{{ route('admin.dashboard') }}">
-                                <i class="bi bi-speedometer2" aria-hidden="true"></i>
-                                {{ __('profile.open_admin_console') }}
-                            </a>
-                        @else
-                            @if ($user->stripe_customer_id)
-                                <form method="POST" action="{{ route('billing.portal') }}">
-                                    @csrf
-                                    <button type="submit" class="billing-secondary-btn profile-action-btn">{{ __('profile.manage_subscription') }}</button>
-                                </form>
-                            @endif
-                            <a class="billing-primary-btn profile-action-btn profile-upgrade-btn" href="{{ route('pricing') }}">{{ __('profile.upgrade_plan') }}</a>
-                        @endif
-                    </div>
-                </aside>
             </div>
 
             @if (session('billing_status'))
@@ -120,8 +57,7 @@
                     <div class="profile-grid">
                         <article class="profile-card profile-pane profile-card--details" data-profile-details id="personal-details">
                             <div class="profile-card-head">
-                                <h2><i class="bi bi-person-vcard" aria-hidden="true"></i>{{ __('profile.personal_details') }}</h2>
-                                <p>{{ __('profile.personal_details_desc') }}</p>
+                                <h2>{{ __('profile.personal_details') }}</h2>
                             </div>
 
                             <form
@@ -158,16 +94,10 @@
                                 <div class="profile-field" data-field="email">
                                     <div class="profile-field-label-row">
                                         <label class="form-label" for="profileEmail">{{ __('profile.email') }}</label>
-                                        @if ($pendingEmail || $emailVerified || $verificationRequired)
-                                            <span class="profile-email-status" aria-label="{{ __('profile.email_status') }}">
-                                                @if ($pendingEmail)
-                                                    <span class="profile-badge profile-badge--pending">{{ __('profile.email_pending') }}</span>
-                                                @elseif ($emailVerified)
-                                                    <span class="profile-badge profile-badge--verified">{{ __('profile.email_verified') }}</span>
-                                                @else
-                                                    <span class="profile-badge profile-badge--unverified">{{ __('profile.email_unverified') }}</span>
-                                                @endif
-                                            </span>
+                                        @if ($pendingEmail)
+                                            <span class="profile-badge profile-badge--pending">{{ __('profile.email_pending') }}</span>
+                                        @elseif ($verificationRequired && ! $emailVerified)
+                                            <span class="profile-badge profile-badge--unverified">{{ __('profile.email_unverified') }}</span>
                                         @endif
                                     </div>
                                     <input
@@ -187,8 +117,6 @@
                                         <p id="profileEmailHint" class="profile-field-note">{{ __('profile.email_change_pending', ['email' => $pendingEmail]) }}</p>
                                     @elseif ($verificationRequired && ! $emailVerified)
                                         <p id="profileEmailHint" class="profile-field-note">{{ __('profile.email_unverified_hint') }}</p>
-                                    @elseif ($verificationRequired)
-                                        <p id="profileEmailHint" class="profile-field-note">{{ __('profile.email_change_hint') }}</p>
                                     @endif
                                     <p id="profileEmailError" class="profile-field-error" data-error-for="email" role="alert">
                                         @error('email'){{ $message }}@enderror
@@ -225,189 +153,70 @@
                             @endif
                         </article>
 
-                        <article class="profile-card profile-pane" id="app-preferences">
+                        <article class="profile-card profile-pane" id="password">
                             <div class="profile-card-head">
-                                <h2><i class="bi bi-sliders" aria-hidden="true"></i>{{ __('profile.app_preferences') }}</h2>
-                                <p>{{ __('profile.app_preferences_desc') }}</p>
+                                <h2>{{ $user->hasSetPassword() ? __('profile.change_password') : __('profile.set_password') }}</h2>
                             </div>
-
-                            <div class="profile-pref-grid">
-                                <div class="profile-pref-block">
-                                    <h3 class="profile-pref-title" id="localeHeading">{{ __('profile.language') }}</h3>
-                                    <p class="profile-field-note" id="localeHint">{{ __('profile.language_desc') }}</p>
-                                    <div
-                                        class="profile-choice-grid profile-choice-grid--wrap"
-                                        role="radiogroup"
-                                        aria-labelledby="localeHeading"
-                                        aria-describedby="localeHint"
-                                        data-locale-group
-                                    >
-                                        @foreach ($supportedLocales as $localeCode)
-                                            <button
-                                                type="button"
-                                                class="profile-choice{{ $currentLocale === $localeCode ? ' is-selected' : '' }}"
-                                                role="radio"
-                                                data-locale-choice="{{ $localeCode }}"
-                                                aria-checked="{{ $currentLocale === $localeCode ? 'true' : 'false' }}"
-                                                @if ($currentLocale === $localeCode) aria-current="true" @endif
-                                            >
-                                                {{ $localeLabels[$localeCode] ?? $localeCode }}
-                                            </button>
-                                        @endforeach
-                                    </div>
-                                    <p class="profile-field-error" data-locale-error role="alert"></p>
-                                </div>
-
-                                <div class="profile-pref-block">
-                                    <h3 class="profile-pref-title" id="themeHeading">{{ __('profile.appearance') }}</h3>
-                                    <p class="profile-field-note" id="themeHint">{{ __('profile.appearance_desc') }}</p>
-                                    <div
-                                        class="profile-choice-grid"
-                                        role="radiogroup"
-                                        aria-labelledby="themeHeading"
-                                        aria-describedby="themeHint"
-                                        data-theme-group
-                                    >
-                                        @foreach ($themeModes as $mode)
-                                            <button
-                                                type="button"
-                                                class="profile-choice{{ $currentTheme === $mode['id'] ? ' is-selected' : '' }}"
-                                                role="radio"
-                                                data-theme-choice="{{ $mode['id'] }}"
-                                                aria-checked="{{ $currentTheme === $mode['id'] ? 'true' : 'false' }}"
-                                                @if ($currentTheme === $mode['id']) aria-current="true" @endif
-                                            >
-                                                <i class="bi {{ $mode['icon'] }}" aria-hidden="true"></i>
-                                                {{ __('profile.'.$mode['label_key']) }}
-                                            </button>
-                                        @endforeach
-                                    </div>
-                                    @unless ($user->theme)
-                                        <p class="profile-field-note">{{ __('profile.theme_default_note') }}</p>
-                                    @endunless
-                                    <p class="profile-field-error" data-theme-error role="alert"></p>
-                                </div>
-                            </div>
-                        </article>
-                    </div>
-                </section>
-
-                <article class="profile-card profile-pane profile-card--password" id="settings">
-                    <div class="profile-card-head">
-                        <h2>
-                            <i class="bi bi-shield-lock" aria-hidden="true"></i>
-                            {{ __('profile.account_security') }}
-                        </h2>
-                        <p>{{ __('profile.account_security_desc') }}</p>
-                    </div>
-
-                    <div class="profile-security">
                             <form
                                 method="POST"
                                 action="{{ route('profile.password.update') }}"
-                                class="profile-form profile-password-form"
+                                class="profile-form"
                                 data-password-form
                                 data-form-kind="password"
                                 novalidate
                             >
                                 @csrf
                                 @method('PUT')
-
-                                @if ($isChangePassword)
+                                @if ($user->hasSetPassword())
                                     <div class="profile-field" data-field="current_password">
                                         <label class="form-label" for="currentPassword">{{ __('profile.current_password') }}</label>
-                                        <div class="profile-password-wrap">
-                                            <input
-                                                id="currentPassword"
-                                                name="current_password"
-                                                type="password"
-                                                class="form-control profile-password-input @error('current_password') is-invalid @enderror"
-                                                autocomplete="current-password"
-                                                aria-describedby="currentPasswordError"
-                                                @if ($errors->has('current_password')) aria-invalid="true" @endif
-                                            >
-                                            <button
-                                                type="button"
-                                                class="profile-password-toggle"
-                                                data-password-toggle="currentPassword"
-                                                aria-label="{{ __('ui.show_password') }}"
-                                            >
-                                                <i class="bi bi-eye" aria-hidden="true"></i>
-                                            </button>
-                                        </div>
-                                        <p id="currentPasswordError" class="profile-field-error" data-error-for="current_password" role="alert">@error('current_password'){{ $message }}@enderror</p>
+                                        <input
+                                            id="currentPassword"
+                                            name="current_password"
+                                            type="password"
+                                            class="form-control @error('current_password') is-invalid @enderror"
+                                            autocomplete="current-password"
+                                            @if ($errors->has('current_password')) aria-invalid="true" @endif
+                                        >
+                                        <p class="profile-field-error" data-error-for="current_password" role="alert">
+                                            @error('current_password'){{ $message }}@enderror
+                                        </p>
                                     </div>
                                 @endif
-
                                 <div class="profile-field" data-field="password">
                                     <label class="form-label" for="newPassword">{{ __('profile.new_password') }}</label>
-                                    <div class="profile-password-wrap">
-                                        <input
-                                            id="newPassword"
-                                            name="password"
-                                            type="password"
-                                            class="form-control profile-password-input @error('password') is-invalid @enderror"
-                                            autocomplete="new-password"
-                                            required
-                                            minlength="8"
-                                            @if ($errors->has('password')) aria-invalid="true" @endif
-                                            aria-describedby="passwordStrength passwordError"
-                                        >
-                                        <button
-                                            type="button"
-                                            class="profile-password-toggle"
-                                            data-password-toggle="newPassword"
-                                            aria-label="{{ __('ui.show_password') }}"
-                                        >
-                                            <i class="bi bi-eye" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                    <div
-                                        id="passwordStrength"
-                                        class="profile-password-strength"
-                                        data-password-strength
-                                        data-label-weak="{{ __('profile.password_strength_weak') }}"
-                                        data-label-fair="{{ __('profile.password_strength_fair') }}"
-                                        data-label-strong="{{ __('profile.password_strength_strong') }}"
-                                        hidden
+                                    <input
+                                        id="newPassword"
+                                        name="password"
+                                        type="password"
+                                        class="form-control @error('password') is-invalid @enderror"
+                                        autocomplete="new-password"
+                                        minlength="8"
+                                        required
+                                        @if ($errors->has('password')) aria-invalid="true" @endif
                                     >
-                                        <div class="profile-password-strength__track" aria-hidden="true">
-                                            <span></span><span></span><span></span>
-                                        </div>
-                                        <p class="profile-password-strength__label" data-strength-label></p>
-                                    </div>
-                                    <p id="passwordError" class="profile-field-error" data-error-for="password" role="alert">@error('password'){{ $message }}@enderror</p>
+                                    <p class="profile-field-error" data-error-for="password" role="alert">
+                                        @error('password'){{ $message }}@enderror
+                                    </p>
                                 </div>
-
                                 <div class="profile-field" data-field="password_confirmation">
                                     <label class="form-label" for="newPasswordConfirmation">{{ __('profile.confirm_new_password') }}</label>
-                                    <div class="profile-password-wrap">
-                                        <input
-                                            id="newPasswordConfirmation"
-                                            name="password_confirmation"
-                                            type="password"
-                                            class="form-control profile-password-input @error('password') is-invalid @enderror"
-                                            autocomplete="new-password"
-                                            required
-                                            minlength="8"
-                                            aria-describedby="passwordConfirmError"
-                                        >
-                                        <button
-                                            type="button"
-                                            class="profile-password-toggle"
-                                            data-password-toggle="newPasswordConfirmation"
-                                            aria-label="{{ __('ui.show_password') }}"
-                                        >
-                                            <i class="bi bi-eye" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                    <p id="passwordConfirmError" class="profile-field-error" data-error-for="password_confirmation" role="alert"></p>
+                                    <input
+                                        id="newPasswordConfirmation"
+                                        name="password_confirmation"
+                                        type="password"
+                                        class="form-control @error('password_confirmation') is-invalid @enderror"
+                                        autocomplete="new-password"
+                                        minlength="8"
+                                        required
+                                        @if ($errors->has('password_confirmation')) aria-invalid="true" @endif
+                                    >
+                                    <p class="profile-field-error" data-error-for="password_confirmation" role="alert">
+                                        @error('password_confirmation'){{ $message }}@enderror
+                                    </p>
                                 </div>
-
                                 <button type="submit" class="billing-primary-btn profile-submit-btn" data-submit-btn disabled>
-                                    <span class="profile-submit-btn__state" data-state="idle">
-                                        {{ $isChangePassword ? __('profile.update_password') : __('profile.set_password') }}
-                                    </span>
+                                    <span class="profile-submit-btn__state" data-state="idle">{{ $user->hasSetPassword() ? __('profile.update_password') : __('profile.set_password') }}</span>
                                     <span class="profile-submit-btn__state" data-state="loading" hidden>
                                         <i class="bi bi-arrow-repeat profile-submit-btn__spinner" aria-hidden="true"></i>
                                         {{ __('profile.saving') }}
@@ -418,68 +227,24 @@
                                     </span>
                                 </button>
                             </form>
-
-                            <div class="profile-signin-methods">
-                                <h3 class="profile-signin-methods__title">{{ __('profile.sign_in_methods') }}</h3>
-                                <ul class="profile-signin-methods__list">
-                                    @if ($user->connectedWithGoogle())
-                                        <li>
-                                            <i class="bi bi-google" aria-hidden="true"></i>
-                                            <span>{{ __('profile.connected_with_google', ['email' => $user->email]) }}</span>
-                                        </li>
-                                    @elseif ($emailVerified || ! $verificationRequired)
-                                        <li>
-                                            <i class="bi bi-google" aria-hidden="true"></i>
-                                            <span>{{ __('profile.link_google_desc') }}</span>
-                                            <a href="{{ route('auth.google.redirect') }}" class="profile-link-google">{{ __('profile.link_google') }}</a>
-                                        </li>
-                                    @else
-                                        <li>
-                                            <i class="bi bi-google" aria-hidden="true"></i>
-                                            <span>{{ __('profile.link_google_verify_first') }}</span>
-                                        </li>
-                                    @endif
-                                    @if ($isChangePassword)
-                                        <li>
-                                            <i class="bi bi-envelope" aria-hidden="true"></i>
-                                            <span>{{ __('profile.sign_in_email_password') }}</span>
-                                        </li>
-                                    @elseif (! $user->connectedWithGoogle())
-                                        <li>
-                                            <i class="bi bi-envelope" aria-hidden="true"></i>
-                                            <span>{{ __('profile.sign_in_email_only') }}</span>
-                                        </li>
-                                    @endif
-                                </ul>
-                                @error('google')
-                                    <p class="profile-field-error" role="alert">{{ $message }}</p>
-                                @enderror
-                            </div>
+                        </article>
                     </div>
-                </article>
+                </section>
             </div>
 
             @unless ($isAdmin)
-                <article class="profile-card profile-pane profile-card-wide profile-danger" id="danger-zone">
-                    <div class="profile-card-head">
-                        <h2><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>{{ __('profile.danger_zone') }}</h2>
-                        <p>{{ __('profile.danger_zone_desc') }}</p>
-                    </div>
-
-                    <div class="profile-danger-grid">
-                        <div class="profile-danger-item">
-                            <div class="profile-danger-item__copy">
-                                <strong>{{ __('profile.delete_account') }}</strong>
-                                <p>{{ __('profile.delete_account_desc') }}</p>
-                            </div>
-                            <button
-                                type="button"
-                                class="profile-danger-btn profile-danger-btn--delete"
-                                data-open-delete-dialog
-                            >
-                                {{ __('profile.delete_account') }}
-                            </button>
+                <article class="profile-card profile-pane profile-card-wide" id="delete-account">
+                    <div class="profile-danger-item">
+                        <div class="profile-danger-item__copy">
+                            <strong>{{ __('profile.delete_account') }}</strong>
                         </div>
+                        <button
+                            type="button"
+                            class="profile-danger-btn profile-danger-btn--delete"
+                            data-open-delete-dialog
+                        >
+                            {{ __('profile.delete_account') }}
+                        </button>
                     </div>
                 </article>
             @endunless

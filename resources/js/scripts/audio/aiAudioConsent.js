@@ -149,3 +149,74 @@ export function aiAudioConsentMeta(options = {}) {
     privacyPolicyUrl: config.privacy_policy_url,
   }
 }
+
+/**
+ * Persist an explicit accept/decline locally and on the server when signed in.
+ *
+ * @param {{
+ *   accepted: boolean,
+ *   userId?: string|number|null,
+ *   fetchImpl?: typeof fetch,
+ * }} options
+ */
+export async function persistAiAudioConsentDecision(options = {}) {
+  const accepted = !!options.accepted
+  const policyVersion = readAudioPrivacyConfig().policy_version
+  const status = accepted ? AI_AUDIO_CONSENT_STATUS.ACCEPTED : AI_AUDIO_CONSENT_STATUS.DECLINED
+  const record = {
+    status,
+    version: policyVersion,
+    acceptedAt: new Date().toISOString(),
+  }
+  writeLocalAiAudioConsent(options.userId, record)
+
+  const snapshot = {
+    status: record.status,
+    version: record.version,
+    accepted_at: record.acceptedAt,
+    policy_version: policyVersion,
+    needs_consent: false,
+  }
+
+  if (typeof window !== 'undefined') {
+    window.mutqinAiAudioConsent = snapshot
+  }
+
+  const authenticated = typeof window !== 'undefined' && !!window.mutqinAuthCheck
+  if (!authenticated) {
+    return { snapshot, synced: false }
+  }
+
+  const fetchImpl = options.fetchImpl
+    || (typeof fetch !== 'undefined' ? fetch : null)
+
+  if (!fetchImpl) {
+    return { snapshot, synced: false }
+  }
+
+  try {
+    const csrf = typeof document !== 'undefined'
+      ? document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+      : null
+    const response = await fetchImpl('/api/profile/ai-audio-consent', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({ accepted }),
+    })
+    if (!response.ok) {
+      return { snapshot, synced: false }
+    }
+    const data = await response.json()
+    if (typeof window !== 'undefined' && data) {
+      window.mutqinAiAudioConsent = data
+    }
+    return { snapshot: data || snapshot, synced: true }
+  } catch {
+    return { snapshot, synced: false }
+  }
+}

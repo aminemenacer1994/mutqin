@@ -177,39 +177,43 @@ class RecitationAssessmentService
                 'device_metadata' => $this->sanitizeDeviceMetadata($payload['device_metadata'] ?? null),
             ]);
 
+            $standalone = $this->isStandaloneDashboardRecite($payload);
             $config = is_array($planData['config'] ?? null) ? $planData['config'] : [];
-            $practicePlan = MemorisationPracticePlan::query()->create([
-                'user_id' => $user->id,
-                'assessment_id' => $assessment->id,
-                'session_recommendation_id' => $payload['session_recommendation_id'] ?? null,
-                'title' => $planData['title'],
-                'explanation' => $planData['explanation'],
-                'band' => $planData['band'],
-                'difficulty' => $planData['difficulty'],
-                'status' => MemorisationPracticePlan::STATUS_DRAFT,
-                'practice_scope' => $practiceScope,
-                'recommended_technique' => $config['technique'] ?? ($planData['techniques'][0]['id'] ?? null),
-                'recommended_repetitions' => (int) ($planData['repetitions']['target'] ?? $config['repetitions'] ?? 3),
-                'recommended_playback_speed' => isset($config['playback_speed'])
-                    ? (float) $config['playback_speed']
-                    : null,
-                'recommended_review_at' => now()->addDays(
-                    (int) config('mutqin.learning_history.default_review_days', 1)
-                ),
-                'surah_number' => $planData['surah_number'],
-                'start_ayah' => $planData['start_ayah'],
-                'end_ayah' => $planData['end_ayah'],
-                'priority_ayahs' => $planData['priority_ayahs'],
-                'weak_words' => $planData['weak_words'],
-                'weak_phrases' => $planData['weak_phrases'],
-                'techniques' => $planData['techniques'],
-                'repetitions' => $planData['repetitions'],
-                'config' => array_merge($config, [
+            $practicePlan = null;
+            if (! $standalone) {
+                $practicePlan = MemorisationPracticePlan::query()->create([
+                    'user_id' => $user->id,
+                    'assessment_id' => $assessment->id,
+                    'session_recommendation_id' => $payload['session_recommendation_id'] ?? null,
+                    'title' => $planData['title'],
+                    'explanation' => $planData['explanation'],
+                    'band' => $planData['band'],
+                    'difficulty' => $planData['difficulty'],
+                    'status' => MemorisationPracticePlan::STATUS_DRAFT,
                     'practice_scope' => $practiceScope,
-                    'algorithm_version' => $assessment->algorithm_version,
-                    'model_version' => $assessment->model_version,
-                ]),
-            ]);
+                    'recommended_technique' => $config['technique'] ?? ($planData['techniques'][0]['id'] ?? null),
+                    'recommended_repetitions' => (int) ($planData['repetitions']['target'] ?? $config['repetitions'] ?? 3),
+                    'recommended_playback_speed' => isset($config['playback_speed'])
+                        ? (float) $config['playback_speed']
+                        : null,
+                    'recommended_review_at' => now()->addDays(
+                        (int) config('mutqin.learning_history.default_review_days', 1)
+                    ),
+                    'surah_number' => $planData['surah_number'],
+                    'start_ayah' => $planData['start_ayah'],
+                    'end_ayah' => $planData['end_ayah'],
+                    'priority_ayahs' => $planData['priority_ayahs'],
+                    'weak_words' => $planData['weak_words'],
+                    'weak_phrases' => $planData['weak_phrases'],
+                    'techniques' => $planData['techniques'],
+                    'repetitions' => $planData['repetitions'],
+                    'config' => array_merge($config, [
+                        'practice_scope' => $practiceScope,
+                        'algorithm_version' => $assessment->algorithm_version,
+                        'model_version' => $assessment->model_version,
+                    ]),
+                ]);
+            }
 
             $this->history->syncWordResults($assessment, $aligned['word_results']);
             $this->history->upsertWeakSpots($user, $assessment, $analysis);
@@ -218,8 +222,13 @@ class RecitationAssessmentService
             $outcome = $aligned['accuracy'] >= 80 ? 'strong' : ($aligned['accuracy'] >= 55 ? 'mixed' : 'weak');
             $this->mastery->applyFromAssessment($user, $assessment, $analysis, $aligned, $outcome);
 
-            $this->mirrorLegacyAttempt($user, $assessment, $practicePlan, $aligned, $analysis);
-            $this->syncRecommendation($user, $payload, $assessment, $practicePlan, $aligned, $analysis, $planData);
+            $standaloneAttempt = null;
+            if ($standalone) {
+                $standaloneAttempt = $this->persistStandaloneAttempt($user, $assessment, $aligned, $analysis, $payload);
+            } else {
+                $this->mirrorLegacyAttempt($user, $assessment, $practicePlan, $aligned, $analysis);
+                $this->syncRecommendation($user, $payload, $assessment, $practicePlan, $aligned, $analysis, $planData);
+            }
 
             $improvement = null;
             if ($previousId) {
@@ -250,7 +259,8 @@ class RecitationAssessmentService
                     'priority' => $analysis['priority'],
                     'confidence' => $analysis['confidence'],
                 ],
-                'practice_plan' => $this->transformPlan($practicePlan, $planData),
+                'practice_plan' => $practicePlan ? $this->transformPlan($practicePlan, $planData) : null,
+                'ai_attempt' => $standaloneAttempt ? $this->transformStandaloneAttempt($standaloneAttempt) : null,
                 'improvement' => $improvement,
             ];
         });
@@ -474,6 +484,10 @@ class RecitationAssessmentService
     {
         $analysis = is_array($assessment->weakness_analysis) ? $assessment->weakness_analysis : [];
         $plan = $assessment->practicePlan;
+        $linkedAttempt = AiReciteAttempt::query()
+            ->where('user_id', $assessment->user_id)
+            ->where('memorisation_assessment_id', $assessment->id)
+            ->first();
 
         return [
             'assessment' => $this->transformAssessment($assessment),
@@ -489,6 +503,7 @@ class RecitationAssessmentService
                 'confidence' => $analysis['confidence'] ?? $assessment->confidence,
             ],
             'practice_plan' => $plan ? $this->transformPlan($plan) : null,
+            'ai_attempt' => $linkedAttempt ? $this->transformStandaloneAttempt($linkedAttempt) : null,
             'improvement' => null,
             'idempotent' => true,
         ];
@@ -659,6 +674,104 @@ class RecitationAssessmentService
                 array_slice(is_array($raw['recurringWeaknesses'] ?? null) ? $raw['recurringWeaknesses'] : [], 0, 12)
             )),
             'segments' => $segments,
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $payload
+     */
+    private function isStandaloneDashboardRecite(array $payload): bool
+    {
+        $type = (string) ($payload['assessment_type'] ?? '');
+        $source = (string) ($payload['source'] ?? '');
+
+        return $type === MemorisationAssessment::TYPE_DASHBOARD_AI_RECITE
+            || $source === AiReciteAttempt::SOURCE_DASHBOARD;
+    }
+
+    /**
+     * @param  array<string,mixed>  $aligned
+     * @param  array<string,mixed>  $analysis
+     * @param  array<string,mixed>  $payload
+     */
+    private function persistStandaloneAttempt(
+        User $user,
+        MemorisationAssessment $assessment,
+        array $aligned,
+        array $analysis,
+        array $payload
+    ): AiReciteAttempt {
+        $accuracy = (int) ($aligned['accuracy'] ?? $assessment->overall_accuracy ?? 0);
+        $band = $accuracy >= 80 ? 'strong' : ($accuracy >= 55 ? 'mixed' : 'weak');
+        $peekUsed = (bool) ($payload['peek_used'] ?? false);
+        $source = AiReciteAttempt::SOURCE_DASHBOARD;
+
+        $attemptNumber = (int) AiReciteAttempt::query()
+            ->where('user_id', $user->id)
+            ->where('source', $source)
+            ->max('attempt_number') + 1;
+
+        return AiReciteAttempt::query()->updateOrCreate(
+            ['memorisation_assessment_id' => $assessment->id],
+            [
+                'user_id' => $user->id,
+                'session_recommendation_id' => null,
+                'user_session_id' => null,
+                'source' => $source,
+                'attempt_number' => max(1, $attemptNumber),
+                'accuracy_percent' => $accuracy,
+                'band' => $band,
+                'peek_used' => $peekUsed,
+                'duration_ms' => $assessment->duration_ms,
+                'ayah_range' => [
+                    'surah' => $assessment->surah_number,
+                    'from' => $assessment->start_ayah,
+                    'to' => $assessment->end_ayah,
+                    'count' => max(1, $assessment->end_ayah - $assessment->start_ayah + 1),
+                    'surah_name' => $assessment->surah_name,
+                    'focus_ayahs' => $analysis['weak_ayahs'] ?? [],
+                ],
+                'color_counts' => [
+                    'green' => $aligned['color_counts']['green'] ?? 0,
+                    'amber' => $aligned['color_counts']['amber'] ?? 0,
+                    'red' => $aligned['color_counts']['red'] ?? 0,
+                    'black' => $aligned['color_counts']['black'] ?? 0,
+                    'gray' => ($aligned['color_counts']['grey'] ?? 0) + ($aligned['color_counts']['uncertain'] ?? 0),
+                ],
+                'weak_words' => $analysis['weak_words'] ?? [],
+                'word_statuses' => $aligned['word_results'],
+                'plan_snapshot' => [
+                    'source' => $source,
+                    'peek_used' => $peekUsed,
+                    'assessment_id' => $assessment->id,
+                ],
+            ]
+        );
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function transformStandaloneAttempt(AiReciteAttempt $attempt): array
+    {
+        $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
+
+        return [
+            'id' => $attempt->id,
+            'source' => $attempt->source,
+            'band' => $attempt->band,
+            'accuracy_percent' => $attempt->accuracy_percent,
+            'peek_used' => (bool) $attempt->peek_used,
+            'duration_ms' => $attempt->duration_ms,
+            'ayah_range' => $range,
+            'surah_number' => (int) ($range['surah'] ?? 0) ?: null,
+            'surah_name' => $range['surah_name'] ?? null,
+            'ayah_start' => (int) ($range['from'] ?? 0) ?: null,
+            'ayah_end' => (int) ($range['to'] ?? 0) ?: null,
+            'color_counts' => $attempt->color_counts,
+            'weak_words' => $attempt->weak_words,
+            'word_statuses' => $attempt->word_statuses,
+            'occurred_at' => optional($attempt->created_at)->toIso8601String(),
         ];
     }
 

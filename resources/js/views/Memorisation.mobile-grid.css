@@ -349,7 +349,7 @@
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     display: flex !important;
-    flex-flow: row nowrap !important;
+    flex-flow: row wrap !important;
     align-items: center;
     gap: 0.35rem;
     width: 100% !important;
@@ -358,10 +358,9 @@
     min-inline-size: 0;
     margin: 0;
     padding: 0.55rem 0;
-    overflow-x: auto;
+    overflow-x: hidden;
+    overflow-x: clip;
     overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
   }
 
   .workspace-shell-progress-pills::-webkit-scrollbar {
@@ -3245,17 +3244,16 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     min-block-size: 36px !important;
   }
 
-  /* Mushaf tools: one scrollable row */
+  /* Mushaf tools: wrap instead of a sideways row */
   .main.mushaf-mode-active .mushaf-shell__bar {
     display: flex !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     align-items: center !important;
     gap: 0.3rem !important;
     padding: 0.4rem 0.45rem !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
+    overflow-x: clip !important;
     overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
   }
 
   .main.mushaf-mode-active .mushaf-shell__bar::-webkit-scrollbar {
@@ -4114,14 +4112,13 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .workspace-shell-bottom-pills .workspace-shell-metadata {
     display: flex !important;
-    flex-flow: row nowrap !important;
+    flex-flow: row wrap !important;
     align-items: center !important;
     gap: 0.35rem !important;
     inline-size: 100% !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
+    overflow-x: clip !important;
     overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
   }
 
   .workspace-shell-bottom-pills .workspace-shell-metadata::-webkit-scrollbar {
@@ -4174,7 +4171,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     display: flex !important;
-    flex-flow: row nowrap !important;
+    flex-flow: row wrap !important;
     align-items: center;
     gap: 0.3rem;
     width: 100% !important;
@@ -4182,10 +4179,9 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     min-width: 0 !important;
     margin: 0 !important;
     padding: 0.15rem 0 0 !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
+    overflow-x: clip !important;
     overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
   }
 
   .workspace-shell-head > .workspace-shell-progress-pills::-webkit-scrollbar {
@@ -5592,7 +5588,9 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     display: flex !important;
-    overflow-x: auto !important;
+    flex-flow: row wrap !important;
+    overflow-x: hidden !important;
+    overflow-x: clip !important;
     overflow-y: hidden !important;
   }
 
@@ -5930,6 +5928,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   max-width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
+  overflow: visible !important;
 }
 
 .workspace-shell-head-toolbar > .workspace-shell-copy {
@@ -5989,6 +5988,15 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
+}
+
+.workspace-shell-head-toolbar > .workspace-ai-recite-cta {
+  display: grid !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 2.85rem !important;
 }
 
 .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
@@ -6348,9 +6356,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     display: flex !important;
-    flex-flow: row nowrap !important;
+    flex-flow: row wrap !important;
     gap: 0.35rem !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
+    overflow-x: clip !important;
     padding: 0.05rem 0 0 !important;
     margin: 0 !important;
   }

@@ -135,6 +135,9 @@ html {
   background: var(--bg);
   width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -292,6 +295,45 @@ iframe {
   box-shadow: none !important;
 }
 
+.app-navbar .navbar-toggler {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--nav-icon);
+  height: var(--nav-icon);
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: inherit;
+  box-shadow: none;
+  font: inherit;
+  line-height: 1;
+}
+
+.app-navbar .navbar-toggler:hover,
+.app-navbar .navbar-toggler:focus,
+.app-navbar .navbar-toggler:focus-visible,
+.app-navbar .navbar-toggler:active {
+  background: transparent;
+  box-shadow: none !important;
+  outline: none;
+}
+
+.app-navbar .navbar-toggler:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 html[data-theme="sepia"] .app-navbar,
 [data-theme="sepia"] .app-navbar {
   background: #fff8eb !important;
@@ -317,9 +359,9 @@ html[data-theme="dark"] .app-navbar {
   html[data-theme="dark"] #primaryNavbar,
   html[data-theme="dark"] #primaryNavbar .offcanvas-header,
   html[data-theme="dark"] #primaryNavbar .offcanvas-body {
-    --bs-offcanvas-bg: #000000;
-    background: #000000 !important;
-    background-color: #000000 !important;
+    --bs-offcanvas-bg: var(--bg);
+    background: var(--bg) !important;
+    background-color: var(--bg) !important;
     background-image: none !important;
     opacity: 1;
   }
@@ -1806,11 +1848,37 @@ html.mutqin-ios-pwa-open {
   .pricing-table-wrap,
   .admin-table-wrap,
   .admin-table-scroll,
-  .afb-table-wrap {
+  .afb-table-wrap,
+  .comparison-table-wrap,
+  .analytics-table-wrap {
     max-width: 100%;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Learner chrome: wrap instead of sideways swipe (RTL and LTR). */
+  .workspace-shell-progress-pills,
+  .workspace-shell-metadata,
+  .workspace-shell-bottom-pills,
+  .workspace-shell-idle-chips,
+  .verse-words,
+  .tools-tabs,
+  .mushaf-pill-toolbar,
+  .mushaf-shell__bar,
+  .self-check-header-tools,
+  .active-practice-setup__chips,
+  .dash-drawer__filters,
+  .dash-data-links,
+  .workspace-header-view-controls,
+  .quick-right-controls,
+  .planner-completion-timeline,
+  .amd-toolbar.amd-tools-bar {
+    max-width: 100%;
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 }
 

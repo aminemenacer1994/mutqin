@@ -802,6 +802,64 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
   line-height: 1.55;
 }
 
+.features__carousel {
+  margin-inline: auto;
+  max-width: min(100%, 280px);
+}
+
+.features__carousel-media {
+  display: grid;
+  justify-items: center;
+  padding: 0.15rem 0 0.35rem;
+}
+
+.features__carousel .features__device {
+  max-width: min(210px, 56vw);
+  margin-inline: auto;
+}
+
+.features__carousel .shot {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.features__carousel-indicators {
+  position: static;
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0.35rem 0 0;
+}
+
+.features__carousel-indicators [data-bs-target] {
+  width: 0.45rem;
+  height: 0.45rem;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  background-color: var(--accent);
+  opacity: 0.28;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.features__carousel-indicators .active {
+  opacity: 0.92;
+  transform: scale(1.08);
+}
+
+.features__copy--carousel {
+  max-width: 36ch;
+  min-height: 7.25rem;
+  margin: 0.85rem auto 0;
+  text-align: center;
+}
+
+.features__copy--carousel h3 {
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+
 /* Steps / Your path */
 .steps {
   border-block: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
@@ -1209,14 +1267,6 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 }
 
 @media (max-width: 767.98px) {
-  .features__item {
-    grid-template-columns: minmax(0, 1fr);
-    text-align: center;
-  }
-
-  .features__copy { order: 0; }
-  .features__device { order: 1; }
-
   .steps__track {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -101,19 +101,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
     <style id="mutqin-no-horizontal-scroll">
-      html {
-        width: 100%;
-        max-width: 100%;
-        -webkit-text-size-adjust: 100%;
-        -ms-text-size-adjust: 100%;
-        text-size-adjust: 100%;
-      }
-      body {
+      html, body {
         width: 100%;
         max-width: 100%;
         overflow-x: hidden;
         overflow-x: clip;
         overscroll-behavior-x: none;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
       }
       @media (max-width: 1024px) {
         html, body { scrollbar-gutter: auto; }
@@ -932,7 +928,7 @@
           grid-column: 1 / -1 !important;
           grid-row: 2 !important;
           display: flex !important;
-          flex-flow: row nowrap !important;
+          flex-flow: row wrap !important;
           align-items: center !important;
           gap: 0.3rem !important;
           width: 100% !important;
@@ -940,10 +936,9 @@
           min-width: 0 !important;
           margin: 0 !important;
           padding: 0.15rem 0 0 !important;
-          overflow-x: auto !important;
+          overflow-x: hidden !important;
+          overflow-x: clip !important;
           overflow-y: hidden !important;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
         }
         .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills::-webkit-scrollbar {
           display: none !important;
@@ -3078,25 +3073,53 @@
             gap: 4px !important;
         }
 
-        .navbar-toggler {
-            border: 1px solid var(--border);
-            background: var(--surface);
-            padding: 0;
-            width: var(--nav-icon);
-            height: var(--nav-icon);
-            border-radius: 10px;
-            color: var(--text);
-            transition: all 0.2s ease;
+        /* Reset UA/Bootstrap chrome. A filled + isolated rounded <button> paints
+           black wedges at the corners in Safari (compositor clears to black). */
+        .app-navbar .navbar-toggler {
+            all: unset;
+            box-sizing: border-box;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: var(--nav-icon);
+            height: var(--nav-icon);
             min-width: var(--tap);
             min-height: var(--tap);
+            padding: 0;
+            margin: 0;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            background-color: transparent;
+            background-image: none;
+            color: var(--text);
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            color-scheme: inherit;
+            box-shadow: none;
+            font: inherit;
+            line-height: 1;
         }
 
-        .navbar-toggler:hover {
-            background: var(--accent-light);
+        .app-navbar .navbar-toggler:hover,
+        .app-navbar .navbar-toggler:focus,
+        .app-navbar .navbar-toggler:focus-visible,
+        .app-navbar .navbar-toggler:active {
+            background: transparent;
+            background-color: transparent;
+            box-shadow: none !important;
+            outline: none;
+        }
+
+        .app-navbar .navbar-toggler:hover {
             border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .app-navbar .navbar-toggler:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
 
         .navbar-toggler i {
@@ -3870,7 +3893,11 @@
 
         .profile-page,
         .admin-page {
-            padding-block: calc(var(--nav-h) + 16px) 32px;
+            padding-block: calc(var(--nav-h) + 16px) 24px;
+        }
+
+        .profile-page {
+            background: transparent;
         }
 
         .shell.profile-page,
@@ -3880,12 +3907,12 @@
 
         .profile-stage {
             display: grid;
-            gap: 20px;
+            gap: 12px;
         }
 
         .profile-layout {
             display: grid;
-            gap: 16px;
+            gap: 12px;
         }
 
         .profile-hero-identity {
@@ -4113,7 +4140,7 @@
 
         .profile-account {
             display: grid;
-            gap: 16px;
+            gap: 12px;
         }
 
         .profile-kicker-row {
@@ -4339,15 +4366,15 @@
 
         .profile-hero-card {
             display: grid;
-            gap: 16px;
-            align-items: stretch;
+            gap: 12px;
+            align-items: start;
             position: relative;
-            grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr);
-            padding: clamp(16px, 2.5vw, 22px);
-            border-radius: 20px;
-            overflow: hidden;
-            background: color-mix(in srgb, var(--surface-strong) 94%, var(--surface-elevated));
-            border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
+            grid-template-columns: minmax(0, 1fr);
+            padding: 0;
+            border-radius: 0;
+            overflow: visible;
+            background: transparent;
+            border: 0;
         }
 
         .admin-page-head {
@@ -4504,9 +4531,10 @@
 
         .profile-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 16px;
-            align-items: stretch;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 12px;
+            align-items: start;
+            max-width: 28rem;
         }
 
         .profile-card {
@@ -4517,8 +4545,8 @@
         }
 
         .profile-pane {
-            padding: 18px;
-            border-radius: 20px;
+            padding: 16px;
+            border-radius: 16px;
             background: color-mix(in srgb, var(--surface-strong) 92%, var(--surface-elevated));
             border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
         }
@@ -4526,19 +4554,19 @@
         .profile-grid > .profile-pane {
             display: flex;
             flex-direction: column;
-            height: 100%;
-            min-height: 100%;
+            height: auto;
+            min-height: 0;
         }
 
         .profile-card--details .profile-form {
-            flex: 1 1 auto;
+            flex: 0 0 auto;
             display: flex;
             flex-direction: column;
             gap: 14px;
         }
 
         .profile-card--details .profile-submit-btn--save {
-            margin-top: auto;
+            margin-top: 0;
             align-self: start;
         }
 
@@ -5286,11 +5314,10 @@
                 overflow-x: clip;
             }
 
-            /* Solid black navbar + drawer on mobile dark mode */
             html[data-theme="dark"] .app-navbar,
             [data-theme="dark"] .app-navbar {
-                background: #000000 !important;
-                background-color: #000000 !important;
+                background: var(--bg) !important;
+                background-color: var(--bg) !important;
                 background-image: none !important;
             }
 
@@ -5303,7 +5330,8 @@
             }
 
             .navbar-quick-actions {
-                overflow: hidden;
+                overflow: visible;
+                background: transparent;
                 /* Keep the hamburger fully inside the cell */
                 padding-inline-end: 0.1rem;
             }
@@ -5367,15 +5395,15 @@
             .profile-page,
             .admin-page,
             .billing-page {
-                padding-block: 16px 28px;
+                padding-block: 16px 20px;
             }
 
             .profile-stage {
-                gap: 16px;
+                gap: 12px;
             }
 
             .profile-account {
-                gap: 16px;
+                gap: 12px;
             }
 
             .profile-account__header {
@@ -5415,9 +5443,11 @@
             }
 
             .profile-hero-card {
-                gap: 16px;
-                padding: 16px;
-                border-radius: 22px;
+                gap: 12px;
+                padding: 0;
+                border-radius: 0;
+                background: transparent;
+                border: 0;
             }
 
             .profile-hero-card::after {
@@ -5592,7 +5622,8 @@
                 gap: clamp(4px, 1.6vw, 8px) !important;
                 min-width: 0;
                 max-width: 100%;
-                overflow: hidden;
+                overflow: visible;
+                background: transparent;
             }
 
             .navbar-quick-actions > .dropdown:not(.global-lang-switcher):not(.global-theme-switcher),
@@ -5668,7 +5699,7 @@
                 box-shadow: none;
             }
 
-            /* Solid black menu panel — translucent --surface was showing mushaf through */
+            /* Opaque menu panel — translucent --surface was showing mushaf through */
             html[data-theme="dark"] .app-navbar .offcanvas-lg,
             [data-theme="dark"] .app-navbar .offcanvas-lg,
             html[data-theme="dark"] .app-navbar .offcanvas-lg.show,
@@ -5683,9 +5714,9 @@
             [data-theme="dark"] #primaryNavbar .offcanvas-header,
             html[data-theme="dark"] #primaryNavbar .offcanvas-body,
             [data-theme="dark"] #primaryNavbar .offcanvas-body {
-                --bs-offcanvas-bg: #000000;
-                background: #000000 !important;
-                background-color: #000000 !important;
+                --bs-offcanvas-bg: var(--bg);
+                background: var(--bg) !important;
+                background-color: var(--bg) !important;
                 background-image: none !important;
                 opacity: 1 !important;
             }
@@ -6012,14 +6043,14 @@
             .profile-stage {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 16px !important;
+                gap: 12px !important;
                 grid-template-columns: unset !important;
             }
 
             .profile-account {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 16px !important;
+                gap: 12px !important;
                 grid-column: 1 / -1;
                 min-width: 0;
             }
@@ -6027,8 +6058,11 @@
             .profile-hero-card {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 16px !important;
+                gap: 12px !important;
                 grid-template-columns: unset !important;
+                padding: 0 !important;
+                background: transparent !important;
+                border: 0 !important;
             }
 
             .profile-hero-copy,
@@ -6190,9 +6224,9 @@
         [data-theme="dark"] #primaryNavbar,
         [data-theme="dark"] #primaryNavbar .offcanvas-header,
         [data-theme="dark"] #primaryNavbar .offcanvas-body {
-          --bs-offcanvas-bg: #000 !important;
-          background: #000 !important;
-          background-color: #000 !important;
+          --bs-offcanvas-bg: var(--bg) !important;
+          background: var(--bg) !important;
+          background-color: var(--bg) !important;
           background-image: none !important;
         }
 
@@ -6331,11 +6365,6 @@
                                     <strong>{{ __('ui.profile') }}</strong>
                                     <small>{{ Auth::user()->isAdmin() ? __('profile.account_settings_desc_admin') : __('profile.account_settings_desc') }}</small>
                                 </span>
-                                <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
-                            </a>
-                            <a class="nav-link" href="{{ route('profile.show') }}#settings">
-                                <i class="bi bi-gear nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong>{{ __('ui.settings') }}</strong><small>{{ __('profile.change_password') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
                             </a>
                             <button type="button" class="nav-link mobile-nav-feedback" data-feedback-trigger="menu">

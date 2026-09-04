@@ -5,21 +5,21 @@ namespace App\Http\Controllers\Api\Learning;
 use App\Enums\UserSessionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveSessionRequest;
+use App\Models\User;
 use App\Models\UserSession;
 use App\Services\DashboardService;
+use App\Services\Learning\SessionAnalysisQueryService;
 use App\Services\MainMemorisationPositionService;
 use App\Services\NextSessionRecommendationService;
 use App\Services\SessionLifecycleService;
-use App\Support\QuranMetadata;
 use App\Support\MutqinLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class SessionController extends Controller
 {
-    public function __construct(private readonly SessionLifecycleService $lifecycle)
-    {
-    }
+    public function __construct(private readonly SessionLifecycleService $lifecycle) {}
 
     public function show(Request $request): JsonResponse
     {
@@ -77,42 +77,21 @@ class SessionController extends Controller
         ]);
     }
 
-    public function history(Request $request): JsonResponse
+    public function history(Request $request, SessionAnalysisQueryService $analysis): JsonResponse
     {
-        $sessions = UserSession::query()
-            ->where('user_id', $request->user()->id)
-            ->where('is_onboarding_example', false)
-            ->whereIn('status', [
-                UserSessionStatus::Completed->value,
-                UserSessionStatus::EndedEarly->value,
-            ])
-            ->orderByDesc('ended_at')
-            ->orderByDesc('id')
-            ->limit(100)
-            ->get();
+        return response()->json([
+            'sessions' => $analysis->sessionHistory($request->user()),
+        ]);
+    }
 
-        $items = $sessions->map(function (UserSession $session) {
-            $meta = is_array($session->metadata) ? $session->metadata : [];
-            $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
-            $surah = (int) ($session->surah_number ?: ($config['chapterId'] ?? 0));
-            $from = (int) ($config['rangeStart'] ?? 0);
-            $to = (int) ($config['rangeEnd'] ?? $from);
-            $status = $session->status instanceof UserSessionStatus
-                ? $session->status->value
-                : (string) $session->status;
+    public function analysis(Request $request, int $session, SessionAnalysisQueryService $analysis): JsonResponse
+    {
+        $payload = $analysis->forSession($request->user(), $session);
+        if ($payload === null) {
+            return response()->json(['message' => 'Not found.'], 404);
+        }
 
-            return [
-                'id' => $session->id,
-                'surah_number' => $surah,
-                'surah_name' => $surah > 0 ? (QuranMetadata::name($surah) ?: ('Surah '.$surah)) : null,
-                'ayah_start' => $from > 0 ? $from : null,
-                'ayah_end' => $to > 0 ? $to : null,
-                'status' => $status,
-                'occurred_at' => optional($session->ended_at ?? $session->last_activity_at)->toIso8601String(),
-            ];
-        })->values();
-
-        return response()->json(['sessions' => $items]);
+        return response()->json($payload);
     }
 
     public function store(SaveSessionRequest $request): JsonResponse
@@ -150,7 +129,7 @@ class SessionController extends Controller
         }
 
         if (in_array($action, ['start', 'end'], true)) {
-            MutqinLog::fromRequest($request, 'learning.session.' . $action, [
+            MutqinLog::fromRequest($request, 'learning.session.'.$action, [
                 'session_id' => $session?->id,
                 'action' => $action,
             ]);
@@ -303,7 +282,7 @@ class SessionController extends Controller
      * @param  array<string, mixed>  $data
      * @return array{saved: bool, stale: bool, conflict: bool, session: ?UserSession, status: int}
      */
-    private function saveProgress(\App\Models\User $user, array $data): array
+    private function saveProgress(User $user, array $data): array
     {
         $requestedId = isset($data['session_id']) ? (int) $data['session_id'] : 0;
         $unfinished = $requestedId > 0
@@ -348,7 +327,7 @@ class SessionController extends Controller
 
         if (! empty($data['last_activity_at']) && $unfinished->last_activity_at) {
             try {
-                $incomingActivity = \Illuminate\Support\Carbon::parse($data['last_activity_at']);
+                $incomingActivity = Carbon::parse($data['last_activity_at']);
                 if ($incomingActivity->lt($unfinished->last_activity_at)
                     && ($incomingRevision === null || $incomingRevision <= $storedRevision)
                 ) {

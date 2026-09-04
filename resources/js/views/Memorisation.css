@@ -2161,13 +2161,15 @@
 
 .tools-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 6px;
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .tools-tabs button {
@@ -7474,13 +7476,15 @@ html {
 
 .tools-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 6px;
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
 }
 
@@ -8491,10 +8495,9 @@ html {
   }
 
   .workspace-shell-idle--continuing .workspace-shell-idle-chips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-x: clip;
     padding-bottom: 0.1rem;
   }
 
@@ -10586,15 +10589,15 @@ html {
 
 .verse-words {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 8px;
   direction: rtl;
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: hidden;
-  scroll-snap-type: x proximity;
   padding-bottom: 8px;
 }
 
@@ -14401,7 +14404,8 @@ body.memorisation-page nav.navbar.app-navbar {
 }
 
 .session-analytics-modal {
-  width: min(1080px, 96vw);
+  width: min(1080px, calc(100% - 2rem));
+  max-width: 100%;
   max-height: 88vh;
   border-radius: 20px;
   overflow: hidden;
@@ -26753,10 +26757,11 @@ never mint green */
 
 .planner-completion-timeline {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 0.75rem;
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-x: clip;
   padding-bottom: 0.2rem;
 }
 
@@ -26921,6 +26926,7 @@ textarea {
 .analytics-table-wrap {
   max-width: 100% !important;
   overflow-x: auto !important;
+  overscroll-behavior-x: contain;
 }
 
 .analytics-toggle-btn {
@@ -27039,12 +27045,13 @@ textarea {
 .memorisation-checker-modal .self-check-header-tools {
   width: auto;
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 0.55rem;
   margin-left: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: hidden;
   padding-bottom: 0.1rem;
 }
@@ -30214,12 +30221,12 @@ and review
   width: 100%;
   margin-top: 0.3rem;
   align-items: center;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: visible;
   flex: 0 0 100%;
   gap: 0.28rem !important;
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
 }
 
 .workspace-shell-bottom .workspace-shell-metadata,
@@ -31019,15 +31026,15 @@ and review
 
   .mushaf-pill-toolbar {
     display: flex !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     align-items: center !important;
     justify-content: flex-start !important;
     gap: 8px !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
+    overflow-x: clip !important;
     overflow-y: visible !important;
     padding: 2px 2px 6px;
     margin-inline: -2px;
-    scrollbar-width: none;
   }
 
   .mushaf-pill-toolbar::-webkit-scrollbar {
@@ -31128,9 +31135,10 @@ and review
   }
 
   .help-learning-nav {
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(13rem, 1fr);
-    overflow-x: auto;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    overflow-x: hidden;
+    overflow-x: clip;
     overflow-y: hidden;
     padding: 0.3rem;
   }
@@ -31215,16 +31223,14 @@ and review
     gap: 0.6rem;
   }
 
-  /* Toolbar: horizontal scroll instead of a clipped fixed grid */
   .self-check-modal .self-check-header-tools {
     display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-x: clip;
     gap: 8px;
     grid-template-columns: none;
     padding-bottom: 4px;
-    scrollbar-width: none;
   }
 
   .self-check-modal .self-check-header-tools::-webkit-scrollbar {
@@ -31378,7 +31384,7 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
 
 .mushaf-pill-toolbar {
   display: flex !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: clamp(0.55rem, 1vw, 0.8rem) !important;
@@ -31389,9 +31395,9 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   background: linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(244, 236, 224, 0.94));
   border: 1px solid rgba(164, 123, 83, 0.24);
   box-shadow: 0 12px 30px rgba(61, 42, 24, 0.08);
-  overflow-x: auto !important;
+  overflow-x: hidden !important;
+  overflow-x: clip !important;
   overflow-y: visible !important;
-  scrollbar-width: none;
   position: relative;
   z-index: 2 !important;
 }
@@ -33299,9 +33305,10 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   .workspace-header-view-controls,
 .quick-right-controls {
     width: 100%;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-x: clip;
     padding-bottom: 2px;
-    scrollbar-width: none;
   }
 
   .workspace-header-view-controls::-webkit-scrollbar,
@@ -34684,10 +34691,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   width: 100%;
   margin-top: 0.15rem;
   padding-bottom: 0.18rem;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: visible;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
   animation: workspaceMetadataSlideIn 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -35550,9 +35557,10 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .workspace-shell-bottom-pills {
   flex: 1 1 auto;
   min-width: 0;
-  overflow-x: auto;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
 }
 
 .workspace-shell-reading-toggles {
@@ -37471,6 +37479,211 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .top-card-session-actions.has-paired-actions > .top-card-action-trigger {
   min-height: 2.65rem;
   box-sizing: border-box;
+}
+
+/* AI Recite lives on its own toolbar row — never in the Pause/End pair. */
+.workspace-shell-head-toolbar > .workspace-ai-recite-cta {
+  flex: 0 0 auto;
+  width: 100%;
+  margin-top: 0.15rem;
+}
+
+.workspace-ai-recite-cta {
+  --ai-recite-gold: #c4a056;
+  --ai-recite-ink: #5c3d1f;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.55rem 0.8rem 0.55rem 0.65rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--ai-recite-gold) 58%, var(--border));
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in srgb, var(--ai-recite-gold) 38%, #fff6df) 0%,
+      color-mix(in srgb, var(--accent-light, #f3e4c8) 70%, #fff) 46%,
+      color-mix(in srgb, var(--ai-recite-gold) 22%, var(--workspace-card-surface, var(--surface))) 100%
+    );
+  color: var(--ai-recite-ink);
+  text-align: start;
+  cursor: pointer;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+    0 6px 18px color-mix(in srgb, var(--ai-recite-gold) 22%, transparent);
+}
+
+.workspace-ai-recite-cta__shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 18%,
+    color-mix(in srgb, #fff 55%, transparent) 42%,
+    transparent 64%
+  );
+  transform: translateX(-120%);
+}
+
+.workspace-ai-recite-cta__icon,
+.workspace-ai-recite-cta__copy,
+.workspace-ai-recite-cta__action,
+.workspace-ai-recite-cta__label {
+  position: relative;
+  z-index: 1;
+}
+
+.workspace-ai-recite-cta__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.05rem;
+  height: 2.05rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ai-recite-gold) 55%, transparent);
+  background:
+    radial-gradient(circle at 30% 25%, #fff8e6 0%, color-mix(in srgb, var(--ai-recite-gold) 42%, #f6e7c2) 70%);
+  color: var(--ai-recite-ink);
+  font-size: 1.05rem;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ai-recite-gold) 16%, transparent);
+}
+
+.workspace-ai-recite-cta__copy {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.workspace-ai-recite-cta__copy strong,
+.workspace-ai-recite-cta__label {
+  font-size: 0.95rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+.workspace-ai-recite-cta__copy small {
+  font-size: 0.72rem;
+  font-weight: 550;
+  color: color-mix(in srgb, var(--ai-recite-ink) 68%, var(--text-muted));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-ai-recite-cta__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.85rem;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ai-recite-ink) 92%, #000);
+  color: #fff8e8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.workspace-ai-recite-cta:hover,
+.workspace-ai-recite-cta:focus-visible {
+  border-color: color-mix(in srgb, var(--ai-recite-gold) 78%, var(--border));
+  outline: none;
+}
+
+.workspace-ai-recite-cta:focus-visible {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--ai-recite-gold) 46%, transparent),
+    0 8px 20px color-mix(in srgb, var(--ai-recite-gold) 24%, transparent);
+}
+
+.workspace-ai-recite-cta--idle {
+  margin-top: 0.55rem;
+}
+
+@media (max-width: 419px) {
+  .workspace-ai-recite-cta {
+    gap: 0.55rem;
+    padding-inline: 0.55rem 0.6rem;
+  }
+
+  .workspace-ai-recite-cta__copy small {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .workspace-ai-recite-cta {
+    animation: workspace-ai-recite-glow 2.8s ease-in-out infinite;
+  }
+
+  .workspace-ai-recite-cta__shimmer {
+    animation: workspace-ai-recite-shimmer 3.4s ease-in-out infinite;
+  }
+
+  .workspace-ai-recite-cta__icon {
+    animation: workspace-ai-recite-spark 2.2s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-ai-recite-cta,
+  .workspace-ai-recite-cta__shimmer,
+  .workspace-ai-recite-cta__icon {
+    animation: none;
+  }
+}
+
+@keyframes workspace-ai-recite-glow {
+  0%, 100% {
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+      0 0 0 0 color-mix(in srgb, var(--ai-recite-gold) 0%, transparent),
+      0 6px 18px color-mix(in srgb, var(--ai-recite-gold) 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+      0 0 0 6px color-mix(in srgb, var(--ai-recite-gold) 18%, transparent),
+      0 10px 24px color-mix(in srgb, var(--ai-recite-gold) 28%, transparent);
+  }
+}
+
+@keyframes workspace-ai-recite-shimmer {
+  0%, 28% { transform: translateX(-120%); }
+  58%, 100% { transform: translateX(130%); }
+}
+
+@keyframes workspace-ai-recite-spark {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  40% { transform: scale(1.08) rotate(-8deg); }
+  70% { transform: scale(1.02) rotate(6deg); }
+}
+
+[data-theme="dark"] .workspace-ai-recite-cta {
+  --ai-recite-gold: #e6c36a;
+  --ai-recite-ink: #f4e3b8;
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in srgb, var(--ai-recite-gold) 28%, #3a2c16) 0%,
+      color-mix(in srgb, var(--workspace-card-surface, #2a2218) 78%, #e6c36a) 100%
+    );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 8%, transparent) inset,
+    0 8px 22px color-mix(in srgb, var(--ai-recite-gold) 16%, transparent);
+}
+
+[data-theme="dark"] .workspace-ai-recite-cta__action {
+  background: color-mix(in srgb, var(--ai-recite-gold) 88%, #fff);
+  color: #2b2112;
 }
 
 /* Post-session choice: desktop content-sized (like Start/End); mobile/tablet equal 2-col. */
@@ -44170,9 +44383,10 @@ body,
 
   .help-learning-nav {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(11rem, 1fr);
-    overflow-x: auto;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .keyboard-shortcuts-modal,
@@ -45563,10 +45777,10 @@ body,
 
   .help-learning-nav {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(10rem, 1fr);
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .keyboard-shortcuts-grid {
@@ -53270,11 +53484,12 @@ contained page (top session card untouched) —— */
 
   .main.mushaf-mode-active .mushaf-shell__bar {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem;
     padding: 0.35rem 0.4rem;
-    overflow-x: auto;
+    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .main.mushaf-mode-active .mushaf-shell__bar-group--end {
@@ -59595,10 +59810,10 @@ and mode toggles only.
   }
 
   .active-practice-setup.is-mobile .active-practice-setup__chips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-x: clip;
     padding-bottom: 0.15rem;
-    -webkit-overflow-scrolling: touch;
   }
 
   .active-practice-setup.is-mobile .active-practice-setup__chip {

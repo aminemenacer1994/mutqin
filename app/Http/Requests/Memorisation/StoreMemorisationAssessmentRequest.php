@@ -84,6 +84,8 @@ class StoreMemorisationAssessmentRequest extends FormRequest
             'device_metadata.viewport' => ['sometimes', 'nullable', 'array'],
             'device_metadata.viewport.width' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:10000'],
             'device_metadata.viewport.height' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:10000'],
+            'peek_used' => ['sometimes', 'nullable', 'boolean'],
+            'source' => ['sometimes', 'nullable', 'string', 'max:32'],
         ];
     }
 

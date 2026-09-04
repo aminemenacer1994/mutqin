@@ -75,6 +75,21 @@
                 {{ primaryContinueAction.cta }}
               </span>
             </a>
+            <button
+              type="button"
+              class="dash-ai-recite-cta"
+              :class="{ 'is-animated': !reduceMotion }"
+              @click="openAiRecite"
+            >
+              <span class="dash-ai-recite-cta__icon" aria-hidden="true">
+                <i class="bi bi-stars"></i>
+              </span>
+              <span class="dash-ai-recite-cta__copy">
+                <strong>{{ t('dashboard.ai_recite.cta_label') }}</strong>
+                <small>{{ t('dashboard.ai_recite.cta_hint') }}</small>
+              </span>
+              <span class="dash-ai-recite-cta__action">{{ t('dashboard.ai_recite.cta_action') }}</span>
+            </button>
           </div>
         </header>
 
@@ -436,20 +451,30 @@
                 v-for="(item, index) in visibleDrawerItems"
                 :key="item.id || `${item.type}-${item.occurred_at}`"
               >
-                <a
-                  class="dash-drawer__row dash-drawer__row--link dash-reveal"
+                <div
+                  class="dash-drawer__row dash-drawer__row--analysis dash-reveal"
                   :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
-                  :href="item.href || memorisationUrl"
                 >
-                  <div class="dash-drawer__row-main">
+                  <div class="dash-drawer__analysis-copy">
                     <span class="dash-drawer__type">{{ activityTypeLabel(item.type) }}</span>
                     <span class="dash-drawer__row-title">{{ activityTitle(item) }}</span>
                     <span v-if="activityOutcome(item)" class="dash-drawer__row-meta">{{ activityOutcome(item) }}</span>
+                    <time class="dash-drawer__row-time" :datetime="item.occurred_at">
+                      {{ formatActivityDate(item.occurred_at) }}
+                    </time>
                   </div>
-                  <time class="dash-drawer__row-time" :datetime="item.occurred_at">
-                    {{ formatActivityDate(item.occurred_at) }}
-                  </time>
-                </a>
+                  <div v-if="canViewAnalysis(item)" class="dash-drawer__analysis-actions">
+                    <button
+                      type="button"
+                      class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
+                      :disabled="isAnalysisLoading(item)"
+                      @click="openAnalysisForItem(item)"
+                    >
+                      <i class="bi bi-graph-up" aria-hidden="true"></i>
+                      {{ t('dashboard.view_analysis') }}
+                    </button>
+                  </div>
+                </div>
               </li>
             </ul>
 
@@ -459,20 +484,31 @@
                 :key="`session-${item.id}`"
               >
                 <div
-                  class="dash-drawer__row dash-reveal"
+                  class="dash-drawer__row dash-drawer__row--analysis dash-reveal"
                   :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
                 >
-                  <div class="dash-drawer__row-main">
+                  <div class="dash-drawer__analysis-copy">
                     <span class="dash-drawer__type">{{ t('dashboard.activity_type_session') }}</span>
                     <span class="dash-drawer__row-title">
                       {{ item.surah_name || t('dashboard.not_started') }}
                       <template v-if="formatItemRange(item)"> · {{ formatItemRange(item) }}</template>
                     </span>
                     <span class="dash-drawer__row-meta">{{ sessionStatusLabel(item.status) }}</span>
+                    <time class="dash-drawer__row-time" :datetime="item.occurred_at">
+                      {{ formatActivityDate(item.occurred_at) }}
+                    </time>
                   </div>
-                  <time class="dash-drawer__row-time" :datetime="item.occurred_at">
-                    {{ formatActivityDate(item.occurred_at) }}
-                  </time>
+                  <div v-if="canViewAnalysis(item, 'session')" class="dash-drawer__analysis-actions">
+                    <button
+                      type="button"
+                      class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
+                      :disabled="isAnalysisLoading(item, 'session')"
+                      @click="openAnalysisForItem(item, 'session')"
+                    >
+                      <i class="bi bi-graph-up" aria-hidden="true"></i>
+                      {{ t('dashboard.view_analysis') }}
+                    </button>
+                  </div>
                 </div>
               </li>
             </ul>
@@ -480,20 +516,31 @@
             <ul v-else-if="drawerMode === 'ai_checks'" class="dash-drawer__list">
               <li v-for="(item, index) in visibleDrawerItems" :key="`ai-${item.id}`">
                 <div
-                  class="dash-drawer__row dash-reveal"
+                  class="dash-drawer__row dash-drawer__row--analysis dash-reveal"
                   :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
                 >
-                  <div class="dash-drawer__row-main">
+                  <div class="dash-drawer__analysis-copy">
                     <span class="dash-drawer__type">{{ t('dashboard.activity_type_ai_check') }}</span>
                     <span class="dash-drawer__row-title">
                       {{ item.surah_name || t('dashboard.not_started') }}
                       <template v-if="formatItemRange(item)"> · {{ formatItemRange(item) }}</template>
                     </span>
                     <span class="dash-drawer__row-meta">{{ aiResultLabel(item) }}</span>
+                    <time class="dash-drawer__row-time" :datetime="item.occurred_at">
+                      {{ formatActivityDate(item.occurred_at) }}
+                    </time>
                   </div>
-                  <time class="dash-drawer__row-time" :datetime="item.occurred_at">
-                    {{ formatActivityDate(item.occurred_at) }}
-                  </time>
+                  <div v-if="canViewAnalysis(item, 'attempt')" class="dash-drawer__analysis-actions">
+                    <button
+                      type="button"
+                      class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
+                      :disabled="isAnalysisLoading(item, 'attempt')"
+                      @click="openAnalysisForItem(item, 'attempt')"
+                    >
+                      <i class="bi bi-graph-up" aria-hidden="true"></i>
+                      {{ t('dashboard.view_analysis') }}
+                    </button>
+                  </div>
                 </div>
               </li>
             </ul>
@@ -561,11 +608,50 @@
         </aside>
       </div>
     </Teleport>
+
+    <SessionAnalysisModal
+      :open="analysisModalOpen"
+      :loading="analysisLoading"
+      :error="analysisError"
+      :empty="!analysisLoading && !analysisError && analysisModalOpen && !analysisView?.hasContent"
+      :analysis="analysisView"
+      :title="t('memorisation.session_analytics_overview')"
+      :close-label="t('common.close')"
+      :loading-label="t('memorisation.preparing_analytics')"
+      :error-title="t('memorisation.analyticsEmpty.modalErrorTitle')"
+      :error-desc="t('memorisation.analyticsEmpty.modalErrorDesc')"
+      :error-action-label="t('dashboard.retry')"
+      error-action="retry"
+      :empty-title="t('memorisation.analyticsEmpty.modalEmptyTitle')"
+      :empty-desc="t('dashboard.analysis_empty_desc')"
+      :ai-results-title="t('memorisation.recite_check_results')"
+      :ai-results-subtitle="t('memorisation.saved_word_checks_for_this_session_range')"
+      :words-title="t('dashboard.analysis_words_title')"
+      :recommendations-title="t('dashboard.analysis_recommendations_title')"
+      :retention-title="t('dashboard.analysis_retention_title')"
+      :audio-title="t('dashboard.analysis_audio_title')"
+      :no-recommendations="t('dashboard.analysis_no_recommendations')"
+      :no-retention="t('dashboard.analysis_no_retention')"
+      :audio-unavailable="t('dashboard.analysis_audio_unavailable')"
+      @close="closeSessionAnalysis"
+      @retry="retrySessionAnalysis"
+    />
+
+    <DashboardAiReciteModal
+      v-if="aiReciteReady"
+      :open="aiReciteOpen"
+      :user-id="ownerId"
+      :progress="data?.progress || null"
+      @close="closeAiRecite"
+      @saved="onAiReciteSaved"
+    />
   </main>
 </template>
 
 <script>
+import { defineAsyncComponent } from 'vue'
 import { Bar } from 'vue-chartjs'
+import { wrapChunkImport } from '../utils/chunkLoadRecovery'
 import {
   BarElement,
   CategoryScale,
@@ -577,10 +663,21 @@ import {
 import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
+import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
+import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import './Dashboard.css'
+
+const DashboardAiReciteModal = defineAsyncComponent({
+  loader: () => wrapChunkImport(
+    () => import(/* webpackChunkName: "dash-ai-recite" */ '../components/DashboardAiReciteModal.vue'),
+    { feature: 'dash-ai-recite' },
+  ),
+  delay: 80,
+  timeout: 120000,
+})
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -628,7 +725,7 @@ const DRAWER_ICONS = {
 
 export default {
   name: 'UserDashboard',
-  components: { Bar, NetworkFallback, DashAnimatedNumber },
+  components: { Bar, NetworkFallback, DashAnimatedNumber, SessionAnalysisModal, DashboardAiReciteModal },
   props: {
     auth: { type: Object, default: () => ({}) },
     initialData: { type: Object, default: null },
@@ -663,6 +760,16 @@ export default {
       activeSessionSnapshot: null,
       stickyContinueVisible: false,
       continueObserver: null,
+      analysisModalOpen: false,
+      analysisLoading: false,
+      analysisError: false,
+      analysisView: null,
+      analysisSourceKind: null,
+      analysisSourceId: null,
+      analysisSourceKey: '',
+      analysisRequestId: 0,
+      aiReciteOpen: false,
+      aiReciteReady: false,
     }
   },
   computed: {
@@ -1312,7 +1419,9 @@ export default {
       }
     }
     this.escapeHandler = (event) => {
-      if (event.key === 'Escape' && this.drawerOpen) this.closeDrawer()
+      if (event.key !== 'Escape') return
+      if (this.analysisModalOpen) return
+      if (this.drawerOpen) this.closeDrawer()
     }
     document.addEventListener('visibilitychange', this.visibilityHandler)
     window.addEventListener('focus', this.focusHandler)
@@ -1333,6 +1442,16 @@ export default {
     this.syncDrawerBodyLock(false)
   },
   methods: {
+    openAiRecite() {
+      this.aiReciteReady = true
+      this.aiReciteOpen = true
+    },
+    closeAiRecite() {
+      this.aiReciteOpen = false
+    },
+    onAiReciteSaved() {
+      this.fetchDashboard(this.chartDays, { quiet: true, force: true })
+    },
     t(key, params) {
       if (typeof this.$t === 'function') return this.$t(key, params)
       return key
@@ -1681,6 +1800,108 @@ export default {
     retryDrawer() {
       if (!this.drawerMode) return
       this.openDrawer(this.drawerMode)
+    },
+    analysisTargetForItem(item, fallbackKind = '') {
+      const kind = String(item?.analysis_kind || fallbackKind || '').toLowerCase()
+      const sourceId = Number(item?.source_id || 0)
+      const rowId = Number(item?.id || 0)
+      if (kind === 'attempt') {
+        return { kind: 'attempt', id: sourceId > 0 ? sourceId : rowId }
+      }
+      if (kind === 'session') {
+        return { kind: 'session', id: sourceId > 0 ? sourceId : rowId }
+      }
+      const type = String(item?.type || '').toLowerCase()
+      if (type === 'ai_check' || type === 'ai_recite') {
+        return { kind: 'attempt', id: sourceId > 0 ? sourceId : rowId }
+      }
+      if (type === 'session' || type.startsWith('session_')) {
+        return { kind: 'session', id: sourceId > 0 ? sourceId : rowId }
+      }
+      if (fallbackKind === 'attempt' || fallbackKind === 'session') {
+        return { kind: fallbackKind, id: sourceId > 0 ? sourceId : rowId }
+      }
+      return null
+    },
+    canViewAnalysis(item, fallbackKind = '') {
+      const target = this.analysisTargetForItem(item, fallbackKind)
+      if (!target?.id) return false
+      if (target.kind === 'attempt') return item?.has_analysis !== false
+      return item?.has_analysis === true
+    },
+    analysisItemKey(item, fallbackKind = '') {
+      const target = this.analysisTargetForItem(item, fallbackKind)
+      if (!target?.id) return ''
+      return `${target.kind}:${target.id}`
+    },
+    isAnalysisLoading(item, fallbackKind = '') {
+      return this.analysisLoading && this.analysisSourceKey === this.analysisItemKey(item, fallbackKind)
+    },
+    openAnalysisForItem(item, fallbackKind = '') {
+      const target = this.analysisTargetForItem(item, fallbackKind)
+      if (!target?.id) return
+      this.openSessionAnalysis(target.kind, { id: target.id })
+    },
+    sessionAnalysisKey(item) {
+      return this.analysisItemKey(item, 'session')
+    },
+    attemptAnalysisKey(item) {
+      return this.analysisItemKey(item, 'attempt')
+    },
+    openSessionAnalysis(kind, item) {
+      const id = Number(item?.id || item?.source_id || 0)
+      if (id <= 0) return
+      this.analysisSourceKind = kind === 'attempt' ? 'attempt' : 'session'
+      this.analysisSourceId = id
+      this.analysisSourceKey = this.analysisSourceKind === 'attempt'
+        ? this.attemptAnalysisKey(item)
+        : this.sessionAnalysisKey(item)
+      this.analysisView = null
+      this.analysisError = false
+      this.analysisLoading = true
+      this.analysisModalOpen = true
+      this.fetchSessionAnalysis()
+    },
+    closeSessionAnalysis() {
+      this.analysisRequestId += 1
+      this.analysisModalOpen = false
+      this.analysisLoading = false
+      this.analysisError = false
+      this.analysisView = null
+      this.analysisSourceKind = null
+      this.analysisSourceId = null
+      this.analysisSourceKey = ''
+    },
+    retrySessionAnalysis() {
+      if (!this.analysisSourceId || !this.analysisSourceKind) return
+      this.analysisError = false
+      this.analysisView = null
+      this.analysisLoading = true
+      this.fetchSessionAnalysis()
+    },
+    async fetchSessionAnalysis() {
+      const kind = this.analysisSourceKind
+      const id = Number(this.analysisSourceId || 0)
+      if (!kind || id <= 0) return
+      const requestId = ++this.analysisRequestId
+      this.analysisLoading = true
+      this.analysisError = false
+      this.analysisView = null
+      try {
+        const payload = kind === 'attempt'
+          ? await learningApi.getAiReciteAttemptAnalysis(id)
+          : await learningApi.getSessionAnalysis(id)
+        if (requestId !== this.analysisRequestId) return
+        this.analysisView = buildSessionAnalysisView(payload, this.t.bind(this))
+        this.analysisError = false
+      } catch (error) {
+        console.error('Session analysis fetch failed', error)
+        if (requestId !== this.analysisRequestId) return
+        this.analysisError = true
+        this.analysisView = null
+      } finally {
+        if (requestId === this.analysisRequestId) this.analysisLoading = false
+      }
     },
     syncDrawerBodyLock(open) {
       if (typeof document === 'undefined') return
