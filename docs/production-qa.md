@@ -2,7 +2,7 @@
 
 Final pre-launch gate for real devices, browsers, core flows, and failure scenarios. Do not ship while any **Critical** or **High** item is Fail.
 
-Related runbooks: [TESTER_GUIDE.md](./TESTER_GUIDE.md), [ASSET_DEPLOYMENT.md](./ASSET_DEPLOYMENT.md), [speechmatics-capacity.md](./speechmatics-capacity.md), [monitoring.md](./monitoring.md).
+Related runbooks: [TESTER_GUIDE.md](./TESTER_GUIDE.md), [ASSET_DEPLOYMENT.md](./ASSET_DEPLOYMENT.md), [email-verification-resend.md](./email-verification-resend.md), [speechmatics-capacity.md](./speechmatics-capacity.md), [monitoring.md](./monitoring.md).
 
 ## How to run
 

@@ -12,6 +12,9 @@
             <p class="auth-greeting__arabic" lang="ar" dir="rtl">{{ __('ui.verify_kicker') }}</p>
             <h1 class="auth-heading">{{ __('ui.verify_title') }}</h1>
             <p class="auth-lede">{{ __('ui.verify_subtitle') }}</p>
+            @if (auth()->user()?->getEmailForVerification())
+                <p class="auth-lede auth-lede--meta">{{ __('ui.verify_sent_to', ['email' => auth()->user()->getEmailForVerification()]) }}</p>
+            @endif
         </header>
 
         @if (session('resent'))

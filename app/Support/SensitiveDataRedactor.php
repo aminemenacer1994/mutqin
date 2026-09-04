@@ -20,6 +20,7 @@ class SensitiveDataRedactor
         'passwd',
         'secret',
         'token',
+        'signature',
         'api_key',
         'apikey',
         'authorization',

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -58,15 +58,35 @@ class EmailVerificationTest extends TestCase
 
     public function test_verified_notice_page_renders_for_unverified_user(): void
     {
-        $user = User::factory()->unverified()->create();
+        $user = User::factory()->unverified()->create([
+            'email' => 'notice@example.com',
+        ]);
 
         $this->actingAs($user)
             ->get(route('verification.notice'))
             ->assertOk()
             ->assertSee(__('ui.verify_title'))
             ->assertSee(__('ui.verify_resend_button'))
+            ->assertSee('notice@example.com', false)
             ->assertDontSee('expires=', false)
             ->assertDontSee('signature=', false);
+    }
+
+    public function test_verification_email_uses_mutqin_branded_content(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'name' => 'New Learner',
+            'email' => 'branded@example.com',
+        ]);
+
+        $mail = (new VerifyEmail)->toMail($user);
+
+        $this->assertSame(__('mail.verify_subject'), $mail->subject);
+        $this->assertSame('mail.verify-email', $mail->view);
+        $this->assertSame('New Learner', $mail->viewData['userName']);
+        $this->assertStringStartsWith('http', $mail->viewData['url']);
+        $this->assertStringContainsString((string) $user->id, $mail->viewData['url']);
+        $this->assertStringContainsString('signature=', $mail->viewData['url']);
     }
 
     public function test_resend_sends_another_email_with_clear_feedback(): void

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Support\AdminEmails;
 use App\Support\EmailVerification;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Notifications\VerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

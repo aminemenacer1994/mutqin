@@ -127,4 +127,17 @@ return [
 
     'require_email_verification' => env('AUTH_REQUIRE_EMAIL_VERIFICATION', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Verification Link Expiry
+    |--------------------------------------------------------------------------
+    |
+    | Signed email verification URLs expire after this many minutes.
+    |
+    */
+
+    'verification' => [
+        'expire' => env('AUTH_VERIFICATION_EXPIRE', 60),
+    ],
+
 ];

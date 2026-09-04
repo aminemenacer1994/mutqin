@@ -113,6 +113,7 @@ return [
     'verify_kicker' => 'One last step',
     'verify_title' => 'Verify your email',
     'verify_subtitle' => 'Open the link in your inbox to unlock full access.',
+    'verify_sent_to' => 'We sent a verification link to :email.',
     'verify_message' => 'Before proceeding, please check your email for a verification link.',
     'verify_no_email' => 'If you did not receive the email',
     'verify_resend' => 'click here to request another',
