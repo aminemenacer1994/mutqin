@@ -59,6 +59,7 @@ class EmailVerificationTest extends TestCase
     public function test_verified_notice_page_renders_for_unverified_user(): void
     {
         $user = User::factory()->unverified()->create([
+            'name' => 'Prescott Adams',
             'email' => 'notice@example.com',
         ]);
 
@@ -67,7 +68,11 @@ class EmailVerificationTest extends TestCase
             ->assertOk()
             ->assertSee(__('ui.verify_title'))
             ->assertSee(__('ui.verify_resend_button'))
+            ->assertSee(__('ui.verify_wrong_email'))
             ->assertSee('notice@example.com', false)
+            ->assertDontSee('id="userDropdown"', false)
+            ->assertDontSee('id="dropdownToggle"', false)
+            ->assertDontSee('Prescott Adams', false)
             ->assertDontSee('expires=', false)
             ->assertDontSee('signature=', false);
     }
@@ -82,8 +87,12 @@ class EmailVerificationTest extends TestCase
         $mail = (new VerifyEmail)->toMail($user);
 
         $this->assertSame(__('mail.verify_subject'), $mail->subject);
-        $this->assertSame('mail.verify-email', $mail->view);
+        $this->assertSame([
+            'html' => 'mail.verify-email',
+            'text' => 'mail.text.verify-email',
+        ], $mail->view);
         $this->assertSame('New Learner', $mail->viewData['userName']);
+        $this->assertSame((int) config('auth.verification.expire', 60), $mail->viewData['expireMinutes']);
         $this->assertStringStartsWith('http', $mail->viewData['url']);
         $this->assertStringContainsString((string) $user->id, $mail->viewData['url']);
         $this->assertStringContainsString('signature=', $mail->viewData['url']);

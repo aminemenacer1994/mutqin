@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPassword;
+use App\Notifications\VerifyEmail;
 use App\Support\AdminEmails;
 use App\Support\EmailVerification;
-use App\Notifications\VerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -15,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
@@ -101,6 +103,11 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new VerifyEmail);
     }
 
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPassword($token));
+    }
+
     public function getEmailForVerification(): string
     {
         return $this->hasPendingEmailChange()
@@ -115,6 +122,15 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return (string) $this->email;
+    }
+
+    public function preferredLocale(): string
+    {
+        $locale = strtolower(substr((string) ($this->locale ?: 'en'), 0, 2));
+
+        return in_array($locale, ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'], true)
+            ? $locale
+            : 'en';
     }
 
     public function hasPendingEmailChange(): bool
@@ -213,7 +229,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return 'pro';
         }
 
-        if (!$this->hasPaidAccess()) {
+        if (! $this->hasPaidAccess()) {
             return 'free';
         }
 

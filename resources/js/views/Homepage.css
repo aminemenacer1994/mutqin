@@ -22,6 +22,7 @@
     radial-gradient(ellipse 55% 42% at 8% -4%, var(--hp-glow), transparent 58%),
     radial-gradient(ellipse 42% 36% at 96% 8%, color-mix(in srgb, var(--accent-light) 42%, transparent), transparent 52%),
     var(--bg);
+  overflow-x: hidden;
   overflow-x: clip;
 }
 
@@ -1152,6 +1153,23 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 }
 
 .footer__bottom p { margin: 0; }
+
+/* Large Android / iPhone Plus (Pixel 9 Pro, Pixel 7, Galaxy S24, iPhone 15 Plus) */
+@media (min-width: 400px) and (max-width: 767.98px) {
+  .hero__fan {
+    width: min(100%, 420px);
+    min-height: clamp(240px, 66vw, 340px);
+  }
+
+  .hero__title {
+    font-size: clamp(1.85rem, 5.4vw, 2.15rem);
+    max-width: 18ch;
+  }
+
+  .hero__desc {
+    max-width: 38ch;
+  }
+}
 
 /* Responsive */
 @media (max-width: 991.98px) {

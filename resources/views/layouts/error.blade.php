@@ -13,7 +13,7 @@
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="theme-color" content="{{ $appThemeColor }}">
     <meta name="color-scheme" content="{{ $appColorScheme }}">
     <title>@yield('title', __('ui.error_title')) · Mutqin</title>
@@ -21,8 +21,20 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
     <style>
+        html, body {
+            width: 100%;
+            max-width: 100%;
+        }
+        body {
+            overflow-x: hidden;
+            overflow-x: clip;
+        }
         .mutqin-error-page {
             min-height: 100dvh;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            overflow-x: clip;
             display: grid;
             place-items: center;
             padding: clamp(1.25rem, 4vw, 2.75rem);

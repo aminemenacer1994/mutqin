@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'footer' => 'Recibiste este mensaje porque se solicitó una acción en tu cuenta Mutqin.',
+    'tagline' => 'Memorización del Corán, guiada.',
+    'logo_alt' => 'Mutqin',
+    'fallback' => 'Si el botón no funciona, copia y pega este enlace en tu navegador:',
+    'expires_prefix' => 'Este enlace caduca en ',
+    'expires_minutes' => '{1} :minutes minuto|[2,*] :minutes minutos',
+    'expires_suffix' => '.',
+    'expires_in' => 'El enlace caduca en :minutes minutos',
+
+    'verify_subject' => 'Verifica tu correo de Mutqin',
+    'verify_preheader' => 'Confirma tu correo para desbloquear tu espacio. Caduca en :minutes minutos.',
+    'verify_heading' => 'Confirma tu correo',
+    'verify_greeting' => 'Bienvenido a Mutqin.',
+    'verify_greeting_named' => 'Bienvenido a Mutqin, :name.',
+    'verify_body' => 'Confirma tu dirección de correo para desbloquear tu espacio de memorización.',
+    'verify_action' => 'Verificar correo',
+    'verify_fallback' => 'Si el botón no funciona, copia y pega este enlace en tu navegador:',
+    'verify_security' => 'Si no creaste una cuenta Mutqin, puedes ignorar este correo. No se hará ningún cambio sin usar el enlace.',
+
+    'reset_subject' => 'Restablece tu contraseña de Mutqin',
+    'reset_preheader' => 'Elige una nueva contraseña. Este enlace caduca en :minutes minutos.',
+    'reset_heading' => 'Restablece tu contraseña',
+    'reset_greeting' => 'Recibimos una solicitud para restablecer la contraseña de tu cuenta Mutqin.',
+    'reset_greeting_named' => 'Hola :name, recibimos una solicitud para restablecer la contraseña de tu cuenta Mutqin.',
+    'reset_body' => 'Pulsa el botón de abajo para elegir una nueva contraseña. Por seguridad, este enlace funciona una sola vez y luego caduca.',
+    'reset_steps_title' => 'Qué ocurre a continuación',
+    'reset_step_1' => 'Abre la página segura de restablecimiento.',
+    'reset_step_2' => 'Introduce una nueva contraseña (al menos 8 caracteres).',
+    'reset_step_3' => 'Se iniciará sesión y se abrirá tu espacio de trabajo.',
+    'reset_action' => 'Restablecer contraseña',
+    'reset_fallback' => 'Si el botón no funciona, copia y pega este enlace en tu navegador:',
+    'reset_security' => 'Si no solicitaste restablecer la contraseña, ignora este correo. Tu contraseña no cambiará.',
+];

@@ -25,12 +25,16 @@
     ];
     $supportedDocumentLocales = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'];
     $activeLocaleOption = $appLocaleOptions[$appLocale] ?? ['flag' => '🇬🇧', 'label' => $languageEndonyms[$appLocale] ?? $appLocale];
+    $navUser = auth()->user();
+    $authAwaitingVerification = $navUser !== null
+        && \App\Support\EmailVerification::required()
+        && ! $navUser->hasVerifiedEmail();
 @endphp
 <!doctype html>
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="{{ $appThemeColor }}">
     <meta name="color-scheme" content="{{ $appColorScheme }}">
@@ -96,6 +100,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    <style id="mutqin-no-horizontal-scroll">
+      html {
+        width: 100%;
+        max-width: 100%;
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip;
+        overscroll-behavior-x: none;
+      }
+      @media (max-width: 1024px) {
+        html, body { scrollbar-gutter: auto; }
+      }
+    </style>
     @if(request()->boolean('mutqin_embed'))
     <style id="mutqin-embed-shell">
       .app-navbar,
@@ -3096,7 +3119,7 @@
             flex: 1 1 auto;
             border-color: var(--border);
             background: var(--surface-strong);
-            --bs-offcanvas-width: min(360px, 100vw);
+            --bs-offcanvas-width: min(360px, 100%);
         }
 
         .app-navbar .offcanvas-header {
@@ -3632,8 +3655,8 @@
 
             .app-navbar-logo {
                 height: 46px;
-                max-width: none;
-                flex-shrink: 0;
+                max-width: min(42vw, 10rem);
+                flex-shrink: 1;
             }
         }
 
@@ -3675,8 +3698,11 @@
                 gap: 8px;
                 flex-wrap: nowrap;
                 align-items: center;
-                /* Was overflow:hidden — clipped the toggler's right border/radius */
-                overflow: visible;
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+                box-sizing: border-box;
+                overflow-x: clip;
             }
 
             .navbar-brand {
@@ -3688,9 +3714,9 @@
             .app-navbar-logo {
                 height: 40px;
                 width: auto;
-                max-width: none;
+                max-width: 100%;
                 object-fit: contain;
-                flex-shrink: 0;
+                flex-shrink: 1;
             }
 
             .app-navbar-logo--full.app-navbar-logo--light {
@@ -3733,12 +3759,52 @@
             }
 
             .navbar-quick-actions > .global-lang-switcher {
-                max-width: min(40vw, 9rem);
+                flex: 0 0 auto;
+                width: var(--tap);
+                min-width: var(--tap);
+                max-width: var(--tap);
             }
 
-            .app-lang-label {
-                font-size: 0.74rem;
-                max-width: 3.75rem;
+            .navbar-quick-actions .app-lang-toggle {
+                width: var(--tap);
+                min-width: var(--tap);
+                max-width: var(--tap);
+                padding-inline: 0;
+                justify-content: center;
+            }
+
+            @media (min-width: 400px) and (max-width: 767.98px) {
+                .navbar-quick-actions > .global-lang-switcher {
+                    width: auto !important;
+                    min-width: var(--tap);
+                    max-width: min(38vw, 10rem);
+                }
+
+                .navbar-quick-actions .app-lang-toggle {
+                    width: auto;
+                    min-width: var(--tap);
+                    max-width: 100%;
+                    padding-inline: 0.5rem 0.65rem;
+                    gap: 0.35rem;
+                    justify-content: flex-start;
+                }
+
+                .navbar-quick-actions .app-lang-label {
+                    display: inline;
+                    max-width: 4.25rem;
+                    font-size: 0.78rem;
+                }
+
+                .navbar-quick-actions .app-lang-chevron {
+                    display: inline-flex;
+                }
+            }
+
+            @media (max-width: 399.98px) {
+                .navbar-quick-actions .app-lang-label,
+                .navbar-quick-actions .app-lang-chevron {
+                    display: none;
+                }
             }
 
             .app-user-toggle {
@@ -3764,7 +3830,7 @@
             }
 
             .app-navbar .offcanvas-lg {
-                --bs-offcanvas-width: 100vw;
+                --bs-offcanvas-width: 100%;
             }
 
             .app-navbar .offcanvas-header {
@@ -5216,7 +5282,8 @@
                 /* Shell owns horizontal inset — avoid double padding that squeezes actions */
                 padding-inline: 0;
                 z-index: var(--bs-offcanvas-zindex, 1045);
-                overflow: visible;
+                max-width: 100%;
+                overflow-x: clip;
             }
 
             /* Solid black navbar + drawer on mobile dark mode */
@@ -5232,11 +5299,11 @@
                 width: 100%;
                 max-width: 100%;
                 margin: 0;
-                overflow: visible;
+                overflow-x: clip;
             }
 
             .navbar-quick-actions {
-                overflow: visible;
+                overflow: hidden;
                 /* Keep the hamburger fully inside the cell */
                 padding-inline-end: 0.1rem;
             }
@@ -5248,7 +5315,7 @@
 
             .app-navbar-logo {
                 height: 40px;
-                max-width: none;
+                max-width: min(42vw, 10rem);
             }
 
             .app-navbar-logo--mark {
@@ -5256,9 +5323,9 @@
             }
 
             .app-navbar .offcanvas-lg {
-                --bs-offcanvas-width: 100vw;
-                width: 100vw !important;
-                max-width: 100vw !important;
+                --bs-offcanvas-width: 100%;
+                width: 100% !important;
+                max-width: 100% !important;
                 z-index: var(--bs-offcanvas-zindex, 1045) !important;
             }
 
@@ -5524,7 +5591,8 @@
                 justify-content: flex-end;
                 gap: clamp(4px, 1.6vw, 8px) !important;
                 min-width: 0;
-                overflow: visible;
+                max-width: 100%;
+                overflow: hidden;
             }
 
             .navbar-quick-actions > .dropdown:not(.global-lang-switcher):not(.global-theme-switcher),
@@ -5545,19 +5613,55 @@
             }
 
             .navbar-quick-actions > .global-lang-switcher {
-                flex: 0 1 auto;
-                width: auto !important;
-                min-width: 0;
-                max-width: min(44vw, 10rem);
+                flex: 0 0 auto;
+                width: var(--tap) !important;
+                min-width: var(--tap);
+                max-width: var(--tap);
+            }
+
+            /* Large phones (Pixel 9 Pro, Pixel 7, Galaxy S24): show language label again. */
+            @media (min-width: 400px) and (max-width: 767.98px) {
+                .navbar-quick-actions > .global-lang-switcher {
+                    width: auto !important;
+                    min-width: var(--tap);
+                    max-width: min(38vw, 10rem);
+                }
+
+                .navbar-quick-actions .app-lang-toggle {
+                    width: auto;
+                    min-width: var(--tap);
+                    max-width: 100%;
+                    padding-inline: 0.5rem 0.65rem;
+                    gap: 0.35rem;
+                    justify-content: flex-start;
+                }
+
+                .navbar-quick-actions .app-lang-label {
+                    display: inline;
+                    max-width: 4.25rem;
+                    font-size: 0.78rem;
+                }
+
+                .navbar-quick-actions .app-lang-chevron {
+                    display: inline-flex;
+                }
+            }
+
+            /* Compact phones: flag-only language control to prevent navbar overflow. */
+            @media (max-width: 399.98px) {
+                .navbar-quick-actions .app-lang-label,
+                .navbar-quick-actions .app-lang-chevron {
+                    display: none;
+                }
             }
 
             .app-navbar .offcanvas-lg {
                 display: grid;
                 grid-template-rows: auto minmax(0, 1fr);
-                --bs-offcanvas-width: 100vw;
+                --bs-offcanvas-width: 100%;
                 --bs-offcanvas-bg: var(--surface-strong);
-                width: 100vw !important;
-                max-width: 100vw !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 background: var(--surface-strong);
                 background-image: none;
                 border-inline-start: 0;
@@ -6160,11 +6264,18 @@
                 <div class="offcanvas-header">
                     <div class="mobile-nav-identity">
                         @auth
-                            <span class="app-user-avatar mobile-nav-identity-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
-                            <div class="mobile-nav-identity-copy">
-                                <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ Auth::user()->name ?? __('ui.user') }}</h2>
-                                <p class="mobile-nav-identity-meta mb-0">{{ __('ui.menu') }}</p>
-                            </div>
+                            @if ($authAwaitingVerification)
+                                <div class="mobile-nav-identity-copy">
+                                    <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.verify_title') }}</h2>
+                                    <p class="mobile-nav-identity-meta mb-0">{{ __('ui.verify_kicker') }}</p>
+                                </div>
+                            @else
+                                <span class="app-user-avatar mobile-nav-identity-avatar" aria-hidden="true">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
+                                <div class="mobile-nav-identity-copy">
+                                    <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ Auth::user()->name ?? __('ui.user') }}</h2>
+                                    <p class="mobile-nav-identity-meta mb-0">{{ __('ui.menu') }}</p>
+                                </div>
+                            @endif
                         @else
                             <h2 class="offcanvas-title h5 mb-0" id="primaryNavbarLabel">{{ __('ui.menu') }}</h2>
                         @endauth
@@ -6185,6 +6296,7 @@
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @auth
+                            @unless ($authAwaitingVerification)
                             @if (Auth::user()->isAdmin())
                             <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-dashboard">
                                 <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
@@ -6198,6 +6310,7 @@
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @endif
+                            @endunless
                             @endauth
                         </div>
                     </div>
@@ -6209,6 +6322,7 @@
                         </div>
                     @endguest
                     @auth
+                        @unless ($authAwaitingVerification)
                         <div class="mobile-nav-account mobile-nav-only" aria-label="{{ __('ui.account') }}">
                             <span class="mobile-nav-section-label">{{ __('ui.account') }}</span>
                             <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" href="{{ route('profile.show') }}">
@@ -6236,6 +6350,7 @@
                                 </button>
                             </form>
                         </div>
+                        @endunless
                     @endauth
                 </div>
             </div>
@@ -6306,6 +6421,7 @@
                 </div>
 
                 @auth
+                    @unless ($authAwaitingVerification)
                     {{-- Desktop/tablet account menu; hidden on phone where the offcanvas owns account actions. --}}
                     <div class="dropdown d-none d-md-block" id="userDropdown">
                         <button class="btn app-user-toggle" type="button" id="dropdownToggle" aria-expanded="false" aria-haspopup="menu" aria-controls="dropdownMenu">
@@ -6351,6 +6467,7 @@
                             </li>
                         </ul>
                     </div>
+                    @endunless
                 @endauth
 
                 <button

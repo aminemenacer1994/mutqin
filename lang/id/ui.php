@@ -76,7 +76,7 @@ return [
     'reset_kicker' => 'Perlu atur ulang?',
     'reset_title' => 'Atur ulang kata sandi Anda',
     'reset_subtitle' => 'Masukkan email Anda dan kami akan mengirimkan tautan atur ulang.',
-    'reset_oauth_hint' => 'Daftar dengan Google? Masuk dengan Google, lalu atur kata sandi di Profil.',
+    'reset_oauth_hint' => 'Daftar dengan Google?',
     'send_reset_link' => 'Kirim tautan atur ulang kata sandi',
     'new_password_kicker' => 'Buat yang baru',
     'new_password_title' => 'Pilih kata sandi baru',

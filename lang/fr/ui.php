@@ -89,7 +89,7 @@ return [
     'reset_kicker' => 'Besoin de réinitialiser ?',
     'reset_title' => 'Réinitialiser votre mot de passe',
     'reset_subtitle' => 'Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.',
-    'reset_oauth_hint' => 'Inscrit avec Google ? Connectez-vous avec Google, puis définissez un mot de passe dans le Profil.',
+    'reset_oauth_hint' => 'Inscrit avec Google ?',
     'send_reset_link' => 'Envoyer le lien de réinitialisation',
     'new_password_kicker' => 'Définir un nouveau mot de passe',
     'new_password_title' => 'Choisissez un nouveau mot de passe',

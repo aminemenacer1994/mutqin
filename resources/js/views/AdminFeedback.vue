@@ -663,7 +663,9 @@ export default {
 }
 
 .afb-table-wrap {
+  max-width: 100%;
   overflow: auto;
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 }
 

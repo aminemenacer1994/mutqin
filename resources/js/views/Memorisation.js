@@ -1779,13 +1779,8 @@ export default {
       return this.shouldShowWorkspaceEmptyState || this.shouldShowReadingWorkspace
     },
     showIdleQuickStartChoices() {
-      if (!this.showSessionOverviewIdleActions) return false
-      if (this.hasCompletedOnboarding()) return false
-      if (this.hasPostOnboardingPracticeEvidence()) return false
-      if (this.journeyHasStarted || this.journeyReview) return false
-      if (this.hasValidatedResumableSession) return false
-      if (this.hasMemorisationHistory) return false
-      return true
+      // "Choose where to start" / Bismillah empty cards are retired.
+      return false
     },
     showIdleAsidePanel() {
       if (this.showIdleQuickStartChoices) return false
@@ -2198,21 +2193,9 @@ export default {
       return this.toolsStartBusy
     },
     showSessionOverviewIdleActions() {
-      if (
-        this.isLoggedIn
-        && this.learningBackendEnabled()
-        && !this.learnerJourneyHydrated
-      ) {
-        return false
-      }
-      // Returning learners use the Welcome Back modal — not the inline idle hero.
-      if (!this.showIdleQuickStartChoices) return false
-      return !this.hasVerses
-        && !this.isRestoringWorkspace
-        && this.isDataReady
-        && !this.isPostSessionChoiceVisible
-        && !this.showWelcomeBackModal
-        && !this.returningUserChoicePending
+      // "Your place" / "Choose where to start" idle heroes are retired.
+      // Entry is the Welcome Back modal or an active reading session.
+      return false
     },
     shouldShowWelcomeBackResumeGate() {
       if (!this.isLoggedIn) return false

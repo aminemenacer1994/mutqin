@@ -3,6 +3,11 @@
 .info-page {
   --info-ease: cubic-bezier(0.22, 1, 0.36, 1);
   /* Navbar is sticky (in flow) — only need a short gap below it, not another nav-height. */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-x: clip;
   padding: clamp(0.85rem, 2vw, 1.25rem) 0 clamp(2.25rem, 5vw, 3.5rem);
 }
 

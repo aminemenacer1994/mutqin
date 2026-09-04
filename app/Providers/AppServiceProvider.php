@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Backup\Events\BackupHasFailed;
 use Spatie\Backup\Events\BackupWasSuccessful;
 use Spatie\Backup\Events\CleanupHasFailed;
@@ -40,6 +41,8 @@ class AppServiceProvider extends ServiceProvider
         DB::prohibitDestructiveCommands(
             DatabaseDeploySafety::isProtectedEnvironment()
         );
+
+        Password::defaults(static fn () => Password::min(8));
 
         Gate::define('access-admin', function ($user) {
             // Authorization uses the authenticated persisted user only (never request email).

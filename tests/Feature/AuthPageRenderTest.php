@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
 use Tests\TestCase;
@@ -61,7 +62,7 @@ class AuthPageRenderTest extends TestCase
             'email' => 'layla.beginner@mutqin.test',
         ]);
 
-        $user = \App\Models\User::where('email', 'layla.beginner@mutqin.test')->firstOrFail();
+        $user = User::where('email', 'layla.beginner@mutqin.test')->firstOrFail();
         $this->assertNotNull($user->email_verified_at);
         $this->get(route('memorisation'))->assertOk();
     }
@@ -70,7 +71,7 @@ class AuthPageRenderTest extends TestCase
     {
         config(['app.show_demo_accounts' => true]);
 
-        \App\Models\User::factory()->unverified()->create([
+        User::factory()->unverified()->create([
             'email' => 'layla.beginner@mutqin.test',
             'name' => 'Stale Demo',
             'password' => bcrypt('old-pass'),
@@ -80,7 +81,7 @@ class AuthPageRenderTest extends TestCase
         $this->post(route('login.demo'))
             ->assertRedirect('/memorisation');
 
-        $user = \App\Models\User::where('email', 'layla.beginner@mutqin.test')->firstOrFail();
+        $user = User::where('email', 'layla.beginner@mutqin.test')->firstOrFail();
         $this->assertNotNull($user->email_verified_at);
         $this->get(route('memorisation'))->assertOk();
     }
@@ -99,7 +100,7 @@ class AuthPageRenderTest extends TestCase
     {
         config(['app.show_demo_accounts' => true]);
 
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
 
         $this->actingAs($user)
             ->get(route('memorisation'))
@@ -115,6 +116,29 @@ class AuthPageRenderTest extends TestCase
             ->assertSee(__('ui.auth_register_heading'))
             ->assertSee(__('ui.continue_google'))
             ->assertSee(__('ui.create_account'));
+    }
+
+    public function test_forgot_and_reset_password_pages_render(): void
+    {
+        $this->get(route('password.request'))
+            ->assertOk()
+            ->assertSee(__('ui.reset_title'))
+            ->assertSee(__('ui.send_reset_link'))
+            ->assertSee(__('ui.reset_oauth_hint'))
+            ->assertSee(__('ui.continue_google'))
+            ->assertSee(route('auth.google.redirect'), false);
+
+        $this->get(route('password.reset', ['token' => 'preview-token']))
+            ->assertOk()
+            ->assertSee(__('ui.new_password_title'))
+            ->assertSee(__('ui.reset_password'))
+            ->assertSee(__('ui.reset_step_choose'))
+            ->assertSee(__('ui.reset_link_help'))
+            ->assertDontSee(__('passwords.token'));
+
+        $resetSource = file_get_contents(resource_path('views/auth/passwords/reset.blade.php'));
+        $this->assertStringContainsString('auth-heading--solo', $resetSource);
+        $this->assertStringContainsString('auth-steps', $resetSource);
     }
 
     public function test_verify_page_uses_ui_locale_keys(): void
@@ -162,6 +186,10 @@ class AuthPageRenderTest extends TestCase
             'verify_resent',
             'verify_resend_button',
             'confirm_password',
+            'reset_title',
+            'reset_password',
+            'forgot_password',
+            'new_password_title',
         ];
 
         foreach (['en', 'ar', 'fr', 'es', 'tr', 'id', 'ur'] as $locale) {

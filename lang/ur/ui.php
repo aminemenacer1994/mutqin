@@ -76,7 +76,7 @@ return [
     'reset_kicker' => 'تحتاج إلى إعادة تعيين؟',
     'reset_title' => 'إعادة تعيين كلمة المرور',
     'reset_subtitle' => 'أدخل بريدك الإلكتروني وسنرسل رابط إعادة التعيين.',
-    'reset_oauth_hint' => 'سجّلت عبر Google؟ سجّل الدخول بـ Google ثم عيّن كلمة مرور من الملف الشخصي.',
+    'reset_oauth_hint' => 'سجّلت عبر Google؟',
     'send_reset_link' => 'إرسال رابط إعادة التعيين',
     'new_password_kicker' => 'عيّن كلمة مرور جديدة',
     'new_password_title' => 'اختر كلمة مرور جديدة',

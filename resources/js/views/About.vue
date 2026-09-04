@@ -163,7 +163,8 @@ html[dir="rtl"] .verse {
     --about-mobile-grid: repeat(4, minmax(0, 1fr));
     --about-mobile-gap: clamp(8px, 2.6vw, 14px);
     padding: clamp(24px, 7vw, 44px) clamp(12px, 4vw, 24px);
-    overflow-x: visible;
+    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .hero {

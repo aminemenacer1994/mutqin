@@ -115,4 +115,41 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Transactional brand assets
+    |--------------------------------------------------------------------------
+    |
+    | Logo must be an absolute URL email clients can fetch. Defaults to MAIL_ASSET_URL
+    | (app host). The marketing domain (mutqin.ai) does not serve /images/*.
+    |
+    */
+
+    'brand' => [
+        'name' => env('MAIL_BRAND_NAME', 'Mutqin'),
+        'home_url' => env('MAIL_HOME_URL', 'https://mutqin.ai'),
+        // Public app host serves /images/* for email clients (mutqin.ai marketing site does not).
+        'asset_url' => env('MAIL_ASSET_URL', 'https://app.mutqin.ai'),
+        'logo_url' => env('MAIL_LOGO_URL'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Local / staging mail preview
+    |--------------------------------------------------------------------------
+    |
+    | Used only by `php artisan mutqin:mail-preview`. Disabled in production
+    | even if MAIL_PREVIEW_ENABLED=true. Recipients come from env / --to,
+    | never from production notification classes.
+    |
+    */
+
+    'preview' => [
+        'enabled' => filter_var(env('MAIL_PREVIEW_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'recipients' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('MAIL_PREVIEW_RECIPIENTS', ''))
+        ))),
+    ],
+
 ];

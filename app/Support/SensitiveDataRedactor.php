@@ -138,6 +138,18 @@ class SensitiveDataRedactor
 
     private static function looksSecret(string $value): bool
     {
+        if (preg_match('#/password/reset/[A-Za-z0-9._~-]+#', $value) === 1) {
+            return true;
+        }
+
+        if (preg_match('#/email/verify/\d+/[A-Za-z0-9._~-]+#', $value) === 1) {
+            return true;
+        }
+
+        if (str_contains($value, 'signature=') && str_contains($value, 'expires=')) {
+            return true;
+        }
+
         if (preg_match('/^bearer\s+\S+/i', $value) === 1) {
             return true;
         }

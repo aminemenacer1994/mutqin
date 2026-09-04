@@ -68,6 +68,7 @@
   letter-spacing: 0.005em;
   width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
   overflow-x: clip;
   box-sizing: border-box;
   background:
@@ -2245,8 +2246,8 @@ html[data-theme="dark"] .admin-drawer-root {
   top: 0;
   right: 0;
   z-index: 9999;
-  width: min(560px, 100vw);
-  max-width: 100vw;
+  width: min(560px, 100%);
+  max-width: 100%;
   height: 100vh;
   overflow: hidden;
   border-inline-start: 1px solid var(--dash-line);
@@ -2270,7 +2271,7 @@ html[data-theme="dark"] .admin-drawer-root {
 
 @media (max-width: 639px) {
   .admin-drawer {
-    width: 100vw;
+    width: 100%;
     top: auto;
     bottom: 0;
     right: 0;

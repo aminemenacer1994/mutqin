@@ -34,5 +34,17 @@ class SensitiveDataRedactorTest extends TestCase
         $this->assertSame('[redacted]', SensitiveDataRedactor::redactString($jwt));
         $this->assertSame('[redacted]', SensitiveDataRedactor::redactString($ayah));
         $this->assertSame('upstream timeout', SensitiveDataRedactor::redactString('upstream timeout'));
+        $this->assertSame(
+            '[redacted]',
+            SensitiveDataRedactor::redactString('https://mutqin.ai/password/reset/abcToken123?email=learner@example.com')
+        );
+        $this->assertSame(
+            '[redacted]',
+            SensitiveDataRedactor::redactString('https://app.mutqin.ai/email/verify/12/abcdef123456')
+        );
+        $this->assertSame(
+            '[redacted]',
+            SensitiveDataRedactor::redactString('https://app.mutqin.ai/email/verify/12/abcdef?expires=1710000000&signature=abc')
+        );
     }
 }

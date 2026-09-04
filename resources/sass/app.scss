@@ -133,6 +133,11 @@ html[data-theme="dark"] {
 
 html {
   background: var(--bg);
+  width: 100%;
+  max-width: 100%;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -141,21 +146,29 @@ body {
   color: var(--text);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  scrollbar-gutter: stable both-edges;
+  -moz-osx-font-smoothing: grayscale;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
   overflow-x: clip;
+  overscroll-behavior-x: none;
+  scrollbar-gutter: stable both-edges;
 }
 
 html,
 body,
 #app,
-main {
+main,
+#mainContent {
   min-width: 0;
+  max-width: 100%;
 }
 
 img,
 svg,
 video,
-canvas {
+canvas,
+iframe {
   max-width: 100%;
   height: auto;
 }
@@ -169,8 +182,24 @@ canvas {
 }
 
 :where(.modal-dialog) {
-  max-width: calc(100vw - 1rem);
+  max-width: calc(100% - 1rem);
   margin: 0.5rem auto;
+}
+
+.modal-backdrop,
+.offcanvas-backdrop {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  inset: 0;
+}
+
+.vw-100 {
+  width: 100% !important;
+}
+
+.min-vw-100 {
+  min-width: 100% !important;
 }
 
 :where(.modal-content) {
@@ -436,10 +465,10 @@ html[data-theme="dark"] .app-navbar-logo--dark {
 
 .auth-greeting {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.5rem;
   justify-items: center;
   text-align: center;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.25rem;
 }
 
 .auth-greeting__arabic {
@@ -463,6 +492,12 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   color: var(--text);
 }
 
+.auth-heading--solo {
+  font-size: clamp(1.45rem, 4vw, 1.75rem);
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
 .auth-lede {
   margin: 0;
   padding-inline: 0.15rem;
@@ -473,6 +508,12 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   font-family: var(--font-ui);
   font-size: 0.9rem;
   line-height: 1.55;
+}
+
+.auth-lede--meta {
+  width: min(100%, 38ch);
+  font-size: 0.82rem;
+  color: color-mix(in srgb, var(--text-muted) 92%, var(--text));
 }
 
 .auth-alert {
@@ -733,6 +774,83 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
+.auth-field-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--text-muted) 92%, var(--text));
+}
+
+.auth-alert__list {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+}
+
+.auth-alert__list li + li {
+  margin-top: 0.35rem;
+}
+
+.auth-steps {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0 0 0.25rem;
+  padding: 0.85rem 0.95rem;
+  list-style: none;
+  counter-reset: auth-step;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 34%, var(--surface-strong));
+}
+
+.auth-steps__item {
+  position: relative;
+  padding-left: 1.55rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--text-muted) 88%, var(--text));
+}
+
+.auth-steps__item::before {
+  content: counter(auth-step);
+  counter-increment: auth-step;
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--text-muted) 88%, var(--text));
+  background: color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+}
+
+.auth-steps__item--current {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.auth-steps__item--current::before {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent-strong) 88%, #1f6b4f);
+  border-color: transparent;
+}
+
+.auth-panel--reset .auth-submit {
+  margin-top: 0.15rem;
+}
+
+.auth-field .invalid-feedback {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--danger);
+}
+
 .auth-password-wrap {
   position: relative;
   display: grid;
@@ -869,6 +987,14 @@ button.auth-link {
   margin-bottom: 0;
 }
 
+.auth-actions {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
 .auth-footer {
   margin: 0.2rem 0 0;
   padding-top: 0.15rem;
@@ -878,10 +1004,15 @@ button.auth-link {
   line-height: 1.45;
 }
 
+.auth-actions .auth-footer {
+  margin: 0;
+  padding: 0;
+}
+
 .auth-footer--meta {
   margin-top: 0;
   padding-top: 0;
-  max-width: 34ch;
+  max-width: 44ch;
   justify-self: center;
   font-size: 0.82rem;
   line-height: 1.5;
@@ -1155,8 +1286,8 @@ html[data-theme="dark"] .memorisation-boot-btn--secondary {
 @media (max-width: 768px) {
   .app-navbar-logo {
     height: 46px;
-    max-width: none;
-    flex-shrink: 0;
+    max-width: min(42vw, 10rem);
+    flex-shrink: 1;
   }
 
   .app-user-toggle span:not(.app-user-avatar) {
@@ -1178,8 +1309,11 @@ html[data-theme="dark"] .memorisation-boot-btn--secondary {
     font-size: 0.875rem;
   }
 
-  .auth-field .form-control {
-    font-size: 16px; /* prevent iOS zoom */
+  .auth-field .form-control,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea {
+    font-size: 16px; /* prevent iOS / iPadOS input zoom */
   }
 }
 
@@ -1626,6 +1760,57 @@ html.mutqin-ios-pwa-open {
   html.mutqin-pwa-mobile canvas,
   html.mutqin-pwa-mobile iframe {
     max-width: 100%;
+  }
+}
+
+/* Phone / phablet: lock the document width on iOS, Android, Pixel, Edge, and older WebKit. */
+@media (max-width: 1024px) {
+  html,
+  body {
+    scrollbar-gutter: auto;
+  }
+
+  body {
+    overflow-x: hidden;
+    overflow-x: clip;
+    min-height: 100vh;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
+  #app,
+  main,
+  #mainContent,
+  .homepage,
+  .info-page,
+  .pricing-page,
+  .waiting-list-page,
+  .user-dashboard,
+  .admin-console,
+  .profile-page,
+  .billing-page,
+  .auth-page,
+  .story-page,
+  .mission-page,
+  .donation-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  table {
+    max-width: 100%;
+  }
+
+  .table-responsive,
+  .pricing-table-wrap,
+  .admin-table-wrap,
+  .admin-table-scroll,
+  .afb-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

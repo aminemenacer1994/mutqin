@@ -6,12 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\AuthRedirect;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Contracts\Auth\CanResetPassword;
+use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\ResetsPasswords;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules;
 
 class ResetPasswordController extends Controller
 {
@@ -43,11 +48,55 @@ class ResetPasswordController extends Controller
     }
 
     /**
+     * Show the reset form. When email + token are present but unusable, keep a
+     * generic invalid/expired state so account existence cannot be probed.
+     */
+    public function showResetForm(Request $request): View
+    {
+        $token = $request->route()->parameter('token');
+        $email = $request->email;
+
+        $view = view('auth.passwords.reset')->with([
+            'token' => $token,
+            'email' => $email,
+        ]);
+
+        if (! is_string($email) || $email === '' || ! is_string($token) || $token === '') {
+            return $view;
+        }
+
+        $user = User::query()->where('email', $email)->first();
+        $usable = $user instanceof User
+            && $user->hasSetPassword()
+            && Password::broker()->tokenExists($user, $token);
+
+        if ($usable) {
+            return $view;
+        }
+
+        return $view->withErrors([
+            'email' => __('passwords.token'),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function rules(): array
+    {
+        return [
+            'token' => ['required', 'string'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ];
+    }
+
+    /**
      * Reset the given user's password without granting email verification.
      *
      * The broker only resets the account matching the token + email pair.
      *
-     * @param  \Illuminate\Contracts\Auth\CanResetPassword&\App\Models\User  $user
+     * @param  CanResetPassword&User  $user
      */
     protected function resetPassword($user, $password): void
     {
@@ -65,6 +114,7 @@ class ResetPasswordController extends Controller
         $request = request();
         if ($request->hasSession()) {
             $request->session()->regenerate();
+            $request->session()->forget('url.intended');
         }
 
         // Rehash + password cookie for AuthenticateSession-compatible invalidation.

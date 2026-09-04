@@ -89,7 +89,7 @@ return [
     'reset_kicker' => '¿Necesitas restablecer?',
     'reset_title' => 'Restablece tu contraseña',
     'reset_subtitle' => 'Introduce tu correo y te enviaremos un enlace de restablecimiento.',
-    'reset_oauth_hint' => '¿Te registraste con Google? Inicia sesión con Google y luego establece una contraseña en Perfil.',
+    'reset_oauth_hint' => '¿Te registraste con Google?',
     'send_reset_link' => 'Enviar enlace de restablecimiento',
     'new_password_kicker' => 'Establecer una nueva contraseña',
     'new_password_title' => 'Elige una nueva contraseña',

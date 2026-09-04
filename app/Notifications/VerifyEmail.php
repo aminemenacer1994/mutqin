@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\TransactionalMail;
 use Illuminate\Auth\Notifications\VerifyEmail as VerifyEmailBase;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -20,11 +21,16 @@ class VerifyEmail extends VerifyEmailBase
             return call_user_func(static::$toMailCallback, $notifiable, $verificationUrl);
         }
 
-        return (new MailMessage)
-            ->subject(__('mail.verify_subject'))
-            ->view('mail.verify-email', [
+        return TransactionalMail::message(
+            $notifiable,
+            'mail.verify_subject',
+            'mail.verify-email',
+            'mail.text.verify-email',
+            [
                 'url' => $verificationUrl,
                 'userName' => $notifiable->name ?? null,
-            ]);
+                'expireMinutes' => (int) config('auth.verification.expire', 60),
+            ],
+        );
     }
 }

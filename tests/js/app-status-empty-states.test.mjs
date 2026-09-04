@@ -27,7 +27,9 @@ test('shared AppStatus component exists with required variants', () => {
 test('memorisation wires intentional empty and error states', () => {
   const js = read('resources/js/views/Memorisation.js')
   const vue = read('resources/js/views/Memorisation.vue')
-  assert.match(js, /shouldShowWorkspaceEmptyState\(\)\s*\{[\s\S]*!this\.hasVerses/)
+  assert.match(js, /shouldShowWorkspaceEmptyState\(\)\s*\{[\s\S]*return false/)
+  assert.match(js, /showSessionOverviewIdleActions\(\)\s*\{[\s\S]*return false/)
+  assert.match(js, /showIdleQuickStartChoices\(\)\s*\{[\s\S]*return false/)
   assert.match(js, /madaniPagesError/)
   assert.match(js, /userFacingErrorText/)
   assert.match(js, /analyticsModalError/)

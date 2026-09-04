@@ -276,6 +276,8 @@ export default {
   display: grid;
   align-content: center;
   padding: clamp(1.25rem, 4vw, 2.5rem) 0 clamp(2.5rem, 6vw, 4rem);
+  overflow-x: hidden;
+  overflow: hidden;
   overflow: clip;
 }
 

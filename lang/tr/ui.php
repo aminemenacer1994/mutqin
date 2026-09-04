@@ -76,7 +76,7 @@ return [
     'reset_kicker' => 'Sıfırlama mı gerekiyor?',
     'reset_title' => 'Şifrenizi sıfırlayın',
     'reset_subtitle' => 'E-postanızı girin, size sıfırlama bağlantısı gönderelim.',
-    'reset_oauth_hint' => 'Google ile mi kaydoldunuz? Google ile giriş yapın, ardından Profil’den bir parola belirleyin.',
+    'reset_oauth_hint' => 'Google ile mi kaydoldunuz?',
     'send_reset_link' => 'Şifre sıfırlama bağlantısı gönder',
     'new_password_kicker' => 'Yenisini belirleyin',
     'new_password_title' => 'Yeni bir şifre seçin',

@@ -33,6 +33,11 @@
   --dash-section-gap: clamp(1.35rem, 3vw, 2rem);
   --dash-content-max: 1180px;
 
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-x: clip;
   padding: clamp(1.15rem, 3.2vw, 2rem) 0 clamp(2.5rem, 6vw, 3.5rem);
   color: var(--dash-ink);
   font-family: var(--dash-font);
@@ -1744,7 +1749,7 @@ body.dash-drawer-open {
   --dash-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dash-font-ar: var(--font-ar, "Amiri", "Noto Naskh Arabic", serif);
   --dash-drawer-z: 1100;
-  --dash-drawer-width: min(28rem, 100vw);
+  --dash-drawer-width: min(28rem, 100%);
   --dash-drawer-panel: var(--dash-surface);
   --dash-drawer-panel-soft: color-mix(in srgb, var(--dash-surface) 94%, var(--dash-bg));
   --dash-drawer-border: var(--dash-border-strong);
@@ -2289,7 +2294,7 @@ a.dash-drawer__row--link:focus-visible,
 
 @media (max-width: 640px) {
   .dash-drawer-root {
-    --dash-drawer-width: min(28rem, 100vw);
+    --dash-drawer-width: min(28rem, 100%);
   }
 
   .dash-drawer__head {
@@ -2328,7 +2333,7 @@ a.dash-drawer__row--link:focus-visible,
 
 @media (max-width: 480px) {
   .dash-drawer-root {
-    --dash-drawer-width: 100vw;
+    --dash-drawer-width: 100%;
     justify-items: stretch;
     align-items: end;
   }

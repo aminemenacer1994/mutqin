@@ -33,7 +33,7 @@
         <div class="auth-footer">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="auth-link">{{ __('ui.logout') }}</button>
+                <button type="submit" class="auth-link">{{ __('ui.verify_wrong_email') }}</button>
             </form>
         </div>
     </div>

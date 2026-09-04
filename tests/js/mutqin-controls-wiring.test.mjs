@@ -1043,7 +1043,8 @@ includesAll('centralised session lifecycle wiring', [
 
 includesAll('workspace idle returning-user journey context', [
   /hasMemorisationHistory\(\)/,
-  /showIdleQuickStartChoices\(\)[\s\S]*?hasMemorisationHistory/,
+  /showIdleQuickStartChoices\(\)\s*\{[\s\S]*?return false/,
+  /showSessionOverviewIdleActions\(\)\s*\{[\s\S]*?return false/,
   /learnerJourneyLoading/,
   /dashboard\.journey_now/,
   /dashboard\.journey_keep_going/,

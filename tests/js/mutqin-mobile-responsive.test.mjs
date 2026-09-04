@@ -14,7 +14,9 @@ const fullViewportMatrix = [
   { width: 390, height: 844 },
   { width: 393, height: 852 },
   { width: 412, height: 915 },
+  { width: 427, height: 952 },
   { width: 430, height: 932 },
+  { width: 448, height: 997 },
   { width: 767, height: 900 }
 ]
 const viewports = process.env.MUTQIN_TEST_QUICK === '1'
@@ -110,6 +112,18 @@ const publicRoutes = [
     path: '/password/reset',
     selectors: ['.auth-shell', '.auth-card', '.auth-form-wrap'],
     gridSelectors: ['.navbar-shell', '.auth-form-wrap']
+  },
+  {
+    path: '/privacy',
+    selectors: ['.info-page', '.info-shell', '.info-header', '.info-sections']
+  },
+  {
+    path: '/pricing',
+    selectors: ['.pricing-page', '.pricing-shell', '.pricing-hero', '.pricing-grid']
+  },
+  {
+    path: '/waiting-list',
+    selectors: ['.waiting-list-page', '.waiting-list-shell', '.waiting-list-hero']
   }
 ]
 
@@ -118,6 +132,10 @@ const authenticatedRoutes = [
     path: '/profile',
     selectors: ['.profile-page', '.profile-stage', '.profile-hero-card', '.profile-grid', '.profile-pane', '#personal-details', '#memorisation-preferences', '#app-preferences', '#settings'],
     gridSelectors: ['.navbar-shell', '.profile-stage', '.profile-hero-card', '.profile-grid', '.profile-pref-grid']
+  },
+  {
+    path: '/dashboard',
+    selectors: ['.user-dashboard', '.user-dashboard__shell']
   }
 ]
 
@@ -171,6 +189,7 @@ async function prepareWorkspace(page) {
     const vm = window.__mutqinResponsiveVm
     if (!vm) throw new Error('MutqinApp Vue instance was not found')
     vm.showWelcomeBackModal = false
+    vm.workspaceTourActive = false
     vm.returningUserChoicePending = false
     vm.welcomeBackWorkspaceHidden = false
     vm.showPostLoginOnboarding = false
@@ -200,6 +219,7 @@ async function setState(page, state) {
 
     vm.showTools = false
     vm.showPostLoginOnboarding = false
+    vm.workspaceTourActive = false
     vm.showPostSessionModal = false
     vm.showSessionExitModal = false
     vm.showSelfCheckModal = false
@@ -830,7 +850,7 @@ async function auditNavigation(page, viewport, direction = 'ltr') {
     const drawer = document.querySelector('.app-navbar .offcanvas.show')
     if (!drawer) return { direction, issues: ['navigation drawer did not open'] }
     const rect = drawer.getBoundingClientRect()
-    const expectedWidth = Math.min(innerWidth * 0.88, 360)
+    const expectedWidth = innerWidth
     if (rect.left < -1 || rect.right > innerWidth + 1) issues.push(`drawer outside viewport (${rect.left}..${rect.right})`)
     if (Math.abs(rect.width - expectedWidth) > 2) issues.push(`drawer width ${rect.width}, expected ${expectedWidth}`)
     if (direction === 'rtl' && rect.left > 1) issues.push(`RTL drawer is not anchored to the left (${rect.left})`)

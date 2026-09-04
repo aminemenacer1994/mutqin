@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'footer' => 'Vous avez reçu ce message parce qu\'une action a été demandée sur votre compte Mutqin.',
+    'tagline' => 'Mémorisation du Coran, guidée.',
+    'logo_alt' => 'Mutqin',
+    'fallback' => 'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
+    'expires_prefix' => 'Ce lien expire dans ',
+    'expires_minutes' => '{1} :minutes minute|[2,*] :minutes minutes',
+    'expires_suffix' => '.',
+    'expires_in' => 'Le lien expire dans :minutes minutes',
+
+    'verify_subject' => 'Vérifiez votre adresse e-mail Mutqin',
+    'verify_preheader' => 'Confirmez votre e-mail pour déverrouiller votre espace. Expire dans :minutes minutes.',
+    'verify_heading' => 'Confirmez votre e-mail',
+    'verify_greeting' => 'Bienvenue sur Mutqin.',
+    'verify_greeting_named' => 'Bienvenue sur Mutqin, :name.',
+    'verify_body' => 'Veuillez confirmer votre adresse e-mail pour déverrouiller votre espace de mémorisation.',
+    'verify_action' => 'Vérifier l\'adresse e-mail',
+    'verify_fallback' => 'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
+    'verify_security' => 'Si vous n\'avez pas créé de compte Mutqin, ignorez cet e-mail. Aucun changement ne sera effectué sans ce lien.',
+
+    'reset_subject' => 'Réinitialisez votre mot de passe Mutqin',
+    'reset_preheader' => 'Choisissez un nouveau mot de passe. Ce lien expire dans :minutes minutes.',
+    'reset_heading' => 'Réinitialisez votre mot de passe',
+    'reset_greeting' => 'Nous avons reçu une demande de réinitialisation du mot de passe de votre compte Mutqin.',
+    'reset_greeting_named' => 'Bonjour :name, nous avons reçu une demande de réinitialisation du mot de passe de votre compte Mutqin.',
+    'reset_body' => 'Appuyez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Pour votre sécurité, ce lien ne fonctionne qu\'une fois puis expire.',
+    'reset_steps_title' => 'Étapes suivantes',
+    'reset_step_1' => 'Ouvrez la page de réinitialisation sécurisée.',
+    'reset_step_2' => 'Saisissez un nouveau mot de passe (au moins 8 caractères).',
+    'reset_step_3' => 'Vous serez connecté et redirigé vers votre espace.',
+    'reset_action' => 'Réinitialiser le mot de passe',
+    'reset_fallback' => 'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
+    'reset_security' => 'Si vous n\'avez pas demandé cette réinitialisation, ignorez cet e-mail. Votre mot de passe restera inchangé.',
+];
