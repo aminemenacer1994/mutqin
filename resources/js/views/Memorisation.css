@@ -39607,6 +39607,7 @@ but not its destructive red. */
   --mutqin-modal-width-xl: min(720px, calc(100vw - 2rem));
   --mutqin-modal-width-wide: min(960px, calc(100vw - 2rem));
   --mutqin-modal-width-full: min(1140px, calc(100vw - 2rem));
+  --mutqin-modal-width-confirm: min(26rem, calc(100vw - 2.5rem));
   --mutqin-modal-radius: 26px;
   --mutqin-modal-radius-inner: 14px;
   --mutqin-modal-backdrop: color-mix(in srgb, #0a100d 58%, transparent);
@@ -41026,12 +41027,19 @@ but not its destructive red. */
   }
 }
 
-/* Session exit confirm — fluid shell, full-width (w-100) content column */
+/* Session exit confirm — compact card, not the XL / full-bleed sheet */
 
+.session-exit-modal-wrap .modal-dialog.session-exit-dialog,
+.session-exit-modal-wrap .modal-dialog.mutqin-modal-dialog.session-exit-dialog,
 .session-exit-modal-wrap .modal-dialog.mutqin-modal-dialog.w-100,
 .session-exit-modal-wrap .modal-dialog.w-100 {
-  width: 100% !important;
-  max-width: min(720px, calc(100vw - 2rem)) !important;
+  width: var(--mutqin-modal-width-confirm) !important;
+  max-width: var(--mutqin-modal-width-confirm) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 auto !important;
 }
 
 .mutqin-modal-surface.session-exit-modal,
@@ -44382,17 +44390,16 @@ body,
 
   .mutqin-modal-overlay,
 .welcome-back-modal-wrap,
-.session-exit-modal-wrap,
 .onboarding-post-session-modal-wrap {
     padding: 0 !important;
     align-items: stretch !important;
   }
 
-  .mutqin-modal-dialog,
+  .mutqin-modal-dialog:not(.session-exit-dialog),
 .mutqin-modal-dialog--wide,
 .mutqin-modal-dialog--full,
-.mutqin-modal-overlay > .mutqin-modal-dialog,
-.mutqin-modal-flow .mutqin-modal-dialog,
+.mutqin-modal-overlay > .mutqin-modal-dialog:not(.session-exit-dialog),
+.mutqin-modal-flow .mutqin-modal-dialog:not(.session-exit-dialog),
 .welcome-back-modal-wrap .modal-dialog.modal-xl,
 .session-exit-modal-wrap .modal-dialog.modal-xl,
 .onboarding-post-session-modal-wrap .modal-dialog.modal-xl,
@@ -44413,17 +44420,16 @@ body,
     box-sizing: border-box !important;
   }
 
-  .modal-content.mutqin-modal-surface:not(.ayah-notes-modal):not(.ayah-notes-delete-modal),
+  .modal-content.mutqin-modal-surface:not(.ayah-notes-modal):not(.ayah-notes-delete-modal):not(.session-exit-modal),
 .help-learning-modal,
 .recordings-library-modal,
-.session-exit-modal,
 .onboarding-post-session-modal,
 .welcome-back-modal,
 .post-onboarding-modal,
 .session-analytics-modal,
 .planner-completion-modal,
 .mutqin-modal-surface.save-name-modal,
-.mutqin-modal-surface.confirm-modal,
+.mutqin-modal-surface.confirm-modal:not(.session-exit-modal),
 .mutqin-modal-surface.rename-recording-modal,
 .mutqin-modal-surface.keyboard-shortcuts-modal {
     width: 100% !important;
@@ -44437,7 +44443,6 @@ body,
 
   .help-learning-modal,
 .recordings-library-modal,
-.session-exit-modal,
 .onboarding-post-session-modal,
 .welcome-back-modal,
 .post-onboarding-modal,
@@ -45311,11 +45316,11 @@ body,
     overflow: hidden;
   }
 
-  .mutqin-modal-dialog,
+  .mutqin-modal-dialog:not(.session-exit-dialog),
 .mutqin-modal-dialog--wide,
 .mutqin-modal-dialog--full,
-.mutqin-modal-overlay > .mutqin-modal-dialog,
-.mutqin-modal-flow .mutqin-modal-dialog,
+.mutqin-modal-overlay > .mutqin-modal-dialog:not(.session-exit-dialog),
+.mutqin-modal-flow .mutqin-modal-dialog:not(.session-exit-dialog),
 .welcome-back-modal-wrap .modal-dialog.modal-xl,
 .session-exit-modal-wrap .modal-dialog.modal-xl,
 .onboarding-post-session-modal-wrap .modal-dialog.modal-xl,
@@ -45329,16 +45334,15 @@ body,
     margin: 0 !important;
   }
 
-  .modal-content.mutqin-modal-surface,
+  .modal-content.mutqin-modal-surface:not(.session-exit-modal),
 .help-learning-modal,
-.session-exit-modal,
 .onboarding-post-session-modal,
 .welcome-back-modal,
 .post-onboarding-modal,
 .session-analytics-modal,
 .planner-completion-modal,
 .mutqin-modal-surface.save-name-modal,
-.mutqin-modal-surface.confirm-modal,
+.mutqin-modal-surface.confirm-modal:not(.session-exit-modal),
 .mutqin-modal-surface.rename-recording-modal,
 .mutqin-modal-surface.keyboard-shortcuts-modal {
     display: flex !important;
@@ -45451,8 +45455,7 @@ body,
     white-space: normal;
   }
 
-  .session-exit-modal,
-.onboarding-post-session-modal,
+  .onboarding-post-session-modal,
 .welcome-back-modal {
     max-block-size: calc(100dvh - max(1.5rem, var(--mobile-safe-top) + var(--mobile-safe-bottom))) !important;
   }
@@ -45507,10 +45510,17 @@ body,
   }
 
   .session-exit-confirm-actions.mutqin-modal-actions--end {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
     gap: 0.55rem !important;
     inline-size: 100%;
+  }
+
+  .session-exit-confirm-actions .mutqin-modal-btn {
+    width: auto !important;
+    flex: 0 1 auto;
   }
 
   .session-exit-confirm-actions .mutqin-modal-btn--secondary,

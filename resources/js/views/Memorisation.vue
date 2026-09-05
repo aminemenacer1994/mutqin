@@ -2320,7 +2320,7 @@
         aria-labelledby="sessionExitTitle"
         aria-describedby="sessionExitDescription"
       >
-        <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog">
+        <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog session-exit-dialog">
           <div class="modal-content mutqin-modal-surface session-exit-modal confirm-modal">
             <button
               class="modal-close-btn"

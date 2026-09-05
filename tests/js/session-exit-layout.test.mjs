@@ -30,5 +30,8 @@ assert.doesNotMatch(
 
 assert.match(css, /\.session-exit-scope-surah/)
 assert.match(css, /\.session-exit-progress-metrics/)
+assert.match(vue, /session-exit-dialog/)
+assert.match(css, /--mutqin-modal-width-confirm:\s*min\(26rem/)
+assert.match(css, /\.session-exit-modal-wrap \.modal-dialog\.session-exit-dialog/)
 
 console.log('session-exit-layout.test.mjs: ok')

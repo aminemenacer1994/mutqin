@@ -1770,12 +1770,11 @@
       max(10px, var(--mq-safe-left)) !important;
   }
 
-  .mutqin-modal-dialog:not(.ayah-notes-delete-dialog),
+  .mutqin-modal-dialog:not(.ayah-notes-delete-dialog):not(.session-exit-dialog),
 .mutqin-modal-dialog--wide:not(.ayah-notes-delete-dialog),
-.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay) > .mutqin-modal-dialog,
-.mutqin-modal-flow .mutqin-modal-dialog:not(.ayah-notes-delete-dialog),
+.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay) > .mutqin-modal-dialog:not(.session-exit-dialog),
+.mutqin-modal-flow .mutqin-modal-dialog:not(.ayah-notes-delete-dialog):not(.session-exit-dialog),
 .welcome-back-modal-wrap .modal-dialog,
-.session-exit-modal-wrap .modal-dialog,
 .onboarding-post-session-modal-wrap .modal-dialog,
 .post-onboarding-overlay .modal-dialog {
     inline-size: min(100%, 720px) !important;
@@ -1783,6 +1782,24 @@
     min-block-size: 0 !important;
     max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
     margin: 0 !important;
+  }
+
+  .session-exit-modal-wrap {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-content: center !important;
+  }
+
+  .session-exit-modal-wrap .modal-dialog.session-exit-dialog,
+  .session-exit-modal-wrap .modal-dialog.mutqin-modal-dialog.session-exit-dialog {
+    inline-size: min(26rem, calc(100vw - 2.5rem)) !important;
+    max-inline-size: min(26rem, calc(100vw - 2.5rem)) !important;
+    min-inline-size: 0 !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    max-block-size: none !important;
+    margin: 0 auto !important;
   }
 
   .amd-overlay.mutqin-modal-overlay > .mutqin-modal-dialog.amd-dialog,
@@ -1795,13 +1812,25 @@
     box-sizing: border-box !important;
   }
 
-  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-delete-modal) {
+  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-delete-modal):not(.session-exit-modal) {
     display: grid !important;
     grid-template-rows: auto minmax(0, 1fr) auto;
     inline-size: 100% !important;
     min-block-size: 0 !important;
     block-size: auto !important;
     max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
+    border-radius: var(--mq-radius-card, 18px) !important;
+    overflow: hidden !important;
+  }
+
+  .mutqin-modal-surface.session-exit-modal.confirm-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-rows: none !important;
+    inline-size: 100% !important;
+    min-block-size: 0 !important;
+    block-size: auto !important;
+    max-block-size: min(calc(100dvh - 2rem), 640px) !important;
     border-radius: var(--mq-radius-card, 18px) !important;
     overflow: hidden !important;
   }
@@ -2158,14 +2187,17 @@
 
   .session-exit-confirm-actions.mutqin-modal-actions--end {
     grid-column: 1 / -1;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
     gap: 0.55rem !important;
   }
 
   .session-exit-confirm-actions .mutqin-modal-btn {
-    width: 100% !important;
+    width: auto !important;
     min-inline-size: 0;
+    flex: 0 1 auto;
     justify-content: center !important;
   }
 
