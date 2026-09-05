@@ -37520,14 +37520,15 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   justify-content: center !important;
   gap: 0.4rem !important;
   flex: 0 0 auto;
+  align-self: stretch !important;
   min-width: auto !important;
   width: auto !important;
   min-height: 38px !important;
-  height: 38px !important;
-  max-height: 38px !important;
+  height: auto !important;
+  max-height: none !important;
   padding: 0 0.95rem !important;
   border: 1.5px solid var(--ai-recite-border) !important;
-  border-radius: 8px !important;
+  border-radius: 11px !important;
   background:
     linear-gradient(
       180deg,
@@ -37580,10 +37581,30 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 .workspace-shell-idle-actions__start .workspace-ai-recite-cta.session-idle-action,
 .workspace-shell-idle-aside-cta .workspace-ai-recite-cta.session-idle-action {
   min-height: 2.35rem !important;
-  height: 2.35rem !important;
-  max-height: 2.35rem !important;
-  padding: 0.45rem 1.05rem !important;
+  height: auto !important;
+  max-height: none !important;
+  padding: 0 1.05rem !important;
   font-size: 0.875rem !important;
+}
+
+/* Keep AI Recite on the same row height as Start session at every breakpoint. */
+.top-card-session-cluster:has(.workspace-ai-recite-cta) {
+  align-items: stretch !important;
+}
+
+.top-card-session-cluster:has(.workspace-ai-recite-cta) .top-card-session-actions {
+  display: flex !important;
+  align-items: stretch !important;
+}
+
+.top-card-session-cluster:has(.workspace-ai-recite-cta) .workspace-ai-recite-cta,
+.top-card-session-cluster:has(.workspace-ai-recite-cta) .session-primary-action,
+.top-card-session-cluster:has(.workspace-ai-recite-cta) .top-card-session-actions,
+.top-card-session-cluster:has(.workspace-ai-recite-cta) .top-card-session-actions .top-card-action-trigger {
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+  height: auto !important;
+  max-height: none !important;
 }
 
 .workspace-ai-recite-cta i,

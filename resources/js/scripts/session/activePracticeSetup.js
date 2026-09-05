@@ -477,7 +477,7 @@ export function buildAppliedPracticeSetupSnapshot(input = {}, items = []) {
     chaining_method: input.chainingMethod || null,
     anchor_enabled: !!input.anchorEnabled,
     practice_scope: input.practiceScope || null,
-    mistake_handling_mode: input.mistakeHandlingMode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
+    mistake_handling_mode: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
     mistake_sound_enabled: !!input.mistakeSoundEnabled,
     auto_follow_enabled: !!input.autoFollowEnabled,
     auto_follow_paused: !!input.autoFollowPaused,
@@ -517,7 +517,7 @@ export function collectPracticeSetupInputFromSession(vm = {}, extras = {}) {
       || null,
     scopeRecommended: !!extras.scopeRecommended,
     scopeRecommendedReason: extras.scopeRecommendedReason || '',
-    mistakeHandlingMode: vm.amdMistakeHandlingMode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
+    mistakeHandlingMode: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
     mistakeSoundEnabled: vm.amdMistakeSoundEnabled !== false,
     autoFollowEnabled: extras.autoFollowEnabled !== undefined
       ? !!extras.autoFollowEnabled

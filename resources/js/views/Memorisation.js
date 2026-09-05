@@ -432,14 +432,11 @@ import {
   memorisationDetectionApi,
   MISTAKE_HANDLING_MODES,
   MISTAKE_VISUAL_MS,
-  isConfirmedMistakeStatus,
   normaliseDifficultyPercent,
   selectHiddenWordIndexes,
   buildLiveRecitationCursor,
   clampCursorToPaceLimit,
   clampStatusesToConfirmedCursor,
-  clampStatusesToFreezePoint,
-  findFirstBlockingMistakeIndex,
   LIVE_PACE_DRIP_MS,
   resolveLivePaceLimit,
   mergeLiveRecitationStatuses as mergeConfirmedLiveRecitationStatuses,
@@ -495,6 +492,7 @@ import {
   RECITATION_AMD_UNCERTAIN_CONFIDENCE,
   RECITATION_LIVE_CORRECT_SIMILARITY,
   RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT,
+  RECITATION_LIVE_MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT,
   RECITATION_LIVE_PARTIAL_SIMILARITY,
 } from '../scripts/engine/recitation_analysis'
 import {
@@ -1341,7 +1339,6 @@ export default {
       amdHiddenSeedAttempt: 0,
       amdSeedHtml: '',
       amdExpectedCursor: 0,
-      amdFrozenAtWordIndex: null,
       amdEndingSoon: false,
       amdElapsedMs: 0,
       amdTimerState: TIMER_STATES.IDLE,
@@ -7668,41 +7665,7 @@ export default {
         done: this.t?.('memorisation.amd.done') || 'Done',
         enableMic: this.t?.('memorisation.amd.enableMic') || 'Enable microphone',
         retry: this.t?.('memorisation.aiCheck.tryAgain') || 'Try again',
-        reciteModeTitle: this.t?.('memorisation.amd.reciteMode.title') || 'Recitation style',
-        reciteModeFullSession: this.t?.('memorisation.amd.reciteMode.fullSession.label') || 'Full session',
-        reciteModeFullSessionShort: this.t?.('memorisation.amd.reciteMode.fullSession.short') || 'Full',
-        reciteModeFullSessionDesc: this.t?.('memorisation.amd.reciteMode.fullSession.desc')
-          || 'Keep going even when a word slips. Review everything at the end.',
-        reciteModeStopOnMistake: this.t?.('memorisation.amd.reciteMode.stopOnMistake.label') || 'Stop on mistake',
-        reciteModeStopOnMistakeShort: this.t?.('memorisation.amd.reciteMode.stopOnMistake.short') || 'Stop',
-        reciteModeStopOnMistakeDesc: this.t?.('memorisation.amd.reciteMode.stopOnMistake.desc')
-          || 'Hear a cue, see the word turn red, then say it correctly before continuing.',
-        reciteModeBlocked: this.t?.('memorisation.amd.reciteMode.stopOnMistake.blocked')
-          || 'Recite this word correctly to continue.',
       }
-    },
-    amdReciteModeOptions() {
-      return [
-        {
-          id: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
-          label: this.amdLabels.reciteModeFullSession,
-          shortLabel: this.amdLabels.reciteModeFullSessionShort,
-          description: this.amdLabels.reciteModeFullSessionDesc,
-          icon: 'bi bi-play-circle',
-        },
-        {
-          id: MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE,
-          label: this.amdLabels.reciteModeStopOnMistake,
-          shortLabel: this.amdLabels.reciteModeStopOnMistakeShort,
-          description: this.amdLabels.reciteModeStopOnMistakeDesc,
-          icon: 'bi bi-shield-exclamation',
-        },
-      ]
-    },
-    amdReciteBlockedHint() {
-      if (!this.amdOpen || !Number.isFinite(this.amdFrozenAtWordIndex)) return ''
-      if (this.amdMistakeHandlingMode !== MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) return ''
-      return this.amdLabels.reciteModeBlocked
     },
     amdPracticeHudVisible() {
       // Practice bootstrap HUD disabled in all states
@@ -23920,11 +23883,7 @@ export default {
       this.amdPeekUsed = false
       // Respect the learner's saved AMD preferences.
       const amdPrefs = normaliseAiSessionSettings(this.aiSessionSettings).amd
-      this.setAmdMistakeHandlingMode(
-        amdPrefs.mistake_handling_mode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
-        { persist: false },
-      )
-      this.amdFrozenAtWordIndex = null
+      this.setAmdMistakeHandlingMode(undefined, { persist: false })
       this.amdDifficultyPercent = Number.isFinite(this.amdPendingHidePercent)
         ? normaliseDifficultyPercent(this.amdPendingHidePercent)
         : normaliseDifficultyPercent(amdPrefs.hide_percent)
@@ -24270,7 +24229,7 @@ export default {
     canReleaseAmdPaceHold() {
       if (!this.recitationCheckRecording) return false
       if (this.amdEndingSoon || this._amdCompleting) return false
-      return !Number.isFinite(this.amdFrozenAtWordIndex)
+      return true
     },
     ensureAmdPaceDrip() {
       if (this._amdPaceDripTimer != null || typeof window === 'undefined') return
@@ -24567,9 +24526,6 @@ export default {
       // Resolve which ayah the confirmed cursor sits in so future ayahs stay uncoloured.
       const ayahBounds = this.getAmdAyahBoundsCached()
       const isFutureWord = (index) => {
-        if (Number.isFinite(this.amdFrozenAtWordIndex) && index > Number(this.amdFrozenAtWordIndex)) {
-          return true
-        }
         // Anything strictly after the confirmed cursor is future — never paint.
         if (index > confirmedIndex) return true
         const ayah = ayahBounds.find((bound) => index >= bound.start && index < bound.end)
@@ -24581,9 +24537,6 @@ export default {
         let visual = isFutureWord(index)
           ? 'notAttempted'
           : this.resolveAmdWordVisual(statusEntry, true)
-        if (Number.isFinite(this.amdFrozenAtWordIndex) && index > Number(this.amdFrozenAtWordIndex)) {
-          visual = 'notAttempted'
-        }
         if (index > confirmedIndex) visual = 'notAttempted'
         const isHiddenTarget = hiddenSet.has(index)
         const isCorrect = visual === 'correct' || visual === 'partial'
@@ -24621,18 +24574,9 @@ export default {
     getAmdExpectedWordIndex(statuses = [], hiddenSet = null) {
       // Prefer the confirmed live cursor — never an interim/candidate jump.
       if (this.amdOpen && Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)) {
-        const confirmed = Math.max(0, Number(this.amdLiveCursor.confirmedWordIndex))
-        if (Number.isFinite(this.amdFrozenAtWordIndex)) {
-          return Math.min(confirmed, Math.max(0, Number(this.amdFrozenAtWordIndex)))
-        }
-        return confirmed
+        return Math.max(0, Number(this.amdLiveCursor.confirmedWordIndex))
       }
-      if (Number.isFinite(this.amdFrozenAtWordIndex)) {
-        return Math.max(0, Number(this.amdFrozenAtWordIndex))
-      }
-      return resolveConfirmedWordIndex(statuses, {
-        frozenAt: this.amdFrozenAtWordIndex,
-      })
+      return resolveConfirmedWordIndex(statuses, {})
     },
     /**
      * Recitation time so far, used as the pace ceiling for live colouring.
@@ -24654,10 +24598,9 @@ export default {
       let cursor = buildLiveRecitationCursor({
         committedStatuses: committed,
         candidateStatuses: candidate,
-        frozenAt: this.amdFrozenAtWordIndex,
       })
       // Colouring may never run ahead of the recitation itself.
-      if (Number.isFinite(spokenWordCount) && !Number.isFinite(this.amdFrozenAtWordIndex)) {
+      if (Number.isFinite(spokenWordCount)) {
         const previousConfirmed = Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
           ? Number(this.amdLiveCursor.confirmedWordIndex)
           : 0
@@ -25011,31 +24954,14 @@ export default {
         ai_recite: { persist_mistakes: next },
       })
     },
-    setAmdMistakeHandlingMode(mode, { persist = true } = {}) {
-      const next = Object.values(MISTAKE_HANDLING_MODES).includes(mode)
-        ? mode
-        : MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW
-      this.amdMistakeHandlingMode = next
-      this.ensureAmdMistakeFeedbackController().setMode(next)
-      if (next === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
-        this.amdMistakeSoundEnabled = true
-        this.ensureAmdMistakeFeedbackController().setEnabled(true, { persist: false })
-      }
+    setAmdMistakeHandlingMode(_mode, { persist = false } = {}) {
+      this.amdMistakeHandlingMode = MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW
+      this.ensureAmdMistakeFeedbackController().setMode(MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
       if (persist) {
         void this.persistAiSessionSettingsPatch({
-          amd: { mistake_handling_mode: next },
+          amd: { mistake_handling_mode: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW },
         })
       }
-    },
-    releaseAmdFrozenWord(wordIndex) {
-      const frozen = Number(this.amdFrozenAtWordIndex)
-      const resolved = Number(wordIndex)
-      if (!Number.isFinite(frozen) || !Number.isFinite(resolved) || resolved !== frozen) return
-      this.amdFrozenAtWordIndex = null
-      this._amdPaceHeld = false
-      this.releaseAmdPaceHold?.()
-      this.recitationLiveAlignmentSignature = ''
-      void this.updateLiveWordsFromCommittedRecognition?.('recitation')
     },
     clearAmdMistakeVisual() {
       if (this.amdMistakeVisualTimer) {
@@ -25055,51 +24981,10 @@ export default {
     prepareAmdMistakeSoundForRecording() {
       const controller = this.ensureAmdMistakeFeedbackController()
       controller.setEnabled(this.amdMistakeSoundEnabled, { persist: false })
-      controller.setMode(this.amdMistakeHandlingMode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
+      controller.setMode(MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
       controller.resetSessionSignals()
-      this.amdFrozenAtWordIndex = null
       controller.preload()
       return controller.prepareAfterUserGesture()
-    },
-    freezeAmdLiveWordColoring(wordIndex) {
-      const freezeAt = Number(wordIndex)
-      if (!Number.isFinite(freezeAt) || freezeAt < 0) return
-      if (!Number.isFinite(this.amdFrozenAtWordIndex) || freezeAt < this.amdFrozenAtWordIndex) {
-        this.amdFrozenAtWordIndex = freezeAt
-      }
-      try { this.cancelLiveWordsUpdate?.('recitation') } catch (_) { /* ignore */ }
-      try { this.cancelLiveWordDomPatchFrame?.() } catch (_) { /* ignore */ }
-      this.recitationLiveAlignmentSignature = ''
-    },
-    applyAmdStopOnMistakeClamp(statuses = [], cursor = {}) {
-      if (this.amdMistakeHandlingMode !== MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
-        return Array.isArray(statuses) ? statuses : []
-      }
-      const list = Array.isArray(statuses) ? statuses : []
-      if (!list.length) return list
-      const wasFrozen = Number.isFinite(this.amdFrozenAtWordIndex)
-      const confirmedCap = Math.max(0, Number(cursor?.confirmedWordIndex) || 0)
-      const searchLimit = wasFrozen
-        ? Number(this.amdFrozenAtWordIndex)
-        : Math.min(list.length - 1, confirmedCap + 1)
-      const mistakeAt = findFirstBlockingMistakeIndex(list, searchLimit)
-      if (mistakeAt >= 0 && (!wasFrozen || mistakeAt <= Number(this.amdFrozenAtWordIndex))) {
-        if (!wasFrozen) {
-          const mistakeWord = list[mistakeAt] || {}
-          this.freezeAmdLiveWordColoring(mistakeAt)
-          const cue = this.maybeNotifyAmdConfirmedMistake({
-            wordIndex: mistakeAt,
-            previousStatus: 'pending',
-            nextStatus: mistakeWord.status || 'incorrect',
-            confidence: mistakeWord.confidence,
-          })
-          if (cue?.visual) this.flashAmdMistakeVisual()
-        } else if (mistakeAt < Number(this.amdFrozenAtWordIndex)) {
-          this.freezeAmdLiveWordColoring(mistakeAt)
-        }
-      }
-      if (!Number.isFinite(this.amdFrozenAtWordIndex)) return list
-      return clampStatusesToFreezePoint(list, this.amdFrozenAtWordIndex)
     },
     maybeNotifyAmdConfirmedMistake({
       wordIndex,
@@ -25109,11 +24994,6 @@ export default {
       interim = false,
     } = {}) {
       if (!this.amdOpen) return null
-      const frozenAt = Number(this.amdFrozenAtWordIndex)
-      const atIndex = Number(wordIndex)
-      if (Number.isFinite(frozenAt) && Number.isFinite(atIndex) && atIndex !== frozenAt) {
-        return { played: false, visual: false, shouldStop: true, reason: 'already_frozen' }
-      }
       const reviewing = this.amdStage === AMD_STAGES.COMPLETE
         || this.amdStage === AMD_STAGES.RESULTS
         || this.amdEndingSoon
@@ -25164,7 +25044,6 @@ export default {
       this.amdEndingSoon = false
       this._amdCompleting = false
       this._amdLastExpectedIndex = null
-      this.amdFrozenAtWordIndex = null
       this.resetAmdElapsedTimer()
       this.clearAmdMistakeVisual()
       try { this.amdMistakeFeedback?.resetSessionSignals?.() } catch (_) { /* ignore */ }
@@ -25238,7 +25117,6 @@ export default {
       this._amdAyahBounds = null
       this._amdCompleting = false
       this.amdAssessOnStop = false
-      this.amdFrozenAtWordIndex = null
       this.amdOpen = false
       this.amdEntrySource = null
       this.amdStage = AMD_STAGES.IDLE
@@ -25305,7 +25183,6 @@ export default {
       this.amdBusy = true
       this.amdStage = AMD_STAGES.STARTING
       this.resetAmdElapsedTimer()
-      this.amdFrozenAtWordIndex = null
       // Unlock UI audio + start beep in the same user gesture (Safari needs this
       // before any await). Later playRecitationStartCue must not play a second beep.
       this._amdRecordStartBeepConsumed = false
@@ -25395,7 +25272,6 @@ export default {
     },
     async restartAmdListeningPreserveProgress() {
       if (!this.amdOpen || this.amdEndingSoon || this._amdCompleting) return
-      if (Number.isFinite(this.amdFrozenAtWordIndex)) return
       if (this.recitationCheckRecording || this.recitationCheckPreparing) return
       this.amdError = ''
       // Stay on LISTENING so a brief MediaRecorder restart does not feel like the test ended.
@@ -27105,36 +26981,8 @@ export default {
       if (!current.length) return false
       let next = current
       const changedWords = []
-      const freezeAt = (this.amdOpen && targetKey === 'recitationLiveWords' && Number.isFinite(this.amdFrozenAtWordIndex))
-        ? Number(this.amdFrozenAtWordIndex)
-        : null
-      const ending = !!(this.amdOpen && targetKey === 'recitationLiveWords' && (this.amdEndingSoon || this._amdCompleting))
 
       for (let index = 0; index < current.length; index += 1) {
-        // Stop-on-mistake: never paint words after the confirmed mistake.
-        if (freezeAt != null && index > freezeAt) {
-          const word = current[index] || {}
-          const statusValue = String(word.status || 'pending').toLowerCase()
-          if (statusValue && statusValue !== 'pending' && statusValue !== 'notattempted') {
-            const sanitizedPendingWord = {
-              ...word,
-              status: 'pending',
-              note: this.sanitizeLiveWordFeedbackNote('', { ...word, status: 'pending' }),
-              actual: undefined,
-              similarity: undefined,
-              confidence: undefined,
-            }
-            if (next === current) next = current.slice()
-            next[index] = sanitizedPendingWord
-            changedWords.push({ index, word: sanitizedPendingWord })
-          }
-          continue
-        }
-        // Once ending after a freeze, keep the mistaken word stable against late ASR.
-        if (ending && freezeAt != null && index === freezeAt) {
-          continue
-        }
-
         const word = current[index] || {}
         const status = statuses[index] || {}
         const incomingStatus = status.status || 'pending'
@@ -27160,59 +27008,15 @@ export default {
         if (next === current) next = current.slice()
         next[index] = nextWord
         changedWords.push({ index, word: nextWord })
-        if (
-          this.amdOpen
-          && targetKey === 'recitationLiveWords'
-          && Number.isFinite(this.amdFrozenAtWordIndex)
-          && index === Number(this.amdFrozenAtWordIndex)
-          && String(nextWord.status || '').toLowerCase() === 'correct'
-        ) {
-          this.releaseAmdFrozenWord(index)
-        }
         if (this.amdOpen && targetKey === 'recitationLiveWords') {
-          const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
-          const becameBlockingMistake = isConfirmedMistakeStatus(nextWord.status)
-            && !isConfirmedMistakeStatus(word.status)
-          if (stopOnMistake && becameBlockingMistake && !Number.isFinite(this.amdFrozenAtWordIndex)) {
-            this.freezeAmdLiveWordColoring(index)
-            const cue = this.maybeNotifyAmdConfirmedMistake({
-              wordIndex: index,
-              previousStatus: word.status || 'pending',
-              nextStatus: nextWord.status || 'pending',
-              confidence: nextWord.confidence,
-              interim: status.interim === true || status.hypothesis === true,
-            })
-            if (cue?.visual) this.flashAmdMistakeVisual()
-          } else if (!stopOnMistake || !becameBlockingMistake) {
-            const cue = this.maybeNotifyAmdConfirmedMistake({
-              wordIndex: index,
-              previousStatus: word.status || 'pending',
-              nextStatus: nextWord.status || 'pending',
-              confidence: nextWord.confidence,
-              interim: status.interim === true || status.hypothesis === true,
-            })
-            if (cue?.visual) this.flashAmdMistakeVisual()
-          }
-          if (stopOnMistake && Number.isFinite(this.amdFrozenAtWordIndex)) {
-            const stopAt = Number(this.amdFrozenAtWordIndex)
-            for (let j = stopAt + 1; j < current.length; j += 1) {
-              const later = (next === current ? current : next)[j] || current[j] || {}
-              const laterStatus = String(later.status || 'pending').toLowerCase()
-              if (!laterStatus || laterStatus === 'pending' || laterStatus === 'notattempted') continue
-              if (next === current) next = current.slice()
-              const pendingWord = {
-                ...later,
-                status: 'pending',
-                note: this.sanitizeLiveWordFeedbackNote('', { ...later, status: 'pending' }),
-                actual: undefined,
-                similarity: undefined,
-                confidence: undefined,
-              }
-              next[j] = pendingWord
-              changedWords.push({ index: j, word: pendingWord })
-            }
-            break
-          }
+          const cue = this.maybeNotifyAmdConfirmedMistake({
+            wordIndex: index,
+            previousStatus: word.status || 'pending',
+            nextStatus: nextWord.status || 'pending',
+            confidence: nextWord.confidence,
+            interim: status.interim === true || status.hypothesis === true,
+          })
+          if (cue?.visual) this.flashAmdMistakeVisual()
         }
       }
       if (next === current) return false
@@ -27268,11 +27072,7 @@ export default {
       if (
         this.amdOpen
         && kind === 'recitation'
-        && (
-          Number.isFinite(this.amdFrozenAtWordIndex)
-          || this.amdEndingSoon
-          || this._amdCompleting
-        )
+        && (this.amdEndingSoon || this._amdCompleting)
       ) {
         return
       }
@@ -27305,16 +27105,15 @@ export default {
         livePreviewAlignmentOptions.strictProgression = true
       }
       // Memorisation test: STT-tolerant thresholds, sequential, article-aware.
-      // Continue-and-review may soft-advance past a red; stop-on-mistake must not.
+      // Keep reciting the full range — mistakes are marked but never block progress.
       if (this.amdOpen && kind === 'recitation') {
-        const stopOnMistake = this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
         liveAlignmentOptions.strictProgression = true
         // Exact-only skip window (not fuzzy): detect skipped phrases without
         // soft lookahead. Always on so missing words paint as omitted.
         liveAlignmentOptions.lookahead = 0
-        liveAlignmentOptions.exactSkipLookahead = stopOnMistake ? 0 : 3
-        liveAlignmentOptions.partialAdvances = !stopOnMistake
-        liveAlignmentOptions.advanceOnIncorrect = !stopOnMistake
+        liveAlignmentOptions.exactSkipLookahead = 3
+        liveAlignmentOptions.partialAdvances = true
+        liveAlignmentOptions.advanceOnIncorrect = true
         liveAlignmentOptions.allowArticleMatch = true
         // Soft ASR letter conflation is capped below the final green floor.
         // Live matching stays slightly more tolerant so ASR jitter does not paint
@@ -27322,11 +27121,12 @@ export default {
         liveAlignmentOptions.correctSimilarity = RECITATION_LIVE_CORRECT_SIMILARITY
         liveAlignmentOptions.partialSimilarity = RECITATION_LIVE_PARTIAL_SIMILARITY
         liveAlignmentOptions.minConfidenceForCorrect = RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT
+        liveAlignmentOptions.minConfidenceForSimilarityCorrect = RECITATION_LIVE_MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT
         liveAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
         livePreviewAlignmentOptions.strictProgression = true
         livePreviewAlignmentOptions.lookahead = 0
-        livePreviewAlignmentOptions.exactSkipLookahead = stopOnMistake ? 0 : 3
-        livePreviewAlignmentOptions.partialAdvances = !stopOnMistake
+        livePreviewAlignmentOptions.exactSkipLookahead = 3
+        livePreviewAlignmentOptions.partialAdvances = true
         livePreviewAlignmentOptions.advanceOnIncorrect = false
         livePreviewAlignmentOptions.allowArticleMatch = true
         livePreviewAlignmentOptions.correctSimilarity = RECITATION_LIVE_CORRECT_SIMILARITY
@@ -27334,6 +27134,10 @@ export default {
         livePreviewAlignmentOptions.minConfidenceForCorrect = Math.max(
           0.16,
           RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT - 0.04,
+        )
+        livePreviewAlignmentOptions.minConfidenceForSimilarityCorrect = Math.max(
+          0.22,
+          RECITATION_LIVE_MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT - 0.04,
         )
         livePreviewAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
       }
@@ -27378,7 +27182,7 @@ export default {
       const paceContext = this.recitationCheckRecording
         ? this.getRecitationAdaptivePaceContext(committedWords, buildTargetUnits())
         : null
-      const cursor = this.amdOpen && kind === 'recitation'
+      let cursor = this.amdOpen && kind === 'recitation'
         ? this.syncAmdLiveCursor({
           committedStatuses,
           candidateStatuses,
@@ -27398,15 +27202,6 @@ export default {
         },
       )
       statuses = clampStatusesToConfirmedCursor(statuses, cursor.confirmedWordIndex)
-      if (this.amdOpen && kind === 'recitation' && this.amdMistakeHandlingMode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
-        statuses = this.applyAmdStopOnMistakeClamp(statuses, cursor)
-        cursor = buildLiveRecitationCursor({
-          committedStatuses: statuses,
-          candidateStatuses: candidateStatuses,
-          frozenAt: this.amdFrozenAtWordIndex,
-        })
-        this.amdLiveCursor = cursor
-      }
       if (this.recitationCheckRecording) {
         const targetUnits = buildTargetUnits()
         statuses = applyRecitationTimingBuffer(statuses, {
@@ -27424,15 +27219,26 @@ export default {
           tajweedHeavy: paceContext?.tajweedHeavy,
         })
       }
-      // Live AMD: only demote soft-letter near-miss reds to amber in continue mode.
-      if (preferVisible && this.amdMistakeHandlingMode !== MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE) {
+      // Live AMD: demote soft-letter near-miss reds to amber so ASR letter swaps
+      // do not block the learner mid-range.
+      if (preferVisible) {
         statuses = statuses.map((status) => {
           if (!status || String(status.status || '').toLowerCase() !== 'incorrect') return status
           const similarity = Number(status.similarity || 0)
           const expected = String(status.targetWord || status.text || '')
           const actual = String(status.actual || '')
           const softOnly = expected && actual && differsOnlyBySoftAsrLetters(expected, actual)
-          if (softOnly && similarity >= 0.62 && similarity < RECITATION_LIVE_CORRECT_SIMILARITY) {
+          if (softOnly) {
+            return {
+              ...status,
+              status: 'partial',
+              note: status.note || 'Close — keep going.',
+            }
+          }
+          if (
+            similarity >= RECITATION_LIVE_PARTIAL_SIMILARITY
+            && similarity < RECITATION_LIVE_CORRECT_SIMILARITY
+          ) {
             return {
               ...status,
               status: 'partial',
@@ -27681,9 +27487,7 @@ export default {
     },
     getRecitationSilenceAutoStopThresholdMs() {
       const liveWords = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
-      const wordIndex = resolveConfirmedWordIndex(liveWords, {
-        frozenAt: this.amdFrozenAtWordIndex,
-      })
+      const wordIndex = resolveConfirmedWordIndex(liveWords, {})
       const targetUnits = liveWords.map((word) => ({
         display: word?.text || word?.display || '',
         text: word?.text || word?.display || '',
@@ -27959,11 +27763,7 @@ export default {
       if (
         this.amdOpen
         && kind === 'recitation'
-        && (
-          Number.isFinite(this.amdFrozenAtWordIndex)
-          || this.amdEndingSoon
-          || this._amdCompleting
-        )
+        && (this.amdEndingSoon || this._amdCompleting)
       ) {
         return this.getRecognitionPipelineState(kind)
       }

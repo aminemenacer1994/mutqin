@@ -3737,6 +3737,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .app .workspace-shell .workspace-shell-actions .top-card-action-trigger.session-primary-action,
 .app .workspace-shell .workspace-shell-actions .top-card-action-trigger.action-btn-exit,
+.app .workspace-shell .workspace-shell-actions .workspace-ai-recite-cta.top-card-action-trigger,
 .app .tools-footer :where(.tools-btn, .session-primary-action, .btn),
 .app .mutqin-modal-footer .mutqin-modal-btn {
     block-size: 44px !important;
@@ -5998,6 +5999,20 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
+}
+
+.workspace-shell-head-utility-row .top-card-session-cluster .workspace-ai-recite-cta,
+.workspace-shell-idle-actions__start .workspace-ai-recite-cta,
+.workspace-shell-idle-aside-cta .workspace-ai-recite-cta {
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+.workspace-shell-head-utility-row .top-card-session-cluster:has(.workspace-ai-recite-cta) .top-card-session-actions {
+  display: flex !important;
+  align-items: stretch !important;
 }
 
 .workspace-shell-head-utility-row .top-card-session-cluster .top-card-session-actions {

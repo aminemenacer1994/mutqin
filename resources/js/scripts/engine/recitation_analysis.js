@@ -5,6 +5,7 @@ import {
   RECITATION_CORRECT_SIMILARITY,
   RECITATION_LIVE_CORRECT_SIMILARITY,
   RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT,
+  RECITATION_LIVE_MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT,
   RECITATION_LIVE_PARTIAL_SIMILARITY,
   RECITATION_SOFT_SIMILARITY_CAP,
   RECITATION_THRESHOLDS,
@@ -18,6 +19,7 @@ export {
   RECITATION_CORRECT_SIMILARITY,
   RECITATION_LIVE_CORRECT_SIMILARITY,
   RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT,
+  RECITATION_LIVE_MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT,
   RECITATION_LIVE_PARTIAL_SIMILARITY,
   RECITATION_SOFT_SIMILARITY_CAP,
   RECITATION_THRESHOLDS,
@@ -57,6 +59,9 @@ export function normalizeArabicForRecitation(text) {
     .replace(/[إأآٱ]/g, 'ا')
     .replace(/ؤ/g, 'و')
     .replace(/ئ/g, 'ي')
+    // Mushaf وء (waw + hamza) vs ASR وآ / plain وا — same spoken word in recitation.
+    .replace(/([او])ء/g, '$1')
+    .replace(/ء/g, '')
     .replace(/ى/g, 'ي')
     .replace(/ة/g, 'ه')
     .replace(/(^|\s)ا\s+(?=ل)/g, '$1ا')
@@ -262,11 +267,15 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   const uncertainConfidence = Number.isFinite(Number(options.uncertainConfidence))
     ? Number(options.uncertainConfidence)
     : RECITATION_UNCERTAIN_CONFIDENCE
+  const minConfidenceForSimilarityCorrect = Number.isFinite(Number(options.minConfidenceForSimilarityCorrect))
+    ? Number(options.minConfidenceForSimilarityCorrect)
+    : RECITATION_THRESHOLDS.minConfidenceForSimilarityCorrect
   const allowArticleMatch = options.allowArticleMatch !== false
   const matchThresholds = {
     correctSimilarity,
     partialSimilarity,
     minConfidenceForCorrect,
+    minConfidenceForSimilarityCorrect,
     allowArticleMatch,
     uncertainConfidence,
   }
@@ -417,6 +426,27 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     if (strict) {
       if (options.advanceOnIncorrect) {
         cursor += 1
+        continue
+      }
+      const recovered = findSameSlotRecovery({
+        heardWords,
+        fromHeardIndex: heardIndex,
+        targetWord,
+        displayText: displayWords[cursor] || targetWord,
+        targetUnit,
+        cursor,
+        targetWords,
+        matchThresholds,
+        correctSimilarity,
+        allowArticleMatch,
+      })
+      if (recovered) {
+        statuses[cursor] = recovered.classified
+        firstBlockingIndex = recovered.classified.status === 'correct' || recovered.classified.status === 'partial'
+          ? -1
+          : cursor
+        cursor += 1
+        heardIndex = recovered.heardIndex
         continue
       }
       break
@@ -1118,6 +1148,54 @@ export function isLikelyOffTargetTransientNoise(
  * - Re-saying the previous target word while still on the next slot.
  * - Immediate duplicate tokens in the same breath / segment.
  */
+/**
+ * After a stop-on-mistake red, later heard tokens can still correct the same slot.
+ * Accepts green or amber rematches so a genuine retry is not discarded.
+ */
+function findSameSlotRecovery({
+  heardWords = [],
+  fromHeardIndex = 0,
+  targetWord = '',
+  displayText = '',
+  targetUnit = null,
+  cursor = 0,
+  targetWords = [],
+  matchThresholds = {},
+  correctSimilarity = RECITATION_CORRECT_SIMILARITY,
+  allowArticleMatch = true,
+} = {}) {
+  const expected = String(targetWord || '')
+  if (!expected) return null
+  for (let retry = fromHeardIndex + 1; retry < heardWords.length; retry += 1) {
+    const retryHeard = heardWords[retry] || {}
+    if (isLikelyTransientNoiseWord(retryHeard, matchThresholds)) continue
+    if (isLikelyOffTargetTransientNoise(retryHeard, targetWords, cursor, matchThresholds)) continue
+    const retrySimilarity = getRecitationWordSimilarity(expected, retryHeard.word, { allowArticleMatch })
+    const retryClassified = classifyWordMatch({
+      displayText: displayText || expected,
+      targetWord: expected,
+      heardWord: retryHeard,
+      similarity: retrySimilarity,
+      outOfOrderIndex: -1,
+      targetIndex: cursor,
+      targetUnit,
+      ...matchThresholds,
+    })
+    if (retryClassified.status === 'correct' || retryClassified.status === 'partial') {
+      return { classified: retryClassified, heardIndex: retry }
+    }
+    if (cursor + 1 < targetWords.length) {
+      const nextSimilarity = getRecitationWordSimilarity(
+        targetWords[cursor + 1],
+        retryHeard.word,
+        { allowArticleMatch },
+      )
+      if (nextSimilarity >= correctSimilarity) return null
+    }
+  }
+  return null
+}
+
 export function shouldSkipLearnerStutterRepeat(heardWords = [], heardIndex = 0, targetWords = [], cursor = 0) {
   const heardWord = heardWords[heardIndex] || {}
   const word = String(heardWord?.word || '').trim()

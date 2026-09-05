@@ -168,7 +168,7 @@ function baseInput(overrides = {}) {
   assert.equal(snap.playback_speed, 0.75)
   assert.equal(snap.visibility_percent, 40)
   assert.equal(snap.practice_scope, PRACTICE_SCOPE.FULL_RANGE)
-  assert.equal(snap.mistake_handling_mode, MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE)
+  assert.equal(snap.mistake_handling_mode, MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW)
   assert.equal(snap.mistake_sound_enabled, false)
   assert.equal(snap.auto_follow_enabled, true)
   assert.equal(snap.selection_source, 'recommended')

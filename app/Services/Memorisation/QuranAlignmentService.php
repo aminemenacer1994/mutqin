@@ -172,6 +172,9 @@ class QuranAlignmentService
         $value = str_replace("\u{0640}", '', $value);
         $value = preg_replace('/[إأآٱ]/u', 'ا', $value) ?? $value;
         $value = str_replace(['ؤ', 'ئ', 'ى', 'ة'], ['و', 'ي', 'ي', 'ه'], $value);
+        // Mushaf وء vs ASR وآ / plain وا — same spoken word in recitation checks.
+        $value = preg_replace('/([او])ء/u', '$1', $value) ?? $value;
+        $value = preg_replace('/ء/u', '', $value) ?? $value;
         $value = preg_replace('/[^\x{0621}-\x{064A}\s]/u', ' ', $value) ?? $value;
         $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
 

@@ -341,9 +341,28 @@ function assertStatuses(result, expected) {
   assert.equal(live.statuses[3].status, 'correct')
 }
 
+// Stop-on-mistake: a later correct retry of the same word must recover the slot
+{
+  const live = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين',
+    createWordsFromTranscript('الحمد لله رب صمد العالمين'),
+    {
+      lookahead: 0,
+      exactSkipLookahead: 0,
+      strictProgression: true,
+      advanceOnIncorrect: false,
+      partialAdvances: false,
+      correctSimilarity: 0.70,
+      partialSimilarity: 0.45,
+    }
+  )
+  assert.equal(live.statuses[3].status, 'correct', 'retry of العالمين after صمد must recover')
+  assert.equal(live.statuses[3].actual, 'العالمين')
+}
+
 // Mid-confidence wrong words must paint red, not vanish as noise
 {
-  const words = createWordsFromTranscript('قل هو الله صمد').map((w) => ({ ...w, confidence: 0.45 }))
+  const words = createWordsFromTranscript('قل هو الله صمد').map((w) => ({ ...w, confidence: 0.52 }))
   const live = buildRealtimePreviewAlignment(target, words, {
     lookahead: 0,
     exactSkipLookahead: 3,
@@ -352,7 +371,8 @@ function assertStatuses(result, expected) {
     partialAdvances: true,
     correctSimilarity: 0.79,
     partialSimilarity: 0.45,
-    uncertainConfidence: 0.38,
+    uncertainConfidence: 0.48,
+    minConfidenceForSimilarityCorrect: 0.28,
   })
   assert.equal(live.statuses[3].status, 'incorrect')
   assert.equal(live.statuses[3].actual, 'صمد')
@@ -429,6 +449,34 @@ function assertStatuses(result, expected) {
     deriveWeakAyahsFromWordStatuses([{ status: 'partial', ayahNumber: 4 }]).map(Number).join(','),
     '4',
   )
+}
+
+// Surah Quraysh: mushaf hamza orthography must match plain ASR (وءامن vs وامن, li-ilaaf).
+{
+  const quraysh = 'لِإِيلَٰفِ قُرَيْشٍ إِيلَٰفِهِمْ رِحْلَةَ ٱلشِّتَآءِ وَٱلصَّيْفِ ٱلَّذِىٓ أَطْعَمَهُم مِّن جُوعٍ وَءَامَنَهُم مِّنْ خَوْفٍ'
+  const heard = 'لإيلاف قريش إيلافهم رحلة الشتاء والصيف الذي أطعمهم من جوع وآمنهم من خوف'
+  assert.equal(getRecitationWordSimilarity('وَءَامَنَهُم', 'وآمنهم'), 1)
+  assert.equal(getRecitationWordSimilarity('وَءَامَنَهُم', 'وامنهم'), 1)
+  assert.equal(getRecitationWordSimilarity('لِإِيلَٰفِ', 'لإيلاف'), 1)
+  assert.equal(getRecitationWordSimilarity('إِيلَٰفِهِمْ', 'إيلافهم'), 1)
+
+  const final = buildDeterministicRecitationResult(
+    quraysh,
+    createWordsFromTranscript(heard),
+    opts,
+  )
+  assert.equal(final.wordStatuses.find((w) => w.text === 'وَءَامَنَهُم')?.status, 'correct')
+  assert.equal(final.wordStatuses.find((w) => w.text === 'لِإِيلَٰفِ')?.status, 'correct')
+  assert.equal(final.wordStatuses.find((w) => w.text === 'إِيلَٰفِهِمْ')?.status, 'correct')
+
+  const live = buildRealtimePreviewAlignment(quraysh, createWordsFromTranscript(heard), {
+    ...opts,
+    correctSimilarity: 0.63,
+    partialSimilarity: 0.36,
+    uncertainConfidence: 0.48,
+    minConfidenceForSimilarityCorrect: 0.28,
+  })
+  assert.ok(live.statuses.every((word) => word.status === 'correct'))
 }
 
 console.log('recitation-mistake-detection: ok')

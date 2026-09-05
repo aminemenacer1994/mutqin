@@ -602,9 +602,7 @@ includesAll('ai audio consent and retention wiring', [
   assert.match(source, /skipBeep/)
   assert.match(source, /ensureUiAudioContext\(/)
   assert.match(amdVue, /playRecordingStartBeep/)
-  assert.match(amdVue, /amd-recite-mode--toolbar/)
   assert.match(amdVue, /amd-tools-bar__leading/)
-  assert.match(amdVue, /set-recite-mode/)
   assert.match(amdVue, /recordingActiveLabel/)
   assert.match(amdVue, /displayMicStatusLabel/)
   // One Recording status pill — starting must not show a separate listening label.

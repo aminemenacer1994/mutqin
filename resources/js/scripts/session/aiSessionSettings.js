@@ -89,11 +89,7 @@ export function normaliseAiSessionSettings(raw) {
         amd.mistake_sound_enabled,
         defaults.amd.mistake_sound_enabled,
       ),
-      mistake_handling_mode: Object.values(MISTAKE_HANDLING_MODES).includes(
-        String(amd.mistake_handling_mode || '').trim(),
-      )
-        ? String(amd.mistake_handling_mode).trim()
-        : defaults.amd.mistake_handling_mode,
+      mistake_handling_mode: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
     },
   }
 }
@@ -133,10 +129,7 @@ export function mergeAiSessionSettings(existing, patch) {
       )
     }
     if (Object.prototype.hasOwnProperty.call(amd, 'mistake_handling_mode')) {
-      const nextMode = String(amd.mistake_handling_mode || '').trim()
-      if (Object.values(MISTAKE_HANDLING_MODES).includes(nextMode)) {
-        base.amd.mistake_handling_mode = nextMode
-      }
+      base.amd.mistake_handling_mode = MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW
     }
   }
   return base

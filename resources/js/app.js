@@ -53,7 +53,7 @@ if (typeof window !== 'undefined') {
         const bust = (typeof document !== 'undefined' && (
             document.documentElement?.dataset?.mutqinAssetBuild
             || document.querySelector('meta[name="mutqin-asset-build"]')?.content
-        )) || 'v165';
+        )) || 'v170';
         const original = __webpack_require__.u.bind(__webpack_require__);
         __webpack_require__.u = (chunkId) => {
             const url = String(original(chunkId) || '');
