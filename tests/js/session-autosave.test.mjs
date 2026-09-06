@@ -137,6 +137,11 @@ const learningSource = readFileSync(join(root, 'resources/js/scripts/api/learnin
     backendEnabled: false,
     isLive: true,
   }), false)
+  assert.equal(shouldAutosave({
+    backendEnabled: true,
+    isLive: true,
+    overlayOpen: true,
+  }), false)
 }
 
 // --- isStaleAutosaveResponse ---

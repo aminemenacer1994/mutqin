@@ -61,6 +61,12 @@ class AppServiceProvider extends ServiceProvider
             return app(SpeechmaticsRateLimit::class)->limitsFor($request);
         });
 
+        RateLimiter::for('ask-mutqin-interpret', function (Request $request) {
+            $userId = optional($request->user())->id;
+
+            return Limit::perMinute(20)->by($userId ? 'user:'.$userId : 'ip:'.$request->ip());
+        });
+
         // Ensure learner-audio temp dir exists with a .gitignore so backups/logs never
         // accidentally treat scratch recordings as durable assets.
         try {

@@ -3587,12 +3587,14 @@
         "title": "Recitation style",
         "fullSession": {
           "label": "Full session",
-          "desc": "Keep going even when a word slips. Review everything at the end."
+          "desc": "Keep going even when a word slips. Review everything at the end.",
+          "short": "Full"
         },
         "stopOnMistake": {
           "label": "Stop on mistake",
           "desc": "Hear a cue, see the word turn red, then say it correctly before continuing.",
-          "blocked": "Recite this word correctly to continue."
+          "blocked": "Recite this word correctly to continue.",
+          "short": "Stop"
         }
       }
     },
@@ -3710,6 +3712,58 @@
           "bestFor": "Ceux qui préfèrent une réflexion simple, par eux-mêmes."
         }
       }
+    },
+    "askMutqin": {
+      "kicker": "Recherche vocale",
+      "title": "Demander à Mutqin",
+      "ctaLabel": "Demander à Mutqin",
+      "ctaHint": "Récitez quelques mots, puis dites ce que vous souhaitez faire",
+      "introLead": "Récitez quelques mots d’une ayah, puis dites quoi faire.",
+      "exampleFive": "Donne-moi cinq ayahs à partir d’ici.",
+      "exampleReciter": "Avec Mishary.",
+      "exampleSpeed": "À la vitesse 0,75.",
+      "exampleRepeat": "Répète chaque ayah 3 fois.",
+      "startCta": "Démarrer",
+      "searchIn": "Chercher dans",
+      "entireQuran": "Tout le Coran",
+      "reciteTitle": "Ask Mutqin",
+      "reciteHint": "Récitez quelques mots du début d’une ayah.",
+      "keepRecitingTitle": "Continuez à réciter…",
+      "keepReciting": "Continuez à réciter…",
+      "foundTitle": "Trouvé",
+      "foundSubtitle": "{surah} · Ayah {ayah}",
+      "listeningHint": "Dites quoi ouvrir, ou utilisez les boutons ci-dessous.",
+      "interpreting": "Analyse…",
+      "ready": "Prêt",
+      "readyTitle": "Prêt",
+      "opening": "Ouverture…",
+      "openHere": "Ouvrir cette ayah",
+      "chooseRange": "Choisir une plage",
+      "untilAyah": "Jusqu’à l’ayah",
+      "openRange": "Ouvrir la plage",
+      "errorTitle": "Demander à Mutqin n’a pas pu continuer",
+      "invalidCommand": "Cette instruction n’a pas pu être utilisée. Réessayez, ou ouvrez ici.",
+      "networkError": "Impossible de joindre Demander à Mutqin. Vérifiez votre connexion et réessayez.",
+      "serviceUnavailable": "L’écoute en direct est temporairement indisponible. Réessayez dans un instant.",
+      "helloAsk": "Demandez-moi ce que vous voulez",
+      "heardLabel": "Entendu",
+      "commandHeard": "Instruction",
+      "wordProgress": "{count} mots sur {needed} entendus",
+      "possibleMatches": "Correspondances possibles",
+      "recordingOn": "Enregistrement",
+      "recordingListening": "Écoute",
+      "matchedLabel": "Ayah trouvée",
+      "phaseFlowing": "En direct",
+      "phasePaused": "En pause",
+      "phaseFrozen": "Verrouillée",
+      "resultLabel": "Résultat",
+      "ayahChip": "Ayah {ayah}",
+      "clearScreen": "Effacer",
+      "retryRecording": "Réessayer",
+      "hideRange": "Masquer la plage",
+      "ctaShort": "Demander",
+      "tipShort": "Récitez quelques mots du début d’une ayah.",
+      "openActionsHint": "Ouvrez cette ayah seule, ou choisissez une ayah de fin et ouvrez la plage."
     }
   },
   "toasts": {

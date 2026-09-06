@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Learning\ProgressController;
 use App\Http\Controllers\Api\Learning\RecommendationController;
 use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
+use App\Http\Controllers\AskMutqinCommandController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
 use App\Http\Controllers\BillingController;
@@ -141,6 +142,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.recommendations.adaptive-assessment');
 
         // AI Memorisation Detection — assessment, personalised plan, practice execution.
+        Route::post('/memorisation/ask-mutqin/interpret', [AskMutqinCommandController::class, 'interpret'])
+            ->middleware('throttle:ask-mutqin-interpret')
+            ->name('memorisation.ask-mutqin.interpret');
+
         Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
             ->middleware('throttle:20,1')
             ->name('api.memorisation.assessments.store');

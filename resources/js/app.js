@@ -18,6 +18,16 @@ import { installErrorTracking, reportError } from './scripts/observability/error
 import { openFeedbackModal } from './scripts/feedback/feedbackLauncher';
 import FeedbackModal from './components/FeedbackModal.vue';
 import enLocale from './locales/en.json';
+import { bootPersistedQuranFont } from './scripts/quran/quranFonts';
+
+// Apply the user's Qur’anic font CSS vars before Vue mounts Memorisation.
+try {
+    bootPersistedQuranFont({
+        userId: typeof window !== 'undefined' ? window.mutqinUserId : null,
+    });
+} catch {
+    /* ignore */
+}
 
 function resolveEn(key) {
     return key.split('.').reduce((node, part) => (node && node[part] !== undefined ? node[part] : undefined), enLocale) ?? key;

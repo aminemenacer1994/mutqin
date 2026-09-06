@@ -730,7 +730,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
                 sample_rate: sampleRate
               },
               transcription_config: {
-                language: 'ar',
+                language: String(options.language || 'ar').trim() || 'ar',
                 model: 'enhanced',
                 enable_partials: true,
                 max_delay: clampSpeechmaticsMaxDelaySeconds(

@@ -138,6 +138,7 @@ export function shouldAutosave(ctx = {}) {
   if (ctx.signupIsolation) return false
   if (ctx.manualLockHeld) return false
   if (ctx.isBootstrapping) return false
+  if (ctx.overlayOpen) return false
 
   const mutation = String(ctx.lifecycleMutation || '').toLowerCase()
   if (mutation === 'starting' || mutation === 'ending' || mutation === 'pausing' || mutation === 'resuming') {

@@ -12,8 +12,11 @@ export const AUTO_FOLLOW_MIN_RATIO = 0.28
 export const AUTO_FOLLOW_MAX_RATIO = 0.55
 /** Ignore tiny adjustments that would feel like shaking. */
 export const AUTO_FOLLOW_MIN_DELTA_PX = 20
-/** After manual scroll, wait before auto-resuming. */
-export const AUTO_FOLLOW_IDLE_RESUME_MS = 4500
+/**
+ * Legacy idle-resume delay. Product rule: manual scroll suspends follow until the
+ * user explicitly resumes — idle auto-resume is disabled (kept for API/tests).
+ */
+export const AUTO_FOLLOW_IDLE_RESUME_MS = 0
 /** Coalesce rapid recognition updates. */
 export const AUTO_FOLLOW_RAF_COALESCE = true
 
@@ -179,10 +182,14 @@ export function createLiveAutoFollowController(options = {}) {
       notifyPause()
     }
     clearIdleTimer()
-    idleTimer = setTimeout(() => {
-      idleTimer = null
-      if (enabled && paused) resume({ followNow: true })
-    }, idleMs)
+    // Stay paused until an explicit resume action. Optional idleResumeMs > 0
+    // remains available for tests / future opt-in, but defaults to off.
+    if (idleMs > 0) {
+      idleTimer = setTimeout(() => {
+        idleTimer = null
+        if (enabled && paused) resume({ followNow: true })
+      }, idleMs)
+    }
     return true
   }
 

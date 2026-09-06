@@ -291,6 +291,14 @@ includesAll('workspace AI Recite companion', [
   /webpackChunkName: "amd-modal"/,
 ])
 
+includesAll('workspace Ask Mutqin companion', [
+  /data-testid="workspace-ask-mutqin"/,
+  /showWorkspaceAskMutqinCta/,
+  /openAskMutqin/,
+  /class="[^"]*workspace-ask-mutqin-cta/,
+  /webpackChunkName: "ask-mutqin-modal"/,
+])
+
 includesAll('top toolbar feature spacing', [
   /\.top-card-icon-controls \{[\s\S]*--top-card-toolbar-gap:\s*0\.5rem;/,
   /\.top-card-icon-controls \{[\s\S]*gap:\s*var\(--top-card-toolbar-gap\)\s*!important;/,
@@ -950,14 +958,22 @@ assert.doesNotMatch(
 
 includesAll('offcanvas stability hooks', [
   /toolsReturnFocusEl:\s*null/,
-  /syncBodyScrollLock\(locked = false\)/,
-  /const shouldLock = !!\(locked \|\| this\.showTools \|\| this\.isAnyModalOverlayActive\)/,
+  /syncBodyScrollLock\(locked = false, options = \{\}\)/,
+  /const forceUnlock = options\?\.force === true && !locked/,
+  /const shouldLock = forceUnlock \? false : !!\(locked \|\| this\.showTools \|\| this\.isAnyModalOverlayActive\)/,
   /document\.body\.classList\.toggle\('tools-panel-open', shouldLock\)/,
+  /forceReleaseBodyScrollLock\(\)/,
   /focusToolsPanel\(\)/,
   /restoreToolsFocus\(\)/,
   /const panelBody = this\.\$refs\.toolsBody/,
   /if \(this\.showTools\) \{\s*event\.preventDefault\(\)\s*this\.closeToolsPanel\(\)\s*return/s
 ])
+
+assert.doesNotMatch(
+  source,
+  /if \(\(this\.readingViewMode === 'mushaf'\) && nextNodes\.size\) \{[\s\S]*?scrollIntoView/,
+  'word highlight must not force-scroll the viewport during recitation'
+)
 
 includesAll('word audio sync stability', [
   /wordHighlightRequestId:\s*0/,

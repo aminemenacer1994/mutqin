@@ -455,19 +455,37 @@
                 class="top-card-session-cluster"
                 :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
               >
-                <button
-                  v-if="showWorkspaceAiReciteCta"
-                  type="button"
-                  class="action-btn workspace-ai-recite-cta top-card-action-trigger"
-                  :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                  data-testid="workspace-ai-recite"
-                  :title="t('dashboard.ai_recite.cta_hint')"
-                  :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                  @click="openWorkspaceAiRecite"
+                <div
+                  v-if="showWorkspaceAskMutqinCta || showWorkspaceAiReciteCta"
+                  class="workspace-ai-cta-pair"
                 >
-                  <i class="bi bi-stars" aria-hidden="true"></i>
-                  <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-                </button>
+                  <button
+                    v-if="showWorkspaceAskMutqinCta"
+                    type="button"
+                    class="action-btn workspace-ask-mutqin-cta top-card-action-trigger"
+                    :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                    data-testid="workspace-ask-mutqin"
+                    :title="t('memorisation.askMutqin.ctaHint')"
+                    :aria-label="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
+                    @click="openAskMutqin"
+                  >
+                    <i class="bi bi-mic" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.askMutqin.ctaShort') }}</span>
+                  </button>
+                  <button
+                    v-if="showWorkspaceAiReciteCta"
+                    type="button"
+                    class="action-btn workspace-ai-recite-cta top-card-action-trigger"
+                    :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                    data-testid="workspace-ai-recite"
+                    :title="t('dashboard.ai_recite.cta_hint')"
+                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                    @click="openWorkspaceAiRecite"
+                  >
+                    <i class="bi bi-soundwave" aria-hidden="true"></i>
+                    <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                  </button>
+                </div>
                 <div
                   class="top-card-session-actions"
                   :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
@@ -677,7 +695,7 @@
           </div>
           </div>
           <div
-            v-if="mobileProgressPills.length && !isPostSessionChoiceVisible"
+            v-if="mobileProgressPills.length && !isPostSessionChoiceVisible && !askMutqinOpen"
             class="workspace-shell-progress-pills w-100"
             :aria-label="t('memorisation.a11y.sessionMetadata')"
           >
@@ -777,19 +795,37 @@
                     v-else-if="showHeaderSessionAction"
                     class="workspace-shell-idle-actions__start workspace-shell-idle-actions__start--inline top-card-session-cluster"
                   >
-                    <button
-                      v-if="showWorkspaceAiReciteCta"
-                      type="button"
-                      class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
-                      :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                      data-testid="workspace-ai-recite-idle"
-                      :title="t('dashboard.ai_recite.cta_hint')"
-                      :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                      @click="openWorkspaceAiRecite"
+                    <div
+                      v-if="showWorkspaceAskMutqinCta || showWorkspaceAiReciteCta"
+                      class="workspace-ai-cta-pair"
                     >
-                      <i class="bi bi-stars" aria-hidden="true"></i>
-                      <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-                    </button>
+                      <button
+                        v-if="showWorkspaceAskMutqinCta"
+                        type="button"
+                        class="action-btn workspace-ask-mutqin-cta session-idle-action top-card-action-trigger"
+                        :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                        data-testid="workspace-ask-mutqin-idle"
+                        :title="t('memorisation.askMutqin.ctaHint')"
+                        :aria-label="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
+                        @click="openAskMutqin"
+                      >
+                        <i class="bi bi-mic" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.askMutqin.ctaShort') }}</span>
+                      </button>
+                      <button
+                        v-if="showWorkspaceAiReciteCta"
+                        type="button"
+                        class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
+                        :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                        data-testid="workspace-ai-recite-idle"
+                        :title="t('dashboard.ai_recite.cta_hint')"
+                        :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                        @click="openWorkspaceAiRecite"
+                      >
+                        <i class="bi bi-soundwave" aria-hidden="true"></i>
+                        <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                      </button>
+                    </div>
                     <div
                       class="action-btn primary session-idle-action session-primary-action"
                       role="button"
@@ -875,19 +911,37 @@
                   v-if="!showIdleQuickStartChoices && showHeaderSessionAction"
                   class="workspace-shell-idle-aside-cta top-card-session-cluster"
                 >
-                  <button
-                    v-if="showWorkspaceAiReciteCta"
-                    type="button"
-                    class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
-                    :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                    data-testid="workspace-ai-recite-aside"
-                    :title="t('dashboard.ai_recite.cta_hint')"
-                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                    @click="openWorkspaceAiRecite"
+                  <div
+                    v-if="showWorkspaceAskMutqinCta || showWorkspaceAiReciteCta"
+                    class="workspace-ai-cta-pair"
                   >
-                    <i class="bi bi-stars" aria-hidden="true"></i>
-                    <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-                  </button>
+                    <button
+                      v-if="showWorkspaceAskMutqinCta"
+                      type="button"
+                      class="action-btn workspace-ask-mutqin-cta session-idle-action top-card-action-trigger"
+                      :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                      data-testid="workspace-ask-mutqin-aside"
+                      :title="t('memorisation.askMutqin.ctaHint')"
+                      :aria-label="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
+                      @click="openAskMutqin"
+                    >
+                      <i class="bi bi-mic" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.askMutqin.ctaShort') }}</span>
+                    </button>
+                    <button
+                      v-if="showWorkspaceAiReciteCta"
+                      type="button"
+                      class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
+                      :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                      data-testid="workspace-ai-recite-aside"
+                      :title="t('dashboard.ai_recite.cta_hint')"
+                      :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                      @click="openWorkspaceAiRecite"
+                    >
+                      <i class="bi bi-soundwave" aria-hidden="true"></i>
+                      <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                    </button>
+                  </div>
                   <div
                     class="action-btn primary session-idle-action session-primary-action"
                     role="button"
@@ -4223,6 +4277,19 @@
     </div>
 
   </div>
+
+    <AskMutqinModal
+      v-if="askMutqinOpen"
+      :open="true"
+      :theme="theme"
+      :reciters="reciters"
+      :current-speed="speed"
+      :current-reciter-id="reciterId"
+      :quran-font-family="quranFontFamily"
+      :search-index="quranSearchIndex"
+      @close="closeAskMutqin"
+      @apply="applyAskMutqinCommand"
+    />
 
     <AiMemorisationDetectionModal
       v-if="aiTestModalsEnabled && amdOpen && isAmdEntryActive(amdEntrySource)"

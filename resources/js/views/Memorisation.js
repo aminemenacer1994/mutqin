@@ -170,8 +170,12 @@ import {
 } from '../scripts/recommendations/memorisationPlan'
 import {
   applyQuranFontCssVariable,
+  bootPersistedQuranFont,
+  ensureQuranFontFacesLoaded,
   normaliseQuranFontId,
+  readPersistedQuranFontId,
   resolveQuranFontFamily,
+  setQuranFontReadyAttribute,
 } from '../scripts/quran/quranFonts'
 import {
   applyAudioDefaultsToModeState,
@@ -385,6 +389,14 @@ const preloadAiMemorisationDetectionModal = () => wrapChunkImport(
 const AiMemorisationDetectionModal = lazyWorkspaceChunk(
   () => preloadAiMemorisationDetectionModal(),
   'amd-modal'
+)
+const preloadAskMutqinModal = () => wrapChunkImport(
+  () => import(/* webpackChunkName: "ask-mutqin-modal" */ '../components/AskMutqinModal.vue'),
+  { feature: 'ask-mutqin-modal' }
+)
+const AskMutqinModal = lazyWorkspaceChunk(
+  () => preloadAskMutqinModal(),
+  'ask-mutqin-modal'
 )
 const AiAudioConsentModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue'),
@@ -657,6 +669,7 @@ export default {
   components: {
     HifzPlanCreatorModal,
     AiMemorisationDetectionModal,
+    AskMutqinModal,
     AiAudioConsentModal,
     AyahNotesModal,
     SessionAnalysisModal,
@@ -1197,9 +1210,12 @@ export default {
       selfCheckRatingsByAyahKey: {},
       themeObserver: null,
 
-      // Reading options
+      // Reading options — hydrate font from storage before first paint to avoid FOUC.
       script: 'uthmani',
-      quranFont: 'uthmanic',
+      quranFont: typeof window !== 'undefined'
+        ? readPersistedQuranFontId({ userId: window.mutqinUserId })
+        : 'uthmanic',
+      quranFontFacesReady: false,
       fontPickerOpen: false,
       quranFontOptionDefs: [
         { value: 'uthmanic', icon: 'bi-book' },
@@ -1302,6 +1318,7 @@ export default {
       ignoreRecordingsAudioPauseEvent: false,
       // AI Memorisation Detection (post-session "Test with AI" only)
       amdOpen: false,
+      askMutqinOpen: false,
       amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | 'saved-session-review' | 'workspace-ai-recite' | null
       savedSessionReviewMode: false,
       dashboardAiCheckReturnTo: null,
@@ -2263,6 +2280,7 @@ export default {
       )
     },
     showSessionProgressRail() {
+      if (this.askMutqinOpen) return false
       if (this.isOnboardingExperienceActive || this.isWelcomeBackWorkspaceHidden) return false
       if (this.showSessionOverviewIdleActions && !this.hasVerses) return false
       return true
@@ -2994,6 +3012,16 @@ export default {
       if (this.isPostSessionChoiceVisible) return false
       if (this.isOnboardingExperienceActive) return false
       if (this.amdOpen) return false
+      if (this.askMutqinOpen) return false
+      return !!(this.hasVerses || this.showSessionOverviewIdleActions)
+    },
+    showWorkspaceAskMutqinCta() {
+      if (!this.isLoggedIn) return false
+      if (!this.aiTestModalsEnabled) return false
+      if (this.isPostSessionChoiceVisible) return false
+      if (this.isOnboardingExperienceActive) return false
+      if (this.amdOpen) return false
+      if (this.askMutqinOpen) return false
       return !!(this.hasVerses || this.showSessionOverviewIdleActions)
     },
     workspaceAiReciteAnimated() {
@@ -8240,6 +8268,7 @@ export default {
         || this.showSelfCheckModal
         || this.showQuranSearchModal
         || this.amdOpen
+        || this.askMutqinOpen
         || this.showPlannerCompletionModal
         || this.showSessionEndedModal
         || this.showPlannerModal
@@ -9750,6 +9779,17 @@ export default {
     }
   },
 
+  beforeCreate() {
+    // Apply persisted font CSS vars before the first render paints ayah text.
+    try {
+      bootPersistedQuranFont({
+        userId: typeof window !== 'undefined' ? window.mutqinUserId : null,
+      })
+    } catch {
+      /* ignore storage / DOM failures */
+    }
+  },
+
   async mounted() {
     let clearBootstrapWatchdog = null
     const bootstrapWatchdog = new Promise((resolve) => {
@@ -9797,6 +9837,7 @@ export default {
     document.documentElement.setAttribute('data-theme', this.theme)
     this.enforceSubscriptionFeatureLimits()
     applyQuranFontCssVariable(this.quranFont)
+    void this.ensureSelectedQuranFontReady(this.quranFont)
     this.activeLocale = this.$i18n?.locale?.value || 'en'
     this.ensureWordAudioHighlighting()
 
@@ -10151,7 +10192,8 @@ export default {
       window.clearTimeout(this.practiceTurnCalloutFrame)
       this.practiceTurnCalloutFrame = null
     }
-    this.syncBodyScrollLock(false)
+    this.showTools = false
+    this.forceReleaseBodyScrollLock()
     this.clearTouchPeek()
     this.blurPeekHoldingSpace = false
     if (this.bannerTimer) clearTimeout(this.bannerTimer)
@@ -10311,10 +10353,6 @@ export default {
       this.$nextTick(() => this.scheduleMadaniPageFit())
     },
     tajweedEnabled() {
-      this.$nextTick(() => this.scheduleMadaniPageFit())
-    },
-    quranFont(newVal) {
-      applyQuranFontCssVariable(newVal)
       this.$nextTick(() => this.scheduleMadaniPageFit())
     },
     showTools(newVal) {
@@ -10478,6 +10516,8 @@ export default {
       if (this.showTools) {
         this.closeToolsPanel()
       }
+      // Soft unlock only — keep legitimate locks if another modal is still open.
+      this.syncBodyScrollLock(false)
     },
 
     beforeUnmount() {
@@ -10623,8 +10663,10 @@ export default {
     fontScale: 'persistUiState',
     quranFont(newVal) {
       applyQuranFontCssVariable(newVal)
+      void this.ensureSelectedQuranFontReady(newVal)
       this.clearMushafAyahHtmlCache()
       this.persistUiState()
+      this.$nextTick(() => this.scheduleMadaniPageFit())
     },
     script: 'persistUiState',
     repetitionsPerStep(newVal) {
@@ -10806,6 +10848,39 @@ export default {
     async retryWorkspaceAiRecite() {
       this.closeWorkspaceReciteAnalysis()
       await this.openWorkspaceAiRecite()
+    },
+    openAskMutqin() {
+      if (this.amdOpen || this.askMutqinOpen) return
+      this.cancelSessionAutosave({ bumpGeneration: true })
+      void preloadAskMutqinModal().catch(() => {})
+      void import('../scripts/askMutqin/matchingIndex.js')
+        .then(({ loadAskMutqinMatchingIndex }) => loadAskMutqinMatchingIndex(this.quranSearchIndex))
+        .catch(() => {})
+      this.askMutqinOpen = true
+    },
+    closeAskMutqin() {
+      this.askMutqinOpen = false
+    },
+    async applyAskMutqinCommand(payload = {}) {
+      const surah = Number(payload.surah || 0)
+      const ayahStart = Number(payload.ayahStart || 0)
+      const ayahEnd = Number(payload.ayahEnd || ayahStart)
+      this.cancelSessionAutosave({ bumpGeneration: true })
+      this.askMutqinOpen = false
+      if (surah < 1 || ayahStart < 1) return
+      const settings = {}
+      if (payload.reciterId) settings.reciter = payload.reciterId
+      if (payload.speed != null) settings.playback_speed = payload.speed
+      if (payload.repetitions != null) settings.repetitions = payload.repetitions
+      await this.startSessionFromRecommendationPayload({
+        chapterId: surah,
+        rangeStart: ayahStart,
+        rangeEnd: ayahEnd || ayahStart,
+        sessionMode: payload.sessionMode || 'new_learning',
+        settings,
+        autoStart: !!payload.autoplay,
+      })
+      this.setActiveVerse(`${surah}:${ayahStart}`, { scroll: true })
     },
     async openWorkspaceAiRecite() {
       if (this.amdOpen || this.postSessionAiReciteGateBusy) return
@@ -12885,17 +12960,58 @@ export default {
       this.activeLocale = this.$i18n?.locale?.value || locale
     },
 
-    syncBodyScrollLock(locked = false) {
+    syncBodyScrollLock(locked = false, options = {}) {
       if (typeof document === 'undefined') return
-      const shouldLock = !!(locked || this.showTools || this.isAnyModalOverlayActive)
+      // Soft unlock keeps the lock when tools/modals are still open (legitimate).
+      // Force unlock is only for unmount / leave — otherwise leftover state freezes the page.
+      const forceUnlock = options?.force === true && !locked
+      const shouldLock = forceUnlock ? false : !!(locked || this.showTools || this.isAnyModalOverlayActive)
       document.body.classList.toggle('tools-panel-open', shouldLock)
       if (shouldLock) {
         document.body.style.overflow = 'hidden'
         document.documentElement.style.overflow = 'hidden'
       } else {
+        document.body.classList.remove('tools-panel-open')
         document.body.style.removeProperty('overflow')
         document.documentElement.style.removeProperty('overflow')
       }
+    },
+
+    /**
+     * Hard-clear body/html scroll locks and modal lock classes left behind by
+     * tools/modals (including child components that toggle their own *-open classes).
+     */
+    forceReleaseBodyScrollLock() {
+      if (typeof document === 'undefined') return
+      const lockClasses = [
+        'tools-panel-open',
+        'ask-mutqin-open',
+        'session-analysis-modal-open',
+        'dash-drawer-open',
+        'dash-ai-recite-open',
+      ]
+      for (const cls of lockClasses) {
+        document.body.classList.remove(cls)
+        document.documentElement.classList.remove(cls)
+      }
+      document.body.style.removeProperty('overflow')
+      document.documentElement.style.removeProperty('overflow')
+    },
+
+    /**
+     * Gate ayah rendering until the selected Qur’an face is available (or soft-timeout).
+     * Preference id is already applied via CSS vars — this only avoids fallback flash.
+     */
+    async ensureSelectedQuranFontReady(fontId = this.quranFont) {
+      const id = normaliseQuranFontId(fontId)
+      this.quranFontFacesReady = false
+      setQuranFontReadyAttribute(false)
+      const ready = await ensureQuranFontFacesLoaded(id)
+      // Ignore stale completions if the user switched fonts mid-load.
+      if (normaliseQuranFontId(this.quranFont) !== id) return false
+      this.quranFontFacesReady = !!ready
+      setQuranFontReadyAttribute(true)
+      return this.quranFontFacesReady
     },
 
     focusToolsPanel() {
@@ -37554,6 +37670,7 @@ export default {
       if (!allowed) return
       this.quranFont = normaliseQuranFontId(fontValue)
       applyQuranFontCssVariable(this.quranFont)
+      void this.ensureSelectedQuranFontReady(this.quranFont)
       this.clearMushafAyahHtmlCache?.()
       this.fontDropdownOpen = false
       this.fontOpen = false
@@ -38797,17 +38914,8 @@ export default {
         nextNodes.add(node)
       })
       this.lastHighlightedWordNodes = Array.from(nextNodes)
-      if ((this.readingViewMode === 'mushaf') && nextNodes.size) {
-        const lead = this.lastHighlightedWordNodes[0]
-        if (lead && typeof lead.scrollIntoView === 'function') {
-          const rect = lead.getBoundingClientRect?.()
-          const viewH = typeof window !== 'undefined' ? window.innerHeight : 0
-          const outOfView = !rect || rect.top < viewH * 0.18 || rect.bottom > viewH * 0.82
-          if (outOfView) {
-            lead.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
-          }
-        }
-      }
+      // Recitation highlighting must never force-follow / steal the viewport.
+      // Users can scroll freely while audio continues; use an explicit follow action to re-centre.
     },
 
     findWordTimingIndex(currentTime, timestamps = this.wordHighlightTimestamps) {
@@ -39555,7 +39663,8 @@ export default {
         const verseKey = entry?.verse?.key || entry?.key
 
         if (verseKey) {
-          this.setActiveVerse(verseKey, { queueIndex: this.queueIndex })
+          // Do not yank the viewport during auto-advance; keep highlighting only.
+          this.setActiveVerse(verseKey, { queueIndex: this.queueIndex, scroll: false })
         }
 
         const v = this.queue[this.queueIndex]
@@ -41116,6 +41225,7 @@ export default {
     setQuranFont(font) {
       this.quranFont = normaliseQuranFontId(font)
       applyQuranFontCssVariable(this.quranFont)
+      void this.ensureSelectedQuranFontReady(this.quranFont)
       this.script = 'uthmani'
       this.fontPickerOpen = false
       this.persistUiState()
@@ -41334,6 +41444,7 @@ export default {
           this.uiScale = Number(state.uiScale ?? this.uiScale)
           this.quranFont = normaliseQuranFontId(state.quranFont || this.quranFont)
           applyQuranFontCssVariable(this.quranFont)
+          void this.ensureSelectedQuranFontReady(this.quranFont)
           this.script = state.script || this.script
           this.sectionOpen = { ...this.sectionOpen, ...(state.sectionOpen || {}) }
           if (this.isSavedSessionSectionKey(state.savedActiveSection)) {
@@ -41696,6 +41807,7 @@ export default {
         isLive: !!this.isSessionLive,
         isPausedUnfinished: !!this.sessionPaused || !!this.backendUnfinishedSession,
         hasUnfinished: !!this.backendUnfinishedSession,
+        overlayOpen: !!this.askMutqinOpen || !!this.amdOpen,
       })) {
         return
       }
@@ -41721,6 +41833,7 @@ export default {
         isLive: !!this.isSessionLive,
         isPausedUnfinished: !!this.sessionPaused || !!this.backendUnfinishedSession,
         hasUnfinished: !!this.backendUnfinishedSession || !!this.isSessionLive || !!this.sessionPaused,
+        overlayOpen: !!this.askMutqinOpen || !!this.amdOpen,
       })) {
         return null
       }

@@ -3587,12 +3587,14 @@
         "title": "Recitation style",
         "fullSession": {
           "label": "Full session",
-          "desc": "Keep going even when a word slips. Review everything at the end."
+          "desc": "Keep going even when a word slips. Review everything at the end.",
+          "short": "Full"
         },
         "stopOnMistake": {
           "label": "Stop on mistake",
           "desc": "Hear a cue, see the word turn red, then say it correctly before continuing.",
-          "blocked": "Recite this word correctly to continue."
+          "blocked": "Recite this word correctly to continue.",
+          "short": "Stop"
         }
       }
     },
@@ -3710,6 +3712,58 @@
           "bestFor": "Students who prefer self-reflection and independent revision."
         }
       }
+    },
+    "askMutqin": {
+      "kicker": "Voice finder",
+      "title": "Ask Mutqin",
+      "ctaLabel": "Ask Mutqin",
+      "ctaHint": "Recite a few words, then say what you would like to do",
+      "introLead": "Bir ayetten birkaç kelime oku, sonra ne yapmak istediğini söyle.",
+      "exampleFive": "Give me five ayahs from here.",
+      "exampleReciter": "With Mishary.",
+      "exampleSpeed": "At 0.75 speed.",
+      "exampleRepeat": "Repeat each ayah 3 times.",
+      "startCta": "Başlat",
+      "searchIn": "Search in",
+      "entireQuran": "Entire Qur’an",
+      "reciteTitle": "Ask Mutqin",
+      "reciteHint": "Recite a few words from the start of an ayah.",
+      "keepRecitingTitle": "Keep reciting…",
+      "keepReciting": "Keep reciting…",
+      "foundTitle": "Found",
+      "foundSubtitle": "{surah} · Ayah {ayah}",
+      "listeningHint": "Ne açılacağını söyle veya aşağıdaki düğmeleri kullan.",
+      "interpreting": "Understanding…",
+      "ready": "Ready",
+      "readyTitle": "Ready",
+      "opening": "Opening…",
+      "openHere": "Bu ayeti aç",
+      "chooseRange": "Choose range",
+      "untilAyah": "Until ayah",
+      "openRange": "Aralığı aç",
+      "errorTitle": "Ask Mutqin couldn’t continue",
+      "invalidCommand": "That instruction could not be used. Try again, or open here.",
+      "networkError": "We couldn’t reach Ask Mutqin. Check your connection and try again.",
+      "serviceUnavailable": "Live listening is temporarily unavailable. Try again in a moment.",
+      "helloAsk": "Ask me anything",
+      "heardLabel": "Heard",
+      "commandHeard": "Instruction",
+      "wordProgress": "{count} of {needed} words heard",
+      "possibleMatches": "Possible matches",
+      "recordingOn": "Kayıt",
+      "recordingListening": "Dinleniyor",
+      "matchedLabel": "Eşleşen ayet",
+      "phaseFlowing": "Canlı",
+      "phasePaused": "Duraklatıldı",
+      "phaseFrozen": "Kilitli",
+      "resultLabel": "Sonuç",
+      "ayahChip": "Ayet {ayah}",
+      "clearScreen": "Temizle",
+      "retryRecording": "Yeniden dene",
+      "hideRange": "Aralığı gizle",
+      "ctaShort": "Sor",
+      "tipShort": "Bir ayetin başından birkaç kelime oku.",
+      "openActionsHint": "Sadece bu ayeti aç, veya bitiş ayeti seçip aralığı aç."
     }
   },
   "toasts": {

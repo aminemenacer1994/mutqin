@@ -4,6 +4,9 @@ import {
   QURAN_FONT_IDS,
   normaliseQuranFontId,
   resolveQuranFontFamily,
+  readPersistedQuranFontId,
+  applyQuranFontCssVariable,
+  bootPersistedQuranFont,
 } from '../../resources/js/scripts/quran/quranFonts.js'
 import {
   PLAN_STATUS,
@@ -28,6 +31,44 @@ test('resolveQuranFontFamily returns distinct stacks per font', () => {
   assert.match(naskh, /Noto Naskh Arabic/)
   assert.match(uthmanic, /UthmanicHafs|KFGQPC/)
   assert.notEqual(amiri, naskh)
+})
+
+test('readPersistedQuranFontId prefers owner-scoped uiState over default', () => {
+  const map = new Map([
+    ['mutqin.uiState.42', JSON.stringify({ quranFont: 'naskh' })],
+    ['mutqin.uiState', JSON.stringify({ quranFont: 'amiri' })],
+  ])
+  const storage = {
+    getItem(key) { return map.has(key) ? map.get(key) : null },
+  }
+  assert.equal(readPersistedQuranFontId({ userId: 42, storage }), 'naskh')
+  assert.equal(readPersistedQuranFontId({ userId: null, storage }), 'amiri')
+  assert.equal(readPersistedQuranFontId({ storage: { getItem() { return null } } }), 'uthmanic')
+})
+
+test('bootPersistedQuranFont applies CSS vars without swapping to another Mutqin font', () => {
+  const props = new Map()
+  const attrs = new Map()
+  const root = {
+    style: {
+      setProperty(key, value) { props.set(key, value) },
+    },
+    setAttribute(key, value) { attrs.set(key, value) },
+    removeAttribute(key) { attrs.delete(key) },
+  }
+  const storage = {
+    getItem(key) {
+      if (key === 'mutqin.uiState.guest') return JSON.stringify({ quranFont: 'lateef' })
+      return null
+    },
+  }
+  const id = bootPersistedQuranFont({ userId: 'guest', storage, root })
+  assert.equal(id, 'lateef')
+  assert.match(props.get('--quran-font'), /Lateef/)
+  assert.equal(attrs.get('data-quran-font'), 'lateef')
+  assert.equal(attrs.has('data-quran-font-ready'), false)
+  applyQuranFontCssVariable('lateef', root)
+  assert.match(props.get('--font-ar'), /Lateef/)
 })
 
 test('buildMemorisationPlan consolidates recommendation settings', () => {

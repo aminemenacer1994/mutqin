@@ -1,0 +1,446 @@
+html.ask-mutqin-open,
+body.ask-mutqin-open {
+  overflow: hidden;
+}
+
+html.ask-mutqin-open .session-progress-rail,
+html.ask-mutqin-open .workspace-shell-progress-pills,
+body.ask-mutqin-open .session-progress-rail,
+body.ask-mutqin-open .workspace-shell-progress-pills {
+  display: none !important;
+}
+
+.ask-mutqin-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 12050 !important;
+  display: flex !important;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding:
+    max(0.75rem, calc(var(--navbar-height, var(--navbar-offset, 64px)) + 0.5rem))
+    0.7rem
+    max(0.75rem, env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, #2a2118 46%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.ask-mutqin-dialog {
+  width: min(28rem, calc(100vw - 1rem));
+  max-width: 28rem;
+  margin: 0 auto !important;
+  max-height: min(84dvh, 38rem);
+  transform: none !important;
+}
+
+.ask-mutqin-modal {
+  --ask-ink: #3d3228;
+  --ask-muted: #7a6b5c;
+  --ask-line: rgba(120, 88, 48, 0.16);
+  --ask-accent: #a67c52;
+  --ask-accent-soft: rgba(166, 124, 82, 0.12);
+  --ask-chip: #fffdf8;
+  --ask-error: #8b3a2a;
+  --ask-surface: #f7f1e6;
+  --ask-brown: #8a5a32;
+  --ask-arabic: "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif;
+  --ask-display: "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  overflow: hidden;
+  color: var(--ask-ink);
+  background: linear-gradient(180deg, #fbf6ec 0%, var(--ask-surface) 100%);
+  border: 1px solid var(--ask-line);
+  border-radius: 20px;
+  box-shadow:
+    0 18px 40px color-mix(in srgb, #1a1410 16%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  font-family: var(--ask-display);
+  animation: ask-mutqin-sheet-in 220ms ease-out;
+}
+
+.ask-mutqin-overlay[data-theme="sepia"] .ask-mutqin-modal {
+  --ask-ink: #4a3828;
+  --ask-muted: #7a6248;
+  --ask-line: rgba(120, 88, 48, 0.2);
+  --ask-accent: #c89a58;
+  --ask-accent-soft: rgba(200, 154, 88, 0.14);
+  --ask-chip: #fff8ec;
+  --ask-surface: #f6ead4;
+  --ask-brown: #9a6738;
+}
+
+.ask-mutqin-overlay[data-theme="dark"] .ask-mutqin-modal {
+  --ask-ink: #f3e7d4;
+  --ask-muted: #b6aa9c;
+  --ask-line: rgba(232, 214, 186, 0.12);
+  --ask-accent: #e0b878;
+  --ask-accent-soft: rgba(224, 184, 120, 0.14);
+  --ask-chip: #26201b;
+  --ask-error: #f0b8ac;
+  --ask-surface: #1c1814;
+  --ask-brown: #c89a58;
+  background: linear-gradient(180deg, #241e18 0%, #1c1814 100%);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ask-mutqin-header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 0.95rem 0.35rem;
+}
+
+.ask-mutqin-header__copy {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ask-mutqin-kicker {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ask-accent);
+}
+
+.ask-mutqin-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.ask-mutqin-close {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--ask-line);
+  background: color-mix(in srgb, var(--ask-chip) 80%, transparent);
+  color: inherit;
+}
+
+.ask-mutqin-recording {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.65rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ask-accent) 40%, var(--ask-line));
+  background: color-mix(in srgb, var(--ask-accent-soft) 70%, var(--ask-chip));
+  color: var(--ask-brown);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ask-mutqin-recording__pulse {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #c45c3c;
+  animation: ask-mutqin-recording-pulse 1.5s ease-out infinite;
+}
+
+.ask-mutqin-overlay[data-theme="dark"] .ask-mutqin-recording {
+  color: var(--ask-accent);
+}
+
+.ask-mutqin-body {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.15rem 0.95rem 0.25rem;
+  overflow: auto;
+  min-height: 0;
+}
+
+.ask-mutqin-tip {
+  margin: 0;
+  color: var(--ask-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.ask-mutqin-ayah {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem 0.8rem 0.8rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf8 0%, #f8f1e3 100%);
+  border: 1px solid var(--ask-line);
+  overflow: hidden;
+}
+
+.ask-mutqin-ayah.is-live {
+  border-color: color-mix(in srgb, var(--ask-accent) 50%, var(--ask-line));
+  box-shadow: 0 0 0 3px var(--ask-accent-soft);
+}
+
+.ask-mutqin-overlay[data-theme="dark"] .ask-mutqin-ayah {
+  background: #26201b;
+}
+
+.ask-mutqin-ayah__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ask-mutqin-ayah__label,
+.ask-mutqin-ayah__meta {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ask-accent);
+}
+
+.ask-mutqin-ayah__meta {
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--ask-muted);
+  font-weight: 650;
+}
+
+.ask-mutqin-ayah__stage {
+  max-height: min(28vh, 11rem);
+  min-height: 5.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ask-accent) 50%, transparent) transparent;
+  padding-block: 0.2rem 0.35rem;
+}
+
+.ask-mutqin-ayah__text {
+  margin: 0;
+  font-family: var(--mushaf-quran-font, var(--quran-font, var(--ask-arabic)));
+  font-size: clamp(1.35rem, 4.8vw, 1.85rem);
+  line-height: 2.2;
+  font-weight: 500;
+  color: var(--ask-ink);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.ask-mutqin-ayah__placeholder {
+  display: block;
+  color: color-mix(in srgb, var(--ask-muted) 70%, transparent);
+  font-family: var(--ask-display);
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.ask-mutqin-ayah__mark {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  min-width: 1.2em;
+  padding: 0.1em 0.22em;
+  border: 1px solid color-mix(in srgb, var(--ask-accent) 45%, transparent);
+  border-radius: 999px;
+  color: var(--ask-accent);
+  font-size: 0.48em;
+  line-height: 1.3;
+  vertical-align: middle;
+}
+
+.ask-mutqin-command {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  background: var(--ask-accent-soft);
+  font-size: 0.88rem;
+}
+
+.ask-mutqin-command span {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ask-accent);
+}
+
+.ask-mutqin-command p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.ask-mutqin-ready {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.9rem;
+}
+
+.ask-mutqin-ready strong {
+  color: var(--ask-accent);
+}
+
+.ask-mutqin-ready p {
+  margin: 0;
+}
+
+.ask-mutqin-error {
+  margin: 0;
+  color: var(--ask-error);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.ask-mutqin-footer {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.45rem 0.95rem 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--ask-line) 80%, transparent);
+}
+
+.ask-mutqin-actions {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.ask-mutqin-actions > .ask-mutqin-primary {
+  width: 100%;
+}
+
+.ask-mutqin-range {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, 5.5rem) minmax(0, 1fr);
+  gap: 0.4rem;
+  align-items: end;
+}
+
+.ask-mutqin-range__field {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.64rem;
+  font-weight: 650;
+  color: var(--ask-muted);
+}
+
+.ask-mutqin-range__field input {
+  min-height: 2rem;
+  border: 1px solid var(--ask-line);
+  border-radius: 8px;
+  background: var(--ask-chip);
+  color: inherit;
+  padding: 0 0.45rem;
+  font-size: 0.88rem;
+}
+
+.ask-mutqin-actions__hint {
+  margin: 0;
+  color: var(--ask-muted);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.ask-mutqin-primary,
+.ask-mutqin-secondary {
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border-radius: 9px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ask-mutqin-primary {
+  border: 0;
+  background: var(--ask-brown);
+  color: #fff;
+}
+
+.ask-mutqin-secondary {
+  border: 1px solid var(--ask-line);
+  background: color-mix(in srgb, var(--ask-chip) 85%, transparent);
+  color: inherit;
+}
+
+.ask-mutqin-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.ask-mutqin-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.85rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--ask-line);
+  background: color-mix(in srgb, var(--ask-chip) 70%, transparent);
+  color: var(--ask-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ask-mutqin-tool i {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.ask-mutqin-tool:hover,
+.ask-mutqin-tool:focus-visible {
+  color: var(--ask-brown);
+  border-color: color-mix(in srgb, var(--ask-accent) 45%, var(--ask-line));
+}
+
+@media (max-width: 480px) {
+  .ask-mutqin-dialog {
+    width: calc(100vw - 0.55rem);
+  }
+
+  .ask-mutqin-modal {
+    border-radius: 16px;
+  }
+
+  .ask-mutqin-header,
+  .ask-mutqin-body,
+  .ask-mutqin-footer {
+    padding-inline: 0.8rem;
+  }
+
+  .ask-mutqin-ayah__stage {
+    min-height: 4.8rem;
+    max-height: min(26vh, 9.5rem);
+  }
+
+  .ask-mutqin-ayah__text {
+    font-size: clamp(1.25rem, 5.4vw, 1.65rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-mutqin-modal,
+  .ask-mutqin-recording__pulse {
+    animation: none !important;
+  }
+}
+
+@keyframes ask-mutqin-recording-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, #c45c3c 50%, transparent); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes ask-mutqin-sheet-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

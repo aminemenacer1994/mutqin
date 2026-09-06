@@ -322,14 +322,6 @@
                       >
                         {{ lastActivePill(row) }}
                       </span>
-                      <span
-                        class="admin-status-chip"
-                        :data-status="activityStatus(row)"
-                        :title="activityStatusLabel(row)"
-                      >
-                        <i class="admin-status-dot" :data-status="activityStatus(row)" aria-hidden="true"></i>
-                        <span class="admin-status-chip__label">{{ statusChipLabel(row) }}</span>
-                      </span>
                     </div>
                   </button>
                 </div>
@@ -370,7 +362,6 @@
                     <col class="admin-col-num admin-col-sessions">
                     <col class="admin-col-num admin-col-learning">
                     <col class="admin-col-date">
-                    <col class="admin-col-status">
                     <col class="admin-col-actions">
                   </colgroup>
                   <thead>
@@ -404,7 +395,6 @@
                           {{ t('admin.col_active') }}
                         </button>
                       </th>
-                      <th class="admin-table__status">{{ t('admin.col_status') }}</th>
                       <th class="admin-table__actions"></th>
                     </tr>
                   </thead>
@@ -445,16 +435,6 @@
                       <td class="admin-num admin-num--active" :class="{ 'is-empty': !row.last_activity_at }">
                         <span :title="row.last_activity_at ? (formatDateShort(row.last_activity_at) || undefined) : undefined">
                           {{ lastActiveLabel(row.last_activity_at) }}
-                        </span>
-                      </td>
-                      <td class="admin-table__status">
-                        <span
-                          class="admin-status-chip"
-                          :data-status="activityStatus(row)"
-                          :title="activityStatusLabel(row)"
-                        >
-                          <i class="admin-status-dot" :data-status="activityStatus(row)" aria-hidden="true"></i>
-                          <span class="admin-status-chip__label">{{ statusChipLabel(row) }}</span>
                         </span>
                       </td>
                         <td class="admin-table__actions" @click.stop>
@@ -779,18 +759,6 @@
                   </label>
                 </div>
                 <div class="admin-drawer__meta">
-                  <span
-                    class="admin-status-chip"
-                    :data-status="activityStatus(detail?.user || selectedListRow || {})"
-                    :title="activityStatusLabel(detail?.user || selectedListRow || {})"
-                  >
-                    <i
-                      class="admin-status-dot"
-                      :data-status="activityStatus(detail?.user || selectedListRow || {})"
-                      aria-hidden="true"
-                    ></i>
-                    <span class="admin-status-chip__label">{{ statusChipLabel(detail?.user || selectedListRow || {}) }}</span>
-                  </span>
                   <span class="admin-drawer__status-label">{{ activityStatusLabel(detail?.user || selectedListRow || {}) }}</span>
                   <button
                     v-if="editFormDirty"
@@ -2003,24 +1971,6 @@ export default {
     isDeleted(row) {
       return !!(row && (row.is_deleted || row.deleted_at))
     },
-    activityStatus(row) {
-      if (this.isDeleted(row)) return 'deleted'
-      const at = row?.last_activity_at
-      if (!at) return 'inactive'
-      const date = new Date(at)
-      if (Number.isNaN(date.getTime())) return 'inactive'
-      const days = (Date.now() - date.getTime()) / 86400000
-      if (days <= 7) return 'hot'
-      if (days <= 30) return 'warm'
-      return 'inactive'
-    },
-    statusChipLabel(row) {
-      const status = this.activityStatus(row)
-      if (status === 'deleted') return this.t('admin.status_deleted')
-      if (status === 'hot') return this.t('admin.status_chip_active')
-      if (status === 'warm') return this.t('admin.status_chip_recent')
-      return this.t('admin.status_chip_inactive')
-    },
     activityStatusLabel(row) {
       if (this.isDeleted(row)) return this.t('admin.status_deleted_help')
       const at = row?.last_activity_at
@@ -2734,22 +2684,6 @@ export default {
       }
       const i18nKey = map[String(key || '').toLowerCase()] || null
       return i18nKey ? this.t(`admin.${i18nKey}`) : String(key || 'none')
-    },
-    subscriptionPillClass(rowOrKey) {
-      if (rowOrKey && typeof rowOrKey === 'object') {
-        const status = String(rowOrKey.subscription_status || '').toLowerCase()
-        const tier = String(rowOrKey.subscription_tier || '').toLowerCase()
-        const isPro = status === 'pro' || tier === 'pro' || status === 'active' || status === 'trialing'
-        if (isPro && (status === 'active' || status === 'trialing')) return 'admin-pill--active-pro'
-        if (isPro) return 'admin-pill--pro'
-        if (status === 'free' || tier === 'free') return 'admin-pill--free'
-        return 'admin-pill--none'
-      }
-      const status = String(rowOrKey || '').toLowerCase()
-      if (status === 'active' || status === 'trialing') return 'admin-pill--active-pro'
-      if (status === 'pro') return 'admin-pill--pro'
-      if (status === 'free') return 'admin-pill--free'
-      return 'admin-pill--none'
     },
     surahBarWidth(row) {
       const percent = Number(row?.percent || 0)

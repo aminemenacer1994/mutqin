@@ -163,14 +163,55 @@ function createMemoryStorage(seed = {}) {
 
     controller.pauseFromManualScroll()
     assert.equal(controller.paused, true)
-    now += AUTO_FOLLOW_IDLE_RESUME_MS
-    // Fire due idle timers.
+    now += 4500
+    // Fire any due idle timers — product default does not auto-resume.
     timers.splice(0).forEach((timer) => timer.fn())
-    assert.equal(controller.paused, false, 'idle period resumes auto-follow')
+    assert.equal(controller.paused, true, 'manual scroll stays paused until explicit resume')
+    assert.equal(followNowCalls, 1)
+
+    controller.resume({ followNow: true })
+    assert.equal(controller.paused, false)
     assert.equal(followNowCalls, 2)
 
     controller.setEnabled(false, { persist: false })
     assert.equal(controller.onContainerScroll(), false, 'disabled follow ignores manual scroll pause')
+    controller.dispose()
+  } finally {
+    global.setTimeout = realSetTimeout
+    global.clearTimeout = realClearTimeout
+  }
+}
+
+// Optional idleResumeMs > 0 still auto-resumes when explicitly configured.
+{
+  const realSetTimeout = global.setTimeout
+  const realClearTimeout = global.clearTimeout
+  const timers = []
+  let now = 0
+  let followNowCalls = 0
+  global.setTimeout = (fn, ms) => {
+    const id = { fn, due: now + (Number(ms) || 0) }
+    timers.push(id)
+    return id
+  }
+  global.clearTimeout = (id) => {
+    const idx = timers.indexOf(id)
+    if (idx >= 0) timers.splice(idx, 1)
+  }
+
+  try {
+    const controller = createLiveAutoFollowController({
+      enabled: true,
+      now: () => now,
+      idleResumeMs: 4500,
+      followNow: () => { followNowCalls += 1 },
+    })
+    controller.pauseFromManualScroll()
+    assert.equal(controller.paused, true)
+    now += 4500
+    timers.splice(0).forEach((timer) => timer.fn())
+    assert.equal(controller.paused, false, 'configured idleResumeMs resumes auto-follow')
+    assert.equal(followNowCalls, 1)
     controller.dispose()
   } finally {
     global.setTimeout = realSetTimeout

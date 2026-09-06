@@ -1491,8 +1491,8 @@ html[data-theme="dark"] .admin-toolbar__select {
 .admin-user-card__footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  justify-content: flex-start;
+  gap: 0.5rem;
   padding-top: 0.15rem;
 }
 
@@ -1963,64 +1963,6 @@ html[data-theme="dark"] .admin-row-menu__panel--float button.is-danger {
   letter-spacing: -0.01em;
 }
 
-.admin-table__status .admin-status-dot {
-  display: inline-block;
-  margin: 0;
-}
-
-.admin-status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 1.65rem;
-  max-width: 100%;
-  padding: 0.18rem 0.55rem 0.18rem 0.4rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  line-height: 1;
-  color: var(--text-secondary);
-  background: color-mix(in srgb, var(--dash-soft) 82%, transparent);
-  white-space: nowrap;
-}
-
-.admin-status-chip__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.admin-status-chip[data-status="hot"] {
-  color: color-mix(in srgb, var(--fill-success) 78%, var(--dash-ink));
-  background: color-mix(in srgb, var(--fill-success) 14%, transparent);
-}
-
-.admin-status-chip[data-status="warm"] {
-  color: color-mix(in srgb, var(--fill-warning) 80%, var(--dash-ink));
-  background: color-mix(in srgb, var(--fill-warning) 16%, transparent);
-}
-
-.admin-status-chip[data-status="inactive"] {
-  color: color-mix(in srgb, var(--fill-danger) 72%, var(--dash-ink));
-  background: color-mix(in srgb, var(--fill-danger) 12%, transparent);
-}
-
-.admin-status-chip[data-status="deleted"] {
-  color: #7a5a3a;
-  background: color-mix(in srgb, #c4a574 22%, var(--dash-soft));
-}
-
-.admin-status-dot[data-status="deleted"] {
-  background: #8a6a45;
-  color: #8a6a45;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #8a6a45 18%, transparent);
-}
-
-html[data-theme="dark"] .admin-status-chip[data-status="deleted"] {
-  color: #e6c89a;
-  background: color-mix(in srgb, #8a6a45 28%, transparent);
-}
-
 .admin-deleted-badge {
   display: inline-flex;
   align-items: center;
@@ -2073,28 +2015,9 @@ html[data-theme="dark"] .admin-deleted-badge {
   box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 12%, transparent);
 }
 
-.admin-status-dot[data-status="hot"] {
-  background: var(--fill-success);
-  color: var(--fill-success);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fill-success) 18%, transparent);
-}
-
-.admin-status-dot[data-status="warm"] {
-  background: var(--fill-warning);
-  color: var(--fill-warning);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fill-warning) 20%, transparent);
-}
-
-.admin-status-dot[data-status="inactive"] {
-  background: var(--fill-danger);
-  color: var(--fill-danger);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fill-danger) 18%, transparent);
-}
-
-html[data-theme="dark"] .admin-status-dot[data-status="inactive"] {
-  background: #ff9b85;
-  color: #ff9b85;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #ff9b85 22%, transparent);
+.admin-table__status .admin-status-dot {
+  display: inline-block;
+  margin: 0;
 }
 
 .admin-pagination {
@@ -2185,40 +2108,6 @@ html[data-theme="dark"] .admin-status-dot[data-status="inactive"] {
 .admin-acc--high { color: var(--text-success); }
 .admin-acc--mid { color: var(--text-warning); }
 .admin-acc--low { color: var(--text-danger); }
-
-.admin-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 10px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.admin-pill--muted,
-.admin-pill--none,
-.admin-pill--free {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.admin-pill--pro {
-  border-color: transparent;
-  background: var(--bg-warning);
-  color: var(--text-warning);
-}
-
-.admin-pill--active,
-.admin-pill--active-pro {
-  border-color: transparent;
-  background: var(--bg-success);
-  color: var(--text-success);
-}
 
 .admin-drawer-root {
   /* Mirror console tokens so teleported drawer keeps the theme */
