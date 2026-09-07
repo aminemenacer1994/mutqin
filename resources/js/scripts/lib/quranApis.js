@@ -82,6 +82,15 @@ export function getSurahEdition(surahNumber, edition) {
   return cachedRequest(surahEditionCache, key, () => alquranClient.get(`/surah/${surahNumber}/${edition}`))
 }
 
+/** Quran.com tafsir for one ayah. verse key uses a colon, allowed by the proxy. */
+export function getAyahTafsir(tafsirId, surahNumber, ayahNumber) {
+  const chapter = Number(surahNumber) || 0
+  const ayah = Number(ayahNumber) || 0
+  const id = Number(tafsirId) || 0
+  const key = `tafsir:${id}:${chapter}:${ayah}`
+  return cachedRequest(surahEditionCache, key, () => quranComClient.get(`/tafsirs/${id}/by_ayah/${chapter}:${ayah}`))
+}
+
 /** Quran.com chapter list via same-origin proxy (avoids browser CORS). */
 export function getChapters(params = { language: 'en' }) {
   return quranComClient.get('/chapters', { params })

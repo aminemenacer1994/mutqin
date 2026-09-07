@@ -3126,6 +3126,13 @@
             font-size: 20px;
         }
 
+        /* Custom toggler resets override Bootstrap’s expand-lg hide — keep mobile-only. */
+        @media (min-width: 992px) {
+            .app-navbar .navbar-toggler {
+                display: none !important;
+            }
+        }
+
         .nav-links-desktop {
             display: flex;
             gap: 12px;
@@ -6500,7 +6507,7 @@
                 @endauth
 
                 <button
-                    class="navbar-toggler"
+                    class="navbar-toggler d-lg-none"
                     type="button"
                     data-bs-toggle="offcanvas"
                     data-bs-target="#primaryNavbar"

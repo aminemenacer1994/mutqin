@@ -43,13 +43,9 @@
           </header>
 
           <div class="ask-mutqin-body">
-            <p v-if="!match && !errorMessage" class="ask-mutqin-tip">
-              {{ t('memorisation.askMutqin.tipShort') }}
+            <p v-if="!match" class="ask-mutqin-intro">
+              {{ t('memorisation.askMutqin.featureBrief') }}
             </p>
-            <p v-else-if="match && !errorMessage" class="ask-mutqin-tip">
-              {{ t('memorisation.askMutqin.listeningHint') }}
-            </p>
-
             <section
               class="ask-mutqin-ayah"
               :class="{
@@ -73,10 +69,92 @@
                   <template v-if="panelArabic">
                     <span class="ask-mutqin-ayah__verse">{{ panelArabic }}</span>
                     <span v-if="ayahMark" class="ask-mutqin-ayah__mark">{{ ayahMark }}</span>
+                    <span
+                      v-else-if="showHeardSpinner"
+                      class="ask-mutqin-spinner ask-mutqin-spinner--inline"
+                      aria-hidden="true"
+                    ></span>
                   </template>
-                  <span v-else class="ask-mutqin-ayah__placeholder">…</span>
+                  <span
+                    v-else
+                    class="ask-mutqin-ayah__placeholder"
+                    dir="auto"
+                    lang="en"
+                  >
+                    {{ t('memorisation.askMutqin.heardWaiting') }}
+                  </span>
                 </p>
               </div>
+            </section>
+
+            <section
+              v-if="match"
+              class="ask-mutqin-aid"
+              :aria-label="t('memorisation.askMutqin.aidLabel')"
+            >
+              <div class="ask-mutqin-aid__grid" role="tablist">
+                <button
+                  v-for="option in aidOptions"
+                  :key="option.kind"
+                  type="button"
+                  class="ask-mutqin-aid__tab"
+                  :class="{ 'is-active': aidKind === option.kind }"
+                  role="tab"
+                  :aria-selected="aidKind === option.kind ? 'true' : 'false'"
+                  @click="selectAid(option.kind)"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
+              <Transition name="ask-mutqin-aid-fade" mode="out-in">
+                <div
+                  :key="aidKind"
+                  class="ask-mutqin-aid__box"
+                  :class="{
+                    'is-loading': aidLoading,
+                  }"
+                  role="tabpanel"
+                  :dir="aidContent.dir"
+                >
+                  <p v-if="aidLoading" class="ask-mutqin-aid__status">
+                    <span class="ask-mutqin-spinner" aria-hidden="true"></span>
+                    {{ t('memorisation.askMutqin.aidLoading') }}
+                  </p>
+                  <p v-else-if="aidError" class="ask-mutqin-aid__status is-error" role="alert">
+                    {{ aidError }}
+                  </p>
+                  <div v-else-if="aidContent.sections?.length" class="ask-mutqin-aid__sections">
+                    <article
+                      v-for="section in aidContent.sections"
+                      :key="section.lang"
+                      class="ask-mutqin-aid__section"
+                    >
+                      <p class="ask-mutqin-aid__lang" dir="ltr">{{ section.label }}</p>
+                      <div class="ask-mutqin-aid__body" :dir="section.dir" :lang="section.lang">
+                        <p
+                          v-for="(paragraph, index) in section.paragraphs"
+                          :key="`${section.lang}-${index}`"
+                          class="ask-mutqin-aid__text"
+                        >{{ paragraph }}</p>
+                      </div>
+                      <p v-if="section.reference" class="ask-mutqin-aid__reference" dir="ltr">
+                        <span>{{ t('memorisation.reading.sourceLabel') }}</span>
+                        {{ section.reference }}
+                      </p>
+                    </article>
+                  </div>
+                  <template v-else-if="aidContent.text">
+                    <p class="ask-mutqin-aid__text">{{ aidContent.text }}</p>
+                    <p v-if="aidContent.reference" class="ask-mutqin-aid__reference" dir="ltr">
+                      <span>{{ t('memorisation.reading.sourceLabel') }}</span>
+                      {{ aidContent.reference }}
+                    </p>
+                  </template>
+                  <p v-else class="ask-mutqin-aid__status">
+                    {{ t('memorisation.askMutqin.aidEmpty') }}
+                  </p>
+                </div>
+              </Transition>
             </section>
 
             <div
@@ -99,50 +177,38 @@
           </div>
 
           <footer class="ask-mutqin-footer">
-            <template v-if="state === 'error'">
-              <button type="button" class="ask-mutqin-primary" @click="retryFromError">
-                {{ t('common.tryAgain') }}
+            <button
+              v-if="state === 'error'"
+              type="button"
+              class="ask-mutqin-primary"
+              @click="retryFromError"
+            >
+              {{ t('common.tryAgain') }}
+            </button>
+            <div v-else class="ask-mutqin-actions">
+              <button
+                v-if="showFallbackActions"
+                type="button"
+                class="ask-mutqin-primary"
+                @click="openHere"
+              >
+                <span>{{ t('memorisation.askMutqin.openHere') }}</span>
               </button>
-            </template>
-            <template v-else-if="showFallbackActions">
-              <div class="ask-mutqin-actions">
-                <button
-                  type="button"
-                  class="ask-mutqin-primary"
-                  @click="openHere"
-                >
-                  {{ t('memorisation.askMutqin.openHere') }}
-                </button>
-                <div class="ask-mutqin-range">
-                  <label class="ask-mutqin-range__field">
-                    <span>{{ t('memorisation.askMutqin.untilAyah') }}</span>
-                    <input
-                      v-model.number="rangeEndDraft"
-                      type="number"
-                      :min="match?.ayah || 1"
-                      :max="maxAyah"
-                    >
-                  </label>
-                  <button
-                    type="button"
-                    class="ask-mutqin-secondary"
-                    @click="confirmChosenRange"
-                  >
-                    {{ t('memorisation.askMutqin.openRange') }}
-                  </button>
-                </div>
-              </div>
-              <p class="ask-mutqin-actions__hint">
-                {{ t('memorisation.askMutqin.openActionsHint') }}
-              </p>
-            </template>
-
-            <div v-if="showSessionTools" class="ask-mutqin-tools">
-              <button type="button" class="ask-mutqin-tool" @click="clearScreen">
+              <button
+                v-if="showSessionTools"
+                type="button"
+                class="ask-mutqin-tool"
+                @click="clearScreen"
+              >
                 <i class="bi bi-eraser" aria-hidden="true"></i>
                 <span>{{ t('memorisation.askMutqin.clearScreen') }}</span>
               </button>
-              <button type="button" class="ask-mutqin-tool" @click="retryRecording">
+              <button
+                v-if="showSessionTools"
+                type="button"
+                class="ask-mutqin-tool"
+                @click="retryRecording"
+              >
                 <i class="bi bi-mic" aria-hidden="true"></i>
                 <span>{{ t('memorisation.askMutqin.retryRecording') }}</span>
               </button>
@@ -157,7 +223,7 @@
 <script>
 import {
   ASK_MUTQIN_STATES,
-  askMutqinSurahAyahCount,
+  ASK_MUTQIN_AID_KINDS,
   createAskMutqinVoiceSession,
   interpretAskMutqinCommand,
   isAskMutqinRecordingState,
@@ -166,10 +232,12 @@ import {
   heardStreamText,
   heardWordCount,
   loadAskMutqinMatchingIndex,
+  loadAskMutqinAyahAid,
   matchHeardAyahPrefix,
   resolveAskMutqinRange,
   resolveAskMutqinReciter,
   ASK_MUTQIN_MIN_WORDS,
+  ASK_MUTQIN_UNIQUE_MIN_WORDS,
 } from '../scripts/askMutqin/index.js'
 import { resolveMicDeniedGuidance } from '../scripts/audio/recordingResilience.js'
 
@@ -185,6 +253,8 @@ const EMPTY_COMMAND = () => ({
   repetitions: null,
   autoplay: false,
 })
+
+const EMPTY_AID = () => ({ kind: 'translation', text: '', html: '', dir: 'ltr', reference: '', sections: [] })
 
 /** Wait this long after the last new heard text before locking a match. */
 const ASK_MUTQIN_RECITATION_PAUSE_MS = 1000
@@ -214,7 +284,6 @@ export default {
       validatedRange: null,
       errorMessage: '',
       recoverableState: ASK_MUTQIN_STATES.INTRO,
-      rangeEndDraft: 1,
       interpreting: false,
       interpretKey: '',
       voice: null,
@@ -223,8 +292,14 @@ export default {
       settleTimer: null,
       pendingMatchText: '',
       lastHeardForPause: '',
+      clearedTranscript: '',
       speechActive: false,
       speechIdleTimer: null,
+      aidKind: ASK_MUTQIN_AID_KINDS[0],
+      aidContent: EMPTY_AID(),
+      aidLoading: false,
+      aidError: '',
+      aidRequestKey: '',
     }
   },
   computed: {
@@ -238,16 +313,17 @@ export default {
       return [
         ASK_MUTQIN_STATES.RECITING,
         ASK_MUTQIN_STATES.MATCHING,
-        ASK_MUTQIN_STATES.FOUND,
-        ASK_MUTQIN_STATES.LISTENING_COMMAND,
         ASK_MUTQIN_STATES.AMBIGUOUS,
       ].includes(this.state)
     },
     recordingLabel() {
-      if (this.state === ASK_MUTQIN_STATES.LISTENING_COMMAND || this.state === ASK_MUTQIN_STATES.FOUND) {
-        return this.t('memorisation.askMutqin.recordingListening')
-      }
       return this.t('memorisation.askMutqin.recordingOn')
+    },
+    aidOptions() {
+      return [
+        { kind: 'translation', label: this.t('memorisation.reading.translation') },
+        { kind: 'transliteration', label: this.t('memorisation.reading.transliteration') },
+      ]
     },
     ayahPanelLabel() {
       if (this.match) return this.t('memorisation.askMutqin.matchedLabel')
@@ -261,6 +337,13 @@ export default {
     panelArabic() {
       if (this.match?.arabic) return this.match.arabic
       return this.streamingText
+    },
+    heardWordTotal() {
+      const streamed = this.streamingText.split(/\s+/).filter(Boolean).length
+      return Math.max(heardWordCount(this.heard), streamed)
+    },
+    showHeardSpinner() {
+      return this.isListening && !this.match && this.heardWordTotal >= ASK_MUTQIN_MIN_WORDS
     },
     matchMeta() {
       if (!this.match) return ''
@@ -307,9 +390,6 @@ export default {
       ].filter(Boolean).join(' · ')
       return { range, settings }
     },
-    maxAyah() {
-      return this.match ? askMutqinSurahAyahCount(this.match.surah) : 286
-    },
     ayahMark() {
       const ayah = Number(this.match?.ayah || 0)
       if (!ayah || !this.match?.arabic) return ''
@@ -343,8 +423,10 @@ export default {
     },
     match(next) {
       if (next) {
-        this.rangeEndDraft = next.ayah
         this.$nextTick(() => this.resetAyahScroll())
+        this.loadSelectedAid()
+      } else {
+        this.resetAidPanel()
       }
     },
   },
@@ -370,6 +452,43 @@ export default {
       if (!stage) return
       stage.scrollTop = 0
     },
+    resetAidPanel() {
+      this.aidContent = EMPTY_AID()
+      this.aidLoading = false
+      this.aidError = ''
+      this.aidRequestKey = ''
+    },
+    selectAid(kind) {
+      const next = ASK_MUTQIN_AID_KINDS.includes(kind) ? kind : 'translation'
+      if (this.aidKind === next && (this.aidContent.text || this.aidContent.html || this.aidContent.sections?.length || this.aidLoading)) {
+        return
+      }
+      this.aidKind = next
+      this.loadSelectedAid()
+    },
+    async loadSelectedAid() {
+      if (!this.match) {
+        this.resetAidPanel()
+        return
+      }
+      const kind = ASK_MUTQIN_AID_KINDS.includes(this.aidKind) ? this.aidKind : 'translation'
+      this.aidKind = kind
+      const requestKey = `${kind}:${this.match.surah}:${this.match.ayah}`
+      this.aidRequestKey = requestKey
+      this.aidLoading = true
+      this.aidError = ''
+      try {
+        const content = await loadAskMutqinAyahAid(kind, this.match.surah, this.match.ayah)
+        if (this.aidRequestKey !== requestKey) return
+        this.aidContent = content
+      } catch {
+        if (this.aidRequestKey !== requestKey) return
+        this.aidContent = EMPTY_AID()
+        this.aidError = this.t('memorisation.askMutqin.aidError')
+      } finally {
+        if (this.aidRequestKey === requestKey) this.aidLoading = false
+      }
+    },
     resetSession() {
       this.teardown({ keepLock: true })
       this.state = ASK_MUTQIN_STATES.INTRO
@@ -387,7 +506,9 @@ export default {
       this.interpretKey = ''
       this.pendingMatchText = ''
       this.lastHeardForPause = ''
-      this.rangeEndDraft = 1
+      this.clearedTranscript = ''
+      this.resetAidPanel()
+      this.aidKind = ASK_MUTQIN_AID_KINDS[0]
       this.clearSpeechIdle()
     },
     async startSession() {
@@ -415,10 +536,12 @@ export default {
       return Promise.resolve(this.voice)
     },
     onTranscript(payload) {
-      const nextHeard = appendHeardPayload(this.heard, payload)
+      const filtered = this.transcriptAfterClear(payload)
+      if (!filtered) return
+      const nextHeard = appendHeardPayload(this.heard, filtered)
       const heardText = heardStreamText(nextHeard)
-      const incoming = String(payload?.transcript || '').trim()
-      const isFinal = !!(payload?.type === 'final' || payload?.isFinal || payload?.type === 'end-of-transcript')
+      const incoming = String(filtered?.transcript || '').trim()
+      const isFinal = !!(filtered?.type === 'final' || filtered?.isFinal || filtered?.type === 'end-of-transcript')
 
       // Skip no-op Vue updates when partials repeat the same text.
       if (heardText !== this.recitationText || heardText !== heardStreamText(this.heard)) {
@@ -487,7 +610,7 @@ export default {
         heardWordCount(this.heard),
         text.split(/\s+/).filter(Boolean).length,
       )
-      if (wordTotal < ASK_MUTQIN_MIN_WORDS) return
+      if (wordTotal < ASK_MUTQIN_UNIQUE_MIN_WORDS) return
       this.applyMatch(text)
     },
     applyMatch(transcript) {
@@ -501,7 +624,7 @@ export default {
         this.pendingMatchText = ''
         this.clearSpeechIdle()
         this.state = ASK_MUTQIN_STATES.FOUND
-        this.enterCommandPhase()
+        this.stopListeningAfterMatch()
         return
       }
       if (result.status === 'ambiguous') {
@@ -512,32 +635,63 @@ export default {
         this.state = ASK_MUTQIN_STATES.RECITING
       }
     },
-    async enterCommandPhase() {
-      this.state = ASK_MUTQIN_STATES.LISTENING_COMMAND
-      try {
-        await this.voice?.setLanguage?.('en')
-      } catch (error) {
-        this.fail(error)
-      }
+    stopListeningAfterMatch() {
+      try { this.voice?.stop?.() } catch { /* ignore */ }
+      this.voice = null
     },
     clearScreen() {
+      const leftover = String(
+        this.recitationText
+        || this.liveTranscript
+        || heardStreamText(this.heard)
+        || '',
+      ).replace(/\s+/g, ' ').trim()
+      this.clearedTranscript = leftover
       this.errorMessage = ''
       this.commandText = ''
       this.interpretKey = ''
       this.validatedRange = null
       this.command = EMPTY_COMMAND()
-      if (this.match) {
-        this.liveTranscript = ''
-        this.rangeEndDraft = this.match.ayah
-        return
-      }
-      this.heard = createHeardStream()
-      this.recitationText = ''
+      this.match = null
+      this.candidates = []
       this.liveTranscript = ''
+      this.recitationText = ''
+      this.heard = createHeardStream()
       this.pendingMatchText = ''
       this.lastHeardForPause = ''
+      this.interpreting = false
+      this.resetAidPanel()
       this.clearSpeechIdle()
       this.resetAyahScroll()
+      if (this.state === ASK_MUTQIN_STATES.FOUND || this.state === ASK_MUTQIN_STATES.LISTENING_COMMAND) {
+        this.state = ASK_MUTQIN_STATES.RECITING
+      }
+      this.restartListeningAfterClear()
+    },
+    transcriptAfterClear(payload) {
+      const blocked = String(this.clearedTranscript || '').trim()
+      if (!blocked) return payload
+      const incoming = String(payload?.transcript || '').replace(/\s+/g, ' ').trim()
+      if (!incoming || incoming === blocked || blocked.startsWith(incoming)) return null
+      if (incoming.startsWith(blocked)) {
+        const suffix = incoming.slice(blocked.length).trim()
+        this.clearedTranscript = ''
+        if (!suffix) return null
+        return { ...payload, transcript: suffix, words: suffix.split(/\s+/).filter(Boolean) }
+      }
+      this.clearedTranscript = ''
+      return payload
+    },
+    async restartListeningAfterClear() {
+      if (!this.voice && !this.isListening) return
+      try {
+        try { this.voice?.stop?.() } catch { /* ignore */ }
+        this.voice = null
+        this.state = ASK_MUTQIN_STATES.RECITING
+        await this.ensureVoice().then((voice) => voice.start('ar'))
+      } catch (error) {
+        this.fail(error)
+      }
     },
     async retryRecording() {
       this.errorMessage = ''
@@ -554,7 +708,8 @@ export default {
       this.interpreting = false
       this.pendingMatchText = ''
       this.lastHeardForPause = ''
-      this.rangeEndDraft = 1
+      this.resetAidPanel()
+      this.aidKind = ASK_MUTQIN_AID_KINDS[0]
       this.resetAyahScroll()
       try {
         try { this.voice?.stop?.() } catch { /* ignore */ }
@@ -593,7 +748,6 @@ export default {
         }
         this.command = { ...this.command, ...result.command }
         this.validatedRange = result.range
-        if (result.range?.ayah_end) this.rangeEndDraft = result.range.ayah_end
         this.errorMessage = ''
         if (this.canOpenAutomatically(result.command)) {
           this.markReadyAndOpen()
@@ -638,26 +792,6 @@ export default {
       }
       this.markReadyAndOpen()
     },
-    confirmChosenRange() {
-      if (!this.match) return
-      const range = resolveAskMutqinRange({
-        surah: this.match.surah,
-        ayahStart: this.match.ayah,
-        untilAyah: this.rangeEndDraft,
-      })
-      if (!range.ok) {
-        this.errorMessage = this.t('memorisation.askMutqin.invalidCommand')
-        return
-      }
-      this.command = { ...this.command, until_ayah: range.ayahEnd, intent: 'open' }
-      this.validatedRange = {
-        surah: range.surah,
-        ayah_start: range.ayahStart,
-        ayah_end: range.ayahEnd,
-        open_ended: false,
-      }
-      this.markReadyAndOpen()
-    },
     markReadyAndOpen() {
       this.state = ASK_MUTQIN_STATES.READY
       if (this.openTimer) window.clearTimeout(this.openTimer)
@@ -683,12 +817,7 @@ export default {
     async retryFromError() {
       this.errorMessage = ''
       if (this.match) {
-        this.state = ASK_MUTQIN_STATES.LISTENING_COMMAND
-        try {
-          await this.ensureVoice().then((voice) => voice.start('en'))
-        } catch (error) {
-          this.fail(error)
-        }
+        this.state = ASK_MUTQIN_STATES.FOUND
         return
       }
       this.resetSession()

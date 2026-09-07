@@ -142,8 +142,8 @@ class QuranProxyController extends Controller
             return null;
         }
 
-        // Allow surah/ayah/edition/quran/verses paths and comma-separated editions.
-        if (! preg_match('/^[A-Za-z0-9._\\/\\-,]+$/', $path)) {
+        // Allow surah/ayah/edition paths, comma-separated editions, and verse keys (2:255).
+        if (! preg_match('/^[A-Za-z0-9._\\/\\-,:]+$/', $path)) {
             return null;
         }
 

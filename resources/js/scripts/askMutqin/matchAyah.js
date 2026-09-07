@@ -31,27 +31,46 @@ export function stripLeadingBasmalaTokens(words = []) {
   return isBasmala ? list.slice(BASMALA_WORDS.length) : list
 }
 
+function countOrderedMatches(phrase, expected, start) {
+  const { matchedIndexes } = matchSequentialTokens({
+    expectedTokens: expected.slice(start, start + phrase.length + 5),
+    heardTokens: phrase,
+    windowSize: Math.min(8, Math.max(4, phrase.length + 2)),
+    threshold: ASK_MUTQIN_TOKEN_THRESHOLD,
+  })
+  return matchedIndexes.length
+}
+
+function alignPhrase(heard, expected) {
+  let bestScore = 0
+  let bestMatched = 0
+  if (!heard.length || !expected.length) return { score: 0, matched: 0 }
+
+  const attempts = [{ phrase: heard, skipped: 0 }]
+  if (heard.length >= 3) attempts.push({ phrase: heard.slice(1), skipped: 1 })
+
+  for (const { phrase, skipped } of attempts) {
+    if (phrase.length < 2) continue
+    for (let start = 0; start < expected.length; start += 1) {
+      if (!tokensMatch(phrase[0], expected[start], ASK_MUTQIN_TOKEN_THRESHOLD)) continue
+      const matched = countOrderedMatches(phrase, expected, start)
+      if (matched < 2) continue
+      const coverage = matched / heard.length
+      const complete = matched === phrase.length && skipped === 0
+      const score = Math.max(0, Math.min(1, coverage + (complete ? 0.12 : 0) - (skipped ? 0.08 : 0)))
+      if (matched > bestMatched || (matched === bestMatched && score > bestScore)) {
+        bestMatched = matched
+        bestScore = score
+      }
+    }
+  }
+  return { score: bestScore, matched: bestMatched }
+}
+
 export function scoreAyahPrefix(heardWords, ayahWords) {
   const heard = Array.isArray(heardWords) ? heardWords.filter(Boolean) : []
   const expected = Array.isArray(ayahWords) ? ayahWords.filter(Boolean) : []
-  if (!heard.length || !expected.length) return 0
-
-  const window = Math.min(6, Math.max(3, heard.length + 2))
-  const { matchedIndexes } = matchSequentialTokens({
-    expectedTokens: expected.slice(0, heard.length + 4),
-    heardTokens: heard,
-    windowSize: window,
-    threshold: ASK_MUTQIN_TOKEN_THRESHOLD,
-  })
-  if (!matchedIndexes.length) return 0
-
-  const firstHeardMatches = tokensMatch(heard[0], expected[0], ASK_MUTQIN_TOKEN_THRESHOLD)
-  const secondHeardMatches = heard.length > 1 && expected.length > 1
-    && tokensMatch(heard[1], expected[1], ASK_MUTQIN_TOKEN_THRESHOLD)
-  const coverage = matchedIndexes.length / heard.length
-  const prefixBonus = (firstHeardMatches ? 0.14 : 0) + (secondHeardMatches ? 0.1 : 0)
-  const startPenalty = matchedIndexes[0] === 0 ? 0 : 0.04
-  return Math.max(0, Math.min(1, coverage + prefixBonus - startPenalty))
+  return alignPhrase(heard, expected).score
 }
 
 function rankCandidates(index, heardWords, surahFilter) {
@@ -59,23 +78,24 @@ function rankCandidates(index, heardWords, surahFilter) {
     ? index.filter((item) => Number(item.surah) === Number(surahFilter))
     : index
 
-  const first = heardWords[0]
+  const anchors = heardWords.slice(0, 2)
   const ranked = []
   for (const item of scoped) {
     const words = Array.isArray(item.words) ? item.words : []
     if (!words.length) continue
-    // Cheap reject before the sequential scorer — keeps live matching responsive.
-    if (first && !tokensMatch(first, words[0], Math.min(0.45, ASK_MUTQIN_TOKEN_THRESHOLD))) continue
-    const score = scoreAyahPrefix(heardWords, words)
-    if (score < 0.22) continue
-    ranked.push({ ...item, score })
+    // The recited span may begin on any word, and the first heard token may be a false start.
+    const anchored = anchors.some((token) => words.some((word) => tokensMatch(token, word, 0.45)))
+    if (anchors.length && !anchored) continue
+    const aligned = alignPhrase(heardWords, words)
+    if (aligned.score < 0.22 || aligned.matched < 2) continue
+    ranked.push({ ...item, score: aligned.score, matched: aligned.matched })
   }
-  ranked.sort((a, b) => b.score - a.score || a.surah - b.surah || a.ayah - b.ayah)
+  ranked.sort((a, b) => (b.matched - a.matched) || (b.score - a.score) || a.surah - b.surah || a.ayah - b.ayah)
   return ranked.slice(0, 8)
 }
 
 /**
- * Progressive prefix match. Prefer a confident unique hit after 3 words.
+ * Progressive span match. A phrase may start at any word in the ayah.
  * @returns {{ status: 'insufficient'|'ambiguous'|'matched', match?: object, candidates?: object[] }}
  */
 export function matchHeardAyahPrefix(index, transcript, { surah = null } = {}) {
@@ -91,8 +111,12 @@ export function matchHeardAyahPrefix(index, transcript, { surah = null } = {}) {
   const top = ranked[0]
   const runnerUp = ranked[1]
   const uniqueTop = !runnerUp || (top.score - runnerUp.score) >= ASK_MUTQIN_AMBIGUOUS_GAP
+    || (top.matched || 0) > (runnerUp?.matched || 0)
   const uniqueExact = ranked.filter((item) => item.score >= ASK_MUTQIN_UNIQUE_SCORE).length === 1
   const strongEnough = top.score >= ASK_MUTQIN_STRONG_SCORE
+  const spanWins = (top.matched || 0) >= 2
+    && (top.matched || 0) > (runnerUp?.matched || 0)
+    && top.score >= 0.5
 
   // Two words only when clearly unique — never guess a common prefix.
   const uniqueEarly = heard.length >= ASK_MUTQIN_UNIQUE_MIN_WORDS
@@ -105,9 +129,10 @@ export function matchHeardAyahPrefix(index, transcript, { surah = null } = {}) {
     uniqueTop
     || top.score >= 0.55
     || (top.score - (runnerUp?.score || 0)) >= 0.08
+    || spanWins
   )
 
-  if (uniqueEarly || threeWordHit) {
+  if (uniqueEarly || threeWordHit || spanWins) {
     return { status: 'matched', match: top, candidates: ranked }
   }
 

@@ -19,6 +19,7 @@ export {
   stripLeadingBasmalaTokens,
   scoreAyahPrefix,
   ASK_MUTQIN_MIN_WORDS,
+  ASK_MUTQIN_UNIQUE_MIN_WORDS,
 } from './matchAyah.js'
 export {
   loadAskMutqinMatchingIndex,
@@ -34,3 +35,9 @@ export {
 } from './heardStream.js'
 export { createAskMutqinVoiceSession } from './voiceSession.js'
 export { interpretAskMutqinCommand } from './interpretClient.js'
+export {
+  ASK_MUTQIN_AID_KINDS,
+  ASK_MUTQIN_TAFSEER_EDITION,
+  ASK_MUTQIN_TAFSEER_EDITIONS,
+  loadAskMutqinAyahAid,
+} from './ayahAids.js'

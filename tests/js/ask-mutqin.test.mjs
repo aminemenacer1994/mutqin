@@ -50,11 +50,21 @@ assert.match(modal, /ask-mutqin-recording/, 'recording indicator is shown while 
 assert.doesNotMatch(modal, /transcriptPhase|ask-mutqin-results/, 'legacy phase/result chrome is removed')
 assert.match(modal, /matchMeta/, 'matched ayah shows surah · ayah in the panel bar')
 assert.match(modal, /quranFontFamily/, 'modal uses the workspace Qur’an font')
-assert.match(modal, /askMutqin.tipShort/, 'short tip copy lives on the listening screen')
+assert.match(modal, /askMutqin.featureBrief/, 'listening screen briefly explains the feature')
+assert.doesNotMatch(modal, /stepTextSize|increaseText|textExpanded|expandText/, 'font size and expand tools are removed')
 assert.doesNotMatch(modal, /askMutqin.searchIn|v-model.number="searchSurah"/, 'no surah search dropdown')
 assert.doesNotMatch(modal, /ask-mutqin-examples/, 'examples are not a stacked list')
-assert.match(modal, /ask-mutqin-actions|ask-mutqin-range/, 'open ayah / range actions are compact')
-assert.match(modal, /openActionsHint/, 'open actions include a short hint')
+assert.match(modal, /ask-mutqin-actions/, 'open ayah action is present')
+assert.doesNotMatch(modal, /ask-mutqin-range|openActionsHint|untilAyah/, 'manual until-ayah range UI is removed')
+assert.match(modal, /ask-mutqin-aid/, 'matched ayah shows a reading-aid panel')
+assert.match(modal, /ask-mutqin-aid__grid|aidOptions/, 'reading aids use a tab layout')
+assert.match(modal, /selectAid|loadAskMutqinAyahAid/, 'reading aids load when a tab is selected')
+assert.match(modal, /is-active/, 'selected reading aid shows an active state')
+assert.match(modal, /stopListeningAfterMatch/, 'microphone stops once an ayah is matched')
+assert.doesNotMatch(modal, /enterCommandPhase|setLanguage\?\.\('en'\)/, 'matched ayah no longer keeps the mic for English commands')
+assert.match(modal, /translation|transliteration/, 'aid tabs include translation and transliteration')
+assert.doesNotMatch(modal, /kind: 'tajweed'/, 'tajweed tab is removed')
+assert.doesNotMatch(modal, /kind: 'tafseer'/, 'tafseer tab is removed')
 assert.match(modal, /clearScreen|askMutqin.clearScreen/, 'clear action is available')
 assert.match(modal, /retryRecording|askMutqin.retryRecording/, 'retry recording action is available')
 assert.match(modal, /resetAyahScroll/, 'ayah stage resets to the start of the verse')
@@ -62,9 +72,24 @@ assert.match(modalCss, /z-index: 12050/, 'Ask Mutqin overlays the navbar')
 assert.match(modalCss, /position: fixed !important/, 'Ask Mutqin overlay stays fixed')
 assert.match(modalCss, /ask-mutqin-ayah__stage/, 'ayah text sits in a padded stage')
 assert.match(modalCss, /overflow-y: auto/, 'ayah stage scrolls for long text')
-assert.match(modalCss, /ask-mutqin-actions|ask-mutqin-range/, 'bottom open actions are compact')
+assert.match(modalCss, /ask-mutqin-actions/, 'bottom open action is compact')
+assert.match(modalCss, /ask-mutqin-aid__box/, 'reading aid has its own text box')
+assert.match(modalCss, /ask-mutqin-aid__grid/, 'reading aids sit in a two-column grid')
+assert.match(modalCss, /grid-column: span 6/, 'open ayah takes half the footer row')
+assert.match(modalCss, /ask-mutqin-aid__tab\.is-active/, 'active aid tab has distinct styles')
+assert.match(modalCss, /ask-mutqin-aid-fade|ask-mutqin-match-in/, 'subtle aid/match animations exist')
+assert.doesNotMatch(modalCss, /ask-mutqin-range|ask-mutqin-actions__hint|ask-mutqin-tip|ask-mutqin-aid__select/, 'legacy tip/range/select chrome is removed')
+
+const ayahAids = readFileSync(join(root, 'resources/js/scripts/askMutqin/ayahAids.js'), 'utf8')
+assert.match(ayahAids, /ASK_MUTQIN_AID_KINDS/, 'aid kinds are exported')
+assert.doesNotMatch(ayahAids, /getAyahTafsir|169|Ibn Kathir/, 'English tafsir is not loaded')
+assert.match(ayahAids, /ar\.jalalayn/, 'Arabic tafsir edition is configured')
+assert.match(ayahAids, /formatTafsirParagraphs/, 'tafsir text is split into readable paragraphs')
+assert.doesNotMatch(ayahAids, /quran-tajweed|tajweed/, 'tajweed aid is not loaded')
+assert.match(ayahAids, /loadAskMutqinAyahAid/, 'ayah aid loader exists')
 assert.match(modalCss, /ask-mutqin-recording-pulse/, 'recording pulse animation exists')
-assert.match(modalCss, /padding-inline: 0\.8rem/, 'mobile side padding is tightened')
+assert.match(modalCss, /padding-inline: 0\.75rem/, 'mobile side padding is tightened')
+assert.match(modalCss, /ask-mutqin-aid__reference/, 'reading aid shows a source line')
 assert.match(modalCss, /session-progress-rail/, 'session progress hides while Ask Mutqin is open')
 assert.match(modalCss, /Amiri Quran|UthmanicHafs/, 'Islamic Qur’anic font stack is used')
 assert.match(memorisation, /askMutqin\.ctaShort/, 'Ask Mutqin CTA uses a short label')
@@ -137,6 +162,13 @@ const index = buildIndex([
       { numberInSurah: 2, text: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ' },
     ],
   },
+  {
+    number: 2,
+    englishName: 'Al-Baqara',
+    ayahs: [
+      { numberInSurah: 255, text: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ' },
+    ],
+  },
 ])
 
 const unique = matchHeardAyahPrefix(index, 'تبارك الذي بيده')
@@ -150,6 +182,16 @@ assert.notEqual(ambiguous.status, 'matched')
 const threeWords = matchHeardAyahPrefix(index, 'الحمد لله رب')
 assert.equal(threeWords.status, 'matched')
 assert.equal(threeWords.match.ayah, 2)
+
+const midAyah = matchHeardAyahPrefix(index, 'بيده الملك')
+assert.equal(midAyah.status, 'matched', 'a phrase from the middle of an ayah still matches')
+assert.equal(midAyah.match.surah, 67)
+assert.equal(midAyah.match.ayah, 1)
+
+const laterSpan = matchHeardAyahPrefix(index, 'كرسيه السماوات والارض')
+assert.equal(laterSpan.status, 'matched', 'a phrase from later in a long ayah still matches')
+assert.equal(laterSpan.match.surah, 2)
+assert.equal(laterSpan.match.ayah, 255)
 
 let stream = createHeardStream()
 for (const word of ['تبارك', 'الذي', 'بيده']) {

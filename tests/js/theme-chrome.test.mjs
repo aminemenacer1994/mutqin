@@ -93,6 +93,11 @@ assert.match(
 )
 assert.match(appBlade, /\.app-navbar \.navbar-toggler \{[\s\S]*?appearance:\s*none/)
 assert.match(appBlade, /\.app-navbar \.navbar-toggler \{[\s\S]*?background:\s*transparent/)
+assert.match(
+  appBlade,
+  /@media \(min-width: 992px\) \{[\s\S]*?\.app-navbar \.navbar-toggler \{[\s\S]*?display:\s*none !important/,
+)
+assert.match(appBlade, /class="navbar-toggler d-lg-none"/)
 assert.doesNotMatch(appBlade, /\.navbar-toggler \{[\s\S]*?isolation:\s*isolate/)
 assert.doesNotMatch(appBlade, /html\[data-theme="dark"\] \.app-navbar,\s*\[data-theme="dark"\] \.app-navbar \{\s*background:\s*#000000/)
 assert.doesNotMatch(appScss, /--bs-offcanvas-bg:\s*#000000/)

@@ -28114,6 +28114,8 @@ export default {
       return request
     },
     async requestTranscriptionAccessToken() {
+      // Ensure Sanctum XSRF cookie exists before the first POST (meta alone can be stale).
+      await this.refreshCsrfCookie()
       const postToken = () => axios.post('/memorisation/transcription-token', null, {
         withCredentials: true,
         headers: this.buildCsrfRequestHeaders(),
