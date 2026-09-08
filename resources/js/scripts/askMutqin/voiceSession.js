@@ -85,8 +85,8 @@ export function createAskMutqinVoiceSession(options = {}) {
       language,
       getAccessToken: getToken,
       getSampleRate: () => Number(bridge?.sampleRate || 16000),
-      maxDelaySeconds: Math.max(delays.maxDelaySeconds, 0.9),
-      endOfUtteranceSeconds: Math.max(delays.endOfUtteranceSeconds, 0.85),
+      maxDelaySeconds: Math.max(delays.maxDelaySeconds, 1.6),
+      endOfUtteranceSeconds: Math.max(delays.endOfUtteranceSeconds, 1.8),
       handshakeTimeoutMs: 4500,
     })
     provider.onTranscript(onTranscript)

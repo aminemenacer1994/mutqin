@@ -265,11 +265,9 @@ includesAll('welcome back continue session flow', [
 }
 
 includesAll('quran font picker access', [
-  /toggleFontDropdown/,
   /selectFont\(fontValue\)/,
-  /top-card-font-wrap/,
-  /fontDropdownOpen/,
-  /top-card-font-menu/,
+  /top-card-menu-font/,
+  /quranFontOptions/,
   /clearMushafAyahHtmlCache/,
 ])
 

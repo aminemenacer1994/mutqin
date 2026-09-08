@@ -5942,20 +5942,20 @@ body.has-navbar .tools-top {
 }
 
 .verse-arabic {
-  /* Force Arabic ayah text to be comfortably large by default. */
+  /* Keep stacked Arabic readable without dwarfing the translation. */
   --verse-font-percent: 120;
-  --verse-font-size: clamp(2.2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 4rem);
+  --verse-font-size: clamp(1.28rem, calc(var(--verse-font-percent, 120) * 0.0125rem), 1.95rem);
   font-family: var(--quran-font, var(--font-ar));
   /* If we scale UI, apply it to Arabic too. */
   font-size: calc(var(--verse-font-size) * var(--ui-scale, 1) * var(--text-scale, 1));
-  line-height: 1.85;
+  line-height: 1.7;
   text-align: right;
   direction: rtl;
   unicode-bidi: isolate;
   background: transparent;
-  padding: 14px 16px;
+  padding: 8px 8px 4px;
   border-radius: 16px;
-  margin: 10px 0;
+  margin: 6px 0 4px;
   display: block;
   /* anywhere fractures Arabic joining / shows stray tatweel dashes */
   overflow-wrap: normal;
@@ -7151,19 +7151,28 @@ html {
 }
 
 .verse-arabic {
-  /* Force Arabic ayah text to be comfortably large by default. */
+  /* Keep stacked Arabic readable without dwarfing the translation. */
   --verse-font-percent: 120;
-  --verse-font-size: clamp(2.2rem, calc(var(--verse-font-percent, 120) * 0.02rem), 4rem);
+  --verse-font-size: clamp(1.28rem, calc(var(--verse-font-percent, 120) * 0.0125rem), 1.95rem);
   font-family: var(--font-ar);
   font-size: calc(var(--verse-font-size) * var(--ui-scale, 1) * var(--text-scale, 1));
-  line-height: 2.1;
+  line-height: 1.75;
   text-align: right;
   direction: rtl;
   unicode-bidi: isolate;
   background: transparent;
-  padding: 20px;
+  padding: 8px 8px 4px;
   border-radius: 16px;
-  margin: 12px 0;
+  margin: 6px 0 4px;
+}
+
+@media (max-width: 640px) {
+  .verse-arabic {
+    --verse-font-size: clamp(1.18rem, calc(var(--verse-font-percent, 120) * 0.011rem), 1.7rem);
+    line-height: 1.65;
+    padding: 4px 2px 2px;
+    margin: 2px 0;
+  }
 }
 
 .verse-arabic word {
@@ -10546,9 +10555,9 @@ html {
 }
 
 .verse-translation {
-  font-size: calc(0.94rem * var(--en-scale, 1));
+  font-size: calc(1.2rem * var(--en-scale, 1));
   color: #1c1917;
-  line-height: 1.55;
+  line-height: 1.65;
   display: block;
   opacity: 1;
   font-family: 'Outfit', sans-serif;
@@ -10567,7 +10576,7 @@ html {
 
 .verse-aid-source {
   margin: 0.28rem 0 0;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   font-weight: 500;
   line-height: 1.35;
   color: var(--text-muted, #64748b);
@@ -18958,8 +18967,8 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .verse-translation {
   color: var(--text-secondary);
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: calc(1.2rem * var(--en-scale, 1));
+  line-height: 1.65;
 }
 
 .toggle-chip {
@@ -22065,6 +22074,15 @@ button:active {
   background: color-mix(in srgb, var(--border) 82%, transparent);
 }
 
+.top-card-menu-label {
+  margin: 0.15rem 0.35rem 0.05rem;
+  color: var(--text-muted, #64748b);
+  font-size: 0.68rem;
+  font-weight: 720;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .top-card-menu-action {
   width: 100%;
   min-height: 42px;
@@ -22459,6 +22477,11 @@ never mint green */
   direction: ltr;
   text-align: left;
   unicode-bidi: isolate;
+}
+
+.verse-translation {
+  font-size: calc(1.2rem * var(--en-scale, 1));
+  line-height: 1.65;
 }
 
 .memorisation-checker-modal .recitation-word-chip.word-incorrect,
@@ -53037,12 +53060,12 @@ contained page (top session card untouched) —— */
 .main.mushaf-mode-active .madani-word--unicode,
 .main.mushaf-mode-active .madani-word--fallback {
     display: inline-block !important;
-    font-size: calc(clamp(1.45rem, 2.2vw, 2.1rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(0.92rem, 1.15vw, 1.18rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-inline: 0.015em 0.01em !important;
     padding-inline: 0 !important;
     letter-spacing: 0 !important;
     word-spacing: 0 !important;
-    line-height: 1.75 !important;
+    line-height: 1.52 !important;
     white-space: nowrap !important;
     width: auto !important;
     max-width: 100% !important;
@@ -53050,7 +53073,7 @@ contained page (top session card untouched) —— */
   }
 
   .main.mushaf-mode-active .madani-word--glyph {
-    font-size: calc(clamp(1.4rem, 2.15vw, 2.05rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(0.88rem, 1.05vw, 1.08rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-inline: 0 !important;
     padding-inline: 0 !important;
     letter-spacing: 0 !important;
@@ -53222,7 +53245,7 @@ contained page (top session card untouched) —— */
   word-spacing: 0.02em !important;
   opacity: 1 !important;
   filter: none !important;
-  font-size: calc(clamp(1.45rem, 2.8vw, 2.35rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
+  font-size: calc(clamp(0.92rem, 1.15vw, 1.18rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
 }
 
 .main.mushaf-mode-active .madani-surah-name {
@@ -54482,7 +54505,7 @@ compact readable type (never clip) —— */
     text-align: center !important;
     text-align-last: center !important;
     text-justify: none !important;
-    line-height: 1.75 !important;
+    line-height: 1.52 !important;
   }
 
   .app .main.mushaf-mode-active .madani-line--ayah,
@@ -54520,13 +54543,13 @@ compact readable type (never clip) —— */
 .main.mushaf-mode-active .madani-word--unicode,
 .main.mushaf-mode-active .madani-word--fallback {
     display: inline-block !important;
-    font-size: calc(clamp(1.45rem, 2.2vw, 2.1rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(0.92rem, 1.15vw, 1.18rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-block: 0 !important;
-    margin-inline: 0.12em 0.04em !important;
+    margin-inline: 0.08em 0.02em !important;
     padding-inline: 0 !important;
     letter-spacing: normal !important;
     word-spacing: normal !important;
-    line-height: 1.75 !important;
+    line-height: 1.52 !important;
     white-space: nowrap !important;
     width: auto !important;
     max-width: 100% !important;
@@ -54535,7 +54558,7 @@ compact readable type (never clip) —— */
 
   .app .main.mushaf-mode-active .madani-word--glyph,
 .main.mushaf-mode-active .madani-word--glyph {
-    font-size: calc(clamp(1.5rem, 2.3vw, 2.2rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(0.88rem, 1.05vw, 1.08rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-inline: 0.05em 0.02em !important;
     padding-inline: 0 !important;
   }
@@ -54547,7 +54570,7 @@ compact readable type (never clip) —— */
 
   .app .main.mushaf-mode-active .madani-surah-name,
 .main.mushaf-mode-active .madani-surah-name {
-    font-size: calc(clamp(1.5rem, 2.2vw, 2.15rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(0.98rem, 1.2vw, 1.22rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-inline: 0 !important;
   }
 }
@@ -54568,7 +54591,7 @@ compact readable type (never clip) —— */
   max-width: 100% !important;
   overflow-x: hidden !important;
   box-sizing: border-box !important;
-  line-height: 1.68 !important;
+  line-height: 1.52 !important;
   word-spacing: normal !important;
   letter-spacing: normal !important;
 }
@@ -54787,7 +54810,7 @@ compact readable type (never clip) —— */
   overflow-wrap: normal !important;
   line-height: 1.55 !important;
   font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
-  font-size: calc(clamp(1.35rem, 2.6vw, 2.1rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+  font-size: calc(clamp(0.95rem, 1.2vw, 1.2rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
   -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
 }

@@ -542,34 +542,6 @@
                 <i class="bi" :class="currentReadingViewModeIcon" aria-hidden="true"></i>
               </button>
             </div>
-            <div class="font-dropdown workspace-font-dropdown top-card-font-wrap">
-              <button
-                class="font-dropdown-trigger top-card-icon-control"
-                type="button"
-                @click.stop="toggleFontDropdown"
-                :title="t('memorisation.a11y.changeQuranFont')"
-                :aria-label="t('memorisation.a11y.changeQuranFont')"
-                :aria-expanded="fontDropdownOpen ? 'true' : 'false'"
-              >
-                <i class="bi bi-fonts" aria-hidden="true"></i>
-              </button>
-              <transition name="dropdown-fade">
-                <div v-if="fontDropdownOpen" class="font-dropdown-menu top-card-font-menu" @click.stop>
-                  <button
-                    v-for="font in quranFontOptions"
-                    :key="font.value"
-                    type="button"
-                    class="font-option"
-                    :class="{ active: quranFont === font.value }"
-                    @click="selectFont(font.value)"
-                  >
-                    <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                    <span>{{ font.label }}</span>
-                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </transition>
-            </div>
             <div v-if="!isPostSessionChoiceVisible" class="top-card-controls-wrap">
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
@@ -669,6 +641,21 @@
                     <i class="bi bi-palette" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.tajweed') }}</span>
                     <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <div class="top-card-menu-divider" aria-hidden="true"></div>
+                  <p class="top-card-menu-label">{{ t('memorisation.a11y.changeQuranFont') }}</p>
+                  <button
+                    v-for="font in quranFontOptions"
+                    :key="font.value"
+                    type="button"
+                    class="top-card-menu-toggle top-card-menu-font"
+                    :class="{ active: quranFont === font.value }"
+                    :aria-pressed="quranFont === font.value ? 'true' : 'false'"
+                    @click.stop="selectFont(font.value)"
+                  >
+                    <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
+                    <span>{{ font.label }}</span>
+                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <div class="top-card-menu-divider" aria-hidden="true"></div>
                   <a

@@ -89,6 +89,55 @@
             </section>
 
             <section
+              v-if="match && surahAyahMax"
+              class="ask-mutqin-span"
+              :aria-label="t('memorisation.askMutqin.chooseRange')"
+            >
+              <div class="ask-mutqin-span__head">
+                <p class="ask-mutqin-span__title">{{ t('memorisation.askMutqin.chooseRange') }}</p>
+                <p class="ask-mutqin-span__meta">{{ rangeSummary }}</p>
+              </div>
+              <div class="ask-mutqin-span__row">
+                <span class="ask-mutqin-span__value" :aria-label="t('memorisation.askMutqin.rangeFrom')">{{ rangeStart }}</span>
+                <span class="ask-mutqin-span__dash" aria-hidden="true">–</span>
+                <div class="ask-mutqin-span__stepper">
+                  <button
+                    type="button"
+                    class="ask-mutqin-span__step"
+                    :disabled="rangeEnd <= rangeStart"
+                    :aria-label="t('memorisation.askMutqin.rangeEarlier')"
+                    @click="stepRangeEnd(-1)"
+                  >−</button>
+                  <select
+                    id="askMutqinRangeEnd"
+                    class="ask-mutqin-span__select"
+                    :aria-label="t('memorisation.askMutqin.rangeTo')"
+                    :value="rangeEnd"
+                    @change="setRangeEnd($event.target.value)"
+                  >
+                    <option v-for="ayah in rangeEndOptions" :key="ayah" :value="ayah">{{ ayah }}</option>
+                  </select>
+                  <button
+                    type="button"
+                    class="ask-mutqin-span__step"
+                    :disabled="rangeEnd >= surahAyahMax"
+                    :aria-label="t('memorisation.askMutqin.rangeLater')"
+                    @click="stepRangeEnd(1)"
+                  >+</button>
+                </div>
+                <button
+                  type="button"
+                  class="ask-mutqin-span__end"
+                  :class="{ 'is-on': rangeEnd >= surahAyahMax }"
+                  :disabled="rangeEnd >= surahAyahMax"
+                  @click="setRangeToSurahEnd"
+                >
+                  {{ t('memorisation.askMutqin.rangeEndOfSurah') }}
+                </button>
+              </div>
+            </section>
+
+            <section
               v-if="match"
               class="ask-mutqin-aid"
               :aria-label="t('memorisation.askMutqin.aidLabel')"
@@ -114,7 +163,7 @@
                   class="ask-mutqin-primary ask-mutqin-open"
                   @click="openHere"
                 >
-                  {{ t('memorisation.askMutqin.openHere') }}
+                  {{ openActionLabel }}
                 </button>
               </div>
               <Transition name="ask-mutqin-aid-fade" mode="out-in">
@@ -209,18 +258,8 @@
             >
               {{ t('common.tryAgain') }}
             </button>
-            <div v-else class="ask-mutqin-actions">
+            <div v-else-if="showSessionTools" class="ask-mutqin-actions">
               <button
-                v-if="showSessionTools"
-                type="button"
-                class="ask-mutqin-tool"
-                @click="clearScreen"
-              >
-                <i class="bi bi-eraser" aria-hidden="true"></i>
-                <span>{{ t('memorisation.askMutqin.clearScreen') }}</span>
-              </button>
-              <button
-                v-if="showSessionTools"
                 type="button"
                 class="ask-mutqin-tool"
                 @click="retryRecording"
@@ -250,6 +289,7 @@ import {
   loadAskMutqinMatchingIndex,
   loadAskMutqinAyahAid,
   matchHeardAyahPrefix,
+  askMutqinSurahAyahCount,
   resolveAskMutqinRange,
   resolveAskMutqinReciter,
   ASK_MUTQIN_MIN_WORDS,
@@ -272,8 +312,11 @@ const EMPTY_COMMAND = () => ({
 
 const EMPTY_AID = () => ({ kind: 'translation', text: '', html: '', dir: 'ltr', reference: '', sections: [] })
 
-/** Wait this long after the last new heard text before locking a match. */
-const ASK_MUTQIN_RECITATION_PAUSE_MS = 550
+/**
+ * Wait after the last new Arabic words before locking a match.
+ * Long enough for a cough, a breath, or a stutter without treating that gap as the end.
+ */
+const ASK_MUTQIN_RECITATION_PAUSE_MS = 2000
 
 export default {
   name: 'AskMutqinModal',
@@ -317,6 +360,7 @@ export default {
       aidLoading: false,
       aidError: '',
       aidRequestKey: '',
+      rangeEnd: 0,
     }
   },
   computed: {
@@ -364,8 +408,8 @@ export default {
     },
     matchMeta() {
       if (!this.match) return ''
-      const start = this.validatedRange?.ayah_start || this.match.ayah
-      const end = this.validatedRange?.ayah_end
+      const start = this.rangeStart || this.match.ayah
+      const end = Number(this.rangeEnd || start)
       const ayah = end && end !== start ? `${start}–${end}` : String(start)
       return `${this.match.surahName} · ${ayah}`
     },
@@ -380,6 +424,35 @@ export default {
       if (this.match) return this.t('memorisation.askMutqin.foundTitle')
       if (this.state === ASK_MUTQIN_STATES.AMBIGUOUS) return this.t('memorisation.askMutqin.keepRecitingTitle')
       return this.t('memorisation.askMutqin.reciteTitle')
+    },
+    rangeStart() {
+      return Number(this.match?.ayah || 0)
+    },
+    surahAyahMax() {
+      return askMutqinSurahAyahCount(this.match?.surah)
+    },
+    rangeEndOptions() {
+      const start = this.rangeStart
+      const max = this.surahAyahMax
+      if (!start || !max || start > max) return []
+      const options = []
+      for (let ayah = start; ayah <= max; ayah += 1) options.push(ayah)
+      return options
+    },
+    openActionLabel() {
+      const start = this.rangeStart
+      const end = Number(this.rangeEnd || start)
+      if (!start || !end || end <= start) return this.t('memorisation.askMutqin.openHere')
+      return this.t('memorisation.askMutqin.openRangeNamed', { start, end })
+    },
+    rangeSummary() {
+      const start = this.rangeStart
+      const end = Number(this.rangeEnd || start)
+      const count = end >= start ? end - start + 1 : 1
+      const countLabel = count === 1
+        ? this.t('memorisation.askMutqin.rangeCountOne')
+        : this.t('memorisation.askMutqin.rangeCount', { count })
+      return `${this.match?.surahName || ''} · ${countLabel}`
     },
     showFallbackActions() {
       return [
@@ -464,6 +537,12 @@ export default {
     containsArabic(text) {
       return /[\u0600-\u06FF]/.test(String(text || ''))
     },
+    arabicPauseKey(text) {
+      return String(text || '')
+        .replace(/[^\u0600-\u06FF\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    },
     toArabicIndic(value) {
       return String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)])
     },
@@ -517,6 +596,7 @@ export default {
       this.heard = createHeardStream()
       this.commandText = ''
       this.match = null
+      this.rangeEnd = 0
       this.candidates = []
       this.command = EMPTY_COMMAND()
       this.validatedRange = null
@@ -580,8 +660,10 @@ export default {
       if (!this.match) {
         if (heardText && this.index.length) {
           this.pendingMatchText = heardText
-          const pauseKey = heardText.replace(/[.\u06D4،,\s]+/g, ' ').trim()
-          if (pauseKey !== this.lastHeardForPause || isFinal) {
+          // Only new Arabic words restart the wait. Coughs, breaths, and
+          // repeated finals do not count as the end of the recitation.
+          const pauseKey = this.arabicPauseKey(heardText)
+          if (pauseKey && pauseKey !== this.lastHeardForPause) {
             this.lastHeardForPause = pauseKey
             this.markSpeechActive(ASK_MUTQIN_RECITATION_PAUSE_MS)
           }
@@ -641,6 +723,7 @@ export default {
       const result = matchHeardAyahPrefix(this.index, text)
       if (result.status === 'matched' && result.match) {
         this.match = result.match
+        this.rangeEnd = Number(result.match.ayah || 0)
         this.candidates = []
         this.pendingMatchText = ''
         this.clearSpeechIdle()
@@ -674,6 +757,7 @@ export default {
       this.validatedRange = null
       this.command = EMPTY_COMMAND()
       this.match = null
+      this.rangeEnd = 0
       this.candidates = []
       this.liveTranscript = ''
       this.recitationText = ''
@@ -718,6 +802,7 @@ export default {
       this.errorMessage = ''
       this.clearSpeechIdle()
       this.match = null
+      this.rangeEnd = 0
       this.candidates = []
       this.heard = createHeardStream()
       this.recitationText = ''
@@ -793,18 +878,41 @@ export default {
         || command.autoplay
       )
     },
+    setRangeEnd(value) {
+      const start = this.rangeStart
+      const max = this.surahAyahMax
+      const next = Number(value)
+      if (!start || !max || !Number.isFinite(next)) return
+      this.rangeEnd = Math.max(start, Math.min(max, Math.round(next)))
+    },
+    stepRangeEnd(delta) {
+      this.setRangeEnd(Number(this.rangeEnd || this.rangeStart) + Number(delta || 0))
+    },
+    setRangeToSurahEnd() {
+      if (!this.surahAyahMax) return
+      this.rangeEnd = this.surahAyahMax
+    },
     openHere() {
       if (!this.match) return
+      const start = this.rangeStart
+      const end = Number(this.rangeEnd || start)
+      const justThis = !end || end <= start
       const range = resolveAskMutqinRange({
         surah: this.match.surah,
-        ayahStart: this.match.ayah,
-        justThis: true,
+        ayahStart: start,
+        untilAyah: justThis ? null : end,
+        justThis,
       })
       if (!range.ok) {
         this.errorMessage = this.t('memorisation.askMutqin.invalidCommand')
         return
       }
-      this.command = { ...this.command, just_this: true, intent: 'open' }
+      this.command = {
+        ...this.command,
+        just_this: justThis,
+        until_ayah: justThis ? null : end,
+        intent: 'open',
+      }
       this.validatedRange = {
         surah: range.surah,
         ayah_start: range.ayahStart,

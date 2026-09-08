@@ -33,7 +33,9 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   width: min(52rem, calc(100vw - 1.1rem));
   max-width: 52rem;
   margin: 0 auto !important;
-  max-height: min(92dvh, 48rem);
+  max-height: min(92dvh, calc(100dvh - 1.25rem));
+  min-height: 0;
+  display: flex;
   transform: none !important;
 }
 
@@ -52,7 +54,9 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   --ask-display: var(--ask-ui);
   display: flex;
   flex-direction: column;
-  max-height: inherit;
+  width: 100%;
+  max-height: min(92dvh, calc(100dvh - 1.25rem));
+  min-height: 0;
   overflow: hidden;
   color: var(--ask-ink);
   background: linear-gradient(180deg, #fbf6ec 0%, var(--ask-surface) 100%);
@@ -163,12 +167,22 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   color: var(--ask-accent);
 }
 
+.ask-mutqin-header,
+.ask-mutqin-footer {
+  flex: 0 0 auto;
+}
+
 .ask-mutqin-body {
   display: grid;
+  align-content: start;
   gap: 0.75rem;
   padding: 0.2rem var(--ask-pad) 0.35rem;
-  overflow: auto;
+  flex: 1 1 auto;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .ask-mutqin-intro {
@@ -288,6 +302,143 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   font-weight: inherit;
   line-height: inherit;
   vertical-align: baseline;
+}
+
+.ask-mutqin-span {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid var(--ask-line);
+  background: color-mix(in srgb, var(--ask-chip) 88%, transparent);
+}
+
+.ask-mutqin-span__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.ask-mutqin-span__title,
+.ask-mutqin-span__meta {
+  margin: 0;
+  min-width: 0;
+}
+
+.ask-mutqin-span__title {
+  color: var(--ask-ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ask-mutqin-span__meta {
+  color: var(--ask-muted);
+  font-size: 0.64rem;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.ask-mutqin-span__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.ask-mutqin-span__dash {
+  flex: 0 0 auto;
+  color: var(--ask-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.ask-mutqin-span__value,
+.ask-mutqin-span__stepper,
+.ask-mutqin-span__end {
+  min-height: 2.2rem;
+  border-radius: 9px;
+  border: 1px solid var(--ask-line);
+  background: var(--ask-chip);
+  color: var(--ask-ink);
+  font-family: var(--ask-ui);
+}
+
+.ask-mutqin-span__value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 3.2rem;
+  width: 3.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.ask-mutqin-span__stepper {
+  display: grid;
+  grid-template-columns: 2rem 3.4rem 2rem;
+  flex: 0 0 auto;
+  width: 7.4rem;
+  overflow: hidden;
+}
+
+.ask-mutqin-span__step,
+.ask-mutqin-span__select {
+  min-height: 2.15rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.ask-mutqin-span__step {
+  cursor: pointer;
+}
+
+.ask-mutqin-span__step + .ask-mutqin-span__select,
+.ask-mutqin-span__select + .ask-mutqin-span__step {
+  box-shadow: inset 1px 0 0 var(--ask-line);
+}
+
+.ask-mutqin-span__select {
+  width: 3.4rem;
+  max-width: 3.4rem;
+  padding: 0;
+  text-align: center;
+  text-align-last: center;
+  appearance: none;
+  cursor: pointer;
+}
+
+.ask-mutqin-span__end {
+  flex: 0 0 auto;
+  padding: 0 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ask-mutqin-span__end.is-on,
+.ask-mutqin-span__end:disabled {
+  background: color-mix(in srgb, var(--ask-brown) 12%, var(--ask-chip));
+  color: var(--ask-brown);
+  border-color: color-mix(in srgb, var(--ask-brown) 35%, var(--ask-line));
+  opacity: 1;
+  cursor: default;
+}
+
+.ask-mutqin-span__step:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .ask-mutqin-aid {
@@ -539,7 +690,8 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 
 .ask-mutqin-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: stretch;
   gap: 0.4rem;
 }
 
@@ -619,18 +771,12 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 @media (min-width: 768px) {
   .ask-mutqin-actions {
     grid-template-columns: repeat(12, minmax(0, 1fr));
-  }
-
-  .ask-mutqin-actions > .ask-mutqin-primary {
-    grid-column: span 6;
+    justify-items: end;
   }
 
   .ask-mutqin-actions > .ask-mutqin-tool {
-    grid-column: span 3;
-  }
-
-  .ask-mutqin-actions:not(:has(.ask-mutqin-primary)) > .ask-mutqin-tool {
-    grid-column: span 6;
+    grid-column: 10 / span 3;
+    width: 100%;
   }
 
   .ask-mutqin-dialog {
@@ -662,12 +808,13 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   .ask-mutqin-dialog {
     width: 100%;
     max-width: none;
-    max-height: min(94dvh, calc(100dvh - 1rem));
+    max-height: calc(100dvh - 1.25rem);
   }
 
   .ask-mutqin-modal {
-    --ask-pad: 1.35rem;
+    --ask-pad: 0.85rem;
     border-radius: 16px;
+    max-height: calc(100dvh - 1.25rem);
   }
 
   .ask-mutqin-header,
@@ -691,22 +838,41 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 
   .ask-mutqin-ayah,
   .ask-mutqin-aid__box {
-    padding: 1rem 1.1rem 1.1rem;
+    padding: 0.75rem 0.8rem;
+  }
+
+  .ask-mutqin-span {
+    padding: 0.5rem 0.55rem;
+  }
+
+  .ask-mutqin-span__row {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+  }
+
+  .ask-mutqin-span__value {
+    flex-basis: 2.7rem;
+    width: 2.7rem;
+  }
+
+  .ask-mutqin-span__stepper {
+    grid-template-columns: 1.7rem 2.8rem 1.7rem;
+    width: 6.2rem;
+  }
+
+  .ask-mutqin-span__select {
+    width: 2.8rem;
+    max-width: 2.8rem;
+  }
+
+  .ask-mutqin-span__end {
+    margin-inline-start: 0;
+    padding-inline: 0.45rem;
+    font-size: 0.68rem;
   }
 
   .ask-mutqin-header h2 {
     font-size: 1.2rem;
-  }
-
-  .ask-mutqin-ayah__stage,
-  .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
-    min-height: 9.5rem;
-    max-height: min(40vh, 18rem);
-  }
-
-  .ask-mutqin-ayah__text {
-    font-size: clamp(1.22rem, 4.8vw, 1.52rem);
-    line-height: 2.05;
   }
 
   .ask-mutqin-aid__grid {
@@ -721,11 +887,16 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 
   .ask-mutqin-aid__text {
     font-size: 0.9rem;
-    line-height: 1.6;
+    line-height: 1.55;
+  }
+
+  .ask-mutqin-aid__reference {
+    font-size: 0.84rem;
   }
 
   .ask-mutqin-aid__box {
-    max-height: min(34dvh, 14rem);
+    max-height: none;
+    overflow: visible;
   }
 }
 
@@ -744,7 +915,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-aid__text {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .ask-mutqin-recording span {
@@ -807,13 +978,21 @@ html body .ask-mutqin-overlay.modal-overlay.mutqin-modal-overlay {
 html body .ask-mutqin-overlay .ask-mutqin-dialog.mutqin-modal-dialog {
   width: min(56rem, calc(100vw - 2.7rem)) !important;
   max-width: min(56rem, calc(100vw - 2.7rem)) !important;
+  max-height: min(92dvh, calc(100dvh - 1.25rem)) !important;
   min-height: 0 !important;
+  display: flex !important;
   margin-inline: auto !important;
 }
 
 html body .ask-mutqin-overlay .ask-mutqin-modal.mutqin-modal-surface {
   box-sizing: border-box !important;
-  padding: 1.35rem 1.25rem 1.3rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-height: min(92dvh, calc(100dvh - 1.25rem)) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 1.15rem 1.1rem 1rem !important;
 }
 
 html body .ask-mutqin-overlay .ask-mutqin-header,
@@ -828,18 +1007,15 @@ html body .ask-mutqin-overlay .ask-mutqin-header {
 }
 
 html body .ask-mutqin-overlay .ask-mutqin-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
   padding-block: 0.15rem 0.35rem !important;
 }
 
 html body .ask-mutqin-overlay .ask-mutqin-footer {
   padding-top: 0.7rem !important;
   padding-bottom: 0 !important;
-}
-
-html body .ask-mutqin-overlay .ask-mutqin-ayah {
-  padding: 1.05rem 1.1rem 1.15rem !important;
-}
-
-html body .ask-mutqin-overlay .ask-mutqin-ayah__stage {
-  padding: 0.85rem 0.75rem 0.95rem !important;
 }
