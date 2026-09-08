@@ -7428,6 +7428,12 @@ html {
   background: rgba(15, 12, 8, 0.35);
   backdrop-filter: blur(1px);
   z-index: 1099;
+  opacity: 0;
+  pointer-events: none;
+  touch-action: auto;
+}
+
+.tools-backdrop.open {
   touch-action: none;
 }
 
@@ -61390,11 +61396,26 @@ body.memorisation-page .tools.show {
   pointer-events: auto !important;
 }
 
-body.memorisation-page .tools-backdrop,
 body.memorisation-page .tools-backdrop.open {
   position: fixed !important;
   inset: 0 !important;
   z-index: 12490 !important;
+  pointer-events: auto !important;
+}
+
+/* Closed backdrop stays in the DOM. Never let it sit over the page and freeze scroll. */
+body.memorisation-page .tools-backdrop:not(.open) {
+  pointer-events: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  touch-action: auto !important;
+  display: none !important;
+}
+
+body.memorisation-page .tools:not(.open):not(.show),
+body.memorisation-page .tools:not(.open):not(.show) * {
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 
 html[dir="rtl"] body.memorisation-page .tools.offcanvas-section,

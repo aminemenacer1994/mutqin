@@ -9820,6 +9820,7 @@ export default {
 
     document.body.classList.add('memorisation-page')
     this.initSessionWorkspaceScrollController()
+    this.bindStaleScrollLockRelease()
     // Hard-close any leftover AI test overlays — this modal must never
     // appear unless the user clicks Session Complete → Test with AI.
     this.amdOpen = false
@@ -10159,6 +10160,7 @@ export default {
   },
 
   beforeUnmount() {
+    this.unbindStaleScrollLockRelease()
     this._recitationComponentActive = false
     this.recitationAttemptId = ''
     this.clearRecitationSlowProcessingNotice?.()
@@ -12971,16 +12973,15 @@ export default {
       // Soft unlock keeps the lock when tools/modals are still open (legitimate).
       // Force unlock is only for unmount / leave — otherwise leftover state freezes the page.
       const forceUnlock = options?.force === true && !locked
-      const shouldLock = forceUnlock ? false : !!(locked || this.showTools || this.isAnyModalOverlayActive)
+      const overlayOpen = !!(this.showTools || this.isAnyModalOverlayActive)
+      const shouldLock = forceUnlock ? false : !!(locked || overlayOpen)
       document.body.classList.toggle('tools-panel-open', shouldLock)
       if (shouldLock) {
         document.body.style.overflow = 'hidden'
         document.documentElement.style.overflow = 'hidden'
-      } else {
-        document.body.classList.remove('tools-panel-open')
-        document.body.style.removeProperty('overflow')
-        document.documentElement.style.removeProperty('overflow')
+        return
       }
+      this.forceReleaseBodyScrollLock()
     },
 
     /**
@@ -13002,6 +13003,42 @@ export default {
       }
       document.body.style.removeProperty('overflow')
       document.documentElement.style.removeProperty('overflow')
+    },
+
+    bodyScrollLockIsStale() {
+      if (typeof document === 'undefined') return false
+      if (this.showTools || this.isAnyModalOverlayActive) return false
+      const body = document.body
+      const html = document.documentElement
+      return body.classList.contains('tools-panel-open')
+        || body.classList.contains('ask-mutqin-open')
+        || body.classList.contains('dash-ai-recite-open')
+        || body.classList.contains('session-analysis-modal-open')
+        || html.classList.contains('ask-mutqin-open')
+        || html.classList.contains('dash-ai-recite-open')
+        || body.style.overflow === 'hidden'
+        || html.style.overflow === 'hidden'
+    },
+
+    releaseStaleBodyScrollLock() {
+      if (!this.bodyScrollLockIsStale()) return
+      this.forceReleaseBodyScrollLock()
+    },
+
+    bindStaleScrollLockRelease() {
+      if (typeof window === 'undefined' || this._releaseStaleScrollLock) return
+      this._releaseStaleScrollLock = () => this.releaseStaleBodyScrollLock()
+      window.addEventListener('wheel', this._releaseStaleScrollLock, { passive: true })
+      window.addEventListener('touchmove', this._releaseStaleScrollLock, { passive: true })
+      window.addEventListener('pointerdown', this._releaseStaleScrollLock, { passive: true })
+    },
+
+    unbindStaleScrollLockRelease() {
+      if (typeof window === 'undefined' || !this._releaseStaleScrollLock) return
+      window.removeEventListener('wheel', this._releaseStaleScrollLock)
+      window.removeEventListener('touchmove', this._releaseStaleScrollLock)
+      window.removeEventListener('pointerdown', this._releaseStaleScrollLock)
+      this._releaseStaleScrollLock = null
     },
 
     /**
