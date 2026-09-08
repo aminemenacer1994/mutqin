@@ -1301,6 +1301,7 @@ export default {
       workspaceReciteAnalysisLoading: false,
       workspaceReciteAnalysisError: false,
       workspaceReciteAnalysisView: null,
+      workspaceReciteAttemptSaved: false,
       selectedSessionId: '',
       sessionName: '',
       showRecordingsLibrary: false,
@@ -3023,6 +3024,9 @@ export default {
       if (this.amdOpen) return false
       if (this.askMutqinOpen) return false
       return !!(this.hasVerses || this.showSessionOverviewIdleActions)
+    },
+    aiReciteResultsHref() {
+      return '/dashboard#ai-recite-results'
     },
     workspaceAiReciteAnimated() {
       if (typeof window === 'undefined' || !window.matchMedia) return false
@@ -10816,6 +10820,7 @@ export default {
       this.workspaceReciteAnalysisLoading = false
       this.workspaceReciteAnalysisError = false
       this.workspaceReciteAnalysisView = null
+      this.workspaceReciteAttemptSaved = false
     },
     presentWorkspaceReciteAnalysis(submitData, result, audioUrl = '') {
       const view = buildWorkspaceAiReciteResultView({
@@ -10843,6 +10848,7 @@ export default {
       this.workspaceReciteAnalysisView = view
       this.workspaceReciteAnalysisError = false
       this.workspaceReciteAnalysisLoading = false
+      this.workspaceReciteAttemptSaved = Number(submitData?.ai_attempt?.id || 0) > 0
       this.workspaceReciteAnalysisOpen = true
     },
     async retryWorkspaceAiRecite() {

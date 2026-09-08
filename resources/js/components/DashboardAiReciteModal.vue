@@ -4,8 +4,8 @@
       v-if="open"
       class="modal-overlay mutqin-modal-overlay dash-ai-recite-overlay"
       :class="{ 'is-busy': isBusy }"
-      @mousedown.self.prevent="onBackdrop"
-      @click.self.prevent="onBackdrop"
+      @mousedown.self.prevent
+      @click.self.prevent
       @keydown="onOverlayKeydown"
     >
       <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog dash-ai-recite-dialog">
@@ -251,6 +251,9 @@
                 {{ t('memorisation.amd.stopRecitation') }}
               </button>
               <template v-if="stage === 'result'">
+                <a class="dash-btn dash-btn--ghost" href="/dashboard#ai-recite-results">
+                  {{ t('dashboard.ai_recite.see_all_results') }}
+                </a>
                 <button type="button" class="dash-btn dash-btn--ghost" @click="tryAgain">
                   {{ t('dashboard.ai_recite.try_again') }}
                 </button>
@@ -702,10 +705,6 @@ export default {
     },
     onAudioEnded() {
       this.audioPlaying = false
-    },
-    onBackdrop() {
-      if (this.isBusy) return
-      this.requestClose()
     },
     async requestClose() {
       if (this.stage === 'recording' || this.starting) {

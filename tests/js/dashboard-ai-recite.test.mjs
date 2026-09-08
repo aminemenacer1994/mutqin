@@ -34,6 +34,9 @@ function t(key, params = {}) {
 assert.doesNotMatch(dashboard, /dash-ai-recite-cta/, 'progress page does not expose the AI Recite CTA')
 assert.doesNotMatch(dashboard, /openAiRecite/, 'progress page does not open the standalone modal')
 assert.doesNotMatch(dashboard, /DashboardAiReciteModal/, 'progress page does not mount the AI Recite modal')
+assert.match(dashboard, /id="ai-recite-results"/, 'progress page has an AI Recite results section')
+assert.match(dashboard, /loadAiReciteResults/, 'progress page loads saved AI Recite results')
+assert.match(dashboard, /ai-recite-results/, 'progress page can be linked to the results section')
 assert.match(modalCss, /prefers-reduced-motion/, 'modal animation respects reduced motion')
 
 assert.match(memorisation, /workspace-ai-recite-cta/, 'session card exposes the AI Recite CTA')
@@ -46,6 +49,8 @@ assert.match(memorisation, /workspaceReciteAnalysisOpen/, 'memorisation mounts t
 assert.match(memorisation, /WorkspaceAiReciteResultModal/, 'workspace recite uses the post-session-style result modal')
 assert.match(memorisation, /buildWorkspaceAiReciteResultView/, 'workspace recite builds guided AI review view')
 assert.match(memorisation, /dashboard_ai_recite/, 'workspace recite saves standalone attempts')
+assert.match(memorisation, /workspaceReciteAttemptSaved/, 'workspace recite marks a saved attempt')
+assert.match(memorisation, /aiReciteResultsHref/, 'workspace recite links to the progress results section')
 assert.match(memorisation, /border-radius:\s*8px/, 'session card CTA uses 8px radius')
 assert.match(memorisation, /workspace-ai-gold-pulse/, 'session card CTA has gold glow')
 assert.match(memorisation, /workspace-ai-shimmer/, 'session card CTA has AI shimmer')

@@ -4,7 +4,7 @@
       <div
         v-if="visible"
         class="feedback-modal-overlay"
-        @click.self="onBackdropClick"
+        @click.self.prevent
       >
         <div
           ref="dialog"
@@ -237,9 +237,6 @@ export default {
       if (this.success) {
         this.reset(true);
       }
-    },
-    onBackdropClick() {
-      this.close();
     },
     reset(full = true) {
       this.success = false;

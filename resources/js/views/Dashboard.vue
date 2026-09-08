@@ -319,6 +319,139 @@
         </section>
         </div>
 
+        <section
+          id="ai-recite-results"
+          ref="aiReciteResults"
+          class="dash-section dash-section--flat dash-ai-results dash-reveal"
+          aria-labelledby="dash-ai-results-heading"
+          style="--dash-delay: 40ms"
+        >
+          <div class="dash-section__head dash-section__head--compact">
+            <div class="dash-section__head-row">
+              <div class="dash-section__title">
+                <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
+                  <i class="bi bi-mic" aria-hidden="true"></i>
+                </span>
+                <div class="dash-section__title-copy">
+                  <h2 id="dash-ai-results-heading">{{ t('dashboard.ai_recite.results_title') }}</h2>
+                  <p class="dash-section__hint">{{ t('dashboard.ai_recite.results_subtitle') }}</p>
+                </div>
+              </div>
+              <button
+                v-if="aiReciteView && !aiReciteView.empty"
+                type="button"
+                class="dash-glance-action dash-glance-action--ghost"
+                @click="openDrawer('ai_checks')"
+              >
+                <i class="bi bi-list-ul" aria-hidden="true"></i>
+                {{ t('dashboard.ai_recite.view_all_results') }}
+              </button>
+            </div>
+          </div>
+
+          <div class="dash-section__body dash-section__body--spacious">
+            <div v-if="aiReciteLoading && !aiReciteStats" class="dash-ai-results__status" role="status">
+              <span>{{ t('dashboard.loading') }}</span>
+            </div>
+            <div v-else-if="aiReciteError && (!aiReciteView || aiReciteView.empty)" class="dash-ai-results__status">
+              <p>{{ t('dashboard.ai_recite.stats_error_title') }}</p>
+              <button type="button" class="dash-btn dash-btn--ghost dash-btn--sm" @click="loadAiReciteResults">
+                {{ t('dashboard.retry') }}
+              </button>
+            </div>
+            <div v-else-if="!aiReciteView || aiReciteView.empty" class="dash-ai-results__empty">
+              <span class="dash-ai-results__empty-icon" aria-hidden="true">
+                <i class="bi bi-mic" aria-hidden="true"></i>
+              </span>
+              <p class="dash-ai-results__empty-title">{{ t('dashboard.ai_recite.stats_empty_title') }}</p>
+              <p class="dash-ai-results__empty-hint">{{ t('dashboard.ai_recite.results_empty_hint') }}</p>
+            </div>
+            <template v-else>
+              <div class="dash-ai-results__stats" role="list" :aria-label="t('dashboard.ai_recite.results_title')">
+                <article
+                  v-for="card in aiReciteSummaryCards"
+                  :key="card.key"
+                  class="dash-ai-results__stat"
+                  role="listitem"
+                >
+                  <span>{{ card.label }}</span>
+                  <strong>{{ card.value }}</strong>
+                </article>
+              </div>
+              <p v-if="aiReciteImprovement" class="dash-ai-results__change">
+                {{ aiReciteImprovement }}
+              </p>
+
+              <div class="dash-ai-results__layout">
+                <section class="dash-ai-results__panel" :aria-label="t('dashboard.ai_recite.recent_attempts')">
+                  <h3>{{ t('dashboard.ai_recite.recent_attempts') }}</h3>
+                  <ul v-if="aiReciteView.recent.length" class="dash-ai-results__attempts">
+                    <li v-for="item in aiRecitePreview" :key="item.id">
+                      <div class="dash-ai-results__attempt">
+                        <div class="dash-ai-results__attempt-copy">
+                          <strong>
+                            {{ item.surah_name || t('dashboard.not_started') }}
+                            <template v-if="ayahRangeLabel(item)"> · {{ ayahRangeLabel(item) }}</template>
+                          </strong>
+                          <span>{{ aiResultLabel(item) }}</span>
+                          <time :datetime="item.occurred_at">{{ formatActivityDate(item.occurred_at) }}</time>
+                        </div>
+                        <div class="dash-ai-results__attempt-aside">
+                          <span
+                            v-if="item.band"
+                            class="dash-ai-results__band"
+                            :class="`dash-ai-results__band--${item.band}`"
+                          >{{ aiBandLabel(item.band) }}</span>
+                          <i
+                            v-if="item.peek_used"
+                            class="bi bi-eye"
+                            :title="t('dashboard.ai_recite.peek_used')"
+                            aria-hidden="true"
+                          ></i>
+                          <button
+                            type="button"
+                            class="dash-btn dash-btn--ghost dash-btn--sm"
+                            :disabled="isAnalysisLoading(item, 'attempt')"
+                            @click="openAnalysisForItem(item, 'attempt')"
+                          >
+                            {{ t('dashboard.view_analysis') }}
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                  <p v-else class="dash-ai-results__muted">{{ t('dashboard.ai_recite.no_recent') }}</p>
+                </section>
+
+                <div class="dash-ai-results__insights">
+                  <section v-if="aiReciteView.weakest.length" class="dash-ai-results__panel">
+                    <h3>{{ t('dashboard.ai_recite.weakest_ayahs') }}</h3>
+                    <ul class="dash-ai-results__simple">
+                      <li v-for="item in aiReciteView.weakest" :key="item.key">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.value }}</strong>
+                      </li>
+                    </ul>
+                  </section>
+                  <section v-if="aiReciteView.missed.length" class="dash-ai-results__panel">
+                    <h3>{{ t('dashboard.ai_recite.missed_words') }}</h3>
+                    <ul class="dash-ai-results__words">
+                      <li v-for="item in aiReciteView.missed" :key="item.key">
+                        <span lang="ar" dir="rtl">{{ item.text }}</span>
+                        <small>{{ item.count }}</small>
+                      </li>
+                    </ul>
+                  </section>
+                  <p
+                    v-if="!aiReciteView.weakest.length && !aiReciteView.missed.length"
+                    class="dash-ai-results__muted"
+                  >{{ t('dashboard.ai_recite.results_no_weak') }}</p>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
       </template>
     </div>
 
@@ -356,12 +489,7 @@
         aria-modal="true"
         :aria-labelledby="drawerTitleId"
       >
-        <button
-          type="button"
-          class="dash-drawer__backdrop"
-          :aria-label="t('dashboard.drawer_close')"
-          @click="closeDrawer"
-        ></button>
+        <div class="dash-drawer__backdrop" aria-hidden="true"></div>
           <aside
             class="dash-drawer"
             :class="drawerMode ? `dash-drawer--${drawerMode}` : ''"
@@ -642,6 +770,7 @@ import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessio
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
+import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -733,6 +862,10 @@ export default {
       analysisSourceId: null,
       analysisSourceKey: '',
       analysisRequestId: 0,
+      aiReciteStats: null,
+      aiReciteLoading: false,
+      aiReciteError: false,
+      aiReciteRequestId: 0,
     }
   },
   computed: {
@@ -1101,6 +1234,24 @@ export default {
         },
       ]
     },
+    aiReciteView() {
+      return buildDashboardAiReciteStatsView(this.aiReciteStats, this.t.bind(this))
+    },
+    aiReciteSummaryCards() {
+      const preferred = ['total', 'average', 'recent', 'best']
+      const cards = this.aiReciteView?.cards || []
+      return preferred
+        .map((key) => cards.find((card) => card.key === key))
+        .filter(Boolean)
+    },
+    aiRecitePreview() {
+      return (this.aiReciteView?.recent || []).slice(0, 5)
+    },
+    aiReciteImprovement() {
+      const card = (this.aiReciteView?.cards || []).find((item) => item.key === 'improvement')
+      if (!card?.value) return ''
+      return this.t('dashboard.ai_recite.results_change', { value: card.value })
+    },
     weeklyInsightText() {
       const week = this.data?.week_summary
       if (!week || week.is_empty) return ''
@@ -1393,6 +1544,8 @@ export default {
       if (online && this.error && !this.data) this.reload(true)
     })
     this.setupContinueObserver()
+    this.loadAiReciteResults()
+    this.scrollToAiReciteResults()
   },
   beforeUnmount() {
     try { this._dashboardAbort?.abort?.() } catch (_) { /* ignore */ }
@@ -1660,6 +1813,41 @@ export default {
       if (status === 'ended_early') return this.t('dashboard.drawer_status_ended_early')
       return this.t('dashboard.drawer_status_completed')
     },
+    aiBandLabel(band) {
+      const key = String(band || '').toLowerCase()
+      if (key === 'strong') return this.t('dashboard.drawer_result_strong')
+      if (key === 'mixed') return this.t('dashboard.drawer_result_mixed')
+      if (key === 'weak') return this.t('dashboard.drawer_result_weak')
+      return key ? key.charAt(0).toUpperCase() + key.slice(1) : ''
+    },
+    async loadAiReciteResults() {
+      const requestId = ++this.aiReciteRequestId
+      this.aiReciteLoading = true
+      this.aiReciteError = false
+      try {
+        const stats = await learningApi.getDashboardAiReciteStats()
+        if (requestId !== this.aiReciteRequestId) return
+        this.aiReciteStats = stats
+        this.scrollToAiReciteResults()
+      } catch (error) {
+        console.error('AI Recite results fetch failed', error)
+        if (requestId !== this.aiReciteRequestId) return
+        this.aiReciteError = true
+      } finally {
+        if (requestId === this.aiReciteRequestId) this.aiReciteLoading = false
+      }
+    },
+    scrollToAiReciteResults() {
+      if (typeof window === 'undefined' || window.location.hash !== '#ai-recite-results') return
+      this.$nextTick(() => {
+        const el = this.$refs.aiReciteResults
+        if (!el || typeof el.scrollIntoView !== 'function') return
+        el.scrollIntoView({
+          behavior: this.reduceMotion ? 'auto' : 'smooth',
+          block: 'start',
+        })
+      })
+    },
     aiResultLabel(item) {
       const band = String(item?.band || '').toLowerCase()
       let bandLabel = ''
@@ -1896,6 +2084,7 @@ export default {
     },
     reload(force = false) {
       this.fetchDashboard(this.chartDays, { force })
+      this.loadAiReciteResults()
     },
     setChartDays(days) {
       const next = days === 7 ? 7 : 30
@@ -1959,6 +2148,7 @@ export default {
           this.chartReady = true
           this.refreshActiveSessionSnapshot()
           this.setupContinueObserver()
+          this.scrollToAiReciteResults()
         }
       } catch (error) {
         if (

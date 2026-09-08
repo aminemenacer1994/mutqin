@@ -2211,7 +2211,7 @@ html[data-theme="dark"] .admin-drawer-root {
   border: 0;
   background: rgba(28, 22, 18, 0.42);
   backdrop-filter: blur(4px);
-  cursor: pointer;
+  cursor: default;
   pointer-events: auto;
 }
 
@@ -3519,7 +3519,7 @@ html[data-theme="dark"] .admin-btn--primary:focus-visible {
   border: 0;
   background: rgba(28, 22, 18, 0.45);
   backdrop-filter: blur(4px);
-  cursor: pointer;
+  cursor: default;
 }
 
 html[data-theme="dark"] .admin-modal__backdrop {

@@ -24,9 +24,9 @@
                 <i class="bi bi-play-fill" aria-hidden="true"></i>
                 {{ t('homepage.hero.startFree') }}
               </a>
-              <a href="#how-it-works" class="btn btn--secondary" @click.prevent="scrollToId('how-it-works')">
-                <i class="bi bi-play-circle" aria-hidden="true"></i>
-                {{ t('homepage.hero.seeHow') }}
+              <a href="/waiting-list" class="btn btn--secondary">
+                <i class="bi bi-envelope" aria-hidden="true"></i>
+                {{ t('homepage.hero.joinWaitlist') }}
               </a>
             </div>
           </div>
@@ -158,6 +158,7 @@
               </div>
             </div>
             <div class="features__copy">
+              <span class="features__index" aria-hidden="true">{{ String(idx + 1).padStart(2, '0') }}</span>
               <h3>{{ feature.title }}</h3>
               <p>{{ feature.description }}</p>
             </div>
@@ -212,6 +213,7 @@
           </div>
         </div>
         <div v-if="isFeaturesMobile" class="features__copy features__copy--carousel">
+          <span class="features__index" aria-hidden="true">{{ String(featuresCarouselIndex + 1).padStart(2, '0') }}</span>
           <h3>{{ activeFeature.title }}</h3>
           <p>{{ activeFeature.description }}</p>
         </div>
@@ -321,6 +323,7 @@
             <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
             <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
+            <a href="/waiting-list">{{ t('homepage.footer.waitlist') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>

@@ -9,8 +9,8 @@
         <div class="post-session-simple__backdrop" aria-hidden="true"></div>
         <div
           class="post-session-simple__overlay"
-          @mousedown.self.prevent="requestClose"
-          @click.self.prevent="requestClose"
+          @mousedown.self.prevent
+          @click.self.prevent
         >
           <div
             ref="dialog"
@@ -285,6 +285,15 @@
             </div>
 
             <footer v-if="!loading && !error && !empty" class="post-session-simple__footer">
+              <p v-if="attemptSaved || resultsHref" class="workspace-recite-saved" data-testid="workspace-recite-saved">
+                <span v-if="attemptSaved">{{ savedLabel }}</span>
+                <a
+                  v-if="resultsHref"
+                  class="workspace-recite-saved__link"
+                  :href="resultsHref"
+                  data-testid="workspace-recite-results-link"
+                >{{ resultsLabel }}</a>
+              </p>
               <div class="post-session-simple__actions post-session-simple__actions--2">
                 <button
                   type="button"
@@ -340,6 +349,10 @@ export default {
     errorDesc: { type: String, default: 'Please close and try again.' },
     emptyTitle: { type: String, default: 'No results yet' },
     emptyDesc: { type: String, default: 'Complete a recitation check to see your results here.' },
+    attemptSaved: { type: Boolean, default: false },
+    savedLabel: { type: String, default: 'This attempt is saved.' },
+    resultsHref: { type: String, default: '' },
+    resultsLabel: { type: String, default: 'See all results' },
   },
   emits: ['close', 'try-again'],
   watch: {
@@ -359,3 +372,23 @@ export default {
   },
 }
 </script>
+
+<style>
+.workspace-recite-saved {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 1rem;
+  margin: 0 0 0.85rem;
+  color: var(--text-muted, #6d6256);
+  font-size: 0.92rem;
+}
+
+.workspace-recite-saved__link {
+  color: var(--accent-strong, #8a6230);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+</style>

@@ -3,7 +3,7 @@
     v-if="visible"
     ref="overlay"
     class="modal-overlay mutqin-modal-overlay ayah-notes-modal-overlay"
-    @click.self="close"
+    @click.self.prevent
     @keydown="onOverlayKeydown"
   >
     <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog ayah-notes-dialog">
@@ -227,7 +227,7 @@
       v-if="visible && pendingDeleteNote"
       ref="deleteOverlay"
       class="modal-overlay mutqin-modal-overlay ayah-notes-delete-overlay"
-      @click.self="cancelDelete"
+      @click.self.prevent
       @keydown="onDeleteOverlayKeydown"
     >
       <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog ayah-notes-delete-dialog">

@@ -7,7 +7,7 @@
       role="dialog"
       aria-modal="true"
       aria-labelledby="hifzPlanCreatorTitle"
-      @click.self="close"
+      @click.self.prevent
       @keydown.esc.prevent="close"
     >
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">

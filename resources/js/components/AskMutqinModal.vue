@@ -5,8 +5,8 @@
       class="modal-overlay mutqin-modal-overlay ask-mutqin-overlay"
       :data-theme="themeAttr"
       :class="{ 'is-busy': isBusy }"
-      @mousedown.self.prevent="onBackdrop"
-      @click.self.prevent="onBackdrop"
+      @mousedown.self.prevent
+      @click.self.prevent
       @keydown.esc.prevent="onEscape"
     >
       <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog ask-mutqin-dialog">
@@ -968,10 +968,6 @@ export default {
       }
       this.state = ASK_MUTQIN_STATES.ERROR
       this.teardown({ keepLock: true })
-    },
-    onBackdrop() {
-      if (this.isBusy) return
-      this.requestClose()
     },
     onEscape() {
       this.requestClose()

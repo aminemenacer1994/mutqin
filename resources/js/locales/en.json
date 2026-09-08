@@ -272,27 +272,27 @@
       "items": {
         "setup": {
           "title": "Memorisation setup",
-          "description": "Choose your surah, ayah range, repetitions, and how you want to practise, a niyyah made practical."
+          "description": "Choose the surah, ayah range, and how you want to practise. A niyyah made practical."
         },
         "techniques": {
           "title": "Memorisation techniques",
-          "description": "Hide the text gradually, join ayahs, listen and repeat, methods that strengthen what you carry."
+          "description": "Hide the text, join ayahs, listen and repeat. Methods that strengthen what you carry."
         },
         "progress": {
-          "title": "Progress layout",
-          "description": "See your Hifz at a glance, memorised ayahs, what you are learning now, and how far you have come."
+          "title": "Hifz progress",
+          "description": "Memorised ayahs, what you are learning, and how far you have come, at a glance."
         },
         "aiRecitation": {
           "title": "Recitation check",
-          "description": "Recite from memory while Mutqin follows along, a gentle mirror for your tilawah."
+          "description": "Recite from memory while Mutqin follows along. A gentle mirror for your tilawah."
         },
         "mushafLayout": {
           "title": "Mushaf layout",
-          "description": "Read in a clear mushaf page made for calm, focused practice."
+          "description": "A clear mushaf page, made for calm and focused practice."
         },
         "translationTajweed": {
           "title": "Translation & tajweed",
-          "description": "Keep meaning and tajweed close while you memorise, so the heart and tongue move together."
+          "description": "Meaning and tajweed stay close, so the heart and tongue move together."
         }
       }
     },
@@ -4643,6 +4643,14 @@
       "missed_words": "Often missed",
       "recent_attempts": "Recent attempts",
       "no_recent": "No recent attempts yet.",
+      "results_title": "AI Recite results",
+      "results_subtitle": "Saved checks from AI Recite, so you can see how your recitation is holding.",
+      "results_empty_hint": "Use AI Recite on a session. Each finished check is saved here.",
+      "results_change": "Change from earlier checks: {value}",
+      "results_no_weak": "No repeated weak spots yet.",
+      "view_all_results": "All results",
+      "attempt_saved": "This attempt is saved.",
+      "see_all_results": "See all results",
       "empty_recording": "That recording was too short or silent. Try again.",
       "network_error": "We couldn’t reach the recitation service. Check your connection and try again.",
       "error_title": "AI Recite couldn’t finish"

@@ -69,5 +69,6 @@ assert.doesNotMatch(modal, /post-session-simple__ai-details-toggle/, 'details ar
 assert.doesNotMatch(modal, /post-session-simple__panel--hero ps-rec-card/, 'modal excludes recommendation plan')
 assert.doesNotMatch(modal, /save.*plan/i, 'modal excludes save plan actions')
 assert.match(modal, /workspace-recite-try-again/, 'modal exposes try again action')
+assert.match(modal, /workspace-recite-results-link/, 'modal links to saved results')
 
 console.log('workspace-ai-recite-result-view.test.mjs passed')

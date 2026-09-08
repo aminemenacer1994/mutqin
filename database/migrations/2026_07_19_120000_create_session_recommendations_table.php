@@ -32,7 +32,7 @@ return new class extends Migration
 
             $table->index(['user_id', 'created_at']);
             $table->index(['user_id', 'accepted']);
-            $table->index(['user_id', 'surah_number', 'ayah_start', 'ayah_end']);
+            $table->index(['user_id', 'surah_number', 'ayah_start', 'ayah_end'], 'session_recs_user_ayah_range_idx');
         });
     }
 

@@ -2149,7 +2149,7 @@
     </div>
 
     <!-- Save Session Name Modal (manual only — post-session auto-saves silently) -->
-    <div class="modal-overlay mutqin-modal-overlay save-name-modal-overlay" v-if="false && showSaveNameModal" @click.self="closeSaveModal">
+    <div class="modal-overlay mutqin-modal-overlay save-name-modal-overlay" v-if="false && showSaveNameModal" @click.self.prevent>
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
       <div class="modal-content mutqin-modal-surface save-name-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
         <div class="modal-header">
@@ -2197,7 +2197,7 @@
       </div>
     </div>
 
-    <div class="modal-overlay mutqin-modal-overlay confirm-modal-overlay" v-if="showConfirmModal" @click.self="closeConfirmModal" @keydown="onModalOverlayKeydown($event, { containerRef: 'confirmModalDialog', onClose: closeConfirmModal })">
+    <div class="modal-overlay mutqin-modal-overlay confirm-modal-overlay" v-if="showConfirmModal" @click.self.prevent @keydown="onModalOverlayKeydown($event, { containerRef: 'confirmModalDialog', onClose: closeConfirmModal })">
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
       <div ref="confirmModalDialog" class="modal-content mutqin-modal-surface confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-describedby="confirmModalMessage">
         <div class="modal-header">
@@ -2241,7 +2241,7 @@
       :class="{ 'welcome-back-flow--ready': welcomeBackModalReady }"
       aria-live="polite"
     >
-      <div class="welcome-back-backdrop" @click="closeWelcomeBackModal"></div>
+      <div class="welcome-back-backdrop" aria-hidden="true"></div>
       <div
         class="welcome-back-modal-wrap"
         tabindex="-1"
@@ -2351,7 +2351,6 @@
     <div v-if="showSessionExitModal" class="session-exit-flow mutqin-modal-flow" aria-live="polite">
       <div
         class="modal-backdrop fade show session-exit-backdrop"
-        @click="keepPractisingFromExitModal"
       ></div>
       <div
         class="modal fade show d-block session-exit-modal-wrap"
@@ -2450,7 +2449,7 @@
     </div>
     </transition>
 
-    <div v-if="showHelpLearningModal" class="modal-overlay mutqin-modal-overlay help-learning-overlay" @click.self="closeHelpLearningModal">
+    <div v-if="showHelpLearningModal" class="modal-overlay mutqin-modal-overlay help-learning-overlay" @click.self.prevent>
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide help-learning-dialog">
         <div class="modal-content mutqin-modal-surface help-learning-modal" role="dialog" aria-modal="true"
           aria-labelledby="helpLearningTitle" aria-describedby="helpLearningSubtitle">
@@ -2580,7 +2579,7 @@
     </transition>
 
     <div v-if="showHifzPlannerUi && showPlannerCompletionModal" class="modal-overlay mutqin-modal-overlay planner-completion-overlay"
-      @click.self="closePlannerCompletionModal">
+      @click.self.prevent>
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide">
       <div class="modal-content mutqin-modal-surface planner-completion-modal" role="dialog" aria-modal="true"
         aria-labelledby="plannerCompletionTitle">
@@ -2866,12 +2865,16 @@
       :error-desc="translateOrFallback('memorisation.analyticsEmpty.modalErrorDesc', 'Please close and try again.')"
       :empty-title="translateOrFallback('memorisation.analyticsEmpty.modalEmptyTitle', 'No results yet')"
       :empty-desc="translateOrFallback('memorisation.analyticsEmpty.modalEmptyDesc', 'Complete a recitation check to see your results here.')"
+      :attempt-saved="workspaceReciteAttemptSaved"
+      :saved-label="translateOrFallback('dashboard.ai_recite.attempt_saved', 'This attempt is saved.')"
+      :results-href="aiReciteResultsHref"
+      :results-label="translateOrFallback('dashboard.ai_recite.see_all_results', 'See all results')"
       @close="closeWorkspaceReciteAnalysis"
       @try-again="retryWorkspaceAiRecite"
     />
 
     <div v-if="showAdvancedMetricsModal" class="modal-overlay mutqin-modal-overlay session-analytics-overlay advanced-metrics-overlay"
-      @click.self="closeAdvancedMetricsModal">
+      @click.self.prevent>
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide">
       <div class="modal-content mutqin-modal-surface session-analytics-modal advanced-metrics-modal" role="dialog" aria-modal="true"
         aria-labelledby="advancedMetricsTitle">
@@ -2940,7 +2943,7 @@
 
 
     <div v-if="showRecordingsLibrary" class="modal-overlay mutqin-modal-overlay recordings-library-overlay"
-      @click.self="closeRecordingsLibrary">
+      @click.self.prevent>
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--full">
       <div class="modal-content mutqin-modal-surface recordings-library-modal" role="dialog" aria-modal="true"
         aria-labelledby="recordingsLibraryTitle">
@@ -3954,7 +3957,7 @@
     </transition>
     </Teleport>
 
-    <div v-if="showRenameRecordingModal" class="modal-overlay mutqin-modal-overlay" @click.self="closeRenameRecordingModal">
+    <div v-if="showRenameRecordingModal" class="modal-overlay mutqin-modal-overlay" @click.self.prevent>
       <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
       <div class="modal-content mutqin-modal-surface confirm-modal rename-recording-modal" role="dialog" aria-modal="true"
         aria-labelledby="renameRecordingTitle">
@@ -4160,7 +4163,7 @@
       @error="onReviewResultAudioError"></audio>
 
     <div v-if="showQuranSearchModal" class="quran-search-modal-backdrop" role="presentation"
-      @click.self="closeQuranSearchModal">
+      @click.self.prevent>
       <section class="quran-search-modal" role="dialog" aria-modal="true" :aria-label="t('memorisation.quranSearch.title')">
         <header class="quran-search-header">
           <div></div>
@@ -4728,7 +4731,7 @@
     </div>
   </div>
 
-  <div v-if="quizActive" class="quiz-overlay" @click.self="stopQuiz">
+  <div v-if="quizActive" class="quiz-overlay" @click.self.prevent>
     <div class="quiz-card modal-lg" role="dialog" aria-modal="true" :aria-labelledby="'quizModalTitle'">
       <div class="quiz-top">
         <div class="quiz-title-wrap">
@@ -4903,7 +4906,7 @@
     </div>
   </div>
 
-  <div v-if="showKeyboardShortcuts" class="modal-overlay mutqin-modal-overlay keyboard-shortcuts-overlay" @click.self="closeKeyboardShortcuts" @keydown="onModalOverlayKeydown($event, { containerRef: 'keyboardShortcutsDialog', onClose: closeKeyboardShortcuts })">
+  <div v-if="showKeyboardShortcuts" class="modal-overlay mutqin-modal-overlay keyboard-shortcuts-overlay" @click.self.prevent @keydown="onModalOverlayKeydown($event, { containerRef: 'keyboardShortcutsDialog', onClose: closeKeyboardShortcuts })">
     <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog">
     <div
       ref="keyboardShortcutsDialog"

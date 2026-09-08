@@ -726,7 +726,7 @@
         aria-modal="true"
         :aria-label="t('admin.drawer_user_title')"
       >
-        <button type="button" class="admin-drawer__backdrop" :aria-label="t('admin.drawer_close')" @click="closeDrawer"></button>
+        <div class="admin-drawer__backdrop" aria-hidden="true"></div>
         <aside class="admin-drawer">
           <header class="admin-drawer__head">
             <div class="admin-drawer__identity">
@@ -962,7 +962,7 @@
 
     <!-- Create modal -->
     <div v-if="createOpen" class="admin-modal-root" role="dialog" aria-modal="true" :aria-label="t('admin.drawer_create_title')">
-      <button type="button" class="admin-modal__backdrop" :aria-label="t('admin.drawer_close')" @click="createOpen = false"></button>
+      <div class="admin-modal__backdrop" aria-hidden="true"></div>
       <div class="admin-modal">
         <header class="admin-modal__head">
           <h2>{{ t('admin.drawer_create_title') }}</h2>
@@ -1004,7 +1004,7 @@
 
     <!-- Delete confirm modal -->
     <div v-if="deleteOpen" class="admin-modal-root" role="dialog" aria-modal="true" :aria-label="t('admin.delete_user')">
-      <button type="button" class="admin-modal__backdrop" :aria-label="t('admin.drawer_close')" @click="closeDeleteModal"></button>
+      <div class="admin-modal__backdrop" aria-hidden="true"></div>
       <div class="admin-modal admin-modal--delete">
         <header class="admin-modal__head">
           <h2>{{ t('admin.delete_user') }}</h2>
@@ -1146,7 +1146,7 @@
       aria-modal="true"
       :aria-label="t('admin.feedback.detailTitle')"
     >
-      <button type="button" class="admin-modal__backdrop" :aria-label="t('common.close')" @click="closeFeedbackDetail"></button>
+      <div class="admin-modal__backdrop" aria-hidden="true"></div>
       <div class="admin-modal admin-modal--feedback">
         <header class="admin-modal__head">
           <div class="admin-modal__head-copy">
@@ -1222,7 +1222,7 @@
 
     <!-- Action confirm modal (reset / deactivate / delete feedback) -->
     <div v-if="confirmOpen" class="admin-modal-root" role="dialog" aria-modal="true" :aria-label="confirmTitle">
-      <button type="button" class="admin-modal__backdrop" :aria-label="t('admin.drawer_close')" @click="closeConfirmModal"></button>
+      <div class="admin-modal__backdrop" aria-hidden="true"></div>
       <div class="admin-modal">
         <header class="admin-modal__head">
           <h2>{{ confirmTitle }}</h2>

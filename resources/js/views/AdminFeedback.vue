@@ -197,7 +197,7 @@
       <div
         v-if="detail"
         class="afb-modal-overlay"
-        @click.self="closeDetail"
+        @click.self.prevent
       >
         <div
           class="afb-modal"
