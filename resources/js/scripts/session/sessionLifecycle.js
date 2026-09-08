@@ -787,22 +787,22 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
     [PRIMARY_SESSION_ACTION.START_SESSION]: {
       labelKey: 'common.startSession',
       icon: 'bi-play-fill',
-      fallback: 'Start session',
+      fallback: 'Start',
     },
     [PRIMARY_SESSION_ACTION.RESUME_SESSION]: {
       labelKey: 'common.resumeSession',
       icon: 'bi-play-fill',
-      fallback: 'Resume session',
+      fallback: 'Resume',
     },
     [PRIMARY_SESSION_ACTION.PAUSE_SESSION]: {
       labelKey: 'common.pauseSession',
       icon: 'bi-pause-fill',
-      fallback: 'Pause session',
+      fallback: 'Pause',
     },
     [PRIMARY_SESSION_ACTION.END_SESSION]: {
       labelKey: 'sessionStatus.end',
       icon: 'bi-box-arrow-right',
-      fallback: 'End Session',
+      fallback: 'End',
     },
     [PRIMARY_SESSION_ACTION.LOADING]: {
       labelKey: resolveLoadingLabelKey(options.status),

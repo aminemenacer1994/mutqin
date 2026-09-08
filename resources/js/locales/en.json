@@ -3,7 +3,7 @@
     "on": "On",
     "off": "Off",
     "reset": "Reset",
-    "startSession": "Start session",
+    "startSession": "Start",
     "pause": "Pause",
     "settings": "Settings",
     "controls": "Controls",
@@ -34,8 +34,8 @@
     "backToTop": "Back to top",
     "skipOnboarding": "Skip tour",
     "closeTour": "Close tour",
-    "resumeSession": "Resume session",
-    "pauseSession": "Pause session",
+    "resumeSession": "Resume",
+    "pauseSession": "Pause",
     "resumingSession": "Resuming…",
     "pausingSession": "Pausing…",
     "endingSession": "Ending…",
@@ -112,7 +112,7 @@
     "ready": "Session ready",
     "progress": "{current} of {total} ayahs · {percent}% complete",
     "left": "{eta} left",
-    "end": "End session"
+    "end": "End"
   },
   "recordings": {
     "viewAll": "View All Recordings"
@@ -1307,7 +1307,7 @@
       "commandHeard": "Your instruction",
       "title": "Find an ayah",
       "ctaLabel": "Find ayah",
-      "ctaShort": "AI Find",
+      "ctaShort": "Find",
       "ctaHint": "Recite a few words to find an ayah, then say what to open",
       "introLead": "Recite a few words from an ayah, then say what to open.",
       "tipShort": "Recite a few words from the start of an ayah to find it.",
@@ -4607,7 +4607,7 @@
     "ai_recite": {
       "title": "AI Recite",
       "kicker": "Quick test",
-      "cta_label": "AI Recite",
+      "cta_label": "Recite",
       "cta_hint": "Test your memorisation anytime",
       "cta_action": "Start",
       "surah": "Surah",
@@ -4648,6 +4648,10 @@
       "results_empty_hint": "Use AI Recite on a session. Each finished check is saved here.",
       "results_change": "Change from earlier checks: {value}",
       "results_no_weak": "No repeated weak spots yet.",
+      "results_focus": "Needs practice",
+      "results_holding_title": "Holding well",
+      "results_holding_hint": "No weak ayahs in these checks yet.",
+      "results_open": "Open this check",
       "view_all_results": "All results",
       "attempt_saved": "This attempt is saved.",
       "see_all_results": "See all results",

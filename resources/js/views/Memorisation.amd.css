@@ -5958,3 +5958,186 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 .amd-disclaimer--row {
   display: none !important;
 }
+
+/* Mobile session card: names on one row, labeled actions, aligned AI icons. */
+@media (max-width: 767.98px) {
+  html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "copy icons"
+      "actions actions" !important;
+    align-items: center !important;
+    gap: 0.55rem 0.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+    grid-area: copy !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title,
+  html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    flex-wrap: nowrap !important;
+    align-items: baseline !important;
+    justify-content: flex-start !important;
+    gap: 0.3rem 0.4rem !important;
+    width: auto !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    text-wrap: nowrap !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    font-size: 1.05rem !important;
+    line-height: 1.2 !important;
+    padding-bottom: 0.2rem !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
+    display: inline !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
+    display: contents !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row > .top-card-icon-controls {
+    grid-area: icons !important;
+    align-self: center !important;
+    justify-self: end !important;
+    width: max-content !important;
+    margin: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row > .workspace-shell-head-actions,
+  html body .app .workspace-shell-head-utility-row > .workspace-shell-actions,
+  html body .app .workspace-shell-head-utility-row .action-buttons-group {
+    grid-area: actions !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster.has-paired-actions:has(.workspace-ai-cta-pair) {
+    display: grid !important;
+    grid-template-columns: minmax(6.6rem, 1.4fr) minmax(4.6rem, 1fr) 40px 40px !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster.has-paired-actions > .workspace-ai-cta-pair,
+  html body .app .workspace-shell .top-card-session-cluster.has-paired-actions > .top-card-session-actions {
+    display: contents !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster .session-primary-action,
+  html body .app .workspace-shell .top-card-session-cluster .session-primary-action[style] {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster .action-btn-exit {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster .workspace-ask-mutqin-cta {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster .workspace-ai-recite-cta {
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster .session-primary-action,
+  html body .app .workspace-shell .top-card-session-cluster .session-primary-action[style],
+  html body .app .workspace-shell .top-card-session-cluster .action-btn-exit {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    block-size: 40px !important;
+    padding: 0 0.7rem !important;
+    gap: 0.3rem !important;
+    overflow: visible !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    font-size: 0.84rem !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster :is(
+    .session-primary-action,
+    .action-btn-exit
+  ) span {
+    position: static !important;
+    display: inline !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    clip: auto !important;
+    clip-path: none !important;
+    white-space: nowrap !important;
+    font-size: inherit !important;
+    line-height: 1 !important;
+  }
+
+  html body .app .workspace-shell .top-card-session-cluster :is(
+    .workspace-ask-mutqin-cta,
+    .workspace-ai-recite-cta
+  ) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 999px !important;
+  }
+}

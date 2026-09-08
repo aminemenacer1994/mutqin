@@ -5,6 +5,7 @@ import NetworkStatusBanner from './components/NetworkStatusBanner.vue';
 import './styles/info-pages.css';
 import './styles/about-page.css';
 import './styles/pricing-page.css';
+import './components/SessionAnalysisOverview.css';
 import { setupI18n, setLocale } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
@@ -241,7 +242,7 @@ const WaitingListPage = lazyPage(
     { feature: 'waiting-list' }
 );
 const UserDashboard = lazyPage(
-    () => import(/* webpackChunkName: "dashboard" */ './views/Dashboard.vue'),
+    () => import(/* webpackChunkName: "user-dashboard-v5" */ './views/Dashboard.vue'),
     { feature: 'dashboard' }
 );
 const AdminDashboard = lazyPage(

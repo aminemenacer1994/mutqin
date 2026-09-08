@@ -367,19 +367,42 @@
               <p class="dash-ai-results__empty-hint">{{ t('dashboard.ai_recite.results_empty_hint') }}</p>
             </div>
             <template v-else>
-              <div class="dash-ai-results__stats" role="list" :aria-label="t('dashboard.ai_recite.results_title')">
-                <article
-                  v-for="card in aiReciteSummaryCards"
-                  :key="card.key"
-                  class="dash-ai-results__stat"
-                  role="listitem"
+              <article
+                v-if="aiReciteScore"
+                class="dash-ai-results__hero"
+                :class="`is-${aiReciteScore.tone}`"
+              >
+                <div class="dash-ai-results__score">
+                  <span class="dash-ai-results__score-label">{{ aiReciteScore.label }}</span>
+                  <strong class="dash-ai-results__score-value">{{ aiReciteScore.value }}</strong>
+                  <span v-if="aiReciteImprovement" class="dash-ai-results__delta">
+                    {{ aiReciteImprovement }}
+                  </span>
+                </div>
+                <div
+                  class="dash-ai-results__meter"
+                  role="progressbar"
+                  :aria-valuenow="aiReciteScore.percent"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  :aria-label="aiReciteScore.label"
                 >
-                  <span>{{ card.label }}</span>
-                  <strong>{{ card.value }}</strong>
-                </article>
-              </div>
-              <p v-if="aiReciteImprovement" class="dash-ai-results__change">
-                {{ aiReciteImprovement }}
+                  <span :style="{ width: `${aiReciteScore.percent}%` }"></span>
+                </div>
+                <ul v-if="aiReciteFacts.length" class="dash-ai-results__facts">
+                  <li v-for="fact in aiReciteFacts" :key="fact.key">
+                    <span>{{ fact.label }}</span>
+                    <strong>{{ fact.value }}</strong>
+                  </li>
+                </ul>
+              </article>
+
+              <p v-if="aiReciteHolding && !aiReciteHasInsights" class="dash-ai-results__holding">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                <span>
+                  <strong>{{ t('dashboard.ai_recite.results_holding_title') }}</strong>
+                  {{ t('dashboard.ai_recite.results_holding_hint') }}
+                </span>
               </p>
 
               <div class="dash-ai-results__layout">
@@ -387,53 +410,63 @@
                   <h3>{{ t('dashboard.ai_recite.recent_attempts') }}</h3>
                   <ul v-if="aiReciteView.recent.length" class="dash-ai-results__attempts">
                     <li v-for="item in aiRecitePreview" :key="item.id">
-                      <div class="dash-ai-results__attempt">
-                        <div class="dash-ai-results__attempt-copy">
+                      <button
+                        type="button"
+                        class="dash-ai-results__attempt"
+                        :class="`is-${aiAttemptTone(item)}`"
+                        :disabled="isAnalysisLoading(item, 'attempt')"
+                        :aria-label="aiAttemptActionLabel(item)"
+                        @click="openAnalysisForItem(item, 'attempt')"
+                      >
+                        <span class="dash-ai-results__attempt-score">{{ aiAttemptAccuracy(item) }}</span>
+                        <span class="dash-ai-results__attempt-copy">
                           <strong>
                             {{ item.surah_name || t('dashboard.not_started') }}
-                            <template v-if="ayahRangeLabel(item)"> · {{ ayahRangeLabel(item) }}</template>
+                            <span v-if="ayahRangeLabel(item)">{{ ayahRangeLabel(item) }}</span>
                           </strong>
-                          <span>{{ aiResultLabel(item) }}</span>
-                          <time :datetime="item.occurred_at">{{ formatActivityDate(item.occurred_at) }}</time>
-                        </div>
-                        <div class="dash-ai-results__attempt-aside">
-                          <span
-                            v-if="item.band"
-                            class="dash-ai-results__band"
-                            :class="`dash-ai-results__band--${item.band}`"
-                          >{{ aiBandLabel(item.band) }}</span>
-                          <i
-                            v-if="item.peek_used"
-                            class="bi bi-eye"
-                            :title="t('dashboard.ai_recite.peek_used')"
-                            aria-hidden="true"
-                          ></i>
-                          <button
-                            type="button"
-                            class="dash-btn dash-btn--ghost dash-btn--sm"
-                            :disabled="isAnalysisLoading(item, 'attempt')"
-                            @click="openAnalysisForItem(item, 'attempt')"
-                          >
-                            {{ t('dashboard.view_analysis') }}
-                          </button>
-                        </div>
-                      </div>
+                          <span class="dash-ai-results__attempt-meta">
+                            <span
+                              v-if="item.band"
+                              class="dash-ai-results__band"
+                              :class="`dash-ai-results__band--${item.band}`"
+                            >{{ aiBandLabel(item.band) }}</span>
+                            <time :datetime="item.occurred_at">{{ formatActivityDate(item.occurred_at) }}</time>
+                            <span v-if="item.peek_used" class="dash-ai-results__peek">
+                              <i class="bi bi-eye" aria-hidden="true"></i>
+                              {{ t('dashboard.ai_recite.peek_used') }}
+                            </span>
+                          </span>
+                        </span>
+                        <i
+                          class="dash-ai-results__attempt-go"
+                          :class="isAnalysisLoading(item, 'attempt') ? 'bi bi-hourglass-split' : 'bi bi-chevron-right'"
+                          aria-hidden="true"
+                        ></i>
+                      </button>
                     </li>
                   </ul>
                   <p v-else class="dash-ai-results__muted">{{ t('dashboard.ai_recite.no_recent') }}</p>
                 </section>
 
-                <div class="dash-ai-results__insights">
-                  <section v-if="aiReciteView.weakest.length" class="dash-ai-results__panel">
-                    <h3>{{ t('dashboard.ai_recite.weakest_ayahs') }}</h3>
-                    <ul class="dash-ai-results__simple">
-                      <li v-for="item in aiReciteView.weakest" :key="item.key">
-                        <span>{{ item.label }}</span>
-                        <strong>{{ item.value }}</strong>
+                <div v-if="aiReciteHasInsights" class="dash-ai-results__insights">
+                  <section v-if="aiReciteFocus.length" class="dash-ai-results__panel">
+                    <h3>{{ t('dashboard.ai_recite.results_focus') }}</h3>
+                    <ul class="dash-ai-results__focus">
+                      <li v-for="item in aiReciteFocus" :key="item.key" :class="`is-${item.tone}`">
+                        <div class="dash-ai-results__focus-top">
+                          <span>
+                            <strong>{{ item.surah_name }}</strong>
+                            <small>{{ item.ayah_label }}</small>
+                          </span>
+                          <strong>{{ item.value }}</strong>
+                        </div>
+                        <span class="dash-ai-results__bar" aria-hidden="true">
+                          <span :style="{ width: `${item.accuracy}%` }"></span>
+                        </span>
                       </li>
                     </ul>
                   </section>
-                  <section v-if="aiReciteView.missed.length" class="dash-ai-results__panel">
+                  <section v-if="aiReciteView.missed.length" class="dash-ai-results__panel dash-ai-results__panel--chips">
                     <h3>{{ t('dashboard.ai_recite.missed_words') }}</h3>
                     <ul class="dash-ai-results__words">
                       <li v-for="item in aiReciteView.missed" :key="item.key">
@@ -442,10 +475,6 @@
                       </li>
                     </ul>
                   </section>
-                  <p
-                    v-if="!aiReciteView.weakest.length && !aiReciteView.missed.length"
-                    class="dash-ai-results__muted"
-                  >{{ t('dashboard.ai_recite.results_no_weak') }}</p>
                 </div>
               </div>
             </template>
@@ -1237,12 +1266,25 @@ export default {
     aiReciteView() {
       return buildDashboardAiReciteStatsView(this.aiReciteStats, this.t.bind(this))
     },
-    aiReciteSummaryCards() {
-      const preferred = ['total', 'average', 'recent', 'best']
+    aiReciteScore() {
+      return this.aiReciteView?.score || null
+    },
+    aiReciteFacts() {
+      const preferred = ['total', 'average', 'best', 'ayahs']
       const cards = this.aiReciteView?.cards || []
       return preferred
         .map((key) => cards.find((card) => card.key === key))
-        .filter(Boolean)
+        .filter((card) => card && card.value && card.value !== '—')
+        .filter((card) => !(this.aiReciteScore?.key === 'average' && card.key === 'average'))
+    },
+    aiReciteFocus() {
+      return this.aiReciteView?.focus || []
+    },
+    aiReciteHolding() {
+      return !!this.aiReciteView?.holding
+    },
+    aiReciteHasInsights() {
+      return this.aiReciteFocus.length > 0 || (this.aiReciteView?.missed?.length || 0) > 0
     },
     aiRecitePreview() {
       return (this.aiReciteView?.recent || []).slice(0, 5)
@@ -1847,6 +1889,31 @@ export default {
           block: 'start',
         })
       })
+    },
+    aiAttemptAccuracy(item) {
+      const accuracy = Number(item?.accuracy_percent)
+      if (!Number.isFinite(accuracy) || accuracy < 0) return '—'
+      return this.t('dashboard.drawer_accuracy', { n: accuracy })
+    },
+    aiAttemptTone(item) {
+      const accuracy = Number(item?.accuracy_percent)
+      if (Number.isFinite(accuracy)) {
+        if (accuracy >= 85) return 'strong'
+        if (accuracy >= 60) return 'mixed'
+        return 'weak'
+      }
+      const band = String(item?.band || '').toLowerCase()
+      return band || 'neutral'
+    },
+    aiAttemptActionLabel(item) {
+      const parts = [
+        item?.surah_name || this.t('dashboard.not_started'),
+        this.ayahRangeLabel(item),
+        this.aiAttemptAccuracy(item),
+        this.formatActivityDate(item.occurred_at),
+        this.t('dashboard.ai_recite.results_open'),
+      ].filter(Boolean)
+      return parts.join(', ')
     },
     aiResultLabel(item) {
       const band = String(item?.band || '').toLowerCase()

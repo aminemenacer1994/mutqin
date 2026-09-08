@@ -7,6 +7,16 @@ function asText(value) {
   return String(value || '').trim()
 }
 
+function toneForAccuracy(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return 'neutral'
+  if (n >= 85) return 'strong'
+  if (n >= 60) return 'mixed'
+  return 'weak'
+}
+
+const FOCUS_BELOW = 90
+
 export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
   const payload = stats && typeof stats === 'object' ? stats : {}
   const total = asNumber(payload.total_attempts)
@@ -56,12 +66,40 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
   }
 
   const weakest = Array.isArray(payload.weakest_ayahs)
-    ? payload.weakest_ayahs.map((item, index) => ({
-      key: `${item.surah_number}:${item.ayah}:${index}`,
-      label: [asText(item.surah_name), t('dashboard.ayah_n', { n: item.ayah })].filter(Boolean).join(' · '),
-      value: t('dashboard.drawer_accuracy', { n: item.accuracy }),
-    }))
+    ? payload.weakest_ayahs.map((item, index) => {
+      const accuracy = asNumber(item.accuracy)
+      const surahName = asText(item.surah_name)
+      const ayahLabel = t('dashboard.ayah_n', { n: item.ayah })
+      return {
+        key: `${item.surah_number}:${item.ayah}:${index}`,
+        surah_name: surahName,
+        ayah: asNumber(item.ayah),
+        ayah_label: ayahLabel,
+        accuracy,
+        tone: toneForAccuracy(accuracy),
+        label: [surahName, ayahLabel].filter(Boolean).join(' · '),
+        value: t('dashboard.drawer_accuracy', { n: accuracy }),
+      }
+    })
     : []
+
+  const focus = weakest.filter((item) => item.accuracy < FOCUS_BELOW)
+  const holding = weakest.length > 0 && focus.length === 0
+
+  const recentAccuracy = payload.recent_accuracy == null ? null : asNumber(payload.recent_accuracy)
+  const averageAccuracy = payload.average_accuracy == null ? null : asNumber(payload.average_accuracy)
+  const headlineAccuracy = recentAccuracy ?? averageAccuracy
+  const score = empty || headlineAccuracy == null
+    ? null
+    : {
+      key: recentAccuracy == null ? 'average' : 'recent',
+      label: recentAccuracy == null || total <= 1
+        ? t('dashboard.analysis_accuracy_label')
+        : t('dashboard.ai_recite.recent_accuracy'),
+      value: t('dashboard.drawer_accuracy', { n: headlineAccuracy }),
+      percent: Math.max(0, Math.min(100, headlineAccuracy)),
+      tone: toneForAccuracy(headlineAccuracy),
+    }
 
   const missed = Array.isArray(payload.missed_words)
     ? payload.missed_words.map((item, index) => ({
@@ -88,6 +126,9 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
   return {
     empty,
     cards,
+    score,
+    focus,
+    holding,
     weakest,
     missed,
     recent,

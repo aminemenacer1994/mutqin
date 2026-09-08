@@ -465,7 +465,7 @@
                     class="action-btn workspace-ask-mutqin-cta top-card-action-trigger"
                     :class="{ 'is-animated': workspaceAiReciteAnimated }"
                     data-testid="workspace-ask-mutqin"
-                    :title="t('memorisation.askMutqin.ctaHint')"
+                    :title="t('memorisation.askMutqin.ctaShort')"
                     :aria-label="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
                     @click="openAskMutqin"
                   >
@@ -478,7 +478,7 @@
                     class="action-btn workspace-ai-recite-cta top-card-action-trigger"
                     :class="{ 'is-animated': workspaceAiReciteAnimated }"
                     data-testid="workspace-ai-recite"
-                    :title="t('dashboard.ai_recite.cta_hint')"
+                    :title="t('dashboard.ai_recite.cta_label')"
                     :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
                     @click="openWorkspaceAiRecite"
                   >
@@ -792,7 +792,7 @@
                         class="action-btn workspace-ask-mutqin-cta session-idle-action top-card-action-trigger"
                         :class="{ 'is-animated': workspaceAiReciteAnimated }"
                         data-testid="workspace-ask-mutqin-idle"
-                        :title="t('memorisation.askMutqin.ctaHint')"
+                        :title="t('memorisation.askMutqin.ctaShort')"
                         :aria-label="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
                         @click="openAskMutqin"
                       >
@@ -805,7 +805,7 @@
                         class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
                         :class="{ 'is-animated': workspaceAiReciteAnimated }"
                         data-testid="workspace-ai-recite-idle"
-                        :title="t('dashboard.ai_recite.cta_hint')"
+                        :title="t('dashboard.ai_recite.cta_label')"
                         :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
                         @click="openWorkspaceAiRecite"
                       >
@@ -908,7 +908,7 @@
                       class="action-btn workspace-ask-mutqin-cta session-idle-action top-card-action-trigger"
                       :class="{ 'is-animated': workspaceAiReciteAnimated }"
                       data-testid="workspace-ask-mutqin-aside"
-                      :title="t('memorisation.askMutqin.ctaHint')"
+                      :title="t('memorisation.askMutqin.ctaShort')"
                       :aria-label="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
                       @click="openAskMutqin"
                     >
@@ -921,7 +921,7 @@
                       class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
                       :class="{ 'is-animated': workspaceAiReciteAnimated }"
                       data-testid="workspace-ai-recite-aside"
-                      :title="t('dashboard.ai_recite.cta_hint')"
+                      :title="t('dashboard.ai_recite.cta_label')"
                       :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
                       @click="openWorkspaceAiRecite"
                     >
@@ -1305,8 +1305,8 @@
         'post-session-choice-tools': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen,
         'session-exit-tools': showSessionExitModal && sessionExitOffcanvasOpen
       }"
-        @click.stop role="dialog" aria-modal="true" aria-labelledby="memorisationToolsTitle"
-        :aria-hidden="showTools ? 'false' : 'true'" tabindex="-1" @keydown="onToolsPanelKeydown">
+        @click.stop role="dialog" :aria-modal="showTools ? 'true' : 'false'" aria-labelledby="memorisationToolsTitle"
+        :aria-hidden="showTools ? 'false' : 'true'" :inert="showTools ? undefined : true" tabindex="-1" @keydown="onToolsPanelKeydown">
         <div class="tools-top">
         <div class="tools-topbar">
           <div id="memorisationToolsTitle" class="tools-title">

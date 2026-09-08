@@ -68,12 +68,12 @@ assert.match(
 assert.match(
   memorisation,
   /max-width:\s*767\.98px[\s\S]*?has-paired-actions:has\(\.workspace-ai-recite-cta\)[\s\S]*?width:\s*100%/,
-  'mobile paired layout puts AI Recite full width below session controls',
+  'mobile paired layout keeps the action row full width',
 )
 assert.match(
   memorisation,
-  /max-width:\s*767\.98px[\s\S]*?not\(\.has-paired-actions\):has\(\.workspace-ai-recite-cta\)[\s\S]*?width:\s*50%/,
-  'mobile idle layout splits AI Recite and Resume fifty-fifty',
+  /max-width:\s*767\.98px[\s\S]*?flex-flow:\s*row nowrap[\s\S]*?session-primary-action[\s\S]*?min-width:\s*max-content/,
+  'mobile Resume label keeps its full width',
 )
 
 assert.match(modal, /Start Recording|ai_recite.start_recording/)
@@ -89,7 +89,7 @@ assert.doesNotMatch(modal, /startMemorisationPracticePlan/)
 assert.match(modal, /isBusy/, 'recording/processing blocks accidental dismiss')
 assert.match(modal, /dash-ai-recite-open/, 'background scroll is locked')
 
-assert.equal(en.dashboard.ai_recite.cta_label, 'AI Recite')
+assert.equal(en.dashboard.ai_recite.cta_label, 'Recite')
 assert.match(en.dashboard.ai_recite.cta_hint, /memorisation/i)
 
 const chapters = surahCatalog()
@@ -166,7 +166,21 @@ const filled = buildDashboardAiReciteStatsView({
 assert.equal(filled.empty, false)
 assert.ok(filled.cards.some((card) => card.key === 'average' && card.value.includes('81')))
 assert.equal(filled.weakest[0].label.includes('5'), true)
+assert.equal(filled.focus.length, 1)
+assert.equal(filled.holding, false)
+assert.equal(filled.score.tone, 'strong')
 assert.equal(filled.missed[0].text, 'الضالين')
 assert.equal(filled.recent[0].peek_used, true)
+
+const perfect = buildDashboardAiReciteStatsView({
+  total_attempts: 1,
+  average_accuracy: 100,
+  recent_accuracy: 100,
+  best_accuracy: 100,
+  weakest_ayahs: [{ surah_number: 1, surah_name: 'Al-Fatihah', ayah: 1, accuracy: 100 }],
+}, t)
+assert.equal(perfect.focus.length, 0)
+assert.equal(perfect.holding, true)
+assert.equal(perfect.score.label, en.dashboard.analysis_accuracy_label)
 
 console.log('dashboard-ai-recite.test.mjs: ok')

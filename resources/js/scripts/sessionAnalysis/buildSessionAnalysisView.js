@@ -91,6 +91,20 @@ function toneForStatus(status) {
   return 'is-neutral'
 }
 
+function formatOccurredAt(value) {
+  const raw = asText(value)
+  if (!raw) return ''
+  const date = new Date(raw)
+  if (Number.isNaN(date.getTime())) return raw
+  return date.toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 function formatDuration(seconds) {
   const total = Math.max(0, Math.round(asNumber(seconds)))
   const minutes = Math.floor(total / 60)
@@ -204,7 +218,7 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
   const statusLabel = status === 'ended_early'
     ? t('dashboard.drawer_status_ended_early')
     : (status ? t('dashboard.drawer_status_completed') : '')
-  const occurredAt = asText(session.occurred_at || attempt?.occurred_at || assessment?.completed_at)
+  const occurredAt = formatOccurredAt(session.occurred_at || attempt?.occurred_at || assessment?.completed_at)
   const sessionMeta = [statusLabel, occurredAt].filter(Boolean).join(' · ')
 
   const accuracy = asNumber(

@@ -9261,7 +9261,7 @@ export default {
     },
 
     currentReadingViewModeIcon() {
-      if (this.readingViewMode === 'mushaf') return 'bi-journal-richtext'
+      if (this.readingViewMode === 'mushaf') return 'bi-book'
       return 'bi-view-stacked'
     },
 
@@ -9821,6 +9821,7 @@ export default {
     document.body.classList.add('memorisation-page')
     this.initSessionWorkspaceScrollController()
     this.bindStaleScrollLockRelease()
+    this.$nextTick(() => this.unstickPageScroll())
     // Hard-close any leftover AI test overlays — this modal must never
     // appear unless the user clicks Session Complete → Test with AI.
     this.amdOpen = false
@@ -13005,39 +13006,52 @@ export default {
       document.documentElement.style.removeProperty('overflow')
     },
 
-    bodyScrollLockIsStale() {
+    visiblePageOverlayOpen() {
       if (typeof document === 'undefined') return false
-      if (this.showTools || this.isAnyModalOverlayActive) return false
-      const body = document.body
-      const html = document.documentElement
-      return body.classList.contains('tools-panel-open')
-        || body.classList.contains('ask-mutqin-open')
-        || body.classList.contains('dash-ai-recite-open')
-        || body.classList.contains('session-analysis-modal-open')
-        || html.classList.contains('ask-mutqin-open')
-        || html.classList.contains('dash-ai-recite-open')
-        || body.style.overflow === 'hidden'
-        || html.style.overflow === 'hidden'
+      const nav = document.getElementById('primaryNavbar')
+      if (nav?.classList.contains('show') || nav?.classList.contains('showing')) return true
+      if (document.querySelector('.offcanvas.show, .offcanvas.showing, .modal.show, .tools.open, .tools.show')) return true
+      const blockers = document.querySelectorAll(
+        '.welcome-back-flow, .post-session-simple, .session-exit-flow, .memory-check-overlay, .quiz-overlay, .modal-overlay, .workspace-tour, .ask-mutqin-shell, .amd-overlay'
+      )
+      for (const el of blockers) {
+        const style = window.getComputedStyle(el)
+        if (style.display === 'none' || style.visibility === 'hidden' || style.pointerEvents === 'none') continue
+        return true
+      }
+      return false
     },
 
-    releaseStaleBodyScrollLock() {
-      if (!this.bodyScrollLockIsStale()) return
+    unstickPageScroll() {
+      if (typeof document === 'undefined') return
+      if (this.showTools && document.querySelector('.tools.open, .tools.show')) return
+      if (this.visiblePageOverlayOpen()) return
+
+      document.querySelectorAll('.offcanvas-backdrop, .modal-backdrop').forEach((el) => el.remove())
       this.forceReleaseBodyScrollLock()
+      document.body.classList.remove('modal-open')
+      document.body.style.removeProperty('padding-right')
+      document.documentElement.style.overflowY = 'auto'
+      document.body.style.overflowY = 'auto'
     },
 
     bindStaleScrollLockRelease() {
       if (typeof window === 'undefined' || this._releaseStaleScrollLock) return
-      this._releaseStaleScrollLock = () => this.releaseStaleBodyScrollLock()
-      window.addEventListener('wheel', this._releaseStaleScrollLock, { passive: true })
-      window.addEventListener('touchmove', this._releaseStaleScrollLock, { passive: true })
-      window.addEventListener('pointerdown', this._releaseStaleScrollLock, { passive: true })
+      this._releaseStaleScrollLock = () => this.unstickPageScroll()
+      const opts = { passive: true, capture: true }
+      window.addEventListener('wheel', this._releaseStaleScrollLock, opts)
+      window.addEventListener('touchmove', this._releaseStaleScrollLock, opts)
+      window.addEventListener('touchstart', this._releaseStaleScrollLock, opts)
+      window.addEventListener('pointerdown', this._releaseStaleScrollLock, opts)
     },
 
     unbindStaleScrollLockRelease() {
       if (typeof window === 'undefined' || !this._releaseStaleScrollLock) return
-      window.removeEventListener('wheel', this._releaseStaleScrollLock)
-      window.removeEventListener('touchmove', this._releaseStaleScrollLock)
-      window.removeEventListener('pointerdown', this._releaseStaleScrollLock)
+      const opts = { capture: true }
+      window.removeEventListener('wheel', this._releaseStaleScrollLock, opts)
+      window.removeEventListener('touchmove', this._releaseStaleScrollLock, opts)
+      window.removeEventListener('touchstart', this._releaseStaleScrollLock, opts)
+      window.removeEventListener('pointerdown', this._releaseStaleScrollLock, opts)
       this._releaseStaleScrollLock = null
     },
 

@@ -30,10 +30,10 @@ assert.match(memorisation, /<SessionAnalysisModal/, 'Memorisation keeps the shar
 assert.doesNotMatch(memorisation, /@click\.self="closeSessionAnalyticsModal"/, 'backdrop click no longer closes the modal')
 assert.match(modal, /@click\.self\.prevent/, 'backdrop click is swallowed')
 assert.match(modal, /@mousedown\.self\.prevent/, 'backdrop mousedown is swallowed')
-assert.match(modal, /modal-close-btn/, 'existing close button remains')
+assert.match(modal, /btn-close/, 'existing close button remains')
 assert.match(modal, /variant="error"/, 'error state present')
 assert.match(modal, /variant="empty"/, 'empty state present')
-assert.match(modal, /analytics-loading/, 'loading state present')
+assert.match(modal, /spinner-border/, 'loading state present')
 assert.match(modal, /session-analysis-modal-open/, 'background scroll/interaction is locked')
 
 const first = buildSessionAnalysisView({
@@ -78,6 +78,8 @@ const first = buildSessionAnalysisView({
 assert.equal(first.hasContent, true)
 assert.match(first.sessionLabel, /Al-Ikhlas/)
 assert.match(first.sessionLabel, /1/)
+assert.doesNotMatch(first.sessionMeta, /T10:00:00/)
+assert.match(first.sessionMeta, /2026/)
 assert.ok(first.summaryCards.some((card) => card.key === 'accuracy' && String(card.value).includes('77')))
 assert.ok(first.aiReview)
 assert.notEqual(first.aiReview.accuracy, 41)

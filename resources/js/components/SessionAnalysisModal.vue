@@ -1,42 +1,45 @@
 <template>
   <Teleport to="body">
+    <div v-if="open" class="modal-backdrop fade show sa-session-overview-backdrop"></div>
     <div
       v-if="open"
-      class="modal-overlay mutqin-modal-overlay session-analytics-overlay session-analysis-modal-root"
+      id="sa-session-overview"
+      class="modal fade show d-block session-analysis-modal-root"
+      tabindex="-1"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="titleId"
       @mousedown.self.prevent
       @click.self.prevent
       @keydown="onOverlayKeydown"
     >
-      <div class="modal-dialog modal-dialog-centered modal-xl mutqin-modal-dialog mutqin-modal-dialog--wide">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div
           ref="dialog"
-          class="modal-content mutqin-modal-surface session-analytics-modal"
-          role="dialog"
-          aria-modal="true"
-          :aria-labelledby="titleId"
+          class="modal-content"
           tabindex="-1"
         >
-          <div class="modal-header session-analytics-header">
-            <div class="session-analytics-head-copy">
-              <h2 :id="titleId">{{ title }}</h2>
-              <p v-if="resolvedSessionLabel">{{ resolvedSessionLabel }}</p>
-              <small v-if="resolvedSessionMeta">{{ resolvedSessionMeta }}</small>
+          <div class="modal-header border-0 sa-ui-header">
+            <div class="sa-ui-header__copy">
+              <h2 :id="titleId" class="modal-title">{{ title }}</h2>
+              <div class="sa-ov__session">
+                <span v-if="resolvedSessionLabel" class="sa-ov__chip">{{ resolvedSessionLabel }}</span>
+                <span v-if="resolvedSessionMeta" class="sa-ov__when">{{ resolvedSessionMeta }}</span>
+              </div>
             </div>
-            <div class="session-analytics-head-actions">
+            <div class="d-flex align-items-center gap-2">
               <slot name="header-actions" />
               <button
                 type="button"
-                class="modal-close-btn"
+                class="btn-close"
                 :aria-label="closeLabel"
                 @click="$emit('close')"
-              >
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-              </button>
+              ></button>
             </div>
           </div>
-          <div class="modal-body session-analytics-body">
-            <div v-if="loading" class="analytics-loading" role="status">
-              <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+          <div class="modal-body sa-ui-body">
+            <div v-if="loading" class="d-flex align-items-center justify-content-center gap-2 py-5 text-muted" role="status">
+              <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
               <span>{{ loadingLabel }}</span>
             </div>
             <AppStatus
@@ -60,112 +63,83 @@
             />
             <template v-else>
               <slot>
-                <template v-if="analysis">
-                  <section v-if="analysis.summaryCards?.length" class="session-analytics-section">
-                    <div class="session-analytics-summary-grid">
-                      <article
-                        v-for="item in analysis.summaryCards"
-                        :key="item.key"
-                        class="session-analytics-summary-card"
+                <div v-if="analysis" class="sa-ov">
+                  <section v-if="analysis.aiReview" class="sa-ov__hero" :class="`is-${aiLeadTone}`">
+                    <div class="sa-ov__hero-main">
+                      <div
+                        v-if="aiLeadPercent != null"
+                        class="sa-ov__ring"
+                        role="img"
+                        :aria-label="aiLeadStat ? `${aiLeadStat.label} ${aiLeadStat.value}` : ''"
                       >
-                        <span>{{ item.label }}</span>
-                        <strong>{{ item.value }}</strong>
-                        <small>{{ item.description }}</small>
-                      </article>
+                        <svg viewBox="0 0 36 36" aria-hidden="true">
+                          <circle class="sa-ov__ring-track" cx="18" cy="18" r="15.5" pathLength="100" />
+                          <circle
+                            class="sa-ov__ring-fill"
+                            cx="18"
+                            cy="18"
+                            r="15.5"
+                            pathLength="100"
+                            :stroke-dasharray="`${aiLeadPercent} 100`"
+                          />
+                        </svg>
+                        <strong>{{ Math.round(aiLeadPercent) }}</strong>
+                      </div>
+                      <div class="sa-ov__hero-copy">
+                        <p v-if="aiLeadStat" class="sa-ov__hero-label">{{ aiLeadStat.label }}</p>
+                        <p v-if="analysis.aiReview.outcomeLabel" class="sa-ov__hero-status">{{ analysis.aiReview.outcomeLabel }}</p>
+                      </div>
+                    </div>
+                    <ul v-if="aiFactStats.length" class="sa-ov__facts">
+                      <li v-for="stat in aiFactStats" :key="stat.key">
+                        <span>{{ stat.label }}</span>
+                        <strong>{{ stat.value }}</strong>
+                      </li>
+                    </ul>
+                  </section>
+
+                  <p v-if="overviewCards.length" class="sa-ov__meta">
+                    <span v-for="item in overviewCards" :key="item.key">{{ item.label }} {{ item.value }}</span>
+                  </p>
+
+                  <section v-if="analysis.ayahRows?.length" class="sa-ov__panel">
+                    <h3>{{ wordsTitle }}</h3>
+                    <article
+                      v-for="row in analysis.ayahRows"
+                      :key="`ayah-${row.ayah || row.ayahLabel}`"
+                      class="sa-ov__ayah"
+                    >
+                      <p class="sa-ov__ayah-ar" lang="ar" dir="rtl">
+                        <template v-for="(part, index) in row.parts" :key="`${row.ayah}-${index}`">
+                          <span class="sa-ov__word" :class="part.tone">{{ part.text }}</span>
+                          <span v-if="index < row.parts.length - 1"> </span>
+                        </template>
+                        <span v-if="ayahIndex(row)" class="sa-ov__ayah-no">{{ ayahIndex(row) }}</span>
+                      </p>
+                    </article>
+                  </section>
+
+                  <section v-if="analysis.recommendations?.length" class="sa-ov__panel">
+                    <h3>{{ recommendationsTitle }}</h3>
+                    <div v-for="item in analysis.recommendations" :key="item.key" class="sa-ov__note">
+                      <strong>{{ item.label }}</strong>
+                      <span v-if="item.detail">{{ item.detail }}</span>
                     </div>
                   </section>
 
-                  <section v-if="analysis.aiReview" class="session-analytics-section">
-                    <article class="session-analytics-panel analytics-ai-report">
-                      <header>
-                        <h3>{{ aiResultsTitle }}</h3>
-                        <p>{{ aiResultsSubtitle }}</p>
-                      </header>
-                      <div v-if="aiStatChips.length" class="recitation-result-stats">
-                        <article
-                          v-for="stat in aiStatChips"
-                          :key="stat.key"
-                          class="recitation-result-stat"
-                          :class="stat.tone"
-                        >
-                          <span>{{ stat.label }}</span>
-                          <strong>{{ stat.value }}</strong>
-                          <small>{{ stat.description }}</small>
-                        </article>
-                      </div>
-                      <div v-if="analysis.aiReview.summaryLine || analysis.aiReview.outcomeLabel" class="recitation-next-card">
-                        <span>{{ analysis.aiReview.outcomeLabel }}</span>
-                        <strong>{{ analysis.aiReview.summaryLine }}</strong>
-                      </div>
-                    </article>
+                  <section v-if="analysis.retention?.length" class="sa-ov__panel sa-ov__panel--soft">
+                    <h3>{{ retentionTitle }}</h3>
+                    <div v-for="item in analysis.retention" :key="item.id || item.label" class="sa-ov__note">
+                      <strong>{{ item.label }}</strong>
+                      <span v-if="item.detail">{{ item.detail }}</span>
+                    </div>
                   </section>
 
-                  <section v-if="analysis.ayahRows?.length" class="session-analytics-section">
-                    <article class="session-analytics-panel">
-                      <header>
-                        <h3>{{ wordsTitle }}</h3>
-                      </header>
-                      <ul class="session-analysis-ayah-list">
-                        <li
-                          v-for="row in analysis.ayahRows"
-                          :key="`ayah-${row.ayah || row.ayahLabel}`"
-                          class="session-analysis-ayah-item"
-                        >
-                          <span v-if="row.ayahLabel" class="session-analysis-ayah-label">{{ row.ayahLabel }}</span>
-                          <p class="session-analysis-ayah-words" lang="ar" dir="rtl">
-                            <span
-                              v-for="(part, index) in row.parts"
-                              :key="`${row.ayah}-${index}`"
-                              class="session-analysis-word"
-                              :class="part.tone"
-                            >{{ part.text }}</span>
-                          </p>
-                        </li>
-                      </ul>
-                    </article>
+                  <section v-if="analysis.audio?.url" class="sa-ov__panel">
+                    <h3>{{ audioTitle }}</h3>
+                    <audio class="w-100" controls :src="analysis.audio.url"></audio>
                   </section>
-
-                  <section v-if="analysis.recommendations?.length" class="session-analytics-section">
-                    <article class="session-analytics-panel">
-                      <header>
-                        <h3>{{ recommendationsTitle }}</h3>
-                      </header>
-                      <ul class="session-analysis-note-list">
-                        <li v-for="item in analysis.recommendations" :key="item.key">
-                          <strong>{{ item.label }}</strong>
-                          <p v-if="item.detail">{{ item.detail }}</p>
-                        </li>
-                      </ul>
-                    </article>
-                  </section>
-
-                  <section v-if="analysis.retention?.length" class="session-analytics-section">
-                    <article class="session-analytics-panel">
-                      <header>
-                        <h3>{{ retentionTitle }}</h3>
-                      </header>
-                      <ul class="session-analysis-note-list">
-                        <li v-for="item in analysis.retention" :key="item.id || item.label">
-                          <strong>{{ item.label }}</strong>
-                          <p v-if="item.detail">{{ item.detail }}</p>
-                        </li>
-                      </ul>
-                    </article>
-                  </section>
-
-                  <section v-if="analysis.audio?.url" class="session-analytics-section">
-                    <article class="session-analytics-panel">
-                      <header>
-                        <h3>{{ audioTitle }}</h3>
-                      </header>
-                      <audio
-                        class="session-analysis-audio"
-                        controls
-                        :src="analysis.audio.url"
-                      ></audio>
-                    </article>
-                  </section>
-                </template>
+                </div>
               </slot>
             </template>
           </div>
@@ -177,6 +151,7 @@
 
 <script>
 import AppStatus from './AppStatus.vue'
+import './SessionAnalysisOverview.css'
 
 export default {
   name: 'SessionAnalysisModal',
@@ -221,6 +196,11 @@ export default {
     resolvedSessionMeta() {
       return this.sessionMeta || this.analysis?.sessionMeta || ''
     },
+    overviewCards() {
+      const cards = Array.isArray(this.analysis?.summaryCards) ? this.analysis.summaryCards : []
+      if (!this.analysis?.aiReview) return cards
+      return cards.filter((card) => card.key === 'time' || card.key === 'repeats')
+    },
     aiStatChips() {
       const review = this.analysis?.aiReview
       if (!review) return []
@@ -244,6 +224,25 @@ export default {
       }
       return []
     },
+    aiLeadStat() {
+      return this.aiStatChips[0] || null
+    },
+    aiFactStats() {
+      return this.aiStatChips.slice(1)
+    },
+    aiLeadPercent() {
+      const raw = String(this.aiLeadStat?.value || '')
+      const match = raw.match(/(\d+(?:\.\d+)?)/)
+      if (!match) return null
+      return Math.max(0, Math.min(100, Number(match[1])))
+    },
+    aiLeadTone() {
+      const percent = this.aiLeadPercent
+      if (percent == null) return 'neutral'
+      if (percent >= 90) return 'strong'
+      if (percent >= 70) return 'mixed'
+      return 'weak'
+    },
   },
   watch: {
     open: {
@@ -266,6 +265,11 @@ export default {
     this.syncBodyLock(false)
   },
   methods: {
+    ayahIndex(row) {
+      if (row?.ayah) return row.ayah
+      const match = String(row?.ayahLabel || '').match(/\d+/)
+      return match ? match[0] : ''
+    },
     onOverlayKeydown(event) {
       if (event.key === 'Escape') {
         event.preventDefault()
@@ -297,199 +301,3 @@ export default {
   },
 }
 </script>
-
-<style>
-.session-analysis-modal-root.session-analytics-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 12000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: color-mix(in srgb, #0a100d 62%, transparent);
-  backdrop-filter: blur(6px);
-}
-
-[data-theme="light"] .session-analysis-modal-root.session-analytics-overlay,
-[data-theme="sepia"] .session-analysis-modal-root.session-analytics-overlay {
-  background: color-mix(in srgb, #1a1410 42%, transparent);
-}
-
-html.session-analysis-modal-open,
-body.session-analysis-modal-open {
-  overflow: hidden;
-}
-
-.session-analysis-modal-root .session-analytics-modal {
-  width: min(1080px, calc(100% - 2rem));
-  max-width: 100%;
-  max-height: min(88vh, 100dvh - 2rem);
-  border-radius: var(--mutqin-modal-radius, 20px);
-  overflow: hidden;
-  background: var(--mutqin-modal-surface-bg, var(--surface-strong, #f9f5ef));
-  color: var(--text, inherit);
-}
-
-.session-analysis-modal-root .session-analytics-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.session-analysis-modal-root .session-analytics-head-copy h2 {
-  margin: 0;
-  font-size: 1.15rem;
-}
-
-.session-analysis-modal-root .session-analytics-head-copy p {
-  margin: 6px 0 0;
-  font-size: 0.9rem;
-  color: var(--text, inherit);
-}
-
-.session-analysis-modal-root .session-analytics-head-copy small {
-  display: block;
-  margin-top: 4px;
-  color: var(--text-muted, #6f655b);
-  font-size: 0.76rem;
-}
-
-.session-analysis-modal-root .session-analytics-head-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.session-analysis-modal-root .session-analytics-body {
-  max-height: calc(88vh - 92px);
-  overflow-y: auto;
-  display: grid;
-  gap: 16px;
-}
-
-.session-analysis-modal-root .session-analytics-section,
-.session-analysis-modal-root .session-analytics-panel,
-.session-analysis-modal-root .session-analytics-summary-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.session-analysis-modal-root .session-analytics-summary-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.session-analysis-modal-root .session-analytics-summary-card,
-.session-analysis-modal-root .session-analytics-panel {
-  border: 1px solid var(--border, rgba(80, 64, 48, 0.16));
-  border-radius: 14px;
-  padding: 14px;
-  background: color-mix(in srgb, #fff 64%, transparent);
-}
-
-.session-analysis-modal-root .session-analytics-summary-card span,
-.session-analysis-modal-root .session-analytics-panel header p,
-.session-analysis-modal-root .analytics-empty-panel {
-  font-size: 0.76rem;
-  color: var(--text-muted, #6f655b);
-}
-
-.session-analysis-modal-root .session-analytics-panel header h3 {
-  margin: 0;
-  font-size: 0.88rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-muted, #6f655b);
-}
-
-.session-analysis-modal-root .recitation-result-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-  gap: 8px;
-}
-
-.session-analysis-modal-root .recitation-result-stat,
-.session-analysis-modal-root .recitation-next-card {
-  border: 1px solid var(--border, rgba(80, 64, 48, 0.16));
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: grid;
-  gap: 4px;
-}
-
-.session-analysis-ayah-list,
-.session-analysis-note-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 10px;
-}
-
-.session-analysis-ayah-words {
-  margin: 0.25rem 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.45rem;
-  font-family: var(--font-ar, "Amiri", "Noto Naskh Arabic", serif);
-  font-size: 1.15rem;
-  line-height: 1.8;
-}
-
-.session-analysis-word {
-  padding: 0.05rem 0.2rem;
-  border-radius: 0.35rem;
-}
-
-.session-analysis-word.is-correct { color: #2d6a4f; }
-.session-analysis-word.is-weak { color: #9a6b14; background: rgba(201, 162, 39, 0.14); }
-.session-analysis-word.is-incorrect { color: #9b2c2c; background: rgba(180, 60, 60, 0.12); }
-.session-analysis-word.is-omitted { color: #5c534b; text-decoration: underline dotted; }
-
-.session-analysis-audio {
-  width: 100%;
-}
-
-.session-analysis-modal-root .analytics-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  min-height: 8rem;
-  color: var(--text-muted, #6f655b);
-}
-
-[data-theme="dark"] .session-analysis-modal-root .session-analytics-modal {
-  background: var(--mutqin-modal-surface-bg, #1c1916);
-}
-
-[data-theme="dark"] .session-analysis-modal-root .session-analytics-summary-card,
-[data-theme="dark"] .session-analysis-modal-root .session-analytics-panel {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 236, 216, 0.12);
-}
-
-@media (max-width: 720px) {
-  .session-analysis-modal-root .session-analytics-summary-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  .session-analysis-modal-root.session-analytics-overlay {
-    padding: 0;
-    align-items: stretch;
-  }
-
-  .session-analysis-modal-root .session-analytics-modal {
-    width: 100%;
-    max-height: 100dvh;
-    border-radius: 0;
-  }
-
-  .session-analysis-modal-root .session-analytics-summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
