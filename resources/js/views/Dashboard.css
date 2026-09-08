@@ -124,6 +124,24 @@ html[data-theme="dark"] .user-dashboard,
     grid-column: 2;
     grid-row: 1;
   }
+
+  .dash-ai-results {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .user-dashboard__primary {
+    order: 1;
+  }
+
+  .dash-ai-results {
+    order: 2;
+  }
+
+  .dash-section--weekly {
+    order: 3;
+  }
 }
 
 .user-dashboard__loading,

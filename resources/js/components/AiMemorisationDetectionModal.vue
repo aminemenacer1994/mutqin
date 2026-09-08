@@ -55,6 +55,7 @@
                 </button>
               </div>
             </div>
+            <p v-if="readyCopy && isReady && !isError && !showInlineError" class="amd-brief">{{ readyCopy }}</p>
           </header>
 
           <div class="amd-body amd-body--premium amd-body--scroll">
@@ -294,6 +295,7 @@ export default {
     rangeLabel: { type: String, default: '' },
     betaBadge: { type: String, default: 'Beta' },
     disclaimer: { type: String, default: '' },
+    readyCopy: { type: String, default: '' },
     micStatus: { type: String, default: 'ready' },
     micStatusLabel: { type: String, default: 'Ready' },
     micGuidance: { type: String, default: '' },

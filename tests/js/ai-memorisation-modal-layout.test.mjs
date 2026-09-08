@@ -38,6 +38,19 @@ assertMatch('vue sticky header class', vue, /amd-header--sticky/)
 assertMatch('vue scrollable body class', vue, /amd-body--scroll/)
 assertMatch('vue sticky footer markup', vue, /amd-footer amd-footer--sticky/)
 assertMatch('vue footer hosts primary start action', vue, /amd-start-wrap--footer/)
+assertMatch('vue accepts a ready-copy explanation', vue, /readyCopy:\s*\{\s*type:\s*String/)
+assertMatch('vue shows a short ready-state explanation', vue, /class="amd-brief"/)
+assertMatch('css ready copy uses a full-width reading measure', css, /\.amd-brief[\s\S]*?width:\s*100%/)
+assertMatch(
+  'css title uses a serif display family',
+  css,
+  /\.amd-title--premium[\s\S]*?font-family:\s*"Iowan Old Style"/
+)
+assert.doesNotMatch(
+  css,
+  /\.amd-mushaf-shell\.is-ready:not\(\.is-listening\)[\s\S]*?\.amd-ayah-run[\s\S]*?display:\s*contents/,
+  'ready state must not collapse ayah runs into a side-by-side marker row'
+)
 assertMatch('vue footer hosts complete actions', vue, /amd-complete__actions--footer/)
 assertMatch('vue footer hosts stop action', vue, /amd-footer-stop-btn|amd-footer__stop/)
 assertMatch('css sticky header', css, /\.amd-header--sticky[\s\S]*?position:\s*sticky/)

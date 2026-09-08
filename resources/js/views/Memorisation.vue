@@ -412,10 +412,10 @@
           </div>
           <div class="workspace-shell-head-utility-row">
           <div class="workspace-shell-actions workspace-shell-head-actions">
-            <div class="action-buttons-group">
+            <div class="action-buttons-group w-100">
               <div
                 v-if="isPostSessionChoiceVisible"
-                class="top-card-session-actions post-session-choice-pair"
+                class="top-card-session-actions post-session-choice-pair w-100"
                 :class="{
                   'has-paired-actions': canShowRepeatRecommendedAction,
                 }"
@@ -452,7 +452,7 @@
               </div>
               <div
                 v-else
-                class="top-card-session-cluster"
+                class="top-card-session-cluster w-100"
                 :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
               >
                 <div
@@ -487,12 +487,12 @@
                   </button>
                 </div>
                 <div
-                  class="top-card-session-actions"
+                  class="top-card-session-actions w-100"
                   :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
                 >
                 <div
                   v-if="showHeaderSessionAction"
-                  class="action-btn btn btn-primary session-primary-action top-card-action-trigger"
+                  class="action-btn btn btn-primary session-primary-action top-card-action-trigger w-100"
                   role="button"
                   tabindex="0"
                   :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
@@ -511,7 +511,7 @@
                 <button
                   v-if="showHeaderEndSessionAction"
                   type="button"
-                  class="action-btn top-card-action-trigger action-btn-exit mutqin-btn--destructive"
+                  class="action-btn top-card-action-trigger action-btn-exit mutqin-btn--destructive w-100"
                   data-tour="end-session"
                   @click="openSessionExitModalFromMenu"
                   :title="t('sessionStatus.end')"
@@ -4290,6 +4290,7 @@
       :range-label="amdRangeLabel"
       :beta-badge="amdLabels.betaBadge"
       :disclaimer="amdLabels.disclaimer"
+      :ready-copy="amdReadyCopy"
       :mic-status="amdLearnerMicStatus"
       :mic-status-label="amdLearnerMicStatusLabel"
       :mic-guidance="amdMicGuidance"

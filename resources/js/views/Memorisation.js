@@ -3017,13 +3017,7 @@ export default {
       return !!(this.hasVerses || this.showSessionOverviewIdleActions)
     },
     showWorkspaceAskMutqinCta() {
-      if (!this.isLoggedIn) return false
-      if (!this.aiTestModalsEnabled) return false
-      if (this.isPostSessionChoiceVisible) return false
-      if (this.isOnboardingExperienceActive) return false
-      if (this.amdOpen) return false
-      if (this.askMutqinOpen) return false
-      return !!(this.hasVerses || this.showSessionOverviewIdleActions)
+      return false
     },
     aiReciteResultsHref() {
       return '/dashboard#ai-recite-results'
@@ -7653,7 +7647,7 @@ export default {
     },
     amdReadyCopy() {
       return this.t?.('memorisation.amd.readyCopy')
-        || 'Select your range, hide the text, and recite from memory. Mutqin will listen, highlight mistakes, and build a personalised practice plan.'
+        || 'Recite this range from memory. Mutqin listens and colours words as it follows you.'
     },
     amdLabels() {
       return {

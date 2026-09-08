@@ -317,7 +317,6 @@
             </div>
           </div>
         </section>
-        </div>
 
         <section
           id="ai-recite-results"
@@ -480,6 +479,7 @@
             </template>
           </div>
         </section>
+        </div>
 
       </template>
     </div>

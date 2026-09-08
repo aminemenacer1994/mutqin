@@ -37776,6 +37776,94 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
     0 0 0 3px var(--ai-recite-glow);
 }
 
+/* Mobile AI Recite icon: theme-aware circle, scales with the viewport. */
+@media (max-width: 767.98px) {
+  .workspace-shell-head-utility-row .top-card-session-cluster {
+    --ai-circle-size: clamp(36px, 9.6vw, 44px);
+  }
+
+  html body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger {
+    --ai-recite-bg: #f6efe4;
+    --ai-recite-bg-deep: #e8d6ba;
+    --ai-recite-border: #b8894f;
+    --ai-recite-icon: #6b4a2e;
+    --ai-recite-highlight: rgba(255, 252, 246, 0.88);
+    --ai-recite-glow: rgba(166, 124, 82, 0.16);
+    box-sizing: border-box !important;
+    width: var(--ai-circle-size) !important;
+    min-width: var(--ai-circle-size) !important;
+    max-width: var(--ai-circle-size) !important;
+    height: var(--ai-circle-size) !important;
+    min-height: var(--ai-circle-size) !important;
+    max-height: var(--ai-circle-size) !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    border: 1.5px solid var(--ai-recite-border) !important;
+    background:
+      radial-gradient(circle at 32% 28%, var(--ai-recite-highlight), transparent 58%),
+      linear-gradient(180deg, var(--ai-recite-bg), var(--ai-recite-bg-deep)) !important;
+    color: var(--ai-recite-icon) !important;
+    box-shadow:
+      inset 0 1px 0 var(--ai-recite-highlight),
+      0 1px 2px color-mix(in srgb, #3d2a18 10%, transparent) !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger i {
+    font-size: clamp(0.95rem, 3.4vw, 1.15rem) !important;
+    color: var(--ai-recite-icon) !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--ai-recite-highlight) 72%, transparent);
+    pointer-events: none;
+  }
+
+  [data-theme="light"] html body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger,
+  html body .app[data-theme="light"] .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger {
+    --ai-recite-bg: #f8f3ea;
+    --ai-recite-bg-deep: #eadcc6;
+    --ai-recite-border: #a67c52;
+    --ai-recite-icon: #6b4a2e;
+    --ai-recite-highlight: rgba(255, 253, 248, 0.92);
+    --ai-recite-glow: rgba(166, 124, 82, 0.14);
+  }
+
+  [data-theme="sepia"] html body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger,
+  html body .app[data-theme="sepia"] .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger {
+    --ai-recite-bg: #f3e6d0;
+    --ai-recite-bg-deep: #e2c89a;
+    --ai-recite-border: #b8894f;
+    --ai-recite-icon: #5c4028;
+    --ai-recite-highlight: rgba(255, 246, 226, 0.82);
+    --ai-recite-glow: rgba(184, 137, 79, 0.18);
+  }
+
+  [data-theme="dark"] html body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger,
+  html body .app[data-theme="dark"] .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger,
+  html[data-theme="dark"] body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger {
+    --ai-recite-bg: #3a2c1c;
+    --ai-recite-bg-deep: #22180f;
+    --ai-recite-border: #d4a574;
+    --ai-recite-icon: #f0c894;
+    --ai-recite-highlight: rgba(255, 236, 205, 0.12);
+    --ai-recite-glow: rgba(212, 165, 116, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 236, 205, 0.12),
+      0 1px 3px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger:hover,
+  html body .app .workspace-shell-head-utility-row .workspace-ai-recite-cta.top-card-action-trigger:focus-visible {
+    box-shadow:
+      inset 0 1px 0 var(--ai-recite-highlight),
+      0 0 0 3px var(--ai-recite-glow) !important;
+  }
+}
+
 /* Mobile-only session cluster layout for AI Recite + session controls. */
 @media (max-width: 767.98px) {
   .top-card-session-cluster:not(.has-paired-actions):has(.workspace-ai-recite-cta) {

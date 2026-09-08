@@ -443,7 +443,7 @@ export default {
       const start = this.rangeStart
       const end = Number(this.rangeEnd || start)
       if (!start || !end || end <= start) return this.t('memorisation.askMutqin.openHere')
-      return this.t('memorisation.askMutqin.openRangeNamed', { start, end })
+      return this.t('memorisation.askMutqin.openRange')
     },
     rangeSummary() {
       const start = this.rangeStart

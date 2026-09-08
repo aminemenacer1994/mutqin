@@ -469,10 +469,10 @@
 
 .amd-title {
   margin: 0;
-  font-family: var(--font-ui, "SF Pro Text", "Avenir Next", system-ui, sans-serif);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif;
   font-size: clamp(1.2rem, 3vw, 1.35rem);
   font-weight: 650;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.02em;
   color: #1c1917;
 }
 
@@ -1137,10 +1137,10 @@
 
 .amd-title--premium {
   margin: 0;
-  font-family: var(--font-ui, "SF Pro Text", "Avenir Next", system-ui, sans-serif);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif;
   font-size: clamp(1.22rem, 3.2vw, 1.42rem);
   font-weight: 650;
-  letter-spacing: -0.028em;
+  letter-spacing: -0.02em;
   color: #1c1917;
 }
 
@@ -2201,18 +2201,38 @@
 
 .amd-header--premium .amd-title--premium,
 .amd-header--compact .amd-title--premium {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
   font-size: clamp(1.1rem, 3.4vw, 1.35rem) !important;
   line-height: 1.3 !important;
 }
 
 .amd-header--premium .amd-range--premium,
 .amd-header--compact .amd-range--premium {
-  margin: 0.4rem 0 0 !important;
-  font-size: 0.88rem !important;
+  margin: 0.35rem 0 0 !important;
+  font-size: 0.86rem !important;
   line-height: 1.4;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, #a8a29e 50%, transparent);
-  text-underline-offset: 0.2em;
+  color: color-mix(in srgb, currentColor 72%, transparent);
+  text-decoration: none;
+}
+
+.amd-brief {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  font-weight: 400;
+  color: color-mix(in srgb, currentColor 68%, transparent);
+}
+
+[data-theme="dark"] .amd-brief,
+.amd-overlay[data-theme="dark"] .amd-brief {
+  color: color-mix(in srgb, #f5e6d0 68%, transparent);
+}
+
+[data-theme="sepia"] .amd-brief,
+.amd-overlay[data-theme="sepia"] .amd-brief {
+  color: color-mix(in srgb, #5c4028 78%, transparent);
 }
 
 .amd-header--compact .amd-beta-badge {
@@ -2758,9 +2778,10 @@
   display: flex !important;
   flex-wrap: nowrap !important;
   align-items: center !important;
-  justify-content: space-between !important;
+  justify-content: flex-start !important;
   gap: 0.45rem !important;
-  width: 100% !important;
+  width: auto !important;
+  max-width: 100% !important;
   min-width: 0 !important;
 }
 
@@ -4253,6 +4274,7 @@
 }
 
 .amd-header--compact .amd-title--premium {
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
   font-size: clamp(1rem, 2.8vw, 1.14rem) !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em;
@@ -4605,8 +4627,9 @@
 
 .amd-toolbar--tools.amd-tools-bar.amd-tools-bar--full {
   flex-wrap: nowrap !important;
-  justify-content: space-between !important;
-  width: 100% !important;
+  justify-content: flex-start !important;
+  width: auto !important;
+  max-width: 100% !important;
 }
 
 .amd-tools-bar__icon-btn.amd-tool-btn,
@@ -6035,56 +6058,78 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 
   html body .app .workspace-shell-head-utility-row > .workspace-shell-head-actions,
   html body .app .workspace-shell-head-utility-row > .workspace-shell-actions,
-  html body .app .workspace-shell-head-utility-row .action-buttons-group {
+  html body .app .workspace-shell-head-utility-row .action-buttons-group,
+  html body .app .workspace-shell-head-utility-row .action-buttons-group.w-100 {
     grid-area: actions !important;
     display: flex !important;
     flex-flow: row nowrap !important;
-    align-items: center !important;
+    align-items: stretch !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     overflow: visible !important;
   }
 
-  html body .app .workspace-shell .top-card-session-cluster.has-paired-actions:has(.workspace-ai-cta-pair) {
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions:has(.workspace-ai-cta-pair),
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions:has(.workspace-ai-recite-cta) {
     display: grid !important;
-    grid-template-columns: minmax(6.6rem, 1.4fr) minmax(4.6rem, 1fr) 40px 40px !important;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 40px !important;
     align-items: center !important;
+    justify-content: stretch !important;
     gap: 0.4rem !important;
     width: 100% !important;
+    max-width: 100% !important;
     min-width: 0 !important;
     overflow: visible !important;
   }
 
-  html body .app .workspace-shell .top-card-session-cluster.has-paired-actions > .workspace-ai-cta-pair,
-  html body .app .workspace-shell .top-card-session-cluster.has-paired-actions > .top-card-session-actions {
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions).w-100 {
+    grid-template-columns: minmax(0, 1fr) 40px !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster > .workspace-ai-cta-pair,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions > .workspace-ai-cta-pair,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster > .top-card-session-actions,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions > .top-card-session-actions,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster > .top-card-session-actions.w-100 {
     display: contents !important;
   }
 
-  html body .app .workspace-shell .top-card-session-cluster .session-primary-action,
-  html body .app .workspace-shell .top-card-session-cluster .session-primary-action[style] {
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster .session-primary-action,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster .session-primary-action[style] {
     grid-column: 1 !important;
     grid-row: 1 !important;
   }
 
-  html body .app .workspace-shell .top-card-session-cluster .action-btn-exit {
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions .action-btn-exit {
     grid-column: 2 !important;
     grid-row: 1 !important;
   }
 
-  html body .app .workspace-shell .top-card-session-cluster .workspace-ask-mutqin-cta {
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster .workspace-ask-mutqin-cta {
     grid-column: 3 !important;
     grid-row: 1 !important;
   }
 
-  html body .app .workspace-shell .top-card-session-cluster .workspace-ai-recite-cta {
-    grid-column: 4 !important;
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions) .workspace-ask-mutqin-cta {
+    grid-column: 2 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster .workspace-ai-recite-cta {
+    grid-column: 3 !important;
     grid-row: 1 !important;
   }
 
-  html body .app .workspace-shell .top-card-session-cluster .session-primary-action,
-  html body .app .workspace-shell .top-card-session-cluster .session-primary-action[style],
-  html body .app .workspace-shell .top-card-session-cluster .action-btn-exit {
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster:not(.has-paired-actions) .workspace-ai-recite-cta {
+    grid-column: 2 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster .session-primary-action,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster .session-primary-action[style],
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster .action-btn-exit,
+  html body .app .workspace-shell-head-utility-row .top-card-action-trigger.session-primary-action,
+  html body .app .workspace-shell-head-utility-row .top-card-action-trigger.action-btn-exit {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -6139,5 +6184,94 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     padding: 0 !important;
     margin: 0 !important;
     border-radius: 999px !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .action-buttons-group.w-100,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100,
+  html body .app .workspace-shell-head-utility-row .top-card-session-actions.w-100 {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 {
+    --ai-circle-size: clamp(36px, 9.6vw, 44px);
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) var(--ai-circle-size) !important;
+    justify-content: stretch !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100:not(.has-paired-actions) {
+    grid-template-columns: minmax(0, 1fr) var(--ai-circle-size) !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .workspace-ai-cta-pair,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .top-card-session-actions,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 > .top-card-session-actions.w-100 {
+    display: contents !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 .session-primary-action.w-100,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 .action-btn-exit.w-100,
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster.w-100 .session-primary-action.w-100[style] {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster :is(
+    .workspace-ask-mutqin-cta,
+    .workspace-ai-recite-cta
+  ),
+  html body .app .workspace-shell-head-utility-row .top-card-session-cluster .workspace-ai-cta-pair :is(
+    .workspace-ask-mutqin-cta,
+    .workspace-ai-recite-cta
+  ),
+  html body .app .workspace-shell .workspace-ai-cta-pair .workspace-ai-recite-cta,
+  html body .app .workspace-shell .workspace-shell-actions .workspace-ask-mutqin-cta.top-card-action-trigger,
+  html body .app .workspace-shell .workspace-shell-actions .workspace-ai-recite-cta.top-card-action-trigger {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    justify-self: center !important;
+    flex: 0 0 var(--ai-circle-size, 40px) !important;
+    gap: 0 !important;
+    width: var(--ai-circle-size, 40px) !important;
+    min-width: var(--ai-circle-size, 40px) !important;
+    max-width: var(--ai-circle-size, 40px) !important;
+    height: var(--ai-circle-size, 40px) !important;
+    min-height: var(--ai-circle-size, 40px) !important;
+    max-height: var(--ai-circle-size, 40px) !important;
+    inline-size: var(--ai-circle-size, 40px) !important;
+    block-size: var(--ai-circle-size, 40px) !important;
+    min-inline-size: var(--ai-circle-size, 40px) !important;
+    max-inline-size: var(--ai-circle-size, 40px) !important;
+    min-block-size: var(--ai-circle-size, 40px) !important;
+    max-block-size: var(--ai-circle-size, 40px) !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    border-radius: 50% !important;
+    border: 1.5px solid var(--ai-recite-border, #b8894f) !important;
+    background:
+      radial-gradient(circle at 32% 28%, var(--ai-recite-highlight, rgba(255, 252, 246, 0.88)), transparent 58%),
+      linear-gradient(180deg, var(--ai-recite-bg, #f6efe4), var(--ai-recite-bg-deep, #e8d6ba)) !important;
+    color: var(--ai-recite-icon, #6b4a2e) !important;
+  }
+}
+
+.amd-overlay .amd-brief,
+.amd-header .amd-brief {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 767.98px) {
+  .amd-brief {
+    font-size: 0.8rem;
+    line-height: 1.45;
   }
 }

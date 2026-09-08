@@ -348,14 +348,24 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 
 .ask-mutqin-span__row {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  gap: 0;
+  width: max-content;
+  max-width: 100%;
   min-width: 0;
+  min-height: 2.35rem;
+  border: 1px solid var(--ask-line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--ask-chip);
 }
 
 .ask-mutqin-span__dash {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 0.4rem;
   color: var(--ask-muted);
   font-size: 0.95rem;
   line-height: 1;
@@ -364,10 +374,10 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 .ask-mutqin-span__value,
 .ask-mutqin-span__stepper,
 .ask-mutqin-span__end {
-  min-height: 2.2rem;
-  border-radius: 9px;
-  border: 1px solid var(--ask-line);
-  background: var(--ask-chip);
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--ask-ink);
   font-family: var(--ask-ui);
 }
@@ -376,23 +386,23 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 3.2rem;
-  width: 3.2rem;
+  flex: 0 0 3.1rem;
+  width: 3.1rem;
   font-size: 0.9rem;
   font-weight: 700;
 }
 
 .ask-mutqin-span__stepper {
   display: grid;
-  grid-template-columns: 2rem 3.4rem 2rem;
+  grid-template-columns: 2rem 3.2rem 2rem;
   flex: 0 0 auto;
-  width: 7.4rem;
+  width: 7.2rem;
   overflow: hidden;
 }
 
 .ask-mutqin-span__step,
 .ask-mutqin-span__select {
-  min-height: 2.15rem;
+  min-height: 2.35rem;
   border: 0;
   background: transparent;
   color: inherit;
@@ -411,8 +421,8 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 }
 
 .ask-mutqin-span__select {
-  width: 3.4rem;
-  max-width: 3.4rem;
+  width: 3.2rem;
+  max-width: 3.2rem;
   padding: 0;
   text-align: center;
   text-align-last: center;
@@ -422,12 +432,18 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 
 .ask-mutqin-span__end {
   flex: 0 0 auto;
-  padding: 0 0.7rem;
+  padding: 0 0.8rem;
+  border-inline-start: 1px solid var(--ask-line);
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.1;
   white-space: nowrap;
   cursor: pointer;
+}
+
+.ask-mutqin-span__step:hover:not(:disabled),
+.ask-mutqin-span__end:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ask-accent-soft) 80%, var(--ask-chip));
 }
 
 .ask-mutqin-span__end.is-on,
@@ -471,10 +487,10 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 .ask-mutqin-open {
   min-width: 0;
   min-height: 2.15rem;
-  padding-inline: 0.45rem;
-  font-size: 0.95rem;
-  line-height: 1.2;
-  white-space: normal;
+  padding-inline: 0.55rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .ask-mutqin-aid__tab {
@@ -849,29 +865,29 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-span__row {
-    flex-wrap: nowrap;
-    gap: 0.3rem;
+    width: 100%;
   }
 
   .ask-mutqin-span__value {
-    flex-basis: 2.7rem;
-    width: 2.7rem;
+    flex-basis: 2.8rem;
+    width: 2.8rem;
   }
 
   .ask-mutqin-span__stepper {
-    grid-template-columns: 1.7rem 2.8rem 1.7rem;
-    width: 6.2rem;
+    grid-template-columns: 1.8rem 2.9rem 1.8rem;
+    width: 6.5rem;
   }
 
   .ask-mutqin-span__select {
-    width: 2.8rem;
-    max-width: 2.8rem;
+    width: 2.9rem;
+    max-width: 2.9rem;
   }
 
   .ask-mutqin-span__end {
-    margin-inline-start: 0;
-    padding-inline: 0.45rem;
-    font-size: 0.68rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-inline: 0.55rem;
+    font-size: 0.72rem;
   }
 
   .ask-mutqin-header h2 {
@@ -892,6 +908,11 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
     min-height: 2.05rem;
     font-size: 0.78rem;
     padding-inline: 0.35rem;
+  }
+
+  .ask-mutqin-open {
+    font-size: 0.76rem;
+    padding-inline: 0.4rem;
   }
 
   .ask-mutqin-aid__text {
@@ -1079,7 +1100,8 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-span__row {
-    flex-wrap: wrap !important;
+    width: 100% !important;
+    flex-wrap: nowrap !important;
   }
 }
 

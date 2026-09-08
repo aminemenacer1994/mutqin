@@ -12,6 +12,7 @@ import {
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const dashboard = readFileSync(join(root, 'resources/js/views/Dashboard.vue'), 'utf8')
+const dashboardCss = readFileSync(join(root, 'resources/js/views/Dashboard.css'), 'utf8')
 const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
   + '\n'
   + readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
@@ -35,6 +36,11 @@ assert.doesNotMatch(dashboard, /dash-ai-recite-cta/, 'progress page does not exp
 assert.doesNotMatch(dashboard, /openAiRecite/, 'progress page does not open the standalone modal')
 assert.doesNotMatch(dashboard, /DashboardAiReciteModal/, 'progress page does not mount the AI Recite modal')
 assert.match(dashboard, /id="ai-recite-results"/, 'progress page has an AI Recite results section')
+assert.match(
+  dashboardCss,
+  /max-width:\s*1023\.98px[\s\S]*?\.dash-ai-results[\s\S]*?order:\s*2[\s\S]*?\.dash-section--weekly[\s\S]*?order:\s*3/,
+  'mobile progress page shows AI Recite results above Days with the Qur’an',
+)
 assert.match(dashboard, /loadAiReciteResults/, 'progress page loads saved AI Recite results')
 assert.match(dashboard, /ai-recite-results/, 'progress page can be linked to the results section')
 assert.match(modalCss, /prefers-reduced-motion/, 'modal animation respects reduced motion')
@@ -43,6 +49,7 @@ assert.match(memorisation, /workspace-ai-recite-cta/, 'session card exposes the 
 assert.match(memorisation, /openWorkspaceAiRecite/, 'session card opens the memory check modal')
 assert.match(memorisation, /fromWorkspaceAiRecite:\s*true/, 'session card uses the workspace AI Recite entry')
 assert.match(memorisation, /AiMemorisationDetectionModal/, 'memorisation mounts the memory check modal')
+assert.match(memorisation, /:ready-copy="amdReadyCopy"/, 'memory check modal receives a short feature explanation')
 assert.doesNotMatch(memorisation, /DashboardAiReciteModal/, 'session card does not mount the dashboard AI Recite modal')
 assert.match(memorisation, /presentWorkspaceReciteAnalysis/, 'workspace recite opens analysis after completion')
 assert.match(memorisation, /workspaceReciteAnalysisOpen/, 'memorisation mounts the recite analysis modal')
@@ -58,6 +65,8 @@ assert.match(memorisation, /workspace-ai-icon-spark/, 'session card CTA sparkles
 assert.match(memorisation, /\[data-theme="light"\] \.workspace-ai-recite-cta/, 'light theme gold palette')
 assert.match(memorisation, /\[data-theme="sepia"\] \.workspace-ai-recite-cta/, 'sepia theme gold palette')
 assert.match(memorisation, /\[data-theme="dark"\] \.workspace-ai-recite-cta/, 'dark theme gold palette')
+assert.match(memorisation, /--ai-circle-size:\s*clamp\(36px, 9\.6vw, 44px\)/, 'mobile AI icon scales with the viewport')
+assert.match(memorisation, /data-theme="sepia"\][\s\S]*workspace-ai-recite-cta\.top-card-action-trigger/, 'sepia has a dedicated mobile AI icon palette')
 assert.match(memorisation, /is-animated/, 'session card CTA supports animation toggle')
 assert.match(memorisation, /prefers-reduced-motion/, 'session card glow respects reduced motion')
 assert.match(
@@ -182,5 +191,10 @@ const perfect = buildDashboardAiReciteStatsView({
 assert.equal(perfect.focus.length, 0)
 assert.equal(perfect.holding, true)
 assert.equal(perfect.score.label, en.dashboard.analysis_accuracy_label)
+assert.match(
+  String(en.memorisation?.amd?.readyCopy || ''),
+  /Mutqin listens and colours words/,
+  'ready copy explains that Mutqin listens and colours words',
+)
 
 console.log('dashboard-ai-recite.test.mjs: ok')

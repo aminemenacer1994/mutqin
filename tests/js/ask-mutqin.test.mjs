@@ -82,7 +82,8 @@ assert.match(modalCss, /ask-mutqin-aid__toolbar/, 'open ayah sits beside the rea
 assert.match(modalCss, /minmax\(0, 9fr\) minmax\(0, 3fr\)/, 'tabs take nine columns and open ayah the rest')
 assert.match(modalCss, /ask-mutqin-aid__tab\.is-active/, 'active aid tab has distinct styles')
 assert.match(modalCss, /ask-mutqin-aid-fade|ask-mutqin-match-in/, 'subtle aid/match animations exist')
-assert.match(modalCss, /ask-mutqin-span__row/, 'range picker stacks cleanly on small screens')
+assert.match(modalCss, /ask-mutqin-span__row/, 'range picker stays on one compact row')
+assert.match(modalCss, /white-space: nowrap/, 'open ayah stays on one line')
 assert.doesNotMatch(modalCss, /ask-mutqin-actions__hint|ask-mutqin-tip|ask-mutqin-aid__select/, 'legacy tip/select chrome is removed')
 
 const ayahAids = readFileSync(join(root, 'resources/js/scripts/askMutqin/ayahAids.js'), 'utf8')
