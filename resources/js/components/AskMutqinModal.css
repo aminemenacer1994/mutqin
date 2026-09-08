@@ -296,14 +296,31 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   animation: ask-mutqin-aid-in 240ms ease-out;
 }
 
+.ask-mutqin-aid__toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 9fr) minmax(0, 3fr);
+  gap: 0.45rem;
+  align-items: stretch;
+}
+
 .ask-mutqin-aid__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.18rem;
+  min-width: 0;
   padding: 0.18rem;
   border-radius: 11px;
   border: 1px solid var(--ask-line);
   background: color-mix(in srgb, var(--ask-brown) 7%, var(--ask-chip));
+}
+
+.ask-mutqin-open {
+  min-width: 0;
+  min-height: 2.15rem;
+  padding-inline: 0.45rem;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  white-space: normal;
 }
 
 .ask-mutqin-aid__tab {
@@ -504,7 +521,10 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 }
 
 .ask-mutqin-error {
-  margin: 0;
+  margin: 0.4rem 0 0.15rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ask-error) 10%, transparent);
   color: var(--ask-error);
   font-size: 0.86rem;
   text-align: center;

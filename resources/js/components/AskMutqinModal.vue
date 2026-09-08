@@ -43,10 +43,11 @@
           </header>
 
           <div class="ask-mutqin-body">
-            <p v-if="!match" class="ask-mutqin-intro">
+            <p v-if="!match && state !== 'error'" class="ask-mutqin-intro">
               {{ t('memorisation.askMutqin.featureBrief') }}
             </p>
             <section
+              v-if="state !== 'error'"
               class="ask-mutqin-ayah"
               :class="{
                 'is-live': isListening && !match,
@@ -92,18 +93,28 @@
               class="ask-mutqin-aid"
               :aria-label="t('memorisation.askMutqin.aidLabel')"
             >
-              <div class="ask-mutqin-aid__grid" role="tablist">
+              <div class="ask-mutqin-aid__toolbar">
+                <div class="ask-mutqin-aid__grid" role="tablist">
+                  <button
+                    v-for="option in aidOptions"
+                    :key="option.kind"
+                    type="button"
+                    class="ask-mutqin-aid__tab"
+                    :class="{ 'is-active': aidKind === option.kind }"
+                    role="tab"
+                    :aria-selected="aidKind === option.kind ? 'true' : 'false'"
+                    @click="selectAid(option.kind)"
+                  >
+                    {{ option.label }}
+                  </button>
+                </div>
                 <button
-                  v-for="option in aidOptions"
-                  :key="option.kind"
+                  v-if="showFallbackActions"
                   type="button"
-                  class="ask-mutqin-aid__tab"
-                  :class="{ 'is-active': aidKind === option.kind }"
-                  role="tab"
-                  :aria-selected="aidKind === option.kind ? 'true' : 'false'"
-                  @click="selectAid(option.kind)"
+                  class="ask-mutqin-primary ask-mutqin-open"
+                  @click="openHere"
                 >
-                  {{ option.label }}
+                  {{ t('memorisation.askMutqin.openHere') }}
                 </button>
               </div>
               <Transition name="ask-mutqin-aid-fade" mode="out-in">
@@ -173,12 +184,25 @@
               <p v-if="readySummary.settings">{{ readySummary.settings }}</p>
             </div>
 
-            <p v-if="errorMessage" class="ask-mutqin-error" role="alert">{{ errorMessage }}</p>
+            <p
+              v-if="errorMessage"
+              class="ask-mutqin-error"
+              :class="{ 'is-limit': errorCode === 'usage_cap' }"
+              role="alert"
+            >{{ errorMessage }}</p>
           </div>
 
           <footer class="ask-mutqin-footer">
             <button
-              v-if="state === 'error'"
+              v-if="state === 'error' && errorCode === 'usage_cap'"
+              type="button"
+              class="ask-mutqin-primary"
+              @click="requestClose"
+            >
+              {{ t('common.close') }}
+            </button>
+            <button
+              v-else-if="state === 'error'"
               type="button"
               class="ask-mutqin-primary"
               @click="retryFromError"
@@ -186,14 +210,6 @@
               {{ t('common.tryAgain') }}
             </button>
             <div v-else class="ask-mutqin-actions">
-              <button
-                v-if="showFallbackActions"
-                type="button"
-                class="ask-mutqin-primary"
-                @click="openHere"
-              >
-                <span>{{ t('memorisation.askMutqin.openHere') }}</span>
-              </button>
               <button
                 v-if="showSessionTools"
                 type="button"
@@ -257,7 +273,7 @@ const EMPTY_COMMAND = () => ({
 const EMPTY_AID = () => ({ kind: 'translation', text: '', html: '', dir: 'ltr', reference: '', sections: [] })
 
 /** Wait this long after the last new heard text before locking a match. */
-const ASK_MUTQIN_RECITATION_PAUSE_MS = 1000
+const ASK_MUTQIN_RECITATION_PAUSE_MS = 550
 
 export default {
   name: 'AskMutqinModal',
@@ -283,6 +299,7 @@ export default {
       command: EMPTY_COMMAND(),
       validatedRange: null,
       errorMessage: '',
+      errorCode: '',
       recoverableState: ASK_MUTQIN_STATES.INTRO,
       interpreting: false,
       interpretKey: '',
@@ -353,6 +370,9 @@ export default {
       return `${this.match.surahName} · ${ayah}`
     },
     title() {
+      if (this.state === ASK_MUTQIN_STATES.ERROR && this.errorCode === 'usage_cap') {
+        return this.t('memorisation.askMutqin.usageCapTitle')
+      }
       if (this.state === ASK_MUTQIN_STATES.ERROR) return this.t('memorisation.askMutqin.errorTitle')
       if (this.state === ASK_MUTQIN_STATES.READY || this.state === ASK_MUTQIN_STATES.OPENING) {
         return this.t('memorisation.askMutqin.readyTitle')
@@ -501,6 +521,7 @@ export default {
       this.command = EMPTY_COMMAND()
       this.validatedRange = null
       this.errorMessage = ''
+      this.errorCode = ''
       this.recoverableState = ASK_MUTQIN_STATES.INTRO
       this.interpreting = false
       this.interpretKey = ''
@@ -562,7 +583,7 @@ export default {
           const pauseKey = heardText.replace(/[.\u06D4،,\s]+/g, ' ').trim()
           if (pauseKey !== this.lastHeardForPause || isFinal) {
             this.lastHeardForPause = pauseKey
-            this.markSpeechActive()
+            this.markSpeechActive(ASK_MUTQIN_RECITATION_PAUSE_MS)
           }
         }
         return
@@ -575,7 +596,7 @@ export default {
         this.queueInterpret()
       }
     },
-    markSpeechActive() {
+    markSpeechActive(delay = ASK_MUTQIN_RECITATION_PAUSE_MS) {
       this.speechActive = true
       if (this.speechIdleTimer) window.clearTimeout(this.speechIdleTimer)
       if (this.settleTimer) {
@@ -586,7 +607,7 @@ export default {
         this.speechActive = false
         this.speechIdleTimer = null
         this.settleAfterRecitationPause()
-      }, ASK_MUTQIN_RECITATION_PAUSE_MS)
+      }, delay)
     },
     clearSpeechIdle() {
       if (this.speechIdleTimer) {
@@ -816,6 +837,7 @@ export default {
     },
     async retryFromError() {
       this.errorMessage = ''
+      this.errorCode = ''
       if (this.match) {
         this.state = ASK_MUTQIN_STATES.FOUND
         return
@@ -825,6 +847,7 @@ export default {
     },
     fail(error) {
       const code = String(error?.code || '')
+      this.errorCode = code
       this.recoverableState = this.state
       if (code === 'permission_denied') {
         this.errorMessage = resolveMicDeniedGuidance((key) => this.t(key))

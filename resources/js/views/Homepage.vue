@@ -15,14 +15,8 @@
             <p class="hero__desc">{{ t('homepage.hero.desc') }}</p>
 
             <div class="hero__promise" role="group" :aria-label="t('homepage.hero.promiseLabel')">
-              <p>
-                <span class="hero__promise-label">{{ t('homepage.hero.problem') }}</span>
-                {{ t('homepage.hero.problemText') }}
-              </p>
-              <p>
-                <span class="hero__promise-label">{{ t('homepage.hero.solution') }}</span>
-                {{ t('homepage.hero.solutionText') }}
-              </p>
+              <p><span>{{ t('homepage.hero.problem') }}</span> {{ t('homepage.hero.problemText') }}</p>
+              <p><span>{{ t('homepage.hero.solution') }}</span> {{ t('homepage.hero.solutionText') }}</p>
             </div>
 
             <div class="hero__actions">
@@ -643,10 +637,7 @@ export default {
       return [
         { id: 'whatIsMutqin', question: t('homepage.faq.items.whatIsMutqin.question'), answer: t('homepage.faq.items.whatIsMutqin.answer') },
         { id: 'howMemorisation', question: t('homepage.faq.items.howMemorisation.question'), answer: t('homepage.faq.items.howMemorisation.answer') },
-        { id: 'accuracy', question: t('homepage.faq.items.accuracy.question'), answer: t('homepage.faq.items.accuracy.answer') },
-        { id: 'privacy', question: t('homepage.faq.items.privacy.question'), answer: t('homepage.faq.items.privacy.answer') },
         { id: 'pricing', question: t('homepage.faq.items.pricing.question'), answer: t('homepage.faq.items.pricing.answer') },
-        { id: 'howAiFeedback', question: t('homepage.faq.items.howAiFeedback.question'), answer: t('homepage.faq.items.howAiFeedback.answer') },
         { id: 'howRevision', question: t('homepage.faq.items.howRevision.question'), answer: t('homepage.faq.items.howRevision.answer') },
         { id: 'whoFor', question: t('homepage.faq.items.whoFor.question'), answer: t('homepage.faq.items.whoFor.answer') },
       ];

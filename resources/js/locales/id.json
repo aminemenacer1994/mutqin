@@ -359,43 +359,31 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Questions people ask",
-      "subtitle": "Kepercayaan penting untuk Hifz. Jawaban jelas tentang akurasi, privasi, harga, dan latihan.",
+      "subtitle": "Jawaban singkat tentang latihan, murajaah, dan harga.",
       "items": {
         "whatIsMutqin": {
-          "question": "What is Mutqin?",
-          "answer": "Mutqin is a Quran memorisation companion. It helps you practise a short range, check your recall, and keep a clear next step for your Hifz."
+          "question": "Apa itu Mutqin?",
+          "answer": "Mutqin membantu Anda melatih rentang singkat, memeriksa hafalan, dan tahu apa yang dibuka berikutnya."
         },
         "howMemorisation": {
-          "question": "How does memorisation work?",
-          "answer": "Choose a surah and ayah range, practise in short sessions, and use tools like gradually hiding the text or joining ayahs. Small, steady sets are enough."
-        },
-        "howAiFeedback": {
-          "question": "Seberapa akurat pemeriksaan tilawah audio?",
-          "answer": "Pemeriksaan bisa melewatkan atau salah mendengar kata. Anggap sorotan sebagai bantuan latihan, bukan keputusan tentang tilawah. Selalu konfirmasi dengan guru."
+          "question": "Bagaimana hafalan bekerja?",
+          "answer": "Pilih rentang ayat singkat dan latih sampai kuat. Sembunyikan teks atau sambungkan ayat sambil berlatih."
         },
         "whatIsPro": {
           "question": "Apakah saya perlu Pro untuk mulai?",
-          "answer": "Tidak. Mulai gratis, latih set singkat, dan upgrade hanya jika Anda ingin umpan balik serta riwayat yang lebih kaya."
+          "answer": "Tidak. Mulai gratis. Upgrade hanya jika Anda ingin umpan balik dan riwayat yang lebih kaya."
         },
         "howRevision": {
-          "question": "How does revision work?",
-          "answer": "Mutqin helps you return to recent and weaker ayahs before they fade, and suggests a next practice while the verses still feel fresh."
-        },
-        "accuracy": {
-          "question": "Bisakah saya mempercayai Mutqin untuk hafalan Qur’an?",
-          "answer": "Mutqin adalah pendamping latihan, bukan pengganti guru atau sanad. Gunakan untuk sesi singkat dan titik lemah, lalu verifikasi dengan guru yang berkualifikasi. Pemeriksaan tilawah hanya panduan."
-        },
-        "privacy": {
-          "question": "Apa yang terjadi pada rekaman dan data Hifz saya?",
-          "answer": "Data latihan milik akun Anda. Audio pemeriksaan diproses untuk umpan balik dan tidak dijual. Anda dapat meminta penghapusan akun dan data terkait. Lihat kebijakan privasi."
+          "question": "Bagaimana murajaah bekerja?",
+          "answer": "Mutqin mengembalikan Anda ke ayat terbaru dan lebih lemah, serta menyarankan apa yang dilatih berikutnya."
         },
         "pricing": {
           "question": "Apakah Mutqin gratis? Berapa biaya Pro?",
-          "answer": "Anda bisa mulai berlatih tanpa paket berbayar. Pro menambah tinjauan lebih dalam, riwayat, dan perencanaan. Harga ditampilkan jelas sebelum upgrade."
+          "answer": "Ya, Anda bisa mulai gratis. Pro menambah tinjauan lebih dalam, riwayat, dan perencanaan. Harga ditampilkan sebelum upgrade."
         },
         "whoFor": {
           "question": "Untuk siapa Mutqin?",
-          "answer": "Untuk siapa pun yang membangun atau merevisi Hifz dan ingin sesi singkat, posisi tersimpan, dan langkah berikutnya yang jelas."
+          "answer": "Untuk siapa pun yang menghafal atau merevisi dan ingin sesi singkat serta posisi tersimpan."
         }
       }
     },

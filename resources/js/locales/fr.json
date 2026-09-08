@@ -359,43 +359,31 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Questions fréquentes",
-      "subtitle": "La confiance compte pour le Hifz. Réponses claires sur l’exactitude, la confidentialité, les tarifs et la pratique.",
+      "subtitle": "Réponses courtes sur la pratique, la révision et les tarifs.",
       "items": {
         "whatIsMutqin": {
           "question": "Qu’est-ce que Mutqin ?",
-          "answer": "Mutqin est un compagnon de mémorisation du Coran. Il vous aide à pratiquer un court passage, vérifier votre rappel, et garder une prochaine étape claire pour votre Hifz."
+          "answer": "Mutqin vous aide à pratiquer un court passage, vérifier votre rappel, et savoir quoi ouvrir ensuite."
         },
         "howMemorisation": {
           "question": "Comment fonctionne la mémorisation ?",
-          "answer": "Choisissez une sourate et un passage, pratiquez en courtes séances, et utilisez des outils comme masquer le texte progressivement. De petits ensembles réguliers suffisent."
-        },
-        "howAiFeedback": {
-          "question": "Quelle est la précision du contrôle audio ?",
-          "answer": "Le contrôle peut manquer ou mal entendre des mots. Traitez les surlignages comme une aide à la pratique, pas comme un jugement sur votre tilawah. Confirmez toujours avec un enseignant."
+          "answer": "Choisissez un court passage et pratiquez jusqu’à ce qu’il tienne. Masquez le texte ou reliez les ayahs au fil de la pratique."
         },
         "whatIsPro": {
           "question": "Ai-je besoin de Pro pour commencer ?",
-          "answer": "Non. Commencez gratuitement, pratiquez un court ensemble, et passez à Pro seulement si vous voulez plus de retours et d’historique."
+          "answer": "Non. Commencez gratuitement. Passez à Pro seulement si vous voulez plus de retours et d’historique."
         },
         "howRevision": {
           "question": "Comment fonctionne la révision ?",
-          "answer": "Mutqin vous aide à revenir aux ayahs récents et plus faibles avant qu’ils ne s’effacent, et suggère la prochaine pratique tant que les versets restent frais."
-        },
-        "accuracy": {
-          "question": "Puis-je faire confiance à Mutqin pour mon Hifz ?",
-          "answer": "Mutqin est un compagnon de pratique, pas un substitut à un professeur ou à un sanad. Organisez de courtes sessions, repérez les points faibles, puis confirmez les passages importants avec un professeur qualifié. Les contrôles de récitation restent un guide."
-        },
-        "privacy": {
-          "question": "Qu’advient-il de mes enregistrements et de mes données de Hifz ?",
-          "answer": "Vos données de pratique appartiennent à votre compte. Pour AI Recite et Vérifier la mémorisation, l’audio du microphone sert à évaluer la récitation du Coran — y compris par Speechmatics lors de la transcription en direct. Mutqin ne vend pas votre audio. Les enregistrements bruts ne sont pas conservés sur les serveurs Mutqin ; les copies locales temporaires, s’il y en a, sont supprimées selon notre politique de conservation. La pratique sans IA fonctionne sans microphone. Consultez la Politique de confidentialité pour le détail."
+          "answer": "Mutqin vous ramène aux ayahs récents et plus faibles, et suggère quoi pratiquer ensuite."
         },
         "pricing": {
           "question": "Mutqin est-il gratuit ? Que coûte Pro ?",
-          "answer": "Vous pouvez commencer à pratiquer sans formule payante. Pro ajoute une revue plus profonde, l’historique et des outils de planification. Les tarifs sont indiqués clairement avant tout passage à Pro."
+          "answer": "Oui, vous pouvez commencer gratuitement. Pro ajoute une revue plus profonde, l’historique et la planification. Le tarif est indiqué avant tout passage à Pro."
         },
         "whoFor": {
           "question": "Pour qui est Mutqin ?",
-          "answer": "Pour toute personne qui construit ou révise son Hifz et veut de courtes sessions, une place sauvegardée, et une prochaine étape claire, surtout quand les journées sont chargées."
+          "answer": "Pour toute personne qui mémorise ou révise et veut de courtes sessions et une place sauvegardée."
         }
       }
     },

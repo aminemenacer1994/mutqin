@@ -359,43 +359,31 @@
     "faq": {
       "kicker": "FAQ",
       "title": "Questions people ask",
-      "subtitle": "حفظ کے لیے اعتماد اہم ہے۔ درستگی، رازداری، قیمت اور مشق کے واضح جوابات۔",
+      "subtitle": "مشق، دہرائی اور قیمت کے مختصر جوابات۔",
       "items": {
         "whatIsMutqin": {
-          "question": "What is Mutqin?",
-          "answer": "Mutqin is a Quran memorisation companion. It helps you practise a short range, check your recall, and keep a clear next step for your Hifz."
+          "question": "متقن کیا ہے؟",
+          "answer": "متقن مختصر رینج کی مشق، یادداشت کی جانچ، اور اگلا قدم واضح رکھنے میں مدد کرتا ہے۔"
         },
         "howMemorisation": {
-          "question": "How does memorisation work?",
-          "answer": "Choose a surah and ayah range, practise in short sessions, and use tools like gradually hiding the text or joining ayahs. Small, steady sets are enough."
-        },
-        "howAiFeedback": {
-          "question": "آڈیو یادداشت کی جانچ کتنی درست ہے؟",
-          "answer": "جانچ الفاظ چھوڑ یا غلط سن سکتی ہے۔ نمایاں الفاظ کو مشق کی مدد سمجھیں، تلاوت کا فیصلہ نہیں۔ ہمیشہ استاد سے تصدیق کریں۔"
+          "question": "حفظ کیسے کام کرتا ہے؟",
+          "answer": "مختصر آیت رینج منتخب کریں اور جب تک مضبوط ہو مشق کریں۔ متن چھپا یا آیات جوڑ سکتے ہیں۔"
         },
         "whatIsPro": {
           "question": "کیا شروع کرنے کے لیے Pro چاہیے؟",
-          "answer": "نہیں۔ مفت شروع کریں، مختصر سیٹ مشق کریں، اور صرف تب اپ گریڈ کریں جب زیادہ فیڈبیک اور تاریخ چاہیے۔"
+          "answer": "نہیں۔ مفت شروع کریں۔ صرف تب اپ گریڈ کریں جب زیادہ فیڈبیک اور تاریخ چاہیے۔"
         },
         "howRevision": {
-          "question": "How does revision work?",
-          "answer": "Mutqin helps you return to recent and weaker ayahs before they fade, and suggests a next practice while the verses still feel fresh."
-        },
-        "accuracy": {
-          "question": "کیا میں اپنے قرآن حفظ کے لیے متقن پر بھروسہ کر سکتا ہوں؟",
-          "answer": "متقن مشق کا ساتھی ہے، استاد یا سند کا متبادل نہیں۔ مختصر نشستوں اور کمزور مقامات کے لیے استعمال کریں، اہم حصے اہل استاد سے تصدیق کریں۔ تلاوت کی جانچ صرف رہنمائی ہے۔"
-        },
-        "privacy": {
-          "question": "میری ریکارڈنگز اور حفظ کے ڈیٹا کا کیا ہوتا ہے؟",
-          "answer": "آپ کے مشق کے ڈیٹا کا تعلق آپ کے اکاؤنٹ سے ہے۔ یادداشت کی جانچ کی آڈیو فیڈبیک کے لیے پروسیس ہوتی ہے اور فروخت نہیں ہوتی۔ آپ اکاؤنٹ اور متعلقہ ڈیٹا حذف کروا سکتے ہیں۔ پرائیویسی پالیسی دیکھیں۔"
+          "question": "دہرائی کیسے کام کرتی ہے؟",
+          "answer": "متقن آپ کو حالیہ اور کمزور آیات پر واپس لاتا ہے، اور اگلی مشق تجویز کرتا ہے۔"
         },
         "pricing": {
           "question": "کیا متقن مفت ہے؟ Pro کی قیمت کیا ہے؟",
-          "answer": "آپ بغیر ادائیگی والے پلان کے مشق شروع کر سکتے ہیں۔ Pro گہری جائزہ، تاریخ اور منصوبہ بندی کا اضافہ کرتا ہے۔ اپ گریڈ سے پہلے قیمتیں واضح دکھائی جاتی ہیں۔"
+          "answer": "ہاں، مفت شروع کر سکتے ہیں۔ Pro گہری جائزہ، تاریخ اور منصوبہ بندی کا اضافہ کرتا ہے۔ قیمت اپ گریڈ سے پہلے دکھائی جاتی ہے۔"
         },
         "whoFor": {
           "question": "متقن کس کے لیے ہے؟",
-          "answer": "ہر اس شخص کے لیے جو حفظ بنا رہا ہو یا دہرا رہا ہو اور مختصر نشستیں، محفوظ جگہ اور واضح اگلا قدم چاہتا ہو۔"
+          "answer": "ہر اس شخص کے لیے جو حفظ یا دہرائی کر رہا ہو اور مختصر نشستیں اور محفوظ جگہ چاہتا ہو۔"
         }
       }
     },

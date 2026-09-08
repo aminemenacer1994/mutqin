@@ -73,19 +73,55 @@ export function scoreAyahPrefix(heardWords, ayahWords) {
   return alignPhrase(heard, expected).score
 }
 
-function rankCandidates(index, heardWords, surahFilter) {
-  const scoped = Number(surahFilter) > 0
-    ? index.filter((item) => Number(item.surah) === Number(surahFilter))
-    : index
+const tokenIndexCache = new WeakMap()
+
+function tokenLookup(index) {
+  const cached = tokenIndexCache.get(index)
+  if (cached) return cached
+  const map = new Map()
+  index.forEach((item, indexAt) => {
+    const seen = new Set()
+    for (const word of item.words || []) {
+      if (!word || seen.has(word)) continue
+      seen.add(word)
+      const bucket = map.get(word)
+      if (bucket) bucket.push(indexAt)
+      else map.set(word, [indexAt])
+    }
+  })
+  tokenIndexCache.set(index, map)
+  return map
+}
+
+function candidateItems(index, heardWords, surahFilter) {
+  const lookup = tokenLookup(index)
+  const ids = new Set()
+  for (const token of heardWords.slice(0, 3)) {
+    const bucket = lookup.get(token)
+    if (!bucket) continue
+    for (const indexAt of bucket) ids.add(indexAt)
+  }
+  let items = [...ids].map((indexAt) => index[indexAt]).filter(Boolean)
+  if (Number(surahFilter) > 0) {
+    items = items.filter((item) => Number(item.surah) === Number(surahFilter))
+  }
+  if (items.length) return items
 
   const anchors = heardWords.slice(0, 2)
+  return index.filter((item) => {
+    if (Number(surahFilter) > 0 && Number(item.surah) !== Number(surahFilter)) return false
+    const words = Array.isArray(item.words) ? item.words : []
+    return anchors.some((token) => words.some((word) => tokensMatch(token, word, 0.45)))
+  })
+}
+
+function rankCandidates(index, heardWords, surahFilter) {
+  const scoped = candidateItems(index, heardWords, surahFilter)
+
   const ranked = []
   for (const item of scoped) {
     const words = Array.isArray(item.words) ? item.words : []
     if (!words.length) continue
-    // The recited span may begin on any word, and the first heard token may be a false start.
-    const anchored = anchors.some((token) => words.some((word) => tokensMatch(token, word, 0.45)))
-    if (anchors.length && !anchored) continue
     const aligned = alignPhrase(heardWords, words)
     if (aligned.score < 0.22 || aligned.matched < 2) continue
     ranked.push({ ...item, score: aligned.score, matched: aligned.matched })
