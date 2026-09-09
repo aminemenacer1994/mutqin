@@ -9487,6 +9487,12 @@ export default {
       return this.talqinRecitationTurnActive && !this.playerBarVisible
     },
 
+    mushafBasmalaStyle() {
+      return {
+        lineHeight: '1.7',
+      }
+    },
+
     mushafCornerSurahLabel() {
       return this.getChapterDisplayName(this.currentChapter || this.chapterId)
         || this.mushafSurahTitle

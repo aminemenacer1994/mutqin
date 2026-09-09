@@ -5999,7 +5999,7 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 
   html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
     grid-area: copy !important;
-    width: auto !important;
+    width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     overflow: visible !important;
@@ -6011,10 +6011,11 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     flex-flow: row nowrap !important;
     flex-wrap: nowrap !important;
     align-items: baseline !important;
-    justify-content: flex-start !important;
-    gap: 0.3rem 0.4rem !important;
-    width: auto !important;
+    justify-content: space-between !important;
+    gap: 0.55rem 0.7rem !important;
+    width: 100% !important;
     max-width: 100% !important;
+    padding-inline: clamp(2.5rem, 12vw, 7rem) !important;
     overflow: visible !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
@@ -6040,8 +6041,12 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
     flex: 1 1 auto !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
+    display: none !important;
   }
 
   html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
@@ -6273,5 +6278,22 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   .amd-brief {
     font-size: 0.8rem;
     line-height: 1.45;
+  }
+}
+
+/* Opening line only. Never restyle .madani-word — that strips the page glyph font. */
+html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-line--basmala .madani-basmala,
+html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala,
+html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala {
+  display: block !important;
+  font-size: calc(clamp(1.45rem, 3.4vw, 2.05rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+  line-height: 1.7 !important;
+}
+
+@media (max-width: 767.98px) {
+  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-line--basmala .madani-basmala,
+  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala,
+  html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala {
+    font-size: calc(clamp(1.15rem, 4.6vw, 1.55rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 }

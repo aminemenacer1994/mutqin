@@ -15858,7 +15858,7 @@ body.memorisation-page nav.navbar.app-navbar {
   width: 100%;
   box-sizing: border-box;
   font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
-  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(2.6rem, 4.7vw, 3.8rem));
+  font-size: var(--mushaf-reading-font, calc((var(--verse-font-percent, 120) / 100) * clamp(2.55rem, 4.6vw, 3.7rem)));
   line-height: 1.55;
   color: var(--mushaf-text, #000000);
   font-weight: 400 !important;
@@ -42386,6 +42386,12 @@ finish-choice selection */
   max-width: none;
 }
 
+.main.mushaf-mode-active.container {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+}
+
 .main.mushaf-mode-active .mushaf-workspace {
   padding-inline: 0;
   box-sizing: border-box;
@@ -53832,7 +53838,7 @@ contained page (top session card untouched) —— */
 
   .main.mushaf-mode-active .madani-word,
 .main.mushaf-mode-active .madani-basmala {
-    font-size: calc(clamp(1.85rem, 7.2vw, 2.65rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: var(--mushaf-reading-font, calc(clamp(1.85rem, 7.2vw, 2.65rem) * (var(--verse-font-percent, 120) * 0.01))) !important;
   }
 
   .main.mushaf-mode-active .madani-surah-name {
@@ -54980,7 +54986,7 @@ compact readable type (never clip) —— */
   overflow-wrap: normal !important;
   line-height: 1.7 !important;
   font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
-  font-size: var(--mushaf-reading-font, calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 120) * 0.01))) !important;
+  font-size: calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
   -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
 }

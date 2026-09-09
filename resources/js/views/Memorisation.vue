@@ -400,11 +400,6 @@
             <h1 class="workspace-shell-main-title mutqin-surah-bilingual" :aria-label="topCardSessionLabel">
               <template v-if="topCardSurahArabic || topCardSurahLatin">
                 <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en" dir="ltr">{{ topCardSurahLatin }}</span>
-                <span
-                  v-if="topCardSurahArabic && topCardSurahLatin && topCardSurahArabic !== topCardSurahLatin"
-                  class="workspace-shell-surah-sep"
-                  aria-hidden="true"
-                >·</span>
                 <span v-if="topCardSurahArabic" class="workspace-shell-surah-ar" dir="rtl" lang="ar">{{ topCardSurahArabic }}</span>
               </template>
               <template v-else>{{ topCardSessionLabel }}</template>
@@ -1063,7 +1058,7 @@
               </div>
             </section>
             <div v-else-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace">
-              <div class="container-fluid mushaf-workspace__fluid px-0">
+              <div class="container mushaf-workspace__fluid">
               <section
                 class="mushaf-shell"
                 :aria-label="t('memorisation.view.mushaf')"
@@ -1140,6 +1135,7 @@
                             dir="rtl"
                             lang="ar"
                             :aria-label="t('memorisation.a11y.bismillah')"
+                            :style="mushafBasmalaStyle"
                           >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</div>
                         </template>
                         <template v-else-if="line.type === 'ayah' || line.type === 'basmala_ayah'">

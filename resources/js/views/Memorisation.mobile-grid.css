@@ -7507,27 +7507,11 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   }
 }
 
-/* Mushaf reading text: one shared size on phones. Desktop stays unchanged. */
+/* Opening line only. Do not restyle .madani-word — that strips the page glyph font. */
 @media (max-width: 767.98px) {
-  html body .app .main.mushaf-mode-active .mushaf-page--madani,
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet,
-  html body .main.mushaf-mode-active .mushaf-page--madani,
-  html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet {
-    --mushaf-reading-font: calc(clamp(1.68rem, 6.4vw, 2.32rem) * (var(--verse-font-percent, 120) * 0.01));
-  }
-
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-word,
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-word--glyph,
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-word--unicode,
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-word--fallback,
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-word,
   html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala,
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-line--basmala .madani-basmala,
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-line--basmala-ayah .madani-word,
-  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-surah-name,
-  html body .main.mushaf-mode-active .mushaf-page--madani .madani-word,
   html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala {
-    font-size: var(--mushaf-reading-font) !important;
+    font-size: calc(clamp(1.68rem, 6.4vw, 2.32rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     line-height: 1.7 !important;
   }
 }
