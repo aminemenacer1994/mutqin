@@ -24553,6 +24553,7 @@ export default {
       // Masking is driven by difficulty + progress only — never by recording stage.
       // Blur only changes presentation (soft blur vs clean gaps). Gating on `live`
       // caused a full-text flash on stop/processing when HTML rebuilt unmasked.
+      // Peek is hold-to-reveal for the current ayah only — never the full session.
       const maskOn = !this.amdPeekActive
       // Confirmed cursor comes from the committed-speech alignment pass only.
       // Never mutate reactive cursor state here — this builder also feeds seed HTML.
@@ -24601,6 +24602,8 @@ export default {
         }
         const ayahNumber = Number(verse?.number || String(verse?.key || '').split(':')[1] || tIndex + 1)
         const ayahActive = highlightIndex >= offset && highlightIndex < offset + words.length
+        const peekCursor = Number.isFinite(highlightIndex) && highlightIndex >= 0 ? highlightIndex : 0
+        const peekThisAyah = !!this.amdPeekActive && peekCursor >= offset && peekCursor < offset + words.length
         const isFutureAyah = highlightIndex < offset
         const wordHtml = words.map((word, index) => {
           const globalIndex = offset + index
@@ -24617,7 +24620,8 @@ export default {
           const isCorrect = visual === 'correct' || visual === 'partial'
           const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(maskVisual || ''))
           // Keep grey blanks only until the learner attempts the word; then show amber/red/green.
-          const shouldMask = maskOn && isHiddenTarget && !attempted
+          // Peek unmasks this ayah's hidden words only — other ayahs stay blank.
+          const shouldMask = (maskOn || !peekThisAyah) && isHiddenTarget && !attempted
           const isCurrent = live && globalIndex === highlightIndex
           const displayStatus = shouldMask ? 'notAttempted' : (visual || 'notAttempted')
           const canCorrect = ''
@@ -24628,7 +24632,7 @@ export default {
             shouldMask ? 'amd-word-hidden' : '',
             isCorrect && isHiddenTarget ? 'amd-word-revealed' : '',
             isCurrent ? 'amd-word-current' : '',
-            this.amdPeekActive && isHiddenTarget && !isCorrect ? 'amd-word-peeked' : '',
+            peekThisAyah && isHiddenTarget && !isCorrect ? 'amd-word-peeked' : '',
             canCorrect.trim(),
           ].filter(Boolean).join(' ')
           const safeAttrs = shouldMask
@@ -24644,7 +24648,7 @@ export default {
           || `<span class="verse-ayah-end-number verse-ayah-number-digits-1" role="img" aria-hidden="true"><img class="verse-ayah-end-number__img" src="/images/ayah-markers/${Number(ayahNumber) || 1}.png" alt="" width="90" height="96" draggable="false" decoding="async"></span>`
         // Inline runs so ayahs wrap continuously like a printed mushaf page.
         runs.push(
-          `<span class="amd-ayah-run${ayahActive ? ' is-active' : ''}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">`
+          `<span class="amd-ayah-run${ayahActive ? ' is-active' : ''}${peekThisAyah ? ' is-peeking' : ''}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">`
           + `<span class="amd-ayah-run__text">${wordHtml}</span>`
           + `${wordHtml ? ' ' : ''}${endMarker}`
           + `</span>`
@@ -24704,6 +24708,20 @@ export default {
       const maskOn = !this.amdPeekActive
       // Resolve which ayah the confirmed cursor sits in so future ayahs stay uncoloured.
       const ayahBounds = this.getAmdAyahBoundsCached()
+      const peekCursor = Number.isFinite(confirmedIndex) && confirmedIndex >= 0 ? confirmedIndex : 0
+      const peekAyah = this.amdPeekActive
+        ? (this.getAmdAyahBoundForWordIndex(peekCursor) || this.getAmdAyahBoundForWordIndex(0) || null)
+        : null
+      if (peekAyah) {
+        for (let i = peekAyah.start; i < peekAyah.end; i += 1) indexes.add(i)
+        const prevPeek = this._amdPeekAyahBound
+        if (prevPeek && (prevPeek.start !== peekAyah.start || prevPeek.end !== peekAyah.end)) {
+          for (let i = prevPeek.start; i < prevPeek.end; i += 1) indexes.add(i)
+        }
+        this._amdPeekAyahBound = peekAyah
+      } else {
+        this._amdPeekAyahBound = null
+      }
       const isFutureWord = (index) => {
         // Anything strictly after the confirmed cursor is future — never paint.
         if (index > confirmedIndex) return true
@@ -24720,7 +24738,8 @@ export default {
         const isHiddenTarget = hiddenSet.has(index)
         const isCorrect = visual === 'correct' || visual === 'partial'
         const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(visual || ''))
-        const shouldMask = maskOn && isHiddenTarget && !attempted
+        const peekThisWord = !!(peekAyah && index >= peekAyah.start && index < peekAyah.end)
+        const shouldMask = (maskOn || !peekThisWord) && isHiddenTarget && !attempted
         return {
           index,
           status: shouldMask ? 'notAttempted' : (visual || 'notAttempted'),
@@ -24728,7 +24747,7 @@ export default {
           tajweedActive: index === activeTajweedIndex,
           hidden: shouldMask,
           revealed: isCorrect && isHiddenTarget,
-          peeked: this.amdPeekActive && isHiddenTarget && !isCorrect,
+          peeked: peekThisWord && isHiddenTarget && !isCorrect,
           masked: shouldMask,
         }
       })
@@ -25195,10 +25214,17 @@ export default {
       if (this.amdStage === AMD_STAGES.COMPLETE || this.amdEndingSoon) return
       this.amdPeekUsed = true
       this.amdPeekActive = true
+      const peekCursor = Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
+        ? Number(this.amdLiveCursor.confirmedWordIndex)
+        : 0
+      this._amdPeekAyahBound = this.getAmdAyahBoundForWordIndex(peekCursor)
+        || this.getAmdAyahBoundForWordIndex(0)
+        || null
       this.syncAmdMushafSurface({ force: true })
     },
     stopAmdPeek() {
       this.amdPeekActive = false
+      this._amdPeekAyahBound = null
       this.syncAmdMushafSurface({ force: true })
     },
     playAmdAudioHelp() {
@@ -25220,6 +25246,7 @@ export default {
       this.amdError = ''
       this.amdPeekActive = false
       this.amdPeekUsed = false
+      this._amdPeekAyahBound = null
       this.amdEndingSoon = false
       this._amdCompleting = false
       this._amdLastExpectedIndex = null
@@ -25284,6 +25311,7 @@ export default {
       this.restoreSessionAudioAfterAmd()
       this.amdPeekActive = false
       this.amdPeekUsed = false
+      this._amdPeekAyahBound = null
       this.amdEndingSoon = false
       this.amdLiveTajweedCoach = null
       this.amdLiveCursor = {

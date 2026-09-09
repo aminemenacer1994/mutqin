@@ -17,6 +17,7 @@ import {
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const memorisationJs = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
 const modalVue = readFileSync(join(root, 'resources/js/components/AiMemorisationDetectionModal.vue'), 'utf8')
+const amdCss = readFileSync(join(root, 'resources/js/views/Memorisation.amd.css'), 'utf8')
 
 function extractMethod(source, name) {
   const re = new RegExp(`${name}\\([^)]*\\)\\s*\\{[\\s\\S]*?\\n    \\},`)
@@ -69,6 +70,48 @@ function extractMethod(source, name) {
     fn,
     /resolveAmdWordVisual\(statusEntry, true\)/,
     'mask attempt check must use live semantics so pending→omitted cannot unmask',
+  )
+  assert.match(fn, /const peekThisAyah = /, 'peek must be computed per ayah, not session-wide')
+  assert.match(
+    fn,
+    /shouldMask = \(maskOn \|\| !peekThisAyah\) && isHiddenTarget && !attempted/,
+    'peek may unmask the current ayah only',
+  )
+  assert.match(
+    fn,
+    /peekThisAyah && isHiddenTarget && !isCorrect \? 'amd-word-peeked'/,
+    'peeked class must stay on the current ayah',
+  )
+}
+
+// Peek CSS must not fill hidden words outside the current ayah.
+{
+  assert.match(amdCss, /\.amd-mushaf-shell\.is-peeking \.amd-word-peeked\b/)
+  assert.doesNotMatch(
+    amdCss,
+    /\.amd-mushaf-shell\.is-peeking \.amd-word-hidden\b/,
+    'peek chrome must not unmask every hidden word in the session',
+  )
+  assert.doesNotMatch(
+    amdCss,
+    /\.amd-mushaf-shell\.is-peeking \.recitation-word-notAttempted\b/,
+    'peek chrome must not paint every not-attempted word in the session',
+  )
+}
+
+// Live word patches must remask the previous ayah when peek follows the cursor.
+{
+  const fn = extractMethod(memorisationJs, 'patchAmdLiveWordStatuses')
+  assert.match(fn, /const peekThisWord = /, 'live peek must be per-word against the current ayah')
+  assert.match(
+    fn,
+    /shouldMask = \(maskOn \|\| !peekThisWord\) && isHiddenTarget && !attempted/,
+    'live peek may unmask the current ayah only',
+  )
+  assert.match(
+    fn,
+    /peeked: peekThisWord && isHiddenTarget && !isCorrect/,
+    'live peeked flag must stay on the current ayah',
   )
 }
 
