@@ -53472,7 +53472,7 @@ contained page (top session card untouched) —— */
 }
 
 .main.mushaf-mode-active .madani-basmala {
-  font-size: calc(clamp(2.6rem, 4.7vw, 3.8rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
+  font-size: calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
 }
 
 .main.mushaf-mode-active .madani-word--glyph,
@@ -54978,9 +54978,9 @@ compact readable type (never clip) —— */
   white-space: normal !important;
   word-break: keep-all !important;
   overflow-wrap: normal !important;
-  line-height: 1.55 !important;
+  line-height: 1.7 !important;
   font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
-  font-size: calc(clamp(2.6rem, 4.7vw, 3.8rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+  font-size: var(--mushaf-reading-font, calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 120) * 0.01))) !important;
   color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
   -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
 }
@@ -58125,10 +58125,14 @@ never recolour tajweed text */
 .mushaf-viewport-scroll {
   position: relative;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .mushaf-workspace .mushaf-viewport-scroll {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 /* —— CRITICAL: post-session CTA — stacked on phones, 3 columns on wide screens —— */
@@ -62474,5 +62478,71 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
 
 .workspace-recite-result .post-session-simple__ai-details--open .post-session-simple__ai-details-body {
   display: block;
+}
+
+/* Session reading card: wrap ayahs in the card. Never clip or scroll sideways. */
+.app .main.mushaf-mode-active .mushaf-workspace,
+.app .main.mushaf-mode-active .mushaf-shell,
+.main.mushaf-mode-active .mushaf-workspace,
+.main.mushaf-mode-active .mushaf-shell {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  box-sizing: border-box !important;
+}
+
+.app .main.mushaf-mode-active .mushaf-viewport-scroll,
+.main.mushaf-mode-active .mushaf-viewport-scroll {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+.app .main.mushaf-mode-active .mushaf-page--madani,
+.app .main.mushaf-mode-active .mushaf-page-body,
+.app .main.mushaf-mode-active .madani-page-sheet,
+.app .main.mushaf-mode-active .madani-page-sheet--unicode,
+.main.mushaf-mode-active .mushaf-page--madani,
+.main.mushaf-mode-active .mushaf-page-body,
+.main.mushaf-mode-active .madani-page-sheet,
+.main.mushaf-mode-active .madani-page-sheet--unicode {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+.app .main.mushaf-mode-active .madani-page-sheet,
+.app .main.mushaf-mode-active .madani-page-sheet--unicode,
+.main.mushaf-mode-active .madani-page-sheet,
+.main.mushaf-mode-active .madani-page-sheet--unicode {
+  display: block !important;
+  text-align: center !important;
+  text-align-last: center !important;
+}
+
+.app .main.mushaf-mode-active .madani-word,
+.app .main.mushaf-mode-active .madani-word--glyph,
+.app .main.mushaf-mode-active .madani-word--unicode,
+.app .main.mushaf-mode-active .madani-word--fallback,
+.main.mushaf-mode-active .madani-word,
+.main.mushaf-mode-active .madani-word--glyph,
+.main.mushaf-mode-active .madani-word--unicode,
+.main.mushaf-mode-active .madani-word--fallback {
+  display: inline !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
 }
 

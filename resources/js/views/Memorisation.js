@@ -11160,13 +11160,16 @@ export default {
       sheet.style.setProperty('width', '100%', 'important')
       sheet.style.setProperty('max-width', '100%', 'important')
       sheet.style.setProperty('overflow-x', 'hidden', 'important')
+      sheet.style.setProperty('overflow-wrap', 'anywhere', 'important')
+      sheet.style.setProperty('white-space', 'normal', 'important')
       sheet.style.setProperty('transform', 'none', 'important')
       sheet.style.setProperty('text-align', 'center', 'important')
       sheet.style.setProperty('text-justify', 'none', 'important')
       sheet.style.setProperty('word-spacing', '0', 'important')
       viewport.style.overflowX = 'hidden'
+      viewport.style.overflowY = 'visible'
 
-      // Continuous natural word flow — no full-width line boxes that create gaps.
+      // Continuous natural word flow — wrap inside the card, never sideways.
       sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs').forEach((line) => {
         if (!line?.style) return
         line.style.setProperty('display', 'contents', 'important')
@@ -11177,7 +11180,8 @@ export default {
         word.style.setProperty('margin-inline', '0.14em 0', 'important')
         word.style.setProperty('padding-inline', '0', 'important')
         word.style.setProperty('word-spacing', '0', 'important')
-        word.style.setProperty('white-space', 'nowrap', 'important')
+        word.style.setProperty('white-space', 'normal', 'important')
+        word.style.setProperty('max-width', '100%', 'important')
         word.style.removeProperty('width')
         word.style.removeProperty('flex')
       })
