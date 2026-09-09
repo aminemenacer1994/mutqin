@@ -806,11 +806,11 @@ export default {
       isAppFullscreen: false,
       openVerseActionKey: '',
       verseFontSizes: {},
-      defaultFontSize: 120,
+      defaultFontSize: 160,
       // Per-layout sizes so zooming mushaf does not blow up stacked (and vice versa).
       layoutFontSizes: {
         stacked: 150,
-        mushaf: 120,
+        mushaf: 160,
       },
       fontSizeStep: 10,
       minFontSize: 70,
@@ -11163,6 +11163,7 @@ export default {
       sheet.style.setProperty('transform', 'none', 'important')
       sheet.style.setProperty('text-align', 'center', 'important')
       sheet.style.setProperty('text-justify', 'none', 'important')
+      sheet.style.setProperty('word-spacing', '0', 'important')
       viewport.style.overflowX = 'hidden'
 
       // Continuous natural word flow — no full-width line boxes that create gaps.
@@ -11172,9 +11173,10 @@ export default {
       })
       sheet.querySelectorAll('.madani-word').forEach((word) => {
         if (!word?.style) return
-        word.style.setProperty('display', 'inline-block', 'important')
-        word.style.setProperty('margin-inline', '0.1em 0.02em', 'important')
+        word.style.setProperty('display', 'inline', 'important')
+        word.style.setProperty('margin-inline', '0.14em 0', 'important')
         word.style.setProperty('padding-inline', '0', 'important')
+        word.style.setProperty('word-spacing', '0', 'important')
         word.style.setProperty('white-space', 'nowrap', 'important')
         word.style.removeProperty('width')
         word.style.removeProperty('flex')
@@ -34273,7 +34275,7 @@ export default {
     applyLayoutFontSize(mode = this.readingViewMode) {
       const key = isReadingViewMode(mode) ? mode : 'mushaf'
       const stored = Number(this.layoutFontSizes?.[key])
-      const fallback = key === 'stacked' ? 150 : 120
+      const fallback = key === 'stacked' ? 150 : 160
       const next = Math.max(
         this.minFontSize,
         Math.min(this.maxFontSize, Number.isFinite(stored) && stored > 0 ? stored : fallback)
@@ -41460,7 +41462,9 @@ export default {
           if (state.layoutFontSizes && typeof state.layoutFontSizes === 'object') {
             this.layoutFontSizes = {
               stacked: Number(state.layoutFontSizes.stacked || this.layoutFontSizes.stacked || 150),
-              mushaf: Number(state.layoutFontSizes.mushaf || this.layoutFontSizes.mushaf || 120),
+              mushaf: Number(state.layoutFontSizes.mushaf) === 120
+                ? 160
+                : Number(state.layoutFontSizes.mushaf || this.layoutFontSizes.mushaf || 160),
               original: Number(state.layoutFontSizes.original || this.layoutFontSizes.original || 150),
             }
           } else {
@@ -41492,7 +41496,7 @@ export default {
             showTransliteration: state.showTransliteration ?? this.showTransliteration,
             showWordByWord: state.showWordByWord ?? this.showWordByWord,
             wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
-            defaultFontSize: Number(state.defaultFontSize ?? this.defaultFontSize ?? 150)
+            defaultFontSize: Number(this.defaultFontSize ?? state.defaultFontSize ?? 160)
           }
           this.uiScale = Number(state.uiScale ?? this.uiScale)
           this.quranFont = normaliseQuranFontId(state.quranFont || this.quranFont)
@@ -41587,7 +41591,7 @@ export default {
           defaultFontSize: this.defaultFontSize,
           layoutFontSizes: {
             stacked: Number(this.layoutFontSizes?.stacked || 150),
-            mushaf: Number(this.layoutFontSizes?.mushaf || 120),
+            mushaf: Number(this.layoutFontSizes?.mushaf || 160),
           },
           chainingEnabled: this.chainingEnabled,
           chainingMethod: this.chainingMethod,

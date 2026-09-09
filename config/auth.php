@@ -119,13 +119,14 @@ return [
     | Email Verification
     |--------------------------------------------------------------------------
     |
-    | When false, new sign-ups skip the verification notice, verified middleware
-    | passes, and verification emails are not sent. Set AUTH_REQUIRE_EMAIL_
-    | VERIFICATION=true when you are ready to enforce mailbox confirmation.
+    | When true, new email/password sign-ups stay unverified until they confirm
+    | the mailbox. Verified middleware and the notice page are enforced. Demo
+    | login (DemoPass1! / POST /login/demo) still auto-verifies tester accounts.
+    | Set AUTH_REQUIRE_EMAIL_VERIFICATION=false to skip the gate locally.
     |
     */
 
-    'require_email_verification' => env('AUTH_REQUIRE_EMAIL_VERIFICATION', false),
+    'require_email_verification' => filter_var(env('AUTH_REQUIRE_EMAIL_VERIFICATION', true), FILTER_VALIDATE_BOOL),
 
     /*
     |--------------------------------------------------------------------------

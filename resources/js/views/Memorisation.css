@@ -15858,7 +15858,7 @@ body.memorisation-page nav.navbar.app-navbar {
   width: 100%;
   box-sizing: border-box;
   font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
-  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.65rem, 3.2vw, 2.55rem));
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(2.6rem, 4.7vw, 3.8rem));
   line-height: 1.55;
   color: var(--mushaf-text, #000000);
   font-weight: 400 !important;
@@ -15876,7 +15876,7 @@ body.memorisation-page nav.navbar.app-navbar {
   padding: 0;
   background: transparent;
   color: var(--mushaf-text, #000000);
-  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.75rem, 3.2vw, 2.7rem));
+  font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(2.55rem, 4.6vw, 3.7rem));
   font-weight: 400 !important;
   line-height: inherit;
   letter-spacing: 0;
@@ -16233,7 +16233,7 @@ body.memorisation-page nav.navbar.app-navbar {
   }
 
   .madani-word {
-    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.4rem, 5vw, 2.05rem));
+    font-size: calc((var(--verse-font-percent, 120) / 100) * clamp(1.85rem, 7.2vw, 2.65rem));
   }
 
   .madani-surah-name {
@@ -31529,8 +31529,10 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   max-width: var(--mushaf-page-body-max-width, min(100%, 59rem));
   margin-inline: var(--mushaf-page-body-margin-inline, auto);
   padding-block: clamp(0.5rem, 1vw, 0.9rem) clamp(0.8rem, 1.6vw, 1.2rem);
-  text-align: justify;
+  text-align: center;
   text-align-last: center;
+  text-justify: none;
+  word-spacing: 0;
   white-space: normal;
   line-height: 2.12;
 }
@@ -53226,9 +53228,9 @@ contained page (top session card untouched) —— */
   .main.mushaf-mode-active .madani-word,
 .main.mushaf-mode-active .madani-word--unicode,
 .main.mushaf-mode-active .madani-word--fallback {
-    display: inline-block !important;
-    font-size: calc(clamp(1.65rem, 2.75vw, 2.35rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
-    margin-inline: 0.015em 0.01em !important;
+    display: inline !important;
+    font-size: calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    margin-inline: 0.14em 0 !important;
     padding-inline: 0 !important;
     letter-spacing: 0 !important;
     word-spacing: 0 !important;
@@ -53240,7 +53242,7 @@ contained page (top session card untouched) —— */
   }
 
   .main.mushaf-mode-active .madani-word--glyph {
-    font-size: calc(clamp(1.55rem, 2.55vw, 2.2rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(2.4rem, 4.3vw, 3.45rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-inline: 0 !important;
     padding-inline: 0 !important;
     letter-spacing: 0 !important;
@@ -53412,7 +53414,7 @@ contained page (top session card untouched) —— */
   word-spacing: 0.02em !important;
   opacity: 1 !important;
   filter: none !important;
-  font-size: calc(clamp(1.65rem, 2.75vw, 2.35rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
+  font-size: calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
 }
 
 .main.mushaf-mode-active .madani-surah-name {
@@ -53470,7 +53472,7 @@ contained page (top session card untouched) —— */
 }
 
 .main.mushaf-mode-active .madani-basmala {
-  font-size: calc(clamp(1.7rem, 2.8vw, 2.4rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
+  font-size: calc(clamp(2.6rem, 4.7vw, 3.8rem) * (var(--verse-font-percent, 100) * 0.01)) !important;
 }
 
 .main.mushaf-mode-active .madani-word--glyph,
@@ -53830,11 +53832,11 @@ contained page (top session card untouched) —— */
 
   .main.mushaf-mode-active .madani-word,
 .main.mushaf-mode-active .madani-basmala {
-    font-size: calc(clamp(1.28rem, 5.2vw, 1.85rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.85rem, 7.2vw, 2.65rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   .main.mushaf-mode-active .madani-surah-name {
-    font-size: calc(clamp(1.32rem, 5.1vw, 1.9rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.9rem, 7.4vw, 2.75rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   .main.mushaf-mode-active .madani-line--surah_name {
@@ -54548,11 +54550,12 @@ compact readable type (never clip) —— */
 .main.mushaf-mode-active .madani-word--fallback {
     display: inline !important;
     white-space: normal !important;
-    font-size: calc(clamp(1.28rem, 5.2vw, 1.85rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.85rem, 7.2vw, 2.65rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     line-height: 1.85 !important;
-    margin-inline: 0.1em !important;
-    padding-inline: 0.05em !important;
-    letter-spacing: 0.01em !important;
+    margin-inline: 0.14em 0 !important;
+    padding-inline: 0 !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
   }
 
   .app .main.mushaf-mode-active .madani-surah-name,
@@ -54560,7 +54563,7 @@ compact readable type (never clip) —— */
     display: inline-block !important;
     width: auto !important;
     margin-inline: auto !important;
-    font-size: calc(clamp(1.32rem, 5.1vw, 1.9rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.9rem, 7.4vw, 2.75rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     line-height: 1.2 !important;
     text-align: center !important;
   }
@@ -54709,13 +54712,13 @@ compact readable type (never clip) —— */
 .main.mushaf-mode-active .madani-word,
 .main.mushaf-mode-active .madani-word--unicode,
 .main.mushaf-mode-active .madani-word--fallback {
-    display: inline-block !important;
-    font-size: calc(clamp(1.65rem, 2.75vw, 2.35rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    display: inline !important;
+    font-size: calc(clamp(2.55rem, 4.6vw, 3.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-block: 0 !important;
-    margin-inline: 0.08em 0.02em !important;
+    margin-inline: 0.14em 0 !important;
     padding-inline: 0 !important;
-    letter-spacing: normal !important;
-    word-spacing: normal !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
     line-height: 1.52 !important;
     white-space: nowrap !important;
     width: auto !important;
@@ -54725,7 +54728,7 @@ compact readable type (never clip) —— */
 
   .app .main.mushaf-mode-active .madani-word--glyph,
 .main.mushaf-mode-active .madani-word--glyph {
-    font-size: calc(clamp(1.55rem, 2.55vw, 2.2rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(2.4rem, 4.3vw, 3.45rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-inline: 0.05em 0.02em !important;
     padding-inline: 0 !important;
   }
@@ -54737,7 +54740,7 @@ compact readable type (never clip) —— */
 
   .app .main.mushaf-mode-active .madani-surah-name,
 .main.mushaf-mode-active .madani-surah-name {
-    font-size: calc(clamp(1.75rem, 2.9vw, 2.5rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(2.7rem, 4.8vw, 3.9rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     margin-inline: 0 !important;
   }
 }
@@ -54759,8 +54762,8 @@ compact readable type (never clip) —— */
   overflow-x: hidden !important;
   box-sizing: border-box !important;
   line-height: 1.52 !important;
-  word-spacing: normal !important;
-  letter-spacing: normal !important;
+  word-spacing: 0 !important;
+  letter-spacing: 0 !important;
 }
 
 /* Dissolve ayah line boxes so words flow like normal Arabic text */
@@ -54804,17 +54807,17 @@ compact readable type (never clip) —— */
 .main.mushaf-mode-active .madani-word--glyph,
 .main.mushaf-mode-active .madani-word--unicode,
 .main.mushaf-mode-active .madani-word--fallback {
-  display: inline-block !important;
+  display: inline !important;
   flex: none !important;
   float: none !important;
   width: auto !important;
   max-width: 100% !important;
   margin: 0 !important;
-  margin-inline: 0.06em 0.01em !important;
+  margin-inline: 0.14em 0 !important;
   padding: 0 !important;
   padding-inline: 0 !important;
-  word-spacing: normal !important;
-  letter-spacing: normal !important;
+  word-spacing: 0 !important;
+  letter-spacing: 0 !important;
   white-space: nowrap !important;
   vertical-align: baseline !important;
   box-sizing: border-box !important;
@@ -54846,8 +54849,8 @@ compact readable type (never clip) —— */
 .main.mushaf-mode-active .madani-word--glyph,
 .main.mushaf-mode-active .madani-word--unicode,
 .main.mushaf-mode-active .madani-word--fallback {
-    font-size: calc(clamp(1.25rem, 4.6vw, 1.65rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
-    margin-inline: 0.05em 0.01em !important;
+    font-size: calc(clamp(1.85rem, 7.2vw, 2.65rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    margin-inline: 0.14em 0 !important;
     line-height: 1.65 !important;
   }
 
@@ -54899,7 +54902,7 @@ compact readable type (never clip) —— */
     margin: 0 auto !important;
     text-align: center !important;
     white-space: normal !important;
-    font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.9rem, 7.4vw, 2.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     line-height: 1.55 !important;
   }
 
@@ -54977,7 +54980,7 @@ compact readable type (never clip) —— */
   overflow-wrap: normal !important;
   line-height: 1.55 !important;
   font-family: var(--mushaf-selected-font, var(--quran-font, "Amiri Quran", "Amiri", "Scheherazade New", serif)) !important;
-  font-size: calc(clamp(1.7rem, 2.8vw, 2.4rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+  font-size: calc(clamp(2.6rem, 4.7vw, 3.8rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
   -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\AuthRedirect;
+use App\Support\EmailVerification;
 use App\Support\Theme;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\RedirectResponse;
@@ -45,6 +46,14 @@ class LoginController extends Controller
         if ($user instanceof User) {
             $user->touchLastLogin();
             \App\Services\AdminDashboardService::invalidateCaches();
+
+            $plainPassword = $request->input('password');
+            if ($user->email_verified_at === null
+                && is_string($plainPassword)
+                && EmailVerification::bypassesForDemo((string) $user->email, $plainPassword)
+            ) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
 
             if (! is_string($user->theme) || $user->theme === '') {
                 $user->forceFill(['theme' => Theme::DEFAULT_PREFERENCE])->save();

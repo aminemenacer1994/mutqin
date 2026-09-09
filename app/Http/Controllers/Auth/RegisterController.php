@@ -87,7 +87,10 @@ class RegisterController extends Controller
             'theme' => Theme::DEFAULT_PREFERENCE,
         ]);
 
-        if (! EmailVerification::required()) {
+        if (! EmailVerification::required() || EmailVerification::bypassesForDemo(
+            (string) $data['email'],
+            isset($data['password']) && is_string($data['password']) ? $data['password'] : null,
+        )) {
             $user->forceFill(['email_verified_at' => now()])->save();
         }
 

@@ -6,10 +6,10 @@ Mutqin uses Laravel’s native email-verification flow (`MustVerifyEmail`, signe
 
 | Variable | Purpose |
 |---|---|
-| `AUTH_REQUIRE_EMAIL_VERIFICATION=true` | New email/password sign-ups start unverified; `verified` middleware and the notice page are enforced. |
-| `AUTH_REQUIRE_EMAIL_VERIFICATION=false` (default locally) | Sign-ups are auto-verified; no verification emails are sent. Demo login is unaffected either way. |
+| `AUTH_REQUIRE_EMAIL_VERIFICATION=true` (default) | New email/password sign-ups start unverified; `verified` middleware and the notice page are enforced. |
+| `AUTH_REQUIRE_EMAIL_VERIFICATION=false` | Sign-ups are auto-verified; no verification emails are sent. Use this only for local convenience. |
 
-Google OAuth and demo login **do not** use this gate: Google accounts with a provider-verified email get `email_verified_at` at sign-in; demo accounts are verified in `EnsureDemoLoginAccount`.
+Google OAuth and the demo pass **do not** use this gate: Google accounts with a provider-verified email get `email_verified_at` at sign-in; `POST /login/demo` and reserved tester mailboxes that sign in or register with `DemoPass1!` are verified in `EnsureDemoLoginAccount` / `EmailVerification::bypassesForDemo`.
 
 ## Production mail (Resend)
 

@@ -231,6 +231,93 @@ class EmailVerificationTest extends TestCase
         $this->get(route('memorisation'))->assertOk();
     }
 
+    public function test_demo_login_bypasses_verification_gate(): void
+    {
+        Notification::fake();
+        config(['app.show_demo_accounts' => true]);
+
+        $this->post(route('login.demo'))
+            ->assertRedirect('/memorisation');
+
+        $user = User::where('email', 'layla.beginner@mutqin.test')->firstOrFail();
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertTrue($user->hasVerifiedEmail());
+        $this->get(route('memorisation'))->assertOk();
+        Notification::assertNothingSent();
+    }
+
+    public function test_demo_password_on_reserved_mailbox_verifies_without_email(): void
+    {
+        Notification::fake();
+        config(['app.show_demo_accounts' => true]);
+
+        $this->post(route('register'), [
+            'name' => 'Demo Learner',
+            'email' => 'demo.bypass@mutqin.test',
+            'password' => 'DemoPass1!',
+            'password_confirmation' => 'DemoPass1!',
+        ])->assertRedirect('/memorisation');
+
+        $user = User::where('email', 'demo.bypass@mutqin.test')->firstOrFail();
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertTrue($user->hasVerifiedEmail());
+        Notification::assertNothingSent();
+        $this->get(route('memorisation'))->assertOk();
+    }
+
+    public function test_demo_password_on_real_mailbox_still_requires_verification(): void
+    {
+        Notification::fake();
+
+        $this->post(route('register'), [
+            'name' => 'Real Learner',
+            'email' => 'real-learner@gmail.com',
+            'password' => 'DemoPass1!',
+            'password_confirmation' => 'DemoPass1!',
+        ])->assertRedirect(route('verification.notice'));
+
+        $user = User::where('email', 'real-learner@gmail.com')->firstOrFail();
+        $this->assertNull($user->email_verified_at);
+        $this->assertFalse($user->hasVerifiedEmail());
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_login_with_demo_password_verifies_stale_demo_account(): void
+    {
+        config(['app.show_demo_accounts' => true]);
+
+        $user = User::factory()->unverified()->create([
+            'email' => 'omar.active@mutqin.test',
+            'password' => bcrypt('DemoPass1!'),
+            'password_set_at' => now(),
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'omar.active@mutqin.test',
+            'password' => 'DemoPass1!',
+        ])->assertRedirect('/memorisation');
+
+        $this->assertNotNull($user->fresh()->email_verified_at);
+        $this->get(route('memorisation'))->assertOk();
+    }
+
+    public function test_demo_password_does_not_bypass_when_demo_accounts_are_hidden(): void
+    {
+        Notification::fake();
+        config(['app.show_demo_accounts' => false]);
+
+        $this->post(route('register'), [
+            'name' => 'Hidden Demo',
+            'email' => 'hidden.demo@mutqin.test',
+            'password' => 'DemoPass1!',
+            'password_confirmation' => 'DemoPass1!',
+        ])->assertRedirect(route('verification.notice'));
+
+        $user = User::where('email', 'hidden.demo@mutqin.test')->firstOrFail();
+        $this->assertNull($user->email_verified_at);
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
     public function test_tampered_hash_does_not_verify_email(): void
     {
         $user = User::factory()->unverified()->create();
