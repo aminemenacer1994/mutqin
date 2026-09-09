@@ -34740,14 +34740,16 @@ export default {
     increaseMushafFontSize() {
       const current = Number(this.defaultFontSize || 150)
       const next = Math.min(this.maxFontSize, current + Number(this.fontSizeStep || 10))
+      if (next === current) return
       this.defaultFontSize = next
-      this.applyMushafFontSizeChange({ silent: false })
+      this.applyMushafFontSizeChange({ silent: true })
     },
     decreaseMushafFontSize() {
       const current = Number(this.defaultFontSize || 150)
       const next = Math.max(this.minFontSize, current - Number(this.fontSizeStep || 10))
+      if (next === current) return
       this.defaultFontSize = next
-      this.applyMushafFontSizeChange({ silent: false })
+      this.applyMushafFontSizeChange({ silent: true })
     },
     applyMushafFontSizeChange(options = {}) {
       const { silent = true } = options

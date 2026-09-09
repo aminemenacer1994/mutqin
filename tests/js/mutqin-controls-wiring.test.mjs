@@ -1076,6 +1076,16 @@ includesAll('long session load stays slim', [
   /buildSessionConfig\(mode = this\.currentMode\) \{[\s\S]*chapterId: Number\(config\.chapterId \|\| 0\)/,
 ])
 
+includesAll('mushaf layout font-size +/− controls', [
+  /class="mushaf-font-zoom"/,
+  /@click\.stop="increaseMushafFontSize"/,
+  /@click\.stop="decreaseMushafFontSize"/,
+  /increaseMushafFontSize\(\) \{/,
+  /decreaseMushafFontSize\(\) \{/,
+  /applyMushafFontSizeChange\(/,
+  /\.mushaf-font-zoom__btn/,
+])
+
 includesAll('workspace idle returning-user journey context', [
   /hasMemorisationHistory\(\)/,
   /showIdleQuickStartChoices\(\)\s*\{[\s\S]*?return false/,

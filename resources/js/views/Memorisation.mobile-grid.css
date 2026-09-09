@@ -4905,11 +4905,11 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     font-size: calc(clamp(1.9rem, 7.4vw, 2.75rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
-  /* Mushaf: centered full-width ayat with small side gutters */
+  /* Mushaf: centered ayat using the card width */
   .main.mushaf-mode-active .mushaf-shell__page {
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    padding-inline: 0.28rem !important;
+    padding-inline: 0 !important;
     width: 100% !important;
     display: flex !important;
     justify-content: center !important;
@@ -4918,7 +4918,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   .main.mushaf-mode-active .mushaf-page {
     overflow-x: hidden !important;
     overflow-y: visible !important;
-    padding: 0.55rem 0.28rem 0.9rem !important;
+    padding: 0.45rem 0.2rem 0.75rem !important;
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: auto !important;
@@ -5283,10 +5283,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     font-size: calc(clamp(1.9rem, 7.4vw, 2.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
-  /* Mushaf portrait: continuous page with slight side breathing room */
+  /* Mushaf portrait: continuous page using the card width */
   .app .main.mushaf-mode-active .mushaf-shell__page {
     overflow-x: hidden !important;
-    padding-inline: 0.35rem !important;
+    padding-inline: 0 !important;
     width: 100% !important;
     display: block !important;
   }
@@ -5299,7 +5299,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     transform: none !important;
     overflow: visible !important;
     gap: 0 !important;
-    padding-inline: 1.15rem !important;
+    padding-inline: 0 !important;
     margin-inline: 0 !important;
     text-align: center !important;
     text-align-last: center !important;
@@ -5510,10 +5510,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
 /* —— Final: natural continuous mushaf text (wins over earlier mobile rules) —— */
 @media (max-width: 767.98px) {
-  /* Side breathing room must beat legacy full-bleed mushaf overrides */
+  /* Flush-ish card: only a thin bezel + safe-area */
   .app .main.mushaf-mode-active,
 .main.mushaf-mode-active {
-    padding-inline: clamp(16px, 4.8vw, 22px) !important;
+    padding-inline: max(4px, var(--mq-safe-left, 0px)) max(4px, var(--mq-safe-right, 0px)) !important;
   }
 
   .app .main.mushaf-mode-active .mushaf-shell,
@@ -5529,14 +5529,19 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     text-align-last: center !important;
     text-justify: none !important;
     line-height: 1.85 !important;
-    padding-inline: 1.15rem !important;
+    padding-inline: 0 !important;
     overflow-x: hidden !important;
   }
 
-  /* Slight outer breathing room for mushaf page chrome on phone */
+  .app .main.mushaf-mode-active .mushaf-page--madani,
+.main.mushaf-mode-active .mushaf-page--madani {
+    padding: 0.35rem 0.08rem 0.55rem !important;
+  }
+
+  /* Let ayahs use the card width; avoid stacked inner gutters */
   .app .main.mushaf-mode-active .mushaf-shell__page,
 .main.mushaf-mode-active .mushaf-shell__page {
-    padding-inline: 0.35rem !important;
+    padding-inline: 0 !important;
   }
 
   .app .main.mushaf-mode-active .madani-line--ayah,
@@ -6541,7 +6546,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     text-align: center !important;
     text-align-last: center !important;
     line-height: 1.85 !important;
-    padding-inline: clamp(0.85rem, 4vw, 1.15rem) !important;
+    padding-inline: 0 !important;
     overflow-x: hidden !important;
   }
 
@@ -7361,14 +7366,14 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title {
-    display: inline-flex !important;
+    display: flex !important;
     flex-flow: row nowrap !important;
     align-items: baseline !important;
-    justify-content: flex-start !important;
-    gap: 0.28rem 0.4rem !important;
-    width: auto !important;
+    justify-content: space-between !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
     max-width: 100% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     white-space: nowrap !important;
   }
 
@@ -7376,7 +7381,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
     display: inline !important;
-    flex: 0 1 auto !important;
+    flex: 0 0 auto !important;
     min-width: 0 !important;
     white-space: nowrap !important;
   }
@@ -7513,6 +7518,29 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .madani-basmala {
     font-size: calc(clamp(1.68rem, 6.4vw, 2.32rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     line-height: 1.7 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom),
+  html body .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom,
+  html body .main.mushaf-mode-active .mushaf-font-zoom {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 0 0 2.55rem !important;
+    width: 2.55rem !important;
+    min-width: 2.55rem !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) > .mushaf-viewport-scroll,
+  html body .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) > .mushaf-viewport-scroll {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
   }
 }
 

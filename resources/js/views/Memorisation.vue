@@ -1063,6 +1063,32 @@
                 class="mushaf-shell"
                 :aria-label="t('memorisation.view.mushaf')"
               >
+                <div
+                  class="mushaf-font-zoom"
+                  role="group"
+                  :aria-label="t('common.fontSize')"
+                >
+                  <button
+                    type="button"
+                    class="mushaf-font-zoom__btn"
+                    :disabled="Number(defaultFontSize) >= Number(maxFontSize)"
+                    :title="t('memorisation.a11y.increaseFontSize')"
+                    :aria-label="t('memorisation.a11y.increaseFontSize')"
+                    @click.stop="increaseMushafFontSize"
+                  >
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="mushaf-font-zoom__btn"
+                    :disabled="Number(defaultFontSize) <= Number(minFontSize)"
+                    :title="t('memorisation.a11y.decreaseFontSize')"
+                    :aria-label="t('memorisation.a11y.decreaseFontSize')"
+                    @click.stop="decreaseMushafFontSize"
+                  >
+                    <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                  </button>
+                </div>
                 <div ref="mushafViewport" class="mushaf-viewport-scroll">
                   <div v-if="madaniPagesError" class="mushaf-empty-page mushaf-empty-page--error">
                     <AppStatus
