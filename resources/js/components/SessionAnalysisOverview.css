@@ -14,12 +14,15 @@ body.session-analysis-modal-open {
 
 #sa-session-overview.session-analysis-modal-root .modal-dialog {
   max-width: 38rem;
+  min-width: 0;
+  width: min(38rem, calc(100vw - 1.4rem));
   margin: 1.15rem auto;
 }
 
 #sa-session-overview.session-analysis-modal-root .modal-content {
   display: flex !important;
   flex-direction: column !important;
+  min-width: 0;
   overflow: hidden;
   border: 1px solid #e4d8c6;
   border-radius: 1.25rem;
@@ -80,6 +83,9 @@ body.session-analysis-modal-open {
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ui-body {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   padding: 1.1rem 1.3rem 1.35rem;
 }
 
@@ -87,6 +93,8 @@ body.session-analysis-modal-open {
   display: flex !important;
   flex-direction: column !important;
   gap: 1rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__hero {
@@ -236,6 +244,9 @@ body.session-analysis-modal-open {
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__panel {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   padding: 0.95rem 1rem 0.85rem;
   border: 1px solid rgba(80, 64, 48, 0.1);
   border-radius: 1.05rem;
@@ -256,6 +267,8 @@ body.session-analysis-modal-open {
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__ayah {
   display: block !important;
+  min-width: 0;
+  max-width: 100%;
   padding: 0;
   border: 0;
 }
@@ -268,9 +281,16 @@ body.session-analysis-modal-open {
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__ayah-ar {
   display: block !important;
+  box-sizing: border-box;
   margin: 0;
-  padding: 0.4em 0.05em 0.55em;
-  overflow: visible;
+  padding: 0.4em 0.15em 0.55em;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  overflow-y: visible;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
   text-align: right;
   color: #2a2621;
   font-family: var(--font-ar, "Amiri", "Noto Naskh Arabic", "Amiri Quran", serif);
@@ -280,8 +300,11 @@ body.session-analysis-modal-open {
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__word {
   display: inline !important;
+  max-width: 100%;
   margin: 0;
   padding: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__word.is-weak,

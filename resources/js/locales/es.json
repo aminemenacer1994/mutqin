@@ -429,7 +429,14 @@
       "connectNote": "Follow Mutqin for freeLimitedduct updates.",
       "demo": "Demo",
       "login": "Iniciar sesión",
-      "register": "Registrarse"
+      "register": "Registrarse",
+      "social": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "x": "X",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok"
+      }
     },
     "name": "Nom",
     "focused_quran_memorisation_tools_for_recitation_ch": "Un compañero sereno para practicar el Corán, controlar el recuerdo y volver a tu lugar.",
@@ -971,6 +978,7 @@
       "savedSessions": "Sesións enregistrées",
       "sessionInsights": "sesión información",
       "changeQuranFont": "Change القرآن font",
+      "changeReadingLayout": "Cambiar el diseño",
       "changeQuranicFont": "تغيير خط القرآن",
       "showTranslation": "Mostrar or hide the English translation",
       "showTransliteration": "Mostrar or hide transliteration",
@@ -4040,27 +4048,47 @@
     }
   },
   "waitingList": {
-    "brand": "« Mutqin»",
-    "kicker": "« Mutqin»",
-    "title": "Join el waiting lista",
-    "subtitle": "Be primero a know cuando access opens. One short nota es todos we necesitan.",
-    "name": "Nom",
-    "email": "E-mail",
-    "namePlaceholder": "tu name",
-    "emailPlaceholder": "tú{'@'}example.com",
-    "join": "Join waiting lista",
-    "joining": "« Joining…»",
-    "success": "tú’volver a activado el lista",
-    "alreadyJoined": "tú’volver a already activado el lista",
-    "successHint": "We’ll email you when Mutqin is listo for you.",
-    "joinAnother": "Usa a different email",
+    "brand": "Mutqin",
+    "kicker": "Acceso anticipado",
+    "title": "Mantén tu hifz cerca",
+    "subtitle": "Practica un tramo corto, comprueba tu recuerdo y sabe qué abrir después. Te escribiremos cuando haya un lugar listo.",
+    "formKicker": "Lista de espera",
+    "formTitle": "Reserva tu lugar",
+    "formLead": "Solo tu nombre y correo.",
+    "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+    "ayah": "Y recita el Corán con recitación mesurada.",
+    "ayahRef": "Al-Muzzammil 73:4",
+    "benefits": {
+      "access": {
+        "title": "Entérate primero",
+        "desc": "Te escribimos cuando se abra el acceso."
+      },
+      "place": {
+        "title": "Un lugar guardado",
+        "desc": "Mañana sigues desde donde te detuviste."
+      },
+      "note": {
+        "title": "Sin spam",
+        "desc": "Un correo cuando Mutqin esté listo."
+      }
+    },
+    "name": "Nombre",
+    "email": "Correo",
+    "namePlaceholder": "Tu nombre",
+    "emailPlaceholder": "tu{'@'}ejemplo.com",
+    "join": "Reservar mi lugar",
+    "joining": "Reservando…",
+    "success": "Ya estás en la lista",
+    "alreadyJoined": "Ya estabas en la lista",
+    "successHint": "Te escribiremos cuando Mutqin esté listo para ti.",
+    "joinAnother": "Usar otro correo",
     "privacyNote": "Solo lo usaremos para avisarte. Sin spam.",
-    "errorFields": "Vérifiez les champs signalés y réessayez.",
+    "errorFields": "Revisa los campos marcados e inténtalo de nuevo.",
     "errorSend": "Algo salió mal. Inténtalo de nuevo en un momento.",
     "errors": {
-      "name": "Por favor entrer tu nom.",
-      "email": "Por favor entrer tu adresse e-mail.",
-      "emailInvalid": "Por favor entrer une adresse e-mail valide."
+      "name": "Introduce tu nombre.",
+      "email": "Introduce tu correo electrónico.",
+      "emailInvalid": "Introduce un correo electrónico válido."
     }
   },
   "hifzPlan": {

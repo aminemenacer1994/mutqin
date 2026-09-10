@@ -496,6 +496,7 @@ import {
   getRecitationColorCounts,
   getRecitationWordSimilarity as getRecitationWordSimilarityEngine,
   normalizeArabicForRecitation as normalizeArabicForRecitationEngine,
+  resolveRecitationWordDisplay as resolveRecitationWordDisplayEngine,
   stabilizeRecognitionEvent,
   tokenizeRecitationDisplayWords as tokenizeRecitationDisplayWordsEngine,
   tokenizeRecitationWords as tokenizeRecitationWordsEngine,
@@ -27182,6 +27183,8 @@ export default {
         || currentWord.confidence !== nextWord.confidence
         || currentWord.actual !== nextWord.actual
         || currentWord.similarity !== nextWord.similarity
+        || currentWord.displayWord !== nextWord.displayWord
+        || currentWord.rawWord !== nextWord.rawWord
     },
     applyLiveStatusUpdate(targetKey, statuses = []) {
       const current = Array.isArray(this[targetKey]) ? this[targetKey] : []
@@ -27209,6 +27212,12 @@ export default {
           confidence: status.confidence ?? word.confidence,
           actual: status.actual ?? word.actual,
           similarity: status.similarity ?? word.similarity,
+          displayWord: sticky?.displayWord ?? status.displayWord ?? word.displayWord ?? '',
+          rawWord: sticky?.rawWord ?? status.rawWord ?? word.rawWord ?? '',
+          start: sticky?.start ?? status.start ?? word.start ?? null,
+          end: sticky?.end ?? status.end ?? word.end ?? null,
+          startTime: sticky?.startTime ?? status.startTime ?? word.startTime ?? null,
+          endTime: sticky?.endTime ?? status.endTime ?? word.endTime ?? null,
           timingBuffered: status.timingBuffered === true || word.timingBuffered === true,
         }
         if (!this.hasLiveWordChanged(word, nextWord)) continue
@@ -30632,6 +30641,9 @@ export default {
     tokenizeRecitationWords(text) {
       return tokenizeRecitationWordsEngine(text)
     },
+    resolveRecitationWordDisplay(word = {}) {
+      return resolveRecitationWordDisplayEngine(word)
+    },
     getSequentialTranscriptCoverage(candidateWords = [], targetWords = [], threshold = 0.86) {
       if (!candidateWords.length || !targetWords.length) return 0
       let candidateIndex = 0
@@ -31065,7 +31077,7 @@ export default {
             word.note || '',
             word.status === 'pending' ? 'Missed word.' : '',
           )
-          return `<word class="wbw-word recitation-word-${this.escapeHtml(status)}" title="${this.escapeHtml(note)}">${this.escapeHtml(word.text)}</word>`
+          return `<word class="wbw-word recitation-word-${this.escapeHtml(status)}" title="${this.escapeHtml(note)}">${this.escapeHtml(this.resolveRecitationWordDisplay(word))}</word>`
         })
       if (issueWords.length) return issueWords.join(' ')
       return '<span class="recitation-review-clean">No incorrect section detected.</span>'

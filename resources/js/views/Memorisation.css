@@ -54266,7 +54266,9 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
     justify-content: space-between;
   }
 
-  .top-card-menu .top-card-menu-toggle--layout {
+  .top-card-menu .top-card-menu-toggle--layout,
+  .top-card-menu .top-card-menu-label--layout,
+  .top-card-menu .top-card-menu-divider--layout {
     display: none !important;
   }
 
@@ -59386,16 +59388,28 @@ html:not([data-quran-font-ready="1"]) .main .verse-arabic.verse-arabic-primary {
 html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
   display: flex !important;
   flex-wrap: nowrap !important;
-  justify-content: space-between !important;
+  justify-content: flex-start !important;
   align-items: baseline !important;
-  gap: 0.75rem !important;
-  width: 100% !important;
+  column-gap: 1.85rem !important;
+  row-gap: 0 !important;
+  gap: 1.85rem !important;
+  width: fit-content !important;
   max-width: 100% !important;
 }
 
 .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
 .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
-  flex: 0 0 auto;
+  display: inline-block !important;
+  flex: 0 0 auto !important;
+  isolation: isolate;
+}
+
+.workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
+  padding-inline-end: 0.2em;
+}
+
+.workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+  padding-inline-start: 0.2em;
 }
 
 .workspace-shell .workspace-shell-main-title,

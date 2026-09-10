@@ -1074,7 +1074,7 @@
           text-overflow: ellipsis !important;
           white-space: nowrap !important;
         }
-        /* Mobile: sliders + mushaf layout toggle + ellipsis top-right (sliders left of stacked). */
+        /* Mobile: sliders + ellipsis top-right; mushaf layout lives in the ellipsis menu. */
         .app .top-card-icon-controls {
           --mq-top-icon: 36px;
           display: flex !important;
@@ -1194,8 +1194,23 @@
           grid-column: auto !important;
           grid-row: auto !important;
         }
-        .app .top-card-menu .top-card-menu-toggle--layout {
+        /* Mobile: mushaf/stacked lives in the ellipsis menu — hide the outside icon. */
+        html body .app .top-card-icon-controls .top-card-layout-icons,
+        html body .app .workspace-shell-head .top-card-icon-controls .top-card-layout-icons,
+        html body .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
           display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          max-width: 0 !important;
+          max-height: 0 !important;
+          overflow: hidden !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+        }
+        .app .top-card-menu .top-card-menu-toggle--layout {
+          display: flex !important;
         }
         .app .workspace-shell-actions .top-card-action-trigger.session-primary-action,
         .app .workspace-shell-actions .top-card-action-trigger.action-btn-exit {

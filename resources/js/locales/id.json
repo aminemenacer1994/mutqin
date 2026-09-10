@@ -429,7 +429,14 @@
       "connectNote": "Follow Mutqin for freeLimitedduct updates.",
       "demo": "Demo",
       "login": "Masuk",
-      "register": "Daftar"
+      "register": "Daftar",
+      "social": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "x": "X",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok"
+      }
     },
     "name": "Nama",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
@@ -971,6 +978,7 @@
       "savedSessions": "disimpan sesi",
       "sessionInsights": "sesi wawasan",
       "changeQuranFont": "Change القرآن font",
+      "changeReadingLayout": "Ubah tata letak",
       "changeQuranicFont": "تغيير خط القرآن",
       "showTranslation": "Tampilkan or hide the English translation",
       "showTransliteration": "Tampilkan or hide transliteration",
@@ -4053,27 +4061,47 @@
     }
   },
   "waitingList": {
-    "brand": "« Mutqin»",
-    "kicker": "« Mutqin»",
-    "title": "Join the waiting daftar",
-    "subtitle": "Be dulu ke know saat access opens. One short catatan is semua we perlu.",
+    "brand": "Mutqin",
+    "kicker": "Akses awal",
+    "title": "Jaga hafalanmu dekat",
+    "subtitle": "Ulang set pendek, periksa hafalan, dan tahu apa yang dibuka berikutnya. Kami mengirim email saat tempat siap.",
+    "formKicker": "Daftar tunggu",
+    "formTitle": "Pesan tempatmu",
+    "formLead": "Cukup nama dan email.",
+    "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+    "ayah": "Dan bacalah Al-Qur’an dengan tartil.",
+    "ayahRef": "Al-Muzzammil 73:4",
+    "benefits": {
+      "access": {
+        "title": "Dengar lebih dulu",
+        "desc": "Kami menulis saat akses dibuka."
+      },
+      "place": {
+        "title": "Tempat tersimpan",
+        "desc": "Besok lanjut dari tempat kamu berhenti."
+      },
+      "note": {
+        "title": "Tanpa spam",
+        "desc": "Satu email saat Mutqin siap."
+      }
+    },
     "name": "Nama",
-    "email": "« Email»",
-    "namePlaceholder": "Anda name",
-    "emailPlaceholder": "Anda{'@'}example.com",
-    "join": "Join waiting daftar",
-    "joining": "« Joining…»",
-    "success": "Anda’re aktif the daftar",
-    "alreadyJoined": "Anda’re already aktif the daftar",
-    "successHint": "We’ll email you when Mutqin is siap for you.",
-    "joinAnother": "Gunakan a different email",
-    "privacyNote": "We’ll only Gunakan Ini ke notify Anda. No spam.",
-    "errorFields": "Silakan check the highlighted fields and try again.",
-    "errorSend": "Something went wrong. Silakan try again in a moment.",
+    "email": "Email",
+    "namePlaceholder": "Namamu",
+    "emailPlaceholder": "anda{'@'}contoh.com",
+    "join": "Pesan tempat saya",
+    "joining": "Memesan…",
+    "success": "Anda sudah masuk daftar",
+    "alreadyJoined": "Anda sudah ada di daftar",
+    "successHint": "Kami akan mengirim email saat Mutqin siap untuk Anda.",
+    "joinAnother": "Gunakan email lain",
+    "privacyNote": "Kami hanya menggunakannya untuk memberi kabar. Tanpa spam.",
+    "errorFields": "Periksa kolom yang ditandai, lalu coba lagi.",
+    "errorSend": "Ada yang salah. Coba lagi sebentar.",
     "errors": {
-      "name": "Silakan enter your name.",
-      "email": "Silakan enter your email address.",
-      "emailInvalid": "Silakan enter a valid email address."
+      "name": "Silakan masukkan nama Anda.",
+      "email": "Silakan masukkan alamat email Anda.",
+      "emailInvalid": "Silakan masukkan email yang valid."
     }
   },
   "hifzPlan": {

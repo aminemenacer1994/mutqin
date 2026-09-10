@@ -54,10 +54,12 @@ export function buildRecognitionWords(committedWords = [], options = {}) {
   return (Array.isArray(committedWords) ? committedWords : [])
     .map((word) => {
       const text = String(word?.word || word?.text || '').trim()
+      const rawWord = String(word?.rawWord || word?.raw_word || word?.display || '').trim()
       const entry = {
         word: text,
         confidence: Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1,
       }
+      if (rawWord && rawWord !== text) entry.raw_word = rawWord
       if (includeTiming) {
         const start = Number(word?.start ?? word?.startTime)
         const end = Number(word?.end ?? word?.endTime)

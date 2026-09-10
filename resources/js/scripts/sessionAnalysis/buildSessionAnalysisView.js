@@ -1,5 +1,5 @@
 import { buildAiReviewDetails } from '../recommendations/aiReviewDetails.js'
-import { classifyRecitationWordColor, RECITATION_COLOR } from '../engine/recitation_analysis.js'
+import { classifyRecitationWordColor, RECITATION_COLOR, resolveRecitationWordDisplay } from '../engine/recitation_analysis.js'
 
 /**
  * Map persisted session/AI analysis into the existing Analysis Modal view-model.
@@ -21,7 +21,7 @@ function wordStatus(word) {
 
 function wordText(word) {
   return asText(
-    word?.text
+    resolveRecitationWordDisplay(word)
     || word?.target_word
     || word?.expected
     || word?.detected_token

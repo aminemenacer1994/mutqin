@@ -101,6 +101,8 @@ class QuranAlignmentService
                 'status' => 'missing',
                 'note' => 'Word was not recited.',
                 'actual' => '',
+                'raw_word' => '',
+                'display_word' => '',
                 'confidence' => 0.0,
                 'similarity' => 0.0,
                 'target_index' => $index,
@@ -134,6 +136,8 @@ class QuranAlignmentService
                     && (($heard[$h - 1]['word'] ?? null) === ($heard[$h - 2]['word'] ?? null));
                 $extraWords[] = [
                     'word' => $heard[$h - 1]['word'] ?? '',
+                    'raw_word' => $heard[$h - 1]['raw_word'] ?? ($heard[$h - 1]['word'] ?? ''),
+                    'display_word' => '',
                     'confidence' => (float) ($heard[$h - 1]['confidence'] ?? 1),
                     'status' => 'extra',
                     'type' => $repeated ? 'repetition' : 'extra',
@@ -243,6 +247,7 @@ class QuranAlignmentService
                     $units[] = [
                         'word' => $this->normalizeArabic($display),
                         'display' => $display,
+                        'display_word' => $display,
                         'ayah_number' => $ayahNumber,
                         'ayah_key' => $ayahKey,
                         'ayah_word_index' => $index,
@@ -256,6 +261,7 @@ class QuranAlignmentService
                 $units[] = [
                     'word' => $this->normalizeArabic($display),
                     'display' => $display,
+                    'display_word' => $display,
                     'ayah_number' => 0,
                     'ayah_key' => '',
                     'ayah_word_index' => $index,
@@ -293,12 +299,16 @@ class QuranAlignmentService
             if (is_string($entry)) {
                 $word = $this->normalizeArabic($entry);
                 if ($word !== '') {
-                    $out[] = ['word' => $word, 'confidence' => 1.0];
+                    $out[] = [
+                        'word' => $word,
+                        'raw_word' => $entry,
+                        'confidence' => 1.0,
+                    ];
                 }
                 continue;
             }
-            $raw = (string) ($entry['word'] ?? $entry['text'] ?? '');
-            $word = $this->normalizeArabic($raw);
+            $raw = (string) ($entry['raw_word'] ?? $entry['rawWord'] ?? $entry['display'] ?? $entry['word'] ?? $entry['text'] ?? '');
+            $word = $this->normalizeArabic((string) ($entry['word'] ?? $entry['text'] ?? $raw));
             if ($word === '') {
                 continue;
             }
@@ -308,9 +318,20 @@ class QuranAlignmentService
             if ($confidence < 0.15) {
                 continue;
             }
+            $heard = [
+                'word' => $word,
+                'raw_word' => $raw !== '' ? $raw : $word,
+                'confidence' => $confidence,
+            ];
+            if (is_numeric($entry['start'] ?? $entry['startTime'] ?? null)) {
+                $heard['start'] = (float) ($entry['start'] ?? $entry['startTime']);
+            }
+            if (is_numeric($entry['end'] ?? $entry['endTime'] ?? null)) {
+                $heard['end'] = (float) ($entry['end'] ?? $entry['endTime']);
+            }
             // Keep adjacent duplicates so intentional learner repetitions survive.
             // DP marks them as extras with a cheaper repetition cost.
-            $out[] = ['word' => $word, 'confidence' => $confidence];
+            $out[] = $heard;
         }
 
         return $out;
@@ -584,10 +605,13 @@ class QuranAlignmentService
     ): array {
         $actual = (string) ($heardWord['word'] ?? '');
         $confidence = (float) ($heardWord['confidence'] ?? 1);
+        $rawWord = (string) ($heardWord['raw_word'] ?? $heardWord['rawWord'] ?? $heardWord['display'] ?? $actual);
         $base = [
             'text' => $display,
             'target_word' => $expected,
             'actual' => $actual,
+            'raw_word' => $rawWord,
+            'display_word' => '',
             'confidence' => $confidence,
             'similarity' => $similarity,
             'target_index' => $targetIndex,
@@ -595,6 +619,12 @@ class QuranAlignmentService
             'ayah_key' => $unit['ayah_key'] ?? '',
             'ayah_word_index' => $unit['ayah_word_index'] ?? $targetIndex,
         ];
+        if (isset($heardWord['start'])) {
+            $base['start'] = (float) $heardWord['start'];
+        }
+        if (isset($heardWord['end'])) {
+            $base['end'] = (float) $heardWord['end'];
+        }
 
         $articleMatch = $expected !== ''
             && $actual !== ''
@@ -616,6 +646,7 @@ class QuranAlignmentService
                 'note' => 'Correct.',
                 'similarity' => 1.0,
                 'visual_status' => 'green',
+                'display_word' => $display,
             ]);
         }
 

@@ -3,7 +3,7 @@
     "on": "آن",
     "off": "آف",
     "reset": "ری سیٹ",
-    "startSession": "ابدأ",
+    "startSession": "سیشن شروع کریں",
     "pause": "إيقاف مؤقت",
     "settings": "الإعدادات",
     "controls": "عناصر التحكم",
@@ -429,7 +429,14 @@
       "connectNote": "تابع Mutqin ل product updates.",
       "demo": "Demo",
       "login": "لاگ اِن",
-      "register": "رجسٹر"
+      "register": "رجسٹر",
+      "social": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "x": "X",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok"
+      }
     },
     "name": "الاسم",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
@@ -971,6 +978,7 @@
       "savedSessions": "الجلسات المحفوظة",
       "sessionInsights": "جلسة رؤى",
       "changeQuranFont": "غيّر القرآن خط",
+      "changeReadingLayout": "لے آؤٹ تبدیل کریں",
       "changeQuranicFont": "تغيير خط القرآن",
       "showTranslation": "اعرض أو hide English translation",
       "showTransliteration": "اعرض أو hide transliteration",
@@ -4054,26 +4062,46 @@
   },
   "waitingList": {
     "brand": "متقن",
-    "kicker": "متقن",
-    "title": "اربط  waiting قائمة",
-    "subtitle": "Be أولًا إلى know عندما access opens. واحدة short note  كل  يحتاج.",
-    "name": "اسم",
-    "email": "البريد الإلكتروني",
-    "namePlaceholder": " اسم",
-    "emailPlaceholder": "{'@'}example.com",
-    "join": "اربط waiting قائمة",
-    "joining": "اربطing…",
-    "success": "’re على  قائمة",
-    "alreadyJoined": "’re بالفعل على  قائمة",
-    "successHint": "’ll email  عندما Mutqin  جاهز ل .",
-    "joinAnother": "استخدم a مختلف email",
-    "privacyNote": "’ll فقط استخدم هذا إلى notify . لا spam.",
-    "errorFields": "يرجى فحص  highlighted fields و جرّب مجددًا.",
-    "errorSend": "Something went wrong. يرجى جرّب مجددًا في a moment.",
+    "kicker": "جلد رسائی",
+    "title": "اپنا حفظ قریب رکھو",
+    "subtitle": "مختصر حصّہ دہرائیں، یادداشت جانچیں، اور اگلا سبق معلوم ہو۔ جگہ تیار ہونے پر ہم ای میل کریں گے۔",
+    "formKicker": "انتظار کی فہرست",
+    "formTitle": "اپنی جگہ محفوظ کریں",
+    "formLead": "صرف نام اور ای میل۔",
+    "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+    "ayah": "اور قرآن کو ٹھہر ٹھہر کر پڑھو۔",
+    "ayahRef": "المزمل ۷۳:۴",
+    "benefits": {
+      "access": {
+        "title": "پہلے آپ کو خبر ہو",
+        "desc": "رسائی کھلنے پر ہم لکھیں گے۔"
+      },
+      "place": {
+        "title": "محفوظ جگہ",
+        "desc": "کل جہاں چھوڑا تھا وہیں سے جاری رکھیں۔"
+      },
+      "note": {
+        "title": "کوئی سپیم نہیں",
+        "desc": "متقن تیار ہو تو ایک ای میل."
+      }
+    },
+    "name": "نام",
+    "email": "ای میل",
+    "namePlaceholder": "آپ کا نام",
+    "emailPlaceholder": "you{'@'}example.com",
+    "join": "میری جگہ محفوظ کریں",
+    "joining": "محفوظ ہو رہی ہے…",
+    "success": "آپ فہرست میں شامل ہیں",
+    "alreadyJoined": "آپ پہلے سے فہرست میں ہیں",
+    "successHint": "متقن آپ کے لیے تیار ہو گا تو ہم ای میل کریں گے۔",
+    "joinAnother": "دوسری ای میل استعمال کریں",
+    "privacyNote": "ہم اسے صرف اطلاع کے لیے استعمال کریں گے۔ کوئی سپیم نہیں۔",
+    "errorFields": "نمایاں خانے چیک کر کے دوبارہ کوشش کریں۔",
+    "errorSend": "کچھ غلط ہو گیا۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔",
     "errors": {
-      "name": "يرجى enter  اسم.",
-      "email": "يرجى enter  email address.",
-      "emailInvalid": "يرجى enter a valid email address."
+      "name": "براہ کرم اپنا نام درج کریں۔",
+      "email": "براہ کرم اپنی ای میل درج کریں۔",
+      "emailInvalid": "براہ کرم درست ای میل درج کریں۔"
     }
   },
   "hifzPlan": {

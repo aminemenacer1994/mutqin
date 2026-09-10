@@ -429,7 +429,14 @@
       "connectNote": "Follow Mutqin for freeLimitedduct updates.",
       "demo": "Demo",
       "login": "Connexion",
-      "register": "Créer un compte"
+      "register": "Créer un compte",
+      "social": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "x": "X",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok"
+      }
     },
     "name": "Nom",
     "focused_quran_memorisation_tools_for_recitation_ch": "Un compagnon calme pour pratiquer le Coran, contrôler le rappel et retrouver votre place.",
@@ -971,6 +978,7 @@
       "savedSessions": "Sesións enregistrées",
       "sessionInsights": "sesión información",
       "changeQuranFont": "Change القرآن font",
+      "changeReadingLayout": "Changer la mise en page",
       "changeQuranicFont": "Change Coranic font",
       "showTranslation": "Mostrar or hide the English translation",
       "showTransliteration": "Mostrar or hide transliteration",
@@ -4053,27 +4061,47 @@
     }
   },
   "waitingList": {
-    "brand": "« Mutqin»",
-    "kicker": "« Mutqin»",
-    "title": "Join el waiting lista",
-    "subtitle": "Be primero a know cuando access opens. One short nota es todos we necesitan.",
+    "brand": "Mutqin",
+    "kicker": "Accès anticipé",
+    "title": "Gardez votre hifz près du cœur",
+    "subtitle": "Pratiquez un court passage, vérifiez votre mémorisation, et sachez quoi ouvrir ensuite. Nous vous écrirons quand une place sera prête.",
+    "formKicker": "Liste d’attente",
+    "formTitle": "Réservez votre place",
+    "formLead": "Votre nom et votre e-mail.",
+    "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+    "ayah": "Et récitez le Coran d’une récitation mesurée.",
+    "ayahRef": "Al-Muzzammil 73:4",
+    "benefits": {
+      "access": {
+        "title": "Soyez les premiers",
+        "desc": "Nous vous écrivons dès l’ouverture."
+      },
+      "place": {
+        "title": "Un lieu sauvegardé",
+        "desc": "Reprenez demain là où vous vous êtes arrêtés."
+      },
+      "note": {
+        "title": "Pas de spam",
+        "desc": "Un e-mail quand Mutqin sera prêt."
+      }
+    },
     "name": "Nom",
     "email": "E-mail",
-    "namePlaceholder": "tu name",
-    "emailPlaceholder": "tú{'@'}example.com",
-    "join": "Join waiting lista",
-    "joining": "« Joining…»",
-    "success": "tú’volver a activado el lista",
-    "alreadyJoined": "tú’volver a already activado el lista",
-    "successHint": "We’ll email you when Mutqin is listo for you.",
-    "joinAnother": "Usa a different email",
+    "namePlaceholder": "Votre nom",
+    "emailPlaceholder": "vous{'@'}exemple.com",
+    "join": "Réserver ma place",
+    "joining": "Réservation…",
+    "success": "Vous êtes sur la liste",
+    "alreadyJoined": "Vous êtes déjà sur la liste",
+    "successHint": "Nous vous écrirons quand Mutqin sera prêt pour vous.",
+    "joinAnother": "Utiliser un autre e-mail",
     "privacyNote": "Nous l’utiliserons seulement pour vous prévenir. Pas de spam.",
-    "errorFields": "Vérifiez les champs signalés y réessayez.",
+    "errorFields": "Vérifiez les champs signalés et réessayez.",
     "errorSend": "Une erreur s’est produite. Réessayez dans un instant.",
     "errors": {
-      "name": "Por favor entrer tu nom.",
-      "email": "Por favor entrer tu adresse e-mail.",
-      "emailInvalid": "Por favor entrer une adresse e-mail valide."
+      "name": "Veuillez entrer votre nom.",
+      "email": "Veuillez entrer votre adresse e-mail.",
+      "emailInvalid": "Veuillez entrer une adresse e-mail valide."
     }
   },
   "hifzPlan": {

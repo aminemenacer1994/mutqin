@@ -373,7 +373,33 @@ includesAll('top toolbar feature spacing', [
     /\.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) > \.action-btn-exit \{[\s\S]*?grid-column:\s*2\s*!important[\s\S]*?grid-row:\s*1\s*!important/,
     'mobile-grid must place End session beside Resume on row 1'
   )
+  assert.match(
+    mobileGridCss,
+    /mushaf layout icon is menu-only on mobile[\s\S]*?\.top-card-layout-icons,[\s\S]*?display:\s*none\s*!important/,
+    'mobile-grid must hide the outside mushaf layout icon'
+  )
+  assert.match(
+    mobileGridCss,
+    /html body \.app \.top-card-menu \.top-card-menu-toggle--layout \{\s*display:\s*flex\s*!important/,
+    'mobile-grid must show mushaf/stacked inside the ellipsis menu'
+  )
+  assert.match(
+    blade,
+    /mushaf\/stacked lives in the ellipsis menu[\s\S]*?\.top-card-layout-icons,[\s\S]*?display:\s*none\s*!important/,
+    'blade hotfix must hide the outside mushaf layout icon on mobile'
+  )
+  assert.match(
+    blade,
+    /\.app \.top-card-menu \.top-card-menu-toggle--layout \{\s*display:\s*flex\s*!important/,
+    'blade hotfix must show mushaf/stacked inside the ellipsis menu on mobile'
+  )
 }
+
+includesAll('ellipsis layout section', [
+  /top-card-menu-label--layout/,
+  /top-card-menu-divider--layout/,
+  /memorisation\.a11y\.changeReadingLayout/,
+])
 
 includesAll('arabic grapheme safety', [
   /function splitArabicGraphemes\(text\) \{/,
@@ -602,6 +628,7 @@ includesAll('ai audio consent and retention wiring', [
   assert.match(source, /stopAmdElapsedTimer\(/)
   assert.match(source, /createSessionTimer/)
   assert.match(source, /normalizeArabicForRecitationEngine/)
+  assert.match(source, /resolveRecitationWordDisplayEngine/)
   assert.match(source, /phraseStart/)
   assert.match(source, /playRecordingStartBeep/)
   assert.match(source, /_amdRecordStartBeepConsumed/)

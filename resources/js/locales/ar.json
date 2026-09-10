@@ -3,7 +3,7 @@
     "on": "تشغيل",
     "off": "إيقاف",
     "reset": "إعادة تعيين",
-    "startSession": "ابدأ",
+    "startSession": "ابدأ الجلسة",
     "pause": "إيقاف مؤقت",
     "settings": "الإعدادات",
     "controls": "عناصر التحكم",
@@ -429,7 +429,14 @@
       "connectNote": "تابع Mutqin ل product updates.",
       "demo": "Demo",
       "login": "تسجيل الدخول",
-      "register": "إنشاء حساب"
+      "register": "إنشاء حساب",
+      "social": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "x": "X",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok"
+      }
     },
     "name": "الاسم",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
@@ -971,6 +978,7 @@
       "savedSessions": "الجلسات المحفوظة",
       "sessionInsights": "جلسة رؤى",
       "changeQuranFont": "غيّر القرآن خط",
+      "changeReadingLayout": "غيّر التخطيط",
       "changeQuranicFont": "تغيير خط القرآن",
       "showTranslation": "اعرض أو hide English translation",
       "showTransliteration": "اعرض أو hide transliteration",
@@ -4054,26 +4062,46 @@
   },
   "waitingList": {
     "brand": "متقن",
-    "kicker": "متقن",
-    "title": "اربط  waiting قائمة",
-    "subtitle": "Be أولًا إلى know عندما access opens. واحدة short note  كل  يحتاج.",
-    "name": "اسم",
+    "kicker": "وصول مبكر",
+    "title": "أبقِ حفظك قريبًا",
+    "subtitle": "راجع مجموعة قصيرة، وتأكد من استظهارك، واعرف ماذا تفتح بعد ذلك. سنراسلك حين تجهز لك مكانًا.",
+    "formKicker": "قائمة الانتظار",
+    "formTitle": "احجز مكانك",
+    "formLead": "الاسم والبريد فقط.",
+    "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+    "ayah": "ورتل القرآن ترتيلًا",
+    "ayahRef": "المزمل ٧٣:٤",
+    "benefits": {
+      "access": {
+        "title": "كن أول من يعلم",
+        "desc": "نراسلك عند فتح الوصول."
+      },
+      "place": {
+        "title": "موضع محفوظ",
+        "desc": "غدًا تتابع من حيث توقفت."
+      },
+      "note": {
+        "title": "بلا إزعاج",
+        "desc": "رسالة واحدة حين يكون متقن جاهزًا."
+      }
+    },
+    "name": "الاسم",
     "email": "البريد الإلكتروني",
-    "namePlaceholder": " اسم",
-    "emailPlaceholder": "{'@'}example.com",
-    "join": "اربط waiting قائمة",
-    "joining": "اربطing…",
-    "success": "’re على  قائمة",
-    "alreadyJoined": "’re بالفعل على  قائمة",
-    "successHint": "’ll email  عندما Mutqin  جاهز ل .",
-    "joinAnother": "استخدم a مختلف email",
-    "privacyNote": "’ll فقط استخدم هذا إلى notify . لا spam.",
-    "errorFields": "يرجى فحص  highlighted fields و جرّب مجددًا.",
-    "errorSend": "Something went wrong. يرجى جرّب مجددًا في a moment.",
+    "namePlaceholder": "اسمك",
+    "emailPlaceholder": "you{'@'}example.com",
+    "join": "احجز مكاني",
+    "joining": "جارٍ الحجز…",
+    "success": "أنت الآن في القائمة",
+    "alreadyJoined": "أنت مسجّل بالفعل في القائمة",
+    "successHint": "سنراسلُك حين يكون متقن جاهزًا لك.",
+    "joinAnother": "استخدم بريدًا آخر",
+    "privacyNote": "نستخدمه فقط لإعلامك. بلا رسائل مزعجة.",
+    "errorFields": "يرجى مراجعة الحقول المظللة ثم المحاولة مجددًا.",
+    "errorSend": "حدث خطأ. حاول مرة أخرى بعد لحظات.",
     "errors": {
-      "name": "يرجى enter  اسم.",
-      "email": "يرجى enter  email address.",
-      "emailInvalid": "يرجى enter a valid email address."
+      "name": "يرجى إدخال اسمك.",
+      "email": "يرجى إدخال بريدك الإلكتروني.",
+      "emailInvalid": "يرجى إدخال بريد إلكتروني صالح."
     }
   },
   "hifzPlan": {

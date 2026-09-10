@@ -3,7 +3,7 @@
     "on": "On",
     "off": "Off",
     "reset": "Reset",
-    "startSession": "Start",
+    "startSession": "Start session",
     "pause": "Pause",
     "settings": "Settings",
     "controls": "Controls",
@@ -429,7 +429,14 @@
       "connectNote": "Follow Mutqin for quiet product updates.",
       "demo": "Demo",
       "login": "Log in",
-      "register": "Register"
+      "register": "Register",
+      "social": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "x": "X",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok"
+      }
     },
     "name": "Name",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
@@ -971,6 +978,7 @@
       "savedSessions": "Saved sessions",
       "sessionInsights": "Session insights",
       "changeQuranFont": "Change Quran font",
+      "changeReadingLayout": "Change layout",
       "changeQuranicFont": "Change Quranic font",
       "showTranslation": "Show or hide the English translation",
       "showTransliteration": "Show or hide transliteration",
@@ -4060,15 +4068,35 @@
   },
   "waitingList": {
     "brand": "Mutqin",
-    "kicker": "Mutqin",
-    "title": "Join the waiting list",
-    "subtitle": "Be first to know when access opens. One short note is all we need.",
+    "kicker": "Early access",
+    "title": "Keep your hifz close",
+    "subtitle": "Practise a short set, check your recall, and know what to open next. We will email you when a place is ready.",
+    "formKicker": "Waiting list",
+    "formTitle": "Reserve your place",
+    "formLead": "Just your name and email.",
+    "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+    "ayah": "And recite the Quran with measured recitation.",
+    "ayahRef": "Al-Muzzammil 73:4",
+    "benefits": {
+      "access": {
+        "title": "Hear first",
+        "desc": "We email you when access opens."
+      },
+      "place": {
+        "title": "A saved place",
+        "desc": "Continue tomorrow from where you stopped."
+      },
+      "note": {
+        "title": "No spam",
+        "desc": "One email when Mutqin is ready."
+      }
+    },
     "name": "Name",
     "email": "Email",
     "namePlaceholder": "Your name",
     "emailPlaceholder": "you{'@'}example.com",
-    "join": "Join waiting list",
-    "joining": "Joining…",
+    "join": "Reserve my place",
+    "joining": "Reserving…",
     "success": "You’re on the list",
     "alreadyJoined": "You’re already on the list",
     "successHint": "We’ll email you when Mutqin is ready for you.",

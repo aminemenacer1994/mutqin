@@ -331,6 +331,32 @@ function presentationFor(input) {
   assert.equal(isResumableSessionPayload({
     config: { chapterId: 2 },
   }, { backendStatus: BACKEND_SESSION_STATUS.COMPLETED }), false)
+  assert.equal(isResumableSessionPayload({
+    config: { chapterId: 2 },
+    sessionStatus: 'ended_early',
+  }), false)
+}
+
+// 17b. Ended / completed sittings show Start session, not Resume
+{
+  assert.equal(actionFor({
+    authHydrated: true,
+    sessionHydrated: true,
+    sessionCompleted: true,
+    hasValidatedContinuePayload: true,
+    backendUnfinished: true,
+  }), PRIMARY_SESSION_ACTION.START_SESSION)
+  assert.equal(actionFor({
+    authHydrated: true,
+    sessionHydrated: true,
+    backendStatus: BACKEND_SESSION_STATUS.ENDED_EARLY,
+    hasValidatedContinuePayload: true,
+  }), PRIMARY_SESSION_ACTION.START_SESSION)
+  assert.equal(presentationFor({
+    authHydrated: true,
+    sessionHydrated: true,
+    sessionCompleted: true,
+  }).label, 'Start Session')
 }
 
 // 18. Stale local session ID is ignored when backend says ended

@@ -5793,9 +5793,31 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     z-index: 140 !important;
   }
 
-  /* Mushaf/Stacked lives on the icon toggle — not in the ellipsis menu on mobile. */
-  .top-card-menu .top-card-menu-toggle--layout {
+  /* Mobile: mushaf/stacked lives in the ellipsis menu — hide the outside icon. */
+  html body .app .top-card-icon-controls .top-card-layout-icons,
+  html body .app .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons,
+  html body .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
     display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .top-card-menu .top-card-menu-toggle--layout {
+    display: flex !important;
+  }
+
+  .top-card-menu .top-card-menu-label--layout,
+  .top-card-menu .top-card-menu-divider--layout {
+    display: block !important;
   }
 
   /* Delete confirm: keep Cancel / Delete side-by-side (Teleport is outside .app). */
@@ -7173,11 +7195,14 @@ html body.memorisation-page .tools.show {
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: baseline !important;
-    width: 100% !important;
+    justify-content: flex-start !important;
+    column-gap: 1.85rem !important;
+    gap: 1.85rem !important;
+    width: fit-content !important;
     max-width: 100% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     white-space: nowrap !important;
-    text-overflow: ellipsis !important;
+    text-overflow: clip !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
@@ -7369,9 +7394,10 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: baseline !important;
-    justify-content: space-between !important;
-    gap: 0.75rem !important;
-    width: 100% !important;
+    justify-content: flex-start !important;
+    column-gap: 1.85rem !important;
+    gap: 1.85rem !important;
+    width: fit-content !important;
     max-width: 100% !important;
     overflow: visible !important;
     white-space: nowrap !important;
@@ -7380,10 +7406,19 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
-    display: inline !important;
+    display: inline-block !important;
     flex: 0 0 auto !important;
     min-width: 0 !important;
     white-space: nowrap !important;
+    isolation: isolate;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
+    padding-inline-end: 0.2em !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+    padding-inline-start: 0.2em !important;
   }
 
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster,
@@ -7509,6 +7544,21 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     margin: -1px !important;
     overflow: hidden !important;
     clip: rect(0, 0, 0, 0) !important;
+  }
+
+  /* Final: mushaf layout icon is menu-only on mobile. */
+  html body .app .top-card-icon-controls .top-card-layout-icons,
+  html body .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
+    display: none !important;
+  }
+
+  html body .app .top-card-menu .top-card-menu-toggle--layout {
+    display: flex !important;
+  }
+
+  html body .app .top-card-menu .top-card-menu-label--layout,
+  html body .app .top-card-menu .top-card-menu-divider--layout {
+    display: block !important;
   }
 }
 

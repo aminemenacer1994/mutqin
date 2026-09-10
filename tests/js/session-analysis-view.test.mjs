@@ -7,6 +7,7 @@ import { buildSessionAnalysisView, hasSavedAnalysis } from '../../resources/js/s
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const dashboard = readFileSync(join(root, 'resources/js/views/Dashboard.vue'), 'utf8')
 const modal = readFileSync(join(root, 'resources/js/components/SessionAnalysisModal.vue'), 'utf8')
+const overviewCss = readFileSync(join(root, 'resources/js/components/SessionAnalysisOverview.css'), 'utf8')
 const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 const en = JSON.parse(readFileSync(join(root, 'resources/js/locales/en.json'), 'utf8'))
 
@@ -35,6 +36,21 @@ assert.match(modal, /variant="error"/, 'error state present')
 assert.match(modal, /variant="empty"/, 'empty state present')
 assert.match(modal, /spinner-border/, 'loading state present')
 assert.match(modal, /session-analysis-modal-open/, 'background scroll/interaction is locked')
+assert.match(
+  overviewCss,
+  /\.sa-ov__ayah-ar \{[\s\S]*?overflow-wrap:\s*anywhere/,
+  'long ayah text wraps inside its card',
+)
+assert.match(
+  overviewCss,
+  /\.sa-ov__ayah \{[\s\S]*?max-width:\s*100%/,
+  'each ayah row stays within the panel width',
+)
+assert.match(
+  overviewCss,
+  /\.sa-ov__panel \{[\s\S]*?overflow-x:\s*clip/,
+  'words-and-ayahs panel clips horizontal overflow',
+)
 
 const first = buildSessionAnalysisView({
   has_analysis: true,

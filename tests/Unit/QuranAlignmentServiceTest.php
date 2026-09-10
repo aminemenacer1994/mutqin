@@ -13,6 +13,8 @@ class QuranAlignmentServiceTest extends TestCase
     {
         $service = new QuranAlignmentService;
         $this->assertSame('الله', $service->normalizeArabic('اللَّهَ'));
+        $this->assertSame('الحمد', $service->normalizeArabic('ٱلْحَمْدُ'));
+        $this->assertSame('رب', $service->normalizeArabic('رَبِّ'));
         // Dagger alef expands to ا (الرَّحْمَٰنِ → الرحمان), not deleted.
         $this->assertSame('الرحمان', $service->normalizeArabic('الرَّحْمَٰنِ'));
         $this->assertSame('العالمين', $service->normalizeArabic('ٱلْعَٰلَمِينَ'));
@@ -122,6 +124,35 @@ class QuranAlignmentServiceTest extends TestCase
 
         $this->assertSame('wrong', $result['word_results'][3]['status']);
         $this->assertSame(1, $result['color_counts']['red']);
+        $this->assertSame('صمد', $result['word_results'][3]['raw_word']);
+        $this->assertSame('', $result['word_results'][3]['display_word']);
+        $this->assertSame('احد', $result['word_results'][3]['text']);
+    }
+
+    public function test_correct_match_exposes_canonical_display_word_and_preserves_asr_metadata(): void
+    {
+        $service = new QuranAlignmentService;
+        $result = $service->align(
+            [[
+                'ayah_number' => 2,
+                'surah_number' => 1,
+                'text' => 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ',
+            ]],
+            [
+                ['word' => 'الحمد', 'confidence' => 0.96, 'start' => 1.24, 'end' => 1.67],
+                ['word' => 'لله', 'confidence' => 0.95, 'start' => 1.70, 'end' => 1.92],
+                ['word' => 'رب', 'confidence' => 0.94, 'start' => 1.95, 'end' => 2.10],
+                ['word' => 'العالمين', 'confidence' => 0.97, 'start' => 2.14, 'end' => 2.80],
+            ]
+        );
+
+        $this->assertSame('correct', $result['word_results'][0]['status']);
+        $this->assertSame('ٱلْحَمْدُ', $result['word_results'][0]['display_word']);
+        $this->assertSame('الحمد', $result['word_results'][0]['raw_word']);
+        $this->assertSame(0.96, $result['word_results'][0]['confidence']);
+        $this->assertSame(1.24, $result['word_results'][0]['start']);
+        $this->assertSame(1.67, $result['word_results'][0]['end']);
+        $this->assertSame('ٱلْعَٰلَمِينَ', $result['word_results'][3]['display_word']);
     }
 
     public function test_omission_insertion_and_repetition(): void

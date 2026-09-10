@@ -333,7 +333,12 @@ export function buildContinuePayloadFromLastPosition(position) {
 export function isResumableSessionPayload(payload, options = {}) {
   if (!payload || typeof payload !== 'object') return false
   if (options.isSample || payload.isOnboardingSample || payload.sessionKind === 'sample') return false
-  if (payload.completed || payload.sessionStatus === 'completed' || payload.sessionStatus === 'ended') return false
+  if (
+    payload.completed
+    || payload.sessionStatus === 'completed'
+    || payload.sessionStatus === 'ended'
+    || payload.sessionStatus === 'ended_early'
+  ) return false
   const backendStatus = options.backendStatus ?? payload.backendStatus ?? null
   if (
     backendStatus === BACKEND_SESSION_STATUS.COMPLETED
@@ -644,10 +649,20 @@ export function deriveSessionStatus(input = {}) {
     return SESSION_STATUS.ONBOARDING_EXAMPLE
   }
 
+  const terminalBackend = backendStatus === BACKEND_SESSION_STATUS.COMPLETED
+    || backendStatus === BACKEND_SESSION_STATUS.ENDED_EARLY
+    || backendStatus === BACKEND_SESSION_STATUS.ABANDONED
+
   // Practice session state always wins over a stale onboarding CTA.
   // An active / paused / resumable session must never show "Start Onboarding".
-  if (mutqinSessionActive && !sessionCompleted) {
+  if (mutqinSessionActive && !sessionCompleted && !terminalBackend) {
     return SESSION_STATUS.ACTIVE
+  }
+
+  // End / complete is terminal — Start session, never Resume, even if a
+  // stale continue payload or unfinished flag is still hanging around.
+  if ((sessionCompleted || terminalBackend) && !mutqinSessionActive) {
+    return SESSION_STATUS.COMPLETED
   }
 
   const unfinishedBackend = backendUnfinished
@@ -663,10 +678,6 @@ export function deriveSessionStatus(input = {}) {
 
   if ((hasValidatedContinuePayload || unfinishedBackend) && !mutqinSessionActive && !sessionCompleted) {
     return SESSION_STATUS.INTERRUPTED_RESUMABLE
-  }
-
-  if (sessionCompleted && !mutqinSessionActive && !hasValidatedContinuePayload && !backendUnfinished) {
-    return SESSION_STATUS.COMPLETED
   }
 
   if (requiresOnboarding) {
@@ -787,7 +798,7 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
     [PRIMARY_SESSION_ACTION.START_SESSION]: {
       labelKey: 'common.startSession',
       icon: 'bi-play-fill',
-      fallback: 'Start',
+      fallback: 'Start session',
     },
     [PRIMARY_SESSION_ACTION.RESUME_SESSION]: {
       labelKey: 'common.resumeSession',

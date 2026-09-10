@@ -566,6 +566,7 @@
               </div>
               <transition name="dropdown-fade">
                 <div v-if="topCardMenuOpen" class="top-card-menu">
+                  <p class="top-card-menu-label top-card-menu-label--layout">{{ t('memorisation.a11y.changeReadingLayout') }}</p>
                   <button
                     type="button"
                     class="top-card-menu-toggle top-card-menu-toggle--layout"
@@ -588,8 +589,7 @@
                     <span>{{ t('memorisation.view.mushaf') }}</span>
                     <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
-                  
-                  
+                  <div class="top-card-menu-divider top-card-menu-divider--layout" aria-hidden="true"></div>
                   <button
                     v-if="readingViewMode === 'stacked'"
                     type="button"
@@ -3171,7 +3171,7 @@
                         <div v-if="getRecitationWordsToReview(selectedRecordingsEntry).length" class="shared-result-word-review-list" dir="rtl">
                           <span v-for="word in getRecitationWordsToReview(selectedRecordingsEntry)" :key="`saved-review-${word.index}`"
                             class="shared-result-word-review-chip" :class="`is-${word.visualStatus}`">
-                            {{ word.text }}
+                            {{ resolveRecitationWordDisplay(word) }}
                           </span>
                         </div>
                         <p v-else class="shared-result-word-review-summary"><i class="bi bi-check2-circle" aria-hidden="true"></i><span>{{ getFriendlyNoWordMistakesMessage() }}</span></p>

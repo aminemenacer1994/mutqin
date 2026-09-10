@@ -128,6 +128,57 @@ export function tokenizeRecitationWords(text) {
   return normalized ? normalized.split(/\s+/).filter(Boolean) : []
 }
 
+/** Speechmatics / ASR surface form — never rewrite this with canonical tashkīl. */
+export function heardRawWord(heardWord = {}) {
+  if (typeof heardWord === 'string') return String(heardWord || '').trim()
+  return String(
+    heardWord?.rawWord
+    || heardWord?.raw_word
+    || heardWord?.display
+    || heardWord?.word
+    || heardWord?.text
+    || ''
+  ).trim()
+}
+
+/**
+ * Render helper for AI Recite / saved-session word chips.
+ * Canonical harakāt only when a confident match set displayWord.
+ */
+export function resolveRecitationWordDisplay(word = {}) {
+  const displayWord = String(word?.displayWord ?? word?.display_word ?? '').trim()
+  if (displayWord) return displayWord
+  const rawWord = String(word?.rawWord ?? word?.raw_word ?? '').trim()
+  if (rawWord) return rawWord
+  return String(word?.text || word?.display || word?.word || '').trim()
+}
+
+function heardTiming(heardWord = {}) {
+  const start = finiteOrNull(heardWord?.start ?? heardWord?.startTime)
+  const end = finiteOrNull(heardWord?.end ?? heardWord?.endTime)
+  return { start, end, startTime: start, endTime: end }
+}
+
+function withHeardAlignmentFields(payload, heardWord = {}, status = payload?.status) {
+  return {
+    ...payload,
+    rawWord: heardRawWord(heardWord),
+    displayWord: status === 'correct' ? String(payload?.text || '') : '',
+    ...heardTiming(heardWord),
+  }
+}
+
+function unmatchedTargetAlignmentFields() {
+  return {
+    rawWord: '',
+    displayWord: '',
+    start: null,
+    end: null,
+    startTime: null,
+    endTime: null,
+  }
+}
+
 export function wordsToTranscript(words = []) {
   return (Array.isArray(words) ? words : [])
     .map(item => item?.word || item?.text || '')
@@ -139,6 +190,7 @@ export function createWordsFromTranscript(transcript = '', options = {}) {
   return tokenizeRecitationWords(transcript).map((word, index) => ({
     word,
     display: word,
+    rawWord: word,
     confidence: Number.isFinite(Number(options.confidence)) ? Number(options.confidence) : 1,
     provider: options.provider || 'stable-transcript',
     segmentId: options.segmentId || 'stable-transcript',
@@ -241,7 +293,8 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     ayahKey: targetUnits[index]?.ayahKey || '',
     ayahNumber: targetUnits[index]?.ayahNumber ?? null,
     ayahIndex: Number.isFinite(Number(targetUnits[index]?.ayahIndex)) ? Number(targetUnits[index].ayahIndex) : 0,
-    ayahWordIndex: Number.isFinite(Number(targetUnits[index]?.ayahWordIndex)) ? Number(targetUnits[index].ayahWordIndex) : index
+    ayahWordIndex: Number.isFinite(Number(targetUnits[index]?.ayahWordIndex)) ? Number(targetUnits[index].ayahWordIndex) : index,
+    ...unmatchedTargetAlignmentFields(),
   }))
   const strict = options.strictProgression !== false
   // Preserve explicit 0 so strict AMD modes can disable fuzzy skip-ahead.
@@ -297,9 +350,13 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     if (cursor >= targetWords.length) {
       extraWords.push({
         word: heardWord.word || '',
-        display: heardWord.display || heardWord.word || '',
+        display: heardWord.display || heardWord.rawWord || heardWord.word || '',
+        rawWord: heardRawWord(heardWord),
+        displayWord: '',
         heardIndex,
         confidence: Number(heardWord.confidence ?? 1),
+        start: finiteOrNull(heardWord.start ?? heardWord.startTime),
+        end: finiteOrNull(heardWord.end ?? heardWord.endTime),
         type: isRepeatedHeardWord(heardWords, heardIndex) ? 'repetition' : 'extra'
       })
       continue
@@ -364,6 +421,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
           ayahNumber: skipUnit?.ayahNumber ?? null,
           ayahIndex: Number.isFinite(Number(skipUnit?.ayahIndex)) ? Number(skipUnit.ayahIndex) : 0,
           ayahWordIndex: Number.isFinite(Number(skipUnit?.ayahWordIndex)) ? Number(skipUnit.ayahWordIndex) : cursor,
+          ...unmatchedTargetAlignmentFields(),
         }
         statuses[cursor + 1] = nextClassified
         firstBlockingIndex = cursor
@@ -396,7 +454,8 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
           ayahKey: skipUnit?.ayahKey || '',
           ayahNumber: skipUnit?.ayahNumber ?? null,
           ayahIndex: Number.isFinite(Number(skipUnit?.ayahIndex)) ? Number(skipUnit.ayahIndex) : 0,
-          ayahWordIndex: Number.isFinite(Number(skipUnit?.ayahWordIndex)) ? Number(skipUnit.ayahWordIndex) : skipIndex
+          ayahWordIndex: Number.isFinite(Number(skipUnit?.ayahWordIndex)) ? Number(skipUnit.ayahWordIndex) : skipIndex,
+          ...unmatchedTargetAlignmentFields(),
         }
       }
       firstBlockingIndex = cursor
@@ -526,7 +585,8 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     ayahKey: targetUnits[index]?.ayahKey || '',
     ayahNumber: targetUnits[index]?.ayahNumber ?? null,
     ayahIndex: Number.isFinite(Number(targetUnits[index]?.ayahIndex)) ? Number(targetUnits[index].ayahIndex) : 0,
-    ayahWordIndex: Number.isFinite(Number(targetUnits[index]?.ayahWordIndex)) ? Number(targetUnits[index].ayahWordIndex) : index
+    ayahWordIndex: Number.isFinite(Number(targetUnits[index]?.ayahWordIndex)) ? Number(targetUnits[index].ayahWordIndex) : index,
+    ...unmatchedTargetAlignmentFields(),
   }))
   const extraWords = []
   const operations = []
@@ -561,11 +621,16 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
       operations.unshift({ op: 'match', targetIndex: targetIndex - 1, heardIndex: heardIndex - 1, similarity: cell.similarity })
     } else if (cell.op === 'extra') {
       const repeated = isRepeatedHeardWord(heardWords, heardIndex - 1)
+      const extraHeard = heardWords[heardIndex - 1] || {}
       const extra = {
-        word: heardWords[heardIndex - 1]?.word || '',
-        display: heardWords[heardIndex - 1]?.display || heardWords[heardIndex - 1]?.word || '',
+        word: extraHeard.word || '',
+        display: extraHeard.display || extraHeard.rawWord || extraHeard.word || '',
+        rawWord: heardRawWord(extraHeard),
+        displayWord: '',
         heardIndex: heardIndex - 1,
-        confidence: Number(heardWords[heardIndex - 1]?.confidence ?? 1),
+        confidence: Number(extraHeard.confidence ?? 1),
+        start: finiteOrNull(extraHeard.start ?? extraHeard.startTime),
+        end: finiteOrNull(extraHeard.end ?? extraHeard.endTime),
         type: repeated ? 'repetition' : 'extra'
       }
       extraWords.unshift(extra)
@@ -585,7 +650,8 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         ayahKey: omitUnit?.ayahKey || '',
         ayahNumber: omitUnit?.ayahNumber ?? null,
         ayahIndex: Number.isFinite(Number(omitUnit?.ayahIndex)) ? Number(omitUnit.ayahIndex) : 0,
-        ayahWordIndex: Number.isFinite(Number(omitUnit?.ayahWordIndex)) ? Number(omitUnit.ayahWordIndex) : omitIndex
+        ayahWordIndex: Number.isFinite(Number(omitUnit?.ayahWordIndex)) ? Number(omitUnit.ayahWordIndex) : omitIndex,
+        ...unmatchedTargetAlignmentFields(),
       }
       operations.unshift({ op: 'omission', targetIndex: omitIndex })
     }
@@ -762,6 +828,7 @@ function buildTargetWordUnits(targetAyahs = [], targetText = '') {
       if (!word) return
       units.push({
         display,
+        displayWord: display,
         word,
         targetIndex: units.length,
         ayahKey: ayah.key || '',
@@ -860,10 +927,13 @@ function normalizeRecognitionWords(words = [], options = {}) {
         return {
           word,
           display: rawWord,
+          rawWord: String(rawWord || '').trim() || word,
           confidence,
           provider: entry?.provider || provider,
-          start: finiteOrNull(entry?.start),
-          end: finiteOrNull(entry?.end),
+          start: finiteOrNull(entry?.start ?? entry?.startTime),
+          end: finiteOrNull(entry?.end ?? entry?.endTime),
+          startTime: finiteOrNull(entry?.start ?? entry?.startTime),
+          endTime: finiteOrNull(entry?.end ?? entry?.endTime),
           segmentId: entry?.segmentId || segmentId,
           sequence: eventSequence,
           sourceIndex: index + wordIndex
@@ -885,8 +955,11 @@ function collectRejectedRecognitionWords(words = [], threshold, provider, segmen
       return {
         word,
         display: rawWord,
+        rawWord: String(rawWord || '').trim() || word,
         confidence,
         provider: entry?.provider || provider,
+        start: finiteOrNull(entry?.start ?? entry?.startTime),
+        end: finiteOrNull(entry?.end ?? entry?.endTime),
         segmentId,
         sourceIndex: index,
         reason: 'below-confidence-threshold'
@@ -997,6 +1070,7 @@ function normaliseCommittedRecognitionWords(words = [], options = {}) {
         ...entry,
         word,
         display: entry?.display || entry?.text || raw || word,
+        rawWord: entry?.rawWord || entry?.raw_word || entry?.display || raw || word,
         confidence: Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 1,
         commitIndex: Number.isFinite(Number(entry?.commitIndex)) ? Number(entry.commitIndex) : index
       }
@@ -1454,7 +1528,7 @@ function classifyWordMatch({
       || (similarityLooksCorrect && confidence >= similarityCorrectFloor)
     )
   ) {
-    return {
+    return withHeardAlignmentFields({
       text: displayText,
       targetWord: expected,
       status: 'correct',
@@ -1465,11 +1539,11 @@ function classifyWordMatch({
       targetIndex,
       heardIndex: heardWord.commitIndex,
       ...location
-    }
+    }, heardWord, 'correct')
   }
   // Recognition uncertainty must not become a learner mistake.
   if (expected && actual && !exactOrArticle && confidence < uncertainFloor) {
-    return {
+    return withHeardAlignmentFields({
       text: displayText,
       targetWord: expected,
       status: 'uncertain',
@@ -1480,10 +1554,10 @@ function classifyWordMatch({
       targetIndex,
       heardIndex: heardWord.commitIndex,
       ...location
-    }
+    }, heardWord, 'uncertain')
   }
   if (expected && actual && shortSubstitution) {
-    return {
+    return withHeardAlignmentFields({
       text: displayText,
       targetWord: expected,
       status: 'incorrect',
@@ -1494,11 +1568,11 @@ function classifyWordMatch({
       targetIndex,
       heardIndex: heardWord.commitIndex,
       ...location
-    }
+    }, heardWord, 'incorrect')
   }
   // Near-miss / soft-letter / single-edit ASR noise → amber, not red.
   if (expected && actual && effectiveSimilarity >= partialFloor) {
-    return {
+    return withHeardAlignmentFields({
       text: displayText,
       targetWord: expected,
       status: 'partial',
@@ -1509,9 +1583,9 @@ function classifyWordMatch({
       targetIndex,
       heardIndex: heardWord.commitIndex,
       ...location
-    }
+    }, heardWord, 'partial')
   }
-  return {
+  return withHeardAlignmentFields({
     text: displayText,
     targetWord: expected,
     status: 'incorrect',
@@ -1525,7 +1599,7 @@ function classifyWordMatch({
     targetIndex,
     heardIndex: heardWord.commitIndex,
     ...location
-  }
+  }, heardWord, 'incorrect')
 }
 
 /**
@@ -1540,8 +1614,11 @@ function reconcileUncertainFromRejectedWords(statuses = [], rejectedWords = [], 
       if (!word) return null
       return {
         word,
-        display: entry?.display || raw || word,
+        display: entry?.display || entry?.rawWord || raw || word,
+        rawWord: heardRawWord(entry),
         confidence: Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 0,
+        start: finiteOrNull(entry?.start ?? entry?.startTime),
+        end: finiteOrNull(entry?.end ?? entry?.endTime),
       }
     })
     .filter(Boolean)
@@ -1572,14 +1649,14 @@ function reconcileUncertainFromRejectedWords(statuses = [], rejectedWords = [], 
     if (bestIndex < 0 || bestSim < Math.max(partialFloor, Math.min(0.72, correctFloor - 0.05))) continue
     used.add(bestIndex)
     const heard = rejected[bestIndex]
-    statuses[index] = {
+    statuses[index] = withHeardAlignmentFields({
       ...status,
       status: 'uncertain',
       note: '',
       actual: heard.word,
       confidence: heard.confidence,
       similarity: bestSim,
-    }
+    }, heard, 'uncertain')
   }
   return statuses
 }

@@ -318,7 +318,7 @@
             </div>
             <p>{{ t('homepage.focused_quran_memorisation_tools_for_recitation_ch') }}</p>
           </div>
-                    <div class="footer__links">
+          <div class="footer__links">
             <h4>{{ t('homepage.footer.product') }}</h4>
             <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
@@ -334,8 +334,21 @@
           </div>
         </div>
         <div class="footer__bottom">
-          <p>{{ t('homepage.footer.tagline') }}</p>
-          <span>{{ t('homepage.all_rights_reserved') }}</span>
+          <p class="footer__tagline">{{ t('homepage.footer.tagline') }}</p>
+          <span class="footer__copy">{{ t('homepage.all_rights_reserved') }}</span>
+          <nav class="footer__social" :aria-label="t('homepage.footer.connect')">
+            <a
+              v-for="link in socialLinks"
+              :key="link.id"
+              class="footer__social-link"
+              :href="link.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              :aria-label="t(`homepage.footer.social.${link.id}`)"
+            >
+              <i class="bi" :class="link.icon" aria-hidden="true"></i>
+            </a>
+          </nav>
         </div>
       </div>
     </footer>
@@ -522,6 +535,14 @@ export default {
       window.mutqinAuthCheck ? '/memorisation' : '/register'
     ));
 
+    const socialLinks = [
+      { id: 'instagram', href: 'https://www.instagram.com/mutqinai/', icon: 'bi-instagram' },
+      { id: 'facebook', href: 'https://www.facebook.com/mutqin', icon: 'bi-facebook' },
+      { id: 'x', href: 'https://x.com/mutqin', icon: 'bi-twitter-x' },
+      { id: 'linkedin', href: 'https://www.linkedin.com/company/mutqin', icon: 'bi-linkedin' },
+      { id: 'tiktok', href: 'https://www.tiktok.com/@mutqin', icon: 'bi-tiktok' },
+    ];
+
     const contactForm = reactive({ name: '', email: '', subject: '', message: '' });
     const contactErrors = reactive({});
     const contactStatus = reactive({ type: '', message: '' });
@@ -703,6 +724,7 @@ export default {
       t,
       currentTheme,
       startFreeHref,
+      socialLinks,
       FEATURES_CAROUSEL_START_INDEX,
       isFeaturesMobile,
       featuresCarouselIndex,

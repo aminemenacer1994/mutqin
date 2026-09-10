@@ -429,7 +429,14 @@
       "connectNote": "Follow Mutqin for freeLimitedduct updates.",
       "demo": "Demo",
       "login": "Giriş yap",
-      "register": "Kayıt ol"
+      "register": "Kayıt ol",
+      "social": {
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "x": "X",
+        "linkedin": "LinkedIn",
+        "tiktok": "TikTok"
+      }
     },
     "name": "« Name»",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
@@ -971,6 +978,7 @@
       "savedSessions": "kaydedilmiş oturumlar",
       "sessionInsights": "oturum öngörüler",
       "changeQuranFont": "Change القرآن font",
+      "changeReadingLayout": "Düzeni değiştir",
       "changeQuranicFont": "تغيير خط القرآن",
       "showTranslation": "Göster or hide the English translation",
       "showTransliteration": "Göster or hide transliteration",
@@ -4054,26 +4062,46 @@
   },
   "waitingList": {
     "brand": "Mutqin",
-    "kicker": "Mutqin",
-    "title": "Join the waiting liste",
-    "subtitle": "Be first to know sonlandırdığınızda access opens. One short not is tüm we ihtiyaç duyar.",
-    "name": "« Name»",
-    "email": "« Email»",
-    "namePlaceholder": "yeriniz name",
-    "emailPlaceholder": "sen{'@'}example.com",
-    "join": "Join waiting liste",
-    "joining": "« Joining…»",
-    "success": "sen’re açık the liste",
-    "alreadyJoined": "sen’re already açık the liste",
-    "successHint": "We’ll email you when Mutqin is hazır for you.",
-    "joinAnother": "Kullan a different email",
-    "privacyNote": "We’ll only Kullan Bu to notify sen. No spam.",
-    "errorFields": "Lütfen check the highlighted fields and try again.",
-    "errorSend": "Something went wrong. Lütfen try again in a moment.",
+    "kicker": "Erken erişim",
+    "title": "Hıfzını yakın tut",
+    "subtitle": "Kısa bir bölüm çalış, ezberini kontrol et, sonra ne açacağını bil. Yer hazır olunca e-posta yazarız.",
+    "formKicker": "Bekleme listesi",
+    "formTitle": "Yerini ayırt",
+    "formLead": "Sadece adın ve e-postan.",
+    "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
+    "ayah": "Kur’an’ı tane tane oku.",
+    "ayahRef": "El-Müzzemmil 73:4",
+    "benefits": {
+      "access": {
+        "title": "İlk sen duy",
+        "desc": "Erişim açılınca yazarız."
+      },
+      "place": {
+        "title": "Kayıtlı bir yer",
+        "desc": "Yarın kaldığın yerden devam et."
+      },
+      "note": {
+        "title": "Spam yok",
+        "desc": "Mutqin hazır olunca bir e-posta."
+      }
+    },
+    "name": "Ad",
+    "email": "E-posta",
+    "namePlaceholder": "Adınız",
+    "emailPlaceholder": "sen{'@'}ornek.com",
+    "join": "Yerimi ayırt",
+    "joining": "Ayırtılıyor…",
+    "success": "Listedesin",
+    "alreadyJoined": "Zaten listedesin",
+    "successHint": "Mutqin senin için hazır olunca e-posta yazarız.",
+    "joinAnother": "Başka bir e-posta kullan",
+    "privacyNote": "Bunu yalnızca haber vermek için kullanırız. Spam yok.",
+    "errorFields": "İşaretli alanları kontrol edip tekrar dene.",
+    "errorSend": "Bir şeyler ters gitti. Biraz sonra tekrar dene.",
     "errors": {
-      "name": "Lütfen enter your name.",
-      "email": "Lütfen enter your email address.",
-      "emailInvalid": "Lütfen enter a valid email address."
+      "name": "Lütfen adınızı girin.",
+      "email": "Lütfen e-posta adresinizi girin.",
+      "emailInvalid": "Lütfen geçerli bir e-posta girin."
     }
   },
   "hifzPlan": {
