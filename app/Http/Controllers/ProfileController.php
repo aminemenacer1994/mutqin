@@ -18,19 +18,20 @@ use App\Support\Theme;
 
 class ProfileController extends Controller
 {
-    public function show(
-        Request $request,
-        AiAudioConsentService $consent
-    ) {
+    public function show(Request $request)
+    {
         $user = $request->user();
+        $isAdmin = $user->isAdmin();
+        $planLabels = $this->planLabels();
 
         return view('profile', [
             'user' => $user,
-            'isAdmin' => $user->isAdmin(),
-            'planLabels' => $this->planLabels(),
-            'aiAudioConsent' => $consent->snapshot($user),
+            'isAdmin' => $isAdmin,
+            'planLabels' => $planLabels,
+            'subscriptionSummary' => $this->subscriptionSummary($user, $isAdmin, $planLabels),
             'verificationRequired' => EmailVerification::required(),
-            'supportedLocales' => ['en', 'fr', 'ar'],
+            'emailVerified' => $user->hasVerifiedEmail(),
+            'supportedLocales' => ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'],
             'themeModes' => Theme::modes(),
             'currentTheme' => Theme::toDataTheme($user->theme),
         ]);
@@ -255,6 +256,69 @@ class ProfileController extends Controller
             'premium_yearly' => __('profile.plan_premium_yearly'),
             'pro_monthly' => __('profile.plan_pro_monthly'),
             'pro_yearly' => __('profile.plan_pro_yearly'),
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $planLabels
+     * @return array{
+     *     plan_label: string,
+     *     status_label: string,
+     *     tier_label: string,
+     *     renewal_label: string,
+     *     trial_label: string|null,
+     *     can_manage: bool,
+     *     can_upgrade: bool
+     * }
+     */
+    private function subscriptionSummary(User $user, bool $isAdmin, array $planLabels): array
+    {
+        $planKey = strtolower((string) ($user->subscription_plan ?: 'free'));
+        if ($isAdmin) {
+            $planLabel = __('profile.org_plan');
+        } elseif (! $user->hasPaidAccess()) {
+            $planLabel = $planLabels['free'];
+        } else {
+            $planLabel = $planLabels[$planKey] ?? $planLabels['free'];
+        }
+
+        $status = strtolower((string) ($user->subscription_status ?: 'free'));
+        $statusKey = 'profile.status_'.$status;
+        $statusLabel = __($statusKey);
+        if ($statusLabel === $statusKey) {
+            $statusLabel = $isAdmin ? __('profile.org_plan') : __('profile.status_free');
+        }
+
+        $tier = $user->effectiveSubscriptionTier();
+        $tierLabel = __("profile.tier_{$tier}");
+        if ($tierLabel === "profile.tier_{$tier}") {
+            $tierLabel = __('profile.tier_free');
+        }
+
+        $renewalLabel = __('profile.renewal_free_never');
+        $trialLabel = null;
+        $periodEnd = $user->subscription_current_period_ends_at;
+        $trialEnd = $user->subscription_trial_ends_at;
+
+        if ($trialEnd && $status === 'trialing') {
+            $trialLabel = __('profile.trial_ends', ['date' => $trialEnd->timezone(config('app.timezone'))->format('j M Y')]);
+            $renewalLabel = $trialLabel;
+        } elseif ($periodEnd && $user->hasPaidAccess()) {
+            $renewalLabel = __('profile.renewal_on', ['date' => $periodEnd->timezone(config('app.timezone'))->format('j M Y')]);
+        } elseif ($user->hasPaidAccess()) {
+            $renewalLabel = __('profile.renewal_not_scheduled');
+        }
+
+        $verified = $user->hasVerifiedEmail();
+
+        return [
+            'plan_label' => $planLabel,
+            'status_label' => $statusLabel,
+            'tier_label' => $tierLabel,
+            'renewal_label' => $renewalLabel,
+            'trial_label' => $trialLabel,
+            'can_manage' => $verified && filled($user->stripe_customer_id) && ! $isAdmin,
+            'can_upgrade' => ! $isAdmin,
         ];
     }
 }

@@ -201,6 +201,65 @@ class ProfileControllerTest extends TestCase
         $this->assertSame('next@example.com', $user->pending_email);
     }
 
+    public function test_profile_form_is_prefilled_from_the_user_record(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Amina Rahman',
+            'email' => 'amina@example.com',
+            'password_set_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('profile.show'))
+            ->assertOk()
+            ->assertSee('value="Amina Rahman"', false)
+            ->assertSee('value="amina@example.com"', false)
+            ->assertSee('Amina Rahman', false)
+            ->assertSee('amina@example.com', false)
+            ->assertSee('data-initial="Amina Rahman"', false)
+            ->assertSee('data-initial="amina@example.com"', false)
+            ->assertSee('id="currentPassword"', false)
+            ->assertSee('data-password-toggle="newPassword"', false)
+            ->assertSee('data-password-strength', false);
+    }
+
+    public function test_google_only_user_sees_set_password_without_current_password(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Google Learner',
+            'email' => 'google.learner@example.com',
+            'password_set_at' => null,
+            'google_id' => 'google-learner-1',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('profile.show'))
+            ->assertOk()
+            ->assertSee(__('profile.set_password'), false)
+            ->assertDontSee('id="currentPassword"', false)
+            ->assertSee('data-password-toggle="newPassword"', false);
+    }
+
+    public function test_user_without_password_can_set_one(): void
+    {
+        $user = User::factory()->create([
+            'password' => Hash::make('temporary-placeholder'),
+            'password_set_at' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('profile.password.update'), [
+                'password' => 'new-secret',
+                'password_confirmation' => 'new-secret',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('password_status');
+
+        $user->refresh();
+        $this->assertTrue(Hash::check('new-secret', $user->password));
+        $this->assertNotNull($user->password_set_at);
+    }
+
     public function test_user_can_update_password(): void
     {
         $user = User::factory()->create([
@@ -257,44 +316,49 @@ class ProfileControllerTest extends TestCase
             ->get(route('profile.show'))
             ->assertOk()
             ->assertSee(__('profile.personal_details'), false)
-            ->assertDontSee(__('profile.memorisation_prefs'), false)
-            ->assertDontSee(__('profile.app_preferences'), false)
+            ->assertDontSee(__('profile.last_position'), false)
             ->assertDontSee(__('profile.ai_audio'), false)
             ->assertDontSee('data-consent-choice', false)
-            ->assertDontSee(__('profile.account_security'), false)
-            ->assertDontSee(__('profile.current_plan'), false)
-            ->assertDontSee(__('profile.upgrade_plan'), false)
+            ->assertDontSee('id="ai-recitation"', false)
+            ->assertDontSee('id="memorisation-place"', false)
+            ->assertDontSee('id="ai-session"', false)
+            ->assertSee(__('profile.sign_in_methods'), false)
+            ->assertSee(__('profile.connected_with_google', ['email' => $user->email]), false)
+            ->assertSee(__('profile.current_plan'), false)
+            ->assertSee(__('profile.upgrade_plan'), false)
             ->assertSee(__('profile.change_password'), false)
             ->assertSee('id="currentPassword"', false)
             ->assertSee(__('profile.delete_account'), false)
+            ->assertSee('id="subscription"', false)
+            ->assertDontSee(__('profile.ai_session'), false)
+            ->assertDontSee(__('profile.app_preferences'), false)
+            ->assertDontSee(__('profile.account_security'), false)
             ->assertDontSee('data-locale-choice="en"', false)
             ->assertDontSee('id="app-preferences"', false)
             ->assertDontSee('id="danger-zone"', false)
             ->assertDontSee('cus_hidden_internal', false)
             ->assertDontSee('google-hidden-id', false)
-            ->assertDontSee('is_admin', false)
-            ->assertDontSee('id="subscription"', false);
+            ->assertDontSee('is_admin', false);
     }
 
-    public function test_profile_hides_security_plan_and_ai_recitation_checks(): void
+    public function test_profile_shows_plan_without_workspace_pref_sections(): void
     {
-        $user = User::factory()->create([
-            'ai_audio_consent_status' => 'accepted',
-        ]);
+        $user = User::factory()->create();
 
         $this->actingAs($user)
             ->get(route('profile.show'))
             ->assertOk()
-            ->assertDontSee(__('profile.account_security'), false)
-            ->assertDontSee(__('profile.current_plan'), false)
+            ->assertSee(__('profile.current_plan'), false)
+            ->assertSee('id="subscription"', false)
             ->assertDontSee('id="settings"', false)
             ->assertSee('mutqin:app-mounted', false)
             ->assertDontSee('profile-choice-grid--pair', false)
             ->assertDontSee('data-consent-block', false)
             ->assertDontSee('data-consent-choice', false)
             ->assertDontSee(__('profile.ai_audio'), false)
-            ->assertDontSee(__('profile.ai_audio_allow'), false)
-            ->assertDontSee(__('profile.ai_audio_decline'), false);
+            ->assertDontSee(__('profile.ai_session'), false)
+            ->assertDontSee('data-ai-key="hide_percent"', false)
+            ->assertDontSee('id="memorisation-place"', false);
     }
 
     public function test_unverified_profile_shows_status_and_name_email(): void
@@ -312,6 +376,7 @@ class ProfileControllerTest extends TestCase
             ->assertSee(__('profile.personal_details'), false)
             ->assertDontSee(__('profile.app_preferences'), false)
             ->assertDontSee(__('profile.ai_audio_not_set'), false)
+            ->assertSee(__('profile.link_google_verify_first'), false)
             ->assertSee(__('profile.resend_verification'), false)
             ->assertSee('profile-badge--unverified', false);
     }
@@ -408,14 +473,40 @@ class ProfileControllerTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.show'))
             ->assertOk()
-            ->assertSee(__('profile.title'), false)
-            ->assertDontSee(__('profile.org_plan'), false)
-            ->assertDontSee(__('profile.open_admin_console'), false)
-            ->assertDontSee(__('profile.connected_with_google', ['email' => $user->email]), false)
+            ->assertSee(__('profile.org_plan'), false)
+            ->assertSee(__('profile.open_admin_console'), false)
+            ->assertSee(__('profile.connected_with_google', ['email' => $user->email]), false)
             ->assertDontSee(__('profile.danger_zone'), false)
             ->assertDontSee(__('profile.upgrade_plan'), false)
             ->assertDontSee('Log out of all devices', false)
-            ->assertDontSee('id="subscription"', false)
+            ->assertSee('id="subscription"', false)
             ->assertDontSee('google-admin-1', false);
+    }
+
+    public function test_profile_does_not_show_memorisation_place(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('profile.show'))
+            ->assertOk()
+            ->assertDontSee(__('profile.continue_memorisation'), false)
+            ->assertDontSee(__('profile.last_position'), false)
+            ->assertDontSee('id="memorisation-place"', false);
+    }
+
+    public function test_verified_user_without_google_sees_link_button(): void
+    {
+        $user = User::factory()->create([
+            'google_id' => null,
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('profile.show'))
+            ->assertOk()
+            ->assertSee(route('auth.google.redirect'), false)
+            ->assertSee(__('profile.link_google'), false)
+            ->assertDontSee(__('profile.link_google_verify_first'), false);
     }
 }

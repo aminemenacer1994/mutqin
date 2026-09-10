@@ -72,6 +72,10 @@ export const FONT_SIZE_MIN = 70
 export const FONT_SIZE_MAX = 280
 export const FONT_SIZE_STEP = 10
 export const UI_SCALE_OPTIONS = Object.freeze([1, 1.1, 1.2])
+export const DEFAULT_LAYOUT_FONT_SIZES = Object.freeze({
+  stacked: 150,
+  mushaf: 160,
+})
 
 export const DEFAULT_WORKSPACE_PREFERENCES = Object.freeze({
   quranFont: 'uthmanic',
@@ -111,6 +115,156 @@ function clampNumber(value, min, max, fallback) {
 function knownReciterId(value) {
   const id = String(value || '').trim()
   return SETTINGS_RECITER_OPTIONS.some((item) => item.id === id) ? id : DEFAULT_RECITER_ID
+}
+
+export function clampWorkspaceFontSize(value, fallback = DEFAULT_LAYOUT_FONT_SIZES.mushaf) {
+  return clampNumber(value, FONT_SIZE_MIN, FONT_SIZE_MAX, fallback)
+}
+
+export function normaliseLayoutFontSizes(raw, fallbackDefault = DEFAULT_LAYOUT_FONT_SIZES.mushaf) {
+  const src = raw && typeof raw === 'object' ? raw : {}
+  const mushafRaw = Number(src.mushaf)
+  return {
+    stacked: clampWorkspaceFontSize(src.stacked, fallbackDefault === DEFAULT_LAYOUT_FONT_SIZES.mushaf ? DEFAULT_LAYOUT_FONT_SIZES.stacked : fallbackDefault),
+    mushaf: mushafRaw === 120
+      ? DEFAULT_LAYOUT_FONT_SIZES.mushaf
+      : clampWorkspaceFontSize(src.mushaf, DEFAULT_LAYOUT_FONT_SIZES.mushaf),
+  }
+}
+
+function resolvePreferenceStorage(storage) {
+  if (storage) return storage
+  if (typeof localStorage !== 'undefined') return localStorage
+  return null
+}
+
+function readPreferenceJson(storage, key) {
+  if (!storage || !key) return null
+  try {
+    const raw = storage.getItem(key)
+    if (raw == null || raw === '') return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function writePreferenceJson(storage, key, value) {
+  if (!storage || !key) return false
+  try {
+    storage.setItem(key, JSON.stringify(value))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Read the user's mushaf/stacked font size from owner-scoped keys.
+ * Authenticated accounts never fall back to another profile's unscoped blob.
+ * @param {{ userId?: string|number|null, storage?: Storage|null }} [options]
+ */
+export function readPersistedFontPreferences(options = {}) {
+  const storage = resolvePreferenceStorage(options.storage)
+  const owner = resolveOwnerId(options.userId)
+  const empty = {
+    defaultFontSize: DEFAULT_LAYOUT_FONT_SIZES.mushaf,
+    layoutFontSizes: { ...DEFAULT_LAYOUT_FONT_SIZES },
+    found: false,
+  }
+  if (!storage) return empty
+
+  const sizeKey = offlineScopedLocalKey(STORAGE.defaultFontSize, owner)
+  const layoutKey = offlineScopedLocalKey(STORAGE.layoutFontSizes, owner)
+  const uiKey = offlineScopedLocalKey(STORAGE.uiState, owner)
+
+  let size = readPreferenceJson(storage, sizeKey)
+  let layouts = readPreferenceJson(storage, layoutKey)
+
+  if (size == null || layouts == null) {
+    const ui = readPreferenceJson(storage, uiKey)
+      || (owner === 'guest' ? readPreferenceJson(storage, STORAGE.uiState) : null)
+    if (size == null && ui && ui.defaultFontSize != null) size = ui.defaultFontSize
+    if (layouts == null && ui && ui.layoutFontSizes && typeof ui.layoutFontSizes === 'object') {
+      layouts = ui.layoutFontSizes
+    }
+  }
+
+  const found = size != null || layouts != null
+  if (!found) return empty
+
+  const defaultFontSize = clampWorkspaceFontSize(size, DEFAULT_LAYOUT_FONT_SIZES.mushaf)
+  const layoutFontSizes = layouts
+    ? normaliseLayoutFontSizes(layouts, defaultFontSize)
+    : {
+        stacked: defaultFontSize,
+        mushaf: defaultFontSize,
+      }
+
+  return { defaultFontSize, layoutFontSizes, found: true }
+}
+
+/**
+ * Persist font size on owner-scoped keys so reload / account switch stay isolated.
+ * @param {{ defaultFontSize?: unknown, layoutFontSizes?: unknown }} prefs
+ * @param {{ userId?: string|number|null, storage?: Storage|null }} [options]
+ */
+export function writePersistedFontPreferences(prefs, options = {}) {
+  const storage = resolvePreferenceStorage(options.storage)
+  const owner = resolveOwnerId(options.userId)
+  const defaultFontSize = clampWorkspaceFontSize(prefs?.defaultFontSize, DEFAULT_LAYOUT_FONT_SIZES.mushaf)
+  const layoutFontSizes = normaliseLayoutFontSizes(
+    prefs?.layoutFontSizes || { stacked: defaultFontSize, mushaf: defaultFontSize },
+    defaultFontSize,
+  )
+  const next = { defaultFontSize, layoutFontSizes }
+
+  if (!storage) return next
+
+  writePreferenceJson(storage, offlineScopedLocalKey(STORAGE.defaultFontSize, owner), defaultFontSize)
+  writePreferenceJson(storage, offlineScopedLocalKey(STORAGE.layoutFontSizes, owner), layoutFontSizes)
+
+  const uiKey = offlineScopedLocalKey(STORAGE.uiState, owner)
+  const existing = readPreferenceJson(storage, uiKey)
+  if (existing && typeof existing === 'object') {
+    writePreferenceJson(storage, uiKey, {
+      ...existing,
+      defaultFontSize,
+      layoutFontSizes,
+    })
+  }
+  if (owner === 'guest') {
+    const unscoped = readPreferenceJson(storage, STORAGE.uiState)
+    if (unscoped && typeof unscoped === 'object') {
+      writePreferenceJson(storage, STORAGE.uiState, {
+        ...unscoped,
+        defaultFontSize,
+        layoutFontSizes,
+      })
+    }
+  }
+
+  return next
+}
+
+/**
+ * @param {{ defaultFontSize?: unknown }} prefs
+ * @param {Element|null} [root]
+ */
+export function applyPersistedFontSizeCssVariable(prefs, root = null) {
+  const size = clampWorkspaceFontSize(prefs?.defaultFontSize, DEFAULT_LAYOUT_FONT_SIZES.mushaf)
+  const el = root
+    || (typeof document !== 'undefined' ? document.documentElement : null)
+  if (el?.style?.setProperty) {
+    el.style.setProperty('--verse-font-percent', String(size))
+  }
+  return size
+}
+
+export function bootPersistedFontSize(options = {}) {
+  const prefs = readPersistedFontPreferences(options)
+  applyPersistedFontSizeCssVariable(prefs, options.root || null)
+  return prefs
 }
 
 /**
@@ -226,6 +380,11 @@ export function patchWorkspacePreferences(patch, options = {}) {
     writeLocalJson(key, merged)
   }
 
+  writePersistedFontPreferences({
+    defaultFontSize: next.defaultFontSize,
+    layoutFontSizes: existing.layoutFontSizes,
+  }, { userId })
+
   patchModeAudioDefaults(next.defaultReciterId, next.defaultSpeed, userId)
   applyWorkspacePreferenceSideEffects(next)
   return next
@@ -299,6 +458,7 @@ export function applyAudioDefaultsToModeState(modeState, userId = null) {
 export function applyWorkspacePreferenceSideEffects(prefs) {
   const normalised = normaliseWorkspacePreferences(prefs)
   applyQuranFontCssVariable(normalised.quranFont)
+  applyPersistedFontSizeCssVariable(normalised)
   if (typeof document === 'undefined') return normalised
   const root = document.documentElement
   root.style.setProperty('--ui-scale', String(normalised.uiScale))

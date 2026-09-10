@@ -20,12 +20,13 @@ import { openFeedbackModal } from './scripts/feedback/feedbackLauncher';
 import FeedbackModal from './components/FeedbackModal.vue';
 import enLocale from './locales/en.json';
 import { bootPersistedQuranFont } from './scripts/quran/quranFonts';
+import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 
 // Apply the user's Qur’anic font CSS vars before Vue mounts Memorisation.
 try {
-    bootPersistedQuranFont({
-        userId: typeof window !== 'undefined' ? window.mutqinUserId : null,
-    });
+    const userId = typeof window !== 'undefined' ? window.mutqinUserId : null;
+    bootPersistedQuranFont({ userId });
+    bootPersistedFontSize({ userId });
 } catch {
     /* ignore */
 }

@@ -179,7 +179,10 @@ import {
 } from '../scripts/quran/quranFonts'
 import {
   applyAudioDefaultsToModeState,
+  applyPersistedFontSizeCssVariable,
   applyWorkspacePreferenceOverlay,
+  readPersistedFontPreferences,
+  writePersistedFontPreferences,
 } from '../scripts/settings/workspacePreferences'
 import {
   ASSESSMENT_QUALITY,
@@ -807,12 +810,16 @@ export default {
       isAppFullscreen: false,
       openVerseActionKey: '',
       verseFontSizes: {},
-      defaultFontSize: 160,
+      defaultFontSize: typeof window !== 'undefined'
+        ? readPersistedFontPreferences({ userId: window.mutqinUserId }).defaultFontSize
+        : 160,
       // Per-layout sizes so zooming mushaf does not blow up stacked (and vice versa).
-      layoutFontSizes: {
-        stacked: 150,
-        mushaf: 160,
-      },
+      layoutFontSizes: typeof window !== 'undefined'
+        ? readPersistedFontPreferences({ userId: window.mutqinUserId }).layoutFontSizes
+        : {
+            stacked: 150,
+            mushaf: 160,
+          },
       fontSizeStep: 10,
       minFontSize: 70,
       maxFontSize: 280,
@@ -9954,7 +9961,6 @@ export default {
         }
       )
       this.refreshHifzJourneyState()
-      this.loadVerseFontSizes()
       if (authenticatedWorkspace) {
         await this.initLearningBackend()
         this.reconcileLocalResumeAfterBackendSync(localResumeSnapshot)
@@ -9964,6 +9970,7 @@ export default {
       }
       this.loadRecommendedSessionTemplates()
       this.loadUiState()
+      this.loadVerseFontSizes()
       this.applyMobileLayoutFontDefault(this.readingViewMode)
       if (this.isMobileViewport()) this.playerCompact = true
       this.hydrateAiSessionSettings()
@@ -11117,6 +11124,7 @@ export default {
     applyMobileLayoutFontDefault(mode = this.readingViewMode) {
       // Mushaf +/- controls own font size on every viewport — never force-pin it.
       if (mode === 'mushaf' || false) return
+      if (readPersistedFontPreferences({ userId: this.currentAuthUserId() }).found) return
       const isMobile = this.isMobileViewport?.() === true
       if (!isMobile) return
       const target = 130
@@ -11124,7 +11132,6 @@ export default {
       if (this.settingsDraft && Number(this.settingsDraft.defaultFontSize) !== target) {
         this.settingsDraft.defaultFontSize = target
       }
-      this.writeScopedStorageValue('defaultFontSize', 'mutqin.defaultFontSize', target)
     },
 
     scheduleMadaniPageFit() {
@@ -34309,6 +34316,7 @@ export default {
       }
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
+      this.persistUserFontSize()
       this.persistUiState()
     },
     rememberLayoutFontSize(mode = this.readingViewMode) {
@@ -37934,12 +37942,70 @@ export default {
       this.persistVerseFontSizes()
     },
 
+    persistUserFontSize() {
+      try {
+        const next = writePersistedFontPreferences({
+          defaultFontSize: this.defaultFontSize,
+          layoutFontSizes: this.layoutFontSizes,
+        }, { userId: this.currentAuthUserId() })
+        this.defaultFontSize = next.defaultFontSize
+        this.layoutFontSizes = {
+          ...this.layoutFontSizes,
+          ...next.layoutFontSizes,
+        }
+        this.writeScopedStorageValue('defaultFontSize', 'mutqin.defaultFontSize', next.defaultFontSize)
+        this.writeScopedStorageValue('layoutFontSizes', 'mutqin.layoutFontSizes', next.layoutFontSizes)
+        applyPersistedFontSizeCssVariable(next)
+      } catch (e) {
+        console.error('Failed to save font size:', e)
+      }
+    },
+
     persistVerseFontSizes() {
       try {
         this.writeScopedStorageValue('verseFontSizes', 'mutqin.verseFontSizes', this.verseFontSizes)
-        this.writeScopedStorageValue('defaultFontSize', 'mutqin.defaultFontSize', this.defaultFontSize)
+        this.persistUserFontSize()
       } catch (e) {
         console.error('Failed to save font sizes:', e)
+      }
+    },
+
+    applyPersistedUserFontSize() {
+      try {
+        let prefs = readPersistedFontPreferences({ userId: this.currentAuthUserId() })
+        if (!prefs.found && this.learningBackendEnabled()) {
+          const wsSize = this.readWorkspaceStateValue('defaultFontSize', null)
+          const wsLayouts = this.readWorkspaceStateValue('layoutFontSizes', null)
+          if (wsSize != null || wsLayouts != null) {
+            prefs = {
+              defaultFontSize: Number(wsSize ?? this.defaultFontSize ?? 160),
+              layoutFontSizes: wsLayouts && typeof wsLayouts === 'object'
+                ? { ...this.layoutFontSizes, ...wsLayouts }
+                : this.layoutFontSizes,
+              found: true,
+            }
+          }
+        }
+        if (!prefs.found) return
+        const nextSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, Number(prefs.defaultFontSize)))
+        if (Number.isFinite(nextSize) && nextSize > 0) {
+          this.defaultFontSize = nextSize
+        }
+        if (prefs.layoutFontSizes && typeof prefs.layoutFontSizes === 'object') {
+          this.layoutFontSizes = {
+            ...this.layoutFontSizes,
+            ...prefs.layoutFontSizes,
+          }
+        }
+        if (this.settingsDraft && typeof this.settingsDraft === 'object') {
+          this.settingsDraft = {
+            ...this.settingsDraft,
+            defaultFontSize: this.defaultFontSize,
+          }
+        }
+        applyPersistedFontSizeCssVariable({ defaultFontSize: this.defaultFontSize })
+      } catch (e) {
+        console.error('Failed to restore font size:', e)
       }
     },
 
@@ -37949,16 +38015,7 @@ export default {
         if (savedSizes && typeof savedSizes === 'object') {
           this.verseFontSizes = savedSizes
         }
-        const savedDefault = this.readScopedStorageValue('defaultFontSize', 'mutqin.defaultFontSize', null)
-        if (savedDefault !== null && typeof savedDefault !== 'undefined') {
-          const parsed = Number(savedDefault)
-          if (Number.isFinite(parsed) && parsed > 0) {
-            this.defaultFontSize = parsed
-          }
-        } else {
-          this.defaultFontSize = 150
-          this.writeScopedStorageValue('defaultFontSize', 'mutqin.defaultFontSize', 150)
-        }
+        this.applyPersistedUserFontSize()
       } catch (e) {
         console.error('Failed to load font sizes:', e)
       }
@@ -41266,8 +41323,8 @@ export default {
     updateDefaultFontSize() {
       // Clamp the value
       this.defaultFontSize = Math.max(this.minFontSize, Math.min(this.maxFontSize, this.defaultFontSize))
+      this.rememberLayoutFontSize(this.readingViewMode)
       this.clearMushafAyahHtmlCache()
-      this.writeScopedStorageValue('defaultFontSize', 'mutqin.defaultFontSize', this.defaultFontSize)
       this.syncSettingsDraft()
       this.persistVerseFontSizes()
       this.persistUiState()
@@ -41433,14 +41490,43 @@ export default {
     },
 
     // Persistence methods
+    readLocalUiState() {
+      const owner = this.currentAuthUserId() || 'guest'
+      const scopedKey = offlineScopedLocalKey('mutqin.uiState', owner)
+      try {
+        const scoped = localStorage.getItem(scopedKey)
+        if (scoped) return JSON.parse(scoped)
+        if (owner === 'guest') {
+          const raw = localStorage.getItem('mutqin.uiState')
+          return raw ? JSON.parse(raw) : null
+        }
+      } catch {
+        return null
+      }
+      return null
+    },
+
+    writeLocalUiState(nextUiState) {
+      const owner = this.currentAuthUserId() || 'guest'
+      const scopedKey = offlineScopedLocalKey('mutqin.uiState', owner)
+      try {
+        localStorage.setItem(scopedKey, JSON.stringify(nextUiState))
+        if (owner === 'guest') {
+          localStorage.setItem('mutqin.uiState', JSON.stringify(nextUiState))
+        }
+        return true
+      } catch {
+        return false
+      }
+    },
+
     loadUiState() {
       let state = null
       try {
         if (this.learningBackendEnabled()) {
-          state = this.readWorkspaceStateValue('uiState', null)
+          state = this.readWorkspaceStateValue('uiState', null) || this.readLocalUiState()
         } else {
-          const raw = localStorage.getItem('mutqin.uiState')
-          state = raw ? JSON.parse(raw) : null
+          state = this.readLocalUiState()
         }
         state = applyWorkspacePreferenceOverlay(state, this.currentAuthUserId?.() || this.auth?.id)
 
@@ -41679,9 +41765,9 @@ export default {
 
         if (this.learningBackendEnabled()) {
           this.writeWorkspaceStateValue('uiState', nextUiState)
-        } else {
-          localStorage.setItem('mutqin.uiState', JSON.stringify(nextUiState))
         }
+        this.writeLocalUiState(nextUiState)
+        this.persistUserFontSize()
       } catch (e) {
         console.error('Failed to persist UI state:', e)
       }
