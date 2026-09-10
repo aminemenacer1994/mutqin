@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
 import {
+  arabicHasTashkil,
   buildDeterministicRecitationResult,
   buildRealtimePreviewAlignment,
   createRecognitionState,
   createWordsFromTranscript,
   getRecognitionDisplayWords,
   normalizeArabicForRecitation,
+  pickVocalisedArabicText,
   resolveRecitationWordDisplay,
   stabilizeRecognitionEvent,
 } from '../../resources/js/scripts/engine/recitation_analysis.js'
@@ -30,6 +32,12 @@ function speechmaticsWords(pairs) {
 assert.equal(normalizeArabicForRecitation('ٱلْحَمْدُ'), 'الحمد')
 assert.equal(normalizeArabicForRecitation('رَبِّ'), 'رب')
 assert.equal(normalizeArabicForRecitation('ٱلْعَٰلَمِينَ'), 'العالمين')
+assert.equal(arabicHasTashkil('ٱلْحَمْدُ'), true)
+assert.equal(arabicHasTashkil('الحمد'), false)
+assert.equal(
+  pickVocalisedArabicText('الحمد لله رب العالمين', 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'),
+  'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ',
+)
 
 // --- Correct recitation maps to vocalised canonical words ---
 {

@@ -499,6 +499,8 @@ import {
   getRecitationColorCounts,
   getRecitationWordSimilarity as getRecitationWordSimilarityEngine,
   normalizeArabicForRecitation as normalizeArabicForRecitationEngine,
+  arabicHasTashkil as arabicHasTashkilEngine,
+  pickVocalisedArabicText as pickVocalisedArabicTextEngine,
   resolveRecitationWordDisplay as resolveRecitationWordDisplayEngine,
   stabilizeRecognitionEvent,
   tokenizeRecitationDisplayWords as tokenizeRecitationDisplayWordsEngine,
@@ -14165,6 +14167,7 @@ export default {
       return {
         ...verse,
         arabic: this.stripRedundantQuranCircles(verse.arabic || ''),
+        arabic_uthmani: this.stripRedundantQuranCircles(verse.arabic_uthmani || verse.arabic || ''),
         arabic_tajweed: this.stripRedundantQuranCircles(verse.arabic_tajweed || ''),
         text: verse.text != null ? this.stripRedundantQuranCircles(verse.text) : verse.text,
         words
@@ -24646,9 +24649,10 @@ export default {
           const safeAttrs = shouldMask
             ? ` aria-hidden="true" data-masked="1"`
             : (markTitle ? ` title="${this.escapeHtml(markTitle)}"` : '')
+          const painted = String(statusEntry.displayWord || word || '').trim() || word
           const tokenHtml = useTajweed && tajweedTokens[index]
-            ? (this.sanitizeHtml?.(tajweedTokens[index]) || this.escapeHtml(word))
-            : this.escapeHtml(word)
+            ? (this.sanitizeHtml?.(tajweedTokens[index]) || this.escapeHtml(painted))
+            : this.escapeHtml(painted)
           return `<word class="${classes}" data-recitation-word-index="${globalIndex}" data-verse-key="${this.escapeHtml(verse?.key || '')}" data-word-index="${index}"${safeAttrs}>${tokenHtml}</word>`
         }).join(' ')
         offset += words.length
@@ -25986,7 +25990,7 @@ export default {
       const words = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(this.aiMemorisationCheckerTargets))
       const liveWords = []
       for (const text of words) {
-        liveWords.push({ text, status: 'pending', note: '' })
+        liveWords.push({ text, displayWord: text, rawWord: '', status: 'pending', note: '' })
       }
       this.aiMemorisationCheckerLiveWords = liveWords
       this.aiMemorisationCheckerHiddenIndexes = []
@@ -26766,7 +26770,7 @@ export default {
       const targetWords = this.tokenizeRecitationDisplayWords(this.getRecitationTargetText(targetVerses))
       const liveWords = []
       for (const text of targetWords) {
-        liveWords.push({ text, status: 'pending', note: '' })
+        liveWords.push({ text, displayWord: text, rawWord: '', status: 'pending', note: '' })
       }
       this.recitationLiveWords = liveWords
       this.recitationLiveAlignmentSignature = ''
@@ -27354,14 +27358,8 @@ export default {
         livePreviewAlignmentOptions.allowArticleMatch = true
         livePreviewAlignmentOptions.correctSimilarity = RECITATION_LIVE_CORRECT_SIMILARITY
         livePreviewAlignmentOptions.partialSimilarity = RECITATION_LIVE_PARTIAL_SIMILARITY
-        livePreviewAlignmentOptions.minConfidenceForCorrect = Math.max(
-          0.16,
-          RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT - 0.04,
-        )
-        livePreviewAlignmentOptions.minConfidenceForSimilarityCorrect = Math.max(
-          0.22,
-          RECITATION_LIVE_MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT - 0.04,
-        )
+        livePreviewAlignmentOptions.minConfidenceForCorrect = RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT
+        livePreviewAlignmentOptions.minConfidenceForSimilarityCorrect = RECITATION_LIVE_MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT
         livePreviewAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
       }
       const targetAyahMeta = this.buildRecitationTargetAyahMetadata(targetVerses)
@@ -27442,26 +27440,16 @@ export default {
           tajweedHeavy: paceContext?.tajweedHeavy,
         })
       }
-      // Live AMD: demote soft-letter near-miss reds to amber so ASR letter swaps
-      // do not block the learner mid-range.
+      // Live AMD: only soft-letter ASR swaps (ص/س, ق/ك) demote red → amber.
+      // Do not treat every mid-similarity substitution as “close” — that hid
+      // deliberate wrong words as green/amber.
       if (preferVisible) {
         statuses = statuses.map((status) => {
           if (!status || String(status.status || '').toLowerCase() !== 'incorrect') return status
-          const similarity = Number(status.similarity || 0)
           const expected = String(status.targetWord || status.text || '')
           const actual = String(status.actual || '')
           const softOnly = expected && actual && differsOnlyBySoftAsrLetters(expected, actual)
           if (softOnly) {
-            return {
-              ...status,
-              status: 'partial',
-              note: status.note || 'Close — keep going.',
-            }
-          }
-          if (
-            similarity >= RECITATION_LIVE_PARTIAL_SIMILARITY
-            && similarity < RECITATION_LIVE_CORRECT_SIMILARITY
-          ) {
             return {
               ...status,
               status: 'partial',
@@ -30607,7 +30595,16 @@ export default {
     },
     getPlainVerseArabicForCheck(verse) {
       const source = this.getCanonicalVerseForCheck(verse)
-      return this.cleanRecitationDisplayText(source?.arabic || source?.arabic_tajweed || '')
+      const fromWords = (Array.isArray(source?.words) ? source.words : [])
+        .map((word) => String(word?.ar || word?.text || word?.word || '').trim())
+        .filter(Boolean)
+        .join(' ')
+      return this.cleanRecitationDisplayText(pickVocalisedArabicTextEngine(
+        source?.arabic_uthmani,
+        source?.arabic,
+        fromWords,
+        source?.arabic_tajweed,
+      ))
     },
     getRecitationTargetText(targetVerses = this.getRecitationCheckTargetVerses()) {
       const parts = []
@@ -34881,7 +34878,7 @@ export default {
     getVerseCacheKey(mode = this.currentMode, config = null) {
       const targetConfig = config || this.buildSessionConfig(mode)
       // bump when display scrubbing changes so stale localStorage verse caches are ignored
-      return `${mode}:${this.getConfigFingerprint(targetConfig)}:wbw4-meanings`
+      return `${mode}:${this.getConfigFingerprint(targetConfig)}:wbw5-uthmani-tashkil`
     },
 
     getCachedVerses(mode = this.currentMode, config = null) {
@@ -38381,7 +38378,7 @@ export default {
       } else if (needsInteractiveWords) {
         html = this.splitArabicIntoWords(cleanVerse)
       } else {
-        html = this.stripTajweedMarkup(cleanVerse.arabic)
+        html = this.stripTajweedMarkup(cleanVerse.arabic_uthmani || cleanVerse.arabic)
       }
       html = this.stripEmbeddedAyahEndMarkers(html)
       // Stacked layout: ornate PNG ayah number after the ayah text.
@@ -38424,7 +38421,7 @@ export default {
         review,
         highlightActive,
         focusSig,
-        String(verse.arabic || '').length,
+        String(verse.arabic_uthmani || verse.arabic || '').length,
         String(verse.arabic_tajweed || '').length,
       ].join('|')
     },
@@ -38849,7 +38846,7 @@ export default {
         return tajweedMarkup || this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
       }
       const words = this.tokenizeRecitationDisplayWords(sourceText)
-      if (!words.length) return this.cleanRecitationDisplayText(verse.arabic || verse.arabic_tajweed || '')
+      if (!words.length) return this.cleanRecitationDisplayText(verse.arabic_uthmani || verse.arabic || verse.arabic_tajweed || '')
       const html = words
         .map((word, idx) => this.buildWordTokenHtml(
           verse,
@@ -39947,7 +39944,13 @@ export default {
 
       try {
         const cached = this.getCachedVerses(mode, targetConfig)
-        if (cached?.verses?.length) {
+        const cachedNeedsUthmaniRefresh = Array.isArray(cached?.verses) && cached.verses.length
+          && cached.verses.some((verse) => {
+            if (!Object.prototype.hasOwnProperty.call(verse || {}, 'arabic_uthmani')) return true
+            const arabic = String(verse?.arabic_uthmani || verse?.arabic || '').trim()
+            return arabic && !arabicHasTashkilEngine(arabic)
+          })
+        if (cached?.verses?.length && !cachedNeedsUthmaniRefresh) {
           let resolvedVerses = cached.verses.map((verse) => {
             const clean = this.sanitizeVerseDisplayText(verse)
             const audio = this.ensureVerseAudioUrl(clean)
@@ -40046,7 +40049,8 @@ export default {
           .filter(ayah => ayah.numberInSurah >= start && ayah.numberInSurah <= end)
           .map(ayah => {
             const key = `${chapterId}:${ayah.numberInSurah}`
-            let arabic = arabicByNumber.get(ayah.numberInSurah) || ayah.text || ''
+            const uthmani = String(arabicByNumber.get(ayah.numberInSurah) || '').trim()
+            let arabic = uthmani || ayah.text || ''
             let tajweed = tajweedByNumber.get(ayah.numberInSurah) || ''
 
             // Strip leading basmala from ayah 1 of surahs that render it as a
@@ -40087,6 +40091,7 @@ export default {
               globalNumber: Number(ayah.number) || null,
               chapterId,
               arabic,
+              arabic_uthmani: uthmani ? arabic : (arabicHasTashkilEngine(arabic) ? arabic : ''),
               arabic_tajweed: tajweed,
               translation: this.cleanTranslationText(translation),
               transliteration,

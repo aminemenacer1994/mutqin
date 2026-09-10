@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict'
 import {
+  DEFAULT_LAYOUT_FONT_SIZES,
   DEFAULT_WORKSPACE_PREFERENCES,
   applyAudioDefaultsToModeState,
+  applyPersistedFontSizeCssVariable,
   applyWorkspacePreferenceOverlay,
+  bootPersistedFontSize,
   normaliseWorkspacePreferences,
   patchWorkspacePreferences,
+  readPersistedFontPreferences,
   readWorkspacePreferences,
   resetWorkspacePreferences,
+  writePersistedFontPreferences,
 } from '../../resources/js/scripts/settings/workspacePreferences.js'
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
@@ -122,6 +127,54 @@ globalThis.localStorage = storage
   const prefs = readWorkspacePreferences('5')
   assert.equal(prefs.quranFont, DEFAULT_WORKSPACE_PREFERENCES.quranFont)
   assert.equal(prefs.tajweedEnabled, DEFAULT_WORKSPACE_PREFERENCES.tajweedEnabled)
+}
+
+{
+  storage.store.clear()
+  writePersistedFontPreferences({
+    defaultFontSize: 210,
+    layoutFontSizes: { stacked: 140, mushaf: 210 },
+  }, { userId: '8', storage })
+
+  const mine = readPersistedFontPreferences({ userId: '8', storage })
+  assert.equal(mine.found, true)
+  assert.equal(mine.defaultFontSize, 210)
+  assert.equal(mine.layoutFontSizes.mushaf, 210)
+  assert.equal(storage.getItem('mutqin.defaultFontSize.8'), '210')
+  assert.equal(JSON.parse(storage.getItem('mutqin.layoutFontSizes.8')).mushaf, 210)
+
+  const other = readPersistedFontPreferences({ userId: '9', storage })
+  assert.equal(other.found, false)
+  assert.equal(other.defaultFontSize, DEFAULT_LAYOUT_FONT_SIZES.mushaf)
+
+  storage.setItem('mutqin.uiState', JSON.stringify({ defaultFontSize: 90 }))
+  const isolated = readPersistedFontPreferences({ userId: '9', storage })
+  assert.equal(isolated.found, false, 'authenticated users must not inherit unscoped font size')
+}
+
+{
+  storage.store.clear()
+  storage.setItem('mutqin.uiState.guest', JSON.stringify({ defaultFontSize: 190 }))
+  const guest = readPersistedFontPreferences({ userId: 'guest', storage })
+  assert.equal(guest.found, true)
+  assert.equal(guest.defaultFontSize, 190)
+  assert.equal(guest.layoutFontSizes.mushaf, 190)
+}
+
+{
+  storage.store.clear()
+  const props = new Map()
+  const root = {
+    style: {
+      setProperty(key, value) { props.set(key, value) },
+    },
+  }
+  writePersistedFontPreferences({ defaultFontSize: 230 }, { userId: '4', storage })
+  const booted = bootPersistedFontSize({ userId: '4', storage, root })
+  assert.equal(booted.defaultFontSize, 230)
+  assert.equal(props.get('--verse-font-percent'), '230')
+  applyPersistedFontSizeCssVariable({ defaultFontSize: 80 }, root)
+  assert.equal(props.get('--verse-font-percent'), '80')
 }
 
 {

@@ -629,6 +629,8 @@ includesAll('ai audio consent and retention wiring', [
   assert.match(source, /createSessionTimer/)
   assert.match(source, /normalizeArabicForRecitationEngine/)
   assert.match(source, /resolveRecitationWordDisplayEngine/)
+  assert.match(source, /pickVocalisedArabicTextEngine/)
+  assert.match(source, /arabic_uthmani/)
   assert.match(source, /phraseStart/)
   assert.match(source, /playRecordingStartBeep/)
   assert.match(source, /_amdRecordStartBeepConsumed/)
@@ -1111,6 +1113,17 @@ includesAll('mushaf layout font-size +/− controls', [
   /decreaseMushafFontSize\(\) \{/,
   /applyMushafFontSizeChange\(/,
   /\.mushaf-font-zoom__btn/,
+])
+
+includesAll('mushaf font size is user-scoped and survives reload', [
+  /readPersistedFontPreferences/,
+  /writePersistedFontPreferences/,
+  /persistUserFontSize\(\)/,
+  /applyPersistedUserFontSize\(\)/,
+  /this\.loadUiState\(\)\s*this\.loadVerseFontSizes\(\)/,
+  /readLocalUiState\(\)/,
+  /writeLocalUiState\(/,
+  /offlineScopedLocalKey\('mutqin.uiState'/,
 ])
 
 includesAll('workspace idle returning-user journey context', [

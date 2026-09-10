@@ -123,6 +123,23 @@ export function tokenizeRecitationDisplayWords(text) {
   return cleaned ? cleaned.split(/\s+/).map(word => word.trim()).filter(Boolean) : []
 }
 
+/** True when the string still carries Qur’anic harakāt / dagger-alef. */
+export function arabicHasTashkil(text) {
+  return /[\u064B-\u065F\u0670]/.test(String(text || ''))
+}
+
+/**
+ * Prefer canonical vocalised Uthmāni text for recitation display.
+ * Falls back to any candidate that still has tashkīl, then raw Arabic.
+ */
+export function pickVocalisedArabicText(...candidates) {
+  const list = candidates
+    .map((value) => String(value || '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+  if (!list.length) return ''
+  return list.find((value) => arabicHasTashkil(value)) || list[0]
+}
+
 export function tokenizeRecitationWords(text) {
   const normalized = normalizeArabicForRecitation(text)
   return normalized ? normalized.split(/\s+/).filter(Boolean) : []

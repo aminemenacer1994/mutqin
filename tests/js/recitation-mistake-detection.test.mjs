@@ -32,6 +32,7 @@ const {
   classifyRecitationWordColor,
   getRecitationColorCounts,
   deriveWeakAyahsFromWordStatuses,
+  RECITATION_THRESHOLDS,
 } = recitation.namespace
 
 const target = 'قل هو الله أحد'
@@ -471,12 +472,51 @@ function assertStatuses(result, expected) {
 
   const live = buildRealtimePreviewAlignment(quraysh, createWordsFromTranscript(heard), {
     ...opts,
-    correctSimilarity: 0.63,
-    partialSimilarity: 0.36,
-    uncertainConfidence: 0.48,
-    minConfidenceForSimilarityCorrect: 0.28,
+    correctSimilarity: RECITATION_THRESHOLDS.liveCorrectSimilarity,
+    partialSimilarity: RECITATION_THRESHOLDS.livePartialSimilarity,
+    uncertainConfidence: RECITATION_THRESHOLDS.amdUncertainConfidence,
+    minConfidenceForSimilarityCorrect: RECITATION_THRESHOLDS.liveMinConfidenceForSimilarityCorrect,
   })
   assert.ok(live.statuses.every((word) => word.status === 'correct'))
+}
+
+// Live AMD defaults: deliberate substitutions stay red; exact stays green; soft-letter stays amber
+{
+  const amdLive = {
+    lookahead: 0,
+    exactSkipLookahead: 3,
+    strictProgression: true,
+    advanceOnIncorrect: true,
+    partialAdvances: true,
+    correctSimilarity: RECITATION_THRESHOLDS.liveCorrectSimilarity,
+    partialSimilarity: RECITATION_THRESHOLDS.livePartialSimilarity,
+    minConfidenceForCorrect: RECITATION_THRESHOLDS.liveMinConfidenceForCorrect,
+    minConfidenceForSimilarityCorrect: RECITATION_THRESHOLDS.liveMinConfidenceForSimilarityCorrect,
+    uncertainConfidence: RECITATION_THRESHOLDS.amdUncertainConfidence,
+  }
+  const wrong = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين',
+    createWordsFromTranscript('الحمد لله رب صمد'),
+    amdLive,
+  )
+  assert.equal(wrong.statuses[3].status, 'incorrect', 'صمد must stay red on العالمين under live AMD thresholds')
+  assert.equal(wrong.statuses[3].actual, 'صمد')
+
+  const exact = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين',
+    createWordsFromTranscript('الحمد لله رب العالمين'),
+    amdLive,
+  )
+  assert.ok(exact.statuses.every((word) => word.status === 'correct'))
+
+  const soft = buildRealtimePreviewAlignment(
+    'اهدنا الصراط المستقيم',
+    createWordsFromTranscript('اهدنا السراط المستقيم'),
+    amdLive,
+  )
+  assert.equal(soft.statuses[1].status, 'partial', 'ص↔س must be amber, not green')
+  assert.equal(soft.statuses[0].status, 'correct')
+  assert.equal(soft.statuses[2].status, 'correct')
 }
 
 console.log('recitation-mistake-detection: ok')
