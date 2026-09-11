@@ -367,11 +367,15 @@
         },
         "howMemorisation": {
           "question": "How does memorisation work?",
-          "answer": "Pick a short ayah range and practise it until it holds. Hide the text or join ayahs as you go."
+          "answer": "Pick a short ayah range and practise it until it holds. Session setup, audio, and beginner tools are free."
+        },
+        "freeTools": {
+          "question": "Which tools are free?",
+          "answer": "Session setup, audio (speed, auto-advance, delays), one ayah at a time, gradually hide the text, and listen and repeat are free. Only Join ayahs together and Highlight memory words need Pro."
         },
         "whatIsPro": {
           "question": "Do I need Pro to start?",
-          "answer": "No. Start free. Upgrade only if you want richer feedback and history."
+          "answer": "No. Start free. Upgrade if you want Join ayahs together, highlight memory words, AI checks, or more saved sessions."
         },
         "howRevision": {
           "question": "How does revision work?",
@@ -379,7 +383,7 @@
         },
         "pricing": {
           "question": "Is Mutqin free? What does Pro cost?",
-          "answer": "Yes, you can start free. Pro adds deeper review, history, and planning. The price is shown before you upgrade."
+          "answer": "Yes. Session setup, audio, and beginner tools are free. Only Join ayahs together and Highlight memory words need Pro. Pro also adds AI checks, unlimited saves, and planning. The price is shown before you upgrade."
         },
         "whoFor": {
           "question": "Who is Mutqin for?",
@@ -501,13 +505,15 @@
       "dailyMinutes": "Review due today"
     },
     "planFeatures": {
-      "sessionSetup": "Basic session setup",
+      "sessionSetup": "Session setup, reciter, range, and repetitions",
       "savedSessions3": "3 saved sessions",
       "savedSessions5": "5 saved sessions",
       "savedSessionsUnlimited": "Unlimited saved sessions",
       "basicAnalytics": "Basic insights",
-      "focusMode": "Focus mode",
-      "blurringMethod": "Blur method",
+      "focusMode": "One ayah at a time",
+      "blurringMethod": "Gradually hide the text",
+      "listenAndRepeat": "Listen and repeat",
+      "audioControls": "Audio speed, auto-advance, and delays",
       "chainingMethod": "Chaining method",
       "anchorMode": "Anchor mode",
       "manualSelfAssessment": "Manual self-assessment recording",
@@ -516,7 +522,7 @@
       "spacedRetention": "Steady review between sessions",
       "adaptiveRevision": "Adaptive revision scheduling",
       "progressTracking": "Progress tracking",
-      "allTechniques": "All memorisation techniques",
+      "allTechniques": "Join ayahs together and memory-word highlights",
       "aiRecitation": "Recitation check",
       "aiMemorisationChecker": "Memorisation check",
       "advancedAnalysis": "Deeper progress insights",
@@ -837,9 +843,9 @@
     },
     "practiceTools": {
       "beginner": "Beginner Tools",
-      "beginnerDesc": "Simple options for reading, listening, and repeating ayahs.",
+      "beginnerDesc": "Free. One ayah at a time, hide the text, and listen and repeat.",
       "advanced": "Advanced Tools",
-      "advancedDesc": "Techniques for linking ayahs together and remembering key words."
+      "advancedDesc": "Join ayahs together and highlight memory words. These two need Pro."
     },
     "activePracticeSetup": {
       "title": "Active practice setup",
@@ -3905,7 +3911,7 @@
     "sessionSaveFailed": "Could not save this session. Try again.",
     "sessionSaveSyncFailed": "Session saved on this device. Sync will retry shortly.",
     "sessionSaveLimitReached": "Saved session limit reached ({max}). Delete one to save another, or upgrade to Pro for unlimited saves.",
-    "premiumTechniqueRequired": "This technique needs Premium. Upgrade to unlock it.",
+    "premiumTechniqueRequired": "Join ayahs together and memory-word highlights need Pro. Upgrade to unlock them.",
     "couldNotPlayRecording": "We could not play this recording. Try reloading it or record again.",
     "defaultSessionLoaded": "Loaded a gentle starter set: Al-Fātiḥah 1–7, Alafasy, standard speed, one repeat.",
     "recordingRenamed": "Recording renamed to \"{name}\".",
@@ -4041,7 +4047,11 @@
         },
         "difference": {
           "question": "What does Pro add?",
-          "answer": "Unlimited saved sessions, all memorisation techniques, recitation and memorisation checks, a custom Hifz plan, adaptive revision, and offline listening."
+          "answer": "Join ayahs together, highlight memory words, unlimited saved sessions, recitation and memorisation checks, a custom Hifz plan, adaptive revision, and offline listening. Session setup, audio, and beginner tools stay free."
+        },
+        "freeTools": {
+          "question": "Which tools stay free?",
+          "answer": "Session setup, audio (speed, auto-advance, delays), one ayah at a time, gradually hide the text, and listen and repeat. Only Join ayahs together and Highlight memory words are paid."
         },
         "yearly": {
           "question": "How does yearly billing work?",

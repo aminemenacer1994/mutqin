@@ -367,7 +367,11 @@
         },
         "howMemorisation": {
           "question": "¿Cómo funciona la memorización?",
-          "answer": "Elige un rango corto y practica hasta que se fije. Oculta el texto o une ayahs mientras avanzas."
+          "answer": "Elige un rango corto y practica hasta que se fije. La configuración de sesión, el audio y las herramientas de principiante son gratis."
+        },
+        "freeTools": {
+          "question": "¿Qué herramientas son gratis?",
+          "answer": "La configuración de sesión, el audio (velocidad, avance automático, pausas), una ayah a la vez, ocultar el texto poco a poco y escuchar y repetir son gratis. Solo Unir ayahs y Resaltar palabras ancla necesitan Pro."
         },
         "whatIsPro": {
           "question": "¿Necesito Pro para empezar?",
@@ -379,7 +383,7 @@
         },
         "pricing": {
           "question": "¿Mutqin es gratis? ¿Cuánto cuesta Pro?",
-          "answer": "Sí, puedes empezar gratis. Pro añade revisión más profunda, historial y planificación. El precio se muestra antes de mejorar."
+          "answer": "Sí. La configuración de sesión, el audio y las herramientas de principiante son gratis. Solo Unir ayahs y Resaltar palabras ancla necesitan Pro. Pro también añade comprobaciones IA, sesiones ilimitadas y planificación. El precio se muestra antes de mejorar."
         },
         "whoFor": {
           "question": "¿Para quién es Mutqin?",
@@ -506,8 +510,10 @@
       "savedSessions5": "5 sessions enregistrées",
       "savedSessionsUnlimited": "Sesións enregistrées illimitées",
       "basicAnalytics": "Analíticas de base",
-      "focusMode": "Modo focus",
-      "blurringMethod": "Méthode de flou",
+      "focusMode": "Una ayah a la vez",
+      "blurringMethod": "Ocultar el texto poco a poco",
+      "listenAndRepeat": "Escuchar y repetir",
+      "audioControls": "Velocidad de audio, avance automático y pausas",
       "chainingMethod": "Méthode de enchaînement",
       "anchorMode": "Modo ancre",
       "manualSelfAssessment": "Grabación de auto-évaluation manuelle",
@@ -516,7 +522,7 @@
       "spacedRetention": "Rétention espacée sessions",
       "adaptiveRevision": "Planification adaptative de révision",
       "progressTracking": "Suivi de progression",
-      "allTechniques": "Toutes les techniques de mémorisation",
+      "allTechniques": "Unir ayahs y resaltar palabras ancla",
       "aiRecitation": "Récitation IA",
       "aiMemorisationChecker": "Comprobación de mémorisation",
       "advancedAnalysis": "Analyse avancée",
@@ -837,9 +843,9 @@
     },
     "practiceTools": {
       "beginner": "Herramientas para principiantes",
-      "beginnerDesc": "Opciones simples para leer, escuchar y repetir ayahs.",
+      "beginnerDesc": "Gratis. Una ayah a la vez, ocultar el texto y escuchar y repetir.",
       "advanced": "Herramientas avanzadas",
-      "advancedDesc": "Técnicas para enlazar ayahs y recordar palabras clave."
+      "advancedDesc": "Unir ayahs y resaltar palabras ancla. Estas dos necesitan Pro."
     },
     "activePracticeSetup": {
       "title": "Ajuste de práctica activa",
@@ -3892,7 +3898,7 @@
     "sessionSaveFailed": "No se pudo guardar esta sesión. Inténtalo de nuevo.",
     "sessionSaveSyncFailed": "Sesión guardada en este dispositivo. La sincronización se reintentará en breve.",
     "sessionSaveLimitReached": "Límite de sesiones guardadas alcanzado ({max}). Elimina una para guardar otra.",
-    "premiumTechniqueRequired": "Esta técnica necesita Premium. Mejora tu plan para desbloquearla.",
+    "premiumTechniqueRequired": "Unir ayahs y resaltar palabras ancla necesitan Pro. Mejora tu plan para desbloquearlas.",
     "couldNotPlayRecording": "We could not play this grabación. Try reloading it or record again.",
     "defaultSessionLoaded": "Default sesión loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no memorización techniques.",
     "recordingRenamed": "grabación renamed to \"{name}\".",
@@ -4024,7 +4030,11 @@
         },
         "difference": {
           "question": "¿Qué añade Pro?",
-          "answer": "Sesiones ilimitadas, todas las técnicas, comprobaciones de recitación y memorización, un plan de hifz, revisión adaptativa y escucha sin conexión."
+          "answer": "Unir ayahs, resaltar palabras ancla, sesiones ilimitadas, comprobaciones de recitación y memorización, un plan de hifz, revisión adaptativa y escucha sin conexión. La configuración de sesión, el audio y las herramientas de principiante siguen gratis."
+        },
+        "freeTools": {
+          "question": "¿Qué herramientas siguen gratis?",
+          "answer": "La configuración de sesión, el audio (velocidad, avance automático, pausas), una ayah a la vez, ocultar el texto poco a poco y escuchar y repetir. Solo Unir ayahs y Resaltar palabras ancla son de pago."
         },
         "yearly": {
           "question": "¿Cómo funciona el pago anual?",

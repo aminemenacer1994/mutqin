@@ -367,7 +367,11 @@
         },
         "howMemorisation": {
           "question": "Bagaimana hafalan bekerja?",
-          "answer": "Pilih rentang ayat singkat dan latih sampai kuat. Sembunyikan teks atau sambungkan ayat sambil berlatih."
+          "answer": "Pilih rentang ayat singkat dan latih sampai kuat. Pengaturan sesi, audio, dan alat pemula gratis."
+        },
+        "freeTools": {
+          "question": "Alat mana yang gratis?",
+          "answer": "Pengaturan sesi, audio (kecepatan, maju otomatis, jeda), satu ayat pada satu waktu, sembunyikan teks bertahap, dan dengar lalu ulang adalah gratis. Hanya Sambungkan ayat dan Sorot kata kunci yang membutuhkan Pro."
         },
         "whatIsPro": {
           "question": "Apakah saya perlu Pro untuk mulai?",
@@ -379,7 +383,7 @@
         },
         "pricing": {
           "question": "Apakah Mutqin gratis? Berapa biaya Pro?",
-          "answer": "Ya, Anda bisa mulai gratis. Pro menambah tinjauan lebih dalam, riwayat, dan perencanaan. Harga ditampilkan sebelum upgrade."
+          "answer": "Ya. Pengaturan sesi, audio, dan alat pemula gratis. Hanya Sambungkan ayat dan Sorot kata kunci yang membutuhkan Pro. Pro juga menambah cek AI, sesi tak terbatas, dan perencanaan. Harga ditampilkan sebelum upgrade."
         },
         "whoFor": {
           "question": "Untuk siapa Mutqin?",
@@ -506,8 +510,10 @@
       "savedSessions5": "5 sesi tersimpan",
       "savedSessionsUnlimited": "Sesi tersimpan tanpa batas",
       "basicAnalytics": "Analitik dasar",
-      "focusMode": "Mode fokus",
-      "blurringMethod": "Metode blur",
+      "focusMode": "Satu ayat pada satu waktu",
+      "blurringMethod": "Sembunyikan teks bertahap",
+      "listenAndRepeat": "Dengar lalu ulang",
+      "audioControls": "Kecepatan audio, maju otomatis, dan jeda",
       "chainingMethod": "Metode chaining",
       "anchorMode": "Mode anchor",
       "manualSelfAssessment": "Rekaman penilaian diri manual",
@@ -516,7 +522,7 @@
       "spacedRetention": "Spaced sesi retention",
       "adaptiveRevision": "تكيّفي revision scheduling",
       "progressTracking": "kemajuan tracking",
-      "allTechniques": "All hafalan techniques",
+      "allTechniques": "Sambungkan ayat dan sorot kata kunci",
       "aiRecitation": "Tilawah AI",
       "aiMemorisationChecker": "Hafalan check",
       "advancedAnalysis": "Analisis lanjutan",
@@ -837,9 +843,9 @@
     },
     "practiceTools": {
       "beginner": "Alat pemula",
-      "beginnerDesc": "Opsi sederhana untuk membaca, mendengar, dan mengulang ayat.",
+      "beginnerDesc": "Gratis. Satu ayat pada satu waktu, sembunyikan teks, dan dengar lalu ulang.",
       "advanced": "Alat lanjutan",
-      "advancedDesc": "Teknik untuk menghubungkan ayat dan mengingat kata kunci."
+      "advancedDesc": "Sambungkan ayat dan sorot kata kunci. Dua alat ini membutuhkan Pro."
     },
     "activePracticeSetup": {
       "title": "aktif practice setup",
@@ -3905,7 +3911,7 @@
     "sessionSaveFailed": "Tidak dapat menyimpan sesi ini. Coba lagi.",
     "sessionSaveSyncFailed": "Sesi disimpan di perangkat ini. Sinkronisasi akan dicoba lagi sebentar lagi.",
     "sessionSaveLimitReached": "Batas sesi tersimpan tercapai ({max}). Hapus satu untuk menyimpan yang lain.",
-    "premiumTechniqueRequired": "Teknik ini membutuhkan Premium. Tingkatkan untuk membukanya.",
+    "premiumTechniqueRequired": "Sambungkan ayat dan sorot kata kunci membutuhkan Pro. Tingkatkan untuk membukanya.",
     "couldNotPlayRecording": "We could not play this rekaman. Try reloading it or record again.",
     "defaultSessionLoaded": "Default sesi loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no hafalan techniques.",
     "recordingRenamed": "rekaman renamed to \"{name}\".",
@@ -4037,7 +4043,11 @@
         },
         "difference": {
           "question": "Apa yang ditambah Pro?",
-          "answer": "Sesi tersimpan tak terbatas, semua teknik, cek bacaan dan hafalan, rencana hifz, revisi adaptif, dan dengar luring."
+          "answer": "Sambungkan ayat, sorot kata kunci, sesi tersimpan tak terbatas, cek bacaan dan hafalan, rencana hifz, revisi adaptif, dan dengar luring. Pengaturan sesi, audio, dan alat pemula tetap gratis."
+        },
+        "freeTools": {
+          "question": "Alat mana yang tetap gratis?",
+          "answer": "Pengaturan sesi, audio (kecepatan, maju otomatis, jeda), satu ayat pada satu waktu, sembunyikan teks bertahap, dan dengar lalu ulang. Hanya Sambungkan ayat dan Sorot kata kunci yang berbayar."
         },
         "yearly": {
           "question": "Bagaimana penagihan tahunan bekerja?",

@@ -35,4 +35,6 @@ return [
     'continue_free' => 'Continue free',
     'monthly' => 'Monthly',
     'yearly' => 'Yearly',
+    'stripe_checkout_note' => 'Pro unlocks Join ayahs together, highlight memory words, and AI checks. Session setup, audio, and beginner tools stay free.',
+    'stripe_subscription_description' => 'Pro: join ayahs, memory-word highlights, AI checks, unlimited saves.',
 ];

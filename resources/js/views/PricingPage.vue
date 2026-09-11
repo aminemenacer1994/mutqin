@@ -271,6 +271,7 @@ export default {
       return [
         { id: 'cost', question: t('pricingPage.faq.items.cost.question'), answer: t('pricingPage.faq.items.cost.answer', prices) },
         { id: 'difference', question: t('pricingPage.faq.items.difference.question'), answer: t('pricingPage.faq.items.difference.answer') },
+        { id: 'freeTools', question: t('pricingPage.faq.items.freeTools.question'), answer: t('pricingPage.faq.items.freeTools.answer') },
         { id: 'yearly', question: t('pricingPage.faq.items.yearly.question'), answer: t('pricingPage.faq.items.yearly.answer', prices) },
         { id: 'trial', question: t('pricingPage.faq.items.trial.question'), answer: t('pricingPage.faq.items.trial.answer') },
         { id: 'cancel', question: t('pricingPage.faq.items.cancel.question'), answer: t('pricingPage.faq.items.cancel.answer') },
@@ -371,7 +372,10 @@ export default {
             feature('homepage.planFeatures.savedSessions3'),
             feature('homepage.planFeatures.sessionSetup'),
             feature('homepage.planFeatures.basicAnalytics'),
-            feature('homepage.planFeatures.focusMode')
+            feature('homepage.planFeatures.focusMode'),
+            feature('homepage.planFeatures.blurringMethod'),
+            feature('homepage.planFeatures.listenAndRepeat'),
+            feature('homepage.planFeatures.audioControls')
           ],
           featured: false,
           ctaType: 'link',

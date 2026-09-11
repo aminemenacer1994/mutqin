@@ -657,6 +657,17 @@ includesAll('ai audio consent and retention wiring', [
 includesAll('planner ui gated by premium tier', [
   /showHifzPlannerUi\(\) \{\s*return this\.canUsePremiumTechniques\s*\}/s,
   /showAiMemorisationButton\(\) \{\s*return this\.aiTestModalsEnabled && this\.canUseProFeatures\s*\}/s,
+  /requirePremiumTechniqueAccess\(\) \{\s*if \(this\.canUsePremiumTechniques\) return true/s,
+  /enforceSubscriptionFeatureLimits\(\) \{\s*if \(this\.canUsePremiumTechniques\) return/s,
+  /'is-locked': !canUsePremiumTechniques/,
+])
+
+includesAll('advanced tools require premium', [
+  /setChainingEnabled\(enabled\) \{\s*const nextEnabled = !!enabled\s*if \(nextEnabled && !this\.requirePremiumTechniqueAccess\(\)\) return/s,
+  /setAnchorMode\(enabled\) \{\s*const nextEnabled = !!enabled\s*if \(nextEnabled && !this\.requirePremiumTechniqueAccess\(\)\) return/s,
+])
+
+includesAll('planner ui gated by premium tier rest', [
   /<HifzPlanCreatorModal/,
   /:visible="showHifzPlannerUi && showHifzPlanModal"/,
   /workspaceShellKicker/,

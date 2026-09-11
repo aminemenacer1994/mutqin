@@ -367,7 +367,11 @@
         },
         "howMemorisation": {
           "question": "Comment fonctionne la mémorisation ?",
-          "answer": "Choisissez un court passage et pratiquez jusqu’à ce qu’il tienne. Masquez le texte ou reliez les ayahs au fil de la pratique."
+          "answer": "Choisissez un court passage et pratiquez jusqu’à ce qu’il tienne. La configuration de session, l’audio et les outils débutants sont gratuits."
+        },
+        "freeTools": {
+          "question": "Quels outils sont gratuits ?",
+          "answer": "La configuration de session, l’audio (vitesse, avance automatique, pauses), une ayah à la fois, masquer le texte progressivement et écouter puis répéter sont gratuits. Seuls Relier les ayahs et Surligner les mots-ancres nécessitent Pro."
         },
         "whatIsPro": {
           "question": "Ai-je besoin de Pro pour commencer ?",
@@ -379,7 +383,7 @@
         },
         "pricing": {
           "question": "Mutqin est-il gratuit ? Que coûte Pro ?",
-          "answer": "Oui, vous pouvez commencer gratuitement. Pro ajoute une revue plus profonde, l’historique et la planification. Le tarif est indiqué avant tout passage à Pro."
+          "answer": "Oui. La configuration de session, l’audio et les outils débutants sont gratuits. Seuls Relier les ayahs et Surligner les mots-ancres nécessitent Pro. Pro ajoute aussi les contrôles IA, des sessions illimitées et la planification. Le tarif est indiqué avant le passage à Pro."
         },
         "whoFor": {
           "question": "Pour qui est Mutqin ?",
@@ -506,8 +510,10 @@
       "savedSessions5": "5 sessions enregistrées",
       "savedSessionsUnlimited": "Sessions enregistrées illimitées",
       "basicAnalytics": "Analyses de base",
-      "focusMode": "Mode focus",
-      "blurringMethod": "Méthode de flou",
+      "focusMode": "Une ayah à la fois",
+      "blurringMethod": "Masquer le texte progressivement",
+      "listenAndRepeat": "Écouter puis répéter",
+      "audioControls": "Vitesse audio, avance automatique et pauses",
       "chainingMethod": "Méthode d'enchaînement",
       "anchorMode": "Mode ancre",
       "manualSelfAssessment": "Enregistrement d'auto-évaluation manuelle",
@@ -516,7 +522,7 @@
       "spacedRetention": "Rétention espacée des sessions",
       "adaptiveRevision": "Planification adaptative de révision",
       "progressTracking": "Suivi de progression",
-      "allTechniques": "Toutes les techniques de mémorisation",
+      "allTechniques": "Relier les ayahs et surligner les mots-ancres",
       "aiRecitation": "Vérification de récitation",
       "aiMemorisationChecker": "Vérification de mémorisation",
       "advancedAnalysis": "Analyse avancée",
@@ -837,9 +843,9 @@
     },
     "practiceTools": {
       "beginner": "Outils débutant",
-      "beginnerDesc": "Options simples pour lire, écouter et répéter les ayahs.",
+      "beginnerDesc": "Gratuit. Une ayah à la fois, masquer le texte et écouter puis répéter.",
       "advanced": "Outils avancés",
-      "advancedDesc": "Techniques pour relier les ayahs et mémoriser les mots clés."
+      "advancedDesc": "Relier les ayahs et surligner les mots-ancres. Ces deux outils nécessitent Pro."
     },
     "activePracticeSetup": {
       "title": "Réglage de la pratique",
@@ -3905,7 +3911,7 @@
     "sessionSaveFailed": "Impossible d’enregistrer cette session. Réessayez.",
     "sessionSaveSyncFailed": "Session enregistrée sur cet appareil. La synchronisation réessaiera sous peu.",
     "sessionSaveLimitReached": "Limite de sessions enregistrées atteinte ({max}). Supprimez-en une pour en enregistrer une autre.",
-    "premiumTechniqueRequired": "Cette technique nécessite Premium. Passez à Premium pour la débloquer.",
+    "premiumTechniqueRequired": "Relier les ayahs et surligner les mots-ancres nécessitent Pro. Passez à Pro pour les débloquer.",
     "couldNotPlayRecording": "We could not play this grabación. Try reloading it or record again.",
     "defaultSessionLoaded": "Default sesión loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no memorización techniques.",
     "recordingRenamed": "grabación renamed to \"{name}\".",
@@ -4037,7 +4043,11 @@
         },
         "difference": {
           "question": "Que ajoute Pro ?",
-          "answer": "Sessions illimitées, toutes les techniques, contrôles de récitation et de mémorisation, un plan de hifz, une révision adaptative et l’écoute hors ligne."
+          "answer": "Relier les ayahs, surligner les mots-ancres, sessions illimitées, contrôles de récitation et de mémorisation, un plan de hifz, une révision adaptative et l’écoute hors ligne. La configuration de session, l’audio et les outils débutants restent gratuits."
+        },
+        "freeTools": {
+          "question": "Quels outils restent gratuits ?",
+          "answer": "La configuration de session, l’audio (vitesse, avance automatique, pauses), une ayah à la fois, masquer le texte progressivement et écouter puis répéter. Seuls Relier les ayahs et Surligner les mots-ancres sont payants."
         },
         "yearly": {
           "question": "Comment fonctionne l’abonnement annuel ?",

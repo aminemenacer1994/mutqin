@@ -8,10 +8,13 @@ return [
             'name' => 'Free',
             'tier' => 'free',
             'features' => [
-                'Full basic session setup',
+                'Session setup, reciter, range, and repetitions',
+                'Audio speed, auto-advance, and delays',
+                'One ayah at a time',
+                'Gradually hide the text',
+                'Listen and repeat',
                 '3 saved sessions',
                 'Basic analytics',
-                'Focus mode',
             ],
         ],
         'premium_monthly' => [
@@ -66,7 +69,7 @@ return [
             'features' => [
                 'Full basic session setup',
                 'Unlimited saved sessions',
-                'All memorisation techniques included',
+                'Join ayahs together and memory-word highlights',
                 'AI recitation',
                 'AI memorisation checker',
                 'Manual self-assessment recording + self recording',
@@ -90,7 +93,7 @@ return [
             'features' => [
                 'Full basic session setup',
                 'Unlimited saved sessions',
-                'All memorisation techniques included',
+                'Join ayahs together and memory-word highlights',
                 'AI recitation',
                 'AI memorisation checker',
                 'Manual self-assessment recording + self recording',

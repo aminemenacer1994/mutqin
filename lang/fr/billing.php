@@ -35,4 +35,6 @@ return [
     'continue_free' => 'Continuer gratuitement',
     'monthly' => 'Mensuel',
     'yearly' => 'Annuel',
+    'stripe_checkout_note' => 'Pro débloque Relier les ayahs, surligner les mots-ancres et les contrôles IA. La configuration de session, l’audio et les outils débutants restent gratuits.',
+    'stripe_subscription_description' => 'Pro : relier les ayahs, mots-ancres, contrôles IA, sessions illimitées.',
 ];

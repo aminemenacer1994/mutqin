@@ -1810,15 +1810,13 @@ export default {
           bestFor: this.translateOrFallback('memorisation.helpLearning.sections.aiRecitation.bestFor', HELP_LEARNING_FALLBACKS.sections.aiRecitation.bestFor)
         })
       }
-      if (this.canUsePremiumTechniques) {
-        sections.push({
-          key: 'talqin-mode',
-          icon: 'bi-soundwave',
-          title: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.title', HELP_LEARNING_FALLBACKS.sections.talqinMode.title),
-          description: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.description', HELP_LEARNING_FALLBACKS.sections.talqinMode.description),
-          bestFor: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.bestFor', HELP_LEARNING_FALLBACKS.sections.talqinMode.bestFor)
-        })
-      }
+      sections.push({
+        key: 'talqin-mode',
+        icon: 'bi-soundwave',
+        title: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.title', HELP_LEARNING_FALLBACKS.sections.talqinMode.title),
+        description: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.description', HELP_LEARNING_FALLBACKS.sections.talqinMode.description),
+        bestFor: this.translateOrFallback('memorisation.helpLearning.sections.talqinMode.bestFor', HELP_LEARNING_FALLBACKS.sections.talqinMode.bestFor)
+      })
       sections.push({
         key: 'manual-assessment',
         icon: 'bi-check2-square',
@@ -10601,6 +10599,16 @@ export default {
         this.applyChainingQueueChange(this.currentMode)
         return
       }
+      if (newVal && !this.canUsePremiumTechniques) {
+        this._techniqueConflictSilenced = true
+        this.chainingEnabled = false
+        this.chainingMethod = ''
+        this._techniqueConflictSilenced = false
+        this.persistUiState()
+        this.persistCentralSessionState()
+        this.applyChainingQueueChange(this.currentMode)
+        return
+      }
       if (newVal && this.blurModeEnabled) {
         this._techniqueConflictSilenced = true
         this.blurModeEnabled = false
@@ -12289,6 +12297,7 @@ export default {
       this.readingViewMode = defaults.readingViewMode
       this.tab = 'tools'
       this.showTools = !!openSetup
+      this.enforceSubscriptionFeatureLimits()
       this.syncSettingsDraft()
       this.persistUiState()
       this.persistCentralSessionState()
@@ -14040,7 +14049,7 @@ export default {
       this.customGapSeconds = 2
       this.focusModeEnabled = true
       this.blurModeEnabled = false
-      this.chainingEnabled = true
+      this.chainingEnabled = this.canUsePremiumTechniques
       this.chainingMethod = ''
       this.chainingRepetitions = 1
       this.anchorModeEnabled = false
@@ -14084,12 +14093,14 @@ export default {
       switch (type) {
         case 'guided':
           this.focusModeEnabled = true
+          if (!this.requirePremiumTechniqueAccess()) break
           this.chainingEnabled = true
           this.chainingMethod = 'linking'
           this.chainingRepetitions = 1
           this.showBanner(this.t('toasts.presetGuidedStart'), 'success', 2000)
           break
         case 'chain':
+          if (!this.requirePremiumTechniqueAccess()) break
           this.chainingEnabled = true
           this.chainingMethod = 'linking'
           this.anchorModeEnabled = true
@@ -14102,7 +14113,7 @@ export default {
           break
         case 'focus':
           this.focusModeEnabled = true
-          this.anchorModeEnabled = true
+          if (this.canUsePremiumTechniques) this.anchorModeEnabled = true
           this.showBanner(this.t('toasts.presetFocusModeAnchorHooks'), 'success', 2000)
           break
         case 'talqin':
@@ -14216,6 +14227,7 @@ export default {
       return verses.map(verse => this.sanitizeVerseDisplayText(verse))
     },
     toggleAnchorMode() {
+      if (!this.anchorModeEnabled && !this.requirePremiumTechniqueAccess()) return
       this.anchorModeEnabled = !this.anchorModeEnabled
 
       if (this.anchorModeEnabled) {
@@ -21518,6 +21530,7 @@ export default {
           : this.readingViewMode
       )
       this.sectionOpen = deepClone(snapshot.sectionOpen || this.sectionOpen)
+      this.enforceSubscriptionFeatureLimits()
       this.persistUiState()
     },
     applyOnboardingStep(stepIndex) {
@@ -35258,6 +35271,7 @@ export default {
       this.blurIntensity = Math.max(4, Math.min(18, Number(config.blurIntensity || this.blurIntensity || 10)))
       this.anchorModeEnabled = !!config.anchorModeEnabled
       this.anchorCount = Math.max(1, Math.min(3, Number(config.anchorCount || this.anchorCount || 2)))
+      this.enforceSubscriptionFeatureLimits()
       this.syncGlobalTheme(getSavedTheme())
     },
 
@@ -37579,6 +37593,7 @@ export default {
           this.sessionStartedAt = Number(this.centralSession.sessionStartedAt)
         }
         this.reconcilePersistedSessionCompletion()
+        this.enforceSubscriptionFeatureLimits()
       } catch (e) {
         console.error('Failed to load central session state:', e)
       }
@@ -40405,16 +40420,49 @@ export default {
     },
 
     enforceSubscriptionFeatureLimits() {
-      // All techniques and features are free — nothing to strip.
+      if (this.canUsePremiumTechniques) return
+      const stripChaining = !!(this.chainingEnabled || this.chainingMethod)
+      const stripAnchor = !!this.anchorModeEnabled
+      if (!stripChaining && !stripAnchor) return
+      this._techniqueConflictSilenced = true
+      if (stripChaining) {
+        this.chainingEnabled = false
+        this.chainingMethod = ''
+      }
+      if (stripAnchor) {
+        this.anchorModeEnabled = false
+        this.cancelAnchorHighlightFrame?.()
+        this.clearAnchorHighlights?.()
+      }
+      this._techniqueConflictSilenced = false
+      this.persistUiState()
+    },
+    promptPremiumTechniqueUpgrade() {
+      this.showBanner(
+        this.t('toasts.premiumTechniqueRequired'),
+        'info',
+        5000,
+        { key: 'open-pricing', label: this.t('pricingPage.upgradeToPro') }
+      )
     },
     requirePremiumTechniqueAccess() {
-      return true
+      if (this.canUsePremiumTechniques) return true
+      this.promptPremiumTechniqueUpgrade()
+      return false
     },
     requireProFeatureAccess() {
-      return true
+      if (this.canUseProFeatures) return true
+      this.showBanner(
+        this.t('dashboard.subscription_pro_title'),
+        'info',
+        5000,
+        { key: 'open-pricing', label: this.t('pricingPage.upgradeToPro') }
+      )
+      return false
     },
     setChainingEnabled(enabled) {
       const nextEnabled = !!enabled
+      if (nextEnabled && !this.requirePremiumTechniqueAccess()) return
       if (this.chainingEnabled === nextEnabled) return
       this.chainingEnabled = nextEnabled
       if (!nextEnabled) {
@@ -40439,6 +40487,7 @@ export default {
 
     setAnchorMode(enabled) {
       const nextEnabled = !!enabled
+      if (nextEnabled && !this.requirePremiumTechniqueAccess()) return
       if (this.anchorModeEnabled === nextEnabled) return
       this.toggleAnchorMode()
     },
@@ -41769,6 +41818,7 @@ export default {
         this.playerCompact = true
         this.applyMobileLayoutFontDefault(this.readingViewMode)
       }
+      this.enforceSubscriptionFeatureLimits()
     },
 
     persistUiState() {

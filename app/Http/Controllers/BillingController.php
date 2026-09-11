@@ -72,6 +72,8 @@ class BillingController extends Controller
         $checkoutData['client_reference_id'] = (string) $user->id;
         $checkoutData['metadata[user_id]'] = (string) $user->id;
         $checkoutData['subscription_data[metadata][user_id]'] = (string) $user->id;
+        $checkoutData['subscription_data[description]'] = __('billing.stripe_subscription_description');
+        $checkoutData['custom_text[submit][message]'] = __('billing.stripe_checkout_note');
 
         $session = $this->stripePost('checkout/sessions', $checkoutData);
 

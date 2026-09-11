@@ -9,7 +9,7 @@ Mutqin is a Quran memorisation workspace: practise short ayah ranges, use memori
 - **Backend:** PHP 8.2, Laravel 12, Sanctum (SPA cookie auth)
 - **Frontend:** Vue 3, Bootstrap 5, Laravel Mix 6
 - **Speech:** Speechmatics (server-minted realtime tokens)
-- **Payments:** Stripe checkout is wired but unused — every signed-in feature is currently free
+- **Payments:** Stripe checkout. Free includes beginner tools (Focus, Blur, Talqin). Advanced tools, Hifz planning, and AI checks need a paid plan.
 
 ## Requirements
 
@@ -131,9 +131,9 @@ Paid tiers are enforced. `hasPremiumAccess` / `hasProAccess` and `EnsureSubscrip
 
 Feature lists live in `config/billing.php`:
 
-- **Free** — Focus mode, basic sessions, limited saves
-- **Premium** — Blur, Chaining, Anchor, Hifz plan, spaced retention, adaptive revision
-- **Pro** — AI recitation check, AI memorisation checker, unlimited saves
+- **Free** — Session setup, audio controls, beginner tools (one ayah at a time, hide text, listen and repeat), limited saves
+- **Premium** — Advanced tools (Chaining, Anchor), Hifz plan, spaced retention, adaptive revision
+- **Pro** — Everything in Premium plus AI recitation check, AI memorisation checker, unlimited saves
 
 ## Frontend build
 

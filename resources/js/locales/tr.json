@@ -367,7 +367,11 @@
         },
         "howMemorisation": {
           "question": "Ezber nasıl çalışır?",
-          "answer": "Kısa bir ayet aralığı seçin ve oturana kadar çalışın. Metni gizleyebilir veya ayetleri birleştirebilirsiniz."
+          "answer": "Kısa bir ayet aralığı seçin ve oturana kadar çalışın. Oturum kurulumu, ses ve başlangıç araçları ücretsizdir."
+        },
+        "freeTools": {
+          "question": "Hangi araçlar ücretsiz?",
+          "answer": "Oturum kurulumu, ses (hız, otomatik ilerleme, gecikmeler), her seferinde bir ayet, metni yavaşça gizleme ve dinle-tekrar et ücretsizdir. Yalnızca Ayetleri birleştir ve Bellek kelimelerini vurgula Pro ister."
         },
         "whatIsPro": {
           "question": "Başlamak için Pro gerekir mi?",
@@ -379,7 +383,7 @@
         },
         "pricing": {
           "question": "Mutqin ücretsiz mi? Pro ne kadar?",
-          "answer": "Evet, ücretsiz başlayabilirsiniz. Pro daha derin inceleme, geçmiş ve planlama ekler. Fiyat yükseltmeden önce gösterilir."
+          "answer": "Evet. Oturum kurulumu, ses ve başlangıç araçları ücretsizdir. Yalnızca Ayetleri birleştir ve Bellek kelimelerini vurgula Pro ister. Pro ayrıca yapay zeka kontrolleri, sınırsız oturum ve planlama ekler. Fiyat yükseltmeden önce gösterilir."
         },
         "whoFor": {
           "question": "Mutqin kimler için?",
@@ -506,8 +510,10 @@
       "savedSessions5": "5 kaydedilmiş oturumlar",
       "savedSessionsUnlimited": "Unlimited kaydedilmiş oturumlar",
       "basicAnalytics": "Basic analitik",
-      "focusMode": "odak modu",
-      "blurringMethod": "Blurring method",
+      "focusMode": "Her seferinde bir ayet",
+      "blurringMethod": "Metni yavaşça gizle",
+      "listenAndRepeat": "Dinle ve tekrar et",
+      "audioControls": "Ses hızı, otomatik ilerleme ve gecikmeler",
       "chainingMethod": "zincirleme method",
       "anchorMode": "çapa modu",
       "manualSelfAssessment": "Manual self-assessment kayıt",
@@ -516,7 +522,7 @@
       "spacedRetention": "Spaced oturum retention",
       "adaptiveRevision": "تكيّفي revision scheduling",
       "progressTracking": "ilerleme tracking",
-      "allTechniques": "All ezber techniques",
+      "allTechniques": "Ayetleri birleştirme ve bellek kelimelerini vurgulama",
       "aiRecitation": "AI Recitation",
       "aiMemorisationChecker": "Ezber check",
       "advancedAnalysis": "Gelişmiş analysis",
@@ -837,9 +843,9 @@
     },
     "practiceTools": {
       "beginner": "Başlangıç araçları",
-      "beginnerDesc": "Ayetleri okuma, dinleme ve tekrar için basit seçenekler.",
+      "beginnerDesc": "Ücretsiz. Her seferinde bir ayet, metni gizle ve dinle-tekrar et.",
       "advanced": "Gelişmiş araçlar",
-      "advancedDesc": "Ayetleri bağlama ve anahtar kelimeleri hatırlama teknikleri."
+      "advancedDesc": "Ayetleri birleştirin ve bellek kelimelerini vurgulayın. Bu iki araç Pro ister."
     },
     "activePracticeSetup": {
       "title": "aktif practice setup",
@@ -3905,7 +3911,7 @@
     "sessionSaveFailed": "Bu oturum kaydedilemedi. Tekrar deneyin.",
     "sessionSaveSyncFailed": "Oturum bu cihazda kaydedildi. Senkron birazdan yeniden denenecek.",
     "sessionSaveLimitReached": "Kayıtlı oturum sınırına ulaşıldı ({max}). Başka kaydetmek için birini silin.",
-    "premiumTechniqueRequired": "Bu teknik Premium gerektirir. Açmak için yükseltin.",
+    "premiumTechniqueRequired": "Ayetleri birleştirme ve bellek kelimelerini vurgulama Pro ister. Açmak için yükseltin.",
     "couldNotPlayRecording": "We could not play this kayıt. Try reloading it or record again.",
     "defaultSessionLoaded": "Default oturum loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no ezber techniques.",
     "recordingRenamed": "kayıt renamed to \"{name}\".",
@@ -4037,7 +4043,11 @@
         },
         "difference": {
           "question": "Pro ne ekler?",
-          "answer": "Sınırsız kayıtlı oturum, tüm teknikler, tilavet ve ezber kontrolleri, özel hifz planı, uyarlanabilir tekrar ve çevrimdışı dinleme."
+          "answer": "Ayetleri birleştirme, bellek kelimelerini vurgulama, sınırsız kayıtlı oturum, tilavet ve ezber kontrolleri, özel hifz planı, uyarlanabilir tekrar ve çevrimdışı dinleme. Oturum kurulumu, ses ve başlangıç araçları ücretsiz kalır."
+        },
+        "freeTools": {
+          "question": "Hangi araçlar ücretsiz kalır?",
+          "answer": "Oturum kurulumu, ses (hız, otomatik ilerleme, gecikmeler), her seferinde bir ayet, metni yavaşça gizleme ve dinle-tekrar et. Yalnızca Ayetleri birleştir ve Bellek kelimelerini vurgula ücretlidir."
         },
         "yearly": {
           "question": "Yıllık faturalandırma nasıl işler?",

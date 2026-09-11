@@ -1757,7 +1757,7 @@
                       role="switch"
                       tabindex="0"
                       class="mode-radio"
-                      :class="{ active: chainingEnabled }"
+                      :class="{ active: chainingEnabled, 'is-locked': !canUsePremiumTechniques }"
                       :aria-checked="chainingEnabled ? 'true' : 'false'"
                       :aria-label="t('memorisation.a11y.useChaining')"
                       @click.stop="toggleChainingRadio"
@@ -1766,7 +1766,7 @@
                     >
                       <i
                         class="mode-radio-icon bi"
-                        :class="chainingEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
+                        :class="chainingEnabled ? 'bi-check-circle-fill' : (canUsePremiumTechniques ? 'bi-circle' : 'bi-lock')"
                         aria-hidden="true"
                       ></i>
                     </span>
@@ -1845,7 +1845,7 @@
                       role="switch"
                       tabindex="0"
                       class="mode-radio"
-                      :class="{ active: anchorModeEnabled }"
+                      :class="{ active: anchorModeEnabled, 'is-locked': !canUsePremiumTechniques }"
                       :aria-checked="anchorModeEnabled ? 'true' : 'false'"
                       :aria-label="t('memorisation.a11y.useAnchorMode')"
                       @click.stop="toggleAnchorModeRadio"
@@ -1854,7 +1854,7 @@
                     >
                       <i
                         class="mode-radio-icon bi"
-                        :class="anchorModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'"
+                        :class="anchorModeEnabled ? 'bi-check-circle-fill' : (canUsePremiumTechniques ? 'bi-circle' : 'bi-lock')"
                         aria-hidden="true"
                       ></i>
                     </span>

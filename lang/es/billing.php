@@ -35,4 +35,6 @@ return [
     'continue_free' => 'Seguir gratis',
     'monthly' => 'Mensual',
     'yearly' => 'Anual',
+    'stripe_checkout_note' => 'Pro desbloquea Unir ayahs, resaltar palabras ancla y las comprobaciones IA. La configuración de sesión, el audio y las herramientas de principiante siguen gratis.',
+    'stripe_subscription_description' => 'Pro: unir ayahs, palabras ancla, comprobaciones IA, sesiones ilimitadas.',
 ];

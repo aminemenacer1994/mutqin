@@ -74,6 +74,8 @@ class BillingCheckoutTest extends TestCase
                 && $request['metadata[user_id]'] === (string) $user->id
                 && (int) $request['subscription_data[trial_period_days]'] === 7
                 && $request['payment_method_collection'] === 'always'
+                && $request['custom_text[submit][message]'] === __('billing.stripe_checkout_note')
+                && $request['subscription_data[description]'] === __('billing.stripe_subscription_description')
                 && str_contains((string) $request['cancel_url'], '/pricing');
         });
     }

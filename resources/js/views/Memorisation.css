@@ -7055,6 +7055,10 @@ html {
   background: rgba(248, 236, 222, 0.95);
 }
 
+.mode-radio.is-locked {
+  opacity: 0.55;
+}
+
 .mode-radio.active .mode-radio-icon {
   color: #2f8f52;
   transform: scale(1.05);
