@@ -8,6 +8,7 @@ use App\Http\Middleware\SetLocale;
 use App\Models\User;
 use App\Support\AuthRedirect;
 use App\Support\ErrorReporting;
+use App\Support\Theme;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -31,8 +32,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // proxy so request()->isSecure() and URL generation stay on HTTPS.
         $middleware->trustProxies(at: '*');
 
+        // JS writes these as plaintext; encrypting them makes reload drop the choice.
         $middleware->encryptCookies(except: [
             'mutqin_locale',
+            Theme::COOKIE,
+            Theme::CHOSEN_COOKIE,
         ]);
 
         $middleware->web(prepend: [

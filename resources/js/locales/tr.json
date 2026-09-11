@@ -4007,6 +4007,22 @@
     "continueFree": "Devam et",
     "includes": "Dahil",
     "everythingInFree": "Ücretsiz plandaki her şey",
+    "freeFeatures": {
+      "sessionSetup": "Temel oturum kurulumu",
+      "quranicFonts": "Kur’an yazı tipleri",
+      "recitationChecks": "5 ücretsiz akıllı kıraat kontrolü"
+    },
+    "proFeatures": {
+      "everythingInFree": "Ücretsiz plandaki her şey",
+      "recitationChecks": "20 akıllı kıraat kontrolü",
+      "offlineAudio": "Çevrimdışı dinlemek için ses indirin",
+      "lessonPlans": "Uyarlanabilir ders planları",
+      "instantFeedback": "Kıraatiniz için anında geri bildirim",
+      "progressInsights": "Gelişmiş ilerleme içgörüleri",
+      "mistakesAndWeakAyahs": "Geçmiş hataları ve zayıf ayetleri gözden geçirin",
+      "advancedTools": "Gelişmiş pratik araçları",
+      "unlimitedSessions": "Sınırsız kayıtlı oturum"
+    },
     "buyPremium": "Premium al",
     "buyPro": "Pro’ya geç",
     "premiumDiscount": "%50 indirim",
@@ -4028,7 +4044,7 @@
       "startTitle": "Ücretsiz başla",
       "startDesc": "Bugün kısa bir aralık aç. Kart gerekmez.",
       "upgradeTitle": "Hazır olunca Pro’ya geç",
-      "upgradeDesc": "Pro sınırsız oturum, yapay zeka kontrolleri ve planlama ekler.",
+      "upgradeDesc": "Pro kıraat kontrolleri, ders planları ve sınırsız kayıtlı oturum ekler.",
       "leaveTitle": "İstediğin zaman bırak",
       "leaveDesc": "7 günlük deneme, sonra faturalandırmadan iptal."
     },
@@ -4043,11 +4059,11 @@
         },
         "difference": {
           "question": "Pro ne ekler?",
-          "answer": "Ayetleri birleştirme, bellek kelimelerini vurgulama, sınırsız kayıtlı oturum, tilavet ve ezber kontrolleri, özel hifz planı, uyarlanabilir tekrar ve çevrimdışı dinleme. Oturum kurulumu, ses ve başlangıç araçları ücretsiz kalır."
+          "answer": "Pro, Ücretsiz plandaki her şeyi, 20 akıllı kıraat kontrolünü, çevrimdışı ses indirmeyi, uyarlanabilir ders planlarını, anında geri bildirimi, ilerleme içgörülerini, geçmiş hataları ve zayıf ayetleri, gelişmiş araçları ve sınırsız kayıtlı oturumu kapsar."
         },
         "freeTools": {
           "question": "Hangi araçlar ücretsiz kalır?",
-          "answer": "Oturum kurulumu, ses (hız, otomatik ilerleme, gecikmeler), her seferinde bir ayet, metni yavaşça gizleme ve dinle-tekrar et. Yalnızca Ayetleri birleştir ve Bellek kelimelerini vurgula ücretlidir."
+          "answer": "Temel oturum kurulumu, Kur’an yazı tipleri, 5 kıraat kontrolü ve 3 kayıtlı oturum. Pro 20 kontrol, çevrimdışı ses, ders planları ve daha fazla geçmiş ekler."
         },
         "yearly": {
           "question": "Yıllık faturalandırma nasıl işler?",

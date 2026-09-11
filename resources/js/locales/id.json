@@ -4006,7 +4006,23 @@
     "currentPlan": "Paket saat ini",
     "continueFree": "Lanjutkan",
     "includes": "Termasuk",
-    "everythingInFree": "Semua yang ada di Gratis",
+    "everythingInFree": "Semua yang ada di paket Gratis",
+    "freeFeatures": {
+      "sessionSetup": "Pengaturan sesi dasar",
+      "quranicFonts": "Font Al-Qur'an",
+      "recitationChecks": "5 pemeriksaan tilawah cerdas gratis"
+    },
+    "proFeatures": {
+      "everythingInFree": "Semua yang ada di paket Gratis",
+      "recitationChecks": "20 pemeriksaan tilawah cerdas",
+      "offlineAudio": "Unduh audio untuk didengar luring",
+      "lessonPlans": "Rencana pelajaran adaptif",
+      "instantFeedback": "Umpan balik instan untuk tilawah Anda",
+      "progressInsights": "Wawasan kemajuan tingkat lanjut",
+      "mistakesAndWeakAyahs": "Tinjau kesalahan lama dan ayat lemah",
+      "advancedTools": "Alat latihan tingkat lanjut",
+      "unlimitedSessions": "Sesi tersimpan tanpa batas"
+    },
     "buyPremium": "Ambil Premium",
     "buyPro": "Ambil Pro",
     "premiumDiscount": "Diskon 50%",
@@ -4028,7 +4044,7 @@
       "startTitle": "Mulai gratis",
       "startDesc": "Buka rentang pendek hari ini. Tanpa kartu.",
       "upgradeTitle": "Naik ke Pro saat siap",
-      "upgradeDesc": "Pro menambah sesi tak terbatas, cek AI, dan perencanaan.",
+      "upgradeDesc": "Pro menambah pemeriksaan tilawah, rencana pelajaran, dan sesi tersimpan tanpa batas.",
       "leaveTitle": "Berhenti kapan saja",
       "leaveDesc": "Uji coba 7 hari, lalu batalkan dari penagihan."
     },
@@ -4043,11 +4059,11 @@
         },
         "difference": {
           "question": "Apa yang ditambah Pro?",
-          "answer": "Sambungkan ayat, sorot kata kunci, sesi tersimpan tak terbatas, cek bacaan dan hafalan, rencana hifz, revisi adaptif, dan dengar luring. Pengaturan sesi, audio, dan alat pemula tetap gratis."
+          "answer": "Pro mencakup semua yang ada di Gratis, plus 20 pemeriksaan tilawah, unduhan audio luring, rencana pelajaran adaptif, umpan balik instan, wawasan kemajuan, tinjauan kesalahan dan ayat lemah, alat lanjutan, dan sesi tersimpan tanpa batas."
         },
         "freeTools": {
           "question": "Alat mana yang tetap gratis?",
-          "answer": "Pengaturan sesi, audio (kecepatan, maju otomatis, jeda), satu ayat pada satu waktu, sembunyikan teks bertahap, dan dengar lalu ulang. Hanya Sambungkan ayat dan Sorot kata kunci yang berbayar."
+          "answer": "Pengaturan sesi dasar, font Al-Qur'an, 5 pemeriksaan tilawah, dan 3 sesi tersimpan. Pro menambah 20 pemeriksaan, unduhan audio luring, rencana pelajaran, dan lebih banyak riwayat."
         },
         "yearly": {
           "question": "Bagaimana penagihan tahunan bekerja?",

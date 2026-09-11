@@ -3993,7 +3993,23 @@
     "currentPlan": "Plan actual",
     "continueFree": "Continuar",
     "includes": "Incluido",
-    "everythingInFree": "Todo lo incluido en Gratis",
+    "everythingInFree": "Todo lo incluido en el plan Gratis",
+    "freeFeatures": {
+      "sessionSetup": "Configuración básica de sesión",
+      "quranicFonts": "Fuentes coránicas",
+      "recitationChecks": "5 comprobaciones inteligentes de recitación gratis"
+    },
+    "proFeatures": {
+      "everythingInFree": "Todo lo incluido en el plan Gratis",
+      "recitationChecks": "20 comprobaciones inteligentes de recitación",
+      "offlineAudio": "Descarga el audio para escucharlo sin conexión",
+      "lessonPlans": "Planes de lección adaptativos",
+      "instantFeedback": "Feedback instantáneo de tu recitación",
+      "progressInsights": "Información avanzada de progreso",
+      "mistakesAndWeakAyahs": "Revisa errores pasados y aleyas débiles",
+      "advancedTools": "Herramientas de práctica avanzadas",
+      "unlimitedSessions": "Sesiones guardadas ilimitadas"
+    },
     "buyPremium": "Obtener Premium",
     "buyPro": "Pasar a Pro",
     "premiumDiscount": "50% de descuento",
@@ -4015,7 +4031,7 @@
       "startTitle": "Empieza gratis",
       "startDesc": "Abre un tramo corto hoy. Sin tarjeta.",
       "upgradeTitle": "Pasa a Pro cuando quieras",
-      "upgradeDesc": "Pro añade sesiones ilimitadas, comprobaciones IA y planificación.",
+      "upgradeDesc": "Pro añade comprobaciones de recitación, planes de lección y sesiones ilimitadas.",
       "leaveTitle": "Déjalo cuando quieras",
       "leaveDesc": "Prueba de 7 días y cancelación desde facturación."
     },
@@ -4030,11 +4046,11 @@
         },
         "difference": {
           "question": "¿Qué añade Pro?",
-          "answer": "Unir ayahs, resaltar palabras ancla, sesiones ilimitadas, comprobaciones de recitación y memorización, un plan de hifz, revisión adaptativa y escucha sin conexión. La configuración de sesión, el audio y las herramientas de principiante siguen gratis."
+          "answer": "Pro incluye todo Gratis, más 20 comprobaciones de recitación, descarga de audio sin conexión, planes de lección adaptativos, feedback instantáneo, información de progreso, revisión de errores y aleyas débiles, herramientas avanzadas y sesiones ilimitadas."
         },
         "freeTools": {
           "question": "¿Qué herramientas siguen gratis?",
-          "answer": "La configuración de sesión, el audio (velocidad, avance automático, pausas), una ayah a la vez, ocultar el texto poco a poco y escuchar y repetir. Solo Unir ayahs y Resaltar palabras ancla son de pago."
+          "answer": "Configuración básica de sesión, fuentes coránicas, 5 comprobaciones de recitación y 3 sesiones guardadas. Pro añade 20 comprobaciones, audio sin conexión, planes de lección y más historial."
         },
         "yearly": {
           "question": "¿Cómo funciona el pago anual?",

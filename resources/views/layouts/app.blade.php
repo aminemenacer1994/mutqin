@@ -51,8 +51,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script>
       (function () {
-        // SSR/cookie is the source of truth (light by default). Device cache is
-        // only a fallback when the document has no theme yet — never override light.
+        // SSR paints the account theme (or the guest cookie). Do not read localStorage.
         var modes = @json(\App\Support\Theme::clientCatalog());
         var defaultTheme = @json(\App\Support\Theme::DEFAULT);
         var byId = {};
@@ -65,15 +64,7 @@
           }
           return defaultTheme;
         }
-        var theme = document.documentElement.getAttribute('data-theme') || '';
-        if (!theme) {
-          try {
-            theme = localStorage.getItem('mutqin-theme.guest')
-              || localStorage.getItem('mutqin-theme')
-              || '';
-          } catch (e) {}
-        }
-        if (!theme) theme = defaultTheme;
+        var theme = document.documentElement.getAttribute('data-theme') || defaultTheme;
         theme = normalize(theme);
         document.documentElement.setAttribute('data-theme', theme);
         var chrome = byId[theme] || byId[defaultTheme];
@@ -7084,14 +7075,23 @@
         // Theme management. Vue workspace uses resources/js/utils/theme.js;
         // keep this inline script in sync with App\Support\Theme / THEME_MODES.
         (function() {
-            function safeGet(key) {
-                try { return localStorage.getItem(key); } catch (e) { return null; }
-            }
-            function safeSet(key, value) {
-                try { localStorage.setItem(key, value); } catch (e) {}
-            }
             function safeRemove(key) {
                 try { localStorage.removeItem(key); } catch (e) {}
+            }
+            function clearThemeDeviceCache() {
+                safeRemove('mutqin-theme');
+                safeRemove('mutqin-theme-preference');
+                try {
+                    const stale = [];
+                    for (let i = 0; i < localStorage.length; i += 1) {
+                        const key = localStorage.key(i);
+                        if (!key) continue;
+                        if (key.startsWith('mutqin-theme.') || key.startsWith('mutqin-theme-preference.')) {
+                            stale.push(key);
+                        }
+                    }
+                    stale.forEach(safeRemove);
+                } catch (e) {}
             }
             const themeModes = Array.isArray(window.mutqinThemeModes) ? window.mutqinThemeModes : [];
             const defaultTheme = window.mutqinDefaultTheme || 'light';
@@ -7113,6 +7113,21 @@
                 return pack[key] || fallback || key;
             }
 
+            function readCookie(name) {
+                const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+                return match ? decodeURIComponent(match[1]) : null;
+            }
+
+            function guestChoseTheme() {
+                const explicit = readCookie('mutqin_theme_set');
+                return explicit === '1' || explicit === 'true' || explicit === 'on' || explicit === 'yes';
+            }
+
+            function knownThemeValue(value) {
+                const raw = String(value || '').toLowerCase();
+                return themeModes.some((mode) => mode.id === raw || mode.preference === raw);
+            }
+
             function themeOwnerId() {
                 if (!window.mutqinAuthCheck) return 'guest';
                 if (window.mutqinUserId != null && String(window.mutqinUserId).trim() !== '') {
@@ -7120,25 +7135,45 @@
                 }
                 return 'guest';
             }
-            function ownerThemeKey(ownerId) {
-                return `mutqin-theme.${ownerId || 'guest'}`;
-            }
-            function ownerThemePreferenceKey(ownerId) {
-                return `mutqin-theme-preference.${ownerId || 'guest'}`;
+
+            function themeCsrfHeaders() {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                };
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (csrf) headers['X-CSRF-TOKEN'] = csrf;
+                const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
+                if (match && match[1]) {
+                    try { headers['X-XSRF-TOKEN'] = decodeURIComponent(match[1]); }
+                    catch (e) { headers['X-XSRF-TOKEN'] = match[1]; }
+                }
+                return headers;
             }
 
             function persistThemeToServer(themePreference) {
                 if (!window.mutqinAuthCheck) return;
-                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                fetch('/api/profile/theme', {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ theme: themePreference }),
+                const send = function () {
+                    return fetch('/api/profile/theme', {
+                        method: 'PATCH',
+                        headers: themeCsrfHeaders(),
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ theme: themePreference }),
+                    });
+                };
+                send().then(function (response) {
+                    if (response.status !== 419) return response;
+                    return fetch('/sanctum/csrf-cookie', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+                        .then(function () { return send(); });
+                }).then(function (response) {
+                    if (!response || !response.ok) return null;
+                    return response.json().catch(function () { return null; });
+                }).then(function (payload) {
+                    if (payload && payload.theme) {
+                        window.mutqinInitialTheme = findThemeMode(payload.theme).id;
+                        window.mutqinInitialThemePreference = payload.theme;
+                    }
                 }).catch(function () {});
             }
 
@@ -7170,8 +7205,7 @@
 
                 document.documentElement.setAttribute('data-theme', normalizedTheme);
                 document.documentElement.style.colorScheme = mode.colorScheme || 'light';
-                safeSet(ownerThemeKey(ownerId), normalizedTheme);
-                safeSet(ownerThemePreferenceKey(ownerId), themePreference);
+                clearThemeDeviceCache();
                 document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;
                 if (persist) {
                     document.cookie = `mutqin_theme_set=1;path=/;max-age=31536000;samesite=lax`;
@@ -7179,11 +7213,6 @@
                 if (window.mutqinAuthCheck) {
                     window.mutqinInitialTheme = normalizedTheme;
                     window.mutqinInitialThemePreference = themePreference;
-                    safeRemove('mutqin-theme');
-                    safeRemove('mutqin-theme-preference');
-                } else {
-                    safeSet('mutqin-theme', normalizedTheme);
-                    safeSet('mutqin-theme-preference', themePreference);
                 }
                 var themeColorMeta = document.querySelector('meta[name="theme-color"]');
                 if (themeColorMeta) {
@@ -7212,16 +7241,14 @@
 
             window.mutqinSetTheme = setTheme;
 
-            // SSR/cookie wins (light by default). Device cache is a fallback only.
-            const ownerId = themeOwnerId();
-            const scopedTheme = safeGet(ownerThemeKey(ownerId));
-            const scopedPreference = safeGet(ownerThemePreferenceKey(ownerId));
-            const savedThemePreference = safeGet('mutqin-theme-preference');
-            const savedTheme = safeGet('mutqin-theme');
-            const initialTheme = window.mutqinInitialTheme
+            // Signed-in accounts use users.theme from SSR. Guests keep an explicit cookie.
+            const cookieTheme = readCookie('mutqin_theme');
+            let initialTheme = window.mutqinInitialTheme
                 || window.mutqinInitialThemePreference
-                || (!window.mutqinAuthCheck && (scopedTheme || scopedPreference || savedTheme || savedThemePreference))
                 || defaultTheme;
+            if (!window.mutqinAuthCheck && guestChoseTheme() && knownThemeValue(cookieTheme)) {
+                initialTheme = cookieTheme;
+            }
             setTheme(initialTheme, { persist: false });
 
             function bindThemeDropdown() {

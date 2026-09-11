@@ -367,11 +367,11 @@
         },
         "howMemorisation": {
           "question": "How does memorisation work?",
-          "answer": "Pick a short ayah range and practise it until it holds. Session setup, audio, and beginner tools are free."
+          "answer": "Pick a short ayah range and practise it until it holds. Basic session setup, Quranic fonts, and 5 smart recitation checks are free."
         },
         "freeTools": {
           "question": "Which tools are free?",
-          "answer": "Session setup, audio (speed, auto-advance, delays), one ayah at a time, gradually hide the text, and listen and repeat are free. Only Join ayahs together and Highlight memory words need Pro."
+          "answer": "Free includes basic session setup, Quranic fonts, 5 smart recitation checks, and 3 saved sessions. Pro adds 20 smart recitation checks, offline audio downloads, lesson plans, and more history."
         },
         "whatIsPro": {
           "question": "Do I need Pro to start?",
@@ -383,7 +383,7 @@
         },
         "pricing": {
           "question": "Is Mutqin free? What does Pro cost?",
-          "answer": "Yes. Session setup, audio, and beginner tools are free. Only Join ayahs together and Highlight memory words need Pro. Pro also adds AI checks, unlimited saves, and planning. The price is shown before you upgrade."
+          "answer": "Yes. Free covers session setup, Quranic fonts, and 5 smart recitation checks. Pro adds 20 smart recitation checks, offline audio downloads, adaptive lesson plans, progress insights, and unlimited saved sessions. The price is shown before you upgrade."
         },
         "whoFor": {
           "question": "Who is Mutqin for?",
@@ -3991,7 +3991,7 @@
   },
   "pricingPage": {
     "title": "Choose your plan",
-    "subtitle": "Start free. Move to Pro when you want more feedback, history, and planning.",
+    "subtitle": "Start free. Move to Pro when you want more feedback, checks, and history.",
     "billingToggleLabel": "Billing cycle",
     "annualSavings": "Save 25%",
     "freeForever": "Free forever",
@@ -4006,7 +4006,23 @@
     "currentPlan": "Current plan",
     "continueFree": "Continue",
     "includes": "Included",
-    "everythingInFree": "Everything in Free",
+    "everythingInFree": "Everything in the Free plan",
+    "freeFeatures": {
+      "sessionSetup": "Basic session setup",
+      "quranicFonts": "Quranic fonts",
+      "recitationChecks": "5 free smart recitation checks"
+    },
+    "proFeatures": {
+      "everythingInFree": "Everything in the Free plan",
+      "recitationChecks": "20 smart recitation checks",
+      "offlineAudio": "Download audio to listen offline",
+      "lessonPlans": "Adaptive lesson plans",
+      "instantFeedback": "Instant feedback on your recitation",
+      "progressInsights": "Advanced progress insights",
+      "mistakesAndWeakAyahs": "Review past mistakes and weak ayahs",
+      "advancedTools": "Advanced practice tools",
+      "unlimitedSessions": "Unlimited saved sessions"
+    },
     "buyPremium": "Get Premium",
     "buyPro": "Get Pro",
     "premiumDiscount": "50% off",
@@ -4032,7 +4048,7 @@
       "startTitle": "Start free",
       "startDesc": "Open a short range today. No card needed.",
       "upgradeTitle": "Upgrade when ready",
-      "upgradeDesc": "Pro adds unlimited sessions, AI checks, and planning.",
+      "upgradeDesc": "Pro adds recitation checks, lesson plans, and unlimited saved sessions.",
       "leaveTitle": "Leave anytime",
       "leaveDesc": "A 7-day trial, then cancel from billing if you want."
     },
@@ -4047,11 +4063,11 @@
         },
         "difference": {
           "question": "What does Pro add?",
-          "answer": "Join ayahs together, highlight memory words, unlimited saved sessions, recitation and memorisation checks, a custom Hifz plan, adaptive revision, and offline listening. Session setup, audio, and beginner tools stay free."
+          "answer": "Everything in the Free plan, plus 20 smart recitation checks, download audio to listen offline, adaptive lesson plans, instant feedback on your recitation, advanced progress insights, review of past mistakes and weak ayahs, advanced practice tools, and unlimited saved sessions."
         },
         "freeTools": {
           "question": "Which tools stay free?",
-          "answer": "Session setup, audio (speed, auto-advance, delays), one ayah at a time, gradually hide the text, and listen and repeat. Only Join ayahs together and Highlight memory words are paid."
+          "answer": "Basic session setup, Quranic fonts, 5 smart recitation checks, and 3 saved sessions. Pro adds 20 smart recitation checks, offline audio downloads, adaptive lesson plans, progress insights, and unlimited saved sessions."
         },
         "yearly": {
           "question": "How does yearly billing work?",

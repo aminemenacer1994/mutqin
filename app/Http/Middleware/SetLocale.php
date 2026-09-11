@@ -46,7 +46,7 @@ class SetLocale
         }
 
         if ($response instanceof Response) {
-            $response->headers->setCookie(cookie(Theme::COOKIE, $themePreference, 60 * 24 * 365, null, null, false, false, false, 'lax'));
+            $this->queueThemeCookies($response, $request, $themePreference);
         }
 
         return $response;
@@ -83,18 +83,31 @@ class SetLocale
 
         // Guests stay on light unless they actually picked a mode (mutqin_theme_set).
         // Leftover sepia cookies/session from an older default must not stick.
-        $explicit = $request->cookie(Theme::CHOSEN_COOKIE);
-        $choseTheme = $explicit === '1'
-            || $explicit === 'true'
-            || $explicit === 'on'
-            || $explicit === 'yes';
-
-        if (! $choseTheme) {
+        if (! $this->guestExplicitlyChoseTheme($request)) {
             return Theme::DEFAULT_PREFERENCE;
         }
 
         $candidate = $request->cookie(Theme::COOKIE) ?: Theme::DEFAULT_PREFERENCE;
 
         return Theme::normalizePreference((string) $candidate);
+    }
+
+    private function guestExplicitlyChoseTheme(Request $request): bool
+    {
+        $explicit = $request->cookie(Theme::CHOSEN_COOKIE);
+
+        return $explicit === '1'
+            || $explicit === 'true'
+            || $explicit === 'on'
+            || $explicit === 'yes';
+    }
+
+    private function queueThemeCookies(Response $response, Request $request, string $themePreference): void
+    {
+        $response->headers->setCookie(cookie(Theme::COOKIE, $themePreference, 60 * 24 * 365, null, null, false, false, false, 'lax'));
+
+        if (! $request->user() && $this->guestExplicitlyChoseTheme($request)) {
+            $response->headers->setCookie(cookie(Theme::CHOSEN_COOKIE, '1', 60 * 24 * 365, null, null, false, false, false, 'lax'));
+        }
     }
 }

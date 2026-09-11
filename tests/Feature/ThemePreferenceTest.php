@@ -12,22 +12,42 @@ class ThemePreferenceTest extends TestCase
 
     public function test_guest_leftover_sepia_cookie_does_not_override_light_default(): void
     {
-        $this->withCookie('mutqin_theme', 'sepia-mode')
+        $this->withUnencryptedCookie('mutqin_theme', 'sepia-mode')
             ->withSession(['mutqin_theme' => 'sepia-mode'])
             ->get(route('home'))
             ->assertOk()
             ->assertSee('data-theme="light"', false)
-            ->assertCookie('mutqin_theme', 'light-mode');
+            ->assertCookie('mutqin_theme', 'light-mode', false);
     }
 
     public function test_guest_keeps_sepia_after_explicitly_choosing_it(): void
     {
-        $this->withCookie('mutqin_theme', 'sepia-mode')
-            ->withCookie('mutqin_theme_set', '1')
+        // Browser JS writes plaintext cookies; they must stay readable after reload.
+        $this->withUnencryptedCookie('mutqin_theme', 'sepia-mode')
+            ->withUnencryptedCookie('mutqin_theme_set', '1')
             ->get(route('home'))
             ->assertOk()
             ->assertSee('data-theme="sepia"', false)
-            ->assertCookie('mutqin_theme', 'sepia-mode');
+            ->assertCookie('mutqin_theme', 'sepia-mode', false)
+            ->assertCookie('mutqin_theme_set', '1', false);
+    }
+
+    public function test_guest_javascript_theme_cookies_survive_reload_unencrypted(): void
+    {
+        $response = $this->withUnencryptedCookie('mutqin_theme', 'dark-mode')
+            ->withUnencryptedCookie('mutqin_theme_set', '1')
+            ->get(route('home'));
+
+        $response->assertOk()
+            ->assertSee('data-theme="dark"', false)
+            ->assertCookie('mutqin_theme', 'dark-mode', false)
+            ->assertCookie('mutqin_theme_set', '1', false);
+
+        $themeCookie = collect($response->headers->getCookies())
+            ->first(static fn ($cookie) => $cookie->getName() === 'mutqin_theme');
+
+        $this->assertNotNull($themeCookie);
+        $this->assertSame('dark-mode', $themeCookie->getValue());
     }
 
     public function test_registration_persists_light_theme_as_default(): void
@@ -74,7 +94,7 @@ class ThemePreferenceTest extends TestCase
             ->get(route('home'))
             ->assertOk()
             ->assertSee('data-theme="dark"', false)
-            ->assertCookie('mutqin_theme', 'dark-mode');
+            ->assertCookie('mutqin_theme', 'dark-mode', false);
     }
 
     public function test_colour_mode_dropdown_lists_existing_themes_only(): void
@@ -140,6 +160,32 @@ class ThemePreferenceTest extends TestCase
             ->assertSee('data-theme="light"', false);
     }
 
+    public function test_updating_one_user_theme_does_not_change_another(): void
+    {
+        $sepiaUser = User::factory()->create(['theme' => 'light-mode']);
+        $darkUser = User::factory()->create(['theme' => 'dark-mode']);
+
+        $this->actingAs($sepiaUser)
+            ->patchJson(route('api.profile.theme'), [
+                'theme' => 'sepia',
+            ])
+            ->assertOk()
+            ->assertJson(['theme' => 'sepia-mode']);
+
+        $this->assertSame('sepia-mode', $sepiaUser->fresh()->theme);
+        $this->assertSame('dark-mode', $darkUser->fresh()->theme);
+
+        $this->actingAs($darkUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-theme="dark"', false);
+
+        $this->actingAs($sepiaUser)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-theme="sepia"', false);
+    }
+
     public function test_each_user_keeps_their_own_theme(): void
     {
         $sepiaUser = User::factory()->create(['theme' => 'sepia-mode']);
@@ -168,7 +214,7 @@ class ThemePreferenceTest extends TestCase
             ->get(route('home'))
             ->assertOk()
             ->assertSee('data-theme="light"', false)
-            ->assertCookie('mutqin_theme', 'light-mode');
+            ->assertCookie('mutqin_theme', 'light-mode', false);
     }
 
     public function test_logout_resets_shared_theme_cookie_to_light(): void
@@ -181,6 +227,6 @@ class ThemePreferenceTest extends TestCase
             ->withCookie('mutqin_theme', 'dark-mode')
             ->post(route('logout'))
             ->assertRedirect(route('memorisation'))
-            ->assertCookie('mutqin_theme', 'light-mode');
+            ->assertCookie('mutqin_theme', 'light-mode', false);
     }
 }

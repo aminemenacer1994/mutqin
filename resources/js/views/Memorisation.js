@@ -9902,10 +9902,14 @@ export default {
           this.refreshHifzJourneyState()
           return
         }
-        // Only mirror this account's theme bucket — ignore other users / legacy shared keys.
-        if (event?.key && !isCurrentOwnerThemeStorageKey(event.key)) return
-        const nextTheme = event?.newValue || document.documentElement.getAttribute('data-theme') || DEFAULT_THEME
-        this.syncGlobalTheme(nextTheme)
+        // Theme is stored on the user row. Ignore every browser theme key so
+        // accounts cannot inherit or overwrite each other from localStorage.
+        if (isCurrentOwnerThemeStorageKey(event?.key)
+          || event?.key === 'mutqin-theme'
+          || event?.key === 'mutqin-theme-preference'
+          || String(event?.key || '').startsWith('mutqin-theme')) {
+          return
+        }
       }
       window.addEventListener('mutqin:theme-change', this.handleGlobalThemeChange)
       window.addEventListener('mutqin:locale-change', this.handleLocaleChange)

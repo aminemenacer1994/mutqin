@@ -44,13 +44,6 @@
             </button>
           </div>
           <p class="pricing-assurance">{{ t('pricingPage.switchAssurance') }}</p>
-          <p v-if="!isAuthenticated" class="pricing-checkout-note">
-            <i class="bi bi-info-circle" aria-hidden="true"></i>
-            <span>
-              {{ t('pricingPage.checkoutNote') }}
-              <a :href="signInHref">{{ t('pricingPage.signInToCheckout') }}</a>
-            </span>
-          </p>
         </div>
 
         <div class="pricing-grid">
@@ -229,7 +222,6 @@ export default {
     const billingBusy = ref(false);
     let revealObserver = null;
     const checkoutPlanKey = computed(() => (billingCycle.value === 'annual' ? 'pro_yearly' : 'pro_monthly'));
-    const signInHref = computed(() => `/login?plan=${checkoutPlanKey.value}`);
     const registerHref = computed(() => `/register?plan=${checkoutPlanKey.value}`);
 
     const startFreeHref = computed(() => (window.mutqinAuthCheck ? '/memorisation' : '/register'));
@@ -369,13 +361,11 @@ export default {
           note: '',
           badge: '',
           features: [
+            feature('pricingPage.freeFeatures.sessionSetup'),
+            feature('pricingPage.freeFeatures.quranicFonts'),
+            feature('pricingPage.freeFeatures.recitationChecks'),
             feature('homepage.planFeatures.savedSessions3'),
-            feature('homepage.planFeatures.sessionSetup'),
-            feature('homepage.planFeatures.basicAnalytics'),
-            feature('homepage.planFeatures.focusMode'),
-            feature('homepage.planFeatures.blurringMethod'),
-            feature('homepage.planFeatures.listenAndRepeat'),
-            feature('homepage.planFeatures.audioControls')
+            feature('homepage.planFeatures.basicAnalytics')
           ],
           featured: false,
           ctaType: 'link',
@@ -395,15 +385,15 @@ export default {
           note: annual ? t('pricingPage.billedAnnually', { amount: billingDisplay.proYearlyTotal, symbol: currencySymbol }) : '',
           badge: t('pricingPage.popular'),
           features: [
-            { label: t('pricingPage.everythingInFree'), highlight: true },
-            feature('homepage.planFeatures.savedSessionsUnlimited'),
-            feature('homepage.planFeatures.allTechniques'),
-            feature('homepage.planFeatures.aiRecitation'),
-            feature('homepage.planFeatures.aiMemorisationChecker'),
-            feature('homepage.planFeatures.hifzPlan'),
-            feature('homepage.planFeatures.adaptiveRevision'),
-            feature('homepage.planFeatures.offlineDownloads'),
-            feature('homepage.planFeatures.advancedAnalysis')
+            { label: t('pricingPage.proFeatures.everythingInFree'), highlight: true },
+            feature('pricingPage.proFeatures.recitationChecks'),
+            feature('pricingPage.proFeatures.offlineAudio'),
+            feature('pricingPage.proFeatures.lessonPlans'),
+            feature('pricingPage.proFeatures.instantFeedback'),
+            feature('pricingPage.proFeatures.progressInsights'),
+            feature('pricingPage.proFeatures.mistakesAndWeakAyahs'),
+            feature('pricingPage.proFeatures.advancedTools'),
+            feature('pricingPage.proFeatures.unlimitedSessions')
           ],
           featured: true,
           guaranteeTitle: t('pricingPage.trialBadge'),
@@ -459,7 +449,6 @@ export default {
       billingBusy,
       currentTheme,
       currencySymbol,
-      signInHref,
       highlights,
       faqItems,
       plans,

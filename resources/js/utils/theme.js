@@ -100,20 +100,6 @@ export function toThemePreference(value = DEFAULT_THEME) {
   return getThemeMode(value).preference;
 }
 
-function safeGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function safeSet(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {}
-}
-
 function safeRemove(key) {
   try {
     localStorage.removeItem(key);
@@ -175,12 +161,44 @@ function rememberLiveAccountTheme(normalizedTheme, themePreference) {
   window.mutqinInitialThemePreference = themePreference;
 }
 
-function readOwnerScopedTheme(ownerId = getThemeOwnerId()) {
-  const scopedTheme = safeGet(themeStorageKeyForOwner(ownerId));
-  if (scopedTheme) return normalizeThemeToken(scopedTheme);
-  const scopedPreference = safeGet(themePreferenceStorageKeyForOwner(ownerId));
-  if (scopedPreference) return normalizeThemeToken(scopedPreference);
-  return null;
+function themeCsrfHeaders() {
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  };
+  if (typeof document === 'undefined') return headers;
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  if (csrf) headers['X-CSRF-TOKEN'] = csrf;
+
+  const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
+  if (match?.[1]) {
+    try {
+      headers['X-XSRF-TOKEN'] = decodeURIComponent(match[1]);
+    } catch {
+      headers['X-XSRF-TOKEN'] = match[1];
+    }
+  }
+  return headers;
+}
+
+/** Drop leftover theme keys so one account cannot inherit another device cache. */
+export function clearThemeDeviceCache() {
+  safeRemove(THEME_STORAGE_KEY);
+  safeRemove(THEME_PREFERENCE_KEY);
+  if (typeof localStorage === 'undefined') return;
+  try {
+    const stale = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (key.startsWith(`${THEME_STORAGE_KEY}.`) || key.startsWith(`${THEME_PREFERENCE_KEY}.`)) {
+        stale.push(key);
+      }
+    }
+    stale.forEach(safeRemove);
+  } catch {}
 }
 
 export function getSavedTheme() {
@@ -191,28 +209,10 @@ export function getSavedTheme() {
     if (htmlTheme) return normalizeThemeToken(htmlTheme);
   }
 
-  const ownerId = getThemeOwnerId();
-
-  // Authenticated: account theme from the server — never shared-device localStorage/cookie.
+  // Signed-in: users.theme from SSR — never localStorage or another person's cookie.
   if (isAuthenticated()) {
-    const serverTheme = getServerInitialTheme();
-    if (serverTheme) return serverTheme;
-
-    const scoped = readOwnerScopedTheme(ownerId);
-    if (scoped) return scoped;
-
-    return DEFAULT_THEME;
+    return getServerInitialTheme() || DEFAULT_THEME;
   }
-
-  // Guests: owner-scoped cache, then legacy unscoped keys, cookie, server SSR, default.
-  const scoped = readOwnerScopedTheme(ownerId);
-  if (scoped) return scoped;
-
-  const savedTheme = safeGet(THEME_STORAGE_KEY);
-  if (savedTheme) return normalizeThemeToken(savedTheme);
-
-  const savedPreference = safeGet(THEME_PREFERENCE_KEY);
-  if (savedPreference) return normalizeThemeToken(savedPreference);
 
   const cookieTheme = readCookieTheme();
   if (cookieTheme) return normalizeThemeToken(cookieTheme);
@@ -225,20 +225,26 @@ export function getSavedTheme() {
 
 async function persistThemeToServer(themePreference) {
   if (typeof window === 'undefined' || !window.mutqinAuthCheck) return;
+  const send = () => fetch('/api/profile/theme', {
+    method: 'PATCH',
+    headers: themeCsrfHeaders(),
+    credentials: 'same-origin',
+    body: JSON.stringify({ theme: themePreference }),
+  });
+
   try {
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    await fetch('/api/profile/theme', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
-      },
-      credentials: 'same-origin',
-      body: JSON.stringify({ theme: themePreference }),
-    });
+    let response = await send();
+    if (response.status === 419) {
+      await fetch('/sanctum/csrf-cookie', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+      response = await send();
+    }
+    if (!response.ok) return;
+    const payload = await response.json().catch(() => null);
+    if (payload?.theme) {
+      rememberLiveAccountTheme(normalizeThemeToken(payload.theme), String(payload.theme));
+    }
   } catch {
-    // non-blocking: cookie/localStorage still persist preference
+    // Same-page UI already applied; the next successful PATCH or SSR reload heals.
   }
 }
 
@@ -257,20 +263,11 @@ export function setGlobalTheme(theme, options = {}) {
     applyThemeChrome(normalizedTheme);
   }
 
-  // Per-owner device cache — User A never overwrites User B's bucket.
-  safeSet(themeStorageKeyForOwner(ownerId), normalizedTheme);
-  safeSet(themePreferenceStorageKeyForOwner(ownerId), themePreference);
+  // Theme is account-owned (users.theme) or a guest cookie — never localStorage.
+  clearThemeDeviceCache();
 
   if (isAuthenticated()) {
-    // Keep live account snapshot in sync so getSavedTheme/cycle stay stable.
     rememberLiveAccountTheme(normalizedTheme, themePreference);
-    // Drop legacy shared keys so the next guest/account cannot inherit them.
-    safeRemove(THEME_STORAGE_KEY);
-    safeRemove(THEME_PREFERENCE_KEY);
-  } else {
-    // Guests keep a legacy mirror for older FOUC helpers, still cleared on logout.
-    safeSet(THEME_STORAGE_KEY, normalizedTheme);
-    safeSet(THEME_PREFERENCE_KEY, themePreference);
   }
 
   if (persist) {

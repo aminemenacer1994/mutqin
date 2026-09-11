@@ -15,6 +15,7 @@ import {
   themeStorageKeyForOwner,
   SHARED_THEME_STORAGE_KEYS,
   cycleGlobalTheme,
+  clearThemeDeviceCache,
 } from '../../resources/js/utils/theme.js'
 import { clearSharedMutqinBrowserResidue } from '../../resources/js/utils/mutqinStorageKeys.js'
 
@@ -67,18 +68,33 @@ window.mutqinUserId = null
 window.mutqinInitialTheme = null
 window.mutqinInitialThemePreference = null
 window.dispatchEvent = () => {}
+globalThis.fetch = async () => ({
+  ok: true,
+  status: 200,
+  json: async () => ({ theme: 'dark-mode' }),
+})
 
 assert.equal(themeStorageKeyForOwner(42), 'mutqin-theme.42')
 assert.equal(themePreferenceStorageKeyForOwner('guest'), 'mutqin-theme-preference.guest')
 assert.deepEqual(SHARED_THEME_STORAGE_KEYS, ['mutqin-theme', 'mutqin-theme-preference'])
 
-// Guest A preference stays in guest bucket
+// Guest preference is a cookie, never localStorage.
 document.documentElement.setAttribute('data-theme', '')
 setGlobalTheme('dark', { dispatchEvent: false, persist: false })
-assert.equal(store.get('mutqin-theme.guest'), 'dark')
-assert.equal(store.get('mutqin-theme'), 'dark', 'guest still mirrors legacy key')
+assert.equal(store.has('mutqin-theme.guest'), false, 'guest must not write localStorage')
+assert.equal(store.has('mutqin-theme'), false, 'guest must not write shared theme keys')
+assert.match(cookieBag.value, /mutqin_theme=dark-mode/)
 
-// Switch to user 7 — must not read guest dark; uses account theme
+// Leftover device cache is wiped so it cannot overlap the next account.
+store.set('mutqin-theme', 'dark')
+store.set('mutqin-theme.guest', 'dark')
+store.set('mutqin-theme.99', 'sepia')
+clearThemeDeviceCache()
+assert.equal(store.has('mutqin-theme'), false)
+assert.equal(store.has('mutqin-theme.guest'), false)
+assert.equal(store.has('mutqin-theme.99'), false)
+
+// Switch to user 7 — must use account theme, never leftover storage/cookie.
 document.documentElement.setAttribute('data-theme', '')
 window.mutqinAuthCheck = true
 window.mutqinUserId = 7
@@ -87,6 +103,7 @@ window.mutqinInitialThemePreference = 'light-mode'
 store.set('mutqin-theme', 'dark')
 store.set('mutqin-theme.guest', 'dark')
 store.set('mutqin-theme.99', 'sepia')
+cookieBag.value = 'mutqin_theme=dark-mode; mutqin_theme_set=1'
 
 assert.equal(getThemeOwnerId(), '7')
 assert.equal(getSavedTheme(), 'light', 'auth users follow account theme, not shared/guest storage')
@@ -95,10 +112,10 @@ assert.equal(isCurrentOwnerThemeStorageKey('mutqin-theme.99'), false)
 assert.equal(isCurrentOwnerThemeStorageKey('mutqin-theme'), false)
 
 setGlobalTheme('sepia', { dispatchEvent: false, persist: false })
-assert.equal(store.get('mutqin-theme.7'), 'sepia')
-assert.equal(store.has('mutqin-theme'), false, 'auth writes must clear legacy shared keys')
-assert.equal(store.get('mutqin-theme.guest'), 'dark', 'other owners untouched')
-assert.equal(store.get('mutqin-theme.99'), 'sepia', 'other owners untouched')
+assert.equal(store.has('mutqin-theme.7'), false, 'auth writes must not use localStorage')
+assert.equal(store.has('mutqin-theme'), false, 'auth writes must clear leftover shared keys')
+assert.equal(store.has('mutqin-theme.guest'), false)
+assert.equal(store.has('mutqin-theme.99'), false)
 assert.equal(window.mutqinInitialTheme, 'sepia')
 
 // Cycle advances from live DOM, not a stale snapshot
@@ -107,21 +124,18 @@ window.mutqinInitialTheme = 'light'
 assert.equal(cycleGlobalTheme(), 'dark')
 assert.equal(document.documentElement.getAttribute('data-theme'), 'dark')
 
-// User 99 keeps their own bucket when “logged in”
+// User 99 keeps their own account snapshot when “logged in”
 document.documentElement.setAttribute('data-theme', '')
 window.mutqinUserId = 99
 window.mutqinInitialTheme = 'sepia'
 assert.equal(getSavedTheme(), 'sepia')
-assert.equal(store.get('mutqin-theme.7'), 'dark')
 
-// Logout residue clear drops shared theme keys but keeps per-user buckets
+// Logout residue clear drops shared theme keys
 store.set('mutqin-theme', 'light')
 store.set('mutqin-theme-preference', 'light-mode')
 clearSharedMutqinBrowserResidue({ localStorage: globalThis.localStorage, sessionStorage: null })
 assert.equal(store.has('mutqin-theme'), false)
 assert.equal(store.has('mutqin-theme-preference'), false)
-assert.equal(store.get('mutqin-theme.7'), 'dark')
-assert.equal(store.get('mutqin-theme.99'), 'sepia')
 
 assert.equal(DEFAULT_THEME, 'light')
 assert.deepEqual(THEME_MODE_IDS, ['light', 'sepia', 'dark'])
@@ -131,9 +145,10 @@ assert.equal(THEME_MODES.length, 3)
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const blade = readFileSync(join(root, 'resources/views/layouts/app.blade.php'), 'utf8')
-assert.match(blade, /ownerThemeKey|mutqin-theme\.\$\{/)
-assert.match(blade, /safeRemove\('mutqin-theme'\)/)
+assert.match(blade, /clearThemeDeviceCache/)
+assert.match(blade, /X-XSRF-TOKEN/)
 assert.match(blade, /window\.mutqinInitialTheme/)
+assert.doesNotMatch(blade, /safeSet\(ownerThemeKey/)
 
 const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
 assert.match(memorisation, /isCurrentOwnerThemeStorageKey/)
@@ -146,7 +161,7 @@ const setLocale = readFileSync(join(root, 'app/Http/Middleware/SetLocale.php'), 
 assert.match(setLocale, /Signed-in accounts never inherit another person's cookie\/session/)
 
 const login = readFileSync(join(root, 'app/Http/Controllers/Auth/LoginController.php'), 'utf8')
-assert.match(login, /withCookie\(cookie\('mutqin_theme', Theme::DEFAULT_PREFERENCE/)
+assert.match(login, /withCookie\(cookie\(Theme::COOKIE, Theme::DEFAULT_PREFERENCE/)
 assert.match(login, /session\(\)->put\('mutqin_theme', \$theme\)/)
 
 console.log('theme-owner-isolation: ok')

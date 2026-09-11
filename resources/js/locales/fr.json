@@ -4007,6 +4007,22 @@
     "continueFree": "Continuer",
     "includes": "Inclus",
     "everythingInFree": "Tout ce qui est inclus dans Gratuit",
+    "freeFeatures": {
+      "sessionSetup": "Configuration de session de base",
+      "quranicFonts": "Polices coraniques",
+      "recitationChecks": "5 contrôles de récitation intelligents gratuits"
+    },
+    "proFeatures": {
+      "everythingInFree": "Tout ce qui est inclus dans Gratuit",
+      "recitationChecks": "20 contrôles de récitation intelligents",
+      "offlineAudio": "Télécharger l’audio pour écouter hors ligne",
+      "lessonPlans": "Plans de leçon adaptatifs",
+      "instantFeedback": "Retour immédiat sur votre récitation",
+      "progressInsights": "Analyses de progression avancées",
+      "mistakesAndWeakAyahs": "Revoir les erreurs et les ayahs faibles",
+      "advancedTools": "Outils de pratique avancés",
+      "unlimitedSessions": "Sessions enregistrées illimitées"
+    },
     "buyPremium": "Prendre Premium",
     "buyPro": "Passer à Pro",
     "premiumDiscount": "−50 %",
@@ -4028,7 +4044,7 @@
       "startTitle": "Commencez gratuitement",
       "startDesc": "Ouvrez un court passage aujourd’hui. Sans carte.",
       "upgradeTitle": "Passez à Pro quand vous voulez",
-      "upgradeDesc": "Pro ajoute des sessions illimitées, des contrôles IA et la planification.",
+      "upgradeDesc": "Pro ajoute des contrôles de récitation, des plans de leçon et des sessions illimitées.",
       "leaveTitle": "Partez quand vous voulez",
       "leaveDesc": "Essai de 7 jours, puis annulation depuis la facturation."
     },
@@ -4043,11 +4059,11 @@
         },
         "difference": {
           "question": "Que ajoute Pro ?",
-          "answer": "Relier les ayahs, surligner les mots-ancres, sessions illimitées, contrôles de récitation et de mémorisation, un plan de hifz, une révision adaptative et l’écoute hors ligne. La configuration de session, l’audio et les outils débutants restent gratuits."
+          "answer": "Pro inclut tout Gratuit, plus 20 contrôles de récitation, le téléchargement audio hors ligne, des plans de leçon adaptatifs, un retour immédiat, des analyses de progression, la relecture des erreurs et ayahs faibles, des outils avancés et des sessions illimitées."
         },
         "freeTools": {
           "question": "Quels outils restent gratuits ?",
-          "answer": "La configuration de session, l’audio (vitesse, avance automatique, pauses), une ayah à la fois, masquer le texte progressivement et écouter puis répéter. Seuls Relier les ayahs et Surligner les mots-ancres sont payants."
+          "answer": "La configuration de session de base, les polices coraniques, 5 contrôles de récitation et 3 sessions enregistrées. Pro ajoute 20 contrôles, le téléchargement audio hors ligne, des plans de leçon et plus d’historique."
         },
         "yearly": {
           "question": "Comment fonctionne l’abonnement annuel ?",
