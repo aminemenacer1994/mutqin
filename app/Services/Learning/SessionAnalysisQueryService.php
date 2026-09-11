@@ -35,7 +35,15 @@ class SessionAnalysisQueryService
             ->orderByDesc('ended_at')
             ->orderByDesc('id')
             ->limit(100)
-            ->get();
+            ->get([
+                'id',
+                'status',
+                'surah_number',
+                'ayah_number',
+                'metadata',
+                'ended_at',
+                'last_activity_at',
+            ]);
 
         $flags = $this->analysisFlagsForSessions($user, $sessions);
 
@@ -155,34 +163,27 @@ class SessionAnalysisQueryService
         }
 
         $fromAssessments = MemorisationAssessment::query()
+            ->select('user_session_id as session_id')
             ->where('user_id', $user->id)
             ->whereIn('user_session_id', $ids)
             ->where('status', MemorisationAssessment::STATUS_COMPLETED)
-            ->distinct()
-            ->pluck('user_session_id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+            ->whereNotNull('user_session_id');
 
         $fromAttempts = AiReciteAttempt::query()
+            ->select('user_session_id as session_id')
             ->where('user_id', $user->id)
             ->whereIn('user_session_id', $ids)
-            ->distinct()
-            ->pluck('user_session_id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+            ->whereNotNull('user_session_id');
 
         $fromRecommendations = SessionRecommendation::query()
+            ->select('source_session_id as session_id')
             ->where('user_id', $user->id)
             ->whereIn('source_session_id', $ids)
-            ->whereNotNull('ai_assessment')
-            ->distinct()
-            ->pluck('source_session_id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+            ->whereNotNull('ai_assessment');
 
         $flags = [];
-        foreach (array_unique(array_merge($fromAssessments, $fromAttempts, $fromRecommendations)) as $id) {
-            $flags[$id] = true;
+        foreach ($fromAssessments->union($fromAttempts)->union($fromRecommendations)->pluck('session_id') as $id) {
+            $flags[(int) $id] = true;
         }
 
         return $flags;
@@ -214,6 +215,16 @@ class SessionAnalysisQueryService
      */
     public function dashboardStats(User $user): array
     {
+        $attemptColumns = [
+            'id',
+            'accuracy_percent',
+            'ayah_range',
+            'weak_words',
+            'word_statuses',
+            'peek_used',
+            'created_at',
+        ];
+
         $attempts = AiReciteAttempt::query()
             ->where('user_id', $user->id)
             ->where('source', AiReciteAttempt::SOURCE_DASHBOARD)
@@ -221,14 +232,14 @@ class SessionAnalysisQueryService
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(200)
-            ->get();
+            ->get($attemptColumns);
 
         $latest = AiReciteAttempt::query()
             ->where('user_id', $user->id)
             ->where('source', AiReciteAttempt::SOURCE_DASHBOARD)
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->first();
+            ->first(['id', 'ayah_range', 'accuracy_percent', 'band', 'created_at']);
 
         $accuracies = $attempts
             ->pluck('accuracy_percent')

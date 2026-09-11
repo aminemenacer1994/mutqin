@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Schema;
 
 class HifzPlanController extends Controller
 {
+    private static ?bool $tableReady = null;
+
     public function show(Request $request): JsonResponse
     {
-        if (! Schema::hasTable('hifz_plans')) {
+        if (! $this->hifzPlansTableReady()) {
             return response()->json([
                 'plan' => null,
                 'meta' => null,
@@ -21,6 +23,7 @@ class HifzPlanController extends Controller
         }
 
         $plan = HifzPlan::query()
+            ->select(['id', 'client_id', 'status', 'config', 'updated_at'])
             ->where('user_id', $request->user()->id)
             ->first();
 
@@ -37,7 +40,7 @@ class HifzPlanController extends Controller
 
     public function upsert(Request $request): JsonResponse
     {
-        if (! Schema::hasTable('hifz_plans')) {
+        if (! $this->hifzPlansTableReady()) {
             return response()->json([
                 'message' => __('ui.api_hifz_plan_not_ready'),
             ], 503);
@@ -74,7 +77,7 @@ class HifzPlanController extends Controller
 
     public function destroy(Request $request): JsonResponse
     {
-        if (! Schema::hasTable('hifz_plans')) {
+        if (! $this->hifzPlansTableReady()) {
             return response()->json(['deleted' => true]);
         }
 
@@ -83,5 +86,10 @@ class HifzPlanController extends Controller
             ->delete();
 
         return response()->json(['deleted' => true]);
+    }
+
+    private function hifzPlansTableReady(): bool
+    {
+        return self::$tableReady ??= Schema::hasTable('hifz_plans');
     }
 }

@@ -283,6 +283,13 @@ class AdminDashboardTest extends TestCase
             ->assertOk();
         $this->assertNotContains('idle@example.com', collect($today->json('users'))->pluck('email')->all());
 
+        $inactive = $this->actingAs($admin)
+            ->getJson('/api/admin/users?activity=inactive_30d')
+            ->assertOk();
+        $inactiveEmails = collect($inactive->json('users'))->pluck('email')->all();
+        $this->assertContains('idle@example.com', $inactiveEmails);
+        $this->assertNotContains('active@example.com', $inactiveEmails);
+
         $this->actingAs($admin)
             ->postJson('/api/admin/users/bulk', [
                 'action' => 'update_status',

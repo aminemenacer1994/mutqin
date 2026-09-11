@@ -24,7 +24,13 @@ class StateSyncController extends Controller
     public function show(Request $request): JsonResponse
     {
         $user = $request->user();
-        $record = MemorisationSyncState::query()->firstWhere('user_id', $user->id);
+        $record = MemorisationSyncState::query()
+            ->where('user_id', $user->id)
+            ->first(['id', 'state', 'payload_hash', 'state_updated_at', 'last_pulled_at']);
+
+        if ($record?->payload_hash && $request->headers->get('If-None-Match') === $record->payload_hash) {
+            return response()->json(null, 304, ['ETag' => $record->payload_hash]);
+        }
 
         // Throttle the "last pulled" bookkeeping so a read does not turn into a
         // write on every poll. It only needs to be roughly accurate.
@@ -44,6 +50,11 @@ class StateSyncController extends Controller
             }
         }
 
+        $headers = [];
+        if ($record?->payload_hash) {
+            $headers['ETag'] = $record->payload_hash;
+        }
+
         return response()->json([
             'state' => $this->slimEngineState($decoded),
             'meta' => [
@@ -52,7 +63,7 @@ class StateSyncController extends Controller
                 'payload_hash' => $record?->payload_hash,
                 'has_state' => (bool) $record,
             ],
-        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
+        ], 200, $headers, JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
     }
 
     public function store(
@@ -82,7 +93,9 @@ class StateSyncController extends Controller
 
         $payloadHash = hash('sha256', $encodedState);
 
-        $existing = MemorisationSyncState::query()->firstWhere('user_id', $user->id);
+        $existing = MemorisationSyncState::query()
+            ->where('user_id', $user->id)
+            ->first(['id', 'payload_hash', 'state_updated_at']);
         $unchanged = $existing && $existing->payload_hash === $payloadHash;
 
         // No-op autosaves: skip rewriting the longText blob and re-deriving tables.
@@ -127,15 +140,20 @@ class StateSyncController extends Controller
         ];
 
         try {
-            MemorisationSyncState::updateOrCreate(
-                ['user_id' => $user->id],
-                $syncPayload
-            );
-        } catch (UniqueConstraintViolationException) {
-            $row = MemorisationSyncState::query()->where('user_id', $user->id)->first();
-            if ($row) {
-                $row->fill($syncPayload)->save();
+            if ($existing) {
+                MemorisationSyncState::query()
+                    ->whereKey($existing->id)
+                    ->update($syncPayload);
+            } else {
+                MemorisationSyncState::query()->create([
+                    'user_id' => $user->id,
+                    ...$syncPayload,
+                ]);
             }
+        } catch (UniqueConstraintViolationException) {
+            MemorisationSyncState::query()
+                ->where('user_id', $user->id)
+                ->update($syncPayload);
         }
 
         try {

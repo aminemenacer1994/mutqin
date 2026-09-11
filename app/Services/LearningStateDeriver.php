@@ -7,6 +7,8 @@ use App\Models\MemorisationProgress;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Derives the normalised learning tables (user_sessions, user_last_positions,
@@ -162,10 +164,7 @@ class LearningStateDeriver
         }
 
         $now = now();
-        $existing = MemorisationProgress::query()
-            ->where('user_id', $user->id)
-            ->get(['surah_number', 'ayah_number', 'status', 'mastery_level', 'repetitions', 'metadata', 'completed_at'])
-            ->keyBy(fn (MemorisationProgress $row) => $row->surah_number.':'.$row->ayah_number);
+        $existing = $this->existingProgressKeyedByAyah($user->id, $ayahs);
 
         $dirty = [];
 
@@ -183,7 +182,6 @@ class LearningStateDeriver
             $status = self::STATUS_MAP[$engineStatus] ?? 'learning';
             $masteryLevel = (int) round(max(0, min(5, (float) ($ayah['mastery_level'] ?? 0))) / 5 * 100);
             $key = $surah.':'.$ayahNumber;
-            /** @var MemorisationProgress|null $current */
             $current = $existing->get($key);
 
             // Preserve an existing completion timestamp when the engine only
@@ -206,13 +204,9 @@ class LearningStateDeriver
 
             $repetitions = (int) ($ayah['repetition_count'] ?? 0);
             if ($current) {
-                $currentMeta = is_array($current->metadata)
-                    ? json_encode($current->metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-                    : (string) ($current->metadata ?? '');
-                $currentCompleted = $current->completed_at?->toDateTimeString();
-                $nextCompleted = $completedAt instanceof Carbon
-                    ? $completedAt->toDateTimeString()
-                    : null;
+                $currentMeta = $this->encodedProgressMetadata($current->metadata);
+                $currentCompleted = $this->completedAtString($current->completed_at);
+                $nextCompleted = $this->completedAtString($completedAt);
                 if (
                     (string) $current->status === $status
                     && (int) $current->mastery_level === $masteryLevel
@@ -305,6 +299,90 @@ class LearningStateDeriver
         }
 
         return 0;
+    }
+
+    /**
+     * Load only the progress rows that appear in the incoming engine ayah map.
+     * Uses the query builder so we do not hydrate Eloquent models for dirty-checking.
+     *
+     * @param  array<string|int, mixed>  $ayahs
+     * @return Collection<string, object>
+     */
+    private function existingProgressKeyedByAyah(int $userId, array $ayahs): Collection
+    {
+        $ayahsBySurah = [];
+
+        foreach ($ayahs as $id => $ayah) {
+            if (! is_array($ayah)) {
+                continue;
+            }
+
+            [$surah, $ayahNumber] = $this->parseAyahId($ayah['id'] ?? $id);
+            if ($surah === null || $ayahNumber === null) {
+                continue;
+            }
+
+            $ayahsBySurah[$surah][$ayahNumber] = true;
+        }
+
+        if ($ayahsBySurah === []) {
+            return collect();
+        }
+
+        return DB::table('memorisation_progress')
+            ->where('user_id', $userId)
+            ->where(function ($query) use ($ayahsBySurah) {
+                foreach ($ayahsBySurah as $surah => $ayahNumbers) {
+                    $query->orWhere(function ($inner) use ($surah, $ayahNumbers) {
+                        $inner->where('surah_number', $surah)
+                            ->whereIn('ayah_number', array_keys($ayahNumbers));
+                    });
+                }
+            })
+            ->get([
+                'surah_number',
+                'ayah_number',
+                'status',
+                'mastery_level',
+                'repetitions',
+                'metadata',
+                'completed_at',
+            ])
+            ->keyBy(fn ($row) => $row->surah_number.':'.$row->ayah_number);
+    }
+
+    private function encodedProgressMetadata(mixed $metadata): string
+    {
+        if (is_array($metadata)) {
+            return (string) json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }
+
+        if (! is_string($metadata) || $metadata === '') {
+            return '';
+        }
+
+        $decoded = json_decode($metadata, true);
+
+        return is_array($decoded)
+            ? (string) json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            : $metadata;
+    }
+
+    private function completedAtString(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof Carbon) {
+            return $value->toDateTimeString();
+        }
+
+        try {
+            return Carbon::parse((string) $value)->toDateTimeString();
+        } catch (\Throwable) {
+            return (string) $value;
+        }
     }
 
     /**

@@ -258,7 +258,16 @@ class DashboardService
             ->orderByDesc('last_activity_at')
             ->orderByDesc('id')
             ->limit($limit)
-            ->get()
+            ->get([
+                'id',
+                'status',
+                'surah_number',
+                'ayah_number',
+                'metadata',
+                'ended_at',
+                'paused_at',
+                'last_activity_at',
+            ])
             ->each(function (UserSession $session) use ($events) {
                 $status = UserSessionStatus::tryFromMixed($session->status);
                 $meta = is_array($session->metadata) ? $session->metadata : [];
@@ -315,7 +324,7 @@ class DashboardService
             ->where('user_id', $user->id)
             ->latest('id')
             ->limit($limit)
-            ->get()
+            ->get(['id', 'ayah_range', 'band', 'accuracy_percent', 'created_at'])
             ->each(function (AiReciteAttempt $attempt) use ($events) {
                 $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
                 $surah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? 0);
@@ -354,7 +363,7 @@ class DashboardService
             ->latest('updated_at')
             ->latest('id')
             ->limit($limit)
-            ->get()
+            ->get(['id', 'surah_number', 'ayah_number', 'body', 'updated_at', 'created_at'])
             ->each(function (AyahNote $note) use ($events) {
                 $body = trim((string) preg_replace('/\s+/u', ' ', (string) $note->body));
                 $snippet = $body !== ''
@@ -393,13 +402,10 @@ class DashboardService
             ->unique()
             ->values()
             ->all();
-        $sessionModels = $sessionIds === []
-            ? collect()
-            : UserSession::query()
-                ->where('user_id', $user->id)
-                ->whereIn('id', $sessionIds)
-                ->get();
-        $flags = $this->sessionAnalysis->analysisFlagsForSessions($user, $sessionModels);
+        $flags = $this->sessionAnalysis->analysisFlagsForSessions(
+            $user,
+            collect($sessionIds)->map(fn (int $id) => (object) ['id' => $id])
+        );
 
         return $events
             ->map(function (array $event) use ($flags) {
@@ -1296,7 +1302,7 @@ class DashboardService
             UserSessionStatus::Paused->value,
         ];
 
-        $weekSessions = UserSession::query()
+        $weekSessionQuery = UserSession::query()
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
             ->whereIn('status', $sessionStatuses)
@@ -1306,10 +1312,10 @@ class DashboardService
                         $inner->whereNull('ended_at')
                             ->whereBetween('last_activity_at', [$from, $to]);
                     });
-            })
-            ->get(['id', 'status', 'ended_at', 'last_activity_at', 'ayah_number', 'metadata']);
+            });
 
-        $sessions = $weekSessions->count();
+        $sessions = (clone $weekSessionQuery)->count();
+        $weekSessions = collect();
 
         $aiChecks = AiReciteAttempt::query()
             ->where('user_id', $user->id)
@@ -1328,7 +1334,8 @@ class DashboardService
         });
 
         // Fallback: derive practised ayahs from session metadata when analytics lag behind.
-        if ($ayahsPractised === 0 && $weekSessions->isNotEmpty()) {
+        if ($ayahsPractised === 0 && $sessions > 0) {
+            $weekSessions = $this->weekSessionsForSummary($weekSessionQuery, $weekSessions);
             $ayahsPractised = (int) $weekSessions->sum(function (UserSession $session) {
                 $meta = is_array($session->metadata) ? $session->metadata : [];
                 $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
@@ -1353,7 +1360,8 @@ class DashboardService
             ->unique(fn (LearningAnalytic $row) => $row->session_date?->toDateString())
             ->count();
 
-        if ($activeDays === 0 && $weekSessions->isNotEmpty()) {
+        if ($activeDays === 0 && $sessions > 0) {
+            $weekSessions = $this->weekSessionsForSummary($weekSessionQuery, $weekSessions);
             $activeDays = (int) $weekSessions
                 ->map(function (UserSession $session) {
                     $at = $session->ended_at ?? $session->last_activity_at;
@@ -1379,6 +1387,20 @@ class DashboardService
     }
 
     /**
+     * @param  \Illuminate\Database\Eloquent\Builder<UserSession>  $query
+     * @param  Collection<int, UserSession>  $loaded
+     * @return Collection<int, UserSession>
+     */
+    private function weekSessionsForSummary($query, Collection $loaded): Collection
+    {
+        if ($loaded->isNotEmpty()) {
+            return $loaded;
+        }
+
+        return $query->get(['id', 'status', 'ended_at', 'last_activity_at', 'ayah_number', 'metadata']);
+    }
+
+    /**
      * @return array{items: list<array<string,mixed>>, total: int, has_more: bool}
      */
     private function buildWeaknesses(User $user): array
@@ -1389,7 +1411,7 @@ class DashboardService
             ->where('user_id', $user->id)
             ->latest('id')
             ->limit(8)
-            ->get();
+            ->get(['id', 'surah_number', 'surah_name', 'weakness_analysis', 'created_at']);
 
         foreach ($assessments as $assessment) {
             $analysis = is_array($assessment->weakness_analysis) ? $assessment->weakness_analysis : [];
@@ -1436,7 +1458,16 @@ class DashboardService
             ])
             ->latest('id')
             ->limit(3)
-            ->get();
+            ->get([
+                'id',
+                'surah_number',
+                'priority_ayahs',
+                'weak_phrases',
+                'weak_words',
+                'status',
+                'updated_at',
+                'created_at',
+            ]);
 
         foreach ($plans as $plan) {
             $surah = (int) $plan->surah_number;
@@ -1510,7 +1541,16 @@ class DashboardService
             ->where('user_id', $user->id)
             ->latest('id')
             ->limit(12)
-            ->get()
+            ->get([
+                'id',
+                'band',
+                'weak_words',
+                'word_statuses',
+                'ayah_range',
+                'plan_snapshot',
+                'session_recommendation_id',
+                'created_at',
+            ])
             ->filter(function (AiReciteAttempt $attempt) {
                 $band = strtolower((string) ($attempt->band ?? ''));
                 if (in_array($band, ['weak', 'mixed', 'gentle', 'focused'], true)) {
@@ -1649,7 +1689,7 @@ class DashboardService
             ->where('user_id', $user->id)
             ->orderByDesc('updated_at')
             ->limit(20)
-            ->get()
+            ->get(['surah_number', 'ayah_number', 'status', 'metadata', 'updated_at'])
             ->filter(function (MemorisationProgress $row) {
                 if ($row->status === 'reviewing') {
                     return true;

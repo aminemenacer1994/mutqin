@@ -1208,7 +1208,7 @@ class NextSessionRecommendationService
                 ->where('user_id', $user->id)
                 ->where('surah_number', $surah['id'])
                 ->whereBetween('ayah_number', [$rangeStart, $rangeEnd])
-                ->get();
+                ->get(['ayah_number', 'status', 'mastery_level', 'metadata']);
         }
 
         $avgMastery = $rangeProgress->avg('mastery_level');

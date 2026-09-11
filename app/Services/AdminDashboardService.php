@@ -227,18 +227,18 @@ class AdminDashboardService
                         ->whereNotNull('user_id');
                 });
         } elseif ($activity === 'inactive_30d') {
-            $activeIds = UserSession::query()
-                ->where('is_onboarding_example', false)
-                ->whereNotNull('user_id')
-                ->where('last_activity_at', '>=', now()->subDays(30))
-                ->distinct()
-                ->pluck('user_id')
-                ->all();
-            $loginActiveIds = User::query()
-                ->where('last_login_at', '>=', now()->subDays(30))
-                ->pluck('id')
-                ->all();
-            $query->whereNotIn('id', array_values(array_unique(array_merge($activeIds, $loginActiveIds))));
+            $query->where(function ($outer) {
+                $outer->where(function ($login) {
+                    $login->whereNull('last_login_at')
+                        ->orWhere('last_login_at', '<', now()->subDays(30));
+                })->whereNotIn('id', function ($sub) {
+                    $sub->select('user_id')
+                        ->from('user_sessions')
+                        ->where('is_onboarding_example', false)
+                        ->whereNotNull('user_id')
+                        ->where('last_activity_at', '>=', now()->subDays(30));
+                });
+            });
         }
 
         if ($progress === 'has') {

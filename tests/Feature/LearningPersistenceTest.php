@@ -206,6 +206,23 @@ class LearningPersistenceTest extends TestCase
             ->assertJsonPath('meta.has_state', true);
     }
 
+    public function test_state_show_returns_not_modified_when_etag_matches(): void
+    {
+        $user = User::factory()->create();
+        MemorisationSyncState::query()->create([
+            'user_id' => $user->id,
+            'state' => json_encode(['version' => 1], JSON_UNESCAPED_UNICODE),
+            'payload_hash' => 'abc123etag',
+            'state_updated_at' => now(),
+            'last_pulled_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/state', ['If-None-Match' => 'abc123etag'])
+            ->assertStatus(304)
+            ->assertHeader('ETag', 'abc123etag');
+    }
+
     public function test_state_store_succeeds_when_deriver_throws(): void
     {
         $user = User::factory()->create();

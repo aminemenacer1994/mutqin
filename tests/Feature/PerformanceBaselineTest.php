@@ -87,10 +87,11 @@ class PerformanceBaselineTest extends TestCase
             ->assertOk());
 
         $this->assertLessThanOrEqual(2, $measured['count']);
-        $this->assertStringNotContainsString(
-            'update',
-            strtolower(implode(' ', $measured['queries'])),
-            'State show should not write when last_pulled_at is recent'
+        $writes = collect($measured['queries'])
+            ->filter(fn ($sql) => (bool) preg_match('/^\s*(update|insert|delete)\b/i', (string) $sql));
+        $this->assertTrue(
+            $writes->isEmpty(),
+            'State show should not write when last_pulled_at is recent: '.$writes->implode(' | ')
         );
     }
 
