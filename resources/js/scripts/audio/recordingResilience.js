@@ -60,11 +60,11 @@ const USER_MESSAGE_FALLBACKS = Object.freeze({
   [RECITATION_FAILURE_KIND.PROVIDER]:
     'Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.',
   [RECITATION_FAILURE_KIND.USAGE_CAP]:
-    'You have reached today\'s AI voice-check limit. Please try again tomorrow.',
+    'You have reached today\'s AI voice-check limit. Continue practising without AI, or try again tomorrow.',
   [RECITATION_FAILURE_KIND.RATE_LIMIT]:
     'You are starting AI voice checks too quickly. Please wait a moment and try again.',
   [RECITATION_FAILURE_KIND.TIMEOUT]:
-    'This is taking longer than expected. Try again.',
+    'This is taking longer than expected. Try again, or continue practising without AI.',
   [RECITATION_FAILURE_KIND.CANCELLED]:
     'This check was cancelled. Start a new recording when you are ready.',
   [RECITATION_FAILURE_KIND.PERMANENT]:
@@ -78,6 +78,24 @@ let attemptCounter = 0
 /**
  * @returns {string}
  */
+const CONTINUE_WITHOUT_AI_KINDS = new Set([
+  RECITATION_FAILURE_KIND.MICROPHONE,
+  RECITATION_FAILURE_KIND.USAGE_CAP,
+  RECITATION_FAILURE_KIND.TIMEOUT,
+  RECITATION_FAILURE_KIND.NETWORK,
+  RECITATION_FAILURE_KIND.PROVIDER,
+])
+
+/**
+ * Mic, cap, timeout, and service failures should offer a way back to practice.
+ *
+ * @param {string|null|undefined} kind
+ * @returns {boolean}
+ */
+export function canContinuePracticeWithoutAi(kind) {
+  return CONTINUE_WITHOUT_AI_KINDS.has(String(kind || ''))
+}
+
 export function createRecitationAttemptId() {
   attemptCounter += 1
   const stamp = typeof Date !== 'undefined' ? Date.now() : 0

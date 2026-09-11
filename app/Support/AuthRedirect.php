@@ -8,6 +8,7 @@ use App\Models\User;
  * Single post-auth destination for login / guest redirects.
  * Verified admins and learners both land on memorisation (not Progress).
  * Unverified accounts go to the email verification notice.
+ * Get Pro from /pricing stores a plan and resumes Stripe checkout after auth.
  */
 final class AuthRedirect
 {
@@ -24,7 +25,7 @@ final class AuthRedirect
 
     public static function to(?User $user, bool $justRegistered = false): string
     {
-        return route(self::routeName($user, $justRegistered));
+        return self::url($user, $justRegistered, absolute: true);
     }
 
     /**
@@ -32,6 +33,21 @@ final class AuthRedirect
      */
     public static function path(?User $user, bool $justRegistered = false): string
     {
-        return route(self::routeName($user, $justRegistered), absolute: false);
+        return self::url($user, $justRegistered, absolute: false);
+    }
+
+    private static function url(?User $user, bool $justRegistered, bool $absolute): string
+    {
+        if ($user !== null && $user->hasVerifiedEmail()) {
+            $plan = BillingIntent::peek();
+            if ($plan !== null) {
+                return route('pricing', [
+                    'plan' => $plan,
+                    'checkout' => 1,
+                ], $absolute);
+            }
+        }
+
+        return route(self::routeName($user, $justRegistered), absolute: $absolute);
     }
 }

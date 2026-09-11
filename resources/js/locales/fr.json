@@ -478,7 +478,7 @@
       "yearly": "Annuel",
       "perMonth": "/mois",
       "premiumYearly": "ou 17,99 £ par an",
-      "proYearly": "ou 49,99 £ par an",
+      "proYearly": "ou 53,91 £ par an",
       "featureColumn": "Fonctionnalité",
       "freeTrial": "ESSAI GRATUIT 7 JOURS",
       "accountNote": "Sign en antes checkout so tu plan syncs a el correct Mutqin account."
@@ -1396,7 +1396,8 @@
       "colourCloseHint": "Casi aciertos por pulir.",
       "colourIncorrectHint": "Palabras said incorrectly.",
       "colourSkippedHint": "Palabras no recited.",
-      "colourWaitingHint": "no evaluated yet."
+      "colourWaitingHint": "no evaluated yet.",
+      "continueWithoutAi": "Continuer sans l’IA"
     },
     "analyticsHeatmap": {
       "confidence": "confianza: {value}%",
@@ -3465,7 +3466,7 @@
       "disclaimerShort": "Aide à la pratique uniquement, pas un jugement d’enseignant.",
       "onlyFromTestWithAi": "Terminez votre session, puis choisissez Vérifier ma mémorisation pour ouvrir ce contrôle.",
       "assessmentType": "De mémoire",
-      "readyCopy": "Récitez ce passage de mémoire. Mutqin écoute et colore les mots en vous suivant.",
+      "readyCopy": "Récitez à voix haute de mémoire. Mutqin suivra doucement votre récitation.",
       "startAssessment": "Commencer",
       "startPlan": "Démarrer ce plan de pratique",
       "adjustPlan": "Ajuster le plan",
@@ -3713,8 +3714,8 @@
       "kicker": "Trouver par la voix",
       "title": "Trouver une ayah",
       "ctaLabel": "Trouver une ayah",
-      "ctaHint": "Récitez quelques mots, puis dites ce que vous souhaitez faire",
-      "introLead": "Récitez quelques mots d’une ayah, puis dites quoi faire.",
+      "ctaHint": "Récitez quelques mots pour trouver une ayah, puis dites quoi ouvrir",
+      "introLead": "Récitez quelques mots d’une ayah, puis dites quoi ouvrir.",
       "exampleFive": "Donne-moi cinq ayahs à partir d’ici.",
       "exampleReciter": "Avec Mishary.",
       "exampleSpeed": "À la vitesse 0,75.",
@@ -3725,7 +3726,7 @@
       "reciteTitle": "Trouver une ayah",
       "reciteHint": "Récitez quelques mots du début d’une ayah pour la trouver.",
       "keepRecitingTitle": "Continuez à réciter…",
-      "keepReciting": "Continuez à réciter…",
+      "keepReciting": "Continuez à réciter un peu plus…",
       "foundTitle": "Ayah trouvée",
       "foundSubtitle": "{surah} · Ayah {ayah}",
       "listeningHint": "Dites quoi ouvrir, ou utilisez les boutons ci-dessous.",
@@ -3733,7 +3734,7 @@
       "ready": "Prêt",
       "readyTitle": "Ouverture de l’ayah",
       "opening": "Ouverture…",
-      "openHere": "Ouvrir l'ayah",
+      "openHere": "Ouvrir l’ayah",
       "rangeFrom": "De",
       "rangeTo": "À",
       "rangeEarlier": "Ayah précédente",
@@ -3746,7 +3747,7 @@
       "untilAyah": "Jusqu’à l’ayah",
       "openRange": "Ouvrir la plage",
       "errorTitle": "Impossible de trouver l’ayah",
-      "invalidCommand": "Cette instruction n’a pas pu être utilisée. Réessayez, ou ouvrez ici.",
+      "invalidCommand": "Cette instruction n’a pas pu être utilisée. Réessayez, ou ouvrez cette ayah.",
       "networkError": "Impossible de joindre le chercheur vocal. Vérifiez votre connexion et réessayez.",
       "serviceUnavailable": "L’écoute en direct est temporairement indisponible. Réessayez dans un instant.",
       "helloAsk": "Demandez-moi ce que vous voulez",
@@ -3773,8 +3774,15 @@
       "tafseer": "Tafsîr",
       "aidLoading": "Chargement…",
       "aidEmpty": "Aucun texte disponible pour cette ayah.",
-      "aidError": "Impossible de charger cette aide. Réessayez."
-    }
+      "aidError": "Impossible de charger cette aide. Réessayez.",
+      "featureBrief": "Recite a few words from an ayah. We’ll find it, then you can open it or read a translation or transliteration.",
+      "usageCapTitle": "Voice limit reached",
+      "decreaseText": "Smaller text",
+      "increaseText": "Larger text",
+      "expandText": "Expand text",
+      "collapseText": "Collapse text"
+    },
+    "countdownPlayNow": "Lire maintenant"
   },
   "toasts": {
     "saved": "Enregistré avec succès.",
@@ -3976,19 +3984,83 @@
     "cleaner_decisions": "Choix plus clairs"
   },
   "pricingPage": {
-    "title": "Elige your plan",
-    "subtitle": "Iniciar free. Upgrade anytime.",
-    "billingToggleLabel": "« Billing cycle»",
-    "annualSavings": "Guardar 50%",
-    "freeForever": "Gratuit forever",
-    "buyPremium": "« Get Premium»",
-    "buyPro": "« Get Pro»",
-    "premiumDiscount": "50% desactivado",
-    "proDiscount": "30% desactivado",
-    "billedMonthly": "« Billed monthly»",
-    "billedAnnually": "« £{amount}/year»",
-    "trialBadge": "7-día trial",
-    "checkoutNote": "Sign en antes checkout so tu plan syncs a el correct account. After payment, Usa el same email tú used en Stripe."
+    "title": "Choisissez votre formule",
+    "subtitle": "Commencez gratuitement. Passez à Pro pour plus de suivi et d’historique.",
+    "billingToggleLabel": "Période de facturation",
+    "annualSavings": "−25 %",
+    "freeForever": "Gratuit pour toujours",
+    "freeKicker": "Découverte",
+    "proKicker": "Pratique",
+    "freeTagline": "Pour essayer Mutqin",
+    "proTagline": "Pour une pratique plus régulière et plus profonde",
+    "popular": "Populaire",
+    "getPro": "Passer à Pro",
+    "upgradeToPro": "Passer à Pro",
+    "manageBilling": "Gérer la facturation",
+    "currentPlan": "Formule actuelle",
+    "continueFree": "Continuer",
+    "includes": "Inclus",
+    "everythingInFree": "Tout ce qui est inclus dans Gratuit",
+    "buyPremium": "Prendre Premium",
+    "buyPro": "Passer à Pro",
+    "premiumDiscount": "−50 %",
+    "proDiscount": "−25 %",
+    "billedMonthly": "Facturé chaque mois",
+    "billedAnnually": "{symbol}{amount} facturés par an",
+    "trialBadge": "Essai gratuit de 7 jours",
+    "guaranteeNote": "Annulez à tout moment avant la fin de l’essai.",
+    "switchAssurance": "Essai gratuit de 7 jours · Annulez à tout moment",
+    "proCtaNote": "Essai gratuit de 7 jours. Annulez à tout moment.",
+    "checkoutNote": "Créez un compte pour lier le paiement Stripe au bon compte Mutqin.",
+    "signInToCheckout": "Déjà un compte ? Connectez-vous",
+    "trustAria": "Garanties de facturation",
+    "trustTrial": "Essai gratuit de 7 jours sur Pro",
+    "trustCancel": "Annulez à tout moment depuis la facturation",
+    "trustSecure": "Paiement sécurisé avec Stripe",
+    "yearlyPerk": "3 mois offerts en facturation annuelle",
+    "highlights": {
+      "startTitle": "Commencez gratuitement",
+      "startDesc": "Ouvrez un court passage aujourd’hui. Sans carte.",
+      "upgradeTitle": "Passez à Pro quand vous voulez",
+      "upgradeDesc": "Pro ajoute des sessions illimitées, des contrôles IA et la planification.",
+      "leaveTitle": "Partez quand vous voulez",
+      "leaveDesc": "Essai de 7 jours, puis annulation depuis la facturation."
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Questions fréquentes",
+      "subtitle": "Réponses courtes sur les formules, le paiement et l’annulation.",
+      "items": {
+        "cost": {
+          "question": "Mutqin est-il gratuit ? Combien coûte Pro ?",
+          "answer": "Oui. Gratuit est à {symbol}0 pour toujours. Pro coûte {symbol}{monthly} par mois, ou {symbol}{yearlyMonthly} par mois en annuel ({symbol}{yearlyTotal} / an)."
+        },
+        "difference": {
+          "question": "Que ajoute Pro ?",
+          "answer": "Sessions illimitées, toutes les techniques, contrôles de récitation et de mémorisation, un plan de hifz, une révision adaptative et l’écoute hors ligne."
+        },
+        "yearly": {
+          "question": "Comment fonctionne l’abonnement annuel ?",
+          "answer": "L’annuel est 25 % moins cher. Vous payez {symbol}{yearlyTotal} une fois par an au lieu de {symbol}{monthly} chaque mois."
+        },
+        "trial": {
+          "question": "Y a-t-il un essai gratuit ?",
+          "answer": "Pro inclut 7 jours d’essai. Annulez avant la fin et vous ne serez pas débité."
+        },
+        "cancel": {
+          "question": "Puis-je annuler à tout moment ?",
+          "answer": "Oui. Ouvrez la facturation depuis votre profil, ou Gérer la facturation sur cette page après l’abonnement."
+        },
+        "account": {
+          "question": "Faut-il un compte avant de payer ?",
+          "answer": "Oui. Connectez-vous avec la même adresse que sur Stripe pour lier la formule au bon compte Mutqin."
+        }
+      }
+    },
+    "submitting": "Redirection…",
+    "contactSupport": "Contacter le support",
+    "billingSyncNeeded": "La facturation n’est pas encore liée à Stripe sur ce compte. Contactez-nous si vous avez déjà payé.",
+    "currentPremium": "Vous êtes sur Premium. Passez à Pro pour les contrôles IA et les sauvegardes illimitées."
   },
   "mission": {
     "kicker": "Notre mission",
@@ -4667,7 +4739,20 @@
       "no_recent": "Aucun essai récent.",
       "empty_recording": "Cet enregistrement était trop court ou silencieux. Réessayez.",
       "network_error": "Le service de récitation est injoignable. Vérifiez votre connexion, puis réessayez.",
-      "error_title": "La récitation IA n’a pas pu aboutir"
+      "error_title": "La récitation IA n’a pas pu aboutir",
+      "results_title": "AI Recite results",
+      "results_subtitle": "Saved checks from AI Recite, so you can see how your recitation is holding.",
+      "results_empty_hint": "Use AI Recite on a session. Each finished check is saved here.",
+      "results_change": "Change from earlier checks: {value}",
+      "results_no_weak": "No repeated weak spots yet.",
+      "results_focus": "Needs practice",
+      "results_holding_title": "Holding well",
+      "results_holding_hint": "No weak ayahs in these checks yet.",
+      "results_open": "Open this check",
+      "view_all_results": "All results",
+      "attempt_saved": "This attempt is saved.",
+      "see_all_results": "See all results",
+      "continue_without_ai": "Continuer sans l’IA"
     }
   },
   "admin": {

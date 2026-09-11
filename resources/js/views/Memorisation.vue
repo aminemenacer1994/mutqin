@@ -2575,6 +2575,13 @@
       <div class="countdown-modal">
         <div class="countdown-number">{{ countdownValue }}</div>
         <div class="countdown-text">{{ t('memorisation.prepare_yourself') }}</div>
+        <button
+          type="button"
+          class="countdown-play-now"
+          @click="skipCountdownToPlay"
+        >
+          {{ t('memorisation.countdownPlayNow') }}
+        </button>
       </div>
     </div>
 
@@ -4327,6 +4334,7 @@
       :busy="amdBusy"
       :ending-soon="amdEndingSoon"
       :error-action="amdErrorAction"
+      :continue-without-label="t('memorisation.aiCheck.continueWithoutAi')"
       :close-label="amdLabels.close"
       :tools-label="amdLabels.tools"
       :blur-label="amdLabels.blur"
@@ -4374,6 +4382,7 @@
       @done="doneAmdTest"
       @retry="retryAmdAssessment"
       @enable-mic="startAmdAssessment"
+      @continue-without-ai="continuePracticeWithoutAi"
     />
 
     <AiAudioConsentModal

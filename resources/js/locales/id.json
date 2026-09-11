@@ -478,7 +478,7 @@
       "yearly": "Tahunan",
       "perMonth": "/bulan",
       "premiumYearly": "atau £17,99/tahun",
-      "proYearly": "atau £49,99/tahun",
+      "proYearly": "atau £53,91/tahun",
       "featureColumn": "Fitur",
       "freeTrial": "COBA GRATIS 7 HARI",
       "accountNote": "You can start Premium or Pro checkout without an account. After paying, create an account or sign in with the same email so Mutqin can link your plan."
@@ -1396,7 +1396,8 @@
       "colourCloseHint": "Hampir benar, perlu diasah.",
       "colourIncorrectHint": "Kata-kata said incorrectly.",
       "colourSkippedHint": "Kata-kata bukan recited.",
-      "colourWaitingHint": "bukan evaluated yet."
+      "colourWaitingHint": "bukan evaluated yet.",
+      "continueWithoutAi": "Lanjut tanpa AI"
     },
     "analyticsHeatmap": {
       "confidence": "keyakinan: {value}%",
@@ -3773,8 +3774,15 @@
       "tafseer": "Tafsir",
       "aidLoading": "Memuat…",
       "aidEmpty": "Tidak ada teks untuk ayat ini.",
-      "aidError": "Tidak dapat memuat bantuan bacaan. Coba lagi."
-    }
+      "aidError": "Tidak dapat memuat bantuan bacaan. Coba lagi.",
+      "featureBrief": "Recite a few words from an ayah. We’ll find it, then you can open it or read a translation or transliteration.",
+      "usageCapTitle": "Voice limit reached",
+      "decreaseText": "Smaller text",
+      "increaseText": "Larger text",
+      "expandText": "Expand text",
+      "collapseText": "Collapse text"
+    },
+    "countdownPlayNow": "Putar sekarang"
   },
   "toasts": {
     "saved": "Berhasil disimpan.",
@@ -3976,19 +3984,83 @@
     "cleaner_decisions": "« Clearer choices»"
   },
   "pricingPage": {
-    "title": "Pilih your plan",
-    "subtitle": "Mulai free. Upgrade anytime.",
-    "billingToggleLabel": "« Billing cycle»",
-    "annualSavings": "Simpan 50%",
-    "freeForever": "Gratis forever",
-    "buyPremium": "« Get Premium»",
-    "buyPro": "« Get Pro»",
-    "premiumDiscount": "50% nonaktif",
-    "proDiscount": "30% nonaktif",
-    "billedMonthly": "« Billed monthly»",
-    "billedAnnually": "« £{amount}/year»",
-    "trialBadge": "7-hari trial",
-    "checkoutNote": "Sign di sebelum checkout so Anda rencana syncs ke the correct account. After payment, Gunakan the same email Anda used di Stripe."
+    "title": "Pilih paket Anda",
+    "subtitle": "Mulai gratis. Naik ke Pro saat Anda ingin umpan balik dan riwayat yang lebih dalam.",
+    "billingToggleLabel": "Siklus penagihan",
+    "annualSavings": "Hemat 25%",
+    "freeForever": "Gratis selamanya",
+    "freeKicker": "Pemula",
+    "proKicker": "Latihan",
+    "freeTagline": "Untuk mencoba Mutqin",
+    "proTagline": "Untuk latihan yang lebih konsisten dan mendalam",
+    "popular": "Populer",
+    "getPro": "Ambil Pro",
+    "upgradeToPro": "Tingkatkan ke Pro",
+    "manageBilling": "Kelola penagihan",
+    "currentPlan": "Paket saat ini",
+    "continueFree": "Lanjutkan",
+    "includes": "Termasuk",
+    "everythingInFree": "Semua yang ada di Gratis",
+    "buyPremium": "Ambil Premium",
+    "buyPro": "Ambil Pro",
+    "premiumDiscount": "Diskon 50%",
+    "proDiscount": "Diskon 25%",
+    "billedMonthly": "Ditagih bulanan",
+    "billedAnnually": "{symbol}{amount} ditagih tahunan",
+    "trialBadge": "Uji coba gratis 7 hari",
+    "guaranteeNote": "Batalkan kapan saja sebelum uji coba berakhir.",
+    "switchAssurance": "Uji coba gratis 7 hari · Batalkan kapan saja",
+    "proCtaNote": "Uji coba gratis 7 hari. Batalkan kapan saja.",
+    "checkoutNote": "Buat akun agar checkout Stripe tertaut ke akun Mutqin yang benar.",
+    "signInToCheckout": "Sudah punya akun? Masuk",
+    "trustAria": "Jaminan penagihan",
+    "trustTrial": "Uji coba gratis 7 hari untuk Pro",
+    "trustCancel": "Batalkan kapan saja dari penagihan",
+    "trustSecure": "Checkout aman dengan Stripe",
+    "yearlyPerk": "3 bulan gratis jika ditagih tahunan",
+    "highlights": {
+      "startTitle": "Mulai gratis",
+      "startDesc": "Buka rentang pendek hari ini. Tanpa kartu.",
+      "upgradeTitle": "Naik ke Pro saat siap",
+      "upgradeDesc": "Pro menambah sesi tak terbatas, cek AI, dan perencanaan.",
+      "leaveTitle": "Berhenti kapan saja",
+      "leaveDesc": "Uji coba 7 hari, lalu batalkan dari penagihan."
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Pertanyaan yang sering diajukan",
+      "subtitle": "Jawaban singkat tentang paket, checkout, dan pembatalan.",
+      "items": {
+        "cost": {
+          "question": "Apakah Mutqin gratis? Berapa harga Pro?",
+          "answer": "Ya. Gratis {symbol}0 selamanya. Pro {symbol}{monthly} per bulan, atau {symbol}{yearlyMonthly} per bulan jika tahunan ({symbol}{yearlyTotal}/tahun)."
+        },
+        "difference": {
+          "question": "Apa yang ditambah Pro?",
+          "answer": "Sesi tersimpan tak terbatas, semua teknik, cek bacaan dan hafalan, rencana hifz, revisi adaptif, dan dengar luring."
+        },
+        "yearly": {
+          "question": "Bagaimana penagihan tahunan bekerja?",
+          "answer": "Tahunan diskon 25%. Anda membayar {symbol}{yearlyTotal} sekali setahun, bukan {symbol}{monthly} setiap bulan."
+        },
+        "trial": {
+          "question": "Ada uji coba gratis?",
+          "answer": "Pro mencakup uji coba 7 hari. Batalkan sebelum berakhir dan Anda tidak dikenai biaya."
+        },
+        "cancel": {
+          "question": "Bisakah saya membatalkan kapan saja?",
+          "answer": "Ya. Buka penagihan dari profil, atau Kelola penagihan di halaman ini setelah berlangganan."
+        },
+        "account": {
+          "question": "Perlu akun sebelum membayar?",
+          "answer": "Ya. Masuk dengan email yang sama seperti di Stripe agar paket tertaut ke akun Mutqin yang benar."
+        }
+      }
+    },
+    "submitting": "Mengalihkan…",
+    "contactSupport": "Hubungi dukungan",
+    "billingSyncNeeded": "Penagihan belum tertaut ke Stripe di akun ini. Hubungi kami jika Anda sudah membayar.",
+    "currentPremium": "Anda di Premium. Naik ke Pro untuk cek AI dan simpanan tanpa batas."
   },
   "mission": {
     "kicker": "Misi Kami",
@@ -4667,7 +4739,20 @@
       "no_recent": "Belum ada percobaan terbaru.",
       "empty_recording": "Rekaman terlalu singkat atau sunyi. Coba lagi.",
       "network_error": "Layanan bacaan tidak terjangkau. Periksa koneksi, lalu coba lagi.",
-      "error_title": "Bacaan AI tidak dapat diselesaikan"
+      "error_title": "Bacaan AI tidak dapat diselesaikan",
+      "results_title": "AI Recite results",
+      "results_subtitle": "Saved checks from AI Recite, so you can see how your recitation is holding.",
+      "results_empty_hint": "Use AI Recite on a session. Each finished check is saved here.",
+      "results_change": "Change from earlier checks: {value}",
+      "results_no_weak": "No repeated weak spots yet.",
+      "results_focus": "Needs practice",
+      "results_holding_title": "Holding well",
+      "results_holding_hint": "No weak ayahs in these checks yet.",
+      "results_open": "Open this check",
+      "view_all_results": "All results",
+      "attempt_saved": "This attempt is saved.",
+      "see_all_results": "See all results",
+      "continue_without_ai": "Lanjut tanpa AI"
     }
   },
   "admin": {

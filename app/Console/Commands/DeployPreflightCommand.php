@@ -43,15 +43,72 @@ class DeployPreflightCommand extends Command
                 : null
         );
 
+        $protected = DatabaseDeploySafety::isProtectedEnvironment($env);
+
         $demoEnabled = (bool) config('app.show_demo_accounts');
+        $demoOk = ! $protected || ! $demoEnabled;
         $checks[] = $this->check(
             'demo_accounts',
-            true,
+            $demoOk,
             $demoEnabled ? 'SHOW_DEMO_ACCOUNTS is enabled.' : 'SHOW_DEMO_ACCOUNTS is disabled.',
-            $demoEnabled
-                ? 'Demo login is visible on /login. Disable with SHOW_DEMO_ACCOUNTS=false if this host should not offer it.'
-                : null
+            $demoOk
+                ? ($demoEnabled
+                    ? 'Demo login is visible on /login. Disable with SHOW_DEMO_ACCOUNTS=false before production.'
+                    : null)
+                : 'Refusing deploy: demo login must be off in production (SHOW_DEMO_ACCOUNTS=false).'
         );
+        if (! $demoOk) {
+            $failed = true;
+        }
+
+        $debugOn = (bool) config('app.debug');
+        $debugOk = ! $protected || ! $debugOn;
+        $checks[] = $this->check(
+            'app_debug',
+            $debugOk,
+            $debugOn ? 'APP_DEBUG=true' : 'APP_DEBUG=false',
+            $debugOk
+                ? null
+                : 'Refusing deploy: APP_DEBUG must be false in production.'
+        );
+        if (! $debugOk) {
+            $failed = true;
+        }
+
+        $capEnabled = (bool) config('services.speechmatics.usage_cap.enabled', false);
+        $userMints = (int) config('services.speechmatics.usage_cap.daily_user_token_mints', 0);
+        $globalMints = (int) config('services.speechmatics.usage_cap.daily_global_token_mints', 0);
+        $checks[] = $this->check(
+            'speechmatics_caps',
+            true,
+            $capEnabled
+                ? "Usage cap on (user={$userMints}, global={$globalMints})."
+                : 'SPEECHMATICS_USAGE_CAP_ENABLED is off.',
+            $capEnabled
+                ? null
+                : 'Daily mint caps are unused while the switch is off. Per-minute rate limits still apply.'
+        );
+
+        $appHost = parse_url((string) config('app.url'), PHP_URL_HOST) ?: '';
+        $googleRedirect = trim((string) config('services.google.redirect'));
+        $googleClient = trim((string) config('services.google.client_id'));
+        $googleOk = ! $protected || $googleClient === '' || (
+            $googleRedirect !== ''
+            && $appHost !== ''
+            && str_contains($googleRedirect, $appHost)
+            && str_ends_with($googleRedirect, '/auth/google/callback')
+        );
+        $checks[] = $this->check(
+            'google_redirect',
+            $googleOk,
+            $googleRedirect !== '' ? "GOOGLE_REDIRECT_URI={$googleRedirect}" : 'GOOGLE_REDIRECT_URI is empty.',
+            $googleOk
+                ? null
+                : 'Refusing deploy: GOOGLE_REDIRECT_URI must be the exact https://'.$appHost.'/auth/google/callback value registered in Google Cloud.'
+        );
+        if (! $googleOk) {
+            $failed = true;
+        }
 
         $backupConfirmed = filter_var(env('MUTQIN_BACKUP_CONFIRMED', false), FILTER_VALIDATE_BOOL);
         $requireBackup = (bool) $this->option('require-backup');

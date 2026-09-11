@@ -77,7 +77,7 @@
         @if (Route::has('register'))
             <p class="auth-footer">
                 {{ __('ui.auth_new_to_mutqin') }}
-                <a href="{{ route('register') }}">{{ __('ui.create_account') }}</a>
+                <a href="{{ route('register', \App\Support\BillingIntent::routeParams()) }}">{{ __('ui.create_account') }}</a>
             </p>
         @endif
     </div>

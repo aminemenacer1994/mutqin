@@ -24,7 +24,7 @@ return [
     // having to enumerate ports in SANCTUM_STATEFUL_DOMAINS.
     'stateful' => array_values(array_unique(array_filter(array_map('trim', explode(',', sprintf(
         '%s%s%s',
-        env('SANCTUM_STATEFUL_DOMAINS', 'localhost,localhost:3000,localhost:8000,localhost:8001,127.0.0.1,127.0.0.1:8000,127.0.0.1:8001,::1'),
+        env('SANCTUM_STATEFUL_DOMAINS', 'localhost,localhost:3000,localhost:8000,localhost:8001,127.0.0.1,127.0.0.1:8000,127.0.0.1:8001,::1,app.mutqin.ai'),
         Sanctum::currentApplicationUrlWithPort(),
         Sanctum::currentRequestHost(),
     )))))),

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\StripeWebhookEvent;
+use App\Support\BillingIntent;
 use App\Support\MutqinLog;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -22,39 +23,59 @@ class BillingController extends Controller
 
     public function checkout(Request $request)
     {
-        if (!$request->user()) {
-            return redirect()->route('login');
+        $user = $request->user();
+
+        if (! $user) {
+            $planKey = BillingIntent::normalize($request->input('plan'));
+            if ($planKey) {
+                BillingIntent::remember($planKey);
+            }
+
+            return redirect()->route('login', $planKey ? ['plan' => $planKey] : []);
         }
 
         $planKey = $request->validate([
             'plan' => ['required', 'string', Rule::in(array_keys($this->paidPlans()))],
         ])['plan'];
 
-        $user = $request->user();
+        BillingIntent::remember($planKey);
+
+        if (! $user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
         $plan = config("billing.plans.$planKey");
         $priceId = $plan['price_id'] ?? null;
 
         abort_unless($priceId, 500, 'Stripe price is not configured.');
 
+        $trialDays = (int) ($plan['trial_days'] ?? 0);
+        $offerTrial = $trialDays > 0 && blank($user->stripe_subscription_id);
+
         $checkoutData = [
             'mode' => 'subscription',
             'success_url' => route('billing.success') . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('billing.index', ['plan' => $planKey]),
+            'cancel_url' => route('pricing', ['plan' => $planKey]),
+            'locale' => $this->stripeLocale(),
             'metadata[plan]' => $planKey,
-            'subscription_data[trial_period_days]' => $plan['trial_days'],
             'subscription_data[metadata][plan]' => $planKey,
+            'payment_method_collection' => 'always',
             'line_items[0][quantity]' => 1,
             'line_items[0][price]' => $priceId,
         ];
 
-        if ($user) {
-            $checkoutData['customer'] = $this->ensureStripeCustomer($user);
-            $checkoutData['client_reference_id'] = (string) $user->id;
-            $checkoutData['metadata[user_id]'] = (string) $user->id;
-            $checkoutData['subscription_data[metadata][user_id]'] = (string) $user->id;
+        if ($offerTrial) {
+            $checkoutData['subscription_data[trial_period_days]'] = $trialDays;
         }
 
+        $checkoutData['customer'] = $this->ensureStripeCustomer($user);
+        $checkoutData['client_reference_id'] = (string) $user->id;
+        $checkoutData['metadata[user_id]'] = (string) $user->id;
+        $checkoutData['subscription_data[metadata][user_id]'] = (string) $user->id;
+
         $session = $this->stripePost('checkout/sessions', $checkoutData);
+
+        BillingIntent::forget();
 
         return redirect()->away($session['url']);
     }
@@ -74,13 +95,10 @@ class BillingController extends Controller
         }
 
         if ($request->user()) {
-            return redirect()->to(route('profile.show') . '#subscription')->with('billing_status', 'Your Mutqin subscription is being activated.');
+            return redirect()->to(route('profile.show') . '#subscription')->with('billing_status', __('billing.activating'));
         }
 
-        return redirect()->route('login')->with(
-            'status',
-            'Checkout complete. Sign in with the same email you used in Stripe to sync your plan, then open Memorisation.'
-        );
+        return redirect()->route('login')->with('status', __('billing.checkout_complete_guest'));
     }
 
     public function portal(Request $request)
@@ -88,7 +106,7 @@ class BillingController extends Controller
         $user = $request->user();
 
         if (!$user->stripe_customer_id) {
-            return redirect()->to(route('profile.show') . '#subscription')->with('billing_error', 'No Stripe customer exists for this account yet.');
+            return redirect()->to(route('profile.show') . '#subscription')->with('billing_error', __('billing.no_stripe_customer'));
         }
 
         $session = $this->stripePost('billing_portal/sessions', [
@@ -165,6 +183,18 @@ class BillingController extends Controller
     private function paidPlans(): array
     {
         return array_filter(config('billing.plans'), fn (array $plan) => isset($plan['price_id']));
+    }
+
+    private function stripeLocale(): string
+    {
+        return match (app()->getLocale()) {
+            'fr' => 'fr',
+            'es' => 'es',
+            'ar' => 'ar',
+            'id' => 'id',
+            'tr' => 'tr',
+            default => 'auto',
+        };
     }
 
     private function ensureStripeCustomer(User $user): string

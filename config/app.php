@@ -35,12 +35,12 @@ return [
     |
     | When enabled, the login page shows a one-click demo login shortcut
     | and Memorisation shows a short tester start guide.
-    | Defaults on so staging and production testers see it. Set
-    | SHOW_DEMO_ACCOUNTS=false to hide it.
+    | Off by default. Forced off in production / prod even if the env is true.
     |
     */
 
-    'show_demo_accounts' => filter_var(env('SHOW_DEMO_ACCOUNTS', true), FILTER_VALIDATE_BOOL),
+    'show_demo_accounts' => ! in_array(env('APP_ENV', 'production'), ['production', 'prod'], true)
+        && filter_var(env('SHOW_DEMO_ACCOUNTS', false), FILTER_VALIDATE_BOOL),
 
     /*
     |--------------------------------------------------------------------------

@@ -59,6 +59,8 @@ Route::get('/onboarding', function () {
 
 Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
 Route::get('/billing/success', [BillingController::class, 'success'])->name('billing.success');
+Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
+Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
 
 Route::get('/memorisation', function (Request $request) {
     $justRegistered = (bool) $request->session()->pull('mutqin_just_registered', false);
@@ -109,8 +111,6 @@ Route::middleware(['auth'])->group(function () {
 // Learner features require a verified email (Google OAuth users are marked verified
 // when the provider reports a verified email — see GoogleSignInService).
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
-    Route::post('/billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
@@ -192,6 +192,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'Content-Type' => 'audio/mpeg',
         ]);
     })
+        ->middleware('plan:pro')
         ->name('memorisation.audio-download');
 
     Route::post('/memorisation/transcription-token', function (SpeechmaticsUsageCap $usageCap, SpeechmaticsRateLimit $rateLimit) {
@@ -300,7 +301,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ]);
         });
     })
-        ->middleware('throttle:'.SpeechmaticsRateLimit::NAME)
+        ->middleware(['plan:pro', 'throttle:'.SpeechmaticsRateLimit::NAME])
         ->name('memorisation.transcription-token');
 });
 

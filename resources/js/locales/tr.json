@@ -478,7 +478,7 @@
       "yearly": "« Yearly»",
       "perMonth": "« /month»",
       "premiumYearly": "veya £17.99 yearly",
-      "proYearly": "veya £49.99 yearly",
+      "proYearly": "veya yılda £53.91",
       "featureColumn": "« Feature»",
       "freeTrial": "7-gün FREE TRIAL",
       "accountNote": "You can start Premium or Pro checkout without an account. After paying, create an account or sign in with the same email so Mutqin can link your plan."
@@ -1396,7 +1396,8 @@
       "colourCloseHint": "Cilalanması gereken yakın hatalar.",
       "colourIncorrectHint": "Kelimeler said incorrectly.",
       "colourSkippedHint": "Kelimeler değil recited.",
-      "colourWaitingHint": "değil evaluated yet."
+      "colourWaitingHint": "değil evaluated yet.",
+      "continueWithoutAi": "Yapay zekâ olmadan devam et"
     },
     "analyticsHeatmap": {
       "confidence": "güven: {value}%",
@@ -3773,8 +3774,15 @@
       "tafseer": "Tefsir",
       "aidLoading": "Yükleniyor…",
       "aidEmpty": "Bu ayet için metin yok.",
-      "aidError": "Okuma yardımı yüklenemedi. Tekrar dene."
-    }
+      "aidError": "Okuma yardımı yüklenemedi. Tekrar dene.",
+      "featureBrief": "Recite a few words from an ayah. We’ll find it, then you can open it or read a translation or transliteration.",
+      "usageCapTitle": "Voice limit reached",
+      "decreaseText": "Smaller text",
+      "increaseText": "Larger text",
+      "expandText": "Expand text",
+      "collapseText": "Collapse text"
+    },
+    "countdownPlayNow": "Şimdi oynat"
   },
   "toasts": {
     "saved": "kaydedilmiş successfully.",
@@ -3976,19 +3984,83 @@
     "cleaner_decisions": "« Clearer choices»"
   },
   "pricingPage": {
-    "title": "Seçin your plan",
-    "subtitle": "Başlat free. Upgrade anytime.",
-    "billingToggleLabel": "« Billing cycle»",
-    "annualSavings": "Kaydet 50%",
-    "freeForever": "« Free forever»",
-    "buyPremium": "« Get Premium»",
-    "buyPro": "« Get Pro»",
-    "premiumDiscount": "50% kapalı",
-    "proDiscount": "30% kapalı",
-    "billedMonthly": "« Billed monthly»",
-    "billedAnnually": "« £{amount}/year»",
-    "trialBadge": "7-gün trial",
-    "checkoutNote": "Sign in önce checkout so yeriniz plan syncs to the correct account. After payment, Kullan the same email sen used in Stripe."
+    "title": "Planınızı seçin",
+    "subtitle": "Ücretsiz başlayın. Daha fazla geri bildirim ve geçmiş istediğinizde Pro’ya geçin.",
+    "billingToggleLabel": "Faturalandırma dönemi",
+    "annualSavings": "%25 tasarruf",
+    "freeForever": "Sonsuza kadar ücretsiz",
+    "freeKicker": "Başlangıç",
+    "proKicker": "Pratik",
+    "freeTagline": "Mutqin’i denemek için",
+    "proTagline": "Daha düzenli ve derin pratik için",
+    "popular": "Popüler",
+    "getPro": "Pro’ya geç",
+    "upgradeToPro": "Pro’ya yükselt",
+    "manageBilling": "Faturalandırmayı yönet",
+    "currentPlan": "Mevcut plan",
+    "continueFree": "Devam et",
+    "includes": "Dahil",
+    "everythingInFree": "Ücretsiz plandaki her şey",
+    "buyPremium": "Premium al",
+    "buyPro": "Pro’ya geç",
+    "premiumDiscount": "%50 indirim",
+    "proDiscount": "%25 indirim",
+    "billedMonthly": "Aylık faturalandırılır",
+    "billedAnnually": "Yıllık {symbol}{amount} faturalandırılır",
+    "trialBadge": "7 günlük ücretsiz deneme",
+    "guaranteeNote": "Deneme bitmeden istediğiniz zaman iptal edin.",
+    "switchAssurance": "7 günlük ücretsiz deneme · İstediğiniz zaman iptal edin",
+    "proCtaNote": "7 günlük ücretsiz deneme. İstediğiniz zaman iptal edin.",
+    "checkoutNote": "Stripe ödemesinin doğru Mutqin hesabına bağlanması için bir hesap oluşturun.",
+    "signInToCheckout": "Hesabınız var mı? Giriş yapın",
+    "trustAria": "Faturalandırma güvenceleri",
+    "trustTrial": "Pro’da 7 günlük ücretsiz deneme",
+    "trustCancel": "Faturalandırmadan istediğiniz zaman iptal edin",
+    "trustSecure": "Stripe ile güvenli ödeme",
+    "yearlyPerk": "Yıllık ödemede 3 ay bedava",
+    "highlights": {
+      "startTitle": "Ücretsiz başla",
+      "startDesc": "Bugün kısa bir aralık aç. Kart gerekmez.",
+      "upgradeTitle": "Hazır olunca Pro’ya geç",
+      "upgradeDesc": "Pro sınırsız oturum, yapay zeka kontrolleri ve planlama ekler.",
+      "leaveTitle": "İstediğin zaman bırak",
+      "leaveDesc": "7 günlük deneme, sonra faturalandırmadan iptal."
+    },
+    "faq": {
+      "kicker": "SSS",
+      "title": "Sık sorulan sorular",
+      "subtitle": "Planlar, ödeme ve iptal hakkında kısa yanıtlar.",
+      "items": {
+        "cost": {
+          "question": "Mutqin ücretsiz mi? Pro ne kadar?",
+          "answer": "Evet. Ücretsiz sonsuza kadar {symbol}0. Pro ayda {symbol}{monthly}; yıllıkta ayda {symbol}{yearlyMonthly} (yılda {symbol}{yearlyTotal})."
+        },
+        "difference": {
+          "question": "Pro ne ekler?",
+          "answer": "Sınırsız kayıtlı oturum, tüm teknikler, tilavet ve ezber kontrolleri, özel hifz planı, uyarlanabilir tekrar ve çevrimdışı dinleme."
+        },
+        "yearly": {
+          "question": "Yıllık faturalandırma nasıl işler?",
+          "answer": "Yıllık %25 indirimlidir. Her ay {symbol}{monthly} yerine yılda bir {symbol}{yearlyTotal} ödersiniz."
+        },
+        "trial": {
+          "question": "Ücretsiz deneme var mı?",
+          "answer": "Pro 7 günlük deneme içerir. Bitmeden iptal ederseniz ücret alınmaz."
+        },
+        "cancel": {
+          "question": "İstediğim zaman iptal edebilir miyim?",
+          "answer": "Evet. Profilinizden faturalandırmayı açın veya abone olduktan sonra bu sayfadaki Faturalandırmayı yönet’i kullanın."
+        },
+        "account": {
+          "question": "Ödemeden önce hesap gerekir mi?",
+          "answer": "Evet. Planın doğru Mutqin hesabına bağlanması için Stripe’da kullanacağınız e-posta ile giriş yapın."
+        }
+      }
+    },
+    "submitting": "Yönlendiriliyor…",
+    "contactSupport": "Destekle iletişim",
+    "billingSyncNeeded": "Bu hesapta faturalama henüz Stripe’a bağlı değil. Ödediyseniz bize yazın.",
+    "currentPremium": "Premium’dasınız. Yapay zekâ kontrolleri ve sınırsız kayıt için Pro’ya geçin."
   },
   "mission": {
     "kicker": "Our Mission",
@@ -4667,7 +4739,20 @@
       "no_recent": "Henüz son deneme yok.",
       "empty_recording": "Kayıt çok kısa veya sessizdi. Tekrar deneyin.",
       "network_error": "Tilavet hizmetine ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
-      "error_title": "YZ Tilavet tamamlanamadı"
+      "error_title": "YZ Tilavet tamamlanamadı",
+      "results_title": "AI Recite results",
+      "results_subtitle": "Saved checks from AI Recite, so you can see how your recitation is holding.",
+      "results_empty_hint": "Use AI Recite on a session. Each finished check is saved here.",
+      "results_change": "Change from earlier checks: {value}",
+      "results_no_weak": "No repeated weak spots yet.",
+      "results_focus": "Needs practice",
+      "results_holding_title": "Holding well",
+      "results_holding_hint": "No weak ayahs in these checks yet.",
+      "results_open": "Open this check",
+      "view_all_results": "All results",
+      "attempt_saved": "This attempt is saved.",
+      "see_all_results": "See all results",
+      "continue_without_ai": "Yapay zekâ olmadan devam et"
     }
   },
   "admin": {

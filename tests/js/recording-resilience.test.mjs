@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   RECITATION_FAILURE_KIND,
   RECITATION_PROCESSING_STAGE,
+  canContinuePracticeWithoutAi,
   classifyRecitationFailure,
   createRecitationAttemptId,
   isStaleRecitationAttempt,
@@ -81,6 +82,10 @@ import {
 
   const cancelled = classifyRecitationFailure({ name: 'AbortError', message: 'The operation was aborted' })
   assert.equal(cancelled.kind, RECITATION_FAILURE_KIND.CANCELLED)
+  assert.equal(canContinuePracticeWithoutAi(mic.kind), true)
+  assert.equal(canContinuePracticeWithoutAi(usageCap.kind), true)
+  assert.equal(canContinuePracticeWithoutAi(timeout.kind), true)
+  assert.equal(canContinuePracticeWithoutAi(cancelled.kind), false)
   assert.equal(cancelled.retryable, false)
 
   const provider4xx = classifyRecitationFailure({ response: { status: 401, data: { message: 'not_authorised' } } })

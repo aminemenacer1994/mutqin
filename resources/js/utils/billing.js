@@ -1,16 +1,30 @@
 /**
  * Client-side subscription helpers.
- * All product features are free — these always grant access.
+ * Mirrors User::effectiveSubscriptionTier / hasPremiumAccess / hasProAccess.
  */
 
+function isAdmin(auth = {}) {
+  return !!auth?.is_admin
+}
+
+function isPaid(auth = {}) {
+  if (isAdmin(auth) || auth?.has_paid_access === true) {
+    return true
+  }
+
+  const status = String(auth?.subscription_status || '').toLowerCase()
+
+  return status === 'trialing' || status === 'active'
+}
+
 export function resolveSubscriptionTier(auth = {}) {
-  if (auth?.is_admin) {
+  if (isAdmin(auth)) {
     return 'pro'
   }
 
   const tier = String(auth?.subscription_tier || 'free').toLowerCase()
 
-  if (tier === 'pro' || tier === 'premium') {
+  if ((tier === 'pro' || tier === 'premium') && isPaid(auth)) {
     return tier
   }
 
@@ -18,21 +32,37 @@ export function resolveSubscriptionTier(auth = {}) {
 }
 
 export function hasActiveSubscription(auth = {}) {
-  void auth
-  return true
+  return isPaid(auth)
 }
 
 export function hasPremiumAccess(auth = {}) {
-  void auth
-  return true
+  if (auth?.has_premium_access === true || isAdmin(auth)) {
+    return true
+  }
+
+  const tier = resolveSubscriptionTier(auth)
+
+  return tier === 'premium' || tier === 'pro'
 }
 
 export function hasProAccess(auth = {}) {
-  void auth
-  return true
+  if (auth?.has_pro_access === true || isAdmin(auth)) {
+    return true
+  }
+
+  return resolveSubscriptionTier(auth) === 'pro'
 }
 
 export function maxSavedSessionsForTier(auth = {}) {
-  void auth
-  return Number.POSITIVE_INFINITY
+  const tier = resolveSubscriptionTier(auth)
+
+  if (tier === 'pro') {
+    return Number.POSITIVE_INFINITY
+  }
+
+  if (tier === 'premium') {
+    return 5
+  }
+
+  return 3
 }

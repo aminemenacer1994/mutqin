@@ -258,6 +258,12 @@
                   class="btn-secondary"
                   @click.stop="$emit('retry')"
                 >{{ tryAgainLabel }}</button>
+                <button
+                  v-if="continueWithoutLabel"
+                  type="button"
+                  class="btn-secondary"
+                  @click.stop="$emit('continue-without-ai')"
+                >{{ continueWithoutLabel }}</button>
               </div>
 
               <div v-else class="amd-footer__spacer" aria-hidden="true"></div>
@@ -313,6 +319,7 @@ export default {
     busy: { type: Boolean, default: false },
     endingSoon: { type: Boolean, default: false },
     errorAction: { type: String, default: 'retry' },
+    continueWithoutLabel: { type: String, default: '' },
     closeLabel: { type: String, default: 'Close' },
     toolsLabel: { type: String, default: 'Memorisation tools' },
     blurLabel: { type: String, default: 'Blur' },
@@ -367,6 +374,7 @@ export default {
     'done',
     'retry',
     'enable-mic',
+    'continue-without-ai',
   ],
   data() {
     return {

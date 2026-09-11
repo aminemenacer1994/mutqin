@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'currency' => env('BILLING_CURRENCY', 'GBP'),
+    'currency_symbol' => env('BILLING_CURRENCY_SYMBOL', '£'),
     'plans' => [
         'free' => [
             'name' => 'Free',
@@ -60,6 +62,7 @@ return [
             'interval' => 'month',
             'price_id' => env('STRIPE_PRICE_PRO_MONTHLY'),
             'trial_days' => 7,
+            'display_amount' => '5.99',
             'features' => [
                 'Full basic session setup',
                 'Unlimited saved sessions',
@@ -81,6 +84,9 @@ return [
             'interval' => 'year',
             'price_id' => env('STRIPE_PRICE_PRO_YEARLY'),
             'trial_days' => 7,
+            'display_amount' => '53.91',
+            'display_monthly_equivalent' => '4.49',
+            'annual_discount_percent' => 25,
             'features' => [
                 'Full basic session setup',
                 'Unlimited saved sessions',

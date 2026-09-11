@@ -4251,9 +4251,8 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     min-width: 0 !important;
     margin: 0 !important;
     padding: 0.15rem 0 0 !important;
-    overflow-x: hidden !important;
-    overflow-x: clip !important;
-    overflow-y: hidden !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
   }
 
   .workspace-shell-head > .workspace-shell-progress-pills::-webkit-scrollbar {
@@ -4296,6 +4295,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+    min-height: 44px !important;
     white-space: nowrap !important;
   }
 

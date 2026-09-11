@@ -22,14 +22,8 @@ class MemorisationAudioDownloadTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_free_user_can_download_allowed_cdn_audio(): void
+    public function test_free_user_cannot_download_offline_audio(): void
     {
-        Http::fake([
-            self::ALLOWED_URL => Http::response('fake-audio-bytes', 200, [
-                'Content-Type' => 'audio/mpeg',
-            ]),
-        ]);
-
         $user = User::factory()->create();
 
         $this->actingAs($user)
@@ -37,8 +31,7 @@ class MemorisationAudioDownloadTest extends TestCase
                 'url' => self::ALLOWED_URL,
                 'filename' => 'surah-1-ayah-1.mp3',
             ]))
-            ->assertOk()
-            ->assertHeader('content-disposition');
+            ->assertForbidden();
     }
 
     public function test_pro_user_can_download_allowed_cdn_audio(): void
@@ -91,7 +84,7 @@ class MemorisationAudioDownloadTest extends TestCase
             ]),
         ]);
 
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
 
         $this->actingAs($user)
             ->get(route('memorisation.audio-download', [
@@ -116,7 +109,7 @@ class MemorisationAudioDownloadTest extends TestCase
             ]),
         ]);
 
-        $user = User::factory()->create();
+        $user = User::factory()->pro()->create();
 
         $this->actingAs($user)
             ->get(route('memorisation.audio-download', [

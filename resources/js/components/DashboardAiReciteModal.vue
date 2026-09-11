@@ -145,7 +145,9 @@
                 :title="errorTitle"
                 :description="errorDesc"
                 :action-label="t('dashboard.retry')"
+                :secondary-action-label="t('dashboard.ai_recite.continue_without_ai')"
                 @action="retryFromError"
+                @secondary-action="$emit('close')"
               />
 
               <section v-if="stage === 'result' && analysisView" class="dash-ai-recite-result">

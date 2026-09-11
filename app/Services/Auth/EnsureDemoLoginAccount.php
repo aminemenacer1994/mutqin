@@ -11,7 +11,7 @@ use RuntimeException;
 
 /**
  * Ensures the one-click demo login account exists with a known password.
- * Allowed wherever SHOW_DEMO_ACCOUNTS is on, including production testers.
+ * Allowed only when SHOW_DEMO_ACCOUNTS is on. Production forces that flag off.
  * Never overwrites a real-user mailbox — emails must stay on a reserved demo domain.
  */
 class EnsureDemoLoginAccount

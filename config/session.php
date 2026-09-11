@@ -47,7 +47,13 @@ return [
     |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    'encrypt' => filter_var(
+        env(
+            'SESSION_ENCRYPT',
+            in_array(env('APP_ENV', 'production'), ['production', 'prod'], true) ? 'true' : 'false'
+        ),
+        FILTER_VALIDATE_BOOL
+    ),
 
     /*
     |--------------------------------------------------------------------------

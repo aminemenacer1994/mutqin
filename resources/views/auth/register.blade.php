@@ -76,7 +76,7 @@
 
         <p class="auth-footer">
             {{ __('ui.auth_already_account') }}
-            <a href="{{ route('login') }}">{{ __('ui.auth_sign_in') }}</a>
+            <a href="{{ route('login', \App\Support\BillingIntent::routeParams()) }}">{{ __('ui.auth_sign_in') }}</a>
         </p>
     </div>
 </div>

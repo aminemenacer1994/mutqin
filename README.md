@@ -127,9 +127,9 @@ Watch logs for `speechmatics.rate_limit.hit` (legacy: `Speechmatics token rate l
 
 ### Subscription tiers
 
-**All authenticated features are currently free.** `hasPremiumAccess` / `hasProAccess` and `EnsureSubscriptionTier` grant every signed-in user. Stripe checkout and webhooks stay wired for a later paid launch.
+Paid tiers are enforced. `hasPremiumAccess` / `hasProAccess` and `EnsureSubscriptionTier` (`plan:premium` / `plan:pro`) follow `subscription_status` (`trialing`/`active`) and `subscription_tier`. Admins receive Pro.
 
-Planned feature lists live in `config/billing.php`:
+Feature lists live in `config/billing.php`:
 
 - **Free** — Focus mode, basic sessions, limited saves
 - **Premium** — Blur, Chaining, Anchor, Hifz plan, spaced retention, adaptive revision

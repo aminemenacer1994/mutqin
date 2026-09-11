@@ -115,8 +115,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/hifz-plan', [HifzPlanController::class, 'show'])->name('api.hifz-plan.show');
         Route::put('/hifz-plan', [HifzPlanController::class, 'upsert'])
+            ->middleware('plan:premium')
             ->name('api.hifz-plan.upsert');
         Route::delete('/hifz-plan', [HifzPlanController::class, 'destroy'])
+            ->middleware('plan:premium')
             ->name('api.hifz-plan.destroy');
 
         // Private per-āyah notes & reflections (user-scoped).
@@ -137,8 +139,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/recommendations/confidence', [RecommendationController::class, 'confidence'])->name('api.recommendations.confidence');
         Route::post('/recommendations/settings', [RecommendationController::class, 'settings'])->name('api.recommendations.settings');
         Route::post('/recommendations/ai-assessment', [RecommendationController::class, 'aiAssessment'])
+            ->middleware('plan:pro')
             ->name('api.recommendations.ai-assessment');
         Route::post('/recommendations/adaptive-assessment', [RecommendationController::class, 'adaptiveAssessment'])
+            ->middleware('plan:premium')
             ->name('api.recommendations.adaptive-assessment');
 
         // AI Memorisation Detection — assessment, personalised plan, practice execution.
@@ -147,10 +151,10 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('memorisation.ask-mutqin.interpret');
 
         Route::post('/memorisation/assessments', [MemorisationDetectionController::class, 'storeAssessment'])
-            ->middleware('throttle:20,1')
+            ->middleware(['plan:pro', 'throttle:20,1'])
             ->name('api.memorisation.assessments.store');
         Route::post('/memorisation/assessments/failed', [MemorisationDetectionController::class, 'storeFailedAssessment'])
-            ->middleware('throttle:20,1')
+            ->middleware(['plan:pro', 'throttle:20,1'])
             ->name('api.memorisation.assessments.failed');
         Route::get('/memorisation/assessments', [MemorisationHistoryController::class, 'attemptIndex'])
             ->name('api.memorisation.assessments.index');

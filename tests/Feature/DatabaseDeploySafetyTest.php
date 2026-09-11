@@ -167,4 +167,20 @@ class DatabaseDeploySafetyTest extends TestCase
         $this->assertTrue(DatabaseDeploySafety::allowsForcedMigrate('production'));
         $this->assertFalse(DatabaseDeploySafety::allowsForcedMigrate('local'));
     }
+
+    public function test_deploy_preflight_fails_when_demo_is_on_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config([
+            'app.debug' => false,
+            'app.show_demo_accounts' => true,
+            'services.speechmatics.usage_cap.enabled' => true,
+            'services.speechmatics.usage_cap.daily_user_token_mints' => 30,
+            'services.speechmatics.usage_cap.daily_global_token_mints' => 200,
+            'services.google.client_id' => '',
+        ]);
+
+        $this->artisan('mutqin:deploy-preflight')
+            ->assertFailed();
+    }
 }

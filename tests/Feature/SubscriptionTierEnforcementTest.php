@@ -10,7 +10,7 @@ class SubscriptionTierEnforcementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_free_user_can_create_memorisation_assessment(): void
+    public function test_free_user_cannot_create_memorisation_assessment(): void
     {
         $user = User::factory()->create();
 
@@ -32,7 +32,7 @@ class SubscriptionTierEnforcementTest extends TestCase
                     ['word' => 'الله', 'confidence' => 0.94],
                 ],
             ])
-            ->assertCreated();
+            ->assertForbidden();
     }
 
     public function test_pro_user_can_create_memorisation_assessment(): void
@@ -60,19 +60,13 @@ class SubscriptionTierEnforcementTest extends TestCase
             ->assertCreated();
     }
 
-    public function test_free_user_can_request_transcription_token_when_speechmatics_unconfigured(): void
+    public function test_free_user_cannot_request_transcription_token(): void
     {
         $user = User::factory()->create();
 
-        config([
-            'services.speechmatics.api_key' => '',
-            'services.speechmatics.region' => 'eu',
-        ]);
-
         $this->actingAs($user)
             ->postJson(route('memorisation.transcription-token'))
-            ->assertOk()
-            ->assertJsonPath('available', false);
+            ->assertForbidden();
     }
 
     public function test_pro_user_can_request_transcription_token_when_speechmatics_unconfigured(): void
@@ -90,38 +84,44 @@ class SubscriptionTierEnforcementTest extends TestCase
             ->assertJsonPath('available', false);
     }
 
-    public function test_free_user_can_submit_adaptive_assessment(): void
+    public function test_free_user_cannot_submit_adaptive_assessment(): void
     {
         $freeUser = User::factory()->create();
-        $premiumUser = User::factory()->premium()->create();
 
-        $payload = [
-            'session_id' => 'sess-adaptive-1',
-            'skills' => ['phrase_recall'],
-            'confidence' => 'needs_practice',
-        ];
-
-        $freeResponse = $this->actingAs($freeUser)
-            ->postJson('/api/recommendations/adaptive-assessment', $payload);
-        $this->assertNotSame(403, $freeResponse->status());
-
-        $premiumResponse = $this->actingAs($premiumUser)
-            ->postJson('/api/recommendations/adaptive-assessment', $payload);
-        $this->assertNotSame(403, $premiumResponse->status());
+        $this->actingAs($freeUser)
+            ->postJson('/api/recommendations/adaptive-assessment', [
+                'session_id' => 'sess-adaptive-1',
+                'skills' => ['phrase_recall'],
+                'confidence' => 'needs_practice',
+            ])
+            ->assertForbidden();
     }
 
-    public function test_free_user_can_submit_ai_assessment(): void
+    public function test_premium_user_can_submit_adaptive_assessment(): void
+    {
+        $premiumUser = User::factory()->premium()->create();
+
+        $response = $this->actingAs($premiumUser)
+            ->postJson('/api/recommendations/adaptive-assessment', [
+                'session_id' => 'sess-adaptive-1',
+                'skills' => ['phrase_recall'],
+                'confidence' => 'needs_practice',
+            ]);
+
+        $this->assertNotSame(403, $response->status());
+    }
+
+    public function test_free_user_cannot_submit_ai_assessment(): void
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)
+        $this->actingAs($user)
             ->postJson('/api/recommendations/ai-assessment', [
                 'session_id' => 'sess-ai-1',
                 'accuracy' => 0.8,
                 'confidence' => 'confident',
-            ]);
-
-        $this->assertNotSame(403, $response->status());
+            ])
+            ->assertForbidden();
     }
 
     public function test_admin_user_bypasses_pro_gate(): void

@@ -17,14 +17,13 @@ class HifzPlanTest extends TestCase
         $this->putJson('/api/hifz-plan', ['plan' => []])->assertUnauthorized();
     }
 
-    public function test_free_user_can_save_hifz_plan(): void
+    public function test_free_user_cannot_save_hifz_plan(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->putJson('/api/hifz-plan', ['plan' => $this->samplePlan()])
-            ->assertOk()
-            ->assertJsonPath('saved', true);
+            ->assertForbidden();
     }
 
     public function test_premium_user_can_save_fetch_and_delete_hifz_plan(): void
@@ -58,7 +57,7 @@ class HifzPlanTest extends TestCase
 
     public function test_hifz_plan_rejects_oversized_payload(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->premium()->create();
 
         $this->actingAs($user)
             ->putJson('/api/hifz-plan', [

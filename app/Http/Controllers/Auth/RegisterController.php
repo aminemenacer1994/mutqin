@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\AdminEmails;
 use App\Support\AuthRedirect;
+use App\Support\BillingIntent;
 use App\Support\EmailVerification;
 use App\Support\Theme;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -46,6 +48,13 @@ class RegisterController extends Controller
     protected function redirectTo(): string
     {
         return AuthRedirect::path($this->guard()->user(), justRegistered: true);
+    }
+
+    public function showRegistrationForm(): View
+    {
+        BillingIntent::rememberFromRequest(request());
+
+        return view('auth.register');
     }
 
     /**

@@ -264,14 +264,14 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
 
     public function hasPremiumAccess(): bool
     {
-        // All features are free for every authenticated user.
-        return true;
+        $tier = $this->effectiveSubscriptionTier();
+
+        return in_array($tier, ['premium', 'pro'], true);
     }
 
     public function hasProAccess(): bool
     {
-        // All features are free for every authenticated user.
-        return true;
+        return $this->effectiveSubscriptionTier() === 'pro';
     }
 
     public function isAdmin(): bool

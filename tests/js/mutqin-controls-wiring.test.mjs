@@ -655,8 +655,8 @@ includesAll('ai audio consent and retention wiring', [
 }
 
 includesAll('planner ui gated by premium tier', [
-  /showHifzPlannerUi\(\) \{\s*return true\s*\}/s,
-  /showAiMemorisationButton\(\) \{\s*return this\.aiTestModalsEnabled\s*\}/s,
+  /showHifzPlannerUi\(\) \{\s*return this\.canUsePremiumTechniques\s*\}/s,
+  /showAiMemorisationButton\(\) \{\s*return this\.aiTestModalsEnabled && this\.canUseProFeatures\s*\}/s,
   /<HifzPlanCreatorModal/,
   /:visible="showHifzPlannerUi && showHifzPlanModal"/,
   /workspaceShellKicker/,

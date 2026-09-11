@@ -19,6 +19,8 @@ import {
 import { migrateLegacyWorkspaceLocalStorage } from '../utils/mutqinLocalStorageMigration'
 import { isBrowserOffline, isBrowserOnline, isNetworkError } from '../utils/networkStatus'
 import {
+  hasPremiumAccess,
+  hasProAccess,
   maxSavedSessionsForTier,
 } from '../utils/billing'
 import {
@@ -241,6 +243,7 @@ import {
   RECITATION_FAILURE_KIND,
   RECITATION_AMD_SUBMIT_TIMEOUT_MS,
   RECITATION_SUBMIT_TIMEOUT_MS,
+  canContinuePracticeWithoutAi,
   classifyRecitationFailure,
   createRecitationAttemptId,
   probeMicrophonePermission,
@@ -796,6 +799,7 @@ export default {
       countdownValue: 3,
       countdownInterval: null,
       countdownGeneration: 0,
+      _countdownFinish: null,
       talqinPauseTimer: null,
       talqinPauseSettleTimer: null,
       practiceTurnCalloutStyle: {},
@@ -2303,19 +2307,19 @@ export default {
       return true
     },
     showHifzPlannerUi() {
-      return true
+      return this.canUsePremiumTechniques
     },
     showAiMemorisationButton() {
-      return this.aiTestModalsEnabled
+      return this.aiTestModalsEnabled && this.canUseProFeatures
     },
     aiTestModalsEnabled() {
       return AI_TEST_MODALS_ENABLED === true
     },
     canUsePremiumTechniques() {
-      return true
+      return hasPremiumAccess(this.auth)
     },
     canUseProFeatures() {
-      return true
+      return hasProAccess(this.auth)
     },
     maxSavedSessionsAllowed() {
       return maxSavedSessionsForTier(this.auth)
@@ -11011,7 +11015,38 @@ export default {
       if (this.amdOpen) {
         this.failAmdAssessment(text, { toast: false })
       }
-      if (text) this.showBanner(text, 'error', Number(options?.durationMs) || 4200)
+      if (!text) return
+      const classification = classifyRecitationFailure(
+        options.error || { message: text },
+        { context: options.context || 'recitation_ui' }
+      )
+      const action = canContinuePracticeWithoutAi(options.failureKind || classification.kind)
+        ? {
+            key: 'continue-without-ai',
+            label: this.t('memorisation.aiCheck.continueWithoutAi'),
+          }
+        : null
+      this.showBanner(text, 'error', Number(options?.durationMs) || 9000, action)
+    },
+
+    continuePracticeWithoutAi() {
+      try { this.closeAmdModal?.({ returnToCompletion: false }) } catch (_) { /* ignore */ }
+      this.showSelfCheckModal = false
+      this.postSessionAiReciteActive = false
+      this.postSessionAdaptiveCheckActive = false
+      this.recitationCheckPanelOpen = false
+      this.recitationCheckPreparing = false
+      this.recitationCheckRecording = false
+      this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+      if (this.postSessionRecommendationStep === 'memorisation_check_nudge') {
+        this.continueWithoutMemorisationCheck()
+        return
+      }
+      this.showBanner(
+        this.t('memorisation.aiCheck.consentDeclined'),
+        'info',
+        4200
+      )
     },
     setRecitationProcessingStage(stage = RECITATION_PROCESSING_STAGE.IDLE) {
       this.recitationProcessingStage = String(stage || RECITATION_PROCESSING_STAGE.IDLE)
@@ -13856,7 +13891,8 @@ export default {
             this.t('toasts.sessionSaveLimitReached', { max: this.maxSavedSessionsAllowed })
               || `Saved session limit reached (${this.maxSavedSessionsAllowed}). Delete one to save another.`,
             'warning',
-            4200
+            8000,
+            this.sessionSaveLimitUpgradeAction()
           )
         } else {
           this.showBanner(
@@ -13890,7 +13926,8 @@ export default {
                   || `Saved session limit reached (${this.maxSavedSessionsAllowed}). Delete one to save another.`)
                 : (this.t('toasts.sessionSaveFailed') || 'Could not save this session. Try again.'),
               reason === 'limit' ? 'warning' : 'danger',
-              4200
+              reason === 'limit' ? 8000 : 4200,
+              reason === 'limit' ? this.sessionSaveLimitUpgradeAction() : null
             )
             return null
           }
@@ -14402,6 +14439,7 @@ export default {
     showCountdown(callback) {
       this.countdownGeneration = (Number(this.countdownGeneration) || 0) + 1
       const generation = this.countdownGeneration
+      this._countdownFinish = callback
       this.showCountdownOverlay = true
       this.countdownValue = 3
 
@@ -14420,17 +14458,51 @@ export default {
         this.countdownValue -= 1
 
         if (this.countdownValue <= 0) {
-          clearInterval(this.countdownInterval)
-          this.countdownInterval = null
-          this.showCountdownOverlay = false
-          if (!callback) return
-          Promise.resolve()
-            .then(() => callback())
-            .catch((error) => {
-              console.error('Countdown callback failed', error)
-            })
+          this.finishCountdown()
         }
       }, 1000)
+    },
+
+    finishCountdown() {
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval)
+        this.countdownInterval = null
+      }
+      this.showCountdownOverlay = false
+      const callback = this._countdownFinish
+      this._countdownFinish = null
+      if (!callback) return
+      Promise.resolve()
+        .then(() => callback())
+        .catch((error) => {
+          console.error('Countdown callback failed', error)
+        })
+    },
+
+    skipCountdownToPlay() {
+      this.countdownGeneration = (Number(this.countdownGeneration) || 0) + 1
+      this.primeSessionAudioForCountdown()
+      this.finishCountdown()
+    },
+
+    sessionSaveLimitUpgradeAction() {
+      if (window.mutqinHasPaidAccess) return null
+      return {
+        key: 'open-pricing',
+        label: this.t('pricingPage.upgradeToPro'),
+      }
+    },
+
+    primeSessionAudioForCountdown() {
+      const entry = this.queue?.[this.queueIndex] || this.queue?.[0]
+      const verse = entry?.verse || entry
+      const audioUrl = this.toPlayableAudioUrl?.(this.ensureVerseAudioUrl?.(verse)) || ''
+      const audio = this.audioElement || this.$refs.audio
+      if (audio && audioUrl) {
+        this.primeAudioPlaybackUnlock(audio, { targetUrl: audioUrl, pauseAfterUnlock: true })
+        return
+      }
+      this.primeAudioPlaybackUnlock()
     },
 
     getTalqinModeToggleValue() {
@@ -14612,8 +14684,10 @@ export default {
           if (isStale()) return
           audio.muted = false
           if (targetUrl) {
-            // Keep the real ayah URL and do not pause — intentional play may already
-            // be underway (or about to start) on this same element.
+            if (options.pauseAfterUnlock) {
+              try { audio.pause() } catch { }
+            }
+            // Keep the real ayah URL so the post-countdown play() stays on this element.
             return
           }
           try { audio.pause() } catch { }
@@ -14845,7 +14919,7 @@ export default {
       this.pendingPostSessionModalPayload = null
       this.closePostSessionChoice()
       if (!options.skipPrime) {
-        this.primeAudioPlaybackUnlock()
+        this.primeSessionAudioForCountdown()
       }
 
       const preloadEntry = this.queue?.[this.queueIndex] || this.queue?.[0]
@@ -14991,6 +15065,7 @@ export default {
         await this.closeToolsPanel()
         // closeToolsPanel already soft-flushed controls → workspace; avoid a second wipe.
         await this.$nextTick()
+        this.primeSessionAudioForCountdown()
         const started = this.startSessionWithCountdown({ skipPrime: true })
         if (!started) {
           this.showTools = true
@@ -15087,7 +15162,8 @@ export default {
               || `Saved session limit reached (${this.maxSavedSessionsAllowed}).`)
             : (this.t('toasts.sessionSaveFailed') || 'Could not save this session. Try again.'),
           reason === 'limit' ? 'warning' : 'danger',
-          3600
+          reason === 'limit' ? 8000 : 3600,
+          reason === 'limit' ? this.sessionSaveLimitUpgradeAction() : null
         )
         return
       }
@@ -32579,7 +32655,7 @@ export default {
     },
 
     resumeRestoredSessionWithCountdown() {
-      this.primeAudioPlaybackUnlock()
+      this.primeSessionAudioForCountdown()
       this.playerVisible = true
       this.prepareRestoredSessionAudio({ autoplay: false, force: true })
       this.showCountdown(async () => {
@@ -40814,6 +40890,14 @@ export default {
       }
       if (actionKey === 'open-register') {
         window.location.assign(this.auth?.register_url || '/register')
+        return
+      }
+      if (actionKey === 'open-pricing') {
+        window.location.assign(this.auth?.pricing_url || '/pricing')
+        return
+      }
+      if (actionKey === 'continue-without-ai') {
+        this.continuePracticeWithoutAi()
         return
       }
       if (actionKey === 'start-quiz') {

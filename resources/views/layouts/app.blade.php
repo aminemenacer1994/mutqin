@@ -29,6 +29,14 @@
     $authAwaitingVerification = $navUser !== null
         && \App\Support\EmailVerification::required()
         && ! $navUser->hasVerifiedEmail();
+    $mutqinBillingDisplay = [
+        'currency' => config('billing.currency', 'GBP'),
+        'currencySymbol' => config('billing.currency_symbol', '£'),
+        'proMonthly' => (string) config('billing.plans.pro_monthly.display_amount', '5.99'),
+        'proYearlyMonthly' => (string) config('billing.plans.pro_yearly.display_monthly_equivalent', '4.49'),
+        'proYearlyTotal' => (string) config('billing.plans.pro_yearly.display_amount', '53.91'),
+        'annualDiscountPercent' => (int) config('billing.plans.pro_yearly.annual_discount_percent', 25),
+    ];
 @endphp
 <!doctype html>
 <html lang="{{ $appLocale }}" dir="{{ $appDirection }}" data-theme="{{ $appTheme }}">
@@ -936,9 +944,8 @@
           min-width: 0 !important;
           margin: 0 !important;
           padding: 0.15rem 0 0 !important;
-          overflow-x: hidden !important;
-          overflow-x: clip !important;
-          overflow-y: hidden !important;
+          overflow-x: visible !important;
+          overflow-y: visible !important;
         }
         .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills::-webkit-scrollbar {
           display: none !important;
@@ -946,22 +953,23 @@
         .app .workspace-shell-progress-pill {
           display: inline-flex !important;
           align-items: center !important;
-          flex: 0 0 auto !important;
-          max-width: 8.5rem !important;
+          flex: 0 1 auto !important;
+          max-width: 100% !important;
           min-width: 0 !important;
+          min-height: 1.75rem !important;
           margin: 0 !important;
-          padding: 0.14rem 0.48rem !important;
+          padding: 0.22rem 0.55rem !important;
           border: 1px solid color-mix(in srgb, var(--border) 85%, transparent) !important;
           border-radius: 999px !important;
           background: color-mix(in srgb, var(--surface) 92%, var(--bg)) !important;
           color: color-mix(in srgb, var(--text) 72%, transparent) !important;
-          font-size: 0.64rem !important;
+          font-size: 0.75rem !important;
           font-weight: 600 !important;
-          line-height: 1.15 !important;
+          line-height: 1.2 !important;
           white-space: nowrap !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
-          pointer-events: none !important;
+          pointer-events: auto !important;
           user-select: none !important;
         }
         html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-actions {
@@ -982,7 +990,11 @@
           align-items: center !important;
           width: 100% !important;
           min-width: 0 !important;
-          gap: 0.35rem !important;
+          gap: 0.45rem !important;
+        }
+        html body .app .workspace-shell-head-toolbar .top-card-action-trigger.session-primary-action,
+        html body .app .workspace-shell-head-toolbar .top-card-action-trigger.action-btn-exit {
+          min-height: 44px !important;
         }
         /* Post-session mobile: full-width 50/50 CTAs (avoid display:contents shrink-wrap). */
         html body .app .workspace-shell--post-session-choice .workspace-shell-actions,
@@ -7032,6 +7044,10 @@
         window.mutqinForceInitialLocale = @json(request()->query('lang') ? true : false);
         window.mutqinAuthCheck = @json(Auth::check());
         window.mutqinUserId = @json(Auth::id());
+        window.mutqinHasPaidAccess = @json($navUser?->hasPaidAccess() ?? false);
+        window.mutqinCanManageBilling = @json($navUser !== null && filled($navUser->stripe_customer_id));
+        window.mutqinSubscriptionTier = @json($navUser?->effectiveSubscriptionTier() ?? 'free');
+        window.mutqinBilling = @json($mutqinBillingDisplay);
         window.mutqinUiLabels = {
             en: @json(trans('ui', [], 'en')),
             fr: @json(trans('ui', [], 'fr')),

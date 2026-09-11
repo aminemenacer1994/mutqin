@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\AuthRedirect;
+use App\Support\BillingIntent;
 use App\Support\EmailVerification;
 use App\Support\Theme;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
@@ -30,6 +31,8 @@ class LoginController extends Controller
 
     public function showLoginForm(): View
     {
+        BillingIntent::rememberFromRequest(request());
+
         return view('auth.login');
     }
 

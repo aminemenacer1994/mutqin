@@ -323,6 +323,7 @@
             <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
             <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
+            <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
             <a href="/waiting-list">{{ t('homepage.footer.waitlist') }}</a>
           </div>
           <div class="footer__links">

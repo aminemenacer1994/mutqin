@@ -478,7 +478,7 @@
       "yearly": "Yearly",
       "perMonth": "/month",
       "premiumYearly": "or £17.99 yearly",
-      "proYearly": "or £49.99 yearly",
+      "proYearly": "or £53.91 yearly",
       "featureColumn": "Feature",
       "freeTrial": "7-DAY FREE TRIAL",
       "accountNote": "Sign in before checkout so your plan syncs to the correct Mutqin account."
@@ -1410,9 +1410,10 @@
       "recordingInvalid": "No usable audio was captured. Try recording again.",
       "serviceNetworkError": "We couldn't connect to the recitation service. Your session is safe. Try again.",
       "serviceUnavailable": "Recitation checking is temporarily unavailable. You can continue practising and try the AI check again later.",
-      "usageCapReached": "You have reached today's AI voice-check limit. Please try again tomorrow.",
+      "usageCapReached": "You have reached today's AI voice-check limit. Continue practising without AI, or try again tomorrow.",
+      "continueWithoutAi": "Continue without AI",
       "rateLimited": "You are starting AI voice checks too quickly. Please wait a moment and try again.",
-      "processingTimeout": "This is taking longer than expected. Try again.",
+      "processingTimeout": "This is taking longer than expected. Try again, or continue practising without AI.",
       "retry": {
         "silence": "We didn’t hear any recitation. Recite clearly, then try again.",
         "tooShort": "That recording was too short. Recite a little longer, then try again.",
@@ -2045,6 +2046,7 @@
     "save_session": "Save Session",
     "end_this_session_now": "End this session now?",
     "prepare_yourself": "Prepare yourself",
+    "countdownPlayNow": "Play now",
     "session_finished": "Session Finished",
     "rangeOptions": {
       "all": "All",
@@ -3902,7 +3904,7 @@
     "sessionPauseFailed": "Unable to pause session. Please try again.",
     "sessionSaveFailed": "Could not save this session. Try again.",
     "sessionSaveSyncFailed": "Session saved on this device. Sync will retry shortly.",
-    "sessionSaveLimitReached": "Saved session limit reached ({max}). Delete one to save another.",
+    "sessionSaveLimitReached": "Saved session limit reached ({max}). Delete one to save another, or upgrade to Pro for unlimited saves.",
     "premiumTechniqueRequired": "This technique needs Premium. Upgrade to unlock it.",
     "couldNotPlayRecording": "We could not play this recording. Try reloading it or record again.",
     "defaultSessionLoaded": "Loaded a gentle starter set: Al-Fātiḥah 1–7, Alafasy, standard speed, one repeat.",
@@ -3983,18 +3985,82 @@
   },
   "pricingPage": {
     "title": "Choose your plan",
-    "subtitle": "Start free. Upgrade anytime.",
+    "subtitle": "Start free. Move to Pro when you want more feedback, history, and planning.",
     "billingToggleLabel": "Billing cycle",
-    "annualSavings": "Save 50%",
+    "annualSavings": "Save 25%",
     "freeForever": "Free forever",
+    "freeKicker": "Starter",
+    "proKicker": "Practice",
+    "freeTagline": "Everything you need to begin a steady hifz habit.",
+    "proTagline": "Unlimited sessions, AI checks, and a clearer next step.",
+    "popular": "Popular",
+    "getPro": "Get Pro",
+    "upgradeToPro": "Upgrade to Pro",
+    "manageBilling": "Manage billing",
+    "currentPlan": "Current plan",
+    "continueFree": "Continue",
+    "includes": "Included",
+    "everythingInFree": "Everything in Free",
     "buyPremium": "Get Premium",
     "buyPro": "Get Pro",
     "premiumDiscount": "50% off",
-    "proDiscount": "30% off",
+    "proDiscount": "25% off",
     "billedMonthly": "Billed monthly",
-    "billedAnnually": "£{amount}/year",
-    "trialBadge": "7-day trial",
-    "checkoutNote": "Sign in before checkout so your plan syncs to the correct account. After payment, use the same email you used in Stripe."
+    "billedAnnually": "{symbol}{amount} billed yearly",
+    "trialBadge": "7-day free trial",
+    "guaranteeNote": "Cancel anytime before the trial ends.",
+    "switchAssurance": "7-day free trial · Cancel anytime",
+    "proCtaNote": "7-day free trial. Cancel anytime.",
+    "submitting": "Redirecting…",
+    "contactSupport": "Contact support",
+    "billingSyncNeeded": "Billing isn’t linked to Stripe on this account yet. Contact us if you already paid.",
+    "currentPremium": "You’re on Premium. Upgrade to Pro for AI checks and unlimited saves.",
+    "checkoutNote": "Create an account so Stripe checkout links to the right Mutqin account.",
+    "signInToCheckout": "Already have an account? Sign in",
+    "yearlyPerk": "3 months free when billed yearly",
+    "trustAria": "Billing assurances",
+    "trustTrial": "7-day free trial on Pro",
+    "trustCancel": "Cancel any time from billing",
+    "trustSecure": "Secure checkout with Stripe",
+    "highlights": {
+      "startTitle": "Start free",
+      "startDesc": "Open a short range today. No card needed.",
+      "upgradeTitle": "Upgrade when ready",
+      "upgradeDesc": "Pro adds unlimited sessions, AI checks, and planning.",
+      "leaveTitle": "Leave anytime",
+      "leaveDesc": "A 7-day trial, then cancel from billing if you want."
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Questions people ask",
+      "subtitle": "Short answers on plans, checkout, and cancelling.",
+      "items": {
+        "cost": {
+          "question": "Is Mutqin free? What does Pro cost?",
+          "answer": "Yes. Free is {symbol}0 forever. Pro is {symbol}{monthly} a month, or {symbol}{yearlyMonthly} a month when billed yearly ({symbol}{yearlyTotal}/year)."
+        },
+        "difference": {
+          "question": "What does Pro add?",
+          "answer": "Unlimited saved sessions, all memorisation techniques, recitation and memorisation checks, a custom Hifz plan, adaptive revision, and offline listening."
+        },
+        "yearly": {
+          "question": "How does yearly billing work?",
+          "answer": "Yearly is 25% off the monthly price. You pay {symbol}{yearlyTotal} once a year instead of {symbol}{monthly} each month."
+        },
+        "trial": {
+          "question": "Is there a free trial?",
+          "answer": "Pro includes a 7-day free trial. You can cancel before it ends and you will not be charged."
+        },
+        "cancel": {
+          "question": "Can I cancel anytime?",
+          "answer": "Yes. Open billing from your profile, or use Manage billing on this page after you subscribe."
+        },
+        "account": {
+          "question": "Do I need an account before I pay?",
+          "answer": "Yes. Sign in with the same email you will use in Stripe so the plan links to the right Mutqin account."
+        }
+      }
+    }
   },
   "mission": {
     "kicker": "Our mission",
@@ -4685,7 +4751,8 @@
       "see_all_results": "See all results",
       "empty_recording": "That recording was too short or silent. Try again.",
       "network_error": "We couldn’t reach the recitation service. Check your connection and try again.",
-      "error_title": "AI Recite couldn’t finish"
+      "error_title": "AI Recite couldn’t finish",
+      "continue_without_ai": "Continue without AI"
     }
   },
   "admin": {

@@ -45,8 +45,8 @@ class SecurityHardeningTest extends TestCase
 
     public function test_assessment_rejects_foreign_session_ids(): void
     {
-        $owner = User::factory()->create();
-        $attacker = User::factory()->create();
+        $owner = User::factory()->pro()->create();
+        $attacker = User::factory()->pro()->create();
         $foreignSession = UserSession::create([
             'user_id' => $owner->id,
             'surah_number' => 1,

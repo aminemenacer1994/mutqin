@@ -9,7 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureSubscriptionTier
 {
     /**
-     * Previously gated premium/pro features. All features are free.
+     * Gate premium/pro features against the authenticated user's paid tier.
+     * Admins receive Pro via User::effectiveSubscriptionTier().
      *
      * @param  'premium'|'pro'  $tier
      */
@@ -21,7 +22,14 @@ class EnsureSubscriptionTier
             abort(401);
         }
 
-        void $tier;
+        $allowed = match ($tier) {
+            'pro' => $user->hasProAccess(),
+            default => $user->hasPremiumAccess(),
+        };
+
+        if (! $allowed) {
+            abort(403, __('billing.plan_required', ['tier' => $tier]));
+        }
 
         return $next($request);
     }
