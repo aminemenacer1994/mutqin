@@ -12,6 +12,8 @@
  *   secondary / ghost — neutral outline
  */
 
+import { RECITATION_THRESHOLDS } from '../engine/recitationThresholds.js'
+
 export const POST_SESSION_CTA_STATES = Object.freeze({
   NEEDS_PRACTICE: 'needs_practice',
   REVIEW_RECOMMENDED: 'review_recommended',
@@ -140,13 +142,15 @@ export function resolveWeaknessSeverity(evidence = {}) {
   const partialWords = Math.max(0, Number(evidence.partialWordCount || 0))
   const weakAyahs = Math.max(0, Number(evidence.weakAyahCount || 0))
   const sequenceErrors = Math.max(0, Number(evidence.sequenceErrors || 0))
-  // Keep in sync with RECITATION_AUDIO_THRESHOLDS.progressionWithErrorsMin.
-  const progressionWithErrorsMin = 85
+  const progressionWithErrorsMin = RECITATION_THRESHOLDS.progressionWithErrorsMin
+  const strongMin = RECITATION_THRESHOLDS.strongAccuracyMin
+  const developingMin = RECITATION_THRESHOLDS.developingAccuracyMin
+  const maxPartials = RECITATION_THRESHOLDS.mixedProgressionMaxPartials
 
   if (
     outcome === 'weak'
     || resultState === 'needs_practice'
-    || (accuracy != null && accuracy < 55)
+    || (accuracy != null && accuracy < developingMin)
   ) {
     return 'significant'
   }
@@ -158,7 +162,7 @@ export function resolveWeaknessSeverity(evidence = {}) {
   if (
     resultState === 'strong'
     || outcome === 'strong'
-    || (accuracy != null && accuracy >= 80)
+    || (accuracy != null && accuracy >= strongMin)
   ) {
     if (!hasWordLevelEvidence) return null
     if (hardWords === 0 && partialWords === 0 && weakAyahs === 0) return null
@@ -175,12 +179,12 @@ export function resolveWeaknessSeverity(evidence = {}) {
   if (
     resultState === 'developing'
     || outcome === 'mixed'
-    || (accuracy != null && accuracy >= 55)
+    || (accuracy != null && accuracy >= developingMin)
   ) {
     if (!hasWordLevelEvidence) return null
-    if (hardWords >= 2 || weakAyahs >= 2) return 'significant'
+    if (hardWords >= 1 || weakAyahs >= 2 || partialWords > maxPartials) return 'significant'
     // Clean or lightly local developing → reinforce-then-continue (not sticky repeat).
-    if (hardWords <= 1 && weakAyahs <= 1) return 'minor'
+    if (hardWords === 0 && weakAyahs <= 1) return 'minor'
     return 'significant'
   }
 

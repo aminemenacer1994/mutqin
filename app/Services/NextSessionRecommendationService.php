@@ -16,6 +16,7 @@ use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use App\Services\Memorisation\RecitationAttemptClassifier;
 use App\Services\Memorisation\RecitationMasteryService;
+use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Support\AyahWorkload;
 use App\Support\QuranMetadata;
 use App\Support\SessionDefaults;
@@ -2154,7 +2155,7 @@ class NextSessionRecommendationService
 
             return ! $isWeak
                 && $accuracy !== null
-                && $accuracy >= 80
+                && $accuracy >= RecitationScoringThresholds::STRONG_ACCURACY_MIN
                 && $updatedAt
                 && $updatedAt->greaterThanOrEqualTo($recentCutoff);
         });
@@ -2164,11 +2165,11 @@ class NextSessionRecommendationService
      * Mirror client-side progression rules for AI Recite assessments
      * (resources/js/.../aiAssessmentAllowsProgression).
      *
-     * Bands (labels stay 80 / 55):
+     * Bands (labels stay 85 / 68):
      * - strong + clean → advance
-     * - ≥85% with at most one hard error → mostly-secure advance
-     * - 55–84% developing with light local issues → reinforce-then-continue
-     * - weak / multi-error / sequence skips → repeat
+     * - ≥90% with at most one hard error → mostly-secure advance
+     * - 68–84% developing with amber-only local issues → reinforce-then-continue
+     * - weak / any mixed hard error / multi-error / sequence skips → repeat
      *
      * @param  array<string, mixed>  $assessment
      */
@@ -2185,7 +2186,7 @@ class NextSessionRecommendationService
                 ? (float) $assessment['accuracy_percent']
                 : null);
 
-        if ($accuracy !== null && $accuracy < 55) {
+        if ($accuracy !== null && $accuracy < RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN) {
             return false;
         }
 
@@ -2198,8 +2199,7 @@ class NextSessionRecommendationService
         $skippedAyahs = is_array($assessment['skipped_ayahs'] ?? null)
             ? count($assessment['skipped_ayahs'])
             : (is_array($assessment['skippedAyahs'] ?? null) ? count($assessment['skippedAyahs']) : 0);
-        // Keep in sync with RECITATION_AUDIO_THRESHOLDS.progressionWithErrorsMin.
-        $progressionWithErrorsMin = 85;
+        $progressionWithErrorsMin = RecitationScoringThresholds::PROGRESSION_WITH_ERRORS_MIN;
 
         if (
             $sequenceErrors > 0
@@ -2221,14 +2221,16 @@ class NextSessionRecommendationService
             return $hardWords <= 1 && $weakAyahs <= 1;
         }
 
-        // Clean 80–84% (no hard errors) may still advance.
-        if ($accuracy !== null && $accuracy >= 80) {
+        // Clean strong-band scores (no hard errors) may still advance.
+        if ($accuracy !== null && $accuracy >= RecitationScoringThresholds::STRONG_ACCURACY_MIN) {
             return $hardWords === 0 && $weakAyahs <= 1;
         }
 
-        // Developing / mixed middle path: reinforce-then-continue when issues are local.
-        if ($accuracy !== null && $accuracy >= 55) {
-            return $hardWords <= 1 && $weakAyahs <= 1 && $partialWords <= 6;
+        // Developing / mixed: reinforce-then-continue only when slips are amber-only and local.
+        if ($accuracy !== null && $accuracy >= RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN) {
+            return $hardWords === 0
+                && $weakAyahs <= 1
+                && $partialWords <= RecitationScoringThresholds::MIXED_PROGRESSION_MAX_PARTIALS;
         }
 
         return false;

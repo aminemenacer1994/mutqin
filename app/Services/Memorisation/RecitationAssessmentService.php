@@ -219,7 +219,7 @@ class RecitationAssessmentService
             $this->history->upsertWeakSpots($user, $assessment, $analysis);
             $this->history->markRecalledWords($user, $assessment, $aligned['word_results']);
 
-            $outcome = $aligned['accuracy'] >= 80 ? 'strong' : ($aligned['accuracy'] >= 55 ? 'mixed' : 'weak');
+            $outcome = RecitationScoringThresholds::bandForAccuracy((int) $aligned['accuracy']);
             $this->mastery->applyFromAssessment($user, $assessment, $analysis, $aligned, $outcome);
 
             $standaloneAttempt = null;
@@ -702,7 +702,7 @@ class RecitationAssessmentService
         array $payload
     ): AiReciteAttempt {
         $accuracy = (int) ($aligned['accuracy'] ?? $assessment->overall_accuracy ?? 0);
-        $band = $accuracy >= 80 ? 'strong' : ($accuracy >= 55 ? 'mixed' : 'weak');
+        $band = RecitationScoringThresholds::bandForAccuracy($accuracy);
         $peekUsed = (bool) ($payload['peek_used'] ?? false);
         $source = AiReciteAttempt::SOURCE_DASHBOARD;
 
@@ -856,7 +856,7 @@ class RecitationAssessmentService
             return;
         }
 
-        $outcome = $aligned['accuracy'] >= 80 ? 'strong' : ($aligned['accuracy'] >= 55 ? 'mixed' : 'weak');
+        $outcome = RecitationScoringThresholds::bandForAccuracy((int) $aligned['accuracy']);
         $this->recommendations->applyAiAssessment($user, $recommendation, [
             'result' => $outcome,
             'summary' => $assessment->friendly_summary,

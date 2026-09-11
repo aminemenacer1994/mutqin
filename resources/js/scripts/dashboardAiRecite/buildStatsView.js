@@ -1,3 +1,5 @@
+import { recitationAccuracyBand } from '../engine/recitationThresholds.js'
+
 function asNumber(value) {
   const n = Number(value)
   return Number.isFinite(n) ? n : 0
@@ -10,9 +12,7 @@ function asText(value) {
 function toneForAccuracy(value) {
   const n = Number(value)
   if (!Number.isFinite(n)) return 'neutral'
-  if (n >= 85) return 'strong'
-  if (n >= 60) return 'mixed'
-  return 'weak'
+  return recitationAccuracyBand(n)
 }
 
 const FOCUS_BELOW = 90

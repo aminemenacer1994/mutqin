@@ -516,6 +516,8 @@ import {
   RECITATION_LIVE_MIN_CONFIDENCE_FOR_CORRECT,
   RECITATION_LIVE_MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT,
   RECITATION_LIVE_PARTIAL_SIMILARITY,
+  RECITATION_THRESHOLDS,
+  recitationAccuracyBand,
 } from '../scripts/engine/recitation_analysis'
 import {
   DEFAULT_REPLAY_VALIDATION_COUNT,
@@ -25878,9 +25880,7 @@ export default {
           this.$nextTick(() => this.syncAmdMushafSurface())
         }
 
-        const amdOutcome = (data.assessment?.accuracy ?? 0) >= 80
-          ? 'strong'
-          : ((data.assessment?.accuracy ?? 0) >= 55 ? 'mixed' : 'weak')
+        const amdOutcome = recitationAccuracyBand(data.assessment?.accuracy ?? 0)
         this.applyLocalRecitationMasteryFromPostSession(amdOutcome, {
           accuracy_percent: data.assessment?.accuracy,
           weak_ayahs: data.analysis?.weak_ayahs || [],
@@ -26654,10 +26654,10 @@ export default {
         .filter(word => word.status === 'partial')
         .reduce((sum, word) => {
           const confidence = Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1
-          return sum + (0.45 * Math.max(0.35, Math.min(1, confidence)))
+          return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.35, Math.min(1, confidence)))
         }, 0)
-      const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * 0.35
-      const extraPenalty = (Array.isArray(mistakes.extra) ? mistakes.extra.length : 0) * 0.35
+      const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * RECITATION_THRESHOLDS.wrongOrderPenalty
+      const extraPenalty = (Array.isArray(mistakes.extra) ? mistakes.extra.length : 0) * RECITATION_THRESHOLDS.extraPenalty
       return Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty - extraPenalty) / total) * 100)))
     },
     getAiMemorisationScoreFromPercent(score = 0) {
@@ -26685,9 +26685,9 @@ export default {
         .filter(word => word.status === 'partial')
         .reduce((sum, word) => {
           const confidence = Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1
-          return sum + (0.45 * Math.max(0.35, Math.min(1, confidence)))
+          return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.35, Math.min(1, confidence)))
         }, 0)
-      const wrongOrderPenalty = verseStatuses.filter(word => word.outOfOrder).length * 0.35
+      const wrongOrderPenalty = verseStatuses.filter(word => word.outOfOrder).length * RECITATION_THRESHOLDS.wrongOrderPenalty
       const percent = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty) / Math.max(1, verseStatuses.length)) * 100)))
       return this.getAiMemorisationScoreFromPercent(percent)
     },
@@ -29478,7 +29478,7 @@ export default {
             count: this.amdPracticePlan.range?.count,
             focus_ayahs: this.amdPracticePlan.priority_ayahs || [],
           },
-          outcome: (this.amdAssessment?.accuracy ?? 0) >= 80 ? 'strong' : ((this.amdAssessment?.accuracy ?? 0) >= 55 ? 'mixed' : 'weak'),
+          outcome: recitationAccuracyBand(this.amdAssessment?.accuracy ?? 0),
           colorCounts: this.amdAnalysis?.error_types || {},
         }
         this.aiReciteShowFinalPlan = true

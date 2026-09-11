@@ -452,7 +452,7 @@ class QuranAlignmentService
             ? max($hardBest, min($softRaw, $softCap))
             : $softRaw;
         $score = max($hardBest, $softCapped);
-        // One substitution/insertion/deletion still clears ~0.79–0.85 via 1 − 1/n.
+        // One substitution/insertion/deletion still clears ~0.80–0.86 via 1 − 1/n.
         if ($this->isSingleEditMismatch($left, $right)) {
             $score = min($score, $softCap);
         }
@@ -640,7 +640,7 @@ class QuranAlignmentService
             && mb_strlen($expected) === mb_strlen($actual);
         // Single-edit near-misses stay below green via soft similarity cap, but
         // must not paint red when the learner is close / ASR jittered one letter.
-        if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && $similarity >= 0.79))) {
+        if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && $similarity >= RecitationScoringThresholds::CORRECT_SIMILARITY))) {
             return array_merge($base, [
                 'status' => 'correct',
                 'note' => 'Correct.',
@@ -651,7 +651,7 @@ class QuranAlignmentService
         }
 
         // Recognition uncertainty must not become a learner mistake.
-        if ($expected !== '' && $actual !== '' && ! $exactOrArticle && $confidence < 0.55) {
+        if ($expected !== '' && $actual !== '' && ! $exactOrArticle && $confidence < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
             return array_merge($base, [
                 'status' => 'uncertain',
                 'note' => 'Low recognition confidence.',
@@ -667,7 +667,7 @@ class QuranAlignmentService
             ]);
         }
 
-        if ($expected !== '' && $actual !== '' && $similarity >= 0.48) {
+        if ($expected !== '' && $actual !== '' && $similarity >= RecitationScoringThresholds::PARTIAL_SIMILARITY) {
             return array_merge($base, [
                 'status' => 'minor_mistake',
                 'note' => "Close. Expected {$display}; heard {$actual}.",
@@ -696,12 +696,12 @@ class QuranAlignmentService
                 $correct += 1.0;
             } elseif ($status === 'minor_mistake') {
                 $confidence = max(0.4, min(1.0, (float) ($word['confidence'] ?? 1)));
-                $correct += 0.4 * $confidence;
+                $correct += RecitationScoringThresholds::PARTIAL_ACCURACY_WEIGHT * $confidence;
             } elseif ($status === 'uncertain') {
-                $correct += 0.35;
+                $correct += RecitationScoringThresholds::UNCERTAIN_ACCURACY_WEIGHT;
             }
         }
-        $penalty = min(8, count($extraWords) * 0.2);
+        $penalty = min(8, count($extraWords) * RecitationScoringThresholds::EXTRA_PENALTY);
 
         return (int) max(0, min(100, round((($correct - $penalty) / $total) * 100)));
     }

@@ -151,6 +151,7 @@
 
 <script>
 import AppStatus from './AppStatus.vue'
+import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
 import './SessionAnalysisOverview.css'
 
 export default {
@@ -239,9 +240,7 @@ export default {
     aiLeadTone() {
       const percent = this.aiLeadPercent
       if (percent == null) return 'neutral'
-      if (percent >= 90) return 'strong'
-      if (percent >= 70) return 'mixed'
-      return 'weak'
+      return recitationAccuracyBand(percent)
     },
   },
   watch: {

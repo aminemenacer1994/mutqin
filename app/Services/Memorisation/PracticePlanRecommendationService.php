@@ -324,10 +324,10 @@ class PracticePlanRecommendationService
 
     public function band(int $accuracy): string
     {
-        if ($accuracy >= 80) {
+        if ($accuracy >= RecitationScoringThresholds::STRONG_ACCURACY_MIN) {
             return self::BAND_STRONG;
         }
-        if ($accuracy >= 55) {
+        if ($accuracy >= RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN) {
             return self::BAND_FOCUSED;
         }
 

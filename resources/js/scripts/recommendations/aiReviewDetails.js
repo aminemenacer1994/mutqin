@@ -16,6 +16,7 @@ import {
   recitationWordAyahNumber,
   RECITATION_COLOR,
 } from '../engine/recitation_analysis.js'
+import { RECITATION_THRESHOLDS } from '../engine/recitationThresholds.js'
 import {
   RECITATION_RESULT_STATE,
   resolveAccuracyPercent,
@@ -112,7 +113,7 @@ export function classifyRecitationAssessmentQuality(result = null, extras = {}) 
     return ASSESSMENT_QUALITY.VALID_ZERO_MATCH
   }
 
-  if (accuracy != null && accuracy >= 80) return ASSESSMENT_QUALITY.STRONG_MATCH
+  if (accuracy != null && accuracy >= RECITATION_THRESHOLDS.strongAccuracyMin) return ASSESSMENT_QUALITY.STRONG_MATCH
   if (correctWords > 0 || (accuracy != null && accuracy > 0)) return ASSESSMENT_QUALITY.PARTIAL_MATCH
   return ASSESSMENT_QUALITY.PARTIAL_MATCH
 }
@@ -721,7 +722,7 @@ function buildAiSummaryLine({
   const total = Number(totalWords) || 0
   const isStrongBand = outcome === 'strong'
     || resultState === RECITATION_RESULT_STATE.STRONG
-    || (accuracy != null && accuracy >= 80)
+    || (accuracy != null && accuracy >= RECITATION_THRESHOLDS.strongAccuracyMin)
   const minorWeakness = weaknessSeverity === 'minor'
     || (isStrongBand && hasWordLevelEvidence && missed <= 3 && partial >= 0 && weakAyahs.length <= 1)
 

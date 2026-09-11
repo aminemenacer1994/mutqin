@@ -10,6 +10,7 @@ import {
   RECITATION_SOFT_SIMILARITY_CAP,
   RECITATION_THRESHOLDS,
   RECITATION_UNCERTAIN_CONFIDENCE,
+  recitationAccuracyBand,
 } from './recitationThresholds.js'
 
 export {
@@ -24,6 +25,7 @@ export {
   RECITATION_SOFT_SIMILARITY_CAP,
   RECITATION_THRESHOLDS,
   RECITATION_UNCERTAIN_CONFIDENCE,
+  recitationAccuracyBand,
 }
 
 export const DEFAULT_ANALYSIS_TIMESTAMP = '1970-01-01T00:00:00.000Z'

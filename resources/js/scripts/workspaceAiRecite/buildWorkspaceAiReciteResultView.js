@@ -11,6 +11,7 @@ import {
 } from '../recommendations/postSessionInfoArchitecture.js'
 import { formatElapsedLabel } from '../memorisationDetection/sessionTimer.js'
 import { RECITATION_RESULT_STATE } from '../recommendations/recitationResultState.js'
+import { recitationAccuracyBand } from '../engine/recitationThresholds.js'
 
 function asText(value) {
   return String(value || '').trim()
@@ -290,7 +291,7 @@ export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
     ?? input.durationSeconds
     ?? 0,
   )
-  const outcome = accuracy >= 80 ? 'strong' : (accuracy >= 55 ? 'mixed' : 'weak')
+  const outcome = recitationAccuracyBand(accuracy)
   const extras = {
     accuracy_percent: accuracy,
     color_counts: result?.colorCounts || aiAttempt?.color_counts || null,

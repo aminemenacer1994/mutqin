@@ -16,14 +16,15 @@ import {
   attemptAffectsScoring,
   classifyRecitationAttempt,
 } from '../audio/recitationAttemptGuard.js'
+import { RECITATION_THRESHOLDS } from '../engine/recitationThresholds.js'
 
 export const AI_RECITE_MAX_ATTEMPTS = 3
 export const MAX_PRACTICE_AYAH_SPAN = 3
 
 export const ACCURACY_BAND = Object.freeze({
-  STRONG: 'strong', // 80%+
-  FOCUSED: 'focused', // 55–79%
-  GENTLE: 'gentle', // <55%
+  STRONG: 'strong',
+  FOCUSED: 'focused',
+  GENTLE: 'gentle',
 })
 
 export const BEGINNER_HOW_STEPS = Object.freeze({
@@ -193,8 +194,8 @@ export function averageAttemptAccuracy(attempts = []) {
 export function accuracyPracticeBand(accuracyPercent) {
   const n = Number(accuracyPercent)
   if (!Number.isFinite(n)) return ACCURACY_BAND.FOCUSED
-  if (n >= 80) return ACCURACY_BAND.STRONG
-  if (n >= 55) return ACCURACY_BAND.FOCUSED
+  if (n >= RECITATION_THRESHOLDS.strongAccuracyMin) return ACCURACY_BAND.STRONG
+  if (n >= RECITATION_THRESHOLDS.developingAccuracyMin) return ACCURACY_BAND.FOCUSED
   return ACCURACY_BAND.GENTLE
 }
 

@@ -429,10 +429,10 @@ class MemorisationHistoryService
         if ($accuracy === null) {
             return 'unknown';
         }
-        if ($accuracy >= 85) {
+        if ($accuracy >= RecitationScoringThresholds::STRONG_ACCURACY_MIN) {
             return 'strong';
         }
-        if ($accuracy >= 60) {
+        if ($accuracy >= RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN) {
             return 'mixed';
         }
         if ($accuracy > 0) {

@@ -83,7 +83,8 @@ class WeaknessAnalysisService
                 continue;
             }
             $total = max(1, (int) $stats['total']);
-            $correctWeight = (int) $stats['correct'] + (0.65 * (int) $stats['minor_mistake']);
+            $correctWeight = (int) $stats['correct']
+                + (RecitationScoringThresholds::PARTIAL_ACCURACY_WEIGHT * (int) $stats['minor_mistake']);
             $ayahAccuracy = (int) round(($correctWeight / $total) * 100);
             $priority = $this->ayahPriority($ayahAccuracy, (int) $stats['score'], $total);
             $ayahResults[] = [
@@ -95,7 +96,9 @@ class WeaknessAnalysisService
                 'missing' => (int) $stats['missing'],
                 'extra' => (int) $stats['extra'],
                 'uncertain' => (int) $stats['uncertain'],
-                'confidence' => $ayahAccuracy >= 80 ? 0.85 : ($ayahAccuracy >= 55 ? 0.7 : 0.55),
+                'confidence' => $ayahAccuracy >= RecitationScoringThresholds::STRONG_ACCURACY_MIN
+                    ? 0.85
+                    : ($ayahAccuracy >= RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN ? 0.7 : 0.55),
                 'priority' => $priority,
                 'label' => match ($priority) {
                     'priority' => 'Priority practice',
@@ -131,17 +134,19 @@ class WeaknessAnalysisService
             'error_pattern' => $pattern,
             'color_counts' => $colorCounts,
             'overall_accuracy' => $accuracy,
-            'priority' => $accuracy < 55 ? 'high' : ($accuracy < 80 ? 'medium' : 'low'),
+            'priority' => $accuracy < RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN
+                ? 'high'
+                : ($accuracy < RecitationScoringThresholds::STRONG_ACCURACY_MIN ? 'medium' : 'low'),
             'confidence' => $accuracy >= 70 ? 0.8 : 0.65,
         ];
     }
 
     private function ayahPriority(int $accuracy, int $score, int $total): string
     {
-        if ($accuracy < 55 || ($total >= 4 && $score / max(1, $total) >= 0.55)) {
+        if ($accuracy < RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN || ($total >= 4 && $score / max(1, $total) >= 0.55)) {
             return 'priority';
         }
-        if ($accuracy < 80 || $score >= 1) {
+        if ($accuracy < RecitationScoringThresholds::STRONG_ACCURACY_MIN || $score >= 1) {
             return 'attention';
         }
 

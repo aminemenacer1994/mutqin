@@ -12,14 +12,17 @@ class RecitationScoringThresholdsTest extends TestCase
     {
         $all = RecitationScoringThresholds::all();
 
-        $this->assertSame(0.79, $all['correct_similarity']);
-        $this->assertSame(0.48, $all['partial_similarity']);
-        $this->assertSame(0.55, $all['uncertain_confidence']);
+        $this->assertSame(0.84, $all['correct_similarity']);
+        $this->assertSame(0.58, $all['partial_similarity']);
+        $this->assertSame(0.42, $all['uncertain_confidence']);
+        $this->assertSame(85, $all['strong_accuracy_min']);
+        $this->assertSame(68, $all['developing_accuracy_min']);
+        $this->assertSame(90, $all['progression_with_errors_min']);
         $this->assertLessThan(
             RecitationScoringThresholds::CORRECT_SIMILARITY,
             RecitationScoringThresholds::SOFT_SIMILARITY_CAP
         );
-        $this->assertSame(
+        $this->assertGreaterThan(
             RecitationScoringThresholds::UNCERTAIN_CONFIDENCE,
             RecitationScoringThresholds::MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT
         );

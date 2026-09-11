@@ -800,6 +800,7 @@ import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/network
 import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
+import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -1898,9 +1899,7 @@ export default {
     aiAttemptTone(item) {
       const accuracy = Number(item?.accuracy_percent)
       if (Number.isFinite(accuracy)) {
-        if (accuracy >= 85) return 'strong'
-        if (accuracy >= 60) return 'mixed'
-        return 'weak'
+        return recitationAccuracyBand(accuracy)
       }
       const band = String(item?.band || '').toLowerCase()
       return band || 'neutral'

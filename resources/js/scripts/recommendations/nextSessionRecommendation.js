@@ -12,6 +12,7 @@ import {
 import { formatRepetitionCountLabel, formatAyahNumberSpans } from '../formatting/ayahLabels.js'
 import { estimatePracticeDuration, inferAudioDurationSeconds, normaliseWeakWordRecords } from '../session/sessionPracticeCoach.js'
 import { recitationWordAyahNumber } from '../engine/recitation_analysis.js'
+import { RECITATION_THRESHOLDS } from '../engine/recitationThresholds.js'
 import {
   resolveRecommendedPlaybackSpeed,
 } from './playbackSpeedPolicy.js'
@@ -820,8 +821,12 @@ export function aiAssessmentAllowsProgression(result, snapshot = {}) {
     ?? snapshot.aiDetails?.sequence_errors
     ?? 0,
   )
-  // Keep in sync with RECITATION_AUDIO_THRESHOLDS.progressionWithErrorsMin.
-  const progressionWithErrorsMin = 85
+  const strongMin = RECITATION_THRESHOLDS.strongAccuracyMin
+  const developingMin = RECITATION_THRESHOLDS.developingAccuracyMin
+  const progressionWithErrorsMin = RECITATION_THRESHOLDS.progressionWithErrorsMin
+  const maxPartials = RECITATION_THRESHOLDS.mixedProgressionMaxPartials
+
+  if (Number.isFinite(accuracy) && accuracy < developingMin) return false
 
   // Structural / multi-error signals always stay on revision.
   if (sequenceErrors > 0 || omittedWords >= 2 || skippedAyahs.length > 0) return false
@@ -844,16 +849,18 @@ export function aiAssessmentAllowsProgression(result, snapshot = {}) {
   })
 
   if (severity === 'significant') return false
-  // Minor local weakness: advance only when accuracy clears the with-errors floor,
-  // or when developing/mixed is clean enough for reinforce-then-continue.
-  if (severity === 'minor' && hardWords <= 1) {
-    if (hardWords === 0) return true
-    return Number.isFinite(accuracy) && accuracy >= progressionWithErrorsMin
+
+  if (Number.isFinite(accuracy) && accuracy >= progressionWithErrorsMin) {
+    return hardWords <= 1 && weakAyahs.length <= 1
   }
-  if (Number.isFinite(accuracy) && accuracy >= progressionWithErrorsMin && hardWords <= 1) {
-    return true
+  if (Number.isFinite(accuracy) && accuracy >= strongMin) {
+    return hardWords === 0 && weakAyahs.length <= 1
   }
-  return Number.isFinite(accuracy) && accuracy >= 80 && hardWords === 0
+  if (Number.isFinite(accuracy) && accuracy >= developingMin) {
+    return hardWords === 0 && weakAyahs.length <= 1 && partialWords <= maxPartials
+  }
+
+  return false
 }
 
 /**

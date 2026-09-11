@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
 use App\Services\Learning\SessionAnalysisQueryService;
+use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -1805,7 +1806,7 @@ class DashboardService
 
             if (
                 in_array($band, ['weak', 'gentle', 'red'], true)
-                || ($accuracy > 0 && $accuracy < 55)
+                || ($accuracy > 0 && $accuracy < RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN)
                 || $errorCount >= 3
             ) {
                 return 'fragile';
@@ -1813,13 +1814,13 @@ class DashboardService
 
             if (
                 in_array($band, ['mixed', 'focused', 'amber'], true)
-                || ($accuracy >= 55 && $accuracy < 80)
+                || ($accuracy >= RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN && $accuracy < RecitationScoringThresholds::STRONG_ACCURACY_MIN)
                 || $errorCount > 0
             ) {
                 return 'building';
             }
 
-            if (in_array($band, ['strong', 'green'], true) || $accuracy >= 80) {
+            if (in_array($band, ['strong', 'green'], true) || $accuracy >= RecitationScoringThresholds::STRONG_ACCURACY_MIN) {
                 return 'strong';
             }
 
