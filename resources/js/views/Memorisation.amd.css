@@ -6346,3 +6346,16 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
     padding-inline: 0.2rem !important;
   }
 }
+
+.amd-tools-bar__hint {
+  margin: 0.35rem 0 0;
+  padding: 0 0.15rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #57534e;
+}
+
+[data-theme="dark"] .amd-tools-bar__hint,
+.amd-overlay[data-theme="dark"] .amd-tools-bar__hint {
+  color: #d6d3d1;
+}

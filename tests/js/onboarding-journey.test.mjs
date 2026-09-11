@@ -53,10 +53,11 @@ function sliceMethod(source, name) {
   const first = buildFirstOnboardingSessionConfig()
   assert.equal(first.chapterId, 1)
   assert.equal(first.rangeStart, 1)
-  assert.equal(first.rangeEnd, 3)
+  assert.equal(first.rangeEnd, 5)
   assert.equal(first.repetitionsPerStep, 2)
   assert.equal(first.reciterId, 'ar.alafasy')
   assert.equal(buildDefaultWorkspaceSessionConfig().rangeEnd, 7)
+  assert.match(memorisationJs, /applyFirstOnboardingSessionConfig\(\{ openSetup: false, silent: true \}\)/)
 }
 
 {

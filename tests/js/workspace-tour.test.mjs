@@ -142,6 +142,8 @@ function sliceMethod(source, name) {
   assert.ok(tour.saved.title)
   assert.ok(tour.plan.title)
   assert.ok(tour.dashboard.title)
+  assert.ok(tour.dashboard.previewHint)
+  assert.match(tour.ai.body, /%|visible|memory/i)
   assert.match(tour.results.body, /Green|wrong|care|Several/i)
   assert.match(tour.plan.body, /plans|weak ayahs|revise/i)
   for (const step of Object.values(tour)) {
@@ -355,7 +357,7 @@ function sliceMethod(source, name) {
 
   const preview = sliceMethod(memorisationJs, 'applyWorkspaceTourPracticePreview')
   assert.match(preview, /buildWorkspaceTourPracticeConfig/)
-  assert.match(sliceMethod(memorisationJs, 'buildWorkspaceTourPracticeConfig'), /rangeEnd: 3/)
+  assert.match(sliceMethod(memorisationJs, 'buildWorkspaceTourPracticeConfig'), /rangeEnd: FIRST_ONBOARDING_RANGE_END/)
   assert.match(sliceMethod(memorisationJs, 'buildWorkspaceTourPracticeConfig'), /ar\.alafasy/)
   assert.match(sliceMethod(memorisationJs, 'teardownWorkspaceTourPreview'), /commitWorkspaceTourFocusedReview/)
   const commit = sliceMethod(memorisationJs, 'commitWorkspaceTourFocusedReview')
@@ -373,7 +375,16 @@ function sliceMethod(source, name) {
   assert.match(sliceMethod(memorisationJs, 'setActiveTab'), /workspaceTourActive/)
   assert.match(sliceMethod(memorisationJs, 'workspaceTourDashboardGreeting'), /dashboard\.greeting/)
   assert.match(memorisationVue, /workspace-tour__dashboard-preview/)
+  assert.match(memorisationVue, /workspace-tour__dash-chrome/)
+  assert.match(memorisationVue, /workspace-tour__dash-continue/)
+  assert.match(memorisationVue, /workspace-tour__dash-grid/)
+  assert.match(memorisationVue, /dashboard\.journey_data_title/)
+  assert.match(memorisationVue, /dashboard\.currently_learning_range|workspaceTourDashboardContinueRange/)
+  assert.match(memorisationVue, /dashboard\.days_7/)
+  assert.match(memorisationVue, /dashboard\.analytics_week_sessions|workspaceTourDashboardWeekStats/)
   assert.doesNotMatch(memorisationVue, /workspace-tour__dashboard-frame/)
+  assert.match(sliceMethod(memorisationJs, 'workspaceTourDashboardChartEmpty'), /is_empty/)
+  assert.doesNotMatch(sliceMethod(memorisationJs, 'workspaceTourDashboardChartBars'), /height:\s*'68%'/)
   assert.match(sliceMethod(memorisationJs, 'shouldDockWorkspaceTourTooltip'), /key === 'dashboard'/)
   assert.match(
     memorisationCss,

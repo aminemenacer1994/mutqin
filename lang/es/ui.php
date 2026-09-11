@@ -57,7 +57,7 @@ return [
     'tester_guide_intro' => 'Mutqin es grande — prueba primero este camino corto.',
     'tester_guide_step_1' => 'Estás en Memorización — el espacio principal de práctica.',
     'tester_guide_step_2' => 'Si aparece Bienvenido de nuevo, elige Nueva sesión.',
-    'tester_guide_step_3' => 'Abre Controles → Configuración, elige Al-Fatiha 1–3 y Empieza sesión.',
+    'tester_guide_step_3' => 'Abre Controles → Configuración, elige Al-Fatiha 1–5 y Empieza sesión.',
     'tester_guide_step_4' => 'Después, abre el Panel para progreso y muraja\'ah.',
     'tester_guide_dismiss' => 'Entendido',
     'auth_register_kicker' => 'Empieza aquí',

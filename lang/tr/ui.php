@@ -48,7 +48,7 @@ return [
     'tester_guide_intro' => 'Mutqin geniş — önce bu kısa yolu deneyin.',
     'tester_guide_step_1' => 'Ezberdesiniz — ana pratik alanı.',
     'tester_guide_step_2' => 'Tekrar hoş geldiniz çıkarsa Yeni oturum seçin.',
-    'tester_guide_step_3' => 'Kontroller → Kurulum, Fatiha 1–3 seçin, sonra Oturumu başlatın.',
+    'tester_guide_step_3' => 'Kontroller → Kurulum, Fatiha 1–5 seçin, sonra Oturumu başlatın.',
     'tester_guide_step_4' => 'Sonra ilerleme ve muraja\'ah için Kontrol paneline gidin.',
     'tester_guide_dismiss' => 'Anladım',
     'auth_register_kicker' => 'Buradan başlayın',

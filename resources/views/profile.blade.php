@@ -318,7 +318,7 @@
                         <article class="profile-card profile-pane profile-card-wide" id="subscription">
                             <div class="profile-card-head profile-card-head--inline">
                                 <h2>{{ __('profile.subscription') }}</h2>
-                                @if ($subscriptionSummary['can_manage'] || $subscriptionSummary['can_upgrade'] || $isAdmin)
+                                @if ($subscriptionSummary['can_manage'] || $subscriptionSummary['can_upgrade'])
                                     <div class="profile-card-actions profile-subscription-actions">
                                         @if ($subscriptionSummary['can_manage'])
                                             <form method="POST" action="{{ route('billing.portal') }}">
@@ -331,10 +331,6 @@
                                         @if ($subscriptionSummary['can_upgrade'])
                                             <a class="billing-primary-btn profile-mini-btn" href="{{ route('pricing') }}">
                                                 {{ __('profile.upgrade_plan') }}
-                                            </a>
-                                        @elseif ($isAdmin)
-                                            <a class="billing-secondary-btn profile-mini-btn" href="{{ route('admin.dashboard') }}">
-                                                {{ __('profile.open_admin_console') }}
                                             </a>
                                         @endif
                                     </div>

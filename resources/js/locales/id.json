@@ -1711,7 +1711,7 @@
       "steps": {
         "welcome": {
           "title": "Ini adalah Hafalan",
-          "body": "Ruang kerja hifz Anda. Kami mulai dengan Al-Fatiha 1–3 agar jalannya singkat dan jelas.",
+          "body": "Ruang kerja hifz Anda. Kami mulai dengan Al-Fatiha 1–5 agar jalannya singkat dan jelas.",
           "waitHint": ""
         },
         "controls": {
@@ -1721,7 +1721,7 @@
         },
         "setup": {
           "title": "Pengaturan",
-          "body": "Pilih surah dan rentang ayat di sini. Tinjauan terfokus dimulai di Al-Fatiha 1–3 dengan Alafasy dan 2 pengulangan.",
+          "body": "Pilih surah dan rentang ayat di sini. Tinjauan terfokus dimulai di Al-Fatiha 1–5 dengan Alafasy dan 2 pengulangan.",
           "waitHint": ""
         },
         "practice": {
@@ -1736,17 +1736,17 @@
         },
         "start": {
           "title": "Mulai sesi",
-          "body": "Ini memulai tinjauan terfokus: Al-Fatiha 1–3 dengan Alafasy dan 2 pengulangan.",
+          "body": "Ini memulai tinjauan terfokus: Al-Fatiha 1–5 dengan Alafasy dan 2 pengulangan.",
           "waitHint": ""
         },
         "session": {
           "title": "Latih ayat-ayat ini",
-          "body": "Al-Fatiha 1–3 tetap di halaman. Dengarkan dan ulangi di sini selama sesi.",
+          "body": "Al-Fatiha 1–5 tetap di halaman. Dengarkan dan ulangi di sini selama sesi.",
           "waitHint": ""
         },
         "ai": {
           "title": "Periksa dengan tilawah AI",
-          "body": "Ini pemeriksaan tilawah AI. AI mendengar dan menandai setiap kata. Tidak selesai sendiri.",
+          "body": "Ini pemeriksaan tilawah AI. AI mendengar dan menandai setiap kata. % mengatur seberapa banyak teks ayat tetap terlihat — lebih rendah berarti lebih banyak tersembunyi agar Anda mengingat.",
           "waitHint": ""
         },
         "results": {
@@ -1761,12 +1761,13 @@
         },
         "plan": {
           "title": "Rencana yang disarankan",
-          "body": "Dua rencana mengikuti pemeriksaan ini: latih ayat lemah, atau ulang Al-Fatiha 1–3 dengan Alafasy sebanyak 2 pengulangan.",
+          "body": "Dua rencana mengikuti pemeriksaan ini: latih ayat lemah, atau ulang Al-Fatiha 1–5 dengan Alafasy sebanyak 2 pengulangan.",
           "waitHint": ""
         },
         "dashboard": {
           "title": "Tinjau kemajuan",
           "body": "Ini dasbor Anda: rentetan, cakupan, dan muraja’ah.",
+          "previewHint": "Rentetan, cakupan, dan muraja’ah muncul di sini setelah setiap sesi.",
           "waitHint": ""
         }
       }
@@ -1783,7 +1784,7 @@
       "steps": {
         "workspace": "Anda di Hafalan, ruang latihan utama.",
         "welcome": "Jika Selamat datang kembali muncul, pilih Mulai sesi baru.",
-        "setup": "Buka Kontrol → Pengaturan, pilih Al-Fatiha 1–3, lalu Mulai sesi.",
+        "setup": "Buka Kontrol → Pengaturan, pilih Al-Fatiha 1–5, lalu Mulai sesi.",
         "aiCheck": "Berlatih, akhiri sesi, lalu Periksa hafalan (AI).",
         "plan": "Pilih rencana rekomendasi dan ketuk Mulai rencana ini; jangan berhenti di pemilihan saja.",
         "keepGoing": "Buka Dasbor untuk kemajuan dan muraja’ah, lalu kembali ke sini untuk sesi berikutnya."
@@ -3515,6 +3516,7 @@
       "stopRecitation": "Stop rekaman",
       "difficulty": "الصعوبة",
       "wordsShown": "Kata-kata shown",
+      "wordsShownDesc": "Berapa banyak teks ayat yang tetap terlihat. % lebih rendah menyembunyikan lebih banyak kata agar Anda mengingat.",
       "peekShort": "معاينة",
       "peekHintShort": "Hold ke reveal",
       "wordsShownShort": "ظاهر",

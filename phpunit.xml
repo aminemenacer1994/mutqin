@@ -48,5 +48,6 @@
         <env name="SPEECHMATICS_RATE_LIMIT_BURST_SECONDS" value="10"/>
         <env name="SPEECHMATICS_RATE_LIMIT_BYPASS_ADMIN" value="false"/>
         <env name="SPEECHMATICS_RATE_LIMIT_BYPASS_DEMO" value="false"/>
+        <env name="SHOW_DEMO_ACCOUNTS" value="false"/>
     </php>
 </phpunit>

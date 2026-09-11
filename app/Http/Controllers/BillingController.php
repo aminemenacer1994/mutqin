@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class BillingController extends Controller
 {
@@ -47,15 +48,17 @@ class BillingController extends Controller
         $plan = config("billing.plans.$planKey");
         $priceId = $plan['price_id'] ?? null;
 
-        abort_unless($priceId, 500, 'Stripe price is not configured.');
+        if (! $priceId || ! config('services.stripe.secret_key')) {
+            return $this->redirectStripeFailure();
+        }
 
         $trialDays = (int) ($plan['trial_days'] ?? 0);
         $offerTrial = $trialDays > 0 && blank($user->stripe_subscription_id);
 
         $checkoutData = [
             'mode' => 'subscription',
-            'success_url' => route('billing.success') . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('pricing', ['plan' => $planKey]),
+            'success_url' => $this->stripeReturnUrl('/billing/success').'?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => $this->stripeReturnUrl('/pricing').'?plan='.rawurlencode($planKey),
             'locale' => $this->stripeLocale(),
             'metadata[plan]' => $planKey,
             'subscription_data[metadata][plan]' => $planKey,
@@ -68,14 +71,25 @@ class BillingController extends Controller
             $checkoutData['subscription_data[trial_period_days]'] = $trialDays;
         }
 
-        $checkoutData['customer'] = $this->ensureStripeCustomer($user);
-        $checkoutData['client_reference_id'] = (string) $user->id;
-        $checkoutData['metadata[user_id]'] = (string) $user->id;
-        $checkoutData['subscription_data[metadata][user_id]'] = (string) $user->id;
-        $checkoutData['subscription_data[description]'] = __('billing.stripe_subscription_description');
-        $checkoutData['custom_text[submit][message]'] = __('billing.stripe_checkout_note');
+        try {
+            $checkoutData['customer'] = $this->ensureStripeCustomer($user);
+            $checkoutData['client_reference_id'] = (string) $user->id;
+            $checkoutData['metadata[user_id]'] = (string) $user->id;
+            $checkoutData['subscription_data[metadata][user_id]'] = (string) $user->id;
+            $checkoutData['subscription_data[description]'] = __('billing.stripe_subscription_description');
+            $checkoutData['custom_text[submit][message]'] = __('billing.stripe_checkout_note');
 
-        $session = $this->stripePost('checkout/sessions', $checkoutData);
+            $session = $this->stripePost('checkout/sessions', $checkoutData);
+        } catch (\Throwable $e) {
+            MutqinLog::warning('billing.checkout.failed', [
+                'user_id' => $user->id,
+                'plan' => $planKey,
+                'status' => $e instanceof HttpException ? $e->getStatusCode() : 502,
+                'message' => $e->getMessage(),
+            ]);
+
+            return $this->redirectStripeFailure();
+        }
 
         BillingIntent::forget();
 
@@ -107,14 +121,30 @@ class BillingController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->stripe_customer_id) {
-            return redirect()->to(route('profile.show') . '#subscription')->with('billing_error', __('billing.no_stripe_customer'));
+        if (! $user->hasBillableStripeCustomer()) {
+            return redirect()->to(route('profile.show').'#subscription')
+                ->with('billing_error', __('billing.no_stripe_customer'));
         }
 
-        $session = $this->stripePost('billing_portal/sessions', [
-            'customer' => $user->stripe_customer_id,
-            'return_url' => route('profile.show') . '#subscription',
-        ]);
+        try {
+            $session = $this->stripePost('billing_portal/sessions', [
+                'customer' => $user->stripe_customer_id,
+                'return_url' => $this->stripeReturnUrl('/profile').'#subscription',
+            ]);
+        } catch (\Throwable $e) {
+            MutqinLog::warning('billing.portal.failed', [
+                'user_id' => $user->id,
+                'status' => $e instanceof HttpException ? $e->getStatusCode() : 502,
+                'message' => $e->getMessage(),
+            ]);
+
+            if ($e instanceof HttpException && $this->isMissingStripeCustomerError($e)) {
+                $user->forceFill(['stripe_customer_id' => null])->save();
+            }
+
+            return redirect()->to(route('profile.show').'#subscription')
+                ->with('billing_error', __('billing.stripe_unavailable'));
+        }
 
         return redirect()->away($session['url']);
     }
@@ -201,8 +231,11 @@ class BillingController extends Controller
 
     private function ensureStripeCustomer(User $user): string
     {
-        if ($user->stripe_customer_id) {
-            return $user->stripe_customer_id;
+        if ($user->hasBillableStripeCustomer()) {
+            $existing = $this->stripeTryGet('customers/'.$user->stripe_customer_id);
+            if (($existing['id'] ?? null) === $user->stripe_customer_id) {
+                return $user->stripe_customer_id;
+            }
         }
 
         $customer = $this->stripePost('customers', [
@@ -287,28 +320,59 @@ class BillingController extends Controller
         return $this->stripeRequest('get', $path);
     }
 
+    private function stripeTryGet(string $path): array
+    {
+        return $this->stripeRequest('get', $path, abortOnFailure: false);
+    }
+
     private function stripePost(string $path, array $data): array
     {
         return $this->stripeRequest('post', $path, $data);
     }
 
-    private function stripeRequest(string $method, string $path, array $data = []): array
+    private function stripeRequest(string $method, string $path, array $data = [], bool $abortOnFailure = true): array
     {
         $secret = config('services.stripe.secret_key');
 
         abort_unless($secret, 500, 'Stripe secret key is not configured.');
 
         $response = Http::asForm()
+            ->timeout(20)
             ->withToken($secret)
             ->acceptJson()
             ->{$method}("https://api.stripe.com/v1/$path", $data);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $message = $response->json('error.message') ?? 'Stripe request failed.';
+            if (! $abortOnFailure) {
+                return [];
+            }
             abort($response->status() ?: 502, $message);
         }
 
-        return $response->json();
+        return $response->json() ?? [];
+    }
+
+    private function stripeReturnUrl(string $path): string
+    {
+        $request = request();
+        $origin = $request ? rtrim($request->getSchemeAndHttpHost(), '/') : '';
+        if ($origin === '') {
+            $origin = rtrim((string) config('app.url'), '/');
+        }
+
+        return $origin.'/'.ltrim($path, '/');
+    }
+
+    private function redirectStripeFailure(): \Illuminate\Http\RedirectResponse
+    {
+        return redirect()->route('pricing')->with('billing_error', __('billing.stripe_unavailable'));
+    }
+
+    private function isMissingStripeCustomerError(HttpException $e): bool
+    {
+        return $e->getStatusCode() === 404
+            || str_contains(strtolower($e->getMessage()), 'no such customer');
     }
 
     private function timestamp(mixed $value): ?Carbon

@@ -118,6 +118,7 @@ class BillingCheckoutTest extends TestCase
         ]);
 
         Http::fake([
+            'https://api.stripe.com/v1/customers/cus_existing' => Http::response(['id' => 'cus_existing'], 200),
             'https://api.stripe.com/v1/checkout/sessions' => Http::response([
                 'id' => 'cs_test',
                 'url' => 'https://checkout.stripe.com/c/pay/cs_test',
@@ -196,5 +197,82 @@ class BillingCheckoutTest extends TestCase
             ->post(route('billing.portal'))
             ->assertRedirect(route('profile.show') . '#subscription')
             ->assertSessionHas('billing_error', __('billing.no_stripe_customer'));
+    }
+
+    public function test_admin_can_start_pro_checkout(): void
+    {
+        config([
+            'mutqin.admin_emails' => ['admin@example.com'],
+            'services.stripe.secret_key' => 'sk_test',
+            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+        ]);
+
+        Http::fake([
+            'https://api.stripe.com/v1/customers' => Http::response(['id' => 'cus_admin'], 200),
+            'https://api.stripe.com/v1/checkout/sessions' => Http::response([
+                'id' => 'cs_admin',
+                'url' => 'https://checkout.stripe.com/c/pay/cs_admin',
+            ], 200),
+        ]);
+
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->assertRedirect('https://checkout.stripe.com/c/pay/cs_admin');
+    }
+
+    public function test_stale_stripe_customer_is_recreated_during_checkout(): void
+    {
+        config([
+            'services.stripe.secret_key' => 'sk_test',
+            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+        ]);
+
+        Http::fake([
+            'https://api.stripe.com/v1/customers/cus_stale' => Http::response([
+                'error' => ['message' => 'No such customer: cus_stale'],
+            ], 404),
+            'https://api.stripe.com/v1/customers' => Http::response(['id' => 'cus_new'], 200),
+            'https://api.stripe.com/v1/checkout/sessions' => Http::response([
+                'id' => 'cs_new',
+                'url' => 'https://checkout.stripe.com/c/pay/cs_new',
+            ], 200),
+        ]);
+
+        $user = User::factory()->create([
+            'stripe_customer_id' => 'cus_stale',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->assertRedirect('https://checkout.stripe.com/c/pay/cs_new');
+
+        $this->assertSame('cus_new', $user->fresh()->stripe_customer_id);
+    }
+
+    public function test_checkout_stripe_failure_redirects_with_flash(): void
+    {
+        config([
+            'services.stripe.secret_key' => 'sk_test',
+            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+        ]);
+
+        Http::fake([
+            'https://api.stripe.com/v1/customers' => Http::response(['id' => 'cus_test'], 200),
+            'https://api.stripe.com/v1/checkout/sessions' => Http::response([
+                'error' => ['message' => 'Invalid API key'],
+            ], 401),
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->from(route('pricing'))
+            ->post(route('checkout'), ['plan' => 'pro_monthly'])
+            ->assertRedirect(route('pricing'))
+            ->assertSessionHas('billing_error', __('billing.stripe_unavailable'));
     }
 }

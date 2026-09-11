@@ -89,13 +89,14 @@
                   <i class="bi bi-eye" aria-hidden="true"></i>
                 </button>
 
-                <label class="amd-tools-bar__shown" :for="difficultyId" :title="wordsShownLabel">
+                <label class="amd-tools-bar__shown" :for="difficultyId" :title="wordsShownHint">
                   <span class="visually-hidden">{{ wordsShownLabel }}</span>
                   <select
                     :id="difficultyId"
                     class="amd-tools-bar__select"
                     :value="selectedShownPercent"
                     :aria-label="wordsShownLabel"
+                    :title="wordsShownHint"
                     @change="onDifficultyChange"
                   >
                     <option
@@ -118,6 +119,7 @@
                 </div>
                 </div>
               </div>
+              <p v-if="wordsShownHint" class="amd-tools-bar__hint">{{ wordsShownHint }}</p>
             </div>
 
             <div
@@ -331,6 +333,7 @@ export default {
     peekHintLabel: { type: String, default: 'Need a hint? Peek at the text' },
     difficultyLabel: { type: String, default: 'Difficulty' },
     wordsShownLabel: { type: String, default: 'Words shown' },
+    wordsShownDesc: { type: String, default: '' },
     textSizeLabel: { type: String, default: 'Text size' },
     textSizeIncreaseLabel: { type: String, default: 'Increase text size' },
     textSizeDecreaseLabel: { type: String, default: 'Decrease text size' },
@@ -478,6 +481,11 @@ export default {
     },
     wordsShownShortLabel() {
       return this.wordsShownShort || 'Words shown'
+    },
+    wordsShownHint() {
+      return this.wordsShownDesc
+        || this.wordsShownLabel
+        || 'How much ayah text stays visible'
     },
     /** Hide% from parent → words-shown% for the select (0 / 25 / 50 / 75 / 90). */
     selectedShownPercent() {

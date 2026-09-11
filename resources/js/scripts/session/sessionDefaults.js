@@ -7,6 +7,9 @@ export const DEFAULT_TAJWEED_ENABLED = false
 /** Matches memorisationRuntime.DEFAULT_ALQURAN_RECITER without importing that module graph. */
 const DEFAULT_RECITER_ID = 'ar.alafasy'
 
+/** First-session / onboarding window: Al-Fatiha 1–5 (not the full 7-ayah surah). */
+export const FIRST_ONBOARDING_RANGE_END = 5
+
 /**
  * First positive finite candidate, else {@link DEFAULT_SESSION_REPETITIONS}.
  * Use for missing values only — never override an explicitly saved/recommended count.
@@ -70,12 +73,12 @@ export function buildDefaultWorkspaceSessionConfig(overrides = {}) {
 }
 
 /**
- * First real practice set after onboarding: Al-Fatiha 1–3 (fits opening-Fatihah
+ * First real practice set after onboarding: Al-Fatiha 1–5 (fits opening-Fatihah
  * main-position rules and recommendation max session size).
  */
 export function buildFirstOnboardingSessionConfig(overrides = {}) {
   return buildDefaultWorkspaceSessionConfig({
-    rangeEnd: 3,
+    rangeEnd: FIRST_ONBOARDING_RANGE_END,
     reciterId: DEFAULT_RECITER_ID,
     repetitionsPerStep: 2,
     selectedLoopCount: 2,

@@ -7036,8 +7036,8 @@
         window.mutqinAuthCheck = @json(Auth::check());
         window.mutqinUserId = @json(Auth::id());
         window.mutqinHasPaidAccess = @json($navUser?->hasPaidAccess() ?? false);
-        window.mutqinCanManageBilling = @json($navUser !== null && filled($navUser->stripe_customer_id));
-        window.mutqinSubscriptionTier = @json($navUser?->effectiveSubscriptionTier() ?? 'free');
+        window.mutqinCanManageBilling = @json($navUser !== null && $navUser->hasBillableStripeCustomer());
+        window.mutqinSubscriptionTier = @json($navUser?->billingSubscriptionTier() ?? 'free');
         window.mutqinBilling = @json($mutqinBillingDisplay);
         window.mutqinUiLabels = {
             en: @json(trans('ui', [], 'en')),

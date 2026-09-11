@@ -429,6 +429,7 @@ import {
 import {
   DEFAULT_SESSION_REPETITIONS,
   DEFAULT_TAJWEED_ENABLED,
+  FIRST_ONBOARDING_RANGE_END,
   buildDefaultWorkspaceSessionConfig,
   buildFirstOnboardingSessionConfig,
   freshSessionRepetitionDefaults,
@@ -723,6 +724,7 @@ export default {
       learnerProgress: null,
       learnerDashboardContinue: null,
       learnerDashboardChart: null,
+      learnerDashboardWeekSummary: null,
       learnerDashboardWeaknesses: null,
       learnerJourneyLoading: false,
       learnerJourneyHydrated: false,
@@ -2317,7 +2319,7 @@ export default {
       return hasPremiumAccess(this.auth)
     },
     canUseProFeatures() {
-      return hasProAccess(this.auth)
+      return hasProAccess(this.auth) || !!this.auth?.show_tester_guide
     },
     maxSavedSessionsAllowed() {
       return maxSavedSessionsForTier(this.auth)
@@ -7070,6 +7072,57 @@ export default {
       if (this.learnerDashboardChart?.is_empty) return true
       return this.workspaceTourDashboardChartBars.length === 0
     },
+    workspaceTourDashboardContinueTitle() {
+      return this.journeyContinue?.surah_name
+        || this.learnerProgress?.current_surah_name
+        || this.learnerDashboardContinue?.surah_name
+        || this.workspaceIdleSurahLatin
+        || this.getChapterLatinName(this.currentChapter || this.chapterId)
+        || this.t('dashboard.journey_continue_label')
+    },
+    workspaceTourDashboardContinueRange() {
+      const start = Number(
+        this.journeyContinue?.ayah_start
+        || this.learnerProgress?.ayah_start
+        || this.learnerDashboardContinue?.ayah_start
+        || this.rangeStart
+        || 0
+      )
+      const end = Number(
+        this.journeyContinue?.ayah_end
+        || this.learnerProgress?.ayah_end
+        || this.learnerDashboardContinue?.ayah_end
+        || start
+      )
+      if (start <= 0) return ''
+      const range = start === end
+        ? this.t('dashboard.ayah_n', { n: start })
+        : this.t('dashboard.ayah_range', { start, end })
+      return this.t('dashboard.currently_learning_range', { range })
+    },
+    workspaceTourDashboardWeekStats() {
+      const week = this.learnerDashboardWeekSummary || {}
+      return [
+        {
+          key: 'sessions',
+          value: Number(week.sessions ?? 0),
+          label: this.t('dashboard.analytics_week_sessions'),
+          icon: 'bi bi-journal-check',
+        },
+        {
+          key: 'ayahs',
+          value: Number(week.ayahs_practised ?? 0),
+          label: this.t('dashboard.analytics_week_ayahs'),
+          icon: 'bi bi-book',
+        },
+        {
+          key: 'days',
+          value: Number(week.active_days ?? 0),
+          label: this.t('dashboard.analytics_active_days'),
+          icon: 'bi bi-calendar-check',
+        },
+      ]
+    },
     workspaceTourSteps() {
       return [
         { key: 'welcome', selector: '[data-tour="workspace-welcome"]', pad: 8, radius: 20, placement: 'dock-bottom' },
@@ -7677,6 +7730,9 @@ export default {
         reset: this.t?.('common.reset') || 'Reset',
         difficulty: this.t?.('memorisation.amd.difficulty') || 'Difficulty',
         wordsShown: this.t?.('memorisation.amd.wordsShown') || 'Words shown',
+        wordsShownDesc: this.t?.('memorisation.amd.wordsShownDesc')
+          || this.t?.('settings.amd.wordsShownDesc')
+          || 'How much ayah text stays visible. Lower % hides more words so you recall from memory.',
         textSize: this.t?.('common.fontSize') || this.t?.('memorisation.amd.textSizeShort') || 'Text size',
         textSizeIncrease: this.t?.('memorisation.amd.textSizeIncrease') || 'Increase text size',
         textSizeDecrease: this.t?.('memorisation.amd.textSizeDecrease') || 'Decrease text size',
@@ -8288,6 +8344,7 @@ export default {
         || this.showAdvancedMetricsModal
         || this.postSessionAdaptiveCheckActive
         || this.showAiAudioConsentModal
+        || this.workspaceTourActive
       )
     },
     chainingProgressLabel() {
@@ -10068,7 +10125,7 @@ export default {
       if (shouldAutoRestorePersistedSession) {
         this.isDataReady = true
       } else if (shouldAutoOpenOnboarding) {
-        this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
+        this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true })
         this.markOnboardingAutoPresented()
         this.isDataReady = true
       } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
@@ -13038,8 +13095,7 @@ export default {
       // Soft unlock keeps the lock when tools/modals are still open (legitimate).
       // Force unlock is only for unmount / leave — otherwise leftover state freezes the page.
       const forceUnlock = options?.force === true && !locked
-      const overlayOpen = !!(this.showTools || this.isAnyModalOverlayActive)
-      const shouldLock = forceUnlock ? false : !!(locked || overlayOpen)
+      const shouldLock = forceUnlock ? false : !!(locked || this.showTools || this.isAnyModalOverlayActive)
       document.body.classList.toggle('tools-panel-open', shouldLock)
       if (shouldLock) {
         document.body.style.overflow = 'hidden'
@@ -13086,36 +13142,47 @@ export default {
       return false
     },
 
+    isPageScrollIntentionallyLocked() {
+      return !!(this.showTools || this.isAnyModalOverlayActive)
+    },
+
+    documentHasLeftoverScrollLock() {
+      if (typeof document === 'undefined') return false
+      const body = document.body
+      const html = document.documentElement
+      return body.classList.contains('tools-panel-open')
+        || body.classList.contains('modal-open')
+        || body.style.overflow === 'hidden'
+        || html.style.overflow === 'hidden'
+        || !!document.querySelector('.offcanvas-backdrop, .modal-backdrop')
+    },
+
     unstickPageScroll() {
       if (typeof document === 'undefined') return
-      if (this.showTools && document.querySelector('.tools.open, .tools.show')) return
+      if (this.isPageScrollIntentionallyLocked()) return
       if (this.visiblePageOverlayOpen()) return
+      if (!this.documentHasLeftoverScrollLock()) return
 
       document.querySelectorAll('.offcanvas-backdrop, .modal-backdrop').forEach((el) => el.remove())
       this.forceReleaseBodyScrollLock()
       document.body.classList.remove('modal-open')
       document.body.style.removeProperty('padding-right')
-      document.documentElement.style.overflowY = 'auto'
-      document.body.style.overflowY = 'auto'
+      document.documentElement.style.removeProperty('overflow-y')
+      document.body.style.removeProperty('overflow-y')
     },
 
     bindStaleScrollLockRelease() {
       if (typeof window === 'undefined' || this._releaseStaleScrollLock) return
       this._releaseStaleScrollLock = () => this.unstickPageScroll()
-      const opts = { passive: true, capture: true }
-      window.addEventListener('wheel', this._releaseStaleScrollLock, opts)
-      window.addEventListener('touchmove', this._releaseStaleScrollLock, opts)
-      window.addEventListener('touchstart', this._releaseStaleScrollLock, opts)
-      window.addEventListener('pointerdown', this._releaseStaleScrollLock, opts)
+      const opts = { passive: true }
+      window.addEventListener('pageshow', this._releaseStaleScrollLock, opts)
+      document.addEventListener('visibilitychange', this._releaseStaleScrollLock, opts)
     },
 
     unbindStaleScrollLockRelease() {
       if (typeof window === 'undefined' || !this._releaseStaleScrollLock) return
-      const opts = { capture: true }
-      window.removeEventListener('wheel', this._releaseStaleScrollLock, opts)
-      window.removeEventListener('touchmove', this._releaseStaleScrollLock, opts)
-      window.removeEventListener('touchstart', this._releaseStaleScrollLock, opts)
-      window.removeEventListener('pointerdown', this._releaseStaleScrollLock, opts)
+      window.removeEventListener('pageshow', this._releaseStaleScrollLock)
+      document.removeEventListener('visibilitychange', this._releaseStaleScrollLock)
       this._releaseStaleScrollLock = null
     },
 
@@ -14696,13 +14763,21 @@ export default {
         }
         audio.muted = true
         const playPromise = audio.play()
+        if (options.pauseAfterUnlock) {
+          try { audio.pause() } catch { }
+        }
         const restoreAudio = () => {
           if (isStale()) return
+          if (options.pauseAfterUnlock) {
+            try { audio.pause() } catch { }
+            audio.muted = true
+            try { audio.currentTime = 0 } catch { }
+            // Stay muted until finalizeCountdownPlayback — never leak ayah audio
+            // while the 3-2-1 overlay is still up.
+            return
+          }
           audio.muted = false
           if (targetUrl) {
-            if (options.pauseAfterUnlock) {
-              try { audio.pause() } catch { }
-            }
             // Keep the real ayah URL so the post-countdown play() stays on this element.
             return
           }
@@ -14728,6 +14803,11 @@ export default {
         if (playPromise?.then) {
           playPromise.then(restoreAudio).catch(() => {
             if (isStale()) return
+            if (options.pauseAfterUnlock) {
+              try { audio.pause() } catch { }
+              audio.muted = true
+              return
+            }
             audio.muted = false
             if (isSilentUnlock) {
               const nowSrc = audio.currentSrc || audio.getAttribute('src') || ''
@@ -14774,7 +14854,12 @@ export default {
       }
 
       // Invalidate in-flight silent unlock restores before assigning the real ayah URL.
+      // During countdown, keep the element paused and muted so preload cannot leak audio.
       this.claimAudioElement(audio)
+      if (this.showCountdownOverlay) {
+        try { audio.pause() } catch { }
+        audio.muted = true
+      }
 
       const currentSrc = audio.currentSrc ? this.normalizeAudioUrl(audio.currentSrc) : ''
       const attrSrc = this.normalizeAudioUrl(audio.getAttribute('src') || '')
@@ -15959,8 +16044,8 @@ export default {
     },
     applyOnboardingGoalPreset() {
       this.rangeStart = 1
-      const lastAyah = this.resolveCurrentSurahAyahCount() || 3
-      this.rangeEnd = lastAyah <= SHORT_SURAH_AYAH_LIMIT ? lastAyah : 3
+      const lastAyah = this.resolveCurrentSurahAyahCount() || FIRST_ONBOARDING_RANGE_END
+      this.rangeEnd = Math.min(lastAyah, FIRST_ONBOARDING_RANGE_END)
       this.resetRepetitionsForFreshSession()
     },
 
@@ -16720,7 +16805,7 @@ export default {
       return this.buildFirstOnboardingSessionConfig({
         chapterId: 1,
         rangeStart: 1,
-        rangeEnd: 3,
+        rangeEnd: FIRST_ONBOARDING_RANGE_END,
         reciterId: 'ar.alafasy',
         repetitionsPerStep: 2,
         selectedLoopCount: 2,
@@ -16762,7 +16847,7 @@ export default {
         chapterId: 1,
         chapterName: 'Al-Fatihah',
         rangeStart: 1,
-        rangeEnd: 3,
+        rangeEnd: FIRST_ONBOARDING_RANGE_END,
         repetitions: 2,
         reciterId: 'ar.alafasy',
         totalAyahsInSurah: 7,
@@ -18225,7 +18310,7 @@ export default {
 
         // Ensure AI Recite uses the completed session range even after cleanup.
         // Do not expand short-surah windows — the check must match what was practised
-        // (e.g. onboarding first session Al-Fatiha 1–3, not the full surah).
+        // (e.g. onboarding first session Al-Fatiha 1–5, not the full surah).
         this.chapterId = chapterId
         this.rangeStart = from
         this.rangeEnd = to
@@ -24121,7 +24206,7 @@ export default {
         this.recitationCheckScope = 'ayah'
       } else {
         // Keep the practised session window — never expand short surahs to full
-        // length here, or AI Recite drifts from onboarding / partial sets (e.g. 1–3 → 1–7).
+        // length here, or AI Recite drifts from onboarding / partial sets (e.g. 1–5 → 1–7).
         const chapterId = Number(this.chapterId || this.currentChapter?.id || 0)
         const from = Math.max(1, Number(this.rangeStart || 1))
         const to = Math.max(from, Number(this.rangeEnd || from))
@@ -24778,6 +24863,25 @@ export default {
         + `</div>`
       )
     },
+    queueAmdLiveWordPatch(changedWords = []) {
+      if (!this.amdOpen) return false
+      const incoming = Array.isArray(changedWords) ? changedWords : []
+      if (!this._amdPendingPatches) this._amdPendingPatches = []
+      if (incoming.length) this._amdPendingPatches.push(...incoming)
+      if (this._amdPatchRaf) return true
+      const flush = () => {
+        this._amdPatchRaf = null
+        const batch = this._amdPendingPatches
+        this._amdPendingPatches = []
+        if (batch?.length) this.patchAmdLiveWordStatuses(batch)
+      }
+      if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+        this._amdPatchRaf = window.requestAnimationFrame(flush)
+        return true
+      }
+      flush()
+      return true
+    },
     patchAmdLiveWordStatuses(changedWords = []) {
       if (!this.amdOpen) return false
       const modal = this.$refs.amdModal
@@ -24830,7 +24934,8 @@ export default {
       const isFutureWord = (index) => {
         // Anything strictly after the confirmed cursor is future — never paint.
         if (index > confirmedIndex) return true
-        const ayah = ayahBounds.find((bound) => index >= bound.start && index < bound.end)
+        const ayah = this.getAmdAyahBoundForWordIndex(index)
+          || (Array.isArray(ayahBounds) ? ayahBounds.find((bound) => index >= bound.start && index < bound.end) : null)
         if (!ayah) return false
         return confirmedIndex < ayah.start
       }
@@ -27342,7 +27447,7 @@ export default {
       if (next === current) return false
       this[targetKey] = next
       if (this.amdOpen && targetKey === 'recitationLiveWords') {
-        this.patchAmdLiveWordStatuses(changedWords)
+        this.queueAmdLiveWordPatch(changedWords)
         this.maybeCompleteAmdMemorisationTest()
         return true
       }
@@ -28626,7 +28731,7 @@ export default {
       try {
         const audioContext = new AudioContextCtor()
         const analyser = audioContext.createAnalyser()
-        analyser.fftSize = 1024
+        analyser.fftSize = 512
         const source = audioContext.createMediaStreamSource(stream)
         source.connect(analyser)
         const samples = new Uint8Array(analyser.fftSize)
@@ -28635,6 +28740,7 @@ export default {
           analyser,
           source,
           frame: null,
+          interval: null,
           silenceStartedAt: 0,
           lastSpeechAt: 0,
           active: true,
@@ -28643,12 +28749,6 @@ export default {
         const tick = () => {
           if (!vad.active) return
           const now = Date.now()
-          // ~15 Hz is enough for silence detection; full rAF burns CPU during long recitations.
-          if (vad._lastTickAt && now - vad._lastTickAt < 66) {
-            vad.frame = window.requestAnimationFrame(tick)
-            return
-          }
-          vad._lastTickAt = now
           analyser.getByteTimeDomainData(samples)
           let sum = 0
           for (const value of samples) {
@@ -28671,10 +28771,10 @@ export default {
               }
             }
           }
-          vad.frame = window.requestAnimationFrame(tick)
         }
         this.recitationVadState = vad
-        vad.frame = window.requestAnimationFrame(tick)
+        // ~15 Hz interval — avoid scheduling a rAF on every painted frame.
+        vad.interval = window.setInterval(tick, 66)
       } catch (error) {
         console.warn('Failed to start recitation VAD:', error)
       }
@@ -28682,6 +28782,10 @@ export default {
     stopRecitationVad() {
       const vad = this.recitationVadState || {}
       vad.active = false
+      if (vad.interval) {
+        try { window.clearInterval(vad.interval) } catch { }
+        vad.interval = null
+      }
       if (vad.frame) {
         try { window.cancelAnimationFrame(vad.frame) } catch { }
       }
@@ -33868,6 +33972,12 @@ export default {
           overall: { memorised_ayah_count: 0 },
         }
         this.learnerDashboardChart = this.learnerDashboardChart || { points: [], is_empty: true }
+        this.learnerDashboardWeekSummary = this.learnerDashboardWeekSummary || {
+          sessions: 0,
+          ayahs_practised: 0,
+          active_days: 0,
+          is_empty: true,
+        }
         this.learnerDashboardWeaknesses = this.learnerDashboardWeaknesses || {
           items: [],
           all_items: [],
@@ -33892,6 +34002,9 @@ export default {
         this.learnerDashboardChart = payload?.chart && typeof payload.chart === 'object'
           ? payload.chart
           : { points: [], is_empty: true }
+        this.learnerDashboardWeekSummary = payload?.week_summary && typeof payload.week_summary === 'object'
+          ? payload.week_summary
+          : { sessions: 0, ayahs_practised: 0, active_days: 0, is_empty: true }
         this.learnerDashboardWeaknesses = payload?.weaknesses && typeof payload.weaknesses === 'object'
           ? payload.weaknesses
           : { items: [], all_items: [], total: 0 }
@@ -33903,6 +34016,14 @@ export default {
         }
         if (!this.learnerDashboardChart) {
           this.learnerDashboardChart = { points: [], is_empty: true }
+        }
+        if (!this.learnerDashboardWeekSummary) {
+          this.learnerDashboardWeekSummary = {
+            sessions: 0,
+            ayahs_practised: 0,
+            active_days: 0,
+            is_empty: true,
+          }
         }
         if (!this.learnerDashboardWeaknesses) {
           this.learnerDashboardWeaknesses = { items: [], all_items: [], total: 0 }
@@ -39599,6 +39720,7 @@ export default {
     },
 
     async playVerse(verse, options = {}) {
+      if (this.showCountdownOverlay && !options.allowDuringCountdown) return
       if (this.playRequestLocked && !options.force) return
       this.ensureSessionAudioPlayer()
       this.playRequestLocked = true

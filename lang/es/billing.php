@@ -6,6 +6,7 @@ return [
     'hero_desc' => 'Empieza en Free, o desbloquea Pro con 7 días de prueba. Inicia sesión antes del pago para que el plan se sincronice con la cuenta correcta.',
     'activating' => 'Tu suscripción a Mutqin se está activando.',
     'no_stripe_customer' => 'Aún no hay un cliente de Stripe vinculado a esta cuenta. Contáctanos si ya pagaste.',
+    'stripe_unavailable' => 'Stripe no está disponible ahora. Vuelve a intentarlo cuando la facturación esté configurada.',
     'checkout_complete_guest' => 'Pago completado. Inicia sesión con el mismo correo que usaste en Stripe para sincronizar tu plan y abre Memorización.',
     'current_plan' => 'Plan actual',
     'free_access' => 'Acceso gratuito',

@@ -48,7 +48,7 @@ return [
     'tester_guide_intro' => 'Mutqin luas — coba jalur singkat ini dulu.',
     'tester_guide_step_1' => 'Anda di Memorisation — ruang latihan utama.',
     'tester_guide_step_2' => 'Jika Selamat datang kembali muncul, pilih Sesi baru.',
-    'tester_guide_step_3' => 'Buka Controls → Setup, pilih Al-Fatiha 1–3, lalu Mulai sesi.',
+    'tester_guide_step_3' => 'Buka Controls → Setup, pilih Al-Fatiha 1–5, lalu Mulai sesi.',
     'tester_guide_step_4' => 'Setelah itu buka Dashboard untuk progres dan muraja\'ah.',
     'tester_guide_dismiss' => 'Mengerti',
     'auth_register_kicker' => 'Mulai di sini',

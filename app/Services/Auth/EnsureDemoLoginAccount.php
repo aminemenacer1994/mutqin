@@ -49,9 +49,11 @@ class EnsureDemoLoginAccount
             'password_set_at' => $user->password_set_at ?? Carbon::now(),
             'locale' => $user->locale ?: 'en',
             'theme' => $user->theme ?: Theme::DEFAULT_PREFERENCE,
-            'subscription_tier' => $user->subscription_tier ?: 'free',
-            'subscription_plan' => $user->subscription_plan ?: 'free',
-            'subscription_status' => $user->subscription_status ?: 'free',
+            'subscription_tier' => 'pro',
+            'subscription_plan' => $user->subscription_plan && $user->subscription_plan !== 'free'
+                ? $user->subscription_plan
+                : 'pro_monthly',
+            'subscription_status' => 'active',
         ]);
 
         // Demo login always bypasses email verification.

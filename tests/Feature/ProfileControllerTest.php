@@ -473,14 +473,36 @@ class ProfileControllerTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.show'))
             ->assertOk()
-            ->assertSee(__('profile.org_plan'), false)
-            ->assertSee(__('profile.open_admin_console'), false)
+            ->assertDontSee(__('profile.org_plan'), false)
+            ->assertDontSee(__('profile.open_admin_console'), false)
             ->assertSee(__('profile.connected_with_google', ['email' => $user->email]), false)
             ->assertDontSee(__('profile.danger_zone'), false)
-            ->assertDontSee(__('profile.upgrade_plan'), false)
+            ->assertSee(__('profile.upgrade_plan'), false)
+            ->assertSee(__('profile.status_free'), false)
+            ->assertSee(__('profile.tier_free'), false)
             ->assertDontSee('Log out of all devices', false)
             ->assertSee('id="subscription"', false)
             ->assertDontSee('google-admin-1', false);
+    }
+
+    public function test_pro_subscriber_profile_shows_manage_and_live_plan_state(): void
+    {
+        $user = User::factory()->pro()->create([
+            'stripe_customer_id' => 'cus_live_pro',
+            'subscription_current_period_ends_at' => now()->addMonth(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('profile.show'))
+            ->assertOk()
+            ->assertSee(__('profile.plan_pro_monthly'), false)
+            ->assertSee(__('profile.status_active'), false)
+            ->assertSee(__('profile.tier_pro'), false)
+            ->assertSee(__('profile.manage_subscription'), false)
+            ->assertDontSee(__('profile.upgrade_plan'), false)
+            ->assertDontSee(__('profile.open_admin_console'), false)
+            ->assertDontSee(__('profile.org_plan'), false)
+            ->assertDontSee('cus_live_pro', false);
     }
 
     public function test_profile_does_not_show_memorisation_place(): void

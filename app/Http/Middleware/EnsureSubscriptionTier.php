@@ -22,6 +22,12 @@ class EnsureSubscriptionTier
             abort(401);
         }
 
+        // Local/staging testers: demo login is on, so paid gates stay open.
+        // Production forces show_demo_accounts off (see config/app.php).
+        if (config('app.show_demo_accounts')) {
+            return $next($request);
+        }
+
         $allowed = match ($tier) {
             'pro' => $user->hasProAccess(),
             default => $user->hasPremiumAccess(),

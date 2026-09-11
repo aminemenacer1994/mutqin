@@ -45,7 +45,7 @@ The login page **Sign in with demo** button uses this account:
 
 | Label | Email | Password | Plan | Why use it |
 |---|---|---|---|---|
-| **Tester — Beginner (EN)** | `layla.beginner@mutqin.test` | `DemoPass1!` | Free | Small Al-Fatiha progress — good default for most testing |
+| **Tester — Beginner (EN)** | `layla.beginner@mutqin.test` | `DemoPass1!` | Pro | One-click demo — Al-Fatiha start plus AI recitation |
 
 ### Other useful accounts
 
@@ -82,7 +82,7 @@ Do this in order on your first visit:
 1. **Sign in** with **Sign in with demo** (or **Tester — Beginner (EN)** manually).
 2. Follow the floating **Where to go in Mutqin** guide (or minimize it). If you see **Welcome back**, choose **Start new session** (or continue if you are testing resume).
 3. Open **Controls** (toolbar) → **Setup** tab.
-4. Pick **Surah Al-Fatiha**, ayahs **1–3**, and a reciter.
+4. Pick **Surah Al-Fatiha**, ayahs **1–5**, and a reciter.
 5. Tap **Start session**.
 6. Listen to at least one ayah, then finish the session.
 7. On **Session complete**, try **Check memorisation** (AI Memorisation).
@@ -119,7 +119,7 @@ A complete happy path (about 15–20 minutes):
 
 AI Recite checks spoken recitation (often per ayah or after a completed range).
 
-1. Start or resume a session with a short range (Al-Fatiha 1–3 is fine).
+1. Start or resume a session with a short range (Al-Fatiha 1–5 is fine).
 2. Open **Controls** → **Session** tab (or ayah tools on the active ayah).
 3. Tap **AI Recite** / **Start AI recitation check**.
 4. Allow the microphone if prompted.
@@ -254,14 +254,14 @@ Steps to reproduce:
 
 ```
 Feature: AI Recite after session complete
-What I did: Finished Al-Fatiha 1–3, tapped Check memorisation, recited ayah 1
+What I did: Finished Al-Fatiha 1–5, tapped Check memorisation, recited ayah 1
 What I expected: Result modal with accuracy score
 What happened: Spinner never finished; no error message
 Browser/device: Safari 17 / iPhone 15
 Screenshot/video: attached
 Steps to reproduce:
 1. Log in as layla.beginner@mutqin.test
-2. Start Al-Fatiha 1–3 session
+2. Start Al-Fatiha 1–5 session
 3. Complete session → Check memorisation
 4. Recite ayah 1
 ```

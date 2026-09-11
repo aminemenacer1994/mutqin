@@ -26,6 +26,8 @@ class AuthPageRenderTest extends TestCase
 
     public function test_login_page_renders_the_dedicated_login_form(): void
     {
+        config(['app.show_demo_accounts' => true]);
+
         $this->get(route('login'))
             ->assertOk()
             ->assertSee(__('ui.login'))

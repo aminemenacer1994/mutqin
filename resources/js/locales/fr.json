@@ -1711,7 +1711,7 @@
       "steps": {
         "welcome": {
           "title": "Voici Mémorisation",
-          "body": "Votre espace de hifz. Nous commençons par Al-Fatiha 1–3 pour garder le chemin court et clair.",
+          "body": "Votre espace de hifz. Nous commençons par Al-Fatiha 1–5 pour garder le chemin court et clair.",
           "waitHint": ""
         },
         "controls": {
@@ -1721,7 +1721,7 @@
         },
         "setup": {
           "title": "Configuration",
-          "body": "Choisissez ici la sourate et la plage. La revue ciblée commence à Al-Fatiha 1–3, Alafasy, 2 répétitions.",
+          "body": "Choisissez ici la sourate et la plage. La revue ciblée commence à Al-Fatiha 1–5, Alafasy, 2 répétitions.",
           "waitHint": ""
         },
         "practice": {
@@ -1736,17 +1736,17 @@
         },
         "start": {
           "title": "Démarrer la session",
-          "body": "Cela lance la révision ciblée : Al-Fatiha 1–3 avec Alafasy et 2 répétitions.",
+          "body": "Cela lance la révision ciblée : Al-Fatiha 1–5 avec Alafasy et 2 répétitions.",
           "waitHint": ""
         },
         "session": {
           "title": "Pratiquer, puis terminer",
-          "body": "Al-Fatiha 1–3 reste sur la page. Écoutez et répétez ici pendant une session.",
+          "body": "Al-Fatiha 1–5 reste sur la page. Écoutez et répétez ici pendant une session.",
           "waitHint": ""
         },
         "ai": {
           "title": "Vérifier avec la récitation IA",
-          "body": "Voici le contrôle de récitation IA. Il écoute et marque chaque mot. Il ne se termine pas tout seul.",
+          "body": "Voici le contrôle de récitation IA. Il écoute et marque chaque mot. Le % indique combien de texte reste visible — plus il est bas, plus vous récitez de mémoire.",
           "waitHint": ""
         },
         "results": {
@@ -1761,12 +1761,13 @@
         },
         "plan": {
           "title": "Plans recommandés",
-          "body": "Deux plans suivent ce contrôle : pratiquer les ayahs faibles, ou réviser Al-Fatiha 1–3 avec Alafasy à 2 répétitions.",
+          "body": "Deux plans suivent ce contrôle : pratiquer les ayahs faibles, ou réviser Al-Fatiha 1–5 avec Alafasy à 2 répétitions.",
           "waitHint": ""
         },
         "dashboard": {
           "title": "Voir le progrès",
           "body": "Voici le tableau de bord : séries, couverture et muraja’ah.",
+          "previewHint": "Séries, couverture et muraja’ah apparaissent ici après chaque session.",
           "waitHint": ""
         }
       }
@@ -1783,7 +1784,7 @@
       "steps": {
         "workspace": "Vous êtes sur Mémorisation, l’espace principal de pratique.",
         "welcome": "Si « Bon retour » apparaît, choisissez Commencer une nouvelle session.",
-        "setup": "Ouvrez Contrôles → Configuration, choisissez Al-Fatiha 1–3, puis Démarrez la session.",
+        "setup": "Ouvrez Contrôles → Configuration, choisissez Al-Fatiha 1–5, puis Démarrez la session.",
         "aiCheck": "Pratiquez, terminez la session, puis Vérifiez la mémorisation (IA).",
         "plan": "Choisissez un plan recommandé et appuyez sur Démarrer ce plan, ne vous arrêtez pas à la sélection.",
         "keepGoing": "Ouvrez le tableau de bord pour le progrès et la muraja’ah, puis revenez ici pour la session suivante."
@@ -3515,6 +3516,7 @@
       "stopRecitation": "Stop grabación",
       "difficulty": "« Difficulty»",
       "wordsShown": "Palabras shown",
+      "wordsShownDesc": "Quelle part du texte de l’ayah reste visible. Un % plus bas cache plus de mots pour réciter de mémoire.",
       "peekShort": "Aperçu",
       "peekHintShort": "Hold a reveal",
       "wordsShownShort": "« Shown»",

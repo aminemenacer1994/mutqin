@@ -69,6 +69,22 @@ class SubscriptionTierEnforcementTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_free_user_can_request_transcription_token_when_demo_accounts_are_enabled(): void
+    {
+        config([
+            'app.show_demo_accounts' => true,
+            'services.speechmatics.api_key' => '',
+            'services.speechmatics.region' => 'eu',
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk()
+            ->assertJsonPath('available', false);
+    }
+
     public function test_pro_user_can_request_transcription_token_when_speechmatics_unconfigured(): void
     {
         $user = User::factory()->pro()->create();

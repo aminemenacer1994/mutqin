@@ -62,5 +62,25 @@ class SubscriptionAccessTest extends TestCase
         $this->assertTrue($admin->hasPremiumAccess());
         $this->assertTrue($admin->hasProAccess());
         $this->assertSame('pro', $admin->effectiveSubscriptionTier());
+        $this->assertSame('free', $admin->billingSubscriptionTier());
+        $this->assertFalse($admin->hasBillableStripeCustomer());
+    }
+
+    public function test_demo_stripe_customer_ids_are_not_billable(): void
+    {
+        $user = User::factory()->create([
+            'stripe_customer_id' => 'cus_demo_admin',
+        ]);
+
+        $this->assertFalse($user->hasBillableStripeCustomer());
+    }
+
+    public function test_real_stripe_customer_ids_are_billable(): void
+    {
+        $user = User::factory()->create([
+            'stripe_customer_id' => 'cus_existing',
+        ]);
+
+        $this->assertTrue($user->hasBillableStripeCustomer());
     }
 }

@@ -59,7 +59,7 @@ return [
     'tester_guide_intro' => 'Mutqin is large — try this short path first.',
     'tester_guide_step_1' => 'You are on Memorisation — the main practice workspace.',
     'tester_guide_step_2' => 'If Welcome back appears, choose Start new session.',
-    'tester_guide_step_3' => 'Open Controls → Setup, pick Al-Fatiha 1–3, then Start session.',
+    'tester_guide_step_3' => 'Open Controls → Setup, pick Al-Fatiha 1–5, then Start session.',
     'tester_guide_step_4' => 'Afterwards, open Dashboard for progress and muraja\'ah.',
     'tester_guide_dismiss' => 'Got it',
     'mutqin_home' => 'Mutqin home',

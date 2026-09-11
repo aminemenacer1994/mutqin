@@ -247,12 +247,23 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         return in_array($this->subscription_status, ['trialing', 'active'], true);
     }
 
-    public function effectiveSubscriptionTier(): string
+    /**
+     * Real Stripe customer ids only — demo/seed placeholders cannot open Checkout or the portal.
+     */
+    public function hasBillableStripeCustomer(): bool
     {
-        if ($this->isAdmin()) {
-            return 'pro';
-        }
+        $id = trim((string) $this->stripe_customer_id);
 
+        return $id !== ''
+            && str_starts_with($id, 'cus_')
+            && ! str_starts_with($id, 'cus_demo');
+    }
+
+    /**
+     * Plan tier from Stripe/billing columns only (never the admin feature bypass).
+     */
+    public function billingSubscriptionTier(): string
+    {
         if (! $this->hasPaidAccess()) {
             return 'free';
         }
@@ -260,6 +271,15 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
         $tier = strtolower((string) ($this->subscription_tier ?? 'free'));
 
         return in_array($tier, ['premium', 'pro'], true) ? $tier : 'free';
+    }
+
+    public function effectiveSubscriptionTier(): string
+    {
+        if ($this->isAdmin()) {
+            return 'pro';
+        }
+
+        return $this->billingSubscriptionTier();
     }
 
     public function hasPremiumAccess(): bool

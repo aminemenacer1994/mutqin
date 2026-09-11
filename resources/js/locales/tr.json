@@ -1711,7 +1711,7 @@
       "steps": {
         "welcome": {
           "title": "Burası Hıfz alanı",
-          "body": "Hıfz çalışma alanınız. Yol kısa kalsın diye Al-Fatiha 1–3 ile başlıyoruz.",
+          "body": "Hıfz çalışma alanınız. Yol kısa kalsın diye Al-Fatiha 1–5 ile başlıyoruz.",
           "waitHint": ""
         },
         "controls": {
@@ -1721,7 +1721,7 @@
         },
         "setup": {
           "title": "Kurulum",
-          "body": "Sure ve ayet aralığını burada seçin. Odaklı tekrar Al-Fatiha 1–3, Alafasy ve 2 tekrar ile başlar.",
+          "body": "Sure ve ayet aralığını burada seçin. Odaklı tekrar Al-Fatiha 1–5, Alafasy ve 2 tekrar ile başlar.",
           "waitHint": ""
         },
         "practice": {
@@ -1736,17 +1736,17 @@
         },
         "start": {
           "title": "Oturumu başlat",
-          "body": "Bu, odaklı tekrarı başlatır: Al-Fatiha 1–3, Alafasy ve 2 tekrar.",
+          "body": "Bu, odaklı tekrarı başlatır: Al-Fatiha 1–5, Alafasy ve 2 tekrar.",
           "waitHint": ""
         },
         "session": {
           "title": "Bu ayetleri çalışın",
-          "body": "Al-Fatiha 1–3 sayfada kalır. Oturum sırasında burada dinleyin ve tekrarlayın.",
+          "body": "Al-Fatiha 1–5 sayfada kalır. Oturum sırasında burada dinleyin ve tekrarlayın.",
           "waitHint": ""
         },
         "ai": {
           "title": "Yapay zekâ tilavetiyle kontrol",
-          "body": "Bu yapay zekâ tilavet kontrolüdür. Dinler ve her kelimeyi işaretler. Kendi kendine bitmez.",
+          "body": "Bu yapay zekâ tilavet kontrolüdür. Dinler ve her kelimeyi işaretler. % kontrolü metnin ne kadarının görünür kalacağını ayarlar — düşük yüzde daha çok gizler.",
           "waitHint": ""
         },
         "results": {
@@ -1761,12 +1761,13 @@
         },
         "plan": {
           "title": "Önerilen planlar",
-          "body": "Bu kontrolden sonra iki plan var: zayıf ayetleri çalışın veya Al-Fatiha 1–3’ü Alafasy ile 2 kez tekrarlayın.",
+          "body": "Bu kontrolden sonra iki plan var: zayıf ayetleri çalışın veya Al-Fatiha 1–5’ü Alafasy ile 2 kez tekrarlayın.",
           "waitHint": ""
         },
         "dashboard": {
           "title": "İlerlemeyi görün",
           "body": "Bu sizin panonuz: seriler, kapsam ve muraja’ah.",
+          "previewHint": "Seriler, kapsam ve muraja’ah her oturumdan sonra burada görünür.",
           "waitHint": ""
         }
       }
@@ -1783,7 +1784,7 @@
       "steps": {
         "workspace": "Hıfz alanındasınız, ana pratik çalışma alanı.",
         "welcome": "Tekrar hoş geldiniz görünürse Yeni oturum başlat’ı seçin.",
-        "setup": "Kontroller → Kurulum’u açın, Al-Fatiha 1–3’ü seçin, ardından Oturumu başlatın.",
+        "setup": "Kontroller → Kurulum’u açın, Al-Fatiha 1–5’ü seçin, ardından Oturumu başlatın.",
         "aiCheck": "Çalışın, oturumu bitirin, sonra Hıfzı kontrol et (YZ).",
         "plan": "Bir öneri planı seçin ve Bu planı başlat’a dokunun; sadece seçmekle kalmayın.",
         "keepGoing": "İlerleme ve muraja’ah için Panoyu açın, sonra sonraki oturum için buraya dönün."
@@ -3515,6 +3516,7 @@
       "stopRecitation": "Stop kayıt",
       "difficulty": "الصعوبة",
       "wordsShown": "Kelimeler shown",
+      "wordsShownDesc": "Ayette ne kadar metin görünür kalır. Daha düşük % daha çok kelime gizler; ezberden okursunuz.",
       "peekShort": "معاينة",
       "peekHintShort": "اضغط مطولًا للإظهار",
       "wordsShownShort": "ظاهر",

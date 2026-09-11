@@ -1783,7 +1783,7 @@
       "steps": {
         "welcome": {
           "title": "This is Memorisation",
-          "body": "Your workspace for hifz. We start with Al-Fatiha 1–3 so the path stays short and clear.",
+          "body": "Your workspace for hifz. We start with Al-Fatiha 1–5 so the path stays short and clear.",
           "waitHint": ""
         },
         "controls": {
@@ -1793,7 +1793,7 @@
         },
         "setup": {
           "title": "Setup",
-          "body": "Pick the surah and ayah range here. Focused review starts at Al-Fatiha 1–3 with Alafasy and 2 repetitions.",
+          "body": "Pick the surah and ayah range here. Focused review starts at Al-Fatiha 1–5 with Alafasy and 2 repetitions.",
           "waitHint": ""
         },
         "practice": {
@@ -1808,17 +1808,17 @@
         },
         "start": {
           "title": "Begin the set",
-          "body": "This starts the focused review: Al-Fatiha 1–3 with Alafasy and 2 repetitions.",
+          "body": "This starts the focused review: Al-Fatiha 1–5 with Alafasy and 2 repetitions.",
           "waitHint": ""
         },
         "session": {
           "title": "Practise these ayahs",
-          "body": "Al-Fatiha 1–3 stays on the page. Listen and repeat here during a session.",
+          "body": "Al-Fatiha 1–5 stays on the page. Listen and repeat here during a session.",
           "waitHint": ""
         },
         "ai": {
           "title": "Check with AI recitation",
-          "body": "This is the AI recitation check. It listens and marks each word. It does not finish on its own.",
+          "body": "This is the AI recitation check. It listens and marks each word. The % control is how much ayah text stays visible — lower hides more so you recite from memory.",
           "waitHint": ""
         },
         "results": {
@@ -1833,12 +1833,13 @@
         },
         "plan": {
           "title": "Recommended plans",
-          "body": "Two plans follow this check: practise the weak ayahs, or revise Al-Fatiha 1–3 with Alafasy at 2 repetitions.",
+          "body": "Two plans follow this check: practise the weak ayahs, or revise Al-Fatiha 1–5 with Alafasy at 2 repetitions.",
           "waitHint": ""
         },
         "dashboard": {
           "title": "Review progress",
           "body": "This is your dashboard: streaks, coverage, and muraja'ah.",
+          "previewHint": "Streaks, coverage, and muraja'ah land here after each session.",
           "waitHint": ""
         }
       }
@@ -1855,7 +1856,7 @@
       "steps": {
         "workspace": "You are on Memorisation, the main practice workspace.",
         "welcome": "If Welcome back appears, choose Start new session.",
-        "setup": "Open Controls → Setup, pick Al-Fatiha 1–3, then Start session.",
+        "setup": "Open Controls → Setup, pick Al-Fatiha 1–5, then Start session.",
         "aiCheck": "Practise, end the session, then Check memorisation (AI).",
         "plan": "Pick a recommendation plan and tap Start this plan, do not stop at selecting it.",
         "keepGoing": "Open Dashboard for progress and muraja'ah, then return here for the next session."
@@ -3588,6 +3589,7 @@
       "stopRecitation": "Stop recording",
       "difficulty": "Difficulty",
       "wordsShown": "Words shown",
+      "wordsShownDesc": "How much ayah text stays visible. Lower % hides more words so you recite from memory.",
       "peekShort": "Peek",
       "peekHintShort": "Hold to reveal",
       "wordsShownShort": "Shown",

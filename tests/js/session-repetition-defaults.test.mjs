@@ -33,7 +33,7 @@ assert.equal(DEFAULT_TAJWEED_ENABLED, false, 'tajweed is off until the learner t
   const first = buildFirstOnboardingSessionConfig({ focusModeEnabled: true })
   assert.equal(first.chapterId, 1)
   assert.equal(first.rangeStart, 1)
-  assert.equal(first.rangeEnd, 3)
+  assert.equal(first.rangeEnd, 5)
   assert.equal(first.focusModeEnabled, true)
   assert.equal(first.repetitionsPerStep, 2)
   assert.equal(first.reciterId, 'ar.alafasy')

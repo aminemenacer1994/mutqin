@@ -6,6 +6,7 @@ return [
     'hero_desc' => 'Start on Free, or unlock Pro with a 7-day free trial. Sign in before checkout so your plan syncs to the right account.',
     'activating' => 'Your Mutqin subscription is being activated.',
     'no_stripe_customer' => 'No Stripe customer is linked to this account yet. Contact us if you already paid.',
+    'stripe_unavailable' => 'We could not open Stripe just now. Try again in a moment from Pricing.',
     'checkout_complete_guest' => 'Checkout complete. Sign in with the same email you used in Stripe to sync your plan, then open Memorisation.',
     'current_plan' => 'Current plan',
     'free_access' => 'Free access',

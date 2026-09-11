@@ -57,7 +57,7 @@ return [
     'tester_guide_intro' => 'Mutqin est vaste — suivez d’abord ce court parcours.',
     'tester_guide_step_1' => 'Vous êtes sur Mémorisation — l’espace de pratique principal.',
     'tester_guide_step_2' => 'Si Bon retour apparaît, choisissez Nouvelle session.',
-    'tester_guide_step_3' => 'Ouvrez Contrôles → Réglages, choisissez Al-Fatiha 1–3, puis Démarrer.',
+    'tester_guide_step_3' => 'Ouvrez Contrôles → Réglages, choisissez Al-Fatiha 1–5, puis Démarrer.',
     'tester_guide_step_4' => 'Ensuite, ouvrez le Tableau de bord pour la progression et la muraja\'ah.',
     'tester_guide_dismiss' => 'Compris',
     'auth_register_kicker' => 'Commencez ici',

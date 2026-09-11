@@ -94,86 +94,143 @@
 
           <template v-else>
             <header class="workspace-tour__dash-hero">
-              <p class="workspace-tour__dash-kicker">{{ t('dashboard.journey_kicker') }}</p>
-              <h3 class="workspace-tour__dash-title">{{ workspaceTourDashboardGreeting }}</h3>
-              <span
-                v-if="workspaceTourDashboardStreakLabel"
-                class="workspace-tour__dash-chip"
-              >
-                <i class="bi bi-fire" aria-hidden="true"></i>
-                {{ workspaceTourDashboardStreakLabel }}
-              </span>
+              <div class="workspace-tour__dash-chrome">
+                <div class="workspace-tour__dash-greeting">
+                  <p class="workspace-tour__dash-kicker">{{ t('dashboard.journey_kicker') }}</p>
+                  <h3 class="workspace-tour__dash-title">{{ workspaceTourDashboardGreeting }}</h3>
+                  <span
+                    v-if="workspaceTourDashboardStreakLabel"
+                    class="workspace-tour__dash-chip"
+                  >
+                    <i class="bi bi-fire" aria-hidden="true"></i>
+                    {{ workspaceTourDashboardStreakLabel }}
+                  </span>
+                </div>
+                <span class="workspace-tour__dash-refresh" aria-hidden="true">
+                  <i class="bi bi-arrow-clockwise"></i>
+                </span>
+              </div>
+
+              <div class="workspace-tour__dash-continue">
+                <span class="workspace-tour__dash-continue-icon" aria-hidden="true">
+                  <i class="bi bi-book-half"></i>
+                </span>
+                <div class="workspace-tour__dash-continue-main">
+                  <strong>{{ t('dashboard.journey_continue_label') }}</strong>
+                  <em>{{ workspaceTourDashboardContinueTitle }}</em>
+                  <span v-if="workspaceTourDashboardContinueRange">
+                    {{ workspaceTourDashboardContinueRange }}
+                  </span>
+                </div>
+                <span class="workspace-tour__dash-continue-cta">
+                  <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+                  {{ t('dashboard.journey_continue_cta') }}
+                </span>
+              </div>
             </header>
 
-            <div class="workspace-tour__dash-stats">
-              <div class="workspace-tour__dash-stat">
-                <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>
-                <strong>{{ journeyMemorisedCount }}</strong>
-                <span>{{ t('dashboard.glance_memorised_label') }}</span>
-              </div>
-              <div class="workspace-tour__dash-stat">
-                <i class="bi bi-bookmark-plus" aria-hidden="true"></i>
-                <strong>{{ workspaceTourDashboardLearningCount }}</strong>
-                <span>{{ t('dashboard.glance_learning_label') }}</span>
-              </div>
-            </div>
+            <div class="workspace-tour__dash-grid">
+              <section class="workspace-tour__dash-panel">
+                <div class="workspace-tour__dash-panel-head">
+                  <span class="workspace-tour__dash-panel-icon" aria-hidden="true">
+                    <i class="bi bi-journal-bookmark-fill"></i>
+                  </span>
+                  <div>
+                    <h4>{{ t('dashboard.journey_data_title') }}</h4>
+                    <p>{{ t('dashboard.journey_data_subtitle') }}</p>
+                  </div>
+                </div>
 
-            <div class="workspace-tour__dash-card">
-              <div class="workspace-tour__dash-card-head">
-                <span>{{ t('dashboard.journey_overall_label') }}</span>
-                <strong>{{ workspaceTourDashboardOverallDisplay.percent }}%</strong>
-              </div>
-              <div class="workspace-tour__dash-bar">
-                <span
-                  :style="{ width: workspaceTourDashboardOverallDisplay.fillWidth }"
-                  :class="{ 'is-empty': !workspaceTourDashboardOverallDisplay.hasProgress }"
-                ></span>
-              </div>
-            </div>
+                <div class="workspace-tour__dash-stats">
+                  <div class="workspace-tour__dash-stat workspace-tour__dash-stat--memorised">
+                    <span class="workspace-tour__dash-stat-icon" aria-hidden="true">
+                      <i class="bi bi-stars"></i>
+                    </span>
+                    <div>
+                      <strong>{{ journeyMemorisedCount }}</strong>
+                      <span>{{ t('dashboard.glance_memorised_label') }}</span>
+                    </div>
+                  </div>
+                  <div class="workspace-tour__dash-stat workspace-tour__dash-stat--learning">
+                    <span class="workspace-tour__dash-stat-icon" aria-hidden="true">
+                      <i class="bi bi-book-half"></i>
+                    </span>
+                    <div>
+                      <strong>{{ workspaceTourDashboardLearningCount }}</strong>
+                      <span>{{ t('dashboard.glance_learning_label') }}</span>
+                    </div>
+                  </div>
+                </div>
 
-            <div
-              v-if="workspaceTourDashboardWeakItems.length || workspaceTourDashboardShowWeakEmpty"
-              class="workspace-tour__dash-card"
-            >
-              <div class="workspace-tour__dash-card-head">
-                <span>{{ t('dashboard.strengthen_title') }}</span>
-              </div>
-              <ul
-                v-if="workspaceTourDashboardWeakItems.length"
-                class="workspace-tour__dash-weak-list"
-              >
-                <li
-                  v-for="item in workspaceTourDashboardWeakItems"
-                  :key="item.key || `${item.surah_number}-${item.ayah_number}`"
+                <div class="workspace-tour__dash-card">
+                  <div class="workspace-tour__dash-card-head">
+                    <div>
+                      <span>{{ t('dashboard.journey_overall_label') }}</span>
+                      <p>{{ t('dashboard.glance_quran_share') }}</p>
+                    </div>
+                    <strong>{{ workspaceTourDashboardOverallDisplay.percent }}%</strong>
+                  </div>
+                  <div class="workspace-tour__dash-bar">
+                    <span
+                      :style="{ width: workspaceTourDashboardOverallDisplay.fillWidth }"
+                      :class="{ 'is-empty': !workspaceTourDashboardOverallDisplay.hasProgress }"
+                    ></span>
+                  </div>
+                </div>
+
+                <div class="workspace-tour__dash-actions">
+                  <span>
+                    <i class="bi bi-clock-history" aria-hidden="true"></i>
+                    {{ t('dashboard.view_all_activity') }}
+                  </span>
+                  <span>
+                    <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
+                    {{ t('dashboard.view_memorised_ayahs') }}
+                  </span>
+                </div>
+              </section>
+
+              <section class="workspace-tour__dash-panel" data-tour="tour-dashboard-activity">
+                <div class="workspace-tour__dash-panel-head workspace-tour__dash-panel-head--split">
+                  <div class="workspace-tour__dash-panel-title">
+                    <span class="workspace-tour__dash-panel-icon" aria-hidden="true">
+                      <i class="bi bi-calendar-week"></i>
+                    </span>
+                    <h4>{{ t('dashboard.activity_chart_title') }}</h4>
+                  </div>
+                  <div class="workspace-tour__dash-range">
+                    <span class="is-active">{{ t('dashboard.days_7') }}</span>
+                    <span>{{ t('dashboard.days_30') }}</span>
+                  </div>
+                </div>
+
+                <div
+                  v-if="!workspaceTourDashboardChartEmpty"
+                  class="workspace-tour__dash-chart"
                 >
-                  {{ item.surah_name }}
-                  <template v-if="item.ayah_number">
-                    · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
-                  </template>
-                </li>
-              </ul>
-              <p v-else>{{ t('dashboard.weak_empty_message') }}</p>
-            </div>
+                  <span
+                    v-for="(bar, index) in workspaceTourDashboardChartBars"
+                    :key="`dash-bar-${index}`"
+                    :style="{ '--h': bar.height }"
+                    :class="{ 'is-quiet': !bar.active }"
+                  ></span>
+                </div>
+                <div v-else class="workspace-tour__dash-empty">
+                  <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
+                  <span>{{ t('dashboard.weekly_empty_message') }}</span>
+                </div>
 
-            <div class="workspace-tour__dash-card" data-tour="tour-dashboard-activity">
-              <div class="workspace-tour__dash-card-head">
-                <span>{{ t('dashboard.activity_chart_title') }}</span>
-              </div>
-              <div
-                v-if="!workspaceTourDashboardChartEmpty"
-                class="workspace-tour__dash-chart"
-              >
-                <span
-                  v-for="(bar, index) in workspaceTourDashboardChartBars"
-                  :key="`dash-bar-${index}`"
-                  :style="{ '--h': bar.height }"
-                  :class="{ 'is-quiet': !bar.active }"
-                ></span>
-              </div>
-              <div v-else class="workspace-tour__dash-empty">
-                <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
-                <span>{{ t('dashboard.weekly_empty_message') }}</span>
-              </div>
+                <div class="workspace-tour__dash-analytics">
+                  <div
+                    v-for="item in workspaceTourDashboardWeekStats"
+                    :key="item.key"
+                  >
+                    <i :class="item.icon" aria-hidden="true"></i>
+                    <strong>{{ item.value }}</strong>
+                    <span>{{ item.label }}</span>
+                  </div>
+                </div>
+              </section>
             </div>
           </template>
         </div>
@@ -4346,6 +4403,7 @@
       :reset-label="amdLabels.reset"
       :difficulty-label="amdLabels.difficulty"
       :words-shown-label="amdLabels.wordsShown"
+      :words-shown-desc="amdLabels.wordsShownDesc"
       :words-shown-short="amdLabels.wordsShownShort"
       :elapsed-label="amdElapsedLabel"
       :elapsed-timer-label="amdLabels.elapsedTimer || 'Recitation time'"

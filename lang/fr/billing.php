@@ -6,6 +6,7 @@ return [
     'hero_desc' => 'Commencez gratuitement, ou débloquez Pro avec un essai de 7 jours. Connectez-vous avant le paiement pour lier le forfait au bon compte.',
     'activating' => 'Votre abonnement Mutqin est en cours d’activation.',
     'no_stripe_customer' => 'Aucun client Stripe n’est encore lié à ce compte. Contactez-nous si vous avez déjà payé.',
+    'stripe_unavailable' => 'Stripe est indisponible pour le moment. Réessayez après avoir vérifié la configuration de facturation.',
     'checkout_complete_guest' => 'Paiement terminé. Connectez-vous avec le même e-mail que sur Stripe pour synchroniser votre forfait, puis ouvrez Mémorisation.',
     'current_plan' => 'Forfait actuel',
     'free_access' => 'Accès gratuit',
