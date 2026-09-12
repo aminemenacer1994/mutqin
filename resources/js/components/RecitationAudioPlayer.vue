@@ -19,31 +19,33 @@
       <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
     </button>
     <div class="sa-ov__player-body">
-      <div class="sa-ov__player-meta">
-        <strong>{{ title }}</strong>
-        <span>{{ durationLabel }}</span>
-      </div>
-      <input
-        class="sa-ov__player-seek"
-        type="range"
-        min="0"
-        max="1000"
-        step="1"
-        :value="seekValue"
-        :disabled="!src || error"
-        :aria-label="title"
-        @input="onSeek"
-      >
-      <div class="sa-ov__player-times">
-        <span>{{ currentLabel }}</span>
+      <div class="sa-ov__player-seek-row">
+        <input
+          class="sa-ov__player-seek"
+          type="range"
+          min="0"
+          max="1000"
+          step="1"
+          :value="seekValue"
+          :disabled="!src || error"
+          :aria-label="title || 'Recitation'"
+          :aria-valuetext="progressLabel"
+          @input="onSeek"
+        >
         <button
           type="button"
           class="sa-ov__player-restart"
           :disabled="!src || error"
+          :aria-label="restartLabel"
+          :title="restartLabel"
           @click="restart"
         >
-          {{ restartLabel }}
+          <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
         </button>
+      </div>
+      <div class="sa-ov__player-times" aria-live="polite">
+        <span>{{ currentLabel }}</span>
+        <span>{{ durationLabel }}</span>
       </div>
     </div>
   </div>
@@ -91,6 +93,9 @@ export default {
     },
     durationLabel() {
       return formatClock(this.knownDuration)
+    },
+    progressLabel() {
+      return `${this.currentLabel} / ${this.durationLabel}`
     },
   },
   watch: {

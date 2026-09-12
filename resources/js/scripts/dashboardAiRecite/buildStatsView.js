@@ -102,11 +102,35 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
     }
 
   const missed = Array.isArray(payload.missed_words)
-    ? payload.missed_words.map((item, index) => ({
-      key: `${item.text}:${index}`,
-      text: asText(item.text),
-      count: asNumber(item.count),
-    })).filter((item) => item.text)
+    ? payload.missed_words.map((item, index) => {
+      const text = asText(item.text)
+      const count = asNumber(item.count)
+      const surahNumber = asNumber(item.surah_number) || null
+      const ayah = asNumber(item.ayah) || null
+      const attemptId = asNumber(item.last_attempt_id) || null
+      const surahName = asText(item.surah_name)
+      const ayahLabel = ayah
+        ? t('dashboard.ayah_n', { n: ayah })
+        : ''
+      const location = [surahName, ayahLabel].filter(Boolean).join(' · ')
+      return {
+        key: `${text}:${surahNumber || 0}:${ayah || 0}:${index}`,
+        text,
+        count,
+        surah_number: surahNumber,
+        surah_name: surahName,
+        ayah,
+        ayah_label: ayahLabel,
+        location,
+        last_attempt_id: attemptId,
+        count_label: t('dashboard.ai_recite.missed_word_times', { count }),
+        action_label: t('dashboard.ai_recite.missed_word_action', {
+          word: text,
+          count,
+          where: location || t('dashboard.ai_recite.missed_word_unknown_place'),
+        }),
+      }
+    }).filter((item) => item.text)
     : []
 
   const recent = Array.isArray(payload.recent_attempts)

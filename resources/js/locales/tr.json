@@ -4785,7 +4785,15 @@
       "view_all_results": "All results",
       "attempt_saved": "This attempt is saved.",
       "see_all_results": "See all results",
-      "continue_without_ai": "Yapay zekâ olmadan devam et"
+      "continue_without_ai": "Yapay zekâ olmadan devam et",
+      "missed_words_hint": "Kaçırıldığı bir kontrolü açmak için bir kelimeye dokunun.",
+      "missed_word_times": "{count}× kaçırıldı",
+      "missed_word_action": "{word} · {count}× kaçırıldı · {where}. Kontrolü aç.",
+      "missed_word_unknown_place": "son kontroller",
+      "missed_word_open": "Kontrolü aç",
+      "missed_word_detail": "{count}× kaçırıldı{where}",
+      "missed_word_detail_where": " · {where}",
+      "missed_word_no_attempt": "Bu kelimeyi kapsayan kayıtlı bir kontrol henüz yok."
     }
   },
   "admin": {

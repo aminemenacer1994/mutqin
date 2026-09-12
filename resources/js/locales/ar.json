@@ -4785,7 +4785,15 @@
       "view_all_results": "All results",
       "attempt_saved": "This attempt is saved.",
       "see_all_results": "See all results",
-      "continue_without_ai": "المتابعة دون الذكاء الاصطناعي"
+      "continue_without_ai": "المتابعة دون الذكاء الاصطناعي",
+      "missed_words_hint": "المس كلمة لفتح اختبار فُوِّتت فيه.",
+      "missed_word_times": "فُوِّت {count}×",
+      "missed_word_action": "{word} · فُوِّت {count}× · {where}. افتح الاختبار.",
+      "missed_word_unknown_place": "الاختبارات الأخيرة",
+      "missed_word_open": "افتح الاختبار",
+      "missed_word_detail": "فُوِّت {count}×{where}",
+      "missed_word_detail_where": " · {where}",
+      "missed_word_no_attempt": "لا يوجد اختبار محفوظ يغطي هذه الكلمة بعد."
     }
   },
   "admin": {

@@ -4772,7 +4772,15 @@
       "view_all_results": "All results",
       "attempt_saved": "This attempt is saved.",
       "see_all_results": "See all results",
-      "continue_without_ai": "Continuar sin IA"
+      "continue_without_ai": "Continuar sin IA",
+      "missed_words_hint": "Toca una palabra para abrir una prueba donde se omitió.",
+      "missed_word_times": "Omitida {count}×",
+      "missed_word_action": "{word} · omitida {count}× · {where}. Abrir prueba.",
+      "missed_word_unknown_place": "pruebas recientes",
+      "missed_word_open": "Abrir prueba",
+      "missed_word_detail": "Omitida {count}×{where}",
+      "missed_word_detail_where": " · {where}",
+      "missed_word_no_attempt": "Aún no hay una prueba guardada que cubra esta palabra."
     }
   },
   "admin": {

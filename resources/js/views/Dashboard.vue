@@ -473,10 +473,26 @@
                     <h3>{{ t('dashboard.ai_recite.missed_words') }}</h3>
                     <ul class="dash-ai-results__words">
                       <li v-for="item in aiReciteView.missed" :key="item.key">
-                        <span lang="ar" dir="rtl">{{ item.text }}</span>
-                        <small>{{ item.count }}</small>
+                        <button
+                          type="button"
+                          class="dash-ai-results__word"
+                          :class="{ 'is-loading': isMissedWordOpening(item) }"
+                          :aria-label="item.action_label"
+                          :title="missedWordTitle(item)"
+                          :disabled="isMissedWordOpening(item) || !missedWordAttempt(item)"
+                          @click="openMissedWordAttempt(item)"
+                        >
+                          <span lang="ar" dir="rtl" class="dash-ai-results__word-text">{{ item.text }}</span>
+                          <small class="dash-ai-results__word-count" :title="item.count_label">
+                            <span aria-hidden="true">{{ item.count }}</span>
+                            <span class="sr-only">{{ item.count_label }}</span>
+                          </small>
+                        </button>
                       </li>
                     </ul>
+                    <p class="dash-ai-results__chips-hint">
+                      {{ t('dashboard.ai_recite.missed_words_hint') }}
+                    </p>
                   </section>
                 </div>
               </div>
@@ -1874,6 +1890,40 @@ export default {
       if (key === 'mixed') return this.t('dashboard.drawer_result_mixed')
       if (key === 'weak') return this.t('dashboard.drawer_result_weak')
       return key ? key.charAt(0).toUpperCase() + key.slice(1) : ''
+    },
+    missedWordAttempt(item) {
+      if (!item) return null
+      const attemptId = Number(item.last_attempt_id || 0)
+      const recent = this.aiReciteView?.recent || []
+      if (attemptId > 0) {
+        const byId = recent.find((row) => Number(row.id) === attemptId)
+        if (byId) return byId
+        return { id: attemptId, has_analysis: true }
+      }
+      const surah = Number(item.surah_number || 0)
+      const ayah = Number(item.ayah || 0)
+      if (surah <= 0 || ayah <= 0) return null
+      return recent.find((row) => {
+        const start = Number(row.ayah_start || 0)
+        const end = Number(row.ayah_end || start)
+        return Number(row.surah_number || 0) === surah
+          && ayah >= start
+          && ayah <= Math.max(start, end)
+      }) || null
+    },
+    missedWordTitle(item) {
+      if (this.missedWordAttempt(item)) return item?.action_label || ''
+      return this.t('dashboard.ai_recite.missed_word_no_attempt')
+    },
+    isMissedWordOpening(item) {
+      const attempt = this.missedWordAttempt(item)
+      if (!attempt) return false
+      return this.isAnalysisLoading(attempt, 'attempt')
+    },
+    openMissedWordAttempt(item) {
+      const attempt = this.missedWordAttempt(item)
+      if (!attempt) return
+      this.openAnalysisForItem(attempt, 'attempt')
     },
     async loadAiReciteResults() {
       const requestId = ++this.aiReciteRequestId

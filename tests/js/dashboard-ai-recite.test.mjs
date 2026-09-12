@@ -101,6 +101,13 @@ assert.doesNotMatch(modal, /startMemorisationPracticePlan/)
 assert.match(modal, /isBusy/, 'recording/processing blocks accidental dismiss')
 assert.match(modal, /dash-ai-recite-open/, 'background scroll is locked')
 
+assert.match(dashboard, /dash-ai-results__word/, 'often-missed chips are interactive buttons')
+assert.match(dashboard, /openMissedWordAttempt/, 'often-missed chips open a related check')
+assert.match(dashboard, /missed_words_hint/, 'often-missed row explains the affordance')
+assert.doesNotMatch(dashboard, /dash-ai-results__word-detail/, 'often-missed does not show a second detail panel')
+assert.match(dashboardCss, /\.dash-ai-results__word:hover/, 'often-missed chips have hover feedback')
+assert.match(dashboardCss, /prefers-reduced-motion[\s\S]*dash-ai-results__word/, 'often-missed motion respects reduced motion')
+
 assert.equal(en.dashboard.ai_recite.cta_label, 'Recite')
 assert.match(en.dashboard.ai_recite.cta_hint, /memorisation/i)
 
@@ -164,9 +171,17 @@ const filled = buildDashboardAiReciteStatsView({
   peek_used_percent: 25,
   improvement: 6,
   weakest_ayahs: [{ surah_number: 1, surah_name: 'Al-Fatiha', ayah: 5, accuracy: 60 }],
-  missed_words: [{ text: 'الضالين', count: 2 }],
+  missed_words: [{
+    text: 'الضالين',
+    count: 2,
+    surah_number: 1,
+    surah_name: 'Al-Fatiha',
+    ayah: 7,
+    last_attempt_id: 9,
+  }],
   recent_attempts: [{
     id: 9,
+    surah_number: 1,
     surah_name: 'Al-Fatiha',
     ayah_start: 5,
     ayah_end: 5,
@@ -183,6 +198,10 @@ assert.equal(filled.focus.length, 1)
 assert.equal(filled.holding, false)
 assert.equal(filled.score.tone, 'mixed')
 assert.equal(filled.missed[0].text, 'الضالين')
+assert.equal(filled.missed[0].count, 2)
+assert.equal(filled.missed[0].last_attempt_id, 9)
+assert.match(filled.missed[0].count_label, /2/)
+assert.match(filled.missed[0].action_label, /الضالين/)
 assert.equal(filled.recent[0].peek_used, true)
 assert.equal(filled.recent[0].has_audio, true)
 

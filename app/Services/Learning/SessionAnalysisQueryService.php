@@ -294,11 +294,16 @@ class SessionAnalysisQueryService
                     $wordBuckets[$key] = [
                         'text' => $text,
                         'surah_number' => $surah ?: null,
+                        'surah_name' => $range['surah_name'] ?? null,
                         'ayah' => $ayah ?: null,
                         'count' => 0,
+                        'last_attempt_id' => null,
                     ];
                 }
                 $wordBuckets[$key]['count']++;
+                if (! $wordBuckets[$key]['last_attempt_id']) {
+                    $wordBuckets[$key]['last_attempt_id'] = (int) $attempt->id;
+                }
             }
             foreach ($statuses as $status) {
                 $state = strtolower((string) ($status['status'] ?? $status['result_type'] ?? ''));
@@ -315,11 +320,16 @@ class SessionAnalysisQueryService
                     $wordBuckets[$key] = [
                         'text' => $text,
                         'surah_number' => $surah ?: null,
+                        'surah_name' => $range['surah_name'] ?? null,
                         'ayah' => $ayah ?: null,
                         'count' => 0,
+                        'last_attempt_id' => null,
                     ];
                 }
                 $wordBuckets[$key]['count']++;
+                if (! $wordBuckets[$key]['last_attempt_id']) {
+                    $wordBuckets[$key]['last_attempt_id'] = (int) $attempt->id;
+                }
             }
         }
 

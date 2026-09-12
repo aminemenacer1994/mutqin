@@ -4785,7 +4785,15 @@
       "view_all_results": "All results",
       "attempt_saved": "This attempt is saved.",
       "see_all_results": "See all results",
-      "continue_without_ai": "AI کے بغیر جاری رکھیں"
+      "continue_without_ai": "AI کے بغیر جاری رکھیں",
+      "missed_words_hint": "جس چیک میں لفظ چھوٹا تھا اسے کھولنے کے لیے لفظ پر تھپتھپائیں۔",
+      "missed_word_times": "{count}× چھوٹا",
+      "missed_word_action": "{word} · {count}× چھوٹا · {where}. چیک کھولیں۔",
+      "missed_word_unknown_place": "حالیہ چیکس",
+      "missed_word_open": "چیک کھولیں",
+      "missed_word_detail": "{count}× چھوٹا{where}",
+      "missed_word_detail_where": " · {where}",
+      "missed_word_no_attempt": "ابھی کوئی محفوظ چیک اس لفظ کو نہیں ڈھانپتا۔"
     }
   },
   "admin": {

@@ -4785,7 +4785,15 @@
       "view_all_results": "All results",
       "attempt_saved": "This attempt is saved.",
       "see_all_results": "See all results",
-      "continue_without_ai": "Lanjut tanpa AI"
+      "continue_without_ai": "Lanjut tanpa AI",
+      "missed_words_hint": "Ketuk kata untuk membuka pemeriksaan tempat kata itu terlewat.",
+      "missed_word_times": "Terlewat {count}×",
+      "missed_word_action": "{word} · terlewat {count}× · {where}. Buka pemeriksaan.",
+      "missed_word_unknown_place": "pemeriksaan terbaru",
+      "missed_word_open": "Buka pemeriksaan",
+      "missed_word_detail": "Terlewat {count}×{where}",
+      "missed_word_detail_where": " · {where}",
+      "missed_word_no_attempt": "Belum ada pemeriksaan tersimpan yang mencakup kata ini."
     }
   },
   "admin": {

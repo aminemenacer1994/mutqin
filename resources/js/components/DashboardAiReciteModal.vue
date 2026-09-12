@@ -74,12 +74,22 @@
                     </li>
                   </ul>
                 </section>
-                <section v-if="statsView.missed.length" class="dash-ai-recite-panel">
+                <section v-if="statsView.missed.length" class="dash-ai-recite-panel dash-ai-recite-panel--words">
                   <h3>{{ t('dashboard.ai_recite.missed_words') }}</h3>
+                  <p class="dash-ai-recite-hint">{{ t('dashboard.ai_recite.missed_words_hint') }}</p>
                   <ul class="dash-ai-recite-words">
                     <li v-for="item in statsView.missed" :key="item.key">
-                      <span class="dash-ai-recite-arabic">{{ item.text }}</span>
-                      <small>{{ item.count }}</small>
+                      <button
+                        type="button"
+                        class="dash-ai-recite-word"
+                        :aria-label="item.action_label"
+                        :title="item.action_label"
+                        :disabled="!item.last_attempt_id || isBusy"
+                        @click="openMissedWord(item)"
+                      >
+                        <span class="dash-ai-recite-arabic" lang="ar" dir="rtl">{{ item.text }}</span>
+                        <small :title="item.count_label">{{ item.count }}</small>
+                      </button>
                     </li>
                   </ul>
                 </section>
@@ -684,6 +694,11 @@ export default {
       } finally {
         this.statsLoading = false
       }
+    },
+    openMissedWord(item) {
+      const attemptId = Number(item?.last_attempt_id || 0)
+      if (attemptId <= 0) return
+      return this.openSavedAttempt(attemptId)
     },
     togglePlayback() {
       const player = this.$refs.player

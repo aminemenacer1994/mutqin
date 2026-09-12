@@ -226,8 +226,81 @@ body.dash-ai-recite-open {
   gap: 0.75rem;
 }
 
+.dash-ai-recite-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.dash-ai-recite-words li {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  justify-content: flex-start;
+}
+
+.dash-ai-recite-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.25rem;
+  margin: 0;
+  padding: 0.3rem 0.45rem 0.3rem 0.7rem;
+  border: 1px solid var(--border, rgba(80, 64, 48, 0.16));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-soft, #f4ebe1) 70%, var(--surface-strong, #fff));
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.dash-ai-recite-word:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-light, rgba(184, 146, 63, 0.14)) 55%, var(--surface-strong, #fff));
+  border-color: color-mix(in srgb, var(--accent, #b8923f) 35%, var(--border, rgba(80, 64, 48, 0.16)));
+  transform: translateY(-1px);
+}
+
+.dash-ai-recite-word:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #b8923f) 28%, transparent);
+}
+
+.dash-ai-recite-word:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.dash-ai-recite-word small {
+  min-width: 1.3rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border, rgba(80, 64, 48, 0.16)) 70%, transparent);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.dash-ai-recite-hint {
+  margin: 0 0 0.45rem;
+  color: var(--text-muted, #6f655b);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .dash-ai-recite-words li {
   font-size: 1.15rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-ai-recite-word {
+    transition: none;
+  }
+
+  .dash-ai-recite-word:hover:not(:disabled) {
+    transform: none;
+  }
 }
 
 .dash-ai-recite-attempt {
