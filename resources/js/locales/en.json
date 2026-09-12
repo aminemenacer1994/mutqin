@@ -234,92 +234,92 @@
   },
   "homepage": {
     "hero": {
-      "badge": "Hifz companion",
-      "title": "Keep your Hifz close to your heart, one calm session at a time.",
-      "desc": "Practise a short set, recite for Allah’s sake, and leave knowing what to open next, bi’idhnillāh.",
-      "promiseLabel": "The need and the answer",
-      "problem": "Need",
-      "problemText": "Your place scatters.",
+      "badge": "Qur’an memorisation companion",
+      "title": "A calmer, more structured way to memorise the Qur’an.",
+      "desc": "Listen, repeat, recite and review each ayah on a clear path. Start simply, then keep returning.",
+      "promiseLabel": "Why Mutqin",
+      "problem": "The struggle",
+      "problemText": "Forgetting what to revise, losing weak ayahs, and stopping without a way back.",
       "solution": "Mutqin",
-      "solutionText": "A short set, and a clear next step.",
-      "startFree": "Begin your session",
+      "solutionText": "A steady path to listen, recite, review and return, one ayah at a time.",
+      "startFree": "Start memorising",
       "joinWaitlist": "Join the waiting list",
       "viewPricing": "View plans",
       "seeFeatures": "See how it helps",
-      "seeHow": "See how it works"
+      "seeHow": "See how Mutqin works"
     },
     "shots": {
-      "hero": "Mutqin session ready to begin on Al-Kafirun",
-      "setup": "Session setup with surah, ayah range, and repetitions",
-      "tools": "Practice tools including gradually hide the text",
-      "check": "Live memorisation check while you recite",
-      "next": "Recommended next practice after a session",
-      "return": "Welcome back with your saved place",
-      "practise": "Ayah cards with translation during practice",
-      "checkReady": "Check your memorisation ready to record",
-      "result": "Practice complete showing strong recall",
-      "recommend": "Next practice recommendation after a session",
+      "hero": "Mutqin memorisation session ready to begin on Al-Kafirun",
+      "setup": "Choose a surah, ayah range and repetitions for memorisation",
+      "tools": "Practice tools including gradually hiding the Qur’an text",
+      "check": "Recite from memory while Mutqin follows along",
+      "next": "A clear next return after a memorisation session",
+      "return": "Welcome back to your saved place in the Qur’an",
+      "practise": "Ayah cards with translation during Qur’an practice",
+      "checkReady": "Ready to recite from memory",
+      "result": "Session complete, showing which ayahs need another return",
+      "recommend": "Next revision suggested after a session",
       "sessionComplete": "Session complete with recite from memory",
-      "savePlace": "Finish for now with progress saved",
+      "savePlace": "Finish for now with your place saved",
       "progress": "Hifz progress with memorised ayahs and overall share"
     },
     "features": {
-      "kicker": "Features",
-      "title": "Tools that serve your Hifz",
-      "subtitle": "Built for sincere, steady memorisation, not noise.",
+      "kicker": "For Hifz",
+      "title": "What supports your Hifz",
+      "subtitle": "Each part of Mutqin supports memorising, practising, revising and returning.",
       "cta": "",
       "carouselLabel": "Feature screenshots",
       "items": {
         "setup": {
-          "title": "Memorisation setup",
-          "description": "Choose the surah, ayah range, and how you want to practise. A niyyah made practical."
+          "title": "Guided memorisation",
+          "description": "Move through listening, following and reciting with a clear path for each ayah."
         },
         "techniques": {
-          "title": "Memorisation techniques",
-          "description": "Hide the text, join ayahs, listen and repeat. Methods that strengthen what you carry."
+          "title": "Listen, repeat, recite",
+          "description": "Hide the text, join ayahs and repeat until recall feels stronger."
         },
         "progress": {
-          "title": "Hifz progress",
-          "description": "Memorised ayahs, what you are learning, and how far you have come, at a glance."
+          "title": "Spaced review",
+          "description": "Return to memorised ayahs at the right time so revision stays part of the journey."
         },
         "aiRecitation": {
-          "title": "Recitation check",
-          "description": "Recite from memory while Mutqin follows along. A gentle mirror for your tilawah."
+          "title": "AI Recite",
+          "description": "Recite from memory and get feedback on the words and ayahs that need more attention."
         },
         "mushafLayout": {
           "title": "Mushaf layout",
-          "description": "A clear mushaf page, made for calm and focused practice."
+          "description": "Read in a familiar Qur’an page, made for calm, focused practice."
         },
         "translationTajweed": {
-          "title": "Translation & tajweed",
-          "description": "Meaning and tajweed stay close, so the heart and tongue move together."
+          "title": "Reading aids",
+          "description": "Translation, transliteration, tajweed and tafseer stay nearby when you need them."
         }
       }
     },
     "how": {
-      "kicker": "How it works",
-      "title": "From an open mushaf to a clear next step",
-      "subtitle": "One calm loop, from setup to a clear next step. Watch it once, then begin.",
+      "kicker": "How Mutqin works",
+      "title": "A clear path for every ayah",
+      "subtitle": "Set a short range, practise, recite, then return to what still needs care.",
       "items": {
         "choose": {
           "title": "Set your range",
-          "description": "Choose the surah, ayahs, and repetitions. A small, steady set is enough for one session.",
-          "detail": "Start where you are. A short range is easier to finish, easier to check, and easier to return to tomorrow."
+          "description": "Choose the surah, ayahs and repetitions. A small, steady set is enough for one sitting.",
+          "detail": "Start where you are. A short range is easier to finish, easier to recite, and easier to return to."
         },
         "recite": {
           "title": "Recite from memory",
-          "description": "Record your tilawah. Mutqin follows the words so you can see where the tongue hesitates.",
-          "detail": "This is a guide, not a judge. Use it to notice weak spots, then strengthen them while the verses still feel close."
+          "description": "Recite while Mutqin follows the words and highlights what needs more attention.",
+          "detail": "This supports practice. It does not replace a teacher, and it does not judge your recitation."
         },
         "see": {
           "title": "See what is strong",
-          "description": "After you recite, see a clear result, matched words, weak spots, and where to focus.",
-          "detail": "Honest feedback so your revision is purposeful."
+          "description": "After you recite, see matched words, weaker ayahs, and where to return.",
+          "detail": "Clear feedback so revision has a place to begin."
         },
         "continue": {
-          "title": "Follow the recommendation",
-          "description": "Mutqin offers a next step, revise the same set, or continue while recall is fresh.",
-          "detail": "One clear plan, bi’idhnillāh, so you never wonder what to open next."
+          "title": "Know what comes next",
+          "description": "Revise the same set, or continue while the ayahs still feel close.",
+          "detail": "One clear next step, so you are not left wondering what to open."
         }
       }
     },
@@ -332,20 +332,20 @@
     "steps": {
       "kicker": "Your path",
       "title": "A simple path you can repeat",
-      "subtitle": "Three straightforward steps, set, check, return.",
-      "cta": "Start where you are",
+      "subtitle": "Set a range, recite, then return. Consistency over speed.",
+      "cta": "Start with one ayah",
       "items": {
         "sit": {
           "title": "1. Set your range",
-          "description": "Pick a short set of ayahs you can finish in one set."
+          "description": "Pick a short set of ayahs you can finish in one sitting."
         },
         "check": {
-          "title": "2. Check your recall",
-          "description": "Recite from memory. See what is strong and what needs another pass."
+          "title": "2. Recite from memory",
+          "description": "See what is strong and which ayahs need another return."
         },
         "return": {
-          "title": "3. Return tomorrow",
-          "description": "Open Mutqin again and continue from your saved place, bi’idhnillāh."
+          "title": "3. Come back and revise",
+          "description": "Open Mutqin again and continue from your saved place."
         }
       }
     },
@@ -358,47 +358,47 @@
     },
     "faq": {
       "kicker": "FAQ",
-      "title": "Questions people ask",
-      "subtitle": "Short answers on practice, revision, and pricing.",
+      "title": "Questions about memorising with Mutqin",
+      "subtitle": "Short answers on Hifz practice, revision and plans.",
       "items": {
         "whatIsMutqin": {
           "question": "What is Mutqin?",
-          "answer": "Mutqin helps you practise a short range, check your recall, and know what to open next."
+          "answer": "Mutqin is a Qur’an memorisation companion. It helps you listen, recite, review and return, and supports practice between lessons. It does not replace a teacher."
         },
         "howMemorisation": {
           "question": "How does memorisation work?",
-          "answer": "Pick a short ayah range and practise it until it holds. Basic session setup, Quranic fonts, and 5 smart recitation checks are free."
+          "answer": "Choose a short ayah range. Listen, repeat and recite until it feels stronger, then return to revise what you have already memorised. Session setup, Quranic fonts and 5 smart recitation checks are included on Free."
         },
         "freeTools": {
           "question": "Which tools are free?",
-          "answer": "Free includes basic session setup, Quranic fonts, 5 smart recitation checks, and 3 saved sessions. Pro adds 20 smart recitation checks, offline audio downloads, lesson plans, and more history."
+          "answer": "Free includes basic session setup, Quranic fonts, 5 smart recitation checks, and 3 saved sessions. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, lesson plans, and more history."
         },
         "whatIsPro": {
           "question": "Do I need Pro to start?",
-          "answer": "No. Start free. Upgrade if you want Join ayahs together, highlight memory words, AI checks, or more saved sessions."
+          "answer": "No. You can begin memorising on Free. Upgrade later if you want more recitation checks, self-assessed audio recitation, joined ayahs, memory-word highlights, or more saved sessions."
         },
         "howRevision": {
           "question": "How does revision work?",
-          "answer": "Mutqin brings you back to recent and weaker ayahs, and suggests what to practise next."
+          "answer": "Memorisation does not end when an ayah is learnt. Mutqin helps you return to recent and weaker ayahs, so revision stays part of the journey."
         },
         "pricing": {
           "question": "Is Mutqin free? What does Pro cost?",
-          "answer": "Yes. Free covers session setup, Quranic fonts, and 5 smart recitation checks. Pro adds 20 smart recitation checks, offline audio downloads, adaptive lesson plans, progress insights, and unlimited saved sessions. The price is shown before you upgrade."
+          "answer": "Yes. Free covers session setup, Quranic fonts, and 5 smart recitation checks. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, progress insights, and unlimited saved sessions. The price is shown before you upgrade."
         },
         "whoFor": {
           "question": "Who is Mutqin for?",
-          "answer": "Anyone memorising or revising who wants short sessions and a saved place to return to."
+          "answer": "Anyone beginning Hifz, revising, or returning after a pause, who wants a calmer, step-by-step way to continue with the Qur’an."
         }
       }
     },
     "contact": {
       "kicker": "Contact",
-      "title": "Write to us",
-      "subtitle": "Ask about billing, practice, or feedback.",
+      "title": "A question about memorisation?",
+      "subtitle": "Ask about practice, your account, or feedback.",
       "email": "Email",
       "subject": "Subject",
       "message": "Message",
-      "extendedSubtitle": "Ask about practice, access, or feedback. We reply clearly and respectfully.",
+      "extendedSubtitle": "Write about practice, your account, or feedback. We reply clearly and respectfully.",
       "sending": "Sending…",
       "sendMessage": "Send message",
       "errors": {
@@ -413,9 +413,9 @@
       "errorSend": "Unable to send message. Please try again."
     },
     "footer": {
-      "product": "Product",
+      "product": "Explore",
       "features": "Features",
-      "howItWorks": "How it works",
+      "howItWorks": "See how Mutqin works",
       "pricing": "Pricing",
       "waitlist": "Waiting list",
       "resources": "Resources",
@@ -425,12 +425,12 @@
       "connect": "Connect",
       "privacy": "Privacy",
       "terms": "Terms",
-      "tagline": "2026 Mutqin · “And recite the Quran with measured recitation.”",
+      "tagline": "A companion for Qur’an memorisation, revision and return.",
       "aboutUs": "About",
       "ourMission": "Our mission",
       "workspace": "Memorisation workspace",
       "dashboard": "Dashboard",
-      "connectNote": "Follow Mutqin for quiet product updates.",
+      "connectNote": "Follow Mutqin for updates on memorisation and revision.",
       "demo": "Demo",
       "login": "Log in",
       "register": "Register",
@@ -443,7 +443,7 @@
       }
     },
     "name": "Name",
-    "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",
+    "focused_quran_memorisation_tools_for_recitation_ch": "A Qur’an memorisation companion for listening, reciting, revising and returning.",
     "all_rights_reserved": "All rights reserved.",
     "testimonials": {
       "kicker": "Students and teachers",
@@ -488,10 +488,16 @@
       "accountNote": "Sign in before checkout so your plan syncs to the correct Mutqin account."
     },
     "cta": {
-      "title": "Know what to practise next.",
-      "subtitle": "Record a verse, review the weak spots, and keep the next session focused.",
-      "button": "Create free account",
-      "note": "No card needed for Free."
+      "kicker": "Begin",
+      "title": "Start with one ayah.\nKeep building from there.",
+      "subtitle": "Create your memorisation space in Mutqin and begin at your own pace.",
+      "button": "Start memorising",
+      "note": "You will open your space and start from a short ayah range."
+    },
+    "purpose": {
+      "kicker": "The journey",
+      "title": "Memorisation is built through return.",
+      "text": "An ayah listened to, repeated, recited and revisited becomes part of a longer journey. Mutqin is designed to make that journey clearer, calmer and easier to continue."
     },
     "badge": {
       "free": "Free",
@@ -516,8 +522,8 @@
       "audioControls": "Audio speed, auto-advance, and delays",
       "chainingMethod": "Chaining method",
       "anchorMode": "Anchor mode",
-      "manualSelfAssessment": "Manual self-assessment recording",
-      "manualSelfAssessmentPlus": "Manual self-assessment and self recording",
+      "manualSelfAssessment": "Self-assessed audio recitation",
+      "manualSelfAssessmentPlus": "Self-assessed audio recitation and self recording",
       "hifzPlan": "Custom Hifz plan",
       "spacedRetention": "Steady review between sessions",
       "adaptiveRevision": "Adaptive revision scheduling",
@@ -536,7 +542,7 @@
       "blurMethod": "Blur memorisation method",
       "chainingPractice": "Chaining and transition practice",
       "anchorMode": "Anchor mode",
-      "manualRecording": "Manual self-assessment recording",
+      "manualRecording": "Self-assessed audio recitation",
       "aiRecitationReview": "Recitation check",
       "aiMemorisationChecker": "Memorisation check",
       "hifzPlan": "Custom Hifz plan",
@@ -547,67 +553,67 @@
       "offlineDownloads": "Offline audio downloads",
       "unlimited": "Unlimited"
     },
-    "a_short_loop_you_can_repeat_every_day_recite_diagn": "Practise, notice weak spots, then review what needs work.",
-    "start_free_upgrade_only_when_you_need_deeper_recit": "Start free. Upgrade when you want more feedback and history.",
+    "a_short_loop_you_can_repeat_every_day_recite_diagn": "Listen, recite, then return to the ayahs that still need care.",
+    "start_free_upgrade_only_when_you_need_deeper_recit": "Start memorising on Free. Upgrade later if you want more recitation checks and history.",
     "free": "Free",
-    "for_trying_the_workflow": "To try Mutqin",
-    "start_free": "Start free",
+    "for_trying_the_workflow": "To begin memorising",
+    "start_free": "Start memorising",
     "most_useful": "Most useful",
     "teacher_ready": "For teachers",
     "pro": "Pro",
     "feature_comparison": "Feature comparison",
     "everything_included_in_each_subscription_at_a_glan": "What each plan includes.",
-    "a_quick_overview_of_how_mutqin_supports_recitation": "How Mutqin helps with recitation, memorisation, and review.",
-    "record_a_verse_review_the_highlighted_issues_and_k": "Record a verse, review the weak spots, and keep the next session focused.",
+    "a_quick_overview_of_how_mutqin_supports_recitation": "How Mutqin helps you memorise, recite, revise and return.",
+    "record_a_verse_review_the_highlighted_issues_and_k": "Recite an ayah, see what needs more attention, and return with a clear next step.",
     "roadmap": "Roadmap",
     "tajweed_guide": "Tajweed guide",
     "memorization_tips": "Memorisation tips",
     "help_center": "Help centre",
     "pillars": {
       "practice": {
-        "title": "Practice",
-        "text": "Focused daily sessions that build consistency."
+        "title": "Memorise",
+        "text": "Listen, repeat and recite one ayah at a time."
       },
       "check": {
-        "title": "Recall check",
-        "text": "Gentle checks and a clear next step."
+        "title": "Practise",
+        "text": "See which words and ayahs need more attention."
       },
       "return": {
-        "title": "Return",
-        "text": "Pick up where you left off, anytime."
+        "title": "Revise",
+        "text": "Return to what you have already memorised."
       }
     },
     "pipelineDemo": {
-      "kicker": "One session, start to finish",
+      "kicker": "One sitting, start to finish",
       "title": "See how a Mutqin session flows",
-      "subtitle": "From setup to recommendation, a calm loop you can repeat for the sake of Allah.",
-      "pipelineLabel": "Session steps",
+      "subtitle": "From a short ayah range to a clear next return.",
+      "pipelineLabel": "Memorisation steps",
       "play": "Play walkthrough",
       "pause": "Pause walkthrough",
       "steps": {
         "setup": {
-          "label": "Setup",
-          "text": "Choose surah, ayahs, and how you will practise."
+          "label": "Choose ayahs",
+          "text": "Pick a short range and how you will listen, repeat and recite."
         },
         "practise": {
           "label": "Practise",
-          "text": "Work the set with presence, no rush."
+          "text": "Work through each ayah until it feels more familiar."
         },
         "check": {
-          "label": "Recall check",
-          "text": "Recite from memory while Mutqin follows."
+          "label": "Recite",
+          "text": "Recite from memory while Mutqin follows and highlights weaker words."
         },
         "complete": {
           "label": "Session done",
-          "text": "See what you finished in this set."
+          "text": "See the ayahs you practised in this set."
         },
         "result": {
-          "label": "Your result",
-          "text": "See what is strong, and what still needs care."
+          "label": "What needs care",
+          "text": "See what is strong, and which ayahs to revisit."
         },
         "recommend": {
-          "label": "Recommendation",
-          "text": "A clear next plan while the ayahs are still close."
+          "label": "Next return",
+          "text": "Revise the same set, or continue while recall is still close."
         }
       },
       "stepOf": "Step {current} of {total}"
@@ -4017,6 +4023,7 @@
     "proFeatures": {
       "everythingInFree": "Everything in the Free plan",
       "recitationChecks": "20 smart recitation checks",
+      "selfAssessedAudio": "Self-assessed audio recitation",
       "offlineAudio": "Download audio to listen offline",
       "lessonPlans": "Adaptive lesson plans",
       "instantFeedback": "Instant feedback on your recitation",
@@ -4050,7 +4057,7 @@
       "startTitle": "Start free",
       "startDesc": "Open a short range today. No card needed.",
       "upgradeTitle": "Upgrade when ready",
-      "upgradeDesc": "Pro adds recitation checks, lesson plans, and unlimited saved sessions.",
+      "upgradeDesc": "Pro adds recitation checks, self-assessed audio recitation, lesson plans, and unlimited saved sessions.",
       "leaveTitle": "Leave anytime",
       "leaveDesc": "A 7-day trial, then cancel from billing if you want."
     },
@@ -4065,11 +4072,11 @@
         },
         "difference": {
           "question": "What does Pro add?",
-          "answer": "Everything in the Free plan, plus 20 smart recitation checks, download audio to listen offline, adaptive lesson plans, instant feedback on your recitation, advanced progress insights, review of past mistakes and weak ayahs, advanced practice tools, and unlimited saved sessions."
+          "answer": "Everything in the Free plan, plus 20 smart recitation checks, self-assessed audio recitation, download audio to listen offline, adaptive lesson plans, instant feedback on your recitation, advanced progress insights, review of past mistakes and weak ayahs, advanced practice tools, and unlimited saved sessions."
         },
         "freeTools": {
           "question": "Which tools stay free?",
-          "answer": "Basic session setup, Quranic fonts, 5 smart recitation checks, and 3 saved sessions. Pro adds 20 smart recitation checks, offline audio downloads, adaptive lesson plans, progress insights, and unlimited saved sessions."
+          "answer": "Basic session setup, Quranic fonts, 5 smart recitation checks, and 3 saved sessions. Pro adds 20 smart recitation checks, self-assessed audio recitation, offline audio downloads, adaptive lesson plans, progress insights, and unlimited saved sessions."
         },
         "yearly": {
           "question": "How does yearly billing work?",
@@ -4747,6 +4754,10 @@
       "play": "Play",
       "pause": "Pause",
       "restart": "Restart",
+      "listen": "Listen to this recitation",
+      "listening": "Playing your recitation",
+      "audio_expired": "This recording is no longer available.",
+      "audio_loading": "Loading recording…",
       "audio": "Your recitation",
       "accuracy": "Accuracy",
       "stats_title": "AI Recite stats",

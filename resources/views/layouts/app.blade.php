@@ -80,7 +80,7 @@
     </script>
     <meta name="apple-mobile-web-app-title" content="Mutqin">
     <meta name="application-name" content="Mutqin">
-    <meta name="description" content="Quran memorisation and recitation workspace for focused hifz practice.">
+    <meta name="description" content="Mutqin helps you memorise and revise the Qur’an. Listen, recite, review and return to each ayah with a calm Hifz practice path.">
     <title>{{ __('ui.app_title') }}</title>
     @include('partials.google-analytics')
     <link rel="manifest" href="/manifest.webmanifest">

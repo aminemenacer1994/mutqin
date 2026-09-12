@@ -18,6 +18,7 @@ class SessionAnalysisQueryService
 {
     public function __construct(
         private readonly RecitationAssessmentService $assessments,
+        private readonly AiReciteAttemptAudioService $audio,
     ) {}
 
     /**
@@ -94,6 +95,8 @@ class SessionAnalysisQueryService
                 'peek_used' => (bool) $attempt->peek_used,
                 'occurred_at' => optional($attempt->created_at)->toIso8601String(),
                 'has_analysis' => true,
+                'has_audio' => $this->audio->hasPlayableAudio($attempt),
+                'audio_duration_ms' => $attempt->audio_duration_ms ? (int) $attempt->audio_duration_ms : null,
             ];
         })->values()->all();
     }
@@ -374,6 +377,8 @@ class SessionAnalysisQueryService
                     'peek_used' => (bool) $attempt->peek_used,
                     'occurred_at' => optional($attempt->created_at)->toIso8601String(),
                     'has_analysis' => true,
+                    'has_audio' => $this->audio->hasPlayableAudio($attempt),
+                    'audio_duration_ms' => $attempt->audio_duration_ms ? (int) $attempt->audio_duration_ms : null,
                 ];
             })->values()->all(),
             'last_location' => ($lastRange && $lastRange['surah_number'] && $lastRange['ayah_start'])
@@ -512,7 +517,7 @@ class SessionAnalysisQueryService
             'retention' => [
                 'weak_spots' => $weakSpots,
             ],
-            'audio' => null,
+            'audio' => $this->audio->payload($attempt),
         ];
     }
 

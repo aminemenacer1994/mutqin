@@ -205,16 +205,19 @@ function statusByTarget(result) {
 
 // --- Central thresholds stay testable ---
 {
-  assert.equal(RECITATION_THRESHOLDS.correctSimilarity, 0.84)
-  assert.equal(RECITATION_THRESHOLDS.partialSimilarity, 0.58)
-  assert.equal(RECITATION_THRESHOLDS.liveCorrectSimilarity, 0.84)
-  assert.equal(RECITATION_THRESHOLDS.livePartialSimilarity, 0.58)
-  assert.equal(RECITATION_THRESHOLDS.uncertainConfidence, 0.42)
-  assert.equal(RECITATION_THRESHOLDS.minEvaluationConfidenceForStrong, 0.58)
-  assert.equal(RECITATION_THRESHOLDS.strongAccuracyMin, 85)
-  assert.equal(RECITATION_THRESHOLDS.developingAccuracyMin, 68)
-  assert.equal(RECITATION_THRESHOLDS.progressionWithErrorsMin, 90)
+  assert.equal(RECITATION_THRESHOLDS.correctSimilarity, 0.88)
+  assert.equal(RECITATION_THRESHOLDS.partialSimilarity, 0.64)
+  assert.equal(RECITATION_THRESHOLDS.liveCorrectSimilarity, 0.88)
+  assert.equal(RECITATION_THRESHOLDS.livePartialSimilarity, 0.64)
+  assert.equal(RECITATION_THRESHOLDS.uncertainConfidence, 0.36)
+  assert.equal(RECITATION_THRESHOLDS.minEvaluationConfidenceForStrong, 0.65)
+  assert.equal(RECITATION_THRESHOLDS.strongAccuracyMin, 90)
+  assert.equal(RECITATION_THRESHOLDS.developingAccuracyMin, 72)
+  assert.equal(RECITATION_THRESHOLDS.progressionWithErrorsMin, 93)
+  assert.equal(RECITATION_THRESHOLDS.partialAccuracyWeight, 0.12)
+  assert.equal(RECITATION_THRESHOLDS.uncertainAccuracyWeight, 0)
   assert.ok(RECITATION_THRESHOLDS.softSimilarityCap < RECITATION_THRESHOLDS.correctSimilarity)
+  assert.ok(RECITATION_THRESHOLDS.softSimilarityCap >= RECITATION_THRESHOLDS.partialSimilarity)
   assert.ok(RECITATION_THRESHOLDS.softSimilarityCap < RECITATION_THRESHOLDS.liveCorrectSimilarity)
 }
 

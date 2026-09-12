@@ -383,7 +383,7 @@
         },
         "pricing": {
           "question": "Mutqin est-il gratuit ? Que coûte Pro ?",
-          "answer": "Oui. La configuration de session, l’audio et les outils débutants sont gratuits. Seuls Relier les ayahs et Surligner les mots-ancres nécessitent Pro. Pro ajoute aussi les contrôles IA, des sessions illimitées et la planification. Le tarif est indiqué avant le passage à Pro."
+          "answer": "Oui. La configuration de session, l’audio et les outils débutants sont gratuits. Seuls Relier les ayahs et Surligner les mots-ancres nécessitent Pro. Pro ajoute aussi les contrôles IA, la récitation audio en auto-évaluation, des sessions illimitées et la planification. Le tarif est indiqué avant le passage à Pro."
         },
         "whoFor": {
           "question": "Pour qui est Mutqin ?",
@@ -4017,6 +4017,7 @@
     "proFeatures": {
       "everythingInFree": "Tout ce qui est inclus dans Gratuit",
       "recitationChecks": "20 contrôles de récitation intelligents",
+      "selfAssessedAudio": "Récitation audio en auto-évaluation",
       "offlineAudio": "Télécharger l’audio pour écouter hors ligne",
       "lessonPlans": "Plans de leçon adaptatifs",
       "instantFeedback": "Retour immédiat sur votre récitation",
@@ -4061,11 +4062,11 @@
         },
         "difference": {
           "question": "Que ajoute Pro ?",
-          "answer": "Pro inclut tout Gratuit, plus 20 contrôles de récitation, le téléchargement audio hors ligne, des plans de leçon adaptatifs, un retour immédiat, des analyses de progression, la relecture des erreurs et ayahs faibles, des outils avancés et des sessions illimitées."
+          "answer": "Pro inclut tout Gratuit, plus 20 contrôles de récitation, la récitation audio en auto-évaluation, le téléchargement audio hors ligne, des plans de leçon adaptatifs, un retour immédiat, des analyses de progression, la relecture des erreurs et ayahs faibles, des outils avancés et des sessions illimitées."
         },
         "freeTools": {
           "question": "Quels outils restent gratuits ?",
-          "answer": "La configuration de session de base, les polices coraniques, 5 contrôles de récitation et 3 sessions enregistrées. Pro ajoute 20 contrôles, le téléchargement audio hors ligne, des plans de leçon et plus d’historique."
+          "answer": "La configuration de session de base, les polices coraniques, 5 contrôles de récitation et 3 sessions enregistrées. Pro ajoute 20 contrôles, la récitation audio en auto-évaluation, le téléchargement audio hors ligne, des plans de leçon et plus d’historique."
         },
         "yearly": {
           "question": "Comment fonctionne l’abonnement annuel ?",
@@ -4747,6 +4748,10 @@
       "play": "Lecture",
       "pause": "Mettre en pause",
       "restart": "Recommencer",
+      "listen": "Écouter cette récitation",
+      "listening": "Lecture de votre récitation",
+      "audio_expired": "Cet enregistrement n’est plus disponible.",
+      "audio_loading": "Chargement de l’enregistrement…",
       "audio": "Votre récitation",
       "accuracy": "Précision",
       "stats_title": "Statistiques de récitation IA",

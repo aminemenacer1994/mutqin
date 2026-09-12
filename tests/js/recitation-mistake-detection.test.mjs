@@ -118,7 +118,7 @@ function assertStatuses(result, expected) {
 // Longer soft letter swaps (صراط/سراط) must also stay below green
 {
   assert.ok(
-    getRecitationWordSimilarity('الصراط', 'السراط') <= 0.74,
+    getRecitationWordSimilarity('الصراط', 'السراط') <= RECITATION_THRESHOLDS.softSimilarityCap,
     'ص/س on longer words must stay at/under soft cap'
   )
   const result = buildDeterministicRecitationResult(
@@ -133,7 +133,7 @@ function assertStatuses(result, expected) {
 // Hard single-letter edits on longer words must not paint green (1 − 1/n hole)
 {
   assert.ok(
-    getRecitationWordSimilarity('الضالين', 'الدالين') <= 0.74,
+    getRecitationWordSimilarity('الضالين', 'الدالين') <= RECITATION_THRESHOLDS.softSimilarityCap,
     'ض→د single edit must stay at/under soft cap'
   )
   const result = buildDeterministicRecitationResult(
@@ -158,7 +158,7 @@ function assertStatuses(result, expected) {
 
 // ASR truncation (insertion/deletion) stays amber, never green
 {
-  assert.ok(getRecitationWordSimilarity('العالمين', 'العالمي') <= 0.74)
+  assert.ok(getRecitationWordSimilarity('العالمين', 'العالمي') <= RECITATION_THRESHOLDS.softSimilarityCap)
   const result = buildDeterministicRecitationResult(
     'الحمد لله رب العالمين',
     createWordsFromTranscript('الحمد لله رب العالمي'),

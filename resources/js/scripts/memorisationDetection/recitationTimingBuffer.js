@@ -11,6 +11,8 @@
  *   directly — never read timing-buffered live statuses.
  */
 
+import { RECITATION_THRESHOLDS } from '../engine/recitationThresholds.js'
+
 /** Calm tajweed pace baseline (~115 wpm). */
 export const RECITATION_BASE_WORD_MS = 560
 export const RECITATION_MIN_WORD_MS = 420
@@ -368,7 +370,12 @@ function shouldDeferIncorrectDuringGrace(word = {}) {
   const similarity = Number(word?.similarity ?? 0)
   const confidence = Number(word?.confidence ?? 0)
   // Strong mismatches should still surface; weak/noisy hits during a pause should wait.
-  if (similarity >= 0.48 && confidence >= 0.45) return false
+  const partialFloor = RECITATION_THRESHOLDS.partialSimilarity
+  const confidenceFloor = Math.min(
+    RECITATION_THRESHOLDS.amdUncertainConfidence + 0.08,
+    RECITATION_THRESHOLDS.liveMinConfidenceForCorrect,
+  )
+  if (similarity >= partialFloor && confidence >= confidenceFloor) return false
   return true
 }
 

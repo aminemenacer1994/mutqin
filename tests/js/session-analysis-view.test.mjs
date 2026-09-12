@@ -35,6 +35,9 @@ assert.match(modal, /btn-close/, 'existing close button remains')
 assert.match(modal, /variant="error"/, 'error state present')
 assert.match(modal, /variant="empty"/, 'empty state present')
 assert.match(modal, /spinner-border/, 'loading state present')
+assert.match(modal, /sa-ov__audio/, 'session overview always shows a recording panel')
+assert.match(modal, /RecitationAudioPlayer/, 'recording panel uses the designed player')
+assert.doesNotMatch(modal, /<audio class="w-100" controls/, 'native audio chrome is not dumped in the overview')
 assert.match(modal, /session-analysis-modal-open/, 'background scroll/interaction is locked')
 assert.match(
   overviewCss,
@@ -103,6 +106,19 @@ assert.ok(first.ayahRows.some((row) => row.ayah === 2))
 assert.ok(first.recommendations.some((item) => /weak ayah|Return to ayah 2|slow_repeat/i.test(`${item.label} ${item.detail}`)))
 assert.equal(first.retention[0].label, 'Ayah 2')
 assert.equal(first.audio, null)
+
+const withAudio = buildSessionAnalysisView({
+  has_analysis: true,
+  ai_attempt: { accuracy_percent: 88, word_statuses: [] },
+  audio: {
+    available: true,
+    url: '/api/ai-recite-attempts/9/audio',
+    duration_ms: 4200,
+    reason: 'available',
+  },
+}, t)
+assert.equal(withAudio.audio.url, '/api/ai-recite-attempts/9/audio')
+assert.equal(withAudio.audio.duration_ms, 4200)
 
 const latest = buildSessionAnalysisView({
   has_analysis: true,

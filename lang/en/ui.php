@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_title' => 'Mutqin - Preserve Your Hifz',
+    'app_title' => 'Mutqin: Qur’an memorisation and Hifz revision',
     'skip_main' => 'Skip to main content',
     'primary_navigation' => 'Primary navigation',
     'menu' => 'Menu',

@@ -8,33 +8,33 @@
 
 export const RECITATION_THRESHOLDS = Object.freeze({
   /** Soft ASR letter conflation may lift near-misses toward amber, never alone to green. */
-  softSimilarityCap: 0.74,
+  softSimilarityCap: 0.72,
   /** Floor for painting a word green (final scoring). Single-letter slips stay amber. */
-  correctSimilarity: 0.84,
+  correctSimilarity: 0.88,
   /**
    * Live AMD green floor. Must stay above softSimilarityCap so single-edit /
    * ص↔س / ق↔ك swaps cannot paint green. Exact, article, and dagger-alef
    * equals still score 1 and stay green. Speechmatics cannot hear harakāt —
    * those remain display-only.
    */
-  liveCorrectSimilarity: 0.84,
+  liveCorrectSimilarity: 0.88,
   /** Final / server amber (minor) floor. Distant mismatches stay red. */
-  partialSimilarity: 0.58,
+  partialSimilarity: 0.64,
   /** Live AMD amber floor — same as final so weak overlaps stay red, not “close”. */
-  livePartialSimilarity: 0.58,
+  livePartialSimilarity: 0.64,
   /** Below this (non-exact) recognition is uncertain — not a learner mistake. */
-  uncertainConfidence: 0.42,
+  uncertainConfidence: 0.36,
   /** AMD live: only very low-confidence near-matches defer to uncertain. */
-  amdUncertainConfidence: 0.42,
+  amdUncertainConfidence: 0.36,
   /** Live AMD: exact tokens may be green without a high STT score. */
-  liveMinConfidenceForCorrect: 0.40,
+  liveMinConfidenceForCorrect: 0.45,
   /** Live AMD: similarity-only greens use the same confidence bar as final scoring. */
-  liveMinConfidenceForSimilarityCorrect: 0.68,
+  liveMinConfidenceForSimilarityCorrect: 0.75,
   /**
    * Non-exact similarity matches must clear this before green.
    * Exact / article / alef-optional equals may still be green below this.
    */
-  minConfidenceForSimilarityCorrect: 0.68,
+  minConfidenceForSimilarityCorrect: 0.75,
   /** Incoming ASR word filter for stabilize (reject below). */
   stabilizeConfidenceThreshold: 0.70,
   /** Drop ultra-low provider tokens before alignment. */
@@ -44,25 +44,25 @@ export const RECITATION_THRESHOLDS = Object.freeze({
   /** Attempt-level: mean recognition confidence below this is unusable (no spoken paint). */
   minRecognitionConfidence: 0.35,
   /** Attempt-level: do not band as strong when evaluation confidence is below this. */
-  minEvaluationConfidenceForStrong: 0.58,
+  minEvaluationConfidenceForStrong: 0.65,
   /** Minimum MediaRecorder / attempt length before assessment is fair. */
   minRecordingSeconds: 1.5,
   /** Minimum detected usable speech duration. */
   minUsableSpeechSeconds: 0.8,
   /** Accuracy banding. Strong should mean the range is actually secure. */
-  strongAccuracyMin: 85,
-  developingAccuracyMin: 68,
+  strongAccuracyMin: 90,
+  developingAccuracyMin: 72,
   /** One hard error may still advance only when the rest is excellent. */
-  progressionWithErrorsMin: 90,
+  progressionWithErrorsMin: 93,
   /** Mixed / developing may reinforce-then-continue with this many ambers, no reds. */
-  mixedProgressionMaxPartials: 3,
+  mixedProgressionMaxPartials: 2,
   /** Partial word credit in accuracy (× clamped confidence). */
-  partialAccuracyWeight: 0.22,
+  partialAccuracyWeight: 0.12,
   /** Uncertain word credit in accuracy — do not pad the score. */
-  uncertainAccuracyWeight: 0.10,
+  uncertainAccuracyWeight: 0,
   /** Extra / wrong-order accuracy penalties per item. */
-  extraPenalty: 0.28,
-  wrongOrderPenalty: 0.22,
+  extraPenalty: 0.35,
+  wrongOrderPenalty: 0.28,
 })
 
 /**

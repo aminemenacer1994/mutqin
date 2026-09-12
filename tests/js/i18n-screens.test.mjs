@@ -18,7 +18,7 @@ if (!(await reachable())) {
 }
 
 const EXPECT = {
-  en: { home: 'Home', memorise: 'Memorise', cta: 'Begin your session' },
+  en: { home: 'Home', memorise: 'Memorise', cta: 'Start memorising' },
   fr: { home: 'Accueil', memorise: 'Mémorisation', cta: 'Commencer votre session' },
   es: { home: 'Inicio', memorise: 'Memorización', cta: 'Empieza tu sesión' },
 }

@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v85';
-const RUNTIME_CACHE = 'mutqin-runtime-v85';
+const SHELL_CACHE = 'mutqin-shell-v88';
+const RUNTIME_CACHE = 'mutqin-runtime-v88';
 
 // Precache icons/manifest only — never HTML shells (stale HTML → deleted Mix chunks).
 const SHELL_URLS = [
@@ -73,12 +73,16 @@ self.addEventListener('fetch', event => {
     /\.[a-f0-9]{8}\.js$/i.test(url.pathname)
     || /\.[a-f0-9]{8}\.css$/i.test(url.pathname)
   );
+  const isUnhashedMixJs = isSameOrigin
+    && /^\/js\/[a-z0-9_-]+\.js$/i.test(url.pathname)
+    && !/\.[a-f0-9]{8}\.js$/i.test(url.pathname);
   const isEntryBuildAsset = isSameOrigin && (
     url.pathname === '/js/app.js'
     || url.pathname === '/js/memorisation.js'
     || url.pathname === '/css/app.css'
     || url.pathname === '/mix-manifest.json'
     || url.pathname === '/sw.js'
+    || isUnhashedMixJs
   );
   const isAudio = request.destination === 'audio' || /audio|mp3|opus|webm/i.test(url.pathname);
   const isQuranApi = /api\.quran\.com|api\.alquran\.cloud|cdn\.islamic\.network/i.test(url.host);

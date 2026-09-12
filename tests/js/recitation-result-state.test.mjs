@@ -298,7 +298,7 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
   )
   assert.equal(
     aiAssessmentAllowsProgression('mixed', {
-      accuracy_percent: 90,
+      accuracy_percent: 94,
       color_counts: { red: 1, amber: 1, black: 0 },
     }),
     true,
@@ -335,7 +335,7 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
   assert.equal(resolveRecitationResultState({
     transcript: 'الحمد',
     committedWords: [{ text: 'الحمد', confidence: 0.9 }],
-    accuracyScore: 70,
+    accuracyScore: 78,
     durationSeconds: 6,
     wordStatuses: [{ status: 'correct' }, { status: 'partial' }, { status: 'incorrect' }],
   }), RECITATION_RESULT_STATE.DEVELOPING)

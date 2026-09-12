@@ -387,6 +387,7 @@ export default {
           features: [
             { label: t('pricingPage.proFeatures.everythingInFree'), highlight: true },
             feature('pricingPage.proFeatures.recitationChecks'),
+            feature('pricingPage.proFeatures.selfAssessedAudio'),
             feature('pricingPage.proFeatures.offlineAudio'),
             feature('pricingPage.proFeatures.lessonPlans'),
             feature('pricingPage.proFeatures.instantFeedback'),

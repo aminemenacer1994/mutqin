@@ -35,9 +35,9 @@ test('averageAttemptAccuracy excludes invalid audio and provider failures', () =
 
 test('accuracyPracticeBand matches thresholds', () => {
   assert.equal(accuracyPracticeBand(90), ACCURACY_BAND.STRONG)
-  assert.equal(accuracyPracticeBand(80), ACCURACY_BAND.STRONG)
-  assert.equal(accuracyPracticeBand(70), ACCURACY_BAND.FOCUSED)
-  assert.equal(accuracyPracticeBand(55), ACCURACY_BAND.FOCUSED)
+  assert.equal(accuracyPracticeBand(88), ACCURACY_BAND.FOCUSED)
+  assert.equal(accuracyPracticeBand(75), ACCURACY_BAND.FOCUSED)
+  assert.equal(accuracyPracticeBand(55), ACCURACY_BAND.GENTLE)
   assert.equal(accuracyPracticeBand(40), ACCURACY_BAND.GENTLE)
 })
 

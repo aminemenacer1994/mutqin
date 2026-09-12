@@ -34,8 +34,14 @@
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 
-    # Entry bundles are rewritten in place; Mix busts via ?id= — always revalidate.
-    <FilesMatch "^(app\.js|app\.css)$">
+    # Watch-mode / unhashed Mix JS (user-dashboard-audio-1.js, memorisation.js, …).
+    # Negative lookahead keeps content-hashed chunks on the immutable rule above.
+    <FilesMatch "^(?!.*\.[a-fA-F0-9]{8}\.js$)[a-z0-9_-]+\.js$">
+        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Pragma "no-cache"
+    </FilesMatch>
+
+    <FilesMatch "^(app\.css)$">
         Header set Cache-Control "no-cache, must-revalidate"
         Header set Pragma "no-cache"
     </FilesMatch>

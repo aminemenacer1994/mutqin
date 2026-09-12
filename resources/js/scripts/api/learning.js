@@ -252,6 +252,22 @@ export const learningApi = {
     const { data } = await http.get(`/ai-recite-attempts/${id}`)
     return data
   },
+  async uploadAiReciteAttemptAudio(attemptId, blob, durationMs = null) {
+    const id = Number(attemptId || 0)
+    if (id <= 0 || !blob) return null
+    const type = String(blob.type || 'audio/webm')
+    const extension = type.includes('mp4') || type.includes('m4a')
+      ? 'm4a'
+      : (type.includes('ogg') ? 'ogg' : (type.includes('wav') ? 'wav' : (type.includes('mpeg') || type.includes('mp3') ? 'mp3' : 'webm')))
+    const form = new FormData()
+    form.append('audio', blob, `recitation.${extension}`)
+    const elapsed = Number(durationMs)
+    if (Number.isFinite(elapsed) && elapsed > 0) {
+      form.append('duration_ms', String(Math.round(elapsed)))
+    }
+    const { data } = await http.post(`/ai-recite-attempts/${id}/audio`, form)
+    return data?.audio && typeof data.audio === 'object' ? data.audio : null
+  },
   async saveSession(payload) {
     const { data } = await http.post('/session', payload)
     return data

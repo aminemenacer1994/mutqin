@@ -12,39 +12,39 @@ namespace App\Services\Memorisation;
  */
 final class RecitationScoringThresholds
 {
-    public const SOFT_SIMILARITY_CAP = 0.74;
+    public const SOFT_SIMILARITY_CAP = 0.72;
 
-    public const CORRECT_SIMILARITY = 0.84;
+    public const CORRECT_SIMILARITY = 0.88;
 
-    public const PARTIAL_SIMILARITY = 0.58;
+    public const PARTIAL_SIMILARITY = 0.64;
 
-    public const UNCERTAIN_CONFIDENCE = 0.42;
+    public const UNCERTAIN_CONFIDENCE = 0.36;
 
-    public const MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT = 0.68;
+    public const MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT = 0.75;
 
     public const DROP_HEARD_CONFIDENCE_BELOW = 0.15;
 
     public const MIN_RECOGNITION_CONFIDENCE = 0.35;
 
-    public const MIN_EVALUATION_CONFIDENCE_FOR_STRONG = 0.58;
+    public const MIN_EVALUATION_CONFIDENCE_FOR_STRONG = 0.65;
 
     public const MIN_RECORDING_SECONDS = 1.5;
 
     public const MIN_USABLE_SPEECH_SECONDS = 0.8;
 
-    public const STRONG_ACCURACY_MIN = 85;
+    public const STRONG_ACCURACY_MIN = 90;
 
-    public const DEVELOPING_ACCURACY_MIN = 68;
+    public const DEVELOPING_ACCURACY_MIN = 72;
 
-    public const PROGRESSION_WITH_ERRORS_MIN = 90;
+    public const PROGRESSION_WITH_ERRORS_MIN = 93;
 
-    public const MIXED_PROGRESSION_MAX_PARTIALS = 3;
+    public const MIXED_PROGRESSION_MAX_PARTIALS = 2;
 
-    public const PARTIAL_ACCURACY_WEIGHT = 0.22;
+    public const PARTIAL_ACCURACY_WEIGHT = 0.12;
 
-    public const UNCERTAIN_ACCURACY_WEIGHT = 0.10;
+    public const UNCERTAIN_ACCURACY_WEIGHT = 0.0;
 
-    public const EXTRA_PENALTY = 0.28;
+    public const EXTRA_PENALTY = 0.35;
 
     public static function bandForAccuracy(int|float $accuracy): string
     {

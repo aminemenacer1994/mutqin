@@ -383,7 +383,7 @@
         },
         "pricing": {
           "question": "Apakah Mutqin gratis? Berapa biaya Pro?",
-          "answer": "Ya. Pengaturan sesi, audio, dan alat pemula gratis. Hanya Sambungkan ayat dan Sorot kata kunci yang membutuhkan Pro. Pro juga menambah cek AI, sesi tak terbatas, dan perencanaan. Harga ditampilkan sebelum upgrade."
+          "answer": "Ya. Pengaturan sesi, audio, dan alat pemula gratis. Hanya Sambungkan ayat dan Sorot kata kunci yang membutuhkan Pro. Pro juga menambah cek AI, tilawah audio penilaian mandiri, sesi tak terbatas, dan perencanaan. Harga ditampilkan sebelum upgrade."
         },
         "whoFor": {
           "question": "Untuk siapa Mutqin?",
@@ -4017,6 +4017,7 @@
     "proFeatures": {
       "everythingInFree": "Semua yang ada di paket Gratis",
       "recitationChecks": "20 pemeriksaan tilawah cerdas",
+      "selfAssessedAudio": "Tilawah audio penilaian mandiri",
       "offlineAudio": "Unduh audio untuk didengar luring",
       "lessonPlans": "Rencana pelajaran adaptif",
       "instantFeedback": "Umpan balik instan untuk tilawah Anda",
@@ -4061,11 +4062,11 @@
         },
         "difference": {
           "question": "Apa yang ditambah Pro?",
-          "answer": "Pro mencakup semua yang ada di Gratis, plus 20 pemeriksaan tilawah, unduhan audio luring, rencana pelajaran adaptif, umpan balik instan, wawasan kemajuan, tinjauan kesalahan dan ayat lemah, alat lanjutan, dan sesi tersimpan tanpa batas."
+          "answer": "Pro mencakup semua yang ada di Gratis, plus 20 pemeriksaan tilawah, tilawah audio penilaian mandiri, unduhan audio luring, rencana pelajaran adaptif, umpan balik instan, wawasan kemajuan, tinjauan kesalahan dan ayat lemah, alat lanjutan, dan sesi tersimpan tanpa batas."
         },
         "freeTools": {
           "question": "Alat mana yang tetap gratis?",
-          "answer": "Pengaturan sesi dasar, font Al-Qur'an, 5 pemeriksaan tilawah, dan 3 sesi tersimpan. Pro menambah 20 pemeriksaan, unduhan audio luring, rencana pelajaran, dan lebih banyak riwayat."
+          "answer": "Pengaturan sesi dasar, font Al-Qur'an, 5 pemeriksaan tilawah, dan 3 sesi tersimpan. Pro menambah 20 pemeriksaan, tilawah audio penilaian mandiri, unduhan audio luring, rencana pelajaran, dan lebih banyak riwayat."
         },
         "yearly": {
           "question": "Bagaimana penagihan tahunan bekerja?",
@@ -4747,6 +4748,10 @@
       "play": "Putar",
       "pause": "Jeda",
       "restart": "Ulang dari awal",
+      "listen": "Dengarkan bacaan ini",
+      "listening": "Memutar bacaan Anda",
+      "audio_expired": "Rekaman ini sudah tidak tersedia.",
+      "audio_loading": "Memuat rekaman…",
       "audio": "Bacaan Anda",
       "accuracy": "Akurasi",
       "stats_title": "Statistik Bacaan AI",

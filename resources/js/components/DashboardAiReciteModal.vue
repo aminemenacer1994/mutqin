@@ -331,6 +331,7 @@ export default {
       peekAyah: null,
       analysisView: null,
       audioUrl: '',
+      audioBlob: null,
       audioPlaying: false,
       audioTimeLabel: '0:00',
       savedAttemptId: null,
@@ -432,6 +433,7 @@ export default {
       this.peekRevealed = false
       this.analysisView = null
       this.audioUrl = ''
+      this.audioBlob = null
       this.savedAttemptId = null
       this.submitKey = ''
       this.errorTitle = ''
@@ -504,6 +506,7 @@ export default {
       this.peekRevealed = false
       this.analysisView = null
       this.audioUrl = ''
+      this.audioBlob = null
       this.savedAttemptId = null
       this.submitKey = `dash-ai-${this.userId || 'user'}-${this.surah}-${this.ayah}-${Date.now()}`
       playRecordingStartBeep()
@@ -546,6 +549,7 @@ export default {
         return
       }
       this.audioUrl = capture.objectUrl || ''
+      this.audioBlob = capture.blob || null
       await this.analyse(capture)
     },
     async analyse(capture) {
@@ -588,11 +592,23 @@ export default {
         }
         this.savedAttemptId = Number(data?.ai_attempt?.id || 0) || null
         writeStoredLastLocation(this.userId, { surah_number: this.surah, ayah: this.ayah })
+        if (this.savedAttemptId && this.audioBlob) {
+          try {
+            const savedAudio = await learningApi.uploadAiReciteAttemptAudio(
+              this.savedAttemptId,
+              this.audioBlob,
+              capture.durationMs,
+            )
+            if (savedAudio?.url) this.audioUrl = savedAudio.url
+          } catch {
+            /* keep the in-memory recording for this turn */
+          }
+        }
         this.analysisView = buildSessionAnalysisView({
           has_analysis: true,
           assessment: data?.assessment || null,
           ai_attempt: data?.ai_attempt || null,
-          audio: this.audioUrl ? { url: this.audioUrl } : null,
+          audio: this.audioUrl ? { url: this.audioUrl, duration_ms: capture.durationMs || null } : null,
         }, this.t.bind(this))
         this.stage = 'result'
         this.$emit('saved', data?.ai_attempt || null)
@@ -614,6 +630,7 @@ export default {
       this.pauseAudio()
       this.analysisView = null
       this.audioUrl = ''
+      this.audioBlob = null
       this.savedAttemptId = null
       this.peekUsed = false
       this.peekRevealed = false

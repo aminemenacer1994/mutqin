@@ -102,6 +102,23 @@
                     <span v-for="item in overviewCards" :key="item.key">{{ item.label }} {{ item.value }}</span>
                   </p>
 
+                  <section class="sa-ov__panel sa-ov__audio" data-testid="session-overview-audio">
+                    <h3>{{ audioTitle || 'Your recitation' }}</h3>
+                    <RecitationAudioPlayer
+                      v-if="analysis.audio?.url"
+                      :src="analysis.audio.url"
+                      :duration-ms="analysis.audio.duration_ms"
+                      :active="open"
+                      :title="audioTitle || 'Your recitation'"
+                      :play-label="playLabel"
+                      :pause-label="pauseLabel"
+                      :restart-label="restartLabel"
+                    />
+                    <p v-else class="sa-ov__audio-empty" data-testid="session-overview-audio-empty">
+                      {{ audioEmptyCopy || audioUnavailable || 'No recording is saved for this session.' }}
+                    </p>
+                  </section>
+
                   <section v-if="analysis.ayahRows?.length" class="sa-ov__panel">
                     <h3>{{ wordsTitle }}</h3>
                     <article
@@ -135,10 +152,6 @@
                     </div>
                   </section>
 
-                  <section v-if="analysis.audio?.url" class="sa-ov__panel">
-                    <h3>{{ audioTitle }}</h3>
-                    <audio class="w-100" controls :src="analysis.audio.url"></audio>
-                  </section>
                 </div>
               </slot>
             </template>
@@ -151,12 +164,13 @@
 
 <script>
 import AppStatus from './AppStatus.vue'
+import RecitationAudioPlayer from './RecitationAudioPlayer.vue'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
 import './SessionAnalysisOverview.css'
 
 export default {
   name: 'SessionAnalysisModal',
-  components: { AppStatus },
+  components: { AppStatus, RecitationAudioPlayer },
   props: {
     open: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
@@ -183,6 +197,10 @@ export default {
     noRecommendations: { type: String, default: '' },
     noRetention: { type: String, default: '' },
     audioUnavailable: { type: String, default: '' },
+    audioExpired: { type: String, default: '' },
+    playLabel: { type: String, default: 'Play' },
+    pauseLabel: { type: String, default: 'Pause' },
+    restartLabel: { type: String, default: 'Restart' },
   },
   emits: ['close', 'retry'],
   data() {
@@ -241,6 +259,13 @@ export default {
       const percent = this.aiLeadPercent
       if (percent == null) return 'neutral'
       return recitationAccuracyBand(percent)
+    },
+    audioEmptyCopy() {
+      const reason = String(this.analysis?.audio?.reason || '')
+      if ((reason === 'expired' || reason === 'purged') && this.audioExpired) {
+        return this.audioExpired
+      }
+      return this.audioUnavailable
     },
   },
   watch: {

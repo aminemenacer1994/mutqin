@@ -383,7 +383,7 @@
         },
         "pricing": {
           "question": "Mutqin ücretsiz mi? Pro ne kadar?",
-          "answer": "Evet. Oturum kurulumu, ses ve başlangıç araçları ücretsizdir. Yalnızca Ayetleri birleştir ve Bellek kelimelerini vurgula Pro ister. Pro ayrıca yapay zeka kontrolleri, sınırsız oturum ve planlama ekler. Fiyat yükseltmeden önce gösterilir."
+          "answer": "Evet. Oturum kurulumu, ses ve başlangıç araçları ücretsizdir. Yalnızca Ayetleri birleştir ve Bellek kelimelerini vurgula Pro ister. Pro ayrıca yapay zeka kontrolleri, kendi değerlendirmeli sesli kıraat, sınırsız oturum ve planlama ekler. Fiyat yükseltmeden önce gösterilir."
         },
         "whoFor": {
           "question": "Mutqin kimler için?",
@@ -4017,6 +4017,7 @@
     "proFeatures": {
       "everythingInFree": "Ücretsiz plandaki her şey",
       "recitationChecks": "20 akıllı kıraat kontrolü",
+      "selfAssessedAudio": "Kendi değerlendirmeli sesli kıraat",
       "offlineAudio": "Çevrimdışı dinlemek için ses indirin",
       "lessonPlans": "Uyarlanabilir ders planları",
       "instantFeedback": "Kıraatiniz için anında geri bildirim",
@@ -4061,11 +4062,11 @@
         },
         "difference": {
           "question": "Pro ne ekler?",
-          "answer": "Pro, Ücretsiz plandaki her şeyi, 20 akıllı kıraat kontrolünü, çevrimdışı ses indirmeyi, uyarlanabilir ders planlarını, anında geri bildirimi, ilerleme içgörülerini, geçmiş hataları ve zayıf ayetleri, gelişmiş araçları ve sınırsız kayıtlı oturumu kapsar."
+          "answer": "Pro, Ücretsiz plandaki her şeyi, 20 akıllı kıraat kontrolünü, kendi değerlendirmeli sesli kıraati, çevrimdışı ses indirmeyi, uyarlanabilir ders planlarını, anında geri bildirimi, ilerleme içgörülerini, geçmiş hataları ve zayıf ayetleri, gelişmiş araçları ve sınırsız kayıtlı oturumu kapsar."
         },
         "freeTools": {
           "question": "Hangi araçlar ücretsiz kalır?",
-          "answer": "Temel oturum kurulumu, Kur’an yazı tipleri, 5 kıraat kontrolü ve 3 kayıtlı oturum. Pro 20 kontrol, çevrimdışı ses, ders planları ve daha fazla geçmiş ekler."
+          "answer": "Temel oturum kurulumu, Kur’an yazı tipleri, 5 kıraat kontrolü ve 3 kayıtlı oturum. Pro 20 kontrol, kendi değerlendirmeli sesli kıraat, çevrimdışı ses, ders planları ve daha fazla geçmiş ekler."
         },
         "yearly": {
           "question": "Yıllık faturalandırma nasıl işler?",
@@ -4747,6 +4748,10 @@
       "play": "Oynat",
       "pause": "Duraklat",
       "restart": "Baştan başlat",
+      "listen": "Bu tilaveti dinle",
+      "listening": "Tilavetiniz çalıyor",
+      "audio_expired": "Bu kayıt artık mevcut değil.",
+      "audio_loading": "Kayıt yükleniyor…",
       "audio": "Tilavetiniz",
       "accuracy": "Doğruluk",
       "stats_title": "YZ Tilavet istatistikleri",

@@ -430,6 +430,10 @@
                               :class="`dash-ai-results__band--${item.band}`"
                             >{{ aiBandLabel(item.band) }}</span>
                             <time :datetime="item.occurred_at">{{ formatActivityDate(item.occurred_at) }}</time>
+                            <span v-if="item.has_audio" class="dash-ai-results__listen">
+                              <i class="bi bi-play-fill" aria-hidden="true"></i>
+                              {{ t('dashboard.ai_recite.listen') }}
+                            </span>
                             <span v-if="item.peek_used" class="dash-ai-results__peek">
                               <i class="bi bi-eye" aria-hidden="true"></i>
                               {{ t('dashboard.ai_recite.peek_used') }}
@@ -671,6 +675,10 @@
                     <time class="dash-drawer__row-time" :datetime="item.occurred_at">
                       {{ formatActivityDate(item.occurred_at) }}
                     </time>
+                    <span v-if="item.has_audio" class="dash-drawer__listen">
+                      <i class="bi bi-play-fill" aria-hidden="true"></i>
+                      {{ t('dashboard.ai_recite.listen') }}
+                    </span>
                   </div>
                   <div v-if="canViewAnalysis(item, 'attempt')" class="dash-drawer__analysis-actions">
                     <button
@@ -771,10 +779,14 @@
       :words-title="t('dashboard.analysis_words_title')"
       :recommendations-title="t('dashboard.analysis_recommendations_title')"
       :retention-title="t('dashboard.analysis_retention_title')"
-      :audio-title="t('dashboard.analysis_audio_title')"
+      :audio-title="t('dashboard.ai_recite.audio')"
       :no-recommendations="t('dashboard.analysis_no_recommendations')"
       :no-retention="t('dashboard.analysis_no_retention')"
       :audio-unavailable="t('dashboard.analysis_audio_unavailable')"
+      :audio-expired="t('dashboard.ai_recite.audio_expired')"
+      :play-label="t('dashboard.ai_recite.play')"
+      :pause-label="t('dashboard.ai_recite.pause')"
+      :restart-label="t('dashboard.ai_recite.restart')"
       @close="closeSessionAnalysis"
       @retry="retrySessionAnalysis"
     />

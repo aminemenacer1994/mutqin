@@ -8,6 +8,7 @@ use App\Models\MemorisationAssessmentWord;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationSyncState;
 use App\Models\User;
+use App\Services\Learning\AiReciteAttemptAudioService;
 use App\Support\AudioPrivacy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -148,8 +149,6 @@ class LearningHistoryRetentionService
         $path = AudioPrivacy::tempDiskPath();
         if (! File::isDirectory($path)) {
             File::ensureDirectoryExists($path);
-
-            return 0;
         }
 
         // When retention is "never", delete all temp files immediately.
@@ -184,7 +183,15 @@ class LearningHistoryRetentionService
             ]);
         }
 
-        return $deleted;
+        $attemptDeleted = app(AiReciteAttemptAudioService::class)->purgeExpired();
+        if ($attemptDeleted > 0) {
+            Log::info('Purged expired AI Recite attempt audio', [
+                'deleted_count' => $attemptDeleted,
+                'retention' => AudioPrivacy::rawRecordingRetention(),
+            ]);
+        }
+
+        return $deleted + $attemptDeleted;
     }
 
     /**
@@ -336,6 +343,8 @@ class LearningHistoryRetentionService
      */
     public function deleteUserAccount(User $user, ?User $actor = null): void
     {
+        app(AiReciteAttemptAudioService::class)->deleteAllForUser($user);
+
         DB::transaction(function () use ($user, $actor) {
             $this->purgeOptionalRecordings($user, $actor);
 

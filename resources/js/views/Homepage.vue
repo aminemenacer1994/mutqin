@@ -24,9 +24,9 @@
                 <i class="bi bi-play-fill" aria-hidden="true"></i>
                 {{ t('homepage.hero.startFree') }}
               </a>
-              <a href="/waiting-list" class="btn btn--secondary">
-                <i class="bi bi-envelope" aria-hidden="true"></i>
-                {{ t('homepage.hero.joinWaitlist') }}
+              <a href="#how-it-works" class="btn btn--secondary" @click.prevent="scrollToId('how-it-works')">
+                <i class="bi bi-arrow-down" aria-hidden="true"></i>
+                {{ t('homepage.hero.seeHow') }}
               </a>
             </div>
           </div>
@@ -220,6 +220,16 @@
       </div>
     </section>
 
+    <section id="purpose" class="purpose" aria-labelledby="purpose-title">
+      <div class="wrap wrap--tight">
+        <div class="purpose__card" data-reveal>
+          <p class="section-kicker">{{ t('homepage.purpose.kicker') }}</p>
+          <h2 id="purpose-title" class="section-title">{{ t('homepage.purpose.title') }}</h2>
+          <p class="section-sub">{{ t('homepage.purpose.text') }}</p>
+        </div>
+      </div>
+    </section>
+
     <section id="faq" class="faq">
       <div class="wrap">
         <header class="section-head" data-reveal>
@@ -254,6 +264,23 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="start" class="closing" aria-labelledby="closing-title">
+      <div class="wrap">
+        <div class="closing__card" data-reveal>
+          <p class="section-kicker">{{ t('homepage.cta.kicker') }}</p>
+          <h2 id="closing-title" class="closing__title">{{ t('homepage.cta.title') }}</h2>
+          <p class="closing__sub">{{ t('homepage.cta.subtitle') }}</p>
+          <div class="closing__actions">
+            <a :href="startFreeHref" class="btn btn--primary">
+              <i class="bi bi-play-fill" aria-hidden="true"></i>
+              {{ t('homepage.cta.button') }}
+            </a>
+          </div>
+          <p class="closing__note">{{ t('homepage.cta.note') }}</p>
         </div>
       </div>
     </section>

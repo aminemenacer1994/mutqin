@@ -348,6 +348,92 @@ body.session-analysis-modal-open {
   text-decoration: underline dotted;
 }
 
+#sa-session-overview.session-analysis-modal-root .sa-ov__panel.sa-ov__audio {
+  display: block !important;
+  order: 0;
+  border-color: rgba(109, 77, 51, 0.16);
+  background:
+    radial-gradient(90% 80% at 0% 0%, rgba(139, 94, 60, 0.1), transparent 55%),
+    rgba(255, 255, 255, 0.92);
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__audio-empty {
+  margin: 0;
+  color: #6f655b;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: #3f2a1d;
+  color: #fffdf8;
+  box-shadow: 0 8px 18px rgba(63, 42, 29, 0.18);
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle i {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle:disabled {
+  opacity: 0.45;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-meta,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-times {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-meta strong {
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-meta span,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-times span {
+  color: #6f655b;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek {
+  display: block;
+  width: 100%;
+  margin: 0.45rem 0 0.35rem;
+  accent-color: #3f2a1d;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  border: 0;
+  background: transparent;
+  color: #6d4d33;
+  font-size: 0.78rem;
+  font-weight: 650;
+  padding: 0;
+}
+
 #sa-session-overview.session-analysis-modal-root .sa-ov__note {
   display: flex;
   flex-wrap: wrap;
@@ -387,8 +473,22 @@ body.session-analysis-modal-open {
 [data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__facts span,
 [data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__meta,
 [data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__panel h3,
-[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__note span {
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__note span,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__audio-empty,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-meta span,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-times span {
   color: #c9b8a8;
+}
+
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+  background: #e7c8a4;
+  color: #221e1a;
+}
+
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-restart,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-seek {
+  accent-color: #e7c8a4;
+  color: #e7c8a4;
 }
 
 [data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__hero {

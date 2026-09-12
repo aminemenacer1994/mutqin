@@ -742,7 +742,7 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
   const partialScore = statuses.filter(word => word.status === 'partial').reduce((sum, word) => {
     const confidence = Number.isFinite(Number(word.confidence)) ? Number(word.confidence) : 1
     // Amber credit stays modest so soft/ASR near-misses do not inflate accuracy.
-    return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.4, Math.min(1, confidence)))
+    return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.25, Math.min(1, confidence)))
   }, 0)
   const uncertainScore = statuses.filter(word => word.status === 'uncertain').length
     * RECITATION_THRESHOLDS.uncertainAccuracyWeight

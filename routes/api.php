@@ -103,6 +103,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/ai-recite-attempts/{attempt}', [AiReciteAttemptController::class, 'show'])
             ->whereNumber('attempt')
             ->name('api.ai-recite-attempts.show');
+        Route::post('/ai-recite-attempts/{attempt}/audio', [AiReciteAttemptController::class, 'storeAudio'])
+            ->whereNumber('attempt')
+            ->middleware('throttle:30,1')
+            ->name('api.ai-recite-attempts.audio.store');
+        Route::get('/ai-recite-attempts/{attempt}/audio', [AiReciteAttemptController::class, 'audio'])
+            ->whereNumber('attempt')
+            ->name('api.ai-recite-attempts.audio');
         Route::patch('/ai-recite-attempts/{attempt}/peek', [AiReciteAttemptController::class, 'markPeek'])
             ->whereNumber('attempt')
             ->name('api.ai-recite-attempts.peek');

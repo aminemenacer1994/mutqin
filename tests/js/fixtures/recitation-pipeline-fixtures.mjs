@@ -120,7 +120,7 @@ export const recitationPipelineFixtures = Object.freeze({
     durationSeconds: 3.5,
     expected: {
       notStrongWhenConfidenceLow: true,
-      maxEvaluationConfidenceForStrong: 0.45,
+      maxEvaluationConfidenceForStrong: 0.65,
     },
   },
 

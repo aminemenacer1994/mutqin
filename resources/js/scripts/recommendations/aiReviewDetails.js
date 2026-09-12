@@ -307,7 +307,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
   }
 
   const highlights = []
-  if (resolvedOutcome === 'strong' && (accuracy == null || accuracy >= 85)) {
+  if (resolvedOutcome === 'strong' && (accuracy == null || accuracy >= RECITATION_THRESHOLDS.strongAccuracyMin)) {
     highlights.push({
       key: 'strength',
       tone: 'good',
@@ -364,7 +364,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       }),
     })
   }
-  if (accuracy != null && accuracy >= 70 && accuracy < 85 && !highlights.some((h) => h.key === 'mixed')) {
+  if (accuracy != null && accuracy >= RECITATION_THRESHOLDS.developingAccuracyMin && accuracy < RECITATION_THRESHOLDS.strongAccuracyMin && !highlights.some((h) => h.key === 'mixed')) {
     highlights.push({
       key: 'band-mixed',
       tone: 'mid',
@@ -823,7 +823,7 @@ function buildFocusTip({
   if (accuracy >= 95) {
     return t('memorisation.postSession.recommendation.aiFocusStrong')
   }
-  if (accuracy >= 85) {
+  if (accuracy >= RECITATION_THRESHOLDS.strongAccuracyMin) {
     return t('memorisation.postSession.recommendation.aiFocusNearly')
   }
   return t('memorisation.postSession.recommendation.aiFocusRetry')

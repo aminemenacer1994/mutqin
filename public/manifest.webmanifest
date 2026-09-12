@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Mutqin - Preserve Your Hifz",
   "short_name": "Mutqin",
-  "description": "Quran memorisation and recitation workspace for focused hifz practice.",
+  "description": "Mutqin helps you memorise and revise the Qur’an. Listen, recite, review and return to each ayah with a calm Hifz practice path.",
   "start_url": "/memorisation",
   "scope": "/",
   "display": "standalone",

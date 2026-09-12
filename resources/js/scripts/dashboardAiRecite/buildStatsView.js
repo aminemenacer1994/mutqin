@@ -120,6 +120,8 @@ export function buildDashboardAiReciteStatsView(stats, t = (key) => key) {
       accuracy_percent: item.accuracy_percent == null ? null : asNumber(item.accuracy_percent),
       peek_used: !!item.peek_used,
       occurred_at: asText(item.occurred_at),
+      has_audio: !!item.has_audio,
+      audio_duration_ms: item.audio_duration_ms == null ? null : asNumber(item.audio_duration_ms),
     })).filter((item) => item.id > 0)
     : []
 

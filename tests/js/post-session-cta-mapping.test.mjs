@@ -15,7 +15,7 @@ import {
   assert.equal(normaliseCtaOutcome('strong'), 'strong')
   assert.equal(normaliseCtaOutcome('mixed'), 'mixed')
   assert.equal(resolveWeaknessSeverity({
-    accuracyPercent: 91,
+    accuracyPercent: 94,
     hardWordCount: 1,
     weakAyahCount: 0,
     outcome: 'strong',

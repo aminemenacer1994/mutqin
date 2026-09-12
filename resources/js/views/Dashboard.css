@@ -3118,6 +3118,28 @@ a.dash-drawer__row--link:focus-visible,
   font-size: 0.8rem;
 }
 
+.dash-ai-results__listen {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #6d4d33;
+  font-weight: 650;
+}
+
+.dash-ai-results__listen i {
+  font-size: 0.78rem;
+}
+
+.dash-drawer__listen {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin-top: 0.28rem;
+  color: #6d4d33;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
 .dash-ai-results__attempt-meta {
   display: flex;
   flex-wrap: wrap;

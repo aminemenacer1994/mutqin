@@ -442,7 +442,7 @@ class QuranAlignmentService
             $this->levenshteinSimilarity($this->softenAsrForms($cliticA), $this->softenAsrForms($cliticB))
         );
         // Soft letter conflation may lift toward amber, never alone to green.
-        $softCap = 0.74;
+        $softCap = RecitationScoringThresholds::SOFT_SIMILARITY_CAP;
         // صراط↔سراط etc. can still clear the green floor via raw Levenshtein —
         // cap soft-letter-only diffs to amber.
         if ($this->differsOnlyBySoftAsrLetters($left, $right)) {
@@ -631,6 +631,9 @@ class QuranAlignmentService
             && (
                 $this->stripArticle($expected) === $this->stripArticle($actual)
                 || $this->stripClitics($expected) === $this->stripClitics($actual)
+                || $this->alefOptionalEqual($expected, $actual)
+                || $this->alefOptionalEqual($this->stripArticle($expected), $this->stripArticle($actual))
+                || $this->alefOptionalEqual($this->stripClitics($expected), $this->stripClitics($actual))
             );
         $exactOrArticle = $expected !== '' && ($expected === $actual || $articleMatch);
         $shortSubstitution = $expected !== ''
@@ -638,13 +641,19 @@ class QuranAlignmentService
             && ! $exactOrArticle
             && mb_strlen($expected) <= 2
             && mb_strlen($expected) === mb_strlen($actual);
-        // Single-edit near-misses stay below green via soft similarity cap, but
-        // must not paint red when the learner is close / ASR jittered one letter.
-        if ($expected !== '' && ($exactOrArticle || (! $shortSubstitution && $similarity >= RecitationScoringThresholds::CORRECT_SIMILARITY))) {
+        $similarityLooksCorrect = ! $shortSubstitution
+            && $similarity >= RecitationScoringThresholds::CORRECT_SIMILARITY;
+        // Exact / orthographic equals may be green at any confidence. Similarity-only
+        // greens require enough provider confidence — never fabricate correct from noise.
+        if ($expected !== '' && (
+            $exactOrArticle
+            || ($similarityLooksCorrect
+                && $confidence >= RecitationScoringThresholds::MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT)
+        )) {
             return array_merge($base, [
                 'status' => 'correct',
                 'note' => 'Correct.',
-                'similarity' => 1.0,
+                'similarity' => $exactOrArticle ? 1.0 : $similarity,
                 'visual_status' => 'green',
                 'display_word' => $display,
             ]);
@@ -695,7 +704,7 @@ class QuranAlignmentService
             if ($status === 'correct') {
                 $correct += 1.0;
             } elseif ($status === 'minor_mistake') {
-                $confidence = max(0.4, min(1.0, (float) ($word['confidence'] ?? 1)));
+                $confidence = max(0.25, min(1.0, (float) ($word['confidence'] ?? 1)));
                 $correct += RecitationScoringThresholds::PARTIAL_ACCURACY_WEIGHT * $confidence;
             } elseif ($status === 'uncertain') {
                 $correct += RecitationScoringThresholds::UNCERTAIN_ACCURACY_WEIGHT;

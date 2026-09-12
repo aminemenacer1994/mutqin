@@ -237,6 +237,7 @@ import {
   playAudioElement,
   revokeObjectUrl,
   sanitizeAudioDuration,
+  stopMediaRecorderAndCollectBlob,
 } from '../scripts/audio/recordingPlayback'
 import {
   RECITATION_PROCESSING_STAGE,
@@ -1171,6 +1172,8 @@ export default {
       recitationCheckRecording: false,
       recitationCheckPreparing: false,
       recitationCheckDiscardOnStop: false,
+      _recitationCaptureResolver: null,
+      _recitationCapturingForReplay: false,
       recitationCheckError: '',
       recitationCheckMediaRecorder: null,
       recitationCheckMediaStream: null,
@@ -1496,6 +1499,7 @@ export default {
       _recitationSlowNoticeDisposer: null,
       _recitationComponentActive: true,
       lastAmdAssessmentKey: '',
+      _lastAmdSubmitData: null,
       workspaceSyncTimer: null,
       handleMushafToolbarDocumentClick: null,
       playbackAdvanceTimer: null,
@@ -25130,7 +25134,19 @@ export default {
     async completeAmdTestAndReturnToRecommendation({ reason = 'complete' } = {}) {
       if (!this.amdOpen || this._amdCompleting) return
       const isWorkspaceRecite = this.amdEntrySource === 'workspace-ai-recite'
-      const capturedAudioUrl = String(this.reviewResultObjectUrl || '').trim()
+      // Workspace AI Recite previously discarded the MediaRecorder take on stop, so
+      // historic replay never received a blob. Capture it before cleanup.
+      let capturedAudioUrl = String(this.reviewResultObjectUrl || '').trim()
+      let capturedBlob = null
+      if (isWorkspaceRecite) {
+        try {
+          const capture = await this.captureRecitationCheckRecordingForReplay()
+          capturedAudioUrl = String(capture?.objectUrl || capturedAudioUrl || '').trim()
+          capturedBlob = capture?.blob || null
+        } catch (error) {
+          console.warn('AI Recite recording capture failed', error)
+        }
+      }
       this._amdCompleting = true
       this.amdEndingSoon = true
       this.amdBusy = true
@@ -25143,10 +25159,12 @@ export default {
       // Immediate Stop feedback: Processing / endingSoon paint before any sync work.
       this.amdStage = AMD_STAGES.PROCESSING
 
-      this.recitationCheckDiscardOnStop = true
-      try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
+      if (!capturedBlob) {
+        this.recitationCheckDiscardOnStop = true
+        try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
+        try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+      }
       try { this.stopRecitationSpeechRecognition?.() } catch (_) { /* ignore */ }
-      try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
       this.recitationCheckPreparing = false
       this.recitationCheckRecording = false
       this.recitationCheckDiscardOnStop = false
@@ -25163,7 +25181,7 @@ export default {
           wasRecording: true,
           tajweedHighlightingEnabled: !!this.amdTajweedEnabled,
           recognitionWords: result.committedWords || [],
-          learnerBlob: null,
+          learnerBlob: capturedBlob || null,
         })
       } catch (error) {
         console.warn('AMD tajweed practice check failed', error)
@@ -25218,6 +25236,32 @@ export default {
           try { await this.buildAndPersistAiReciteFinalPlan?.() } catch (_) { /* ignore */ }
         }
         if (isWorkspaceRecite) {
+          const attemptId = Number(
+            submitData?.ai_attempt?.id
+            || submitData?.ai_attempt?.attempt_id
+            || 0,
+          )
+          if (attemptId > 0 && capturedBlob && capturedBlob.size > 0) {
+            try {
+              const savedAudio = await learningApi.uploadAiReciteAttemptAudio(
+                attemptId,
+                capturedBlob,
+                Math.round(Number(result?.durationSeconds || 0) * 1000),
+              )
+              if (savedAudio?.url) {
+                capturedAudioUrl = String(savedAudio.url)
+              } else {
+                console.warn('AI Recite audio upload returned no playable URL', {
+                  attemptId,
+                  reason: savedAudio?.reason,
+                })
+              }
+            } catch (error) {
+              console.warn('AI Recite audio upload failed', error)
+            }
+          } else if (attemptId <= 0 && capturedBlob) {
+            console.warn('AI Recite audio skipped: missing attempt id after assessment')
+          }
           this.presentWorkspaceReciteAnalysis(submitData, result, capturedAudioUrl)
         }
         this.playUiTone?.('complete')
@@ -25810,13 +25854,13 @@ export default {
       const idempotencyKey = audioHash
         ? `amd-${this.auth?.id || 'guest'}-${audioHash}`
         : undefined
-      if (idempotencyKey && idempotencyKey === this.lastAmdAssessmentKey && this.amdAssessment) {
+      if (idempotencyKey && idempotencyKey === this.lastAmdAssessmentKey && this._lastAmdSubmitData) {
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
           this.amdBusy = false
         }
         this._amdAssessmentSubmitInFlight = false
-        return this.amdAssessment
+        return this._lastAmdSubmitData
       }
       const payload = {
         surah_number: Number(this.chapterId || ayahs[0]?.surah_number || 0),
@@ -25865,6 +25909,7 @@ export default {
           return null
         }
         if (idempotencyKey) this.lastAmdAssessmentKey = idempotencyKey
+        this._lastAmdSubmitData = data
         this.amdAssessment = data.assessment || null
         this.amdAnalysis = data.analysis || null
         this.amdPracticePlan = this.amdEntrySource === 'workspace-ai-recite'
@@ -26654,7 +26699,7 @@ export default {
         .filter(word => word.status === 'partial')
         .reduce((sum, word) => {
           const confidence = Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1
-          return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.35, Math.min(1, confidence)))
+          return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.25, Math.min(1, confidence)))
         }, 0)
       const wrongOrderPenalty = statuses.filter(word => word.outOfOrder).length * RECITATION_THRESHOLDS.wrongOrderPenalty
       const extraPenalty = (Array.isArray(mistakes.extra) ? mistakes.extra.length : 0) * RECITATION_THRESHOLDS.extraPenalty
@@ -26685,7 +26730,7 @@ export default {
         .filter(word => word.status === 'partial')
         .reduce((sum, word) => {
           const confidence = Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1
-          return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.35, Math.min(1, confidence)))
+          return sum + (RECITATION_THRESHOLDS.partialAccuracyWeight * Math.max(0.25, Math.min(1, confidence)))
         }, 0)
       const wrongOrderPenalty = verseStatuses.filter(word => word.outOfOrder).length * RECITATION_THRESHOLDS.wrongOrderPenalty
       const percent = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore - wrongOrderPenalty) / Math.max(1, verseStatuses.length)) * 100)))
@@ -30094,7 +30139,24 @@ export default {
           const stopAttemptId = attemptId
           // Allow the final dataavailable from stop() to land before we snapshot chunks.
           await new Promise(resolve => queueMicrotask(resolve))
-          if (!this.isActiveRecitationAttempt(stopAttemptId)) return
+          if (!this.isActiveRecitationAttempt(stopAttemptId) && !this._recitationCapturingForReplay) {
+            return
+          }
+
+          // Workspace AI Recite replay capture owns the blob via stopMediaRecorderAndCollectBlob.
+          // Only stop recognition here — do not clear chunks or tracks until capture finishes.
+          if (this._recitationCapturingForReplay || this._recitationCaptureResolver) {
+            this.recitationCheckDiscardOnStop = false
+            this.recitationCheckRecording = false
+            this.recitationCheckPreparing = false
+            this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+            this.clearRecitationSlowProcessingNotice()
+            this.stopSpeechRecognitionWatchdog('recitation')
+            this.stopTranscriptionAudioPump('recitation')
+            this.stopRecitationSpeechRecognition()
+            return
+          }
+
           const discard = this.recitationCheckDiscardOnStop
           this.recitationCheckDiscardOnStop = false
           if (discard) {
@@ -30382,6 +30444,47 @@ export default {
         this.recitationCheckMediaRecorder.requestData?.()
       } catch { }
       this.recitationCheckMediaRecorder.stop()
+    },
+    /**
+     * Stop the live AI Recite MediaRecorder and keep the blob for replay upload.
+     * Must run instead of discardOnStop during workspace AI Recite completion.
+     * @returns {Promise<{ blob: Blob|null, objectUrl: string }>}
+     */
+    async captureRecitationCheckRecordingForReplay() {
+      const recorder = this.recitationCheckMediaRecorder
+      const existingUrl = String(this.reviewResultObjectUrl || '').trim()
+      if (!recorder || !['recording', 'paused'].includes(String(recorder.state || ''))) {
+        return { blob: null, objectUrl: existingUrl }
+      }
+
+      // Copy chunks so onstop cleanup cannot empty the array before the blob is built.
+      const chunksRef = Array.isArray(this.recitationCheckChunks) ? [...this.recitationCheckChunks] : []
+      this._recitationCapturingForReplay = true
+      this.recitationCheckDiscardOnStop = false
+      try {
+        try { recorder.requestData?.() } catch { /* ignore */ }
+        const blob = await stopMediaRecorderAndCollectBlob(recorder, chunksRef, {
+          mimeType: recorder.mimeType || this.recitationCheckRecordingMimeType || 'audio/webm',
+          timeoutMs: 8000,
+        })
+        let objectUrl = ''
+        if (blob && blob.size > 0) {
+          objectUrl = await this.createStableRecordingSrc(blob)
+        }
+        return {
+          blob: blob && blob.size > 0 ? blob : null,
+          objectUrl: String(objectUrl || existingUrl || ''),
+        }
+      } catch (error) {
+        console.warn('AI Recite recording capture failed', error)
+        return { blob: null, objectUrl: existingUrl }
+      } finally {
+        this._recitationCapturingForReplay = false
+        this._recitationCaptureResolver = null
+        this.recitationCheckRecording = false
+        this.recitationCheckPreparing = false
+        try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+      }
     },
     scrollToRecitationTarget() {
       this.$nextTick(() => {

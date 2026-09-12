@@ -259,7 +259,7 @@ function t(key, params = {}) {
     color_counts: { red: 1, black: 0, amber: 0 },
   }), false)
   assert.equal(aiAssessmentAllowsProgression('strong', {
-    accuracy_percent: 91,
+    accuracy_percent: 94,
     color_counts: { red: 1, black: 0, amber: 0 },
   }), true)
   assert.equal(aiAssessmentAllowsProgression('strong', {
@@ -272,7 +272,7 @@ function t(key, params = {}) {
     color_counts: { red: 2, black: 0, amber: 1 },
   }), false)
   assert.equal(aiAssessmentAllowsProgression('mixed', {
-    accuracy_percent: 90,
+    accuracy_percent: 94,
     color_counts: { red: 1, black: 0, amber: 1 },
   }), true)
   // Clean developing / mixed → reinforce-then-continue (not sticky repeat).

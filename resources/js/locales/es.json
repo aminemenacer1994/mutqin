@@ -383,7 +383,7 @@
         },
         "pricing": {
           "question": "¿Mutqin es gratis? ¿Cuánto cuesta Pro?",
-          "answer": "Sí. La configuración de sesión, el audio y las herramientas de principiante son gratis. Solo Unir ayahs y Resaltar palabras ancla necesitan Pro. Pro también añade comprobaciones IA, sesiones ilimitadas y planificación. El precio se muestra antes de mejorar."
+          "answer": "Sí. La configuración de sesión, el audio y las herramientas de principiante son gratis. Solo Unir ayahs y Resaltar palabras ancla necesitan Pro. Pro también añade comprobaciones IA, recitación de audio con autoevaluación, sesiones ilimitadas y planificación. El precio se muestra antes de mejorar."
         },
         "whoFor": {
           "question": "¿Para quién es Mutqin?",
@@ -4004,6 +4004,7 @@
     "proFeatures": {
       "everythingInFree": "Todo lo incluido en el plan Gratis",
       "recitationChecks": "20 comprobaciones inteligentes de recitación",
+      "selfAssessedAudio": "Recitación de audio con autoevaluación",
       "offlineAudio": "Descarga el audio para escucharlo sin conexión",
       "lessonPlans": "Planes de lección adaptativos",
       "instantFeedback": "Feedback instantáneo de tu recitación",
@@ -4048,11 +4049,11 @@
         },
         "difference": {
           "question": "¿Qué añade Pro?",
-          "answer": "Pro incluye todo Gratis, más 20 comprobaciones de recitación, descarga de audio sin conexión, planes de lección adaptativos, feedback instantáneo, información de progreso, revisión de errores y aleyas débiles, herramientas avanzadas y sesiones ilimitadas."
+          "answer": "Pro incluye todo Gratis, más 20 comprobaciones de recitación, recitación de audio con autoevaluación, descarga de audio sin conexión, planes de lección adaptativos, feedback instantáneo, información de progreso, revisión de errores y aleyas débiles, herramientas avanzadas y sesiones ilimitadas."
         },
         "freeTools": {
           "question": "¿Qué herramientas siguen gratis?",
-          "answer": "Configuración básica de sesión, fuentes coránicas, 5 comprobaciones de recitación y 3 sesiones guardadas. Pro añade 20 comprobaciones, audio sin conexión, planes de lección y más historial."
+          "answer": "Configuración básica de sesión, fuentes coránicas, 5 comprobaciones de recitación y 3 sesiones guardadas. Pro añade 20 comprobaciones, recitación de audio con autoevaluación, audio sin conexión, planes de lección y más historial."
         },
         "yearly": {
           "question": "¿Cómo funciona el pago anual?",
@@ -4734,6 +4735,10 @@
       "play": "Reproducir",
       "pause": "Pausar",
       "restart": "Reiniciar",
+      "listen": "Escuchar esta recitación",
+      "listening": "Reproduciendo tu recitación",
+      "audio_expired": "Esta grabación ya no está disponible.",
+      "audio_loading": "Cargando grabación…",
       "audio": "Tu recitación",
       "accuracy": "Precisión",
       "stats_title": "Estadísticas de Recitación IA",

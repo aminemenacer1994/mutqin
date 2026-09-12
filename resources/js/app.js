@@ -243,7 +243,7 @@ const WaitingListPage = lazyPage(
     { feature: 'waiting-list' }
 );
 const UserDashboard = lazyPage(
-    () => import(/* webpackChunkName: "user-dashboard-v5" */ './views/Dashboard.vue'),
+    () => import(/* webpackChunkName: "user-dashboard-audio-1" */ './views/Dashboard.vue'),
     { feature: 'dashboard' }
 );
 const AdminDashboard = lazyPage(

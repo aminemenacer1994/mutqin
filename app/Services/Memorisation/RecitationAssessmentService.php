@@ -716,7 +716,9 @@ class RecitationAssessmentService
             [
                 'user_id' => $user->id,
                 'session_recommendation_id' => null,
-                'user_session_id' => null,
+                'user_session_id' => isset($payload['user_session_id'])
+                    ? (int) $payload['user_session_id'] ?: null
+                    : null,
                 'source' => $source,
                 'attempt_number' => max(1, $attemptNumber),
                 'accuracy_percent' => $accuracy,

@@ -590,10 +590,10 @@ class PracticePlanRecommendationService
 
     private function friendlySummary(int $accuracy): string
     {
-        if ($accuracy >= 85) {
+        if ($accuracy >= RecitationScoringThresholds::STRONG_ACCURACY_MIN) {
             return 'Mā shā’ Allāh. Strong recall. A light review will keep it firm.';
         }
-        if ($accuracy >= 60) {
+        if ($accuracy >= RecitationScoringThresholds::DEVELOPING_ACCURACY_MIN) {
             return 'Good effort. A few marked words need another calm pass before you move on.';
         }
 

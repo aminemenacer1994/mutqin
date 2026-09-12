@@ -27,6 +27,12 @@ class AiReciteAttempt extends Model
         'weak_words',
         'word_statuses',
         'plan_snapshot',
+        'audio_disk',
+        'audio_path',
+        'audio_mime',
+        'audio_bytes',
+        'audio_duration_ms',
+        'audio_expires_at',
     ];
 
     protected $casts = [
@@ -39,6 +45,9 @@ class AiReciteAttempt extends Model
         'weak_words' => 'array',
         'word_statuses' => 'array',
         'plan_snapshot' => 'array',
+        'audio_bytes' => 'integer',
+        'audio_duration_ms' => 'integer',
+        'audio_expires_at' => 'datetime',
     ];
 
     /**

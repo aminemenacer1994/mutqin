@@ -36,6 +36,8 @@ assert.doesNotMatch(dashboard, /dash-ai-recite-cta/, 'progress page does not exp
 assert.doesNotMatch(dashboard, /openAiRecite/, 'progress page does not open the standalone modal')
 assert.doesNotMatch(dashboard, /DashboardAiReciteModal/, 'progress page does not mount the AI Recite modal')
 assert.match(dashboard, /id="ai-recite-results"/, 'progress page has an AI Recite results section')
+assert.match(dashboard, /item.has_audio/, 'recent attempts expose a listen affordance when audio exists')
+assert.match(dashboard, /dashboard\.ai_recite\.listen/, 'listen copy is used on saved checks')
 assert.match(
   dashboardCss,
   /max-width:\s*1023\.98px[\s\S]*?\.dash-ai-results[\s\S]*?order:\s*2[\s\S]*?\.dash-section--weekly[\s\S]*?order:\s*3/,
@@ -93,6 +95,7 @@ assert.match(modal, /try_again/)
 assert.match(modal, /test_another/)
 assert.match(modal, /dashboard_ai_recite/)
 assert.match(modal, /createMemorisationAssessment/)
+assert.match(modal, /uploadAiReciteAttemptAudio/)
 assert.doesNotMatch(modal, /submitRecommendationAiAssessment/)
 assert.doesNotMatch(modal, /startMemorisationPracticePlan/)
 assert.match(modal, /isBusy/, 'recording/processing blocks accidental dismiss')
@@ -169,6 +172,7 @@ const filled = buildDashboardAiReciteStatsView({
     ayah_end: 5,
     accuracy_percent: 88,
     peek_used: true,
+    has_audio: true,
     occurred_at: '2026-09-04T12:00:00Z',
   }],
 }, t)
@@ -177,9 +181,10 @@ assert.ok(filled.cards.some((card) => card.key === 'average' && card.value.inclu
 assert.equal(filled.weakest[0].label.includes('5'), true)
 assert.equal(filled.focus.length, 1)
 assert.equal(filled.holding, false)
-assert.equal(filled.score.tone, 'strong')
+assert.equal(filled.score.tone, 'mixed')
 assert.equal(filled.missed[0].text, 'الضالين')
 assert.equal(filled.recent[0].peek_used, true)
+assert.equal(filled.recent[0].has_audio, true)
 
 const perfect = buildDashboardAiReciteStatsView({
   total_attempts: 1,
