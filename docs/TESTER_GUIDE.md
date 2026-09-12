@@ -2,7 +2,7 @@
 
 A short guide for anyone testing Mutqin without developer help.
 
-> **Local / staging only.** The accounts below come from database seeders. Never use them in production, and never share real user credentials here.
+> **Tester hosts.** The one-click demo on `/login` appears when `SHOW_DEMO_ACCOUNTS=true` (local, staging, or Laravel Cloud). The accounts below also come from local seeders. Never share real user credentials here.
 
 ---
 
@@ -23,7 +23,7 @@ The main workspace is **Memorisation** (`/memorisation`). **Dashboard** (`/dashb
 
 1. Open the app in your browser (local example: `http://localhost:8000`).
 2. Go to **Login** (`/login`).
-3. On local/staging, tap **Sign in with demo** (one click — no form needed), **or** sign in with email + password / Google.
+3. When demo login is enabled, tap **Sign in with demo** (one click — no form needed), **or** sign in with email + password / Google.
 
 After login you land on **Memorisation**. Demo accounts and new signups see the workspace **spotlight tour** once (not again on later logins). Replay it anytime from **Take the tour again**. It walks through Welcome → Controls → Setup → Start → practise/End → AI recitation → results (right/wrong words) → recommendation plan → Dashboard.
 

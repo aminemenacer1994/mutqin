@@ -88,9 +88,11 @@ lock-heavy migration.
 - Reserved demo email suffixes: `@mutqin.test`, `@example.com`, `@example.org`,
   `@example.net` (`App\Support\DatabaseDeploySafety`).
 - Seeders refuse non-demo emails and refuse `APP_ENV=production`.
-- `SHOW_DEMO_ACCOUNTS` is forced **off** when `APP_ENV=production`.
-- `EnsureDemoLoginAccount` refuses production and refuses non-demo
-  `DEMO_LOGIN_EMAIL` values (prevents overwriting a real user’s password).
+- `SHOW_DEMO_ACCOUNTS` is an explicit host flag (including Laravel Cloud).
+  Default is off. When true, `/login` shows one-click demo login.
+- `EnsureDemoLoginAccount` refuses non-demo `DEMO_LOGIN_EMAIL` values
+  (prevents overwriting a real user’s password). Seeders still refuse
+  `APP_ENV=production`.
 
 Local / staging only:
 
@@ -112,10 +114,9 @@ MUTQIN_DEPLOY_STAGE=production ./scripts/deploy/production-release.sh
 What it does:
 
 1. Refuses to run unless stage is `production` / `prod` / `staging`.
-2. Refuses production if `SHOW_DEMO_ACCOUNTS` is enabled.
-3. Runs `php artisan mutqin:deploy-preflight`.
-4. Runs `php artisan migrate --force` only.
-5. Runs `php artisan queue:restart`.
+2. Runs `php artisan mutqin:deploy-preflight` (notes if demo login is on).
+3. Runs `php artisan migrate --force` only.
+4. Runs `php artisan queue:restart`.
 
 `composer setup` may call `migrate --force` for **local bootstrap** — that is not
 a production deploy path.
@@ -137,7 +138,7 @@ Manual checklist:
 - [ ] Pending migrations are expand-safe (nullable/default/index) or have an explicit maintenance plan
 - [ ] Large data backfills split from DDL; estimate lock/time risk
 - [ ] Rollback limits documented in the PR (especially irreversible downs)
-- [ ] `SHOW_DEMO_ACCOUNTS` is false on production
+- [ ] `SHOW_DEMO_ACCOUNTS` is set intentionally (true to show /login demo, false to hide it)
 - [ ] Queue workers will receive `queue:restart` after migrate
 - [ ] App code is compatible with **old** schema during expand (and with **new** schema after)
 - [ ] Maintenance window scheduled only if a migration cannot be online-safe

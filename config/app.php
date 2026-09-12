@@ -35,12 +35,13 @@ return [
     |
     | When enabled, the login page shows a one-click demo login shortcut
     | and Memorisation shows a short tester start guide.
-    | Off by default. Forced off in production / prod even if the env is true.
+    | Off by default. Set SHOW_DEMO_ACCOUNTS=true on the host (including
+    | Laravel Cloud) to show it. The account is still restricted to a
+    | reserved demo mailbox — never a real user email.
     |
     */
 
-    'show_demo_accounts' => ! in_array(env('APP_ENV', 'production'), ['production', 'prod'], true)
-        && filter_var(env('SHOW_DEMO_ACCOUNTS', false), FILTER_VALIDATE_BOOL),
+    'show_demo_accounts' => filter_var(env('SHOW_DEMO_ACCOUNTS', false), FILTER_VALIDATE_BOOL),
 
     /*
     |--------------------------------------------------------------------------

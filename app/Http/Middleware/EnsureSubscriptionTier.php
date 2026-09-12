@@ -23,7 +23,7 @@ class EnsureSubscriptionTier
         }
 
         // Local/staging testers: demo login is on, so paid gates stay open.
-        // Production forces show_demo_accounts off (see config/app.php).
+        // Demo login is an explicit host flag (SHOW_DEMO_ACCOUNTS).
         if (config('app.show_demo_accounts')) {
             return $next($request);
         }

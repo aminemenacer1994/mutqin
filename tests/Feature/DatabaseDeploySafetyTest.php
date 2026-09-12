@@ -168,7 +168,7 @@ class DatabaseDeploySafetyTest extends TestCase
         $this->assertFalse(DatabaseDeploySafety::allowsForcedMigrate('local'));
     }
 
-    public function test_deploy_preflight_fails_when_demo_is_on_in_production(): void
+    public function test_deploy_preflight_allows_explicit_demo_login_in_production(): void
     {
         $this->app->detectEnvironment(fn () => 'production');
         config([
@@ -184,7 +184,8 @@ class DatabaseDeploySafetyTest extends TestCase
         ]);
 
         $this->artisan('mutqin:deploy-preflight')
-            ->assertFailed();
+            ->expectsOutputToContain('SHOW_DEMO_ACCOUNTS is enabled.')
+            ->assertSuccessful();
     }
 
     public function test_deploy_preflight_fails_when_stripe_is_missing_in_production(): void

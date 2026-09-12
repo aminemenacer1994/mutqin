@@ -98,6 +98,17 @@ class AuthPageRenderTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_login_page_shows_demo_when_explicitly_enabled_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config(['app.show_demo_accounts' => true]);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee(__('ui.auth_demo_use'))
+            ->assertSee(route('login.demo'), false);
+    }
+
     public function test_memorisation_exposes_tester_guide_flag_when_demo_accounts_enabled(): void
     {
         config(['app.show_demo_accounts' => true]);
