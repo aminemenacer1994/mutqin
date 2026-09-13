@@ -7594,3 +7594,30 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   }
 }
 
+/* Native document scrolling on phones. Pair clip with visible: hidden would
+   compute the other axis to auto, creating nested scroll areas in the reader. */
+@media (max-width: 767.98px) {
+  html body.memorisation-page:not(.tools-panel-open) {
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  html body.memorisation-page .app .main.mushaf-mode-active :is(
+    .mushaf-workspace,
+    .mushaf-shell,
+    .mushaf-viewport-scroll,
+    .mushaf-page--madani,
+    .mushaf-page-body,
+    .madani-page-sheet
+  ) {
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated,
+  .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated::before,
+  .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated::after,
+  .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated .bi {
+    animation: none !important;
+  }
+}

@@ -10209,9 +10209,16 @@ export default {
     window.addEventListener('keyup', this.handleGlobalKeyup)
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
     this.updateBackToTopVisibility()
+    let readerViewportWidth = window.innerWidth
     this.handlePracticeTurnCalloutResize = () => {
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
-      this.scheduleMadaniPageFit()
+      // Mobile browser chrome changes height while scrolling. The reader wraps
+      // to its width, so only refit when that width actually changes.
+      const nextWidth = window.innerWidth
+      if (nextWidth !== readerViewportWidth) {
+        readerViewportWidth = nextWidth
+        this.scheduleMadaniPageFit()
+      }
       this.updateBackToTopVisibility()
     }
     window.addEventListener('resize', this.handlePracticeTurnCalloutResize, { passive: true })
@@ -10241,6 +10248,8 @@ export default {
 
   beforeUnmount() {
     this.unbindStaleScrollLockRelease()
+    if (this._madaniFitRaf) window.cancelAnimationFrame(this._madaniFitRaf)
+    this._madaniFitTimers?.forEach((id) => window.clearTimeout(id))
     this._recitationComponentActive = false
     this.recitationAttemptId = ''
     this.clearRecitationSlowProcessingNotice?.()
@@ -11248,6 +11257,7 @@ export default {
 
     scheduleMadaniPageFit() {
       if (typeof window === 'undefined') return
+      if (!this.isMobileViewport() || this.readingViewMode !== 'mushaf') return
       if (this._madaniFitRaf) window.cancelAnimationFrame(this._madaniFitRaf)
       if (this._madaniFitTimers?.length) {
         this._madaniFitTimers.forEach((id) => window.clearTimeout(id))
@@ -11285,14 +11295,14 @@ export default {
 
       sheet.style.setProperty('width', '100%', 'important')
       sheet.style.setProperty('max-width', '100%', 'important')
-      sheet.style.setProperty('overflow-x', 'hidden', 'important')
+      sheet.style.setProperty('overflow-x', 'clip', 'important')
       sheet.style.setProperty('overflow-wrap', 'anywhere', 'important')
       sheet.style.setProperty('white-space', 'normal', 'important')
       sheet.style.setProperty('transform', 'none', 'important')
       sheet.style.setProperty('text-align', 'center', 'important')
       sheet.style.setProperty('text-justify', 'none', 'important')
       sheet.style.setProperty('word-spacing', '0', 'important')
-      viewport.style.overflowX = 'hidden'
+      viewport.style.overflowX = 'clip'
       viewport.style.overflowY = 'visible'
 
       // Continuous natural word flow — wrap inside the card, never sideways.
@@ -35767,6 +35777,9 @@ export default {
     },
 
     handleWindowScroll() {
+      // Back-to-top is hidden on phones; do not enqueue work on every swipe
+      // unless a visible practice callout needs to follow its anchor.
+      if (this.isMobileViewport() && (!this.practiceTurnCalloutVisible || this.talqinRecitationTurnActive)) return
       if (this.scrollFrame) return
       const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
         ? window.requestAnimationFrame.bind(window)

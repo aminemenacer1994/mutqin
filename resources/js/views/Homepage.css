@@ -1606,6 +1606,29 @@ html[dir="rtl"] .hero__fan-item--right {
 
 /* Premium mobile rhythm */
 @media (max-width: 767.98px) {
+  /* Keep decorative layers still while the user scrolls on a phone. */
+  .hero__glow,
+  .hero__fan-item,
+  .demo__phone::before,
+  .demo__phone .device {
+    animation: none !important;
+    will-change: auto;
+  }
+
+  .demo__phone::before {
+    filter: none;
+  }
+
+  .hero__fan {
+    perspective: none;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
   .hero {
     padding-top: 1.1rem;
     padding-bottom: 1.5rem;
