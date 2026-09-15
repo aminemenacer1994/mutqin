@@ -57,9 +57,10 @@ if (typeof window !== 'undefined') {
     window.mutqinOpenFeedback = openFeedbackModal;
 }
 
-// Watch/dev Mix emits stable chunk names (memorisation.js). Patch webpack's
-// chunk URL helper so the browser cannot keep a stale mushaf paint forever.
-(function patchMemorisationChunkBust() {
+// Watch/dev Mix emits stable chunk names (homepage.js, memorisation.js, ...).
+// Patch webpack's chunk URL helper so the browser cannot keep stale lazy-page
+// chunks, including old 404 responses, after a local rebuild.
+(function patchStableChunkBust() {
     try {
         if (typeof __webpack_require__ === 'undefined' || typeof __webpack_require__.u !== 'function') return;
         const bust = (typeof document !== 'undefined' && (
@@ -69,7 +70,7 @@ if (typeof window !== 'undefined') {
         const original = __webpack_require__.u.bind(__webpack_require__);
         __webpack_require__.u = (chunkId) => {
             const url = String(original(chunkId) || '');
-            if (!/memorisation/i.test(url)) return url;
+            if (!/\.js(?:$|\?)/i.test(url) || /\.[a-f0-9]{8}\.js(?:$|\?)/i.test(url)) return url;
             const sep = url.includes('?') ? '&' : '?';
             return `${url}${sep}id=${encodeURIComponent(bust)}`;
         };

@@ -151,3 +151,12 @@ test('app mount does not clear chunk reload guard before async pages resolve', (
     'clearing the guard at shell mount can cause homepage chunk reload loops',
   )
 })
+
+test('stable lazy chunks are cache-busted beyond memorisation', () => {
+  assert.match(appSource, /patchStableChunkBust/)
+  assert.doesNotMatch(
+    appSource,
+    /memorisation\/i\.test\(url\)/,
+    'chunk URL cache busting must cover homepage and other lazy pages too',
+  )
+})
