@@ -288,14 +288,24 @@ body.session-analysis-modal-open {
   min-width: 0;
   overflow-x: clip;
   overflow-y: visible;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: normal;
+  word-break: normal;
   white-space: normal;
   text-align: right;
   color: #2a2621;
-  font-family: var(--font-ar, "Amiri", "Noto Naskh Arabic", "Amiri Quran", serif);
+  font-family: var(--mushaf-quran-font, var(--quran-font, "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif));
   font-size: 1.42rem;
   line-height: 2.55;
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__ayah-text {
+  display: inline;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: normal;
+  text-rendering: optimizeLegibility;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__word {
@@ -346,6 +356,35 @@ body.session-analysis-modal-open {
 #sa-session-overview.session-analysis-modal-root .sa-ov__word.is-omitted {
   color: #5c534b;
   text-decoration: underline dotted;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__note--recommendation {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.2rem 0 0.05rem;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__note--recommendation + .sa-ov__note--recommendation {
+  margin-top: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(80, 64, 48, 0.1);
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__note--recommendation strong {
+  display: block;
+  color: #211d19;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.28;
+  letter-spacing: 0;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__note--recommendation span {
+  display: block;
+  color: #6f655b;
+  font-size: 0.94rem;
+  font-weight: 500;
+  line-height: 1.55;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__panel.sa-ov__audio {

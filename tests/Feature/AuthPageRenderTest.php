@@ -176,6 +176,19 @@ class AuthPageRenderTest extends TestCase
         $this->assertStringNotContainsString("__('Password')", $confirmSource);
     }
 
+    public function test_verify_notice_is_hidden_when_email_verification_is_disabled(): void
+    {
+        config(['auth.require_email_verification' => false]);
+
+        $user = User::factory()->unverified()->create();
+
+        $this->actingAs($user)
+            ->get(route('verification.notice'))
+            ->assertRedirect(route('memorisation'))
+            ->assertDontSee(__('ui.verify_kicker'))
+            ->assertDontSee(__('ui.verify_title'));
+    }
+
     public function test_login_page_localises_for_arabic(): void
     {
         $this->get(route('login', ['lang' => 'ar']))

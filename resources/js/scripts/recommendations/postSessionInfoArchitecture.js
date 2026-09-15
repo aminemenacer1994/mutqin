@@ -141,6 +141,7 @@ export function buildSuccessRecommendationFlow(input = {}) {
   const to = Number(nextRange?.to || from)
   const methodTitle = String(input.methodTitle || '').trim()
   const complementaryTitle = String(input.complementaryTitle || '').trim()
+  const surahName = String(input.surahName || '').trim()
 
   const continueFromActions = (() => {
     if (typeof t === 'function') {
@@ -158,8 +159,10 @@ export function buildSuccessRecommendationFlow(input = {}) {
       if (value && !String(value).includes('continueToNextRange')) return value
     }
     if (from > 0) {
-      return formatContinueToAyahLabel(from, to, t)
-        || (from === to ? `Next ayah ${from}` : `Next ayahs ${from}–${to}`)
+      const range = from === to ? `Ayah ${from}` : `Ayahs ${from}–${to}`
+      return surahName
+        ? `Move to ${surahName} ${range}`
+        : (formatContinueToAyahLabel(from, to, t) || `Move to ${range}`)
     }
     return 'Continue'
   })()
@@ -369,6 +372,7 @@ export function buildPostSessionInfoArchitecture(input = {}) {
       ctaState: input.ctaState,
       primaryWeakAyah,
       nextRange,
+      surahName,
       methodTitle,
       complementaryTitle: input.complementaryTitle,
     })
@@ -419,7 +423,7 @@ export function buildPostSessionInfoArchitecture(input = {}) {
       lead: translate(
         t,
         'whatNextLead',
-        'Based on this session, practise this next set with the technique below.',
+        'Based on this session, this is the next section and technique Mutqin recommends.',
       ),
     },
   }

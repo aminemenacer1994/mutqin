@@ -44,6 +44,7 @@ assert.match(
   'mobile progress page shows AI Recite results above Days with the Qur’an',
 )
 assert.match(dashboard, /loadAiReciteResults/, 'progress page loads saved AI Recite results')
+assert.match(dashboard, /aiReciteStats:\s*initial\?\.ai_recite_stats \|\| null/, 'progress page hydrates AI Recite results from dashboard DB payload')
 assert.match(dashboard, /ai-recite-results/, 'progress page can be linked to the results section')
 assert.match(modalCss, /prefers-reduced-motion/, 'modal animation respects reduced motion')
 
@@ -110,6 +111,9 @@ assert.match(dashboardCss, /prefers-reduced-motion[\s\S]*dash-ai-results__word/,
 
 assert.equal(en.dashboard.ai_recite.cta_label, 'Recite')
 assert.match(en.dashboard.ai_recite.cta_hint, /memorisation/i)
+assert.match(dashboard, /heroContextItems/, 'hifz hero adds compact progress context')
+assert.match(dashboard, /currently_learning_with_surah/, 'hifz hero names the current surah with its ayah range')
+assert.equal(en.dashboard.hero_context_ai_recite, 'AI Recite')
 
 const chapters = surahCatalog()
 assert.equal(chapters[0].id, 1)
@@ -196,7 +200,7 @@ assert.ok(filled.cards.some((card) => card.key === 'average' && card.value.inclu
 assert.equal(filled.weakest[0].label.includes('5'), true)
 assert.equal(filled.focus.length, 1)
 assert.equal(filled.holding, false)
-assert.equal(filled.score.tone, 'mixed')
+assert.equal(filled.score.tone, 'strong')
 assert.equal(filled.missed[0].text, 'الضالين')
 assert.equal(filled.missed[0].count, 2)
 assert.equal(filled.missed[0].last_attempt_id, 9)

@@ -33,6 +33,7 @@
             <div class="dash-hero__greeting">
               <span class="dash-kicker">{{ t('dashboard.journey_kicker') }}</span>
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
+              <p v-if="heroProgressSummary" class="dash-hero__summary">{{ heroProgressSummary }}</p>
             </div>
             <button
               type="button"
@@ -69,6 +70,15 @@
                 <p v-else-if="primaryContinueAction.range" class="dash-continue-card__learning">
                   {{ primaryContinueAction.range }}
                 </p>
+                <dl v-if="heroContextItems.length" class="dash-continue-card__context" aria-label="Hifz progress">
+                  <div v-for="item in heroContextItems" :key="item.key" class="dash-continue-card__context-item">
+                    <dt>
+                      <i :class="item.icon" aria-hidden="true"></i>
+                      {{ item.label }}
+                    </dt>
+                    <dd>{{ item.value }}</dd>
+                  </div>
+                </dl>
               </div>
               <span class="dash-continue-card__cta">
                 <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
@@ -158,88 +168,6 @@
           </div>
         </section>
 
-        <section
-          v-if="murajaahPreview.length || showMurajaahEmpty"
-          class="dash-section dash-section--flat dash-reveal"
-          aria-labelledby="dash-murajaah-heading"
-          style="--dash-delay: 20ms"
-        >
-          <div class="dash-murajaah-block">
-            <div class="dash-murajaah-block__head dash-murajaah-block__head--compact">
-              <div class="dash-murajaah-block__head-main">
-                <div class="dash-murajaah-block__title-row">
-                  <span class="dash-section__icon dash-section__icon--review" aria-hidden="true">
-                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                  </span>
-                  <div class="dash-section__title-copy">
-                    <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
-                      {{ t('dashboard.strengthen_title') }}
-                    </h2>
-                    <p class="dash-section__hint">{{ murajaahSectionSubtitle }}</p>
-                  </div>
-                </div>
-              </div>
-              <button
-                v-if="showMurajaahViewAll"
-                type="button"
-                class="dash-glance-action dash-glance-action--ghost dash-murajaah-block__view-all"
-                @click="openDrawer('murajaah')"
-              >
-                <i class="bi bi-list-ul" aria-hidden="true"></i>
-                {{ t('dashboard.view_all_reviews') }}
-              </button>
-            </div>
-
-            <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty">
-              <span class="dash-murajaah-block__empty-icon" aria-hidden="true">
-                <i class="bi bi-check2-circle" aria-hidden="true"></i>
-              </span>
-              <p class="dash-murajaah-block__empty-title">{{ t('dashboard.murajaah_no_urgent') }}</p>
-              <p v-if="!optionalReviewSuggestion" class="dash-murajaah-block__empty-hint">
-                {{ t('dashboard.weak_empty_message') }}
-              </p>
-              <div v-else class="dash-murajaah-suggestion">
-                <span class="dash-kicker">{{ t('dashboard.murajaah_keep_fresh') }}</span>
-                <strong class="dash-murajaah-suggestion__title">{{ optionalReviewSuggestion.title }}</strong>
-                <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="optionalReviewSuggestion.href">
-                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                  {{ t('dashboard.murajaah_practise') }}
-                </a>
-              </div>
-            </div>
-
-            <ul v-else class="dash-murajaah-list">
-              <li v-for="(item, index) in murajaahPreview" :key="item.key">
-                <div class="dash-murajaah-row dash-reveal" :style="{ '--dash-delay': `${index * 50}ms` }">
-                  <a class="dash-murajaah-row__info" :href="item.href || memorisationUrl">
-                    <span class="dash-murajaah-row__ref">
-                      {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
-                    </span>
-                    <span
-                      v-if="item.phrase"
-                      class="dash-murajaah-row__phrase"
-                      lang="ar"
-                      dir="rtl"
-                    >{{ item.phrase }}</span>
-                  </a>
-                  <div class="dash-murajaah-row__aside">
-                    <span
-                      v-if="item.strength"
-                      class="dash-strength"
-                      :class="`dash-strength--${item.strength}`"
-                    >
-                      {{ strengthLabel(item) }}
-                    </span>
-                    <a class="dash-btn dash-btn--ghost dash-btn--sm dash-murajaah-row__cta" :href="reviewNowHref(item)">
-                      <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                      {{ t('dashboard.review_now') }}
-                    </a>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </section>
         </div>
 
         <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
@@ -920,7 +848,7 @@ export default {
       analysisSourceId: null,
       analysisSourceKey: '',
       analysisRequestId: 0,
-      aiReciteStats: null,
+      aiReciteStats: initial?.ai_recite_stats || null,
       aiReciteLoading: false,
       aiReciteError: false,
       aiReciteRequestId: 0,
@@ -995,7 +923,12 @@ export default {
       return this.t('dashboard.journey_continue_cta')
     },
     journeyMemorisedCount() {
-      return Number(this.journey?.overall?.memorised_ayah_count ?? 0)
+      return Math.max(
+        Number(this.journey?.overall?.memorised_ayah_count ?? 0),
+        Number(this.data?.progress?.memorised_ayah_count ?? 0),
+        Number(this.data?.snapshot?.memorised_ayahs?.value ?? 0),
+        Number(this.data?.snapshot?.completed_ayahs?.value ?? 0),
+      )
     },
     journeyOverallPercent() {
       return Number(this.journey?.overall?.percent ?? 0)
@@ -1004,7 +937,16 @@ export default {
       return progressBarDisplay(this.journeyOverallPercent)
     },
     hifzLearningCount() {
-      return Number(this.data?.progress?.learning_ayah_count ?? 0)
+      const progress = this.data?.progress || {}
+      const cont = this.journeyContinue || {}
+      const explicit = Math.max(
+        Number(progress.learning_ayah_count ?? 0),
+        Number(cont.learning_ayah_count ?? 0),
+      )
+      if (explicit > 0) return explicit
+      const start = Number(progress.ayah_start || cont.ayah_start || 0)
+      const end = Number(progress.ayah_end || cont.ayah_end || start)
+      return start > 0 && end >= start ? (end - start + 1) : 0
     },
     hifzGlanceStats() {
       return [
@@ -1042,6 +984,58 @@ export default {
         : this.t('dashboard.ayah_range', { start, end })
       if (surah) return `${surah} · ${range}`
       return this.t('dashboard.currently_learning_range', { range })
+    },
+    heroProgressSummary() {
+      const parts = []
+      const memorised = this.journeyMemorisedCount
+      const learning = this.hifzLearningCount
+      if (memorised > 0) {
+        parts.push(this.t('dashboard.hero_memorised_summary', { count: memorised }))
+      }
+      if (this.currentlyLearningText) {
+        parts.push(this.currentlyLearningText)
+      } else if (learning > 0) {
+        parts.push(this.t('dashboard.hero_learning_summary', { count: learning }))
+      }
+      if (!parts.length && this.primaryContinueAction?.title) {
+        parts.push(this.primaryContinueAction.title)
+      }
+      return parts.join(' · ')
+    },
+    heroContextItems() {
+      if (!this.primaryContinueAction || this.primaryContinueAction.kind === 'fresh') return []
+      const items = []
+      if (this.currentlyLearningText) {
+        items.push({
+          key: 'learning',
+          label: this.t('dashboard.hero_context_learning'),
+          value: this.currentlyLearningText,
+          icon: 'bi bi-book',
+        })
+      }
+      items.push({
+        key: 'memorised',
+        label: this.t('dashboard.hero_context_memorised'),
+        value: this.t('dashboard.hero_memorised_summary', { count: this.journeyMemorisedCount }),
+        icon: 'bi bi-stars',
+      })
+      if (this.journeyOverallPercent > 0 || this.journeyMemorisedCount > 0) {
+        items.push({
+          key: 'overall',
+          label: this.t('dashboard.hero_context_overall'),
+          value: this.t('dashboard.hero_overall_summary', { percent: this.journeyOverallPercent }),
+          icon: 'bi bi-bar-chart',
+        })
+      }
+      if (this.aiReciteView && !this.aiReciteView.empty) {
+        items.push({
+          key: 'ai',
+          label: this.t('dashboard.hero_context_ai_recite'),
+          value: this.t('dashboard.hero_ai_recite_summary', { count: Number(this.aiReciteStats?.total_attempts || 0) }),
+          icon: 'bi bi-mic',
+        })
+      }
+      return items
     },
     earlyProgressMessage() {
       const pct = this.journeyOverallPercent
@@ -1634,16 +1628,23 @@ export default {
       return key
     },
     continueRangeLabel(source = {}) {
+      const surah = String(source?.surah_name || source?.current_surah_name || '').trim()
       const start = Number(source?.ayah_start || 0)
       const end = Number(source?.ayah_end || start)
       if (start <= 0) return ''
+      const range = start === end
+        ? this.t('dashboard.ayah_n', { n: start })
+        : this.t('dashboard.ayah_range', { start, end })
+      if (surah) {
+        return this.t('dashboard.currently_learning_with_surah', { surah, range })
+      }
       if (start === end) {
         return this.t('dashboard.currently_learning_range', {
-          range: this.t('dashboard.ayah_n', { n: start }),
+          range,
         })
       }
       return this.t('dashboard.currently_learning_range', {
-        range: this.t('dashboard.ayah_range', { start, end }),
+        range,
       })
     },
     continueSessionTitle(source = {}) {

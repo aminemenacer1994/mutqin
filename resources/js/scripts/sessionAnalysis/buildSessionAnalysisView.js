@@ -1,5 +1,6 @@
 import { buildAiReviewDetails } from '../recommendations/aiReviewDetails.js'
 import { classifyRecitationWordColor, RECITATION_COLOR, resolveRecitationWordDisplay } from '../engine/recitation_analysis.js'
+import { isKnownTechniqueId, resolveTechniqueDisplay } from '../techniques/techniqueDisplay.js'
 
 /**
  * Map persisted session/AI analysis into the existing Analysis Modal view-model.
@@ -75,6 +76,7 @@ function groupWordsByAyah(words, t) {
       ayahLabel: ayah
         ? (t('dashboard.ayah_n', { n: ayah }) || `Ayah ${ayah}`)
         : '',
+      text: parts.map((word) => word.text).filter(Boolean).join(' '),
       parts: parts.map((word) => ({
         text: word.text,
         tone: toneForStatus(word.status),
@@ -129,15 +131,24 @@ function collectWeakAyahs(payload) {
     .filter((n) => Number.isFinite(n) && n > 0))]
 }
 
-function recommendationLines(payload) {
+function recommendationLines(payload, t = null) {
   const lines = []
+  const pushLine = (line) => {
+    const label = asText(line?.label)
+    const detail = asText(line?.detail)
+    if (!label && !detail) return
+    const key = line?.key || `${label}:${detail}`
+    const signature = `${label.toLowerCase()}|${detail.toLowerCase()}`
+    if (lines.some((item) => item.signature === signature || item.label === label)) return
+    lines.push({ key, label, detail, signature })
+  }
   const plan = payload?.practice_plan
   if (plan) {
-    if (asText(plan.title)) lines.push({ key: 'plan', label: asText(plan.title), detail: asText(plan.why) })
+    if (asText(plan.title)) pushLine({ key: 'plan', label: asText(plan.title), detail: asText(plan.why) })
     if (asText(plan.recommended_technique)) {
-      lines.push({
+      pushLine({
         key: 'technique',
-        label: asText(plan.recommended_technique),
+        label: techniqueLabel(plan.recommended_technique, t),
         detail: '',
       })
     }
@@ -145,24 +156,31 @@ function recommendationLines(payload) {
   const snapshot = payload?.ai_attempt?.plan_snapshot
   if (snapshot && typeof snapshot === 'object') {
     if (asText(snapshot.title) && !lines.some((line) => line.label === asText(snapshot.title))) {
-      lines.push({ key: 'snapshot', label: asText(snapshot.title), detail: '' })
+      pushLine({ key: 'snapshot', label: asText(snapshot.title), detail: '' })
     }
   }
   const ai = payload?.recommendation?.ai_assessment
   if (ai && typeof ai === 'object') {
     if (asText(ai.summary)) {
-      lines.push({ key: 'summary', label: asText(ai.summary), detail: '' })
+      pushLine({ key: 'summary', label: asText(ai.summary), detail: '' })
     }
   }
   const rec = payload?.recommendation
-  if (rec?.recommended_technique && !lines.some((line) => line.label === asText(rec.recommended_technique))) {
-    lines.push({
+  if (rec?.recommended_technique) {
+    pushLine({
       key: 'rec-technique',
-      label: asText(rec.recommended_technique),
+      label: techniqueLabel(rec.recommended_technique, t),
       detail: '',
     })
   }
-  return lines
+  return lines.map(({ signature, ...line }) => line)
+}
+
+function techniqueLabel(value, t = null) {
+  const raw = asText(value)
+  if (!raw) return ''
+  if (isKnownTechniqueId(raw)) return resolveTechniqueDisplay(raw, t, { short: true }).shortLabel
+  return raw
 }
 
 function retentionItems(payload, t) {
@@ -285,7 +303,7 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
 
   const includeRecommendations = options.includeRecommendations !== false
   const includeRetention = options.includeRetention !== false
-  const recommendations = includeRecommendations ? recommendationLines(payload) : []
+  const recommendations = includeRecommendations ? recommendationLines(payload, t) : []
   const retention = includeRetention ? retentionItems(payload, t) : []
   const ayahRows = groupWordsByAyah(words, t)
   const hasContent = Boolean(

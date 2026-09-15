@@ -234,6 +234,24 @@ mix.then(() => {
         }
     }
 
+    // Compatibility for tabs still running a dev/watch runtime after a prod build:
+    // that runtime requests /js/homepage.js while the fresh build emits
+    // /js/homepage.<hash>.js. Keep stable aliases for named chunks so those
+    // tabs load once, refresh their app shell, and stop retrying a 404.
+    for (const [family, list] of generationsByFamily.entries()) {
+        if (!/^[a-z][a-z0-9_-]*$/i.test(family)) continue;
+        list.sort((a, b) => b.mtime - a.mtime);
+        const newest = list[0]?.name;
+        if (!newest) continue;
+        const alias = `${family}.js`;
+        try {
+            fs.copyFileSync(path.join(jsDir, newest), path.join(jsDir, alias));
+            keepNames.add(alias);
+        } catch {
+            /* ignore locked files during watch */
+        }
+    }
+
     // Always keep every lazy chunk the current app.js runtime can request.
     let skipPrune = false;
     const referenced = new Set();

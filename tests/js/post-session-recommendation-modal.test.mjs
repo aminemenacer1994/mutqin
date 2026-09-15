@@ -242,7 +242,7 @@ function t(key, params = {}) {
   )
   assert.match(en, /"reviseFocusPhrase":\s*"Practise Ayahs \{start\}–\{end\}"/)
   assert.match(en, /"continueToNextRange":\s*"Continue"/)
-  assert.match(en, /"continueToAyahs":\s*"Next ayahs \{start\}–\{end\}"/)
+  assert.match(en, /"continueToAyahs":\s*"Move to \{surah\} Ayahs \{start\}–\{end\}"/)
   assert.match(en, /"repeatThisSession":\s*"Repeat Ayahs \{start\}–\{end\}"/)
   assert.match(en, /"returnToWorkspace":\s*"Back to mushaf"/)
   assert.match(en, /"retest":\s*"Check again"/)

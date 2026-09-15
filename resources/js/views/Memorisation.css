@@ -56405,6 +56405,55 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   min-width: 0;
 }
 
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem 1rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"] .post-session-simple__section-kicker,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"] .post-session-simple__next-meta {
+  grid-column: 1 / -1;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-summary {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ps-accent, #9a6b3f) 45%, var(--ps-line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ps-card) 92%, #fff);
+  color: color-mix(in srgb, var(--ps-accent, #9a6b3f) 82%, var(--ps-ink));
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan:hover:not(:disabled),
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan:focus-visible {
+  border-color: var(--ps-accent, #9a6b3f);
+  background: color-mix(in srgb, var(--ps-accent, #9a6b3f) 10%, var(--ps-card));
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-row {
   display: inline-flex;
   flex-wrap: wrap;
@@ -56666,6 +56715,16 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   font-weight: 450;
   line-height: 1.45;
   color: color-mix(in srgb, var(--ps-ink) 72%, transparent);
+}
+
+@media (max-width: 640px) {
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"] {
+    grid-template-columns: 1fr;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan {
+    justify-self: start;
+  }
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta {
@@ -63087,4 +63146,3 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   align-items: center !important;
   justify-content: flex-start !important;
 }
-

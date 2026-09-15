@@ -3691,74 +3691,87 @@
                       <span class="post-session-simple__step-num" aria-hidden="true">2</span>
                       {{ postSessionInfoArchitecture.whatToPractiseNext.title }}
                     </p>
-                    <div
-                      class="post-session-simple__next-target"
-                      id="postSessionRecTitle"
-                      data-testid="post-session-next-target"
-                    >
+                    <div class="post-session-simple__plan-summary">
                       <div
-                        v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName
-                          || postSessionInfoArchitecture.whatToPractiseNext.surahName"
-                        class="post-session-simple__surah-row mutqin-surah-bilingual"
+                        class="post-session-simple__next-target"
+                        id="postSessionRecTitle"
+                        data-testid="post-session-next-target"
                       >
-                        <p
-                          v-if="postSessionInfoArchitecture.whatToPractiseNext.surahName"
-                          class="post-session-simple__surah-latin workspace-shell-surah-en"
-                          lang="en"
-                          dir="ltr"
-                          :class="{
-                            'post-session-simple__surah-latin--solo':
-                              !postSessionInfoArchitecture.whatToPractiseNext.surahArabicName,
-                          }"
-                        >
-                          {{ postSessionInfoArchitecture.whatToPractiseNext.surahName }}
-                        </p>
-                        <span
+                        <div
                           v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName
-                            && postSessionInfoArchitecture.whatToPractiseNext.surahName"
-                          class="post-session-simple__surah-separator workspace-shell-surah-sep"
-                          aria-hidden="true"
-                        >·</span>
-                        <p
-                          v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName"
-                          class="post-session-simple__surah-arabic workspace-shell-surah-ar"
-                          lang="ar"
-                          dir="rtl"
+                            || postSessionInfoArchitecture.whatToPractiseNext.surahName"
+                          class="post-session-simple__surah-row mutqin-surah-bilingual"
                         >
-                          {{ postSessionInfoArchitecture.whatToPractiseNext.surahArabicName }}
+                          <p
+                            v-if="postSessionInfoArchitecture.whatToPractiseNext.surahName"
+                            class="post-session-simple__surah-latin workspace-shell-surah-en"
+                            lang="en"
+                            dir="ltr"
+                            :class="{
+                              'post-session-simple__surah-latin--solo':
+                                !postSessionInfoArchitecture.whatToPractiseNext.surahArabicName,
+                            }"
+                          >
+                            {{ postSessionInfoArchitecture.whatToPractiseNext.surahName }}
+                          </p>
+                          <span
+                            v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName
+                              && postSessionInfoArchitecture.whatToPractiseNext.surahName"
+                            class="post-session-simple__surah-separator workspace-shell-surah-sep"
+                            aria-hidden="true"
+                          >·</span>
+                          <p
+                            v-if="postSessionInfoArchitecture.whatToPractiseNext.surahArabicName"
+                            class="post-session-simple__surah-arabic workspace-shell-surah-ar"
+                            lang="ar"
+                            dir="rtl"
+                          >
+                            {{ postSessionInfoArchitecture.whatToPractiseNext.surahArabicName }}
+                          </p>
+                        </div>
+                        <p
+                          v-else
+                          class="post-session-simple__action-label"
+                        >
+                          {{ postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
+                            || postSessionPersonalPlan?.range?.label
+                            || postSessionRecommendationCardTitle
+                            || postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                            || postSessionSimpleActionLabel }}
                         </p>
                       </div>
                       <p
-                        v-else
-                        class="post-session-simple__action-label"
+                        v-if="postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                          && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                            !== postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
+                          && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                            !== postSessionInfoArchitecture.whatToPractiseNext.surahName
+                          && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
+                            !== (postSessionPersonalPlan?.range?.label || '')"
+                        class="post-session-simple__range"
+                        data-testid="post-session-next-headline"
                       >
-                        {{ postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
-                          || postSessionPersonalPlan?.range?.label
-                          || postSessionRecommendationCardTitle
-                          || postSessionInfoArchitecture.whatToPractiseNext.targetLabel
-                          || postSessionSimpleActionLabel }}
+                        {{ postSessionInfoArchitecture.whatToPractiseNext.targetLabel }}
+                      </p>
+                      <p
+                        v-if="postSessionInfoArchitecture.whatToPractiseNext.lead"
+                        class="post-session-simple__next-lead"
+                        data-testid="post-session-next-lead"
+                      >
+                        {{ postSessionInfoArchitecture.whatToPractiseNext.lead }}
                       </p>
                     </div>
-                    <p
-                      v-if="postSessionInfoArchitecture.whatToPractiseNext.targetLabel
-                        && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
-                          !== postSessionInfoArchitecture.whatToPractiseNext.surahSetDisplay
-                        && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
-                          !== postSessionInfoArchitecture.whatToPractiseNext.surahName
-                        && postSessionInfoArchitecture.whatToPractiseNext.targetLabel
-                          !== (postSessionPersonalPlan?.range?.label || '')"
-                      class="post-session-simple__range"
-                      data-testid="post-session-next-headline"
+                    <button
+                      v-if="postSessionRecommendationActionable"
+                      type="button"
+                      class="post-session-simple__adjust-plan"
+                      data-testid="post-session-adjust-plan"
+                      :disabled="postSessionActionsBusy"
+                      @click="openPostSessionAdjustPlan"
                     >
-                      {{ postSessionInfoArchitecture.whatToPractiseNext.targetLabel }}
-                    </p>
-                    <p
-                      v-if="postSessionInfoArchitecture.whatToPractiseNext.lead"
-                      class="post-session-simple__next-lead"
-                      data-testid="post-session-next-lead"
-                    >
-                      {{ postSessionInfoArchitecture.whatToPractiseNext.lead }}
-                    </p>
+                      <i class="bi bi-sliders" aria-hidden="true"></i>
+                      {{ t('memorisation.postSession.recommendation.adjustPlan') || 'Adjust plan' }}
+                    </button>
                     <dl
                       v-if="(postSessionInfoArchitecture.whatToPractiseNext.metaRows || []).length"
                       class="post-session-simple__next-meta"
@@ -3774,16 +3787,6 @@
                         <dd>{{ row.value }}</dd>
                       </div>
                     </dl>
-                    <button
-                      v-if="postSessionRecommendationActionable"
-                      type="button"
-                      class="post-session-simple__link post-session-simple__adjust-plan"
-                      data-testid="post-session-adjust-plan"
-                      :disabled="postSessionActionsBusy"
-                      @click="openPostSessionAdjustPlan"
-                    >
-                      {{ t('memorisation.postSession.recommendation.adjustPlan') || 'Adjust plan' }}
-                    </button>
                   </div>
 
                   <div

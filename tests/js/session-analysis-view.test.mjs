@@ -41,8 +41,13 @@ assert.doesNotMatch(modal, /<audio class="w-100" controls/, 'native audio chrome
 assert.match(modal, /session-analysis-modal-open/, 'background scroll/interaction is locked')
 assert.match(
   overviewCss,
-  /\.sa-ov__ayah-ar \{[\s\S]*?overflow-wrap:\s*anywhere/,
-  'long ayah text wraps inside its card',
+  /\.sa-ov__ayah-ar \{[\s\S]*?unicode-bidi:\s*plaintext/,
+  'Arabic ayah text keeps RTL shaping context',
+)
+assert.match(
+  modal,
+  /sa-ov__ayah-text/,
+  'ayah rows render a continuous Arabic text run',
 )
 assert.match(
   overviewCss,
@@ -85,7 +90,7 @@ const first = buildSessionAnalysisView({
     plan_snapshot: { title: 'Repeat the weak ayah slowly' },
   },
   recommendation: {
-    recommended_technique: 'slow_repeat',
+    recommended_technique: 'blur',
     ai_assessment: { summary: 'Return to ayah 2', result: 'mixed', weak_ayahs: [2] },
   },
   retention: {
@@ -103,7 +108,9 @@ assert.ok(first.summaryCards.some((card) => card.key === 'accuracy' && String(ca
 assert.ok(first.aiReview)
 assert.notEqual(first.aiReview.accuracy, 41)
 assert.ok(first.ayahRows.some((row) => row.ayah === 2))
-assert.ok(first.recommendations.some((item) => /weak ayah|Return to ayah 2|slow_repeat/i.test(`${item.label} ${item.detail}`)))
+assert.ok(first.ayahRows.every((row) => typeof row.text === 'string'))
+assert.ok(first.recommendations.some((item) => /weak ayah|Return to ayah 2|Gradually hide the text/i.test(`${item.label} ${item.detail}`)))
+assert.ok(!first.recommendations.some((item) => item.label === 'blur'))
 assert.equal(first.retention[0].label, 'Ayah 2')
 assert.equal(first.audio, null)
 

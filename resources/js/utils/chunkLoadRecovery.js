@@ -9,6 +9,7 @@
  */
 
 export const CHUNK_RELOAD_SESSION_KEY = 'mutqin.chunkReload';
+export const CHUNK_RELOAD_TTL_MS = 10 * 60 * 1000;
 export const CHUNK_RELOAD_NOTICE_ID = 'mutqin-chunk-reload-notice';
 
 /**
@@ -36,9 +37,18 @@ export function isChunkLoadError(error) {
 export function hasAttemptedChunkReload(store = defaultSessionStore()) {
     if (!store) return false;
     try {
-        return store.getItem(CHUNK_RELOAD_SESSION_KEY) === '1';
-    } catch (_) {
+        const raw = store.getItem(CHUNK_RELOAD_SESSION_KEY);
+        if (!raw) return false;
+        if (raw === '1') return true;
+
+        const payload = JSON.parse(raw);
+        const attemptedAt = Number(payload?.attemptedAt || 0);
+        if (!Number.isFinite(attemptedAt) || attemptedAt <= 0) return true;
+        if (Date.now() - attemptedAt <= CHUNK_RELOAD_TTL_MS) return true;
+        store.removeItem(CHUNK_RELOAD_SESSION_KEY);
         return false;
+    } catch (_) {
+        return true;
     }
 }
 
@@ -48,7 +58,7 @@ export function hasAttemptedChunkReload(store = defaultSessionStore()) {
 export function markChunkReloadAttempted(store = defaultSessionStore()) {
     if (!store) return;
     try {
-        store.setItem(CHUNK_RELOAD_SESSION_KEY, '1');
+        store.setItem(CHUNK_RELOAD_SESSION_KEY, JSON.stringify({ attemptedAt: Date.now() }));
     } catch (_) { /* ignore quota / private mode */ }
 }
 

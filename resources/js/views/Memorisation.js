@@ -5944,13 +5944,21 @@ export default {
         const end = Number(params.end || start)
         if (!(start > 0)) return ''
         const single = start === end
+        const surah = String(
+          params.surah
+          || this.postSessionRecommendationDisplaySurahName
+          || this.postSessionSnapshot?.chapterName
+          || this.currentChapter?.name_simple
+          || ''
+        ).trim()
         const baseKey = single
           ? 'memorisation.postSession.actions.practiseAyah'
           : 'memorisation.postSession.actions.practiseAyahs'
-        const baseParams = single ? { ayah: start } : { start, end }
-        let label = this.t(baseKey, baseParams)
+        const baseParams = single ? { ayah: start, surah } : { start, end, surah }
+        let label = surah ? this.t(baseKey, baseParams) : ''
         if (!label || label.includes('actions.practiseAyah')) {
-          label = single ? `Practise Ayah ${start}` : `Practise Ayahs ${start}–${end}`
+          const range = single ? `Ayah ${start}` : `Ayahs ${start}–${end}`
+          label = surah ? `Practise ${surah} ${range}` : `Practise ${range}`
         }
         if (again) {
           const againLabel = this.t('memorisation.postSession.actions.practiseAyahsAgain', baseParams)
@@ -6006,12 +6014,28 @@ export default {
           }
         } else if (btn.labelKey === 'continueToAyahs' && params.start && params.end) {
           const single = Number(params.start) === Number(params.end)
-          label = this.t(
-            single
-              ? 'memorisation.postSession.actions.continueToAyah'
-              : 'memorisation.postSession.actions.continueToAyahs',
-            single ? { ayah: params.start } : params,
-          )
+          const surah = String(
+            params.surah
+            || this.postSessionRecommendationDisplaySurahName
+            || this.postSessionSnapshot?.chapterName
+            || this.currentChapter?.name_simple
+            || ''
+          ).trim()
+          const rangeParams = single
+            ? { ayah: params.start, surah }
+            : { ...params, surah }
+          label = surah
+            ? this.t(
+              single
+                ? 'memorisation.postSession.actions.continueToAyah'
+                : 'memorisation.postSession.actions.continueToAyahs',
+              rangeParams,
+            )
+            : ''
+          if (label && !label.includes('continueToAyah') && surah && !String(label).includes(surah)) {
+            const range = single ? `Ayah ${params.start}` : `Ayahs ${params.start}–${params.end}`
+            label = `Move to ${surah} ${range}`
+          }
         } else if (btn.labelKey === 'reviewOnceMore' && Number(params.start) > 0) {
           label = formatPracticeRangeLabel(params, { again: true })
         } else if (rangeLabelKeys.has(btn.labelKey) && Number(params.start) > 0) {
@@ -6023,10 +6047,19 @@ export default {
           || label === `memorisation.postSession.recommendation.confirm.${btn.labelKey}`
           || (btn.labelKey === 'continueToAyahs' && label.includes('continueToAyah'))) {
           if (btn.labelKey === 'continueToAyahs' && params.start && params.end) {
-            label = formatContinueToAyahLabel(params.start, params.end, this.t.bind(this))
-              || (Number(params.start) === Number(params.end)
-                ? `Next ayah ${params.start}`
-                : `Next ayahs ${params.start}–${params.end}`)
+            const surah = String(
+              params.surah
+              || this.postSessionRecommendationDisplaySurahName
+              || this.postSessionSnapshot?.chapterName
+              || this.currentChapter?.name_simple
+              || ''
+            ).trim()
+            const single = Number(params.start) === Number(params.end)
+            const range = single ? `Ayah ${params.start}` : `Ayahs ${params.start}–${params.end}`
+            label = surah
+              ? `Move to ${surah} ${range}`
+              : (formatContinueToAyahLabel(params.start, params.end, this.t.bind(this))
+                || (single ? `Move to Ayah ${params.start}` : `Move to Ayahs ${params.start}–${params.end}`))
           } else if (btn.labelKey === 'reviewAyahOnce') {
             label = Number(params.ayah) > 0
               ? `Repeat Weak Ayah (${params.ayah})`

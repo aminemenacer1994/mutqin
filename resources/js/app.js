@@ -308,7 +308,6 @@ async function bootstrapApp() {
     app.mount('#app');
     document.documentElement.dataset.mutqinAppMounted = '1';
     window.dispatchEvent(new CustomEvent('mutqin:app-mounted'));
-    clearChunkReloadFlag();
 
     const feedbackRoot = document.createElement('div');
     feedbackRoot.id = 'mutqinFeedbackRoot';

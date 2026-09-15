@@ -376,10 +376,8 @@ class PasswordResetFlowTest extends TestCase
         Notification::assertSentToTimes($user, ResetPassword::class, 1);
     }
 
-    public function test_unverified_account_can_reset_but_stays_unverified(): void
+    public function test_unverified_account_can_reset_without_verification_gate(): void
     {
-        $this->requireEmailVerification();
-
         Notification::fake();
 
         $user = User::factory()->unverified()->create([
@@ -402,11 +400,11 @@ class PasswordResetFlowTest extends TestCase
             'email' => $user->email,
             'password' => 'new-secure-password',
             'password_confirmation' => 'new-secure-password',
-        ])->assertRedirect(route('verification.notice'));
+        ])->assertRedirect(route('memorisation'));
 
         $fresh = $user->fresh();
         $this->assertNull($fresh->email_verified_at);
-        $this->assertFalse($fresh->hasVerifiedEmail());
+        $this->assertTrue($fresh->hasVerifiedEmail());
         $this->assertTrue(Hash::check('new-secure-password', $fresh->password));
         $this->assertAuthenticatedAs($fresh);
         $this->assertNull($bystander->fresh()->email_verified_at);

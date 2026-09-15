@@ -106,6 +106,7 @@ class DashboardService
                 'message' => 'Open memorisation to start a new session.',
             ],
             'recommended_next' => null,
+            'ai_recite_stats' => $this->emptyAiReciteStats(),
             'journey' => $this->emptyJourney(),
             'snapshot' => [
                 'completed_sessions' => ['value' => 0, 'change_7d' => 0, 'label' => 'Completed sessions', 'context' => 'Fully finished ranges only'],
@@ -209,6 +210,7 @@ class DashboardService
         );
         $recommendedNext = $this->buildRecommendedNext($openRecommendation);
         $journey = $this->buildJourney($user, $main, $continue, $retention, $weaknesses);
+        $aiReciteStats = $this->sessionAnalysis->dashboardStats($user);
 
         return [
             'meta' => [
@@ -224,6 +226,7 @@ class DashboardService
             ],
             'continue' => $continue,
             'recommended_next' => $recommendedNext,
+            'ai_recite_stats' => $aiReciteStats,
             'journey' => $journey,
             'snapshot' => $snapshot,
             'progress' => $progress,
@@ -232,6 +235,28 @@ class DashboardService
             'weaknesses' => $weaknesses,
             'activity' => $activity,
             'retention' => $retention,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function emptyAiReciteStats(): array
+    {
+        return [
+            'source' => AiReciteAttempt::SOURCE_DASHBOARD,
+            'total_attempts' => 0,
+            'average_accuracy' => null,
+            'recent_accuracy' => null,
+            'best_accuracy' => null,
+            'ayahs_tested' => 0,
+            'peek_used_count' => 0,
+            'peek_used_percent' => null,
+            'improvement' => null,
+            'weakest_ayahs' => [],
+            'missed_words' => [],
+            'recent_attempts' => [],
+            'last_location' => null,
         ];
     }
 

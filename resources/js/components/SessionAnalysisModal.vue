@@ -127,10 +127,7 @@
                       class="sa-ov__ayah"
                     >
                       <p class="sa-ov__ayah-ar" lang="ar" dir="rtl">
-                        <template v-for="(part, index) in row.parts" :key="`${row.ayah}-${index}`">
-                          <span class="sa-ov__word" :class="part.tone">{{ part.text }}</span>
-                          <span v-if="index < row.parts.length - 1"> </span>
-                        </template>
+                        <span class="sa-ov__ayah-text">{{ ayahText(row) }}</span>
                         <span v-if="ayahIndex(row)" class="sa-ov__ayah-no">{{ ayahIndex(row) }}</span>
                       </p>
                     </article>
@@ -138,7 +135,11 @@
 
                   <section v-if="analysis.recommendations?.length" class="sa-ov__panel">
                     <h3>{{ recommendationsTitle }}</h3>
-                    <div v-for="item in analysis.recommendations" :key="item.key" class="sa-ov__note">
+                    <div
+                      v-for="item in analysis.recommendations"
+                      :key="item.key"
+                      class="sa-ov__note sa-ov__note--recommendation"
+                    >
                       <strong>{{ item.label }}</strong>
                       <span v-if="item.detail">{{ item.detail }}</span>
                     </div>
@@ -293,6 +294,13 @@ export default {
       if (row?.ayah) return row.ayah
       const match = String(row?.ayahLabel || '').match(/\d+/)
       return match ? match[0] : ''
+    },
+    ayahText(row) {
+      if (row?.text) return row.text
+      return (Array.isArray(row?.parts) ? row.parts : [])
+        .map((part) => part?.text)
+        .filter(Boolean)
+        .join(' ')
     },
     onOverlayKeydown(event) {
       if (event.key === 'Escape') {

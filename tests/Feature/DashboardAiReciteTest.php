@@ -74,6 +74,13 @@ class DashboardAiReciteTest extends TestCase
             ->assertJsonPath('stats.last_location.surah_number', 1)
             ->assertJsonPath('stats.recent_attempts.0.id', $attemptId);
 
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.ai_recite_stats.total_attempts', 1)
+            ->assertJsonPath('data.ai_recite_stats.recent_attempts.0.id', $attemptId)
+            ->assertJsonPath('data.ai_recite_stats.last_location.surah_number', 1);
+
         $this->actingAs($other)
             ->patchJson('/api/ai-recite-attempts/'.$attemptId.'/peek')
             ->assertNotFound();

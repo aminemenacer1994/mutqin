@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import test from 'node:test'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const recovery = await import(pathToFileURL(join(root, 'resources/js/utils/chunkLoadRecovery.js')).href)
+const appSource = readFileSync(join(root, 'resources/js/app.js'), 'utf8')
 
 function memoryStore(initial = {}) {
   const data = { ...initial }
@@ -48,7 +50,8 @@ test('recoverFromStaleChunk reloads at most once then gives up', async () => {
     }
   )
   assert.equal(first, 'reloading')
-  assert.equal(store.getItem(recovery.CHUNK_RELOAD_SESSION_KEY), '1')
+  assert.match(store.getItem(recovery.CHUNK_RELOAD_SESSION_KEY), /attemptedAt/)
+  assert.equal(recovery.hasAttemptedChunkReload(store), true)
 
   // Allow the async clearCaches().finally(reload) microtask to run.
   await new Promise((resolve) => setTimeout(resolve, 0))
@@ -118,8 +121,18 @@ test('wrapChunkImport retries then reloads once; second give-up throws', async (
 })
 
 test('successful import clears nothing and clearChunkReloadFlag resets recovery', () => {
-  const store = memoryStore({ [recovery.CHUNK_RELOAD_SESSION_KEY]: '1' })
+  const store = memoryStore({ [recovery.CHUNK_RELOAD_SESSION_KEY]: JSON.stringify({ attemptedAt: Date.now() }) })
   recovery.clearChunkReloadFlag(store)
+  assert.equal(store.getItem(recovery.CHUNK_RELOAD_SESSION_KEY), null)
+})
+
+test('expired reload guard clears itself', () => {
+  const store = memoryStore({
+    [recovery.CHUNK_RELOAD_SESSION_KEY]: JSON.stringify({
+      attemptedAt: Date.now() - recovery.CHUNK_RELOAD_TTL_MS - 1000,
+    }),
+  })
+  assert.equal(recovery.hasAttemptedChunkReload(store), false)
   assert.equal(store.getItem(recovery.CHUNK_RELOAD_SESSION_KEY), null)
 })
 
@@ -129,4 +142,12 @@ test('buildFreshReloadUrl strips legacy force params', () => {
   assert.match(url, /mutqin_chunk_reload=1/)
   assert.doesNotMatch(url, /mutqin_force=/)
   assert.doesNotMatch(url, /_=9/)
+})
+
+test('app mount does not clear chunk reload guard before async pages resolve', () => {
+  assert.doesNotMatch(
+    appSource,
+    /mutqin:app-mounted['"][\s\S]{0,160}clearChunkReloadFlag\(\)/,
+    'clearing the guard at shell mount can cause homepage chunk reload loops',
+  )
 })

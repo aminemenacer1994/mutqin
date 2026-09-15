@@ -11,7 +11,7 @@ final class EmailVerification
 {
     public static function required(): bool
     {
-        return (bool) config('auth.require_email_verification', true);
+        return false;
     }
 
     /**

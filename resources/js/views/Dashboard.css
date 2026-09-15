@@ -394,6 +394,14 @@ html[data-theme="dark"] .user-dashboard,
   color: var(--dash-ink);
 }
 
+.dash-hero__summary {
+  margin: 0.45rem 0 0;
+  max-width: 44rem;
+  color: var(--dash-muted);
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
 .dash-hero__intro {
   margin: 0.45rem 0 0;
   max-width: 28rem;
@@ -538,6 +546,40 @@ html[data-theme="dark"] .user-dashboard,
   color: var(--dash-muted);
   font-size: 0.8125rem;
   line-height: 1.45;
+}
+
+.dash-continue-card__context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.7rem;
+  margin: 0.15rem 0 0;
+}
+
+.dash-continue-card__context-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--dash-muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.dash-continue-card__context-item dt,
+.dash-continue-card__context-item dd {
+  margin: 0;
+}
+
+.dash-continue-card__context-item dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--dash-accent-strong);
+  font-weight: 650;
+}
+
+.dash-continue-card__context-item dd {
+  overflow-wrap: anywhere;
 }
 
 .dash-continue-card__cta {
@@ -2644,6 +2686,10 @@ a.dash-drawer__row--link:focus-visible,
     justify-content: center;
   }
 
+  .dash-continue-card__context {
+    display: grid;
+  }
+
   .dash-analytics {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.5rem;
@@ -3389,4 +3435,3 @@ a.dash-drawer__row--link:focus-visible,
 .user-dashboard:has(.dash-sticky-continue.is-visible) {
   padding-bottom: calc(6.25rem + env(safe-area-inset-bottom));
 }
-

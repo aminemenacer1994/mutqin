@@ -7,15 +7,15 @@ use App\Models\User;
 /**
  * Single post-auth destination for login / guest redirects.
  * Verified admins and learners both land on memorisation (not Progress).
- * Unverified accounts go to the email verification notice.
+ * Unverified accounts go to the email verification notice when verification is enabled.
  * Get Pro from /pricing stores a plan and resumes Stripe checkout after auth.
  */
 final class AuthRedirect
 {
     public static function routeName(?User $user, bool $justRegistered = false): string
     {
-        // Email/password accounts must verify before practice; Google users with a
-        // trusted provider-verified email already have email_verified_at set.
+        // Email/password accounts must verify before practice when enabled;
+        // Google users with a trusted provider-verified email already have email_verified_at set.
         if ($user !== null && ! $user->hasVerifiedEmail()) {
             return 'verification.notice';
         }
