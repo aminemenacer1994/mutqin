@@ -314,23 +314,7 @@ export function buildPostSessionInfoArchitecture(input = {}) {
   const nextRange = input.nextRange && typeof input.nextRange === 'object'
     ? input.nextRange
     : null
-  const setLabel = (() => {
-    if (Array.isArray(input.weakAyahNumbers) && input.weakAyahNumbers.length > 1) {
-      const nums = input.weakAyahNumbers.map(Number).filter((n) => n > 0)
-      if (nums.length > 1) {
-        const sorted = [...new Set(nums)].sort((a, b) => a - b)
-        const contiguous = sorted.every((n, i) => i === 0 || n === sorted[i - 1] + 1)
-        if (contiguous) return formatRecommendationSetLabel({ from: sorted[0], to: sorted[sorted.length - 1] }, t)
-        return translate(
-          t,
-          'weakAyahsList',
-          `Ayahs ${sorted.join(', ')}`,
-          { list: sorted.join(', ') },
-        ) || `Ayahs ${sorted.join(', ')}`
-      }
-    }
-    return nextRange ? formatRecommendationSetLabel(nextRange, t) : ''
-  })()
+  const setLabel = nextRange ? formatRecommendationSetLabel(nextRange, t) : ''
   const surahName = String(input.surahName || '').trim()
   const surahArabicName = String(input.surahArabicName || '').trim()
   const surahSetDisplay = formatRecommendationSurahSet(surahName, nextRange || {}, t)
@@ -365,7 +349,14 @@ export function buildPostSessionInfoArchitecture(input = {}) {
       : null,
   ].filter(Boolean)
 
-  const successFlow = input.successFlow && typeof input.successFlow === 'object'
+  const successFlow = input.isRevision
+    ? {
+      visible: false,
+      title: '',
+      lead: '',
+      steps: [],
+    }
+    : input.successFlow && typeof input.successFlow === 'object'
     ? input.successFlow
     : buildSuccessRecommendationFlow({
       t,
@@ -420,11 +411,17 @@ export function buildPostSessionInfoArchitecture(input = {}) {
       pills,
       metaRows,
       why: String(input.planWhy || '').trim(),
-      lead: translate(
-        t,
-        'whatNextLead',
-        'Based on this session, this is the next section and technique Mutqin recommends.',
-      ),
+      lead: input.isRevision
+        ? translate(
+          t,
+          'whatNextRevisionLead',
+          'Practise this range again with the recommended technique. The weak ayahs are shown below so you know what needs extra attention.',
+        )
+        : translate(
+          t,
+          'whatNextLead',
+          'Based on this session, this is the next section and technique Mutqin recommends.',
+        ),
     },
   }
 }

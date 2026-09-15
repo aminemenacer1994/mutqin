@@ -133,15 +133,22 @@
                     </article>
                   </section>
 
-                  <section v-if="analysis.recommendations?.length" class="sa-ov__panel">
+                  <section v-if="analysis.recommendations?.length" class="sa-ov__panel sa-ov__panel--recommendations">
                     <h3>{{ recommendationsTitle }}</h3>
-                    <div
-                      v-for="item in analysis.recommendations"
-                      :key="item.key"
-                      class="sa-ov__note sa-ov__note--recommendation"
-                    >
-                      <strong>{{ item.label }}</strong>
-                      <span v-if="item.detail">{{ item.detail }}</span>
+                    <div class="sa-ov__recommendation-list">
+                      <article
+                        v-for="(item, index) in analysis.recommendations"
+                        :key="item.key"
+                        class="sa-ov__note sa-ov__note--recommendation"
+                      >
+                        <span class="sa-ov__recommendation-icon" aria-hidden="true">
+                          <i :class="index === 0 ? 'bi bi-lightning-charge-fill' : 'bi bi-check2'"></i>
+                        </span>
+                        <span class="sa-ov__recommendation-copy">
+                          <strong>{{ item.label }}</strong>
+                          <span v-if="item.detail">{{ item.detail }}</span>
+                        </span>
+                      </article>
                     </div>
                   </section>
 

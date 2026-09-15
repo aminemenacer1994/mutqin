@@ -3688,10 +3688,23 @@
                     data-testid="post-session-personal-plan"
                   >
                     <p class="post-session-simple__section-kicker post-session-simple__section-kicker--step">
-                      <span class="post-session-simple__step-num" aria-hidden="true">2</span>
-                      {{ postSessionInfoArchitecture.whatToPractiseNext.title }}
+                      <span class="post-session-simple__step-num" aria-hidden="true">
+                        <i class="bi bi-map" aria-hidden="true"></i>
+                      </span>
+                      <span class="post-session-simple__kicker-copy">
+                        <span class="post-session-simple__kicker-label">
+                          {{ t('memorisation.postSession.recommendation.stepPlan') || 'Step 2' }}
+                        </span>
+                        <span class="post-session-simple__kicker-title">
+                          {{ postSessionInfoArchitecture.whatToPractiseNext.title }}
+                        </span>
+                      </span>
                     </p>
                     <div class="post-session-simple__plan-summary">
+                      <p class="post-session-simple__plan-eyebrow">
+                        <i class="bi bi-compass" aria-hidden="true"></i>
+                        {{ t('memorisation.postSession.recommendation.whatYouWillDo') || 'What you will practise' }}
+                      </p>
                       <div
                         class="post-session-simple__next-target"
                         id="postSessionRecTitle"
@@ -3760,6 +3773,14 @@
                       >
                         {{ postSessionInfoArchitecture.whatToPractiseNext.lead }}
                       </p>
+                      <p
+                        v-else
+                        class="post-session-simple__next-lead"
+                        data-testid="post-session-next-lead"
+                      >
+                        {{ t('memorisation.postSession.recommendation.whatNextLead')
+                          || 'Use this short plan for your next practice. It tells you what to recite, how to practise it, and roughly how long it should take.' }}
+                      </p>
                     </div>
                     <button
                       v-if="postSessionRecommendationActionable"
@@ -3772,6 +3793,10 @@
                       <i class="bi bi-sliders" aria-hidden="true"></i>
                       {{ t('memorisation.postSession.recommendation.adjustPlan') || 'Adjust plan' }}
                     </button>
+                    <p class="post-session-simple__plan-helper">
+                      <i class="bi bi-lightbulb" aria-hidden="true"></i>
+                      {{ t('memorisation.postSession.recommendation.flowIntro') || 'Bismillāh, begin when your heart is ready.' }}
+                    </p>
                     <dl
                       v-if="(postSessionInfoArchitecture.whatToPractiseNext.metaRows || []).length"
                       class="post-session-simple__next-meta"
@@ -3783,7 +3808,31 @@
                         class="post-session-simple__next-meta-row"
                         :class="`post-session-simple__next-meta-row--${row.key}`"
                       >
-                        <dt>{{ row.label }}</dt>
+                        <dt>
+                          <span class="post-session-simple__next-meta-icon" aria-hidden="true">
+                            <i
+                              v-if="row.key === 'set' || row.key === 'focus'"
+                              class="bi bi-bullseye"
+                              aria-hidden="true"
+                            ></i>
+                            <i
+                              v-else-if="row.key === 'method' || row.key === 'technique'"
+                              class="bi bi-layers"
+                              aria-hidden="true"
+                            ></i>
+                            <i
+                              v-else-if="row.key === 'time'"
+                              class="bi bi-clock"
+                              aria-hidden="true"
+                            ></i>
+                            <i
+                              v-else
+                              class="bi bi-check2-circle"
+                              aria-hidden="true"
+                            ></i>
+                          </span>
+                          <span>{{ row.label }}</span>
+                        </dt>
                         <dd>{{ row.value }}</dd>
                       </div>
                     </dl>
@@ -3799,6 +3848,7 @@
                       v-if="postSessionPlanWhyText"
                       class="post-session-simple__why-heading"
                     >
+                      <i class="bi bi-patch-question" aria-hidden="true"></i>
                       {{ t('memorisation.postSession.recommendation.whyRecommended') || 'Why this was recommended' }}
                     </p>
                     <p

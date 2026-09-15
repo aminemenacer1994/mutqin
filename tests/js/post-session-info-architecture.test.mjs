@@ -93,7 +93,8 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
       ['time', 'Time', 'About 4 minutes'],
     ],
   )
-  assert.match(ia.whatToPractiseNext.lead, /Based on this session/i)
+  assert.match(ia.whatToPractiseNext.lead, /Practise this range again/i)
+  assert.equal(ia.successFlow.visible, false)
 }
 
 // Success sessions get technique-led next steps instead of the stale scope picker
