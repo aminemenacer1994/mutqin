@@ -513,7 +513,8 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   margin-bottom: 0.25rem;
 }
 
-.auth-greeting__arabic {
+.auth-greeting__arabic,
+.auth-greeting__kicker {
   margin: 0;
   font-family: var(--font-auth-serif);
   font-size: clamp(1.5rem, 4.2vw, 1.85rem);

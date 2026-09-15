@@ -33,20 +33,18 @@ class AuthPageRenderTest extends TestCase
             ->assertSee(__('ui.login'))
             ->assertSee(__('ui.continue_google'))
             ->assertSee(__('ui.email_address'))
-            ->assertSee(__('ui.auth_demo_title'))
-            ->assertSee(__('ui.auth_demo_use'))
-            ->assertSee(route('login.demo'), false);
+            ->assertDontSee('auth-tester-notice', false)
+            ->assertDontSee(route('login.demo'), false);
     }
 
-    public function test_login_page_shows_single_demo_login_when_enabled(): void
+    public function test_login_page_hides_demo_login_when_enabled(): void
     {
         config(['app.show_demo_accounts' => true]);
 
         $this->get(route('login'))
             ->assertOk()
-            ->assertSee(__('ui.auth_demo_title'))
-            ->assertSee(__('ui.auth_demo_use'))
-            ->assertSee(route('login.demo'), false)
+            ->assertDontSee('auth-tester-notice', false)
+            ->assertDontSee(route('login.demo'), false)
             ->assertDontSee('omar.active@mutqin.test', false)
             ->assertDontSee('fatima.reviser@mutqin.test', false)
             ->assertDontSee('noah.paused@mutqin.test', false);
@@ -98,15 +96,15 @@ class AuthPageRenderTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_login_page_shows_demo_when_explicitly_enabled_in_production(): void
+    public function test_login_page_hides_demo_when_explicitly_enabled_in_production(): void
     {
         $this->app->detectEnvironment(fn () => 'production');
         config(['app.show_demo_accounts' => true]);
 
         $this->get(route('login'))
             ->assertOk()
-            ->assertSee(__('ui.auth_demo_use'))
-            ->assertSee(route('login.demo'), false);
+            ->assertDontSee('auth-tester-notice', false)
+            ->assertDontSee(route('login.demo'), false);
     }
 
     public function test_memorisation_exposes_tester_guide_flag_when_demo_accounts_enabled(): void
@@ -135,6 +133,7 @@ class AuthPageRenderTest extends TestCase
     {
         $this->get(route('password.request'))
             ->assertOk()
+            ->assertSee(__('ui.reset_kicker'))
             ->assertSee(__('ui.reset_title'))
             ->assertSee(__('ui.send_reset_link'))
             ->assertSee(__('ui.reset_oauth_hint'))
@@ -152,6 +151,10 @@ class AuthPageRenderTest extends TestCase
         $resetSource = file_get_contents(resource_path('views/auth/passwords/reset.blade.php'));
         $this->assertStringContainsString('auth-heading--solo', $resetSource);
         $this->assertStringContainsString('auth-steps', $resetSource);
+
+        $forgotSource = file_get_contents(resource_path('views/auth/passwords/email.blade.php'));
+        $this->assertStringContainsString('auth-greeting__kicker', $forgotSource);
+        $this->assertStringContainsString('dir="auto"', $forgotSource);
     }
 
     public function test_verify_page_uses_ui_locale_keys(): void

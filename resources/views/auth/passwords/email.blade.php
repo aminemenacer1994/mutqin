@@ -9,7 +9,7 @@
         </a>
 
         <header class="auth-greeting">
-            <p class="auth-greeting__arabic" lang="ar" dir="rtl">{{ __('ui.reset_kicker') }}</p>
+            <p class="auth-greeting__kicker" lang="{{ app()->getLocale() }}" dir="auto">{{ __('ui.reset_kicker') }}</p>
             <h1 class="auth-heading auth-heading--solo">{{ __('ui.reset_title') }}</h1>
             <p class="auth-lede">{{ __('ui.reset_subtitle') }}</p>
         </header>
