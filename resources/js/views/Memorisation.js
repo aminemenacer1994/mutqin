@@ -1205,6 +1205,7 @@ export default {
       recitationTranscriptionClosing: false,
       recitationTranscriptionMeta: createRealtimeTranscriptionMeta(),
       recitationTranscriptionAudioBridge: null,
+      recitationAudioQualityMetrics: null,
       recitationInputSessionId: '',
       recitationInputAudioHash: '',
       recitationSessionCacheDb: null,
@@ -1456,6 +1457,7 @@ export default {
       aiMemorisationCheckerTranscriptionClosing: false,
       aiMemorisationCheckerTranscriptionMeta: createRealtimeTranscriptionMeta(),
       aiMemorisationCheckerTranscriptionAudioBridge: null,
+      aiMemorisationAudioQualityMetrics: null,
       aiMemorisationCheckerLiveTranscript: '',
       aiMemorisationCheckerLiveChunkInFlight: false,
       aiMemorisationCheckerLiveChunkQueue: [],
@@ -25921,6 +25923,7 @@ export default {
           ? new Date(this.amdStartedAt).toISOString()
           : undefined,
         provider,
+        audio_quality_metrics: result?.audioQualityMetrics || this.recitationAudioQualityMetrics || undefined,
         session_recommendation_id: this.amdEntrySource === 'workspace-ai-recite'
           ? undefined
           : (this.amdRecommendationId || undefined),
@@ -28367,6 +28370,9 @@ export default {
     stopTranscriptionAudioBridge(kind = 'recitation') {
       const bridge = this.getTranscriptionAudioBridge(kind)
       if (!bridge) return null
+      const quality = bridge.getQualityMetrics?.() || null
+      if (kind === 'memorisation') this.aiMemorisationAudioQualityMetrics = quality
+      else this.recitationAudioQualityMetrics = quality
       const remaining = bridge.stop?.() || null
       this.setTranscriptionAudioBridge(kind, null)
       return remaining

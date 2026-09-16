@@ -2445,11 +2445,195 @@
         }
       }
     </style>
+    <style id="mutqin-practice-modal-premium-v1">
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 * {
+        font-family: Amiri, Georgia, "Times New Roman", serif !important;
+        letter-spacing: 0 !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
+        --pm-ink: #2d2118;
+        --pm-muted: #76695d;
+        --pm-paper: #fbf4e8;
+        --pm-panel: #fffaf1;
+        --pm-line: rgba(92, 70, 47, 0.18);
+        --pm-line-strong: rgba(92, 70, 47, 0.3);
+        --pm-green: #1f7a4d;
+        --pm-gold: #b9812d;
+      }
+      [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] {
+        --pm-ink: #f7eadb;
+        --pm-muted: rgba(247, 234, 219, 0.74);
+        --pm-paper: #1f1a17;
+        --pm-panel: #29231f;
+        --pm-line: rgba(247, 234, 219, 0.14);
+        --pm-line-strong: rgba(247, 234, 219, 0.24);
+        --pm-green: #6ee7b7;
+        --pm-gold: #f2bd6b;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+        width: min(58rem, calc(100vw - 2rem)) !important;
+        max-width: min(58rem, calc(100vw - 2rem)) !important;
+        max-height: min(91vh, 68rem) !important;
+        border: 1px solid var(--pm-line-strong) !important;
+        border-radius: 22px !important;
+        background: linear-gradient(180deg, var(--pm-panel), var(--pm-paper)) !important;
+        color: var(--pm-ink) !important;
+        box-shadow: 0 30px 80px rgba(35, 28, 21, 0.22) !important;
+        overflow: hidden !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header {
+        padding: clamp(1rem, 2.4vw, 1.45rem) clamp(1.1rem, 3vw, 1.8rem) !important;
+        border-bottom: 1px solid var(--pm-line) !important;
+        background: color-mix(in srgb, var(--pm-panel) 78%, transparent) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__check {
+        width: 3rem !important;
+        height: 3rem !important;
+        background: color-mix(in srgb, var(--pm-green) 10%, transparent) !important;
+        border-color: color-mix(in srgb, var(--pm-green) 30%, transparent) !important;
+        color: var(--pm-green) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
+        font-size: clamp(2rem, 4vw, 3rem) !important;
+        font-weight: 700 !important;
+        line-height: 1.02 !important;
+        color: var(--pm-ink) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__subtitle {
+        font-size: clamp(1.05rem, 2.2vw, 1.35rem) !important;
+        line-height: 1.35 !important;
+        color: var(--pm-muted) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__body {
+        gap: 0.82rem !important;
+        padding: clamp(0.85rem, 2vw, 1.25rem) clamp(1.05rem, 2.8vw, 1.8rem) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review--guided,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel--hero {
+        gap: 0.78rem !important;
+        padding: clamp(0.9rem, 2vw, 1.2rem) !important;
+        border: 1px solid var(--pm-line) !important;
+        border-radius: 18px !important;
+        background: color-mix(in srgb, var(--pm-panel) 90%, transparent) !important;
+        box-shadow: none !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-title,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker-title,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-label {
+        font-size: clamp(1.35rem, 2.6vw, 2rem) !important;
+        line-height: 1.12 !important;
+        font-weight: 700 !important;
+        color: var(--pm-ink) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-summary,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-body,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-lead,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-benefit,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-meta {
+        font-size: clamp(1rem, 1.8vw, 1.2rem) !important;
+        line-height: 1.48 !important;
+        color: var(--pm-muted) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__step-num,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-icon,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading .bi {
+        width: 2.05rem !important;
+        height: 2.05rem !important;
+        min-width: 2.05rem !important;
+        min-height: 2.05rem !important;
+        border: 1px solid color-mix(in srgb, var(--pm-gold) 24%, transparent) !important;
+        background: color-mix(in srgb, var(--pm-gold) 9%, transparent) !important;
+        color: var(--pm-gold) !important;
+        font-size: 1rem !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-tools {
+        gap: 0.55rem !important;
+        margin: 0.85rem 0 0 !important;
+        padding: 0.8rem 0 0 !important;
+        border-top: 1px solid var(--pm-line) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip {
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: var(--pm-muted) !important;
+        font-size: 1rem !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__support-block {
+        margin-top: 0.85rem !important;
+        padding-top: 0.85rem !important;
+        border-top: 1px solid var(--pm-line) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card {
+        border: 1px solid var(--pm-line) !important;
+        border-radius: 16px !important;
+        background: color-mix(in srgb, var(--pm-panel) 76%, transparent) !important;
+        box-shadow: none !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus {
+        padding: 0.78rem 0.95rem !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text {
+        font-size: clamp(1.6rem, 3vw, 2.15rem) !important;
+        line-height: 1.8 !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card {
+        padding: 0.92rem 1rem !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__footer {
+        padding: 0.8rem clamp(1rem, 2.6vw, 1.85rem) !important;
+        border-top: 1px solid var(--pm-line) !important;
+        background: color-mix(in srgb, var(--pm-panel) 82%, transparent) !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
+        min-height: 3.1rem !important;
+        border-radius: 14px !important;
+        font-size: clamp(1rem, 1.8vw, 1.2rem) !important;
+        font-weight: 700 !important;
+        box-shadow: none !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--success {
+        background: var(--pm-green) !important;
+        border-color: var(--pm-green) !important;
+        color: #fffaf1 !important;
+      }
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--secondary,
+      .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
+        background: transparent !important;
+        border-color: var(--pm-line-strong) !important;
+        color: var(--pm-ink) !important;
+      }
+      @media (max-width: 760px) {
+        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+          width: calc(100vw - 0.75rem) !important;
+          max-width: calc(100vw - 0.75rem) !important;
+          max-height: calc(100dvh - 0.75rem) !important;
+        }
+        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards,
+        .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+          grid-template-columns: 1fr !important;
+        }
+      }
+    </style>
     <script>
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });

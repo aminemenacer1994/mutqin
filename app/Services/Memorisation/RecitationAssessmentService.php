@@ -19,6 +19,7 @@ class RecitationAssessmentService
         private readonly NextSessionRecommendationService $recommendations,
         private readonly MemorisationHistoryService $history,
         private readonly RecitationMasteryService $mastery,
+        private readonly SpeechmaticsAudioPolicy $audioPolicy,
     ) {}
 
     /**
@@ -46,6 +47,15 @@ class RecitationAssessmentService
             }
         }
 
+        $rawRecognitionWords = is_array($payload['recognition_words'] ?? null) ? $payload['recognition_words'] : [];
+        $audioDecision = $this->audioPolicy->evaluate($payload);
+        $payload['recognition_words'] = $audioDecision['words'];
+        $payload['audio_quality_status'] = $audioDecision['status'];
+        $payload['speaker_analysis'] = $audioDecision;
+        if (! $audioDecision['reliable']) {
+            $payload['attempt_class'] = RecitationAttemptClassifier::UNUSABLE_AUDIO;
+            $payload['failure_reason'] = $audioDecision['reason'];
+        }
         $classification = RecitationAttemptClassifier::classifyPayload($payload);
         if (! RecitationAttemptClassifier::affectsScoring($classification)) {
             $assessment = $this->recordFailed(
@@ -60,7 +70,7 @@ class RecitationAssessmentService
 
         $startedAt = microtime(true);
 
-        return DB::transaction(function () use ($user, $payload, $idempotencyKey, $startedAt) {
+        return DB::transaction(function () use ($user, $payload, $idempotencyKey, $startedAt, $rawRecognitionWords, $audioDecision) {
             $ayahs = is_array($payload['ayahs'] ?? null) ? $payload['ayahs'] : [];
             $recognitionWords = is_array($payload['recognition_words'] ?? null)
                 ? $payload['recognition_words']
@@ -83,7 +93,10 @@ class RecitationAssessmentService
                 ));
             }
 
-            $aligned = $this->alignment->align($ayahs, $recognitionWords, $targetText);
+            $lifecycle = $this->resolveAlignmentLifecycle($payload);
+            $aligned = $this->alignment->align($ayahs, $recognitionWords, $targetText, [
+                'lifecycle' => $lifecycle,
+            ]);
             $analysis = $this->weakness->analyse(
                 $aligned['word_results'],
                 $aligned['extra_words'],
@@ -148,11 +161,45 @@ class RecitationAssessmentService
                 'surah_name' => $range['surah_name'],
                 'recognition_data' => [
                     // Structured recognition only — never store raw audio blobs here.
-                    'transcript' => $aligned['transcript'],
-                    'recognition_words' => $recognitionWords,
-                    'extra_words' => $aligned['extra_words'],
+                    'raw' => [
+                        'transcript' => (string) ($payload['transcript'] ?? $aligned['transcript'] ?? ''),
+                        'recognition_words' => $rawRecognitionWords,
+                        'speechmatics' => $this->sanitizeProviderPayload($payload['raw_speechmatics'] ?? null),
+                    ],
+                    'normalised' => [
+                        'transcript' => $aligned['normalised_transcript'] ?? $aligned['transcript'],
+                        'tokens' => $aligned['comparison_tokens'] ?? [],
+                    ],
+                    'alignment' => [
+                        'word_results' => $aligned['word_results'],
+                        'extra_words' => $aligned['extra_words'],
+                        'events' => $aligned['events'] ?? [],
+                        'scenario_counts' => $aligned['scenario_counts'] ?? [],
+                        'metadata' => $aligned['metadata'] ?? [],
+                    ],
+                    'calibration' => [
+                        'surah' => $range['surah_number'],
+                        'ayah_range' => [$range['start_ayah'], $range['end_ayah']],
+                        'expected_comparison_tokens' => $aligned['comparison_tokens'] ?? [],
+                        'detected_scenarios' => $aligned['scenario_counts'] ?? [],
+                        'final_word_states' => $aligned['word_results'],
+                        'result_status' => $matchResult,
+                        'audio_quality_status' => $this->sanitizeAudioQualityStatus($payload['audio_quality_status'] ?? null),
+                    ],
                     'provider' => $payload['provider'] ?? null,
+                    'speechmatics_config' => $this->sanitizeProviderPayload($payload['speechmatics_config'] ?? null),
+                    'speechmatics_model' => $payload['speechmatics_model'] ?? null,
+                    'speaker_analysis' => [
+                        'status' => $audioDecision['status'],
+                        'primary_speaker' => $audioDecision['primary_speaker'],
+                        'speaker_count' => $audioDecision['speaker_count'],
+                    ],
+                    'audio_policy_version' => SpeechmaticsAudioPolicy::VERSION,
                     'attempt_class' => RecitationAttemptClassifier::VALID_CHECK,
+                    'lifecycle' => $lifecycle,
+                    'alignment_version' => QuranAlignmentService::ALIGNMENT_VERSION,
+                    'normalizer_version' => QuranTextNormalizer::VERSION,
+                    'confidence_policy_version' => RecitationConfidencePolicy::VERSION,
                     'tajweed_practice_check' => $this->sanitizeTajweedPracticeCheck(
                         $payload['tajweed_practice_check'] ?? null
                     ),
@@ -308,6 +355,12 @@ class RecitationAssessmentService
             'surah_name' => $payload['surah_name'] ?? null,
             'recognition_data' => [
                 'provider' => $payload['provider'] ?? null,
+                'raw' => [
+                    'speechmatics' => $this->sanitizeProviderPayload($payload['raw_speechmatics'] ?? null),
+                ],
+                'speechmatics_config' => $this->sanitizeProviderPayload($payload['speechmatics_config'] ?? null),
+                'speechmatics_model' => $payload['speechmatics_model'] ?? null,
+                'audio_quality_status' => $this->sanitizeAudioQualityStatus($payload['audio_quality_status'] ?? null),
                 'attempt_class' => RecitationAttemptClassifier::classFromToken(
                     (string) ($payload['attempt_class'] ?? $failureReason)
                 ),
@@ -458,6 +511,7 @@ class RecitationAssessmentService
             'improvement' => null,
             'invalid_attempt' => true,
             'attempt_class' => (string) ($classification['class'] ?? RecitationAttemptClassifier::UNUSABLE_AUDIO),
+            'message' => 'We could not assess this attempt',
             'retry_guidance' => (string) ($classification['retry_guidance'] ?? ''),
         ];
     }
@@ -544,6 +598,76 @@ class RecitationAssessmentService
         $key = trim($value);
 
         return $key === '' ? null : mb_substr($key, 0, 64);
+    }
+
+    /**
+     * @param  array<string,mixed>  $payload
+     */
+    private function resolveAlignmentLifecycle(array $payload): string
+    {
+        $raw = strtolower(trim((string) (
+            $payload['alignment_lifecycle']
+            ?? $payload['lifecycle']
+            ?? $payload['completion_state']
+            ?? 'final'
+        )));
+
+        return in_array($raw, ['live', 'recording', 'paused'], true) ? 'live' : 'final';
+    }
+
+    /**
+     * @return array<string,mixed>|null
+     */
+    private function sanitizeProviderPayload(mixed $raw): ?array
+    {
+        if (! is_array($raw)) {
+            return null;
+        }
+
+        $encoded = json_encode($raw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (! is_string($encoded)) {
+            return null;
+        }
+
+        if (strlen($encoded) > 120000) {
+            $raw = [
+                'truncated' => true,
+                'size_bytes' => strlen($encoded),
+            ];
+        }
+
+        return $raw;
+    }
+
+    private function sanitizeAudioQualityStatus(mixed $raw): ?string
+    {
+        $value = strtolower(trim((string) $raw));
+        if ($value === '') {
+            return null;
+        }
+
+        $allowed = [
+            'ok',
+            'noisy',
+            'echo',
+            'clipping',
+            'low_volume',
+            'second_speaker',
+            'music_or_tv',
+            'broken_recording',
+            'insufficient_speech',
+            'unreliable_recognition',
+            'unassessed',
+            'clear',
+            'secondary_speaker_filtered',
+            'multiple_competing_speakers',
+            'heavy_noise',
+            'very_low_volume',
+            'severe_clipping',
+            'insufficient_usable_speech',
+        ];
+
+        return in_array($value, $allowed, true) ? $value : 'unassessed';
     }
 
     /**

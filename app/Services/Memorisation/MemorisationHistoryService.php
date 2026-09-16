@@ -399,19 +399,19 @@ class MemorisationHistoryService
             return MemorisationAssessmentWord::TYPE_OUT_OF_ORDER;
         }
         $value = strtolower(trim($raw));
-        if (in_array($value, ['correct', 'green', 'word-correct', 'ok'], true)) {
+        if (in_array($value, ['correct', 'green', 'word-correct', 'ok', 'match', 'realignment'], true)) {
             return MemorisationAssessmentWord::TYPE_CORRECT;
         }
-        if (in_array($value, ['partial', 'close', 'close_match', 'amber', 'yellow', 'minor_mistake', 'minor'], true)) {
+        if (in_array($value, ['partial', 'close', 'close_match', 'amber', 'yellow', 'minor_mistake', 'minor', 'repetition', 'self_correction', 'hesitation', 'restart'], true)) {
             return MemorisationAssessmentWord::TYPE_CLOSE_MATCH;
         }
-        if (in_array($value, ['incorrect', 'wrong', 'red', 'missed'], true)) {
+        if (in_array($value, ['incorrect', 'wrong', 'red', 'missed', 'substitution', 'divergence'], true)) {
             return MemorisationAssessmentWord::TYPE_INCORRECT;
         }
-        if (in_array($value, ['omitted', 'omission', 'missing', 'black', 'pending'], true)) {
+        if (in_array($value, ['omitted', 'omission', 'missing', 'black', 'pending', 'deletion'], true)) {
             return MemorisationAssessmentWord::TYPE_OMITTED;
         }
-        if (in_array($value, ['additional', 'extra', 'insertion'], true)) {
+        if (in_array($value, ['additional', 'extra', 'insertion', 'out_of_range'], true)) {
             return MemorisationAssessmentWord::TYPE_ADDITIONAL;
         }
         if (in_array($value, ['out_of_order', 'outoforder', 'order'], true)) {

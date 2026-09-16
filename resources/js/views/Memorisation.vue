@@ -3663,6 +3663,7 @@
                 :class="{
                   'is-loading': postSessionRecommendationStatus === 'loading',
                   'is-empty': postSessionRecommendationStatus === 'empty' || !postSessionRecommendationActionable,
+                  'ps-rec-card--focused': postSessionRecommendationActionable,
                 }"
                 :data-plan="postSessionPlanKind"
                 :aria-busy="postSessionRecommendationStatus === 'loading' ? 'true' : 'false'"
@@ -3793,10 +3794,6 @@
                       <i class="bi bi-sliders" aria-hidden="true"></i>
                       {{ t('memorisation.postSession.recommendation.adjustPlan') || 'Adjust plan' }}
                     </button>
-                    <p class="post-session-simple__plan-helper">
-                      <i class="bi bi-lightbulb" aria-hidden="true"></i>
-                      {{ t('memorisation.postSession.recommendation.flowIntro') || 'Bismillāh, begin when your heart is ready.' }}
-                    </p>
                     <dl
                       v-if="(postSessionInfoArchitecture.whatToPractiseNext.metaRows || []).length"
                       class="post-session-simple__next-meta"
@@ -3901,7 +3898,12 @@
                         class="post-session-simple__success-step"
                         :data-tone="step.tone"
                       >
-                        <span class="post-session-simple__success-step-num" aria-hidden="true">{{ step.step }}</span>
+                        <span class="post-session-simple__success-step-num" aria-hidden="true">
+                          <i
+                            :class="step.tone === 'reinforce' ? 'bi bi-arrow-repeat' : 'bi bi-arrow-right-circle'"
+                            aria-hidden="true"
+                          ></i>
+                        </span>
                         <span class="post-session-simple__success-step-body">
                           <span class="post-session-simple__success-step-title">{{ step.title }}</span>
                           <span

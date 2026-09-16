@@ -63267,3 +63267,771 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   align-items: center !important;
   justify-content: flex-start !important;
 }
+
+/* Post-session recommendation refinement.
+   A late, scoped layer to make the plan lighter, tighter, and theme-consistent. */
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
+  --ps-rec-font-display: "Amiri", "Amiri Quran", "Scheherazade New", Georgia, serif;
+  --ps-rec-font-body: var(--font-ui, "Avenir Next", "Segoe UI", system-ui, sans-serif);
+  --ps-rec-icon-size: 2rem;
+  --ps-rec-icon-inner: 1rem;
+  --ps-rec-radius: 0.8rem;
+  --ps-rec-gap: 0.65rem;
+  --ps-rec-hairline: color-mix(in srgb, var(--ps-line, var(--border)) 74%, transparent);
+  --ps-rec-panel: color-mix(in srgb, var(--ps-card, var(--surface)) 96%, #fff);
+  --ps-rec-panel-soft: color-mix(in srgb, var(--ps-cream, var(--surface)) 34%, var(--ps-card, var(--surface)));
+}
+
+[data-theme="sepia"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="sepia"] {
+  --ps-rec-panel: #fbf3e5;
+  --ps-rec-panel-soft: #f4ead9;
+  --ps-rec-hairline: rgba(120, 91, 56, 0.22);
+}
+
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] {
+  --ps-rec-panel: #28231f;
+  --ps-rec-panel-soft: #211c19;
+  --ps-rec-hairline: rgba(246, 239, 230, 0.14);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card {
+  gap: 0.75rem !important;
+  padding: clamp(0.82rem, 2vw, 1rem) !important;
+  border-radius: var(--ps-rec-radius) !important;
+  border-color: var(--ps-rec-hairline) !important;
+  background: var(--ps-rec-panel) !important;
+  box-shadow: none !important;
+  font-family: var(--ps-rec-font-body) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card--focused {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.62rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan] {
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--ps-accent, #9a6b3f) 58%, transparent) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"] {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 0.62rem 0.75rem !important;
+  align-items: center !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--step {
+  margin: 0 !important;
+  gap: 0.55rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__step-num,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-icon,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading .bi,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-eyebrow .bi,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-helper .bi,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan .bi {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 var(--ps-rec-icon-size) !important;
+  width: var(--ps-rec-icon-size) !important;
+  height: var(--ps-rec-icon-size) !important;
+  min-width: var(--ps-rec-icon-size) !important;
+  min-height: var(--ps-rec-icon-size) !important;
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in srgb, var(--ps-accent, #9a6b3f) 16%, transparent) !important;
+  background: color-mix(in srgb, var(--ps-accent, #9a6b3f) 8%, transparent) !important;
+  color: color-mix(in srgb, var(--ps-accent, #9a6b3f) 82%, var(--ps-ink)) !important;
+  font-size: var(--ps-rec-icon-inner) !important;
+  line-height: 1 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan .bi {
+  --ps-rec-icon-size: 1.65rem;
+  --ps-rec-icon-inner: 0.9rem;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num .bi {
+  font-size: 0.94rem !important;
+  line-height: 1 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker-label {
+  font-size: 0.64rem !important;
+  letter-spacing: 0.08em !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker-title,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-title,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__action-label,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__range {
+  font-family: var(--ps-rec-font-display) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker-title {
+  font-size: clamp(1.12rem, 2.8vw, 1.35rem) !important;
+  line-height: 1.08 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-summary {
+  gap: 0.36rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card--focused .post-session-simple__plan-summary {
+  max-width: 46rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-eyebrow {
+  gap: 0.5rem !important;
+  font-size: 0.78rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-row {
+  gap: 0.25rem 0.42rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-latin,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-arabic {
+  font-family: var(--ps-rec-font-display) !important;
+  font-size: clamp(1.05rem, 2.8vw, 1.22rem) !important;
+  line-height: 1.25 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-body,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow-lead,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-detail {
+  max-width: 58ch !important;
+  font-size: clamp(0.82rem, 2vw, 0.9rem) !important;
+  line-height: 1.48 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan {
+  min-height: 2.1rem !important;
+  padding: 0.28rem 0.58rem 0.28rem 0.35rem !important;
+  border-radius: 999px !important;
+  font-size: 0.8rem !important;
+  gap: 0.18rem !important;
+  white-space: nowrap !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-helper {
+  display: flex !important;
+  grid-column: 1 / -1 !important;
+  gap: 0.55rem !important;
+  align-items: center !important;
+  padding: 0.48rem 0.58rem !important;
+  border: 1px solid color-mix(in srgb, var(--ps-accent, #9a6b3f) 12%, transparent) !important;
+  border-radius: 0.65rem !important;
+  background: color-mix(in srgb, var(--ps-accent, #9a6b3f) 5%, transparent) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.55rem !important;
+  margin: 0 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  gap: 0.32rem 0.48rem !important;
+  align-items: center !important;
+  padding: 0.58rem 0.62rem !important;
+  border: 1px solid var(--ps-rec-hairline) !important;
+  border-radius: 0.7rem !important;
+  background: color-mix(in srgb, var(--ps-rec-panel-soft) 72%, transparent) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dt {
+  display: contents !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dt > span:last-child {
+  align-self: end !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: var(--ps-muted) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dd {
+  grid-column: 2 !important;
+  margin: 0 !important;
+  font-family: var(--ps-rec-font-display) !important;
+  font-size: clamp(0.98rem, 2.4vw, 1.12rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.18 !important;
+  color: var(--ps-ink) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow {
+  margin: 0 !important;
+  padding: 0.74rem 0.82rem !important;
+  border-radius: var(--ps-rec-radius) !important;
+  border: 1px solid var(--ps-rec-hairline) !important;
+  background: var(--ps-rec-panel-soft) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading {
+  gap: 0.55rem !important;
+  margin: 0 0 0.28rem !important;
+  font-size: clamp(1.04rem, 2.5vw, 1.22rem) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-colours {
+  gap: 0.36rem !important;
+  margin-top: 0.52rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-colours li {
+  gap: 0.3rem !important;
+  padding: 0.1rem 0.42rem !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, currentColor 9%, transparent) !important;
+  font-size: 0.74rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-colours li > span {
+  width: 0.48rem !important;
+  height: 0.48rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-emphasis {
+  margin-top: 0.5rem !important;
+  font-size: 0.82rem !important;
+  line-height: 1.4 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow {
+  gap: 0.5rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--sub {
+  margin: 0 !important;
+  font-size: 0.68rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-steps {
+  gap: 0.46rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step {
+  gap: 0.58rem !important;
+  padding: 0.62rem 0.68rem !important;
+  border-radius: 0.7rem !important;
+  border-color: var(--ps-rec-hairline) !important;
+  background: color-mix(in srgb, var(--ps-rec-panel) 78%, transparent) !important;
+  box-shadow: inset 2px 0 0 color-mix(in srgb, currentColor 48%, transparent) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="reinforce"] {
+  color: #b7791f !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step[data-tone="continue"] {
+  color: #207a52 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-body {
+  color: var(--ps-ink) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-title {
+  font-size: clamp(0.98rem, 2.3vw, 1.12rem) !important;
+  line-height: 1.18 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-technique {
+  margin-top: 0.08rem !important;
+  padding: 0.1rem 0.48rem !important;
+  border-radius: 999px !important;
+  font-size: 0.72rem !important;
+}
+
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-summary,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step,
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__plan-summary,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__why--plan,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-flow,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__success-step,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__next-meta-row {
+  background: var(--ps-rec-panel-soft) !important;
+  border-color: var(--ps-rec-hairline) !important;
+}
+
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-helper,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__plan-helper {
+  background: rgba(246, 239, 230, 0.045) !important;
+  border-color: var(--ps-rec-hairline) !important;
+}
+
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__adjust-plan {
+  background: rgba(246, 239, 230, 0.045) !important;
+  border-color: rgba(246, 239, 230, 0.2) !important;
+  color: #f0d2ae !important;
+}
+
+@media (max-width: 720px) {
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan {
+    justify-self: start !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
+    --ps-rec-icon-size: 1.8rem;
+    --ps-rec-icon-inner: 0.92rem;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card {
+    gap: 0.62rem !important;
+    padding: 0.72rem !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow {
+    padding: 0.64rem !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-body,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow-lead,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-detail {
+    max-width: none !important;
+  }
+}
+
+/* Practice modal premium overhaul. */
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 * {
+  font-family: Amiri, Georgia, "Times New Roman", serif !important;
+  letter-spacing: 0 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
+  --ps-pro-ink: #2d2118;
+  --ps-pro-muted: #7e7064;
+  --ps-pro-subtle: #a08f7d;
+  --ps-pro-paper: #fbf4e8;
+  --ps-pro-panel: #fffaf1;
+  --ps-pro-line: rgba(92, 70, 47, 0.18);
+  --ps-pro-line-strong: rgba(92, 70, 47, 0.3);
+  --ps-pro-green: #1f7a4d;
+  --ps-pro-gold: #b9812d;
+  --ps-pro-red: #b91c1c;
+  --ps-pro-radius: 18px;
+}
+
+[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] {
+  --ps-pro-ink: #f7eadb;
+  --ps-pro-muted: rgba(247, 234, 219, 0.74);
+  --ps-pro-subtle: rgba(247, 234, 219, 0.58);
+  --ps-pro-paper: #1f1a17;
+  --ps-pro-panel: #29231f;
+  --ps-pro-line: rgba(247, 234, 219, 0.14);
+  --ps-pro-line-strong: rgba(247, 234, 219, 0.24);
+  --ps-pro-green: #6ee7b7;
+  --ps-pro-gold: #f2bd6b;
+  --ps-pro-red: #fca5a5;
+}
+
+[data-theme="sepia"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="sepia"] {
+  --ps-pro-paper: #f4ead9;
+  --ps-pro-panel: #fff7ea;
+  --ps-pro-line: rgba(118, 88, 54, 0.2);
+  --ps-pro-line-strong: rgba(118, 88, 54, 0.34);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__backdrop {
+  background:
+    radial-gradient(circle at 12% 100%, rgba(126, 64, 44, 0.4), transparent 30%),
+    rgba(39, 35, 30, 0.66) !important;
+  backdrop-filter: blur(8px) saturate(0.88);
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+  width: min(86rem, calc(100vw - 2rem)) !important;
+  max-height: min(91vh, 68rem) !important;
+  border: 1px solid var(--ps-pro-line-strong) !important;
+  border-radius: 22px !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ps-pro-panel) 94%, #fff) 0%, var(--ps-pro-paper) 100%) !important;
+  color: var(--ps-pro-ink) !important;
+  box-shadow:
+    0 30px 80px rgba(35, 28, 21, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.48) inset !important;
+  overflow: hidden !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  gap: 1rem !important;
+  align-items: center !important;
+  padding: clamp(1.05rem, 2.6vw, 1.55rem) clamp(1.2rem, 3vw, 2rem) !important;
+  border-bottom: 1px solid var(--ps-pro-line) !important;
+  background: color-mix(in srgb, var(--ps-pro-panel) 76%, transparent) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__check {
+  width: 3.1rem !important;
+  height: 3.1rem !important;
+  border: 1px solid color-mix(in srgb, var(--ps-pro-green) 28%, transparent) !important;
+  background: color-mix(in srgb, var(--ps-pro-green) 10%, transparent) !important;
+  color: var(--ps-pro-green) !important;
+  box-shadow: none !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
+  margin: 0 !important;
+  color: var(--ps-pro-ink) !important;
+  font-size: clamp(2rem, 4vw, 3rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.02 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__subtitle {
+  margin: 0.28rem 0 0 !important;
+  color: var(--ps-pro-muted) !important;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem) !important;
+  line-height: 1.35 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__body {
+  display: grid !important;
+  gap: 0.82rem !important;
+  padding: clamp(0.85rem, 2vw, 1.25rem) clamp(1.05rem, 2.8vw, 1.9rem) !important;
+  overflow-x: hidden !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card {
+  border: 1px solid var(--ps-pro-line) !important;
+  border-radius: var(--ps-pro-radius) !important;
+  background: color-mix(in srgb, var(--ps-pro-panel) 90%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review {
+  padding: clamp(0.85rem, 2vw, 1.2rem) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--step,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--sub,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-eyebrow {
+  color: var(--ps-pro-subtle) !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__step-num,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-icon,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading .bi,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num {
+  width: 2.05rem !important;
+  height: 2.05rem !important;
+  min-width: 2.05rem !important;
+  min-height: 2.05rem !important;
+  border: 1px solid color-mix(in srgb, var(--ps-pro-gold) 22%, transparent) !important;
+  background: color-mix(in srgb, var(--ps-pro-gold) 9%, transparent) !important;
+  color: var(--ps-pro-gold) !important;
+  font-size: 1rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__beta-badge,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-recommended {
+  border-color: color-mix(in srgb, var(--ps-pro-gold) 36%, transparent) !important;
+  background: color-mix(in srgb, var(--ps-pro-gold) 9%, transparent) !important;
+  color: color-mix(in srgb, var(--ps-pro-gold) 78%, var(--ps-pro-ink)) !important;
+  font-size: 0.76rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-title,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker-title,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-label {
+  color: var(--ps-pro-ink) !important;
+  font-size: clamp(1.35rem, 2.6vw, 2rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.12 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-summary,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-body,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-lead,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-benefit,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-meta {
+  color: var(--ps-pro-muted) !important;
+  font-size: clamp(1rem, 1.8vw, 1.2rem) !important;
+  line-height: 1.48 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-tools {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.55rem !important;
+  margin: 0.85rem 0 0 !important;
+  padding: 0.8rem 0 0 !important;
+  border-top: 1px solid var(--ps-pro-line) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.38rem !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--ps-pro-muted) !important;
+  box-shadow: none !important;
+  font-size: 1rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip-value {
+  color: var(--ps-pro-ink) !important;
+  font-size: 1.05rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__support-block {
+  margin-top: 0.85rem !important;
+  padding-top: 0.85rem !important;
+  border-top: 1px solid var(--ps-pro-line) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-block {
+  padding-inline-start: 0.85rem !important;
+  border-inline-start: 2px solid color-mix(in srgb, var(--ps-pro-gold) 28%, transparent) !important;
+  color: var(--ps-pro-muted) !important;
+  font-size: 1.05rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-list {
+  display: grid !important;
+  gap: 0.72rem !important;
+  margin-top: 0.72rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-label {
+  margin: 0 0 0.28rem !important;
+  color: var(--ps-pro-muted) !important;
+  font-size: 1.02rem !important;
+  font-weight: 700 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus {
+  width: 100% !important;
+  padding: 0.78rem 0.95rem !important;
+  border: 1px solid var(--ps-pro-line-strong) !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--ps-pro-panel) 76%, transparent) !important;
+  box-shadow: 0 8px 18px rgba(35, 28, 21, 0.06) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text {
+  font-size: clamp(1.6rem, 3vw, 2.15rem) !important;
+  line-height: 1.8 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline {
+  gap: 0.45rem !important;
+  margin-top: 0.62rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline > .post-session-simple__weak-spots-item {
+  padding: 0.32rem 0.68rem !important;
+  border: 1px solid var(--ps-pro-line) !important;
+  background: color-mix(in srgb, var(--ps-pro-panel) 78%, transparent) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-details-toggle {
+  color: var(--ps-pro-muted) !important;
+  font-size: 1rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card {
+  padding: clamp(0.95rem, 2.1vw, 1.25rem) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"] {
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 0.75rem 1rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-summary {
+  max-width: 50rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan {
+  min-height: 2.45rem !important;
+  padding: 0.35rem 0.75rem !important;
+  border-color: var(--ps-pro-line-strong) !important;
+  background: transparent !important;
+  color: color-mix(in srgb, var(--ps-pro-gold) 72%, var(--ps-pro-ink)) !important;
+  font-size: 1rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta {
+  gap: 0.6rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card {
+  border: 1px solid var(--ps-pro-line) !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--ps-pro-panel) 74%, transparent) !important;
+  box-shadow: none !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row {
+  padding: 0.68rem 0.75rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dd {
+  color: var(--ps-pro-ink) !important;
+  font-size: clamp(1.1rem, 2vw, 1.35rem) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan {
+  padding: 0.9rem 1rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-colours li {
+  padding: 0 !important;
+  background: transparent !important;
+  font-size: 1.05rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-picker {
+  margin-top: 0.8rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards {
+  gap: 0.72rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card {
+  padding: 0.92rem 1rem !important;
+  min-height: 0 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card[data-scope="weak_areas"],
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card[data-scope="full_range"] {
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--ps-pro-gold) 72%, transparent) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card.is-selected {
+  border-color: color-mix(in srgb, var(--ps-pro-green) 34%, var(--ps-pro-line)) !important;
+  background: color-mix(in srgb, var(--ps-pro-green) 5%, var(--ps-pro-panel)) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__footer {
+  padding: 0.8rem clamp(1rem, 2.6vw, 1.85rem) !important;
+  border-top: 1px solid var(--ps-pro-line) !important;
+  background: color-mix(in srgb, var(--ps-pro-panel) 82%, transparent) !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+  gap: 0.7rem !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
+  min-height: 3.1rem !important;
+  border-radius: 14px !important;
+  font-size: clamp(1rem, 1.8vw, 1.2rem) !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--success {
+  background: var(--ps-pro-green) !important;
+  border-color: var(--ps-pro-green) !important;
+  color: #fffaf1 !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--secondary,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
+  background: transparent !important;
+  border-color: var(--ps-pro-line-strong) !important;
+  color: var(--ps-pro-ink) !important;
+}
+
+@media (max-width: 760px) {
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+    width: calc(100vw - 0.75rem) !important;
+    max-height: calc(100dvh - 0.75rem) !important;
+    border-radius: 18px !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header {
+    grid-template-columns: 1fr !important;
+    gap: 0.55rem !important;
+    padding: 0.9rem 1rem !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__check {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__body {
+    padding: 0.75rem !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"],
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan {
+    justify-self: stretch !important;
+  }
+}

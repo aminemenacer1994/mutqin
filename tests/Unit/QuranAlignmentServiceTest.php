@@ -193,7 +193,7 @@ class QuranAlignmentServiceTest extends TestCase
             ]
         );
         $this->assertNotEmpty($repetition['extra_words']);
-        $this->assertSame('repetition', $repetition['extra_words'][0]['type'] ?? '');
+        $this->assertSame('repetition', $repetition['extra_words'][0]['legacy_type'] ?? '');
     }
 
     public function test_soft_letter_swap_is_not_marked_correct(): void
@@ -325,5 +325,188 @@ class QuranAlignmentServiceTest extends TestCase
         $this->assertArrayHasKey('title', $plan);
         $this->assertArrayHasKey('explanation', $plan);
         $this->assertGreaterThanOrEqual(1, (int) ($plan['repetitions']['target'] ?? 0));
+    }
+
+    public function test_required_ai_recite_edge_case_fixtures(): void
+    {
+        $cases = [
+            'perfect recitation' => [
+                'heard' => ['الحمد', 'لله', 'رب', 'العالمين'],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+            ],
+            'substitution without cascade' => [
+                'heard' => ['الحمد', 'لله', 'رب', 'الرحمن'],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'SUBSTITUTION'],
+            ],
+            'skipped word + realignment' => [
+                'heard' => ['الحمد', 'لله', 'العالمين'],
+                'types' => ['MATCH', 'MATCH', 'DELETION', 'MATCH'],
+            ],
+            'extra word + realignment' => [
+                'heard' => ['الحمد', 'لله', 'العظيم', 'رب', 'العالمين'],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+                'extra_types' => ['INSERTION'],
+            ],
+            'repetition' => [
+                'heard' => ['الحمد', 'لله', 'لله', 'رب', 'العالمين'],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+                'extra_types' => ['REPETITION'],
+            ],
+            'self-correction' => [
+                'heard' => [
+                    ['word' => 'الحمد', 'start' => 0.0, 'end' => 0.2],
+                    ['word' => 'لله', 'start' => 0.25, 'end' => 0.45],
+                    ['word' => 'الرحمن', 'start' => 0.5, 'end' => 0.8],
+                    ['word' => 'رب', 'start' => 1.55, 'end' => 1.7],
+                    ['word' => 'العالمين', 'start' => 1.75, 'end' => 2.1],
+                ],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+                'extra_types' => ['SELF_CORRECTION'],
+            ],
+            'hesitation' => [
+                'heard' => [
+                    ['word' => 'الحمد', 'start' => 0.0, 'end' => 0.2],
+                    ['word' => 'لله', 'start' => 0.25, 'end' => 0.45],
+                    ['word' => 'رب', 'start' => 2.2, 'end' => 2.35],
+                    ['word' => 'العالمين', 'start' => 2.4, 'end' => 2.8],
+                ],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+                'events' => ['HESITATION'],
+            ],
+            'restart/backtracking' => [
+                'heard' => ['الحمد', 'لله', 'الحمد', 'لله', 'رب', 'العالمين'],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+                'extra_types' => ['RESTART', 'RESTART'],
+            ],
+            'mid-ayah start' => [
+                'heard' => ['رب', 'العالمين'],
+                'types' => ['DELETION', 'DELETION', 'MATCH', 'MATCH'],
+            ],
+            'early stop' => [
+                'heard' => ['الحمد', 'لله', 'رب'],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'DELETION'],
+            ],
+            'out-of-range continuation' => [
+                'heard' => ['الحمد', 'لله', 'رب', 'العالمين', 'الرحمن', 'الرحيم'],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+                'extra_types' => ['OUT_OF_RANGE', 'OUT_OF_RANGE'],
+            ],
+            'wrong-ayah drift + realignment' => [
+                'expected' => ['ا', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ'],
+                'heard' => ['ا', 'ب', 'س', 'ش', 'ص', 'ح', 'خ'],
+                'types' => ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'],
+            ],
+            'fast recitation' => [
+                'heard' => [
+                    ['word' => 'الحمد', 'start' => 0.00, 'end' => 0.08],
+                    ['word' => 'لله', 'start' => 0.09, 'end' => 0.16],
+                    ['word' => 'رب', 'start' => 0.17, 'end' => 0.22],
+                    ['word' => 'العالمين', 'start' => 0.23, 'end' => 0.34],
+                ],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+            ],
+            'voice/accent variation' => [
+                'heard' => ['الحمد', 'لله', 'رب', 'العالمين'],
+                'types' => ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+            ],
+        ];
+
+        foreach ($cases as $name => $case) {
+            $expected = $case['expected'] ?? ['الحمد', 'لله', 'رب', 'العالمين'];
+            $result = $this->alignWords($expected, $case['heard']);
+            $this->assertSame($case['types'], array_column($result['word_results'], 'type'), $name);
+            if (isset($case['extra_types'])) {
+                $this->assertSame($case['extra_types'], array_column($result['extra_words'], 'type'), $name);
+            }
+            if (isset($case['events'])) {
+                $this->assertSame($case['events'], array_values(array_unique(array_column($result['events'], 'type'))), $name);
+            }
+        }
+    }
+
+    public function test_live_alignment_does_not_mark_future_words_deleted(): void
+    {
+        $result = $this->alignWords(['الحمد', 'لله', 'رب', 'العالمين'], ['الحمد', 'لله', 'رب'], [
+            'lifecycle' => 'live',
+        ]);
+
+        $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'UNASSESSED'], array_column($result['word_results'], 'type'));
+        $this->assertSame('uncertain', $result['word_results'][3]['status']);
+    }
+
+    public function test_compound_edge_cases(): void
+    {
+        $hesitationSelfCorrection = $this->alignWords(['الحمد', 'لله', 'رب', 'العالمين'], [
+            ['word' => 'الحمد', 'start' => 0.0, 'end' => 0.2],
+            ['word' => 'لله', 'start' => 0.25, 'end' => 0.45],
+            ['word' => 'الرحمن', 'start' => 1.9, 'end' => 2.1],
+            ['word' => 'رب', 'start' => 2.8, 'end' => 2.95],
+            ['word' => 'العالمين', 'start' => 3.0, 'end' => 3.4],
+        ]);
+        $this->assertContains('SELF_CORRECTION', array_column($hesitationSelfCorrection['extra_words'], 'type'));
+        $this->assertContains('HESITATION', array_column($hesitationSelfCorrection['events'], 'type'));
+
+        $repetitionRestart = $this->alignWords(['الحمد', 'لله', 'رب', 'العالمين'], ['الحمد', 'لله', 'لله', 'الحمد', 'لله', 'رب', 'العالمين']);
+        $this->assertContains('REPETITION', array_column($repetitionRestart['extra_words'], 'type'));
+        $this->assertContains('RESTART', array_column($repetitionRestart['extra_words'], 'type'));
+
+        $substitutionLaterRealignment = $this->alignWords(['الحمد', 'لله', 'رب', 'العالمين', 'الرحمن'], ['الحمد', 'لله', 'رب', 'العظيم', 'الرحمن']);
+        $this->assertSame('SUBSTITUTION', $substitutionLaterRealignment['word_results'][3]['type']);
+        $this->assertSame('MATCH', $substitutionLaterRealignment['word_results'][4]['type']);
+
+        $skipFast = $this->alignWords(['الحمد', 'لله', 'رب', 'العالمين'], [
+            ['word' => 'الحمد', 'start' => 0.00, 'end' => 0.08],
+            ['word' => 'لله', 'start' => 0.09, 'end' => 0.16],
+            ['word' => 'العالمين', 'start' => 0.17, 'end' => 0.30],
+        ]);
+        $this->assertSame(['MATCH', 'MATCH', 'DELETION', 'MATCH'], array_column($skipFast['word_results'], 'type'));
+
+        $driftReturn = $this->alignWords(['ا', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ'], ['ا', 'ب', 'س', 'ش', 'ص', 'ح', 'خ']);
+        $this->assertContains('DIVERGENCE', array_column($driftReturn['word_results'], 'type'));
+        $this->assertContains('REALIGNMENT', array_column($driftReturn['word_results'], 'type'));
+
+        $lowConfidenceCorrect = $this->alignWords(['الحمد', 'لله', 'رب', 'العالمين'], [
+            ['word' => 'الحمد', 'confidence' => 0.18],
+            ['word' => 'لله', 'confidence' => 0.19],
+            ['word' => 'رب', 'confidence' => 0.2],
+            ['word' => 'العالمين', 'confidence' => 0.18],
+        ]);
+        $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'MATCH'], array_column($lowConfidenceCorrect['word_results'], 'type'));
+        $this->assertSame(0, $lowConfidenceCorrect['color_counts']['red']);
+    }
+
+    public function test_comparison_normalisation_preserves_display_text_separately(): void
+    {
+        $normalizer = new \App\Services\Memorisation\QuranTextNormalizer;
+        $this->assertSame('الحمد لله رب العالمين', $normalizer->normalizeComparisonText('ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'));
+
+        $result = $this->alignWords(['ٱلْحَمْدُ', 'لِلَّهِ'], ['الحمد', 'لله']);
+        $this->assertSame('ٱلْحَمْدُ', $result['word_results'][0]['displayText']);
+        $this->assertSame('الحمد', $result['word_results'][0]['comparisonText']);
+    }
+
+    /**
+     * @param  list<string>  $expected
+     * @param  list<string|array<string,mixed>>  $heard
+     * @param  array<string,mixed>  $options
+     * @return array<string,mixed>
+     */
+    private function alignWords(array $expected, array $heard, array $options = []): array
+    {
+        $service = new QuranAlignmentService;
+        $recognition = array_map(static function ($entry) {
+            if (is_array($entry)) {
+                return array_merge(['confidence' => 0.95], $entry);
+            }
+
+            return ['word' => $entry, 'confidence' => 0.95];
+        }, $heard);
+
+        return $service->align(
+            [['ayah_number' => 2, 'surah_number' => 1, 'words' => $expected]],
+            $recognition,
+            '',
+            $options
+        );
     }
 }

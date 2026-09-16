@@ -60,6 +60,8 @@ export function buildRecognitionWords(committedWords = [], options = {}) {
         confidence: Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1,
       }
       if (rawWord && rawWord !== text) entry.raw_word = rawWord
+      const speaker = String(word?.speaker || '').trim()
+      if (speaker) entry.speaker = speaker
       if (includeTiming) {
         const start = Number(word?.start ?? word?.startTime)
         const end = Number(word?.end ?? word?.endTime)

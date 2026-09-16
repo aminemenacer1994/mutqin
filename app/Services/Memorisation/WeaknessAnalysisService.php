@@ -20,7 +20,27 @@ class WeaknessAnalysisService
             'missing' => 0,
             'extra' => count($extraWords),
             'uncertain' => 0,
+            'unresolved_mistakes' => 0,
+            'self_corrected_mistakes' => 0,
+            'repetitions' => 0,
+            'hesitations' => 0,
+            'restarts' => 0,
+            'out_of_range_words' => 0,
+            'divergence_events' => 0,
+            'unassessed_events' => 0,
         ];
+
+        foreach ($extraWords as $extra) {
+            $type = strtoupper((string) ($extra['type'] ?? ''));
+            match ($type) {
+                QuranAlignmentService::TYPE_SELF_CORRECTION => $errorTypes['self_corrected_mistakes']++,
+                QuranAlignmentService::TYPE_REPETITION => $errorTypes['repetitions']++,
+                QuranAlignmentService::TYPE_RESTART => $errorTypes['restarts']++,
+                QuranAlignmentService::TYPE_OUT_OF_RANGE => $errorTypes['out_of_range_words']++,
+                QuranAlignmentService::TYPE_UNASSESSED => $errorTypes['unassessed_events']++,
+                default => null,
+            };
+        }
 
         foreach ($wordResults as $word) {
             $status = (string) ($word['status'] ?? '');
@@ -46,6 +66,19 @@ class WeaknessAnalysisService
             if (in_array($status, ['minor_mistake', 'wrong', 'missing', 'uncertain'], true)) {
                 if (isset($errorTypes[$status])) {
                     $errorTypes[$status]++;
+                }
+                $type = strtoupper((string) ($word['type'] ?? ''));
+                if (in_array($type, [
+                    QuranAlignmentService::TYPE_SUBSTITUTION,
+                    QuranAlignmentService::TYPE_DELETION,
+                    QuranAlignmentService::TYPE_DIVERGENCE,
+                ], true)) {
+                    $errorTypes['unresolved_mistakes']++;
+                } elseif ($type === QuranAlignmentService::TYPE_UNASSESSED) {
+                    $errorTypes['unassessed_events']++;
+                }
+                if ($type === QuranAlignmentService::TYPE_DIVERGENCE) {
+                    $errorTypes['divergence_events']++;
                 }
                 $weight = match ($status) {
                     'wrong', 'missing' => 2,

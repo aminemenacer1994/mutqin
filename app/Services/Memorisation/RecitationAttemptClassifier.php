@@ -182,7 +182,7 @@ class RecitationAttemptClassifier
             (bool) preg_match('/empty|transcript|low.?confidence/', $value) => self::EMPTY_LOW_CONFIDENCE_TRANSCRIPT,
             (bool) preg_match('/no.?speech|silence/', $value) => self::SILENCE_NO_SPEECH,
             (bool) preg_match('/timeout|network|provider|speechmatics|process|usage_cap|rate_limit/', $value) => self::PROVIDER_NETWORK_ERROR,
-            (bool) preg_match('/unusable|invalid_audio|invalid_mime/', $value) => self::UNUSABLE_AUDIO,
+            (bool) preg_match('/unusable|invalid_audio|invalid_mime|noise|tv|music|second.?speaker|echo|clipping|low.?mic|low.?volume|broken|unreliable.?recognition/', $value) => self::UNUSABLE_AUDIO,
             default => null,
         };
     }

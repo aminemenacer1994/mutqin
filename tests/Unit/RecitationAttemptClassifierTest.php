@@ -164,4 +164,21 @@ class RecitationAttemptClassifierTest extends TestCase
 
         $this->assertSame(RecitationAttemptClassifier::VALID_CHECK, $classification['class']);
     }
+
+    public function test_poor_audio_is_not_scored_as_memorisation_mistake(): void
+    {
+        foreach (['loud_noise', 'tv_music', 'second_speaker', 'echo', 'clipping', 'very_low_mic_volume', 'broken_recording', 'highly_unreliable_recognition'] as $reason) {
+            $classification = RecitationAttemptClassifier::classifyPayload([
+                'failure_reason' => $reason,
+                'duration_ms' => 6000,
+                'recognition_words' => [
+                    ['word' => 'الحمد', 'confidence' => 0.09],
+                    ['word' => 'لله', 'confidence' => 0.08],
+                ],
+            ]);
+
+            $this->assertFalse($classification['valid_check'], $reason);
+            $this->assertFalse(RecitationAttemptClassifier::affectsScoring($classification), $reason);
+        }
+    }
 }

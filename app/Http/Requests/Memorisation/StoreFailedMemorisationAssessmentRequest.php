@@ -40,6 +40,11 @@ class StoreFailedMemorisationAssessmentRequest extends FormRequest
             'failure_reason' => ['sometimes', 'nullable', 'string', 'max:120'],
             'attempt_class' => ['sometimes', 'nullable', 'string', 'max:64'],
             'provider_status' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:599'],
+            'raw_speechmatics' => ['sometimes', 'nullable', 'array'],
+            'speechmatics_config' => ['sometimes', 'nullable', 'array'],
+            'speechmatics_model' => ['sometimes', 'nullable', 'string', 'max:80'],
+            'audio_quality_status' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'audio_quality_metrics' => ['sometimes', 'nullable', 'array'],
             'started_at' => ['sometimes', 'nullable', 'date'],
             'device_metadata' => ['sometimes', 'nullable', 'array'],
         ];

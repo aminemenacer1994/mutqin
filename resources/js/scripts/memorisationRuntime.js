@@ -17,6 +17,7 @@ import {
   CENTRAL_SESSION_STORAGE_KEY,
 } from '../utils/mutqinStorageKeys'
 import { DEFAULT_TAJWEED_ENABLED } from './session/sessionDefaults'
+import { buildSpeechmaticsRecitationConfig } from './speechmatics/quranVocabulary'
 
 export { MODE_STORAGE_KEYS, SESSION_STORAGE_KEYS, CENTRAL_SESSION_STORAGE_KEY }
 
@@ -502,7 +503,8 @@ export function extractSpeechmaticsTranscriptWords(message = {}, { isPartial = f
         word,
         confidence: Number.isFinite(confidence) ? confidence : (isPartial ? SPEECHMATICS_PARTIAL_CONFIDENCE : 1),
         start: Number.isFinite(Number(item?.start_time)) ? Number(item.start_time) : null,
-        end: Number.isFinite(Number(item?.end_time)) ? Number(item.end_time) : null
+        end: Number.isFinite(Number(item?.end_time)) ? Number(item.end_time) : null,
+        speaker: String(alternative?.speaker || item?.speaker || '').trim() || null
       }
     })
     .filter(item => item.word)
@@ -537,10 +539,27 @@ export function createTranscriptionAudioBridge(stream = null) {
   const sink = audioContext.createGain()
   sink.gain.value = 0
   const pendingBuffers = []
+  let sampleCount = 0
+  let sumSquares = 0
+  let peak = 0
+  let clippedSamples = 0
+  let frameCount = 0
+  let activeFrames = 0
 
   processor.onaudioprocess = event => {
     const samples = event?.inputBuffer?.getChannelData?.(0)
     if (!samples?.length) return
+    let frameSquares = 0
+    for (let index = 0; index < samples.length; index += 1) {
+      const magnitude = Math.abs(Number(samples[index] || 0))
+      frameSquares += magnitude * magnitude
+      peak = Math.max(peak, magnitude)
+      if (magnitude >= 0.995) clippedSamples += 1
+    }
+    sampleCount += samples.length
+    sumSquares += frameSquares
+    frameCount += 1
+    if (Math.sqrt(frameSquares / samples.length) >= 0.012) activeFrames += 1
     pendingBuffers.push(float32ToPcm16Buffer(samples))
   }
 
@@ -567,6 +586,16 @@ export function createTranscriptionAudioBridge(stream = null) {
     sampleRate: Number(audioContext.sampleRate || 48000),
     getState() {
       return audioContext.state
+    },
+    getQualityMetrics() {
+      return {
+        rms: sampleCount ? Math.sqrt(sumSquares / sampleCount) : 0,
+        peak,
+        clipping_ratio: sampleCount ? clippedSamples / sampleCount : 0,
+        speech_ratio: frameCount ? activeFrames / frameCount : 0,
+        complete: sampleCount > 0,
+        broken: sampleCount === 0,
+      }
     },
     ensureRunning,
     flush() {
@@ -730,9 +759,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
                 sample_rate: sampleRate
               },
               transcription_config: {
-                language: String(options.language || 'ar').trim() || 'ar',
-                model: 'enhanced',
-                enable_partials: true,
+                ...buildSpeechmaticsRecitationConfig(options),
                 max_delay: clampSpeechmaticsMaxDelaySeconds(
                   options.maxDelaySeconds,
                   SPEECHMATICS_MAX_DELAY_SECONDS,
