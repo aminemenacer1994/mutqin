@@ -420,6 +420,14 @@ class RecitationAssessmentService
             'model_version' => $assessment->model_version,
             'algorithm_version' => $assessment->algorithm_version,
             'word_results' => $assessment->word_results ?? [],
+            'alignment' => is_array($assessment->recognition_data['alignment'] ?? null)
+                ? [
+                    'extra_words' => $assessment->recognition_data['alignment']['extra_words'] ?? [],
+                    'events' => $assessment->recognition_data['alignment']['events'] ?? [],
+                    'scenario_counts' => $assessment->recognition_data['alignment']['scenario_counts'] ?? [],
+                    'metadata' => $assessment->recognition_data['alignment']['metadata'] ?? [],
+                ]
+                : ['extra_words' => [], 'events' => [], 'scenario_counts' => [], 'metadata' => []],
             'ayahs' => $assessment->ayah_results ?? [],
             'error_classifications' => $assessment->error_classifications ?? [],
             'tajweed_practice_check' => is_array($assessment->recognition_data['tajweed_practice_check'] ?? null)

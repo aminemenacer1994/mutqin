@@ -545,6 +545,7 @@ export function createTranscriptionAudioBridge(stream = null) {
   let clippedSamples = 0
   let frameCount = 0
   let activeFrames = 0
+  const frameLevels = []
 
   processor.onaudioprocess = event => {
     const samples = event?.inputBuffer?.getChannelData?.(0)
@@ -559,7 +560,9 @@ export function createTranscriptionAudioBridge(stream = null) {
     sampleCount += samples.length
     sumSquares += frameSquares
     frameCount += 1
-    if (Math.sqrt(frameSquares / samples.length) >= 0.012) activeFrames += 1
+    const frameRms = Math.sqrt(frameSquares / samples.length)
+    frameLevels.push(frameRms)
+    if (frameRms >= 0.012) activeFrames += 1
     pendingBuffers.push(float32ToPcm16Buffer(samples))
   }
 
@@ -588,11 +591,21 @@ export function createTranscriptionAudioBridge(stream = null) {
       return audioContext.state
     },
     getQualityMetrics() {
+      const sortedLevels = frameLevels.slice().sort((left, right) => left - right)
+      const percentile = (ratio) => sortedLevels.length
+        ? sortedLevels[Math.min(sortedLevels.length - 1, Math.floor(sortedLevels.length * ratio))]
+        : 0
+      const noiseFloor = percentile(0.1)
+      const speechLevel = percentile(0.8)
+      const snrDb = noiseFloor > 0 && speechLevel > noiseFloor
+        ? 20 * Math.log10(speechLevel / noiseFloor)
+        : null
       return {
         rms: sampleCount ? Math.sqrt(sumSquares / sampleCount) : 0,
         peak,
         clipping_ratio: sampleCount ? clippedSamples / sampleCount : 0,
         speech_ratio: frameCount ? activeFrames / frameCount : 0,
+        snr_db: Number.isFinite(snrDb) ? snrDb : null,
         complete: sampleCount > 0,
         broken: sampleCount === 0,
       }

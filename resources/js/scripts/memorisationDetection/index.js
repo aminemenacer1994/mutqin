@@ -4,6 +4,8 @@ export {
   buildRecognitionWords,
 } from './api'
 
+export { applyBackendAlignmentToResult } from './backendAlignment'
+
 export {
   DIFFICULTY_PERCENTS,
   DEFAULT_DIFFICULTY_PERCENT,

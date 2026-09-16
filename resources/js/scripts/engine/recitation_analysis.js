@@ -548,6 +548,84 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   }
 }
 
+export function selectPrimaryReciterWords(recognitionWords = [], targetText = '') {
+  const words = Array.isArray(recognitionWords) ? recognitionWords : []
+  const labelled = words.filter(word => String(word?.speaker || '').trim() && String(word?.speaker).toUpperCase() !== 'UU')
+  const speakers = new Map()
+  for (const word of labelled) {
+    const speaker = String(word.speaker).trim()
+    if (!speakers.has(speaker)) speakers.set(speaker, [])
+    speakers.get(speaker).push(word)
+  }
+  if (speakers.size <= 1) {
+    return {
+      reliable: true,
+      status: 'single_speaker',
+      primarySpeaker: speakers.size ? speakers.keys().next().value : null,
+      speakerCount: speakers.size,
+      words,
+    }
+  }
+
+  const target = tokenizeRecitationWords(targetText)
+  const ranked = Array.from(speakers, ([speaker, speakerWords]) => {
+    let cursor = 0
+    let orderedMatches = 0
+    let consecutive = 0
+    let longestConsecutive = 0
+    let previousTargetIndex = -2
+    for (const heard of speakerWords) {
+      const token = tokenizeRecitationWords(heard?.word || heard?.text || '')[0] || ''
+      let found = -1
+      for (let index = cursor; index < target.length; index += 1) {
+        if (token === target[index]) {
+          found = index
+          break
+        }
+      }
+      if (found < 0) {
+        consecutive = 0
+        continue
+      }
+      orderedMatches += 1
+      consecutive = found === previousTargetIndex + 1 ? consecutive + 1 : 1
+      longestConsecutive = Math.max(longestConsecutive, consecutive)
+      previousTargetIndex = found
+      cursor = found + 1
+    }
+    return { speaker, words: speakerWords, count: speakerWords.length, orderedMatches, longestConsecutive }
+  }).sort((left, right) => (
+    right.longestConsecutive - left.longestConsecutive
+    || right.orderedMatches - left.orderedMatches
+    || right.count - left.count
+  ))
+
+  const primary = ranked[0]
+  const secondary = ranked[1]
+  const anchored = primary.longestConsecutive >= 2 || primary.orderedMatches >= 3
+  const substantialSecondStream = secondary.count >= Math.max(4, Math.ceil(primary.count * 0.75))
+  const quranLikeSecondStream = secondary.count >= Math.max(3, Math.ceil(primary.count * 0.55))
+    && secondary.orderedMatches >= Math.max(2, Math.floor(primary.orderedMatches * 0.6))
+  const competing = substantialSecondStream || quranLikeSecondStream
+  if (!anchored || competing) {
+    return {
+      reliable: false,
+      status: competing ? 'multiple_competing_speakers' : 'primary_speaker_uncertain',
+      primarySpeaker: null,
+      speakerCount: speakers.size,
+      words: [],
+    }
+  }
+
+  return {
+    reliable: true,
+    status: 'secondary_speaker_filtered',
+    primarySpeaker: primary.speaker,
+    speakerCount: speakers.size,
+    words: words.filter(word => String(word?.speaker || '').trim() === primary.speaker),
+  }
+}
+
 export function buildQuranAlignment(targetText = '', recognitionWords = [], options = {}) {
   const targetAyahs = normalizeTargetAyahs(options.targetAyahs || options.ayahs || [], targetText)
   const targetUnits = buildTargetWordUnits(targetAyahs, targetText)
@@ -637,7 +715,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
           : 0,
         allowArticleMatch: options.allowArticleMatch !== false,
       })
-      operations.unshift({ op: 'match', targetIndex: targetIndex - 1, heardIndex: heardIndex - 1, similarity: cell.similarity })
+      operations.unshift({ op: 'match', targetIndex: targetIndex - 1, expectedIndex: targetIndex - 1, heardIndex: heardIndex - 1, recognisedIndex: heardIndex - 1, similarity: cell.similarity })
     } else if (cell.op === 'extra') {
       const repeated = isRepeatedHeardWord(heardWords, heardIndex - 1)
       const extraHeard = heardWords[heardIndex - 1] || {}
@@ -650,10 +728,11 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         confidence: Number(extraHeard.confidence ?? 1),
         start: finiteOrNull(extraHeard.start ?? extraHeard.startTime),
         end: finiteOrNull(extraHeard.end ?? extraHeard.endTime),
-        type: repeated ? 'repetition' : 'extra'
+        type: repeated ? 'REPETITION' : 'INSERTION',
+        legacyType: repeated ? 'repetition' : 'extra'
       }
       extraWords.unshift(extra)
-      operations.unshift({ op: repeated ? 'repetition' : 'extra', heardIndex: heardIndex - 1 })
+      operations.unshift({ op: 'extra', expectedIndex: targetIndex, targetIndex, heardIndex: heardIndex - 1, recognisedIndex: heardIndex - 1 })
     } else if (cell.op === 'omission') {
       const omitIndex = targetIndex - 1
       const omitUnit = targetUnits[omitIndex] || null
@@ -672,11 +751,21 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         ayahWordIndex: Number.isFinite(Number(omitUnit?.ayahWordIndex)) ? Number(omitUnit.ayahWordIndex) : omitIndex,
         ...unmatchedTargetAlignmentFields(),
       }
-      operations.unshift({ op: 'omission', targetIndex: omitIndex })
+      operations.unshift({ op: 'omission', targetIndex: omitIndex, expectedIndex: omitIndex })
     }
     ;[targetIndex, heardIndex] = cell.prev || [0, 0]
   }
 
+  const quranAware = classifyQuranAwareOperations({
+    operations,
+    statuses,
+    extraWords,
+    targetWords,
+    heardWords,
+    lifecycle: options.lifecycle || 'final',
+    hesitationSeconds: options.hesitationSeconds,
+    selfCorrectionSeconds: options.selfCorrectionSeconds,
+  })
   applyWrongOrderGuard(statuses, targetWords, transcriptWords)
   reconcileUncertainFromRejectedWords(statuses, options.rejectedWords || [], {
     allowArticleMatch: options.allowArticleMatch !== false,
@@ -692,6 +781,8 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     statuses,
     heardWords: rawHeardWords,
     extraWords,
+    events: quranAware.events,
+    scenarioCounts: quranAware.scenarioCounts,
     targetAyahs,
     targetUnits,
     operations
@@ -724,6 +815,8 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     statuses,
     wordStatuses: statuses,
     extraWords,
+    events: quranAware.events,
+    scenarioCounts: quranAware.scenarioCounts,
     operations,
     mistakes,
     mistakeBreakdown: mistakes,
@@ -731,6 +824,163 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     progression,
     analysis
   }
+}
+
+function classifyQuranAwareOperations({
+  operations = [],
+  statuses = [],
+  extraWords = [],
+  targetWords = [],
+  heardWords = [],
+  lifecycle = 'final',
+  hesitationSeconds = 1.35,
+  selfCorrectionSeconds = 0.55,
+} = {}) {
+  const finalised = !['live', 'recording', 'paused'].includes(String(lifecycle || '').toLowerCase())
+  const resolved = operation => {
+    if (operation?.op !== 'match') return false
+    const status = statuses[Number(operation.expectedIndex)]?.status
+    return status === 'correct'
+  }
+
+  for (const operation of operations) {
+    if (operation.op === 'match') {
+      const status = statuses[Number(operation.expectedIndex)]?.status
+      operation.type = status === 'correct' ? 'MATCH' : (status === 'uncertain' ? 'UNASSESSED' : 'SUBSTITUTION')
+    } else if (operation.op === 'omission') {
+      operation.type = finalised ? 'DELETION' : 'UNASSESSED'
+    } else {
+      operation.type = 'INSERTION'
+    }
+  }
+
+  for (let index = 0; index < operations.length; index += 1) {
+    const operation = operations[index]
+    if (operation.op !== 'extra') continue
+    const heardIndex = Number(operation.recognisedIndex)
+    const expectedIndex = Number(operation.expectedIndex)
+    const word = String(heardWords[heardIndex]?.word || '')
+    const previous = heardIndex > 0 ? String(heardWords[heardIndex - 1]?.word || '') : ''
+    if (expectedIndex >= targetWords.length) {
+      operation.type = 'OUT_OF_RANGE'
+      continue
+    }
+    if (word && word === previous) {
+      operation.type = 'REPETITION'
+      continue
+    }
+    if (word && targetWords.slice(0, Math.max(0, expectedIndex)).includes(word)) {
+      operation.type = 'RESTART'
+      continue
+    }
+    if (word && targetWords.includes(word)) {
+      const laterSameAnchor = operations.slice(index + 1).some(candidate => (
+        resolved(candidate)
+        && targetWords[Number(candidate.expectedIndex)] === word
+      ))
+      if (laterSameAnchor) {
+        operation.type = 'RESTART'
+        continue
+      }
+    }
+    const next = operations[index + 1]
+    const currentEnd = finiteOrNull(heardWords[heardIndex]?.end ?? heardWords[heardIndex]?.endTime)
+    const nextStart = finiteOrNull(heardWords[heardIndex + 1]?.start ?? heardWords[heardIndex + 1]?.startTime)
+    const pause = currentEnd != null && nextStart != null ? Math.max(0, nextStart - currentEnd) : 0
+    if (
+      next?.op === 'match'
+      && Number(next.expectedIndex) === expectedIndex
+      && resolved(next)
+      && pause >= Math.max(0, Number(selfCorrectionSeconds) || 0.55)
+    ) {
+      operation.type = 'SELF_CORRECTION'
+    }
+  }
+
+  let cursor = 0
+  while (cursor < operations.length) {
+    if (resolved(operations[cursor])) {
+      cursor += 1
+      continue
+    }
+    const start = cursor
+    let hasExpected = false
+    while (cursor < operations.length && !resolved(operations[cursor])) {
+      if (operations[cursor].op !== 'extra') hasExpected = true
+      cursor += 1
+    }
+    const recovered = cursor < operations.length && resolved(operations[cursor])
+    if (hasExpected && recovered && cursor - start >= 3) {
+      for (let index = start; index < cursor; index += 1) {
+        if (operations[index].op !== 'extra') operations[index].type = 'DIVERGENCE'
+      }
+      operations[cursor].type = 'REALIGNMENT'
+    }
+  }
+
+  for (const operation of operations) {
+    if (operation.op === 'extra') continue
+    const expectedIndex = Number(operation.expectedIndex)
+    const status = statuses[expectedIndex]
+    if (!status) continue
+    status.type = operation.type
+    status.expectedIndex = expectedIndex
+    status.recognisedIndex = Number.isFinite(Number(operation.recognisedIndex)) ? Number(operation.recognisedIndex) : null
+    if (operation.type === 'UNASSESSED') {
+      status.status = operation.op === 'omission' ? 'pending' : 'uncertain'
+      status.note = ''
+      status.visualStatus = 'neutral'
+    } else if (operation.type === 'DIVERGENCE') {
+      status.status = 'incorrect'
+      status.visualStatus = 'red'
+    } else if (operation.type === 'REALIGNMENT') {
+      status.status = 'correct'
+      status.visualStatus = 'green'
+      status.realigned = true
+    }
+  }
+
+  const extrasByHeardIndex = new Map(extraWords.map(extra => [Number(extra.heardIndex), extra]))
+  for (const operation of operations) {
+    if (operation.op !== 'extra') continue
+    const extra = extrasByHeardIndex.get(Number(operation.recognisedIndex))
+    if (!extra) continue
+    extra.type = operation.type
+    extra.classificationType = operation.type
+    extra.highlight = ['REPETITION', 'SELF_CORRECTION', 'RESTART'].includes(operation.type)
+      ? 'amber'
+      : (operation.type === 'INSERTION' ? 'red' : 'neutral')
+    extra.expectedIndex = Number(operation.expectedIndex)
+    extra.recognisedIndex = Number(operation.recognisedIndex)
+  }
+
+  const events = []
+  const hesitationFloor = Math.max(0.5, Number(hesitationSeconds) || 1.35)
+  for (let index = 1; index < heardWords.length; index += 1) {
+    const previousEnd = finiteOrNull(heardWords[index - 1]?.end ?? heardWords[index - 1]?.endTime)
+    const currentStart = finiteOrNull(heardWords[index]?.start ?? heardWords[index]?.startTime)
+    if (previousEnd == null || currentStart == null) continue
+    const duration = currentStart - previousEnd
+    if (duration >= hesitationFloor) {
+      events.push({ type: 'HESITATION', highlight: 'amber', duration, recognisedIndex: index })
+    }
+  }
+
+  const scenarioCounts = {
+    correct_words: statuses.filter(word => word.type === 'MATCH' || word.type === 'REALIGNMENT').length,
+    wrong_words: statuses.filter(word => word.type === 'SUBSTITUTION' || word.type === 'DIVERGENCE').length,
+    skipped_words: statuses.filter(word => word.type === 'DELETION').length,
+    extra_words: extraWords.filter(word => word.type === 'INSERTION').length,
+    repetitions: extraWords.filter(word => word.type === 'REPETITION').length,
+    self_corrections: extraWords.filter(word => word.type === 'SELF_CORRECTION').length,
+    hesitations: events.length,
+    restarts: extraWords.filter(word => word.type === 'RESTART').length,
+    out_of_range_words: extraWords.filter(word => word.type === 'OUT_OF_RANGE').length,
+    divergence_events: statuses.filter(word => word.type === 'DIVERGENCE').length,
+    unassessed_events: statuses.filter(word => word.type === 'UNASSESSED').length,
+  }
+
+  return { events, scenarioCounts }
 }
 
 export function buildDeterministicRecitationResult(targetText = '', recognitionWords = [], options = {}) {
@@ -784,6 +1034,8 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
     deterministicAnalysis: alignment.analysis,
     missingWords: alignment.analysis.omissions,
     extraWords: alignment.extraWords,
+    alignmentEvents: alignment.events,
+    scenarioCounts: alignment.scenarioCounts,
     incorrectWords: alignment.analysis.substitutions,
     repeatedWords: alignment.analysis.repeatedWords,
     repeatedPhrases: alignment.analysis.repeatedPhrases,
@@ -954,6 +1206,7 @@ function normalizeRecognitionWords(words = [], options = {}) {
           startTime: finiteOrNull(entry?.start ?? entry?.startTime),
           endTime: finiteOrNull(entry?.end ?? entry?.endTime),
           segmentId: entry?.segmentId || segmentId,
+          speaker: String(entry?.speaker || '').trim() || null,
           sequence: eventSequence,
           sourceIndex: index + wordIndex
         }
@@ -1943,7 +2196,8 @@ function detectRepeatedWords(heardWords = [], extraWords = []) {
   const seen = new Set()
   // Prefer alignment-confirmed deliberate repetitions, not ASR re-emits / stutters.
   for (const item of extraWords) {
-    if (item?.type !== 'repetition' || !item.word) continue
+    if (item?.type !== 'REPETITION' && item?.legacyType !== 'repetition') continue
+    if (!item.word) continue
     const heardIndex = Number(item.heardIndex)
     const previous = Number.isFinite(heardIndex) && heardIndex > 0
       ? heardWords[heardIndex - 1]
@@ -2187,7 +2441,7 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
       outOfOrder: !!word.outOfOrder
     }))
   const repetitions = extraWords
-    .filter(item => item.type === 'repetition')
+    .filter(item => item.type === 'REPETITION' || item.legacyType === 'repetition')
     .map(item => ({ word: item.display || item.word, heardIndex: item.heardIndex, confidence: Number(item.confidence || 0) }))
   const repeatedWords = structural.repeatedWords?.length ? structural.repeatedWords : repetitions
   const repeatedPhrases = structural.repeatedPhrases || []

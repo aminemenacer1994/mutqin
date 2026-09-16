@@ -181,4 +181,21 @@ class RecitationAttemptClassifierTest extends TestCase
             $this->assertFalse(RecitationAttemptClassifier::affectsScoring($classification), $reason);
         }
     }
+
+    public function test_low_stt_confidence_with_correct_context_remains_assessable(): void
+    {
+        $classification = RecitationAttemptClassifier::classifyPayload([
+            'duration_ms' => 5000,
+            'target_text' => 'الحمد لله رب العالمين',
+            'recognition_words' => [
+                ['word' => 'الحمد', 'confidence' => 0.12],
+                ['word' => 'لله', 'confidence' => 0.14],
+                ['word' => 'رب', 'confidence' => 0.11],
+                ['word' => 'العالمين', 'confidence' => 0.13],
+            ],
+        ]);
+
+        $this->assertSame(RecitationAttemptClassifier::VALID_CHECK, $classification['class']);
+        $this->assertTrue($classification['affects_scoring']);
+    }
 }

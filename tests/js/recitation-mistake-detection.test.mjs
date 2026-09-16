@@ -231,7 +231,7 @@ function assertStatuses(result, expected) {
     { word: 'أحد', confidence: 0.95, start: 1.9, end: 2.1, segmentId: 'b' },
   ]
   const pauseResult = buildDeterministicRecitationResult(target, pauseRepeat, opts)
-  assert.ok(pauseResult.extraWords.some(item => item.type === 'repetition' && item.word === 'هو'))
+  assert.ok(pauseResult.extraWords.some(item => item.type === 'REPETITION' && item.word === 'هو'))
   assert.equal(statusMap(pauseResult)['أحد'], 'correct')
 
   const reemit = [

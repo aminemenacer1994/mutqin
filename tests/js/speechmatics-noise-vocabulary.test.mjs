@@ -18,17 +18,10 @@ const config = buildSpeechmaticsRecitationConfig({
 })
 assert.equal(config.diarization, 'speaker')
 assert.equal(config.speaker_diarization_config.speaker_sensitivity, 0.5)
-assert.ok(QURAN_VOCABULARY_VERSION.includes('v1'))
-assert.deepEqual(config.additional_vocab, getSpeechmaticsQuranVocabulary())
-assert.ok(APPROVED_QURAN_VOCABULARY.every((entry) => entry.benchmark))
-assert.ok(APPROVED_QURAN_VOCABULARY.every((entry) => (
-  entry.benchmark.custom_correct
-  && !entry.benchmark.baseline_correct
-  && entry.benchmark.substitution_preserved
-)), 'every approved entry improves its correct fixture without hiding substitutions')
-assert.ok(config.additional_vocab.some((entry) => entry.content === 'كهيعص'), 'approved difficult vocabulary is sent')
-assert.ok(!config.additional_vocab.some((entry) => entry.content === 'الحمد'), 'selected ayah is never copied into vocabulary')
-assert.ok(!config.additional_vocab.some((entry) => 'sounds_like' in entry), 'unproven sounds_like values are not sent')
+assert.equal(QURAN_VOCABULARY_VERSION, 'quran-vocab-v2-empty')
+assert.deepEqual(APPROVED_QURAN_VOCABULARY, [], 'no vocabulary is approved without real paired-audio evidence')
+assert.deepEqual(getSpeechmaticsQuranVocabulary(), [])
+assert.equal('additional_vocab' in config, false, 'empty or selected-range vocabulary is not sent')
 
 assert.match(runtime, /speaker:\s*String\(alternative\?\.speaker/, 'provider speaker labels are retained')
 assert.match(runtime, /\.\.\.buildSpeechmaticsRecitationConfig\(options\)/, 'central config is used by StartRecognition')

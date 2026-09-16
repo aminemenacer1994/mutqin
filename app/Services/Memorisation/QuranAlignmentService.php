@@ -864,7 +864,7 @@ class QuranAlignmentService
         $expectedUnit = $units[max(0, min(count($units) - 1, $expectedIndex))] ?? null;
         $visual = in_array($type, [self::TYPE_REPETITION, self::TYPE_SELF_CORRECTION, self::TYPE_RESTART], true)
             ? 'amber'
-            : 'grey';
+            : ($type === self::TYPE_INSERTION ? 'red' : 'grey');
 
         $payload = [
             'word' => (string) ($word['word'] ?? ''),
@@ -881,7 +881,9 @@ class QuranAlignmentService
             'type' => $type,
             'legacy_type' => $type === self::TYPE_REPETITION ? 'repetition' : 'extra',
             'visual_status' => $visual,
-            'highlight' => in_array($type, [self::TYPE_INSERTION, self::TYPE_OUT_OF_RANGE], true) ? 'neutral' : 'amber',
+            'highlight' => $type === self::TYPE_INSERTION
+                ? 'red'
+                : ($type === self::TYPE_OUT_OF_RANGE ? 'neutral' : 'amber'),
         ];
         if (isset($word['start'])) {
             $payload['start_time'] = (float) $word['start'];

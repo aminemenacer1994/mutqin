@@ -33,6 +33,7 @@ class WeaknessAnalysisService
         foreach ($extraWords as $extra) {
             $type = strtoupper((string) ($extra['type'] ?? ''));
             match ($type) {
+                QuranAlignmentService::TYPE_INSERTION => $errorTypes['unresolved_mistakes']++,
                 QuranAlignmentService::TYPE_SELF_CORRECTION => $errorTypes['self_corrected_mistakes']++,
                 QuranAlignmentService::TYPE_REPETITION => $errorTypes['repetitions']++,
                 QuranAlignmentService::TYPE_RESTART => $errorTypes['restarts']++,

@@ -135,6 +135,7 @@ class RecitationAttemptClassifier
             && $meanConfidence !== null
             && $meanConfidence < self::MIN_RECOGNITION_CONFIDENCE
             && ! $hasReliableWord
+            && ! self::hasStrongContextualMatch($words, $payload)
         ) {
             return self::build(self::EMPTY_LOW_CONFIDENCE_TRANSCRIPT, 'low_confidence', true);
         }
@@ -277,6 +278,41 @@ class RecitationAttemptClassifier
         }
 
         return false;
+    }
+
+    /** @param list<array{word:string}> $words @param array<string,mixed> $payload */
+    private static function hasStrongContextualMatch(array $words, array $payload): bool
+    {
+        $targetText = trim((string) ($payload['target_text'] ?? ''));
+        if ($targetText === '' && is_array($payload['ayahs'] ?? null)) {
+            $targetText = implode(' ', array_map(
+                static fn ($ayah) => is_array($ayah) ? (string) ($ayah['text'] ?? $ayah['arabic'] ?? '') : '',
+                $payload['ayahs']
+            ));
+        }
+        $normalizer = new QuranTextNormalizer;
+        $target = $normalizer->tokenizeComparisonText($targetText);
+        $heard = array_values(array_filter(array_map(
+            static fn ($word) => $normalizer->normalizeComparisonText((string) ($word['word'] ?? '')),
+            $words
+        )));
+        if ($target === [] || $heard === []) {
+            return false;
+        }
+
+        $cursor = 0;
+        $matches = 0;
+        foreach ($heard as $token) {
+            for ($i = $cursor; $i < count($target); $i++) {
+                if ($token === $target[$i]) {
+                    $matches++;
+                    $cursor = $i + 1;
+                    break;
+                }
+            }
+        }
+
+        return $matches >= min(3, count($heard)) && ($matches / count($heard)) >= 0.8;
     }
 
     /**

@@ -448,6 +448,7 @@ import {
   buildAssessmentAyahs,
   buildHiddenWordSeed,
   buildRecognitionWords,
+  applyBackendAlignmentToResult,
   createMistakeFeedbackController,
   memorisationDetectionApi,
   MISTAKE_HANDLING_MODES,
@@ -497,6 +498,7 @@ import {
   buildRealtimePreviewAlignment,
   buildDeterministicRecitationResult,
   buildQuranAlignment,
+  selectPrimaryReciterWords,
   cleanRecitationDisplayText as cleanRecitationDisplayTextEngine,
   createRecognitionState,
   deriveWeakAyahsFromWordStatuses,
@@ -1206,6 +1208,7 @@ export default {
       recitationTranscriptionMeta: createRealtimeTranscriptionMeta(),
       recitationTranscriptionAudioBridge: null,
       recitationAudioQualityMetrics: null,
+      recitationSpeakerDecision: null,
       recitationInputSessionId: '',
       recitationInputAudioHash: '',
       recitationSessionCacheDb: null,
@@ -25878,8 +25881,10 @@ export default {
         || ''
       )
       const ayahs = buildAssessmentAyahs(targets, getArabic)
-      const committed = (Array.isArray(result?.committedWords) && result.committedWords.length)
-        ? result.committedWords
+      const committed = (Array.isArray(result?.rawRecognitionWords) && result.rawRecognitionWords.length)
+        ? result.rawRecognitionWords
+        : (Array.isArray(result?.committedWords) && result.committedWords.length)
+          ? result.committedWords
         : (this.getBestRecognitionWordsForAssessment?.('recitation') || this.getCommittedRecognitionWords?.('recitation') || [])
       const recognitionWords = buildRecognitionWords(committed.length ? committed : (result?.transcript || '').split(/\s+/), { includeTiming: true })
       const numbers = ayahs.map((a) => a.ayah_number).filter(Boolean)
@@ -25924,6 +25929,17 @@ export default {
           : undefined,
         provider,
         audio_quality_metrics: result?.audioQualityMetrics || this.recitationAudioQualityMetrics || undefined,
+        raw_speechmatics: {
+          messages: (Array.isArray(this.recitationRawTranscriptStream) ? this.recitationRawTranscriptStream : []).slice(-100),
+        },
+        speechmatics_config: provider === 'speechmatics' ? {
+          language: 'ar',
+          model: 'enhanced',
+          diarization: 'speaker',
+          vocabulary_version: 'quran-vocab-v2-empty',
+        } : undefined,
+        speechmatics_model: provider === 'speechmatics' ? 'enhanced' : undefined,
+        alignment_lifecycle: 'final',
         session_recommendation_id: this.amdEntrySource === 'workspace-ai-recite'
           ? undefined
           : (this.amdRecommendationId || undefined),
@@ -25958,6 +25974,10 @@ export default {
         this._lastAmdSubmitData = data
         this.amdAssessment = data.assessment || null
         this.amdAnalysis = data.analysis || null
+        const canonicalResult = applyBackendAlignmentToResult(result, data.assessment || {})
+        this.recitationCheckResult = canonicalResult
+        this.recitationLiveWords = canonicalResult.wordStatuses || []
+        this.syncSessionEvaluationMaps('recitation', targets, this.recitationLiveWords, true)
         this.amdPracticePlan = this.amdEntrySource === 'workspace-ai-recite'
           ? null
           : (data.practice_plan || null)
@@ -27104,9 +27124,15 @@ export default {
       const state = this.getRecognitionPipelineState(kind)
       const committedWords = Array.isArray(state?.committedWords) ? state.committedWords : []
       const displayWords = getRecognitionDisplayWords(state)
+      const committedSelection = selectPrimaryReciterWords(committedWords, targetText)
+      const displaySelection = selectPrimaryReciterWords(
+        Array.isArray(displayWords) && displayWords.length ? displayWords : committedWords,
+        targetText
+      )
+      if (kind === 'recitation') this.recitationSpeakerDecision = committedSelection
       return {
-        committedWords,
-        displayWords: Array.isArray(displayWords) && displayWords.length ? displayWords : committedWords
+        committedWords: committedSelection.reliable ? committedSelection.words : [],
+        displayWords: displaySelection.reliable ? displaySelection.words : []
       }
     },
     liveWordStatusSeverity(status = '') {
@@ -27550,7 +27576,7 @@ export default {
         .map(verse => verse?.key || `${verse?.chapterId || ''}:${verse?.number || ''}`)
         .join(',')
       const wordKey = words => (Array.isArray(words) ? words : [])
-        .map(word => `${word?.text || word?.word || ''}:${word?.final ? 1 : 0}:${Number(word?.confidence || 0).toFixed(2)}`)
+        .map(word => `${word?.text || word?.word || ''}:${word?.speaker || ''}:${word?.final ? 1 : 0}:${Number(word?.confidence || 0).toFixed(2)}`)
         .join(' ')
       return `${kind}|${targetKeys}|${wordKey(committedWords)}|${wordKey(displayWords)}`
     },
@@ -27580,6 +27606,7 @@ export default {
         const leftWord = left[index] || {}
         const rightWord = right[index] || {}
         if ((leftWord.word || leftWord.text || '') !== (rightWord.word || rightWord.text || '')) return false
+        if (String(leftWord.speaker || '') !== String(rightWord.speaker || '')) return false
         if (Number(leftWord.confidence || 0).toFixed(3) !== Number(rightWord.confidence || 0).toFixed(3)) return false
       }
       return true
@@ -27652,10 +27679,12 @@ export default {
         livePreviewAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
       }
       const targetAyahMeta = this.buildRecitationTargetAyahMetadata(targetVerses)
-      // AMD: force sequential realtime alignment so DP cannot colour random later ayahs.
+      // Committed Speechmatics words use Qur'an-aware DP so skips, restarts and
+      // later anchors can resynchronise. Live lifecycle keeps all future words neutral.
       const committedAlignment = (this.amdOpen && kind === 'recitation')
-        ? buildRealtimePreviewAlignment(targetText, committedWords, {
+        ? buildQuranAlignment(targetText, committedWords, {
           ...liveAlignmentOptions,
+          lifecycle: 'live',
           targetAyahs: targetAyahMeta
         })
         : this.getCachedCommittedAlignment(
@@ -28770,7 +28799,8 @@ export default {
         confidence: Number.isFinite(Number(item.confidence)) ? Number(item.confidence) : (payload?.isFinal ? 1 : SPEECHMATICS_PARTIAL_CONFIDENCE),
         start: item.start,
         end: item.end,
-        provider: 'speechmatics'
+        provider: 'speechmatics',
+        speaker: item.speaker || null
       })).filter(item => item.word)
       const isFinal = !!payload?.isFinal
       this.markTranscriptionMessage(kind, { isFinal })
@@ -31896,11 +31926,13 @@ export default {
     },
     assessRecitationRecognitionWords(recognitionWords = [], targetVerses = this.getRecitationCheckTargetVerses(), options = {}) {
       const targetText = this.getRecitationTargetText(targetVerses)
+      const speakerDecision = selectPrimaryReciterWords(recognitionWords, targetText)
+      const assessmentWords = speakerDecision.reliable ? speakerDecision.words : []
       const timestamp = options.timestamp || new Date().toISOString()
       const rejectedWords = Array.isArray(options.rejectedWords)
         ? options.rejectedWords
         : (this.getRecognitionPipelineState?.(options.recognitionKind || 'recitation')?.rejectedWords || [])
-	      const result = buildDeterministicRecitationResult(targetText, recognitionWords, {
+	      const result = buildDeterministicRecitationResult(targetText, assessmentWords, {
 	        // Final review always shows the full colour map (soft), even if live
 	        // tutoring used strict progression.
 	        strictProgression: false,
@@ -31923,6 +31955,10 @@ export default {
       const speedReview = this.getRecitationSpeedReview({ wordStatuses, startedAt, endedAt })
       return {
         ...result,
+        rawRecognitionWords: Array.isArray(recognitionWords) ? recognitionWords : [],
+        speakerDecision,
+        unusableAudio: !speakerDecision.reliable,
+        insufficient_audio: !speakerDecision.reliable,
         mistakes,
         mistakeBreakdown: mistakes,
         wordStatuses,
