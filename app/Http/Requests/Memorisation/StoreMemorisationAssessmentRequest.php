@@ -38,7 +38,11 @@ class StoreMemorisationAssessmentRequest extends FormRequest
             'recognition_words.*.startTime' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'recognition_words.*.endTime' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'recognition_words.*.speaker' => ['sometimes', 'nullable', 'string', 'max:32'],
-            'raw_speechmatics' => ['sometimes', 'nullable', 'array'],
+            // Raw events are diagnostics only; bound their size so a client
+            // cannot turn the assessment endpoint into an unbounded payload
+            // sink while still retaining enough events for replay audits.
+            'raw_speechmatics' => ['sometimes', 'nullable', 'array', 'max:500'],
+            'raw_speechmatics.*' => ['array'],
             'speechmatics_config' => ['sometimes', 'nullable', 'array'],
             'speechmatics_model' => ['sometimes', 'nullable', 'string', 'max:80'],
             'audio_quality_status' => ['sometimes', 'nullable', 'string', 'max:64'],

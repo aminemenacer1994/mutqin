@@ -6388,3 +6388,124 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
 .amd-overlay[data-theme="dark"] .amd-tools-bar__hint {
   color: #d6d3d1;
 }
+
+/* Live ayah status palette: every word has a deliberate state while recording. */
+.amd-mushaf-ayah--premium .recitation-word-correct,
+.amd-mushaf-stream .recitation-word-correct {
+  color: #16734b !important;
+  -webkit-text-fill-color: #16734b !important;
+  background: color-mix(in srgb, #22a06b 11%, transparent) !important;
+  border-radius: 0.18em;
+}
+
+.amd-mushaf-ayah--premium .recitation-word-partial,
+.amd-mushaf-stream .recitation-word-partial {
+  color: #a85608 !important;
+  -webkit-text-fill-color: #a85608 !important;
+  background: color-mix(in srgb, #f59e0b 22%, transparent) !important;
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #d97706 72%, transparent) !important;
+  border-radius: 0.18em;
+}
+
+.amd-mushaf-ayah--premium .recitation-word-incorrect,
+.amd-mushaf-stream .recitation-word-incorrect {
+  color: #b42318 !important;
+  -webkit-text-fill-color: #b42318 !important;
+  background: color-mix(in srgb, #dc2626 12%, transparent) !important;
+  border-radius: 0.18em;
+}
+
+.amd-mushaf-ayah--premium .recitation-word-omitted,
+.amd-mushaf-stream .recitation-word-omitted {
+  color: #25211e !important;
+  -webkit-text-fill-color: #25211e !important;
+  background: color-mix(in srgb, #25211e 9%, transparent) !important;
+  text-decoration: line-through !important;
+  text-decoration-thickness: 0.07em;
+  border-radius: 0.18em;
+}
+
+.amd-mushaf-ayah--premium .recitation-word-pending,
+.amd-mushaf-ayah--premium .recitation-word-notAttempted,
+.amd-mushaf-ayah--premium .recitation-word-uncertain,
+.amd-mushaf-stream .recitation-word-pending,
+.amd-mushaf-stream .recitation-word-notAttempted,
+.amd-mushaf-stream .recitation-word-uncertain {
+  color: #8b9198 !important;
+  -webkit-text-fill-color: #8b9198 !important;
+  background: color-mix(in srgb, #94a3b8 10%, transparent) !important;
+  border-radius: 0.18em;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-correct,
+.amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-correct {
+  color: #8ee0b5 !important;
+  -webkit-text-fill-color: #8ee0b5 !important;
+  background: rgba(76, 175, 119, 0.16) !important;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-partial,
+.amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-partial {
+  color: #ffd166 !important;
+  -webkit-text-fill-color: #ffd166 !important;
+  background: rgba(245, 158, 11, 0.18) !important;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-incorrect,
+.amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-incorrect {
+  color: #ff9b91 !important;
+  -webkit-text-fill-color: #ff9b91 !important;
+  background: rgba(239, 68, 68, 0.18) !important;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-omitted,
+.amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-omitted {
+  color: #e7ddd3 !important;
+  -webkit-text-fill-color: #e7ddd3 !important;
+  background: rgba(231, 221, 211, 0.12) !important;
+}
+
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-pending,
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-notAttempted,
+[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-uncertain,
+.amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-pending,
+.amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-notAttempted,
+.amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-uncertain {
+  color: #a9a19a !important;
+  -webkit-text-fill-color: #a9a19a !important;
+  background: rgba(169, 161, 154, 0.1) !important;
+}
+
+[data-theme="sepia"] .amd-mushaf-ayah--premium .recitation-word-correct,
+[data-theme="sepia"] .amd-mushaf-stream .recitation-word-correct {
+  color: #216b4b !important;
+  -webkit-text-fill-color: #216b4b !important;
+}
+
+[data-theme="sepia"] .amd-mushaf-ayah--premium .recitation-word-partial,
+[data-theme="sepia"] .amd-mushaf-stream .recitation-word-partial {
+  color: #a85d12 !important;
+  -webkit-text-fill-color: #a85d12 !important;
+}
+
+[data-theme="sepia"] .amd-mushaf-ayah--premium .recitation-word-incorrect,
+[data-theme="sepia"] .amd-mushaf-stream .recitation-word-incorrect {
+  color: #a13a32 !important;
+  -webkit-text-fill-color: #a13a32 !important;
+}
+
+[data-theme="sepia"] .amd-mushaf-ayah--premium .recitation-word-omitted,
+[data-theme="sepia"] .amd-mushaf-stream .recitation-word-omitted {
+  color: #3e342b !important;
+  -webkit-text-fill-color: #3e342b !important;
+}
+
+[data-theme="sepia"] .amd-mushaf-ayah--premium .recitation-word-pending,
+[data-theme="sepia"] .amd-mushaf-ayah--premium .recitation-word-notAttempted,
+[data-theme="sepia"] .amd-mushaf-ayah--premium .recitation-word-uncertain,
+[data-theme="sepia"] .amd-mushaf-stream .recitation-word-pending,
+[data-theme="sepia"] .amd-mushaf-stream .recitation-word-notAttempted,
+[data-theme="sepia"] .amd-mushaf-stream .recitation-word-uncertain {
+  color: #84786c !important;
+  -webkit-text-fill-color: #84786c !important;
+}

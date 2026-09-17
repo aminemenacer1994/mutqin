@@ -291,10 +291,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ]);
             }
 
+            // Treat a malformed 2xx response as unavailable. Recording a mint
+            // without a usable RT key would consume the application budget and
+            // leave the browser with a socket that can never authenticate.
+            $accessToken = trim((string) $response->json('key_value', ''));
+            if ($accessToken === '') {
+                ErrorReporting::reportProviderFailure('speechmatics', [
+                    'feature' => 'speechmatics',
+                    'status' => $response->status() ?: 502,
+                    'reason' => 'invalid_upstream_payload',
+                    'operation' => 'mint_token',
+                ]);
+
+                return response()->json([
+                    'available' => false,
+                    'reason' => 'unavailable',
+                    'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
+                    'speechmatics_status' => 502,
+                ]);
+            }
+
             $usageCap->recordSuccessfulMint($userId);
 
             return response()->json([
-                'access_token' => $response->json('key_value'),
+                'access_token' => $accessToken,
                 'expires_in' => $tokenTtl,
                 'region' => $region['code'],
                 'websocket_host' => $region['host'],

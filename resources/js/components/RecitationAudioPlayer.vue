@@ -1,5 +1,10 @@
 <template>
-  <div class="sa-ov__player" :class="{ 'is-playing': playing }">
+  <div
+    class="sa-ov__player"
+    :class="{ 'is-playing': playing, 'has-error': error }"
+    role="group"
+    :aria-label="title || 'Recitation player'"
+  >
     <audio
       ref="player"
       :src="src"
@@ -9,45 +14,57 @@
       @ended="onEnded"
       @error="onError"
     ></audio>
-    <button
-      type="button"
-      class="sa-ov__player-toggle"
-      :disabled="!src || error"
-      :aria-label="playing ? pauseLabel : playLabel"
-      @click="toggle"
-    >
-      <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-    </button>
-    <div class="sa-ov__player-body">
-      <div class="sa-ov__player-seek-row">
-        <input
-          class="sa-ov__player-seek"
-          type="range"
-          min="0"
-          max="1000"
-          step="1"
-          :value="seekValue"
-          :disabled="!src || error"
-          :aria-label="title || 'Recitation'"
-          :aria-valuetext="progressLabel"
-          @input="onSeek"
-        >
-        <button
-          type="button"
-          class="sa-ov__player-restart"
-          :disabled="!src || error"
-          :aria-label="restartLabel"
-          :title="restartLabel"
-          @click="restart"
-        >
-          <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-        </button>
-      </div>
-      <div class="sa-ov__player-times" aria-live="polite">
-        <span>{{ currentLabel }}</span>
-        <span>{{ durationLabel }}</span>
+    <div class="sa-ov__player-main">
+      <button
+        type="button"
+        class="sa-ov__player-toggle"
+        :disabled="!src || error"
+        :aria-label="playing ? pauseLabel : playLabel"
+        :title="playing ? pauseLabel : playLabel"
+        @click="toggle"
+      >
+        <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+      </button>
+      <div class="sa-ov__player-body">
+        <div class="sa-ov__player-seek-row">
+          <input
+            class="sa-ov__player-seek"
+            type="range"
+            min="0"
+            max="1000"
+            step="1"
+            :value="seekValue"
+            :disabled="!src || error"
+            :aria-label="title || 'Recitation'"
+            :aria-valuetext="progressLabel"
+            @input="onSeek"
+          >
+          <button
+            type="button"
+            class="sa-ov__player-restart"
+            :disabled="!src || error"
+            :aria-label="restartLabel"
+            :title="restartLabel"
+            @click="restart"
+          >
+            <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="sa-ov__player-times" aria-live="polite">
+          <span>{{ currentLabel }}</span>
+          <span>{{ durationLabel }}</span>
+        </div>
       </div>
     </div>
+    <button
+      type="button"
+      class="sa-ov__player-speed"
+      :disabled="!src || error"
+      :aria-label="`Playback speed ${playbackRate}x`"
+      :title="`Playback speed ${playbackRate}x`"
+      @click="cycleSpeed"
+    >{{ playbackRate }}×</button>
+    <p v-if="error" class="sa-ov__player-error" role="status">{{ errorLabel }}</p>
   </div>
 </template>
 
@@ -69,6 +86,7 @@ export default {
     playLabel: { type: String, default: 'Play' },
     pauseLabel: { type: String, default: 'Pause' },
     restartLabel: { type: String, default: 'Restart' },
+    errorLabel: { type: String, default: 'Audio unavailable' },
   },
   data() {
     return {
@@ -76,6 +94,7 @@ export default {
       current: 0,
       duration: 0,
       error: false,
+      playbackRate: 1,
     }
   },
   computed: {
@@ -120,6 +139,7 @@ export default {
         this.pause()
         return
       }
+      audio.playbackRate = this.playbackRate
       audio.play?.()?.then(() => {
         this.playing = true
       }).catch(() => {
@@ -137,12 +157,20 @@ export default {
       audio.currentTime = 0
       this.current = 0
       if (this.src && !this.error) {
+        audio.playbackRate = this.playbackRate
         audio.play?.()?.then(() => {
           this.playing = true
         }).catch(() => {
           this.playing = false
         })
       }
+    },
+    cycleSpeed() {
+      const rates = [1, 1.25, 1.5, 0.75]
+      const currentIndex = rates.indexOf(this.playbackRate)
+      this.playbackRate = rates[(currentIndex + 1) % rates.length]
+      const audio = this.player()
+      if (audio) audio.playbackRate = this.playbackRate
     },
     onSeek(event) {
       const audio = this.player()
@@ -173,6 +201,7 @@ export default {
       this.current = 0
       this.duration = 0
       this.error = false
+      this.playbackRate = 1
     },
   },
 }

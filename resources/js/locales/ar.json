@@ -491,7 +491,8 @@
       "title": "اعرف ماذا تتدرب عليه بعد ذلك.",
       "subtitle": "سجّل آية، راجع نقاط الضعف، وركّز الجلسة التالية.",
       "button": "إنشاء حساب مجاني",
-      "note": "لا حاجة لبطاقة للخطة المجانية."
+      "note": "لا حاجة لبطاقة للخطة المجانية.",
+      "kicker": "Begin"
     },
     "badge": {
       "free": "مجاني",
@@ -611,6 +612,11 @@
         }
       },
       "stepOf": "الخطوة {current} من {total}"
+    },
+    "purpose": {
+      "kicker": "The journey",
+      "title": "Memorisation is built through return.",
+      "text": "An ayah listened to, repeated, recited and revisited becomes part of a longer journey. Mutqin is designed to make that journey clearer, calmer and easier to continue."
     }
   },
   "memorisation": {
@@ -843,9 +849,9 @@
     },
     "practiceTools": {
       "beginner": "أدوات للمبتدئين",
-      "beginnerDesc": "مجانية. آية واحدة في كل مرة، وإخفاء النص، والاستماع ثم التكرار.",
+      "beginnerDesc": "خيارات بسيطة للقراءة والاستماع وتكرار الآيات.",
       "advanced": "أدوات متقدمة",
-      "advancedDesc": "ربط الآيات وإبراز كلمات التثبيت. هاتان الأداتان تحتاجان Pro."
+      "advancedDesc": "تقنيات لربط الآيات وتذكر الكلمات المفتاحية."
     },
     "activePracticeSetup": {
       "title": "إعداد التمرين النشط",
@@ -1784,7 +1790,7 @@
       "steps": {
         "workspace": "أنت في الحفظ، مساحة التمرين الرئيسية.",
         "welcome": "إذا ظهرت «مرحبًا بعودتك»، اختر بدء جلسة جديدة.",
-        "setup": "افتح عناصر التحكم ← الإعداد، اختر الفاتحة ١–٥، ثم ابدأ الجلسة.",
+        "setup": "افتح عناصر التحكم ← الإعداد، اختر الفاتحة ١–٣، ثم ابدأ الجلسة.",
         "aiCheck": "تمرّن، أنهِ الجلسة، ثم افحص الحفظ (الذكاء الاصطناعي).",
         "plan": "اختر خطة مقترحة واضغط بدء هذه الخطة، لا تتوقف عند الاختيار فقط.",
         "keepGoing": "افتح لوحة التقدم للتقدّم والمراجعة، ثم عد إلى هنا للجلسة التالية."
@@ -2745,7 +2751,8 @@
         "aiFocusWeakAyah": "خصص التمريرة التالية للآية {ayah} بوضع التركيز.",
         "aiFocusWeakAyahs": "راجع الآيات {ayahs} قبل المتابعة.",
         "aiWeakAyahsLabel": "آيات للتركيز",
-        "aiFirstBody": "اختبر بالتلاوة الذكية أولًا. ستظهر نتيجتك وخطة التدريب هنا بعد الاستماع إليك."
+        "aiFirstBody": "اختبر بالتلاوة الذكية أولًا. ستظهر نتيجتك وخطة التدريب هنا بعد الاستماع إليك.",
+        "whatNextRevisionLead": "Practise this range again with the recommended technique. The weak ayahs are shown below so you know what needs extra attention."
       }
     },
     "aiRecitePlan": {
@@ -3913,7 +3920,7 @@
     "sessionSaveFailed": "تعذّر حفظ هذه الجلسة. حاول مرة أخرى.",
     "sessionSaveSyncFailed": "حُفظت الجلسة على هذا الجهاز. ستُعاد المزامنة قريبًا.",
     "sessionSaveLimitReached": "بلغت حد الجلسات المحفوظة ({max}). احذف واحدة لتحفظ أخرى.",
-    "premiumTechniqueRequired": "ربط الآيات وإبراز كلمات التثبيت يحتاجان Pro. رقِّ اشتراكك لفتحهما.",
+    "premiumTechniqueRequired": "هذه التقنية تحتاج Premium. رقِّ اشتراكك لفتحها.",
     "couldNotPlayRecording": "تعذّر تشغيل هذا التسجيل. أعد تحميله أو سجّل مرة أخرى.",
     "defaultSessionLoaded": "Default جلسة loaded: Al-Fatihah 1-7, Alafasy, standard سرعة, 1 repeat, لا الحفظ techniques.",
     "recordingRenamed": "تسجيل renamed إلى \"{name}\".",

@@ -68,6 +68,29 @@ class SpeechmaticsTranscriptionTokenTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_transcription_token_does_not_count_a_malformed_success_as_a_mint(): void
+    {
+        $user = User::factory()->pro()->create();
+
+        $this->configureSpeechmatics();
+        $this->configureUsageCap(userMints: 1, globalMints: 1);
+        Http::fake([
+            'https://mp.speechmatics.com/*' => Http::response(['unexpected' => 'payload'], 200),
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('memorisation.transcription-token'))
+            ->assertOk()
+            ->assertJson([
+                'available' => false,
+                'reason' => 'unavailable',
+                'message' => SpeechmaticsUsageCap::LEARNER_UNAVAILABLE,
+                'speechmatics_status' => 502,
+            ]);
+
+        $this->assertSame(0, app(SpeechmaticsUsageCap::class)->usageSnapshot($user->id)['global']['used']);
+    }
+
     public function test_transcription_token_allows_a_normal_session_burst_under_the_rate_limit(): void
     {
         $user = User::factory()->pro()->create();

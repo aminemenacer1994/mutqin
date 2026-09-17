@@ -496,7 +496,17 @@ export function extractSpeechmaticsTranscriptWords(message = {}, { isPartial = f
   return (Array.isArray(message?.results) ? message.results : [])
     .filter(item => item?.type === 'word')
     .map(item => {
-      const alternative = Array.isArray(item?.alternatives) ? item.alternatives[0] : null
+      const alternatives = Array.isArray(item?.alternatives) ? item.alternatives : []
+      const alternative = alternatives
+        .filter(candidate => String(candidate?.content || '').trim())
+        .sort((left, right) => {
+          const leftConfidence = Number(left?.confidence)
+          const rightConfidence = Number(right?.confidence)
+          if (Number.isFinite(leftConfidence) && Number.isFinite(rightConfidence)) {
+            return rightConfidence - leftConfidence
+          }
+          return 0
+        })[0] || alternatives[0] || null
       const word = String(alternative?.content || '').trim()
       const confidence = Number(alternative?.confidence)
       return {
@@ -643,6 +653,8 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
   let sentSeqNo = 0
   let acknowledgedSeqNo = 0
   let recognitionId = ''
+  let connectionGeneration = 0
+  let terminalError = false
 
   const clearHandshakeTimer = () => {
     if (handshakeTimer) window.clearTimeout(handshakeTimer)
@@ -703,6 +715,13 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
     const end = Number.isFinite(Number(message?.metadata?.end_time)) ? Number(message.metadata.end_time) : null
     const words = extractSpeechmaticsTranscriptWords(message, { isPartial: !isFinal })
     const transcript = String(message?.metadata?.transcript || '').trim() || words.map(item => item.word).join(' ')
+    const explicitSegmentId = String(
+      message?.segment_id
+      || message?.segmentId
+      || message?.metadata?.segment_id
+      || message?.metadata?.segmentId
+      || ''
+    ).trim()
     transcriptHandler({
       type: isFinal ? 'final' : 'partial',
       provider: 'speechmatics',
@@ -712,9 +731,10 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       confidence: null,
       start,
       duration: start !== null && end !== null ? Math.max(0, end - start) : null,
-      segmentId: recognitionId && start !== null && end !== null
-        ? `speechmatics:${recognitionId}:${start}:${end}`
-        : '',
+      segmentId: explicitSegmentId
+        || (recognitionId && start !== null && end !== null
+          ? `speechmatics:${recognitionId}:${start}:${end}`
+          : ''),
       words,
       raw: message
     })
@@ -749,6 +769,8 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       sentSeqNo = 0
       acknowledgedSeqNo = 0
       recognitionId = ''
+      terminalError = false
+      const generation = ++connectionGeneration
 
       return await new Promise((resolve, reject) => {
         readyResolve = resolve
@@ -763,6 +785,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
         }, Number(options.handshakeTimeoutMs || 3500))
 
         socket.onopen = () => {
+          if (generation !== connectionGeneration || intentionallyClosing) return
           try {
             socket.send(JSON.stringify({
               message: 'StartRecognition',
@@ -798,10 +821,18 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
         }
 
         socket.onmessage = event => {
+          if (generation !== connectionGeneration || intentionallyClosing) return
           let message = null
           try {
             message = JSON.parse(String(event?.data || '{}'))
           } catch {
+            const error = createProviderError('Live transcription returned an invalid response.', {
+              category: readySettled ? 'stream' : 'connection'
+            })
+            terminalError = true
+            settleReady(readyReject, error)
+            emitError(error)
+            try { socket?.close() } catch { }
             return
           }
 
@@ -833,18 +864,22 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
 
           if (message?.message === 'Error') {
             const error = normalizeProviderError(message, 'Live transcription disconnected unexpectedly.', readySettled ? 'stream' : 'connection')
+            terminalError = true
             settleReady(readyReject, error)
             emitError(error)
+            try { socket?.close() } catch { }
           }
         }
 
         socket.onerror = () => {
+          if (generation !== connectionGeneration || intentionallyClosing) return
           if (!readySettled) {
             settleReady(readyReject, createProviderError('Unable to start live streaming right now.', { category: 'connection' }))
           }
         }
 
         socket.onclose = event => {
+          if (generation !== connectionGeneration) return
           clearHandshakeTimer()
           const wasIntentional = intentionallyClosing
           const closeCode = Number(event?.code || 0)
@@ -861,7 +896,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
               raw: event
             })
             settleReady(readyReject, error)
-            if (readySettled) emitError(error)
+            if (readySettled && !terminalError) emitError(error)
           }
 
           socket = null
@@ -901,6 +936,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
     },
     disconnect() {
       intentionallyClosing = true
+      connectionGeneration += 1
       clearHandshakeTimer()
       if (!socket) return
       try {

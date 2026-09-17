@@ -271,13 +271,14 @@
                       <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
                         {{ audioTitle }}
                       </p>
-                      <audio
-                        ref="player"
+                      <RecitationAudioPlayer
                         :src="view.audioUrl"
-                        controls
-                        preload="metadata"
-                        class="post-session-simple__audio-player"
-                      ></audio>
+                        :active="open"
+                        :title="audioTitle"
+                        :play-label="playLabel"
+                        :pause-label="pauseLabel"
+                        :restart-label="restartLabel"
+                      />
                     </div>
                   </div>
                 </div>
@@ -323,10 +324,11 @@
 
 <script>
 import AppStatus from './AppStatus.vue'
+import RecitationAudioPlayer from './RecitationAudioPlayer.vue'
 
 export default {
   name: 'WorkspaceAiReciteResultModal',
-  components: { AppStatus },
+  components: { AppStatus, RecitationAudioPlayer },
   props: {
     open: { type: Boolean, default: false },
     loading: { type: Boolean, default: false },
@@ -345,6 +347,9 @@ export default {
     aiResultsAriaLabel: { type: String, default: 'AI memorisation result' },
     colourMeterAriaLabel: { type: String, default: 'Word colour breakdown' },
     audioTitle: { type: String, default: 'Your recording' },
+    playLabel: { type: String, default: 'Play' },
+    pauseLabel: { type: String, default: 'Pause' },
+    restartLabel: { type: String, default: 'Restart' },
     errorTitle: { type: String, default: 'Could not load results' },
     errorDesc: { type: String, default: 'Please close and try again.' },
     emptyTitle: { type: String, default: 'No results yet' },

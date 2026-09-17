@@ -491,7 +491,8 @@
       "title": "Know Ne to practise Sonraki.",
       "subtitle": "Record a verse, review the weak spots, and keep the next oturum focused.",
       "button": "Ücretsiz hesap oluştur",
-      "note": "No card needed için Free."
+      "note": "No card needed için Free.",
+      "kicker": "Begin"
     },
     "badge": {
       "free": "« Free»",
@@ -611,6 +612,11 @@
         }
       },
       "stepOf": "Adım {current} / {total}"
+    },
+    "purpose": {
+      "kicker": "The journey",
+      "title": "Memorisation is built through return.",
+      "text": "An ayah listened to, repeated, recited and revisited becomes part of a longer journey. Mutqin is designed to make that journey clearer, calmer and easier to continue."
     }
   },
   "memorisation": {
@@ -843,9 +849,9 @@
     },
     "practiceTools": {
       "beginner": "Başlangıç araçları",
-      "beginnerDesc": "Ücretsiz. Her seferinde bir ayet, metni gizle ve dinle-tekrar et.",
+      "beginnerDesc": "Ayetleri okuma, dinleme ve tekrar için basit seçenekler.",
       "advanced": "Gelişmiş araçlar",
-      "advancedDesc": "Ayetleri birleştirin ve bellek kelimelerini vurgulayın. Bu iki araç Pro ister."
+      "advancedDesc": "Ayetleri bağlama ve anahtar kelimeleri hatırlama teknikleri."
     },
     "activePracticeSetup": {
       "title": "aktif practice setup",
@@ -1711,7 +1717,7 @@
       "steps": {
         "welcome": {
           "title": "Burası Hıfz alanı",
-          "body": "Hıfz çalışma alanınız. Yol kısa kalsın diye Al-Fatiha 1–5 ile başlıyoruz.",
+          "body": "Hıfz çalışma alanınız. Yol kısa kalsın diye Al-Fatiha 1–3 ile başlıyoruz.",
           "waitHint": ""
         },
         "controls": {
@@ -1721,7 +1727,7 @@
         },
         "setup": {
           "title": "Kurulum",
-          "body": "Sure ve ayet aralığını burada seçin. Odaklı tekrar Al-Fatiha 1–5, Alafasy ve 2 tekrar ile başlar.",
+          "body": "Sure ve ayet aralığını burada seçin. Odaklı tekrar Al-Fatiha 1–3, Alafasy ve 2 tekrar ile başlar.",
           "waitHint": ""
         },
         "practice": {
@@ -1736,17 +1742,17 @@
         },
         "start": {
           "title": "Oturumu başlat",
-          "body": "Bu, odaklı tekrarı başlatır: Al-Fatiha 1–5, Alafasy ve 2 tekrar.",
+          "body": "Bu, odaklı tekrarı başlatır: Al-Fatiha 1–3, Alafasy ve 2 tekrar.",
           "waitHint": ""
         },
         "session": {
           "title": "Bu ayetleri çalışın",
-          "body": "Al-Fatiha 1–5 sayfada kalır. Oturum sırasında burada dinleyin ve tekrarlayın.",
+          "body": "Al-Fatiha 1–3 sayfada kalır. Oturum sırasında burada dinleyin ve tekrarlayın.",
           "waitHint": ""
         },
         "ai": {
           "title": "Yapay zekâ tilavetiyle kontrol",
-          "body": "Bu yapay zekâ tilavet kontrolüdür. Dinler ve her kelimeyi işaretler. % kontrolü metnin ne kadarının görünür kalacağını ayarlar — düşük yüzde daha çok gizler.",
+          "body": "Bu yapay zekâ tilavet kontrolüdür. Dinler ve her kelimeyi işaretler. Kendi kendine bitmez.",
           "waitHint": ""
         },
         "results": {
@@ -1761,7 +1767,7 @@
         },
         "plan": {
           "title": "Önerilen planlar",
-          "body": "Bu kontrolden sonra iki plan var: zayıf ayetleri çalışın veya Al-Fatiha 1–5’ü Alafasy ile 2 kez tekrarlayın.",
+          "body": "Bu kontrolden sonra iki plan var: zayıf ayetleri çalışın veya Al-Fatiha 1–3’ü Alafasy ile 2 kez tekrarlayın.",
           "waitHint": ""
         },
         "dashboard": {
@@ -1784,7 +1790,7 @@
       "steps": {
         "workspace": "Hıfz alanındasınız, ana pratik çalışma alanı.",
         "welcome": "Tekrar hoş geldiniz görünürse Yeni oturum başlat’ı seçin.",
-        "setup": "Kontroller → Kurulum’u açın, Al-Fatiha 1–5’ü seçin, ardından Oturumu başlatın.",
+        "setup": "Kontroller → Kurulum’u açın, Al-Fatiha 1–3’ü seçin, ardından Oturumu başlatın.",
         "aiCheck": "Çalışın, oturumu bitirin, sonra Hıfzı kontrol et (YZ).",
         "plan": "Bir öneri planı seçin ve Bu planı başlat’a dokunun; sadece seçmekle kalmayın.",
         "keepGoing": "İlerleme ve muraja’ah için Panoyu açın, sonra sonraki oturum için buraya dönün."
@@ -2745,7 +2751,8 @@
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with odak modu.",
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} önce continuing.",
         "aiWeakAyahsLabel": "Odak ayahs",
-        "aiFirstBody": "Önce yapay zeka ile test edin. Skorunuz ve planınız dinledikten sonra burada görünür."
+        "aiFirstBody": "Önce yapay zeka ile test edin. Skorunuz ve planınız dinledikten sonra burada görünür.",
+        "whatNextRevisionLead": "Practise this range again with the recommended technique. The weak ayahs are shown below so you know what needs extra attention."
       }
     },
     "aiRecitePlan": {
@@ -3913,7 +3920,7 @@
     "sessionSaveFailed": "Bu oturum kaydedilemedi. Tekrar deneyin.",
     "sessionSaveSyncFailed": "Oturum bu cihazda kaydedildi. Senkron birazdan yeniden denenecek.",
     "sessionSaveLimitReached": "Kayıtlı oturum sınırına ulaşıldı ({max}). Başka kaydetmek için birini silin.",
-    "premiumTechniqueRequired": "Ayetleri birleştirme ve bellek kelimelerini vurgulama Pro ister. Açmak için yükseltin.",
+    "premiumTechniqueRequired": "Bu teknik Premium gerektirir. Açmak için yükseltin.",
     "couldNotPlayRecording": "We could not play this kayıt. Try reloading it or record again.",
     "defaultSessionLoaded": "Default oturum loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no ezber techniques.",
     "recordingRenamed": "kayıt renamed to \"{name}\".",

@@ -704,10 +704,10 @@ export default {
           if (node) controller.wordCache.set(index, node)
         }
         if (!node?.classList) continue
-        const status = String(patch.status || 'notAttempted')
+        const status = this.normaliseLiveStatus(patch.status)
         const statusClass = `recitation-word-${status}`
         if (!node.classList.contains(statusClass)) {
-          ;['correct', 'partial', 'incorrect', 'omitted', 'notAttempted', 'pending'].forEach((name) => {
+          ;['correct', 'partial', 'incorrect', 'omitted', 'notAttempted', 'pending', 'uncertain'].forEach((name) => {
             node.classList.remove(`recitation-word-${name}`)
           })
           node.classList.add(statusClass)
@@ -749,6 +749,16 @@ export default {
         this.scrollActiveIntoView(el)
       }
       return changed
+    },
+    normaliseLiveStatus(value) {
+      const status = String(value || 'notAttempted').toLowerCase().trim()
+      if (status.includes('uncertain') || status.includes('unrecogn')) return 'uncertain'
+      if (status.includes('omit') || status.includes('missing') || status.includes('skip')) return 'omitted'
+      if (status.includes('incorrect') || status === 'wrong' || status === 'red' || status.includes('mismatch')) return 'incorrect'
+      if (status.includes('partial') || status.includes('close') || status === 'amber' || status === 'yellow') return 'partial'
+      if (status === 'correct' || status === 'green' || status.includes('word-correct')) return 'correct'
+      if (status === 'pending' || status === 'waiting' || status === 'gray' || status === 'grey') return 'pending'
+      return 'notAttempted'
     },
     syncTajweedSegmentState(node, { active = false, completed = false, needsReview = false } = {}) {
       if (!node?.querySelectorAll) return

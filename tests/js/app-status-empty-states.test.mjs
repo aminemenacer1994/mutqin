@@ -28,6 +28,7 @@ test('memorisation wires intentional empty and error states', () => {
   const js = read('resources/js/views/Memorisation.js')
   const vue = read('resources/js/views/Memorisation.vue')
   assert.match(js, /shouldShowWorkspaceEmptyState\(\)\s*\{[\s\S]*return false/)
+  assert.match(js, /ensureEmptyWorkspaceEntrySurface\(\)/)
   assert.match(js, /showSessionOverviewIdleActions\(\)\s*\{[\s\S]*return false/)
   assert.match(js, /showIdleQuickStartChoices\(\)\s*\{[\s\S]*return false/)
   assert.match(js, /madaniPagesError/)

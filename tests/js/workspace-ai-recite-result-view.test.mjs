@@ -46,6 +46,26 @@ assert.equal(view.showDetailsToggle, true, 'details toggle is available')
 assert.ok(view.colourSegments.length >= 1, 'colour meter segments exist')
 assert.equal(view.audioUrl, 'blob:audio', 'audio url is preserved')
 
+const omissionOnly = buildWorkspaceAiReciteResultView({
+  result: {
+    wordStatuses: [
+      { text: 'وَاحِد', status: 'correct', ayahNumber: 1, ayahWordIndex: 0 },
+      { text: 'اثْنَان', status: 'omitted', ayahNumber: 1, ayahWordIndex: 1 },
+      { text: 'ثَلَاثَة', status: 'omitted', ayahNumber: 1, ayahWordIndex: 2 },
+    ],
+    accuracyScore: 33,
+  },
+  surahName: 'Al-Fatiha',
+  rangeStart: 1,
+  rangeEnd: 1,
+}, t)
+
+assert.equal(
+  omissionOnly.outcomeStatChips.some((chip) => chip.key === 'issues'),
+  false,
+  'omissions do not appear as incorrect words in the red issue pill',
+)
+
 const insufficient = buildWorkspaceAiReciteResultView({
   result: { wordStatuses: [], failureReason: 'silence' },
   surahName: 'Al-Fatiha',

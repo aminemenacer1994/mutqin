@@ -1845,7 +1845,8 @@ export default {
         || null
     },
     shouldShowWorkspaceEmptyState() {
-      // Session setup belongs in the tools offcanvas / Welcome Back modal — not inline cards.
+      // Session setup belongs in the tools offcanvas / Welcome Back modal.
+      // Keep the legacy inline card retired so there is one clear setup prompt.
       return false
     },
     shouldShowWorkspaceMain() {
@@ -2309,6 +2310,9 @@ export default {
       if (this.askMutqinOpen) return false
       if (this.isOnboardingExperienceActive || this.isWelcomeBackWorkspaceHidden) return false
       if (this.showSessionOverviewIdleActions && !this.hasVerses) return false
+      // A 0% "This session" rail without ayahs is an orphaned progress shell,
+      // not useful progress. Plans and loaded sessions may still show it.
+      if (!this.hasVerses && !this.hifzPlanExists && !this.isPostSessionChoiceVisible) return false
       return true
     },
     shouldShowOffcanvasTabs() {
@@ -5157,7 +5161,8 @@ export default {
         })
       }
       const counts = details.colorCounts || {}
-      const wrong = Number(counts.red || 0) + Number(counts.black || 0)
+      // Keep the red pill honest: black is an omission, not an incorrect word.
+      const wrong = Number(counts.red || 0)
       const close = Number(counts.amber || 0)
       if (wrong > 0 || close > 0) {
         chips.push({
@@ -10234,6 +10239,9 @@ export default {
       if (this.isDemoMode) {
         this.initGuestDemoWorkspace()
       }
+      // No active session means setup is the page's primary task. Open the
+      // existing setup prompt instead of leaving only an empty workspace shell.
+      this.ensureEmptyWorkspaceEntrySurface()
     }
 
     window.addEventListener('online', this.handleOnline)
@@ -10495,6 +10503,18 @@ export default {
         this.toolsPanelMounted = true
         this.ensureSecondaryToolsLoaded()
       }
+    },
+    showAiAudioConsentModal(newVal) {
+      if (newVal) {
+        // Consent is a blocking decision. Never leave the controls drawer
+        // visible behind it or interactive underneath its backdrop.
+        this.showTools = false
+        this.postSessionOffcanvasOpen = false
+        this.topCardMenuOpen = false
+        this.syncBodyScrollLock(true)
+        return
+      }
+      this.syncBodyScrollLock(false)
     },
     showHifzPlanModal(newVal) {
       this.syncBodyScrollLock(newVal)
@@ -33240,6 +33260,21 @@ export default {
     openAdvancedControls() {
       // Keep power features accessible, but behind a tertiary surface.
       this.openToolsPanel()
+    },
+    ensureEmptyWorkspaceEntrySurface() {
+      if (!this.appReady || !this.isDataReady || this.hasVerses || this.showTools) return
+      if (
+        this.isOnboardingExperienceActive
+        || this.workspaceTourActive
+        || this.isWelcomeBackWorkspaceHidden
+        || this.showWelcomeBackModal
+        || this.returningUserChoicePending
+        || this.showPostSessionModal
+        || this.isPostSessionChoiceVisible
+        || this.showSessionExitModal
+        || this.shouldShowWelcomeBackResumeGate
+      ) return
+      this.openToolsPanel({ tab: 'tools' })
     },
     openDashboardView() {
       try {

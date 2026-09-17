@@ -124,6 +124,42 @@ const diarizedState = stabilizeRecognitionEvent(createRecognitionState(), {
 })
 assert.deepEqual(Array.from(diarizedState.committedWords, word => word.speaker), ['S1', 'S2'])
 
+// Transcript-only envelopes and alternate final markers are valid inputs at
+// the provider boundary; they must enter the same stabilizer as word results.
+let transcriptOnlyState = stabilizeRecognitionEvent(createRecognitionState(), {
+  provider: 'speechmatics',
+  type: 'partial',
+  transcript: 'الحمد لله',
+  confidence: 0.9,
+})
+assert.deepEqual(Array.from(transcriptOnlyState.interimWords, word => word.word), ['الحمد', 'لله'])
+transcriptOnlyState = stabilizeRecognitionEvent(transcriptOnlyState, {
+  provider: 'speechmatics',
+  speechFinal: true,
+  transcript: 'الحمد لله',
+  confidence: 0.9,
+})
+assert.deepEqual(Array.from(transcriptOnlyState.committedWords, word => word.word), ['الحمد', 'لله'])
+
+const pendingBeforeEmptyFinal = stabilizeRecognitionEvent(createRecognitionState(), {
+  provider: 'speechmatics',
+  isFinal: false,
+  segmentId: 'pending-empty-final',
+  words: [{ word: 'رب', confidence: 0.9 }],
+})
+const pendingAfterEmptyFinal = stabilizeRecognitionEvent(pendingBeforeEmptyFinal, {
+  provider: 'speechmatics',
+  isFinal: true,
+  segmentId: 'pending-empty-final',
+  words: [],
+})
+assert.deepEqual(Array.from(pendingAfterEmptyFinal.interimWords, word => word.word), ['رب'])
+
+const phraseAlignment = align(['الحمد لله', 'رب العالمين'])
+const wordAlignment = align(['الحمد', 'لله', 'رب', 'العالمين'])
+assert.deepEqual(types(phraseAlignment), types(wordAlignment), 'phrase-level entries are tokenized consistently')
+assert.equal(phraseAlignment.transcript, wordAlignment.transcript)
+
 const repetitionRestart = align(['الحمد', 'لله', 'لله', 'الحمد', 'لله', 'رب', 'العالمين'].map(word => ({ word, confidence: 0.95 })))
 assert.ok(extras(repetitionRestart).includes('REPETITION'))
 assert.ok(extras(repetitionRestart).includes('RESTART'))

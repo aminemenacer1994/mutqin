@@ -225,18 +225,27 @@ export function stabilizeRecognitionEvent(state = createRecognitionState(), even
     : DEFAULT_RECITATION_CONFIDENCE_THRESHOLD
   const next = cloneRecognitionState(state)
   const sequence = Number(next.sequence || 0)
-  const normalizedWords = normalizeRecognitionWords(event.words || [], {
+  const isFinal = event?.type === 'final'
+    || event?.isFinal === true
+    || event?.speechFinal === true
+  const eventWords = Array.isArray(event?.words) && event.words.length
+    ? event.words
+    : (String(event?.transcript || '').trim()
+      ? [{ word: String(event.transcript).trim(), confidence: event?.confidence }]
+      : [])
+  const segmentId = getRecognitionSegmentId({ ...event, words: eventWords }, sequence)
+  const normalizedWords = normalizeRecognitionWords(eventWords, {
     confidenceThreshold: threshold,
     provider: event.provider || 'unknown',
-    segmentId: getRecognitionSegmentId(event, sequence),
+    segmentId,
     eventSequence: sequence
   })
   const rawEvent = {
     sequence,
     provider: event.provider || 'unknown',
-    isFinal: !!event.isFinal,
+    isFinal,
     speechFinal: !!event.speechFinal,
-    segmentId: getRecognitionSegmentId(event, sequence),
+    segmentId,
     start: finiteOrNull(event.start),
     duration: finiteOrNull(event.duration),
     transcript: String(event.transcript || ''),
@@ -248,23 +257,29 @@ export function stabilizeRecognitionEvent(state = createRecognitionState(), even
 
   next.sequence = sequence + 1
   next.rawEvents.push(rawEvent)
-  next.rejectedWords.push(...collectRejectedRecognitionWords(event.words || [], threshold, event.provider || 'unknown', rawEvent.segmentId))
+  next.rejectedWords.push(...collectRejectedRecognitionWords(eventWords, threshold, event.provider || 'unknown', rawEvent.segmentId))
 
   if (!rawEvent.isFinal) {
-    next.interimSegment = normalizedWords.length
-      ? {
-          segmentId: rawEvent.segmentId,
-          provider: rawEvent.provider,
-          sequence,
-          start: rawEvent.start,
-          duration: rawEvent.duration,
-          speechFinal: false,
-          words: normalizedWords.map(word => ({ ...word, segmentId: rawEvent.segmentId }))
-        }
-      : null
+    // Empty keep-alive / punctuation partials must not erase the last useful
+    // hypothesis while the provider is still resolving the utterance.
+    if (!normalizedWords.length) return next
+    next.interimSegment = {
+      segmentId: rawEvent.segmentId,
+      provider: rawEvent.provider,
+      sequence,
+      start: rawEvent.start,
+      duration: rawEvent.duration,
+      speechFinal: false,
+      words: normalizedWords.map(word => ({ ...word, segmentId: rawEvent.segmentId }))
+    }
     next.interimWords = suppressDuplicateRecognitionWords(normalizedWords)
     return next
   }
+
+  // A final envelope without word results is valid provider output (for
+  // example punctuation-only or an empty utterance). It cannot confirm the
+  // pending hypothesis, so retain it until EndOfTranscript/finalisation.
+  if (!normalizedWords.length) return next
 
   const existingKey = findSupersededSegmentKey(next.bufferedSegments, rawEvent)
   const segmentKey = existingKey || rawEvent.segmentId
@@ -1217,52 +1232,90 @@ function normalizeRecognitionWords(words = [], options = {}) {
 
 function collectRejectedRecognitionWords(words = [], threshold, provider, segmentId) {
   return (Array.isArray(words) ? words : [])
-    .map((entry, index) => {
+    .flatMap((entry, index) => {
       const rawWord = typeof entry === 'string'
         ? entry
         : (entry?.word || entry?.text || entry?.transcript || entry?.punctuated_word || '')
-      const word = tokenizeRecitationWords(rawWord)[0] || ''
+      const tokens = tokenizeRecitationWords(rawWord)
       const confidence = Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 1
-      if (!word || confidence >= threshold) return null
-      return {
+      if (!tokens.length || confidence >= threshold) return []
+      return tokens.map((word, tokenIndex) => ({
         word,
-        display: rawWord,
+        display: typeof entry === 'string' ? word : rawWord,
         rawWord: String(rawWord || '').trim() || word,
         confidence,
         provider: entry?.provider || provider,
-        start: finiteOrNull(entry?.start ?? entry?.startTime),
-        end: finiteOrNull(entry?.end ?? entry?.endTime),
+        start: tokenIndex === 0 ? finiteOrNull(entry?.start ?? entry?.startTime) : null,
+        end: tokenIndex === 0 ? finiteOrNull(entry?.end ?? entry?.endTime) : null,
         segmentId,
-        sourceIndex: index,
+        sourceIndex: index + tokenIndex,
         reason: 'below-confidence-threshold'
-      }
+      }))
     })
-    .filter(Boolean)
 }
 
 function getRecognitionSegmentId(event = {}, sequence = 0) {
   if (event.segmentId) return String(event.segmentId)
+  if (event.segment_id) return String(event.segment_id)
   const provider = event.provider || 'unknown'
   const start = finiteOrNull(event.start)
   const duration = finiteOrNull(event.duration)
-  const words = normalizeRecognitionWords(event.words || [], {
-    confidenceThreshold: 0,
-    provider,
-    segmentId: 'signature',
-    eventSequence: sequence
-  }).map(word => word.word).join('|')
+  const words = normalizeRecognitionWords(
+    Array.isArray(event.words) && event.words.length
+      ? event.words
+      : (String(event.transcript || '').trim() ? [{ word: event.transcript }] : []),
+    {
+      confidenceThreshold: 0,
+      provider,
+      segmentId: 'signature',
+      eventSequence: sequence
+    }
+  ).map(word => word.word).join('|')
   if (start !== null || duration !== null) return `${provider}:${start ?? 'na'}:${duration ?? 'na'}`
   return `${provider}:seq:${sequence}:${words}`
 }
 
 function findSupersededSegmentKey(segments = {}, event = {}) {
+  if (event.segmentId) {
+    const explicitKey = String(event.segmentId)
+    if (segments[explicitKey]) return explicitKey
+  }
+  if (event.segment_id) {
+    const explicitKey = String(event.segment_id)
+    if (segments[explicitKey]) return explicitKey
+  }
   const start = finiteOrNull(event.start)
   const duration = finiteOrNull(event.duration)
-  if (start === null && duration === null) return ''
-  return Object.entries(segments).find(([, segment]) => {
+  const exact = Object.entries(segments).find(([, segment]) => {
     if (segment.provider !== event.provider) return false
-    return finiteOrNull(segment.start) === start && finiteOrNull(segment.duration) === duration
+    const segmentStart = finiteOrNull(segment.start)
+    const segmentDuration = finiteOrNull(segment.duration)
+    if (start !== null && segmentStart !== start) return false
+    if (duration !== null && segmentDuration !== null && segmentDuration !== duration) return false
+    return (start !== null || duration !== null) && (segmentStart !== null || segmentDuration !== null)
   })?.[0] || ''
+  if (exact) return exact
+
+  // Some Speechmatics-compatible gateways omit utterance timing on one of the
+  // partial/final envelopes. Reuse an immediately adjacent identical final
+  // envelope when no timing exists; timed deliberate repetitions stay separate.
+  const incomingWords = normalizeRecognitionWords(event.words || [], { confidenceThreshold: 0 })
+    .map(word => word.word)
+  if (start === null && duration === null && incomingWords.length) {
+    const latest = Object.entries(segments)
+      .filter(([, segment]) => segment.provider === event.provider)
+      .sort(([, left], [, right]) => Number(right.sequence || 0) - Number(left.sequence || 0))[0]
+    if (latest) {
+      const [key, segment] = latest
+      const existingWords = (segment.words || []).map(word => word.word)
+      if (Number(event.sequence || 0) - Number(segment.sequence || 0) <= 1
+        && existingWords.length === incomingWords.length
+        && existingWords.every((word, index) => word === incomingWords[index])) {
+        return key
+      }
+    }
+  }
+  return ''
 }
 
 function selectPreferredRecognitionSegment(currentSegment = null, incomingSegment = null) {
@@ -1334,20 +1387,35 @@ function suppressDuplicateRecognitionWords(words = []) {
 
 function normaliseCommittedRecognitionWords(words = [], options = {}) {
   const normalized = (Array.isArray(words) ? words : [])
-    .map((entry, index) => {
-      const raw = entry?.word || entry?.text || entry?.display || ''
-      const word = tokenizeRecitationWords(raw)[0] || ''
-      if (!word) return null
-      return {
-        ...entry,
+    .flatMap((entry, index) => {
+      const raw = typeof entry === 'string'
+        ? entry
+        : (entry?.word || entry?.text || entry?.display || '')
+      const tokens = tokenizeRecitationWords(raw)
+      if (!tokens.length) return []
+      return tokens.map((word, tokenIndex) => ({
+        ...(entry && typeof entry === 'object' ? entry : {}),
         word,
-        display: entry?.display || entry?.text || raw || word,
-        rawWord: entry?.rawWord || entry?.raw_word || entry?.display || raw || word,
+        display: typeof entry === 'string'
+          ? word
+          : (entry?.display || entry?.text || raw || word),
+        rawWord: typeof entry === 'string'
+          ? word
+          : (entry?.rawWord || entry?.raw_word || entry?.display || raw || word),
         confidence: Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 1,
-        commitIndex: Number.isFinite(Number(entry?.commitIndex)) ? Number(entry.commitIndex) : index
-      }
+        // A phrase-level fallback has no word-level timing. Keep timing on the
+        // first token only instead of assigning the full phrase duration to all.
+        ...(tokenIndex > 0 ? {
+          start: null,
+          end: null,
+          startTime: null,
+          endTime: null,
+        } : {}),
+        commitIndex: Number.isFinite(Number(entry?.commitIndex))
+          ? Number(entry.commitIndex) + tokenIndex
+          : index + tokenIndex
+      }))
     })
-    .filter(Boolean)
   return options.suppressDuplicates === false ? normalized : suppressDuplicateRecognitionWords(normalized)
 }
 

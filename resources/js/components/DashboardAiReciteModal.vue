@@ -589,7 +589,9 @@ export default {
           recognition_words: recognitionWords,
           transcript: capture.transcript || '',
           duration_ms: capture.durationMs || null,
-          provider: 'speechmatics',
+          provider: capture.provider || 'speechmatics',
+          raw_speechmatics: capture.rawEvents || [],
+          audio_quality_metrics: capture.audioQualityMetrics || null,
           peek_used: this.peekUsed,
           idempotency_key: this.submitKey,
         })

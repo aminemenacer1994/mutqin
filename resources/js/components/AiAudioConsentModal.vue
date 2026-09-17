@@ -11,16 +11,25 @@
       @keydown="onOverlayKeydown"
     >
       <div ref="dialog" class="ai-audio-consent-card" @click.stop>
-        <h2 id="aiAudioConsentTitle" class="ai-audio-consent-title">{{ title }}</h2>
+        <div class="ai-audio-consent-heading">
+          <span class="ai-audio-consent-icon" aria-hidden="true">
+            <i class="bi bi-mic-fill"></i>
+          </span>
+          <div>
+            <span class="ai-audio-consent-eyebrow">AI RECITATION</span>
+            <h2 id="aiAudioConsentTitle" class="ai-audio-consent-title">{{ title }}</h2>
+          </div>
+        </div>
         <p id="aiAudioConsentBody" class="ai-audio-consent-lead">{{ lead }}</p>
-        <p class="ai-audio-consent-privacy">
+        <div class="ai-audio-consent-privacy">
+          <i class="bi bi-shield-check" aria-hidden="true"></i>
           <a
             :href="privacyPolicyUrl"
             target="_blank"
             rel="noopener noreferrer"
             @click.stop
           >{{ privacyPolicyLabel }}</a>
-        </p>
+        </div>
         <div class="ai-audio-consent-actions">
           <button
             type="button"
@@ -114,43 +123,81 @@ export default {
     max(1rem, env(safe-area-inset-right, 0px))
     max(1rem, env(safe-area-inset-bottom, 0px))
     max(1rem, env(safe-area-inset-left, 0px));
-  background: color-mix(in srgb, #0a100d 58%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: color-mix(in srgb, #0a100d 64%, transparent);
+  backdrop-filter: blur(9px) saturate(0.82);
+  -webkit-backdrop-filter: blur(9px) saturate(0.82);
   pointer-events: auto;
 }
 
 .ai-audio-consent-card {
-  width: min(100%, 22rem);
+  width: min(100%, 30rem);
   max-width: 100%;
   box-sizing: border-box;
   margin: 0;
-  padding: 1.25rem 1.2rem 1.1rem;
-  border-radius: 1rem;
+  padding: clamp(1.35rem, 3vw, 1.9rem);
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: 1.35rem;
   background: var(--surface, #f6f1ea);
   color: var(--text-primary, #2c2118);
-  box-shadow: 0 18px 48px color-mix(in srgb, #1a1410 28%, transparent);
+  box-shadow: 0 24px 70px color-mix(in srgb, #1a1410 34%, transparent), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
   pointer-events: auto;
+}
+
+.ai-audio-consent-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.ai-audio-consent-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid color-mix(in srgb, #8b5e3c 28%, transparent);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, #b77a45 14%, transparent);
+  color: #8b5e3c;
+  font-size: 1.1rem;
+}
+
+.ai-audio-consent-eyebrow {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #8b5e3c;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
 }
 
 .ai-audio-consent-title {
   margin: 0;
-  font-size: clamp(1.05rem, 2.8vw, 1.2rem);
+  font-size: clamp(1.25rem, 3vw, 1.55rem);
   font-weight: 650;
   line-height: 1.3;
   letter-spacing: -0.01em;
 }
 
 .ai-audio-consent-lead {
-  margin: 0.7rem 0 0;
-  font-size: 0.94rem;
-  line-height: 1.5;
+  margin: 1.15rem 0 0;
+  font-size: 1rem;
+  line-height: 1.62;
   opacity: 0.92;
 }
 
 .ai-audio-consent-privacy {
-  margin: 0.75rem 0 0;
-  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  margin: 1rem 0 0;
+  color: #8b5e3c;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.ai-audio-consent-privacy i {
+  font-size: 0.95rem;
 }
 
 .ai-audio-consent-privacy a {
@@ -162,8 +209,8 @@ export default {
 .ai-audio-consent-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.55rem;
-  margin-top: 1.15rem;
+  gap: 0.7rem;
+  margin-top: 1.45rem;
 }
 
 .ai-audio-consent-btn {
@@ -171,15 +218,15 @@ export default {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.65rem;
+  min-height: 3rem;
   width: 100%;
   margin: 0;
   padding: 0.55rem 0.75rem;
-  border-radius: 0.7rem;
+  border-radius: 0.85rem;
   border: 1px solid transparent;
   font: inherit;
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-size: 0.98rem;
+  font-weight: 650;
   line-height: 1.2;
   cursor: pointer;
   pointer-events: auto;
@@ -204,14 +251,45 @@ export default {
 }
 
 [data-theme="dark"] .ai-audio-consent-card {
-  background: #1c1814;
+  border-color: rgba(255, 236, 216, 0.14);
+  background: linear-gradient(160deg, #27211c, #1b1714);
   color: #f3ebe2;
+  box-shadow: 0 26px 72px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+[data-theme="dark"] .ai-audio-consent-icon {
+  border-color: rgba(196, 164, 132, 0.35);
+  background: rgba(196, 164, 132, 0.14);
+  color: #e3bd91;
+}
+
+[data-theme="dark"] .ai-audio-consent-eyebrow,
+[data-theme="dark"] .ai-audio-consent-privacy {
+  color: #e3bd91;
 }
 
 [data-theme="dark"] .ai-audio-consent-btn--primary {
   background: #c4a484;
   border-color: #c4a484;
   color: #1c1814;
+}
+
+[data-theme="sepia"] .ai-audio-consent-card {
+  border-color: rgba(118, 88, 54, 0.22);
+  background: linear-gradient(160deg, #fffaf1, #f2e6d2);
+}
+
+@media (max-width: 520px) {
+  .ai-audio-consent-overlay {
+    align-items: flex-end;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .ai-audio-consent-card {
+    width: 100%;
+    border-radius: 1.25rem;
+    padding: 1.35rem;
+  }
 }
 
 @media (max-width: 420px) {

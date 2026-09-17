@@ -491,7 +491,8 @@
       "title": "Sachez quoi pratiquer ensuite.",
       "subtitle": "Enregistrez un verset, révisez les points faibles, et gardez la prochaine session ciblée.",
       "button": "Créer un compte gratuit",
-      "note": "Aucune carte requise pour le plan gratuit."
+      "note": "Aucune carte requise pour le plan gratuit.",
+      "kicker": "Commencer"
     },
     "badge": {
       "free": "Gratuit",
@@ -611,6 +612,11 @@
         }
       },
       "stepOf": "Étape {current} sur {total}"
+    },
+    "purpose": {
+      "kicker": "Le parcours",
+      "title": "La mémorisation se construit dans le retour.",
+      "text": "Une ayah écoutée, répétée, récitée puis revue s’inscrit dans un parcours plus long. Mutqin rend ce parcours plus clair, plus serein et plus facile à poursuivre."
     }
   },
   "memorisation": {
@@ -843,9 +849,9 @@
     },
     "practiceTools": {
       "beginner": "Outils débutant",
-      "beginnerDesc": "Gratuit. Une ayah à la fois, masquer le texte et écouter puis répéter.",
+      "beginnerDesc": "Options simples pour lire, écouter et répéter les ayahs.",
       "advanced": "Outils avancés",
-      "advancedDesc": "Relier les ayahs et surligner les mots-ancres. Ces deux outils nécessitent Pro."
+      "advancedDesc": "Techniques pour relier les ayahs et mémoriser les mots clés."
     },
     "activePracticeSetup": {
       "title": "Réglage de la pratique",
@@ -1784,7 +1790,7 @@
       "steps": {
         "workspace": "Vous êtes sur Mémorisation, l’espace principal de pratique.",
         "welcome": "Si « Bon retour » apparaît, choisissez Commencer une nouvelle session.",
-        "setup": "Ouvrez Contrôles → Configuration, choisissez Al-Fatiha 1–5, puis Démarrez la session.",
+        "setup": "Ouvrez Contrôles → Configuration, choisissez Al-Fatiha 1–3, puis Démarrez la session.",
         "aiCheck": "Pratiquez, terminez la session, puis Vérifiez la mémorisation (IA).",
         "plan": "Choisissez un plan recommandé et appuyez sur Démarrer ce plan, ne vous arrêtez pas à la sélection.",
         "keepGoing": "Ouvrez le tableau de bord pour le progrès et la muraja’ah, puis revenez ici pour la session suivante."
@@ -2745,7 +2751,8 @@
         "aiFocusWeakAyah": "Spend the next pass on ayah {ayah} with modo enfoque.",
         "aiFocusWeakAyahs": "Revisit ayahs {ayahs} antes continuing.",
         "aiWeakAyahsLabel": "Enfoque ayahs",
-        "aiFirstBody": "Testez d’abord avec l’IA. Votre score et votre plan apparaîtront ici après l’écoute."
+        "aiFirstBody": "Testez d’abord avec l’IA. Votre score et votre plan apparaîtront ici après l’écoute.",
+        "whatNextRevisionLead": "Pratiquez à nouveau cette plage avec la technique recommandée. Les ayahs faibles sont affichées ci-dessous pour vous aider à savoir lesquelles nécessitent plus d’attention."
       }
     },
     "aiRecitePlan": {
@@ -3913,7 +3920,7 @@
     "sessionSaveFailed": "Impossible d’enregistrer cette session. Réessayez.",
     "sessionSaveSyncFailed": "Session enregistrée sur cet appareil. La synchronisation réessaiera sous peu.",
     "sessionSaveLimitReached": "Limite de sessions enregistrées atteinte ({max}). Supprimez-en une pour en enregistrer une autre.",
-    "premiumTechniqueRequired": "Relier les ayahs et surligner les mots-ancres nécessitent Pro. Passez à Pro pour les débloquer.",
+    "premiumTechniqueRequired": "Cette technique nécessite Premium. Passez à Premium pour la débloquer.",
     "couldNotPlayRecording": "We could not play this grabación. Try reloading it or record again.",
     "defaultSessionLoaded": "Default sesión loaded: Al-Fatihah 1-7, Alafasy, standard speed, 1 repeat, no memorización techniques.",
     "recordingRenamed": "grabación renamed to \"{name}\".",

@@ -63180,6 +63180,99 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   display: block;
 }
 
+/* Result review: keep the important feedback readable at every width. */
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+  width: min(52rem, calc(100vw - 1.25rem)) !important;
+  max-height: min(94dvh, 60rem) !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__body {
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-review {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__outcome-tools {
+  align-items: stretch !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__outcome-chip {
+  min-width: min(100%, 11rem);
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__check-meter-track {
+  min-height: 0.65rem !important;
+  border-radius: 999px !important;
+  overflow: hidden !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-metrics--details {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-metrics--details > li {
+  min-width: 0 !important;
+  padding: 0.58rem 0.68rem !important;
+  border: 1px solid var(--ps-pro-line, rgba(92, 70, 47, 0.18)) !important;
+  border-radius: 0.72rem !important;
+  background: color-mix(in srgb, var(--ps-pro-panel, #fffaf1) 76%, transparent) !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-metrics--details > li span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .post-session-simple.workspace-recite-result .post-session-simple__ai-metrics--details > li,
+.post-session-simple.workspace-recite-result[data-theme="dark"] .post-session-simple__ai-metrics--details > li {
+  background: rgba(255, 255, 255, 0.055) !important;
+}
+
+@media (max-width: 760px) {
+  .post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+  .post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+    width: calc(100vw - 0.65rem) !important;
+    max-height: calc(100dvh - 0.65rem) !important;
+    border-radius: 1.05rem !important;
+  }
+
+  .post-session-simple.workspace-recite-result .post-session-simple__title {
+    max-width: calc(100vw - 6rem) !important;
+    font-size: clamp(1.6rem, 7vw, 2.35rem) !important;
+    line-height: 1.06 !important;
+  }
+
+  .post-session-simple.workspace-recite-result .post-session-simple__subtitle {
+    font-size: 0.95rem !important;
+  }
+
+  .post-session-simple.workspace-recite-result .post-session-simple__ai-metrics--details {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .post-session-simple.workspace-recite-result .post-session-simple__outcome-tools {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .post-session-simple.workspace-recite-result .post-session-simple__outcome-chip {
+    width: 100% !important;
+  }
+}
+
 /* Session reading card: wrap ayahs in the card. Never clip or scroll sideways. */
 .app .main.mushaf-mode-active .mushaf-workspace,
 .app .main.mushaf-mode-active .mushaf-shell,
@@ -64034,4 +64127,13 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan {
     justify-self: stretch !important;
   }
+}
+
+/* AI consent owns the surface while it is open; keep a mounted tools panel
+   fully out of the visual and pointer layers behind the teleported modal. */
+.app.ai-audio-consent-active .tools,
+.app.ai-audio-consent-active .tools-backdrop {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }

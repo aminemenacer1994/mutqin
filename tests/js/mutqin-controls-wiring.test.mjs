@@ -442,7 +442,7 @@ includesAll('ai recitation speechmatics stability', [
   /const words = extractSpeechmaticsTranscriptWords\(message, \{ isPartial: !isFinal \}\)/,
   /const transcript = String\(message\?\.metadata\?\.transcript \|\| ''\)\.trim\(\) \|\| words\.map\(item => item\.word\)\.join\(' '\)/,
   /const displayWords = getRecognitionDisplayWords\(state\)/,
-  /displayWords: Array\.isArray\(displayWords\) && displayWords\.length \? displayWords : committedWords/,
+  /Array\.isArray\(displayWords\) && displayWords\.length \? displayWords : committedWords/,
   /const strictProgression = !!this\.aiRecitationStrictProgression/,
   /const liveAlignmentOptions = \{\s*strictProgression,/,
   /const verseSelector = `\[data-verse-key="\$\{this\.escapeCssAttributeValue\(patch\.verseKey\)\}"\]\[data-word-index="\$\{Number\(patch\.localIndex\)\}"\]`/,

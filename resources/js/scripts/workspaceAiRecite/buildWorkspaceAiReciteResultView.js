@@ -181,7 +181,9 @@ function buildOutcomeStatChips(details, durationSeconds, t) {
     })
   }
   const counts = details.colorCounts || {}
-  const wrong = Number(counts.red || 0) + Number(counts.black || 0)
+  // Red means an incorrect match. Black is an omission and must not inflate
+  // the red "wrong" pill; it is already visible in the colour breakdown.
+  const wrong = Number(counts.red || 0)
   const close = Number(counts.amber || 0)
   if (wrong > 0 || close > 0) {
     chips.push({

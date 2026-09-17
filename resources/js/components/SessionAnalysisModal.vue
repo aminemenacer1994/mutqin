@@ -113,6 +113,7 @@
                       :play-label="playLabel"
                       :pause-label="pauseLabel"
                       :restart-label="restartLabel"
+                      :error-label="audioUnavailable || 'Audio unavailable'"
                     />
                     <p v-else class="sa-ov__audio-empty" data-testid="session-overview-audio-empty">
                       {{ audioEmptyCopy || audioUnavailable || 'No recording is saved for this session.' }}
@@ -152,12 +153,54 @@
                     </div>
                   </section>
 
-                  <section v-if="analysis.retention?.length" class="sa-ov__panel sa-ov__panel--soft">
-                    <h3>{{ retentionTitle }}</h3>
-                    <div v-for="item in analysis.retention" :key="item.id || item.label" class="sa-ov__note">
-                      <strong>{{ item.label }}</strong>
-                      <span v-if="item.detail">{{ item.detail }}</span>
+                  <section v-if="analysis.retention?.length" class="sa-ov__panel sa-ov__panel--soft sa-ov__retention-panel">
+                    <div class="sa-ov__retention-head">
+                      <div>
+                        <h3>{{ retentionTitle }}</h3>
+                        <p class="sa-ov__retention-summary">
+                          {{ retentionStats.active }} active focus {{ retentionStats.active === 1 ? 'area' : 'areas' }}
+                          <span aria-hidden="true">·</span>
+                          {{ retentionStats.improving }} improving
+                        </p>
+                      </div>
+                      <span class="sa-ov__retention-score" :data-tone="retentionStats.tone">
+                        {{ retentionStats.active }}/{{ analysis.retention.length }}
+                      </span>
                     </div>
+                    <div class="sa-ov__retention-filters" role="toolbar" aria-label="Filter retention areas">
+                      <button
+                        v-for="filter in retentionFilters"
+                        :key="filter.key"
+                        type="button"
+                        class="sa-ov__retention-filter"
+                        :class="{ 'is-active': retentionFilter === filter.key }"
+                        :aria-pressed="retentionFilter === filter.key ? 'true' : 'false'"
+                        @click="retentionFilter = filter.key"
+                      >{{ filter.label }}</button>
+                    </div>
+                    <div v-if="filteredRetention.length" class="sa-ov__retention-list">
+                      <button
+                        v-for="item in filteredRetention"
+                        :key="item.id || item.label"
+                        type="button"
+                        class="sa-ov__retention-card"
+                        :class="{ 'is-selected': selectedRetentionId === (item.id || item.label) }"
+                        :data-tone="item.tone || 'mid'"
+                        :aria-expanded="selectedRetentionId === (item.id || item.label) ? 'true' : 'false'"
+                        @click="selectRetention(item)"
+                      >
+                        <span class="sa-ov__retention-dot" aria-hidden="true"></span>
+                        <span class="sa-ov__retention-copy">
+                          <strong>{{ item.label }}</strong>
+                          <span>{{ retentionStatusLabel(item) }}</span>
+                        </span>
+                        <i class="bi" :class="selectedRetentionId === (item.id || item.label) ? 'bi-chevron-up' : 'bi-chevron-down'" aria-hidden="true"></i>
+                        <span v-if="selectedRetentionId === (item.id || item.label)" class="sa-ov__retention-detail">
+                          {{ retentionDetailLabel(item) }}
+                        </span>
+                      </button>
+                    </div>
+                    <p v-else class="sa-ov__retention-empty">No retention areas match this filter.</p>
                   </section>
 
                 </div>
@@ -214,6 +257,8 @@ export default {
   data() {
     return {
       titleId: 'sessionAnalysisTitle',
+      retentionFilter: 'all',
+      selectedRetentionId: null,
     }
   },
   computed: {
@@ -257,6 +302,34 @@ export default {
     aiFactStats() {
       return this.aiStatChips.slice(1)
     },
+    retentionFilters() {
+      return [
+        { key: 'all', label: 'All' },
+        { key: 'active', label: 'Active' },
+        { key: 'improving', label: 'Improving' },
+      ]
+    },
+    filteredRetention() {
+      const items = Array.isArray(this.analysis?.retention) ? this.analysis.retention : []
+      if (this.retentionFilter === 'active') {
+        return items.filter((item) => String(item.status || 'active').toLowerCase() === 'active')
+      }
+      if (this.retentionFilter === 'improving') {
+        return items.filter((item) => String(item.trend || item.status || '').toLowerCase() === 'improving')
+      }
+      return items
+    },
+    retentionStats() {
+      const items = Array.isArray(this.analysis?.retention) ? this.analysis.retention : []
+      const active = items.filter((item) => String(item.status || 'active').toLowerCase() === 'active').length
+      const improving = items.filter((item) => String(item.trend || item.status || '').toLowerCase() === 'improving').length
+      const high = items.filter((item) => String(item.severity || '').toLowerCase() === 'high').length
+      return {
+        active,
+        improving,
+        tone: high > 0 ? 'warn' : (improving > 0 ? 'good' : 'mid'),
+      }
+    },
     aiLeadPercent() {
       const raw = String(this.aiLeadStat?.value || '')
       const match = raw.match(/(\d+(?:\.\d+)?)/)
@@ -297,6 +370,23 @@ export default {
     this.syncBodyLock(false)
   },
   methods: {
+    retentionKey(item) {
+      return item?.id || item?.label || ''
+    },
+    selectRetention(item) {
+      const key = this.retentionKey(item)
+      this.selectedRetentionId = this.selectedRetentionId === key ? null : key
+    },
+    retentionStatusLabel(item) {
+      const status = String(item?.status || 'active').replace(/_/g, ' ')
+      const trend = String(item?.trend || 'unknown').replace(/_/g, ' ')
+      return `${status} · ${trend}`
+    },
+    retentionDetailLabel(item) {
+      const severity = String(item?.severity || 'moderate').replace(/_/g, ' ')
+      const type = item?.spotType ? String(item.spotType).replace(/_/g, ' ') : 'ayah'
+      return `${severity} priority ${type} · practise this area again to strengthen recall.`
+    },
     ayahIndex(row) {
       if (row?.ayah) return row.ayah
       const match = String(row?.ayahLabel || '').match(/\d+/)

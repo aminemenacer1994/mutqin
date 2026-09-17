@@ -339,7 +339,7 @@ assert.match(memorisationSource, /async playVerse\(verse, options = \{\}\)/, 'pl
 assert.match(memorisationSource, /!options\.force && this\.activeKey === verse\.key/, 'same-ayah manual play may toggle only when not forced')
 assert.equal((memorisationSource.match(/playQueueEntry\(v, \{ force: true, queueIndex: this\.queueIndex \}\)/g) || []).length >= 2, true, 'queue navigation must force same-ayah replay for repetitions')
 assert.match(memorisationSource, /playQueueEntry\(first, \{ force: true, queueIndex: playbackIndex \}\)/, 'session start must force first playback through queue entry metadata')
-assert.match(memorisationSource, /setActiveVerse\(verseKey, \{ queueIndex: this\.queueIndex \}\)/, 'next navigation must preserve duplicate queue entry index')
+assert.match(memorisationSource, /setActiveVerse\(verseKey, \{[^}]*queueIndex: this\.queueIndex[^}]*\}\)/, 'next navigation must preserve duplicate queue entry index')
 assert.match(memorisationSource, /queueIndex: Number\.isFinite\(options\.queueIndex\)/, 'playback must not reset repeated ayah entries to first queue match')
 assert.doesNotMatch(memorisationSource, /createAyahSegments/, 'linking must be ayah-level, not word-segment based')
 assert.match(memorisationSource, /linking:single:\$\{verse\.key\}/, 'linking must include individual ayah practice')

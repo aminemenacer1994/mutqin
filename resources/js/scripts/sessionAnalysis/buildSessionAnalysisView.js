@@ -187,12 +187,24 @@ function retentionItems(payload, t) {
   const spots = Array.isArray(payload?.retention?.weak_spots) ? payload.retention.weak_spots : []
   return spots.map((spot) => {
     const ayah = asNumber(spot?.ayah_number)
+    const severity = asText(spot?.severity).toLowerCase() || 'moderate'
+    const status = asText(spot?.status).toLowerCase() || 'active'
+    const trend = asText(spot?.trend).toLowerCase() || 'unknown'
+    const tone = status === 'resolved' || trend === 'improving'
+      ? 'good'
+      : (severity === 'high' || trend === 'regressing' ? 'warn' : (status === 'dormant' ? 'neutral' : 'mid'))
     return {
       id: spot?.id,
       label: ayah > 0
         ? (t('dashboard.ayah_n', { n: ayah }) || `Ayah ${ayah}`)
         : asText(spot?.verse_key),
-      detail: [asText(spot?.severity), asText(spot?.status), asText(spot?.trend)]
+      ayah,
+      spotType: asText(spot?.spot_type),
+      severity,
+      status,
+      trend,
+      tone,
+      detail: [severity, status, trend]
         .filter(Boolean)
         .join(' · '),
     }

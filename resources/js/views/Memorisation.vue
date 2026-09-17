@@ -14,6 +14,7 @@
     'post-session-choice-offcanvas-open': isPostSessionChoiceVisible && postSessionChoiceOffcanvasOpen && showTools,
     'session-exit-flow-active': showSessionExitModal,
     'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools,
+    'ai-audio-consent-active': showAiAudioConsentModal,
     'is-fullscreen': isAppFullscreen
   }" :style="appStyleVars" v-cloak>
     <div v-if="showAppBootLoader" class="app-boot-loading" role="status" aria-live="polite">
