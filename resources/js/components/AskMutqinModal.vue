@@ -64,17 +64,12 @@
               <div ref="ayahStage" class="ask-mutqin-ayah__stage">
                 <p
                   class="ask-mutqin-ayah__text"
-                  :class="{ 'is-frozen': !!match }"
+                  :class="{ 'is-frozen': !!match, 'is-searching': isSearching }"
                   :style="arabicTextStyle"
                 >
                   <template v-if="panelArabic">
                     <span class="ask-mutqin-ayah__verse">{{ panelArabic }}</span>
                     <span v-if="ayahMark" class="ask-mutqin-ayah__mark">{{ ayahMark }}</span>
-                    <span
-                      v-else-if="showHeardSpinner"
-                      class="ask-mutqin-spinner ask-mutqin-spinner--inline"
-                      aria-hidden="true"
-                    ></span>
                   </template>
                   <span
                     v-else
@@ -85,55 +80,18 @@
                     {{ t('memorisation.askMutqin.heardWaiting') }}
                   </span>
                 </p>
-              </div>
-            </section>
-
-            <section
-              v-if="match && surahAyahMax"
-              class="ask-mutqin-span"
-              :aria-label="t('memorisation.askMutqin.chooseRange')"
-            >
-              <div class="ask-mutqin-span__head">
-                <p class="ask-mutqin-span__title">{{ t('memorisation.askMutqin.chooseRange') }}</p>
-                <p class="ask-mutqin-span__meta">{{ rangeSummary }}</p>
-              </div>
-              <div class="ask-mutqin-span__row">
-                <span class="ask-mutqin-span__value" :aria-label="t('memorisation.askMutqin.rangeFrom')">{{ rangeStart }}</span>
-                <span class="ask-mutqin-span__dash" aria-hidden="true">–</span>
-                <div class="ask-mutqin-span__stepper">
-                  <button
-                    type="button"
-                    class="ask-mutqin-span__step"
-                    :disabled="rangeEnd <= rangeStart"
-                    :aria-label="t('memorisation.askMutqin.rangeEarlier')"
-                    @click="stepRangeEnd(-1)"
-                  >−</button>
-                  <select
-                    id="askMutqinRangeEnd"
-                    class="ask-mutqin-span__select"
-                    :aria-label="t('memorisation.askMutqin.rangeTo')"
-                    :value="rangeEnd"
-                    @change="setRangeEnd($event.target.value)"
-                  >
-                    <option v-for="ayah in rangeEndOptions" :key="ayah" :value="ayah">{{ ayah }}</option>
-                  </select>
-                  <button
-                    type="button"
-                    class="ask-mutqin-span__step"
-                    :disabled="rangeEnd >= surahAyahMax"
-                    :aria-label="t('memorisation.askMutqin.rangeLater')"
-                    @click="stepRangeEnd(1)"
-                  >+</button>
-                </div>
-                <button
-                  type="button"
-                  class="ask-mutqin-span__end"
-                  :class="{ 'is-on': rangeEnd >= surahAyahMax }"
-                  :disabled="rangeEnd >= surahAyahMax"
-                  @click="setRangeToSurahEnd"
+                <div
+                  v-if="isSearching"
+                  class="ask-mutqin-searching"
+                  role="status"
+                  aria-live="polite"
                 >
-                  {{ t('memorisation.askMutqin.rangeEndOfSurah') }}
-                </button>
+                  <span class="ask-mutqin-spinner" aria-hidden="true"></span>
+                  <span>{{ t('memorisation.quranSearch.searching') }}</span>
+                  <span class="ask-mutqin-searching__dots" aria-hidden="true">
+                    <i></i><i></i><i></i>
+                  </span>
+                </div>
               </div>
             </section>
 
@@ -183,33 +141,22 @@
                   <p v-else-if="aidError" class="ask-mutqin-aid__status is-error" role="alert">
                     {{ aidError }}
                   </p>
-                  <div v-else-if="aidContent.sections?.length" class="ask-mutqin-aid__sections">
-                    <article
-                      v-for="section in aidContent.sections"
-                      :key="section.lang"
-                      class="ask-mutqin-aid__section"
-                    >
-                      <p class="ask-mutqin-aid__lang" dir="ltr">{{ section.label }}</p>
-                      <div class="ask-mutqin-aid__body" :dir="section.dir" :lang="section.lang">
+                  <div v-else-if="aidContent.text || aidContent.sections?.length" class="ask-mutqin-aid__sections">
+                    <article class="ask-mutqin-aid__section is-selected">
+                      <p class="ask-mutqin-aid__lang" dir="ltr">{{ activeAidOption.label }}</p>
+                      <div class="ask-mutqin-aid__body" :dir="aidContent.dir" lang="en">
                         <p
-                          v-for="(paragraph, index) in section.paragraphs"
-                          :key="`${section.lang}-${index}`"
+                          v-for="(paragraph, index) in activeAidParagraphs"
+                          :key="`${aidKind}-${index}`"
                           class="ask-mutqin-aid__text"
                         >{{ paragraph }}</p>
                       </div>
-                      <p v-if="section.reference" class="ask-mutqin-aid__reference" dir="ltr">
+                      <p v-if="aidContent.reference" class="ask-mutqin-aid__reference" dir="ltr">
                         <span>{{ t('memorisation.reading.sourceLabel') }}</span>
-                        {{ section.reference }}
+                        {{ aidContent.reference }}
                       </p>
                     </article>
                   </div>
-                  <template v-else-if="aidContent.text">
-                    <p class="ask-mutqin-aid__text">{{ aidContent.text }}</p>
-                    <p v-if="aidContent.reference" class="ask-mutqin-aid__reference" dir="ltr">
-                      <span>{{ t('memorisation.reading.sourceLabel') }}</span>
-                      {{ aidContent.reference }}
-                    </p>
-                  </template>
                   <p v-else class="ask-mutqin-aid__status">
                     {{ t('memorisation.askMutqin.aidEmpty') }}
                   </p>
@@ -285,15 +232,13 @@ import {
   appendHeardPayload,
   createHeardStream,
   heardStreamText,
-  heardWordCount,
+  tokenizeHeardArabic,
   loadAskMutqinMatchingIndex,
   loadAskMutqinAyahAid,
   matchHeardAyahPrefix,
-  askMutqinSurahAyahCount,
   resolveAskMutqinRange,
   resolveAskMutqinReciter,
   ASK_MUTQIN_MIN_WORDS,
-  ASK_MUTQIN_UNIQUE_MIN_WORDS,
 } from '../scripts/askMutqin/index.js'
 import { resolveMicDeniedGuidance } from '../scripts/audio/recordingResilience.js'
 
@@ -360,7 +305,6 @@ export default {
       aidLoading: false,
       aidError: '',
       aidRequestKey: '',
-      rangeEnd: 0,
     }
   },
   computed: {
@@ -368,12 +312,13 @@ export default {
       return this.theme || 'light'
     },
     isBusy() {
-      return isAskMutqinRecordingState(this.state) || this.interpreting
+      return isAskMutqinRecordingState(this.state)
+        || this.state === ASK_MUTQIN_STATES.MATCHING
+        || this.interpreting
     },
     isListening() {
       return [
         ASK_MUTQIN_STATES.RECITING,
-        ASK_MUTQIN_STATES.MATCHING,
         ASK_MUTQIN_STATES.AMBIGUOUS,
       ].includes(this.state)
     },
@@ -385,6 +330,15 @@ export default {
         { kind: 'translation', label: this.t('memorisation.reading.translation') },
         { kind: 'transliteration', label: this.t('memorisation.reading.transliteration') },
       ]
+    },
+    activeAidOption() {
+      return this.aidOptions.find((option) => option.kind === this.aidKind) || this.aidOptions[0]
+    },
+    activeAidParagraphs() {
+      if (this.aidContent.sections?.length) {
+        return this.aidContent.sections.flatMap((section) => section.paragraphs || [])
+      }
+      return this.aidContent.text ? [this.aidContent.text] : []
     },
     ayahPanelLabel() {
       if (this.match) return this.t('memorisation.askMutqin.matchedLabel')
@@ -399,19 +353,12 @@ export default {
       if (this.match?.arabic) return this.match.arabic
       return this.streamingText
     },
-    heardWordTotal() {
-      const streamed = this.streamingText.split(/\s+/).filter(Boolean).length
-      return Math.max(heardWordCount(this.heard), streamed)
-    },
-    showHeardSpinner() {
-      return this.isListening && !this.match && this.heardWordTotal >= ASK_MUTQIN_MIN_WORDS
+    isSearching() {
+      return this.state === ASK_MUTQIN_STATES.MATCHING && !this.match && !this.voice
     },
     matchMeta() {
       if (!this.match) return ''
-      const start = this.rangeStart || this.match.ayah
-      const end = Number(this.rangeEnd || start)
-      const ayah = end && end !== start ? `${start}–${end}` : String(start)
-      return `${this.match.surahName} · ${ayah}`
+      return `${this.match.surahName} · ${this.match.ayah}`
     },
     title() {
       if (this.state === ASK_MUTQIN_STATES.ERROR && this.errorCode === 'usage_cap') {
@@ -421,38 +368,15 @@ export default {
       if (this.state === ASK_MUTQIN_STATES.READY || this.state === ASK_MUTQIN_STATES.OPENING) {
         return this.t('memorisation.askMutqin.readyTitle')
       }
+      if (this.state === ASK_MUTQIN_STATES.MATCHING) {
+        return this.t('memorisation.quranSearch.searching')
+      }
       if (this.match) return this.t('memorisation.askMutqin.foundTitle')
       if (this.state === ASK_MUTQIN_STATES.AMBIGUOUS) return this.t('memorisation.askMutqin.keepRecitingTitle')
       return this.t('memorisation.askMutqin.reciteTitle')
     },
-    rangeStart() {
-      return Number(this.match?.ayah || 0)
-    },
-    surahAyahMax() {
-      return askMutqinSurahAyahCount(this.match?.surah)
-    },
-    rangeEndOptions() {
-      const start = this.rangeStart
-      const max = this.surahAyahMax
-      if (!start || !max || start > max) return []
-      const options = []
-      for (let ayah = start; ayah <= max; ayah += 1) options.push(ayah)
-      return options
-    },
     openActionLabel() {
-      const start = this.rangeStart
-      const end = Number(this.rangeEnd || start)
-      if (!start || !end || end <= start) return this.t('memorisation.askMutqin.openHere')
-      return this.t('memorisation.askMutqin.openRange')
-    },
-    rangeSummary() {
-      const start = this.rangeStart
-      const end = Number(this.rangeEnd || start)
-      const count = end >= start ? end - start + 1 : 1
-      const countLabel = count === 1
-        ? this.t('memorisation.askMutqin.rangeCountOne')
-        : this.t('memorisation.askMutqin.rangeCount', { count })
-      return `${this.match?.surahName || ''} · ${countLabel}`
+      return this.t('memorisation.askMutqin.openHere')
     },
     showFallbackActions() {
       return [
@@ -563,7 +487,7 @@ export default {
         return
       }
       this.aidKind = next
-      this.loadSelectedAid()
+      if (this.match) this.loadSelectedAid()
     },
     async loadSelectedAid() {
       if (!this.match) {
@@ -596,7 +520,6 @@ export default {
       this.heard = createHeardStream()
       this.commandText = ''
       this.match = null
-      this.rangeEnd = 0
       this.candidates = []
       this.command = EMPTY_COMMAND()
       this.validatedRange = null
@@ -637,6 +560,7 @@ export default {
       return Promise.resolve(this.voice)
     },
     onTranscript(payload) {
+      if (this.state === ASK_MUTQIN_STATES.MATCHING && !this.match) return
       const filtered = this.transcriptAfterClear(payload)
       if (!filtered) return
       const nextHeard = appendHeardPayload(this.heard, filtered)
@@ -702,46 +626,65 @@ export default {
       }
       this.speechActive = false
     },
-    settleAfterRecitationPause() {
+    async settleAfterRecitationPause() {
       if (this.match || this.speechActive || !this.index.length) return
       const text = String(this.pendingMatchText || heardStreamText(this.heard) || this.recitationText || '')
         .replace(/[.\u06D4،,]+/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()
       if (!text) return
-      const wordTotal = Math.max(
-        heardWordCount(this.heard),
-        text.split(/\s+/).filter(Boolean).length,
-      )
-      if (wordTotal < ASK_MUTQIN_UNIQUE_MIN_WORDS) return
-      this.applyMatch(text)
+      const wordTotal = tokenizeHeardArabic(text).length
+      // This entry point is intentionally stricter than the low-level matcher:
+      // the user must recite at least three words before we reveal a result.
+      if (wordTotal < ASK_MUTQIN_MIN_WORDS) return
+      // Stop the microphone and flush the final audio before showing the
+      // matching spinner. This keeps the UI from implying that recording is
+      // still active while the local index is being searched.
+      this.state = ASK_MUTQIN_STATES.MATCHING
+      this.stopListeningAfterMatch()
+      await this.$nextTick()
+      // Keep the search state visible long enough for the user to understand
+      // that the finished recording is being checked against the Qur'an index.
+      await new Promise((resolve) => window.setTimeout(resolve, 360))
+      if (this.match || this.state !== ASK_MUTQIN_STATES.MATCHING) return
+      const matched = this.applyMatch(text)
+      if (!matched) await this.resumeListeningAfterMatchFailure()
     },
     applyMatch(transcript) {
-      if (!this.index.length || this.match || this.speechActive) return
+      if (!this.index.length || this.match || this.speechActive) return false
       const text = String(transcript || '').trim()
-      if (!text) return
+      if (!text) return false
       const result = matchHeardAyahPrefix(this.index, text)
       if (result.status === 'matched' && result.match) {
         this.match = result.match
-        this.rangeEnd = Number(result.match.ayah || 0)
         this.candidates = []
         this.pendingMatchText = ''
         this.clearSpeechIdle()
         this.state = ASK_MUTQIN_STATES.FOUND
         this.stopListeningAfterMatch()
-        return
+        return true
       }
       if (result.status === 'ambiguous') {
         this.state = ASK_MUTQIN_STATES.AMBIGUOUS
-        return
+        return false
       }
       if (this.state !== ASK_MUTQIN_STATES.RECITING) {
         this.state = ASK_MUTQIN_STATES.RECITING
       }
+      return false
     },
     stopListeningAfterMatch() {
       try { this.voice?.stop?.() } catch { /* ignore */ }
       this.voice = null
+    },
+    async resumeListeningAfterMatchFailure() {
+      if (this.match || this.voice || this.state === ASK_MUTQIN_STATES.ERROR) return
+      this.state = ASK_MUTQIN_STATES.RECITING
+      try {
+        await this.ensureVoice().then((voice) => voice.start('ar'))
+      } catch (error) {
+        this.fail(error)
+      }
     },
     clearScreen() {
       const leftover = String(
@@ -757,7 +700,6 @@ export default {
       this.validatedRange = null
       this.command = EMPTY_COMMAND()
       this.match = null
-      this.rangeEnd = 0
       this.candidates = []
       this.liveTranscript = ''
       this.recitationText = ''
@@ -802,7 +744,6 @@ export default {
       this.errorMessage = ''
       this.clearSpeechIdle()
       this.match = null
-      this.rangeEnd = 0
       this.candidates = []
       this.heard = createHeardStream()
       this.recitationText = ''
@@ -878,30 +819,13 @@ export default {
         || command.autoplay
       )
     },
-    setRangeEnd(value) {
-      const start = this.rangeStart
-      const max = this.surahAyahMax
-      const next = Number(value)
-      if (!start || !max || !Number.isFinite(next)) return
-      this.rangeEnd = Math.max(start, Math.min(max, Math.round(next)))
-    },
-    stepRangeEnd(delta) {
-      this.setRangeEnd(Number(this.rangeEnd || this.rangeStart) + Number(delta || 0))
-    },
-    setRangeToSurahEnd() {
-      if (!this.surahAyahMax) return
-      this.rangeEnd = this.surahAyahMax
-    },
     openHere() {
       if (!this.match) return
-      const start = this.rangeStart
-      const end = Number(this.rangeEnd || start)
-      const justThis = !end || end <= start
+      const start = Number(this.match.ayah || 0)
       const range = resolveAskMutqinRange({
         surah: this.match.surah,
         ayahStart: start,
-        untilAyah: justThis ? null : end,
-        justThis,
+        justThis: true,
       })
       if (!range.ok) {
         this.errorMessage = this.t('memorisation.askMutqin.invalidCommand')
@@ -909,8 +833,8 @@ export default {
       }
       this.command = {
         ...this.command,
-        just_this: justThis,
-        until_ayah: justThis ? null : end,
+        just_this: true,
+        until_ayah: null,
         intent: 'open',
       }
       this.validatedRange = {

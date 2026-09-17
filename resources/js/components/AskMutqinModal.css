@@ -31,12 +31,24 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   backdrop-filter: blur(10px);
 }
 
+.ask-mutqin-overlay[data-theme="light"] {
+  background: rgba(47, 37, 28, 0.3);
+}
+
+.ask-mutqin-overlay[data-theme="sepia"] {
+  background: rgba(79, 57, 35, 0.38);
+}
+
+.ask-mutqin-overlay[data-theme="dark"] {
+  background: rgba(4, 3, 2, 0.68);
+}
+
 .ask-mutqin-dialog {
   box-sizing: border-box;
-  width: min(52rem, 100%);
-  max-width: 52rem;
+  width: min(68rem, calc(100vw - 1rem));
+  max-width: 68rem;
   margin: 0 auto !important;
-  max-height: 100%;
+  max-height: calc(100dvh - 1rem);
   min-height: 0;
   display: flex;
   transform: none !important;
@@ -58,7 +70,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-height: 100%;
+  max-height: calc(100dvh - 1rem);
   min-height: 0;
   overflow: hidden;
   color: var(--ask-ink);
@@ -75,6 +87,11 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   animation: ask-mutqin-sheet-in 220ms ease-out;
+}
+
+.ask-mutqin-overlay[data-theme="light"] .ask-mutqin-modal,
+.ask-mutqin-overlay[data-theme="sepia"] .ask-mutqin-modal {
+  color-scheme: light;
 }
 
 .ask-mutqin-overlay[data-theme="sepia"] .ask-mutqin-modal {
@@ -98,6 +115,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   --ask-error: #f0b8ac;
   --ask-surface: #1c1814;
   --ask-brown: #c89a58;
+  color-scheme: dark;
   background: linear-gradient(180deg, #241e18 0%, #1c1814 100%);
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.45),
@@ -186,6 +204,21 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ask-mutqin-body::-webkit-scrollbar,
+.ask-mutqin-ayah__stage::-webkit-scrollbar,
+.ask-mutqin-aid__box::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.ask-mutqin-body > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ask-mutqin-intro {
@@ -201,7 +234,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   gap: 0.5rem;
   padding: 0.95rem 1.05rem 1.05rem;
   border-radius: 14px;
-  background: linear-gradient(180deg, #fffdf8 0%, #f8f1e3 100%);
+  background: linear-gradient(180deg, var(--ask-chip) 0%, var(--ask-surface) 100%);
   border: 1px solid var(--ask-line);
   overflow: hidden;
 }
@@ -239,31 +272,76 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 }
 
 .ask-mutqin-ayah__stage {
-  max-height: min(38vh, 16rem);
+  max-height: none;
   min-height: 8.5rem;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: visible;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--ask-accent) 50%, transparent) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   padding: 0.55rem 0.65rem 0.7rem;
 }
 
 .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
   min-height: 9rem;
-  max-height: min(40vh, 18rem);
+  max-height: none;
 }
 
 .ask-mutqin-ayah__text {
   margin: 0;
   font-family: var(--mushaf-quran-font, var(--quran-font, var(--ask-arabic)));
-  font-size: clamp(1.28rem, 4vw, 1.62rem);
+  font-size: clamp(1.4rem, 4.4vw, 1.78rem);
   line-height: 2.1;
   font-weight: 500;
   color: var(--ask-ink);
   text-align: center;
+  max-width: 100%;
+  white-space: normal !important;
+  word-break: break-word;
   overflow-wrap: anywhere;
 }
+
+.ask-mutqin-searching {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0.45rem auto 0;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ask-accent) 35%, var(--ask-line));
+  border-radius: 999px;
+  color: var(--ask-brown);
+  background: color-mix(in srgb, var(--ask-accent-soft) 75%, var(--ask-chip));
+  font-family: var(--ask-ui);
+  font-size: 0.82rem;
+  font-weight: 700;
+  animation: ask-mutqin-search-in 240ms ease-out;
+}
+
+.ask-mutqin-searching .ask-mutqin-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-basis: 0.85rem;
+  border-width: 2px;
+}
+
+.ask-mutqin-searching__dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18rem;
+}
+
+.ask-mutqin-searching__dots i {
+  width: 0.24rem;
+  height: 0.24rem;
+  border-radius: 50%;
+  background: currentColor;
+  animation: ask-mutqin-search-dot 1s ease-in-out infinite;
+}
+
+.ask-mutqin-searching__dots i:nth-child(2) { animation-delay: 140ms; }
+.ask-mutqin-searching__dots i:nth-child(3) { animation-delay: 280ms; }
 
 .ask-mutqin-spinner {
   width: 1.15rem;
@@ -305,159 +383,6 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   font-weight: inherit;
   line-height: inherit;
   vertical-align: baseline;
-}
-
-.ask-mutqin-span {
-  display: grid;
-  gap: 0.4rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 12px;
-  border: 1px solid var(--ask-line);
-  background: color-mix(in srgb, var(--ask-chip) 88%, transparent);
-}
-
-.ask-mutqin-span__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.ask-mutqin-span__title,
-.ask-mutqin-span__meta {
-  margin: 0;
-  min-width: 0;
-}
-
-.ask-mutqin-span__title {
-  color: var(--ask-ink);
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.ask-mutqin-span__meta {
-  color: var(--ask-muted);
-  font-size: 0.64rem;
-  font-weight: 650;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  text-align: end;
-  white-space: nowrap;
-}
-
-.ask-mutqin-span__row {
-  display: flex;
-  align-items: stretch;
-  flex-wrap: nowrap;
-  gap: 0;
-  width: max-content;
-  max-width: 100%;
-  min-width: 0;
-  min-height: 2.35rem;
-  border: 1px solid var(--ask-line);
-  border-radius: 10px;
-  overflow: hidden;
-  background: var(--ask-chip);
-}
-
-.ask-mutqin-span__dash {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  padding: 0 0.4rem;
-  color: var(--ask-muted);
-  font-size: 0.95rem;
-  line-height: 1;
-}
-
-.ask-mutqin-span__value,
-.ask-mutqin-span__stepper,
-.ask-mutqin-span__end {
-  min-height: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--ask-ink);
-  font-family: var(--ask-ui);
-}
-
-.ask-mutqin-span__value {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 3.1rem;
-  width: 3.1rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.ask-mutqin-span__stepper {
-  display: grid;
-  grid-template-columns: 2rem 3.2rem 2rem;
-  flex: 0 0 auto;
-  width: 7.2rem;
-  overflow: hidden;
-}
-
-.ask-mutqin-span__step,
-.ask-mutqin-span__select {
-  min-height: 2.35rem;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-family: inherit;
-  font-size: 0.86rem;
-  font-weight: 700;
-}
-
-.ask-mutqin-span__step {
-  cursor: pointer;
-}
-
-.ask-mutqin-span__step + .ask-mutqin-span__select,
-.ask-mutqin-span__select + .ask-mutqin-span__step {
-  box-shadow: inset 1px 0 0 var(--ask-line);
-}
-
-.ask-mutqin-span__select {
-  width: 3.2rem;
-  max-width: 3.2rem;
-  padding: 0;
-  text-align: center;
-  text-align-last: center;
-  appearance: none;
-  cursor: pointer;
-}
-
-.ask-mutqin-span__end {
-  flex: 0 0 auto;
-  padding: 0 0.8rem;
-  border-inline-start: 1px solid var(--ask-line);
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.1;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.ask-mutqin-span__step:hover:not(:disabled),
-.ask-mutqin-span__end:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--ask-accent-soft) 80%, var(--ask-chip));
-}
-
-.ask-mutqin-span__end.is-on,
-.ask-mutqin-span__end:disabled {
-  background: color-mix(in srgb, var(--ask-brown) 12%, var(--ask-chip));
-  color: var(--ask-brown);
-  border-color: color-mix(in srgb, var(--ask-brown) 35%, var(--ask-line));
-  opacity: 1;
-  cursor: default;
-}
-
-.ask-mutqin-span__step:disabled {
-  opacity: 0.35;
-  cursor: default;
 }
 
 .ask-mutqin-aid {
@@ -530,9 +455,11 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 
 .ask-mutqin-aid__box {
   min-height: 0;
-  max-height: min(28vh, 12.5rem);
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   padding: 0.85rem 0.95rem 0.7rem;
   border-radius: 12px;
   border: 1px solid var(--ask-line);
@@ -619,12 +546,15 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 .ask-mutqin-aid__text {
   margin: 0;
   font-family: var(--ask-ui);
-  font-size: 0.92rem;
+  font-size: 1rem;
   line-height: 1.65;
   font-weight: 450;
   color: var(--ask-ink);
   text-align: start;
-  overflow-wrap: break-word;
+  max-width: 100%;
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   hyphens: manual;
 }
 
@@ -799,12 +729,8 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-dialog {
-    width: min(56rem, calc(100vw - 2rem));
-    max-width: 56rem;
-  }
-
-  .ask-mutqin-aid__box {
-    max-height: min(32vh, 15rem);
+    width: min(68rem, calc(100vw - 1rem));
+    max-width: 68rem;
   }
 
   .ask-mutqin-aid__tab {
@@ -813,7 +739,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-aid__text {
-    font-size: 0.98rem;
+    font-size: 1.04rem;
     line-height: 1.7;
   }
 }
@@ -843,7 +769,26 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-header {
+    gap: 0.4rem;
     padding-top: 1.2rem;
+  }
+
+  .ask-mutqin-header__copy {
+    min-width: 0;
+  }
+
+  .ask-mutqin-kicker {
+    font-size: 0.68rem;
+  }
+
+  .ask-mutqin-recording {
+    max-width: 42%;
+    overflow: hidden;
+  }
+
+  .ask-mutqin-recording > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .ask-mutqin-body {
@@ -860,36 +805,6 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
     padding: 0.75rem 0.8rem;
   }
 
-  .ask-mutqin-span {
-    padding: 0.5rem 0.55rem;
-  }
-
-  .ask-mutqin-span__row {
-    width: 100%;
-  }
-
-  .ask-mutqin-span__value {
-    flex-basis: 2.8rem;
-    width: 2.8rem;
-  }
-
-  .ask-mutqin-span__stepper {
-    grid-template-columns: 1.8rem 2.9rem 1.8rem;
-    width: 6.5rem;
-  }
-
-  .ask-mutqin-span__select {
-    width: 2.9rem;
-    max-width: 2.9rem;
-  }
-
-  .ask-mutqin-span__end {
-    flex: 1 1 auto;
-    min-width: 0;
-    padding-inline: 0.55rem;
-    font-size: 0.72rem;
-  }
-
   .ask-mutqin-header h2 {
     font-size: 1.2rem;
   }
@@ -897,7 +812,20 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   .ask-mutqin-ayah__stage,
   .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
     min-height: 0;
-    max-height: min(32vh, 12.5rem);
+    max-height: none;
+  }
+
+  .ask-mutqin-aid__toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ask-mutqin-aid__grid,
+  .ask-mutqin-open {
+    width: 100%;
+  }
+
+  .ask-mutqin-open {
+    min-height: 2.65rem;
   }
 
   .ask-mutqin-aid__grid {
@@ -916,7 +844,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-aid__text {
-    font-size: 0.9rem;
+    font-size: 0.96rem;
     line-height: 1.55;
   }
 
@@ -925,14 +853,14 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-aid__box {
-    max-height: min(28vh, 12rem);
-    overflow: auto;
+    max-height: none;
+    overflow: visible;
   }
 }
 
 @media (max-width: 360px) {
   .ask-mutqin-overlay {
-    padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+    padding-inline: max(0.5rem, env(safe-area-inset-left, 0px)) max(0.5rem, env(safe-area-inset-right, 0px));
   }
 
   .ask-mutqin-dialog {
@@ -945,7 +873,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-aid__text {
-    font-size: 0.9rem;
+    font-size: 0.94rem;
   }
 
   .ask-mutqin-recording span {
@@ -960,6 +888,8 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   .ask-mutqin-ayah.is-matched,
   .ask-mutqin-aid,
   .ask-mutqin-spinner,
+  .ask-mutqin-searching,
+  .ask-mutqin-searching__dots i,
   .ask-mutqin-aid__tab,
   .ask-mutqin-aid-fade-enter-active,
   .ask-mutqin-aid-fade-leave-active {
@@ -998,6 +928,16 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   to { transform: rotate(360deg); }
 }
 
+@keyframes ask-mutqin-search-in {
+  from { opacity: 0; transform: translateY(5px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ask-mutqin-search-dot {
+  0%, 60%, 100% { opacity: 0.32; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
 /* Beat global modal resets that zero overlay inset and stretch the dialog. */
 html body .ask-mutqin-overlay.modal-overlay.mutqin-modal-overlay {
   box-sizing: border-box !important;
@@ -1013,10 +953,10 @@ html body .ask-mutqin-overlay.modal-overlay.mutqin-modal-overlay {
 
 html body .ask-mutqin-overlay .ask-mutqin-dialog.mutqin-modal-dialog {
   box-sizing: border-box !important;
-  width: min(56rem, 100%) !important;
-  max-width: min(56rem, 100%) !important;
+  width: min(68rem, calc(100vw - 1rem)) !important;
+  max-width: min(68rem, calc(100vw - 1rem)) !important;
   height: auto !important;
-  max-height: 100% !important;
+  max-height: calc(100dvh - 1rem) !important;
   min-height: 0 !important;
   display: flex !important;
   margin-inline: auto !important;
@@ -1028,7 +968,7 @@ html body .ask-mutqin-overlay .ask-mutqin-modal.mutqin-modal-surface {
   flex-direction: column !important;
   width: 100% !important;
   height: auto !important;
-  max-height: 100% !important;
+  max-height: calc(100dvh - 1rem) !important;
   min-height: 0 !important;
   overflow: hidden !important;
   padding: 1.15rem 1.1rem 1rem !important;
@@ -1050,6 +990,8 @@ html body .ask-mutqin-overlay .ask-mutqin-body {
   min-height: 0 !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
   -webkit-overflow-scrolling: touch;
   padding-block: 0.15rem 0.35rem !important;
 }
@@ -1089,20 +1031,29 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   html body .ask-mutqin-overlay .ask-mutqin-ayah__stage,
   html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
     min-height: 0 !important;
-    max-height: min(30vh, 12rem) !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-aid__box {
-    max-height: min(26vh, 11.5rem) !important;
-    overflow: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
-  html body .ask-mutqin-overlay .ask-mutqin-span__row {
-    width: 100% !important;
-    flex-wrap: nowrap !important;
+  html body .ask-mutqin-overlay .ask-mutqin-aid__toolbar {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
+
+  html body .ask-mutqin-overlay .ask-mutqin-aid__grid,
+  html body .ask-mutqin-overlay .ask-mutqin-open {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-open {
+    min-height: 2.65rem !important;
+  }
+
 }
 
 @media (max-width: 380px) {
@@ -1119,11 +1070,12 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   html body .ask-mutqin-overlay .ask-mutqin-ayah__stage,
   html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
     min-height: 0 !important;
-    max-height: min(24vh, 8.5rem) !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-aid__box {
-    max-height: min(22vh, 8rem) !important;
-    overflow: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 }

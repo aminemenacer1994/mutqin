@@ -578,6 +578,17 @@
             </div>
           </div>
           <div class="top-card-icon-controls" :aria-label="t('memorisation.a11y.readingTools')">
+            <button
+              v-if="!isPostSessionChoiceVisible"
+              type="button"
+              class="top-card-search-trigger top-card-action-trigger top-card-icon-control"
+              data-testid="workspace-ayah-search"
+              :title="t('memorisation.askMutqin.ctaHint')"
+              :aria-label="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
+              @click="openAskMutqin"
+            >
+              <i class="bi bi-search" aria-hidden="true"></i>
+            </button>
             <div
               class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
               role="group"

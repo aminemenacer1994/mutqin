@@ -154,7 +154,8 @@ export function matchHeardAyahPrefix(index, transcript, { surah = null } = {}) {
     && (top.matched || 0) > (runnerUp?.matched || 0)
     && top.score >= 0.5
 
-  // Two words only when clearly unique — never guess a common prefix.
+  // The low-level matcher can still recognize a uniquely distinctive pair;
+  // the voice modal applies the product-level three-word minimum before using it.
   const uniqueEarly = heard.length >= ASK_MUTQIN_UNIQUE_MIN_WORDS
     && uniqueExact
     && uniqueTop

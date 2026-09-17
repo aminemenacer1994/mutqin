@@ -139,8 +139,18 @@ export default {
   border-radius: 1.35rem;
   background: var(--surface, #f6f1ea);
   color: var(--text-primary, #2c2118);
+  /* Keep this modal typographically distinct from the old browser/system face. */
+  font-family: "Avenir Next", "Nunito", system-ui, sans-serif !important;
   box-shadow: 0 24px 70px color-mix(in srgb, #1a1410 34%, transparent), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
   pointer-events: auto;
+}
+
+.ai-audio-consent-card h2,
+.ai-audio-consent-card p,
+.ai-audio-consent-card span,
+.ai-audio-consent-card a,
+.ai-audio-consent-card button {
+  font-family: "Avenir Next", "Nunito", system-ui, sans-serif !important;
 }
 
 .ai-audio-consent-heading {

@@ -15,7 +15,6 @@ export const ASK_MUTQIN_STATES = Object.freeze({
 /** States where the microphone / live listen session is active. */
 export const ASK_MUTQIN_RECORDING_STATES = Object.freeze([
   ASK_MUTQIN_STATES.RECITING,
-  ASK_MUTQIN_STATES.MATCHING,
   ASK_MUTQIN_STATES.AMBIGUOUS,
 ])
 
