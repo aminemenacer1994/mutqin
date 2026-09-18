@@ -245,7 +245,17 @@ mix.then(() => {
         if (!newest) continue;
         const alias = `${family}.js`;
         try {
-            fs.copyFileSync(path.join(jsDir, newest), path.join(jsDir, alias));
+            const newestPath = path.join(jsDir, newest);
+            const aliasPath = path.join(jsDir, alias);
+            const aliasExists = fs.existsSync(aliasPath);
+            const aliasMtime = aliasExists ? fs.statSync(aliasPath).mtimeMs : 0;
+            const newestMtime = fs.statSync(newestPath).mtimeMs;
+            // A watch/dev build may have just emitted the stable alias. Do not
+            // overwrite that current chunk with an older hashed generation;
+            // its JSONP chunk id can differ from the current app runtime.
+            if (!aliasExists || aliasMtime < newestMtime) {
+                fs.copyFileSync(newestPath, aliasPath);
+            }
             keepNames.add(alias);
         } catch {
             /* ignore locked files during watch */

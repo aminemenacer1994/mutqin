@@ -30,6 +30,18 @@ function wordText(word) {
   )
 }
 
+function expectedWordText(word) {
+  return asText(
+    word?.expected_word
+    || word?.expectedWord
+    || word?.displayText
+    || word?.display_text
+    || word?.text
+    || word?.target_word
+    || word?.display
+  )
+}
+
 function wordAyah(word) {
   const n = Number(word?.ayahNumber ?? word?.ayah_number ?? 0)
   return Number.isFinite(n) && n > 0 ? n : 0
@@ -42,7 +54,10 @@ function toClientWord(word) {
   if (!text && !status) return null
   return {
     text,
+    expectedText: expectedWordText(word) || text,
     status,
+    type: asText(word?.type).toUpperCase(),
+    visualStatus: asText(word?.visualStatus || word?.visual_status).toLowerCase(),
     ayahNumber: wordAyah(word),
     wordIndex: Number(word?.ayah_word_index ?? word?.wordIndex ?? word?.word_index ?? -1),
   }
@@ -79,13 +94,20 @@ function groupWordsByAyah(words, t) {
       text: parts.map((word) => word.text).filter(Boolean).join(' '),
       parts: parts.map((word) => ({
         text: word.text,
-        tone: toneForStatus(word.status),
+        tone: toneForStatus(word),
       })),
+      correctText: parts.map((word) => word.expectedText).filter(Boolean).join(' '),
+      // Only show the canonical ayah when the learner's row contains a
+      // confirmed issue. Correct rows should stay quiet and uncluttered.
+      hasMistake: parts.some((word) => ['is-weak', 'is-incorrect', 'is-omitted'].includes(toneForStatus(word))),
     }))
 }
 
-function toneForStatus(status) {
-  const color = classifyRecitationWordColor(status)
+function toneForStatus(word) {
+  const isDeletion = String(word?.type || '').toUpperCase() === 'DELETION'
+  const color = isDeletion
+    ? RECITATION_COLOR.RED
+    : classifyRecitationWordColor(word?.visualStatus || word?.status || word)
   if (color === RECITATION_COLOR.GREEN) return 'is-correct'
   if (color === RECITATION_COLOR.AMBER) return 'is-weak'
   if (color === RECITATION_COLOR.RED) return 'is-incorrect'
@@ -183,38 +205,10 @@ function techniqueLabel(value, t = null) {
   return raw
 }
 
-function retentionItems(payload, t) {
-  const spots = Array.isArray(payload?.retention?.weak_spots) ? payload.retention.weak_spots : []
-  return spots.map((spot) => {
-    const ayah = asNumber(spot?.ayah_number)
-    const severity = asText(spot?.severity).toLowerCase() || 'moderate'
-    const status = asText(spot?.status).toLowerCase() || 'active'
-    const trend = asText(spot?.trend).toLowerCase() || 'unknown'
-    const tone = status === 'resolved' || trend === 'improving'
-      ? 'good'
-      : (severity === 'high' || trend === 'regressing' ? 'warn' : (status === 'dormant' ? 'neutral' : 'mid'))
-    return {
-      id: spot?.id,
-      label: ayah > 0
-        ? (t('dashboard.ayah_n', { n: ayah }) || `Ayah ${ayah}`)
-        : asText(spot?.verse_key),
-      ayah,
-      spotType: asText(spot?.spot_type),
-      severity,
-      status,
-      trend,
-      tone,
-      detail: [severity, status, trend]
-        .filter(Boolean)
-        .join(' · '),
-    }
-  }).filter((item) => item.label)
-}
-
 /**
  * @param {Record<string, unknown>|null} payload
  * @param {(key: string, params?: Record<string, unknown>) => string} t
- * @param {{ includeRecommendations?: boolean, includeRetention?: boolean }} [options]
+ * @param {{ includeRecommendations?: boolean }} [options]
  */
 export function buildSessionAnalysisView(payload, t = (key) => key, options = {}) {
   if (!payload || typeof payload !== 'object') {
@@ -226,7 +220,6 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
       aiReview: null,
       ayahRows: [],
       recommendations: [],
-      retention: [],
       audio: null,
     }
   }
@@ -314,16 +307,13 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
     : null
 
   const includeRecommendations = options.includeRecommendations !== false
-  const includeRetention = options.includeRetention !== false
   const recommendations = includeRecommendations ? recommendationLines(payload, t) : []
-  const retention = includeRetention ? retentionItems(payload, t) : []
   const ayahRows = groupWordsByAyah(words, t)
   const hasContent = Boolean(
     summaryCards.length
     || aiReview
     || ayahRows.length
     || recommendations.length
-    || retention.length
     || payload?.has_analysis
   )
 
@@ -335,7 +325,6 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
     aiReview,
     ayahRows,
     recommendations,
-    retention,
     audio: payload.audio && typeof payload.audio === 'object' ? payload.audio : null,
   }
 }

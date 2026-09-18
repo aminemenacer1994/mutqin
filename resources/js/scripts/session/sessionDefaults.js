@@ -1,8 +1,8 @@
 /** Default ayah/step repetitions for genuinely new sessions (bar, selector, payload). */
 export const DEFAULT_SESSION_REPETITIONS = 1
 
-/** Tajweed colouring is off until the learner turns it on (saved per account / device). */
-export const DEFAULT_TAJWEED_ENABLED = false
+/** Tajweed colouring is on by default (saved per account / device). */
+export const DEFAULT_TAJWEED_ENABLED = true
 
 /** Matches memorisationRuntime.DEFAULT_ALQURAN_RECITER without importing that module graph. */
 const DEFAULT_RECITER_ID = 'ar.alafasy'

@@ -21,8 +21,11 @@ function wordText(word) {
   return asText(word?.text || word?.word || word?.target_word || word?.arabic)
 }
 
-function tokenTone(status) {
-  const color = classifyRecitationWordColor(status)
+function tokenTone(wordOrStatus) {
+  const isDeletion = String(wordOrStatus?.type || '').toUpperCase() === 'DELETION'
+  const color = isDeletion
+    ? RECITATION_COLOR.BLACK
+    : classifyRecitationWordColor(wordOrStatus?.status ?? wordOrStatus?.visualStatus ?? wordOrStatus)
   if (color === RECITATION_COLOR.GREEN) return 'ok'
   if (color === RECITATION_COLOR.AMBER) return 'partial'
   if (color === RECITATION_COLOR.BLACK) return 'omitted'
@@ -46,7 +49,7 @@ function buildWeakSpotRows(wordStatuses, weakAyahs, t) {
   for (const word of (Array.isArray(wordStatuses) ? wordStatuses : [])) {
     const ayah = recitationWordAyahNumber(word)
     if (!ayah || !byAyah.has(ayah)) continue
-    const tone = tokenTone(word?.status ?? word?.visualStatus)
+    const tone = tokenTone(word)
     if (!isWeakTone(tone)) continue
     const text = wordText(word)
     if (!text) continue
@@ -83,7 +86,7 @@ function buildFocusAyahRows(wordStatuses, weakAyahs, t) {
     if (!grouped.has(ayah)) grouped.set(ayah, [])
     const text = wordText(word)
     if (!text) continue
-    const tone = tokenTone(word?.status ?? word?.visualStatus)
+    const tone = tokenTone(word)
     grouped.get(ayah).push({
       text,
       tone,
@@ -182,10 +185,11 @@ function buildOutcomeStatChips(details, durationSeconds, t) {
   }
   const counts = details.colorCounts || {}
   // Red means an incorrect match. Black is an omission and must not inflate
-  // the red "wrong" pill; it is already visible in the colour breakdown.
+  // the red "wrong" pill; keep it as a calm review count instead.
   const wrong = Number(counts.red || 0)
   const close = Number(counts.amber || 0)
-  if (wrong > 0 || close > 0) {
+  const omitted = Number(counts.black || 0)
+  if (wrong > 0 || close > 0 || omitted > 0) {
     chips.push({
       key: 'issues',
       tone: wrong > 0 ? 'weak' : 'review',
@@ -194,8 +198,10 @@ function buildOutcomeStatChips(details, durationSeconds, t) {
       value: wrong > 0
         ? (t('memorisation.postSession.recommendation.statWrongCount', { count: wrong })
           || `${wrong} wrong`)
-        : (t('memorisation.postSession.recommendation.statCloseCount', { count: close })
-          || `${close} close`),
+        : close > 0
+          ? (t('memorisation.postSession.recommendation.statCloseCount', { count: close })
+            || `${close} close`)
+          : `${omitted} omitted`,
       hint: t('memorisation.postSession.recommendation.statNeedsWorkHint')
         || 'Words that need another calm pass',
     })

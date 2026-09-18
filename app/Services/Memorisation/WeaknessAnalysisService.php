@@ -13,6 +13,10 @@ class WeaknessAnalysisService
     public function analyse(array $wordResults, array $extraWords = [], array $colorCounts = [], int $accuracy = 0): array
     {
         $weakWords = [];
+        $substitutions = [];
+        $selfCorrected = [];
+        $selfCorrectionGroups = [];
+        $selfCorrectionIndexes = [];
         $byAyah = [];
         $errorTypes = [
             'minor_mistake' => 0,
@@ -32,9 +36,26 @@ class WeaknessAnalysisService
 
         foreach ($extraWords as $extra) {
             $type = strtoupper((string) ($extra['type'] ?? ''));
+            if ($type === QuranAlignmentService::TYPE_SELF_CORRECTION) {
+                $groupId = (string) ($extra['self_correction_group_id'] ?? $extra['correction_group_id'] ?? ($extra['recognised_index'] ?? count($selfCorrectionGroups)));
+                if (! isset($selfCorrectionGroups[$groupId])) {
+                    $selfCorrectionGroups[$groupId] = true;
+                    $selfCorrectionIndexes[$groupId] = count($selfCorrected);
+                    $selfCorrected[] = [
+                        'wrong_tokens' => [],
+                        'corrected_target_word' => (string) ($extra['corrected_target_word'] ?? $extra['expected_word'] ?? ''),
+                        'corrected_target_words' => is_array($extra['corrected_target_words'] ?? null)
+                            ? array_values($extra['corrected_target_words'])
+                            : [(string) ($extra['corrected_target_word'] ?? $extra['expected_word'] ?? '')],
+                        'corrected_target_index' => (int) ($extra['corrected_target_index'] ?? $extra['expected_index'] ?? 0),
+                        'correction_group_id' => $groupId,
+                    ];
+                }
+                $selfCorrected[$selfCorrectionIndexes[$groupId]]['wrong_tokens'][] = (string) ($extra['wrong_token'] ?? $extra['recognised_word'] ?? $extra['raw_word'] ?? $extra['word'] ?? '');
+            }
             match ($type) {
                 QuranAlignmentService::TYPE_INSERTION => $errorTypes['unresolved_mistakes']++,
-                QuranAlignmentService::TYPE_SELF_CORRECTION => $errorTypes['self_corrected_mistakes']++,
+                QuranAlignmentService::TYPE_SELF_CORRECTION => null,
                 QuranAlignmentService::TYPE_REPETITION => $errorTypes['repetitions']++,
                 QuranAlignmentService::TYPE_RESTART => $errorTypes['restarts']++,
                 QuranAlignmentService::TYPE_OUT_OF_RANGE => $errorTypes['out_of_range_words']++,
@@ -42,9 +63,22 @@ class WeaknessAnalysisService
                 default => null,
             };
         }
+        $errorTypes['self_corrected_mistakes'] = count($selfCorrectionGroups);
 
         foreach ($wordResults as $word) {
             $status = (string) ($word['status'] ?? '');
+            if (strtoupper((string) ($word['type'] ?? '')) === QuranAlignmentService::TYPE_SUBSTITUTION
+                && (string) ($word['actual'] ?? '') !== '') {
+                $substitutions[] = [
+                    'expected' => (string) ($word['expected_word'] ?? $word['text'] ?? $word['target_word'] ?? ''),
+                    'actual' => (string) ($word['actual'] ?? $word['raw_word'] ?? ''),
+                    'expected_index' => (int) ($word['expected_index'] ?? $word['target_index'] ?? 0),
+                    'ayah_number' => (int) ($word['ayah_number'] ?? 0),
+                    'ayah_word_index' => (int) ($word['ayah_word_index'] ?? $word['target_index'] ?? 0),
+                    'confidence' => (float) ($word['confidence'] ?? $word['speechmatics_confidence'] ?? 0),
+                    'similarity' => (float) ($word['similarity'] ?? 0),
+                ];
+            }
             $ayah = (int) ($word['ayah_number'] ?? 0);
             if (! isset($byAyah[$ayah])) {
                 $byAyah[$ayah] = [
@@ -161,6 +195,8 @@ class WeaknessAnalysisService
             'weak_ayahs' => $weakAyahs,
             'strong_ayahs' => $strongAyahs,
             'weak_words' => array_slice($weakWords, 0, 40),
+            'substitutions' => array_slice($substitutions, 0, 40),
+            'self_corrected_mistakes' => $selfCorrected,
             'weak_phrases' => $weakPhrases,
             'ayah_results' => $ayahResults,
             'error_types' => $errorTypes,

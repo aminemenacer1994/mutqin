@@ -212,7 +212,7 @@ assert.ok(omissionResult.skippedWords.some(group => group.words.includes('هو')
 assert.ok(omissionResult.mistakes.wordSkips.some(group => group.words.includes('هو')))
 assert.equal(omissionResult.verseJumpDetected, false)
 assert.ok(omissionResult.wordStatuses.some(word => word.text === 'هو' && word.status === 'omitted'))
-assert.ok((omissionResult.colorCounts?.black || 0) >= 1)
+assert.ok((omissionResult.colorCounts?.red || 0) >= 1)
 assert.ok(omissionResult.weakAyahs.includes(1))
 
 const extraResult = buildDeterministicRecitationResult(

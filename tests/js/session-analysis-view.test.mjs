@@ -39,6 +39,9 @@ assert.match(modal, /sa-ov__audio/, 'session overview always shows a recording p
 assert.match(modal, /RecitationAudioPlayer/, 'recording panel uses the designed player')
 assert.doesNotMatch(modal, /<audio class="w-100" controls/, 'native audio chrome is not dumped in the overview')
 assert.match(modal, /session-analysis-modal-open/, 'background scroll/interaction is locked')
+assert.doesNotMatch(modal, /sa-ov__retention-panel/, 'retention panel is permanently removed from session analysis')
+assert.match(modal, /sa-ov__word/, 'recited words render individually for mistake highlighting')
+assert.match(modal, /correctText/, 'the correct ayah renders below the recitation')
 assert.match(
   overviewCss,
   /\.sa-ov__ayah-ar \{[\s\S]*?unicode-bidi:\s*plaintext/,
@@ -111,8 +114,38 @@ assert.ok(first.ayahRows.some((row) => row.ayah === 2))
 assert.ok(first.ayahRows.every((row) => typeof row.text === 'string'))
 assert.ok(first.recommendations.some((item) => /weak ayah|Return to ayah 2|Gradually hide the text/i.test(`${item.label} ${item.detail}`)))
 assert.ok(!first.recommendations.some((item) => item.label === 'blur'))
-assert.equal(first.retention[0].label, 'Ayah 2')
+assert.equal(first.retention, undefined)
+assert.equal(first.ayahRows.find((row) => row.ayah === 2)?.correctText, 'الصمد')
 assert.equal(first.audio, null)
+
+const omissionHistory = buildSessionAnalysisView({
+  has_analysis: true,
+  ai_attempt: {
+    word_statuses: [
+      { text: 'الحمد', status: 'correct', type: 'MATCH', ayah_number: 1 },
+      { text: 'رب', status: 'missing', type: 'DELETION', visual_status: 'red', ayah_number: 1 },
+      { text: 'العالمين', status: 'correct', type: 'MATCH', ayah_number: 1 },
+    ],
+  },
+}, t)
+assert.deepEqual(
+  omissionHistory.ayahRows[0].parts.map((part) => part.tone),
+  ['is-correct', 'is-incorrect', 'is-correct'],
+  'confirmed missing words are red in saved session analysis',
+)
+
+const incorrectHistory = buildSessionAnalysisView({
+  has_analysis: true,
+  ai_attempt: {
+    word_statuses: [
+      { text: 'الحمد', status: 'correct', ayah_number: 1 },
+      { text: 'لله', expected_word: 'لله', raw_word: 'للرحمن', status: 'wrong', ayah_number: 1 },
+    ],
+  },
+}, t)
+assert.equal(incorrectHistory.ayahRows[0].parts[1].text, 'للرحمن')
+assert.equal(incorrectHistory.ayahRows[0].parts[1].tone, 'is-incorrect')
+assert.equal(incorrectHistory.ayahRows[0].correctText, 'الحمد لله')
 
 const withAudio = buildSessionAnalysisView({
   has_analysis: true,
@@ -154,9 +187,9 @@ const noExtras = buildSessionAnalysisView({
   practice_plan: { title: 'Repeat weak ayah', why: 'Focus here' },
   recommendation: { recommended_technique: 'slow_repeat' },
   retention: { weak_spots: [{ id: 1, ayah_number: 2, severity: 'high', status: 'active' }] },
-}, t, { includeRecommendations: false, includeRetention: false })
+}, t, { includeRecommendations: false })
 assert.equal(noExtras.recommendations.length, 0)
-assert.equal(noExtras.retention.length, 0)
+assert.equal(noExtras.retention, undefined)
 assert.ok(noExtras.aiReview)
 
 console.log('session-analysis-view.test.mjs: ok')

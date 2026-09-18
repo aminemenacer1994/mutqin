@@ -1079,3 +1079,29 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
     overflow: visible !important;
   }
 }
+
+/* Give the voice-search dialog more room on desktop without changing mobile sizing. */
+@media (min-width: 901px) {
+  html body .ask-mutqin-overlay .ask-mutqin-dialog.mutqin-modal-dialog {
+    width: min(96rem, calc(100vw - 2rem)) !important;
+    max-width: min(96rem, calc(100vw - 2rem)) !important;
+  }
+}
+
+@media (min-width: 901px) and (min-height: 721px) {
+  html body .ask-mutqin-overlay .ask-mutqin-dialog.mutqin-modal-dialog {
+    max-height: calc(100dvh - 2rem) !important;
+    min-height: min(38rem, calc(100dvh - 2rem)) !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-modal.mutqin-modal-surface {
+    max-height: calc(100dvh - 2rem) !important;
+    min-height: min(38rem, calc(100dvh - 2rem)) !important;
+    padding: 1.4rem 1.5rem 1.25rem !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-ayah__stage,
+  html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
+    min-height: clamp(12rem, 28vh, 18rem) !important;
+  }
+}

@@ -9,7 +9,10 @@ import {
   RECITATION_LIVE_PARTIAL_SIMILARITY,
   RECITATION_SOFT_SIMILARITY_CAP,
   RECITATION_THRESHOLDS,
+  RECITATION_PAUSE_POLICY,
   RECITATION_UNCERTAIN_CONFIDENCE,
+  resolveHesitationPauseSeconds,
+  resolveSelfCorrectionPauseSeconds,
   recitationAccuracyBand,
 } from './recitationThresholds.js'
 
@@ -24,7 +27,10 @@ export {
   RECITATION_LIVE_PARTIAL_SIMILARITY,
   RECITATION_SOFT_SIMILARITY_CAP,
   RECITATION_THRESHOLDS,
+  RECITATION_PAUSE_POLICY,
   RECITATION_UNCERTAIN_CONFIDENCE,
+  resolveHesitationPauseSeconds,
+  resolveSelfCorrectionPauseSeconds,
   recitationAccuracyBand,
 }
 
@@ -173,18 +179,39 @@ export function resolveRecitationWordDisplay(word = {}) {
 }
 
 function heardTiming(heardWord = {}) {
-  const start = finiteOrNull(heardWord?.start ?? heardWord?.startTime)
-  const end = finiteOrNull(heardWord?.end ?? heardWord?.endTime)
+  const start = finiteOrNull(heardWord?.start ?? heardWord?.startTime ?? heardWord?.start_time)
+  const end = finiteOrNull(heardWord?.end ?? heardWord?.endTime ?? heardWord?.end_time)
   return { start, end, startTime: start, endTime: end }
 }
 
-function withHeardAlignmentFields(payload, heardWord = {}, status = payload?.status) {
+function heardRecognitionToken(heardWord = {}) {
+  const token = heardWord?.token
+    ?? heardWord?.speechmaticsToken
+    ?? heardWord?.speechmatics_token
+    ?? heardWord?.resultId
+    ?? heardWord?.result_id
+    ?? heardWord?.id
+  return token === undefined || token === null ? null : token
+}
+
+function withRecognitionDebugFields(payload, heardWord = {}) {
+  const token = heardRecognitionToken(heardWord)
   return {
+    ...payload,
+    ...(heardWord?.provider ? { provider: heardWord.provider } : {}),
+    ...(heardWord?.segmentId ? { segmentId: heardWord.segmentId } : {}),
+    ...(Number.isFinite(Number(heardWord?.sourceIndex)) ? { sourceIndex: Number(heardWord.sourceIndex) } : {}),
+    ...(token !== null ? { token, speechmaticsToken: token } : {}),
+  }
+}
+
+function withHeardAlignmentFields(payload, heardWord = {}, status = payload?.status) {
+  return withRecognitionDebugFields({
     ...payload,
     rawWord: heardRawWord(heardWord),
     displayWord: status === 'correct' ? String(payload?.text || '') : '',
     ...heardTiming(heardWord),
-  }
+  }, heardWord)
 }
 
 function unmatchedTargetAlignmentFields() {
@@ -290,7 +317,11 @@ export function stabilizeRecognitionEvent(state = createRecognitionState(), even
     start: rawEvent.start,
     duration: rawEvent.duration,
     speechFinal: rawEvent.speechFinal,
-    words: normalizedWords.map(word => ({ ...word, segmentId: segmentKey }))
+    // Speechmatics can re-emit the same token while replacing a segment. Keep
+    // the token in rawEvents for diagnostics, but do not let that provider
+    // duplicate become a learner repetition in the committed transcript.
+    words: suppressDuplicateRecognitionWords(normalizedWords)
+      .map(word => ({ ...word, segmentId: segmentKey }))
   }
   const currentSegment = next.bufferedSegments[segmentKey]
   next.bufferedSegments[segmentKey] = selectPreferredRecognitionSegment(currentSegment, incomingSegment)
@@ -315,6 +346,25 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   const displayWords = targetUnits.map(unit => unit.display)
   const targetWords = targetUnits.map(unit => unit.word)
   const heardWords = normaliseCommittedRecognitionWords(recognitionWords)
+  const isLiveLifecycle = ['live', 'recording', 'paused'].includes(String(options.lifecycle || '').toLowerCase())
+
+  // The cursor preview is intentionally lightweight for ordinary speech, but
+  // it must yield to the same anchor-gated DP once a real backward move is
+  // visible. Otherwise a restart is mistaken for a long omission/red cascade
+  // while the recording is still live.
+  if (heardWords.length >= 4 && targetWords.length >= 3 && findLiveRestartEvidence(targetWords, heardWords)) {
+    const restartAlignment = buildQuranAlignment(targetText, heardWords, {
+      ...options,
+      lifecycle: 'live',
+      targetAyahs,
+    })
+    if (restartAlignment.events?.some(event => event.type === 'RESTART')) {
+      return {
+        ...restartAlignment,
+        firstBlockingIndex: restartAlignment.progression?.currentIndex ?? -1,
+      }
+    }
+  }
   const statuses = displayWords.map((text, index) => ({
     text,
     targetWord: targetWords[index] || '',
@@ -391,7 +441,9 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         confidence: Number(heardWord.confidence ?? 1),
         start: finiteOrNull(heardWord.start ?? heardWord.startTime),
         end: finiteOrNull(heardWord.end ?? heardWord.endTime),
-        type: isRepeatedHeardWord(heardWords, heardIndex) ? 'repetition' : 'extra'
+        type: isRepeatedHeardWord(heardWords, heardIndex)
+          ? 'repetition'
+          : (isLowConfidenceRecognitionWord(heardWord) ? 'uncertain' : 'extra')
       })
       continue
     }
@@ -445,11 +497,14 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         statuses[cursor] = {
           text: displayWords[cursor] || targetWord,
           targetWord,
-          status: 'omitted',
-          note: `Skipped. Expected ${displayWords[cursor] || targetWord} before continuing.`,
+          status: isLiveLifecycle ? 'pending' : 'omitted',
+          type: isLiveLifecycle ? 'UNASSESSED' : 'DELETION',
+          note: isLiveLifecycle ? '' : `Skipped. Expected ${displayWords[cursor] || targetWord} before continuing.`,
           actual: '',
           confidence: 0,
           similarity: 0,
+          visualStatus: isLiveLifecycle ? 'neutral' : 'red',
+          highlight: isLiveLifecycle ? 'neutral' : 'red',
           targetIndex: cursor,
           ayahKey: skipUnit?.ayahKey || '',
           ayahNumber: skipUnit?.ayahNumber ?? null,
@@ -479,11 +534,14 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         statuses[skipIndex] = {
           text: displayWords[skipIndex] || targetWords[skipIndex] || '',
           targetWord: targetWords[skipIndex] || '',
-          status: 'omitted',
-          note: `Skipped. Expected ${displayWords[skipIndex] || targetWords[skipIndex] || ''} before continuing.`,
+          status: isLiveLifecycle ? 'pending' : 'omitted',
+          type: isLiveLifecycle ? 'UNASSESSED' : 'DELETION',
+          note: isLiveLifecycle ? '' : `Skipped. Expected ${displayWords[skipIndex] || targetWords[skipIndex] || ''} before continuing.`,
           actual: '',
           confidence: 0,
           similarity: 0,
+          visualStatus: isLiveLifecycle ? 'neutral' : 'red',
+          highlight: isLiveLifecycle ? 'neutral' : 'red',
           targetIndex: skipIndex,
           ayahKey: skipUnit?.ayahKey || '',
           ayahNumber: skipUnit?.ayahNumber ?? null,
@@ -548,6 +606,13 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   }
 
   const progression = buildStableProgression(statuses, extraWords, options)
+  const events = detectHesitationEvents({
+    statuses,
+    extraWords,
+    heardWords,
+    lifecycle: options.lifecycle || 'live',
+    hesitationSeconds: options.hesitationSeconds,
+  })
   return {
     sourceOfTruth: 'selected-ayah-live-preview',
     targetText,
@@ -558,6 +623,8 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     statuses,
     wordStatuses: statuses,
     extraWords,
+    events,
+    scenarioCounts: buildQuranScenarioCounts(statuses, extraWords, events),
     progression,
     firstBlockingIndex
   }
@@ -651,6 +718,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
   const transcriptWords = heardWords.map(word => word.word)
   const targetCount = targetWords.length
   const heardCount = transcriptWords.length
+  const startingAnchor = findStartingAnchor(targetWords, heardWords)
   const matrix = Array.from({ length: targetCount + 1 }, () => Array(heardCount + 1).fill(null))
   matrix[0][0] = { cost: 0, prev: null, op: 'start', similarity: 0 }
 
@@ -675,7 +743,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
       const confidenceWeight = Math.max(0.35, Math.min(1, Number(heardWord.confidence ?? 1)))
       const matchCost = getWeightedMatchCost(targetWord, heardWord.word, similarity, confidenceWeight, {
         allowArticleMatch,
-      })
+      }) + startingAnchorAdjustment(startingAnchor, targetIndex - 1, heardIndex - 1) + (heardIndex - 1) * 1e-9
       const candidates = [
         { cost: matrix[targetIndex - 1][heardIndex - 1].cost + matchCost, prev: [targetIndex - 1, heardIndex - 1], op: 'match', similarity },
         { cost: matrix[targetIndex - 1][heardIndex].cost + 1.02, prev: [targetIndex - 1, heardIndex], op: 'omission', similarity: 0 },
@@ -743,9 +811,12 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         confidence: Number(extraHeard.confidence ?? 1),
         start: finiteOrNull(extraHeard.start ?? extraHeard.startTime),
         end: finiteOrNull(extraHeard.end ?? extraHeard.endTime),
+        startTime: finiteOrNull(extraHeard.start ?? extraHeard.startTime),
+        endTime: finiteOrNull(extraHeard.end ?? extraHeard.endTime),
         type: repeated ? 'REPETITION' : 'INSERTION',
         legacyType: repeated ? 'repetition' : 'extra'
       }
+      Object.assign(extra, withRecognitionDebugFields({}, extraHeard))
       extraWords.unshift(extra)
       operations.unshift({ op: 'extra', expectedIndex: targetIndex, targetIndex, heardIndex: heardIndex - 1, recognisedIndex: heardIndex - 1 })
     } else if (cell.op === 'omission') {
@@ -776,11 +847,68 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     statuses,
     extraWords,
     targetWords,
+    targetDisplayWords: displayWords,
     heardWords,
+    startingAnchor,
     lifecycle: options.lifecycle || 'final',
     hesitationSeconds: options.hesitationSeconds,
     selfCorrectionSeconds: options.selfCorrectionSeconds,
+    allowIncomplete: ['live', 'recording', 'paused'].includes(String(options.lifecycle || '').toLowerCase()),
   })
+  const isLiveLifecycle = ['live', 'recording', 'paused'].includes(String(options.lifecycle || '').toLowerCase())
+  if (isLiveLifecycle && !quranAware.events.some(event => event.type === 'RESTART')) {
+    const liveRestart = findLiveRestartEvidence(targetWords, heardWords)
+    const restartHasAlignmentConflict = liveRestart
+      && statuses.slice(liveRestart.restartEndIndex + 1).some(status => status.status !== 'correct')
+    if (liveRestart && restartHasAlignmentConflict) {
+      for (let heardIndex = liveRestart.recognisedStartIndex; heardIndex <= liveRestart.recognisedEndIndex; heardIndex += 1) {
+        if (extraWords.some(extra => Number(extra.heardIndex) === heardIndex)) continue
+        const heard = heardWords[heardIndex] || {}
+        extraWords.push({
+          word: heard.word || '',
+          display: heard.display || heardRawWord(heard),
+          rawWord: heardRawWord(heard),
+          displayWord: '',
+          heardIndex,
+          confidence: Number(heard.confidence ?? 1),
+          start: finiteOrNull(heard.start ?? heard.startTime),
+          end: finiteOrNull(heard.end ?? heard.endTime),
+          startTime: finiteOrNull(heard.start ?? heard.startTime),
+          endTime: finiteOrNull(heard.end ?? heard.endTime),
+          type: 'RESTART',
+          classificationType: 'RESTART',
+          legacyType: 'extra',
+          highlight: 'amber',
+          expectedIndex: liveRestart.restartStartIndex,
+          recognisedIndex: heardIndex,
+          restartStartIndex: liveRestart.restartStartIndex,
+          restartEndIndex: liveRestart.restartEndIndex,
+          recognisedStartIndex: liveRestart.recognisedStartIndex,
+          recognisedEndIndex: liveRestart.recognisedEndIndex,
+          ...withRecognitionDebugFields({}, heard),
+        })
+      }
+      quranAware.events.unshift(buildRestartEvent(liveRestart, heardWords))
+      quranAware.scenarioCounts.restarts = Number(quranAware.scenarioCounts.restarts || 0) + 1
+      for (let index = liveRestart.restartEndIndex + 1; index < statuses.length; index += 1) {
+        statuses[index] = {
+          ...statuses[index],
+          status: 'pending',
+          type: 'UNASSESSED',
+          note: '',
+          actual: '',
+          confidence: 0,
+          similarity: 0,
+          visualStatus: 'neutral',
+          ...unmatchedTargetAlignmentFields(),
+        }
+      }
+    }
+  }
+  // The live restart fallback can turn a provisional DP divergence into
+  // UNASSESSED future words. Refresh counters after that mutation so stale
+  // red/wrong counts cannot surface as a cascading error.
+  quranAware.scenarioCounts = buildQuranScenarioCounts(statuses, extraWords, quranAware.events)
   applyWrongOrderGuard(statuses, targetWords, transcriptWords)
   reconcileUncertainFromRejectedWords(statuses, options.rejectedWords || [], {
     allowArticleMatch: options.allowArticleMatch !== false,
@@ -792,6 +920,9 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
       : 0.48,
   })
   const progression = buildStableProgression(statuses, extraWords, options)
+  // Keep low-confidence extras in the raw alignment for debugging, but do not
+  // surface them as learner extra-word mistakes or apply an extra penalty.
+  const reportableExtraWords = extraWords.filter(word => word.type !== 'UNASSESSED')
   const structural = buildStructuralRecitationAnalysis({
     statuses,
     heardWords: rawHeardWords,
@@ -802,12 +933,12 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     targetUnits,
     operations
   })
-  const mistakes = buildMistakesFromStatuses(statuses, extraWords, structural)
+  const mistakes = buildMistakesFromStatuses(statuses, reportableExtraWords, structural)
   const analysis = buildAnalysis({
     statuses,
     heardWords,
     rawHeardWords,
-    extraWords,
+    extraWords: reportableExtraWords,
     mistakes,
     targetWords,
     targetAyahs,
@@ -837,7 +968,8 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
     mistakeBreakdown: mistakes,
     structural,
     progression,
-    analysis
+    analysis,
+    startingAnchor
   }
 }
 
@@ -846,10 +978,13 @@ function classifyQuranAwareOperations({
   statuses = [],
   extraWords = [],
   targetWords = [],
+  targetDisplayWords = [],
   heardWords = [],
+  startingAnchor = null,
   lifecycle = 'final',
-  hesitationSeconds = 1.35,
-  selfCorrectionSeconds = 0.55,
+  hesitationSeconds = RECITATION_PAUSE_POLICY.hesitationSeconds,
+  selfCorrectionSeconds = RECITATION_PAUSE_POLICY.selfCorrectionSeconds,
+  allowIncomplete = false,
 } = {}) {
   const finalised = !['live', 'recording', 'paused'].includes(String(lifecycle || '').toLowerCase())
   const resolved = operation => {
@@ -869,13 +1004,41 @@ function classifyQuranAwareOperations({
     }
   }
 
+  const restartGroups = detectRestartGroups({
+    operations,
+    targetWords,
+    heardWords,
+    correctSimilarity: RECITATION_CORRECT_SIMILARITY,
+    hesitationSeconds,
+    allowIncomplete: !finalised,
+  })
+  const midStartRestart = detectMidStartRestart(targetWords, heardWords, startingAnchor, finalised)
+  if (midStartRestart) restartGroups.push(midStartRestart)
+  for (const group of restartGroups) {
+    for (const operation of operations) {
+      if (
+        operation.op !== 'extra'
+        || Number(operation.recognisedIndex) < group.recognisedStartIndex
+        || Number(operation.recognisedIndex) > group.recognisedEndIndex
+      ) continue
+      operation.type = 'RESTART'
+      Object.assign(operation, group)
+    }
+  }
+
+  const selfCorrectionGroups = []
   for (let index = 0; index < operations.length; index += 1) {
     const operation = operations[index]
-    if (operation.op !== 'extra') continue
+    if (operation.op !== 'extra' || operation.type !== 'INSERTION') continue
     const heardIndex = Number(operation.recognisedIndex)
     const expectedIndex = Number(operation.expectedIndex)
-    const word = String(heardWords[heardIndex]?.word || '')
+    const heard = heardWords[heardIndex] || {}
+    const word = String(heard.word || '')
     const previous = heardIndex > 0 ? String(heardWords[heardIndex - 1]?.word || '') : ''
+    if (isLowConfidenceRecognitionWord(heard) && !wordIsStructuralExtra(word, previous, targetWords, expectedIndex)) {
+      operation.type = 'UNASSESSED'
+      continue
+    }
     if (expectedIndex >= targetWords.length) {
       operation.type = 'OUT_OF_RANGE'
       continue
@@ -884,52 +1047,211 @@ function classifyQuranAwareOperations({
       operation.type = 'REPETITION'
       continue
     }
-    if (word && targetWords.slice(0, Math.max(0, expectedIndex)).includes(word)) {
-      operation.type = 'RESTART'
+
+    // A previously recited target word is a backward move, not a correction.
+    // Restart detection above may claim a longer span; a lone occurrence is
+    // retained as repetition so it cannot become an amber correction.
+    if (targetWords.slice(0, Math.max(0, expectedIndex)).includes(word)) {
+      operation.type = 'REPETITION'
       continue
     }
-    if (word && targetWords.includes(word)) {
-      const laterSameAnchor = operations.slice(index + 1).some(candidate => (
-        resolved(candidate)
-        && targetWords[Number(candidate.expectedIndex)] === word
-      ))
-      if (laterSameAnchor) {
-        operation.type = 'RESTART'
-        continue
-      }
-    }
-    const next = operations[index + 1]
-    const currentEnd = finiteOrNull(heardWords[heardIndex]?.end ?? heardWords[heardIndex]?.endTime)
-    const nextStart = finiteOrNull(heardWords[heardIndex + 1]?.start ?? heardWords[heardIndex + 1]?.startTime)
-    const pause = currentEnd != null && nextStart != null ? Math.max(0, nextStart - currentEnd) : 0
-    if (
-      next?.op === 'match'
-      && Number(next.expectedIndex) === expectedIndex
-      && resolved(next)
-      && pause >= Math.max(0, Number(selfCorrectionSeconds) || 0.55)
+
+    let end = index
+    while (
+      end + 1 < operations.length
+      && operations[end + 1]?.op === 'extra'
+      && operations[end + 1]?.type === 'INSERTION'
+      && Number(operations[end + 1]?.expectedIndex) === expectedIndex
+      && Number(operations[end + 1]?.recognisedIndex) === Number(operations[end]?.recognisedIndex) + 1
     ) {
-      operation.type = 'SELF_CORRECTION'
+      end += 1
+    }
+    const correction = operations[end + 1]
+    const correctedHeardIndex = Number(correction?.recognisedIndex)
+    const currentEnd = finiteOrNull(heardWords[Number(operations[end]?.recognisedIndex)]?.end ?? heardWords[Number(operations[end]?.recognisedIndex)]?.endTime)
+    const correctedStart = finiteOrNull(heardWords[correctedHeardIndex]?.start ?? heardWords[correctedHeardIndex]?.startTime)
+    const pause = currentEnd != null && correctedStart != null ? Math.max(0, correctedStart - currentEnd) : 0
+    if (
+      correction?.op === 'match'
+      && Number(correction.expectedIndex) === expectedIndex
+      && resolved(correction)
+      && pause >= resolveSelfCorrectionPauseSeconds(selfCorrectionSeconds)
+    ) {
+      let correctedEnd = end + 1
+      while (
+        correctedEnd + 1 < operations.length
+        && resolved(operations[correctedEnd + 1])
+        && Number(operations[correctedEnd + 1].expectedIndex) === Number(operations[correctedEnd].expectedIndex) + 1
+        && Number(operations[correctedEnd + 1].recognisedIndex) === Number(operations[correctedEnd].recognisedIndex) + 1
+      ) {
+        correctedEnd += 1
+      }
+      const correctedTargetWords = operations
+        .slice(end + 1, correctedEnd + 1)
+        .map(item => targetDisplayWords[Number(item.expectedIndex)] || targetWords[Number(item.expectedIndex)] || '')
+        .filter(Boolean)
+      const group = {
+        correctionGroupId: `self-correction:${expectedIndex}:${Number(operation.recognisedIndex)}:${Number(operations[end].recognisedIndex)}`,
+        self_correction_group_id: `self-correction:${expectedIndex}:${Number(operation.recognisedIndex)}:${Number(operations[end].recognisedIndex)}`,
+        correctedTargetIndex: expectedIndex,
+        corrected_target_index: expectedIndex,
+        correctedTargetWord: correctedTargetWords.join(' '),
+        corrected_target_word: correctedTargetWords.join(' '),
+        correctedTargetWords,
+        corrected_target_words: correctedTargetWords,
+        recognisedStartIndex: Number(operation.recognisedIndex),
+        recognisedEndIndex: Number(operations[end].recognisedIndex),
+        recognised_start_index: Number(operation.recognisedIndex),
+        recognised_end_index: Number(operations[end].recognisedIndex),
+        correctedTargetEndIndex: Number(operations[correctedEnd]?.expectedIndex ?? expectedIndex),
+        corrected_target_end_index: Number(operations[correctedEnd]?.expectedIndex ?? expectedIndex),
+      }
+      for (let groupIndex = index; groupIndex <= end; groupIndex += 1) {
+        operations[groupIndex].type = 'SELF_CORRECTION'
+        Object.assign(operations[groupIndex], group)
+      }
+      selfCorrectionGroups.push({ ...group, correctionIndex: end + 1, pause })
+      index = end
     }
   }
 
-  let cursor = 0
-  while (cursor < operations.length) {
-    if (resolved(operations[cursor])) {
-      cursor += 1
-      continue
+  const reliableAnchorRunLength = start => {
+    let length = 0
+    let previousExpected = null
+    let previousRecognised = null
+    for (let index = start; index < operations.length; index += 1) {
+      const operation = operations[index]
+      if (!resolved(operation)) break
+      const expectedIndex = Number(operation.expectedIndex)
+      const recognisedIndex = Number(operation.recognisedIndex)
+      if (
+        previousExpected !== null
+        && (expectedIndex !== previousExpected + 1 || recognisedIndex !== previousRecognised + 1)
+      ) break
+      if (isLowConfidenceRecognitionWord(heardWords[recognisedIndex])) break
+      length += 1
+      previousExpected = expectedIndex
+      previousRecognised = recognisedIndex
     }
-    const start = cursor
-    let hasExpected = false
-    while (cursor < operations.length && !resolved(operations[cursor])) {
-      if (operations[cursor].op !== 'extra') hasExpected = true
-      cursor += 1
+    return length
+  }
+
+  const anchorRuns = []
+  for (let start = 0; start < operations.length;) {
+    const length = reliableAnchorRunLength(start)
+    if (length >= 2) {
+      anchorRuns.push({ start, end: start + length - 1 })
+      start += length
+    } else {
+      start += 1
     }
-    const recovered = cursor < operations.length && resolved(operations[cursor])
-    if (hasExpected && recovered && cursor - start >= 3) {
-      for (let index = start; index < cursor; index += 1) {
-        if (operations[index].op !== 'extra') operations[index].type = 'DIVERGENCE'
+  }
+
+  // If the path has no return anchor, rebase a confident coherent tail from
+  // the last stable anchor. This prevents DP from shifting the wrong phrase
+  // onto later expected slots and preserves its indexes.
+  if (anchorRuns.length === 1) {
+    const anchor = anchorRuns[0]
+    let divergentMatches = 0
+    for (let index = anchor.end + 1; index < operations.length; index += 1) {
+      const operation = operations[index]
+      const heard = heardWords[Number(operation?.recognisedIndex)] || {}
+      if (
+        operation?.op === 'match'
+        && operation.type === 'SUBSTITUTION'
+        && !isLowConfidenceRecognitionWord(heard)
+      ) divergentMatches += 1
+    }
+    if (divergentMatches >= 2) {
+      let nextExpected = Number(operations[anchor.end]?.expectedIndex) + 1
+      let nextRecognised = Number(operations[anchor.end]?.recognisedIndex) + 1
+      const rebased = operations.slice(0, anchor.end + 1)
+      while (nextExpected < targetWords.length && nextRecognised < heardWords.length) {
+        const heard = heardWords[nextRecognised] || {}
+        const similarity = getRecitationWordSimilarity(targetWords[nextExpected], heard.word)
+        rebased.push({
+          op: 'match',
+          expectedIndex: nextExpected,
+          targetIndex: nextExpected,
+          heardIndex: nextRecognised,
+          recognisedIndex: nextRecognised,
+          similarity,
+          type: isLowConfidenceRecognitionWord(heard)
+            ? 'UNASSESSED'
+            : (similarity >= RECITATION_CORRECT_SIMILARITY ? 'MATCH' : 'SUBSTITUTION'),
+        })
+        nextExpected += 1
+        nextRecognised += 1
       }
-      operations[cursor].type = 'REALIGNMENT'
+      while (nextExpected < targetWords.length) {
+        rebased.push({
+          op: 'omission',
+          targetIndex: nextExpected,
+          expectedIndex: nextExpected,
+          type: finalised ? 'DELETION' : 'UNASSESSED',
+        })
+        nextExpected += 1
+      }
+      while (nextRecognised < heardWords.length) {
+        rebased.push({
+          op: 'extra',
+          targetIndex: targetWords.length,
+          expectedIndex: targetWords.length,
+          heardIndex: nextRecognised,
+          recognisedIndex: nextRecognised,
+          type: 'OUT_OF_RANGE',
+        })
+        nextRecognised += 1
+      }
+      operations.splice(0, operations.length, ...rebased)
+    }
+  }
+
+  // One matching word inside a similar phrase is not enough evidence to
+  // resynchronise. Require a two-word expected/recognised recovery anchor.
+  for (let runIndex = 1; runIndex < anchorRuns.length; runIndex += 1) {
+    const previous = anchorRuns[runIndex - 1]
+    const recovery = anchorRuns[runIndex]
+    const start = previous.end + 1
+    const end = recovery.start - 1
+    let divergentMatches = 0
+    for (let index = start; index <= end; index += 1) {
+      const operation = operations[index]
+      const heard = heardWords[Number(operation?.recognisedIndex)] || {}
+      if (
+        operation?.op === 'match'
+        && operation.type === 'SUBSTITUTION'
+        && !isLowConfidenceRecognitionWord(heard)
+      ) divergentMatches += 1
+    }
+    if (divergentMatches < 2) continue
+    for (let index = start; index <= end; index += 1) {
+      if (operations[index]?.op !== 'extra') operations[index].type = 'DIVERGENCE'
+    }
+    operations[recovery.start].type = 'REALIGNMENT'
+  }
+
+  // No return anchor: keep only confident wrong matches as an unresolved
+  // divergence. Omissions and low-confidence recognition remain distinct.
+  if (anchorRuns.length) {
+    const lastAnchor = anchorRuns[anchorRuns.length - 1]
+    const start = lastAnchor.end + 1
+    let divergentMatches = 0
+    for (let index = start; index < operations.length; index += 1) {
+      const operation = operations[index]
+      const heard = heardWords[Number(operation?.recognisedIndex)] || {}
+      if (
+        operation?.op === 'match'
+        && operation.type === 'SUBSTITUTION'
+        && !isLowConfidenceRecognitionWord(heard)
+      ) divergentMatches += 1
+    }
+    if (divergentMatches >= 2) {
+      for (let index = start; index < operations.length; index += 1) {
+        if (operations[index]?.op === 'match' && operations[index].type === 'SUBSTITUTION') {
+          operations[index].type = 'DIVERGENCE'
+        }
+      }
     }
   }
 
@@ -945,6 +1267,12 @@ function classifyQuranAwareOperations({
       status.status = operation.op === 'omission' ? 'pending' : 'uncertain'
       status.note = ''
       status.visualStatus = 'neutral'
+      status.highlight = 'neutral'
+    } else if (operation.type === 'DELETION') {
+      // Keep omission semantics for analytics, but make a confirmed skipped
+      // expected word the only red target in the aligned sequence.
+      status.visualStatus = 'red'
+      status.highlight = 'red'
     } else if (operation.type === 'DIVERGENCE') {
       status.status = 'incorrect'
       status.visualStatus = 'red'
@@ -965,37 +1293,331 @@ function classifyQuranAwareOperations({
     extra.highlight = ['REPETITION', 'SELF_CORRECTION', 'RESTART'].includes(operation.type)
       ? 'amber'
       : (operation.type === 'INSERTION' ? 'red' : 'neutral')
+    extra.visualStatus = extra.highlight
+    extra.visual_status = extra.highlight
     extra.expectedIndex = Number(operation.expectedIndex)
     extra.recognisedIndex = Number(operation.recognisedIndex)
-  }
-
-  const events = []
-  const hesitationFloor = Math.max(0.5, Number(hesitationSeconds) || 1.35)
-  for (let index = 1; index < heardWords.length; index += 1) {
-    const previousEnd = finiteOrNull(heardWords[index - 1]?.end ?? heardWords[index - 1]?.endTime)
-    const currentStart = finiteOrNull(heardWords[index]?.start ?? heardWords[index]?.startTime)
-    if (previousEnd == null || currentStart == null) continue
-    const duration = currentStart - previousEnd
-    if (duration >= hesitationFloor) {
-      events.push({ type: 'HESITATION', highlight: 'amber', duration, recognisedIndex: index })
+    if (operation.type === 'SELF_CORRECTION') {
+      for (const key of [
+        'correctionGroupId',
+        'self_correction_group_id',
+        'correctedTargetIndex',
+        'corrected_target_index',
+        'correctedTargetWord',
+        'corrected_target_word',
+        'correctedTargetWords',
+        'corrected_target_words',
+        'correctedTargetEndIndex',
+        'corrected_target_end_index',
+        'recognisedStartIndex',
+        'recognisedEndIndex',
+        'recognised_start_index',
+        'recognised_end_index',
+      ]) {
+        if (operation[key] !== undefined) extra[key] = operation[key]
+      }
+      // Each preserved wrong token points at the first corrected target word;
+      // the event carries the complete corrected phrase when one exists.
+      extra.correctedTargetWord = targetDisplayWords[Number(operation.expectedIndex)] || targetWords[Number(operation.expectedIndex)] || ''
+      extra.corrected_target_word = extra.correctedTargetWord
+    }
+    if (operation.type === 'RESTART') {
+      for (const key of [
+        'restartStartIndex',
+        'restartEndIndex',
+        'recognisedStartIndex',
+        'recognisedEndIndex',
+        'restart_start_index',
+        'restart_end_index',
+        'recognised_start_index',
+        'recognised_end_index',
+      ]) {
+        if (operation[key] !== undefined) extra[key] = operation[key]
+      }
+    }
+    if (operation.type === 'INSERTION' && statuses.length) {
+      const anchorIndex = Math.max(0, Math.min(
+        statuses.length - 1,
+        Number(operation.expectedIndex) > 0 ? Number(operation.expectedIndex) - 1 : 0,
+      ))
+      extra.markerTargetIndex = anchorIndex
+      extra.markerPosition = Number(operation.expectedIndex) > 0 ? 'after' : 'before'
+      statuses[anchorIndex].attachedErrorMarkers = [
+        ...(Array.isArray(statuses[anchorIndex].attachedErrorMarkers) ? statuses[anchorIndex].attachedErrorMarkers : []),
+        {
+          type: 'INSERTION',
+          word: extra.display || extra.word || '',
+          recognisedIndex: extra.recognisedIndex,
+          expectedIndex: extra.expectedIndex,
+        },
+      ]
     }
   }
 
-  const scenarioCounts = {
-    correct_words: statuses.filter(word => word.type === 'MATCH' || word.type === 'REALIGNMENT').length,
-    wrong_words: statuses.filter(word => word.type === 'SUBSTITUTION' || word.type === 'DIVERGENCE').length,
-    skipped_words: statuses.filter(word => word.type === 'DELETION').length,
-    extra_words: extraWords.filter(word => word.type === 'INSERTION').length,
-    repetitions: extraWords.filter(word => word.type === 'REPETITION').length,
-    self_corrections: extraWords.filter(word => word.type === 'SELF_CORRECTION').length,
-    hesitations: events.length,
-    restarts: extraWords.filter(word => word.type === 'RESTART').length,
-    out_of_range_words: extraWords.filter(word => word.type === 'OUT_OF_RANGE').length,
-    divergence_events: statuses.filter(word => word.type === 'DIVERGENCE').length,
-    unassessed_events: statuses.filter(word => word.type === 'UNASSESSED').length,
+  const events = restartGroups.map(group => buildRestartEvent(group, heardWords))
+  for (const group of selfCorrectionGroups) {
+    const wrongTokens = heardWords
+      .slice(group.recognisedStartIndex, group.recognisedEndIndex + 1)
+      .map(word => heardRawWord(word))
+      .filter(Boolean)
+    events.push({
+      type: 'SELF_CORRECTION',
+      status: 'extra',
+      visualStatus: 'amber',
+      visual_status: 'amber',
+      highlight: 'amber',
+      wrongTokens,
+      wrong_tokens: wrongTokens,
+      correctedTargetWord: group.correctedTargetWord,
+      corrected_target_word: group.corrected_target_word,
+      correctedTargetWords: group.correctedTargetWords,
+      corrected_target_words: group.corrected_target_words,
+      correctedTargetIndex: group.correctedTargetIndex,
+      corrected_target_index: group.corrected_target_index,
+      recognisedStartIndex: group.recognisedStartIndex,
+      recognisedEndIndex: group.recognisedEndIndex,
+      recognised_start_index: group.recognised_start_index,
+      recognised_end_index: group.recognised_end_index,
+      correctionGroupId: group.correctionGroupId,
+      self_correction_group_id: group.self_correction_group_id,
+      startTime: finiteOrNull(heardWords[group.recognisedStartIndex]?.start ?? heardWords[group.recognisedStartIndex]?.startTime),
+      endTime: finiteOrNull(heardWords[group.recognisedEndIndex]?.end ?? heardWords[group.recognisedEndIndex]?.endTime),
+      pause: group.pause,
+    })
   }
+  events.push(...detectHesitationEvents({
+    statuses,
+    extraWords,
+    heardWords,
+    lifecycle,
+    hesitationSeconds,
+  }))
+
+  const scenarioCounts = buildQuranScenarioCounts(statuses, extraWords, events, restartGroups.length)
 
   return { events, scenarioCounts }
+}
+
+function buildQuranScenarioCounts(statuses = [], extraWords = [], events = [], restartCount = null) {
+  const selfCorrectionGroupIds = new Set(
+    extraWords
+      .filter(word => word.type === 'SELF_CORRECTION')
+      .map(word => word.correctionGroupId || word.self_correction_group_id || `${word.expectedIndex}:${word.heardIndex}`),
+  )
+  const scenarioCounts = {
+    correct_words: statuses.filter(word => word.type === 'MATCH' || word.type === 'REALIGNMENT' || word.status === 'correct').length,
+    wrong_words: statuses.filter(word => word.type === 'SUBSTITUTION' || word.type === 'DIVERGENCE' || word.status === 'incorrect').length,
+    skipped_words: statuses.filter(word => word.type === 'DELETION' || word.status === 'omitted').length,
+    extra_words: extraWords.filter(word => word.type === 'INSERTION').length,
+    repetitions: extraWords.filter(word => word.type === 'REPETITION').length,
+    self_corrections: selfCorrectionGroupIds.size,
+    unresolved_mistakes: statuses.filter(word => ['SUBSTITUTION', 'DIVERGENCE', 'DELETION'].includes(word.type)).length
+      + extraWords.filter(word => word.type === 'INSERTION').length,
+    self_corrected_mistakes: selfCorrectionGroupIds.size,
+    hesitations: events.filter(event => event.type === 'HESITATION').length,
+    restarts: restartCount == null
+      ? events.filter(event => event.type === 'RESTART').length
+      : restartCount,
+    out_of_range_words: extraWords.filter(word => word.type === 'OUT_OF_RANGE').length,
+    divergence_events: statuses.filter(word => word.type === 'DIVERGENCE').length,
+    unassessed_events: statuses.filter(word => word.type === 'UNASSESSED').length
+      + extraWords.filter(word => word.type === 'UNASSESSED').length,
+  }
+
+  return scenarioCounts
+}
+
+/**
+ * Find a deliberate backward move in the monotonic DP path.
+ *
+ * A single earlier word is deliberately not enough: it is usually a repeated
+ * word or an ASR re-emit. A restart needs prior resolved progress, two or more
+ * consecutive earlier target words which are all extra operations, and either
+ * an immediate forward continuation or a clear pause before the restart.
+ */
+function detectRestartGroups({
+  operations = [],
+  targetWords = [],
+  heardWords = [],
+  correctSimilarity = RECITATION_CORRECT_SIMILARITY,
+  hesitationSeconds = RECITATION_PAUSE_POLICY.hesitationSeconds,
+  allowIncomplete = false,
+} = {}) {
+  const extrasByHeardIndex = new Map(
+    operations
+      .filter(operation => operation?.op === 'extra')
+      .map(operation => [Number(operation.recognisedIndex), operation]),
+  )
+  const resolved = operation => (
+    operation?.op === 'match'
+    && targetWords[Number(operation.expectedIndex)]
+    && heardWords[Number(operation.recognisedIndex)]
+    && getRecitationWordSimilarity(
+      targetWords[Number(operation.expectedIndex)],
+      heardWords[Number(operation.recognisedIndex)].word,
+    ) >= correctSimilarity
+  )
+  const isAnchorMatch = (targetIndex, heardIndex) => {
+    const target = targetWords[targetIndex]
+    const heard = heardWords[heardIndex]
+    if (!target || !heard || isLowConfidenceRecognitionWord(heard)) return false
+    return getRecitationWordSimilarity(target, heard.word) >= correctSimilarity
+  }
+  const groups = []
+  const claimed = new Set()
+
+  for (const operation of operations) {
+    if (operation?.op !== 'extra') continue
+    const heardStart = Number(operation.recognisedIndex)
+    const expectedIndex = Number(operation.expectedIndex)
+    if (!Number.isFinite(heardStart) || !Number.isFinite(expectedIndex) || claimed.has(heardStart)) continue
+
+    let best = null
+    for (let restartStart = expectedIndex - 1; restartStart >= 0; restartStart -= 1) {
+      if (!isAnchorMatch(restartStart, heardStart)) continue
+      const priorProgress = operations.some(previous => (
+        resolved(previous)
+        && Number(previous.expectedIndex) >= restartStart
+        && Number(previous.expectedIndex) < expectedIndex
+        && Number(previous.recognisedIndex) < heardStart
+      ))
+      if (!priorProgress) continue
+
+      let length = 0
+      while (
+        extrasByHeardIndex.has(heardStart + length)
+        && isAnchorMatch(restartStart + length, heardStart + length)
+      ) {
+        length += 1
+      }
+      if (length < 2) continue
+
+      const continuationTargetIndex = restartStart + length
+      const continuationHeardIndex = heardStart + length
+      const continuation = continuationTargetIndex < targetWords.length
+        && isAnchorMatch(continuationTargetIndex, continuationHeardIndex)
+        && resolved(operations.find(candidate => Number(candidate.recognisedIndex) === continuationHeardIndex))
+      const previousHeard = heardWords[heardStart - 1]
+      const currentHeard = heardWords[heardStart]
+      const previousEnd = finiteOrNull(previousHeard?.end ?? previousHeard?.endTime)
+      const currentStart = finiteOrNull(currentHeard?.start ?? currentHeard?.startTime)
+      const pause = previousEnd != null && currentStart != null
+        ? Math.max(0, currentStart - previousEnd)
+        : 0
+      if (!continuation && !allowIncomplete && pause < resolveHesitationPauseSeconds(hesitationSeconds)) continue
+
+      const candidate = {
+        restartStartIndex: restartStart,
+        restartEndIndex: restartStart + length - 1,
+        recognisedStartIndex: heardStart,
+        recognisedEndIndex: heardStart + length - 1,
+        restart_start_index: restartStart,
+        restart_end_index: restartStart + length - 1,
+        recognised_start_index: heardStart,
+        recognised_end_index: heardStart + length - 1,
+      }
+      if (!best || length > best.restartEndIndex - best.restartStartIndex + 1) best = candidate
+    }
+    if (!best) continue
+    groups.push(best)
+    for (let index = best.recognisedStartIndex; index <= best.recognisedEndIndex; index += 1) claimed.add(index)
+  }
+  return groups
+}
+
+/**
+ * If the first pass starts mid-ayah and the learner subsequently says the
+ * opening phrase, the DP's authoritative path is the later complete pass. The
+ * discarded initial phrase is restart evidence, not an insertion/error.
+ */
+function detectMidStartRestart(targetWords = [], heardWords = [], startingAnchor = null, finalised = true) {
+  if (!startingAnchor || Number(startingAnchor.expectedIndex) < 1) return null
+  const length = Number(startingAnchor.length || 0)
+  if (length < 2 || heardWords.length <= length + 1) return null
+
+  const matches = (targetIndex, heardIndex) => {
+    const target = targetWords[targetIndex]
+    const heard = heardWords[heardIndex]
+    return !!target
+      && !!heard?.word
+      && !isLowConfidenceRecognitionWord(heard)
+      && getRecitationWordSimilarity(target, heard.word) >= RECITATION_CORRECT_SIMILARITY
+  }
+  for (let index = length; index + 1 < heardWords.length; index += 1) {
+    if (!matches(0, index) || !matches(1, index + 1)) continue
+    const hasContinuation = index + 2 >= heardWords.length
+      || !targetWords[2]
+      || matches(2, index + 2)
+    if (!hasContinuation || (!finalised && index + 2 >= heardWords.length)) continue
+    return {
+      restartStartIndex: 0,
+      restartEndIndex: Number(startingAnchor.expectedIndex) + length - 1,
+      recognisedStartIndex: 0,
+      recognisedEndIndex: length - 1,
+      restart_start_index: 0,
+      restart_end_index: Number(startingAnchor.expectedIndex) + length - 1,
+      recognised_start_index: 0,
+      recognised_end_index: length - 1,
+    }
+  }
+  return null
+}
+
+function findLiveRestartEvidence(targetWords = [], heardWords = []) {
+  const matches = (targetIndex, heardIndex) => {
+    const target = targetWords[targetIndex]
+    const heard = heardWords[heardIndex]
+    return !!target
+      && !!heard
+      && !isLowConfidenceRecognitionWord(heard)
+      && getRecitationWordSimilarity(target, heard.word) >= RECITATION_CORRECT_SIMILARITY
+  }
+  for (let restartStartIndex = 0; restartStartIndex + 1 < targetWords.length; restartStartIndex += 1) {
+    for (let firstStart = 0; firstStart + 1 < heardWords.length; firstStart += 1) {
+      if (!matches(restartStartIndex, firstStart) || !matches(restartStartIndex + 1, firstStart + 1)) continue
+      for (let secondStart = firstStart + 2; secondStart + 1 < heardWords.length; secondStart += 1) {
+        if (!matches(restartStartIndex, secondStart) || !matches(restartStartIndex + 1, secondStart + 1)) continue
+        return {
+          restartStartIndex,
+          restartEndIndex: restartStartIndex + 1,
+          recognisedStartIndex: secondStart,
+          recognisedEndIndex: secondStart + 1,
+          restart_start_index: restartStartIndex,
+          restart_end_index: restartStartIndex + 1,
+          recognised_start_index: secondStart,
+          recognised_end_index: secondStart + 1,
+        }
+      }
+    }
+  }
+  return null
+}
+
+function buildRestartEvent(group = {}, heardWords = []) {
+  const first = heardWords[group.recognisedStartIndex] || {}
+  const last = heardWords[group.recognisedEndIndex] || {}
+  const startTime = finiteOrNull(first.start ?? first.startTime)
+  const endTime = finiteOrNull(last.end ?? last.endTime)
+  return {
+    type: 'RESTART',
+    status: 'extra',
+    visualStatus: 'amber',
+    highlight: 'amber',
+    startIndex: group.restartStartIndex,
+    endIndex: group.restartEndIndex,
+    recognisedStartIndex: group.recognisedStartIndex,
+    recognisedEndIndex: group.recognisedEndIndex,
+    restartStartIndex: group.restartStartIndex,
+    restartEndIndex: group.restartEndIndex,
+    restart_start_index: group.restartStartIndex,
+    restart_end_index: group.restartEndIndex,
+    startTime,
+    endTime,
+    start_time: startTime,
+    end_time: endTime,
+    duration: startTime != null && endTime != null ? Math.max(0, endTime - startTime) : null,
+    classificationConfidence: 0.9,
+  }
 }
 
 export function buildDeterministicRecitationResult(targetText = '', recognitionWords = [], options = {}) {
@@ -1216,14 +1838,18 @@ function normalizeRecognitionWords(words = [], options = {}) {
           rawWord: String(rawWord || '').trim() || word,
           confidence,
           provider: entry?.provider || provider,
-          start: finiteOrNull(entry?.start ?? entry?.startTime),
-          end: finiteOrNull(entry?.end ?? entry?.endTime),
-          startTime: finiteOrNull(entry?.start ?? entry?.startTime),
-          endTime: finiteOrNull(entry?.end ?? entry?.endTime),
+          start: finiteOrNull(entry?.start ?? entry?.startTime ?? entry?.start_time),
+          end: finiteOrNull(entry?.end ?? entry?.endTime ?? entry?.end_time),
+          startTime: finiteOrNull(entry?.start ?? entry?.startTime ?? entry?.start_time),
+          endTime: finiteOrNull(entry?.end ?? entry?.endTime ?? entry?.end_time),
           segmentId: entry?.segmentId || segmentId,
           speaker: String(entry?.speaker || '').trim() || null,
           sequence: eventSequence,
-          sourceIndex: index + wordIndex
+          sourceIndex: index + wordIndex,
+          ...(entry?.token !== undefined ? { token: entry.token } : {}),
+          ...(entry?.speechmaticsToken !== undefined ? { speechmaticsToken: entry.speechmaticsToken } : {}),
+          ...(entry?.speechmatics_token !== undefined ? { speechmatics_token: entry.speechmatics_token } : {}),
+          ...(entry?.id !== undefined ? { id: entry.id } : {})
         }
       })
     })
@@ -1245,8 +1871,8 @@ function collectRejectedRecognitionWords(words = [], threshold, provider, segmen
         rawWord: String(rawWord || '').trim() || word,
         confidence,
         provider: entry?.provider || provider,
-        start: tokenIndex === 0 ? finiteOrNull(entry?.start ?? entry?.startTime) : null,
-        end: tokenIndex === 0 ? finiteOrNull(entry?.end ?? entry?.endTime) : null,
+        start: tokenIndex === 0 ? finiteOrNull(entry?.start ?? entry?.startTime ?? entry?.start_time) : null,
+        end: tokenIndex === 0 ? finiteOrNull(entry?.end ?? entry?.endTime ?? entry?.end_time) : null,
         segmentId,
         sourceIndex: index + tokenIndex,
         reason: 'below-confidence-threshold'
@@ -1370,6 +1996,18 @@ function suppressDuplicateRecognitionWords(words = []) {
     const current = { ...word }
     const last = stable[stable.length - 1]
     const previous = stable[stable.length - 2]
+    // A Speechmatics token ID identifies one provider word. If that same ID
+    // appears again, it is a re-emission even when the timestamps moved far
+    // enough apart to resemble a deliberate repetition.
+    if (last && heardRecognitionToken(last) !== null && heardRecognitionToken(last) === heardRecognitionToken(current)) {
+      last.confidence = Math.max(Number(last.confidence || 0), Number(current.confidence || 0))
+      last.start = finiteOrNull(last.start) ?? finiteOrNull(current.start)
+      last.end = finiteOrNull(current.end) ?? finiteOrNull(last.end)
+      last.startTime = last.start
+      last.endTime = last.end
+      last.duplicateSuppressed = true
+      continue
+    }
     if (last?.word === current.word && isNearbyWord(last, current)) {
       last.confidence = Math.max(Number(last.confidence || 0), Number(current.confidence || 0))
       last.end = finiteOrNull(current.end) ?? finiteOrNull(last.end)
@@ -1440,6 +2078,109 @@ function heardWordGapMs(previous = {}, current = {}) {
   return (currentStart - previousEnd) * 1000
 }
 
+/**
+ * A pause is feedback attached to the boundary between two recognised words.
+ * It is deliberately not an omission operation: only the surrounding words'
+ * statuses can decide whether a target word was skipped.
+ */
+export function detectHesitationEvents({
+  statuses = [],
+  extraWords = [],
+  heardWords = [],
+  lifecycle = 'final',
+  hesitationSeconds,
+} = {}) {
+  const byRecognisedIndex = new Map()
+  const add = (word) => {
+    const rawRecognisedIndex = word?.recognisedIndex ?? word?.recognised_index ?? word?.heardIndex
+    if (rawRecognisedIndex === undefined || rawRecognisedIndex === null) return
+    const recognisedIndex = Number(rawRecognisedIndex)
+    if (!Number.isFinite(recognisedIndex)) return
+    byRecognisedIndex.set(recognisedIndex, word)
+  }
+  statuses.forEach(status => add(status))
+  extraWords.forEach(extra => add(extra))
+  const indexes = [...byRecognisedIndex.keys()].sort((left, right) => left - right)
+  const threshold = resolveHesitationPauseSeconds(hesitationSeconds)
+  const finalised = !['live', 'recording', 'paused'].includes(String(lifecycle || '').toLowerCase())
+  const events = []
+
+  for (let index = 1; index < indexes.length; index += 1) {
+    let previousRecognisedIndex = indexes[index - 1]
+    const recognisedIndex = indexes[index]
+    const current = byRecognisedIndex.get(recognisedIndex) || {}
+    const currentIsCorrect = current.status === 'correct'
+    const currentIsPauseAnchor = currentIsCorrect || ['REALIGNMENT', 'SELF_CORRECTION', 'RESTART'].includes(current.type)
+    let previous = byRecognisedIndex.get(previousRecognisedIndex) || {}
+    const adjacentRecognisedWords = recognisedIndex === previousRecognisedIndex + 1
+    if (!adjacentRecognisedWords && current.type !== 'REALIGNMENT') continue
+    // A realignment can follow a short wrong phrase. Use the last confirmed
+    // green word as the left boundary, while keeping the wrong phrase intact.
+    if (current.type === 'REALIGNMENT' && previous.status !== 'correct') {
+      for (let candidate = index - 1; candidate >= 0; candidate -= 1) {
+        const candidateWord = byRecognisedIndex.get(indexes[candidate]) || {}
+        if (candidateWord.status === 'correct') {
+          previousRecognisedIndex = indexes[candidate]
+          previous = candidateWord
+          break
+        }
+      }
+    }
+    const sameTargetCorrection = currentIsCorrect
+      && current.type === 'MATCH'
+      && previous.type === 'SELF_CORRECTION'
+      && Number(previous.expectedIndex ?? previous.expected_index) === Number(current.targetIndex ?? current.expectedIndex ?? current.expected_index)
+    const restartContinuation = currentIsCorrect && previous.type === 'RESTART'
+    const correctionContinuation = currentIsCorrect && sameTargetCorrection
+    if (!currentIsPauseAnchor || (previous.status !== 'correct' && !correctionContinuation && !restartContinuation)) continue
+
+    const previousEnd = finiteOrNull(previous.end ?? previous.endTime ?? previous.end_time ?? heardWords[previousRecognisedIndex]?.end)
+    const currentStart = finiteOrNull(current.start ?? current.startTime ?? current.start_time ?? heardWords[recognisedIndex]?.start)
+    if (previousEnd == null || currentStart == null) continue
+    const duration = Math.max(0, currentStart - previousEnd)
+    if (duration < threshold) continue
+
+    const previousExpectedIndex = previous.targetIndex ?? previous.expectedIndex ?? previous.expected_index ?? null
+    const expectedIndex = current.targetIndex ?? current.expectedIndex ?? current.expected_index ?? null
+    events.push({
+      type: 'HESITATION',
+      status: 'extra',
+      visualStatus: 'amber',
+      visual_status: 'amber',
+      highlight: 'amber',
+      fatal: false,
+      affectsScoring: false,
+      affects_scoring: false,
+      lifecycle: finalised ? 'final' : 'live',
+      previousRecognisedIndex,
+      previous_recognised_index: previousRecognisedIndex,
+      recognisedIndex,
+      recognised_index: recognisedIndex,
+      afterWordIndex: previousRecognisedIndex,
+      after_word_index: previousRecognisedIndex,
+      previousWordIndex: previousRecognisedIndex,
+      previous_word_index: previousRecognisedIndex,
+      nextWordIndex: recognisedIndex,
+      next_word_index: recognisedIndex,
+      previousExpectedIndex,
+      previous_expected_index: previousExpectedIndex,
+      expectedIndex,
+      expected_index: expectedIndex,
+      startTime: previousEnd,
+      start_time: previousEnd,
+      endTime: currentStart,
+      end_time: currentStart,
+      duration,
+      durationSeconds: duration,
+      duration_seconds: duration,
+      classificationConfidence: 0.82,
+      classification_confidence: 0.82,
+    })
+  }
+
+  return events
+}
+
 /** True when consecutive identical tokens look like a deliberate learner repeat. */
 function isDeliberateHeardRepetition(previous = {}, current = {}) {
   if (!previous?.word || previous.word !== current?.word) return false
@@ -1473,11 +2214,97 @@ function getWeightedMatchCost(targetWord, heardWord, similarity, confidence, opt
   // otherwise DP skips الصراط and wrongly attaches السراط to المستقيم.
   if (similarity >= 0.72) return 0.5 + ((1 - confidence) * 0.18)
   if (similarity >= 0.35) return 0.78 + ((1 - confidence) * 0.24)
-  return 1.45
+  // Keep a clear mismatch attached to the current expected slot. A higher
+  // cost lets DP skip the beginning of a coherent wrong phrase and attach its
+  // tokens to later words, losing drift indexes.
+  return confidence < RECITATION_UNCERTAIN_CONFIDENCE ? 1.45 : 0.85
 }
 
 function duplicateAdjustedExtraCost(words = [], index = 0) {
+  // A low-confidence token is evidence about recognition quality, not enough
+  // evidence to insert a learner word into the Qur'an sequence. Keep it in the
+  // DP input so it can become UNASSESSED, but make matching the current target
+  // cheaper than consuming it as an extra.
+  if (isLowConfidenceRecognitionWord(words[index])) return 1.8
   return isRepeatedHeardWord(words, index) ? 0.34 : 0.78
+}
+
+/**
+ * Anchor the first recognised word only when it is reliable in context. A
+ * single repeated/fuzzy word must not turn the opening of an ayah into an
+ * omission; a consecutive phrase is strong enough to locate a mid-ayah start.
+ */
+function findStartingAnchor(targetWords = [], heardWords = []) {
+  if (targetWords.length < 2 || !heardWords.length) return null
+  const first = heardWords[0] || {}
+  if (!first.word) return null
+
+  const matches = (targetIndex, heardIndex) => {
+    const target = targetWords[targetIndex]
+    const heard = heardWords[heardIndex]
+    return !!target
+      && !!heard?.word
+      && getRecitationWordSimilarity(target, heard.word) >= RECITATION_CORRECT_SIMILARITY
+  }
+  const candidates = []
+  for (let expectedIndex = 1; expectedIndex < targetWords.length; expectedIndex += 1) {
+    if (!matches(expectedIndex, 0)) continue
+    let length = 0
+    let confidenceSum = 0
+    let reliableCount = 0
+    while (matches(expectedIndex + length, length)) {
+      length += 1
+      const confidence = Number(heardWords[length - 1]?.confidence ?? 1)
+      confidenceSum += confidence
+      if (confidence >= RECITATION_UNCERTAIN_CONFIDENCE) reliableCount += 1
+    }
+    if (length === 1) {
+      const occurrences = targetWords.filter(target => (
+        getRecitationWordSimilarity(target, first.word) >= RECITATION_CORRECT_SIMILARITY
+      )).length
+      if (reliableCount !== 1) continue
+      // Exact, unique words can start a range; a repeated or fuzzy singleton
+      // needs a following word before it may move the cursor forward.
+      if (occurrences !== 1 || getRecitationWordSimilarity(targetWords[expectedIndex], first.word) < 0.99) continue
+    } else if (reliableCount === 0) {
+      // Consecutive lexical matches can support one uncertain token, but a
+      // wholly uncertain phrase is not a starting anchor.
+      continue
+    }
+    candidates.push({ expectedIndex, recognisedIndex: 0, length, confidenceSum })
+  }
+  if (!candidates.length) return null
+  candidates.sort((left, right) => (
+    right.length - left.length
+    || right.confidenceSum - left.confidenceSum
+    || left.expectedIndex - right.expectedIndex
+  ))
+  const best = candidates[0]
+  return {
+    expectedIndex: best.expectedIndex,
+    recognisedIndex: best.recognisedIndex,
+    length: best.length,
+  }
+}
+
+function startingAnchorAdjustment(anchor = null, expectedIndex = 0, recognisedIndex = 0) {
+  if (recognisedIndex !== 0 || expectedIndex === 0) return 0
+  if (!anchor) return 2
+  return expectedIndex === Number(anchor.expectedIndex) ? -0.4 : 2
+}
+
+function isLowConfidenceRecognitionWord(heardWord = {}) {
+  const confidence = Number.isFinite(Number(heardWord?.confidence))
+    ? Number(heardWord.confidence)
+    : 1
+  return confidence < RECITATION_UNCERTAIN_CONFIDENCE
+}
+
+function wordIsStructuralExtra(word = '', previous = '', targetWords = [], expectedIndex = 0) {
+  if (!word) return false
+  if (word === previous) return true
+  if (targetWords.slice(0, Math.max(0, expectedIndex)).includes(word)) return true
+  return targetWords.includes(word)
 }
 
 function isRepeatedHeardWord(words = [], index = 0) {
@@ -2168,7 +2995,8 @@ export function recitationWordAyahNumber(word) {
 
 /**
  * Five-tier colour counts for AI Recite → recommendation / personal plan.
- * green=correct, amber=partial, red=incorrect, black=omitted, gray=not yet.
+ * green=correct, amber=partial, red=incorrect or confirmed deletion,
+ * black=legacy omitted status without an operation type, gray=not yet.
  * Uncertain (recognition failure) is tracked separately and does not inflate red/black.
  */
 export function getRecitationColorCounts(statuses = []) {
@@ -2182,7 +3010,9 @@ export function getRecitationColorCounts(statuses = []) {
     uncertain: 0,
   }
   for (const word of list) {
-    const color = classifyRecitationWordColor(word?.status ?? word?.visualStatus ?? word)
+    const color = String(word?.type || '').toUpperCase() === 'DELETION'
+      ? RECITATION_COLOR.RED
+      : classifyRecitationWordColor(word?.status ?? word?.visualStatus ?? word)
     if (color === RECITATION_COLOR.UNCERTAIN) counts.uncertain += 1
     else counts[color] += 1
   }
@@ -2461,10 +3291,41 @@ function buildMistakesFromStatuses(statuses = [], extraWords = [], structural = 
       ayahWordIndex: word.ayahWordIndex
     }))
   )
+  const unresolvedExtras = extraWords.filter(item => !['SELF_CORRECTION', 'REPETITION', 'RESTART', 'UNASSESSED'].includes(item.type))
+  const selfCorrected = []
+  const selfCorrectionGroups = new Set()
+  for (const item of extraWords) {
+    if (item.type !== 'SELF_CORRECTION') continue
+    const groupId = item.correctionGroupId || item.self_correction_group_id || `${item.expectedIndex}:${item.heardIndex}`
+    if (selfCorrectionGroups.has(groupId)) continue
+    selfCorrectionGroups.add(groupId)
+    selfCorrected.push({
+      wrongTokens: extraWords
+        .filter(candidate => (candidate.correctionGroupId || candidate.self_correction_group_id) === groupId)
+        .map(candidate => candidate.rawWord || candidate.display || candidate.word)
+        .filter(Boolean),
+      correctedTargetWord: item.correctedTargetWord || item.corrected_target_word || item.expectedWord || item.expected_word || '',
+      correctedTargetWords: item.correctedTargetWords || item.corrected_target_words || [item.correctedTargetWord || item.corrected_target_word || item.expectedWord || item.expected_word || ''],
+      correctedTargetIndex: item.correctedTargetIndex ?? item.corrected_target_index ?? item.expectedIndex ?? null,
+      correctionGroupId: groupId,
+    })
+  }
+  const unresolvedMistakes = statuses
+    .filter(word => ['incorrect', 'partial', 'omitted'].includes(word.status))
+    .map(word => ({ expected: word.text, actual: word.actual || '', type: word.type }))
+    .concat(unresolvedExtras.map(item => ({
+      expected: item.expectedWord || item.expected_word || '',
+      actual: item.rawWord || item.display || item.word || '',
+      type: item.type,
+    })))
   return {
     correct: statuses.filter(word => word.status === 'correct').map(word => word.text),
     missing: omittedStatuses.map(word => word.text),
-    extra: extraWords.map(item => item.display || item.word).filter(Boolean),
+    extra: unresolvedExtras.map(item => item.display || item.word).filter(Boolean),
+    selfCorrected,
+    self_corrected_mistakes: selfCorrected,
+    unresolvedMistakes,
+    unresolved_mistakes: unresolvedMistakes,
     partial: statuses
       .filter(word => word.status === 'partial')
       .map(word => ({ expected: word.text, actual: word.actual || '', confidence: Number(word.confidence || 0), similarity: Number(word.similarity || 0) })),
@@ -2513,6 +3374,8 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
     .map(item => ({ word: item.display || item.word, heardIndex: item.heardIndex, confidence: Number(item.confidence || 0) }))
   const repeatedWords = structural.repeatedWords?.length ? structural.repeatedWords : repetitions
   const repeatedPhrases = structural.repeatedPhrases || []
+  const selfCorrected = Array.isArray(mistakes.selfCorrected) ? mistakes.selfCorrected : []
+  const unresolvedMistakes = Array.isArray(mistakes.unresolvedMistakes) ? mistakes.unresolvedMistakes : []
   const skippedWords = buildSkippedWordGroups(omissions)
   const weakWords = statuses
     .filter((word) => {
@@ -2536,6 +3399,7 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
     omissions,
     substitutions,
     extraWords,
+    selfCorrected,
     repeatedWords,
     repeatedPhrases,
     skippedAyahs: structural.skippedAyahs || [],
@@ -2557,13 +3421,19 @@ function buildAnalysis({ statuses = [], heardWords = [], extraWords = [], mistak
       incorrect: mistakes.incorrect?.length || 0,
       uncertain: mistakes.uncertain?.length || 0,
       omissions: omissions.length,
-      extra: mistakes.extra?.length || 0
+      extra: mistakes.extra?.length || 0,
+      unresolved_mistakes: unresolvedMistakes.length,
+      self_corrected_mistakes: selfCorrected.length,
     },
     completionPercentage: statuses.length ? Math.round((matchedCount / statuses.length) * 100) : 0,
     omissions,
     omissionCount: omissions.length,
     substitutions,
     substitutionCount: substitutions.length,
+    unresolvedMistakes,
+    unresolvedMistakeCount: unresolvedMistakes.length,
+    selfCorrectedMistakes: selfCorrected,
+    selfCorrectedMistakeCount: selfCorrected.length,
     repetitions,
     repetitionCount: repetitions.length,
     repeatedWords,
@@ -2622,7 +3492,7 @@ function buildSkippedWordGroups(omissions = []) {
   return groups
 }
 
-function buildDetailedFeedback({ omissions = [], substitutions = [], extraWords = [], repeatedWords = [], repeatedPhrases = [], skippedAyahs = [], sequenceErrors = [], verseJumpDetected = false } = {}) {
+function buildDetailedFeedback({ omissions = [], substitutions = [], extraWords = [], selfCorrected = [], repeatedWords = [], repeatedPhrases = [], skippedAyahs = [], sequenceErrors = [], verseJumpDetected = false } = {}) {
   const feedback = []
   if (skippedAyahs.length) {
     feedback.push(`Skipped ${skippedAyahs.length} complete ayah${skippedAyahs.length === 1 ? '' : 's'}: ${skippedAyahs.slice(0, 3).map(formatAyahLabel).join(', ')}.`)
@@ -2633,7 +3503,11 @@ function buildDetailedFeedback({ omissions = [], substitutions = [], extraWords 
   if (substitutions.length) {
     feedback.push(`Changed words: ${substitutions.slice(0, 4).map(item => `${item.expected} -> ${item.actual || '?'}`).join('، ')}${substitutions.length > 4 ? '...' : ''}.`)
   }
-  if (extraWords.length) feedback.push(`Extra words heard: ${extraWords.slice(0, 6).map(item => item.display || item.word).join('، ')}${extraWords.length > 6 ? '...' : ''}.`)
+  if (selfCorrected.length) {
+    feedback.push(`Self-corrected: ${selfCorrected.slice(0, 4).map(item => `${item.wrongTokens.join('، ')} -> ${item.correctedTargetWord}`).join('؛ ')}.`)
+  }
+  const unresolvedExtras = extraWords.filter(item => item.type !== 'SELF_CORRECTION')
+  if (unresolvedExtras.length) feedback.push(`Extra words heard: ${unresolvedExtras.slice(0, 6).map(item => item.display || item.word).join('، ')}${unresolvedExtras.length > 6 ? '...' : ''}.`)
   if (repeatedWords.length) feedback.push(`Repeated words: ${repeatedWords.slice(0, 5).map(item => item.word).join('، ')}${repeatedWords.length > 5 ? '...' : ''}.`)
   if (repeatedPhrases.length) feedback.push(`Repeated phrase: ${repeatedPhrases[0].phrase}.`)
   if (!feedback.length) feedback.push('Clean word order and wording match.')

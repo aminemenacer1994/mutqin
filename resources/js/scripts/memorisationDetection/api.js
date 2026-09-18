@@ -60,6 +60,18 @@ export function buildRecognitionWords(committedWords = [], options = {}) {
         confidence: Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1,
       }
       if (rawWord && rawWord !== text) entry.raw_word = rawWord
+      const token = word?.token
+        ?? word?.speechmaticsToken
+        ?? word?.speechmatics_token
+        ?? word?.resultId
+        ?? word?.result_id
+        ?? word?.id
+      if (token !== undefined && token !== null) {
+        entry.token = token
+        entry.speechmatics_token = token
+      }
+      if (word?.provider) entry.provider = word.provider
+      if (word?.segmentId || word?.segment_id) entry.segment_id = word.segmentId || word.segment_id
       const speaker = String(word?.speaker || '').trim()
       if (speaker) entry.speaker = speaker
       if (includeTiming) {

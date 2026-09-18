@@ -509,9 +509,14 @@ export function extractSpeechmaticsTranscriptWords(message = {}, { isPartial = f
         })[0] || alternatives[0] || null
       const word = String(alternative?.content || '').trim()
       const confidence = Number(alternative?.confidence)
+      const token = item?.token
+        ?? item?.speechmatics_token
+        ?? alternative?.token
+        ?? item?.id
       return {
         word,
         confidence: Number.isFinite(confidence) ? confidence : (isPartial ? SPEECHMATICS_PARTIAL_CONFIDENCE : 1),
+        ...(token !== undefined && token !== null ? { token, speechmaticsToken: token } : {}),
         start: Number.isFinite(Number(item?.start_time)) ? Number(item.start_time) : null,
         end: Number.isFinite(Number(item?.end_time)) ? Number(item.end_time) : null,
         speaker: String(alternative?.speaker || item?.speaker || '').trim() || null

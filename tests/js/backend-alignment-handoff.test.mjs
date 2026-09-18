@@ -4,7 +4,7 @@ import { applyBackendAlignmentToResult } from '../../resources/js/scripts/memori
 const types = [
   ['MATCH', 'correct'],
   ['SUBSTITUTION', 'incorrect'],
-  ['DELETION', 'incorrect'],
+  ['DELETION', 'omitted'],
   ['DIVERGENCE', 'incorrect'],
   ['REALIGNMENT', 'correct'],
   ['UNASSESSED', 'pending'],
@@ -18,6 +18,7 @@ for (const [type, expectedStatus] of types) {
     alignment: { extra_words: [], events: [], scenario_counts: { [type]: 1 } },
   })
   assert.equal(result.wordStatuses[0].status, expectedStatus, type)
+  if (type === 'DELETION') assert.equal(result.wordStatuses[0].visualStatus, 'neutral')
   assert.equal(result.backendFinalised, true)
 }
 

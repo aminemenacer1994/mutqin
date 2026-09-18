@@ -3,8 +3,7 @@ import {
   attemptAffectsScoring,
   classifyRecitationAttempt,
 } from '../audio/recitationAttemptGuard.js'
-
-const DEFAULT_HESITATION_SECONDS = 2.25
+import { resolveHesitationPauseSeconds } from './recitationThresholds.js'
 
 function clamp(value, min = 0, max = 1) {
   const numericValue = Number(value)
@@ -106,7 +105,7 @@ function normalizeTimedWords(words = []) {
 }
 
 function detectHesitations(payload = {}) {
-  const threshold = Math.max(0.5, Number(payload.hesitationThresholdSeconds || DEFAULT_HESITATION_SECONDS))
+  const threshold = resolveHesitationPauseSeconds(payload.hesitationThresholdSeconds)
   const timedWords = normalizeTimedWords(payload.words || payload.recognitionWords || payload.committedWords || [])
   const hesitations = []
 

@@ -5164,7 +5164,8 @@ export default {
       // Keep the red pill honest: black is an omission, not an incorrect word.
       const wrong = Number(counts.red || 0)
       const close = Number(counts.amber || 0)
-      if (wrong > 0 || close > 0) {
+      const omitted = Number(counts.black || 0)
+      if (wrong > 0 || close > 0 || omitted > 0) {
         chips.push({
           key: 'issues',
           tone: wrong > 0 ? 'weak' : 'review',
@@ -5173,8 +5174,10 @@ export default {
           value: wrong > 0
             ? (this.t('memorisation.postSession.recommendation.statWrongCount', { count: wrong })
               || `${wrong} wrong`)
-            : (this.t('memorisation.postSession.recommendation.statCloseCount', { count: close })
-              || `${close} close`),
+            : close > 0
+              ? (this.t('memorisation.postSession.recommendation.statCloseCount', { count: close })
+                || `${close} close`)
+              : `${omitted} omitted`,
           hint: this.t('memorisation.postSession.recommendation.statNeedsWorkHint')
             || 'Words that need another calm pass',
         })
@@ -15898,7 +15901,7 @@ export default {
           chainingEnabled: false,
           chainingMethod: '',
           chainingRepetitions: 1,
-          tajweedEnabled: false,
+          tajweedEnabled: DEFAULT_TAJWEED_ENABLED,
           showTranslation: true,
           showTransliteration: false,
           showWordByWord: false,
@@ -19612,11 +19615,12 @@ export default {
           || reasonFallback === 'omission'
         const isPartial = ['partial', 'minor_mistake', 'amber', 'hesitation', 'uncertain'].includes(status)
           || reasonFallback === 'hesitation'
-        const isWrong = ['incorrect', 'wrong', 'red', 'pronunciation'].includes(status)
-          || reasonFallback === 'pronunciation'
-        if (!isPartial && !isWrong && !isOmitted && !word.text && !word.word && !Number.isFinite(Number(word.wordIndex))) {
-          return
-        }
+        const isWrong = ['incorrect', 'wrong', 'red'].includes(status)
+          || (reasonFallback === 'pronunciation' && !status)
+        // An ayah-level weakness is not evidence that every word in the
+        // phrase was mispronounced. Only paint a word when it carries an
+        // explicit omission, hesitation, or pronunciation signal.
+        if (!isPartial && !isWrong && !isOmitted) return
         const reason = isOmitted ? 'omission' : (isPartial ? 'hesitation' : 'pronunciation')
         pushWeakText(word.text || word.word || word.arabic || word.target_word || word.targetWord, reason)
         const idx = Number(word.wordIndex ?? word.ayahWordIndex ?? word.ayah_word_index ?? word.index)
@@ -20811,7 +20815,9 @@ export default {
             surahId: Number(surahPart) || null,
             ayahNumber: Number(ayahPart) || null,
             status: word.status || word.visualStatus || status,
-            reason: status.includes('partial') || status.includes('amber') ? 'hesitation' : 'pronunciation',
+            reason: ['omitted', 'omission', 'missing', 'pending', 'black'].includes(status)
+              ? 'omission'
+              : (status.includes('partial') || status.includes('amber') ? 'hesitation' : 'pronunciation'),
             confidence: word.confidence,
           }
         })
@@ -23692,6 +23698,8 @@ export default {
     },
     getWordVisualStatus(word = {}, active = false, finalised = false) {
       const status = String(word?.status || 'pending').toLowerCase()
+      if (String(word?.type || '').toUpperCase() === 'DELETION') return 'omitted'
+      if (['omitted', 'missing', 'omission'].includes(status)) return 'omitted'
       if (status === 'wrong' || status === 'red') return 'incorrect'
       if (status === 'minor_mistake' || status === 'amber') return 'partial'
       if (['correct', 'partial', 'incorrect', 'omitted', 'skipped', 'notattempted'].includes(status)) {
@@ -24782,6 +24790,7 @@ export default {
       })
     },
     resolveAmdWordVisual(statusEntry = {}, live = true) {
+      if (String(statusEntry?.type || '').toUpperCase() === 'DELETION') return 'omitted'
       const raw = String(
         statusEntry.status
         || statusEntry.visual_status
@@ -24813,6 +24822,9 @@ export default {
           .map((i) => Number(i))
           .filter((i) => Number.isFinite(i))
       )
+      // 0% shown is stored as 100% hidden. Treat it as an explicit all-word
+      // mask as well, so a stale/empty cached index list cannot reveal text.
+      const hideAllWords = normaliseDifficultyPercent(this.amdDifficultyPercent) === 100
       // Masking is driven by difficulty + progress only — never by recording stage.
       // Blur only changes presentation (soft blur vs clean gaps). Gating on `live`
       // caused a full-text flash on stop/processing when HTML rebuilt unmasked.
@@ -24879,16 +24891,21 @@ export default {
           const maskVisual = (isFutureAyah || globalIndex > highlightIndex)
             ? 'notAttempted'
             : this.resolveAmdWordVisual(statusEntry, true)
-          const isHiddenTarget = hiddenSet.has(globalIndex)
+          const isHiddenTarget = hideAllWords || hiddenSet.has(globalIndex)
           const isCorrect = visual === 'correct' || visual === 'partial'
           const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(maskVisual || ''))
+          const attachedInsertions = Array.isArray(statusEntry.attachedErrorMarkers)
+            ? statusEntry.attachedErrorMarkers.filter(marker => String(marker?.type || '').toUpperCase() === 'INSERTION')
+            : []
           // Keep grey blanks only until the learner attempts the word; then show amber/red/green.
           // Peek unmasks this ayah's hidden words only — other ayahs stay blank.
           const shouldMask = (maskOn || !peekThisAyah) && isHiddenTarget && !attempted
           const isCurrent = live && globalIndex === highlightIndex
           const displayStatus = shouldMask ? 'notAttempted' : (visual || 'notAttempted')
           const canCorrect = ''
-          const markTitle = ''
+          const markTitle = attachedInsertions.length
+            ? `Extra word heard: ${attachedInsertions.map(marker => marker?.word || '').filter(Boolean).join('، ')}`
+            : ''
           const classes = [
             'wbw-word',
             `recitation-word-${this.escapeHtml(displayStatus)}`,
@@ -24896,6 +24913,7 @@ export default {
             isCorrect && isHiddenTarget ? 'amd-word-revealed' : '',
             isCurrent ? 'amd-word-current' : '',
             peekThisAyah && isHiddenTarget && !isCorrect ? 'amd-word-peeked' : '',
+            attachedInsertions.length ? 'amd-word-insertion-anchor' : '',
             canCorrect.trim(),
           ].filter(Boolean).join(' ')
           const safeAttrs = shouldMask
@@ -24970,6 +24988,7 @@ export default {
           .map((i) => Number(i))
           .filter((i) => Number.isFinite(i))
       )
+      const hideAllWords = normaliseDifficultyPercent(this.amdDifficultyPercent) === 100
       // Highlight / Tajweed active = confirmed learner position only.
       this.syncAmdLiveCursor({ committedStatuses: statuses })
       const confirmedIndex = Number.isFinite(this.amdLiveCursor?.confirmedWordIndex)
@@ -25019,7 +25038,7 @@ export default {
           ? 'notAttempted'
           : this.resolveAmdWordVisual(statusEntry, true)
         if (index > confirmedIndex) visual = 'notAttempted'
-        const isHiddenTarget = hiddenSet.has(index)
+        const isHiddenTarget = hideAllWords || hiddenSet.has(index)
         const isCorrect = visual === 'correct' || visual === 'partial'
         const attempted = ['correct', 'partial', 'incorrect', 'omitted'].includes(String(visual || ''))
         const peekThisWord = !!(peekAyah && index >= peekAyah.start && index < peekAyah.end)
@@ -27632,13 +27651,10 @@ export default {
       return true
     },
     updateLiveWordsFromCommittedRecognition(kind = 'recitation') {
-      if (
-        this.amdOpen
-        && kind === 'recitation'
-        && (this.amdEndingSoon || this._amdCompleting)
-      ) {
-        return
-      }
+      // AMD is deliberately final-only: don't run alignment or mutate the
+      // Mushaf DOM on every ASR event. The single assessment on Stop owns all
+      // colours and progress, which keeps recording responsive and stable.
+      if (this.amdOpen && kind === 'recitation') return
       const targetVerses = kind === 'memorisation'
         ? this.aiMemorisationCheckerTargets
         : (this.recitationCheckPendingTargets?.length ? this.recitationCheckPendingTargets : this.getRecitationCheckTargetVerses())
@@ -27652,6 +27668,7 @@ export default {
       const strictProgression = !!this.aiRecitationStrictProgression
       const liveAlignmentOptions = {
         strictProgression,
+        lifecycle: 'live',
         metadata: {
           sessionId: this.getCurrentRecitationSessionId(),
           audioHash: kind === 'recitation' ? this.recitationInputAudioHash : ''
@@ -28817,9 +28834,16 @@ export default {
       const entries = rawWords.map(item => ({
         word: item.word || item.content || item.text || item.punctuated_word || '',
         confidence: Number.isFinite(Number(item.confidence)) ? Number(item.confidence) : (payload?.isFinal ? 1 : SPEECHMATICS_PARTIAL_CONFIDENCE),
-        start: item.start,
-        end: item.end,
+        start: item.start ?? item.startTime ?? item.start_time,
+        end: item.end ?? item.endTime ?? item.end_time,
+        ...(item.token !== undefined || item.speechmaticsToken !== undefined || item.speechmatics_token !== undefined || item.id !== undefined
+          ? {
+              token: item.token ?? item.speechmaticsToken ?? item.speechmatics_token ?? item.id,
+              speechmaticsToken: item.speechmaticsToken ?? item.speechmatics_token ?? item.token ?? item.id,
+            }
+          : {}),
         provider: 'speechmatics',
+        segmentId: payload?.segmentId || item.segmentId || item.segment_id || '',
         speaker: item.speaker || null
       })).filter(item => item.word)
       const isFinal = !!payload?.isFinal

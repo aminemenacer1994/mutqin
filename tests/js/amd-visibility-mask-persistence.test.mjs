@@ -31,6 +31,7 @@ function extractMethod(source, name) {
   for (const pct of DIFFICULTY_PERCENTS) {
     assert.equal(normaliseDifficultyPercent(pct), pct)
   }
+  assert.equal(normaliseDifficultyPercent(0), 100, '0% shown maps to 100% hidden')
 }
 
 // Mask selection stays stable for each percentage across identical seeds.
@@ -61,6 +62,12 @@ function extractMethod(source, name) {
 {
   const fn = extractMethod(memorisationJs, 'buildAmdMushafHtml')
   assert.match(fn, /const maskOn = !this\.amdPeekActive\b/, 'maskOn must ignore live stage')
+  assert.match(
+    fn,
+    /const hideAllWords = normaliseDifficultyPercent\(this\.amdDifficultyPercent\) === 100/,
+    '0% shown must force an all-word mask even if cached indexes are stale',
+  )
+  assert.match(fn, /const isHiddenTarget = hideAllWords \|\| hiddenSet\.has\(globalIndex\)/)
   assert.doesNotMatch(
     fn,
     /maskOn = !this\.amdPeekActive && live/,
@@ -102,6 +109,12 @@ function extractMethod(source, name) {
 // Live word patches must remask the previous ayah when peek follows the cursor.
 {
   const fn = extractMethod(memorisationJs, 'patchAmdLiveWordStatuses')
+  assert.match(
+    fn,
+    /const hideAllWords = normaliseDifficultyPercent\(this\.amdDifficultyPercent\) === 100/,
+    'live patches must preserve the 0%-shown all-word mask',
+  )
+  assert.match(fn, /const isHiddenTarget = hideAllWords \|\| hiddenSet\.has\(index\)/)
   assert.match(fn, /const peekThisWord = /, 'live peek must be per-word against the current ayah')
   assert.match(
     fn,

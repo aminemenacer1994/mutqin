@@ -363,6 +363,11 @@
   background: transparent;
 }
 
+/* Inserted non-Qur'an words have no Mushaf glyph; mark the nearest anchor. */
+.amd-mushaf-ayah .amd-word-insertion-anchor {
+  border-bottom: 2px dotted #b91c1c;
+}
+
 /* Hidden words keep their original inline box — never display:none / collapse. */
 .amd-mushaf-ayah .amd-word-hidden,
 .amd-mushaf-shell.is-hidden-text .recitation-word-notAttempted,

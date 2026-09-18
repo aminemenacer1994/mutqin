@@ -67,6 +67,7 @@ class QuranAlignmentService
 
         $targetCount = count($targetWords);
         $heardCount = count($heardWords);
+        $startingAnchor = $this->findStartingAnchor($targetWords, $heard);
 
         $matrix = [];
         for ($t = 0; $t <= $targetCount; $t++) {
@@ -97,7 +98,13 @@ class QuranAlignmentService
             for ($h = 1; $h <= $heardCount; $h++) {
                 $similarity = $this->similarity($targetWords[$t - 1], $heardWords[$h - 1]);
                 $confidence = max(0.35, min(1.0, (float) ($heard[$h - 1]['confidence'] ?? 1)));
-                $matchCost = $this->matchCost($targetWords[$t - 1], $heardWords[$h - 1], $similarity, $confidence);
+                // Equal-cost duplicate paths should keep the earliest valid
+                // recitation green and treat the later copy as the restart.
+                // This epsilon only breaks DP ties; it cannot change a real
+                // match/substitution decision.
+                $matchCost = $this->matchCost($targetWords[$t - 1], $heardWords[$h - 1], $similarity, $confidence)
+                    + $this->startingAnchorAdjustment($startingAnchor, $t - 1, $h - 1)
+                    + (($h - 1) * 1e-9);
 
                 $candidates = [
                     [
@@ -168,9 +175,40 @@ class QuranAlignmentService
         }
         $operations = array_reverse($operations);
 
-        $operations = $this->classifyOperationContext($operations, $targetWords, $heard, $isFinal);
+        $operations = $this->classifyOperationContext($operations, $targetWords, $heard, $isFinal, $startingAnchor);
         [$statuses, $extraWords, $events] = $this->materialiseOperations($operations, $units, $heard, $isFinal);
-        $events = array_merge($events, $this->detectHesitations($statuses));
+        if (! $isFinal && ! in_array(self::TYPE_RESTART, array_column($extraWords, 'type'), true)) {
+            $liveRestart = $this->findLiveRestartEvidence($targetWords, $heard);
+            $restartHasAlignmentConflict = $liveRestart !== null
+                && count(array_filter(
+                    array_slice($statuses, $liveRestart['restart_end_index'] + 1),
+                    static fn (array $status): bool => ($status['status'] ?? '') !== 'correct'
+                )) > 0;
+            if ($liveRestart !== null && $restartHasAlignmentConflict) {
+                $restartStart = $liveRestart['recognised_start_index'];
+                $restartEnd = $liveRestart['recognised_end_index'];
+                $extraWords = array_values(array_filter(
+                    $extraWords,
+                    static fn (array $extra): bool => (int) ($extra['recognised_index'] ?? -1) < $restartStart
+                        || (int) ($extra['recognised_index'] ?? -1) > $restartEnd
+                ));
+                for ($recognisedIndex = $restartStart; $recognisedIndex <= $restartEnd; $recognisedIndex++) {
+                    $extraWords[] = $this->extraWordPayload([
+                        'recognised_index' => $recognisedIndex,
+                        'expected_index' => $liveRestart['restart_start_index'],
+                        'restart_start_index' => $liveRestart['restart_start_index'],
+                        'restart_end_index' => $liveRestart['restart_end_index'],
+                        'recognised_start_index' => $restartStart,
+                        'recognised_end_index' => $restartEnd,
+                    ], $heard, $units, self::TYPE_RESTART);
+                }
+                for ($index = $liveRestart['restart_end_index'] + 1; $index < count($statuses); $index++) {
+                    $statuses[$index] = $this->deletionStatus($units[$index], $index, false);
+                }
+                $events[] = $this->restartEventPayload($liveRestart, $heard);
+            }
+        }
+        $events = array_merge($events, $this->detectHesitations($statuses, $extraWords, $isFinal));
 
         $accuracy = $this->scoreAccuracy($statuses, $extraWords);
         $confidence = $this->evaluationConfidence($statuses, $heard);
@@ -192,6 +230,11 @@ class QuranAlignmentService
                 'normalizer_version' => QuranTextNormalizer::VERSION,
                 'confidence_policy_version' => RecitationConfidencePolicy::VERSION,
                 'lifecycle' => $isFinal ? 'final' : 'live',
+                'starting_anchor' => $startingAnchor,
+                'pause_policy' => [
+                    'hesitation_seconds' => $this->hesitationPauseSeconds(),
+                    'self_correction_seconds' => $this->selfCorrectionPauseSeconds(),
+                ],
             ],
         ];
     }
@@ -314,6 +357,7 @@ class QuranAlignmentService
                         'confidence' => 1.0,
                     ];
                 }
+
                 continue;
             }
             $raw = (string) ($entry['raw_word'] ?? $entry['rawWord'] ?? $entry['display'] ?? $entry['word'] ?? $entry['text'] ?? '');
@@ -333,11 +377,16 @@ class QuranAlignmentService
                 'recognised_index' => $index,
                 'confidence' => $confidence,
             ];
-            if (is_numeric($entry['start'] ?? $entry['startTime'] ?? null)) {
-                $heard['start'] = (float) ($entry['start'] ?? $entry['startTime']);
+            foreach (['token', 'speechmatics_token', 'speechmaticsToken', 'id', 'provider', 'segment_id', 'segmentId'] as $key) {
+                if (array_key_exists($key, $entry) && is_scalar($entry[$key])) {
+                    $heard[$key] = $entry[$key];
+                }
             }
-            if (is_numeric($entry['end'] ?? $entry['endTime'] ?? null)) {
-                $heard['end'] = (float) ($entry['end'] ?? $entry['endTime']);
+            if (is_numeric($entry['start'] ?? $entry['startTime'] ?? $entry['start_time'] ?? null)) {
+                $heard['start'] = (float) ($entry['start'] ?? $entry['startTime'] ?? $entry['start_time']);
+            }
+            if (is_numeric($entry['end'] ?? $entry['endTime'] ?? $entry['end_time'] ?? null)) {
+                $heard['end'] = (float) ($entry['end'] ?? $entry['endTime'] ?? $entry['end_time']);
             }
             // Keep adjacent duplicates so intentional learner repetitions survive.
             // DP marks them as extras with a cheaper repetition cost.
@@ -576,7 +625,10 @@ class QuranAlignmentService
             return 0.78 + ((1 - $confidence) * 0.24);
         }
 
-        return 1.45;
+        // Keep a clear mismatch attached to the current expected slot. A
+        // higher cost lets DP skip the beginning of a coherent wrong phrase
+        // and attach its tokens to later words, losing drift indexes.
+        return $confidence < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE ? 1.45 : 0.85;
     }
 
     /**
@@ -584,6 +636,12 @@ class QuranAlignmentService
      */
     private function extraCost(array $heard, int $index): float
     {
+        // Recognition uncertainty is not enough evidence to insert a learner
+        // word into the Qur'an sequence. Keep the token for diagnostics, but
+        // prefer consuming it as an uncertain alignment when possible.
+        if ((float) ($heard[$index]['confidence'] ?? 1) < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+            return 1.8;
+        }
         if ($index > 0 && ($heard[$index]['word'] ?? null) === ($heard[$index - 1]['word'] ?? null)) {
             return 0.34;
         }
@@ -601,22 +659,141 @@ class QuranAlignmentService
     }
 
     /**
+     * Find a reliable anchor for the first recognised word in a target range.
+     * A later single word is useful only when it is confident and unique;
+     * consecutive words provide the context needed to disambiguate repeats.
+     *
+     * @param  list<string>  $targetWords
+     * @param  list<array<string,mixed>>  $heard
+     * @return array{expected_index:int,recognised_index:int,length:int}|null
+     */
+    private function findStartingAnchor(array $targetWords, array $heard): ?array
+    {
+        if (count($targetWords) < 2 || $heard === []) {
+            return null;
+        }
+
+        $first = $heard[0];
+        $firstWord = (string) ($first['word'] ?? '');
+        if ($firstWord === '') {
+            return null;
+        }
+
+        $matches = function (int $targetIndex, int $heardIndex) use ($targetWords, $heard): bool {
+            $target = $targetWords[$targetIndex] ?? '';
+            $actual = (string) ($heard[$heardIndex]['word'] ?? '');
+
+            return $target !== ''
+                && $actual !== ''
+                && $this->similarity($target, $actual) >= RecitationScoringThresholds::CORRECT_SIMILARITY;
+        };
+
+        $candidates = [];
+        for ($expectedIndex = 1; $expectedIndex < count($targetWords); $expectedIndex++) {
+            if (! $matches($expectedIndex, 0)) {
+                continue;
+            }
+
+            $length = 0;
+            $confidenceSum = 0.0;
+            $reliableCount = 0;
+            while ($matches($expectedIndex + $length, $length)) {
+                $confidence = (float) ($heard[$length]['confidence'] ?? 1);
+                $confidenceSum += $confidence;
+                $reliableCount += $confidence >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE ? 1 : 0;
+                $length++;
+            }
+
+            // One token cannot choose between repeated target words. Even a
+            // unique fuzzy match is too weak to redefine the starting point.
+            if ($length === 1) {
+                if ($reliableCount !== 1) {
+                    continue;
+                }
+                $occurrences = 0;
+                foreach ($targetWords as $targetIndex => $targetWord) {
+                    if ($this->similarity($targetWord, $firstWord) >= RecitationScoringThresholds::CORRECT_SIMILARITY) {
+                        $occurrences++;
+                    }
+                }
+                if ($occurrences !== 1 || $this->similarity($targetWords[$expectedIndex], $firstWord) < 0.99) {
+                    continue;
+                }
+            } elseif ($reliableCount === 0) {
+                // Consecutive lexical matches can support one uncertain token,
+                // but a wholly uncertain phrase is not a starting anchor.
+                continue;
+            }
+
+            $candidates[] = [
+                'expected_index' => $expectedIndex,
+                'recognised_index' => 0,
+                'length' => $length,
+                'confidence_sum' => $confidenceSum,
+            ];
+        }
+
+        if ($candidates === []) {
+            return null;
+        }
+
+        usort($candidates, static function (array $left, array $right): int {
+            return [$right['length'], $right['confidence_sum'], $left['expected_index']]
+                <=> [$left['length'], $left['confidence_sum'], $right['expected_index']];
+        });
+
+        $best = $candidates[0];
+
+        return [
+            'expected_index' => (int) $best['expected_index'],
+            'recognised_index' => 0,
+            'length' => (int) $best['length'],
+        ];
+    }
+
+    /**
+     * Keep a non-anchored first token on the expected opening slot. Once a
+     * reliable later anchor exists, make that anchor cheaper than a false
+     * substitution on the opening word.
+     */
+    private function startingAnchorAdjustment(?array $anchor, int $expectedIndex, int $recognisedIndex): float
+    {
+        if ($recognisedIndex !== 0 || $expectedIndex === 0) {
+            return 0.0;
+        }
+
+        if ($anchor === null) {
+            return 2.0;
+        }
+
+        return $expectedIndex === (int) $anchor['expected_index'] ? -0.4 : 2.0;
+    }
+
+    /**
      * @param  list<array<string,mixed>>  $operations
      * @param  list<string>  $targetWords
      * @param  list<array<string,mixed>>  $heard
      * @return list<array<string,mixed>>
      */
-    private function classifyOperationContext(array $operations, array $targetWords, array $heard, bool $isFinal): array
+    private function classifyOperationContext(
+        array $operations,
+        array $targetWords,
+        array $heard,
+        bool $isFinal,
+        ?array $startingAnchor = null
+    ): array
     {
         $count = count($operations);
         for ($i = 0; $i < $count; $i++) {
             $op = (string) ($operations[$i]['op'] ?? '');
             if ($op === 'extra') {
                 $operations[$i]['type'] = $this->classifyExtraOperation($operations, $i, $targetWords, $heard);
+
                 continue;
             }
             if ($op === 'omission') {
                 $operations[$i]['type'] = $isFinal ? self::TYPE_DELETION : self::TYPE_UNASSESSED;
+
                 continue;
             }
             if ($op === 'match') {
@@ -637,34 +814,279 @@ class QuranAlignmentService
             }
         }
 
-        $i = 0;
-        while ($i < $count) {
-            if ($this->isResolvedMatchOperation($operations[$i] ?? [], $targetWords, $heard)) {
-                $i++;
+        foreach ($this->detectRestartGroups($operations, $targetWords, $heard) as $group) {
+            foreach ($operations as $i => $operation) {
+                $recognisedIndex = (int) ($operation['recognised_index'] ?? -1);
+                if (($operation['op'] ?? '') !== 'extra'
+                    || $recognisedIndex < $group['recognised_start_index']
+                    || $recognisedIndex > $group['recognised_end_index']) {
+                    continue;
+                }
+                $operations[$i]['type'] = self::TYPE_RESTART;
+                $operations[$i] = array_merge($operations[$i], $group);
+            }
+        }
+
+        // A self-correction is one contiguous wrong path which returns to the
+        // expected target. Require a timed re-alignment pause so ordinary
+        // insertions remain unresolved, and let restart/repetition evidence
+        // take precedence over correction.
+        foreach ($this->detectSelfCorrectionGroups($operations, $targetWords, $heard) as $group) {
+            foreach ($operations as $i => $operation) {
+                $recognisedIndex = (int) ($operation['recognised_index'] ?? -1);
+                if (($operation['op'] ?? '') !== 'extra'
+                    || $recognisedIndex < $group['recognised_start_index']
+                    || $recognisedIndex > $group['recognised_end_index']) {
+                    continue;
+                }
+                $operations[$i]['type'] = self::TYPE_SELF_CORRECTION;
+                $operations[$i] = array_merge($operations[$i], $group);
+            }
+        }
+
+        // If a learner starts in the middle and then restarts from the
+        // beginning, DP keeps the later complete pass as the authoritative
+        // alignment. Reclassify the discarded initial partial pass as amber
+        // restart evidence instead of a red insertion.
+        $midStartRestart = $this->detectMidStartRestart($targetWords, $heard, $startingAnchor, $isFinal);
+        if ($midStartRestart !== null) {
+            foreach ($operations as $i => $operation) {
+                $recognisedIndex = (int) ($operation['recognised_index'] ?? -1);
+                if (($operation['op'] ?? '') !== 'extra'
+                    || $recognisedIndex < $midStartRestart['recognised_start_index']
+                    || $recognisedIndex > $midStartRestart['recognised_end_index']) {
+                    continue;
+                }
+                $operations[$i]['type'] = self::TYPE_RESTART;
+                $operations[$i] = array_merge($operations[$i], $midStartRestart);
+            }
+        }
+
+        $anchorRuns = [];
+        for ($start = 0; $start < $count;) {
+            $length = $this->reliableAnchorRunLength($operations, $start, $targetWords, $heard);
+            if ($length >= 2) {
+                $anchorRuns[] = [
+                    'start' => $start,
+                    'end' => $start + $length - 1,
+                ];
+                $start += $length;
+            } else {
+                $start++;
+            }
+        }
+
+        // If the path has no return anchor, rebase a confident coherent tail
+        // from the last stable anchor. This prevents DP from shifting the
+        // wrong phrase onto later expected slots (and preserves its indexes).
+        if (count($anchorRuns) === 1) {
+            $anchor = $anchorRuns[0];
+            $divergentMatches = 0;
+            for ($j = $anchor['end'] + 1; $j < $count; $j++) {
+                $recognisedIndex = (int) ($operations[$j]['recognised_index'] ?? -1);
+                if (($operations[$j]['op'] ?? '') === 'match'
+                    && ($operations[$j]['type'] ?? '') === self::TYPE_SUBSTITUTION
+                    && (float) ($heard[$recognisedIndex]['confidence'] ?? 1) >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+                    $divergentMatches++;
+                }
+            }
+            if ($divergentMatches >= 2) {
+                $nextExpected = (int) ($operations[$anchor['end']]['expected_index'] ?? -1) + 1;
+                $nextRecognised = (int) ($operations[$anchor['end']]['recognised_index'] ?? -1) + 1;
+                $rebased = array_slice($operations, 0, $anchor['end'] + 1);
+                while ($nextExpected < count($targetWords) && $nextRecognised < count($heard)) {
+                    $similarity = $this->similarity($targetWords[$nextExpected], $heard[$nextRecognised]['word']);
+                    $confidence = (float) ($heard[$nextRecognised]['confidence'] ?? 1);
+                    $rebased[] = [
+                        'op' => 'match',
+                        'expected_index' => $nextExpected,
+                        'recognised_index' => $nextRecognised,
+                        'similarity' => $similarity,
+                        'type' => $confidence < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE
+                            ? self::TYPE_UNASSESSED
+                            : ($similarity >= RecitationScoringThresholds::CORRECT_SIMILARITY
+                                ? self::TYPE_MATCH
+                                : self::TYPE_SUBSTITUTION),
+                    ];
+                    $nextExpected++;
+                    $nextRecognised++;
+                }
+                while ($nextExpected < count($targetWords)) {
+                    $rebased[] = [
+                        'op' => 'omission',
+                        'expected_index' => $nextExpected,
+                        'recognised_index' => null,
+                        'similarity' => 0.0,
+                        'type' => $isFinal ? self::TYPE_DELETION : self::TYPE_UNASSESSED,
+                    ];
+                    $nextExpected++;
+                }
+                while ($nextRecognised < count($heard)) {
+                    $rebased[] = [
+                        'op' => 'extra',
+                        'expected_index' => count($targetWords),
+                        'recognised_index' => $nextRecognised,
+                        'similarity' => 0.0,
+                        'type' => self::TYPE_OUT_OF_RANGE,
+                    ];
+                    $nextRecognised++;
+                }
+                $operations = $rebased;
+                $count = count($operations);
+            }
+        }
+
+        // One matching word inside a similar phrase is not enough evidence to
+        // resynchronise. Require a two-word expected/recognised anchor on the
+        // far side of a coherent, confident wrong span.
+        for ($runIndex = 1, $runCount = count($anchorRuns); $runIndex < $runCount; $runIndex++) {
+            $previous = $anchorRuns[$runIndex - 1];
+            $recovery = $anchorRuns[$runIndex];
+            $start = $previous['end'] + 1;
+            $end = $recovery['start'] - 1;
+            $divergentMatches = 0;
+            for ($j = $start; $j <= $end; $j++) {
+                if (($operations[$j]['op'] ?? '') !== 'match') {
+                    continue;
+                }
+                $recognisedIndex = (int) ($operations[$j]['recognised_index'] ?? -1);
+                if (($operations[$j]['type'] ?? '') === self::TYPE_SUBSTITUTION
+                    && (float) ($heard[$recognisedIndex]['confidence'] ?? 1) >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+                    $divergentMatches++;
+                }
+            }
+            if ($divergentMatches < 2) {
                 continue;
             }
 
-            $start = $i;
-            $hasExpected = false;
-            while ($i < $count && ! $this->isResolvedMatchOperation($operations[$i] ?? [], $targetWords, $heard)) {
-                if (($operations[$i]['op'] ?? '') !== 'extra') {
-                    $hasExpected = true;
+            for ($j = $start; $j <= $end; $j++) {
+                if (($operations[$j]['op'] ?? '') !== 'extra') {
+                    $operations[$j]['type'] = self::TYPE_DIVERGENCE;
                 }
-                $i++;
             }
-            $length = $i - $start;
-            $hasRecovery = $i < $count && $this->isResolvedMatchOperation($operations[$i] ?? [], $targetWords, $heard);
-            if ($hasExpected && $hasRecovery && $length >= 3) {
-                for ($j = $start; $j < $i; $j++) {
-                    if (($operations[$j]['op'] ?? '') !== 'extra') {
+            $operations[$recovery['start']]['type'] = self::TYPE_REALIGNMENT;
+        }
+
+        // No return anchor: keep only confident wrong matches as an
+        // unresolved divergence. Omissions and low-confidence recognition
+        // remain ordinary missing/uncertain results.
+        if ($anchorRuns !== []) {
+            $lastAnchor = $anchorRuns[count($anchorRuns) - 1];
+            $start = $lastAnchor['end'] + 1;
+            $divergentMatches = 0;
+            for ($j = $start; $j < $count; $j++) {
+                if (($operations[$j]['op'] ?? '') !== 'match') {
+                    continue;
+                }
+                $recognisedIndex = (int) ($operations[$j]['recognised_index'] ?? -1);
+                if (($operations[$j]['type'] ?? '') === self::TYPE_SUBSTITUTION
+                    && (float) ($heard[$recognisedIndex]['confidence'] ?? 1) >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+                    $divergentMatches++;
+                }
+            }
+            if ($divergentMatches >= 2) {
+                for ($j = $start; $j < $count; $j++) {
+                    if (($operations[$j]['op'] ?? '') === 'match'
+                        && ($operations[$j]['type'] ?? '') === self::TYPE_SUBSTITUTION) {
                         $operations[$j]['type'] = self::TYPE_DIVERGENCE;
                     }
                 }
-                $operations[$i]['type'] = self::TYPE_REALIGNMENT;
             }
         }
 
         return $operations;
+    }
+
+    /**
+     * Detect a partial mid-ayah attempt which is abandoned when the learner
+     * subsequently says the opening words. This is deliberately phrase-gated
+     * and never treats one word as restart evidence.
+     *
+     * @param  array{expected_index:int,recognised_index:int,length:int}|null  $startingAnchor
+     * @return array<string,int>|null
+     */
+    private function detectMidStartRestart(array $targetWords, array $heard, ?array $startingAnchor, bool $isFinal): ?array
+    {
+        if ($startingAnchor === null || (int) ($startingAnchor['expected_index'] ?? 0) < 1) {
+            return null;
+        }
+        $length = (int) ($startingAnchor['length'] ?? 0);
+        if ($length < 2 || count($heard) <= $length + 1) {
+            return null;
+        }
+
+        $matches = function (int $targetIndex, int $heardIndex) use ($targetWords, $heard): bool {
+            $target = $targetWords[$targetIndex] ?? '';
+            $actual = (string) ($heard[$heardIndex]['word'] ?? '');
+            $confidence = (float) ($heard[$heardIndex]['confidence'] ?? 1);
+
+            return $target !== ''
+                && $actual !== ''
+                && $confidence >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE
+                && $this->similarity($target, $actual) >= RecitationScoringThresholds::CORRECT_SIMILARITY;
+        };
+
+        for ($index = $length; $index + 1 < count($heard); $index++) {
+            if (! $matches(0, $index) || ! $matches(1, $index + 1)) {
+                continue;
+            }
+            $hasContinuation = $index + 2 >= count($heard)
+                || ! isset($targetWords[2])
+                || $matches(2, $index + 2);
+            if (! $hasContinuation) {
+                continue;
+            }
+            if (! $isFinal && $index + 2 >= count($heard)) {
+                continue;
+            }
+
+            return [
+                'restart_start_index' => 0,
+                'restart_end_index' => (int) ($startingAnchor['expected_index'] ?? 1) + $length - 1,
+                'recognised_start_index' => 0,
+                'recognised_end_index' => $length - 1,
+                'restartStartIndex' => 0,
+                'restartEndIndex' => (int) ($startingAnchor['expected_index'] ?? 1) + $length - 1,
+                'recognisedStartIndex' => 0,
+                'recognisedEndIndex' => $length - 1,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Count a consecutive, high-confidence expected/recognised anchor run.
+     *
+     * @param  list<array<string,mixed>>  $operations
+     * @param  list<string>  $targetWords
+     * @param  list<array<string,mixed>>  $heard
+     */
+    private function reliableAnchorRunLength(array $operations, int $start, array $targetWords, array $heard): int
+    {
+        $length = 0;
+        $previousExpected = null;
+        $previousRecognised = null;
+        for ($index = $start, $count = count($operations); $index < $count; $index++) {
+            $operation = $operations[$index] ?? [];
+            if (! $this->isResolvedMatchOperation($operation, $targetWords, $heard)) {
+                break;
+            }
+            $expectedIndex = (int) ($operation['expected_index'] ?? -1);
+            $recognisedIndex = (int) ($operation['recognised_index'] ?? -1);
+            if ($previousExpected !== null
+                && ($expectedIndex !== $previousExpected + 1 || $recognisedIndex !== $previousRecognised + 1)) {
+                break;
+            }
+            if ((float) ($heard[$recognisedIndex]['confidence'] ?? 1) < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+                break;
+            }
+            $length++;
+            $previousExpected = $expectedIndex;
+            $previousRecognised = $recognisedIndex;
+        }
+
+        return $length;
     }
 
     /**
@@ -678,41 +1100,267 @@ class QuranAlignmentService
         $expectedIndex = (int) ($operations[$index]['expected_index'] ?? -1);
         $word = (string) ($heard[$recognisedIndex]['word'] ?? '');
 
+        $confidence = (float) ($heard[$recognisedIndex]['confidence'] ?? 1);
+        $previousRecognised = $recognisedIndex > 0 ? (string) ($heard[$recognisedIndex - 1]['word'] ?? '') : '';
+        $isStructuralExtra = $word !== '' && (
+            $word === $previousRecognised
+            || in_array($word, array_slice($targetWords, 0, max(0, $expectedIndex)), true)
+            || in_array($word, $targetWords, true)
+        );
+        if ($confidence < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE && ! $isStructuralExtra) {
+            return self::TYPE_UNASSESSED;
+        }
+
         if ($expectedIndex >= count($targetWords)) {
             return self::TYPE_OUT_OF_RANGE;
         }
 
-        $previousRecognised = $recognisedIndex > 0 ? (string) ($heard[$recognisedIndex - 1]['word'] ?? '') : '';
         if ($word !== '' && $previousRecognised !== '' && $word === $previousRecognised) {
             return self::TYPE_REPETITION;
         }
 
-        $earlier = array_slice($targetWords, 0, max(0, $expectedIndex));
-        if ($word !== '' && in_array($word, $earlier, true)) {
-            return self::TYPE_RESTART;
+        return self::TYPE_INSERTION;
+    }
+
+    /**
+     * @param  list<array<string,mixed>>  $operations
+     * @param  list<string>  $targetWords
+     * @param  list<array<string,mixed>>  $heard
+     * @return list<array<string,mixed>>
+     */
+    private function detectSelfCorrectionGroups(array $operations, array $targetWords, array $heard): array
+    {
+        $groups = [];
+        $count = count($operations);
+        for ($index = 0; $index < $count; $index++) {
+            $operation = $operations[$index] ?? [];
+            if (($operation['op'] ?? '') !== 'extra' || ($operation['type'] ?? '') !== self::TYPE_INSERTION) {
+                continue;
+            }
+            $expectedIndex = (int) ($operation['expected_index'] ?? -1);
+            $recognisedStart = (int) ($operation['recognised_index'] ?? -1);
+            $word = (string) ($heard[$recognisedStart]['word'] ?? '');
+            if ($expectedIndex < 0 || $recognisedStart < 0 || $word === '') {
+                continue;
+            }
+            // Earlier target words indicate repetition/backtracking. A longer
+            // repeated span has already been labelled RESTART above.
+            if (in_array($word, array_slice($targetWords, 0, $expectedIndex), true)) {
+                continue;
+            }
+
+            $end = $index;
+            while ($end + 1 < $count
+                && ($operations[$end + 1]['op'] ?? '') === 'extra'
+                && ($operations[$end + 1]['type'] ?? '') === self::TYPE_INSERTION
+                && (int) ($operations[$end + 1]['expected_index'] ?? -1) === $expectedIndex
+                && (int) ($operations[$end + 1]['recognised_index'] ?? -1) === (int) ($operations[$end]['recognised_index'] ?? -2) + 1
+            ) {
+                $end++;
+            }
+
+            $correction = $operations[$end + 1] ?? null;
+            $isResolvedCorrection = is_array($correction)
+                && ($correction['op'] ?? '') === 'match'
+                && (int) ($correction['expected_index'] ?? -1) === $expectedIndex
+                && $this->isResolvedMatchOperation($correction, $targetWords, $heard);
+            if (! $isResolvedCorrection) {
+                continue;
+            }
+            $pause = $this->pauseAfter($heard, (int) ($operations[$end]['recognised_index'] ?? -1));
+            if ($pause < $this->selfCorrectionPauseSeconds()) {
+                continue;
+            }
+
+            $groupId = 'self-correction:'.$expectedIndex.':'.$recognisedStart.':'.(int) ($operations[$end]['recognised_index'] ?? $recognisedStart);
+            $correctedEnd = $end + 1;
+            while ($correctedEnd + 1 < $count
+                && $this->isResolvedMatchOperation($operations[$correctedEnd + 1], $targetWords, $heard)
+                && (int) ($operations[$correctedEnd + 1]['expected_index'] ?? -1) === (int) ($operations[$correctedEnd]['expected_index'] ?? -2) + 1
+                && (int) ($operations[$correctedEnd + 1]['recognised_index'] ?? -1) === (int) ($operations[$correctedEnd]['recognised_index'] ?? -2) + 1
+            ) {
+                $correctedEnd++;
+            }
+            $groups[] = [
+                'correction_group_id' => $groupId,
+                'self_correction_group_id' => $groupId,
+                'corrected_target_index' => $expectedIndex,
+                'corrected_target_end_index' => (int) ($operations[$correctedEnd]['expected_index'] ?? $expectedIndex),
+                'recognised_start_index' => $recognisedStart,
+                'recognised_end_index' => (int) ($operations[$end]['recognised_index'] ?? $recognisedStart),
+                'correction_pause_seconds' => $pause,
+            ];
+            $index = $end;
         }
-        if ($word !== '' && in_array($word, $targetWords, true)) {
-            for ($i = $index + 1, $n = count($operations); $i < $n; $i++) {
-                if (! $this->isResolvedMatchOperation($operations[$i], $targetWords, $heard)) {
+
+        return $groups;
+    }
+
+    /**
+     * Detect restart spans only when the DP path provides a reliable context:
+     * prior progress, two consecutive earlier target words consumed as extras,
+     * and a forward continuation (or a clear pause at the end of the span).
+     * A lone earlier word therefore remains a repetition/insertion.
+     *
+     * @param  list<array<string,mixed>>  $operations
+     * @param  list<string>  $targetWords
+     * @param  list<array<string,mixed>>  $heard
+     * @return list<array<string,int>>
+     */
+    private function detectRestartGroups(array $operations, array $targetWords, array $heard): array
+    {
+        $extrasByHeardIndex = [];
+        foreach ($operations as $operation) {
+            if (($operation['op'] ?? '') === 'extra') {
+                $extrasByHeardIndex[(int) ($operation['recognised_index'] ?? -1)] = $operation;
+            }
+        }
+
+        $resolved = function (array $operation) use ($targetWords, $heard): bool {
+            return $this->isResolvedMatchOperation($operation, $targetWords, $heard);
+        };
+        $anchorMatches = function (int $targetIndex, int $heardIndex) use ($targetWords, $heard): bool {
+            $target = $targetWords[$targetIndex] ?? '';
+            $heardWord = $heard[$heardIndex] ?? [];
+            $actual = (string) ($heardWord['word'] ?? '');
+            $confidence = (float) ($heardWord['confidence'] ?? 1);
+
+            return $target !== ''
+                && $actual !== ''
+                && $confidence >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE
+                && $this->similarity($target, $actual) >= RecitationScoringThresholds::CORRECT_SIMILARITY;
+        };
+
+        $groups = [];
+        $claimed = [];
+        foreach ($operations as $operation) {
+            if (($operation['op'] ?? '') !== 'extra') {
+                continue;
+            }
+            $heardStart = (int) ($operation['recognised_index'] ?? -1);
+            $expectedIndex = (int) ($operation['expected_index'] ?? -1);
+            if ($heardStart < 0 || $expectedIndex < 1 || isset($claimed[$heardStart])) {
+                continue;
+            }
+
+            $best = null;
+            for ($restartStart = $expectedIndex - 1; $restartStart >= 0; $restartStart--) {
+                if (! $anchorMatches($restartStart, $heardStart)) {
                     continue;
                 }
-                $laterExpected = $targetWords[(int) ($operations[$i]['expected_index'] ?? -1)] ?? '';
-                if ($laterExpected === $word) {
-                    return self::TYPE_RESTART;
+                $priorProgress = false;
+                foreach ($operations as $previous) {
+                    if ($resolved($previous)
+                        && (int) ($previous['expected_index'] ?? -1) >= $restartStart
+                        && (int) ($previous['expected_index'] ?? -1) < $expectedIndex
+                        && (int) ($previous['recognised_index'] ?? -1) < $heardStart) {
+                        $priorProgress = true;
+                        break;
+                    }
+                }
+                if (! $priorProgress) {
+                    continue;
+                }
+
+                $length = 0;
+                while (isset($extrasByHeardIndex[$heardStart + $length])
+                    && $anchorMatches($restartStart + $length, $heardStart + $length)) {
+                    $length++;
+                }
+                if ($length < 2) {
+                    continue;
+                }
+
+                $continuationTarget = $restartStart + $length;
+                $continuationHeard = $heardStart + $length;
+                $continuation = false;
+                foreach ($operations as $candidate) {
+                    if ((int) ($candidate['recognised_index'] ?? -1) === $continuationHeard
+                        && (int) ($candidate['expected_index'] ?? -1) === $continuationTarget
+                        && $resolved($candidate)) {
+                        $continuation = true;
+                        break;
+                    }
+                }
+                $pause = $this->pauseAfter($heard, $heardStart - 1);
+                $hasClearPause = $pause >= $this->hesitationPauseSeconds();
+                if (! $continuation && ! $hasClearPause) {
+                    continue;
+                }
+
+                if ($best === null || $length > ($best['restart_end_index'] - $best['restart_start_index'] + 1)) {
+                    $best = [
+                        'restart_start_index' => $restartStart,
+                        'restart_end_index' => $restartStart + $length - 1,
+                        'recognised_start_index' => $heardStart,
+                        'recognised_end_index' => $heardStart + $length - 1,
+                        'restartStartIndex' => $restartStart,
+                        'restartEndIndex' => $restartStart + $length - 1,
+                        'recognisedStartIndex' => $heardStart,
+                        'recognisedEndIndex' => $heardStart + $length - 1,
+                    ];
+                }
+            }
+            if ($best === null) {
+                continue;
+            }
+            $groups[] = $best;
+            for ($index = $best['recognised_start_index']; $index <= $best['recognised_end_index']; $index++) {
+                $claimed[$index] = true;
+            }
+        }
+
+        return $groups;
+    }
+
+    /**
+     * Live partials may end immediately after the repeated anchor, before DP
+     * has a forward continuation to resolve. Two repeated target words after
+     * an already heard occurrence are enough to hold the future slots pending.
+     *
+     * @param  list<string>  $targetWords
+     * @param  list<array<string,mixed>>  $heard
+     * @return array<string,int>|null
+     */
+    private function findLiveRestartEvidence(array $targetWords, array $heard): ?array
+    {
+        $matches = function (int $targetIndex, int $heardIndex) use ($targetWords, $heard): bool {
+            $target = $targetWords[$targetIndex] ?? '';
+            $heardWord = $heard[$heardIndex] ?? [];
+            $actual = (string) ($heardWord['word'] ?? '');
+            $confidence = (float) ($heardWord['confidence'] ?? 1);
+
+            return $target !== ''
+                && $actual !== ''
+                && $confidence >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE
+                && $this->similarity($target, $actual) >= RecitationScoringThresholds::CORRECT_SIMILARITY;
+        };
+
+        for ($restartStart = 0; $restartStart + 1 < count($targetWords); $restartStart++) {
+            for ($firstStart = 0; $firstStart + 1 < count($heard); $firstStart++) {
+                if (! $matches($restartStart, $firstStart) || ! $matches($restartStart + 1, $firstStart + 1)) {
+                    continue;
+                }
+                for ($secondStart = $firstStart + 2; $secondStart + 1 < count($heard); $secondStart++) {
+                    if (! $matches($restartStart, $secondStart) || ! $matches($restartStart + 1, $secondStart + 1)) {
+                        continue;
+                    }
+
+                    return [
+                        'restart_start_index' => $restartStart,
+                        'restart_end_index' => $restartStart + 1,
+                        'recognised_start_index' => $secondStart,
+                        'recognised_end_index' => $secondStart + 1,
+                        'restartStartIndex' => $restartStart,
+                        'restartEndIndex' => $restartStart + 1,
+                        'recognisedStartIndex' => $secondStart,
+                        'recognisedEndIndex' => $secondStart + 1,
+                    ];
                 }
             }
         }
 
-        $next = $operations[$index + 1] ?? null;
-        $nextIsExpectedMatch = is_array($next)
-            && ($next['op'] ?? '') === 'match'
-            && (int) ($next['expected_index'] ?? -2) === $expectedIndex
-            && $this->isResolvedMatchOperation($next, $targetWords, $heard);
-        if ($nextIsExpectedMatch && $this->pauseAfter($heard, $recognisedIndex) >= $this->selfCorrectionPauseSeconds()) {
-            return self::TYPE_SELF_CORRECTION;
-        }
-
-        return self::TYPE_INSERTION;
+        return null;
     }
 
     /**
@@ -746,6 +1394,8 @@ class QuranAlignmentService
 
         $extraWords = [];
         $events = [];
+        $restartGroups = [];
+        $selfCorrectionGroups = [];
         foreach ($operations as $operation) {
             $type = (string) ($operation['type'] ?? self::TYPE_UNASSESSED);
             if (($operation['op'] ?? '') === 'match') {
@@ -766,6 +1416,7 @@ class QuranAlignmentService
                     $status = $this->applyOperationType($status, $type);
                 }
                 $statuses[$expectedIndex] = $status;
+
                 continue;
             }
 
@@ -774,17 +1425,157 @@ class QuranAlignmentService
                 if (isset($statuses[$expectedIndex])) {
                     $statuses[$expectedIndex] = $this->applyOperationType($statuses[$expectedIndex], $type);
                 }
+
                 continue;
             }
 
             if (($operation['op'] ?? '') === 'extra') {
                 $extra = $this->extraWordPayload($operation, $heard, $units, $type);
+                if ($type === self::TYPE_INSERTION && $statuses !== []) {
+                    $expectedIndex = (int) ($operation['expected_index'] ?? 0);
+                    $anchorIndex = max(0, min(
+                        count($statuses) - 1,
+                        $expectedIndex > 0 ? $expectedIndex - 1 : 0
+                    ));
+                    $extra['marker_target_index'] = $anchorIndex;
+                    $extra['marker_position'] = $expectedIndex > 0 ? 'after' : 'before';
+                    $statuses[$anchorIndex]['attached_error_markers'] ??= [];
+                    $statuses[$anchorIndex]['attached_error_markers'][] = [
+                        'type' => self::TYPE_INSERTION,
+                        'word' => $extra['recognised_word'] ?? $extra['word'] ?? '',
+                        'recognised_index' => $extra['recognised_index'] ?? null,
+                        'expected_index' => $expectedIndex,
+                    ];
+                }
                 $extraWords[] = $extra;
-                $events[] = $extra;
+                if ($type === self::TYPE_RESTART
+                    && isset($operation['restart_start_index'], $operation['restart_end_index'], $operation['recognised_start_index'], $operation['recognised_end_index'])) {
+                    $key = implode(':', [
+                        (int) $operation['restart_start_index'],
+                        (int) $operation['restart_end_index'],
+                        (int) $operation['recognised_start_index'],
+                        (int) $operation['recognised_end_index'],
+                    ]);
+                    $restartGroups[$key] = $operation;
+                } elseif ($type === self::TYPE_SELF_CORRECTION) {
+                    $groupKey = (string) ($operation['self_correction_group_id'] ?? $operation['correction_group_id'] ?? ($operation['recognised_index'] ?? count($selfCorrectionGroups)));
+                    $selfCorrectionGroups[$groupKey] = $operation;
+                } else {
+                    $events[] = $extra;
+                }
             }
         }
 
+        foreach ($restartGroups as $group) {
+            $events[] = $this->restartEventPayload($group, $heard);
+        }
+        foreach ($selfCorrectionGroups as $group) {
+            $events[] = $this->selfCorrectionEventPayload($group, $heard, $units);
+        }
+
         return [array_values($statuses), $extraWords, $events];
+    }
+
+    /**
+     * @param  array<string,mixed>  $group
+     * @param  list<array<string,mixed>>  $heard
+     * @return array<string,mixed>
+     */
+    private function restartEventPayload(array $group, array $heard): array
+    {
+        $startIndex = (int) ($group['recognised_start_index'] ?? -1);
+        $endIndex = (int) ($group['recognised_end_index'] ?? -1);
+        $startTime = isset($heard[$startIndex]['start']) ? (float) $heard[$startIndex]['start'] : null;
+        $endTime = isset($heard[$endIndex]['end']) ? (float) $heard[$endIndex]['end'] : null;
+
+        return [
+            'type' => self::TYPE_RESTART,
+            'status' => 'extra',
+            'visual_status' => 'amber',
+            'highlight' => 'amber',
+            'start_index' => (int) ($group['restart_start_index'] ?? 0),
+            'end_index' => (int) ($group['restart_end_index'] ?? 0),
+            'startIndex' => (int) ($group['restart_start_index'] ?? 0),
+            'endIndex' => (int) ($group['restart_end_index'] ?? 0),
+            'restart_start_index' => (int) ($group['restart_start_index'] ?? 0),
+            'restart_end_index' => (int) ($group['restart_end_index'] ?? 0),
+            'restartStartIndex' => (int) ($group['restart_start_index'] ?? 0),
+            'restartEndIndex' => (int) ($group['restart_end_index'] ?? 0),
+            'recognised_start_index' => $startIndex,
+            'recognised_end_index' => $endIndex,
+            'recognisedStartIndex' => $startIndex,
+            'recognisedEndIndex' => $endIndex,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'startTime' => $startTime,
+            'endTime' => $endTime,
+            'duration_seconds' => $startTime !== null && $endTime !== null ? max(0.0, $endTime - $startTime) : null,
+            'duration' => $startTime !== null && $endTime !== null ? max(0.0, $endTime - $startTime) : null,
+            'classification_confidence' => 0.9,
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $group
+     * @param  list<array<string,mixed>>  $heard
+     * @param  list<array<string,mixed>>  $units
+     * @return array<string,mixed>
+     */
+    private function selfCorrectionEventPayload(array $group, array $heard, array $units): array
+    {
+        $startIndex = (int) ($group['recognised_start_index'] ?? -1);
+        $endIndex = (int) ($group['recognised_end_index'] ?? -1);
+        $targetIndex = (int) ($group['corrected_target_index'] ?? 0);
+        $wrongTokens = [];
+        for ($index = $startIndex; $index <= $endIndex; $index++) {
+            $wrong = (string) ($heard[$index]['raw_word'] ?? $heard[$index]['word'] ?? '');
+            if ($wrong !== '') {
+                $wrongTokens[] = $wrong;
+            }
+        }
+        $startTime = isset($heard[$startIndex]['start']) ? (float) $heard[$startIndex]['start'] : null;
+        $endTime = isset($heard[$endIndex]['end']) ? (float) $heard[$endIndex]['end'] : null;
+        $correctedWords = $this->correctedTargetWords($units, $targetIndex, (int) ($group['corrected_target_end_index'] ?? $targetIndex));
+        $corrected = implode(' ', $correctedWords);
+
+        return [
+            'type' => self::TYPE_SELF_CORRECTION,
+            'status' => 'extra',
+            'visual_status' => 'amber',
+            'highlight' => 'amber',
+            'wrong_tokens' => $wrongTokens,
+            'wrong_words' => $wrongTokens,
+            'corrected_target_word' => $corrected,
+            'corrected_target_words' => $correctedWords,
+            'corrected_target_index' => $targetIndex,
+            'corrected_target_end_index' => (int) ($group['corrected_target_end_index'] ?? $targetIndex),
+            'correction_group_id' => $group['correction_group_id'] ?? $group['self_correction_group_id'] ?? null,
+            'self_correction_group_id' => $group['self_correction_group_id'] ?? $group['correction_group_id'] ?? null,
+            'recognised_start_index' => $startIndex,
+            'recognised_end_index' => $endIndex,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'duration_seconds' => $startTime !== null && $endTime !== null ? max(0.0, $endTime - $startTime) : null,
+            'correction_pause_seconds' => $group['correction_pause_seconds'] ?? null,
+            'classification_confidence' => 0.88,
+        ];
+    }
+
+    /**
+     * @param  list<array<string,mixed>>  $units
+     * @return list<string>
+     */
+    private function correctedTargetWords(array $units, int $start, int $end): array
+    {
+        $words = [];
+        for ($index = $start; $index <= $end; $index++) {
+            $word = (string) ($units[$index]['display'] ?? '');
+            if ($word !== '') {
+                $words[] = $word;
+            }
+        }
+
+        return $words;
     }
 
     /**
@@ -819,7 +1610,10 @@ class QuranAlignmentService
             'ayah_number' => $unit['ayah_number'] ?? null,
             'ayah_key' => $unit['ayah_key'] ?? '',
             'ayah_word_index' => $unit['ayah_word_index'] ?? $index,
-            'visual_status' => $isFinal ? 'black' : 'uncertain',
+            // A confirmed omission is a learner error on the expected word.
+            // Keep status=missing for API/analytics compatibility, but expose
+            // the visual error as red. Live omissions remain neutral.
+            'visual_status' => $isFinal ? 'red' : 'uncertain',
             'highlight' => $isFinal ? 'red' : 'neutral',
         ];
     }
@@ -862,9 +1656,11 @@ class QuranAlignmentService
         $expectedIndex = (int) ($operation['expected_index'] ?? 0);
         $word = $heard[$recognisedIndex] ?? [];
         $expectedUnit = $units[max(0, min(count($units) - 1, $expectedIndex))] ?? null;
-        $visual = in_array($type, [self::TYPE_REPETITION, self::TYPE_SELF_CORRECTION, self::TYPE_RESTART], true)
+        $visual = $type === self::TYPE_UNASSESSED
+            ? 'uncertain'
+            : (in_array($type, [self::TYPE_REPETITION, self::TYPE_SELF_CORRECTION, self::TYPE_RESTART], true)
             ? 'amber'
-            : ($type === self::TYPE_INSERTION ? 'red' : 'grey');
+            : ($type === self::TYPE_INSERTION ? 'red' : 'grey'));
 
         $payload = [
             'word' => (string) ($word['word'] ?? ''),
@@ -874,23 +1670,64 @@ class QuranAlignmentService
             'expected_index' => $expectedIndex,
             'recognised_word' => (string) ($word['raw_word'] ?? $word['word'] ?? ''),
             'recognised_index' => $recognisedIndex,
+            'token' => $word['token'] ?? $word['speechmatics_token'] ?? $word['speechmaticsToken'] ?? $word['id'] ?? null,
+            'speechmatics_token' => $word['speechmatics_token'] ?? $word['speechmaticsToken'] ?? $word['token'] ?? $word['id'] ?? null,
+            'provider' => $word['provider'] ?? null,
             'speechmatics_confidence' => (float) ($word['confidence'] ?? 1),
-            'classification_confidence' => in_array($type, [self::TYPE_REPETITION, self::TYPE_RESTART], true) ? 0.9 : 0.72,
+            'classification_confidence' => in_array($type, [self::TYPE_REPETITION, self::TYPE_RESTART], true)
+                ? 0.9
+                : ($type === self::TYPE_SELF_CORRECTION ? 0.88 : 0.72),
             'confidence' => (float) ($word['confidence'] ?? 1),
             'status' => 'extra',
             'type' => $type,
             'legacy_type' => $type === self::TYPE_REPETITION ? 'repetition' : 'extra',
             'visual_status' => $visual,
-            'highlight' => $type === self::TYPE_INSERTION
-                ? 'red'
-                : ($type === self::TYPE_OUT_OF_RANGE ? 'neutral' : 'amber'),
+            'highlight' => in_array($type, [self::TYPE_UNASSESSED, self::TYPE_OUT_OF_RANGE], true)
+                ? 'neutral'
+                : ($type === self::TYPE_INSERTION ? 'red' : 'amber'),
         ];
+        if ($type === self::TYPE_SELF_CORRECTION) {
+            $correctedWords = $this->correctedTargetWords(
+                $units,
+                (int) ($operation['corrected_target_index'] ?? $expectedIndex),
+                (int) ($operation['corrected_target_end_index'] ?? $expectedIndex)
+            );
+            $payload['correction_group_id'] = $operation['correction_group_id'] ?? $operation['self_correction_group_id'] ?? null;
+            $payload['self_correction_group_id'] = $operation['self_correction_group_id'] ?? $operation['correction_group_id'] ?? null;
+            $payload['corrected_target_index'] = $operation['corrected_target_index'] ?? $expectedIndex;
+            $payload['corrected_target_word'] = (string) ($units[(int) ($payload['corrected_target_index'] ?? $expectedIndex)]['display'] ?? '');
+            $payload['corrected_target_end_index'] = $operation['corrected_target_end_index'] ?? $expectedIndex;
+            $payload['corrected_target_words'] = $correctedWords;
+            $payload['wrong_token'] = $payload['recognised_word'];
+        }
+        if ($type === self::TYPE_RESTART) {
+            $payload['start_index'] = (int) ($operation['restart_start_index'] ?? $expectedIndex);
+            $payload['end_index'] = (int) ($operation['restart_end_index'] ?? $expectedIndex);
+            $payload['startIndex'] = $payload['start_index'];
+            $payload['endIndex'] = $payload['end_index'];
+            foreach ([
+                'restart_start_index',
+                'restart_end_index',
+                'recognised_start_index',
+                'recognised_end_index',
+                'restartStartIndex',
+                'restartEndIndex',
+                'recognisedStartIndex',
+                'recognisedEndIndex',
+            ] as $key) {
+                if (array_key_exists($key, $operation)) {
+                    $payload[$key] = $operation[$key];
+                }
+            }
+        }
         if (isset($word['start'])) {
             $payload['start_time'] = (float) $word['start'];
+            $payload['startTime'] = (float) $word['start'];
             $payload['start'] = (float) $word['start'];
         }
         if (isset($word['end'])) {
             $payload['end_time'] = (float) $word['end'];
+            $payload['endTime'] = (float) $word['end'];
             $payload['end'] = (float) $word['end'];
         }
 
@@ -917,12 +1754,18 @@ class QuranAlignmentService
 
     private function hesitationPauseSeconds(): float
     {
-        return $this->configFloat('mutqin.ai_recite.pause_thresholds.hesitation_seconds', 1.35);
+        return max(0.5, $this->configFloat(
+            'mutqin.ai_recite.pause_policy.hesitation_seconds',
+            RecitationScoringThresholds::HESITATION_SECONDS
+        ));
     }
 
     private function selfCorrectionPauseSeconds(): float
     {
-        return $this->configFloat('mutqin.ai_recite.pause_thresholds.self_correction_seconds', 0.55);
+        return max(0.0, $this->configFloat(
+            'mutqin.ai_recite.pause_policy.self_correction_seconds',
+            RecitationScoringThresholds::SELF_CORRECTION_SECONDS
+        ));
     }
 
     private function configFloat(string $key, float $fallback): float
@@ -945,36 +1788,87 @@ class QuranAlignmentService
      * @param  list<array<string,mixed>>  $statuses
      * @return list<array<string,mixed>>
      */
-    private function detectHesitations(array $statuses): array
+    private function detectHesitations(array $statuses, array $extraWords = [], bool $isFinal = true): array
     {
         $events = [];
-        $previous = null;
+        $byRecognisedIndex = [];
         foreach ($statuses as $status) {
-            if (($status['status'] ?? '') !== 'correct') {
+            if (is_numeric($status['recognised_index'] ?? null)) {
+                $byRecognisedIndex[(int) $status['recognised_index']] = $status;
+            }
+        }
+        foreach ($extraWords as $extra) {
+            if (is_numeric($extra['recognised_index'] ?? null)) {
+                $byRecognisedIndex[(int) $extra['recognised_index']] = $extra;
+            }
+        }
+        ksort($byRecognisedIndex);
+        $recognisedIndexes = array_keys($byRecognisedIndex);
+        for ($index = 1, $count = count($recognisedIndexes); $index < $count; $index++) {
+            $previousIndex = (int) $recognisedIndexes[$index - 1];
+            $currentIndex = (int) $recognisedIndexes[$index];
+            // Gaps are evidence only between adjacent recognised words. A
+            // missing timestamp/token must never manufacture a pause event.
+            if ($currentIndex !== $previousIndex + 1) {
                 continue;
             }
-            if ($previous !== null
-                && isset($previous['end_time'], $status['start_time'])
-                && is_numeric($previous['end_time'])
-                && is_numeric($status['start_time'])
-            ) {
-                $gap = max(0.0, (float) $status['start_time'] - (float) $previous['end_time']);
-                if ($gap >= $this->hesitationPauseSeconds()) {
-                    $events[] = [
-                        'type' => self::TYPE_HESITATION,
-                        'status' => 'extra',
-                        'visual_status' => 'amber',
-                        'highlight' => 'amber',
-                        'expected_word' => $status['expected_word'] ?? $status['text'] ?? '',
-                        'expected_index' => $status['expected_index'] ?? $status['target_index'] ?? null,
-                        'start_time' => (float) $previous['end_time'],
-                        'end_time' => (float) $status['start_time'],
-                        'duration_seconds' => $gap,
-                        'classification_confidence' => 0.82,
-                    ];
+            $previous = $byRecognisedIndex[$previousIndex];
+            $current = $byRecognisedIndex[$currentIndex];
+            $currentIsCorrect = ($current['status'] ?? '') === 'correct';
+            $currentIsPauseAnchor = $currentIsCorrect
+                || in_array(($current['type'] ?? ''), [self::TYPE_REALIGNMENT, self::TYPE_SELF_CORRECTION, self::TYPE_RESTART], true);
+            $sameTargetCorrection = $currentIsCorrect
+                && ($previous['type'] ?? '') === self::TYPE_SELF_CORRECTION
+                && (int) ($previous['expected_index'] ?? -1) === (int) ($current['expected_index'] ?? -2);
+            if (($current['type'] ?? '') === self::TYPE_REALIGNMENT && ($previous['status'] ?? '') !== 'correct') {
+                for ($candidate = $index - 1; $candidate >= 0; $candidate--) {
+                    $candidateIndex = (int) $recognisedIndexes[$candidate];
+                    if (($byRecognisedIndex[$candidateIndex]['status'] ?? '') === 'correct') {
+                        $previousIndex = $candidateIndex;
+                        $previous = $byRecognisedIndex[$candidateIndex];
+                        break;
+                    }
                 }
             }
-            $previous = $status;
+            if (! $currentIsPauseAnchor || (($previous['status'] ?? '') !== 'correct' && ! $sameTargetCorrection)) {
+                continue;
+            }
+            $previousEnd = $previous['end_time'] ?? $previous['end'] ?? null;
+            $currentStart = $current['start_time'] ?? $current['start'] ?? null;
+            if (! is_numeric($previousEnd) || ! is_numeric($currentStart)) {
+                continue;
+            }
+            $gap = max(0.0, (float) $currentStart - (float) $previousEnd);
+            if ($gap < $this->hesitationPauseSeconds()) {
+                continue;
+            }
+            $previousExpectedIndex = $previous['expected_index'] ?? $previous['target_index'] ?? null;
+            $currentExpectedIndex = $current['expected_index'] ?? $current['target_index'] ?? null;
+            $events[] = [
+                'type' => self::TYPE_HESITATION,
+                'status' => 'extra',
+                'visual_status' => 'amber',
+                'highlight' => 'amber',
+                'fatal' => false,
+                'affects_scoring' => false,
+                'expected_word' => $current['expected_word'] ?? $current['text'] ?? '',
+                'expected_index' => $currentExpectedIndex,
+                'previous_expected_index' => $previousExpectedIndex,
+                'recognised_index' => $currentIndex,
+                'previous_recognised_index' => $previousIndex,
+                'after_word_index' => $previousIndex,
+                'previous_word_index' => $previousIndex,
+                'next_word_index' => $currentIndex,
+                'start_time' => (float) $previousEnd,
+                'end_time' => (float) $currentStart,
+                'duration_seconds' => $gap,
+                'duration' => $gap,
+                'startTime' => (float) $previousEnd,
+                'endTime' => (float) $currentStart,
+                'durationSeconds' => $gap,
+                'lifecycle' => $isFinal ? 'final' : 'live',
+                'classification_confidence' => 0.82,
+            ];
         }
 
         return $events;
@@ -995,6 +1889,8 @@ class QuranAlignmentService
             'extra_words' => 0,
             'repetitions' => 0,
             'self_corrections' => 0,
+            'unresolved_mistakes' => 0,
+            'self_corrected_mistakes' => 0,
             'hesitations' => 0,
             'restarts' => 0,
             'out_of_range_words' => 0,
@@ -1018,21 +1914,33 @@ class QuranAlignmentService
             }
         }
 
+        $selfCorrectionGroups = [];
         foreach ($extraWords as $extra) {
             $type = (string) ($extra['type'] ?? '');
             match ($type) {
                 self::TYPE_REPETITION => $counts['repetitions']++,
-                self::TYPE_SELF_CORRECTION => $counts['self_corrections']++,
-                self::TYPE_RESTART => $counts['restarts']++,
+                self::TYPE_SELF_CORRECTION => $selfCorrectionGroups[(string) ($extra['self_correction_group_id'] ?? $extra['correction_group_id'] ?? ($extra['recognised_index'] ?? count($selfCorrectionGroups)))] = true,
+                self::TYPE_RESTART => null,
                 self::TYPE_OUT_OF_RANGE => $counts['out_of_range_words']++,
                 self::TYPE_UNASSESSED => $counts['unassessed_events']++,
                 default => $counts['extra_words']++,
             };
         }
+        $counts['self_corrections'] = count($selfCorrectionGroups);
+        $counts['self_corrected_mistakes'] = count($selfCorrectionGroups);
+        $counts['unresolved_mistakes'] = count(array_filter(
+            $statuses,
+            static fn (array $status): bool => in_array(($status['type'] ?? ''), [self::TYPE_SUBSTITUTION, self::TYPE_DELETION, self::TYPE_DIVERGENCE], true)
+        )) + count(array_filter(
+            $extraWords,
+            static fn (array $extra): bool => ($extra['type'] ?? '') === self::TYPE_INSERTION
+        ));
 
         foreach ($events as $event) {
             if (($event['type'] ?? '') === self::TYPE_HESITATION) {
                 $counts['hesitations']++;
+            } elseif (($event['type'] ?? '') === self::TYPE_RESTART) {
+                $counts['restarts']++;
             }
         }
 
@@ -1064,6 +1972,9 @@ class QuranAlignmentService
             'expected_index' => $targetIndex,
             'recognised_word' => $rawWord,
             'recognised_index' => isset($heardWord['recognised_index']) ? (int) $heardWord['recognised_index'] : null,
+            'token' => $heardWord['token'] ?? $heardWord['speechmatics_token'] ?? $heardWord['speechmaticsToken'] ?? $heardWord['id'] ?? null,
+            'speechmatics_token' => $heardWord['speechmatics_token'] ?? $heardWord['speechmaticsToken'] ?? $heardWord['token'] ?? $heardWord['id'] ?? null,
+            'provider' => $heardWord['provider'] ?? null,
             'speechmatics_confidence' => $confidence,
             'actual' => $actual,
             'raw_word' => $rawWord,
@@ -1185,7 +2096,11 @@ class QuranAlignmentService
                 $correct += RecitationScoringThresholds::UNCERTAIN_ACCURACY_WEIGHT;
             }
         }
-        $penalty = min(8, count($extraWords) * RecitationScoringThresholds::EXTRA_PENALTY);
+        $penalisedExtras = count(array_filter(
+            $extraWords,
+            static fn (array $word): bool => ($word['type'] ?? '') !== self::TYPE_UNASSESSED
+        ));
+        $penalty = min(8, $penalisedExtras * RecitationScoringThresholds::EXTRA_PENALTY);
 
         return (int) max(0, min(100, round((($correct - $penalty) / $total) * 100)));
     }
@@ -1228,6 +2143,10 @@ class QuranAlignmentService
             'uncertain' => 0,
         ];
         foreach ($statuses as $word) {
+            if (($word['type'] ?? '') === self::TYPE_DELETION) {
+                $counts['red']++;
+                continue;
+            }
             match ((string) ($word['status'] ?? '')) {
                 'correct' => $counts['green']++,
                 'minor_mistake' => $counts['amber']++,

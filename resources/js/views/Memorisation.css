@@ -64094,6 +64094,86 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   color: var(--ps-pro-ink) !important;
 }
 
+/* The result review is a dense utility surface; keep its type compact. */
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
+  font-size: clamp(1.55rem, 2.4vw, 2rem) !important;
+  line-height: 1.08 !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__subtitle {
+  font-size: 0.95rem !important;
+  line-height: 1.35 !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--step,
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--sub {
+  font-size: 0.74rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__step-num {
+  width: 1.55rem !important;
+  height: 1.55rem !important;
+  min-width: 1.55rem !important;
+  min-height: 1.55rem !important;
+  font-size: 0.78rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__beta-badge {
+  font-size: 0.68rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-title {
+  font-size: clamp(1.25rem, 2vw, 1.55rem) !important;
+  line-height: 1.12 !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-summary,
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review-summary {
+  font-size: clamp(0.9rem, 1.25vw, 1rem) !important;
+  line-height: 1.45 !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip {
+  font-size: 0.82rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip-value {
+  font-size: 0.9rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-block {
+  font-size: 0.92rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-label {
+  font-size: 0.86rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text {
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem) !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-details-toggle {
+  font-size: 0.82rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-metrics--details > li {
+  font-size: 0.82rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-metrics--details > li strong {
+  font-size: 0.9rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .workspace-recite-saved {
+  font-size: 0.78rem !important;
+}
+
+.post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
+  min-height: 2.7rem !important;
+  font-size: 0.95rem !important;
+}
+
 @media (max-width: 760px) {
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
@@ -64136,4 +64216,206 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+/* Compact UI pass — result review
+   Keep the result modal scannable without making the user wade through
+   decorative padding. The modal remains roomy enough for Arabic text and
+   keeps the two primary actions at a comfortable touch size. */
+.post-session-simple.workspace-recite-result {
+  --ps-compact-gap: 0.65rem;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__dialog,
+.post-session-simple.workspace-recite-result .post-session-simple__dialog--lg {
+  width: min(48rem, calc(100vw - 1.5rem)) !important;
+  max-width: min(48rem, calc(100vw - 1.5rem)) !important;
+  max-height: min(91dvh, 54rem) !important;
+  border-radius: 1.15rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__header {
+  align-items: center !important;
+  gap: 0.65rem !important;
+  padding: 0.85rem 1.1rem 0.75rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__check {
+  width: 2.1rem !important;
+  height: 2.1rem !important;
+  font-size: 0.9rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__header-copy {
+  gap: 0.08rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__title {
+  font-size: clamp(1.35rem, 2.8vw, 1.8rem) !important;
+  line-height: 1.08 !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__subtitle {
+  font-size: 0.78rem !important;
+  line-height: 1.3 !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__close {
+  top: 0.7rem !important;
+  inset-inline-end: 0.7rem !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__body {
+  gap: var(--ps-compact-gap) !important;
+  padding: 0.8rem 1.1rem 0.9rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-review {
+  gap: var(--ps-compact-gap) !important;
+  padding: 0.75rem 0.8rem !important;
+  border-radius: 0.9rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__section-kicker--step,
+.post-session-simple.workspace-recite-result .post-session-simple__section-kicker--sub {
+  font-size: 0.68rem !important;
+  letter-spacing: 0.055em !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__step-num {
+  width: 1.35rem !important;
+  height: 1.35rem !important;
+  min-width: 1.35rem !important;
+  min-height: 1.35rem !important;
+  font-size: 0.7rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__beta-badge {
+  padding: 0.14rem 0.45rem !important;
+  font-size: 0.6rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__outcome-title {
+  margin-top: 0.18rem !important;
+  font-size: clamp(1.15rem, 2vw, 1.45rem) !important;
+  line-height: 1.12 !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__outcome-summary,
+.post-session-simple.workspace-recite-result .post-session-simple__ai-review-summary {
+  margin-top: 0.22rem !important;
+  font-size: 0.88rem !important;
+  line-height: 1.38 !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__outcome-tools {
+  gap: 0.45rem !important;
+  margin-top: 0.55rem !important;
+  padding-top: 0.55rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__outcome-chip {
+  min-width: 0 !important;
+  font-size: 0.76rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__outcome-chip-value {
+  font-size: 0.84rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__support-block {
+  margin-top: 0.55rem !important;
+  padding-top: 0.55rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__why-block {
+  font-size: 0.84rem !important;
+  line-height: 1.4 !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__focus-ayah-list {
+  gap: 0.45rem !important;
+  margin-top: 0.45rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__focus-ayah-label {
+  margin-bottom: 0.18rem !important;
+  font-size: 0.75rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__quran-focus {
+  padding: 0.42rem 0.6rem !important;
+  border-radius: 0.75rem !important;
+  box-shadow: none !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__quran-focus-text {
+  font-size: clamp(1.08rem, 2vw, 1.35rem) !important;
+  line-height: 1.55 !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-details {
+  gap: 0.4rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__check-meter-legend {
+  gap: 0.35rem 0.7rem !important;
+  margin-top: 0.35rem !important;
+  font-size: 0.68rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-metrics--details {
+  gap: 0.4rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-metrics--details > li {
+  padding: 0.45rem 0.55rem !important;
+  border-radius: 0.62rem !important;
+  font-size: 0.75rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__ai-metrics--details > li strong {
+  font-size: 0.84rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__audio-review {
+  margin-top: 0.55rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__footer {
+  gap: 0.45rem !important;
+  padding: 0.7rem 1.1rem 0.8rem !important;
+}
+
+.post-session-simple.workspace-recite-result .workspace-recite-saved {
+  font-size: 0.72rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__actions {
+  gap: 0.5rem !important;
+}
+
+.post-session-simple.workspace-recite-result .post-session-simple__btn {
+  min-height: 2.75rem !important;
+  padding-block: 0.42rem !important;
+  border-radius: 0.72rem !important;
+  font-size: 0.86rem !important;
+}
+
+@media (max-width: 760px) {
+  .post-session-simple.workspace-recite-result .post-session-simple__dialog,
+  .post-session-simple.workspace-recite-result .post-session-simple__dialog--lg {
+    width: calc(100vw - 0.65rem) !important;
+    max-width: calc(100vw - 0.65rem) !important;
+    max-height: calc(100dvh - 0.65rem) !important;
+    border-radius: 1rem !important;
+  }
+
+  .post-session-simple.workspace-recite-result .post-session-simple__header,
+  .post-session-simple.workspace-recite-result .post-session-simple__body,
+  .post-session-simple.workspace-recite-result .post-session-simple__footer {
+    padding-inline: 0.85rem !important;
+  }
 }

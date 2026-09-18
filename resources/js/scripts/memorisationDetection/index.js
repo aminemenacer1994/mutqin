@@ -213,7 +213,7 @@ export function wordVisualClass(status = '') {
   const value = String(status || '').toLowerCase()
   if (value === 'correct' || value === 'green') return 'is-correct'
   if (value === 'minor_mistake' || value === 'partial' || value === 'amber') return 'is-minor'
-  if (value === 'wrong' || value === 'incorrect' || value === 'red') return 'is-wrong'
+  if (value === 'wrong' || value === 'incorrect' || value === 'red' || value === 'deletion') return 'is-wrong'
   if (value === 'missing' || value === 'omitted' || value === 'black') return 'is-missing'
   if (value === 'extra' || value === 'grey' || value === 'gray') return 'is-extra'
   return 'is-uncertain'

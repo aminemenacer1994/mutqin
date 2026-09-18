@@ -12,6 +12,10 @@ namespace App\Services\Memorisation;
  */
 final class RecitationScoringThresholds
 {
+    public const HESITATION_SECONDS = 1.35;
+
+    public const SELF_CORRECTION_SECONDS = 0.55;
+
     public const SOFT_SIMILARITY_CAP = 0.74;
 
     public const CORRECT_SIMILARITY = 0.84;
@@ -65,6 +69,8 @@ final class RecitationScoringThresholds
     public static function all(): array
     {
         return [
+            'hesitation_seconds' => self::HESITATION_SECONDS,
+            'self_correction_seconds' => self::SELF_CORRECTION_SECONDS,
             'soft_similarity_cap' => self::SOFT_SIMILARITY_CAP,
             'correct_similarity' => self::CORRECT_SIMILARITY,
             'partial_similarity' => self::PARTIAL_SIMILARITY,

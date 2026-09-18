@@ -405,10 +405,10 @@ export function normaliseWeakWordRecords(raw = [], fallback = {}) {
     } else if (
       reasonRaw.includes('omission')
       || reasonRaw.includes('miss')
-      || reasonRaw.includes('incorrect')
-      || reasonRaw.includes('red')
       || reasonRaw.includes('black')
     ) {
+      reason = 'omission'
+    } else if (reasonRaw.includes('incorrect') || reasonRaw.includes('red')) {
       reason = 'pronunciation'
     }
     out.push({
@@ -439,5 +439,6 @@ export function weakWordReasonLabel(reason, t = null) {
   if (msg && !String(msg).includes('reason.')) return msg
   if (reason === 'frequent_replay') return 'Frequent replay'
   if (reason === 'hesitation') return 'Hesitation'
+  if (reason === 'omission') return 'Omission'
   return 'Pronunciation'
 }

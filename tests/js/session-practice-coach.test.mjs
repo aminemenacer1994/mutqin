@@ -102,3 +102,10 @@ test('normaliseWeakWordRecords keeps stable indices', () => {
   assert.equal(words[0].wordIndex, 0)
   assert.equal(words[0].ayahNumber, 1)
 })
+
+test('normaliseWeakWordRecords preserves omissions as omissions', () => {
+  const words = normaliseWeakWordRecords([
+    { text: 'رَبِّ', wordIndex: 1, ayahNumber: 1, surahId: 1, status: 'missing' },
+  ])
+  assert.equal(words[0].reason, 'omission')
+})

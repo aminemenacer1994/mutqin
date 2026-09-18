@@ -7,6 +7,10 @@
  */
 
 export const RECITATION_THRESHOLDS = Object.freeze({
+  /** A timed gap at or above this is a hesitation, not a missing word. */
+  hesitationSeconds: 1.35,
+  /** A wrong token followed by the same expected word after this is self-correction. */
+  selfCorrectionSeconds: 0.55,
   /** Soft ASR letter conflation may lift near-misses toward amber, never alone to green. */
   softSimilarityCap: 0.74,
   /** Floor for painting a word green (final scoring). Single-letter slips stay amber. */
@@ -64,6 +68,28 @@ export const RECITATION_THRESHOLDS = Object.freeze({
   extraPenalty: 0.28,
   wrongOrderPenalty: 0.22,
 })
+
+/** Shared pause classification policy used by live and final alignment. */
+export const RECITATION_PAUSE_POLICY = Object.freeze({
+  hesitationSeconds: RECITATION_THRESHOLDS.hesitationSeconds,
+  selfCorrectionSeconds: RECITATION_THRESHOLDS.selfCorrectionSeconds,
+})
+
+export function resolveHesitationPauseSeconds(value) {
+  const configured = Number(value)
+  return Math.max(
+    0.5,
+    Number.isFinite(configured) ? configured : RECITATION_PAUSE_POLICY.hesitationSeconds,
+  )
+}
+
+export function resolveSelfCorrectionPauseSeconds(value) {
+  const configured = Number(value)
+  return Math.max(
+    0,
+    Number.isFinite(configured) ? configured : RECITATION_PAUSE_POLICY.selfCorrectionSeconds,
+  )
+}
 
 /**
  * @param {number|null|undefined} accuracy

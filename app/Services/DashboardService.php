@@ -1239,19 +1239,67 @@ class DashboardService
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
             ->where('status', UserSessionStatus::Completed->value)
-            ->where('ended_at', '>=', $from)
-            ->where('ended_at', '<=', $to)
+            ->where(function ($query) use ($from, $to) {
+                $query->whereBetween('ended_at', [$from, $to])
+                    ->orWhere(function ($inner) use ($from, $to) {
+                        $inner->whereNull('ended_at')
+                            ->whereBetween('last_activity_at', [$from, $to]);
+                    });
+            })
             ->selectRaw('DATE(ended_at) as day, COUNT(*) as aggregate')
             ->groupByRaw('DATE(ended_at)')
             ->pluck('aggregate', 'day');
+
+        // Analytics can be written a little after a session closes. Keep the
+        // chart useful in that window by deriving activity from completed
+        // session ranges, just like the weekly summary does below.
+        $completedSessions = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where('is_onboarding_example', false)
+            ->where('status', UserSessionStatus::Completed->value)
+            ->where(function ($query) use ($from, $to) {
+                $query->whereBetween('ended_at', [$from, $to])
+                    ->orWhere(function ($inner) use ($from, $to) {
+                        $inner->whereNull('ended_at')
+                            ->whereBetween('last_activity_at', [$from, $to]);
+                    });
+            })
+            ->get(['ended_at', 'last_activity_at', 'ayah_number', 'metadata']);
+
+        $sessionCountsByDay = [];
+        $sessionAyahsByDay = [];
+        foreach ($completedSessions as $session) {
+            $activityAt = $session->ended_at ?? $session->last_activity_at;
+            if (! $activityAt) {
+                continue;
+            }
+
+            $key = $activityAt->toDateString();
+            $sessionCountsByDay[$key] = ($sessionCountsByDay[$key] ?? 0) + 1;
+
+            $meta = is_array($session->metadata) ? $session->metadata : [];
+            $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
+            $start = (int) ($config['rangeStart'] ?? $config['range_start'] ?? $session->ayah_number ?? 0);
+            $end = (int) ($config['rangeEnd'] ?? $config['range_end'] ?? $start);
+            if ($start > 0) {
+                $sessionAyahsByDay[$key] = ($sessionAyahsByDay[$key] ?? 0)
+                    + max(1, $end >= $start ? ($end - $start + 1) : 1);
+            }
+        }
 
         $points = [];
         $cursor = $from->copy();
         while ($cursor->lte($to)) {
             $key = $cursor->toDateString();
             $analytic = $analytics->get($key);
-            $ayahs = (int) ($analytic?->ayahs_memorised ?? 0);
-            $sessions = (int) ($completedByDay[$key] ?? $analytic?->sessions_completed ?? 0);
+            $analyticAyahs = (int) ($analytic?->ayahs_memorised ?? 0)
+                + (int) ($analytic?->ayahs_reviewed ?? 0);
+            $ayahs = max($analyticAyahs, (int) ($sessionAyahsByDay[$key] ?? 0));
+            $sessions = max(
+                (int) ($completedByDay[$key] ?? 0),
+                (int) ($analytic?->sessions_completed ?? 0),
+                (int) ($sessionCountsByDay[$key] ?? 0),
+            );
             $points[] = [
                 'date' => $key,
                 'ayahs_memorised' => $ayahs,

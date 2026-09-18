@@ -217,6 +217,9 @@
                 :aria-label="t('dashboard.chart_aria')"
               />
             </div>
+            <p v-if="chartSummaryText" class="dash-chart__summary">
+              {{ chartSummaryText }}
+            </p>
 
             <div
               class="dash-analytics"
@@ -324,7 +327,7 @@
                 </ul>
               </article>
 
-              <p v-if="aiReciteHolding && !aiReciteHasInsights" class="dash-ai-results__holding">
+              <p v-if="aiReciteHolding" class="dash-ai-results__holding">
                 <i class="bi bi-check2-circle" aria-hidden="true"></i>
                 <span>
                   <strong>{{ t('dashboard.ai_recite.results_holding_title') }}</strong>
@@ -379,51 +382,7 @@
                   <p v-else class="dash-ai-results__muted">{{ t('dashboard.ai_recite.no_recent') }}</p>
                 </section>
 
-                <div v-if="aiReciteHasInsights" class="dash-ai-results__insights">
-                  <section v-if="aiReciteFocus.length" class="dash-ai-results__panel">
-                    <h3>{{ t('dashboard.ai_recite.results_focus') }}</h3>
-                    <ul class="dash-ai-results__focus">
-                      <li v-for="item in aiReciteFocus" :key="item.key" :class="`is-${item.tone}`">
-                        <div class="dash-ai-results__focus-top">
-                          <span>
-                            <strong>{{ item.surah_name }}</strong>
-                            <small>{{ item.ayah_label }}</small>
-                          </span>
-                          <strong>{{ item.value }}</strong>
-                        </div>
-                        <span class="dash-ai-results__bar" aria-hidden="true">
-                          <span :style="{ width: `${item.accuracy}%` }"></span>
-                        </span>
-                      </li>
-                    </ul>
-                  </section>
-                  <section v-if="aiReciteView.missed.length" class="dash-ai-results__panel dash-ai-results__panel--chips">
-                    <h3>{{ t('dashboard.ai_recite.missed_words') }}</h3>
-                    <ul class="dash-ai-results__words">
-                      <li v-for="item in aiReciteView.missed" :key="item.key">
-                        <button
-                          type="button"
-                          class="dash-ai-results__word"
-                          :class="{ 'is-loading': isMissedWordOpening(item) }"
-                          :aria-label="item.action_label"
-                          :title="missedWordTitle(item)"
-                          :disabled="isMissedWordOpening(item) || !missedWordAttempt(item)"
-                          @click="openMissedWordAttempt(item)"
-                        >
-                          <span lang="ar" dir="rtl" class="dash-ai-results__word-text">{{ item.text }}</span>
-                          <small class="dash-ai-results__word-count" :title="item.count_label">
-                            <span aria-hidden="true">{{ item.count }}</span>
-                            <span class="sr-only">{{ item.count_label }}</span>
-                          </small>
-                        </button>
-                      </li>
-                    </ul>
-                    <p class="dash-ai-results__chips-hint">
-                      {{ t('dashboard.ai_recite.missed_words_hint') }}
-                    </p>
-                  </section>
-                </div>
-              </div>
+            </div>
             </template>
           </div>
         </section>
@@ -721,11 +680,11 @@
       :ai-results-title="t('memorisation.recite_check_results')"
       :ai-results-subtitle="t('memorisation.saved_word_checks_for_this_session_range')"
       :words-title="t('dashboard.analysis_words_title')"
+      :recitation-label="t('dashboard.analysis_recitation_label')"
+      :correct-ayah-label="t('dashboard.analysis_correct_ayah_label')"
       :recommendations-title="t('dashboard.analysis_recommendations_title')"
-      :retention-title="t('dashboard.analysis_retention_title')"
       :audio-title="t('dashboard.ai_recite.audio')"
       :no-recommendations="t('dashboard.analysis_no_recommendations')"
-      :no-retention="t('dashboard.analysis_no_retention')"
       :audio-unavailable="t('dashboard.analysis_audio_unavailable')"
       :audio-expired="t('dashboard.ai_recite.audio_expired')"
       :play-label="t('dashboard.ai_recite.play')"
@@ -1300,14 +1259,8 @@ export default {
         .filter((card) => card && card.value && card.value !== '—')
         .filter((card) => !(this.aiReciteScore?.key === 'average' && card.key === 'average'))
     },
-    aiReciteFocus() {
-      return this.aiReciteView?.focus || []
-    },
     aiReciteHolding() {
       return !!this.aiReciteView?.holding
-    },
-    aiReciteHasInsights() {
-      return this.aiReciteFocus.length > 0 || (this.aiReciteView?.missed?.length || 0) > 0
     },
     aiRecitePreview() {
       return (this.aiReciteView?.recent || []).slice(0, 5)
@@ -1390,6 +1343,21 @@ export default {
       const first = points[0]?.date || 'none'
       const last = points[points.length - 1]?.date || 'none'
       return `chart-${this.chartDays}-${points.length}-${first}-${last}`
+    },
+    chartSummaryText() {
+      const chart = this.data?.chart || {}
+      const key = String(chart.summary_key || '').trim()
+      if (!key) return ''
+      const params = chart.summary_params && typeof chart.summary_params === 'object'
+        ? chart.summary_params
+        : {
+            days: this.chartDays,
+            ayahs: 0,
+            sessions: 0,
+            active_days: 0,
+          }
+      const translated = this.t(`dashboard.${key}`, params)
+      return translated === `dashboard.${key}` ? String(chart.summary || '') : translated
     },
     chartData() {
       const points = this.data?.chart?.points || []
@@ -1891,40 +1859,6 @@ export default {
       if (key === 'mixed') return this.t('dashboard.drawer_result_mixed')
       if (key === 'weak') return this.t('dashboard.drawer_result_weak')
       return key ? key.charAt(0).toUpperCase() + key.slice(1) : ''
-    },
-    missedWordAttempt(item) {
-      if (!item) return null
-      const attemptId = Number(item.last_attempt_id || 0)
-      const recent = this.aiReciteView?.recent || []
-      if (attemptId > 0) {
-        const byId = recent.find((row) => Number(row.id) === attemptId)
-        if (byId) return byId
-        return { id: attemptId, has_analysis: true }
-      }
-      const surah = Number(item.surah_number || 0)
-      const ayah = Number(item.ayah || 0)
-      if (surah <= 0 || ayah <= 0) return null
-      return recent.find((row) => {
-        const start = Number(row.ayah_start || 0)
-        const end = Number(row.ayah_end || start)
-        return Number(row.surah_number || 0) === surah
-          && ayah >= start
-          && ayah <= Math.max(start, end)
-      }) || null
-    },
-    missedWordTitle(item) {
-      if (this.missedWordAttempt(item)) return item?.action_label || ''
-      return this.t('dashboard.ai_recite.missed_word_no_attempt')
-    },
-    isMissedWordOpening(item) {
-      const attempt = this.missedWordAttempt(item)
-      if (!attempt) return false
-      return this.isAnalysisLoading(attempt, 'attempt')
-    },
-    openMissedWordAttempt(item) {
-      const attempt = this.missedWordAttempt(item)
-      if (!attempt) return
-      this.openAnalysisForItem(attempt, 'attempt')
     },
     async loadAiReciteResults() {
       const requestId = ++this.aiReciteRequestId

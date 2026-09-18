@@ -6,16 +6,21 @@ export function applyBackendAlignmentToResult(result = {}, assessment = {}) {
     const type = String(word?.type || '').toUpperCase()
     const status = (() => {
       if (type === 'MATCH' || type === 'REALIGNMENT') return 'correct'
-      if (type === 'DELETION') return 'incorrect'
+      if (type === 'DELETION') return 'omitted'
       if (type === 'SUBSTITUTION' || type === 'DIVERGENCE') return 'incorrect'
       if (type === 'UNASSESSED') return 'pending'
       return String(word?.status || 'pending')
     })()
     return {
       ...word,
+      attachedErrorMarkers: Array.isArray(word?.attachedErrorMarkers)
+        ? word.attachedErrorMarkers
+        : (Array.isArray(word?.attached_error_markers) ? word.attached_error_markers : []),
       text: word?.displayText || word?.expected_word || word?.text || '',
       status,
-      visualStatus: word?.highlight || word?.visual_status || (status === 'correct' ? 'green' : 'neutral'),
+      visualStatus: type === 'DELETION'
+        ? 'neutral'
+        : (word?.highlight || word?.visual_status || (status === 'correct' ? 'green' : 'neutral')),
       ayahNumber: word?.ayah_number ?? null,
       expectedIndex: word?.expected_index ?? word?.target_index ?? null,
     }

@@ -50,8 +50,8 @@ const omissionOnly = buildWorkspaceAiReciteResultView({
   result: {
     wordStatuses: [
       { text: 'وَاحِد', status: 'correct', ayahNumber: 1, ayahWordIndex: 0 },
-      { text: 'اثْنَان', status: 'omitted', ayahNumber: 1, ayahWordIndex: 1 },
-      { text: 'ثَلَاثَة', status: 'omitted', ayahNumber: 1, ayahWordIndex: 2 },
+      { text: 'اثْنَان', status: 'missing', type: 'DELETION', visualStatus: 'red', ayahNumber: 1, ayahWordIndex: 1 },
+      { text: 'ثَلَاثَة', status: 'missing', type: 'DELETION', visualStatus: 'red', ayahNumber: 1, ayahWordIndex: 2 },
     ],
     accuracyScore: 33,
   },
@@ -62,8 +62,13 @@ const omissionOnly = buildWorkspaceAiReciteResultView({
 
 assert.equal(
   omissionOnly.outcomeStatChips.some((chip) => chip.key === 'issues'),
-  false,
-  'omissions do not appear as incorrect words in the red issue pill',
+  true,
+  'confirmed omissions contribute to the review issue pill',
+)
+assert.deepEqual(
+  omissionOnly.focusAyahRows[0].parts.map((part) => part.tone),
+  ['ok', 'omitted', 'omitted'],
+  'confirmed deletions are neutral omissions in the post-session focus view',
 )
 
 const insufficient = buildWorkspaceAiReciteResultView({

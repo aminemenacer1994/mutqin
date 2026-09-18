@@ -58,6 +58,13 @@ return [
         'persistent_weak_attempts' => 2,
     ],
 
+    'ai_recite' => [
+        'pause_policy' => [
+            'hesitation_seconds' => max(0.5, (float) env('MUTQIN_HESITATION_PAUSE_SECONDS', 1.35)),
+            'self_correction_seconds' => max(0.0, (float) env('MUTQIN_SELF_CORRECTION_PAUSE_SECONDS', 0.55)),
+        ],
+    ],
+
     /*
      | User-owned durable files (feedback screenshots). Not AI temp audio.
      | Disk name must exist in config/filesystems.php (local | user_files | s3 | …).
