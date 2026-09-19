@@ -4,13 +4,7 @@
 
 import { toRaw } from 'vue'
 import { DEFAULT_RECITATION_CONFIDENCE_THRESHOLD } from './engine/recitation_analysis'
-import {
-  SPEECHMATICS_MAX_DELAY_SECONDS,
-  SPEECHMATICS_END_OF_UTTERANCE_SECONDS,
-  clampSpeechmaticsMaxDelaySeconds,
-  clampSpeechmaticsEndOfUtteranceSeconds,
-  resolveAdaptiveSpeechmaticsDelays,
-} from './memorisationDetection/speechmaticsDelays'
+import { buildSpeechmaticsRecognitionUpdate } from './memorisationDetection/speechmaticsDelays'
 import {
   MODE_STORAGE_KEYS,
   SESSION_STORAGE_KEYS,
@@ -88,8 +82,11 @@ export {
   SPEECHMATICS_AMD_FAST_END_OF_UTTERANCE_SECONDS,
   clampSpeechmaticsMaxDelaySeconds,
   clampSpeechmaticsEndOfUtteranceSeconds,
+  buildSpeechmaticsRecognitionUpdate,
   resolveAdaptiveSpeechmaticsDelays,
 } from './memorisationDetection/speechmaticsDelays'
+// Audio gate sits beside getQualityMetrics. PHP SpeechmaticsAudioPolicy is the save-time twin.
+export { evaluateSpeechmaticsAudioGate, SPEECHMATICS_AUDIO_GATE } from './audio/speechmaticsAudioGate.js'
 export const RECITATION_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.62
 /** AMD live paint: accept quieter partials from far mics without waiting for finals. */
 export const RECITATION_AMD_LIVE_INTERIM_CONFIDENCE_THRESHOLD = 0.48
@@ -660,6 +657,8 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
   let recognitionId = ''
   let connectionGeneration = 0
   let terminalError = false
+  let appliedMaxDelay = null
+  let appliedEndOfUtterance = null
 
   const clearHandshakeTimer = () => {
     if (handshakeTimer) window.clearTimeout(handshakeTimer)
@@ -775,6 +774,8 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
       acknowledgedSeqNo = 0
       recognitionId = ''
       terminalError = false
+      appliedMaxDelay = null
+      appliedEndOfUtterance = null
       const generation = ++connectionGeneration
 
       return await new Promise((resolve, reject) => {
@@ -792,6 +793,12 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
         socket.onopen = () => {
           if (generation !== connectionGeneration || intentionallyClosing) return
           try {
+            const delayUpdate = buildSpeechmaticsRecognitionUpdate({
+              maxDelaySeconds: options.maxDelaySeconds,
+              endOfUtteranceSeconds: options.endOfUtteranceSeconds,
+            })
+            appliedMaxDelay = delayUpdate.transcription_config.max_delay
+            appliedEndOfUtterance = delayUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger
             socket.send(JSON.stringify({
               message: 'StartRecognition',
               audio_format: {
@@ -801,17 +808,9 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
               },
               transcription_config: {
                 ...buildSpeechmaticsRecitationConfig(options),
-                max_delay: clampSpeechmaticsMaxDelaySeconds(
-                  options.maxDelaySeconds,
-                  SPEECHMATICS_MAX_DELAY_SECONDS,
-                ),
+                max_delay: appliedMaxDelay,
                 max_delay_mode: 'flexible',
-                conversation_config: {
-                  end_of_utterance_silence_trigger: clampSpeechmaticsEndOfUtteranceSeconds(
-                    options.endOfUtteranceSeconds,
-                    SPEECHMATICS_END_OF_UTTERANCE_SECONDS,
-                  ),
-                }
+                conversation_config: delayUpdate.transcription_config.conversation_config,
               }
             }))
           } catch (error) {
@@ -950,6 +949,29 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
     },
     isOpen() {
       return !!socket && socket.readyState === WebSocket.OPEN
+    },
+    /**
+     * Push a new pace tier into the open session. SetRecognitionConfig updates
+     * max_delay and end_of_utterance in place — do not reconnect mid-ayah.
+     */
+    updateRecognitionDelays(delays = {}) {
+      if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      const update = buildSpeechmaticsRecognitionUpdate(delays)
+      const maxDelay = update.transcription_config.max_delay
+      const endOfUtterance = update.transcription_config.conversation_config.end_of_utterance_silence_trigger
+      if (maxDelay === appliedMaxDelay && endOfUtterance === appliedEndOfUtterance) return false
+      try {
+        socket.send(JSON.stringify(update))
+        appliedMaxDelay = maxDelay
+        appliedEndOfUtterance = endOfUtterance
+        return true
+      } catch (error) {
+        emitError(createProviderError('Live transcription could not update session delays.', {
+          category: 'stream',
+          raw: error
+        }))
+        return false
+      }
     }
   }
 }

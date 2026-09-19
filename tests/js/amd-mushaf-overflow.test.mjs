@@ -76,4 +76,39 @@ const memorisationJs = readFileSync(join(root, 'resources/js/views/Memorisation.
   assert.match(fn, /amd-ayah-run__text/, 'inline ayah runs remain wrap-friendly')
 }
 
+// A tall modal must not stretch ayahs into rigid, full-height rows.
+{
+  assert.match(
+    amdCss,
+    /\.amd-modal--spacious \.amd-mushaf-page\.amd-mushaf-page--flow[\s\S]*?display:\s*block\s*!important[\s\S]*?height:\s*auto\s*!important/,
+    'mushaf flow keeps intrinsic height inside the full-height stage',
+  )
+  assert.match(
+    amdCss,
+    /\.amd-modal--spacious \.amd-mushaf-page--flow \.amd-ayah-run,[\s\S]*?\.amd-ayah-run__text[\s\S]*?display:\s*inline\s*!important/,
+    'ayah runs remain one natural wrapping text flow',
+  )
+}
+
+assert.match(
+  amdCss,
+  /html body \.amd-overlay \.amd-mushaf-ayah--premium word[\s\S]*?background:\s*transparent\s*!important/,
+  'ayah words stay inline text instead of rigid chips',
+)
+assert.match(
+  amdCss,
+  /madani-page-sheet--tajweed \.madani-basmala[\s\S]*?color:\s*#ffffff\s*!important/,
+  'dark tajweed Bismillah is forced white',
+)
+assert.match(
+  amdCss,
+  /\.workspace-recite-dock__button[\s\S]*?position:\s*relative\s*!important/,
+  'workspace recite button stays inside the mushaf workspace',
+)
+assert.match(
+  amdCss,
+  /\.workspace-shell-metadata[\s\S]*?flex-wrap:\s*nowrap\s*!important/,
+  'dashboard metadata stays on one scrolling row',
+)
+
 console.log('amd-mushaf-overflow.test.mjs: ok')

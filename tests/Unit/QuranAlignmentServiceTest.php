@@ -994,6 +994,148 @@ class QuranAlignmentServiceTest extends TestCase
         $this->assertSame('الحمد', $result['word_results'][0]['comparisonText']);
     }
 
+    public function test_real_ayah_opening_drift_realigns_without_a_substitution_cascade(): void
+    {
+        $fatiha = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين'],
+            ['الرحمن', 'الرحيم', 'رب', 'العالمين']
+        );
+        $this->assertSame(
+            ['DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'],
+            array_column($fatiha['word_results'], 'type')
+        );
+        $this->assertSame(['red', 'red', 'green', 'green'], array_column($fatiha['word_results'], 'visual_status'));
+        $this->assertSame(['red', 'red', 'green', 'green'], array_column($fatiha['word_results'], 'highlight'));
+        $this->assertSame([0, 1, 2, 3], array_column($fatiha['word_results'], 'recognised_index'));
+        $this->assertSame(2, $fatiha['scenario_counts']['divergence_events']);
+
+        $second = $this->alignWords(
+            ['رب', 'العالمين', 'الرحمن', 'الرحيم'],
+            ['الحمد', 'لله', 'الرحمن', 'الرحيم']
+        );
+        $this->assertSame(
+            ['DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'],
+            array_column($second['word_results'], 'type')
+        );
+        $this->assertSame('green', $second['word_results'][2]['visual_status']);
+        $this->assertSame(2, $second['word_results'][2]['recognised_index']);
+        $this->assertSame('green', $second['word_results'][3]['visual_status']);
+
+        $ikhlas = $this->alignWords(
+            ['قل', 'هو', 'الله', 'أحد'],
+            ['الله', 'الصمد', 'الله', 'أحد']
+        );
+        $this->assertSame(
+            ['DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'],
+            array_column($ikhlas['word_results'], 'type')
+        );
+        $this->assertSame([0, 1, 2, 3], array_column($ikhlas['word_results'], 'recognised_index'));
+        $this->assertSame(2, $ikhlas['scenario_counts']['divergence_events']);
+
+        $leftAndReturned = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين', 'الرحمن', 'الرحيم'],
+            ['الحمد', 'لله', 'مالك', 'الدين', 'الرحمن', 'الرحيم']
+        );
+        $this->assertSame(
+            ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'],
+            array_column($leftAndReturned['word_results'], 'type')
+        );
+        $this->assertSame('green', $leftAndReturned['word_results'][4]['highlight']);
+        $this->assertSame('green', $leftAndReturned['word_results'][5]['visual_status']);
+    }
+
+    public function test_real_ayah_drift_without_return_keeps_the_unread_tail_pending_until_final(): void
+    {
+        $expected = ['الحمد', 'لله', 'رب', 'العالمين', 'الرحمن', 'الرحيم'];
+        $heard = ['الحمد', 'لله', 'مالك', 'يوم', 'الدين'];
+        $live = $this->alignWords($expected, $heard, ['lifecycle' => 'live']);
+        $final = $this->alignWords($expected, $heard);
+
+        $this->assertSame(
+            ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'DIVERGENCE', 'UNASSESSED'],
+            array_column($live['word_results'], 'type')
+        );
+        $this->assertSame('neutral', $live['word_results'][5]['highlight']);
+        $this->assertNotSame('red', $live['word_results'][5]['visual_status']);
+        $this->assertSame(
+            ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'DIVERGENCE', 'DELETION'],
+            array_column($final['word_results'], 'type')
+        );
+        $this->assertSame('red', $final['word_results'][5]['visual_status']);
+        $this->assertNotContains('REALIGNMENT', array_column($final['word_results'], 'type'));
+    }
+
+    public function test_one_shared_allah_is_not_a_realignment_anchor(): void
+    {
+        $result = $this->alignWords(
+            ['قل', 'هو', 'الله', 'أحد'],
+            ['قل', 'هو', 'الصمد', 'الله']
+        );
+
+        $this->assertNotContains('REALIGNMENT', array_column($result['word_results'], 'type'));
+    }
+
+    public function test_low_confidence_ayah_drift_stays_unassessed(): void
+    {
+        $result = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين'],
+            [
+                ['word' => 'الحمد', 'confidence' => 0.95],
+                ['word' => 'لله', 'confidence' => 0.95],
+                ['word' => 'الرحمن', 'confidence' => 0.2],
+                ['word' => 'الرحيم', 'confidence' => 0.2],
+            ]
+        );
+
+        $this->assertNotContains('DIVERGENCE', array_column($result['word_results'], 'type'));
+        $this->assertContains('UNASSESSED', array_slice(array_column($result['word_results'], 'type'), 2));
+    }
+
+    public function test_real_ayah_self_correction_does_not_leave_deletions(): void
+    {
+        $result = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين'],
+            [
+                ['word' => 'الحمد', 'start' => 0.0, 'end' => 0.2],
+                ['word' => 'لله', 'start' => 0.3, 'end' => 0.5],
+                ['word' => 'الرحمن', 'start' => 0.6, 'end' => 0.8],
+                ['word' => 'الرحيم', 'start' => 0.9, 'end' => 1.1],
+                ['word' => 'رب', 'start' => 2.0, 'end' => 2.2],
+                ['word' => 'العالمين', 'start' => 2.3, 'end' => 2.5],
+            ]
+        );
+
+        $this->assertContains('SELF_CORRECTION', array_column($result['events'], 'type'));
+        $this->assertNotContains('DELETION', array_column($result['word_results'], 'type'));
+        $this->assertSame(0, $result['scenario_counts']['unresolved_mistakes']);
+        $this->assertSame(
+            ['MATCH', 'MATCH', 'MATCH', 'MATCH'],
+            array_column($result['word_results'], 'type')
+        );
+    }
+
+    public function test_accent_labels_do_not_turn_letter_swaps_into_matches(): void
+    {
+        $result = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العَٰلَمِينَ', 'الصلاة', 'الصراط', 'ملك'],
+            [
+                ['word' => 'الحمد', 'voice_profile' => 'egyptian', 'accent_hint' => 'maghrebi', 'loudness' => 0.9],
+                ['word' => 'لله', 'voice_profile' => 'egyptian', 'accent_hint' => 'maghrebi', 'loudness' => 0.9],
+                ['word' => 'رب', 'voice_profile' => 'egyptian'],
+                ['word' => 'العلمين', 'accent_hint' => 'egyptian'],
+                ['word' => 'الصلاه', 'voice_profile' => 'maghrebi'],
+                ['word' => 'السراط', 'voice_profile' => 'egyptian', 'accent_hint' => 'egyptian'],
+                ['word' => 'مالك', 'loudness' => 0.2],
+            ]
+        );
+
+        $this->assertSame(
+            ['MATCH', 'MATCH', 'MATCH', 'MATCH', 'MATCH', 'SUBSTITUTION', 'MATCH'],
+            array_column($result['word_results'], 'type')
+        );
+        $this->assertNotSame('green', $result['word_results'][5]['visual_status']);
+    }
+
     /**
      * @param  list<string>  $expected
      * @param  list<string|array<string,mixed>>  $heard

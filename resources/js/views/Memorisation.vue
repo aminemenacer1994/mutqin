@@ -509,7 +509,7 @@
                 :class="{ 'has-paired-actions': showHeaderEndSessionAction }"
               >
                 <div
-                  v-if="showWorkspaceAskMutqinCta || showWorkspaceAiReciteCta"
+                  v-if="showWorkspaceAskMutqinCta"
                   class="workspace-ai-cta-pair"
                 >
                   <button
@@ -524,19 +524,6 @@
                   >
                     <i class="bi bi-mic" aria-hidden="true"></i>
                     <span>{{ t('memorisation.askMutqin.ctaShort') }}</span>
-                  </button>
-                  <button
-                    v-if="showWorkspaceAiReciteCta"
-                    type="button"
-                    class="action-btn workspace-ai-recite-cta top-card-action-trigger"
-                    :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                    data-testid="workspace-ai-recite"
-                    :title="t('dashboard.ai_recite.cta_label')"
-                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                    @click="openWorkspaceAiRecite"
-                  >
-                    <i class="bi bi-soundwave" aria-hidden="true"></i>
-                    <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
                   </button>
                 </div>
                 <div
@@ -754,6 +741,7 @@
               v-for="item in mobileProgressPills"
               :key="item.key"
               class="badge rounded-pill workspace-shell-progress-pill"
+              :data-pill="item.key"
               :title="`${item.label}: ${item.value}`"
               :aria-label="`${item.label}: ${item.value}`"
             >{{ item.value }}</span>
@@ -847,7 +835,7 @@
                     class="workspace-shell-idle-actions__start workspace-shell-idle-actions__start--inline top-card-session-cluster"
                   >
                     <div
-                      v-if="showWorkspaceAskMutqinCta || showWorkspaceAiReciteCta"
+                      v-if="showWorkspaceAskMutqinCta"
                       class="workspace-ai-cta-pair"
                     >
                       <button
@@ -862,19 +850,6 @@
                       >
                         <i class="bi bi-mic" aria-hidden="true"></i>
                         <span>{{ t('memorisation.askMutqin.ctaShort') }}</span>
-                      </button>
-                      <button
-                        v-if="showWorkspaceAiReciteCta"
-                        type="button"
-                        class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
-                        :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                        data-testid="workspace-ai-recite-idle"
-                        :title="t('dashboard.ai_recite.cta_label')"
-                        :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                        @click="openWorkspaceAiRecite"
-                      >
-                        <i class="bi bi-soundwave" aria-hidden="true"></i>
-                        <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
                       </button>
                     </div>
                     <div
@@ -963,7 +938,7 @@
                   class="workspace-shell-idle-aside-cta top-card-session-cluster"
                 >
                   <div
-                    v-if="showWorkspaceAskMutqinCta || showWorkspaceAiReciteCta"
+                    v-if="showWorkspaceAskMutqinCta"
                     class="workspace-ai-cta-pair"
                   >
                     <button
@@ -978,19 +953,6 @@
                     >
                       <i class="bi bi-mic" aria-hidden="true"></i>
                       <span>{{ t('memorisation.askMutqin.ctaShort') }}</span>
-                    </button>
-                    <button
-                      v-if="showWorkspaceAiReciteCta"
-                      type="button"
-                      class="action-btn workspace-ai-recite-cta session-idle-action top-card-action-trigger"
-                      :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                      data-testid="workspace-ai-recite-aside"
-                      :title="t('dashboard.ai_recite.cta_label')"
-                      :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                      @click="openWorkspaceAiRecite"
-                    >
-                      <i class="bi bi-soundwave" aria-hidden="true"></i>
-                      <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
                     </button>
                   </div>
                   <div
@@ -1038,6 +1000,7 @@
                 v-for="item in topCardMetadataPills"
                 :key="item.key"
                 class="badge rounded-pill workspace-shell-metadata-pill is-readonly"
+                :data-pill="item.key"
                 :data-session-chapter="item.key === 'surah' || item.key === 'range' ? (Number(chapterId || currentConfig?.chapterId || 0) || null) : null"
                 :data-ayah-range="item.key === 'range' ? `${Number(rangeStart || currentConfig?.rangeStart || 0) || ''}-${Number(rangeEnd || currentConfig?.rangeEnd || 0) || ''}` : null"
                 aria-disabled="true"
@@ -1126,7 +1089,28 @@
                 </div>
               </div>
             </section>
-            <div v-else-if="shouldShowReadingWorkspace && readingViewMode === 'mushaf'" class="mushaf-workspace">
+            <div
+              v-else-if="shouldShowReadingWorkspace"
+              class="workspace-reading-surface"
+              :class="`workspace-reading-surface--${readingViewMode}`"
+            >
+            <Teleport to="body">
+              <div v-if="showWorkspaceAiReciteCta" class="workspace-recite-dock" aria-live="polite">
+                <button
+                  type="button"
+                  class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
+                  :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                  data-testid="workspace-ai-recite"
+                  :title="t('dashboard.ai_recite.cta_label')"
+                  :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                  @click="openWorkspaceAiRecite"
+                >
+                  <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                  <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                </button>
+              </div>
+            </Teleport>
+            <div v-if="readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="container mushaf-workspace__fluid">
               <section
                 class="mushaf-shell"
@@ -1278,7 +1262,7 @@
               </section>
               </div>
             </div>
-            <div v-else-if="shouldShowReadingWorkspace" class="verses-grid">
+            <div v-else class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
                 active: isVerseVisuallyActive(verse.key),
                 'serious-training': false,
@@ -1373,6 +1357,8 @@
                   <p class="verse-aid-source" dir="ltr" lang="en">— {{ translationReference }}</p>
                 </div>
               </div>
+
+            </div>
             </div>
           </main>
         </div>
@@ -4443,7 +4429,6 @@
       :range-label="amdRangeLabel"
       :beta-badge="amdLabels.betaBadge"
       :disclaimer="amdLabels.disclaimer"
-      :ready-copy="amdReadyCopy"
       :mic-status="amdLearnerMicStatus"
       :mic-status-label="amdLearnerMicStatusLabel"
       :mic-guidance="amdMicGuidance"

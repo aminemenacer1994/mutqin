@@ -16,6 +16,10 @@ import {
   wordsToTranscript,
 } from '../engine/recitation_analysis.js'
 import { resolveAdaptiveSpeechmaticsDelays } from '../memorisationDetection/speechmaticsDelays'
+import {
+  buildRecitationAdaptivePaceContext,
+  createRecitationPaceObserver,
+} from '../memorisationDetection/recitationTimingBuffer'
 import { buildCsrfHeaders, ensureCsrfCookie, withCsrfRetry } from '../http/csrf.js'
 
 async function fetchTranscriptionAccessToken() {
@@ -63,6 +67,7 @@ export function createDashboardAiReciteRecorder(options = {}) {
   let browserFallbackDisabled = false
   let endOfTranscript = false
   let qualityMetrics = null
+  let paceObserver = createRecitationPaceObserver()
 
   const emit = (patch) => {
     onState({
@@ -108,6 +113,20 @@ export function createDashboardAiReciteRecorder(options = {}) {
     browserRecognition = null
   }
 
+  const pushPaceDelays = () => {
+    if (!provider?.updateRecognitionDelays || words.length < 2) return
+    const pace = buildRecitationAdaptivePaceContext({
+      observer: paceObserver,
+      recognitionWords: words,
+    })
+    paceObserver = pace.observer
+    provider.updateRecognitionDelays(resolveAdaptiveSpeechmaticsDelays({
+      live: true,
+      paceFactor: pace.paceFactor,
+      tajweedHeavy: pace.tajweedHeavy,
+    }))
+  }
+
   const applyTranscriptPayload = (payload = {}) => {
     if (payload?.type === 'end-of-transcript') {
       endOfTranscript = true
@@ -118,6 +137,7 @@ export function createDashboardAiReciteRecorder(options = {}) {
     words = Array.isArray(recognitionState.committedWords)
       ? recognitionState.committedWords.slice()
       : []
+    pushPaceDelays()
   }
 
   const startBrowserFallback = () => {
@@ -214,6 +234,7 @@ export function createDashboardAiReciteRecorder(options = {}) {
       endOfTranscript = false
       stopping = false
       startedAt = Date.now()
+      paceObserver = createRecitationPaceObserver()
 
       try {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -250,7 +271,7 @@ export function createDashboardAiReciteRecorder(options = {}) {
       } catch {
         bridge = null
       }
-      const delays = resolveAdaptiveSpeechmaticsDelays({ amdLive: false })
+      const delays = resolveAdaptiveSpeechmaticsDelays({ live: true, paceFactor: 1 })
       try {
         provider = createSpeechmaticsRealtimeProvider({
           getAccessToken: () => fetchTranscriptionAccessToken(),

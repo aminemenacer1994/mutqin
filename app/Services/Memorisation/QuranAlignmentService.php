@@ -366,6 +366,9 @@ class QuranAlignmentService
                 continue;
             }
             $confidence = is_numeric($entry['confidence'] ?? null) ? (float) $entry['confidence'] : 1.0;
+            // Closed accent policy: voice_profile, accent_hint, loudness, and timbre
+            // are never copied. Orthographic ASR variants stay in QuranTextNormalizer.
+            // Dialect letter swaps (ص/س, ق/ك) stay substitutions.
             // Keep low-confidence tokens in alignment so classifyMatch can mark them
             // uncertain instead of turning dropped ASR into learner "missing" mistakes.
             if (! $this->confidencePolicy->isRecognitionUsable($confidence)) {
@@ -933,6 +936,33 @@ class QuranAlignmentService
                 }
                 $operations = $rebased;
                 $count = count($operations);
+            }
+        }
+
+        // A wrong-ayah opening has no earlier anchor. Two confident
+        // substitutions before the first two-word return are divergence.
+        // One shared word is not enough to resynchronise.
+        if ($anchorRuns !== [] && (int) $anchorRuns[0]['start'] >= 2) {
+            $recovery = $anchorRuns[0];
+            $openingDivergence = 0;
+            for ($j = 0; $j < $recovery['start']; $j++) {
+                if (($operations[$j]['op'] ?? '') !== 'match') {
+                    continue;
+                }
+                $recognisedIndex = (int) ($operations[$j]['recognised_index'] ?? -1);
+                if (($operations[$j]['type'] ?? '') === self::TYPE_SUBSTITUTION
+                    && (float) ($heard[$recognisedIndex]['confidence'] ?? 1) >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+                    $openingDivergence++;
+                }
+            }
+            if ($openingDivergence >= 2) {
+                for ($j = 0; $j < $recovery['start']; $j++) {
+                    if (($operations[$j]['op'] ?? '') === 'match'
+                        && ($operations[$j]['type'] ?? '') === self::TYPE_SUBSTITUTION) {
+                        $operations[$j]['type'] = self::TYPE_DIVERGENCE;
+                    }
+                }
+                $operations[$recovery['start']]['type'] = self::TYPE_REALIGNMENT;
             }
         }
 

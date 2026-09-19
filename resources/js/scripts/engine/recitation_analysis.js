@@ -15,6 +15,7 @@ import {
   resolveSelfCorrectionPauseSeconds,
   recitationAccuracyBand,
 } from './recitationThresholds.js'
+import { evaluateSpeechmaticsAudioGate } from '../audio/speechmaticsAudioGate.js'
 
 export {
   DEFAULT_RECITATION_CONFIDENCE_THRESHOLD,
@@ -630,7 +631,22 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   }
 }
 
-export function selectPrimaryReciterWords(recognitionWords = [], targetText = '') {
+export function selectPrimaryReciterWords(recognitionWords = [], targetText = '', options = {}) {
+  const metrics = options?.audioQualityMetrics || options?.audio_quality_metrics || null
+  const explicit = options?.audioQualityStatus || options?.audio_quality_status || ''
+  if (metrics || explicit) {
+    const gate = evaluateSpeechmaticsAudioGate(metrics, explicit)
+    if (!gate.reliable) {
+      return {
+        reliable: false,
+        status: gate.status,
+        reason: gate.reason,
+        primarySpeaker: null,
+        speakerCount: 0,
+        words: [],
+      }
+    }
+  }
   const words = Array.isArray(recognitionWords) ? recognitionWords : []
   const labelled = words.filter(word => String(word?.speaker || '').trim() && String(word?.speaker).toUpperCase() !== 'UU')
   const speakers = new Map()
@@ -1207,6 +1223,31 @@ function classifyQuranAwareOperations({
     }
   }
 
+  // A similar ayah can open the attempt, so the first reliable run is the
+  // return rather than a prefix. Two confident substitutions before that
+  // two-word anchor are divergence. One shared word is not an anchor.
+  if (anchorRuns.length && anchorRuns[0].start >= 2) {
+    const recovery = anchorRuns[0]
+    let openingDivergence = 0
+    for (let index = 0; index < recovery.start; index += 1) {
+      const operation = operations[index]
+      const heard = heardWords[Number(operation?.recognisedIndex)] || {}
+      if (
+        operation?.op === 'match'
+        && operation.type === 'SUBSTITUTION'
+        && !isLowConfidenceRecognitionWord(heard)
+      ) openingDivergence += 1
+    }
+    if (openingDivergence >= 2) {
+      for (let index = 0; index < recovery.start; index += 1) {
+        if (operations[index]?.op === 'match' && operations[index].type === 'SUBSTITUTION') {
+          operations[index].type = 'DIVERGENCE'
+        }
+      }
+      operations[recovery.start].type = 'REALIGNMENT'
+    }
+  }
+
   // One matching word inside a similar phrase is not enough evidence to
   // resynchronise. Require a two-word expected/recognised recovery anchor.
   for (let runIndex = 1; runIndex < anchorRuns.length; runIndex += 1) {
@@ -1276,10 +1317,15 @@ function classifyQuranAwareOperations({
     } else if (operation.type === 'DIVERGENCE') {
       status.status = 'incorrect'
       status.visualStatus = 'red'
+      status.highlight = 'red'
     } else if (operation.type === 'REALIGNMENT') {
       status.status = 'correct'
       status.visualStatus = 'green'
+      status.highlight = 'green'
       status.realigned = true
+    } else if (operation.type === 'MATCH') {
+      status.visualStatus = 'green'
+      status.highlight = 'green'
     }
   }
 
@@ -2023,24 +2069,42 @@ function suppressDuplicateRecognitionWords(words = []) {
   return stable
 }
 
+/** Scoring ignores timbre, accent labels, and loudness. Orthography stays with the normalizer. */
+const CLOSED_ACCENT_IGNORED_FIELDS = Object.freeze([
+  'voice_profile',
+  'accent_hint',
+  'loudness',
+  'timbre',
+  'volume',
+  'speaker_timbre',
+])
+
+function stripClosedAccentSignals(entry) {
+  if (!entry || typeof entry !== 'object') return entry
+  const copy = { ...entry }
+  for (const field of CLOSED_ACCENT_IGNORED_FIELDS) delete copy[field]
+  return copy
+}
+
 function normaliseCommittedRecognitionWords(words = [], options = {}) {
   const normalized = (Array.isArray(words) ? words : [])
     .flatMap((entry, index) => {
-      const raw = typeof entry === 'string'
-        ? entry
-        : (entry?.word || entry?.text || entry?.display || '')
+      const lexical = stripClosedAccentSignals(entry)
+      const raw = typeof lexical === 'string'
+        ? lexical
+        : (lexical?.word || lexical?.text || lexical?.display || '')
       const tokens = tokenizeRecitationWords(raw)
       if (!tokens.length) return []
       return tokens.map((word, tokenIndex) => ({
-        ...(entry && typeof entry === 'object' ? entry : {}),
+        ...(lexical && typeof lexical === 'object' ? lexical : {}),
         word,
-        display: typeof entry === 'string'
+        display: typeof lexical === 'string'
           ? word
-          : (entry?.display || entry?.text || raw || word),
-        rawWord: typeof entry === 'string'
+          : (lexical?.display || lexical?.text || raw || word),
+        rawWord: typeof lexical === 'string'
           ? word
-          : (entry?.rawWord || entry?.raw_word || entry?.display || raw || word),
-        confidence: Number.isFinite(Number(entry?.confidence)) ? Number(entry.confidence) : 1,
+          : (lexical?.rawWord || lexical?.raw_word || lexical?.display || raw || word),
+        confidence: Number.isFinite(Number(lexical?.confidence)) ? Number(lexical.confidence) : 1,
         // A phrase-level fallback has no word-level timing. Keep timing on the
         // first token only instead of assigning the full phrase duration to all.
         ...(tokenIndex > 0 ? {
@@ -2049,8 +2113,8 @@ function normaliseCommittedRecognitionWords(words = [], options = {}) {
           startTime: null,
           endTime: null,
         } : {}),
-        commitIndex: Number.isFinite(Number(entry?.commitIndex))
-          ? Number(entry.commitIndex) + tokenIndex
+        commitIndex: Number.isFinite(Number(lexical?.commitIndex))
+          ? Number(lexical.commitIndex) + tokenIndex
           : index + tokenIndex
       }))
     })

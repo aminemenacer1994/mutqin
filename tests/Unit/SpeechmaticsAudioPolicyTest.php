@@ -85,6 +85,15 @@ class SpeechmaticsAudioPolicyTest extends TestCase
         $this->assertTrue($result['reliable']);
     }
 
+    public function test_gate_constants_match_the_client_audio_gate(): void
+    {
+        $this->assertSame(4.0, SpeechmaticsAudioPolicy::MIN_SNR_DB);
+        $this->assertSame(0.008, SpeechmaticsAudioPolicy::MIN_RMS);
+        $this->assertSame(0.025, SpeechmaticsAudioPolicy::MIN_PEAK);
+        $this->assertSame(0.08, SpeechmaticsAudioPolicy::MAX_CLIPPING_RATIO);
+        $this->assertSame(0.08, SpeechmaticsAudioPolicy::MIN_SPEECH_RATIO);
+    }
+
     private function payload(array $words, array $metrics = []): array
     {
         return ['target_text' => 'الحمد لله رب العالمين', 'recognition_words' => $words, 'audio_quality_metrics' => $metrics];

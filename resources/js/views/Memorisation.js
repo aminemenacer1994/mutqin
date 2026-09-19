@@ -566,6 +566,7 @@ import {
   createRealtimeTranscriptionMeta,
   createTranscriptionAudioBridge,
   createSpeechmaticsRealtimeProvider,
+  evaluateSpeechmaticsAudioGate,
 } from '../scripts/memorisationRuntime'
 
 function activeSessionSnapshotStorageKey(userId = null) {
@@ -1234,6 +1235,10 @@ export default {
       selfCheckSavedAttemptsFilter: 'all',
       selfCheckRatingsByAyahKey: {},
       themeObserver: null,
+      navbarResizeObserver: null,
+      syncNavbarOffset: null,
+      syncWorkspaceViewportMetrics: null,
+      scheduleWorkspaceViewportMetrics: null,
 
       // Reading options — hydrate font from storage before first paint to avoid FOUC.
       script: 'uthmani',
@@ -3039,6 +3044,7 @@ export default {
     showWorkspaceAiReciteCta() {
       if (!this.isLoggedIn) return false
       if (!this.aiTestModalsEnabled) return false
+      if (this.showCountdownOverlay) return false
       if (this.isPostSessionChoiceVisible) return false
       if (this.isOnboardingExperienceActive) return false
       if (this.amdOpen) return false
@@ -7762,10 +7768,6 @@ export default {
       if (!this.amdAssessment && !this.recitationCheckResult) return ''
       return this.buildAmdMushafHtml({ live: false, result: this.recitationCheckResult || this.amdAssessment })
     },
-    amdReadyCopy() {
-      return this.t?.('memorisation.amd.readyCopy')
-        || 'Recite this range from memory. Mutqin listens and colours words as it follows you.'
-    },
     amdLabels() {
       return {
         close: this.t?.('common.close') || 'Close',
@@ -10031,12 +10033,53 @@ export default {
       this.watchActiveVerse()
       this.$nextTick(() => {
         const navbar = document.querySelector('.navbar, .app-navbar')
-        if (navbar) {
-          const navbarHeight = navbar.offsetHeight
+        if (!navbar) return
+
+        // The navbar changes height across breakpoints and when its safe-area
+        // padding or mobile menu state changes. Keep the shared sticky layout
+        // offset in sync instead of baking a separate top value into each view.
+        this.syncNavbarOffset = () => {
+          const navbarHeight = Math.ceil(navbar.getBoundingClientRect().height || navbar.offsetHeight || 0)
+          if (!navbarHeight) return
           document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`)
           document.documentElement.style.setProperty('--navbar-offset', `${navbarHeight}px`)
         }
+        this.syncNavbarOffset()
+
+        if (typeof ResizeObserver === 'function') {
+          this.navbarResizeObserver = new ResizeObserver(this.syncNavbarOffset)
+          this.navbarResizeObserver.observe(navbar)
+        }
       })
+      this.syncWorkspaceViewportMetrics = () => {
+        const root = this.$refs?.workspaceMain
+        const surface = root?.querySelector?.('.workspace-reading-surface')
+        const readingSurface = surface?.querySelector?.('.mushaf-shell, .verses-grid')
+        if (!surface || !readingSurface) return
+
+        const viewportHeight = Math.max(
+          0,
+          Math.floor(window.visualViewport?.height || window.innerHeight || 0)
+        )
+        if (!viewportHeight) return
+
+        const surfaceTop = Math.max(0, Math.floor(readingSurface.getBoundingClientRect().top))
+        const minHeight = Math.max(320, viewportHeight - surfaceTop)
+        const nextValue = `${minHeight}px`
+        if (surface.style.getPropertyValue('--workspace-reading-min-height') !== nextValue) {
+          surface.style.setProperty('--workspace-reading-min-height', nextValue)
+        }
+      }
+      this.scheduleWorkspaceViewportMetrics = () => {
+        if (this._workspaceViewportFrame) window.cancelAnimationFrame(this._workspaceViewportFrame)
+        this._workspaceViewportFrame = window.requestAnimationFrame(() => {
+          this._workspaceViewportFrame = null
+          this.syncWorkspaceViewportMetrics?.()
+        })
+      }
+      window.addEventListener('resize', this.scheduleWorkspaceViewportMetrics, { passive: true })
+      window.visualViewport?.addEventListener?.('resize', this.scheduleWorkspaceViewportMetrics, { passive: true })
+      this.$nextTick(() => this.scheduleWorkspaceViewportMetrics?.())
       // Re-apply highlights when anchor/tajweed toggles affect word layout
       this.$watch('tajweedEnabled', () => {
         this.clearDisplayArabicCache?.()
@@ -10295,6 +10338,10 @@ export default {
     this.syncAppFullscreenClass()
   },
 
+  updated() {
+    this.scheduleWorkspaceViewportMetrics?.()
+  },
+
   beforeUnmount() {
     this.unbindStaleScrollLockRelease()
     if (this._madaniFitRaf) window.cancelAnimationFrame(this._madaniFitRaf)
@@ -10320,6 +10367,15 @@ export default {
     window.removeEventListener('mutqin:locale-change', this.handleLocaleChange)
     window.removeEventListener('storage', this.handleThemeStorageSync)
     if (this.themeObserver) this.themeObserver.disconnect()
+    if (this.navbarResizeObserver) this.navbarResizeObserver.disconnect()
+    this.navbarResizeObserver = null
+    this.syncNavbarOffset = null
+    window.removeEventListener('resize', this.scheduleWorkspaceViewportMetrics)
+    window.visualViewport?.removeEventListener?.('resize', this.scheduleWorkspaceViewportMetrics)
+    if (this._workspaceViewportFrame) window.cancelAnimationFrame(this._workspaceViewportFrame)
+    this._workspaceViewportFrame = null
+    this.syncWorkspaceViewportMetrics = null
+    this.scheduleWorkspaceViewportMetrics = null
     window.removeEventListener('beforeunload', this.persistAllState)
     window.removeEventListener('pagehide', this.persistAllState)
     document.removeEventListener('visibilitychange', this.handleVisibilityAutosave)
@@ -10433,6 +10489,12 @@ export default {
       this.syncMushafColorsToAppTheme(newVal)
       this.$nextTick(() => this.refreshLiveWordPresentationForTheme())
     },
+    showWorkspaceAiReciteCta(visible) {
+      if (visible) this.$nextTick(() => this.scheduleWorkspaceViewportMetrics?.())
+    },
+    mainCardCollapsed() {
+      this.$nextTick(() => this.scheduleWorkspaceViewportMetrics?.())
+    },
     aiRecallModeStatus: {
       handler(status) {
         this.syncAiRecallModeAnnouncement(status)
@@ -10472,7 +10534,10 @@ export default {
         // Mobile: single deferred sync instead of multi-timeout DOM walks
         this.$nextTick(() => this.schedulePracticeFocusWordDomSync())
       }
-      this.$nextTick(() => this.scheduleMadaniPageFit())
+      this.$nextTick(() => {
+        this.scheduleMadaniPageFit()
+        this.scheduleWorkspaceViewportMetrics?.()
+      })
     },
     mushafSessionSignature(newVal, oldVal) {
       if (!newVal || newVal === oldVal) return
@@ -27655,6 +27720,9 @@ export default {
       // Mushaf DOM on every ASR event. The single assessment on Stop owns all
       // colours and progress, which keeps recording responsive and stable.
       if (this.amdOpen && kind === 'recitation') return
+      const liveMetrics = this.getTranscriptionAudioBridge(kind)?.getQualityMetrics?.() || null
+      const liveAudioGate = evaluateSpeechmaticsAudioGate(liveMetrics)
+      if (!liveAudioGate.reliable) return
       const targetVerses = kind === 'memorisation'
         ? this.aiMemorisationCheckerTargets
         : (this.recitationCheckPendingTargets?.length ? this.recitationCheckPendingTargets : this.getRecitationCheckTargetVerses())
@@ -28037,6 +28105,14 @@ export default {
       this._amdAdaptiveDripMs = paceContext.livePace?.dripMs ?? this._amdAdaptiveDripMs
       return paceContext
     },
+    syncSpeechmaticsPaceDelays(kind = 'recitation') {
+      if (kind !== 'recitation') return false
+      const provider = this.getTranscriptionProvider(kind)
+      if (!provider?.updateRecognitionDelays) return false
+      const committedWords = this.getCommittedRecognitionWords(kind) || []
+      if (committedWords.length < 2) return false
+      return provider.updateRecognitionDelays(this.resolveAmdSpeechmaticsDelays())
+    },
     resolveAmdSpeechmaticsDelays() {
       const committedWords = this.getCommittedRecognitionWords('recitation') || []
       const liveWords = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
@@ -28339,6 +28415,7 @@ export default {
           : RECITATION_CONFIDENCE_THRESHOLD
       })
       this.setRecognitionPipelineState(kind, nextState)
+      if (kind === 'recitation') this.syncSpeechmaticsPaceDelays(kind)
       this.scheduleLiveWordsUpdate(kind)
       return nextState
     },
@@ -31970,8 +32047,56 @@ export default {
     },
     assessRecitationRecognitionWords(recognitionWords = [], targetVerses = this.getRecitationCheckTargetVerses(), options = {}) {
       const targetText = this.getRecitationTargetText(targetVerses)
-      const speakerDecision = selectPrimaryReciterWords(recognitionWords, targetText)
-      const assessmentWords = speakerDecision.reliable ? speakerDecision.words : []
+      const audioQualityMetrics = options.audioQualityMetrics
+        || options.audio_quality_metrics
+        || this.recitationAudioQualityMetrics
+        || this.getTranscriptionAudioBridge?.('recitation')?.getQualityMetrics?.()
+        || null
+      const speakerDecision = selectPrimaryReciterWords(recognitionWords, targetText, {
+        audioQualityMetrics,
+      })
+      if (!speakerDecision.reliable) {
+        const pendingWords = String(targetText || '').split(/\s+/).filter(Boolean).map((text, index) => ({
+          text,
+          targetWord: text,
+          status: 'pending',
+          type: 'UNASSESSED',
+          visualStatus: 'neutral',
+          highlight: 'neutral',
+          actual: '',
+          recognisedIndex: null,
+          targetIndex: index,
+        }))
+        const emptyMistakes = {
+          missing: [],
+          extra: [],
+          incorrect: [],
+          partial: [],
+          wordSkips: [],
+          skippedAyahs: [],
+          verseJumps: [],
+          sequenceErrors: [],
+        }
+        return {
+          wordStatuses: pendingWords,
+          statuses: pendingWords,
+          mistakes: emptyMistakes,
+          mistakeBreakdown: emptyMistakes,
+          accuracyScore: null,
+          score: null,
+          unusableAudio: true,
+          insufficient_audio: true,
+          audioQualityReason: speakerDecision.reason || speakerDecision.status,
+          speakerDecision,
+          rawRecognitionWords: Array.isArray(recognitionWords) ? recognitionWords : [],
+          extraWords: [],
+          events: [],
+          tajweedRules: [],
+          recommendation: '',
+          reviewMetadata: {},
+        }
+      }
+      const assessmentWords = speakerDecision.words
       const timestamp = options.timestamp || new Date().toISOString()
       const rejectedWords = Array.isArray(options.rejectedWords)
         ? options.rejectedWords

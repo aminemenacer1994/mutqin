@@ -13,14 +13,14 @@ function assertMatch(label, source, pattern) {
 
 // Desktop sizing: fixed max width with viewport-aware calc
 assertMatch(
-  'desktop modal width uses canonical 920px cap',
+  'desktop modal width uses the expanded 1080px cap',
   css,
-  /--amd-modal-width:\s*min\(920px,\s*calc\(100vw - 2rem\)\)/
+  /--amd-modal-width:\s*min\(1080px,\s*calc\(100vw - 1\.5rem\)\)/
 )
 assertMatch(
-  'desktop modal max height stays within the viewport',
+  'desktop modal max height uses the expanded dynamic viewport stage',
   css,
-  /--amd-modal-max-height:\s*min\(94vh,\s*980px\)/
+  /--amd-modal-max-height:\s*min\(96dvh,\s*1080px\)/
 )
 assertMatch(
   'dialog width overrides mutqin full width for the AMD shell',
@@ -38,9 +38,10 @@ assertMatch('vue sticky header class', vue, /amd-header--sticky/)
 assertMatch('vue scrollable body class', vue, /amd-body--scroll/)
 assertMatch('vue sticky footer markup', vue, /amd-footer amd-footer--sticky/)
 assertMatch('vue footer hosts primary start action', vue, /amd-start-wrap--footer/)
-assertMatch('vue accepts a ready-copy explanation', vue, /readyCopy:\s*\{\s*type:\s*String/)
-assertMatch('vue shows a short ready-state explanation', vue, /class="amd-brief"/)
-assertMatch('css ready copy uses a full-width reading measure', css, /\.amd-brief[\s\S]*?width:\s*100%/)
+assert.doesNotMatch(vue, /readyCopy|class="amd-brief"/, 'vue omits the redundant ready-state explanation')
+assertMatch('vue activates the spacious modal layout', vue, /amd-modal--premium amd-modal--spacious/)
+assertMatch('vue activates the compact header layout', vue, /amd-header--compact amd-header--sticky/)
+assertMatch('vue activates the compact body layout', vue, /amd-body--compact amd-body--scroll/)
 assertMatch(
   'css title uses a serif display family',
   css,

@@ -56888,6 +56888,48 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 }
 
+/* Shared workspace flow contract.
+ * The progress rail, session header, and either reading surface are sibling
+ * rows. Keeping their spacing in one grid prevents Mushaf/card-specific drift
+ * when the rail wraps or the navbar changes height.
+ */
+.workspace {
+  --workspace-flow-gap: clamp(0.65rem, 1.35vw, 1rem);
+  --workspace-progress-rail-h: clamp(42px, 3.2vw, 46px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--workspace-flow-gap);
+  align-content: start;
+}
+
+.session-progress-rail {
+  grid-column: 1;
+  top: var(--navbar-height, var(--navbar-offset, 64px));
+  margin: 0;
+  min-height: var(--workspace-progress-rail-h);
+  isolation: isolate;
+}
+
+.session-progress-rail__inner {
+  min-height: var(--workspace-progress-rail-h);
+  box-sizing: border-box;
+  background: var(--bg);
+}
+
+.workspace-shell,
+.workspace-main {
+  grid-column: 1;
+  scroll-margin-block-start: calc(
+    var(--navbar-height, var(--navbar-offset, 64px))
+    + var(--workspace-progress-rail-h)
+    + var(--workspace-flow-gap)
+  );
+}
+
+.workspace-shell {
+  margin-block: 0;
+}
+
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__pill {
   display: inline-flex;
   align-items: center;
@@ -64418,4 +64460,362 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   .post-session-simple.workspace-recite-result .post-session-simple__footer {
     padding-inline: 0.85rem !important;
   }
+}
+
+/* One shared workspace Recite action. The CTA is rendered by the active
+ * workspace branch, so fixing the existing node keeps view switches from
+ * creating duplicate controls. The main surface receives matching clearance
+ * so the fixed action never hides the final ayah/card. */
+body:has(.workspace-recite-dock__button) .app .main {
+  --workspace-recite-clearance: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+  padding-block-end: max(
+    var(--workspace-recite-clearance),
+    var(--player-dock-offset, 0px)
+  ) !important;
+  scroll-padding-block-end: var(--workspace-recite-clearance);
+}
+
+body:has(.workspace-recite-dock__button) .app .workspace-main {
+  padding-block-end: calc(
+    var(--workspace-recite-clearance, 0px) +
+    clamp(0.65rem, 1.6vw, 1.1rem)
+  ) !important;
+}
+
+.workspace-recite-dock__button {
+  --ai-recite-bg: #8ce7b8;
+  --ai-recite-bg-deep: #55cf91;
+  --ai-recite-border: #39b979;
+  --ai-recite-text: #124d38;
+  --ai-recite-icon: #0d7b4f;
+  --ai-recite-glow: rgba(63, 205, 137, 0.34);
+  --ai-recite-highlight: rgba(255, 255, 255, 0.72);
+  position: fixed !important;
+  inset-block-end: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  inset-inline-start: 50%;
+  z-index: 12100 !important;
+  isolation: isolate;
+  overflow: hidden;
+  transform: translateX(-50%);
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  min-width: 0 !important;
+  width: auto !important;
+  width: 68px !important;
+  min-width: 68px !important;
+  max-width: 68px !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  max-height: 68px !important;
+  aspect-ratio: 1;
+  padding: 0 !important;
+  border: 1.5px solid var(--ai-recite-border) !important;
+  border-radius: 50% !important;
+  background:
+    linear-gradient(180deg, var(--ai-recite-highlight), transparent 52%),
+    linear-gradient(180deg, var(--ai-recite-bg), var(--ai-recite-bg-deep)) !important;
+  color: var(--ai-recite-text) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  line-height: 1.15 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 4px 14px rgba(42, 174, 111, 0.28),
+    0 0 0 4px rgba(86, 222, 149, 0.1);
+  max-width: calc(100vw - 2rem) !important;
+  margin: 0 !important;
+}
+
+.workspace-recite-dock__button i,
+.workspace-recite-dock__button span {
+  position: relative;
+  z-index: 1;
+  display: inline-flex !important;
+  align-items: center;
+  line-height: 1.15;
+  color: inherit;
+}
+
+.workspace-recite-dock__button i {
+  font-size: 1.45rem !important;
+  color: var(--ai-recite-icon) !important;
+}
+
+.workspace-recite-dock {
+  display: contents;
+  pointer-events: none;
+}
+
+.workspace-recite-dock__button {
+  pointer-events: auto;
+}
+
+.workspace-recite-dock__button span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes workspace-recite-dock-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.62),
+      0 6px 18px rgba(42, 174, 111, 0.32),
+      0 0 0 0 rgba(86, 222, 149, 0);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.72),
+      0 8px 22px rgba(42, 174, 111, 0.42),
+      0 0 0 8px rgba(86, 222, 149, 0.18);
+  }
+}
+
+.workspace-recite-dock__button.is-animated {
+  animation: workspace-recite-dock-pulse 2.2s ease-in-out infinite;
+}
+
+.workspace-recite-dock__button:hover,
+.workspace-recite-dock__button:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--ai-recite-border) 70%, var(--ai-recite-icon) 30%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 3px 10px color-mix(in srgb, #3d2a18 16%, transparent),
+    0 0 0 3px var(--ai-recite-glow);
+}
+
+[data-theme="dark"] .workspace-recite-dock__button,
+html[data-theme="dark"] .workspace-recite-dock__button {
+  --ai-recite-bg: #5ebd8b;
+  --ai-recite-bg-deep: #338b64;
+  --ai-recite-border: #8de4b5;
+  --ai-recite-text: #072e21;
+  --ai-recite-icon: #073e2a;
+  --ai-recite-highlight: rgba(255, 255, 255, 0.28);
+}
+
+.workspace-recite-dock__button:focus-visible {
+  transform: translateX(-50%);
+}
+
+@media (max-width: 767.98px) {
+  body:has(.workspace-recite-dock__button) .app .main {
+    --workspace-recite-clearance: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .workspace-recite-dock__button {
+    inset-block-end: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+    inset-inline-start: auto;
+    inset-inline-end: max(0.75rem, env(safe-area-inset-right, 0px));
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 50% !important;
+    transform: none;
+  }
+
+  .workspace-recite-dock__button:focus-visible {
+    transform: none;
+  }
+}
+
+/* Keep the opening Bismillah legible in both reading modes on dark surfaces. */
+[data-theme="dark"] .app .verse-basmala,
+.app[data-theme="dark"] .verse-basmala,
+[data-theme="dark"] .main .verse-basmala,
+.main[data-theme="dark"] .verse-basmala,
+[data-theme="dark"] .app .main.mushaf-mode-active .madani-basmala,
+.app[data-theme="dark"] .main.mushaf-mode-active .madani-basmala,
+[data-theme="dark"] .main.mushaf-mode-active .madani-basmala {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Tajweed pages use an inverse filter for the QCF glyphs. Counter it only
+ * for the plain Bismillah so it remains white instead of becoming brown. */
+[data-theme="dark"] .app .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-basmala,
+.app[data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-basmala,
+[data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-basmala {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Keep the fixed action inside the reading surface and clear the final text. */
+body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-shell {
+  padding-block-end: calc(var(--workspace-recite-clearance, 0px) + 2rem) !important;
+}
+
+body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
+  padding-block-end: calc(var(--workspace-recite-clearance, 0px) + 0.5rem) !important;
+}
+
+.workspace-recite-dock__button:hover {
+  animation: none !important;
+}
+
+/* Final shared reading-dock contract.
+ * The dock stays viewport-accessible, while the real scrolling content owns
+ * the clearance. This keeps both Mushaf and stacked layouts from passing text
+ * underneath the action. */
+body:has(.workspace-recite-dock__button) .app .main {
+  --workspace-recite-size: 72px;
+  --workspace-recite-gap: 1rem;
+  --workspace-recite-clearance: calc(
+    var(--workspace-recite-size) +
+    (var(--workspace-recite-gap) * 2) +
+    env(safe-area-inset-bottom, 0px)
+  );
+}
+
+body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-shell {
+  min-height: 0 !important;
+  min-block-size: 0 !important;
+}
+
+body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-page--madani {
+  min-height: 0 !important;
+  padding-block-end: 0.45rem !important;
+  scroll-padding-block-end: 0.45rem !important;
+  box-sizing: border-box !important;
+}
+
+body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
+  padding-block-end: 0.45rem !important;
+  scroll-padding-block-end: 0.45rem !important;
+}
+
+.workspace-recite-dock__button,
+.workspace-recite-dock__button.is-animated,
+.workspace-recite-dock__button:hover,
+.workspace-recite-dock__button:active,
+.workspace-recite-dock__button:focus-visible {
+  width: var(--workspace-recite-size, 64px) !important;
+  min-width: var(--workspace-recite-size, 64px) !important;
+  max-width: var(--workspace-recite-size, 64px) !important;
+  height: var(--workspace-recite-size, 64px) !important;
+  min-height: var(--workspace-recite-size, 64px) !important;
+  max-height: var(--workspace-recite-size, 64px) !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: max(1rem, env(safe-area-inset-inline-end, 0px)) !important;
+  inset-block-end: calc(var(--workspace-recite-gap, 0.85rem) + env(safe-area-inset-bottom, 0px)) !important;
+  animation: none !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease !important;
+  transform: none !important;
+  overflow: hidden !important;
+}
+
+@media (max-width: 767.98px) {
+  .workspace-recite-dock__button,
+  .workspace-recite-dock__button.is-animated,
+  .workspace-recite-dock__button:hover,
+  .workspace-recite-dock__button:active,
+  .workspace-recite-dock__button:focus-visible {
+    inset-inline-end: max(1.5rem, env(safe-area-inset-right, 0px)) !important;
+    transform: none !important;
+  }
+}
+
+/* Metadata is one non-wrapping rail. The outer element scrolls; the inner
+ * flex row keeps its intrinsic width so the final pill never drops a line. */
+.workspace-shell-bottom {
+  min-width: 0 !important;
+}
+
+.workspace-shell-bottom-pills {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+}
+
+.workspace-shell-bottom-pills .workspace-shell-metadata {
+  display: inline-flex !important;
+  flex-flow: row nowrap !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  overflow: visible !important;
+}
+
+.workspace-shell-head > .workspace-shell-progress-pills {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  white-space: nowrap !important;
+}
+
+/* Dark Mushaf Tajweed pages invert the complete sheet. Feed that filter black
+ * Bismillah ink so the final rendered colour is white. Plain pages and the
+ * stacked Al-Fatihah card can use white directly. */
+html[data-theme="dark"] body .app .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-basmala,
+html body .app[data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-basmala {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="dark"] body .app .main.mushaf-mode-active .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+html body .app[data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+html[data-theme="dark"] body .app .main:not(.mushaf-mode-active) .verse-card[data-verse-key="1:1"] .verse-arabic,
+html[data-theme="dark"] body .app .main:not(.mushaf-mode-active) .verse-card[data-verse-key="1:1"] .verse-arabic span,
+html body .app[data-theme="dark"] .main:not(.mushaf-mode-active) .verse-card[data-verse-key="1:1"] .verse-arabic,
+html body .app[data-theme="dark"] .main:not(.mushaf-mode-active) .verse-card[data-verse-key="1:1"] .verse-arabic span,
+html[data-theme="dark"] body .app .verse-basmala,
+html body .app[data-theme="dark"] .verse-basmala {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.workspace-shell-bottom-pills {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.workspace-shell-bottom-pills .workspace-shell-metadata,
+.workspace-shell-metadata {
+  flex-wrap: nowrap !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+.workspace-shell-bottom-pills .workspace-shell-metadata::-webkit-scrollbar,
+.workspace-shell-metadata::-webkit-scrollbar,
+.workspace-shell-progress-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.workspace-shell-metadata-pill,
+.workspace-shell-progress-pill {
+  flex: 0 0 auto !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+}
+
+.workspace-shell-progress-pills {
+  flex-wrap: nowrap !important;
+  min-width: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
 }

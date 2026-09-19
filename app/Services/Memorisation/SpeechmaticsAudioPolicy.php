@@ -10,6 +10,19 @@ class SpeechmaticsAudioPolicy
 {
     public const VERSION = 'speechmatics-audio-policy-v1';
 
+    /**
+     * Must match resources/js/scripts/audio/speechmaticsAudioGate.js SPEECHMATICS_AUDIO_GATE.
+     */
+    public const MIN_SNR_DB = 4.0;
+
+    public const MIN_RMS = 0.008;
+
+    public const MIN_PEAK = 0.025;
+
+    public const MAX_CLIPPING_RATIO = 0.08;
+
+    public const MIN_SPEECH_RATIO = 0.08;
+
     /** @param array<string, mixed> $payload
      *  @return array{reliable:bool,status:string,reason:?string,words:array<int,mixed>,primary_speaker:?string,speaker_count:int}
      */
@@ -95,10 +108,10 @@ class SpeechmaticsAudioPolicy
         $snr = $this->number($metrics['snr_db'] ?? null);
 
         if (($metrics['broken'] ?? false) === true || ($metrics['complete'] ?? true) === false) return 'broken_recording';
-        if ($clipping !== null && $clipping >= 0.08) return 'severe_clipping';
-        if (($rms !== null && $rms < 0.008) || ($peak !== null && $peak < 0.025)) return 'very_low_volume';
-        if ($speech !== null && $speech < 0.08) return 'insufficient_usable_speech';
-        if ($snr !== null && $snr < 4.0) return 'heavy_noise';
+        if ($clipping !== null && $clipping >= self::MAX_CLIPPING_RATIO) return 'severe_clipping';
+        if (($rms !== null && $rms < self::MIN_RMS) || ($peak !== null && $peak < self::MIN_PEAK)) return 'very_low_volume';
+        if ($speech !== null && $speech < self::MIN_SPEECH_RATIO) return 'insufficient_usable_speech';
+        if ($snr !== null && $snr < self::MIN_SNR_DB) return 'heavy_noise';
 
         return null;
     }

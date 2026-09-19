@@ -1121,7 +1121,7 @@
         }
         .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
           display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          grid-template-columns: minmax(0, 1fr) !important;
           flex: 1 1 auto !important;
           gap: 0.35rem !important;
           width: 100% !important;
@@ -1136,8 +1136,8 @@
           min-width: 0 !important;
         }
         .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
-          grid-column: 2 !important;
-          grid-row: 1 !important;
+          grid-column: 1 !important;
+          grid-row: 2 !important;
           width: 100% !important;
           min-width: 0 !important;
         }
@@ -1224,9 +1224,9 @@
           font-weight: 400 !important;
           border-radius: 9px !important;
           box-shadow: none !important;
-          width: auto !important;
+          width: 100% !important;
           min-width: 0 !important;
-          max-width: none !important;
+          max-width: 100% !important;
         }
         .app .workspace-shell-actions .post-session-choice-pair .top-card-action-trigger {
           min-height: 32px !important;
@@ -1992,6 +1992,368 @@
         }
       }
     </style>
+    <style id="mutqin-memorisation-hotfix-v167">
+      /* Reserve space in the elements that actually contain/scroll the ayahs. */
+      html body:has(.workspace-recite-dock__button) .app .main {
+        --workspace-recite-size: 64px;
+        --workspace-recite-gap: 0.85rem;
+        --workspace-recite-clearance: calc(var(--workspace-recite-size) + 1.35rem + env(safe-area-inset-bottom, 0px));
+      }
+
+      html body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-shell,
+      html body .app .main.mushaf-mode-active .mushaf-shell,
+      html body .app .main.mushaf-mode-active .mushaf-shell__page,
+      html body .app .main.mushaf-mode-active .mushaf-page,
+      html body .app .main.mushaf-mode-active .mushaf-page--madani,
+      html body .app .main.mushaf-mode-active .mushaf-viewport-scroll {
+        min-height: 0 !important;
+        min-block-size: 0 !important;
+      }
+
+      html body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+      html body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-page--madani {
+        padding-block-end: 0.45rem !important;
+        scroll-padding-block-end: 0.45rem !important;
+        box-sizing: border-box !important;
+      }
+
+      html body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
+        padding-block-end: 0.45rem !important;
+        scroll-padding-block-end: 0.45rem !important;
+      }
+
+      /* Recite stays fixed to the viewport so it remains visible while the
+       * reading surface scrolls. The card itself hugs the text. */
+      html body .app .workspace-reading-surface {
+        position: relative !important;
+      }
+
+      html body .app .workspace-reading-surface--mushaf .mushaf-workspace {
+        margin-bottom: 0 !important;
+      }
+
+      html body .app .workspace-reading-surface--mushaf .mushaf-shell,
+      html body .app .workspace-reading-surface--stacked .verses-grid,
+      html body .app .main.mushaf-mode-active .mushaf-shell,
+      html body .app .workspace-main .verses-grid {
+        box-sizing: border-box !important;
+        padding-bottom: 0.45rem !important;
+        padding-block-end: 0.45rem !important;
+      }
+
+      html body .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair),
+      html body .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair),
+      html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions > .top-card-session-actions,
+      html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions.w-100 > .top-card-session-actions,
+      html body .app .workspace-shell-head-utility-row .top-card-session-cluster.has-paired-actions.w-100 > .top-card-session-actions.w-100 {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+        grid-template-rows: auto !important;
+        width: auto !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        gap: 0.45rem !important;
+      }
+
+      html body .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action,
+      html body .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit,
+      html body .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions > .session-primary-action,
+      html body .app .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions > .action-btn-exit {
+        grid-column: auto !important;
+        grid-row: 1 !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+      }
+
+      @keyframes mutqin-recite-contrast {
+        0%, 100% {
+          box-shadow:
+            0 16px 36px rgba(28, 16, 8, 0.42),
+            0 0 0 7px rgba(255, 250, 244, 0.92),
+            0 0 0 18px rgba(122, 72, 32, 0.28) !important;
+        }
+        50% {
+          box-shadow:
+            0 22px 48px rgba(28, 16, 8, 0.5),
+            0 0 0 10px rgba(255, 250, 244, 0.96),
+            0 0 0 32px rgba(122, 72, 32, 0.12) !important;
+        }
+      }
+
+      html body .app .workspace-recite-dock__button,
+      html body .app .workspace-recite-dock__button.is-animated,
+      html body .app .workspace-recite-dock__button:hover,
+      html body .app .workspace-recite-dock__button:active,
+      html body .app .workspace-recite-dock__button:focus-visible {
+        position: fixed !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        inset-inline-start: auto !important;
+        inset-inline-end: max(1rem, env(safe-area-inset-inline-end, 0px)) !important;
+        bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+        inset-block-end: calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
+        z-index: 12100 !important;
+        width: var(--workspace-recite-size, 64px) !important;
+        min-width: var(--workspace-recite-size, 64px) !important;
+        max-width: var(--workspace-recite-size, 64px) !important;
+        height: var(--workspace-recite-size, 64px) !important;
+        min-height: var(--workspace-recite-size, 64px) !important;
+        max-height: var(--workspace-recite-size, 64px) !important;
+        border-radius: 50% !important;
+        filter: none !important;
+        transform: none !important;
+        box-shadow: 0 8px 18px rgba(13, 60, 40, 0.28) !important;
+        animation: none !important;
+        overflow: hidden !important;
+      }
+
+      @media (max-width: 767.98px) {
+        html body .app .workspace-recite-dock__button,
+        html body .app .workspace-recite-dock__button.is-animated,
+        html body .app .workspace-recite-dock__button:hover,
+        html body .app .workspace-recite-dock__button:active,
+        html body .app .workspace-recite-dock__button:focus-visible {
+          bottom: calc(2.15rem + env(safe-area-inset-bottom, 0px)) !important;
+          inset-block-end: calc(2.15rem + env(safe-area-inset-bottom, 0px)) !important;
+        }
+      }
+
+      /* Dashboard metadata stays on one scrolling row, clear of the card edge.
+       * Progress pills are the white line under the title — hide them here. */
+      html body .app .workspace-shell-bottom {
+        min-width: 0 !important;
+        padding-bottom: 0.85rem !important;
+      }
+
+      /* Desktop already has the labeled chips. The progress line under the
+       * title is Bootstrap badge white text — hide it above the phone layout. */
+      @media (min-width: 768px) {
+        html body .app .workspace-shell-progress-pills,
+        html body .app .workspace-shell-head > .workspace-shell-progress-pills,
+        html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
+          display: none !important;
+        }
+      }
+
+      @media (max-width: 767.98px) {
+        html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
+          display: flex !important;
+          flex-flow: row nowrap !important;
+          padding-bottom: 0.85rem !important;
+        }
+
+        html body .app .workspace-shell-progress-pill {
+          color: #4a3c30 !important;
+          -webkit-text-fill-color: #4a3c30 !important;
+        }
+
+        html[data-theme="dark"] body .app .workspace-shell-progress-pill,
+        html[data-theme="dark"] body .app .workspace-shell-progress-pill span,
+        html[data-theme="dark"] body .app .workspace-shell-metadata-pill,
+        html[data-theme="dark"] body .app .workspace-shell-metadata-pill span,
+        html[data-theme="dark"] body .app .workspace-shell-metadata-pill strong,
+        .app[data-theme="dark"] .workspace-shell-progress-pill,
+        .app[data-theme="dark"] .workspace-shell-progress-pill span,
+        .app[data-theme="dark"] .workspace-shell-metadata-pill,
+        .app[data-theme="dark"] .workspace-shell-metadata-pill span,
+        .app[data-theme="dark"] .workspace-shell-metadata-pill strong {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+          background-color: transparent !important;
+        }
+      }
+
+      html body .app .workspace-shell-bottom-pills,
+      html body .app .workspace-shell-metadata {
+        display: flex !important;
+        flex-flow: row nowrap !important;
+        align-items: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none;
+      }
+
+      html body .app .workspace-shell-bottom-pills .workspace-shell-metadata {
+        display: flex !important;
+        flex-flow: row nowrap !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+      }
+
+      html body:not([data-theme="dark"]) .app .workspace-shell-metadata-pill,
+      html:not([data-theme="dark"]) body .app .workspace-shell-metadata-pill {
+        flex: 0 0 auto !important;
+        max-width: none !important;
+        white-space: nowrap !important;
+        color: #4a3c30 !important;
+        -webkit-text-fill-color: #4a3c30 !important;
+      }
+
+      html body .app .workspace-shell-bottom-pills::-webkit-scrollbar,
+      html body .app .workspace-shell-metadata::-webkit-scrollbar,
+      html body .app .workspace-shell-progress-pills::-webkit-scrollbar {
+        display: none !important;
+      }
+
+      /* Tajweed sheets invert the page. Counter-invert the Bismillah so the
+       * visible ink is white. Plain Mushaf and stacked reading use white directly. */
+      html[data-theme="dark"] body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet.madani-page-sheet--tajweed .madani-basmala {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        filter: invert(1) hue-rotate(180deg) !important;
+        opacity: 1 !important;
+      }
+
+      html[data-theme="dark"] body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet:not(.madani-page-sheet--tajweed) .madani-basmala,
+      html[data-theme="dark"] body .app .verse-basmala,
+      html[data-theme="dark"] body .app .main:not(.mushaf-mode-active) .verse-card[data-verse-key="1:1"] .verse-arabic,
+      html[data-theme="dark"] body .app .main:not(.mushaf-mode-active) .verse-card[data-verse-key="1:1"] .verse-arabic span,
+      html[data-theme="dark"] body .amd-overlay .amd-basmala,
+      .amd-overlay[data-theme="dark"] .amd-basmala,
+      .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .amd-basmala {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        filter: none !important;
+        opacity: 1 !important;
+      }
+
+      html body .amd-overlay .amd-mushaf-ayah--premium word,
+      html body .amd-overlay .amd-mushaf-ayah--premium .wbw-word {
+        display: inline !important;
+        width: auto !important;
+        margin: 0 0.14em 0 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      html body .amd-overlay .amd-footer,
+      html body .amd-overlay .amd-footer.amd-footer--sticky {
+        position: static !important;
+        margin: 0 0.9rem max(1.2rem, calc(0.7rem + env(safe-area-inset-bottom, 0px))) !important;
+        padding: 0.15rem 0.75rem 0.85rem !important;
+        border-top: 0 !important;
+        border-radius: 0 0 1.15rem 1.15rem !important;
+      }
+
+      html body .amd-overlay .amd-record-btn--inline:hover,
+      html body .amd-overlay .amd-record-btn:hover {
+        transform: none !important;
+        animation: none !important;
+        filter: none !important;
+      }
+
+      /* AI recite modal header needs room above and below the title. */
+      html body .amd-overlay .amd-modal .amd-header.amd-header--premium,
+      html body .amd-overlay .amd-modal .amd-header.amd-header--compact,
+      html body .amd-overlay .amd-modal .amd-header.amd-header--premium.amd-header--compact {
+        padding: 1.7rem 1.55rem 1.4rem !important;
+      }
+
+      html body .amd-overlay .amd-header .amd-header-top {
+        gap: 0.85rem !important;
+      }
+
+      html body .amd-overlay .amd-header .amd-range,
+      html body .amd-overlay .amd-header .amd-range--premium {
+        margin-top: 0.45rem !important;
+      }
+
+      @media (max-width: 767.98px) {
+        html body .amd-overlay .amd-modal .amd-header.amd-header--premium,
+        html body .amd-overlay .amd-modal .amd-header.amd-header--compact,
+        html body .amd-overlay .amd-modal .amd-header.amd-header--premium.amd-header--compact {
+          padding: 1.4rem 1.15rem 1.2rem !important;
+        }
+
+        html body .app .workspace-shell-head .workspace-shell-actions,
+        html body .app .workspace-shell-head .action-buttons-group,
+        html body .app .workspace-shell-head .action-buttons-group.w-100,
+        html body .app .workspace-shell-head .top-card-session-cluster,
+        html body .app .workspace-shell-head .top-card-session-cluster.w-100,
+        html body .app .workspace-shell-head .top-card-session-actions,
+        html body .app .workspace-shell-head .top-card-session-actions.w-100 {
+          display: flex !important;
+          flex-flow: column nowrap !important;
+          align-items: stretch !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+        }
+
+        html body .app .workspace-shell-head .workspace-shell-actions .action-buttons-group.w-100,
+        html body .app .workspace-shell-head .workspace-shell-actions .top-card-session-cluster.w-100,
+        html body .app .workspace-shell-head .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair),
+        html body .app .workspace-shell-head .workspace-shell-actions .top-card-session-actions:not(.has-paired-actions) {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+        }
+
+        html body .app .workspace-shell-head .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+          width: 100% !important;
+        }
+
+        html body .app .workspace-shell-head .workspace-shell-actions .top-card-session-actions:not(.has-paired-actions) > .session-primary-action,
+        html body .app .workspace-shell-head .workspace-shell-actions .top-card-session-actions:not(.has-paired-actions) > .session-primary-action[style],
+        html body .app .workspace-shell-head .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action,
+        html body .app .workspace-shell-head .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action[style],
+        html body .app .workspace-shell-head .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
+          width: 100% !important;
+          min-width: 0 !important;
+          max-width: 100% !important;
+          flex: 1 1 100% !important;
+        }
+      }
+
+      @media (min-width: 768px) {
+        html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) max-content !important;
+          align-items: center !important;
+        }
+
+        html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+          grid-column: 1 !important;
+          grid-row: 1 !important;
+        }
+
+        html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) {
+          display: flex !important;
+          grid-column: 2 !important;
+          grid-row: 1 !important;
+          flex-flow: row nowrap !important;
+          align-items: center !important;
+          justify-content: flex-end !important;
+          gap: 0.45rem !important;
+          width: max-content !important;
+          flex: 0 0 auto !important;
+        }
+
+        html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .workspace-shell-actions,
+        html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .action-buttons-group,
+        html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .top-card-session-cluster,
+        html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .top-card-session-actions {
+          display: flex !important;
+          flex: 0 0 auto !important;
+          width: max-content !important;
+          max-width: none !important;
+          margin: 0 !important;
+        }
+      }
+    </style>
     <style id="mutqin-post-session-site-theme-v2">
       /* Network-first: Session Complete uses site bronze theme + clear section rhythm */
       .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
@@ -2633,7 +2995,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v170'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -2643,7 +3005,20 @@
           setTimeout(pin, 0);
           setTimeout(pin, 500);
           setTimeout(pin, 2000);
+          setTimeout(pin, 5000);
         });
+        if (window.MutationObserver) {
+          var pinning = false;
+          var observer = new MutationObserver(function () {
+            if (pinning) return;
+            var lock = document.getElementById('mutqin-ui-lock-v170');
+            if (!lock || lock === document.body.lastElementChild) return;
+            pinning = true;
+            pin();
+            pinning = false;
+          });
+          observer.observe(document.documentElement, { childList: true, subtree: true });
+        }
       })();
     </script>
     <script id="mutqin-strip-quran-circles">
@@ -8199,5 +8574,201 @@ body.session-analysis-modal-open {
 }
     </style>
     @stack('page-scripts')
+<style id="mutqin-ui-lock-v170">
+  /* Recite stays fixed at the bottom centre of the viewport while the page scrolls. */
+  html body .app {
+    transform: none !important;
+    filter: none !important;
+    perspective: none !important;
+  }
+
+  html body .app .mushaf-shell > .workspace-recite-dock,
+  html body .app .verses-grid > .workspace-recite-dock,
+  html body .app .workspace-reading-surface > .workspace-recite-dock,
+  html body > .workspace-recite-dock {
+    display: flex !important;
+    position: fixed !important;
+    top: auto !important;
+    right: 0 !important;
+    bottom: calc(1.15rem + env(safe-area-inset-bottom, 0px)) !important;
+    left: 0 !important;
+    inset-inline: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    grid-column: 1 / -1 !important;
+    pointer-events: none !important;
+    z-index: 12100 !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+    filter: none !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .workspace-recite-dock__button,
+  html body .app .workspace-recite-dock__button.is-animated,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button.is-animated,
+  html body .app .workspace-recite-dock__button:hover,
+  html body .app .workspace-recite-dock__button:active,
+  html body .app .workspace-recite-dock__button:focus-visible,
+  html body > .workspace-recite-dock .workspace-recite-dock__button,
+  html body > .workspace-recite-dock .workspace-recite-dock__button.is-animated,
+  html body > .workspace-recite-dock .workspace-recite-dock__button:hover,
+  html body > .workspace-recite-dock .workspace-recite-dock__button:active,
+  html body > .workspace-recite-dock .workspace-recite-dock__button:focus-visible {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    inset-inline: auto !important;
+    inset-block: auto !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    pointer-events: auto !important;
+    animation: none !important;
+    filter: none !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .workspace-recite-dock__button::before,
+  html body .app .workspace-recite-dock__button::after,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button::before,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button::after {
+    content: none !important;
+    display: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+
+  html body .amd-overlay .amd-header.amd-header--premium.amd-header--compact.amd-header--sticky,
+  html body .amd-overlay .amd-modal .amd-header.amd-header--premium.amd-header--compact {
+    padding: 1.9rem 1.65rem 1.55rem !important;
+  }
+
+  html body .amd-overlay .amd-header .amd-range--premium {
+    margin-top: 0.6rem !important;
+  }
+
+  @media (max-width: 767.98px) {
+    html body .amd-overlay .amd-header.amd-header--premium.amd-header--compact.amd-header--sticky,
+    html body .amd-overlay .amd-modal .amd-header.amd-header--premium.amd-header--compact {
+      padding: 1.5rem 1.15rem 1.3rem !important;
+    }
+
+    html body .app .workspace-shell .workspace-shell-head .workspace-shell-actions,
+    html body .app .workspace-shell .workspace-shell-head .action-buttons-group,
+    html body .app .workspace-shell .workspace-shell-head .top-card-session-cluster,
+    html body .app .workspace-shell .workspace-shell-head .top-card-session-actions,
+    html body .app .workspace-shell .workspace-shell-head .top-card-session-actions.w-100 {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      align-self: stretch !important;
+      justify-self: stretch !important;
+    }
+
+    html body .app .workspace-shell .workspace-shell-head .top-card-session-actions:not(.has-paired-actions) {
+      display: flex !important;
+      flex-flow: column nowrap !important;
+    }
+
+    html body .app .workspace-shell .workspace-shell-head .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      width: 100% !important;
+    }
+
+    html body .app .workspace-shell .workspace-shell-head .workspace-shell-head-toolbar .workspace-shell-head-utility-row .workspace-shell-actions .action-buttons-group .top-card-session-cluster .top-card-session-actions > .session-primary-action,
+    html body .app .workspace-shell .workspace-shell-head .workspace-shell-head-toolbar .workspace-shell-head-utility-row .workspace-shell-actions .action-buttons-group .top-card-session-cluster .top-card-session-actions > .session-primary-action[style],
+    html body .app .workspace-shell .workspace-shell-head .workspace-shell-head-toolbar .workspace-shell-head-utility-row .workspace-shell-actions .action-buttons-group .top-card-session-cluster .top-card-session-actions > .action-btn-exit {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      flex: 1 1 auto !important;
+      align-self: stretch !important;
+    }
+
+    html[data-theme="dark"] .workspace-shell-progress-pill,
+    html[data-theme="dark"] .workspace-shell-progress-pill span,
+    html[data-theme="dark"] .workspace-shell-metadata-pill,
+    html[data-theme="dark"] .workspace-shell-metadata-pill span,
+    html[data-theme="dark"] .workspace-shell-metadata-pill strong,
+    .app[data-theme="dark"] .workspace-shell-progress-pill,
+    .app[data-theme="dark"] .workspace-shell-progress-pill span,
+    .app[data-theme="dark"] .workspace-shell-metadata-pill,
+    .app[data-theme="dark"] .workspace-shell-metadata-pill span,
+    .app[data-theme="dark"] .workspace-shell-metadata-pill strong {
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    html body .app .workspace-shell .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) max-content !important;
+      grid-template-rows: auto !important;
+      align-items: center !important;
+    }
+
+    html body .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-copy {
+      grid-column: 1 !important;
+      grid-row: 1 !important;
+    }
+
+    html body .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-head-utility-row:not(:has(.has-paired-actions)) {
+      display: flex !important;
+      grid-column: 2 !important;
+      grid-row: 1 !important;
+      flex-flow: row nowrap !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 0.4rem !important;
+      width: max-content !important;
+      max-width: none !important;
+    }
+
+    html body .app .workspace-shell .workspace-shell-head-utility-row:not(:has(.has-paired-actions)) .workspace-shell-actions,
+    html body .app .workspace-shell .workspace-shell-head-utility-row:not(:has(.has-paired-actions)) .action-buttons-group,
+    html body .app .workspace-shell .workspace-shell-head-utility-row:not(:has(.has-paired-actions)) .top-card-session-cluster,
+    html body .app .workspace-shell .workspace-shell-head-utility-row:not(:has(.has-paired-actions)) .top-card-session-actions,
+    html body .app .workspace-shell .workspace-shell-head-utility-row:not(:has(.has-paired-actions)) .session-primary-action {
+      width: max-content !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+    }
+  }
+
+  html[data-theme="dark"] body .app .workspace-shell-metadata-pill,
+  html[data-theme="dark"] body .app .workspace-shell-metadata-pill.is-readonly,
+  html[data-theme="dark"] body .app .badge.workspace-shell-metadata-pill,
+  html[data-theme="dark"] body .app .workspace-shell-metadata-pill strong,
+  html[data-theme="dark"] body .app .workspace-shell-metadata-pill span,
+  html[data-theme="dark"] body .app .workspace-shell-progress-pill,
+  html[data-theme="dark"] body .app .badge.workspace-shell-progress-pill,
+  html[data-theme="dark"] body .app .workspace-shell-progress-pill span,
+  .app[data-theme="dark"] .workspace-shell-metadata-pill,
+  .app[data-theme="dark"] .workspace-shell-metadata-pill.is-readonly,
+  .app[data-theme="dark"] .badge.workspace-shell-metadata-pill,
+  .app[data-theme="dark"] .workspace-shell-metadata-pill strong,
+  .app[data-theme="dark"] .workspace-shell-metadata-pill span,
+  .app[data-theme="dark"] .workspace-shell-progress-pill,
+  .app[data-theme="dark"] .badge.workspace-shell-progress-pill,
+  .app[data-theme="dark"] .workspace-shell-progress-pill span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    opacity: 1 !important;
+  }
+</style>
 </body>
 </html>

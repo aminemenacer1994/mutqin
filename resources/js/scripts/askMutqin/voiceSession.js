@@ -81,6 +81,7 @@ export function createAskMutqinVoiceSession(options = {}) {
     disconnectProvider()
     language = nextLanguage || language || 'ar'
     const delays = resolveAdaptiveSpeechmaticsDelays({ live: true })
+    // Ask Mutqin stays on these longer delays and does not push pace updates mid-session.
     provider = createSpeechmaticsRealtimeProvider({
       language,
       getAccessToken: getToken,

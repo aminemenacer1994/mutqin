@@ -360,18 +360,18 @@ includesAll('top toolbar feature spacing', [
   )
   assert.match(
     blade,
-    /\.app \.workspace-shell-actions \.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) \{[\s\S]*?grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s*!important/,
-    'blade hotfix must keep Resume/End as a 2-column grid (not stacked)'
+    /\.app \.workspace-shell-actions \.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) \{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*!important/,
+    'blade hotfix must keep Pause/Resume/End full width (not a side-by-side pair)'
   )
   assert.match(
     blade,
-    /\.app \.workspace-shell-actions \.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) > \.action-btn-exit \{[\s\S]*?grid-column:\s*2\s*!important[\s\S]*?grid-row:\s*1\s*!important/,
-    'blade hotfix must place End session beside Resume on row 1'
+    /\.app \.workspace-shell-actions \.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) > \.action-btn-exit \{[\s\S]*?grid-column:\s*1\s*!important[\s\S]*?grid-row:\s*2\s*!important/,
+    'blade hotfix must stack End under Pause/Resume'
   )
   assert.match(
     mobileGridCss,
-    /\.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) > \.action-btn-exit \{[\s\S]*?grid-column:\s*2\s*!important[\s\S]*?grid-row:\s*1\s*!important/,
-    'mobile-grid must place End session beside Resume on row 1'
+    /\.top-card-session-actions\.has-paired-actions:not\(\.post-session-choice-pair\) > \.action-btn-exit \{[\s\S]*?grid-column:\s*1\s*!important[\s\S]*?grid-row:\s*2\s*!important/,
+    'mobile-grid must stack End under Pause/Resume'
   )
   assert.match(
     mobileGridCss,

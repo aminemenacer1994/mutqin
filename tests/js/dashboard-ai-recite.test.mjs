@@ -52,7 +52,7 @@ assert.match(memorisation, /workspace-ai-recite-cta/, 'session card exposes the 
 assert.match(memorisation, /openWorkspaceAiRecite/, 'session card opens the memory check modal')
 assert.match(memorisation, /fromWorkspaceAiRecite:\s*true/, 'session card uses the workspace AI Recite entry')
 assert.match(memorisation, /AiMemorisationDetectionModal/, 'memorisation mounts the memory check modal')
-assert.match(memorisation, /:ready-copy="amdReadyCopy"/, 'memory check modal receives a short feature explanation')
+assert.doesNotMatch(memorisation, /ready-copy|amdReadyCopy/, 'memory check modal omits the redundant feature explanation')
 assert.doesNotMatch(memorisation, /DashboardAiReciteModal/, 'session card does not mount the dashboard AI Recite modal')
 assert.match(memorisation, /presentWorkspaceReciteAnalysis/, 'workspace recite opens analysis after completion')
 assert.match(memorisation, /workspaceReciteAnalysisOpen/, 'memorisation mounts the recite analysis modal')
@@ -217,10 +217,4 @@ const perfect = buildDashboardAiReciteStatsView({
 assert.equal(perfect.focus.length, 0)
 assert.equal(perfect.holding, true)
 assert.equal(perfect.score.label, en.dashboard.analysis_accuracy_label)
-assert.match(
-  String(en.memorisation?.amd?.readyCopy || ''),
-  /Mutqin listens and colours words/,
-  'ready copy explains that Mutqin listens and colours words',
-)
-
 console.log('dashboard-ai-recite.test.mjs: ok')

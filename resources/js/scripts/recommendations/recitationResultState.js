@@ -6,6 +6,7 @@
  */
 
 import { RECITATION_THRESHOLDS } from '../engine/recitationThresholds.js'
+import { evaluateSpeechmaticsAudioGate } from '../audio/speechmaticsAudioGate.js'
 
 export const RECITATION_RESULT_STATE = Object.freeze({
   INSUFFICIENT_AUDIO: 'insufficient_audio',
@@ -297,6 +298,17 @@ export function resolveInsufficientAudioReason(result = null, extras = {}, optio
     }
     return INSUFFICIENT_AUDIO_REASONS.UNUSABLE_AUDIO
   }
+
+  const audioMetrics = result?.audioQualityMetrics
+    || result?.audio_quality_metrics
+    || extras.audioQualityMetrics
+    || extras.audio_quality_metrics
+    || null
+  const audioGate = evaluateSpeechmaticsAudioGate(
+    audioMetrics,
+    result?.audio_quality_status || extras.audio_quality_status || '',
+  )
+  if (!audioGate.reliable) return audioGate.reason || INSUFFICIENT_AUDIO_REASONS.UNUSABLE_AUDIO
 
   const reason = String(
     result?.failureReason

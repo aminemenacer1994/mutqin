@@ -33,6 +33,7 @@ const words = (tokens, confidence = 0.95) => tokens.map((word, index) => ({
 }))
 const align = (heard, options = {}) => buildQuranAlignment(target, heard, { strictProgression: false, ...options })
 const types = result => Array.from(result.wordStatuses, word => String(word.type))
+const fields = (result, key) => Array.from(result.wordStatuses, word => word[key])
 const extras = result => Array.from(result.extraWords, word => String(word.type))
 
 assert.deepEqual(types(align(words(['الحمد', 'لله', 'رب', 'العالمين']))), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
@@ -513,5 +514,283 @@ const fastSkip = align([
   { word: 'العالمين', confidence: 0.95, start: 0.14, end: 0.22 },
 ])
 assert.deepEqual(types(fastSkip), ['MATCH', 'MATCH', 'DELETION', 'MATCH'])
+
+const delays = await loadModule('resources/js/scripts/memorisationDetection/speechmaticsDelays.js')
+const timing = await loadModule('resources/js/scripts/memorisationDetection/recitationTimingBuffer.js')
+const audioGate = await loadModule('resources/js/scripts/audio/speechmaticsAudioGate.js')
+const vocabulary = await loadModule('resources/js/scripts/speechmatics/quranVocabulary.js')
+const {
+  buildSpeechmaticsRecognitionUpdate,
+  resolveAdaptiveSpeechmaticsDelays,
+} = delays.namespace
+const { estimateSessionRecitationPaceFactor } = timing.namespace
+const { evaluateSpeechmaticsAudioGate, SPEECHMATICS_AUDIO_GATE } = audioGate.namespace
+const { buildSpeechmaticsRecitationConfig } = vocabulary.namespace
+
+function speechmaticsWords(tokens, confidence = 0.95, step = 0.3) {
+  return tokens.map((word, index) => ({
+    word,
+    confidence,
+    start: index * step,
+    end: index * step + Math.min(0.2, step * 0.7),
+    token: `sm-${index}`,
+    speaker: 'S1',
+  }))
+}
+
+async function alignSpeechmaticsPath(target, tokens, options = {}) {
+  const { stabilizeThreshold = 0.35, ...alignmentOptions } = options
+  let state = stabilizeRecognitionEvent(createRecognitionState(), {
+    provider: 'speechmatics',
+    isFinal: true,
+    speechFinal: true,
+    segmentId: `ayah-drift-${tokens.length}`,
+    words: tokens,
+  }, { confidenceThreshold: stabilizeThreshold })
+  const selected = selectPrimaryReciterWords(state.committedWords, target)
+  assert.equal(selected.reliable, true, 'single reciter stays assessable')
+  return buildQuranAlignment(target, selected.words, { strictProgression: false, ...alignmentOptions })
+}
+
+// 1:1 heard drift into 1:3, then a two-word return to رب العالمين.
+{
+  const drifted = await alignSpeechmaticsPath(
+    'الحمد لله رب العالمين',
+    speechmaticsWords(['الرحمن', 'الرحيم', 'رب', 'العالمين']),
+  )
+  assert.deepEqual(types(drifted), ['DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'])
+  assert.deepEqual(fields(drifted, 'visualStatus'), ['red', 'red', 'green', 'green'])
+  assert.deepEqual(fields(drifted, 'highlight'), ['red', 'red', 'green', 'green'])
+  assert.deepEqual(fields(drifted, 'recognisedIndex'), [0, 1, 2, 3])
+  assert.equal(drifted.wordStatuses[2].status, 'correct')
+  assert.equal(drifted.wordStatuses[3].status, 'correct')
+  assert.equal(drifted.scenarioCounts.divergence_events, 2)
+  assert.equal(types(drifted).includes('SUBSTITUTION'), false)
+  assert.equal(types(drifted).includes('DELETION'), false)
+}
+
+// Left 1:1 into a similar phrase, then returned. Drift is not a substitution cascade.
+{
+  const leftAndReturned = await alignSpeechmaticsPath(
+    'الحمد لله رب العالمين الرحمن الرحيم',
+    speechmaticsWords(['الحمد', 'لله', 'مالك', 'الدين', 'الرحمن', 'الرحيم']),
+  )
+  assert.deepEqual(types(leftAndReturned), ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'])
+  assert.equal(leftAndReturned.wordStatuses[4].visualStatus, 'green')
+  assert.equal(leftAndReturned.wordStatuses[4].highlight, 'green')
+  assert.equal(leftAndReturned.wordStatuses[5].type, 'MATCH')
+  assert.equal(leftAndReturned.wordStatuses[5].visualStatus, 'green')
+  assert.equal(leftAndReturned.scenarioCounts.divergence_events, 2)
+}
+
+// Drift that never returns stays DIVERGENCE. The unread tail is pending live, DELETION only after final.
+{
+  const target = 'الحمد لله رب العالمين الرحمن الرحيم'
+  const heard = speechmaticsWords(['الحمد', 'لله', 'مالك', 'يوم', 'الدين'])
+  const live = await alignSpeechmaticsPath(target, heard, { lifecycle: 'live' })
+  const finalised = await alignSpeechmaticsPath(target, heard)
+  assert.deepEqual(types(live).slice(0, 5), ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'DIVERGENCE'])
+  assert.equal(live.wordStatuses[5].type, 'UNASSESSED')
+  assert.equal(live.wordStatuses[5].status, 'pending')
+  assert.equal(live.wordStatuses[5].visualStatus, 'neutral')
+  assert.equal(types(live).includes('DELETION'), false)
+  assert.equal(types(live).includes('REALIGNMENT'), false)
+  assert.deepEqual(types(finalised).slice(0, 5), ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'DIVERGENCE'])
+  assert.equal(finalised.wordStatuses[5].type, 'DELETION')
+  assert.equal(finalised.wordStatuses[5].visualStatus, 'red')
+  assert.equal(types(finalised).includes('REALIGNMENT'), false)
+}
+
+// 1:2 heard the opening of 1:1, then realigned on الرحمن الرحيم.
+{
+  const realigned = await alignSpeechmaticsPath(
+    'رب العالمين الرحمن الرحيم',
+    speechmaticsWords(['الحمد', 'لله', 'الرحمن', 'الرحيم']),
+  )
+  assert.deepEqual(types(realigned), ['DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'])
+  assert.equal(realigned.wordStatuses[2].visualStatus, 'green')
+  assert.equal(realigned.wordStatuses[2].highlight, 'green')
+  assert.equal(realigned.wordStatuses[2].recognisedIndex, 2)
+  assert.equal(realigned.wordStatuses[3].type, 'MATCH')
+  assert.equal(realigned.wordStatuses[3].visualStatus, 'green')
+  assert.equal(realigned.scenarioCounts.divergence_events, 2)
+}
+
+// 112:1 heard 112:2, then returned on الله أحد.
+{
+  const ikhlas = await alignSpeechmaticsPath(
+    'قل هو الله أحد',
+    speechmaticsWords(['الله', 'الصمد', 'الله', 'أحد']),
+  )
+  assert.deepEqual(types(ikhlas), ['DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH'])
+  assert.deepEqual(fields(ikhlas, 'recognisedIndex'), [0, 1, 2, 3])
+  assert.equal(ikhlas.wordStatuses[2].visualStatus, 'green')
+  assert.equal(ikhlas.wordStatuses[3].status, 'correct')
+  assert.equal(ikhlas.scenarioCounts.divergence_events, 2)
+}
+
+// One shared الله is not a two-word return anchor.
+{
+  const falseAllah = await alignSpeechmaticsPath(
+    'قل هو الله أحد',
+    speechmaticsWords(['قل', 'هو', 'الصمد', 'الله']),
+  )
+  assert.equal(types(falseAllah).includes('REALIGNMENT'), false)
+  assert.ok(types(falseAllah).filter(type => type === 'MATCH').length < 4)
+}
+
+{
+  const lowConfidenceDrift = await alignSpeechmaticsPath(
+    'الحمد لله رب العالمين',
+    [
+      ...speechmaticsWords(['الحمد', 'لله']),
+      ...speechmaticsWords(['الرحمن', 'الرحيم'], 0.2).map((word, index) => ({
+        ...word,
+        start: 0.8 + index * 0.3,
+        end: 1.0 + index * 0.3,
+        token: `low-${index}`,
+      })),
+    ],
+    { stabilizeThreshold: 0.1 },
+  )
+  assert.equal(types(lowConfidenceDrift).includes('DIVERGENCE'), false)
+  assert.ok(types(lowConfidenceDrift).slice(2).every(type => type === 'UNASSESSED' || type === 'DELETION'))
+}
+
+{
+  const corrected = await alignSpeechmaticsPath('الحمد لله رب العالمين', [
+    { word: 'الحمد', confidence: 0.95, start: 0, end: 0.2, token: 'a', speaker: 'S1' },
+    { word: 'لله', confidence: 0.95, start: 0.3, end: 0.5, token: 'b', speaker: 'S1' },
+    { word: 'الرحمن', confidence: 0.95, start: 0.6, end: 0.8, token: 'c', speaker: 'S1' },
+    { word: 'الرحيم', confidence: 0.95, start: 0.9, end: 1.1, token: 'd', speaker: 'S1' },
+    { word: 'رب', confidence: 0.95, start: 2.0, end: 2.2, token: 'e', speaker: 'S1' },
+    { word: 'العالمين', confidence: 0.95, start: 2.3, end: 2.5, token: 'f', speaker: 'S1' },
+  ])
+  assert.ok(corrected.events.some(event => event.type === 'SELF_CORRECTION'))
+  assert.equal(corrected.wordStatuses.some(word => word.type === 'DELETION'), false)
+  assert.equal(corrected.scenarioCounts.unresolved_mistakes, 0)
+  assert.deepEqual(types(corrected), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+}
+
+{
+  const fastWords = speechmaticsWords(['الحمد', 'لله', 'رب', 'العالمين'], 0.95, 0.07)
+  assert.deepEqual(types(await alignSpeechmaticsPath('الحمد لله رب العالمين', fastWords)), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+  const pace = estimateSessionRecitationPaceFactor({ recognitionWords: fastWords })
+  assert.ok(pace <= 0.82, `measured fast pace ${pace}`)
+  const fastDelays = resolveAdaptiveSpeechmaticsDelays({ live: true, paceFactor: pace })
+  const balancedDelays = resolveAdaptiveSpeechmaticsDelays({ live: true, paceFactor: 1 })
+  const slowDelays = resolveAdaptiveSpeechmaticsDelays({ live: true, paceFactor: 1.4, tajweedHeavy: true })
+  const fastUpdate = buildSpeechmaticsRecognitionUpdate(fastDelays)
+  assert.equal(fastDelays.tier, 'fast')
+  assert.equal(fastUpdate.message, 'SetRecognitionConfig')
+  assert.equal(fastUpdate.transcription_config.max_delay, 0.7)
+  assert.equal(fastUpdate.transcription_config.max_delay_mode, 'flexible')
+  assert.ok(fastUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger <= 0.25)
+  assert.ok(
+    fastUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger
+      < balancedDelays.endOfUtteranceSeconds,
+  )
+  assert.ok(slowDelays.endOfUtteranceSeconds > balancedDelays.endOfUtteranceSeconds)
+  assert.ok(slowDelays.maxDelaySeconds <= 0.9)
+  const fastSkipLive = await alignSpeechmaticsPath('الحمد لله رب العالمين', [
+    { word: 'الحمد', confidence: 0.95, start: 0, end: 0.06, token: 'f0', speaker: 'S1' },
+    { word: 'لله', confidence: 0.95, start: 0.07, end: 0.13, token: 'f1', speaker: 'S1' },
+    { word: 'العالمين', confidence: 0.95, start: 0.14, end: 0.22, token: 'f2', speaker: 'S1' },
+  ])
+  assert.deepEqual(types(fastSkipLive), ['MATCH', 'MATCH', 'DELETION', 'MATCH'])
+  const shortGap = await alignSpeechmaticsPath('الحمد لله رب العالمين', speechmaticsWords(
+    ['الحمد', 'لله', 'رب', 'العالمين'],
+    0.95,
+    0.08,
+  ))
+  assert.equal(shortGap.events.some(event => event.type === 'HESITATION'), false)
+  const held = await alignSpeechmaticsPath('الحمد لله رب العالمين', [
+    { word: 'الحمد', confidence: 0.95, start: 0, end: 0.06, token: 'h0', speaker: 'S1' },
+    { word: 'لله', confidence: 0.95, start: 0.14, end: 0.2, token: 'h1', speaker: 'S1' },
+    { word: 'رب', confidence: 0.95, start: 1.7, end: 1.76, token: 'h2', speaker: 'S1' },
+    { word: 'العالمين', confidence: 0.95, start: 1.84, end: 1.92, token: 'h3', speaker: 'S1' },
+  ])
+  assert.ok(held.events.some(event => event.type === 'HESITATION'))
+  assert.deepEqual(types(held), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+}
+
+{
+  const session = await fs.readFile(path.join(root, 'resources/js/scripts/dashboardAiRecite/recordingSession.js'), 'utf8')
+  const memorisation = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
+  const ask = await fs.readFile(path.join(root, 'resources/js/scripts/askMutqin/voiceSession.js'), 'utf8')
+  const runtime = await fs.readFile(path.join(root, 'resources/js/scripts/memorisationRuntime.js'), 'utf8')
+  const dashboard = await fs.readFile(path.join(root, 'resources/js/components/DashboardAiReciteModal.vue'), 'utf8')
+  assert.match(session, /live:\s*true/)
+  assert.match(session, /updateRecognitionDelays/)
+  assert.doesNotMatch(session, /amdLive:\s*false/)
+  assert.match(memorisation, /syncSpeechmaticsPaceDelays/)
+  assert.match(memorisation, /updateRecognitionDelays/)
+  assert.match(runtime, /SetRecognitionConfig/)
+  assert.doesNotMatch(ask, /updateRecognitionDelays/)
+  assert.match(ask, /Math\.max\(delays\.endOfUtteranceSeconds, 1\.8\)/)
+  assert.match(dashboard, /evaluateSpeechmaticsAudioGate/)
+  assert.match(dashboard, /createMemorisationAssessment/)
+  const gateBeforeSave = dashboard.indexOf('evaluateSpeechmaticsAudioGate')
+  const saveCall = dashboard.indexOf('createMemorisationAssessment')
+  assert.ok(gateBeforeSave >= 0 && gateBeforeSave < saveCall)
+}
+
+{
+  const config = buildSpeechmaticsRecitationConfig({ language: 'ar', selectedText: 'الحمد لله رب العالمين' })
+  assert.equal(config.language, 'ar')
+  assert.equal(config.model, 'enhanced')
+  assert.equal(config.diarization, 'speaker')
+  assert.equal('output_locale' in config, false)
+  assert.equal('additional_vocab' in config, false)
+  const accented = await alignSpeechmaticsPath(
+    'الحمد لله رب العالمين الصراط ملك',
+    speechmaticsWords(['الحمد', 'لله', 'رب', 'العلمين', 'السراط', 'مالك']).map(word => ({
+      ...word,
+      voice_profile: 'egyptian',
+      accent_hint: 'maghrebi',
+      loudness: 0.9,
+    })),
+  )
+  assert.deepEqual(types(accented), ['MATCH', 'MATCH', 'MATCH', 'MATCH', 'SUBSTITUTION', 'MATCH'])
+  assert.equal(accented.wordStatuses[4].visualStatus === 'green', false)
+  const plain = buildQuranAlignment(
+    'الحمد لله رب العالمين الصراط ملك',
+    speechmaticsWords(['الحمد', 'لله', 'رب', 'العلمين', 'السراط', 'مالك']),
+    { strictProgression: false },
+  )
+  assert.deepEqual(types(accented), types(plain))
+  assert.deepEqual(fields(accented, 'visualStatus'), fields(plain, 'visualStatus'))
+}
+
+{
+  assert.equal(SPEECHMATICS_AUDIO_GATE.minSnrDb, 4)
+  assert.equal(SPEECHMATICS_AUDIO_GATE.maxClippingRatio, 0.08)
+  assert.equal(evaluateSpeechmaticsAudioGate({ snr_db: 2.5 }).reason, 'heavy_noise')
+  assert.equal(evaluateSpeechmaticsAudioGate({ rms: 0.003, peak: 0.01 }).reason, 'very_low_volume')
+  assert.equal(evaluateSpeechmaticsAudioGate({ clipping_ratio: 0.12 }).reason, 'severe_clipping')
+  assert.equal(evaluateSpeechmaticsAudioGate({ complete: false }).reason, 'broken_recording')
+  assert.equal(evaluateSpeechmaticsAudioGate({ speech_ratio: 0.03 }).reason, 'insufficient_usable_speech')
+  assert.equal(evaluateSpeechmaticsAudioGate({
+    snr_db: 9,
+    rms: 0.04,
+    clipping_ratio: 0.002,
+    speech_ratio: 0.5,
+  }).reliable, true)
+  const blocked = selectPrimaryReciterWords(
+    speechmaticsWords(['الحمد', 'لله', 'رب', 'العالمين']),
+    'الحمد لله رب العالمين',
+    { audioQualityMetrics: { snr_db: 2.5 } },
+  )
+  assert.equal(blocked.reliable, false)
+  assert.equal(blocked.status, 'heavy_noise')
+  assert.equal(blocked.words.length, 0)
+  const quiet = selectPrimaryReciterWords(
+    speechmaticsWords(['الحمد', 'لله', 'رب', 'العالمين']),
+    'الحمد لله رب العالمين',
+    { audioQualityMetrics: { snr_db: 9, rms: 0.04, peak: 0.2, clipping_ratio: 0.002, speech_ratio: 0.5 } },
+  )
+  assert.equal(quiet.reliable, true)
+  assert.equal(quiet.words.length, 4)
+}
 
 console.log('speechmatics-edge-scenarios.test.mjs: ok')

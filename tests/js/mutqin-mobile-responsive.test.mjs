@@ -484,11 +484,19 @@ async function inspectState(page, state) {
       }
       if (state === 'active') {
         expectParallel('.action-btn-exit', '.top-card-ellipsis', 'secondary action rail')
-        expectParallel(
-          '.top-card-session-actions.has-paired-actions > .session-primary-action',
-          '.top-card-session-actions.has-paired-actions > .action-btn-exit',
-          'primary and end-session actions'
-        )
+        const primary = visibleElements('.top-card-session-actions.has-paired-actions > .session-primary-action')[0]
+        const end = visibleElements('.top-card-session-actions.has-paired-actions > .action-btn-exit')[0]
+        if (!primary || !end) {
+          issues.push('active: Pause/Resume and End actions are missing')
+        } else {
+          const a = primary.getBoundingClientRect()
+          const b = end.getBoundingClientRect()
+          const parent = primary.parentElement?.getBoundingClientRect()
+          if (b.top < a.bottom - 2) issues.push('active: Pause/Resume and End are not stacked')
+          if (parent && (a.width < parent.width - 8 || b.width < parent.width - 8)) {
+            issues.push('active: Pause/Resume and End are not full width')
+          }
+        }
       }
       if (state === 'controls') expectParallel('.sheet-content > .field-stack-compact > .field:nth-child(1)', '.sheet-content > .field-stack-compact > .field:nth-child(3)', 'Surah and reciter fields')
       if (state === 'practice') expectParallel('.sheet-toggle > .st-left .st-txt', '.sheet-toggle > .st-right-group', 'practice copy and controls')

@@ -301,6 +301,7 @@ import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessio
 import { resolveMicDeniedGuidance } from '../scripts/audio/recordingResilience'
 import { playRecordingStartBeep } from '../scripts/audio/recordingStartBeep.js'
 import { loadAyah } from '../scripts/dashboardAiRecite/ayahText'
+import { evaluateSpeechmaticsAudioGate } from '../scripts/audio/speechmaticsAudioGate.js'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import {
   ayahCountForSurah,
@@ -563,6 +564,14 @@ export default {
       await this.analyse(capture)
     },
     async analyse(capture) {
+      const audioGate = evaluateSpeechmaticsAudioGate(capture?.audioQualityMetrics || null)
+      if (!audioGate.reliable) {
+        this.showError(
+          this.t('dashboard.ai_recite.error_title'),
+          this.t('memorisation.aiCheck.retry.unusable'),
+        )
+        return
+      }
       this.processingLabel = this.t('memorisation.amd.hintAnalysing')
       const verse = await loadAyah(this.surah, this.ayah)
       if (!verse?.text) {

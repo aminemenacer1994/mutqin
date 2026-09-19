@@ -3,12 +3,13 @@ export const SPEECHMATICS_MAX_DELAY_SECONDS = 0.7
 export const SPEECHMATICS_AMD_MAX_DELAY_SECONDS = 0.7
 /** Slow / tajwīd-heavy sessions — keep a tiny extra hold, still under 1s. */
 export const SPEECHMATICS_AMD_SLOW_MAX_DELAY_SECONDS = 0.9
-/** Fast reciters — Speechmatics minimum. */
+/** Fast reciters — max_delay cannot go below the Speechmatics floor (0.7). */
 export const SPEECHMATICS_AMD_FAST_MAX_DELAY_SECONDS = 0.7
 export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.45
 export const SPEECHMATICS_AMD_END_OF_UTTERANCE_SECONDS = 0.5
 export const SPEECHMATICS_AMD_SLOW_END_OF_UTTERANCE_SECONDS = 0.7
-export const SPEECHMATICS_AMD_FAST_END_OF_UTTERANCE_SECONDS = 0.4
+/** Fast tier is the lower end-of-utterance; max_delay stays on the 0.7 floor. */
+export const SPEECHMATICS_AMD_FAST_END_OF_UTTERANCE_SECONDS = 0.25
 
 function clampSpeechmaticsDelay(value, fallback, min = 0.7, max = 4) {
   const num = Number(value)
@@ -21,7 +22,31 @@ export function clampSpeechmaticsMaxDelaySeconds(value, fallback = SPEECHMATICS_
 }
 
 export function clampSpeechmaticsEndOfUtteranceSeconds(value, fallback = SPEECHMATICS_END_OF_UTTERANCE_SECONDS) {
-  return clampSpeechmaticsDelay(value, fallback, 0.4, 4)
+  // Speechmatics allows 0–2s. The floor must stay below the fast tier (0.25).
+  return clampSpeechmaticsDelay(value, fallback, 0, 2)
+}
+
+/**
+ * Payload pushed to an open Speechmatics session. SetRecognitionConfig can
+ * update max_delay and end_of_utterance without reconnecting mid-ayah.
+ */
+export function buildSpeechmaticsRecognitionUpdate({
+  maxDelaySeconds = SPEECHMATICS_MAX_DELAY_SECONDS,
+  endOfUtteranceSeconds = SPEECHMATICS_END_OF_UTTERANCE_SECONDS,
+} = {}) {
+  return {
+    message: 'SetRecognitionConfig',
+    transcription_config: {
+      max_delay: clampSpeechmaticsMaxDelaySeconds(maxDelaySeconds, SPEECHMATICS_MAX_DELAY_SECONDS),
+      max_delay_mode: 'flexible',
+      conversation_config: {
+        end_of_utterance_silence_trigger: clampSpeechmaticsEndOfUtteranceSeconds(
+          endOfUtteranceSeconds,
+          SPEECHMATICS_END_OF_UTTERANCE_SECONDS,
+        ),
+      },
+    },
+  }
 }
 
 /**

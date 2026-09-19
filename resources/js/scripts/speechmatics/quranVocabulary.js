@@ -19,6 +19,8 @@ export function buildSpeechmaticsRecitationConfig(options = {}) {
     diarization: 'speaker',
     speaker_diarization_config: { speaker_sensitivity: 0.5 },
   }
+  // Language stays ar, operating point enhanced, diarization speaker.
+  // No output_locale and no dialect switch. additional_vocab is never the selected ayah.
   if (additionalVocab.length) config.additional_vocab = additionalVocab
   return config
 }

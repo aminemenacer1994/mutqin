@@ -15,8 +15,8 @@
         aria-modal="true"
         aria-labelledby="amdModalTitle"
       >
-        <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium" data-tour="ai-modal">
-          <header class="amd-header amd-header--premium amd-header--sticky">
+        <div class="modal-content mutqin-modal-surface amd-modal amd-modal--mushaf amd-modal--test amd-modal--premium amd-modal--spacious" data-tour="ai-modal">
+          <header class="amd-header amd-header--premium amd-header--compact amd-header--sticky">
             <div class="amd-header-top">
               <div class="amd-header-copy">
                 <div class="amd-title-row">
@@ -31,7 +31,7 @@
               </div>
               <div class="amd-header-aside">
                 <div
-                  class="amd-mic-status amd-mic-status--header"
+                  class="amd-mic-status amd-mic-status--header amd-mic-status--compact"
                   :class="{
                     'amd-mic-status--recording': isListening,
                     'amd-mic-status--starting': isStarting,
@@ -55,10 +55,9 @@
                 </button>
               </div>
             </div>
-            <p v-if="readyCopy && isReady && !isError && !showInlineError" class="amd-brief">{{ readyCopy }}</p>
           </header>
 
-          <div class="amd-body amd-body--premium amd-body--scroll">
+          <div class="amd-body amd-body--premium amd-body--compact amd-body--scroll">
             <div v-if="!isComplete" class="amd-tools-container">
               <div
                 class="amd-toolbar amd-toolbar--icons amd-toolbar--tools amd-tools-bar amd-tools-bar--full"
@@ -303,7 +302,6 @@ export default {
     rangeLabel: { type: String, default: '' },
     betaBadge: { type: String, default: 'Beta' },
     disclaimer: { type: String, default: '' },
-    readyCopy: { type: String, default: '' },
     micStatus: { type: String, default: 'ready' },
     micStatusLabel: { type: String, default: 'Ready' },
     micGuidance: { type: String, default: '' },

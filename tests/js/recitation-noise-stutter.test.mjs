@@ -116,6 +116,13 @@ const { resolveAdaptiveSpeechmaticsDelays } = delays.namespace
   const balanced = resolveAdaptiveSpeechmaticsDelays({ amdLive: true, paceFactor: 1 })
   assert.equal(balanced.tier, 'balanced')
   assert.equal(balanced.maxDelaySeconds, 0.7)
+  assert.ok(fast.endOfUtteranceSeconds < 0.4, 'fast end-of-utterance is below the old 0.4 clamp')
+  assert.ok(fast.endOfUtteranceSeconds < balanced.endOfUtteranceSeconds)
+  assert.ok(balanced.endOfUtteranceSeconds < resolveAdaptiveSpeechmaticsDelays({
+    amdLive: true,
+    paceFactor: 1.4,
+    tajweedHeavy: true,
+  }).endOfUtteranceSeconds)
 
   const slow = resolveAdaptiveSpeechmaticsDelays({ amdLive: true, paceFactor: 1.4, tajweedHeavy: true })
   assert.equal(slow.tier, 'slow')
@@ -131,6 +138,7 @@ const { resolveAdaptiveSpeechmaticsDelays } = delays.namespace
   const js = await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8')
   assert.match(js, /resolveAmdSpeechmaticsDelays\(/)
   assert.match(js, /resolveAdaptiveSpeechmaticsDelays\(/)
+  assert.match(js, /updateRecognitionDelays\(/)
   assert.match(
     analysis.namespace.buildRealtimePreviewAlignment.toString(),
     /isLikelyOffTargetTransientNoise/,

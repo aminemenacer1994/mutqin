@@ -583,10 +583,10 @@
     justify-content: center !important;
   }
 
-  /* Paired Resume / End session CTAs side by side */
+  /* Paired Pause / Resume / End CTAs each take the full row */
   .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     width: 100% !important;
     gap: 0.4rem !important;
   }
@@ -597,8 +597,8 @@
   }
 
   .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
+    grid-column: 1 !important;
+    grid-row: 2 !important;
   }
 
   .top-card-session-actions:not(.has-paired-actions):not(.post-session-choice-pair) > .session-primary-action {
@@ -3118,7 +3118,7 @@
 
   .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     flex: none !important;
     gap: 0.35rem !important;
     min-inline-size: 0 !important;
@@ -3132,8 +3132,8 @@
   }
 
   .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
-    grid-column: 2 !important;
-    grid-row: 1 !important;
+    grid-column: 1 !important;
+    grid-row: 2 !important;
   }
 
   .top-card-session-actions:not(.has-paired-actions) > .session-primary-action,
@@ -4282,7 +4282,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .workspace-shell-head-toolbar .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     flex-wrap: nowrap !important;
     gap: 0.4rem !important;
     width: 100% !important;
@@ -6120,7 +6120,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
 .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
   display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
   align-items: stretch !important;
   gap: 0.4rem !important;
   width: 100% !important;
@@ -6130,10 +6130,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
 .workspace-shell-head-utility-row .top-card-session-actions:not(.has-paired-actions) {
   display: flex !important;
-  flex-flow: row nowrap !important;
-  align-items: center !important;
+  flex-flow: column nowrap !important;
+  align-items: stretch !important;
   gap: 0.4rem !important;
-  width: auto !important;
+  width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
 }
@@ -6151,8 +6151,8 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 }
 
 .workspace-shell-head-utility-row .top-card-session-actions:not(.has-paired-actions) .top-card-action-trigger.session-primary-action {
-  width: auto !important;
-  flex: 0 1 auto !important;
+  width: 100% !important;
+  flex: 1 1 auto !important;
 }
 
 .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions .top-card-action-trigger span {
@@ -7619,5 +7619,101 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated::after,
   .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated .bi {
     animation: none !important;
+  }
+}
+
+/* Keep the same progress/header/reader flow contract on phones. */
+@media (max-width: 767.98px) {
+  .workspace {
+    --workspace-flow-gap: 0.75rem;
+    --workspace-progress-rail-h: 42px;
+    row-gap: var(--workspace-flow-gap);
+  }
+
+  .session-progress-rail {
+    margin: 0 !important;
+  }
+
+  .workspace-shell {
+    margin: 0 !important;
+  }
+
+}
+
+/* Final responsive workspace contract. Keep metadata in one horizontal rail,
+ * and reserve clearance in the actual reading surface behind the dock. */
+html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills,
+html body .app .workspace-shell-head > .workspace-shell-progress-pills {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+  scrollbar-width: none;
+}
+
+html body .app .workspace-shell-head > .workspace-shell-progress-pills::-webkit-scrollbar,
+html body .app .workspace-shell-bottom-pills .workspace-shell-metadata::-webkit-scrollbar,
+html body .app .workspace-shell-metadata::-webkit-scrollbar {
+  display: none;
+}
+
+html body .app .workspace-shell-progress-pill,
+html body .app .workspace-shell-metadata-pill {
+  flex: 0 0 auto !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+}
+
+html body .app .workspace-shell-bottom-pills,
+html body .app .workspace-shell-bottom-pills .workspace-shell-metadata,
+html body .app .workspace-shell-metadata {
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+}
+
+html body .app .workspace-shell-bottom-pills .workspace-shell-metadata {
+  display: inline-flex !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  overflow: visible !important;
+}
+
+html body .app .main.mushaf-mode-active .mushaf-shell {
+  min-height: 0 !important;
+  min-block-size: 0 !important;
+  padding-block-end: 0.45rem !important;
+}
+
+html body .app .workspace-main .verses-grid {
+  padding-block-end: 0.45rem !important;
+}
+
+html body .app[data-theme="dark"] .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-basmala,
+html[data-theme="dark"] body .app .main.mushaf-mode-active .madani-page-sheet--tajweed .madani-basmala {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+html body .app[data-theme="dark"] .verse-basmala,
+html[data-theme="dark"] body .app .verse-basmala {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .app .workspace-recite-dock__button:hover {
+  animation: none !important;
+}
+
+@media (max-width: 767.98px) {
+  html body .app .workspace-recite-dock__button:hover {
+    transform: none !important;
   }
 }
