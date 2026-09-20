@@ -9854,7 +9854,11 @@ html {
   --back-to-top-content-max: 1320px;
   --back-to-top-rail: max(12px, calc((100vw - min(100vw, var(--back-to-top-content-max))) / 2 + 12px));
   position: fixed;
-  inset-inline-end: var(--back-to-top-rail);
+  /* Physical right of the content rail (same as float-rail stack). */
+  inset-inline: auto;
+  inset-inline-end: auto;
+  left: auto;
+  right: var(--back-to-top-rail);
   bottom: calc(var(--fixed-player-height, 0px) + 12px);
   z-index: 1055;
   width: 52px;
@@ -64983,7 +64987,7 @@ body:has(.workspace-recite-dock__button) .app .workspace {
     inset 0 1px 0 rgba(255, 255, 255, 0.5),
     0 4px 14px rgba(42, 174, 111, 0.28),
     0 0 0 4px rgba(86, 222, 149, 0.1);
-  margin: 0 auto !important;
+  margin: 0 !important;
   pointer-events: auto;
 }
 
@@ -65011,17 +65015,43 @@ body:has(.workspace-recite-dock__button) .app .workspace {
   left: auto;
   right: auto;
   flex: 0 0 auto;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: flex-start;
   width: 100%;
   max-width: none;
   height: 0;
   margin: 0;
   padding: 0;
+  padding-inline-end: max(12px, calc((100% - min(100%, 1320px)) / 2 + 12px));
   overflow: visible;
   pointer-events: none;
   z-index: 40;
   transform: none;
+}
+
+@media (max-width: 1399.98px) {
+  .workspace-recite-dock {
+    padding-inline-end: max(12px, calc((100% - min(100%, 1140px)) / 2 + 12px));
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .workspace-recite-dock {
+    padding-inline-end: max(12px, calc((100% - min(100%, 960px)) / 2 + 12px));
+  }
+}
+
+@media (max-width: 991.98px) {
+  .workspace-recite-dock {
+    padding-inline-end: 12px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .workspace-recite-dock {
+    justify-content: center;
+    padding-inline-end: 0;
+  }
 }
 
 body:has(.player-dock) .workspace-recite-dock,
@@ -65181,7 +65211,7 @@ body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease !important;
   transform: none !important;
   overflow: hidden !important;
-  margin: 0 auto !important;
+  margin: 0 !important;
 }
 
 @media (max-width: 767.98px) {

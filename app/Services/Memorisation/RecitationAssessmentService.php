@@ -70,76 +70,92 @@ class RecitationAssessmentService
 
         $startedAt = microtime(true);
 
-        return DB::transaction(function () use ($user, $payload, $idempotencyKey, $startedAt, $rawRecognitionWords, $audioDecision) {
-            $ayahs = is_array($payload['ayahs'] ?? null) ? $payload['ayahs'] : [];
-            $recognitionWords = is_array($payload['recognition_words'] ?? null)
-                ? $payload['recognition_words']
-                : [];
-            if ($recognitionWords === [] && is_string($payload['transcript'] ?? null)) {
-                $tokens = preg_split('/\s+/u', trim((string) $payload['transcript'])) ?: [];
-                // Transcript-only tokens have no ASR confidence — keep them uncertain-capable
-                // so mismatches are not automatically definite mistakes.
-                $recognitionWords = array_values(array_filter(array_map(
-                    static fn ($token) => ['word' => (string) $token, 'confidence' => 0.5],
-                    $tokens
-                ), static fn ($entry) => trim((string) ($entry['word'] ?? '')) !== ''));
-            }
+        $ayahs = is_array($payload['ayahs'] ?? null) ? $payload['ayahs'] : [];
+        $recognitionWords = is_array($payload['recognition_words'] ?? null)
+            ? $payload['recognition_words']
+            : [];
+        if ($recognitionWords === [] && is_string($payload['transcript'] ?? null)) {
+            $tokens = preg_split('/\s+/u', trim((string) $payload['transcript'])) ?: [];
+            // Transcript-only tokens have no ASR confidence — keep them uncertain-capable
+            // so mismatches are not automatically definite mistakes.
+            $recognitionWords = array_values(array_filter(array_map(
+                static fn ($token) => ['word' => (string) $token, 'confidence' => 0.5],
+                $tokens
+            ), static fn ($entry) => trim((string) ($entry['word'] ?? '')) !== ''));
+        }
 
-            $targetText = (string) ($payload['target_text'] ?? '');
-            if ($targetText === '' && $ayahs !== []) {
-                $targetText = implode(' ', array_map(
-                    fn ($a) => (string) ($a['text'] ?? $a['arabic'] ?? ''),
-                    $ayahs
-                ));
-            }
+        $targetText = (string) ($payload['target_text'] ?? '');
+        if ($targetText === '' && $ayahs !== []) {
+            $targetText = implode(' ', array_map(
+                fn ($a) => (string) ($a['text'] ?? $a['arabic'] ?? ''),
+                $ayahs
+            ));
+        }
 
-            $lifecycle = $this->resolveAlignmentLifecycle($payload);
-            $aligned = $this->alignment->align($ayahs, $recognitionWords, $targetText, [
-                'lifecycle' => $lifecycle,
-            ]);
-            $analysis = $this->weakness->analyse(
-                $aligned['word_results'],
-                $aligned['extra_words'],
-                $aligned['color_counts'],
-                $aligned['accuracy']
-            );
+        $lifecycle = $this->resolveAlignmentLifecycle($payload);
+        $aligned = $this->alignment->align($ayahs, $recognitionWords, $targetText, [
+            'lifecycle' => $lifecycle,
+        ]);
+        $analysis = $this->weakness->analyse(
+            $aligned['word_results'],
+            $aligned['extra_words'],
+            $aligned['color_counts'],
+            $aligned['accuracy']
+        );
 
-            $range = [
-                'surah_number' => (int) $payload['surah_number'],
-                'surah_name' => $payload['surah_name'] ?? null,
-                'start_ayah' => (int) $payload['start_ayah'],
-                'end_ayah' => (int) $payload['end_ayah'],
-            ];
+        $range = [
+            'surah_number' => (int) $payload['surah_number'],
+            'surah_name' => $payload['surah_name'] ?? null,
+            'start_ayah' => (int) $payload['start_ayah'],
+            'end_ayah' => (int) $payload['end_ayah'],
+        ];
 
-            $persistentWeakWords = $this->history->reliableWeakWordsForRange(
-                $user,
-                $range['surah_number'],
-                $range['start_ayah'],
-                $range['end_ayah']
-            );
-            $analysis['weak_words'] = $this->history->mergeWeakWords(
-                is_array($analysis['weak_words'] ?? null) ? $analysis['weak_words'] : [],
-                $persistentWeakWords
-            );
+        $persistentWeakWords = $this->history->reliableWeakWordsForRange(
+            $user,
+            $range['surah_number'],
+            $range['start_ayah'],
+            $range['end_ayah']
+        );
+        $analysis['weak_words'] = $this->history->mergeWeakWords(
+            is_array($analysis['weak_words'] ?? null) ? $analysis['weak_words'] : [],
+            $persistentWeakWords
+        );
 
-            $planData = $this->plans->recommend(
-                $analysis,
-                $range,
-                $aligned['accuracy'],
-                isset($payload['duration_ms']) ? (int) $payload['duration_ms'] : null,
-                count($aligned['word_results'] ?? [])
-            );
+        $planData = $this->plans->recommend(
+            $analysis,
+            $range,
+            $aligned['accuracy'],
+            isset($payload['duration_ms']) ? (int) $payload['duration_ms'] : null,
+            count($aligned['word_results'] ?? [])
+        );
 
-            $previousId = isset($payload['previous_assessment_id'])
-                ? (int) $payload['previous_assessment_id']
-                : null;
-            $processingMs = (int) round((microtime(true) - $startedAt) * 1000);
+        $previousId = isset($payload['previous_assessment_id'])
+            ? (int) $payload['previous_assessment_id']
+            : null;
+        $processingMs = (int) round((microtime(true) - $startedAt) * 1000);
+        $matchResult = $this->history->resolveMatchResult(
+            $aligned['accuracy'],
+            isset($payload['match_result']) ? (string) $payload['match_result'] : null
+        );
+        $practiceScope = $this->resolvePracticeScope($payload, $planData);
+
+        return DB::transaction(function () use (
+            $user,
+            $payload,
+            $idempotencyKey,
+            $rawRecognitionWords,
+            $audioDecision,
+            $aligned,
+            $analysis,
+            $range,
+            $planData,
+            $previousId,
+            $processingMs,
+            $matchResult,
+            $practiceScope,
+            $lifecycle,
+        ) {
             $now = now();
-            $matchResult = $this->history->resolveMatchResult(
-                $aligned['accuracy'],
-                isset($payload['match_result']) ? (string) $payload['match_result'] : null
-            );
-            $practiceScope = $this->resolvePracticeScope($payload, $planData);
 
             $assessment = MemorisationAssessment::query()->create([
                 'user_id' => $user->id,
@@ -280,6 +296,7 @@ class RecitationAssessmentService
             $improvement = null;
             if ($previousId) {
                 $previous = MemorisationAssessment::query()
+                    ->with('practicePlan')
                     ->where('user_id', $user->id)
                     ->whereKey($previousId)
                     ->first();

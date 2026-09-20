@@ -111,7 +111,15 @@ class AiReciteAttemptAudioService
 
     public function hasPlayableAudio(?AiReciteAttempt $attempt): bool
     {
-        return (bool) $this->payload($attempt)['available'];
+        if (! $attempt?->audio_path) {
+            return false;
+        }
+
+        if ($this->isExpired($attempt)) {
+            return false;
+        }
+
+        return $this->hasFile($attempt);
     }
 
     public function stream(User $user, AiReciteAttempt $attempt): ?Response
@@ -165,14 +173,17 @@ class AiReciteAttemptAudioService
 
     public function deleteAllForUser(User $user): int
     {
-        $attempts = AiReciteAttempt::query()
+        $deleted = 0;
+        AiReciteAttempt::query()
             ->where('user_id', $user->id)
             ->whereNotNull('audio_path')
-            ->get();
-
-        foreach ($attempts as $attempt) {
-            $this->deleteStored($attempt);
-        }
+            ->orderBy('id')
+            ->chunkById(100, function ($attempts) use (&$deleted): void {
+                foreach ($attempts as $attempt) {
+                    $this->deleteStored($attempt);
+                    $deleted++;
+                }
+            });
 
         $directory = self::PREFIX.'/'.$user->id;
         try {
@@ -186,29 +197,31 @@ class AiReciteAttemptAudioService
             ]);
         }
 
-        return $attempts->count();
+        return $deleted;
     }
 
     public function purgeExpired(): int
     {
         $query = AiReciteAttempt::query()->whereNotNull('audio_path');
 
-        if (AudioPrivacy::rawRecordingRetention() === AudioPrivacy::RETENTION_NEVER) {
-            $attempts = $query->get();
-        } elseif (AudioPrivacy::rawRecordingRetention() === AudioPrivacy::RETENTION_RETAIN) {
+        if (AudioPrivacy::rawRecordingRetention() === AudioPrivacy::RETENTION_RETAIN) {
             return 0;
-        } else {
-            $attempts = $query
-                ->whereNotNull('audio_expires_at')
-                ->where('audio_expires_at', '<=', now())
-                ->get();
         }
 
-        foreach ($attempts as $attempt) {
-            $this->deleteStored($attempt);
+        if (AudioPrivacy::rawRecordingRetention() !== AudioPrivacy::RETENTION_NEVER) {
+            $query->whereNotNull('audio_expires_at')
+                ->where('audio_expires_at', '<=', now());
         }
 
-        return $attempts->count();
+        $purged = 0;
+        $query->orderBy('id')->chunkById(100, function ($attempts) use (&$purged): void {
+            foreach ($attempts as $attempt) {
+                $this->deleteStored($attempt);
+                $purged++;
+            }
+        });
+
+        return $purged;
     }
 
     private function hasFile(?AiReciteAttempt $attempt): bool

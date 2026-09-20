@@ -1379,6 +1379,7 @@ export default {
       feedbackTypes: ['suggestion', 'bug', 'ai_recitation', 'design', 'other'],
       feedbackStatuses: ['new', 'reviewing', 'planned', 'resolved', 'closed'],
       syncTimer: null,
+      syncInFlight: false,
       rowMenuId: null,
       selectedUserId: null,
       selectedIds: [],
@@ -1650,7 +1651,7 @@ export default {
       this.syncTimer = window.setInterval(() => {
         if (document.visibilityState === 'hidden') return
         this.syncQuiet()
-      }, 20000)
+      }, 60000)
     },
     stopLiveSync() {
       if (this.syncTimer) {
@@ -1662,14 +1663,19 @@ export default {
       if (document.visibilityState === 'visible') this.syncQuiet()
     },
     async syncQuiet() {
+      if (this.syncInFlight) return
+      this.syncInFlight = true
       try {
-        const payload = await adminApi.getDashboard(this.chartDays, { fresh: true })
+        // Use cached dashboard payload (60s TTL) — reserve fresh=1 for explicit refresh.
+        const payload = await adminApi.getDashboard(this.chartDays, { fresh: false })
         const sanitized = this.sanitizePayload(payload)
         if (sanitized) this.data = sanitized
         if (this.directoryTab === 'learners') await this.reloadUsers()
         else await this.loadFeedback(this.feedbackPage)
       } catch (_) {
         /* ignore quiet sync errors */
+      } finally {
+        this.syncInFlight = false
       }
     },
     async boot(force = false) {
@@ -2469,12 +2475,16 @@ export default {
       }
     },
     async refreshSnapshotQuiet() {
+      if (this.syncInFlight) return
+      this.syncInFlight = true
       try {
-        const payload = await adminApi.getDashboard(this.chartDays, { fresh: true })
+        const payload = await adminApi.getDashboard(this.chartDays, { fresh: false })
         const sanitized = this.sanitizePayload(payload)
         if (sanitized) this.data = sanitized
       } catch (error) {
         /* ignore */
+      } finally {
+        this.syncInFlight = false
       }
     },
     selectUser(id) {

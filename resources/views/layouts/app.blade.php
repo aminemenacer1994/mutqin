@@ -2162,7 +2162,7 @@
           0 0 0 4px rgba(86, 222, 149, 0.1) !important;
         animation: none !important;
         overflow: hidden !important;
-        margin: 0 auto !important;
+        margin: 0 !important;
       }
 
       html body .app .workspace-recite-dock .workspace-recite-dock__button i,
@@ -3112,7 +3112,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v174'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -3128,7 +3128,7 @@
           var pinning = false;
           var observer = new MutationObserver(function () {
             if (pinning) return;
-            var lock = document.getElementById('mutqin-ui-lock-v174');
+            var lock = document.getElementById('mutqin-ui-lock-v180');
             if (!lock || lock === document.body.lastElementChild) return;
             pinning = true;
             pin();
@@ -8706,9 +8706,8 @@ body.session-analysis-modal-open {
 }
     </style>
     @stack('page-scripts')
-<style id="mutqin-ui-lock-v174">
-  /* Sticky left zoom. Recite stays sticky in-workspace with an opaque face
-   * so ayah ink never shows through. No reserved clearance band under ayahs. */
+<style id="mutqin-ui-lock-v180">
+  /* Desktop: Recite+FAB stack on container right. Mobile: original in-workspace sticky. */
   html body .app {
     transform: none !important;
     filter: none !important;
@@ -8796,38 +8795,170 @@ body.session-analysis-modal-open {
     }
   }
 
-  /* Sticky in workspace — no empty clearance band under ayahs. */
-  html body .workspace-recite-dock,
-  html body .app .workspace-recite-dock,
-  body > .workspace-recite-dock {
-    display: flex !important;
-    position: sticky !important;
-    top: var(--workspace-recite-sticky-top, calc(100dvh - 5.5rem)) !important;
-    inset-inline: 0 !important;
-    inset-block-end: auto !important;
-    right: auto !important;
-    left: auto !important;
-    bottom: auto !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
-    width: 100% !important;
-    max-width: none !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-    pointer-events: none !important;
-    z-index: 40 !important;
-    transform: none !important;
-    filter: none !important;
-    box-shadow: none !important;
+  /*
+   * Desktop (≥768): fixed rail on physical right — Recite above FAB.
+   * Mobile (≤767.98): hide float-rail; use original in-workspace sticky dock.
+   */
+  @media (min-width: 768px) {
+    html body .workspace-recite-dock--mobile,
+    html body .app .workspace-recite-dock--mobile {
+      display: none !important;
+    }
+
+    html body .workspace-float-rail,
+    html body .workspace-float-rail--desktop,
+    body > .workspace-float-rail {
+      --back-to-top-content-max: 1320px;
+      --back-to-top-rail: max(12px, calc((100vw - min(100vw, var(--back-to-top-content-max))) / 2 + 12px));
+      --workspace-recite-size: 56px;
+      position: fixed !important;
+      top: auto !important;
+      bottom: calc(var(--fixed-player-height, 0px) + 12px) !important;
+      inset-inline: auto !important;
+      inset-inline-start: auto !important;
+      inset-inline-end: auto !important;
+      left: auto !important;
+      right: var(--back-to-top-rail) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 12px !important;
+      width: auto !important;
+      min-width: 52px !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+      pointer-events: none !important;
+      z-index: 1056 !important;
+      transform: none !important;
+      filter: none !important;
+    }
+
+    html body .workspace-float-rail::after,
+    body > .workspace-float-rail::after {
+      content: none !important;
+      display: none !important;
+    }
+
+    html body .workspace-float-rail .workspace-recite-dock,
+    body > .workspace-float-rail .workspace-recite-dock {
+      position: relative !important;
+      inset: auto !important;
+      top: auto !important;
+      bottom: auto !important;
+      left: auto !important;
+      right: auto !important;
+      display: flex !important;
+      width: auto !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      pointer-events: none !important;
+      z-index: 2 !important;
+      transform: none !important;
+    }
+
+    html body .workspace-float-rail .workspace-recite-dock__button,
+    html body .workspace-float-rail .workspace-ai-recite-cta.workspace-recite-dock__button,
+    body > .workspace-float-rail .workspace-recite-dock__button {
+      position: relative !important;
+      inset: auto !important;
+      margin: 0 !important;
+      pointer-events: auto !important;
+      width: var(--workspace-recite-size, 56px) !important;
+      min-width: var(--workspace-recite-size, 56px) !important;
+      max-width: var(--workspace-recite-size, 56px) !important;
+      height: var(--workspace-recite-size, 56px) !important;
+      min-height: var(--workspace-recite-size, 56px) !important;
+      max-height: var(--workspace-recite-size, 56px) !important;
+    }
+
+    html body .workspace-float-rail .back-to-top-fab,
+    body > .workspace-float-rail .back-to-top-fab,
+    html body .workspace-float-rail .back-to-top-fab.fab-btn {
+      position: relative !important;
+      inset: auto !important;
+      inset-inline: auto !important;
+      top: auto !important;
+      bottom: auto !important;
+      left: auto !important;
+      right: auto !important;
+      margin: 0 !important;
+      pointer-events: auto !important;
+      transform: none !important;
+      z-index: 1 !important;
+    }
+
+    html body .workspace-float-rail .back-to-top-fab.is-rail-placeholder,
+    body > .workspace-float-rail .back-to-top-fab.is-rail-placeholder {
+      visibility: hidden !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+    }
   }
 
-  html body:has(.player-dock) .workspace-recite-dock,
-  html body:has(.player-dock) > .workspace-recite-dock,
-  body:has(.player-dock) > .workspace-recite-dock {
-    inset-block-end: auto !important;
-    bottom: auto !important;
+  @media (min-width: 768px) and (max-width: 1399.98px) {
+    html body .workspace-float-rail,
+    body > .workspace-float-rail {
+      --back-to-top-content-max: 1140px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1199.98px) {
+    html body .workspace-float-rail,
+    body > .workspace-float-rail {
+      --back-to-top-content-max: 960px;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 991.98px) {
+    html body .workspace-float-rail,
+    body > .workspace-float-rail {
+      --back-to-top-rail: 12px;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    /* Hide desktop float-rail entirely on phones. */
+    html body .workspace-float-rail,
+    html body .workspace-float-rail--desktop,
+    body > .workspace-float-rail {
+      display: none !important;
+    }
+
+    /* Original mobile: sticky centered recite inside the workspace. */
+    html body .app .workspace-recite-dock--mobile,
+    html body .workspace-recite-dock--mobile {
+      display: flex !important;
+      position: sticky !important;
+      top: var(--workspace-recite-sticky-top, calc(100dvh - 5.5rem)) !important;
+      inset-inline: 0 !important;
+      inset-block-end: auto !important;
+      right: auto !important;
+      left: auto !important;
+      bottom: auto !important;
+      justify-content: center !important;
+      align-items: flex-start !important;
+      width: 100% !important;
+      max-width: none !important;
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+      pointer-events: none !important;
+      z-index: 40 !important;
+      transform: none !important;
+      filter: none !important;
+      box-shadow: none !important;
+    }
+
+    html body .app .workspace-recite-dock--mobile .workspace-recite-dock__button,
+    html body .workspace-recite-dock--mobile .workspace-recite-dock__button {
+      margin: 0 auto !important;
+      pointer-events: auto !important;
+    }
   }
 
   html body .app .workspace-recite-dock .workspace-recite-dock__button,
@@ -8841,6 +8972,10 @@ body.session-analysis-modal-open {
   html body .app .workspace-ai-recite-cta.workspace-recite-dock__button:active,
   html body .app .workspace-ai-recite-cta.workspace-recite-dock__button:focus-visible,
   body > .workspace-recite-dock .workspace-recite-dock__button,
+  body > .workspace-float-rail .workspace-recite-dock__button,
+  body > .workspace-float-rail .workspace-ai-recite-cta.workspace-recite-dock__button,
+  html body .workspace-float-rail .workspace-recite-dock__button,
+  html body .workspace-float-rail .workspace-ai-recite-cta.workspace-recite-dock__button,
   html body .app[data-theme="light"] .workspace-ai-recite-cta.workspace-recite-dock__button,
   html body .app[data-theme="sepia"] .workspace-ai-recite-cta.workspace-recite-dock__button,
   html[data-theme="light"] body .app .workspace-ai-recite-cta.workspace-recite-dock__button,
@@ -8859,7 +8994,7 @@ body.session-analysis-modal-open {
     right: auto !important;
     bottom: auto !important;
     transform: none !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     pointer-events: auto !important;
     animation: none !important;
     filter: none !important;

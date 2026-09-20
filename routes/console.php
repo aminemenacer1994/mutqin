@@ -24,6 +24,12 @@ Schedule::command('mutqin:purge-learning-history --soft-delete-assessments')
 Schedule::command('mutqin:purge-learning-history --purge-temp-audio --strip-sync-audio')
     ->hourly();
 
+// Database cache/session drivers leave expired rows in MySQL until pruned.
+Schedule::command('mutqin:prune-db-ephemera --sessions')
+    ->hourly()
+    ->when(fn () => in_array(config('cache.default'), ['database'], true)
+        || in_array(config('session.driver'), ['database'], true));
+
 Schedule::command('mutqin:speechmatics-usage-report')
     ->dailyAt('23:50')
     ->timezone('UTC')

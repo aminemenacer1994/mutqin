@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v160 -->
+  <!-- mutqin-ui-build: v171 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
@@ -1097,14 +1097,14 @@
             -->
             <div
               v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
-              class="workspace-recite-dock"
+              class="workspace-recite-dock workspace-recite-dock--mobile"
               aria-live="polite"
             >
               <button
                 type="button"
                 class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
                 :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                data-testid="workspace-ai-recite"
+                data-testid="workspace-ai-recite-mobile"
                 :title="t('dashboard.ai_recite.cta_label')"
                 :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
                 @click="openWorkspaceAiRecite"
@@ -4316,18 +4316,43 @@
       </div>
     </transition>
 
-    <transition name="back-to-top">
-      <button
-        v-if="showBackToTop"
-        type="button"
-        class="back-to-top-fab fab-btn"
-        :aria-label="t('common.backToTop')"
-        :title="t('common.backToTop')"
-        @click="scrollPageToTop"
+    <Teleport to="body">
+      <div
+        v-if="(showWorkspaceAiReciteCta && shouldShowReadingWorkspace) || showBackToTop"
+        class="workspace-float-rail workspace-float-rail--desktop"
       >
-        <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
-      </button>
-    </transition>
+        <div
+          v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
+          class="workspace-recite-dock"
+          aria-live="polite"
+        >
+          <button
+            type="button"
+            class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
+            :class="{ 'is-animated': workspaceAiReciteAnimated }"
+            data-testid="workspace-ai-recite"
+            :title="t('dashboard.ai_recite.cta_label')"
+            :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+            @click="openWorkspaceAiRecite"
+          >
+            <i class="bi bi-mic-fill" aria-hidden="true"></i>
+            <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+          </button>
+        </div>
+        <button
+          type="button"
+          class="back-to-top-fab fab-btn"
+          :class="{ 'is-rail-placeholder': !showBackToTop }"
+          :tabindex="showBackToTop ? 0 : -1"
+          :aria-hidden="showBackToTop ? null : 'true'"
+          :aria-label="t('common.backToTop')"
+          :title="t('common.backToTop')"
+          @click="showBackToTop && scrollPageToTop()"
+        >
+          <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+        </button>
+      </div>
+    </Teleport>
 
     <!-- Audio System -->
     <audio ref="audio" style="display:none"></audio>

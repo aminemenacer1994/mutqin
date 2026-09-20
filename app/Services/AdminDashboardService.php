@@ -27,7 +27,7 @@ use Illuminate\Support\Str;
  */
 class AdminDashboardService
 {
-    private const BUILD_CACHE_TTL_SECONDS = 20;
+    private const BUILD_CACHE_TTL_SECONDS = 60;
 
     private const CACHE_VERSION_KEY = 'admin-dashboard:version';
 
@@ -810,12 +810,21 @@ class AdminDashboardService
     private function buildSnapshot(): array
     {
         $now = now();
-        $usersTotal = User::query()->count();
-        $usersNew7d = User::query()->where('created_at', '>=', $now->copy()->subDays(7))->count();
-        $usersPrev7d = User::query()
-            ->where('created_at', '>=', $now->copy()->subDays(14))
-            ->where('created_at', '<', $now->copy()->subDays(7))
-            ->count();
+        $usersAgg = User::query()
+            ->selectRaw(
+                'COUNT(*) as total,
+                 SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as new_7d,
+                 SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as prev_7d',
+                [
+                    $now->copy()->subDays(7),
+                    $now->copy()->subDays(14),
+                    $now->copy()->subDays(7),
+                ]
+            )
+            ->first();
+        $usersTotal = (int) ($usersAgg->total ?? 0);
+        $usersNew7d = (int) ($usersAgg->new_7d ?? 0);
+        $usersPrev7d = (int) ($usersAgg->prev_7d ?? 0);
 
         $active7dSessions = (int) UserSession::query()
             ->where('is_onboarding_example', false)
@@ -856,21 +865,23 @@ class AdminDashboardService
             })
             ->count();
 
-        $sessionsCompleted = UserSession::query()
+        $sessionsAgg = UserSession::query()
             ->where('is_onboarding_example', false)
             ->where('status', UserSessionStatus::Completed->value)
-            ->count();
-        $sessionsLast7d = UserSession::query()
-            ->where('is_onboarding_example', false)
-            ->where('status', UserSessionStatus::Completed->value)
-            ->where('ended_at', '>=', $now->copy()->subDays(7))
-            ->count();
-        $sessionsPrev7d = UserSession::query()
-            ->where('is_onboarding_example', false)
-            ->where('status', UserSessionStatus::Completed->value)
-            ->where('ended_at', '>=', $now->copy()->subDays(14))
-            ->where('ended_at', '<', $now->copy()->subDays(7))
-            ->count();
+            ->selectRaw(
+                'COUNT(*) as total,
+                 SUM(CASE WHEN ended_at >= ? THEN 1 ELSE 0 END) as last_7d,
+                 SUM(CASE WHEN ended_at >= ? AND ended_at < ? THEN 1 ELSE 0 END) as prev_7d',
+                [
+                    $now->copy()->subDays(7),
+                    $now->copy()->subDays(14),
+                    $now->copy()->subDays(7),
+                ]
+            )
+            ->first();
+        $sessionsCompleted = (int) ($sessionsAgg->total ?? 0);
+        $sessionsLast7d = (int) ($sessionsAgg->last_7d ?? 0);
+        $sessionsPrev7d = (int) ($sessionsAgg->prev_7d ?? 0);
 
         $memorisedAyahs = MemorisationProgress::query()
             ->whereIn('status', ['memorised', 'mastered'])
@@ -901,26 +912,41 @@ class AdminDashboardService
 
         $aiChecks = AiReciteAttempt::query()->count();
         $notes = AyahNote::query()->count();
-        $pendingContacts = ContactSubmission::query()->where('status', 'pending')->count();
-        $pendingLast7d = ContactSubmission::query()
-            ->where('created_at', '>=', $now->copy()->subDays(7))
-            ->count();
-        $pendingPrev7d = ContactSubmission::query()
-            ->where('created_at', '>=', $now->copy()->subDays(14))
-            ->where('created_at', '<', $now->copy()->subDays(7))
-            ->count();
+        $contactAgg = ContactSubmission::query()
+            ->selectRaw(
+                "SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                 SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as last_7d,
+                 SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as prev_7d",
+                [
+                    $now->copy()->subDays(7),
+                    $now->copy()->subDays(14),
+                    $now->copy()->subDays(7),
+                ]
+            )
+            ->first();
+        $pendingContacts = (int) ($contactAgg->pending ?? 0);
+        $pendingLast7d = (int) ($contactAgg->last_7d ?? 0);
+        $pendingPrev7d = (int) ($contactAgg->prev_7d ?? 0);
 
-        $feedbackOpen = Feedback::query()
-            ->whereIn('status', [Feedback::STATUS_NEW, Feedback::STATUS_REVIEWING])
-            ->count();
-        $feedbackLast7d = Feedback::query()
-            ->where('created_at', '>=', $now->copy()->subDays(7))
-            ->count();
-        $feedbackPrev7d = Feedback::query()
-            ->where('created_at', '>=', $now->copy()->subDays(14))
-            ->where('created_at', '<', $now->copy()->subDays(7))
-            ->count();
-        $feedbackTotal = Feedback::query()->count();
+        $feedbackAgg = Feedback::query()
+            ->selectRaw(
+                'COUNT(*) as total,
+                 SUM(CASE WHEN status IN (?, ?) THEN 1 ELSE 0 END) as open_count,
+                 SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as last_7d,
+                 SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as prev_7d',
+                [
+                    Feedback::STATUS_NEW,
+                    Feedback::STATUS_REVIEWING,
+                    $now->copy()->subDays(7),
+                    $now->copy()->subDays(14),
+                    $now->copy()->subDays(7),
+                ]
+            )
+            ->first();
+        $feedbackOpen = (int) ($feedbackAgg->open_count ?? 0);
+        $feedbackLast7d = (int) ($feedbackAgg->last_7d ?? 0);
+        $feedbackPrev7d = (int) ($feedbackAgg->prev_7d ?? 0);
+        $feedbackTotal = (int) ($feedbackAgg->total ?? 0);
 
         return [
             'users_total' => [

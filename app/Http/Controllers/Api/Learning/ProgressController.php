@@ -17,11 +17,11 @@ class ProgressController extends Controller
         $validated = $request->validate([
             'surah_number' => ['nullable', 'integer', 'min:1', 'max:114'],
             'updated_since' => ['nullable', 'date'],
-            'limit' => ['nullable', 'integer', 'min:1', 'max:2000'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'offset' => ['nullable', 'integer', 'min:0', 'max:100000'],
         ]);
 
-        $limit = (int) ($validated['limit'] ?? 500);
+        $limit = (int) ($validated['limit'] ?? 200);
         $offset = (int) ($validated['offset'] ?? 0);
 
         $baseQuery = MemorisationProgress::query()

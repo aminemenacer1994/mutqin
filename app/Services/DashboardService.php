@@ -22,6 +22,7 @@ use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Aggregates authenticated-user dashboard data from existing learning tables.
@@ -1149,33 +1150,31 @@ class DashboardService
         $ayahEnd = (int) ($main['ayah_end'] ?? $config['rangeEnd'] ?? $activePlan?->end_ayah ?? 0);
         $currentAyah = (int) ($main['ayah_start'] ?? $unfinished?->ayah_number ?? $lastPosition?->ayah_number ?? 0);
 
-        $memorisedCount = MemorisationProgress::query()
-            ->where('user_id', $user->id)
-            ->whereIn('status', ['memorised', 'mastered'])
-            ->when($surah > 0, fn ($q) => $q->where('surah_number', $surah))
-            ->count();
+        $memorisedCount = 0;
+        $learningCount = 0;
+        $surahPractised = 0;
+        $surahMemorised = 0;
 
-        $learningCount = MemorisationProgress::query()
+        $progressAgg = MemorisationProgress::query()
             ->where('user_id', $user->id)
-            ->whereIn('status', ['learning', 'reviewing'])
             ->when($surah > 0, fn ($q) => $q->where('surah_number', $surah))
-            ->count();
+            ->selectRaw(
+                "SUM(CASE WHEN status IN ('memorised', 'mastered') THEN 1 ELSE 0 END) as memorised_count,
+                 SUM(CASE WHEN status IN ('learning', 'reviewing') THEN 1 ELSE 0 END) as learning_count,
+                 SUM(CASE WHEN status IN ('learning', 'reviewing', 'memorised', 'mastered') THEN 1 ELSE 0 END) as practised_count"
+            )
+            ->first();
+
+        if ($progressAgg) {
+            $memorisedCount = (int) ($progressAgg->memorised_count ?? 0);
+            $learningCount = (int) ($progressAgg->learning_count ?? 0);
+            if ($surah > 0) {
+                $surahPractised = (int) ($progressAgg->practised_count ?? 0);
+                $surahMemorised = $memorisedCount;
+            }
+        }
 
         $surahAyahCount = $surah > 0 ? (QuranMetadata::ayahCount($surah) ?? 0) : 0;
-        $surahPractised = $surah > 0
-            ? MemorisationProgress::query()
-                ->where('user_id', $user->id)
-                ->where('surah_number', $surah)
-                ->whereIn('status', ['learning', 'reviewing', 'memorised', 'mastered'])
-                ->count()
-            : 0;
-        $surahMemorised = $surah > 0
-            ? MemorisationProgress::query()
-                ->where('user_id', $user->id)
-                ->where('surah_number', $surah)
-                ->whereIn('status', ['memorised', 'mastered'])
-                ->count()
-            : 0;
 
         $rangeCompletion = ($ayahStart > 0 && $ayahEnd >= $ayahStart)
             ? $this->rangeCompletionPercent($user, $surah, $ayahStart, $ayahEnd)
@@ -1246,14 +1245,13 @@ class DashboardService
                             ->whereBetween('last_activity_at', [$from, $to]);
                     });
             })
-            ->selectRaw('DATE(ended_at) as day, COUNT(*) as aggregate')
-            ->groupByRaw('DATE(ended_at)')
+            ->selectRaw($this->sessionActivityDayExpression().' as day, COUNT(*) as aggregate')
+            ->groupByRaw($this->sessionActivityDayExpression())
             ->pluck('aggregate', 'day');
 
-        // Analytics can be written a little after a session closes. Keep the
-        // chart useful in that window by deriving activity from completed
-        // session ranges, just like the weekly summary does below.
-        $completedSessions = UserSession::query()
+        // Analytics can lag slightly after a session closes. Derive ayah totals from
+        // session config ranges in SQL (no unbounded metadata hydrate into PHP).
+        $sessionAyahsByDay = UserSession::query()
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
             ->where('status', UserSessionStatus::Completed->value)
@@ -1264,28 +1262,11 @@ class DashboardService
                             ->whereBetween('last_activity_at', [$from, $to]);
                     });
             })
-            ->get(['ended_at', 'last_activity_at', 'ayah_number', 'metadata']);
+            ->selectRaw($this->sessionActivityDayExpression().' as day, SUM('.$this->sessionRangeAyahExpression().') as aggregate')
+            ->groupByRaw($this->sessionActivityDayExpression())
+            ->pluck('aggregate', 'day');
 
-        $sessionCountsByDay = [];
-        $sessionAyahsByDay = [];
-        foreach ($completedSessions as $session) {
-            $activityAt = $session->ended_at ?? $session->last_activity_at;
-            if (! $activityAt) {
-                continue;
-            }
-
-            $key = $activityAt->toDateString();
-            $sessionCountsByDay[$key] = ($sessionCountsByDay[$key] ?? 0) + 1;
-
-            $meta = is_array($session->metadata) ? $session->metadata : [];
-            $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
-            $start = (int) ($config['rangeStart'] ?? $config['range_start'] ?? $session->ayah_number ?? 0);
-            $end = (int) ($config['rangeEnd'] ?? $config['range_end'] ?? $start);
-            if ($start > 0) {
-                $sessionAyahsByDay[$key] = ($sessionAyahsByDay[$key] ?? 0)
-                    + max(1, $end >= $start ? ($end - $start + 1) : 1);
-            }
-        }
+        $sessionCountsByDay = $completedByDay;
 
         $points = [];
         $cursor = $from->copy();
@@ -1362,6 +1343,54 @@ class DashboardService
     }
 
     /**
+     * Calendar day for chart grouping — prefer ended_at, else last_activity_at.
+     */
+    private function sessionActivityDayExpression(): string
+    {
+        return 'DATE(COALESCE(ended_at, last_activity_at))';
+    }
+
+    /**
+     * Ayah span from session metadata config (rangeStart/rangeEnd) with ayah_number fallback.
+     * Computed in SQL so chart building never hydrates every session row.
+     */
+    private function sessionRangeAyahExpression(): string
+    {
+        $driver = DB::connection()->getDriverName();
+
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
+            $start = "COALESCE(
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.config.rangeStart')) AS SIGNED),
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.config.range_start')) AS SIGNED),
+                ayah_number,
+                0
+            )";
+            $end = "COALESCE(
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.config.rangeEnd')) AS SIGNED),
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.config.range_end')) AS SIGNED),
+                {$start}
+            )";
+
+            return "CASE WHEN {$start} > 0 THEN GREATEST(1, {$end} - {$start} + 1) ELSE 0 END";
+        }
+
+        // SQLite (tests / local)
+        $start = "COALESCE(
+            CAST(json_extract(metadata, '$.config.rangeStart') AS INTEGER),
+            CAST(json_extract(metadata, '$.config.range_start') AS INTEGER),
+            ayah_number,
+            0
+        )";
+        $end = "COALESCE(
+            CAST(json_extract(metadata, '$.config.rangeEnd') AS INTEGER),
+            CAST(json_extract(metadata, '$.config.range_end') AS INTEGER),
+            {$start}
+        )";
+
+        return "CASE WHEN {$start} > 0 THEN MAX(1, {$end} - {$start} + 1) ELSE 0 END";
+    }
+
+    /**
      * Calendar-week activity used under the Practice over time chart.
      *
      * @return array<string, mixed>
@@ -1397,15 +1426,18 @@ class DashboardService
             ->where('created_at', '<=', $to)
             ->count();
 
-        $analytics = LearningAnalytic::query()
+        $analyticsAgg = LearningAnalytic::query()
             ->where('user_id', $user->id)
             ->whereDate('session_date', '>=', $from->toDateString())
             ->whereDate('session_date', '<=', $to->toDateString())
-            ->get(['ayahs_memorised', 'ayahs_reviewed', 'sessions_completed', 'session_date']);
+            ->selectRaw(
+                'COALESCE(SUM(ayahs_memorised), 0) + COALESCE(SUM(ayahs_reviewed), 0) as ayahs_practised,
+                 COUNT(CASE WHEN (COALESCE(ayahs_memorised, 0) + COALESCE(ayahs_reviewed, 0) + COALESCE(sessions_completed, 0)) > 0 THEN 1 END) as active_days'
+            )
+            ->first();
 
-        $ayahsPractised = (int) $analytics->sum(function (LearningAnalytic $row) {
-            return (int) ($row->ayahs_memorised ?? 0) + (int) ($row->ayahs_reviewed ?? 0);
-        });
+        $ayahsPractised = (int) ($analyticsAgg->ayahs_practised ?? 0);
+        $activeDays = (int) ($analyticsAgg->active_days ?? 0);
 
         // Fallback: derive practised ayahs from session metadata when analytics lag behind.
         if ($ayahsPractised === 0 && $sessions > 0) {
@@ -1422,17 +1454,6 @@ class DashboardService
                 return max(1, $end >= $start ? ($end - $start + 1) : 1);
             });
         }
-
-        $activeDays = (int) $analytics
-            ->filter(function (LearningAnalytic $row) {
-                $activity = (int) ($row->ayahs_memorised ?? 0)
-                    + (int) ($row->ayahs_reviewed ?? 0)
-                    + (int) ($row->sessions_completed ?? 0);
-
-                return $activity > 0;
-            })
-            ->unique(fn (LearningAnalytic $row) => $row->session_date?->toDateString())
-            ->count();
 
         if ($activeDays === 0 && $sessions > 0) {
             $weekSessions = $this->weekSessionsForSummary($weekSessionQuery, $weekSessions);
@@ -1624,8 +1645,17 @@ class DashboardService
                 'plan_snapshot',
                 'session_recommendation_id',
                 'created_at',
-            ])
-            ->filter(function (AiReciteAttempt $attempt) {
+            ]);
+
+        $recommendationSurahs = SessionRecommendation::query()
+            ->whereIn(
+                'id',
+                $attempts->pluck('session_recommendation_id')->filter()->unique()->values()->all()
+            )
+            ->pluck('surah_number', 'id');
+
+        $attempts = $attempts
+            ->filter(function (AiReciteAttempt $attempt) use ($recommendationSurahs) {
                 $band = strtolower((string) ($attempt->band ?? ''));
                 if (in_array($band, ['weak', 'mixed', 'gentle', 'focused'], true)) {
                     return true;
@@ -1636,7 +1666,7 @@ class DashboardService
                     return true;
                 }
 
-                return $this->weakAyahsFromAiReciteAttempt($attempt) !== [];
+                return $this->weakAyahsFromAiReciteAttempt($attempt, $recommendationSurahs) !== [];
             })
             ->take(8)
             ->values();
@@ -1729,7 +1759,7 @@ class DashboardService
         }
 
         foreach ($attempts as $attempt) {
-            foreach ($this->weakAyahsFromAiReciteAttempt($attempt) as $entry) {
+            foreach ($this->weakAyahsFromAiReciteAttempt($attempt, $recommendationSurahs) as $entry) {
                 $surah = (int) $entry['surah'];
                 $ayah = (int) $entry['ayah'];
                 if ($surah <= 0 || $ayah <= 0) {
@@ -1938,16 +1968,21 @@ class DashboardService
     }
 
     /**
+     * @param  \Illuminate\Support\Collection<int|string, int|string>|null  $recommendationSurahs
      * @return list<array{surah: int, ayah: int, phrase: ?string}>
      */
-    private function weakAyahsFromAiReciteAttempt(AiReciteAttempt $attempt): array
+    private function weakAyahsFromAiReciteAttempt(AiReciteAttempt $attempt, $recommendationSurahs = null): array
     {
         $range = is_array($attempt->ayah_range) ? $attempt->ayah_range : [];
         $rangeSurah = (int) ($range['surah'] ?? $range['surahId'] ?? $range['surah_number'] ?? $range['chapterId'] ?? 0);
         if ($rangeSurah <= 0 && $attempt->session_recommendation_id) {
-            $rangeSurah = (int) (SessionRecommendation::query()
-                ->whereKey($attempt->session_recommendation_id)
-                ->value('surah_number') ?? 0);
+            if ($recommendationSurahs !== null) {
+                $rangeSurah = (int) ($recommendationSurahs[$attempt->session_recommendation_id] ?? 0);
+            } else {
+                $rangeSurah = (int) (SessionRecommendation::query()
+                    ->whereKey($attempt->session_recommendation_id)
+                    ->value('surah_number') ?? 0);
+            }
         }
         $from = (int) ($range['from'] ?? $range['rangeStart'] ?? $range['start'] ?? 0);
         $to = (int) ($range['to'] ?? $range['rangeEnd'] ?? $range['end'] ?? $from);

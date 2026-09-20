@@ -249,7 +249,7 @@ class MemorisationHistoryService
      */
     public function markRecalledWords(User $user, MemorisationAssessment $assessment, array $wordResults): void
     {
-        $now = now();
+        $spotKeys = [];
         foreach ($wordResults as $word) {
             if (! is_array($word)) {
                 continue;
@@ -269,26 +269,29 @@ class MemorisationHistoryService
                 continue;
             }
             $surahNumber = (int) ($word['surah_number'] ?? $word['surahId'] ?? $assessment->surah_number);
-            $spotKey = MemorisationWeakSpot::buildSpotKey(
+            $spotKeys[] = MemorisationWeakSpot::buildSpotKey(
                 MemorisationWeakSpot::TYPE_WORD,
                 $surahNumber,
                 $ayahNumber,
                 (int) $wordIndex
             );
-            $spot = MemorisationWeakSpot::query()
-                ->where('user_id', $user->id)
-                ->where('spot_key', $spotKey)
-                ->first();
-            if (! $spot) {
-                continue;
-            }
-            $spot->fill([
-                'last_recalled_at' => $now,
+        }
+
+        $spotKeys = array_values(array_unique($spotKeys));
+        if ($spotKeys === []) {
+            return;
+        }
+
+        MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->whereIn('spot_key', $spotKeys)
+            ->update([
+                'last_recalled_at' => now(),
                 'last_assessment_id' => $assessment->id,
                 'status' => MemorisationWeakSpot::STATUS_IMPROVING,
                 'trend' => 'improving',
-            ])->save();
-        }
+                'updated_at' => now(),
+            ]);
     }
 
     /**

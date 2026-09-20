@@ -179,7 +179,42 @@ class BillingController extends Controller
         $eventType = (string) ($event['type'] ?? 'unknown');
 
         try {
-            DB::transaction(function () use ($eventId, $eventType, $object): void {
+            if ($eventId !== '' && StripeWebhookEvent::query()->where('stripe_event_id', $eventId)->exists()) {
+                MutqinLog::info('billing.webhook.duplicate', [
+                    'event_id' => $eventId,
+                    'event_type' => $eventType,
+                ]);
+
+                return response('OK');
+            }
+
+            MutqinLog::info('billing.webhook.received', [
+                'event_type' => $eventType,
+                'stripe_object_id' => $object['id'] ?? null,
+                'stripe_event_id' => $eventId !== '' ? $eventId : null,
+            ]);
+
+            // Perform any Stripe HTTP outside the DB transaction so locks are not held
+            // across network I/O. Persist idempotency + local user updates together.
+            $subscriptionPayload = null;
+            if ($eventType === 'checkout.session.completed') {
+                $subscriptionId = (string) ($object['subscription'] ?? '');
+                if ($subscriptionId !== '') {
+                    $subscriptionPayload = $this->stripeGet("subscriptions/$subscriptionId");
+                }
+            } elseif (in_array($eventType, [
+                'customer.subscription.created',
+                'customer.subscription.updated',
+                'customer.subscription.deleted',
+            ], true)) {
+                $subscriptionPayload = $object;
+            }
+
+            $user = is_array($subscriptionPayload)
+                ? $this->resolveUserForSubscription($subscriptionPayload)
+                : null;
+
+            DB::transaction(function () use ($eventId, $eventType, $subscriptionPayload, $user): void {
                 if ($eventId !== '') {
                     StripeWebhookEvent::create([
                         'stripe_event_id' => $eventId,
@@ -188,19 +223,9 @@ class BillingController extends Controller
                     ]);
                 }
 
-                MutqinLog::info('billing.webhook.received', [
-                    'event_type' => $eventType,
-                    'stripe_object_id' => $object['id'] ?? null,
-                    'stripe_event_id' => $eventId !== '' ? $eventId : null,
-                ]);
-
-                match ($eventType) {
-                    'checkout.session.completed' => $this->syncSubscriptionFromStripe((string) ($object['subscription'] ?? '')),
-                    'customer.subscription.created',
-                    'customer.subscription.updated',
-                    'customer.subscription.deleted' => $this->applySubscription($object),
-                    default => null,
-                };
+                if ($user && is_array($subscriptionPayload)) {
+                    $this->applySubscriptionToUser($user, $subscriptionPayload);
+                }
             });
         } catch (UniqueConstraintViolationException) {
             MutqinLog::info('billing.webhook.duplicate', [
@@ -256,24 +281,41 @@ class BillingController extends Controller
         }
 
         $subscription = $this->stripeGet("subscriptions/$subscriptionId");
-        $this->applySubscription($subscription);
+        $user = $this->resolveUserForSubscription($subscription);
+        if ($user) {
+            $this->applySubscriptionToUser($user, $subscription);
+        }
     }
 
     private function applySubscription(array $subscription): void
+    {
+        $user = $this->resolveUserForSubscription($subscription);
+        if ($user) {
+            $this->applySubscriptionToUser($user, $subscription);
+        }
+    }
+
+    /**
+     * Resolve the Mutqin user for a Stripe subscription payload.
+     * May call Stripe HTTP — never invoke inside an open DB transaction.
+     */
+    private function resolveUserForSubscription(array $subscription): ?User
     {
         $userId = $subscription['metadata']['user_id'] ?? null;
         $customerId = $subscription['customer'] ?? null;
         $user = $userId ? User::find($userId) : null;
         $user ??= $customerId ? User::where('stripe_customer_id', $customerId)->first() : null;
 
-        if (!$user && $customerId) {
+        if (! $user && $customerId) {
             $user = $this->resolveUserByStripeCustomerId((string) $customerId);
         }
 
-        if (!$user) {
-            return;
-        }
+        return $user;
+    }
 
+    private function applySubscriptionToUser(User $user, array $subscription): void
+    {
+        $customerId = $subscription['customer'] ?? null;
         $planKey = $subscription['metadata']['plan'] ?? $user->subscription_plan;
         $plan = $planKey ? config("billing.plans.$planKey") : null;
         $status = (string) ($subscription['status'] ?? 'incomplete');
