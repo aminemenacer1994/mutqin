@@ -52980,7 +52980,7 @@ contained page (top session card untouched) —— */
     box-shadow: 0 10px 28px rgba(24, 24, 27, 0.06);
     background: var(--workspace-card-surface);
     border-color: var(--zone-divider);
-    overflow: hidden;
+    overflow: visible;
   }
 }
 
@@ -52994,7 +52994,7 @@ contained page (top session card untouched) —— */
   background: var(--workspace-card-surface);
   border-color: var(--zone-divider);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .main.mushaf-mode-active .mushaf-shell__bar {
@@ -58382,15 +58382,14 @@ never recolour tajweed text */
 }
 
 .mushaf-workspace .mushaf-viewport-scroll {
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: visible;
 }
 
 .app .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom),
 .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) {
   display: flex !important;
   flex-direction: row !important;
-  align-items: stretch !important;
+  align-items: flex-start !important;
 }
 
 .app .main.mushaf-mode-active .mushaf-font-zoom,
@@ -58399,14 +58398,46 @@ never recolour tajweed text */
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  flex: 0 0 2.85rem;
-  width: 2.85rem;
-  min-width: 2.85rem;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  max-width: none;
   gap: 0.45rem;
   padding: 0.85rem 0.18rem 0.65rem;
   box-sizing: border-box;
   background: transparent;
-  z-index: 4;
+  position: sticky;
+  top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  align-self: flex-start;
+  z-index: 8;
+  height: auto;
+  overflow: visible;
+}
+
+@media (min-width: 768px) {
+  .app .main.mushaf-mode-active .mushaf-font-zoom.col-md-1,
+  .main.mushaf-mode-active .mushaf-font-zoom.col-md-1 {
+    flex: 0 0 8.33333333%;
+    width: 8.33333333%;
+    max-width: 8.33333333%;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-viewport-scroll.col-md-11,
+  .main.mushaf-mode-active .mushaf-viewport-scroll.col-md-11 {
+    flex: 0 0 91.66666667%;
+    width: 91.66666667%;
+    max-width: 91.66666667%;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .app .main.mushaf-mode-active .mushaf-font-zoom,
+  .main.mushaf-mode-active .mushaf-font-zoom {
+    flex: 0 0 2.55rem;
+    width: 2.55rem;
+    min-width: 2.55rem;
+    max-width: 2.55rem;
+  }
 }
 
 .app .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) > .mushaf-viewport-scroll,
@@ -58582,6 +58613,154 @@ never recolour tajweed text */
   background: color-mix(in srgb, #d4af6e 28%, #18181b) !important;
   border-color: color-mix(in srgb, #d4af6e 45%, transparent) !important;
   color: #f7efdf !important;
+}
+
+/* Find-ayah search: featured control (important primary action) */
+.top-card-icon-controls .top-card-search-trigger.top-card-icon-control.is-featured,
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent, #c48a4a) 22%, #ffffff),
+      color-mix(in srgb, var(--accent, #c48a4a) 12%, #fff8f0)
+    ) !important;
+  border: 1.5px solid color-mix(in srgb, var(--accent, #c48a4a) 48%, transparent) !important;
+  color: var(--accent-strong, #8a5a2b) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 70%, transparent) inset,
+    0 4px 12px color-mix(in srgb, var(--accent, #c48a4a) 22%, transparent) !important;
+  transform: none !important;
+}
+
+.top-card-icon-controls .top-card-search-trigger.is-featured:hover,
+.top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible,
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent, #c48a4a) 32%, #ffffff),
+      color-mix(in srgb, var(--accent, #c48a4a) 18%, #fff3e6)
+    ) !important;
+  border-color: color-mix(in srgb, var(--accent-strong, #8a5a2b) 55%, transparent) !important;
+  color: var(--accent-strong, #6f4520) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 75%, transparent) inset,
+    0 6px 16px color-mix(in srgb, var(--accent, #c48a4a) 30%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--accent, #c48a4a) 18%, transparent) !important;
+}
+
+.top-card-icon-controls .top-card-search-trigger .top-card-search-glyph,
+html body .app .top-card-icon-controls .top-card-search-trigger .top-card-search-glyph {
+  display: block !important;
+  width: 1.05rem !important;
+  height: 1.05rem !important;
+  flex: 0 0 auto !important;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.top-card-icon-control.is-featured,
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured,
+.app[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, #d4af6e 34%, #2a241e),
+      color-mix(in srgb, #d4af6e 18%, #1c1916)
+    ) !important;
+  border-color: color-mix(in srgb, #e0c08a 48%, transparent) !important;
+  color: #f7efdf !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
+[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible,
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, #d4af6e 44%, #322b23),
+      color-mix(in srgb, #d4af6e 26%, #221d19)
+    ) !important;
+  border-color: color-mix(in srgb, #e8c9a0 62%, transparent) !important;
+  color: #fff8ec !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 6px 18px rgba(0, 0, 0, 0.4),
+    0 0 0 3px color-mix(in srgb, #d4af6e 22%, transparent) !important;
+}
+
+/* Divider between icon controls and Start / Resume / End */
+.top-card-session-hr {
+  display: none;
+  width: 100%;
+  max-width: 100%;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.22)) 88%, transparent);
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
+[data-theme="dark"] .top-card-session-hr {
+  border-top-color: color-mix(in srgb, rgba(208, 160, 107, 0.34) 90%, transparent);
+}
+
+@media (max-width: 767.98px) {
+  html body .app .workspace-shell-head-utility-row > .top-card-session-hr,
+  .workspace-shell-head-utility-row > .top-card-session-hr {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    margin: 0.05rem 0 !important;
+    align-self: stretch !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row > .workspace-shell-actions,
+  html body .app .workspace-shell-head-utility-row > .workspace-shell-head-actions,
+  .workspace-shell-head-utility-row > .workspace-shell-actions,
+  .workspace-shell-head-utility-row > .workspace-shell-head-actions {
+    grid-row: 3 !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar,
+  .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    grid-template-rows: auto auto auto !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row .action-buttons-group.w-100,
+  .workspace-shell-head-utility-row .action-buttons-group.w-100 {
+    display: flex !important;
+    flex-flow: column nowrap !important;
+    align-items: stretch !important;
+    gap: 0.45rem !important;
+  }
+}
+
+/* Desktop: vertical rule between session CTAs and icon controls */
+@media (min-width: 768px) {
+  html body .app .workspace-shell-head-utility-row > .top-card-session-hr,
+  .workspace-shell-head-utility-row > .top-card-session-hr {
+    display: block !important;
+    width: 0 !important;
+    height: 1.65rem !important;
+    margin: 0 0.15rem !important;
+    border: 0 !important;
+    border-inline-start: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.28)) 90%, transparent) !important;
+    align-self: center !important;
+    flex: 0 0 auto !important;
+  }
+
+  [data-theme="dark"] .workspace-shell-head-utility-row > .top-card-session-hr,
+  html[data-theme="dark"] body .app .workspace-shell-head-utility-row > .top-card-session-hr {
+    border-inline-start-color: color-mix(in srgb, rgba(208, 160, 107, 0.4) 90%, transparent) !important;
+  }
 }
 
 /* —— Ayah-end marker: pre-rendered PNG (digit centered in asset) —— */
@@ -63325,8 +63504,7 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   min-width: 0 !important;
   height: auto !important;
   max-height: none !important;
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
+  overflow: visible !important;
   box-sizing: border-box !important;
 }
 
@@ -63335,8 +63513,7 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
+  overflow: visible !important;
 }
 
 .app .main.mushaf-mode-active .mushaf-page--madani,
@@ -63385,7 +63562,7 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
 .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) {
   display: flex !important;
   flex-direction: row !important;
-  align-items: stretch !important;
+  align-items: flex-start !important;
 }
 
 .app .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) > .mushaf-viewport-scroll,
@@ -63401,6 +63578,10 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   flex-direction: column !important;
   align-items: center !important;
   justify-content: flex-start !important;
+  position: sticky !important;
+  top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
+  align-self: flex-start !important;
+  z-index: 8 !important;
 }
 
 /* Post-session recommendation refinement.
@@ -64462,12 +64643,14 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
   }
 }
 
-/* One shared workspace Recite action. The CTA is rendered by the active
- * workspace branch, so fixing the existing node keeps view switches from
- * creating duplicate controls. The main surface receives matching clearance
- * so the fixed action never hides the final ayah/card. */
+/* One shared workspace Recite action (Teleported to body, fixed to viewport). */
 body:has(.workspace-recite-dock__button) .app .main {
-  --workspace-recite-clearance: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+  --workspace-recite-size: 64px;
+  --workspace-recite-clearance: calc(
+    var(--workspace-recite-size) +
+    2.5rem +
+    env(safe-area-inset-bottom, 0px)
+  );
   padding-block-end: max(
     var(--workspace-recite-clearance),
     var(--player-dock-offset, 0px)
@@ -64476,10 +64659,7 @@ body:has(.workspace-recite-dock__button) .app .main {
 }
 
 body:has(.workspace-recite-dock__button) .app .workspace-main {
-  padding-block-end: calc(
-    var(--workspace-recite-clearance, 0px) +
-    clamp(0.65rem, 1.6vw, 1.1rem)
-  ) !important;
+  padding-block-end: clamp(0.65rem, 1.6vw, 1.1rem) !important;
 }
 
 .workspace-recite-dock__button {
@@ -64490,19 +64670,17 @@ body:has(.workspace-recite-dock__button) .app .workspace-main {
   --ai-recite-icon: #0d7b4f;
   --ai-recite-glow: rgba(63, 205, 137, 0.34);
   --ai-recite-highlight: rgba(255, 255, 255, 0.72);
-  position: fixed !important;
-  inset-block-end: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  inset-inline-start: 50%;
-  z-index: 12100 !important;
+  position: relative !important;
+  inset: auto !important;
+  z-index: 1 !important;
   isolation: isolate;
   overflow: hidden;
-  transform: translateX(-50%);
+  transform: none;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 0.4rem !important;
   min-width: 0 !important;
-  width: auto !important;
   width: 68px !important;
   min-width: 68px !important;
   max-width: 68px !important;
@@ -64525,7 +64703,7 @@ body:has(.workspace-recite-dock__button) .app .workspace-main {
     0 4px 14px rgba(42, 174, 111, 0.28),
     0 0 0 4px rgba(86, 222, 149, 0.1);
   max-width: calc(100vw - 2rem) !important;
-  margin: 0 !important;
+  margin: 0 auto !important;
 }
 
 .workspace-recite-dock__button i,
@@ -64544,8 +64722,24 @@ body:has(.workspace-recite-dock__button) .app .workspace-main {
 }
 
 .workspace-recite-dock {
-  display: contents;
+  display: flex;
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   pointer-events: none;
+  z-index: 1030;
+}
+
+body:has(.player-dock) > .workspace-recite-dock,
+html body:has(.player-dock) .workspace-recite-dock {
+  inset-block-end: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem);
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem);
 }
 
 .workspace-recite-dock__button {
@@ -64654,29 +64848,25 @@ html[data-theme="dark"] .workspace-recite-dock__button {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
-/* Keep the fixed action inside the reading surface and clear the final text. */
+/* Keep the action clear of the final text. */
 body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-shell {
-  padding-block-end: calc(var(--workspace-recite-clearance, 0px) + 2rem) !important;
+  padding-block-end: 1rem !important;
 }
 
 body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
-  padding-block-end: calc(var(--workspace-recite-clearance, 0px) + 0.5rem) !important;
+  padding-block-end: 1rem !important;
 }
 
 .workspace-recite-dock__button:hover {
   animation: none !important;
 }
 
-/* Final shared reading-dock contract.
- * The dock stays viewport-accessible, while the real scrolling content owns
- * the clearance. This keeps both Mushaf and stacked layouts from passing text
- * underneath the action. */
+/* Final shared reading-dock contract: fixed to the viewport. */
 body:has(.workspace-recite-dock__button) .app .main {
-  --workspace-recite-size: 72px;
-  --workspace-recite-gap: 1rem;
+  --workspace-recite-size: 64px;
   --workspace-recite-clearance: calc(
     var(--workspace-recite-size) +
-    (var(--workspace-recite-gap) * 2) +
+    2.5rem +
     env(safe-area-inset-bottom, 0px)
   );
 }
@@ -64684,6 +64874,8 @@ body:has(.workspace-recite-dock__button) .app .main {
 body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-shell {
   min-height: 0 !important;
   min-block-size: 0 !important;
+  position: relative !important;
+  padding-block-end: 1rem !important;
 }
 
 body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-viewport-scroll,
@@ -64695,7 +64887,8 @@ body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-p
 }
 
 body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
-  padding-block-end: 0.45rem !important;
+  position: relative !important;
+  padding-block-end: 1rem !important;
   scroll-padding-block-end: 0.45rem !important;
 }
 
@@ -64710,13 +64903,16 @@ body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
   height: var(--workspace-recite-size, 64px) !important;
   min-height: var(--workspace-recite-size, 64px) !important;
   max-height: var(--workspace-recite-size, 64px) !important;
+  position: relative !important;
+  inset: auto !important;
   inset-inline-start: auto !important;
-  inset-inline-end: max(1rem, env(safe-area-inset-inline-end, 0px)) !important;
-  inset-block-end: calc(var(--workspace-recite-gap, 0.85rem) + env(safe-area-inset-bottom, 0px)) !important;
+  inset-inline-end: auto !important;
+  inset-block-end: auto !important;
   animation: none !important;
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease !important;
   transform: none !important;
   overflow: hidden !important;
+  margin: 0 auto !important;
 }
 
 @media (max-width: 767.98px) {

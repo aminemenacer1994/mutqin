@@ -7188,3 +7188,268 @@ html body .amd-overlay .amd-modal .amd-header .amd-range--premium {
     margin-inline-end: 0 !important;
   }
 }
+
+/* Featured Find-ayah search + session-action hr (final cascade) */
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent, #c48a4a) 22%, #ffffff),
+      color-mix(in srgb, var(--accent, #c48a4a) 12%, #fff8f0)
+    ) !important;
+  border: 1.5px solid color-mix(in srgb, var(--accent, #c48a4a) 48%, transparent) !important;
+  color: var(--accent-strong, #8a5a2b) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 70%, transparent) inset,
+    0 4px 12px color-mix(in srgb, var(--accent, #c48a4a) 22%, transparent) !important;
+  width: 2.55rem !important;
+  height: 2.55rem !important;
+  min-width: 2.55rem !important;
+  min-height: 2.55rem !important;
+  max-width: 2.55rem !important;
+  max-height: 2.55rem !important;
+  flex: 0 0 2.55rem !important;
+}
+
+html body .app .top-card-icon-controls:has(.top-card-search-trigger.is-featured) {
+  height: auto !important;
+  min-height: var(--top-card-toolbar-icon, 2.25rem) !important;
+  align-items: center !important;
+}
+
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent, #c48a4a) 32%, #ffffff),
+      color-mix(in srgb, var(--accent, #c48a4a) 18%, #fff3e6)
+    ) !important;
+  border-color: color-mix(in srgb, var(--accent-strong, #8a5a2b) 55%, transparent) !important;
+  color: var(--accent-strong, #6f4520) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 75%, transparent) inset,
+    0 6px 16px color-mix(in srgb, var(--accent, #c48a4a) 30%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--accent, #c48a4a) 18%, transparent) !important;
+}
+
+html body .app .top-card-icon-controls .top-card-search-trigger .top-card-search-glyph {
+  display: block !important;
+  width: 1.15rem !important;
+  height: 1.15rem !important;
+}
+
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured,
+.app[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, #d4af6e 34%, #2a241e),
+      color-mix(in srgb, #d4af6e 18%, #1c1916)
+    ) !important;
+  border-color: color-mix(in srgb, #e0c08a 48%, transparent) !important;
+  color: #f7efdf !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 4px 14px rgba(0, 0, 0, 0.35) !important;
+}
+
+html body .app .top-card-session-hr {
+  display: none;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.22)) 88%, transparent);
+  margin: 0;
+  height: 0;
+  width: 100%;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
+/* Desktop: vertical rule between session CTAs and icon controls */
+@media (min-width: 768px) {
+  html body .app .workspace-shell-head-utility-row > .top-card-session-hr {
+    display: block !important;
+    width: 0 !important;
+    height: 1.65rem !important;
+    margin: 0 0.15rem !important;
+    border: 0 !important;
+    border-inline-start: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.28)) 90%, transparent) !important;
+    align-self: center !important;
+    flex: 0 0 auto !important;
+  }
+
+  html[data-theme="dark"] body .app .workspace-shell-head-utility-row > .top-card-session-hr,
+  .app[data-theme="dark"] .workspace-shell-head-utility-row > .top-card-session-hr {
+    border-inline-start-color: color-mix(in srgb, rgba(208, 160, 107, 0.4) 90%, transparent) !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  html body .app .workspace-shell-head-utility-row .action-buttons-group.w-100 {
+    display: flex !important;
+    flex-flow: column nowrap !important;
+    align-items: stretch !important;
+    gap: 0.45rem !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row > .top-card-session-hr {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    height: 0 !important;
+    margin: 0.05rem 0 !important;
+    border: 0 !important;
+    border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.22)) 88%, transparent) !important;
+    flex: 0 0 auto !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row > .workspace-shell-actions,
+  html body .app .workspace-shell-head-utility-row > .workspace-shell-head-actions {
+    grid-row: 3 !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    grid-template-rows: auto auto auto !important;
+  }
+
+  html[data-theme="dark"] body .app .workspace-shell-head-utility-row > .top-card-session-hr {
+    border-top-color: color-mix(in srgb, rgba(208, 160, 107, 0.34) 90%, transparent) !important;
+  }
+}
+
+/* Mushaf: sticky left zoom; no nested scrollbar (overflow visible everywhere).
+ * Recite dock is Teleported to body with position:fixed (see ui-lock-v171). */
+html body .app .main.mushaf-mode-active .mushaf-shell,
+html body .app .main.mushaf-mode-active .mushaf-shell.row {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: flex-start !important;
+  position: relative !important;
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+  padding-block-end: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+html body .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+html body .app .main.mushaf-mode-active .mushaf-page--madani,
+html body .app .main.mushaf-mode-active .mushaf-page-body,
+html body .app .main.mushaf-mode-active .madani-page-sheet {
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+  max-width: 100% !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html body .app .main.mushaf-mode-active .mushaf-viewport-scroll::-webkit-scrollbar,
+html body .app .main.mushaf-mode-active .mushaf-page--madani::-webkit-scrollbar,
+html body .app .main.mushaf-mode-active .madani-page-sheet::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+html body .app .main.mushaf-mode-active .mushaf-font-zoom {
+  position: sticky !important;
+  top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
+  align-self: flex-start !important;
+  overflow: visible !important;
+  scrollbar-width: none !important;
+  z-index: 8 !important;
+  height: auto !important;
+  flex-shrink: 0 !important;
+}
+
+@media (min-width: 768px) {
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom.col-md-1 {
+    flex: 0 0 8.33333333% !important;
+    width: 8.33333333% !important;
+    max-width: 8.33333333% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll.col-md-11 {
+    flex: 0 0 91.66666667% !important;
+    width: 91.66666667% !important;
+    max-width: 91.66666667% !important;
+    min-width: 0 !important;
+  }
+}
+
+html body .app .workspace-reading-surface {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+html body .app .verses-grid {
+  position: relative !important;
+  overflow: visible !important;
+  max-height: none !important;
+  padding-block-end: 1rem !important;
+}
+
+/* Recite Teleported to body — behind the audio player (lower z-index). */
+html body .workspace-recite-dock,
+body > .workspace-recite-dock {
+  display: flex !important;
+  position: fixed !important;
+  inset-inline: 0 !important;
+  inset-block-end: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+  top: auto !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: none !important;
+  pointer-events: none !important;
+  z-index: 1030 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+html body:has(.player-dock) .workspace-recite-dock,
+body:has(.player-dock) > .workspace-recite-dock {
+  inset-block-end: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem) !important;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem) !important;
+}
+
+html body .workspace-recite-dock .workspace-recite-dock__button,
+html body .workspace-recite-dock .workspace-recite-dock__button.is-animated,
+html body .workspace-recite-dock .workspace-recite-dock__button:hover,
+html body .workspace-recite-dock .workspace-recite-dock__button:active,
+html body .workspace-recite-dock .workspace-recite-dock__button:focus-visible,
+body > .workspace-recite-dock .workspace-recite-dock__button {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  margin: 0 auto !important;
+  pointer-events: auto !important;
+  z-index: 1 !important;
+}
+
+body:has(.workspace-recite-dock__button) .app .main {
+  --workspace-recite-size: 64px;
+  --workspace-recite-clearance: calc(
+    var(--workspace-recite-size) +
+    2.5rem +
+    env(safe-area-inset-bottom, 0px)
+  );
+  padding-block-end: max(
+    var(--workspace-recite-clearance),
+    var(--player-dock-offset, 0px)
+  ) !important;
+  scroll-padding-block-end: var(--workspace-recite-clearance);
+}

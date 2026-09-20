@@ -564,17 +564,32 @@
               </div>
             </div>
           </div>
+          <hr
+            v-if="isPostSessionChoiceVisible || showHeaderSessionAction || showHeaderEndSessionAction"
+            class="top-card-session-hr"
+            aria-hidden="true"
+          />
           <div class="top-card-icon-controls" :aria-label="t('memorisation.a11y.readingTools')">
             <button
               v-if="!isPostSessionChoiceVisible"
               type="button"
-              class="top-card-search-trigger top-card-action-trigger top-card-icon-control"
+              class="top-card-search-trigger top-card-action-trigger top-card-icon-control is-featured"
               data-testid="workspace-ayah-search"
-              :title="t('memorisation.askMutqin.ctaHint')"
+              :title="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
               :aria-label="`${t('memorisation.askMutqin.ctaLabel')}. ${t('memorisation.askMutqin.ctaHint')}`"
               @click="openAskMutqin"
             >
-              <i class="bi bi-search" aria-hidden="true"></i>
+              <svg
+                class="top-card-search-glyph"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle cx="10.5" cy="10.5" r="6.25" fill="none" stroke="currentColor" stroke-width="2.25" />
+                <path d="M15.4 15.4 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+              </svg>
             </button>
             <div
               class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
@@ -1094,30 +1109,14 @@
               class="workspace-reading-surface"
               :class="`workspace-reading-surface--${readingViewMode}`"
             >
-            <Teleport to="body">
-              <div v-if="showWorkspaceAiReciteCta" class="workspace-recite-dock" aria-live="polite">
-                <button
-                  type="button"
-                  class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
-                  :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                  data-testid="workspace-ai-recite"
-                  :title="t('dashboard.ai_recite.cta_label')"
-                  :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                  @click="openWorkspaceAiRecite"
-                >
-                  <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                  <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-                </button>
-              </div>
-            </Teleport>
             <div v-if="readingViewMode === 'mushaf'" class="mushaf-workspace">
               <div class="container mushaf-workspace__fluid">
               <section
-                class="mushaf-shell"
+                class="mushaf-shell row g-0"
                 :aria-label="t('memorisation.view.mushaf')"
               >
                 <div
-                  class="mushaf-font-zoom"
+                  class="mushaf-font-zoom col-md-1"
                   role="group"
                   :aria-label="t('common.fontSize')"
                 >
@@ -1142,7 +1141,7 @@
                     <i class="bi bi-dash-lg" aria-hidden="true"></i>
                   </button>
                 </div>
-                <div ref="mushafViewport" class="mushaf-viewport-scroll">
+                <div ref="mushafViewport" class="mushaf-viewport-scroll col-md-11">
                   <div v-if="madaniPagesError" class="mushaf-empty-page mushaf-empty-page--error">
                     <AppStatus
                       :variant="networkOnline === false ? 'offline' : 'error'"
@@ -1360,6 +1359,27 @@
 
             </div>
             </div>
+
+            <Teleport to="body">
+              <div
+                v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
+                class="workspace-recite-dock"
+                aria-live="polite"
+              >
+                <button
+                  type="button"
+                  class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
+                  :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                  data-testid="workspace-ai-recite"
+                  :title="t('dashboard.ai_recite.cta_label')"
+                  :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                  @click="openWorkspaceAiRecite"
+                >
+                  <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                  <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                </button>
+              </div>
+            </Teleport>
           </main>
         </div>
       </div>

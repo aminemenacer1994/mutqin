@@ -891,7 +891,7 @@
           grid-row: 1 !important;
           display: grid !important;
           grid-template-columns: minmax(0, 1fr) auto !important;
-          grid-template-rows: auto auto !important;
+          grid-template-rows: auto auto auto !important;
           align-items: center !important;
           column-gap: 0.5rem !important;
           row-gap: 0.4rem !important;
@@ -906,10 +906,20 @@
         .app .workspace-shell-head-utility-row {
           display: contents !important;
         }
+        .app .workspace-shell-head-utility-row > .top-card-session-hr {
+          display: block !important;
+          grid-column: 1 / -1 !important;
+          grid-row: 2 !important;
+          width: 100% !important;
+          height: 0 !important;
+          margin: 0.05rem 0 !important;
+          border: 0 !important;
+          border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.22)) 88%, transparent) !important;
+        }
         .app .workspace-shell-head-utility-row > .workspace-shell-actions,
         .app .workspace-shell-head-utility-row > .workspace-shell-head-actions {
           grid-column: 1 / -1 !important;
-          grid-row: 2 !important;
+          grid-row: 3 !important;
           width: 100% !important;
           max-width: 100% !important;
         }
@@ -1541,7 +1551,7 @@
           border: 1px solid var(--toolbar-header-border) !important;
           border-radius: 20px !important;
           box-shadow: 0 10px 28px rgba(63, 39, 18, 0.08) !important;
-          overflow: hidden !important;
+          overflow: visible !important;
           width: 100% !important;
           max-width: none !important;
           color: var(--toolbar-control-fg) !important;
@@ -2018,14 +2028,19 @@
       }
 
       html body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
-        padding-block-end: 0.45rem !important;
+        position: relative !important;
+        padding-block-end: calc(
+          var(--workspace-recite-size, 64px) +
+          (var(--workspace-recite-inset, 0.95rem) * 2)
+        ) !important;
         scroll-padding-block-end: 0.45rem !important;
       }
 
-      /* Recite stays fixed to the viewport so it remains visible while the
-       * reading surface scrolls. The card itself hugs the text. */
+      /* Recite stays inside the reading workspace — absolute, not viewport-fixed. */
       html body .app .workspace-reading-surface {
         position: relative !important;
+        --workspace-recite-size: 64px;
+        --workspace-recite-inset: 0.95rem;
       }
 
       html body .app .workspace-reading-surface--mushaf .mushaf-workspace {
@@ -2036,9 +2051,16 @@
       html body .app .workspace-reading-surface--stacked .verses-grid,
       html body .app .main.mushaf-mode-active .mushaf-shell,
       html body .app .workspace-main .verses-grid {
+        position: relative !important;
         box-sizing: border-box !important;
-        padding-bottom: 0.45rem !important;
-        padding-block-end: 0.45rem !important;
+        padding-bottom: calc(
+          var(--workspace-recite-size, 64px) +
+          (var(--workspace-recite-inset, 0.95rem) * 2)
+        ) !important;
+        padding-block-end: calc(
+          var(--workspace-recite-size, 64px) +
+          (var(--workspace-recite-inset, 0.95rem) * 2)
+        ) !important;
       }
 
       html body .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair),
@@ -2081,20 +2103,21 @@
         }
       }
 
-      html body .app .workspace-recite-dock__button,
-      html body .app .workspace-recite-dock__button.is-animated,
-      html body .app .workspace-recite-dock__button:hover,
-      html body .app .workspace-recite-dock__button:active,
-      html body .app .workspace-recite-dock__button:focus-visible {
-        position: fixed !important;
+      html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button,
+      html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button.is-animated,
+      html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button:hover,
+      html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button:active,
+      html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button:focus-visible {
+        position: relative !important;
         top: auto !important;
         left: auto !important;
         right: auto !important;
+        inset: auto !important;
         inset-inline-start: auto !important;
-        inset-inline-end: max(1rem, env(safe-area-inset-inline-end, 0px)) !important;
-        bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
-        inset-block-end: calc(0.85rem + env(safe-area-inset-bottom, 0px)) !important;
-        z-index: 12100 !important;
+        inset-inline-end: auto !important;
+        bottom: auto !important;
+        inset-block-end: auto !important;
+        z-index: 1 !important;
         width: var(--workspace-recite-size, 64px) !important;
         min-width: var(--workspace-recite-size, 64px) !important;
         max-width: var(--workspace-recite-size, 64px) !important;
@@ -2107,16 +2130,12 @@
         box-shadow: 0 8px 18px rgba(13, 60, 40, 0.28) !important;
         animation: none !important;
         overflow: hidden !important;
+        margin: 0 auto !important;
       }
 
       @media (max-width: 767.98px) {
-        html body .app .workspace-recite-dock__button,
-        html body .app .workspace-recite-dock__button.is-animated,
-        html body .app .workspace-recite-dock__button:hover,
-        html body .app .workspace-recite-dock__button:active,
-        html body .app .workspace-recite-dock__button:focus-visible {
-          bottom: calc(2.15rem + env(safe-area-inset-bottom, 0px)) !important;
-          inset-block-end: calc(2.15rem + env(safe-area-inset-bottom, 0px)) !important;
+        html body .app .workspace-reading-surface {
+          --workspace-recite-inset: 1.1rem;
         }
       }
 
@@ -2995,7 +3014,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v170'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v171'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -3011,7 +3030,7 @@
           var pinning = false;
           var observer = new MutationObserver(function () {
             if (pinning) return;
-            var lock = document.getElementById('mutqin-ui-lock-v170');
+            var lock = document.getElementById('mutqin-ui-lock-v171');
             if (!lock || lock === document.body.lastElementChild) return;
             pinning = true;
             pin();
@@ -8574,25 +8593,88 @@ body.session-analysis-modal-open {
 }
     </style>
     @stack('page-scripts')
-<style id="mutqin-ui-lock-v170">
-  /* Recite stays fixed at the bottom centre of the viewport while the page scrolls. */
+<style id="mutqin-ui-lock-v171">
+  /* Sticky left zoom. Recite is Teleported to body + position:fixed so it
+   * stays on screen while the page scrolls. */
   html body .app {
     transform: none !important;
     filter: none !important;
     perspective: none !important;
+    contain: none !important;
   }
 
-  html body .app .mushaf-shell > .workspace-recite-dock,
-  html body .app .verses-grid > .workspace-recite-dock,
-  html body .app .workspace-reading-surface > .workspace-recite-dock,
-  html body > .workspace-recite-dock {
+  html body .app .main.mushaf-mode-active .mushaf-shell,
+  html body .app .main.mushaf-mode-active .mushaf-shell.row {
+    position: relative !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    flex-flow: row nowrap !important;
+    align-items: flex-start !important;
+    padding-block-end: 1rem !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .app .verses-grid {
+    position: relative !important;
+    overflow: visible !important;
+    max-height: none !important;
+    padding-block-end: 1rem !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-page--madani,
+  html body .app .main.mushaf-mode-active .madani-page-sheet {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    max-width: 100% !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll::-webkit-scrollbar,
+  html body .app .main.mushaf-mode-active .mushaf-page--madani::-webkit-scrollbar,
+  html body .app .main.mushaf-mode-active .madani-page-sheet::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom {
+    position: sticky !important;
+    top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
+    align-self: flex-start !important;
+    z-index: 8 !important;
+    height: auto !important;
+  }
+
+  @media (min-width: 768px) {
+    html body .app .main.mushaf-mode-active .mushaf-font-zoom.col-md-1 {
+      flex: 0 0 8.33333333% !important;
+      width: 8.33333333% !important;
+      max-width: 8.33333333% !important;
+    }
+
+    html body .app .main.mushaf-mode-active .mushaf-viewport-scroll.col-md-11 {
+      flex: 0 0 91.66666667% !important;
+      width: 91.66666667% !important;
+      max-width: 91.66666667% !important;
+    }
+  }
+
+  /* Fixed above the audio player, behind it in stacking order.
+   * Dock is Teleported to body, so it cannot read .app CSS variables. */
+  html body .workspace-recite-dock,
+  body > .workspace-recite-dock {
     display: flex !important;
     position: fixed !important;
+    inset-inline: 0 !important;
+    inset-block-end: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
     top: auto !important;
     right: 0 !important;
-    bottom: calc(1.15rem + env(safe-area-inset-bottom, 0px)) !important;
     left: 0 !important;
-    inset-inline: 0 !important;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
     justify-content: center !important;
     align-items: center !important;
     width: 100% !important;
@@ -8600,47 +8682,58 @@ body.session-analysis-modal-open {
     height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
-    grid-column: 1 / -1 !important;
     pointer-events: none !important;
-    z-index: 12100 !important;
-    box-sizing: border-box !important;
+    z-index: 1030 !important;
     transform: none !important;
     filter: none !important;
     box-shadow: none !important;
   }
 
-  html body .app .workspace-recite-dock__button,
-  html body .app .workspace-recite-dock__button.is-animated,
-  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button,
-  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button.is-animated,
-  html body .app .workspace-recite-dock__button:hover,
-  html body .app .workspace-recite-dock__button:active,
-  html body .app .workspace-recite-dock__button:focus-visible,
-  html body > .workspace-recite-dock .workspace-recite-dock__button,
-  html body > .workspace-recite-dock .workspace-recite-dock__button.is-animated,
-  html body > .workspace-recite-dock .workspace-recite-dock__button:hover,
-  html body > .workspace-recite-dock .workspace-recite-dock__button:active,
-  html body > .workspace-recite-dock .workspace-recite-dock__button:focus-visible {
+  html body:has(.player-dock) .workspace-recite-dock,
+  html body:has(.player-dock) > .workspace-recite-dock,
+  body:has(.player-dock) > .workspace-recite-dock {
+    inset-block-end: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem) !important;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem) !important;
+  }
+
+  html body .workspace-recite-dock .workspace-recite-dock__button,
+  html body .workspace-recite-dock .workspace-recite-dock__button.is-animated,
+  html body .workspace-recite-dock .workspace-recite-dock__button:hover,
+  html body .workspace-recite-dock .workspace-recite-dock__button:active,
+  html body .workspace-recite-dock .workspace-recite-dock__button:focus-visible,
+  body > .workspace-recite-dock .workspace-recite-dock__button {
     position: relative !important;
+    inset: auto !important;
     top: auto !important;
     left: auto !important;
     right: auto !important;
     bottom: auto !important;
-    inset: auto !important;
-    inset-inline: auto !important;
-    inset-block: auto !important;
     transform: none !important;
     margin: 0 auto !important;
     pointer-events: auto !important;
     animation: none !important;
     filter: none !important;
-    box-shadow: none !important;
+    box-shadow: 0 8px 18px rgba(13, 60, 40, 0.28) !important;
   }
 
-  html body .app .workspace-recite-dock__button::before,
-  html body .app .workspace-recite-dock__button::after,
-  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button::before,
-  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button::after {
+  body:has(.workspace-recite-dock__button) .app .main {
+    --workspace-recite-size: 64px;
+    --workspace-recite-clearance: calc(
+      var(--workspace-recite-size) +
+      2.5rem +
+      env(safe-area-inset-bottom, 0px)
+    );
+    padding-block-end: max(
+      var(--workspace-recite-clearance),
+      var(--player-dock-offset, 0px)
+    ) !important;
+    scroll-padding-block-end: var(--workspace-recite-clearance);
+  }
+
+  html body .workspace-recite-dock__button::before,
+  html body .workspace-recite-dock__button::after,
+  html body .workspace-ai-recite-cta.workspace-recite-dock__button::before,
+  html body .workspace-ai-recite-cta.workspace-recite-dock__button::after {
     content: none !important;
     display: none !important;
     animation: none !important;

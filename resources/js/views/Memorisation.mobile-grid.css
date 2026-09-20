@@ -6053,9 +6053,25 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   min-width: 0 !important;
 }
 
+.workspace-shell-head-utility-row > .top-card-icon-controls {
+  order: 1 !important;
+  align-self: flex-end !important;
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.workspace-shell-head-utility-row > .top-card-session-hr {
+  order: 2 !important;
+}
+
 .workspace-shell-head-utility-row > .workspace-shell-head-actions,
 .workspace-shell-head-utility-row > .workspace-shell-actions {
-  order: 1 !important;
+  order: 3 !important;
   display: flex !important;
   flex-flow: column nowrap !important;
   align-items: stretch !important;
@@ -6065,18 +6081,6 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   max-width: 100% !important;
   flex: 0 0 auto !important;
   overflow: visible !important;
-}
-
-.workspace-shell-head-utility-row > .top-card-icon-controls {
-  order: 2 !important;
-  align-self: flex-end !important;
-  flex: 0 0 auto !important;
-  flex-shrink: 0 !important;
-  width: max-content !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  position: relative !important;
-  z-index: 1 !important;
 }
 
 .workspace-shell-head-utility-row .action-buttons-group {
@@ -7574,7 +7578,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   html body .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) {
     display: flex !important;
     flex-direction: row !important;
-    align-items: stretch !important;
+    align-items: flex-start !important;
   }
 
   html body .app .main.mushaf-mode-active .mushaf-font-zoom,
@@ -7584,6 +7588,23 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     flex: 0 0 2.55rem !important;
     width: 2.55rem !important;
     min-width: 2.55rem !important;
+    max-width: 2.55rem !important;
+    overflow: visible !important;
+    position: sticky !important;
+    top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important;
+    align-self: flex-start !important;
+    z-index: 8 !important;
+    height: auto !important;
+  }
+
+  @media (min-width: 768px) {
+    html body .app .main.mushaf-mode-active .mushaf-font-zoom.col-md-1,
+    html body .main.mushaf-mode-active .mushaf-font-zoom.col-md-1 {
+      flex: 0 0 8.33333333% !important;
+      width: 8.33333333% !important;
+      max-width: 8.33333333% !important;
+      min-width: 0 !important;
+    }
   }
 
   html body .app .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) > .mushaf-viewport-scroll,
@@ -7610,8 +7631,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     .mushaf-page-body,
     .madani-page-sheet
   ) {
-    overflow-x: clip !important;
-    overflow-y: visible !important;
+    overflow: visible !important;
   }
 
   .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated,
