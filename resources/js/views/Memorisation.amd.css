@@ -7257,10 +7257,11 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigg
 html body .app .top-card-session-hr {
   display: none;
   border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.22)) 88%, transparent);
   margin: 0;
-  height: 0;
+  padding: 0;
+  height: 2px;
   width: 100%;
+  background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent);
   flex: 0 0 auto;
   align-self: stretch;
 }
@@ -7269,18 +7270,19 @@ html body .app .top-card-session-hr {
 @media (min-width: 768px) {
   html body .app .workspace-shell-head-utility-row > .top-card-session-hr {
     display: block !important;
-    width: 0 !important;
-    height: 1.65rem !important;
-    margin: 0 0.15rem !important;
+    width: 2px !important;
+    min-width: 2px !important;
+    height: 1.85rem !important;
+    margin: 0 0.45rem !important;
     border: 0 !important;
-    border-inline-start: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.28)) 90%, transparent) !important;
+    background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
     align-self: center !important;
-    flex: 0 0 auto !important;
+    flex: 0 0 2px !important;
   }
 
   html[data-theme="dark"] body .app .workspace-shell-head-utility-row > .top-card-session-hr,
   .app[data-theme="dark"] .workspace-shell-head-utility-row > .top-card-session-hr {
-    border-inline-start-color: color-mix(in srgb, rgba(208, 160, 107, 0.4) 90%, transparent) !important;
+    background: color-mix(in srgb, #e0c08a 55%, transparent) !important;
   }
 }
 
@@ -7297,10 +7299,10 @@ html body .app .top-card-session-hr {
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     width: 100% !important;
-    height: 0 !important;
-    margin: 0.05rem 0 !important;
+    height: 2px !important;
+    margin: 0.35rem 0 !important;
     border: 0 !important;
-    border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.22)) 88%, transparent) !important;
+    background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
     flex: 0 0 auto !important;
   }
 
@@ -7314,7 +7316,7 @@ html body .app .top-card-session-hr {
   }
 
   html[data-theme="dark"] body .app .workspace-shell-head-utility-row > .top-card-session-hr {
-    border-top-color: color-mix(in srgb, rgba(208, 160, 107, 0.34) 90%, transparent) !important;
+    background: color-mix(in srgb, #e0c08a 55%, transparent) !important;
   }
 }
 

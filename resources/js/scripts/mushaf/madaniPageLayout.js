@@ -2,7 +2,7 @@ import { qcfFontFamily } from './qcfFontLoader.js'
 
 export const MADANI_LINES_PER_PAGE = 15
 export const MADANI_TOTAL_PAGES = 604
-export const MADANI_LAYOUT_VERSION = 7
+export const MADANI_LAYOUT_VERSION = 8
 
 /** Al-Fatihah ayah 1 is itself the basmala — isolate it onto its own row. */
 export function isFatihahBasmalaVerseKey(verseKey) {
@@ -45,15 +45,37 @@ export function surahNameGlyphText(chapterId) {
 }
 
 /**
- * Flatten Quran.com page verses into sorted Madani lines (ayah words only).
+ * True when a verse has any word (or verse-level page) on the given Madani page.
+ * Long ayahs often start on one page and continue on the next.
  */
-export function groupWordsByLine(verses = []) {
+export function verseBelongsToMadaniPage(verse = {}, pageNumber = 0) {
+  const page = Number(pageNumber)
+  if (!Number.isFinite(page) || page < 1) return false
+  const words = Array.isArray(verse?.words) ? verse.words : []
+  if (words.some((word) => Number(word?.page_number) === page)) return true
+  const pageFromVerse = Number(verse?.page_number)
+  if (Number.isFinite(pageFromVerse) && pageFromVerse === page) return true
+  return false
+}
+
+/**
+ * Flatten Quran.com page verses into sorted Madani lines (ayah words only).
+ * When `pageNumber` is set, only words that belong on that printed page are kept
+ * so cross-page ayah continuations paint on the correct sheet.
+ */
+export function groupWordsByLine(verses = [], { pageNumber = null } = {}) {
   const lines = new Map()
+  const pageFilter = Number(pageNumber)
+  const filterByPage = Number.isFinite(pageFilter) && pageFilter >= 1
 
   for (const verse of verses) {
     const verseKey = String(verse?.verse_key || verse?.key || '')
     const words = Array.isArray(verse?.words) ? verse.words : []
     for (const word of words) {
+      if (filterByPage) {
+        const wordPage = Number(word?.page_number)
+        if (Number.isFinite(wordPage) && wordPage !== pageFilter) continue
+      }
       const lineNumber = Number(word?.line_number)
       if (!Number.isFinite(lineNumber) || lineNumber < 1) continue
       if (!lines.has(lineNumber)) lines.set(lineNumber, [])
@@ -209,7 +231,7 @@ export function isolateFatihahBasmalaLines(lines = []) {
 export function buildMadaniPageLayout(pageNumber, verses = [], options = {}) {
   const page = Math.max(1, Math.min(MADANI_TOTAL_PAGES, Number(pageNumber) || 1))
   const tajweed = !!options.tajweed
-  const ayahLines = groupWordsByLine(verses)
+  const ayahLines = groupWordsByLine(verses, { pageNumber: page })
   const ayahLineMap = new Map(ayahLines.map(line => [line.lineNumber, line]))
   const surahStarts = findAllSurahStartsOnPage(verses)
 

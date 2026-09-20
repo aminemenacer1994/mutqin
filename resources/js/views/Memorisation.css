@@ -53179,14 +53179,14 @@ contained page (top session card untouched) —— */
     min-height: min(62vh, 740px) !important;
   }
 
-  .main.mushaf-mode-active .mushaf-shell,
+.main.mushaf-mode-active .mushaf-shell,
 .main.mushaf-mode-active .mushaf-shell {
     border: 1px solid rgba(24, 24, 27, 0.12) !important;
     border-radius: 20px !important;
     box-shadow: 0 10px 28px rgba(24, 24, 27, 0.06) !important;
     background: var(--workspace-card-surface) !important;
-    overflow: hidden !important;
-  }
+    overflow: visible !important;
+}
 
   .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar {
     background: transparent !important;
@@ -53314,7 +53314,7 @@ contained page (top session card untouched) —— */
     border-color: var(--zone-divider) !important;
     border-radius: 20px !important;
     box-shadow: none !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     color: var(--mushaf-reading-ink) !important;
     --mushaf-bg: var(--mushaf-reading-surface);
     --mushaf-text: var(--mushaf-reading-ink);
@@ -58381,6 +58381,18 @@ never recolour tajweed text */
   min-width: 0;
 }
 
+.mushaf-session-stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 3vw, 2rem);
+  width: 100%;
+}
+
+.mushaf-session-stack .mushaf-page--madani + .mushaf-page--madani {
+  border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(24, 24, 27, 0.12)) 80%, transparent);
+  padding-top: clamp(1rem, 2.4vw, 1.6rem);
+}
+
 .mushaf-workspace .mushaf-viewport-scroll {
   overflow: visible;
 }
@@ -58698,17 +58710,18 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigg
   display: none;
   width: 100%;
   max-width: 100%;
-  height: 0;
+  height: 2px;
   margin: 0;
   padding: 0;
   border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.22)) 88%, transparent);
+  background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent);
+  opacity: 1;
   flex: 0 0 auto;
   align-self: stretch;
 }
 
 [data-theme="dark"] .top-card-session-hr {
-  border-top-color: color-mix(in srgb, rgba(208, 160, 107, 0.34) 90%, transparent);
+  background: color-mix(in srgb, #e0c08a 55%, transparent);
 }
 
 @media (max-width: 767.98px) {
@@ -58718,8 +58731,16 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigg
     grid-column: 1 / -1 !important;
     grid-row: 2 !important;
     width: 100% !important;
-    margin: 0.05rem 0 !important;
+    height: 2px !important;
+    margin: 0.35rem 0 !important;
+    border: 0 !important;
+    background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
     align-self: stretch !important;
+  }
+
+  [data-theme="dark"] .workspace-shell-head-utility-row > .top-card-session-hr,
+  html[data-theme="dark"] body .app .workspace-shell-head-utility-row > .top-card-session-hr {
+    background: color-mix(in srgb, #e0c08a 55%, transparent) !important;
   }
 
   html body .app .workspace-shell-head-utility-row > .workspace-shell-actions,
@@ -58748,18 +58769,19 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigg
   html body .app .workspace-shell-head-utility-row > .top-card-session-hr,
   .workspace-shell-head-utility-row > .top-card-session-hr {
     display: block !important;
-    width: 0 !important;
-    height: 1.65rem !important;
-    margin: 0 0.15rem !important;
+    width: 2px !important;
+    min-width: 2px !important;
+    height: 1.85rem !important;
+    margin: 0 0.45rem !important;
     border: 0 !important;
-    border-inline-start: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.28)) 90%, transparent) !important;
+    background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
     align-self: center !important;
-    flex: 0 0 auto !important;
+    flex: 0 0 2px !important;
   }
 
   [data-theme="dark"] .workspace-shell-head-utility-row > .top-card-session-hr,
   html[data-theme="dark"] body .app .workspace-shell-head-utility-row > .top-card-session-hr {
-    border-inline-start-color: color-mix(in srgb, rgba(208, 160, 107, 0.4) 90%, transparent) !important;
+    background: color-mix(in srgb, #e0c08a 55%, transparent) !important;
   }
 }
 

@@ -74,7 +74,8 @@ import {
   isVerseInteractiveOnPage,
   MADANI_LAYOUT_VERSION,
   textStartsWithBasmala,
-  toEasternArabicDigits
+  toEasternArabicDigits,
+  verseBelongsToMadaniPage,
 } from '../scripts/mushaf/madaniPageLayout'
 import {
   buildAudioIndexMap as buildMadaniAudioIndexMapHelper,
@@ -9282,7 +9283,10 @@ export default {
             : null,
           lines: sessionLines,
           fontFamily: layout?.fontFamily || `p${pageNumber}-v2`,
-          verseKeys: [...sessionKeys],
+          // Page-local keys only — never the full session set (that stuck sync on page 0).
+          verseKeys: Array.isArray(layout?.verseKeys) && layout.verseKeys.length
+            ? [...layout.verseKeys]
+            : verses.map(verse => verse.key).filter(Boolean),
           juzNumber: layout?.juzNumber || null,
           primaryChapterId: Number(this.chapterId || this.currentConfig?.chapterId || layout?.primaryChapterId || 0) || null,
           verses,
@@ -9404,7 +9408,7 @@ export default {
         || (
           this.readingViewMode === 'mushaf'
           && this.shouldShowReadingWorkspace
-          && !this.currentMushafPage
+          && !this.mushafPages.length
           && !this.madaniPagesError
         )
       ) {
@@ -9636,133 +9640,8 @@ export default {
     },
 
     currentMadaniLines() {
-      const page = this.currentMushafPage
       // Only render session-filtered lines from mushafPages — never raw layout.
-      const sourceLines = Array.isArray(page?.lines) ? page.lines : []
-      if (!sourceLines.length) return []
-      const sessionKeys = this.mushafSessionVerseKeys
-      // Belt-and-suspenders: filter again even if page.lines was already trimmed.
-      const lines = filterMadaniLinesToSession(sourceLines, sessionKeys)
-      if (!lines.length) return []
-      const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
-      const effectiveKey = this.effectiveActiveVerseKey
-      const fontFamily = page.fontFamily || `p${page.pageNumber}-v2`
-      const useGlyphs = this.useMadaniQcfGlyphs
-      const fontReady = useGlyphs
-        && !!this.madaniFontsReady?.[page.pageNumber]
-        && isQcfFontLoaded(page.pageNumber, { tajweed: !!this.tajweedEnabled })
-      const audioIndexMap = this.madaniAudioIndexMap
-      const anchorIndexCache = new Map()
-      const highlightVerseKey = this.currentHighlightedVerseKey
-      const highlightWordIndex = Number(this.currentWordIndex)
-      const focusOn = !!this.focusModeEnabled
-      const anchorOn = !!this.anchorModeEnabled
-      const showMeanings = !!this.showWordByWord
-      const sessionVerseByKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
-
-      return lines.map((line, lineIndex) => {
-        if (line.type === 'basmala' || line.type === 'surah_name') {
-          return {
-            ...line,
-            key: `madani-${page.pageNumber}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
-            fontFamily,
-            fontReady,
-            useGlyphs,
-            words: [],
-          }
-        }
-        const words = (line.words || [])
-          .filter(word => isVerseInteractiveOnPage(word?.verseKey || word?.verse_key, sessionKeys))
-          .map(word => {
-          const verseKey = word.verseKey
-          const sessionVerse = sessionVerseByKey.get(verseKey)
-          const inSession = true
-          const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
-          const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
-          const isPlayingAyah = inSession && this.activeVerseKey === verseKey && this.isPlaying
-          let useGlyph = useGlyphs && fontReady && !!word.codeV2
-          let html = useGlyph
-            ? (word.codeV2 || word.textQpc || '')
-            : (word.isEnd
-              ? formatMadaniAyahEndLabel(word)
-              : (word.textQpc || word.codeV2 || ''))
-          // Never leave ayah-end markers blank when a glyph slot is empty.
-          // End labels always resolve from verseKey (per-surah), not global ids.
-          if (word.isEnd && !String(html || '').trim()) {
-            html = formatMadaniAyahEndLabel(word)
-            useGlyph = false
-          }
-          const wordIndex = word.isEnd ? null : this.resolveMadaniAudioWordIndex(word, audioIndexMap)
-          const isHighlighted = inSession
-            && !word.isEnd
-            && wordIndex != null
-            && highlightVerseKey === verseKey
-            && highlightWordIndex === wordIndex
-          let isAnchor = false
-          if (anchorOn && inSession && !word.isEnd && wordIndex != null) {
-            if (!anchorIndexCache.has(verseKey)) {
-              const total = this.getVerseAudioWordCount(verseKey)
-              anchorIndexCache.set(verseKey, new Set(this.getAnchorIndices(total)))
-            }
-            isAnchor = anchorIndexCache.get(verseKey).has(wordIndex)
-          }
-          const sessionWord = Number.isFinite(wordIndex) ? sessionVerse?.words?.[wordIndex] : null
-          const plainText = String(sessionWord?.ar || word.textQpc || '').trim()
-          const meaningLabel = showMeanings && !word.isEnd
-            ? (resolveWordGlossFromVerse(
-              sessionVerse,
-              plainText,
-              Number.isFinite(wordIndex) ? wordIndex : 0
-            ) || String(sessionWord?.en || word.translation || '').trim())
-            : ''
-          const isPracticeFocus = inSession
-            && !word.isEnd
-            && wordIndex != null
-            && this.isPracticeFocusWeakWord(verseKey, wordIndex, plainText)
-          const emphasizeWeak = isPracticeFocus && (
-            this.postSessionPracticeEmphasizeWeakAreas
-            || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
-            || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
-            || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
-          )
-          const recitationStatus = inSession && !word.isEnd && wordIndex != null
-            ? this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, sessionVerse?.sessionTargetKey || '')
-            : ''
-          return {
-            ...word,
-            html,
-            useGlyph,
-            inSession,
-            wordIndex,
-            isActive,
-            isWeak: false,
-            isMastered: inSession && this.isMasteredAyah(verseKey),
-            isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
-            isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
-            isPlayingAyah,
-            isHighlighted,
-            isAnchor,
-            isPracticeFocus,
-            isPracticeFocusEmphasis: !!emphasizeWeak,
-            isPracticeFocusActive: isPracticeFocus && isHighlighted,
-            recitationStatus,
-            isFocusDimmed: focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
-            meaningLabel,
-            isNew: inSession && this.isNewHifzAyah(verseKey),
-            isDue: inSession && this.isDueHifzAyah(verseKey),
-            isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey),
-            hasAiReview: hasActiveReview
-          }
-        })
-        return {
-          ...line,
-          key: `madani-${page.pageNumber}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
-          fontFamily,
-          fontReady,
-          useGlyphs,
-          words
-        }
-      })
+      return this.buildMadaniLinesForPage(this.currentMushafPage)
     },
 
     mushafAidVerse() {
@@ -11403,11 +11282,11 @@ export default {
       // display:contents fit — that collapses every line onto one pile.
       if (!this.isMobileViewport() || this.readingViewMode !== 'mushaf') return
       const viewport = this.$refs.mushafViewport
-      const sheet = viewport?.querySelector?.('.madani-page-sheet')
-      if (!viewport || !sheet) return
+      const sheets = viewport?.querySelectorAll?.('.madani-page-sheet')
+      if (!viewport || !sheets?.length) return
 
-      const parent = sheet.parentElement
-      const clearFit = () => {
+      const applySheetFit = (sheet) => {
+        const parent = sheet.parentElement
         ;['transform', 'zoom', 'width', 'max-width', 'maxWidth', 'margin-inline', 'marginInline', 'margin-left', 'margin-right'].forEach((prop) => {
           sheet.style.removeProperty(prop)
         })
@@ -11416,37 +11295,37 @@ export default {
           parent.style.minHeight = ''
           parent.style.overflowX = ''
         }
+
+        sheet.style.setProperty('width', '100%', 'important')
+        sheet.style.setProperty('max-width', '100%', 'important')
+        sheet.style.setProperty('overflow-x', 'clip', 'important')
+        sheet.style.setProperty('overflow-wrap', 'anywhere', 'important')
+        sheet.style.setProperty('white-space', 'normal', 'important')
+        sheet.style.setProperty('transform', 'none', 'important')
+        sheet.style.setProperty('text-align', 'center', 'important')
+        sheet.style.setProperty('text-justify', 'none', 'important')
+        sheet.style.setProperty('word-spacing', '0', 'important')
+
+        sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs').forEach((line) => {
+          if (!line?.style) return
+          line.style.setProperty('display', 'contents', 'important')
+        })
+        sheet.querySelectorAll('.madani-word').forEach((word) => {
+          if (!word?.style) return
+          word.style.setProperty('display', 'inline', 'important')
+          word.style.setProperty('margin-inline', '0.14em 0', 'important')
+          word.style.setProperty('padding-inline', '0', 'important')
+          word.style.setProperty('word-spacing', '0', 'important')
+          word.style.setProperty('white-space', 'normal', 'important')
+          word.style.setProperty('max-width', '100%', 'important')
+          word.style.removeProperty('width')
+          word.style.removeProperty('flex')
+        })
       }
-      clearFit()
 
-      sheet.style.setProperty('width', '100%', 'important')
-      sheet.style.setProperty('max-width', '100%', 'important')
-      sheet.style.setProperty('overflow-x', 'clip', 'important')
-      sheet.style.setProperty('overflow-wrap', 'anywhere', 'important')
-      sheet.style.setProperty('white-space', 'normal', 'important')
-      sheet.style.setProperty('transform', 'none', 'important')
-      sheet.style.setProperty('text-align', 'center', 'important')
-      sheet.style.setProperty('text-justify', 'none', 'important')
-      sheet.style.setProperty('word-spacing', '0', 'important')
       viewport.style.overflowX = 'clip'
-      viewport.style.overflowY = 'visible'
-
-      // Continuous natural word flow — wrap inside the card, never sideways.
-      sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs').forEach((line) => {
-        if (!line?.style) return
-        line.style.setProperty('display', 'contents', 'important')
-      })
-      sheet.querySelectorAll('.madani-word').forEach((word) => {
-        if (!word?.style) return
-        word.style.setProperty('display', 'inline', 'important')
-        word.style.setProperty('margin-inline', '0.14em 0', 'important')
-        word.style.setProperty('padding-inline', '0', 'important')
-        word.style.setProperty('word-spacing', '0', 'important')
-        word.style.setProperty('white-space', 'normal', 'important')
-        word.style.setProperty('max-width', '100%', 'important')
-        word.style.removeProperty('width')
-        word.style.removeProperty('flex')
-      })
+      viewport.style.overflowY = 'auto'
+      sheets.forEach((sheet) => applySheetFit(sheet))
     },
 
     resolveCsrfToken() {
@@ -34959,25 +34838,42 @@ export default {
       }
       const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey
       const mappedPage = Number(this.madaniPageByVerseKey?.[activeKey] || 0)
+      // Always resolve against mushafPages (session-filtered), never madaniPageNumbers alone —
+      // those lists can diverge when empty layouts are stripped.
+      let pageIndex = -1
       if (mappedPage > 0) {
-        const pageIndex = this.madaniPageNumbers.findIndex(page => Number(page) === mappedPage)
-        if (pageIndex >= 0) {
-          this.mushafPageIndex = pageIndex
-          this.ensureMadaniPageLoaded(mappedPage)
-          return
-        }
+        pageIndex = this.mushafPages.findIndex(page => Number(page.pageNumber) === mappedPage)
       }
-      const pageIndex = this.mushafPages.findIndex(page => (
-        page.verses?.some(verse => verse.key === activeKey)
-        || page.verseKeys?.includes(activeKey)
-      ))
+      if (pageIndex < 0) {
+        pageIndex = this.mushafPages.findIndex(page => (
+          page.verses?.some(verse => verse.key === activeKey)
+          || page.verseKeys?.includes(activeKey)
+        ))
+      }
       if (pageIndex >= 0) {
         this.mushafPageIndex = pageIndex
         const pageNumber = this.mushafPages[pageIndex]?.pageNumber
         if (pageNumber) this.ensureMadaniPageLoaded(pageNumber)
+        this.$nextTick(() => this.scrollActiveMushafPageIntoView())
         return
       }
       this.mushafPageIndex = this.safeMushafPageIndex
+    },
+    scrollActiveMushafPageIntoView() {
+      if (typeof document === 'undefined') return
+      const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey
+      if (!activeKey) return
+      const word = this.$refs.mushafViewport?.querySelector?.(
+        `.madani-word[data-verse-key="${CSS.escape?.(activeKey) || activeKey}"]`
+      )
+      if (word?.scrollIntoView) {
+        word.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+        return
+      }
+      const pageEl = this.$refs.mushafViewport?.querySelector?.(
+        `.mushaf-page[data-mushaf-page-index="${this.safeMushafPageIndex}"]`
+      )
+      pageEl?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
     },
     goToMushafPage(index) {
       if (!this.mushafPages.length) {
@@ -35005,7 +34901,7 @@ export default {
       if (!nextKey) return
       const mappedPage = Number(this.madaniPageByVerseKey?.[nextKey] || 0)
       const nextPageIndex = mappedPage > 0
-        ? this.madaniPageNumbers.findIndex(page => Number(page) === mappedPage)
+        ? this.mushafPages.findIndex(page => Number(page.pageNumber) === mappedPage)
         : this.mushafPages.findIndex(page => page.verses.some(verse => verse.key === nextKey) || page.verseKeys?.includes(nextKey))
       if (nextPageIndex >= 0 && nextPageIndex !== this.safeMushafPageIndex) {
         this.goToMushafPage(nextPageIndex)
@@ -35043,11 +34939,17 @@ export default {
         this.madaniPageNumbers = pages.length ? pages : [1]
         await loadSurahNamesFont()
 
-        const currentIndex = this.safeMushafPageIndex
-        const primaryPage = this.madaniPageNumbers[currentIndex] || this.madaniPageNumbers[0]
-        await this.ensureMadaniPageLoaded(primaryPage, { force: !!options.force })
+        // Eager-load every session page so the full range is painted in the stack.
+        const sessionPages = [...this.madaniPageNumbers]
+        const primaryPage = sessionPages[this.safeMushafPageIndex] || sessionPages[0]
+        await Promise.all(sessionPages.map((pageNumber) => (
+          this.ensureMadaniPageLoaded(pageNumber, { force: !!options.force })
+        )))
         this.prefetchAdjacentMadaniFonts(primaryPage)
-        this.$nextTick(() => this.scheduleMadaniPageFit())
+        this.$nextTick(() => {
+          this.scheduleMadaniPageFit()
+          this.syncMushafPageToActiveVerse()
+        })
         if (
           this.readingViewMode === 'mushaf'
           && this.hasVerses
@@ -35120,10 +35022,7 @@ export default {
             { force: !!options.force }
           )
           layoutVerses = (Array.isArray(chapterVerses) ? chapterVerses : []).filter((verse) => {
-            const pageFromVerse = Number(verse?.page_number)
-            const pageFromWord = Number(verse?.words?.[0]?.page_number)
-            const versePage = Number.isFinite(pageFromVerse) ? pageFromVerse : pageFromWord
-            if (Number(versePage) === page) return true
+            if (verseBelongsToMadaniPage(verse, page)) return true
             const key = String(verse?.verse_key || verse?.key || '')
             return Number(this.madaniPageByVerseKey?.[key]) === page
           })
@@ -35141,7 +35040,9 @@ export default {
         }
         const nextMap = { ...this.madaniPageByVerseKey }
         for (const key of layout.verseKeys || []) {
-          nextMap[key] = page
+          // Keep the earliest page a verse starts on (cross-page ayahs continue later).
+          const existing = Number(nextMap[key] || 0)
+          if (!existing || page < existing) nextMap[key] = page
         }
         this.madaniPageByVerseKey = nextMap
         await this.ensureMadaniFontForPage(page)
@@ -35261,6 +35162,131 @@ export default {
       const sessionKeys = this.mushafSessionVerseKeys
       if (!sessionKeys || sessionKeys.size === 0) return []
       return words.filter(word => isVerseInteractiveOnPage(word?.verseKey || word?.verse_key, sessionKeys))
+    },
+    buildMadaniLinesForPage(page = null) {
+      if (!page) return []
+      const sourceLines = Array.isArray(page?.lines) ? page.lines : []
+      if (!sourceLines.length) return []
+      const sessionKeys = this.mushafSessionVerseKeys
+      const lines = filterMadaniLinesToSession(sourceLines, sessionKeys)
+      if (!lines.length) return []
+      const hasStarted = this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback
+      const effectiveKey = this.effectiveActiveVerseKey
+      const fontFamily = page.fontFamily || `p${page.pageNumber}-v2`
+      const useGlyphs = this.useMadaniQcfGlyphs
+      const fontReady = useGlyphs
+        && !!this.madaniFontsReady?.[page.pageNumber]
+        && isQcfFontLoaded(page.pageNumber, { tajweed: !!this.tajweedEnabled })
+      const audioIndexMap = this.madaniAudioIndexMap
+      const anchorIndexCache = new Map()
+      const highlightVerseKey = this.currentHighlightedVerseKey
+      const highlightWordIndex = Number(this.currentWordIndex)
+      const focusOn = !!this.focusModeEnabled
+      const anchorOn = !!this.anchorModeEnabled
+      const showMeanings = !!this.showWordByWord
+      const sessionVerseByKey = new Map((this.verses || []).map(verse => [verse.key, verse]))
+
+      return lines.map((line, lineIndex) => {
+        if (line.type === 'basmala' || line.type === 'surah_name') {
+          return {
+            ...line,
+            key: `madani-${page.pageNumber}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
+            fontFamily,
+            fontReady,
+            useGlyphs,
+            words: [],
+          }
+        }
+        const words = (line.words || [])
+          .filter(word => isVerseInteractiveOnPage(word?.verseKey || word?.verse_key, sessionKeys))
+          .map(word => {
+          const verseKey = word.verseKey
+          const sessionVerse = sessionVerseByKey.get(verseKey)
+          const inSession = true
+          const hasActiveReview = this.shouldShowRecitationReviewHighlights(verseKey)
+          const isActive = inSession && ((hasStarted && effectiveKey === verseKey) || hasActiveReview)
+          const isPlayingAyah = inSession && this.activeVerseKey === verseKey && this.isPlaying
+          let useGlyph = useGlyphs && fontReady && !!word.codeV2
+          let html = useGlyph
+            ? (word.codeV2 || word.textQpc || '')
+            : (word.isEnd
+              ? formatMadaniAyahEndLabel(word)
+              : (word.textQpc || word.codeV2 || ''))
+          if (word.isEnd && !String(html || '').trim()) {
+            html = formatMadaniAyahEndLabel(word)
+            useGlyph = false
+          }
+          const wordIndex = word.isEnd ? null : this.resolveMadaniAudioWordIndex(word, audioIndexMap)
+          const isHighlighted = inSession
+            && !word.isEnd
+            && wordIndex != null
+            && highlightVerseKey === verseKey
+            && highlightWordIndex === wordIndex
+          let isAnchor = false
+          if (anchorOn && inSession && !word.isEnd && wordIndex != null) {
+            if (!anchorIndexCache.has(verseKey)) {
+              const total = this.getVerseAudioWordCount(verseKey)
+              anchorIndexCache.set(verseKey, new Set(this.getAnchorIndices(total)))
+            }
+            isAnchor = anchorIndexCache.get(verseKey).has(wordIndex)
+          }
+          const sessionWord = Number.isFinite(wordIndex) ? sessionVerse?.words?.[wordIndex] : null
+          const plainText = String(sessionWord?.ar || word.textQpc || '').trim()
+          const meaningLabel = showMeanings && !word.isEnd
+            ? (resolveWordGlossFromVerse(
+              sessionVerse,
+              plainText,
+              Number.isFinite(wordIndex) ? wordIndex : 0
+            ) || String(sessionWord?.en || word.translation || '').trim())
+            : ''
+          const isPracticeFocus = inSession
+            && !word.isEnd
+            && wordIndex != null
+            && this.isPracticeFocusWeakWord(verseKey, wordIndex, plainText)
+          const emphasizeWeak = isPracticeFocus && (
+            this.postSessionPracticeEmphasizeWeakAreas
+            || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
+            || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
+            || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
+          )
+          const recitationStatus = inSession && !word.isEnd && wordIndex != null
+            ? this.getRenderedRecitationWordStatusForVerse(verseKey, wordIndex, sessionVerse?.sessionTargetKey || '')
+            : ''
+          return {
+            ...word,
+            html,
+            useGlyph,
+            inSession,
+            wordIndex,
+            isActive,
+            isWeak: false,
+            isMastered: inSession && this.isMasteredAyah(verseKey),
+            isBlurred: inSession && this.blurModeEnabled && this.isVerseBlurred(verseKey),
+            isPeekRevealed: inSession && this.isVersePeekRevealed(verseKey),
+            isPlayingAyah,
+            isHighlighted,
+            isAnchor,
+            isPracticeFocus,
+            isPracticeFocusEmphasis: !!emphasizeWeak,
+            isPracticeFocusActive: isPracticeFocus && isHighlighted,
+            recitationStatus,
+            isFocusDimmed: focusOn && inSession && !isActive && !isPlayingAyah && !isHighlighted && !isPracticeFocus,
+            meaningLabel,
+            isNew: inSession && this.isNewHifzAyah(verseKey),
+            isDue: inSession && this.isDueHifzAyah(verseKey),
+            isReviewPriority: inSession && this.isReviewPriorityAyah(verseKey),
+            hasAiReview: hasActiveReview
+          }
+        })
+        return {
+          ...line,
+          key: `madani-${page.pageNumber}-line-${line.lineNumber}-${line.type}-${lineIndex}`,
+          fontFamily,
+          fontReady,
+          useGlyphs,
+          words
+        }
+      })
     },
     syncSessionScrubAttrsToDocument() {
       if (typeof document === 'undefined') return
@@ -40543,39 +40569,44 @@ export default {
             return arabic && !arabicHasTashkilEngine(arabic)
           })
         if (cached?.verses?.length && !cachedNeedsUthmaniRefresh) {
-          let resolvedVerses = cached.verses.map((verse) => {
-            const clean = this.sanitizeVerseDisplayText(verse)
-            const audio = this.ensureVerseAudioUrl(clean)
-            return audio && clean.audio !== audio ? { ...clean, audio } : clean
-          })
-          if (this.showWordByWord && !versesHaveWordMeanings(resolvedVerses)) {
-            const wbwByNumber = await getChapterWordByWordMeanings(chapterId, rangeStart, rangeEnd)
-            if (requestId !== this.verseRequestId) return
-            resolvedVerses = applyWordByWordMeaningsToVerses(resolvedVerses, wbwByNumber)
-              .map(verse => this.sanitizeVerseDisplayText(verse))
-          }
-          target.verses = resolvedVerses
-          target.loadedConfig = {
-            ...(cached.loadedConfig || {}),
-            showWordByWord: this.showWordByWord,
-          }
-          if (this.showWordByWord && versesHaveWordMeanings(resolvedVerses)) {
-            this.setCachedVerses(mode, targetConfig, {
-              verses: resolvedVerses,
-              loadedConfig: target.loadedConfig,
+          const expectedCount = Math.max(1, rangeEnd - rangeStart + 1)
+          // Reject incomplete session caches so stacked/mushaf always show the full range.
+          const cacheCoversSession = cached.verses.length >= expectedCount
+          if (cacheCoversSession) {
+            let resolvedVerses = cached.verses.map((verse) => {
+              const clean = this.sanitizeVerseDisplayText(verse)
+              const audio = this.ensureVerseAudioUrl(clean)
+              return audio && clean.audio !== audio ? { ...clean, audio } : clean
             })
+            if (this.showWordByWord && !versesHaveWordMeanings(resolvedVerses)) {
+              const wbwByNumber = await getChapterWordByWordMeanings(chapterId, rangeStart, rangeEnd)
+              if (requestId !== this.verseRequestId) return
+              resolvedVerses = applyWordByWordMeaningsToVerses(resolvedVerses, wbwByNumber)
+                .map(verse => this.sanitizeVerseDisplayText(verse))
+            }
+            target.verses = resolvedVerses
+            target.loadedConfig = {
+              ...(cached.loadedConfig || {}),
+              showWordByWord: this.showWordByWord,
+            }
+            if (this.showWordByWord && versesHaveWordMeanings(resolvedVerses)) {
+              this.setCachedVerses(mode, targetConfig, {
+                verses: resolvedVerses,
+                loadedConfig: target.loadedConfig,
+              })
+            }
+            this.buildQueue(mode)
+            this.syncActiveVerseState(mode)
+            this.syncMutqinAyahs(target.verses)
+            this.isDataReady = true
+            this.isWorkspaceRefreshing = false
+            this.workspaceRefreshReason = ''
+            if (this.readingViewMode === 'mushaf') {
+              this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
+            }
+            this.refreshAyahNoteCounts(chapterId)
+            return
           }
-          this.buildQueue(mode)
-          this.syncActiveVerseState(mode)
-          this.syncMutqinAyahs(target.verses)
-          this.isDataReady = true
-          this.isWorkspaceRefreshing = false
-          this.workspaceRefreshReason = ''
-          if (this.readingViewMode === 'mushaf') {
-            this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
-          }
-          this.refreshAyahNoteCounts(chapterId)
-          return
         }
 
         // One editions call covers audio + tajweed (avoids a duplicate reciter round-trip).

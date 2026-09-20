@@ -911,10 +911,10 @@
           grid-column: 1 / -1 !important;
           grid-row: 2 !important;
           width: 100% !important;
-          height: 0 !important;
-          margin: 0.05rem 0 !important;
+          height: 2px !important;
+          margin: 0.35rem 0 !important;
           border: 0 !important;
-          border-top: 1px solid color-mix(in srgb, var(--zone-divider, rgba(154, 103, 56, 0.22)) 88%, transparent) !important;
+          background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
         }
         .app .workspace-shell-head-utility-row > .workspace-shell-actions,
         .app .workspace-shell-head-utility-row > .workspace-shell-head-actions {

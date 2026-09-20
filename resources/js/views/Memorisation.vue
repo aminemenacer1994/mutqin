@@ -1155,22 +1155,26 @@
                       @secondary-action="setReadingViewMode('stacked')"
                     />
                   </div>
-                  <div v-else-if="!currentMushafPage" class="mushaf-empty-page">
+                  <div v-else-if="!mushafPages.length" class="mushaf-empty-page">
                     <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                     <strong>{{ workspaceLoadingLabel }}</strong>
                     <span>{{ t('memorisation.common.mushafSyncMessage') }}</span>
                   </div>
+                  <div v-else class="mushaf-session-stack" :data-session-signature="mushafSessionSignature">
                   <article
-                    v-else
-                    :key="`${currentMushafPage.id}-${safeMushafPageIndex}-${mushafSessionSignature}-${defaultFontSize}-${tajweedEnabled}-${quranFont}`"
+                    v-for="(mushafPage, mushafPageIdx) in mushafPages"
+                    :key="`${mushafPage.id}-${mushafPageIdx}-${mushafSessionSignature}-${defaultFontSize}-${tajweedEnabled}-${quranFont}`"
                     class="mushaf-page mushaf-page--madani"
+                    :data-mushaf-page-index="mushafPageIdx"
+                    :data-madani-page="mushafPage.pageNumber"
+                    :class="{ 'mushaf-page--active': mushafPageIdx === safeMushafPageIndex }"
                     :style="{ '--verse-font-percent': String(defaultFontSize), '--mushaf-quran-font': quranFontFamily, '--mushaf-selected-font': quranFontFamily }"
                   >
                     <div
                       class="mushaf-page-body madani-page-sheet"
                       dir="rtl"
                       :class="{
-                        'madani-page-sheet--glyphs-ready': useMadaniQcfGlyphs && !!madaniFontsReady[currentMushafPage.pageNumber],
+                        'madani-page-sheet--glyphs-ready': useMadaniQcfGlyphs && !!madaniFontsReady[mushafPage.pageNumber],
                         'madani-page-sheet--unicode': !useMadaniQcfGlyphs,
                         'madani-page-sheet--tajweed': !!tajweedEnabled && useMadaniQcfGlyphs,
                         'word-by-word-meanings': false,
@@ -1178,12 +1182,12 @@
                       }"
                       :style="{
                         '--verse-font-percent': String(defaultFontSize),
-                        '--madani-page-font': `'${currentMushafPage.fontFamily || ('p' + currentMushafPage.pageNumber + (tajweedEnabled ? '-v4' : '-v2'))}'`,
+                        '--madani-page-font': `'${mushafPage.fontFamily || ('p' + mushafPage.pageNumber + (tajweedEnabled ? '-v4' : '-v2'))}'`,
                         '--mushaf-selected-font': quranFontFamily
                       }"
                     >
                       <div
-                        v-for="line in currentMadaniLines"
+                        v-for="line in buildMadaniLinesForPage(mushafPage)"
                         :key="line.key"
                         class="madani-line"
                         :class="[
@@ -1242,14 +1246,14 @@
                           ></span>
                         </template>
                       </div>
-                      <div v-if="madaniPagesLoading && !currentMadaniLines.length" class="madani-page-loading">
+                      <div v-if="madaniPagesLoading && !(mushafPage.lines && mushafPage.lines.length)" class="madani-page-loading">
                         <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                         <span>{{ workspaceLoadingLabel }}</span>
                       </div>
                     </div>
 
                     <div
-                      v-if="mushafAidVerse && activeWordTooltip"
+                      v-if="mushafPageIdx === safeMushafPageIndex && mushafAidVerse && activeWordTooltip"
                       class="mushaf-verse-aids"
                     >
                       <div v-if="activeWordTooltip?.text" class="mushaf-word-tooltip" dir="ltr" lang="en">
@@ -1257,6 +1261,7 @@
                       </div>
                     </div>
                   </article>
+                  </div>
                 </div>
               </section>
               </div>

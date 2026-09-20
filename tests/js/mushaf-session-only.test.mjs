@@ -59,9 +59,30 @@ assert.doesNotMatch(
 )
 
 assert.match(
-  memorisationCss,
-  /\.main\.mushaf-mode-active \.madani-word--out[\s\S]*?display:\s*none\s*!important/,
-  'out-of-session mushaf words are hidden, not dimmed'
+  memorisationVue,
+  /v-for="\(mushafPage, mushafPageIdx\) in mushafPages"/,
+  'mushaf renders the full session page stack, not a single page'
+)
+assert.match(
+  memorisationVue,
+  /mushaf-session-stack/,
+  'mushaf session pages share one scrollable stack'
+)
+assert.match(
+  memorisationJs,
+  /verseKeys: Array\.isArray\(layout\?\.verseKeys\)/,
+  'mushaf page verseKeys stay page-local so sync does not stick on page 0'
+)
+assert.match(
+  memorisationJs,
+  /Eager-load every session page/,
+  'all session Madani pages load so the full range paints'
+)
+assert.match(memorisationJs, /verseBelongsToMadaniPage/, 'cross-page ayah words stay on the correct sheet')
+assert.match(
+  memorisationJs,
+  /cacheCoversSession = cached\.verses\.length >= expectedCount/,
+  'incomplete verse caches are rejected so stacked shows the full session range'
 )
 
 console.log('mushaf-session-only.test.mjs: ok')

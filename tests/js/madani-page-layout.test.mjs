@@ -13,7 +13,8 @@ import {
   resolveMadaniPagesForVerses,
   surahNameGlyphText,
   textStartsWithBasmala,
-  toEasternArabicDigits
+  toEasternArabicDigits,
+  verseBelongsToMadaniPage
 } from '../../resources/js/scripts/mushaf/madaniPageLayout.js'
 import {
   qcfFontFamily,
@@ -240,6 +241,30 @@ assert.deepEqual(
   ).map(v => v.verse_key),
   ['98:1', '98:2'],
   'page verses filtered to session before layout build'
+)
+
+const spanningVerse = {
+  verse_key: '2:5',
+  verse_number: 5,
+  page_number: 2,
+  words: [
+    { position: 1, char_type_name: 'word', code_v2: 'A', text_qpc_hafs: 'أُو۟لَـٰٓئِكَ', line_number: 14, page_number: 2 },
+    { position: 2, char_type_name: 'word', code_v2: 'B', text_qpc_hafs: 'عَلَىٰ', line_number: 1, page_number: 3 },
+    { position: 3, char_type_name: 'end', code_v2: 'E5', text_qpc_hafs: '٥', line_number: 1, page_number: 3 }
+  ]
+}
+assert.equal(verseBelongsToMadaniPage(spanningVerse, 2), true)
+assert.equal(verseBelongsToMadaniPage(spanningVerse, 3), true)
+assert.equal(verseBelongsToMadaniPage(spanningVerse, 4), false)
+assert.deepEqual(
+  groupWordsByLine([spanningVerse], { pageNumber: 2 }).flatMap(line => line.words.map(w => w.pageNumber)),
+  [2],
+  'page 2 layout keeps only page-2 words from a spanning ayah'
+)
+assert.deepEqual(
+  groupWordsByLine([spanningVerse], { pageNumber: 3 }).flatMap(line => line.words.map(w => w.pageNumber)),
+  [3, 3],
+  'page 3 layout keeps the continuation words'
 )
 
 console.log('Madani page layout tests passed')
