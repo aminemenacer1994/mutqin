@@ -6909,7 +6909,10 @@ html body .app .workspace-recite-dock__button:focus-visible {
   inset: auto !important;
   transform: none !important;
   margin: 0 auto !important;
-  box-shadow: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 4px 14px rgba(42, 174, 111, 0.28),
+    0 0 0 4px rgba(86, 222, 149, 0.1) !important;
   animation: none !important;
   filter: none !important;
   z-index: 3 !important;
@@ -7090,7 +7093,10 @@ html body .app .workspace-ai-recite-cta.workspace-recite-dock__button,
 html body .app .workspace-ai-recite-cta.workspace-recite-dock__button.is-animated {
   overflow: hidden !important;
   animation: none !important;
-  box-shadow: none !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 4px 14px rgba(42, 174, 111, 0.28),
+    0 0 0 4px rgba(86, 222, 149, 0.1) !important;
 }
 
 html body .app .workspace-recite-dock__button::before,

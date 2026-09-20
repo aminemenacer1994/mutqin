@@ -814,7 +814,16 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-intro {
-    font-size: 1.08rem;
+    font-size: 1.02rem;
+    line-height: 1.5;
+    max-width: 100%;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
 
   .ask-mutqin-footer {
@@ -1079,6 +1088,19 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
     min-height: min(28rem, calc(100dvh - 1.25rem)) !important;
     padding: 0.95rem 0.9rem 0.85rem !important;
     border-radius: 16px !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-intro {
+    font-size: 1.02rem !important;
+    line-height: 1.5 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    -webkit-line-clamp: unset !important;
+    line-clamp: unset !important;
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-ayah__stage,

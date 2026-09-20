@@ -1572,6 +1572,11 @@
           background: var(--toolbar-header-bg) !important;
           background-color: var(--toolbar-header-bg-solid) !important;
           border-bottom: 1px solid var(--toolbar-header-border) !important;
+          /* Match shell top corners (overflow stays visible for sticky zoom). */
+          border-top-left-radius: inherit !important;
+          border-top-right-radius: inherit !important;
+          border-bottom-left-radius: 0 !important;
+          border-bottom-right-radius: 0 !important;
           color: var(--toolbar-control-fg) !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn {
@@ -1599,7 +1604,8 @@
           color: var(--toolbar-control-fg) !important;
         }
         .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page {
-          background: var(--mushaf-reading-surface) !important;
+          /* Transparent so the shell's rounded background shows in the corners */
+          background: transparent !important;
           border: 0 !important;
           box-shadow: none !important;
           border-radius: 0 !important;
@@ -1607,7 +1613,8 @@
           color: var(--mushaf-reading-ink) !important;
         }
         .app .main.mushaf-mode-active .mushaf-page--madani {
-          background: var(--mushaf-reading-surface) !important;
+          /* Transparent: opaque page fill with radius 0 bleeds past the shell curve */
+          background: transparent !important;
           border: 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
@@ -1761,7 +1768,10 @@
           border: 0 !important;
           border-bottom: 1px solid var(--toolbar-header-border) !important;
           box-shadow: none !important;
-          border-radius: 0 !important;
+          border-top-left-radius: inherit !important;
+          border-top-right-radius: inherit !important;
+          border-bottom-left-radius: 0 !important;
+          border-bottom-right-radius: 0 !important;
           color: var(--toolbar-control-fg) !important;
         }
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__btn,
@@ -1804,7 +1814,7 @@
         [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani,
         .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani,
         [data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani {
-          background: var(--mushaf-reading-surface) !important;
+          background: transparent !important;
           border: 0 !important;
           border-radius: 0 !important;
           box-shadow: none !important;
@@ -1866,7 +1876,7 @@
         }
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page,
         html[data-theme="dark"] .app .main.mushaf-mode-active .mushaf-page--madani {
-          background: #221d19 !important;
+          background: transparent !important;
           color: #f7ebdf !important;
           --mushaf-bg: #221d19;
           --mushaf-text: #f7ebdf;
@@ -2015,11 +2025,12 @@
       }
     </style>
     <style id="mutqin-memorisation-hotfix-v167">
-      /* Reserve space in the elements that actually contain/scroll the ayahs. */
+      /* No reserved empty band under ayahs — recite floats without padding gaps. */
       html body:has(.workspace-recite-dock__button) .app .main {
         --workspace-recite-size: 64px;
-        --workspace-recite-gap: 0.85rem;
-        --workspace-recite-clearance: calc(var(--workspace-recite-size) + 1.35rem + env(safe-area-inset-bottom, 0px));
+        --workspace-recite-gap: 0;
+        --workspace-recite-clearance: 0px;
+        --workspace-recite-inset: 0px;
       }
 
       html body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-shell,
@@ -2034,25 +2045,21 @@
 
       html body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-viewport-scroll,
       html body:has(.workspace-recite-dock__button) .app .main.mushaf-mode-active .mushaf-page--madani {
-        padding-block-end: 0.45rem !important;
-        scroll-padding-block-end: 0.45rem !important;
+        padding-block-end: 0.35rem !important;
+        scroll-padding-block-end: 0.35rem !important;
         box-sizing: border-box !important;
       }
 
       html body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
         position: relative !important;
-        padding-block-end: calc(
-          var(--workspace-recite-size, 64px) +
-          (var(--workspace-recite-inset, 0.95rem) * 2)
-        ) !important;
-        scroll-padding-block-end: 0.45rem !important;
+        padding-block-end: 0.35rem !important;
+        scroll-padding-block-end: 0.35rem !important;
       }
 
-      /* Recite stays inside the reading workspace — absolute, not viewport-fixed. */
       html body .app .workspace-reading-surface {
         position: relative !important;
         --workspace-recite-size: 64px;
-        --workspace-recite-inset: 0.95rem;
+        --workspace-recite-inset: 0px;
       }
 
       html body .app .workspace-reading-surface--mushaf .mushaf-workspace {
@@ -2065,14 +2072,8 @@
       html body .app .workspace-main .verses-grid {
         position: relative !important;
         box-sizing: border-box !important;
-        padding-bottom: calc(
-          var(--workspace-recite-size, 64px) +
-          (var(--workspace-recite-inset, 0.95rem) * 2)
-        ) !important;
-        padding-block-end: calc(
-          var(--workspace-recite-size, 64px) +
-          (var(--workspace-recite-inset, 0.95rem) * 2)
-        ) !important;
+        padding-bottom: 0.35rem !important;
+        padding-block-end: 0.35rem !important;
       }
 
       html body .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair),
@@ -2119,7 +2120,16 @@
       html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button.is-animated,
       html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button:hover,
       html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button:active,
-      html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button:focus-visible {
+      html body .app .workspace-reading-surface > .workspace-recite-dock .workspace-recite-dock__button:focus-visible,
+      html body .app .workspace-recite-dock .workspace-recite-dock__button,
+      html body .app .workspace-ai-recite-cta.workspace-recite-dock__button {
+        --ai-recite-bg: #8ce7b8 !important;
+        --ai-recite-bg-deep: #55cf91 !important;
+        --ai-recite-border: #39b979 !important;
+        --ai-recite-text: #124d38 !important;
+        --ai-recite-icon: #0d7b4f !important;
+        --ai-recite-glow: rgba(63, 205, 137, 0.34) !important;
+        --ai-recite-highlight: rgba(255, 255, 255, 0.72) !important;
         position: relative !important;
         top: auto !important;
         left: auto !important;
@@ -2139,15 +2149,31 @@
         border-radius: 50% !important;
         filter: none !important;
         transform: none !important;
-        box-shadow: 0 8px 18px rgba(13, 60, 40, 0.28) !important;
+        opacity: 1 !important;
+        background:
+          linear-gradient(180deg, var(--ai-recite-highlight), transparent 52%),
+          linear-gradient(180deg, var(--ai-recite-bg), var(--ai-recite-bg-deep)) !important;
+        background-color: var(--ai-recite-bg) !important;
+        border: 1.5px solid var(--ai-recite-border) !important;
+        color: var(--ai-recite-text) !important;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.5),
+          0 4px 14px rgba(42, 174, 111, 0.28),
+          0 0 0 4px rgba(86, 222, 149, 0.1) !important;
         animation: none !important;
         overflow: hidden !important;
         margin: 0 auto !important;
       }
 
+      html body .app .workspace-recite-dock .workspace-recite-dock__button i,
+      html body .app .workspace-ai-recite-cta.workspace-recite-dock__button i {
+        color: #0d7b4f !important;
+        -webkit-text-fill-color: #0d7b4f !important;
+      }
+
       @media (max-width: 767.98px) {
         html body .app .workspace-reading-surface {
-          --workspace-recite-inset: 1.1rem;
+          --workspace-recite-inset: 0px;
         }
       }
 
@@ -3086,7 +3112,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v171'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v174'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -3102,7 +3128,7 @@
           var pinning = false;
           var observer = new MutationObserver(function () {
             if (pinning) return;
-            var lock = document.getElementById('mutqin-ui-lock-v171');
+            var lock = document.getElementById('mutqin-ui-lock-v174');
             if (!lock || lock === document.body.lastElementChild) return;
             pinning = true;
             pin();
@@ -8680,9 +8706,9 @@ body.session-analysis-modal-open {
 }
     </style>
     @stack('page-scripts')
-<style id="mutqin-ui-lock-v171">
-  /* Sticky left zoom. Recite is Teleported to body + position:fixed so it
-   * stays on screen while the page scrolls. */
+<style id="mutqin-ui-lock-v174">
+  /* Sticky left zoom. Recite stays sticky in-workspace with an opaque face
+   * so ayah ink never shows through. No reserved clearance band under ayahs. */
   html body .app {
     transform: none !important;
     filter: none !important;
@@ -8698,15 +8724,35 @@ body.session-analysis-modal-open {
     height: auto !important;
     flex-flow: row nowrap !important;
     align-items: flex-start !important;
-    padding-block-end: 1rem !important;
+    padding-block-end: 0.35rem !important;
     box-sizing: border-box !important;
+    /* Shell paint follows radius; children stay transparent at corners. */
+    background-clip: padding-box !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__bar {
+    border-top-left-radius: inherit !important;
+    border-top-right-radius: inherit !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-shell .mushaf-shell__page,
+  html body .app .main.mushaf-mode-active .mushaf-page--madani {
+    background: transparent !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) > .mushaf-viewport-scroll {
+    /* End-side radii so any viewport paint fits the shell curve (LTR: right). */
+    border-start-end-radius: inherit !important;
+    border-end-end-radius: inherit !important;
   }
 
   html body .app .verses-grid {
     position: relative !important;
     overflow: visible !important;
     max-height: none !important;
-    padding-block-end: 1rem !important;
+    padding-block-end: 0.35rem !important;
   }
 
   html body .app .main.mushaf-mode-active .mushaf-viewport-scroll,
@@ -8750,27 +8796,28 @@ body.session-analysis-modal-open {
     }
   }
 
-  /* Fixed above the audio player, behind it in stacking order.
-   * Dock is Teleported to body, so it cannot read .app CSS variables. */
+  /* Sticky in workspace — no empty clearance band under ayahs. */
   html body .workspace-recite-dock,
+  html body .app .workspace-recite-dock,
   body > .workspace-recite-dock {
     display: flex !important;
-    position: fixed !important;
+    position: sticky !important;
+    top: var(--workspace-recite-sticky-top, calc(100dvh - 5.5rem)) !important;
     inset-inline: 0 !important;
-    inset-block-end: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
-    top: auto !important;
-    right: 0 !important;
-    left: 0 !important;
-    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+    inset-block-end: auto !important;
+    right: auto !important;
+    left: auto !important;
+    bottom: auto !important;
     justify-content: center !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     width: 100% !important;
     max-width: none !important;
-    height: auto !important;
+    height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: visible !important;
     pointer-events: none !important;
-    z-index: 1030 !important;
+    z-index: 40 !important;
     transform: none !important;
     filter: none !important;
     box-shadow: none !important;
@@ -8779,16 +8826,32 @@ body.session-analysis-modal-open {
   html body:has(.player-dock) .workspace-recite-dock,
   html body:has(.player-dock) > .workspace-recite-dock,
   body:has(.player-dock) > .workspace-recite-dock {
-    inset-block-end: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem) !important;
-    bottom: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem) !important;
+    inset-block-end: auto !important;
+    bottom: auto !important;
   }
 
-  html body .workspace-recite-dock .workspace-recite-dock__button,
-  html body .workspace-recite-dock .workspace-recite-dock__button.is-animated,
-  html body .workspace-recite-dock .workspace-recite-dock__button:hover,
-  html body .workspace-recite-dock .workspace-recite-dock__button:active,
-  html body .workspace-recite-dock .workspace-recite-dock__button:focus-visible,
-  body > .workspace-recite-dock .workspace-recite-dock__button {
+  html body .app .workspace-recite-dock .workspace-recite-dock__button,
+  html body .app .workspace-recite-dock .workspace-recite-dock__button.is-animated,
+  html body .app .workspace-recite-dock .workspace-recite-dock__button:hover,
+  html body .app .workspace-recite-dock .workspace-recite-dock__button:active,
+  html body .app .workspace-recite-dock .workspace-recite-dock__button:focus-visible,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button.is-animated,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button:hover,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button:active,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button:focus-visible,
+  body > .workspace-recite-dock .workspace-recite-dock__button,
+  html body .app[data-theme="light"] .workspace-ai-recite-cta.workspace-recite-dock__button,
+  html body .app[data-theme="sepia"] .workspace-ai-recite-cta.workspace-recite-dock__button,
+  html[data-theme="light"] body .app .workspace-ai-recite-cta.workspace-recite-dock__button,
+  html[data-theme="sepia"] body .app .workspace-ai-recite-cta.workspace-recite-dock__button {
+    --ai-recite-bg: #8ce7b8 !important;
+    --ai-recite-bg-deep: #55cf91 !important;
+    --ai-recite-border: #39b979 !important;
+    --ai-recite-text: #124d38 !important;
+    --ai-recite-icon: #0d7b4f !important;
+    --ai-recite-glow: rgba(63, 205, 137, 0.34) !important;
+    --ai-recite-highlight: rgba(255, 255, 255, 0.72) !important;
     position: relative !important;
     inset: auto !important;
     top: auto !important;
@@ -8800,21 +8863,50 @@ body.session-analysis-modal-open {
     pointer-events: auto !important;
     animation: none !important;
     filter: none !important;
-    box-shadow: 0 8px 18px rgba(13, 60, 40, 0.28) !important;
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background:
+      linear-gradient(180deg, var(--ai-recite-highlight), transparent 52%),
+      linear-gradient(180deg, var(--ai-recite-bg), var(--ai-recite-bg-deep)) !important;
+    background-color: var(--ai-recite-bg) !important;
+    border: 1.5px solid var(--ai-recite-border) !important;
+    color: var(--ai-recite-text) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 4px 14px rgba(42, 174, 111, 0.28),
+      0 0 0 4px rgba(86, 222, 149, 0.1) !important;
+  }
+
+  html body .app .workspace-recite-dock .workspace-recite-dock__button i,
+  html body .app .workspace-ai-recite-cta.workspace-recite-dock__button i {
+    color: #0d7b4f !important;
+    -webkit-text-fill-color: #0d7b4f !important;
+    opacity: 1 !important;
   }
 
   body:has(.workspace-recite-dock__button) .app .main {
     --workspace-recite-size: 64px;
-    --workspace-recite-clearance: calc(
-      var(--workspace-recite-size) +
-      2.5rem +
-      env(safe-area-inset-bottom, 0px)
+    --workspace-recite-clearance: 0px;
+    --workspace-recite-sticky-top: calc(
+      100dvh
+      - var(--workspace-recite-size)
+      - 1.25rem
+      - env(safe-area-inset-bottom, 0px)
     );
-    padding-block-end: max(
-      var(--workspace-recite-clearance),
-      var(--player-dock-offset, 0px)
-    ) !important;
-    scroll-padding-block-end: var(--workspace-recite-clearance);
+    padding-block-end: var(--player-dock-offset, 0px) !important;
+    scroll-padding-block-end: var(--player-dock-offset, 0px);
+  }
+
+  body:has(.player-dock):has(.workspace-recite-dock__button) .app .main {
+    --workspace-recite-sticky-top: calc(
+      100dvh
+      - var(--workspace-recite-size)
+      - 96px
+      - 1.5rem
+      - env(safe-area-inset-bottom, 0px)
+    );
   }
 
   html body .workspace-recite-dock__button::before,

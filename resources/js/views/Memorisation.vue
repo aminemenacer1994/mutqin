@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v159 -->
+  <!-- mutqin-ui-build: v160 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
