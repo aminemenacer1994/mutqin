@@ -907,7 +907,7 @@ export default {
       workspaceRefreshReason: '',
       currentWaveVerseKey: null,
       showKeyboardShortcuts: false,
-      activeKeyboardShortcutGroup: 'playback',
+      openKeyboardShortcutGroups: ['playback', 'navigation', 'session', 'mushaf', 'general'],
       // chaining removed
 
       // Arabic text word highlighting state
@@ -15255,13 +15255,23 @@ export default {
     // Fix banner positioning - update CSS
     toggleKeyboardShortcuts() {
       this.topCardMenuOpen = false
-      if (!this.showKeyboardShortcuts && !this.activeKeyboardShortcutGroup) {
-        this.activeKeyboardShortcutGroup = this.keyboardShortcutGroups[0]?.id || 'playback'
+      if (!this.showKeyboardShortcuts) {
+        this.openKeyboardShortcutGroups = this.keyboardShortcutGroups.map((group) => group.id)
       }
       this.showKeyboardShortcuts = !this.showKeyboardShortcuts
     },
+    isKeyboardShortcutGroupOpen(groupId) {
+      return Array.isArray(this.openKeyboardShortcutGroups)
+        && this.openKeyboardShortcutGroups.includes(groupId)
+    },
     toggleKeyboardShortcutGroup(groupId) {
-      this.activeKeyboardShortcutGroup = this.activeKeyboardShortcutGroup === groupId ? null : groupId
+      const open = Array.isArray(this.openKeyboardShortcutGroups)
+        ? [...this.openKeyboardShortcutGroups]
+        : []
+      const index = open.indexOf(groupId)
+      if (index >= 0) open.splice(index, 1)
+      else open.push(groupId)
+      this.openKeyboardShortcutGroups = open
     },
     closeKeyboardShortcuts() {
       this.showKeyboardShortcuts = false
@@ -35596,9 +35606,14 @@ export default {
 
     clampControlRange(mode = this.currentMode) {
       const store = this.getModeStore(mode)
+      if (!store) return
       const max = this.resolveCurrentSurahAyahCount() || Number(this.currentChapter?.verses_count || 0) || 286
-      store.rangeStart = Math.max(1, Math.min(Number(store.rangeStart || 1), max))
-      store.rangeEnd = Math.max(store.rangeStart, Math.min(Number(store.rangeEnd || store.rangeStart || 1), max))
+      const startNum = Number(store.rangeStart)
+      const endNum = Number(store.rangeEnd)
+      const start = Number.isFinite(startNum) && startNum > 0 ? startNum : 1
+      const end = Number.isFinite(endNum) && endNum > 0 ? endNum : start
+      store.rangeStart = Math.max(1, Math.min(start, max))
+      store.rangeEnd = Math.max(store.rangeStart, Math.min(end, max))
     },
 
     clearWorkspaceForConfigChange(mode = this.currentMode) {
@@ -43440,6 +43455,15 @@ export default {
     },
 
     adjustRange(options = {}) {
+      // Only commit on change/blur — clamping + workspace reload on every
+      // keystroke made the number inputs fight typing (empty → snap to 1, etc.).
+      const startRaw = this.rangeStart
+      const endRaw = this.rangeEnd
+      const incomplete = startRaw === '' || startRaw === null || endRaw === '' || endRaw === null
+        || !Number.isFinite(Number(startRaw))
+        || !Number.isFinite(Number(endRaw))
+      if (incomplete && !options.immediate) return
+
       this.clampControlRange(this.currentMode)
       if (this.individualAyahFocusEnabled) {
         this.clampSetupIndividualAyah()

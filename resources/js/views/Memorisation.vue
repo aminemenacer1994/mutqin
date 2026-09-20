@@ -724,6 +724,10 @@
                     <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <div class="top-card-menu-divider" aria-hidden="true"></div>
+                  <button type="button" @click="toggleKeyboardShortcuts">
+                    <i class="bi bi-keyboard" aria-hidden="true"></i>
+                    <span>{{ t('shortcuts.title') }}</span>
+                  </button>
                   <a
                     :href="isAdmin ? adminDashboardUrl : learnerDashboardUrl"
                     class="top-card-menu-link"
@@ -1474,9 +1478,25 @@
                   <div class="field setup-field-row" data-tour="setup-range">
                     <label><i class="bi bi-bounding-box"></i> {{ t('sessionSetup.ayahRange') }}</label>
                     <div class="range range-single">
-                      <input type="number" class="input" v-model.number="rangeStart" @input="adjustRange()" @change="adjustRange({ immediate: true })" min="1">
+                      <input
+                        type="number"
+                        class="input"
+                        inputmode="numeric"
+                        v-model.number="rangeStart"
+                        @change="adjustRange({ immediate: true })"
+                        min="1"
+                        :max="resolveCurrentSurahAyahCount() || undefined"
+                      >
                       <span>{{ t('sessionSetup.to') }}</span>
-                      <input type="number" class="input" v-model.number="rangeEnd" @input="adjustRange()" @change="adjustRange({ immediate: true })" min="1">
+                      <input
+                        type="number"
+                        class="input"
+                        inputmode="numeric"
+                        v-model.number="rangeEnd"
+                        @change="adjustRange({ immediate: true })"
+                        min="1"
+                        :max="resolveCurrentSurahAyahCount() || undefined"
+                      >
                     </div>
                     <small class="field-hint">{{ t('sessionSetup.rangeHint') }}</small>
                   </div>
@@ -5105,23 +5125,27 @@
             v-for="group in keyboardShortcutGroups"
             :key="group.id"
             class="keyboard-shortcuts-group"
-            :class="{ 'is-open': activeKeyboardShortcutGroup === group.id }"
+            :class="{ 'is-open': isKeyboardShortcutGroupOpen(group.id) }"
             :aria-labelledby="`keyboardShortcutsGroup-${group.id}`"
           >
             <button
               type="button"
               class="keyboard-shortcuts-group-header"
-              :aria-expanded="activeKeyboardShortcutGroup === group.id ? 'true' : 'false'"
+              :aria-expanded="isKeyboardShortcutGroupOpen(group.id) ? 'true' : 'false'"
               :aria-controls="`keyboardShortcutsList-${group.id}`"
-              @click="toggleKeyboardShortcutGroup(group.id)"
+              @click.stop.prevent="toggleKeyboardShortcutGroup(group.id)"
             >
               <span class="keyboard-shortcuts-group-icon" aria-hidden="true">
                 <i class="bi" :class="group.icon"></i>
               </span>
-              <h3 :id="`keyboardShortcutsGroup-${group.id}`">{{ group.title }}</h3>
+              <span :id="`keyboardShortcutsGroup-${group.id}`" class="keyboard-shortcuts-group-title">{{ group.title }}</span>
               <i class="bi bi-chevron-down keyboard-shortcuts-group-chevron" aria-hidden="true"></i>
             </button>
-            <ul class="keyboard-shortcuts-list" :id="`keyboardShortcutsList-${group.id}`">
+            <ul
+              v-show="isKeyboardShortcutGroupOpen(group.id)"
+              class="keyboard-shortcuts-list"
+              :id="`keyboardShortcutsList-${group.id}`"
+            >
               <li v-for="item in group.items" :key="item.id" class="keyboard-shortcuts-item">
                 <span class="keyboard-shortcuts-label">{{ item.label }}</span>
                 <div class="keyboard-shortcut-keys">

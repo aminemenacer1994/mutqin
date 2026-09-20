@@ -565,10 +565,8 @@ export default {
 
     const socialLinks = [
       { id: 'instagram', href: 'https://www.instagram.com/mutqinai/', icon: 'bi-instagram' },
-      { id: 'facebook', href: 'https://www.facebook.com/mutqin', icon: 'bi-facebook' },
-      { id: 'x', href: 'https://x.com/mutqin', icon: 'bi-twitter-x' },
-      { id: 'linkedin', href: 'https://www.linkedin.com/company/mutqin', icon: 'bi-linkedin' },
-      { id: 'tiktok', href: 'https://www.tiktok.com/@mutqin', icon: 'bi-tiktok' },
+      { id: 'facebook', href: 'https://www.facebook.com/profile.php?id=61594103506759', icon: 'bi-facebook' },
+      { id: 'linkedin', href: 'https://www.linkedin.com/company/146569969/', icon: 'bi-linkedin' },
     ];
 
     const contactForm = reactive({ name: '', email: '', subject: '', message: '' });

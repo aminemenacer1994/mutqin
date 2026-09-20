@@ -2900,14 +2900,22 @@
 
   .keyboard-shortcuts-header {
     display: grid !important;
-    grid-template-columns: 44px minmax(0, 1fr) 44px !important;
-    gap: 10px !important;
+    grid-template-columns: auto minmax(0, 1fr) 44px !important;
+    gap: 0.55rem !important;
     align-items: center !important;
     padding: calc(10px + var(--mq-safe-top)) 14px 10px !important;
   }
 
-  .keyboard-shortcuts-header-icon,
-.keyboard-shortcuts-header .modal-close-btn {
+  .keyboard-shortcuts-header-icon {
+    inline-size: auto !important;
+    block-size: auto !important;
+    background: transparent !important;
+    border: 0 !important;
+    color: var(--text-muted) !important;
+    font-size: 1.35rem !important;
+  }
+
+  .keyboard-shortcuts-header .modal-close-btn {
     inline-size: 44px !important;
     block-size: 44px !important;
   }
@@ -2922,6 +2930,12 @@
     white-space: normal !important;
     word-break: normal !important;
     overflow-wrap: break-word;
+  }
+
+  .keyboard-shortcuts-header h2 {
+    font-size: 1.1rem !important;
+    font-weight: 650 !important;
+    text-transform: none !important;
   }
 
   .keyboard-shortcuts-body {
@@ -2965,27 +2979,43 @@
 
   .keyboard-shortcuts-group-header {
     display: grid !important;
-    grid-template-columns: 36px minmax(0, 1fr) 36px !important;
-    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    gap: 0.45rem;
     align-items: center;
     inline-size: 100%;
-    min-block-size: 52px;
-    padding: 8px 10px !important;
+    min-block-size: 0;
+    padding: 0.55rem 0.75rem !important;
     border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border, rgba(120, 78, 40, 0.2)) 70%, transparent);
     background: transparent;
     color: var(--text);
     text-align: start;
   }
 
-  .keyboard-shortcuts-group-header h3 {
+  .keyboard-shortcuts-group-header h3,
+  .keyboard-shortcuts-group-title {
     min-inline-size: 0;
     margin: 0 !important;
     font-size: 0.94rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+    text-transform: none !important;
     line-height: 1.25;
+    color: var(--text) !important;
+    pointer-events: none;
+  }
+
+  .keyboard-shortcuts-group-icon {
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    font-size: 0.95rem !important;
   }
 
   .keyboard-shortcuts-group-chevron {
-    justify-self: center;
+    justify-self: end;
     transition: transform 160ms ease;
   }
 
@@ -4444,7 +4474,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     position: absolute !important;
     inset-inline-end: 0 !important;
     top: calc(100% + 0.4rem) !important;
-    z-index: 120 !important;
+    z-index: 230 !important;
     min-width: 12rem;
   }
 
@@ -5790,7 +5820,17 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     position: absolute !important;
     inset-inline-end: 0 !important;
     top: calc(100% + 0.35rem) !important;
-    z-index: 140 !important;
+    z-index: 230 !important;
+  }
+
+  .workspace-shell-head .top-card-icon-controls:has(.is-menu-open),
+  .workspace-shell-head .top-card-icon-controls:has(.top-card-menu) {
+    z-index: 220 !important;
+  }
+
+  .workspace-shell-head-utility-row > .workspace-shell-actions,
+  .workspace-shell-head .workspace-shell-actions {
+    z-index: 2 !important;
   }
 
   /* Mobile: mushaf/stacked lives in the ellipsis menu — hide the outside icon. */
@@ -6062,11 +6102,13 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   max-width: 100% !important;
   margin: 0 !important;
   position: relative !important;
-  z-index: 1 !important;
+  z-index: 8 !important;
 }
 
 .workspace-shell-head-utility-row > .top-card-session-hr {
   order: 2 !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 .workspace-shell-head-utility-row > .workspace-shell-head-actions,
@@ -6081,6 +6123,14 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   max-width: 100% !important;
   flex: 0 0 auto !important;
   overflow: visible !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+/* Ellipsis menu must paint above Start/Resume/End when open. */
+.workspace-shell-head-utility-row > .top-card-icon-controls:has(.is-menu-open),
+.workspace-shell-head-utility-row > .top-card-icon-controls:has(.top-card-menu) {
+  z-index: 120 !important;
 }
 
 .workspace-shell-head-utility-row .action-buttons-group {

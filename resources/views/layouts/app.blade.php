@@ -916,18 +916,30 @@
           border: 0 !important;
           background: color-mix(in srgb, var(--zone-divider, #9a6738) 72%, transparent) !important;
         }
+        .app .workspace-shell-head-utility-row > .top-card-icon-controls {
+          grid-column: 2 !important;
+          grid-row: 1 !important;
+          justify-self: end !important;
+          align-self: center !important;
+          position: relative !important;
+          z-index: 8 !important;
+        }
         .app .workspace-shell-head-utility-row > .workspace-shell-actions,
         .app .workspace-shell-head-utility-row > .workspace-shell-head-actions {
           grid-column: 1 / -1 !important;
           grid-row: 3 !important;
           width: 100% !important;
           max-width: 100% !important;
+          position: relative !important;
+          z-index: 2 !important;
         }
-        .app .workspace-shell-head-utility-row > .top-card-icon-controls {
-          grid-column: 2 !important;
-          grid-row: 1 !important;
-          justify-self: end !important;
-          align-self: center !important;
+        .app .workspace-shell-head-utility-row > .top-card-icon-controls:has(.is-menu-open),
+        .app .workspace-shell-head-utility-row > .top-card-icon-controls:has(.top-card-menu) {
+          z-index: 220 !important;
+        }
+        .app .top-card-icon-controls .top-card-menu-wrap.is-menu-open,
+        .app .top-card-icon-controls .top-card-menu {
+          z-index: 230 !important;
         }
         /*
          * Mobile session overview stack:
