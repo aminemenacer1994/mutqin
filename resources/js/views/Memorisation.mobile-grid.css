@@ -1761,8 +1761,9 @@
   }
 
   /* Shared overlay shells use one scroll owner and grid-composed internals.
-     Delete confirm stays separately centered; ayah notes joins the inset shell. */
-  .modal-overlay.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay),
+     Delete confirm stays separately centered; ayah notes joins the inset shell.
+     Ask Mutqin keeps its own centered sheet (excluded below). */
+  .modal-overlay.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay):not(.ask-mutqin-overlay),
 .welcome-back-modal-wrap,
 .session-exit-modal-wrap,
 .onboarding-post-session-modal-wrap {
@@ -1773,10 +1774,10 @@
       max(10px, var(--mq-safe-left)) !important;
   }
 
-  .mutqin-modal-dialog:not(.ayah-notes-delete-dialog):not(.session-exit-dialog),
-.mutqin-modal-dialog--wide:not(.ayah-notes-delete-dialog),
-.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay) > .mutqin-modal-dialog:not(.session-exit-dialog),
-.mutqin-modal-flow .mutqin-modal-dialog:not(.ayah-notes-delete-dialog):not(.session-exit-dialog),
+  .mutqin-modal-dialog:not(.ayah-notes-delete-dialog):not(.session-exit-dialog):not(.ask-mutqin-dialog),
+.mutqin-modal-dialog--wide:not(.ayah-notes-delete-dialog):not(.ask-mutqin-dialog),
+.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay):not(.ask-mutqin-overlay) > .mutqin-modal-dialog:not(.session-exit-dialog):not(.ask-mutqin-dialog),
+.mutqin-modal-flow .mutqin-modal-dialog:not(.ayah-notes-delete-dialog):not(.session-exit-dialog):not(.ask-mutqin-dialog),
 .welcome-back-modal-wrap .modal-dialog,
 .onboarding-post-session-modal-wrap .modal-dialog,
 .post-onboarding-overlay .modal-dialog {
@@ -1818,7 +1819,7 @@
     box-sizing: border-box !important;
   }
 
-  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-delete-modal):not(.session-exit-modal):not(.amd-modal) {
+  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-delete-modal):not(.session-exit-modal):not(.amd-modal):not(.ask-mutqin-modal) {
     display: grid !important;
     grid-template-rows: auto minmax(0, 1fr) auto;
     inline-size: 100% !important;

@@ -1095,6 +1095,24 @@
               :aria-label="t('memorisation.open_controls')"
               v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"
             -->
+            <div
+              v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
+              class="workspace-recite-dock"
+              aria-live="polite"
+            >
+              <button
+                type="button"
+                class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
+                :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                data-testid="workspace-ai-recite"
+                :title="t('dashboard.ai_recite.cta_label')"
+                :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                @click="openWorkspaceAiRecite"
+              >
+                <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+              </button>
+            </div>
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
               <div class="workspace-empty-card">
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
@@ -1368,27 +1386,6 @@
 
             </div>
             </div>
-
-            <Teleport to="body">
-              <div
-                v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
-                class="workspace-recite-dock"
-                aria-live="polite"
-              >
-                <button
-                  type="button"
-                  class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
-                  :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                  data-testid="workspace-ai-recite"
-                  :title="t('dashboard.ai_recite.cta_label')"
-                  :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                  @click="openWorkspaceAiRecite"
-                >
-                  <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                  <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-                </button>
-              </div>
-            </Teleport>
           </main>
         </div>
       </div>
@@ -4346,7 +4343,9 @@
       @stalled="onReviewResultAudioWaiting"
       @error="onReviewResultAudioError"></audio>
 
+    <Teleport to="body">
     <div v-if="showQuranSearchModal" class="quran-search-modal-backdrop" role="presentation"
+      :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'"
       @click.self.prevent>
       <section class="quran-search-modal" role="dialog" aria-modal="true" :aria-label="t('memorisation.quranSearch.title')">
         <header class="quran-search-header">
@@ -4449,6 +4448,7 @@
         </div>
       </section>
     </div>
+    </Teleport>
 
   </div>
 

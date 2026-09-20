@@ -1606,7 +1606,7 @@ export default {
       quranSearchFilterType: 'all',
       quranSearchFilterValue: '',
       quranSearchShowTranslation: true,
-      quranSearchFontSize: 34,
+      quranSearchFontSize: 46,
       quranSearchRecognition: null,
       quranSearchVoiceActive: false,
 
@@ -12959,8 +12959,8 @@ export default {
     },
 
     adjustQuranSearchFont(delta) {
-      const next = Number(this.quranSearchFontSize || 34) + Number(delta || 0)
-      this.quranSearchFontSize = Math.max(24, Math.min(58, next))
+      const next = Number(this.quranSearchFontSize || 46) + Number(delta || 0)
+      this.quranSearchFontSize = Math.max(32, Math.min(72, next))
     },
 
     toggleQuranVoiceSearch() {

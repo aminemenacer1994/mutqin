@@ -1735,7 +1735,7 @@
   display: grid;
   place-items: center;
   background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.35), transparent 55%);
-  box-shadow: 0 0 0 6px color-mix(in srgb, #c24a40 14%, transparent);
+  box-shadow: none;
 }
 
 .amd-record-btn__core {
@@ -1747,9 +1747,7 @@
   justify-content: center;
   background: linear-gradient(180deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%);
   color: #fffaf8;
-  box-shadow:
-    0 10px 22px rgba(220, 38, 38, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: none;
 }
 
 .amd-record-btn__core i {
@@ -2518,7 +2516,7 @@
   padding: 0.45rem 1.25rem !important;
   border-radius: 999px !important;
   background: linear-gradient(180deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.32) !important;
+  box-shadow: none !important;
   border: 0 !important;
 }
 
@@ -2564,16 +2562,12 @@
 /* Stop uses the same prominent footprint, with a clear listening state */
 .amd-record-btn--inline.amd-record-btn--stop {
   background: linear-gradient(180deg, #3f8f6f 0%, #2f6f58 55%, #245a47 100%) !important;
-  box-shadow:
-    0 8px 18px rgba(47, 111, 88, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
 }
 
 .amd-record-btn--inline.amd-record-btn--stop.active {
   background: linear-gradient(180deg, #c24a40 0%, #a83b33 55%, #8f312b 100%) !important;
-  box-shadow:
-    0 6px 14px rgba(194, 74, 64, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
 }
 
 /* Dark mode — tools + header + record */
@@ -2645,9 +2639,7 @@
 [data-theme="dark"] .amd-record-btn--inline,
 .app[data-theme="dark"] .amd-record-btn--inline {
   background: linear-gradient(180deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
-  box-shadow:
-    0 8px 18px rgba(220, 38, 38, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
 }
 
 [data-theme="dark"] .amd-record-btn--inline.amd-record-btn--stop,
@@ -4866,7 +4858,7 @@
   gap: 0.55rem !important;
   border-radius: 999px !important;
   background: linear-gradient(180deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.32) !important;
+  box-shadow: none !important;
 }
 
 .amd-record-btn--inline .amd-record-btn__core {
@@ -4885,7 +4877,7 @@
 }
 
 .amd-record-btn--inline.amd-record-btn--stop {
-  box-shadow: 0 3px 10px rgba(47, 111, 88, 0.2) !important;
+  box-shadow: none !important;
 }
 
 .amd-footer--sticky {
@@ -5959,7 +5951,7 @@
 body .amd-record-btn.amd-record-btn--inline:not(.amd-record-btn--stop) {
   background: #dc2626 !important;
   background-image: linear-gradient(180deg, #ef4444 0%, #dc2626 55%, #b91c1c 100%) !important;
-  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35) !important;
+  box-shadow: none !important;
   border: 0 !important;
 }
 
@@ -6842,7 +6834,7 @@ html[data-theme="dark"] body .amd-overlay .amd-mushaf-ayah--premium .amd-basmala
   opacity: 1 !important;
 }
 
-/* Recite stays fixed to the viewport so scrolling the text never hides it.
+/* Recite lives under the reading surface inside the workspace.
    The reading card hugs the ayahs instead of stretching to the screen. */
 html body .app .workspace-reading-surface {
   position: relative !important;
@@ -7371,7 +7363,7 @@ html body .app .top-card-session-hr {
 }
 
 /* Mushaf: sticky left zoom; no nested scrollbar (overflow visible everywhere).
- * Recite dock is Teleported to body with position:fixed (see ui-lock-v171). */
+ * Recite dock stays sticky in .workspace-main while scrolling. */
 html body .app .main.mushaf-mode-active .mushaf-shell,
 html body .app .main.mushaf-mode-active .mushaf-shell.row {
   display: flex !important;
@@ -7444,34 +7436,37 @@ html body .app .verses-grid {
   padding-block-end: 1rem !important;
 }
 
-/* Recite Teleported to body — behind the audio player (lower z-index). */
+/* Recite stays sticky in the workspace so scrolling never hides it. */
 html body .workspace-recite-dock,
+html body .app .workspace-recite-dock,
 body > .workspace-recite-dock {
   display: flex !important;
-  position: fixed !important;
+  position: sticky !important;
+  top: var(--workspace-recite-sticky-top, calc(100dvh - 5.5rem)) !important;
   inset-inline: 0 !important;
-  inset-block-end: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
-  top: auto !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important;
+  inset-block-end: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
   justify-content: center !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   width: 100% !important;
   max-width: none !important;
+  height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  flex: none !important;
+  overflow: visible !important;
+  flex: 0 0 auto !important;
   pointer-events: none !important;
-  z-index: 1030 !important;
+  z-index: 40 !important;
   transform: none !important;
   filter: none !important;
 }
 
 html body:has(.player-dock) .workspace-recite-dock,
 body:has(.player-dock) > .workspace-recite-dock {
-  inset-block-end: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem) !important;
-  bottom: calc(96px + env(safe-area-inset-bottom, 0px) + 0.85rem) !important;
+  inset-block-end: auto !important;
+  bottom: auto !important;
 }
 
 html body .workspace-recite-dock .workspace-recite-dock__button,
@@ -7494,14 +7489,30 @@ body > .workspace-recite-dock .workspace-recite-dock__button {
 
 body:has(.workspace-recite-dock__button) .app .main {
   --workspace-recite-size: 64px;
-  --workspace-recite-clearance: calc(
-    var(--workspace-recite-size) +
-    2.5rem +
-    env(safe-area-inset-bottom, 0px)
+  --workspace-recite-clearance: 0px;
+  --workspace-recite-sticky-top: calc(
+    100dvh
+    - var(--workspace-recite-size)
+    - 1.25rem
+    - env(safe-area-inset-bottom, 0px)
   );
-  padding-block-end: max(
-    var(--workspace-recite-clearance),
-    var(--player-dock-offset, 0px)
-  ) !important;
-  scroll-padding-block-end: var(--workspace-recite-clearance);
+  padding-block-end: var(--player-dock-offset, 0px) !important;
+  scroll-padding-block-end: var(--player-dock-offset, 0px);
+}
+
+body:has(.player-dock):has(.workspace-recite-dock__button) .app .main {
+  --workspace-recite-sticky-top: calc(
+    100dvh
+    - var(--workspace-recite-size)
+    - 96px
+    - 1.5rem
+    - env(safe-area-inset-bottom, 0px)
+  );
+}
+
+body:has(.workspace-recite-dock__button) .app .workspace-main,
+body:has(.workspace-recite-dock__button) .app .content,
+body:has(.workspace-recite-dock__button) .app .workspace {
+  overflow: visible !important;
+  overflow-x: visible !important;
 }
