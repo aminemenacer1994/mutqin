@@ -29,21 +29,19 @@
 
     <section class="container-fluid shell profile-page" v-pre>
         <div class="profile-stage">
-            <div class="profile-hero-card">
-                <div class="profile-hero-copy">
-                    <div class="profile-hero-identity">
-                        @if ($user->avatar)
-                            <img class="profile-avatar" src="{{ $user->avatar }}" alt="" width="44" height="44">
-                        @else
-                            <span class="profile-avatar profile-avatar--initials" aria-hidden="true">{{ $initials }}</span>
-                        @endif
-                        <div>
-                            <h1 class="profile-hero-name">{{ $user->name }}</h1>
-                            <p class="profile-hero-email">{{ $user->email }}</p>
-                        </div>
+            <header class="profile-page-head">
+                <div class="profile-hero-identity">
+                    @if ($user->avatar)
+                        <img class="profile-avatar" src="{{ $user->avatar }}" alt="" width="44" height="44">
+                    @else
+                        <span class="profile-avatar profile-avatar--initials" aria-hidden="true">{{ $initials }}</span>
+                    @endif
+                    <div>
+                        <h1>{{ __('profile.title') }}</h1>
+                        <p>{{ $user->email }}</p>
                     </div>
                 </div>
-            </div>
+            </header>
 
             @if (session('billing_status'))
                 <div class="billing-alert billing-alert-success" role="status">{{ session('billing_status') }}</div>
@@ -73,6 +71,7 @@
                         <article class="profile-card profile-pane profile-card--details" data-profile-details id="personal-details">
                             <div class="profile-card-head">
                                 <h2>{{ __('profile.personal_details') }}</h2>
+                                <p>{{ __('profile.personal_details_desc') }}</p>
                             </div>
 
                             <form
@@ -95,6 +94,7 @@
                                         class="form-control @error('name') is-invalid @enderror"
                                         value="{{ old('name', $user->name) }}"
                                         data-initial="{{ $user->name }}"
+                                        placeholder="{{ __('profile.placeholder_name') }}"
                                         required
                                         maxlength="255"
                                         autocomplete="name"
@@ -122,6 +122,7 @@
                                         class="form-control @error('email') is-invalid @enderror"
                                         value="{{ old('email', $user->email) }}"
                                         data-initial="{{ $user->email }}"
+                                        placeholder="{{ __('profile.placeholder_email') }}"
                                         required
                                         maxlength="255"
                                         autocomplete="email"
@@ -171,6 +172,7 @@
                         <article class="profile-card profile-pane profile-card--password" id="password">
                             <div class="profile-card-head">
                                 <h2>{{ $user->hasSetPassword() ? __('profile.change_password') : __('profile.set_password') }}</h2>
+                                <p>{{ $user->hasSetPassword() ? __('profile.change_password_desc') : __('profile.set_password_desc') }}</p>
                             </div>
                             <form
                                 method="POST"
@@ -191,6 +193,7 @@
                                                 name="current_password"
                                                 type="password"
                                                 class="form-control profile-password-input @error('current_password') is-invalid @enderror"
+                                                placeholder="{{ __('profile.placeholder_current_password') }}"
                                                 autocomplete="current-password"
                                                 @if ($errors->has('current_password')) aria-invalid="true" @endif
                                             >
@@ -216,6 +219,7 @@
                                             name="password"
                                             type="password"
                                             class="form-control profile-password-input @error('password') is-invalid @enderror"
+                                            placeholder="{{ __('profile.placeholder_new_password') }}"
                                             autocomplete="new-password"
                                             minlength="8"
                                             required
@@ -255,6 +259,7 @@
                                             name="password_confirmation"
                                             type="password"
                                             class="form-control profile-password-input @error('password_confirmation') is-invalid @enderror"
+                                            placeholder="{{ __('profile.placeholder_confirm_password') }}"
                                             autocomplete="new-password"
                                             minlength="8"
                                             required
@@ -290,6 +295,7 @@
                         <article class="profile-card profile-pane profile-card-wide" id="sign-in-methods">
                             <div class="profile-card-head">
                                 <h2>{{ __('profile.sign_in_methods') }}</h2>
+                                <p>{{ __('profile.account_security_desc') }}</p>
                             </div>
                             @if ($errors->first('google'))
                                 <p class="profile-field-error" role="alert">{{ $errors->first('google') }}</p>
@@ -317,7 +323,10 @@
 
                         <article class="profile-card profile-pane profile-card-wide" id="subscription">
                             <div class="profile-card-head profile-card-head--inline">
-                                <h2>{{ __('profile.subscription') }}</h2>
+                                <div>
+                                    <h2>{{ __('profile.subscription') }}</h2>
+                                    <p>{{ __('profile.subscription_desc') }}</p>
+                                </div>
                                 @if ($subscriptionSummary['can_manage'] || $subscriptionSummary['can_upgrade'])
                                     <div class="profile-card-actions profile-subscription-actions">
                                         @if ($subscriptionSummary['can_manage'])
@@ -418,6 +427,7 @@
                         name="confirmation"
                         type="text"
                         class="form-control"
+                        placeholder="{{ __('profile.placeholder_delete') }}"
                         autocomplete="off"
                         required
                         data-delete-confirm-input

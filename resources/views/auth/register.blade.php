@@ -34,7 +34,7 @@
 
             <div class="auth-field">
                 <label for="name" class="form-label">{{ __('ui.name') }}</label>
-                <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name') }}" required autocomplete="name" autofocus @if($errors->has('name')) aria-invalid="true" aria-describedby="registerNameError" @endif>
+                <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name') }}" placeholder="{{ __('ui.placeholder_name') }}" required autocomplete="name" autofocus @if($errors->has('name')) aria-invalid="true" aria-describedby="registerNameError" @endif>
                 @error('name')
                     <span id="registerNameError" class="invalid-feedback" role="alert">{{ $message }}</span>
                 @enderror
@@ -42,7 +42,7 @@
 
             <div class="auth-field">
                 <label for="email" class="form-label">{{ __('ui.email_address') }}</label>
-                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" @if($errors->has('email')) aria-invalid="true" aria-describedby="registerEmailError" @endif>
+                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" placeholder="{{ __('ui.placeholder_email') }}" required autocomplete="email" @if($errors->has('email')) aria-invalid="true" aria-describedby="registerEmailError" @endif>
                 @error('email')
                     <span id="registerEmailError" class="invalid-feedback" role="alert">{{ $message }}</span>
                 @enderror
@@ -51,7 +51,7 @@
             <div class="auth-field">
                 <label for="password" class="form-label">{{ __('ui.password') }}</label>
                 <div class="auth-password-wrap">
-                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password" @if($errors->has('password')) aria-invalid="true" aria-describedby="registerPasswordError" @endif>
+                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" placeholder="{{ __('ui.placeholder_new_password') }}" required autocomplete="new-password" @if($errors->has('password')) aria-invalid="true" aria-describedby="registerPasswordError" @endif>
                     <button type="button" class="auth-password-toggle" data-password-toggle="password" aria-label="{{ __('ui.show_password') }}">
                         <i class="bi bi-eye" aria-hidden="true"></i>
                     </button>
@@ -64,7 +64,7 @@
             <div class="auth-field">
                 <label for="password-confirm" class="form-label">{{ __('ui.confirm_password') }}</label>
                 <div class="auth-password-wrap">
-                    <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
+                    <input id="password-confirm" type="password" class="form-control" name="password_confirmation" placeholder="{{ __('ui.placeholder_confirm_password') }}" required autocomplete="new-password">
                     <button type="button" class="auth-password-toggle" data-password-toggle="password-confirm" aria-label="{{ __('ui.show_password') }}">
                         <i class="bi bi-eye" aria-hidden="true"></i>
                     </button>

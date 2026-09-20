@@ -5721,12 +5721,10 @@
     box-sizing: border-box !important;
     inline-size: 100% !important;
     max-inline-size: 100% !important;
-    overflow-x: hidden !important;
-    padding:
-      max(0.5rem, env(safe-area-inset-top, 0px))
-      max(0.5rem, env(safe-area-inset-right, 0px))
-      max(0.5rem, env(safe-area-inset-bottom, 0px))
-      max(0.5rem, env(safe-area-inset-left, 0px)) !important;
+    block-size: 100dvh !important;
+    max-block-size: 100dvh !important;
+    overflow: hidden !important;
+    padding: 0 !important;
   }
 
   body.memorisation-page .amd-overlay.mutqin-modal-overlay > .mutqin-modal-dialog.amd-dialog,
@@ -5734,7 +5732,11 @@
     inline-size: 100% !important;
     max-inline-size: 100% !important;
     min-inline-size: 0 !important;
+    block-size: 100% !important;
+    min-block-size: 100% !important;
+    max-block-size: none !important;
     margin: 0 !important;
+    border-radius: 0 !important;
     box-sizing: border-box !important;
   }
 
@@ -5742,6 +5744,9 @@
     inline-size: 100% !important;
     max-inline-size: 100% !important;
     min-inline-size: 0 !important;
+    block-size: 100% !important;
+    max-block-size: none !important;
+    border-radius: 0 !important;
     box-sizing: border-box !important;
   }
 
@@ -6659,14 +6664,23 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
 }
 
 @media (max-width: 720px) {
+  .amd-overlay {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
   .amd-overlay .amd-dialog.mutqin-modal-dialog,
   .amd-overlay .amd-dialog.mutqin-modal-dialog--wide {
-    height: calc(
-      100dvh
-      - max(0.5rem, env(safe-area-inset-top, 0px))
-      - max(0.5rem, env(safe-area-inset-bottom, 0px))
-    ) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    min-height: 100dvh !important;
     max-height: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    flex: 1 1 auto !important;
   }
 
   body.memorisation-page .amd-overlay .amd-dialog > .amd-modal.amd-modal--premium.amd-modal--spacious {
@@ -6946,6 +6960,42 @@ html body .amd-overlay .amd-footer.amd-footer--sticky {
   background: #fffefb !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
+}
+
+@media (max-width: 767.98px) {
+  html body .amd-overlay .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+    border-end-start-radius: 1rem !important;
+    border-end-end-radius: 1rem !important;
+    border-bottom: 1px solid color-mix(in srgb, #d4c8b6 55%, transparent) !important;
+  }
+
+  html body .amd-overlay .amd-footer,
+  html body .amd-overlay .amd-footer.amd-footer--sticky {
+    margin: 0 !important;
+    padding: 0.85rem 1rem calc(1.15rem + env(safe-area-inset-bottom, 0px)) !important;
+    border: 0 !important;
+    border-top: 1px solid color-mix(in srgb, #c4a882 72%, transparent) !important;
+    border-radius: 0 !important;
+    background: color-mix(in srgb, #fffefb 88%, #f3eadc) !important;
+    box-shadow: 0 -10px 28px rgba(28, 20, 12, 0.08) !important;
+  }
+
+  html body .amd-overlay .amd-footer .amd-start-wrap--footer,
+  html body .amd-overlay .amd-footer .amd-footer__stop,
+  html body .amd-overlay .amd-footer .amd-footer__inner {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  html body .amd-overlay .amd-footer .amd-record-btn--inline,
+  html body .amd-overlay .amd-footer .amd-record-btn.amd-record-btn--inline,
+  html body .amd-overlay .amd-footer .amd-footer-stop-btn {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 3.25rem !important;
+    min-height: 3.25rem !important;
+  }
 }
 
 html[data-theme="dark"] body .amd-overlay .amd-footer,

@@ -1762,7 +1762,7 @@
 
   /* Shared overlay shells use one scroll owner and grid-composed internals.
      Delete confirm stays separately centered; ayah notes joins the inset shell. */
-  .modal-overlay.mutqin-modal-overlay:not(.ayah-notes-delete-overlay),
+  .modal-overlay.mutqin-modal-overlay:not(.ayah-notes-delete-overlay):not(.amd-overlay),
 .welcome-back-modal-wrap,
 .session-exit-modal-wrap,
 .onboarding-post-session-modal-wrap {
@@ -1810,12 +1810,15 @@
     inline-size: 100% !important;
     max-inline-size: 100% !important;
     min-inline-size: 0 !important;
-    max-block-size: calc(100dvh - max(20px, var(--mq-safe-top) + var(--mq-safe-bottom))) !important;
+    block-size: 100% !important;
+    min-block-size: 100% !important;
+    max-block-size: none !important;
     margin: 0 !important;
+    border-radius: 0 !important;
     box-sizing: border-box !important;
   }
 
-  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-delete-modal):not(.session-exit-modal) {
+  .mutqin-modal-surface:not(.self-check-modal):not(.recordings-library-modal):not(.ayah-notes-delete-modal):not(.session-exit-modal):not(.amd-modal) {
     display: grid !important;
     grid-template-rows: auto minmax(0, 1fr) auto;
     inline-size: 100% !important;

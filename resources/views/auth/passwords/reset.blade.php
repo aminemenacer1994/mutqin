@@ -40,7 +40,7 @@
 
             <div class="auth-field">
                 <label for="email" class="form-label">{{ __('ui.email_address') }}</label>
-                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" autofocus @if($errors->has('email')) aria-invalid="true" aria-describedby="newPasswordEmailError" @endif>
+                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" placeholder="{{ __('ui.placeholder_email') }}" required autocomplete="email" autofocus @if($errors->has('email')) aria-invalid="true" aria-describedby="newPasswordEmailError" @endif>
                 @error('email')
                     <span id="newPasswordEmailError" class="invalid-feedback d-block" role="alert">{{ $message }}</span>
                 @enderror
@@ -49,7 +49,7 @@
             <div class="auth-field">
                 <label for="password" class="form-label">{{ __('ui.password') }}</label>
                 <div class="auth-password-wrap">
-                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password" minlength="8" @if($errors->has('password')) aria-invalid="true" aria-describedby="newPasswordError" @endif>
+                    <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" placeholder="{{ __('ui.placeholder_new_password') }}" required autocomplete="new-password" minlength="8" @if($errors->has('password')) aria-invalid="true" aria-describedby="newPasswordError" @endif>
                     <button type="button" class="auth-password-toggle" data-password-toggle="password" aria-label="{{ __('ui.show_password') }}">
                         <i class="bi bi-eye" aria-hidden="true"></i>
                     </button>
@@ -63,7 +63,7 @@
             <div class="auth-field">
                 <label for="password-confirm" class="form-label">{{ __('ui.confirm_password') }}</label>
                 <div class="auth-password-wrap">
-                    <input id="password-confirm" type="password" class="form-control @error('password') is-invalid @enderror" name="password_confirmation" required autocomplete="new-password" minlength="8">
+                    <input id="password-confirm" type="password" class="form-control @error('password') is-invalid @enderror" name="password_confirmation" placeholder="{{ __('ui.placeholder_confirm_password') }}" required autocomplete="new-password" minlength="8">
                     <button type="button" class="auth-password-toggle" data-password-toggle="password-confirm" aria-label="{{ __('ui.show_password') }}">
                         <i class="bi bi-eye" aria-hidden="true"></i>
                     </button>

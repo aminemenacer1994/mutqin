@@ -27,7 +27,7 @@
 
             <div class="auth-field">
                 <label for="email" class="form-label">{{ __('ui.email_address') }}</label>
-                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus @if($errors->has('email')) aria-invalid="true" aria-describedby="resetEmailError" @endif>
+                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" placeholder="{{ __('ui.placeholder_email') }}" required autocomplete="email" autofocus @if($errors->has('email')) aria-invalid="true" aria-describedby="resetEmailError" @endif>
                 @error('email')
                     <span id="resetEmailError" class="invalid-feedback d-block" role="alert">{{ $message }}</span>
                 @enderror
