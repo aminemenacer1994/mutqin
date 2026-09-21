@@ -33,12 +33,12 @@ export const RECITATION_TIMING_BUFFER_MAX_MS = 6800
 export const RECENT_PACE_SAMPLE_MAX = 8
 export const MIN_RECENT_PACE_SAMPLES = 2
 
-/** Matches liveCursor LIVE_PACE_MAX_WORDS_PER_SECOND — adaptive pacing pivots on this. */
-export const ADAPTIVE_PACE_BASE_WORDS_PER_SECOND = 1.7
+/** Fluent review pace. Colouring should keep up with speech, not trail a second behind. */
+export const ADAPTIVE_PACE_BASE_WORDS_PER_SECOND = 3.2
 export const ADAPTIVE_PACE_MIN_WORDS_PER_SECOND = 0.55
-export const ADAPTIVE_PACE_MAX_WORDS_PER_SECOND = 4.2
-export const ADAPTIVE_PACE_MIN_DRIP_MS = 120
-export const ADAPTIVE_PACE_MAX_DRIP_MS = 520
+export const ADAPTIVE_PACE_MAX_WORDS_PER_SECOND = 5.5
+export const ADAPTIVE_PACE_MIN_DRIP_MS = 80
+export const ADAPTIVE_PACE_MAX_DRIP_MS = 320
 
 const DEFERRABLE_STATUSES = new Set(['omitted', 'skipped'])
 /** Live paint only — incorrect-word detection must never be softened here. */
@@ -228,14 +228,16 @@ export function resolveAdaptiveLivePaceParams({
     Math.min(ADAPTIVE_PACE_MAX_WORDS_PER_SECOND, maxWordsPerSecond),
   )
 
-  let maxAdvancePerUpdate = 1
-  if (pace <= 0.65) maxAdvancePerUpdate = 4
-  else if (pace <= 0.75) maxAdvancePerUpdate = 3
-  else if (pace <= 0.9) maxAdvancePerUpdate = 2
+  // A Speechmatics final often contains a whole phrase. Paint that phrase,
+  // then drip any remainder. A one-word brake left the highlight stuck mid-ayah.
+  let maxAdvancePerUpdate = 5
+  if (pace <= 0.7) maxAdvancePerUpdate = 8
+  else if (pace <= 0.9) maxAdvancePerUpdate = 6
+  else if (pace >= 1.45 || tajweedHeavy) maxAdvancePerUpdate = 3
 
   const slack = pace >= 1.45 ? 2 : 1
 
-  let dripMs = Math.round(420 * Math.max(0.68, Math.min(1.7, pace)))
+  let dripMs = Math.round(150 * Math.max(0.7, Math.min(1.6, pace)))
   if (tajweedHeavy) dripMs = Math.round(dripMs * 1.1)
 
   return {

@@ -58723,6 +58723,18 @@ never recolour tajweed text */
   cursor: not-allowed;
 }
 
+/* Keep +/− as direct items of the rail so existing gap rules still apply. */
+.app .main.mushaf-mode-active .mushaf-font-zoom__sizes,
+.main.mushaf-mode-active .mushaf-font-zoom__sizes {
+  display: contents;
+}
+
+/* Recite joins the rail on desktop only. Hidden everywhere else so phones keep the existing dock. */
+.app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite,
+.main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite {
+  display: none !important;
+}
+
 [data-theme="dark"] .app .main.mushaf-mode-active .mushaf-font-zoom__btn,
 [data-theme="dark"] .main.mushaf-mode-active .mushaf-font-zoom__btn {
   background: color-mix(in srgb, var(--mushaf-reading-surface, #1a1714) 78%, #000);
@@ -65222,6 +65234,36 @@ body:has(.workspace-recite-dock__button) .app .workspace-main .verses-grid {
   .workspace-recite-dock__button:focus-visible {
     inset-inline-end: auto !important;
     transform: none !important;
+  }
+}
+
+/* Desktop Mushaf: Recite sits under − in the font rail, sized with those controls. */
+@media (min-width: 768px) {
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button,
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-ai-recite-cta.workspace-recite-dock__button,
+  html body .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button,
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button.is-animated,
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button:hover,
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button:focus-visible,
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button:active {
+    display: inline-flex !important;
+    position: relative !important;
+    inset: auto !important;
+    flex: 0 0 auto !important;
+    width: 3.35rem !important;
+    min-width: 3.35rem !important;
+    max-width: 3.35rem !important;
+    height: 3.35rem !important;
+    min-height: 3.35rem !important;
+    max-height: 3.35rem !important;
+    margin: 0 !important;
+    aspect-ratio: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button i,
+  html body .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button i {
+    font-size: 1.45rem !important;
   }
 }
 

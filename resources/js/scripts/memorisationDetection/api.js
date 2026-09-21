@@ -53,32 +53,39 @@ export function buildRecognitionWords(committedWords = [], options = {}) {
   const includeTiming = options.includeTiming !== false
   return (Array.isArray(committedWords) ? committedWords : [])
     .map((word) => {
-      const text = String(word?.word || word?.text || '').trim()
+      const text = String(word?.word || word?.text || '').trim().slice(0, 120)
       const rawWord = String(word?.rawWord || word?.raw_word || word?.display || '').trim()
+      let confidence = Number(word?.confidence)
+      if (!Number.isFinite(confidence)) confidence = 1
+      else if (confidence > 1 && confidence <= 100) confidence = confidence / 100
+      confidence = Math.max(0, Math.min(1, confidence))
       const entry = {
         word: text,
-        confidence: Number.isFinite(Number(word?.confidence)) ? Number(word.confidence) : 1,
+        confidence,
       }
-      if (rawWord && rawWord !== text) entry.raw_word = rawWord
+      if (rawWord && rawWord !== text) entry.raw_word = rawWord.slice(0, 120)
       const token = word?.token
         ?? word?.speechmaticsToken
         ?? word?.speechmatics_token
         ?? word?.resultId
         ?? word?.result_id
         ?? word?.id
-      if (token !== undefined && token !== null) {
-        entry.token = token
-        entry.speechmatics_token = token
+      if (token !== undefined && token !== null && String(token).trim()) {
+        const tokenText = String(token).trim().slice(0, 160)
+        entry.token = tokenText
+        entry.speechmatics_token = tokenText
       }
-      if (word?.provider) entry.provider = word.provider
-      if (word?.segmentId || word?.segment_id) entry.segment_id = word.segmentId || word.segment_id
-      const speaker = String(word?.speaker || '').trim()
+      if (word?.provider) entry.provider = String(word.provider).slice(0, 40)
+      if (word?.segmentId || word?.segment_id) {
+        entry.segment_id = String(word.segmentId || word.segment_id).slice(0, 160)
+      }
+      const speaker = String(word?.speaker || '').trim().slice(0, 32)
       if (speaker) entry.speaker = speaker
       if (includeTiming) {
         const start = Number(word?.start ?? word?.startTime)
         const end = Number(word?.end ?? word?.endTime)
-        if (Number.isFinite(start)) entry.start = start
-        if (Number.isFinite(end)) entry.end = end
+        if (Number.isFinite(start) && start >= 0) entry.start = start
+        if (Number.isFinite(end) && end >= 0) entry.end = end
       }
       return entry
     })

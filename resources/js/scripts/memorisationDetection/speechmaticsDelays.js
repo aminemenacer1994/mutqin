@@ -6,10 +6,13 @@ export const SPEECHMATICS_AMD_SLOW_MAX_DELAY_SECONDS = 0.9
 /** Fast reciters — max_delay cannot go below the Speechmatics floor (0.7). */
 export const SPEECHMATICS_AMD_FAST_MAX_DELAY_SECONDS = 0.7
 export const SPEECHMATICS_END_OF_UTTERANCE_SECONDS = 0.45
-export const SPEECHMATICS_AMD_END_OF_UTTERANCE_SECONDS = 0.5
-export const SPEECHMATICS_AMD_SLOW_END_OF_UTTERANCE_SECONDS = 0.7
-/** Fast tier is the lower end-of-utterance; max_delay stays on the 0.7 floor. */
-export const SPEECHMATICS_AMD_FAST_END_OF_UTTERANCE_SECONDS = 0.25
+export const SPEECHMATICS_AMD_END_OF_UTTERANCE_SECONDS = 0.7
+export const SPEECHMATICS_AMD_SLOW_END_OF_UTTERANCE_SECONDS = 0.95
+/**
+ * Fast tier still waits through a normal breath. A 0.25s cut was finalising
+ * mid-ayah and the next phrase arrived as a new utterance.
+ */
+export const SPEECHMATICS_AMD_FAST_END_OF_UTTERANCE_SECONDS = 0.55
 
 function clampSpeechmaticsDelay(value, fallback, min = 0.7, max = 4) {
   const num = Number(value)
@@ -22,7 +25,7 @@ export function clampSpeechmaticsMaxDelaySeconds(value, fallback = SPEECHMATICS_
 }
 
 export function clampSpeechmaticsEndOfUtteranceSeconds(value, fallback = SPEECHMATICS_END_OF_UTTERANCE_SECONDS) {
-  // Speechmatics allows 0–2s. The floor must stay below the fast tier (0.25).
+  // Speechmatics allows 0–2s. Keep the floor under the fast tier (0.55).
   return clampSpeechmaticsDelay(value, fallback, 0, 2)
 }
 

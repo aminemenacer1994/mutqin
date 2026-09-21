@@ -567,7 +567,6 @@ import {
   createRealtimeTranscriptionMeta,
   createTranscriptionAudioBridge,
   createSpeechmaticsRealtimeProvider,
-  evaluateSpeechmaticsAudioGate,
 } from '../scripts/memorisationRuntime'
 
 function activeSessionSnapshotStorageKey(userId = null) {
@@ -24637,7 +24636,7 @@ export default {
     },
     ensureAmdPaceDrip() {
       if (this._amdPaceDripTimer != null || typeof window === 'undefined') return
-      const dripMs = Math.max(120, Number(this._amdAdaptiveDripMs || LIVE_PACE_DRIP_MS) || 180)
+      const dripMs = Math.max(80, Number(this._amdAdaptiveDripMs || LIVE_PACE_DRIP_MS) || 150)
       this._amdPaceDripTimer = window.setInterval(() => {
         if (!this._amdPaceHeld || !this.canReleaseAmdPaceHold()) {
           this.clearAmdPaceDrip()
@@ -25039,11 +25038,12 @@ export default {
      */
     getAmdLivePaceElapsedMs() {
       if (!this.recitationCheckRecording) return null
-      const timerMs = Number(this.amdElapsedMs)
-      if (Number.isFinite(timerMs) && timerMs > 0) return timerMs
+      // The on-screen timer ticks once a second. Pace must use the real clock
+      // or colouring stalls until the next tick and never catches the end.
       const startedAt = Number(this.recitationCheckStartedAt || this.amdStartedAt || 0)
       if (startedAt > 0) return Math.max(0, Date.now() - startedAt)
-      return null
+      const timerMs = Number(this.amdElapsedMs)
+      return Number.isFinite(timerMs) && timerMs > 0 ? timerMs : null
     },
     syncAmdLiveCursor({ committedStatuses = null, candidateStatuses = null, spokenWordCount = null, adaptiveLivePace = null } = {}) {
       const committed = Array.isArray(committedStatuses)
@@ -25213,6 +25213,8 @@ export default {
       // Yield so Stop → Processing is visible before assessment / network work.
       try { await this.$nextTick?.() } catch (_) { /* ignore */ }
 
+      this._amdAttemptIdempotencyKey = `amd-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`.slice(0, 64)
+      try {
       let result = this.buildAmdLiveAssessmentResult(reason)
       const targets = Array.isArray(this.recitationCheckPendingTargets) && this.recitationCheckPendingTargets.length
         ? this.recitationCheckPendingTargets
@@ -25258,7 +25260,13 @@ export default {
           try {
             submitData = await this.submitAmdAssessmentToBackend(result)
           } catch (error) {
-            console.error('Workspace AI Recite assessment persist failed', error)
+            console.error('Workspace AI Recite assessment persist failed', {
+              status: Number(error?.response?.status || 0) || undefined,
+            })
+            this._amdSubmitStatus = 'failed'
+            if (!this.amdError) {
+              this.amdError = this.resolveRecitationFailureText?.(error, { context: 'amd_backend_submit' }) || ''
+            }
           }
         } else {
           try { this.recordAiReciteAttempt?.(result) } catch (_) { /* ignore */ }
@@ -25266,17 +25274,23 @@ export default {
           // Recommendation sync + Laravel persist in parallel (previously sequential lag).
           const syncTasks = [
             this.maybeApplyPostSessionAiAssessmentFromResult(result).catch((error) => {
-              console.warn('AMD → recommendation sync failed', error)
+              console.warn('AMD → recommendation sync failed', {
+                status: Number(error?.response?.status || 0) || undefined,
+              })
             }),
-            this.submitAmdAssessmentToBackend(result).catch((error) => {
-              // Persist failure must not invent Quran mistakes or a weak score — live result stands.
-              console.error('AMD assessment persist failed', error)
-            }),
+            this.submitAmdAssessmentToBackend(result),
           ]
           await Promise.all(syncTasks)
           try { await this.buildAndPersistAiReciteFinalPlan?.() } catch (_) { /* ignore */ }
         }
-        if (isWorkspaceRecite) {
+        if (this._amdSubmitStatus === 'failed') {
+          this.failAmdAssessment(
+            this.amdError || this.t?.('memorisation.amd.analyseFailed') || this.t?.('common.status.errorDesc')
+          )
+          return
+        }
+        const assessmentSaved = this._amdSubmitStatus === 'ok' || this._amdSubmitStatus === 'guest'
+        if (isWorkspaceRecite && assessmentSaved) {
           const attemptId = Number(
             submitData?.ai_attempt?.id
             || submitData?.ai_attempt?.attempt_id
@@ -25298,23 +25312,40 @@ export default {
                 })
               }
             } catch (error) {
-              console.warn('AI Recite audio upload failed', error)
+              console.warn('AI Recite audio upload failed', {
+                status: Number(error?.response?.status || 0) || undefined,
+              })
             }
-          } else if (attemptId <= 0 && capturedBlob) {
+          } else if (attemptId <= 0 && capturedBlob && this._amdSubmitStatus === 'ok') {
             console.warn('AI Recite audio skipped: missing attempt id after assessment')
           }
           this.presentWorkspaceReciteAnalysis(submitData, result, capturedAudioUrl)
         }
-        this.playUiTone?.('complete')
+        if (assessmentSaved) this.playUiTone?.('complete')
       }
 
       this.closeAmdModal({
         returnToCompletion: !isWorkspaceRecite && this.amdEntrySource !== 'saved-session-review',
       })
       this.amdStage = AMD_STAGES.IDLE
-      this._amdCompleting = false
-      this.amdEndingSoon = false
-      this.amdBusy = false
+      } catch (error) {
+        console.error('AMD assessment could not finish', {
+          reason,
+          status: Number(error?.response?.status || 0) || undefined,
+        })
+        if (this.amdOpen) {
+          this.failAmdAssessment(
+            this.resolveRecitationFailureText?.(error, { context: 'amd_complete' })
+            || this.t?.('memorisation.amd.analyseFailed')
+          )
+        }
+      } finally {
+        this._amdCompleting = false
+        this.amdEndingSoon = false
+        this.amdBusy = false
+        this.recitationCheckPreparing = false
+        this.recitationCheckRecording = false
+      }
     },
     stopAmdAndAssess() {
       if (!this.amdOpen || this._amdCompleting || this.amdEndingSoon) return
@@ -25821,6 +25852,7 @@ export default {
     },
     async submitAmdAssessmentToBackend(result) {
       if (!this.isLoggedIn) {
+        this._amdSubmitStatus = 'guest'
         // Offline / guest: surface local alignment result without Laravel plan.
         this.amdAssessment = {
           id: null,
@@ -25853,14 +25885,31 @@ export default {
         || assessmentQuality === ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
         || resultState === RECITATION_RESULT_STATE.INSUFFICIENT_AUDIO
       ) {
-        console.warn('Skipping AMD assessment persist for unassessable attempt')
+        console.warn('Skipping AMD assessment persist for unassessable attempt', {
+          quality: assessmentQuality,
+          words: Array.isArray(result?.committedWords) ? result.committedWords.length : 0,
+        })
+        this._amdSubmitStatus = 'skipped'
         return null
       }
 
-      if (this._amdAssessmentSubmitInFlight) {
-        return this.amdAssessment || null
-      }
+      if (this._amdAssessmentSubmitPromise) return this._amdAssessmentSubmitPromise
       this._amdAssessmentSubmitInFlight = true
+      this._amdSubmitStatus = ''
+      let settleSubmission = () => {}
+      let submissionSettled = false
+      this._amdAssessmentSubmitPromise = new Promise((resolve) => {
+        settleSubmission = (value) => {
+          if (submissionSettled) return
+          submissionSettled = true
+          resolve(value)
+        }
+      })
+      const finishSubmission = (value) => {
+        settleSubmission(value)
+        return value
+      }
+      try {
 
       if (!this._amdCompleting && !this.amdEndingSoon) {
         this.amdStage = AMD_STAGES.ANALYSING
@@ -25893,17 +25942,22 @@ export default {
       const durationMs = durationSeconds > 0
         ? Math.round(durationSeconds * 1000)
         : this.getAmdElapsedMs()
-      const audioHash = String(result?.audioHash || this.recitationInputAudioHash || '')
-      const idempotencyKey = audioHash
-        ? `amd-${this.auth?.id || 'guest'}-${audioHash}`
-        : undefined
+      const audioHash = String(result?.audioHash || '')
+      const idempotencyKey = (
+        this._amdAttemptIdempotencyKey
+        || (audioHash
+          ? `amd-${audioHash.replace(/[^a-zA-Z0-9]/g, '').slice(0, 48)}`
+          : `amd-${Date.now().toString(36)}`)
+      ).slice(0, 64)
       if (idempotencyKey && idempotencyKey === this.lastAmdAssessmentKey && this._lastAmdSubmitData) {
+        this._amdSubmitStatus = 'ok'
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
           this.amdBusy = false
         }
         this._amdAssessmentSubmitInFlight = false
-        return this._lastAmdSubmitData
+        this._amdAssessmentSubmitPromise = null
+        return finishSubmission(this._lastAmdSubmitData)
       }
       const payload = {
         surah_number: Number(this.chapterId || ayahs[0]?.surah_number || 0),
@@ -25916,15 +25970,15 @@ export default {
         ayahs,
         recognition_words: recognitionWords,
         transcript: result?.transcript || wordsToTranscript(committed),
-        duration_ms: durationMs > 0 ? durationMs : null,
+        duration_ms: durationMs > 0 ? Math.min(3600000, Math.round(durationMs)) : null,
         started_at: this.amdStartedAt
           ? new Date(this.amdStartedAt).toISOString()
           : undefined,
         provider,
         audio_quality_metrics: result?.audioQualityMetrics || this.recitationAudioQualityMetrics || undefined,
-        raw_speechmatics: {
-          messages: (Array.isArray(this.recitationRawTranscriptStream) ? this.recitationRawTranscriptStream : []).slice(-100),
-        },
+        raw_speechmatics: (Array.isArray(this.recitationRawTranscriptStream) ? this.recitationRawTranscriptStream : [])
+          .filter((event) => event && typeof event === 'object')
+          .slice(-400),
         speechmatics_config: provider === 'speechmatics' ? {
           language: 'ar',
           model: 'enhanced',
@@ -25961,7 +26015,18 @@ export default {
             this.amdError = data.retry_guidance
               || resolveAttemptRetryGuidance(attemptClass, this.t.bind(this))
           }
-          return null
+          this._amdSubmitStatus = 'invalid'
+          return finishSubmission(null)
+        }
+        if (!data?.assessment && !data?.ai_attempt) {
+          console.warn('AMD assessment response had no result', {
+            status: 200,
+          })
+          this._amdSubmitStatus = 'failed'
+          this.amdError = this.t?.('memorisation.amd.analyseFailed')
+            || this.t?.('common.status.errorDesc')
+            || 'Please try again in a moment.'
+          return finishSubmission(null)
         }
         if (idempotencyKey) this.lastAmdAssessmentKey = idempotencyKey
         this._lastAmdSubmitData = data
@@ -25979,6 +26044,7 @@ export default {
           this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
         }
         this.amdError = ''
+        this._amdSubmitStatus = 'ok'
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.playUiTone?.('complete')
           this.$nextTick(() => this.syncAmdMushafSurface())
@@ -26017,19 +26083,22 @@ export default {
             },
           })
         }
-        return data
+        return finishSubmission(data)
       } catch (error) {
-        console.error('AMD assessment failed', error)
-        // During Stop→recommendation handoff, persist failure must not invent a scored ERROR result.
+        const status = Number(error?.response?.status || 0)
+        console.error('AMD assessment failed', {
+          status: status || undefined,
+          reason: String(error?.message || 'request_failed').slice(0, 160),
+        })
+        this._amdSubmitStatus = 'failed'
+        if (status === 419) {
+          this.amdError = this.t?.('memorisation.amd.sessionExpired')
+            || 'Your session expired. Refresh the page, then try the assessment again.'
+        } else {
+          this.amdError = this.resolveRecitationFailureText(error, { context: 'amd_backend_submit' })
+        }
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = AMD_STAGES.ERROR
-          const status = Number(error?.response?.status || 0)
-          if (status === 419) {
-            this.amdError = this.t?.('memorisation.amd.sessionExpired')
-              || 'Your session expired. Refresh the page, then try the assessment again.'
-          } else {
-            this.amdError = this.resolveRecitationFailureText(error, { context: 'amd_backend_submit' })
-          }
           void this.logFailedRecitationAssessmentQuiet({
             surah_number: Number(this.chapterId || 0),
             start_ayah: Number(this.rangeStart || 0),
@@ -26038,12 +26107,26 @@ export default {
             provider: 'backend',
           })
         }
-        return null
+        return finishSubmission(null)
       } finally {
+        settleSubmission(null)
         this._amdAssessmentSubmitInFlight = false
+        this._amdAssessmentSubmitPromise = null
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdBusy = false
         }
+      }
+      } catch (error) {
+        console.error('AMD assessment could not be prepared', {
+          status: Number(error?.response?.status || 0) || undefined,
+        })
+        this._amdSubmitStatus = 'failed'
+        if (!this.amdError) {
+          this.amdError = this.resolveRecitationFailureText?.(error, { context: 'amd_backend_submit' }) || ''
+        }
+        this._amdAssessmentSubmitInFlight = false
+        this._amdAssessmentSubmitPromise = null
+        return finishSubmission(null)
       }
     },
     async adjustAmdPracticePlan(adjustments = {}) {
@@ -26511,8 +26594,7 @@ export default {
         this.aiMemorisationCheckerMediaStream = stream
         this.aiMemorisationCheckerMediaRecorder = recorder
         this.aiMemorisationCheckerChunks = []
-        const bridgeReady = this.startTranscriptionAudioBridge('memorisation', stream)
-        if (bridgeReady) await this.ensureTranscriptionAudioBridgeRunning('memorisation')
+        this.startTranscriptionAudioBridge('memorisation', stream)
         recorder.ondataavailable = event => {
           if (event.data?.size) {
             this.aiMemorisationCheckerChunks.push(event.data)
@@ -27605,13 +27687,13 @@ export default {
       return true
     },
     updateLiveWordsFromCommittedRecognition(kind = 'recitation') {
-      // AMD is deliberately final-only: don't run alignment or mutate the
-      // Mushaf DOM on every ASR event. The single assessment on Stop owns all
-      // colours and progress, which keeps recording responsive and stable.
-      if (this.amdOpen && kind === 'recitation') return
-      const liveMetrics = this.getTranscriptionAudioBridge(kind)?.getQualityMetrics?.() || null
-      const liveAudioGate = evaluateSpeechmaticsAudioGate(liveMetrics)
-      if (!liveAudioGate.reliable) return
+      if (
+        this.amdOpen
+        && kind === 'recitation'
+        && (this.amdEndingSoon || this._amdCompleting)
+      ) {
+        return
+      }
       const targetVerses = kind === 'memorisation'
         ? this.aiMemorisationCheckerTargets
         : (this.recitationCheckPendingTargets?.length ? this.recitationCheckPendingTargets : this.getRecitationCheckTargetVerses())
@@ -28700,7 +28782,10 @@ export default {
         const words = this.getBestRecognitionWordsForAssessment(kind)
         if (Number(meta?.messageCount || 0) > 0 || words.length) return
         const provider = this.getTranscriptionProvider(kind)
-        if (provider?.isOpen?.()) return
+        const quality = this.getTranscriptionAudioBridge(kind)?.getQualityMetrics?.() || null
+        const bridgeProducingAudio = Number(quality?.rms || 0) > 0 || Number(quality?.peak || 0) > 0
+        // An open socket that never receives PCM must not block the browser fallback.
+        if (provider?.isOpen?.() && bridgeProducingAudio) return
         this.failoverTranscriptionToBrowserStt(kind)
       }, delayMs)
     },
@@ -30211,7 +30296,6 @@ export default {
         this.recitationCheckChunks = []
         this.recitationInputSessionId = this.getCurrentRecitationSessionId()
         const bridgeReady = this.startTranscriptionAudioBridge('recitation', stream)
-        if (bridgeReady) await this.ensureTranscriptionAudioBridgeRunning('recitation')
 
         // Start the mic immediately — never block recording on the Speechmatics token.
         recorder.ondataavailable = event => {
@@ -30327,7 +30411,21 @@ export default {
           } catch (settleError) {
             console.warn('Transcription settle failed:', settleError)
           }
-          if (!this.isActiveRecitationAttempt(stopAttemptId)) return
+          if (!this.isActiveRecitationAttempt(stopAttemptId)) {
+            this.recitationCheckRecording = false
+            this.recitationCheckPreparing = false
+            this.clearRecitationSlowProcessingNotice()
+            this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+            if (
+              this.amdOpen
+              && !this._amdCompleting
+              && [AMD_STAGES.PROCESSING, AMD_STAGES.ANALYSING, AMD_STAGES.STARTING].includes(this.amdStage)
+            ) {
+              this.amdBusy = false
+              this.amdStage = AMD_STAGES.READY
+            }
+            return
+          }
           this.stopSpeechRecognitionWatchdog('recitation')
           this.stopTranscriptionAudioPump('recitation')
           let audioSrc = ''
@@ -30370,7 +30468,10 @@ export default {
             if (!this.isActiveRecitationAttempt(stopAttemptId)) return
             // Invalidate so a late submit from Promise.race cannot corrupt the next attempt.
             this.beginRecitationAttempt()
-            console.error('Failed to process recitation check:', error)
+            console.error('Failed to process recitation check', {
+              status: Number(error?.response?.status || 0) || undefined,
+              reason: String(error?.message || 'request_failed').slice(0, 160),
+            })
             const failureText = this.resolveRecitationFailureText(error, { context: 'recitation_submit' })
             const classification = classifyRecitationFailure(error, { context: 'recitation_submit' })
             const isInsufficientFailure = classification.kind === RECITATION_FAILURE_KIND.RECORDING
@@ -30589,16 +30690,15 @@ export default {
       })
     },
     async submitRecitationCheck(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '', options = {}) {
-      if (this.recitationSubmitInFlight) {
-        return this.recitationCheckResult || null
-      }
+      if (this._recitationSubmitPromise) return this._recitationSubmitPromise
       this.recitationSubmitInFlight = true
       const attemptId = String(options.attemptId || this.recitationAttemptId || '')
-      try {
-        return await this.runRecitationCheckSubmit(blob, targetVerses, audioSrc, { attemptId })
-      } finally {
-        this.recitationSubmitInFlight = false
-      }
+      this._recitationSubmitPromise = this.runRecitationCheckSubmit(blob, targetVerses, audioSrc, { attemptId })
+        .finally(() => {
+          this.recitationSubmitInFlight = false
+          this._recitationSubmitPromise = null
+        })
+      return this._recitationSubmitPromise
     },
     async runRecitationCheckSubmit(blob, targetVerses = this.getRecitationCheckTargetVerses(), audioSrc = '', options = {}) {
       const attemptId = String(options.attemptId || this.recitationAttemptId || '')
@@ -31898,6 +31998,11 @@ export default {
         : this.t('memorisation.recitationResult.listenThenSaveOrRetry')
     },
     getRecitationRecommendationDisplay(result) {
+      const mistakes = result?.mistakes || result?.mistakeBreakdown
+      if (mistakes && typeof mistakes === 'object') {
+        const score = Number(result?.accuracyScore ?? this.getResolvedRecitationScore?.(result) ?? 0)
+        return this.getRecitationRecommendation(score, mistakes)
+      }
       const raw = String(result?.recommendation || '')
         .replace(/\s*Transcription source:.*$/i, '')
         .trim()

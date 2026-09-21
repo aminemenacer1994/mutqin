@@ -60,6 +60,7 @@ export function shouldSkipUntranslatedKey(key, value) {
     'homepage.social.instagram',
     'homepage.social.youtube',
     'homepage.social.facebook',
+    'waitingList.ayahRef',
   ].includes(key)) return true
   return false
 }

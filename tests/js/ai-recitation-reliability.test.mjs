@@ -29,6 +29,7 @@ import {
   resolveAdaptiveLivePaceParams,
   RECITATION_MIN_SILENCE_STOP_MS,
   RECITATION_MAX_SILENCE_STOP_MS,
+  ADAPTIVE_PACE_MAX_WORDS_PER_SECOND,
 } from '../../resources/js/scripts/memorisationDetection/recitationTimingBuffer.js'
 import {
   isPaintedLiveStatus,
@@ -124,7 +125,7 @@ function words(entries) {
     tajweedHeavy: true,
   })
   assert.ok(live.dripMs >= 120)
-  assert.ok(live.maxWordsPerSecond <= 4.2)
+  assert.ok(live.maxWordsPerSecond <= ADAPTIVE_PACE_MAX_WORDS_PER_SECOND)
 
   const silenceMs = computeSilenceAutoStopThresholdMs({
     wordIndex: 0,

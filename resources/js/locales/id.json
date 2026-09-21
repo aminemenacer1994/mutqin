@@ -1098,7 +1098,8 @@
       "closeAudioPlayer": "Close audio player",
       "restorePlayer": "Tampilkan audio player",
       "quranFallback": "Al-Quran",
-      "tapToPlay": "Ketuk to play"
+      "tapToPlay": "Ketuk to play",
+      "playbackSpeedAria": "Playback speed {rate}"
     },
     "sync": {
       "badge": {
@@ -4808,7 +4809,8 @@
       "missed_word_detail": "Terlewat {count}×{where}",
       "missed_word_detail_where": " · {where}",
       "missed_word_no_attempt": "Belum ada pemeriksaan tersimpan yang mencakup kata ini."
-    }
+    },
+    "hifz_progress_aria": "Hifz progress"
   },
   "admin": {
     "loading": "memuat…",

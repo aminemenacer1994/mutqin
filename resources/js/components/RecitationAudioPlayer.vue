@@ -3,7 +3,7 @@
     class="sa-ov__player"
     :class="{ 'is-playing': playing, 'has-error': error }"
     role="group"
-    :aria-label="title || 'Recitation player'"
+    :aria-label="playerTitle"
   >
     <audio
       ref="player"
@@ -19,8 +19,8 @@
         type="button"
         class="sa-ov__player-toggle"
         :disabled="!src || error"
-        :aria-label="playing ? pauseLabel : playLabel"
-        :title="playing ? pauseLabel : playLabel"
+        :aria-label="playing ? resolvedPauseLabel : resolvedPlayLabel"
+        :title="playing ? resolvedPauseLabel : resolvedPlayLabel"
         @click="toggle"
       >
         <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
@@ -35,7 +35,7 @@
             step="1"
             :value="seekValue"
             :disabled="!src || error"
-            :aria-label="title || 'Recitation'"
+            :aria-label="seekLabel"
             :aria-valuetext="progressLabel"
             @input="onSeek"
           >
@@ -43,8 +43,8 @@
             type="button"
             class="sa-ov__player-restart"
             :disabled="!src || error"
-            :aria-label="restartLabel"
-            :title="restartLabel"
+            :aria-label="resolvedRestartLabel"
+            :title="resolvedRestartLabel"
             @click="restart"
           >
             <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
@@ -60,11 +60,11 @@
       type="button"
       class="sa-ov__player-speed"
       :disabled="!src || error"
-      :aria-label="`Playback speed ${playbackRate}x`"
-      :title="`Playback speed ${playbackRate}x`"
+      :aria-label="playbackSpeedLabel"
+      :title="playbackSpeedLabel"
       @click="cycleSpeed"
     >{{ playbackRate }}×</button>
-    <p v-if="error" class="sa-ov__player-error" role="status">{{ errorLabel }}</p>
+    <p v-if="error" class="sa-ov__player-error" role="status">{{ resolvedErrorLabel }}</p>
   </div>
 </template>
 
@@ -83,10 +83,10 @@ export default {
     durationMs: { type: [Number, String], default: null },
     active: { type: Boolean, default: true },
     title: { type: String, default: '' },
-    playLabel: { type: String, default: 'Play' },
-    pauseLabel: { type: String, default: 'Pause' },
-    restartLabel: { type: String, default: 'Restart' },
-    errorLabel: { type: String, default: 'Audio unavailable' },
+    playLabel: { type: String, default: '' },
+    pauseLabel: { type: String, default: '' },
+    restartLabel: { type: String, default: '' },
+    errorLabel: { type: String, default: '' },
   },
   data() {
     return {
@@ -115,6 +115,27 @@ export default {
     },
     progressLabel() {
       return `${this.currentLabel} / ${this.durationLabel}`
+    },
+    playerTitle() {
+      return this.title || this.$t('memorisation.player.audioPlayer')
+    },
+    seekLabel() {
+      return this.title || this.$t('dashboard.analysis_recitation_label')
+    },
+    resolvedPlayLabel() {
+      return this.playLabel || this.$t('dashboard.ai_recite.play')
+    },
+    resolvedPauseLabel() {
+      return this.pauseLabel || this.$t('dashboard.ai_recite.pause')
+    },
+    resolvedRestartLabel() {
+      return this.restartLabel || this.$t('dashboard.ai_recite.restart')
+    },
+    resolvedErrorLabel() {
+      return this.errorLabel || this.$t('dashboard.analysis_audio_unavailable')
+    },
+    playbackSpeedLabel() {
+      return this.$t('memorisation.player.playbackSpeedAria', { rate: `${this.playbackRate}×` })
     },
   },
   watch: {

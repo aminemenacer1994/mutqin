@@ -1098,7 +1098,8 @@
       "closeAudioPlayer": "Minimize audio player",
       "restorePlayer": "Show audio player",
       "quranFallback": "Quran",
-      "tapToPlay": "Tap to play"
+      "tapToPlay": "Tap to play",
+      "playbackSpeedAria": "Playback speed {rate}"
     },
     "sync": {
       "badge": {
@@ -4808,7 +4809,8 @@
       "network_error": "We couldn’t reach the recitation service. Check your connection and try again.",
       "error_title": "AI Recite couldn’t finish",
       "continue_without_ai": "Continue without AI"
-    }
+    },
+    "hifz_progress_aria": "Hifz progress"
   },
   "admin": {
     "loading": "Loading…",

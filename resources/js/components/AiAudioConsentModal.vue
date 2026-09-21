@@ -16,7 +16,7 @@
             <i class="bi bi-mic-fill"></i>
           </span>
           <div>
-            <span class="ai-audio-consent-eyebrow">AI RECITATION</span>
+            <span class="ai-audio-consent-eyebrow">{{ $t('memorisation.aiCheck.aiRecitation') }}</span>
             <h2 id="aiAudioConsentTitle" class="ai-audio-consent-title">{{ title }}</h2>
           </div>
         </div>
@@ -179,6 +179,7 @@ export default {
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .ai-audio-consent-title {

@@ -283,6 +283,12 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
     const live = display[index] || null
 
     if (confirmedOnly) {
+      if (
+        String(confirmed?.status || '').toLowerCase() === 'correct'
+        && isStickyLiveIssueStatus(live?.status)
+      ) {
+        return confirmed
+      }
       if (confirmed && confirmed.status && confirmed.status !== 'pending') {
         // Allow a later committed correct match to recover a prior issue.
         if (
@@ -301,6 +307,13 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
         status: 'pending',
         note: confirmed?.note || '',
       }
+    }
+
+    if (
+      String(confirmed?.status || '').toLowerCase() === 'correct'
+      && isStickyLiveIssueStatus(live?.status)
+    ) {
+      return confirmed
     }
 
     if (protectAgainstInterimRed && live?.status === 'incorrect'

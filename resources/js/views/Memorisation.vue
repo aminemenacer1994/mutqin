@@ -1137,30 +1137,45 @@
                 class="mushaf-shell row g-0"
                 :aria-label="t('memorisation.view.mushaf')"
               >
-                <div
-                  class="mushaf-font-zoom col-md-1"
-                  role="group"
-                  :aria-label="t('common.fontSize')"
-                >
-                  <button
-                    type="button"
-                    class="mushaf-font-zoom__btn"
-                    :disabled="Number(defaultFontSize) >= Number(maxFontSize)"
-                    :title="t('memorisation.a11y.increaseFontSize')"
-                    :aria-label="t('memorisation.a11y.increaseFontSize')"
-                    @click.stop="increaseMushafFontSize"
+                <div class="mushaf-font-zoom col-md-1">
+                  <div
+                    class="mushaf-font-zoom__sizes"
+                    role="group"
+                    :aria-label="t('common.fontSize')"
                   >
-                    <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                  </button>
+                    <button
+                      type="button"
+                      class="mushaf-font-zoom__btn"
+                      :disabled="Number(defaultFontSize) >= Number(maxFontSize)"
+                      :title="t('memorisation.a11y.increaseFontSize')"
+                      :aria-label="t('memorisation.a11y.increaseFontSize')"
+                      @click.stop="increaseMushafFontSize"
+                    >
+                      <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="mushaf-font-zoom__btn"
+                      :disabled="Number(defaultFontSize) <= Number(minFontSize)"
+                      :title="t('memorisation.a11y.decreaseFontSize')"
+                      :aria-label="t('memorisation.a11y.decreaseFontSize')"
+                      @click.stop="decreaseMushafFontSize"
+                    >
+                      <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                    </button>
+                  </div>
                   <button
+                    v-if="showWorkspaceAiReciteCta"
                     type="button"
-                    class="mushaf-font-zoom__btn"
-                    :disabled="Number(defaultFontSize) <= Number(minFontSize)"
-                    :title="t('memorisation.a11y.decreaseFontSize')"
-                    :aria-label="t('memorisation.a11y.decreaseFontSize')"
-                    @click.stop="decreaseMushafFontSize"
+                    class="action-btn workspace-ai-recite-cta workspace-recite-dock__button mushaf-font-zoom__recite"
+                    :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                    data-testid="workspace-ai-recite"
+                    :title="t('dashboard.ai_recite.cta_label')"
+                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                    @click="openWorkspaceAiRecite"
                   >
-                    <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                    <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                    <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
                   </button>
                 </div>
                 <div ref="mushafViewport" class="mushaf-viewport-scroll col-md-11">
@@ -4318,11 +4333,11 @@
 
     <Teleport to="body">
       <div
-        v-if="(showWorkspaceAiReciteCta && shouldShowReadingWorkspace) || showBackToTop"
+        v-if="(showWorkspaceAiReciteCta && shouldShowReadingWorkspace && readingViewMode !== 'mushaf') || showBackToTop"
         class="workspace-float-rail workspace-float-rail--desktop"
       >
         <div
-          v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
+          v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace && readingViewMode !== 'mushaf'"
           class="workspace-recite-dock"
           aria-live="polite"
         >

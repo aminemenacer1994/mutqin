@@ -103,20 +103,20 @@
                   </p>
 
                   <section class="sa-ov__panel sa-ov__audio" data-testid="session-overview-audio">
-                    <h3>{{ audioTitle || 'Your recitation' }}</h3>
+                    <h3>{{ audioTitle || $t('dashboard.analysis_recitation_label') }}</h3>
                     <RecitationAudioPlayer
                       v-if="analysis.audio?.url"
                       :src="analysis.audio.url"
                       :duration-ms="analysis.audio.duration_ms"
                       :active="open"
-                      :title="audioTitle || 'Your recitation'"
+                      :title="audioTitle || $t('dashboard.analysis_recitation_label')"
                       :play-label="playLabel"
                       :pause-label="pauseLabel"
                       :restart-label="restartLabel"
-                      :error-label="audioUnavailable || 'Audio unavailable'"
+                      :error-label="audioUnavailable || $t('dashboard.analysis_audio_unavailable')"
                     />
                     <p v-else class="sa-ov__audio-empty" data-testid="session-overview-audio-empty">
-                      {{ audioEmptyCopy || audioUnavailable || 'No recording is saved for this session.' }}
+                      {{ audioEmptyCopy || audioUnavailable || $t('dashboard.analysis_audio_unavailable') }}
                     </p>
                   </section>
 

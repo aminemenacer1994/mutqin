@@ -1098,7 +1098,8 @@
       "closeAudioPlayer": "Close audio player",
       "restorePlayer": "اعرض صوت player",
       "quranFallback": "القرآن",
-      "tapToPlay": "اضغط إلى شغّل"
+      "tapToPlay": "اضغط إلى شغّل",
+      "playbackSpeedAria": "Playback speed {rate}"
     },
     "sync": {
       "badge": {
@@ -4808,7 +4809,8 @@
       "missed_word_detail": "{count}× چھوٹا{where}",
       "missed_word_detail_where": " · {where}",
       "missed_word_no_attempt": "ابھی کوئی محفوظ چیک اس لفظ کو نہیں ڈھانپتا۔"
-    }
+    },
+    "hifz_progress_aria": "Hifz progress"
   },
   "admin": {
     "loading": "جارٍ التحميل…",

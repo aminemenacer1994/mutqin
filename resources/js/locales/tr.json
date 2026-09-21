@@ -1098,7 +1098,8 @@
       "closeAudioPlayer": "Close audio player",
       "restorePlayer": "Göster ses player",
       "quranFallback": "Kur'an",
-      "tapToPlay": "Dokunun to play"
+      "tapToPlay": "Dokunun to play",
+      "playbackSpeedAria": "Playback speed {rate}"
     },
     "sync": {
       "badge": {
@@ -4808,7 +4809,8 @@
       "missed_word_detail": "{count}× kaçırıldı{where}",
       "missed_word_detail_where": " · {where}",
       "missed_word_no_attempt": "Bu kelimeyi kapsayan kayıtlı bir kontrol henüz yok."
-    }
+    },
+    "hifz_progress_aria": "Hifz progress"
   },
   "admin": {
     "loading": "yükleniyor…",

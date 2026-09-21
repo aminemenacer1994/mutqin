@@ -7029,6 +7029,7 @@ html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-p
   html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
     display: flex !important;
     flex-flow: row nowrap !important;
+    justify-content: safe center !important;
     padding-bottom: 0.85rem !important;
   }
 
@@ -7555,4 +7556,137 @@ body:has(.workspace-recite-dock__button) .app .content,
 body:has(.workspace-recite-dock__button) .app .workspace {
   overflow: visible !important;
   overflow-x: visible !important;
+}
+
+/* Desktop Mushaf only: fixed reading card, pinned left rail, ayahs scroll inside. */
+@media (min-width: 768px) {
+  html body .app .main.mushaf-mode-active {
+    height: calc(100dvh - var(--navbar-height, 64px)) !important;
+    max-height: calc(100dvh - var(--navbar-height, 64px)) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .app .main.mushaf-mode-active > .content,
+  html body .app .main.mushaf-mode-active .workspace {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  html body .app .main.mushaf-mode-active .workspace-shell,
+  html body .app .main.mushaf-mode-active .session-progress-rail {
+    flex: 0 0 auto !important;
+  }
+
+  html body .app .main.mushaf-mode-active .workspace-main {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  html body .app .main.mushaf-mode-active .workspace-reading-surface--mushaf,
+  html body .app .main.mushaf-mode-active .mushaf-workspace,
+  html body .app .main.mushaf-mode-active .mushaf-workspace__fluid,
+  html body .app .main.mushaf-mode-active .mushaf-shell {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-shell,
+  html body .app .main.mushaf-mode-active .mushaf-shell.row {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: stretch !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom,
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom.col-md-1 {
+    position: sticky !important;
+    top: 0.75rem !important;
+    align-self: flex-start !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 4.4rem !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    z-index: 12 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-shell:has(> .mushaf-font-zoom) > .mushaf-viewport-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll.col-md-11 {
+    flex: 1 1 auto !important;
+    align-self: stretch !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    -ms-overflow-style: auto !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll::-webkit-scrollbar {
+    display: block !important;
+    width: 8px !important;
+    height: 8px !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-page--madani,
+  html body .app .main.mushaf-mode-active .mushaf-page-body,
+  html body .app .main.mushaf-mode-active .madani-page-sheet {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-session-stack {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-session-stack .mushaf-page--madani,
+  html body .app .main.mushaf-mode-active .mushaf-session-stack .mushaf-page--madani + .mushaf-page--madani,
+  html body .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet,
+  html body .app .main.mushaf-mode-active .mushaf-page--madani .mushaf-page-body {
+    margin: 0 !important;
+    margin-block: 0 !important;
+    padding: 0 !important;
+    padding-block: 0 !important;
+    border: 0 !important;
+    border-top: 0 !important;
+    min-height: 0 !important;
+    min-block-size: 0 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-line--empty,
+  html body .app .main.mushaf-mode-active .madani-line--ayah:not(:has(.madani-word)),
+  html body .app .main.mushaf-mode-active .madani-line--glyphs:not(:has(.madani-word)),
+  html body .app .main.mushaf-mode-active .madani-line--basmala-ayah:not(:has(.madani-word)):not(:has(.madani-basmala)) {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
 }

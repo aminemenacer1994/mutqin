@@ -33,8 +33,8 @@ class SpeechmaticsAudioPolicy
         $explicit = strtolower(trim((string) ($payload['audio_quality_status'] ?? '')));
 
         $reason = $this->unreliableAudioReason($metrics, $explicit);
-        if ($reason !== null) {
-            return $this->result(false, $reason, $words, null, 0);
+        if ($reason !== null && $this->audioReasonBlocksTranscript($reason, $words)) {
+            return $this->result(false, $reason, [], null, 0);
         }
 
         $speakers = [];
@@ -114,6 +114,33 @@ class SpeechmaticsAudioPolicy
         if ($snr !== null && $snr < self::MIN_SNR_DB) return 'heavy_noise';
 
         return null;
+    }
+
+    /**
+     * Noise suppression and quiet recitation often look "soft" on RMS/SNR even
+     * when the transcript is real. Only broken or clipped audio may discard it.
+     *
+     * @param  array<int, mixed>  $words
+     */
+    private function audioReasonBlocksTranscript(string $reason, array $words): bool
+    {
+        $soft = in_array($reason, ['heavy_noise', 'very_low_volume', 'insufficient_usable_speech'], true);
+        if (! $soft) {
+            return true;
+        }
+
+        $recognised = 0;
+        foreach ($words as $word) {
+            if (! is_array($word)) {
+                continue;
+            }
+            $token = trim((string) ($word['word'] ?? $word['text'] ?? ''));
+            if ($token !== '') {
+                $recognised++;
+            }
+        }
+
+        return $recognised < 2;
     }
 
     /** @param array<int,mixed> $words @param list<string> $target */

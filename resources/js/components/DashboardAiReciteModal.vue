@@ -301,7 +301,7 @@ import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessio
 import { resolveMicDeniedGuidance } from '../scripts/audio/recordingResilience'
 import { playRecordingStartBeep } from '../scripts/audio/recordingStartBeep.js'
 import { loadAyah } from '../scripts/dashboardAiRecite/ayahText'
-import { evaluateSpeechmaticsAudioGate } from '../scripts/audio/speechmaticsAudioGate.js'
+import { audioGateBlocksTranscript, evaluateSpeechmaticsAudioGate } from '../scripts/audio/speechmaticsAudioGate.js'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import {
   ayahCountForSurah,
@@ -347,6 +347,7 @@ export default {
       audioTimeLabel: '0:00',
       savedAttemptId: null,
       submitKey: '',
+      analysisRequestId: 0,
       statsLoading: false,
       statsError: false,
       statsView: buildDashboardAiReciteStatsView(null, (key) => key),
@@ -437,6 +438,7 @@ export default {
       return date.toLocaleString()
     },
     async resetForOpen() {
+      this.analysisRequestId += 1
       this.stage = 'ready'
       this.starting = false
       this.stopping = false
@@ -505,7 +507,7 @@ export default {
       return isAiAudioConsentDeclined(resolveAiAudioConsentRecord({ userId: this.userId }))
     },
     async startRecording() {
-      if (this.starting || this.stage === 'recording') return
+      if (this.starting || this.stopping || this.stage === 'recording' || this.stage === 'processing') return
       if (this.consentBlocked()) {
         this.showError(
           this.t('dashboard.ai_recite.error_title'),
@@ -519,7 +521,7 @@ export default {
       this.audioUrl = ''
       this.audioBlob = null
       this.savedAttemptId = null
-      this.submitKey = `dash-ai-${this.userId || 'user'}-${this.surah}-${this.ayah}-${Date.now()}`
+      this.submitKey = `dash-ai-${this.userId || 'user'}-${this.surah}-${this.ayah}-${Date.now()}`.slice(0, 64)
       playRecordingStartBeep()
       this.ensureRecorder()
       try {
@@ -545,48 +547,84 @@ export default {
     },
     async stopRecording() {
       if (this.stopping || this.stage !== 'recording') return
+      const requestId = ++this.analysisRequestId
       this.stopping = true
       this.stage = 'processing'
       this.processingLabel = this.t('memorisation.amd.hintProcessing')
       let capture = null
       try {
-        capture = await this.recorder.stop()
-      } catch {
-        capture = null
+        try {
+          capture = await this.recorder.stop()
+        } catch {
+          capture = null
+        }
+        if (!this.isCurrentAnalysis(requestId)) return
+        if (!capture?.transcript && !(capture?.words || []).length) {
+          this.showError(this.t('dashboard.ai_recite.error_title'), this.t('dashboard.ai_recite.empty_recording'))
+          return
+        }
+        this.audioUrl = capture.objectUrl || ''
+        this.audioBlob = capture.blob || null
+        await this.analyse(capture, requestId)
+      } catch (error) {
+        if (this.isCurrentAnalysis(requestId)) {
+          this.showError(this.t('dashboard.ai_recite.error_title'), this.assessmentFailureCopy(error))
+        }
+      } finally {
+        this.stopping = false
+        if (requestId === this.analysisRequestId && this.stage === 'processing') {
+          this.showError(
+            this.t('dashboard.ai_recite.error_title'),
+            this.t('memorisation.amd.analyseFailed'),
+          )
+        }
       }
-      this.stopping = false
-      if (!capture?.transcript && !(capture?.words || []).length) {
-        this.showError(this.t('dashboard.ai_recite.error_title'), this.t('dashboard.ai_recite.empty_recording'))
-        return
-      }
-      this.audioUrl = capture.objectUrl || ''
-      this.audioBlob = capture.blob || null
-      await this.analyse(capture)
     },
-    async analyse(capture) {
-      const audioGate = evaluateSpeechmaticsAudioGate(capture?.audioQualityMetrics || null)
-      if (!audioGate.reliable) {
-        this.showError(
-          this.t('dashboard.ai_recite.error_title'),
-          this.t('memorisation.aiCheck.retry.unusable'),
-        )
-        return
+    isCurrentAnalysis(requestId) {
+      return requestId === this.analysisRequestId
+    },
+    assessmentFailureCopy(error) {
+      const status = Number(error?.response?.status || 0)
+      const message = String(error?.response?.data?.message || '').trim()
+      console.warn('Dashboard AI recite assessment failed', { status: status || undefined })
+      if ((status === 422 || status === 429 || status === 419) && message && message.length <= 180 && !/[<>]/.test(message)) {
+        return message
       }
-      this.processingLabel = this.t('memorisation.amd.hintAnalysing')
-      const verse = await loadAyah(this.surah, this.ayah)
-      if (!verse?.text) {
-        this.showError(this.t('dashboard.ai_recite.error_title'), this.t('memorisation.amd.ayahTextUnavailable'))
-        return
-      }
-      const ayahs = buildAssessmentAyahs([{
-        number: this.ayah,
-        chapterId: this.surah,
-        key: `${this.surah}:${this.ayah}`,
-        arabic: verse.text,
-        text: verse.text,
-      }])
-      const recognitionWords = buildRecognitionWords(capture.words || [], { includeTiming: true })
+      if (status >= 500) return this.t('memorisation.amd.analyseFailed')
+      return this.t('dashboard.ai_recite.network_error')
+    },
+    speechmaticsEventsForAssessment(events) {
+      return (Array.isArray(events) ? events : [])
+        .filter((event) => event && typeof event === 'object')
+        .slice(-400)
+    },
+    async analyse(capture, requestId = this.analysisRequestId) {
       try {
+        const audioGate = evaluateSpeechmaticsAudioGate(capture?.audioQualityMetrics || null)
+        const recognisedCount = (capture?.words || []).filter((word) => String(word?.word || word?.text || '').trim()).length
+        if (audioGateBlocksTranscript(audioGate, recognisedCount)) {
+          if (!this.isCurrentAnalysis(requestId)) return
+          this.showError(
+            this.t('dashboard.ai_recite.error_title'),
+            this.t('memorisation.aiCheck.retry.unusable'),
+          )
+          return
+        }
+        this.processingLabel = this.t('memorisation.amd.hintAnalysing')
+        const verse = await loadAyah(this.surah, this.ayah)
+        if (!this.isCurrentAnalysis(requestId)) return
+        if (!verse?.text) {
+          this.showError(this.t('dashboard.ai_recite.error_title'), this.t('memorisation.amd.ayahTextUnavailable'))
+          return
+        }
+        const ayahs = buildAssessmentAyahs([{
+          number: this.ayah,
+          chapterId: this.surah,
+          key: `${this.surah}:${this.ayah}`,
+          arabic: verse.text,
+          text: verse.text,
+        }])
+        const recognitionWords = buildRecognitionWords(capture.words || [], { includeTiming: true })
         const data = await learningApi.createMemorisationAssessment({
           surah_number: this.surah,
           surah_name: surahName(this.surah),
@@ -597,18 +635,27 @@ export default {
           ayahs,
           recognition_words: recognitionWords,
           transcript: capture.transcript || '',
-          duration_ms: capture.durationMs || null,
+          duration_ms: capture.durationMs > 0 ? Math.min(3600000, Math.round(Number(capture.durationMs))) : null,
           provider: capture.provider || 'speechmatics',
-          raw_speechmatics: capture.rawEvents || [],
+          raw_speechmatics: this.speechmaticsEventsForAssessment(capture.rawEvents),
           audio_quality_metrics: capture.audioQualityMetrics || null,
           peek_used: this.peekUsed,
           idempotency_key: this.submitKey,
         })
+        if (!this.isCurrentAnalysis(requestId)) return
+        if (!data || typeof data !== 'object') {
+          this.showError(this.t('dashboard.ai_recite.error_title'), this.t('memorisation.amd.analyseFailed'))
+          return
+        }
         if (data?.invalid_attempt || data?.assessment?.status === 'failed') {
           this.showError(
             this.t('dashboard.ai_recite.error_title'),
             data?.retry_guidance || data?.assessment?.retry_guidance || this.t('memorisation.amd.analyseFailed'),
           )
+          return
+        }
+        if (!data.assessment && !data.ai_attempt) {
+          this.showError(this.t('dashboard.ai_recite.error_title'), this.t('memorisation.amd.analyseFailed'))
           return
         }
         this.savedAttemptId = Number(data?.ai_attempt?.id || 0) || null
@@ -620,21 +667,27 @@ export default {
               this.audioBlob,
               capture.durationMs,
             )
-            if (savedAudio?.url) this.audioUrl = savedAudio.url
+            if (savedAudio?.url && this.isCurrentAnalysis(requestId)) this.audioUrl = savedAudio.url
           } catch {
             /* keep the in-memory recording for this turn */
           }
         }
+        if (!this.isCurrentAnalysis(requestId)) return
         this.analysisView = buildSessionAnalysisView({
           has_analysis: true,
           assessment: data?.assessment || null,
           ai_attempt: data?.ai_attempt || null,
           audio: this.audioUrl ? { url: this.audioUrl, duration_ms: capture.durationMs || null } : null,
         }, this.t.bind(this))
+        if (!this.analysisView?.hasContent) {
+          this.showError(this.t('dashboard.ai_recite.error_title'), this.t('memorisation.amd.analyseFailed'))
+          return
+        }
         this.stage = 'result'
         this.$emit('saved', data?.ai_attempt || null)
-      } catch {
-        this.showError(this.t('dashboard.ai_recite.error_title'), this.t('dashboard.ai_recite.network_error'))
+      } catch (error) {
+        if (!this.isCurrentAnalysis(requestId)) return
+        this.showError(this.t('dashboard.ai_recite.error_title'), this.assessmentFailureCopy(error))
       }
     },
     showError(title, desc) {
@@ -692,6 +745,10 @@ export default {
       try {
         const payload = await learningApi.getAiReciteAttemptAnalysis(attemptId)
         this.analysisView = buildSessionAnalysisView(payload, this.t.bind(this))
+        if (!this.analysisView?.hasContent) {
+          this.showError(this.t('dashboard.ai_recite.error_title'), this.t('memorisation.amd.analyseFailed'))
+          return
+        }
         this.savedAttemptId = Number(attemptId)
         this.audioUrl = payload?.audio?.url || ''
         this.surah = Number(payload?.ai_attempt?.surah_number || payload?.assessment?.surah_number || this.surah)
@@ -787,6 +844,7 @@ export default {
       document.body.classList.toggle('dash-ai-recite-open', open)
     },
     teardown() {
+      this.analysisRequestId += 1
       this.pauseAudio()
       this.recorder?.dispose?.()
       this.recorder = null

@@ -1,6 +1,6 @@
 html.ask-mutqin-open,
 body.ask-mutqin-open {
-  overflow: hidden;
+  overflow: hidden !important;
 }
 
 html.ask-mutqin-open .session-progress-rail,
@@ -13,7 +13,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 .ask-mutqin-overlay {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 12050 !important;
+  z-index: 13050 !important;
   box-sizing: border-box;
   display: grid !important;
   place-items: center;
@@ -22,13 +22,17 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden !important;
-  overscroll-behavior: contain;
-  padding:
-    max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))
-    max(0.75rem, env(safe-area-inset-right, 0px))
-    max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
-    max(0.75rem, env(safe-area-inset-left, 0px));
+  overscroll-behavior: none;
+  pointer-events: auto !important;
   background: color-mix(in srgb, #2a2118 46%, transparent);
+}
+
+.ask-mutqin-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   backdrop-filter: blur(10px);
 }
 
@@ -983,15 +987,21 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
 /* Beat global modal resets that zero overlay inset and stretch the dialog. */
 html body .ask-mutqin-overlay.modal-overlay.mutqin-modal-overlay {
   box-sizing: border-box !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 13050 !important;
   display: grid !important;
   place-items: center !important;
   align-content: center !important;
   justify-items: center !important;
   align-items: center !important;
   justify-content: center !important;
+  width: 100% !important;
   height: 100dvh !important;
   max-height: 100dvh !important;
+  margin: 0 !important;
   overflow: hidden !important;
+  pointer-events: auto !important;
   padding-block: max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem)) max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem)) !important;
   padding-inline: max(0.85rem, env(safe-area-inset-left, 0px)) max(0.85rem, env(safe-area-inset-right, 0px)) !important;
 }
@@ -999,8 +1009,8 @@ html body .ask-mutqin-overlay.modal-overlay.mutqin-modal-overlay {
 html body .ask-mutqin-overlay .ask-mutqin-dialog.mutqin-modal-dialog,
 html body .ask-mutqin-overlay .ask-mutqin-dialog.modal-dialog-centered {
   box-sizing: border-box !important;
-  width: min(68rem, calc(100vw - 1rem)) !important;
-  max-width: min(68rem, calc(100vw - 1rem)) !important;
+  width: min(68rem, 100%) !important;
+  max-width: min(68rem, 100%) !important;
   height: auto !important;
   max-height: calc(100dvh - 1.5rem) !important;
   min-height: 0 !important;
@@ -1163,8 +1173,8 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
 /* Give the voice-search dialog more room on desktop without changing mobile sizing. */
 @media (min-width: 901px) {
   html body .ask-mutqin-overlay .ask-mutqin-dialog.mutqin-modal-dialog {
-    width: min(96rem, calc(100vw - 2rem)) !important;
-    max-width: min(96rem, calc(100vw - 2rem)) !important;
+    width: min(96rem, 100%) !important;
+    max-width: min(96rem, 100%) !important;
   }
 }
 
@@ -1183,5 +1193,70 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   html body .ask-mutqin-overlay .ask-mutqin-ayah__stage,
   html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
     min-height: clamp(14rem, 32vh, 20rem) !important;
+  }
+}
+
+/*
+ * Desktop and tablet: lock the voice-search sheet to the viewport.
+ * The tools sidebar stacks at 12500, so the overlay must sit above it.
+ * Absolute centering ignores sidebar, navbar, scroll, and Bootstrap's
+ * dialog min-height, which otherwise drops the card into the lower half.
+ */
+@media (min-width: 768px) {
+  html body .ask-mutqin-overlay.modal-overlay.mutqin-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    z-index: 13050 !important;
+    display: block !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    pointer-events: auto !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-dialog.mutqin-modal-dialog,
+  html body .ask-mutqin-overlay .ask-mutqin-dialog.modal-dialog-centered {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+    width: min(960px, calc(100vw - 2rem)) !important;
+    max-width: min(960px, calc(100vw - 2rem)) !important;
+    height: fit-content !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 2rem) !important;
+    margin: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: auto !important;
+    justify-self: auto !important;
+    animation: none !important;
+    pointer-events: none !important;
+    z-index: 1 !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-modal.mutqin-modal-surface {
+    width: min(100%, 960px) !important;
+    max-width: min(100%, 960px) !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    flex: 0 0 auto !important;
+    max-height: calc(100dvh - 2rem) !important;
+    pointer-events: auto !important;
+    transform: none !important;
+    animation: none !important;
   }
 }

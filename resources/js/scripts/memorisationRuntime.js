@@ -549,7 +549,8 @@ export function createTranscriptionAudioBridge(stream = null) {
   const source = audioContext.createMediaStreamSource(stream)
   const processor = createProcessor(SPEECHMATICS_AUDIO_BUFFER_SIZE, 1, 1)
   const sink = audioContext.createGain()
-  sink.gain.value = 0
+  // A zero gain lets browsers drop the ScriptProcessor and send Speechmatics silence.
+  sink.gain.value = 0.00001
   const pendingBuffers = []
   let sampleCount = 0
   let sumSquares = 0
@@ -582,19 +583,29 @@ export function createTranscriptionAudioBridge(stream = null) {
   processor.connect(sink)
   sink.connect(audioContext.destination)
 
-  const ensureRunning = async () => {
-    if (audioContext.state === 'closed') return false
-    if (audioContext.state === 'suspended') {
-      try {
-        await audioContext.resume()
-      } catch (_) {
-        return false
-      }
+  let resumeInFlight = null
+  const ensureRunning = () => {
+    if (audioContext.state === 'closed') return Promise.resolve(false)
+    if (audioContext.state === 'running') return Promise.resolve(true)
+    if (!resumeInFlight) {
+      const resume = audioContext.resume().then(
+        () => audioContext.state === 'running',
+        () => false,
+      )
+      resumeInFlight = resume
+      resume.finally(() => {
+        if (resumeInFlight === resume) resumeInFlight = null
+      })
     }
-    return audioContext.state === 'running'
+    // Never overlap resume(), and never let a stuck resume freeze the recorder.
+    return Promise.race([
+      resumeInFlight,
+      new Promise((resolve) => {
+        window.setTimeout(() => resolve(audioContext.state === 'running'), 1200)
+      }),
+    ])
   }
 
-  // Kick resume immediately (user gesture from getUserMedia/start button).
   void ensureRunning()
 
   return {
@@ -613,11 +624,11 @@ export function createTranscriptionAudioBridge(stream = null) {
         ? 20 * Math.log10(speechLevel / noiseFloor)
         : null
       return {
-        rms: sampleCount ? Math.sqrt(sumSquares / sampleCount) : 0,
-        peak,
-        clipping_ratio: sampleCount ? clippedSamples / sampleCount : 0,
-        speech_ratio: frameCount ? activeFrames / frameCount : 0,
-        snr_db: Number.isFinite(snrDb) ? snrDb : null,
+        rms: sampleCount ? Math.min(1, Math.sqrt(sumSquares / sampleCount)) : 0,
+        peak: Math.min(1, Math.max(0, peak)),
+        clipping_ratio: sampleCount ? Math.min(1, clippedSamples / sampleCount) : 0,
+        speech_ratio: frameCount ? Math.min(1, activeFrames / frameCount) : 0,
+        snr_db: Number.isFinite(snrDb) ? Math.max(-100, Math.min(100, snrDb)) : null,
         complete: sampleCount > 0,
         broken: sampleCount === 0,
       }

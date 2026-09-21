@@ -68,6 +68,44 @@ assert.equal(liveSkipped.wordStatuses[2].highlight, 'neutral')
 assert.equal(liveSkipped.wordStatuses[3].recognisedIndex, 2)
 assert.equal(align(words(['الحمد', 'لله', 'العالمين'])).wordStatuses[2].type, 'DELETION')
 
+const returnedAfterNextAyah = buildRealtimePreviewAlignment(
+  'الحمد لله رب العالمين الرحمن الرحيم مالك يوم الدين',
+  [
+    ...['الحمد', 'لله', 'رب', 'العالمين'].map((word, index) => ({ word, confidence: 0.95, start: index * 0.3, end: index * 0.3 + 0.2 })),
+    ...['مالك', 'يوم', 'الدين'].map((word, index) => ({ word, confidence: 0.95, start: 2 + index * 0.3, end: 2.2 + index * 0.3 })),
+    ...['الرحمن', 'الرحيم', 'مالك', 'يوم', 'الدين'].map((word, index) => ({ word, confidence: 0.95, start: 4 + index * 0.3, end: 4.2 + index * 0.3 })),
+  ],
+  {
+    lifecycle: 'live',
+    strictProgression: true,
+    lookahead: 0,
+    exactSkipLookahead: 3,
+    partialAdvances: true,
+    advanceOnIncorrect: false,
+    allowArticleMatch: true,
+  },
+)
+assert.deepEqual(
+  Array.from(returnedAfterNextAyah.wordStatuses, word => word.status),
+  ['correct', 'correct', 'correct', 'correct', 'correct', 'correct', 'correct', 'correct', 'correct'],
+  'going back to correct an ayah must not lock onto the following ayah',
+)
+const genuineSkip = buildRealtimePreviewAlignment(
+  'الحمد لله رب العالمين الرحمن الرحيم مالك يوم الدين',
+  ['الحمد', 'لله', 'رب', 'العالمين', 'مالك', 'يوم', 'الدين'].map((word, index) => ({
+    word, confidence: 0.95, start: index * 0.3, end: index * 0.3 + 0.2,
+  })),
+  {
+    lifecycle: 'live',
+    strictProgression: true,
+    lookahead: 0,
+    exactSkipLookahead: 3,
+    advanceOnIncorrect: false,
+  },
+)
+assert.equal(genuineSkip.wordStatuses[4].status, 'pending')
+assert.equal(genuineSkip.wordStatuses[6].status, 'correct')
+
 const startsAtSecond = align(words(['لله', 'رب', 'العالمين']))
 assert.deepEqual(types(startsAtSecond), ['DELETION', 'MATCH', 'MATCH', 'MATCH'])
 assert.deepEqual(Array.from(startsAtSecond.wordStatuses, word => word.recognisedIndex), [null, 0, 1, 2])
@@ -685,7 +723,8 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
   assert.equal(fastUpdate.message, 'SetRecognitionConfig')
   assert.equal(fastUpdate.transcription_config.max_delay, 0.7)
   assert.equal(fastUpdate.transcription_config.max_delay_mode, 'flexible')
-  assert.ok(fastUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger <= 0.25)
+  assert.ok(fastUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger >= 0.45)
+  assert.ok(fastUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger <= 0.6)
   assert.ok(
     fastUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger
       < balancedDelays.endOfUtteranceSeconds,
@@ -730,6 +769,8 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
   assert.match(ask, /Math\.max\(delays\.endOfUtteranceSeconds, 1\.8\)/)
   assert.match(dashboard, /evaluateSpeechmaticsAudioGate/)
   assert.match(dashboard, /createMemorisationAssessment/)
+  assert.match(dashboard, /analysisRequestId/)
+  assert.match(dashboard, /isCurrentAnalysis/)
   const gateBeforeSave = dashboard.indexOf('evaluateSpeechmaticsAudioGate')
   const saveCall = dashboard.indexOf('createMemorisationAssessment')
   assert.ok(gateBeforeSave >= 0 && gateBeforeSave < saveCall)
@@ -777,13 +818,20 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
     speech_ratio: 0.5,
   }).reliable, true)
   const blocked = selectPrimaryReciterWords(
-    speechmaticsWords(['الحمد', 'لله', 'رب', 'العالمين']),
+    speechmaticsWords(['الحمد']),
     'الحمد لله رب العالمين',
     { audioQualityMetrics: { snr_db: 2.5 } },
   )
   assert.equal(blocked.reliable, false)
   assert.equal(blocked.status, 'heavy_noise')
   assert.equal(blocked.words.length, 0)
+  const kept = selectPrimaryReciterWords(
+    speechmaticsWords(['الحمد', 'لله', 'رب', 'العالمين']),
+    'الحمد لله رب العالمين',
+    { audioQualityMetrics: { snr_db: 2.5, rms: 0.004, peak: 0.02, speech_ratio: 0.04 } },
+  )
+  assert.equal(kept.reliable, true)
+  assert.equal(kept.words.length, 4)
   const quiet = selectPrimaryReciterWords(
     speechmaticsWords(['الحمد', 'لله', 'رب', 'العالمين']),
     'الحمد لله رب العالمين',

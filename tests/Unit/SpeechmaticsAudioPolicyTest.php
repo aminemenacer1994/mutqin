@@ -76,6 +76,16 @@ class SpeechmaticsAudioPolicyTest extends TestCase
         ];
     }
 
+    public function test_soft_acoustic_flags_do_not_discard_a_real_transcript(): void
+    {
+        $result = $this->policy->evaluate($this->payload(
+            $this->words('S1', ['الحمد', 'لله', 'رب', 'العالمين']),
+            ['snr_db' => 2.5, 'rms' => 0.004, 'peak' => 0.02, 'speech_ratio' => 0.04]
+        ));
+        $this->assertTrue($result['reliable']);
+        $this->assertCount(4, $result['words']);
+    }
+
     public function test_normal_background_noise_does_not_fail_valid_recitation(): void
     {
         $result = $this->policy->evaluate($this->payload(

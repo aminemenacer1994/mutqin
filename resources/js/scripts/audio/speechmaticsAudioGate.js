@@ -55,3 +55,22 @@ export function evaluateSpeechmaticsAudioGate(metrics = null, explicitStatus = '
 
   return { reliable: true, reason: null, status: 'clear' }
 }
+
+const SOFT_AUDIO_GATE_REASONS = new Set([
+  'heavy_noise',
+  'very_low_volume',
+  'insufficient_usable_speech',
+])
+
+/**
+ * Soft acoustic flags (noise suppression, quiet mics, tajwīd pauses) must not
+ * discard a transcript Speechmatics or the browser already recognised.
+ * Broken or clipped audio still blocks assessment.
+ */
+export function audioGateBlocksTranscript(gate, wordCount = 0) {
+  if (!gate || gate.reliable) return false
+  if (SOFT_AUDIO_GATE_REASONS.has(String(gate.reason || gate.status || '')) && Number(wordCount) >= 2) {
+    return false
+  }
+  return true
+}

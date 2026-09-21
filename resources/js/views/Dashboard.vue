@@ -70,7 +70,7 @@
                 <p v-else-if="primaryContinueAction.range" class="dash-continue-card__learning">
                   {{ primaryContinueAction.range }}
                 </p>
-                <dl v-if="heroContextItems.length" class="dash-continue-card__context" aria-label="Hifz progress">
+                <dl v-if="heroContextItems.length" class="dash-continue-card__context" :aria-label="t('dashboard.hifz_progress_aria')">
                   <div v-for="item in heroContextItems" :key="item.key" class="dash-continue-card__context-item">
                     <dt>
                       <i :class="item.icon" aria-hidden="true"></i>

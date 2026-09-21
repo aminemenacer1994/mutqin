@@ -21,7 +21,17 @@ class MemorisationDetectionController extends Controller
         StoreMemorisationAssessmentRequest $request,
         RecitationAssessmentService $service,
     ): JsonResponse {
-        $result = $service->create($request->user(), $request->validated());
+        try {
+            $result = $service->create($request->user(), $request->validated());
+        } catch (\Throwable $exception) {
+            MutqinLog::error('memorisation.assessment.failed', [
+                'exception' => $exception::class,
+            ]);
+
+            return response()->json([
+                'message' => 'We could not assess this attempt.',
+            ], 500);
+        }
         DashboardService::forgetForUser($request->user());
 
         MutqinLog::fromRequest($request, 'memorisation.assessment.submitted', [

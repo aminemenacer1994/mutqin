@@ -15,7 +15,7 @@ import {
   resolveSelfCorrectionPauseSeconds,
   recitationAccuracyBand,
 } from './recitationThresholds.js'
-import { evaluateSpeechmaticsAudioGate } from '../audio/speechmaticsAudioGate.js'
+import { audioGateBlocksTranscript, evaluateSpeechmaticsAudioGate } from '../audio/speechmaticsAudioGate.js'
 
 export {
   DEFAULT_RECITATION_CONFIDENCE_THRESHOLD,
@@ -528,6 +528,13 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       { allowArticleMatch }
     )
     if (exactAheadIndex >= 0) {
+      const returnHeardIndex = findReturnToCurrentTarget(heardWords, heardIndex, targetWords, cursor)
+      if (returnHeardIndex > heardIndex) {
+        // They touched a later ayah, then came back to this one. Do not lock
+        // the cursor onto the following ayah or the rest of the session goes red.
+        heardIndex = returnHeardIndex - 1
+        continue
+      }
       // Exact ahead match = skipped words. Always paint omissions + the matched word.
       // Never attach the ahead hear as a false "incorrect" on the skipped slot.
       for (let skipIndex = cursor; skipIndex < exactAheadIndex; skipIndex += 1) {
@@ -634,9 +641,11 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
 export function selectPrimaryReciterWords(recognitionWords = [], targetText = '', options = {}) {
   const metrics = options?.audioQualityMetrics || options?.audio_quality_metrics || null
   const explicit = options?.audioQualityStatus || options?.audio_quality_status || ''
+  const words = Array.isArray(recognitionWords) ? recognitionWords : []
   if (metrics || explicit) {
     const gate = evaluateSpeechmaticsAudioGate(metrics, explicit)
-    if (!gate.reliable) {
+    const recognisedCount = words.filter((word) => String(word?.word || word?.text || '').trim()).length
+    if (audioGateBlocksTranscript(gate, recognisedCount)) {
       return {
         reliable: false,
         status: gate.status,
@@ -647,7 +656,6 @@ export function selectPrimaryReciterWords(recognitionWords = [], targetText = ''
       }
     }
   }
-  const words = Array.isArray(recognitionWords) ? recognitionWords : []
   const labelled = words.filter(word => String(word?.speaker || '').trim() && String(word?.speaker).toUpperCase() !== 'UU')
   const speakers = new Map()
   for (const word of labelled) {
@@ -2489,16 +2497,31 @@ function findSameSlotRecovery({
     if (retryClassified.status === 'correct' || retryClassified.status === 'partial') {
       return { classified: retryClassified, heardIndex: retry }
     }
-    if (cursor + 1 < targetWords.length) {
-      const nextSimilarity = getRecitationWordSimilarity(
-        targetWords[cursor + 1],
-        retryHeard.word,
-        { allowArticleMatch },
-      )
-      if (nextSimilarity >= correctSimilarity) return null
-    }
   }
   return null
+}
+
+/**
+ * A later ayah was heard before the learner finished the current one.
+ * If they then say this ayah's opening again, that is a self-correction,
+ * not a skip into the following ayah.
+ */
+function findReturnToCurrentTarget(heardWords = [], fromHeardIndex = 0, targetWords = [], cursor = 0) {
+  const first = targetWords[cursor]
+  const second = targetWords[cursor + 1] || ''
+  if (!first) return -1
+  const last = Math.min(heardWords.length - (second ? 2 : 1), fromHeardIndex + 18)
+  for (let index = fromHeardIndex + 1; index <= last; index += 1) {
+    const heard = heardWords[index]
+    if (!heard?.word || isLowConfidenceRecognitionWord(heard)) continue
+    if (getRecitationWordSimilarity(first, heard.word) < RECITATION_CORRECT_SIMILARITY) continue
+    if (!second) return index
+    const next = heardWords[index + 1]
+    if (next?.word && getRecitationWordSimilarity(second, next.word) >= RECITATION_CORRECT_SIMILARITY) {
+      return index
+    }
+  }
+  return -1
 }
 
 export function shouldSkipLearnerStutterRepeat(heardWords = [], heardIndex = 0, targetWords = [], cursor = 0) {
