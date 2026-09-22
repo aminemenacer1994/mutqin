@@ -26,9 +26,15 @@ export function isPaintedLiveStatus(status = '') {
     || value === 'uncertain'
 }
 
-export function hasLaterSettledLiveStatus(statuses = [], fromIndex = 0) {
+/** Soft-continue / keepSettledAhead may bridge this many pending slots — not a later ayah. */
+export const LIVE_SKIP_HOLE_MAX_GAP = 2
+
+export function hasLaterSettledLiveStatus(statuses = [], fromIndex = 0, maxGap = LIVE_SKIP_HOLE_MAX_GAP) {
   const words = Array.isArray(statuses) ? statuses : []
-  for (let index = Math.max(0, Number(fromIndex) || 0) + 1; index < words.length; index += 1) {
+  const start = Math.max(0, Number(fromIndex) || 0) + 1
+  const window = Number.isFinite(Number(maxGap)) ? Math.max(0, Number(maxGap)) : LIVE_SKIP_HOLE_MAX_GAP
+  const end = Math.min(words.length, start + window)
+  for (let index = start; index < end; index += 1) {
     if (isSettledLiveStatus(words[index]?.status)) return true
   }
   return false
@@ -202,10 +208,38 @@ export function clampStatusesToConfirmedCursor(statuses = [], confirmedWordIndex
   const list = Array.isArray(statuses) ? statuses : []
   const cursor = Math.max(0, Number(confirmedWordIndex) || 0)
   const keepSettledAhead = options.keepSettledAhead === true
+  const maxGap = Number.isFinite(Number(options.maxKeepAheadGap))
+    ? Math.max(0, Number(options.maxKeepAheadGap))
+    : LIVE_SKIP_HOLE_MAX_GAP
+  let lastConnected = cursor
+  if (keepSettledAhead) {
+    let gap = 0
+    for (let index = cursor + 1; index < list.length; index += 1) {
+      const word = list[index]
+      const settled = isSettledLiveStatus(word?.status)
+        && word?.interim !== true
+        && word?.hypothesis !== true
+      if (settled) {
+        const next = list[index + 1]
+        const nextSettled = isSettledLiveStatus(next?.status)
+          && next?.interim !== true
+          && next?.hypothesis !== true
+        // A singleton green after a 2-slot hole is the other end of the ayah,
+        // not an ASR skip. Real skip-holes resume with a short confirmed phrase.
+        if (gap > 1 && !nextSettled && lastConnected === cursor) break
+        lastConnected = index
+        gap = 0
+        continue
+      }
+      gap += 1
+      if (gap > maxGap) break
+    }
+  }
   return list.map((word, index) => {
     if (index <= cursor) return word || { status: 'pending' }
     if (
       keepSettledAhead
+      && index <= lastConnected
       && isSettledLiveStatus(word?.status)
       && word?.interim !== true
       && word?.hypothesis !== true

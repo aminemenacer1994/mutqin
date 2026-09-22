@@ -5,7 +5,11 @@ import {
   revokeObjectUrl,
   stopMediaRecorderAndCollectBlob,
 } from '../audio/recordingPlayback'
-import { probeMicrophonePermission, validateRecordingEnvironment } from '../audio/recordingResilience'
+import {
+  getRecitationMicrophoneConstraints,
+  probeMicrophonePermission,
+  validateRecordingEnvironment,
+} from '../audio/recordingResilience'
 import {
   createSpeechmaticsRealtimeProvider,
   createTranscriptionAudioBridge,
@@ -237,14 +241,7 @@ export function createDashboardAiReciteRecorder(options = {}) {
       paceObserver = createRecitationPaceObserver()
 
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-            channelCount: 1,
-          },
-        })
+        stream = await navigator.mediaDevices.getUserMedia(getRecitationMicrophoneConstraints())
       } catch {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       }
@@ -276,6 +273,7 @@ export function createDashboardAiReciteRecorder(options = {}) {
         provider = createSpeechmaticsRealtimeProvider({
           getAccessToken: () => fetchTranscriptionAccessToken(),
           getSampleRate: () => Number(bridge?.sampleRate || 48000),
+          amdLive: true,
           handshakeTimeoutMs: 4500,
           maxDelaySeconds: delays.maxDelaySeconds,
           endOfUtteranceSeconds: delays.endOfUtteranceSeconds,

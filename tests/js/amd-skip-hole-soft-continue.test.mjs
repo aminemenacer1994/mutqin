@@ -29,6 +29,24 @@ import {
 }
 
 {
+  const bothEnds = [
+    { status: 'correct' },
+    { status: 'pending' },
+    { status: 'pending' },
+    { status: 'pending' },
+    { status: 'pending' },
+    { status: 'correct' },
+    { status: 'correct' },
+  ]
+  const confirmed = resolveConfirmedWordIndex(bothEnds)
+  assert.ok(confirmed < 5, 'a far-ahead green must not pull the cursor to the other end')
+  const clamped = clampStatusesToConfirmedCursor(bothEnds, 0, { keepSettledAhead: true })
+  assert.equal(clamped[0].status, 'correct')
+  assert.equal(clamped[5].status, 'pending', 'isolated end greens must not stay painted')
+  assert.equal(clamped[6].status, 'pending')
+}
+
+{
   const merged = mergeLiveRecitationStatuses(
     [
       { status: 'correct' },

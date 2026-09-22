@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict'
 import {
   RECITATION_FAILURE_KIND,
+  RECITATION_MICROPHONE_CONSTRAINTS,
   RECITATION_PROCESSING_STAGE,
   canContinuePracticeWithoutAi,
   classifyRecitationFailure,
   createRecitationAttemptId,
+  getRecitationMicrophoneConstraints,
   isStaleRecitationAttempt,
   resolveRecitationFailureMessage,
   userFacingTranscriptionFailure,
@@ -139,6 +141,16 @@ import {
 {
   assert.equal(RECITATION_PROCESSING_STAGE.RECORDING, 'recording')
   assert.equal(RECITATION_PROCESSING_STAGE.ASSESSING, 'assessing')
+}
+
+{
+  assert.equal(RECITATION_MICROPHONE_CONSTRAINTS.echoCancellation, false)
+  assert.equal(RECITATION_MICROPHONE_CONSTRAINTS.noiseSuppression, false)
+  assert.equal(RECITATION_MICROPHONE_CONSTRAINTS.autoGainControl, true)
+  assert.equal(RECITATION_MICROPHONE_CONSTRAINTS.channelCount, 1)
+  const constraints = getRecitationMicrophoneConstraints()
+  assert.deepEqual(constraints.audio.echoCancellation, false)
+  assert.deepEqual(constraints.audio.noiseSuppression, false)
 }
 
 console.log('Recording resilience tests passed')

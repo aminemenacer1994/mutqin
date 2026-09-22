@@ -115,6 +115,25 @@ export function isStaleRecitationAttempt(activeId, responseId) {
 }
 
 /**
+ * Mic constraints for Qur'an recitation. Browser noise suppression and echo
+ * cancellation treat tajweed (ghunnah, madd, qalqalah) as noise and strip it,
+ * which makes live colouring jump and Speechmatics miss words.
+ * Playback is paused before record, so AEC is not needed.
+ */
+export const RECITATION_MICROPHONE_CONSTRAINTS = Object.freeze({
+  echoCancellation: false,
+  noiseSuppression: false,
+  autoGainControl: true,
+  channelCount: 1,
+})
+
+export function getRecitationMicrophoneConstraints() {
+  return {
+    audio: { ...RECITATION_MICROPHONE_CONSTRAINTS },
+  }
+}
+
+/**
  * @returns {{ supported: boolean, reason?: string }}
  */
 export function validateRecordingEnvironment() {

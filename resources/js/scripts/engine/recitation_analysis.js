@@ -530,7 +530,18 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       skipWindow,
       { allowArticleMatch }
     )
-    if (exactAheadIndex >= 0) {
+    if (
+      exactAheadIndex >= 0
+      && shouldApplyExactSkipAhead({
+        cursor,
+        exactAheadIndex,
+        heardWord,
+        targetWords,
+        heardWords,
+        heardIndex,
+        allowArticleMatch,
+      })
+    ) {
       const returnHeardIndex = findReturnToCurrentTarget(heardWords, heardIndex, targetWords, cursor)
       if (returnHeardIndex > heardIndex) {
         // They touched a later ayah, then came back to this one. Do not lock
@@ -1957,6 +1968,49 @@ function projectRecognitionSegments(segments = {}, interimSegment = null) {
       if (leftStart === null && rightStart !== null) return 1
       return Number(left.sequence || 0) - Number(right.sequence || 0)
     })
+}
+
+function countExactTargetOccurrences(words = [], word = '', options = {}) {
+  if (!word) return 0
+  let count = 0
+  for (let index = 0; index < words.length; index += 1) {
+    if (findExactWordIndexWithinWindow(words, word, index, 1, options) === index) count += 1
+  }
+  return count
+}
+
+/**
+ * Exact skip-ahead is for a real omitted phrase, not a lone common token.
+ * Hearing الرحيم / الله at the start must not paint the far end of the ayah.
+ */
+function shouldApplyExactSkipAhead({
+  cursor = 0,
+  exactAheadIndex = -1,
+  heardWord = {},
+  targetWords = [],
+  heardWords = [],
+  heardIndex = 0,
+  allowArticleMatch = true,
+} = {}) {
+  if (exactAheadIndex < 0) return false
+  const skipGap = exactAheadIndex - Math.max(0, Number(cursor) || 0)
+  if (skipGap <= 1) return true
+  const matchOptions = { allowArticleMatch }
+  const nextHeard = heardWords[heardIndex + 1]
+  const nextConfirms = !!nextHeard?.word
+    && exactAheadIndex + 1 < targetWords.length
+    && findExactWordIndexWithinWindow(
+      targetWords,
+      nextHeard.word,
+      exactAheadIndex + 1,
+      1,
+      matchOptions,
+    ) === exactAheadIndex + 1
+  // A lone first token jumping 2+ words paints both ends (الرحيم at ayah start).
+  // A two-word phrase (رب العالمين) is a real mid-ayah start.
+  if ((Number(cursor) || 0) === 0 && (Number(heardIndex) || 0) === 0) return nextConfirms
+  if (countExactTargetOccurrences(targetWords, heardWord?.word, matchOptions) > 1) return nextConfirms
+  return true
 }
 
 function findExactWordIndexWithinWindow(words = [], word = '', fromIndex = 0, lookahead = 5, options = {}) {

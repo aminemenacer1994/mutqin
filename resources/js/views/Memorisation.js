@@ -249,6 +249,7 @@ import {
   canContinuePracticeWithoutAi,
   classifyRecitationFailure,
   createRecitationAttemptId,
+  getRecitationMicrophoneConstraints,
   probeMicrophonePermission,
   resolveMicDeniedGuidance,
   resolveRecitationFailureMessage,
@@ -26626,14 +26627,7 @@ export default {
       try {
         let stream
         try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-              channelCount: 1
-            }
-          })
+          stream = await navigator.mediaDevices.getUserMedia(getRecitationMicrophoneConstraints())
         } catch (constraintError) {
           console.warn('getUserMedia with constraints failed, retrying basic audio', constraintError)
           stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -28814,7 +28808,7 @@ export default {
         const provider = createSpeechmaticsRealtimeProvider({
           getAccessToken: () => this.fetchTranscriptionAccessToken(),
           getSampleRate: () => Number(bridge.sampleRate || 0),
-          amdLive: liveRecitation && this.amdOpen,
+          amdLive: liveRecitation,
           // Allow slower token/handshake without abandoning a healthy Speechmatics session.
           handshakeTimeoutMs: liveRecitation ? 4500 : 3500,
           maxDelaySeconds: speechmaticsDelays.maxDelaySeconds,
@@ -30565,14 +30559,7 @@ export default {
       try {
         let stream
         try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-              channelCount: 1
-            }
-          })
+          stream = await navigator.mediaDevices.getUserMedia(getRecitationMicrophoneConstraints())
         } catch (constraintError) {
           console.warn('getUserMedia with constraints failed, retrying basic audio', constraintError)
           stream = await navigator.mediaDevices.getUserMedia({ audio: true })

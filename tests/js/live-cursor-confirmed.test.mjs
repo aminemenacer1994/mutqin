@@ -283,7 +283,7 @@ const {
   assert.match(js, /maxWordsPerSecond:\s*livePace\.maxWordsPerSecond/)
   assert.match(js, /adaptiveLivePace/)
   assert.match(js, /previousConfirmed/)
-  assert.match(js, /spokenWordCount:\s*committedWords\.length/)
+  assert.match(js, /spokenWordCount:\s*spokenEvidenceCount/)
   assert.match(js, /liveAlignmentOptions\.lookahead\s*=\s*0/)
   assert.match(js, /livePreviewAlignmentOptions\.lookahead\s*=\s*0/)
   // Red must not wait for an extra settle observation after the mistake is known.
