@@ -13,7 +13,7 @@ import {
 } from '../../utils/mutqinStorageKeys.js'
 import {
   applyQuranFontCssVariable,
-  normaliseQuranFontId,
+  QURAN_FONT_DEFAULT,
 } from '../quran/quranFonts.js'
 import { DEFAULT_TAJWEED_ENABLED } from '../session/sessionDefaults.js'
 
@@ -277,7 +277,7 @@ export function normaliseWorkspacePreferences(raw) {
     : DEFAULT_WORKSPACE_PREFERENCES.chainingMethod
 
   return {
-    quranFont: normaliseQuranFontId(src.quranFont),
+    quranFont: QURAN_FONT_DEFAULT,
     tajweedEnabled: toBool(src.tajweedEnabled, DEFAULT_WORKSPACE_PREFERENCES.tajweedEnabled),
     showTranslation: toBool(src.showTranslation, DEFAULT_WORKSPACE_PREFERENCES.showTranslation),
     showTransliteration: toBool(src.showTransliteration, DEFAULT_WORKSPACE_PREFERENCES.showTransliteration),
@@ -426,15 +426,24 @@ function patchModeAudioDefaults(reciterId, speed, userId) {
  */
 export function applyWorkspacePreferenceOverlay(state, userId = null) {
   const overlay = readWorkspacePreferences(userId)
-  if (!overlay.updatedAt) return state
+  if (!overlay.updatedAt) {
+    return state && typeof state === 'object'
+      ? { ...state, quranFont: QURAN_FONT_DEFAULT }
+      : state
+  }
   const applied = Number(state?.prefsAppliedAt || 0)
-  if (overlay.updatedAt <= applied) return state
+  if (overlay.updatedAt <= applied) {
+    return state && typeof state === 'object'
+      ? { ...state, quranFont: QURAN_FONT_DEFAULT }
+      : state
+  }
 
   const next = state && typeof state === 'object' ? { ...state } : {}
   for (const key of WORKSPACE_PREF_KEYS) {
     if (key === 'defaultReciterId' || key === 'defaultSpeed' || key === 'reduceMotion') continue
     next[key] = overlay[key]
   }
+  next.quranFont = QURAN_FONT_DEFAULT
   next.prefsAppliedAt = overlay.updatedAt
   return next
 }

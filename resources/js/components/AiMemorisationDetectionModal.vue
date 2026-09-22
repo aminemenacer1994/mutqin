@@ -33,8 +33,9 @@
                 <div
                   class="amd-mic-status amd-mic-status--header amd-mic-status--compact"
                   :class="{
-                    'amd-mic-status--recording': isListening,
-                    'amd-mic-status--starting': isStarting,
+                    'amd-mic-status--recording': isListening && !sttRecovering,
+                    'amd-mic-status--starting': isStarting && !sttRecovering,
+                    'amd-mic-status--reconnecting': sttRecovering,
                   }"
                   :data-status="micStatusKey"
                   role="status"
@@ -307,6 +308,7 @@ export default {
     micGuidance: { type: String, default: '' },
     liveHint: { type: String, default: '' },
     recordingActiveLabel: { type: String, default: 'Recording' },
+    sttRecovering: { type: Boolean, default: false },
     ayahHtml: { type: String, default: '' },
     blurActive: { type: Boolean, default: true },
     peeking: { type: Boolean, default: false },

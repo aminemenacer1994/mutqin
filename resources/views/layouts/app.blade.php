@@ -127,7 +127,7 @@
       }
     </style>
     @endif
-    <meta name="mutqin-build" content="v129">
+    <meta name="mutqin-build" content="v131">
     <meta name="mutqin-asset-build" content="{{ config('error_tracking.asset_build', 'v165') }}">
     <meta name="mutqin-release" content="{{ \App\Support\ErrorReporting::release() }}">
     <meta name="mutqin-environment" content="{{ app()->environment() }}">
@@ -8562,7 +8562,7 @@ body.session-analysis-modal-open {
   overflow: visible;
   text-align: right;
   color: #2a2621;
-  font-family: var(--font-ar, "Amiri", "Noto Naskh Arabic", "Amiri Quran", serif);
+  font-family: var(--quran-font, "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Noto Naskh Arabic", serif);
   font-size: 1.42rem;
   line-height: 2.55;
 }
@@ -8706,7 +8706,7 @@ body.session-analysis-modal-open {
 }
     </style>
     @stack('page-scripts')
-<style id="mutqin-ui-lock-v180">
+<style id="mutqin-ui-lock-v181">
   /* Desktop: Recite+FAB stack on container right. Mobile: original in-workspace sticky. */
   html body .app {
     transform: none !important;
@@ -9351,11 +9351,18 @@ body.session-analysis-modal-open {
       order: 3 !important;
     }
 
-    html body .app .main.container,
     html body .app .main > .content,
     html body .app .main .workspace {
       margin-top: 0 !important;
       padding-top: 0 !important;
+    }
+
+    html body .app .main.container {
+      margin-top: 0 !important;
+    }
+
+    html body.memorisation-page .app .main.container {
+      padding-top: clamp(14px, 1.25vw, 22px) !important;
     }
   }
 
@@ -9410,6 +9417,58 @@ body.session-analysis-modal-open {
       font-size: calc(clamp(1.12rem, 4.6vw, 1.48rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
       line-height: 1.42 !important;
     }
+  }
+
+</style>
+<style id="mutqin-quran-ui-isolation-v1">
+  /* Last-wins: Quran faces stay on ayahs; Latin chrome keeps real spaces. */
+  html body .app .session-progress-rail,
+  html body .app .session-progress-rail__title,
+  html body .app .session-progress-rail__meta,
+  html body .app .session-progress-rail__hint,
+  html body .app .session-progress-rail__value,
+  html body .app .session-progress-rail__sep,
+  html body .app .top-card-menu,
+  html body .app .top-card-menu button,
+  html body .app .top-card-menu button span,
+  html body .app .top-card-menu .top-card-menu-label,
+  html body .app .top-card-menu .top-card-menu-link,
+  html body .app .workspace-shell-surah-en {
+    font-family: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif) !important;
+  }
+
+  html body .app .session-progress-rail {
+    z-index: 8 !important;
+  }
+
+  html body .app .workspace:has(.top-card-menu-wrap.is-menu-open) .workspace-shell,
+  html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) {
+    position: relative;
+    z-index: 130 !important;
+    overflow: visible !important;
+  }
+
+  html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .top-card-menu {
+    z-index: 130 !important;
+  }
+
+  /* Qur'anic font picker lives in the ellipsis menu only. */
+  html body .app .top-card-icon-controls .top-card-font-wrap,
+  html body .app .top-card-icon-controls > .font-dropdown.workspace-font-dropdown,
+  html body .app .workspace-shell-head > .top-card-icon-controls .top-card-font-wrap,
+  html body .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 </style>
 </body>

@@ -42,9 +42,18 @@ const html = `<!doctype html>
               <section class="sa-ov__panel">
                 <h3>Words and ayahs</h3>
                 <article class="sa-ov__ayah">
+                  <span class="sa-ov__ayah-label">Your recitation</span>
                   <p class="sa-ov__ayah-ar" lang="ar" dir="rtl">
                     ${words}
                     <span class="sa-ov__ayah-no">255</span>
+                  </p>
+                </article>
+                <article class="sa-ov__ayah sa-ov__ayah--needs-correction sa-ov__ayah--unread">
+                  <span class="sa-ov__ayah-label">Not recited</span>
+                  <span class="sa-ov__ayah-label sa-ov__ayah-label--correct">Correct ayah</span>
+                  <p class="sa-ov__ayah-ar sa-ov__ayah-ar--correct" lang="ar" dir="rtl">
+                    <span class="sa-ov__ayah-text">مَٰلِكِ يَوْمِ ٱلدِّينِ</span>
+                    <span class="sa-ov__ayah-no">4</span>
                   </p>
                 </article>
               </section>
@@ -64,6 +73,8 @@ const metrics = await page.evaluate(() => {
   const panel = document.querySelector('.sa-ov__panel')
   const ayah = document.querySelector('.sa-ov__ayah')
   const text = document.querySelector('.sa-ov__ayah-ar')
+  const label = document.querySelector('.sa-ov__ayah-label')
+  const unread = document.querySelector('.sa-ov__ayah--unread')
   const panelBox = panel.getBoundingClientRect()
   const ayahBox = ayah.getBoundingClientRect()
   const textBox = text.getBoundingClientRect()
@@ -76,6 +87,16 @@ const metrics = await page.evaluate(() => {
     panelRight: panelBox.right,
     textRight: textBox.right,
     lineCount: Math.round(textBox.height / parseFloat(getComputedStyle(text).lineHeight)),
+    labelTransform: label ? getComputedStyle(label).textTransform : '',
+    labelText: label?.textContent || '',
+    unreadLabel: unread?.querySelector('.sa-ov__ayah-label')?.textContent || '',
+    unreadRecitation: Boolean(unread?.querySelector('.sa-ov__ayah-ar--recitation')),
+    unreadCorrect: unread?.querySelector('.sa-ov__ayah-ar--correct')?.textContent || '',
+    unreadFloatingNumberOnly: Boolean(
+      unread
+      && unread.querySelector('.sa-ov__ayah-ar--recitation')
+      && !unread.querySelector('.sa-ov__ayah-ar--recitation .sa-ov__word')
+    ),
   }
 })
 
@@ -86,5 +107,11 @@ assert.ok(metrics.textWidth <= metrics.panelWidth + 1, `ayah text wider than pan
 assert.ok(metrics.textScrollWidth <= metrics.textWidth + 1, `ayah text scrolls sideways: ${JSON.stringify(metrics)}`)
 assert.ok(metrics.textRight <= metrics.panelRight + 1, `ayah text overflows panel right: ${JSON.stringify(metrics)}`)
 assert.ok(metrics.lineCount >= 2, `long ayah should wrap onto multiple lines: ${JSON.stringify(metrics)}`)
+assert.notEqual(metrics.labelTransform, 'uppercase', 'comparison labels must not look like raw keys')
+assert.match(metrics.labelText, /Your recitation/i)
+assert.match(metrics.unreadLabel, /Not recited/i)
+assert.equal(metrics.unreadRecitation, false, 'unread ayahs must not keep an empty Your recitation row')
+assert.equal(metrics.unreadFloatingNumberOnly, false)
+assert.match(metrics.unreadCorrect, /مَٰلِكِ يَوْمِ ٱلدِّينِ/)
 
 console.log('session-analysis-ayah-overflow-layout.mjs: ok', metrics)

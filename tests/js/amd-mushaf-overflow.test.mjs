@@ -111,4 +111,28 @@ assert.match(
   'dashboard metadata stays on one scrolling row',
 )
 
+// Mobile check: last padding lock must not keep the 42dvh shell while chrome grew.
+{
+  assert.doesNotMatch(
+    amdCss,
+    /max-height:\s*min\(42dvh/,
+    'mobile mushaf shell is no longer capped at 42dvh',
+  )
+  assert.match(
+    amdCss,
+    /@media \(max-width:\s*767\.98px\)[\s\S]*?\.amd-mushaf-shell\.amd-mushaf-shell--premium\.amd-mushaf-shell--primary[\s\S]*?max-height:\s*min\(62dvh,\s*560px\)/,
+    'last mobile lock raises the mushaf cap so long ayahs can scroll',
+  )
+  assert.match(
+    amdCss,
+    /@media \(max-width:\s*767\.98px\)[\s\S]*?\.amd-mushaf-shell\.amd-mushaf-shell--premium\.amd-mushaf-shell--primary[\s\S]*?padding:\s*0\.65rem 0\.7rem 0\.5rem/,
+    'last mobile lock keeps tight mushaf padding',
+  )
+  assert.match(
+    amdCss,
+    /@media \(max-width:\s*767\.98px\)[\s\S]*?\.amd-mushaf-ayah\.amd-mushaf-ayah--premium[\s\S]*?padding-block:\s*0\.2rem 0\.35rem/,
+    'last mobile lock keeps tight ayah padding',
+  )
+}
+
 console.log('amd-mushaf-overflow.test.mjs: ok')

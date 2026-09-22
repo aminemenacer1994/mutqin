@@ -517,6 +517,13 @@
   border-color: color-mix(in srgb, #d97706 28%, transparent);
 }
 
+.amd-mic-status--reconnecting {
+  color: #92400e;
+  background: color-mix(in srgb, #f59e0b 16%, #fff);
+  border-color: color-mix(in srgb, #d97706 34%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 12%, transparent);
+}
+
 .amd-mic-status[data-status="need_access"],
 .amd-mic-status[data-status="unsupported"] {
   color: #9a3412;
@@ -537,6 +544,12 @@
 .amd-mic-status--starting .amd-mic-dot {
   background: #d97706;
   animation: amd-mic-pulse 1.6s ease infinite;
+}
+
+.amd-mic-status--reconnecting .amd-mic-dot {
+  display: inline-block !important;
+  background: #d97706;
+  animation: amd-mic-pulse 1s ease infinite;
 }
 
 @keyframes amd-mic-pulse {
@@ -1304,7 +1317,7 @@
   }
 
   .amd-mushaf-shell--premium {
-    padding: 0.6rem 0.3rem;
+    padding: 1rem 0.9rem;
     border-radius: 0.85rem;
   }
 
@@ -2485,11 +2498,11 @@
 
 @media (max-width: 767.98px) {
   .amd-mushaf-shell--premium {
-    padding: 0.6rem 0.3rem !important;
+    padding: 1.1rem 0.95rem !important;
   }
 
   .amd-body--premium {
-    padding-inline: 0.4rem !important;
+    padding-inline: 0.75rem !important;
   }
 }
 
@@ -3418,11 +3431,24 @@
   background: color-mix(in srgb, #ea580c 18%, #171412);
 }
 
+.amd-overlay[data-theme="dark"] .amd-mic-status--reconnecting,
+[data-theme="dark"] .amd-mic-status--reconnecting {
+  color: #fbbf24;
+  background: color-mix(in srgb, #d97706 22%, #171412);
+  border-color: color-mix(in srgb, #fbbf24 36%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, #d97706 16%, transparent);
+}
+
 .amd-overlay[data-theme="dark"] .amd-mic-status[data-status="listening"] .amd-mic-dot,
 .amd-overlay[data-theme="dark"] .amd-mic-status--recording .amd-mic-dot,
 [data-theme="dark"] .amd-mic-status[data-status="listening"] .amd-mic-dot,
 [data-theme="dark"] .amd-mic-status--recording .amd-mic-dot {
   background: #f87171;
+}
+
+.amd-overlay[data-theme="dark"] .amd-mic-status--reconnecting .amd-mic-dot,
+[data-theme="dark"] .amd-mic-status--reconnecting .amd-mic-dot {
+  background: #fbbf24;
 }
 
 .amd-overlay[data-theme="dark"] .amd-live-banner--recording,
@@ -3713,7 +3739,7 @@
     min-height: 0 !important;
     max-height: min(50dvh, 400px) !important;
     margin: 0 !important;
-    padding: 0.75rem 0.65rem !important;
+    padding: 1.2rem 1.05rem 1rem !important;
     border-radius: 0.75rem;
     overflow-x: clip !important;
     overflow-y: auto !important;
@@ -3813,7 +3839,7 @@
 
   .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
     min-height: 0 !important;
-    max-height: min(42dvh, 320px) !important;
+    max-height: min(68dvh, 360px) !important;
   }
 
   .amd-footer--sticky {
@@ -4308,7 +4334,7 @@
 }
 
 .amd-header--premium.amd-header--compact {
-  padding: 0.95rem 1.1rem 0.8rem !important;
+  padding: 1.35rem 1.25rem 1.05rem !important;
   border-bottom: 1px solid color-mix(in srgb, #e7e5e4 88%, transparent);
   background: color-mix(in srgb, #fffdf8 88%, #f3efe6) !important;
 }
@@ -4455,7 +4481,7 @@
   height: auto !important;
   align-items: flex-start !important;
   justify-content: center !important;
-  padding: 1rem 0.9rem !important;
+  padding: 1.35rem 1.25rem !important;
   border-radius: 0.9rem !important;
   border: 1px solid color-mix(in srgb, #e7e5e4 90%, transparent) !important;
   background: #fff !important;
@@ -4554,17 +4580,17 @@
   }
 
   .amd-header--premium.amd-header--compact {
-    padding: 0.8rem 0.85rem 0.7rem !important;
+    padding: 1rem 1rem 0.85rem !important;
   }
 
   .amd-body--premium.amd-body--compact {
-    padding: 0.65rem 0.75rem 0.55rem !important;
-    gap: 0.55rem !important;
+    padding: 0.85rem 0.9rem 0.7rem !important;
+    gap: 0.65rem !important;
   }
 
   .amd-modal--spacious .amd-mushaf-shell--primary,
   .amd-modal--spacious .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
-    padding: 0.8rem 0.7rem !important;
+    padding: 1.15rem 1rem !important;
     border-radius: 0.8rem !important;
   }
 
@@ -4657,7 +4683,7 @@
   width: auto !important;
   max-width: 100% !important;
   margin: 0 !important;
-  padding: 0.28rem !important;
+  padding: 0.45rem 0.55rem !important;
   border-radius: 0.85rem !important;
   background: color-mix(in srgb, #fff 72%, transparent) !important;
   border: 1px solid color-mix(in srgb, #a8a29e 28%, transparent) !important;
@@ -4891,7 +4917,7 @@
 }
 
 .amd-header--premium.amd-header--compact {
-  padding: 0.65rem 0.9rem 0.45rem !important;
+  padding: 1.35rem 1.25rem 1.05rem !important;
 }
 
 /* Dark mode */
@@ -5029,7 +5055,7 @@
   min-width: 0 !important;
   min-height: 0 !important;
   margin: 0 !important;
-  padding: 0.4rem 0.5rem !important;
+  padding: 0.5rem 0.65rem !important;
   border-radius: 0.9rem !important;
   background: color-mix(in srgb, #fff 86%, #f5f0e8) !important;
   border: 1px solid color-mix(in srgb, #a8a29e 22%, transparent) !important;
@@ -5813,13 +5839,13 @@
     white-space: normal !important;
     font-size: 0.7rem !important;
     line-height: 1.45 !important;
-    padding-block: 0.55rem !important;
+    padding-block: 0.2rem !important;
   }
 
   .amd-overlay .amd-body--premium,
   .amd-overlay .amd-body--scroll {
-    padding: 0.45rem 0.55rem 0.4rem !important;
-    gap: 0.45rem !important;
+    padding: 0.5rem 0.65rem 0.4rem !important;
+    gap: 0.4rem !important;
     overflow-x: hidden !important;
   }
 
@@ -5842,10 +5868,11 @@
   }
 
   .amd-overlay .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
-    min-height: min(34dvh, 280px) !important;
-    max-height: min(42dvh, 360px) !important;
-    padding: 0.55rem 0.5rem !important;
+    min-height: 0 !important;
+    max-height: min(62dvh, 560px) !important;
+    padding: 0.7rem 0.75rem 0.55rem !important;
     overflow-x: clip !important;
+    overflow-y: auto !important;
   }
 
   .amd-overlay .amd-mushaf-ayah--premium {
@@ -5896,8 +5923,8 @@
   }
 
   .amd-overlay .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
-    min-height: min(30dvh, 240px) !important;
-    max-height: min(38dvh, 300px) !important;
+    min-height: 0 !important;
+    max-height: min(58dvh, 480px) !important;
   }
 
   .amd-overlay .amd-record-btn--inline,
@@ -6567,8 +6594,8 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
 }
 
 .amd-modal--premium.amd-modal--spacious .amd-header--compact {
-  gap: 0 !important;
-  padding: 0.6rem 0.9rem 0.5rem !important;
+  gap: 0.35rem !important;
+  padding: 1.15rem 1.15rem 0.95rem !important;
 }
 
 .amd-modal--premium.amd-modal--spacious .amd-title--premium {
@@ -6689,11 +6716,11 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
   }
 
   .amd-modal--premium.amd-modal--spacious .amd-header--compact {
-    padding: 0.52rem 0.65rem 0.42rem !important;
+    padding: 0.7rem 0.7rem 0.5rem !important;
   }
 
   .amd-modal--premium.amd-modal--spacious .amd-body--scroll {
-    padding: 0.45rem 0.55rem 0.5rem !important;
+    padding: 0.5rem 0.6rem 0.4rem !important;
   }
 
   .amd-modal--spacious .amd-mushaf-ayah--premium {
@@ -6716,7 +6743,7 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
   flex: 0 0 auto !important;
   height: auto !important;
   min-height: 0 !important;
-  padding-block: 0.15rem 0.65rem;
+  padding-block: 0.45rem 0.75rem;
 }
 
 .amd-modal--spacious .amd-mushaf-page.amd-mushaf-page--flow {
@@ -6924,15 +6951,14 @@ html body .amd-overlay .amd-modal.amd-modal--premium {
 }
 
 html body .amd-overlay .amd-body--scroll {
-  padding-bottom: 0 !important;
-  padding-inline: 0.9rem !important;
+  padding: 0.95rem 1.05rem 0 !important;
 }
 
 html body .amd-overlay .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
   flex: 1 1 auto !important;
   max-height: none !important;
   margin-bottom: 0 !important;
-  padding-bottom: 0.85rem !important;
+  padding: 1.35rem 1.25rem 1rem !important;
   border-bottom: 0 !important;
   border-end-start-radius: 0 !important;
   border-end-end-radius: 0 !important;
@@ -6959,6 +6985,7 @@ html body .amd-overlay .amd-footer.amd-footer--sticky {
 
 @media (max-width: 767.98px) {
   html body .amd-overlay .amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+    padding: 0.7rem 0.75rem 0.55rem !important;
     border-end-start-radius: 1rem !important;
     border-end-end-radius: 1rem !important;
     border-bottom: 1px solid color-mix(in srgb, #d4c8b6 55%, transparent) !important;
@@ -7688,5 +7715,93 @@ body:has(.workspace-recite-dock__button) .app .workspace {
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
+  }
+}
+
+/* Final padding lock — beats earlier compact/fit-size shrinks. */
+html body .amd-overlay .amd-modal.amd-modal--premium .amd-header.amd-header--premium,
+html body .amd-overlay .amd-modal.amd-modal--premium .amd-header.amd-header--compact,
+html body .amd-overlay .amd-modal.amd-modal--premium .amd-header.amd-header--premium.amd-header--compact,
+html body .amd-overlay .amd-modal.amd-modal--spacious .amd-header.amd-header--compact {
+  padding-top: max(1.35rem, calc(0.9rem + env(safe-area-inset-top, 0px))) !important;
+  padding-inline: 1.25rem !important;
+  padding-bottom: 1.1rem !important;
+}
+
+html body .amd-overlay .amd-modal .amd-header .amd-header-top {
+  align-items: center !important;
+  gap: 0.85rem !important;
+}
+
+html body .amd-overlay .amd-modal .amd-header .amd-mic-status--header,
+html body .amd-overlay .amd-modal .amd-header .amd-mic-status--compact {
+  margin: 0 !important;
+  padding: 0.42rem 0.82rem !important;
+}
+
+html body .amd-overlay .amd-modal.amd-modal--premium .amd-body.amd-body--scroll,
+html body .amd-overlay .amd-modal.amd-modal--spacious .amd-body.amd-body--scroll {
+  padding: 0.95rem 1.05rem 0.85rem !important;
+}
+
+html body .amd-overlay .amd-modal .amd-tools-container {
+  margin: 0 0 0.75rem !important;
+  padding-inline: 0.15rem 0.25rem !important;
+}
+
+html body .amd-overlay .amd-modal .amd-toolbar.amd-tools-bar,
+html body .amd-overlay .amd-modal .amd-toolbar--tools.amd-tools-bar {
+  padding: 0.55rem 0.7rem !important;
+}
+
+html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--premium,
+html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--primary,
+html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+  padding: 1.55rem 1.35rem 1.2rem !important;
+}
+
+html body .amd-overlay .amd-modal .amd-mushaf-page,
+html body .amd-overlay .amd-modal .amd-mushaf-page--flow {
+  padding-inline: 0.35rem !important;
+  box-sizing: border-box !important;
+}
+
+html body .amd-overlay .amd-modal .amd-mushaf-ayah.amd-mushaf-ayah--premium {
+  padding-block: 0.65rem 0.95rem !important;
+  padding-inline: 0.35rem !important;
+}
+
+html body .amd-overlay .amd-modal .amd-tools-bar__hint {
+  margin-top: 0.45rem !important;
+  padding-inline: 0.15rem !important;
+}
+
+@media (max-width: 767.98px) {
+  html body .amd-overlay .amd-modal.amd-modal--premium .amd-header.amd-header--premium,
+  html body .amd-overlay .amd-modal.amd-modal--premium .amd-header.amd-header--compact,
+  html body .amd-overlay .amd-modal.amd-modal--premium .amd-header.amd-header--premium.amd-header--compact,
+  html body .amd-overlay .amd-modal.amd-modal--spacious .amd-header.amd-header--compact {
+    padding-top: max(0.7rem, calc(0.4rem + env(safe-area-inset-top, 0px))) !important;
+    padding-inline: 0.7rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  html body .amd-overlay .amd-modal.amd-modal--premium .amd-body.amd-body--scroll,
+  html body .amd-overlay .amd-modal.amd-modal--spacious .amd-body.amd-body--scroll {
+    padding: 0.5rem 0.6rem 0.4rem !important;
+  }
+
+  html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--premium,
+  html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--primary,
+  html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--premium.amd-mushaf-shell--primary {
+    min-height: 0 !important;
+    max-height: min(62dvh, 560px) !important;
+    padding: 0.65rem 0.7rem 0.5rem !important;
+    overflow-y: auto !important;
+  }
+
+  html body .amd-overlay .amd-modal .amd-mushaf-ayah.amd-mushaf-ayah--premium {
+    padding-block: 0.2rem 0.35rem !important;
+    padding-inline: 0.15rem !important;
   }
 }

@@ -274,10 +274,9 @@ body.session-analysis-modal-open {
   margin: 0.2rem 0 0.1rem;
   color: #8a7969;
   font-family: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__ayah-label--correct {
@@ -666,6 +665,10 @@ body.session-analysis-modal-open {
   color: #c9b8a8;
 }
 
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__ayah--unread .sa-ov__ayah-label:not(.sa-ov__ayah-label--correct) {
+  color: #ffaaa3;
+}
+
 @media (max-width: 575.98px) {
   #sa-session-overview.session-analysis-modal-root .modal-dialog {
     margin: 0.7rem;
@@ -847,7 +850,11 @@ body.session-analysis-modal-open {
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__ayah-label {
   margin: 0.12rem 0 0.05rem;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__ayah--unread .sa-ov__ayah-label:not(.sa-ov__ayah-label--correct) {
+  color: #9b2c2c;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__ayah-ar {

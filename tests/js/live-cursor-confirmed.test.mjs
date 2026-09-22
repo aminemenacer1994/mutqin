@@ -43,7 +43,18 @@ const {
     { status: 'pending' },
     { status: 'correct' },
   ])
-  assert.equal(confirmed, 2, 'confirmed cursor stops at first unsettled word')
+  assert.equal(confirmed, 3, 'soft-continue past pending skip holes when a later word is settled')
+}
+
+{
+  const confirmed = resolveConfirmedWordIndex([
+    { status: 'correct' },
+    { status: 'pending' },
+    { status: 'pending' },
+    { status: 'correct' },
+    { status: 'correct' },
+  ])
+  assert.equal(confirmed, 4, 'Al-Fatihah-style ASR skip must not freeze the confirmed cursor')
 }
 
 {
@@ -53,6 +64,15 @@ const {
     { status: 'pending' },
   ])
   assert.equal(confirmed, 2, 'uncertain STT must settle the cursor, not freeze live paint')
+}
+
+{
+  const confirmed = resolveConfirmedWordIndex([
+    { status: 'correct' },
+    { status: 'pending' },
+    { status: 'pending' },
+  ], { softContinue: false })
+  assert.equal(confirmed, 1, 'softContinue:false still stops at the first unsettled hole')
 }
 
 {
@@ -95,6 +115,41 @@ const {
   assert.equal(clamped[1].status, 'pending')
   assert.equal(clamped[2].status, 'pending', 'future interim correct must be stripped')
   assert.equal(clamped[3].status, 'pending', 'future interim partial must be stripped')
+}
+
+{
+  const clamped = clampStatusesToConfirmedCursor([
+    { status: 'correct' },
+    { status: 'pending' },
+    { status: 'correct' },
+    { status: 'partial' },
+  ], 1, { keepSettledAhead: true })
+  assert.equal(clamped[0].status, 'correct')
+  assert.equal(clamped[1].status, 'pending')
+  assert.equal(clamped[2].status, 'correct', 'committed settle past a skip hole must keep paint')
+  assert.equal(clamped[3].status, 'partial', 'committed settle past a skip hole must keep paint')
+}
+
+{
+  const merged = mergeLiveRecitationStatuses(
+    [
+      { status: 'correct' },
+      { status: 'pending' },
+      { status: 'correct' },
+      { status: 'correct' },
+    ],
+    [
+      { status: 'correct' },
+      { status: 'pending' },
+      { status: 'correct' },
+      { status: 'correct' },
+    ],
+    { confirmedOnly: true },
+  )
+  assert.equal(merged[0].status, 'correct')
+  assert.equal(merged[1].status, 'pending', 'skip hole stays pending during live')
+  assert.equal(merged[2].status, 'correct', 'later committed green must survive the hole')
+  assert.equal(merged[3].status, 'correct', 'later committed green must survive the hole')
 }
 
 {

@@ -20,7 +20,22 @@ function wordStatus(word) {
   return asText(word?.status || word?.result_type || word?.visual_status).toLowerCase()
 }
 
+function isOmissionWord(word) {
+  const type = asText(word?.type).toUpperCase()
+  if (type === 'DELETION') return true
+  const status = wordStatus(word)
+  return status === 'missing' || status === 'omitted'
+}
+
 function wordText(word) {
+  // Confirmed omissions keep expected mushaf text in `text`, but the learner
+  // never said that word. Reprinting it under "Your recitation" (especially
+  // in red) makes a skipped ayah look identical to the correct ayah.
+  if (isOmissionWord(word)) {
+    const raw = asText(word?.raw_word || word?.rawWord || word?.actual)
+    if (!raw) return ''
+    return raw
+  }
   return asText(
     resolveRecitationWordDisplay(word)
     || word?.target_word
@@ -86,27 +101,37 @@ function groupWordsByAyah(words, t) {
   })
   return [...groups.entries()]
     .sort((a, b) => (a[0] || 9999) - (b[0] || 9999))
-    .map(([ayah, parts]) => ({
-      ayah: ayah || null,
-      ayahLabel: ayah
-        ? (t('dashboard.ayah_n', { n: ayah }) || `Ayah ${ayah}`)
-        : '',
-      text: parts.map((word) => word.text).filter(Boolean).join(' '),
-      parts: parts.map((word) => ({
-        text: word.text,
-        tone: toneForStatus(word),
-      })),
-      correctText: parts.map((word) => word.expectedText).filter(Boolean).join(' '),
-      // Only show the canonical ayah when the learner's row contains a
-      // confirmed issue. Correct rows should stay quiet and uncluttered.
-      hasMistake: parts.some((word) => ['is-weak', 'is-incorrect', 'is-omitted'].includes(toneForStatus(word))),
-    }))
+    .map(([ayah, parts]) => {
+      const displayParts = parts
+        .map((word) => ({
+          text: word.text,
+          tone: toneForStatus(word),
+        }))
+        // Skip silent omissions so "Your recitation" is blank for unread
+        // ayahs instead of cloning the correct ayah in error styling.
+        .filter((part) => Boolean(part.text))
+      return {
+        ayah: ayah || null,
+        ayahLabel: ayah
+          ? (t('dashboard.ayah_n', { n: ayah }) || `Ayah ${ayah}`)
+          : '',
+        text: displayParts.map((part) => part.text).join(' '),
+        parts: displayParts,
+        correctText: parts.map((word) => word.expectedText).filter(Boolean).join(' '),
+        // Only show the canonical ayah when the learner's row contains a
+        // confirmed issue. Correct rows should stay quiet and uncluttered.
+        hasMistake: parts.some((word) => ['is-weak', 'is-incorrect', 'is-omitted'].includes(toneForStatus(word))),
+        notRecited: displayParts.length === 0,
+      }
+    })
 }
 
 function toneForStatus(word) {
+  // Match workspace AI recite: deletions are omissions (muted), not red
+  // "incorrect" chips. Red is reserved for heard substitutions.
   const isDeletion = String(word?.type || '').toUpperCase() === 'DELETION'
   const color = isDeletion
-    ? RECITATION_COLOR.RED
+    ? RECITATION_COLOR.BLACK
     : classifyRecitationWordColor(word?.visualStatus || word?.status || word)
   if (color === RECITATION_COLOR.GREEN) return 'is-correct'
   if (color === RECITATION_COLOR.AMBER) return 'is-weak'

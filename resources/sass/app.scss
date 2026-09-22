@@ -2,16 +2,20 @@
 @import url('https://fonts.bunny.net/css?family=Nunito');
 @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap');
 
+/* Arabic + presentation forms only. Latin + U+0020 must fall through — this
+   face’s space glyph is hairline/zero and glues English UI into one word. */
 @font-face {
   font-family: 'UthmanicHafs';
   src: url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2') format('woff2');
   font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-089F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
 }
 
 @font-face {
   font-family: 'KFGQPC Uthmanic Script HAFS';
   src: url('https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2') format('woff2');
   font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-089F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
 }
 
 // Variables
@@ -60,8 +64,8 @@
   --radius: 16px;
   --font-ui: "Avenir Next", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --font-auth-serif: "Amiri", "Scheherazade New", "Noto Naskh Arabic", Georgia, serif;
-  --font-ar: "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif;
-  --quran-font: var(--font-ar);
+  --font-ar: "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif;
+  --quran-font: "KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Noto Naskh Arabic", serif;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;

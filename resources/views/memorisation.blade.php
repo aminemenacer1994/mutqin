@@ -27,6 +27,7 @@
             'just_registered' => !empty($justRegistered),
             'just_logged_in' => !empty($justLoggedIn),
             'show_tester_guide' => (bool) config('app.show_demo_accounts') && Auth::check(),
+            'app_url' => rtrim((string) config('app.url'), '/'),
             'csrf_token' => csrf_token(),
             'login_url' => route('login'),
             'google_login_url' => route('auth.google.redirect'),

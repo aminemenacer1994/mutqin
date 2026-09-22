@@ -682,6 +682,7 @@
       :words-title="t('dashboard.analysis_words_title')"
       :recitation-label="t('dashboard.analysis_recitation_label')"
       :correct-ayah-label="t('dashboard.analysis_correct_ayah_label')"
+      :not-recited-label="t('dashboard.analysis_not_recited_label')"
       :recommendations-title="t('dashboard.analysis_recommendations_title')"
       :audio-title="t('dashboard.ai_recite.audio')"
       :no-recommendations="t('dashboard.analysis_no_recommendations')"

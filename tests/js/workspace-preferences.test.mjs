@@ -67,7 +67,7 @@ globalThis.localStorage = storage
   }))
 
   const next = patchWorkspacePreferences({ tajweedEnabled: true }, { userId: '9' })
-  assert.equal(next.quranFont, 'amiri')
+  assert.equal(next.quranFont, 'uthmanic')
   assert.equal(next.tajweedEnabled, true)
   assert.ok(next.updatedAt > 0)
 
@@ -95,7 +95,7 @@ globalThis.localStorage = storage
     quranFont: 'lateef',
     prefsAppliedAt: 10,
   }, 'guest')
-  assert.equal(overlay.quranFont, 'lateef')
+  assert.equal(overlay.quranFont, 'uthmanic')
 
   storage.store.clear()
   patchWorkspacePreferences({ quranFont: 'scheherazade' }, { userId: 'guest' })
@@ -103,7 +103,7 @@ globalThis.localStorage = storage
     quranFont: 'lateef',
     prefsAppliedAt: 1,
   }, 'guest')
-  assert.equal(applied.quranFont, 'scheherazade')
+  assert.equal(applied.quranFont, 'uthmanic')
 }
 
 {

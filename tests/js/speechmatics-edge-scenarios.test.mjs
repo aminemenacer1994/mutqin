@@ -841,4 +841,75 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
   assert.equal(quiet.words.length, 4)
 }
 
+// Speechmatics often emits بسمالله as one token. Without a split, بسم paints red
+// while الله الرحمن الرحيم stay green — the basmala false-negative from live AMD.
+{
+  const basmala = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'
+  const glued = await alignSpeechmaticsPath(
+    basmala,
+    speechmaticsWords(['بسمالله', 'الله', 'الرحمن', 'الرحيم']),
+    { lifecycle: 'live' },
+  )
+  assert.deepEqual(types(glued), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+  assert.equal(glued.wordStatuses[0].status, 'correct')
+  assert.equal(glued.wordStatuses.every(status => status.status === 'correct'), true)
+  assert.ok((glued.extraWords || []).some(extra => extra.type === 'REPETITION' && extra.word === 'الله'))
+
+  const gluedOnly = await alignSpeechmaticsPath(
+    basmala,
+    speechmaticsWords(['بسمالله', 'الرحمن', 'الرحيم']),
+    { lifecycle: 'live' },
+  )
+  assert.deepEqual(types(gluedOnly), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+  assert.equal(gluedOnly.wordStatuses[0].status, 'correct')
+
+  const alefVariant = await alignSpeechmaticsPath(
+    basmala,
+    speechmaticsWords(['باسمالله', 'الرحمن', 'الرحيم']),
+    { lifecycle: 'live' },
+  )
+  assert.deepEqual(types(alefVariant), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+
+  const hamdGlued = await alignSpeechmaticsPath(
+    'الحمد لله رب العالمين',
+    speechmaticsWords(['الحمدلله', 'رب', 'العالمين']),
+    { lifecycle: 'live' },
+  )
+  assert.deepEqual(types(hamdGlued), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+  assert.equal(hamdGlued.wordStatuses[0].status, 'correct')
+
+  // Leading ASR junk must not burn بسم red when the rest of ayah 1 is solid.
+  const leadingJunk = await alignSpeechmaticsPath(
+    basmala,
+    speechmaticsWords(['في', 'الله', 'الرحمن', 'الرحيم']),
+    { lifecycle: 'live' },
+  )
+  assert.equal(leadingJunk.wordStatuses[0].status, 'pending')
+  assert.deepEqual(types(leadingJunk).slice(1), ['MATCH', 'MATCH', 'MATCH'])
+  assert.ok((leadingJunk.extraWords || []).some(extra => extra.type === 'INSERTION' && extra.word === 'في'))
+
+  const nearGlue = await alignSpeechmaticsPath(
+    basmala,
+    speechmaticsWords(['بسمالل', 'ه', 'الرحمن', 'الرحيم']),
+    { lifecycle: 'live' },
+  )
+  assert.deepEqual(types(nearGlue), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+  assert.equal(nearGlue.wordStatuses[0].status, 'correct')
+
+  // Freeze regression: glued بسمالله + echo الله must NOT jump onto later لله
+  // in a multi-ayah Fatihah range (that caused live AMD cursor thrash/flash).
+  const fatihahHead = 'بسم الله الرحمن الرحيم الحمد لله رب العالمين الرحمن الرحيم'
+  const midPhrase = await alignSpeechmaticsPath(
+    fatihahHead,
+    speechmaticsWords(['بسمالله', 'الله', 'الرحمن']),
+    { lifecycle: 'live' },
+  )
+  assert.deepEqual(types(midPhrase).slice(0, 4), ['MATCH', 'MATCH', 'MATCH', 'UNASSESSED'])
+  assert.equal(midPhrase.wordStatuses[5]?.status, 'pending')
+  assert.equal(midPhrase.wordStatuses[5]?.type, 'UNASSESSED')
+  assert.ok((midPhrase.extraWords || []).some(extra => (
+    extra.type === 'REPETITION' && (extra.word === 'الله' || extra.agglutinationEcho)
+  )))
+}
+
 console.log('speechmatics-edge-scenarios.test.mjs: ok')

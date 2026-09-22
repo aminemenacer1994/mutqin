@@ -4,6 +4,7 @@
       <div
         v-if="open"
         class="post-session-simple post-session-simple--calm-v2 post-session-simple--premium workspace-recite-result"
+        :data-theme="theme"
         data-testid="workspace-recite-result"
       >
         <div class="post-session-simple__backdrop" aria-hidden="true"></div>
@@ -358,6 +359,7 @@ export default {
     savedLabel: { type: String, default: 'This attempt is saved.' },
     resultsHref: { type: String, default: '' },
     resultsLabel: { type: String, default: 'See all results' },
+    theme: { type: String, default: '' },
   },
   emits: ['close', 'try-again'],
   watch: {
@@ -395,5 +397,15 @@ export default {
   font-weight: 650;
   text-decoration: underline;
   text-underline-offset: 0.16em;
+}
+
+html[data-theme="dark"] .workspace-recite-saved,
+.post-session-simple[data-theme="dark"] .workspace-recite-saved {
+  color: rgba(247, 234, 219, 0.68);
+}
+
+html[data-theme="dark"] .workspace-recite-saved__link,
+.post-session-simple[data-theme="dark"] .workspace-recite-saved__link {
+  color: #f2bd6b;
 }
 </style>

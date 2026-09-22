@@ -633,6 +633,21 @@ export function createTranscriptionAudioBridge(stream = null) {
         broken: sampleCount === 0,
       }
     },
+    /**
+     * True when any recent audio frame looks like speech.
+     * Session-long RMS stays high after the first word — do not use it for stall recovery.
+     */
+    getRecentSpeechActivity(windowMs = 1600, speechRms = 0.012) {
+      const sampleRate = Number(audioContext.sampleRate || 48000)
+      const frameMs = sampleRate > 0
+        ? (SPEECHMATICS_AUDIO_BUFFER_SIZE / sampleRate) * 1000
+        : 21
+      const framesNeeded = Math.max(1, Math.ceil(Math.max(200, Number(windowMs) || 1600) / frameMs))
+      const recent = frameLevels.slice(-framesNeeded)
+      const threshold = Number(speechRms)
+      const floor = Number.isFinite(threshold) && threshold > 0 ? threshold : 0.012
+      return recent.some((rms) => Number(rms) >= floor)
+    },
     ensureRunning,
     flush() {
       const merged = mergeArrayBuffers(pendingBuffers)
@@ -818,7 +833,10 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
                 sample_rate: sampleRate
               },
               transcription_config: {
-                ...buildSpeechmaticsRecitationConfig(options),
+                ...buildSpeechmaticsRecitationConfig({
+                  language: options.language,
+                  amdLive: options.amdLive,
+                }),
                 max_delay: appliedMaxDelay,
                 max_delay_mode: 'flexible',
                 conversation_config: delayUpdate.transcription_config.conversation_config,
@@ -949,14 +967,59 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
         return false
       }
     },
-    disconnect() {
+    disconnect(options = {}) {
       intentionallyClosing = true
       connectionGeneration += 1
       clearHandshakeTimer()
-      if (!socket) return
-      try {
-        socket.close()
-      } catch { }
+      const activeSocket = socket
+      if (!activeSocket) return Promise.resolve(true)
+
+      // End the RT session cleanly so Speechmatics releases concurrent slots
+      // (free tier allows only 2) before the socket is torn down.
+      if (readySettled && !endOfStreamSent && activeSocket.readyState === WebSocket.OPEN) {
+        try {
+          activeSocket.send(JSON.stringify({
+            message: 'EndOfStream',
+            last_seq_no: Math.max(acknowledgedSeqNo, sentSeqNo)
+          }))
+          endOfStreamSent = true
+        } catch { /* close below still runs */ }
+      }
+
+      const waitMs = Math.max(0, Number(options.waitMs) || 0)
+      return new Promise((resolve) => {
+        let settled = false
+        const finish = () => {
+          if (settled) return
+          settled = true
+          if (socket === activeSocket) socket = null
+          if (waitMs > 0) {
+            window.setTimeout(() => resolve(true), waitMs)
+            return
+          }
+          resolve(true)
+        }
+
+        const onClose = () => {
+          try { activeSocket.removeEventListener('close', onClose) } catch { }
+          finish()
+        }
+
+        try { activeSocket.addEventListener('close', onClose) } catch { }
+        try {
+          activeSocket.close()
+        } catch {
+          finish()
+          return
+        }
+
+        // Free-tier Speechmatics accounts only allow 2 concurrent RT sockets.
+        // If close never fires, still release so reconnect can proceed.
+        window.setTimeout(() => {
+          try { activeSocket.removeEventListener('close', onClose) } catch { }
+          finish()
+        }, 1200)
+      })
     },
     isOpen() {
       return !!socket && socket.readyState === WebSocket.OPEN

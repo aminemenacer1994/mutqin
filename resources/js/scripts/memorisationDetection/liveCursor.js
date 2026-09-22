@@ -26,9 +26,21 @@ export function isPaintedLiveStatus(status = '') {
     || value === 'uncertain'
 }
 
+export function hasLaterSettledLiveStatus(statuses = [], fromIndex = 0) {
+  const words = Array.isArray(statuses) ? statuses : []
+  for (let index = Math.max(0, Number(fromIndex) || 0) + 1; index < words.length; index += 1) {
+    if (isSettledLiveStatus(words[index]?.status)) return true
+  }
+  return false
+}
+
 /**
  * First unsettled index in a status list (= learner’s current confirmed place).
  * Never derived from reference-reciter timing or interim lookahead alone.
+ *
+ * Soft-continue (default): ASR skip holes stay `pending` during live, but a later
+ * committed settle proves the learner moved on — do not freeze the cursor there
+ * or clamp will wipe every later green while Recording keeps running.
  */
 export function resolveConfirmedWordIndex(statuses = [], options = {}) {
   if (Number.isFinite(options.frozenAt)) {
@@ -36,9 +48,19 @@ export function resolveConfirmedWordIndex(statuses = [], options = {}) {
   }
   const words = Array.isArray(statuses) ? statuses : []
   if (!words.length) return 0
+  const softContinue = options.softContinue !== false
+  let lastSettled = -1
   for (let i = 0; i < words.length; i += 1) {
-    if (!isSettledLiveStatus(words[i]?.status)) return i
+    if (isSettledLiveStatus(words[i]?.status)) {
+      lastSettled = i
+      continue
+    }
+    if (softContinue && hasLaterSettledLiveStatus(words, i)) {
+      continue
+    }
+    return i
   }
+  if (lastSettled >= 0) return lastSettled
   return Math.max(0, words.length - 1)
 }
 
@@ -80,11 +102,12 @@ export function buildLiveRecitationCursor({
   committedStatuses = [],
   candidateStatuses = null,
   frozenAt = null,
+  softContinue = true,
 } = {}) {
-  const confirmedWordIndex = resolveConfirmedWordIndex(committedStatuses, { frozenAt })
+  const confirmedWordIndex = resolveConfirmedWordIndex(committedStatuses, { frozenAt, softContinue })
   const candidateWordIndex = resolveCandidateWordIndex(
     Array.isArray(candidateStatuses) ? candidateStatuses : committedStatuses,
-    { frozenAt },
+    { frozenAt, softContinue },
   )
   const expectedWordIndex = resolveExpectedWordIndex({
     confirmedWordIndex,
@@ -171,14 +194,24 @@ export function clampCursorToPaceLimit(cursor = {}, limit = Infinity) {
 }
 
 /**
- * Strip paint from any word strictly ahead of the confirmed cursor.
- * Interim / optimistic statuses beyond confirmed become pending.
+ * Strip interim/optimistic paint ahead of the confirmed cursor.
+ * When keepSettledAhead is set, committed settles beyond a skip hole are kept —
+ * otherwise a pending UNASSESSED hole freezes all later colouring.
  */
-export function clampStatusesToConfirmedCursor(statuses = [], confirmedWordIndex = 0) {
+export function clampStatusesToConfirmedCursor(statuses = [], confirmedWordIndex = 0, options = {}) {
   const list = Array.isArray(statuses) ? statuses : []
   const cursor = Math.max(0, Number(confirmedWordIndex) || 0)
+  const keepSettledAhead = options.keepSettledAhead === true
   return list.map((word, index) => {
     if (index <= cursor) return word || { status: 'pending' }
+    if (
+      keepSettledAhead
+      && isSettledLiveStatus(word?.status)
+      && word?.interim !== true
+      && word?.hypothesis !== true
+    ) {
+      return word || { status: 'pending' }
+    }
     if (!isPaintedLiveStatus(word?.status)) return word || { status: 'pending' }
     return {
       ...(word || {}),
@@ -242,7 +275,10 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
   const maxLength = Math.max(committed.length, display.length)
   const confirmedOnly = options.confirmedOnly === true
   const protectAgainstInterimRed = options.protectAgainstInterimRed === true || confirmedOnly
-  const confirmedCursor = resolveConfirmedWordIndex(committed)
+  const keepSettledAhead = options.keepSettledAhead !== false
+  const confirmedCursor = resolveConfirmedWordIndex(committed, {
+    softContinue: options.softContinue !== false,
+  })
 
   const liveWordStatusSeverity = (status = '') => {
     const value = String(status || '').toLowerCase()
@@ -328,6 +364,7 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
     }
 
     // Soft live paint only at/behind the confirmed cursor — never ahead.
+    // Committed settles past a skip hole are kept; interim display is not.
     if (index > confirmedCursor) {
       if (confirmed && confirmed.status && confirmed.status !== 'pending') return confirmed
       return {
@@ -347,7 +384,5 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
     return { ...(live || confirmed), status: 'pending', note: confirmed?.note || '' }
   })
 
-  return confirmedOnly
-    ? clampStatusesToConfirmedCursor(merged, confirmedCursor)
-    : clampStatusesToConfirmedCursor(merged, confirmedCursor)
+  return clampStatusesToConfirmedCursor(merged, confirmedCursor, { keepSettledAhead })
 }

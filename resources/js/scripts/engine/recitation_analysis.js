@@ -346,7 +346,10 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   const targetUnits = buildTargetWordUnits(targetAyahs, targetText)
   const displayWords = targetUnits.map(unit => unit.display)
   const targetWords = targetUnits.map(unit => unit.word)
-  const heardWords = normaliseCommittedRecognitionWords(recognitionWords)
+  const heardWords = prepareHeardWordsForAlignment(
+    targetWords,
+    normaliseCommittedRecognitionWords(recognitionWords),
+  ).heardWords
   const isLiveLifecycle = ['live', 'recording', 'paused'].includes(String(options.lifecycle || '').toLowerCase())
 
   // The cursor preview is intentionally lightweight for ordinary speech, but
@@ -738,7 +741,15 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
   const displayWords = targetUnits.map(unit => unit.display)
   const targetWords = targetUnits.map(unit => unit.word)
   const rawHeardWords = normaliseCommittedRecognitionWords(recognitionWords, { suppressDuplicates: false })
-  const heardWords = normaliseCommittedRecognitionWords(recognitionWords)
+  // Expand Speechmatics agglutinations + drop leading ASR junk for alignment only —
+  // rawHeardWords keep the provider surface form for audit/replay.
+  const preparedHeard = prepareHeardWordsForAlignment(
+    targetWords,
+    normaliseCommittedRecognitionWords(recognitionWords),
+  )
+  const heardWords = preparedHeard.heardWords
+  const leadingHeardExtras = preparedHeard.leadingExtras || []
+  const absorbedEchoExtras = preparedHeard.absorbedEchoes || []
   const transcriptWords = heardWords.map(word => word.word)
   const targetCount = targetWords.length
   const heardCount = transcriptWords.length
@@ -767,7 +778,11 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
       const confidenceWeight = Math.max(0.35, Math.min(1, Number(heardWord.confidence ?? 1)))
       const matchCost = getWeightedMatchCost(targetWord, heardWord.word, similarity, confidenceWeight, {
         allowArticleMatch,
-      }) + startingAnchorAdjustment(startingAnchor, targetIndex - 1, heardIndex - 1) + (heardIndex - 1) * 1e-9
+      }) + startingAnchorAdjustment(startingAnchor, targetIndex - 1, heardIndex - 1)
+        // Prefer earlier target slots when costs otherwise tie — otherwise
+        // الرحمن latches onto a later identical ayah word and the live cursor jumps.
+        + (targetIndex - 1) * 1e-6
+        + (heardIndex - 1) * 1e-9
       const candidates = [
         { cost: matrix[targetIndex - 1][heardIndex - 1].cost + matchCost, prev: [targetIndex - 1, heardIndex - 1], op: 'match', similarity },
         { cost: matrix[targetIndex - 1][heardIndex].cost + 1.02, prev: [targetIndex - 1, heardIndex], op: 'omission', similarity: 0 },
@@ -864,6 +879,68 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
       operations.unshift({ op: 'omission', targetIndex: omitIndex, expectedIndex: omitIndex })
     }
     ;[targetIndex, heardIndex] = cell.prev || [0, 0]
+  }
+
+  // Re-attach stripped leading ASR junk as INSERTIONs so diagnostics keep them,
+  // while the opening Qur'an slot stays pending/omitted instead of false-red.
+  for (let leadIndex = leadingHeardExtras.length - 1; leadIndex >= 0; leadIndex -= 1) {
+    const leadHeard = leadingHeardExtras[leadIndex] || {}
+    const leadExtra = {
+      word: leadHeard.word || '',
+      display: leadHeard.display || leadHeard.rawWord || leadHeard.word || '',
+      rawWord: heardRawWord(leadHeard),
+      displayWord: '',
+      heardIndex: -1 - leadIndex,
+      confidence: Number(leadHeard.confidence ?? 1),
+      start: finiteOrNull(leadHeard.start ?? leadHeard.startTime),
+      end: finiteOrNull(leadHeard.end ?? leadHeard.endTime),
+      startTime: finiteOrNull(leadHeard.start ?? leadHeard.startTime),
+      endTime: finiteOrNull(leadHeard.end ?? leadHeard.endTime),
+      type: 'INSERTION',
+      legacyType: 'extra',
+      leadingAsrJunk: true,
+    }
+    Object.assign(leadExtra, withRecognitionDebugFields({}, leadHeard))
+    extraWords.unshift(leadExtra)
+    operations.unshift({
+      op: 'extra',
+      expectedIndex: 0,
+      targetIndex: 0,
+      heardIndex: -1 - leadIndex,
+      recognisedIndex: -1 - leadIndex,
+      leadingAsrJunk: true,
+    })
+  }
+
+  // Absorbed agglutination echoes (بسمالله then الله) stay out of DP but remain
+  // visible as REPETITION diagnostics.
+  for (let echoIndex = absorbedEchoExtras.length - 1; echoIndex >= 0; echoIndex -= 1) {
+    const echoHeard = absorbedEchoExtras[echoIndex] || {}
+    const echoExtra = {
+      word: echoHeard.word || '',
+      display: echoHeard.display || echoHeard.rawWord || echoHeard.word || '',
+      rawWord: heardRawWord(echoHeard),
+      displayWord: '',
+      heardIndex: -100 - echoIndex,
+      confidence: Number(echoHeard.confidence ?? 1),
+      start: finiteOrNull(echoHeard.start ?? echoHeard.startTime),
+      end: finiteOrNull(echoHeard.end ?? echoHeard.endTime),
+      startTime: finiteOrNull(echoHeard.start ?? echoHeard.startTime),
+      endTime: finiteOrNull(echoHeard.end ?? echoHeard.endTime),
+      type: 'REPETITION',
+      legacyType: 'repetition',
+      agglutinationEcho: true,
+    }
+    Object.assign(echoExtra, withRecognitionDebugFields({}, echoHeard))
+    extraWords.unshift(echoExtra)
+    operations.unshift({
+      op: 'extra',
+      expectedIndex: 0,
+      targetIndex: 0,
+      heardIndex: -100 - echoIndex,
+      recognisedIndex: -100 - echoIndex,
+      agglutinationEcho: true,
+    })
   }
 
   const quranAware = classifyQuranAwareOperations({
@@ -1023,6 +1100,8 @@ function classifyQuranAwareOperations({
       operation.type = status === 'correct' ? 'MATCH' : (status === 'uncertain' ? 'UNASSESSED' : 'SUBSTITUTION')
     } else if (operation.op === 'omission') {
       operation.type = finalised ? 'DELETION' : 'UNASSESSED'
+    } else if (operation.agglutinationEcho) {
+      operation.type = 'REPETITION'
     } else {
       operation.type = 'INSERTION'
     }
@@ -1617,6 +1696,23 @@ function detectMidStartRestart(targetWords = [], heardWords = [], startingAnchor
   return null
 }
 
+function heardSpanShowsProgressPast(heardWords = [], fromHeard = 0, toHeard = 0, targetWords = [], pastTargetIndex = 0) {
+  const start = Math.max(0, Number(fromHeard) || 0)
+  const end = Math.min(heardWords.length, Math.max(start, Number(toHeard) || 0))
+  const floor = Math.max(0, Number(pastTargetIndex) || 0)
+  for (let heardIndex = start; heardIndex < end; heardIndex += 1) {
+    const heard = heardWords[heardIndex]
+    const word = String(heard?.word || heard?.text || '').trim()
+    if (!word || isLowConfidenceRecognitionWord(heard)) continue
+    for (let targetIndex = floor + 1; targetIndex < targetWords.length; targetIndex += 1) {
+      if (getRecitationWordSimilarity(targetWords[targetIndex], word) >= RECITATION_CORRECT_SIMILARITY) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
 function findLiveRestartEvidence(targetWords = [], heardWords = []) {
   const matches = (targetIndex, heardIndex) => {
     const target = targetWords[targetIndex]
@@ -1631,6 +1727,14 @@ function findLiveRestartEvidence(targetWords = [], heardWords = []) {
       if (!matches(restartStartIndex, firstStart) || !matches(restartStartIndex + 1, firstStart + 1)) continue
       for (let secondStart = firstStart + 2; secondStart + 1 < heardWords.length; secondStart += 1) {
         if (!matches(restartStartIndex, secondStart) || !matches(restartStartIndex + 1, secondStart + 1)) continue
+        // Al-Fatihah (and similar passages) repeat phrases at later ayahs — not a restart.
+        if (heardSpanShowsProgressPast(
+          heardWords,
+          firstStart + 2,
+          secondStart,
+          targetWords,
+          restartStartIndex + 1,
+        )) continue
         return {
           restartStartIndex,
           restartEndIndex: restartStartIndex + 1,
@@ -2129,6 +2233,257 @@ function normaliseCommittedRecognitionWords(words = [], options = {}) {
   return options.suppressDuplicates === false ? normalized : suppressDuplicateRecognitionWords(normalized)
 }
 
+/** Max Qur'an words one ASR agglutination may expand into (e.g. بسمالله → 2). */
+const MAX_AGGLUTINATION_PARTS = 4
+/** Shorter tokens are almost never compounds; skip the scan. */
+const MIN_AGGLUTINATION_HEARD_LEN = 4
+
+function agglutinationFormsMatch(concatenatedTarget = '', heardNormalized = '') {
+  if (!concatenatedTarget || !heardNormalized) return false
+  if (concatenatedTarget === heardNormalized) return true
+  if (arabicAlefOptionalEqual(concatenatedTarget, heardNormalized)) return true
+  // Near-agglutination (بسمالل ≈ بسمالله) — one edit after alef-optional compare.
+  if (concatenatedTarget.length >= 5 && heardNormalized.length >= 5) {
+    const left = stripArabicAlefForCompare(concatenatedTarget)
+    const right = stripArabicAlefForCompare(heardNormalized)
+    if (left && right && levenshteinDistance(left, right) <= 1) return true
+  }
+  return false
+}
+
+function heardMatchesSingleTargetWord(heardNormalized = '', targetWords = []) {
+  if (!heardNormalized || !targetWords.length) return false
+  return targetWords.some(target => (
+    getRecitationWordSimilarity(target, heardNormalized) >= RECITATION_CORRECT_SIMILARITY
+  ))
+}
+
+/**
+ * Speechmatics often glues adjacent ayah words (بسمالله, الحمدلله). Without a
+ * split, DP attaches the compound as a SUBSTITUTION on the first slot and
+ * paints a false red while the following words stay green.
+ */
+function tryExpandAgglutinatedHeardWord(heardEntry = {}, targetWords = [], preferredStart = 0) {
+  const heardNormalized = normalizeArabicForRecitation(heardEntry?.word || heardEntry?.text || '')
+  if (!heardNormalized || heardNormalized.length < MIN_AGGLUTINATION_HEARD_LEN) return null
+  if (heardMatchesSingleTargetWord(heardNormalized, targetWords)) return null
+
+  const starts = []
+  const preferred = Math.max(0, Math.min(targetWords.length - 1, Number(preferredStart) || 0))
+  if (targetWords.length) starts.push(preferred)
+  for (let index = 0; index < targetWords.length; index += 1) {
+    if (index !== preferred) starts.push(index)
+  }
+
+  let best = null
+  for (const start of starts) {
+    let concat = ''
+    const parts = []
+    for (let end = start; end < targetWords.length && parts.length < MAX_AGGLUTINATION_PARTS; end += 1) {
+      concat += targetWords[end]
+      parts.push(targetWords[end])
+      if (parts.length < 2) continue
+      if (!agglutinationFormsMatch(concat, heardNormalized)) continue
+      if (
+        !best
+        || parts.length > best.parts.length
+        || (parts.length === best.parts.length && start < best.start)
+      ) {
+        best = { parts: parts.slice(), start }
+      }
+    }
+  }
+  if (!best) return null
+
+  return best.parts.map((word, index) => ({
+    ...heardEntry,
+    word,
+    display: index === 0
+      ? (heardEntry.display || heardEntry.rawWord || heardEntry.word || word)
+      : word,
+    rawWord: index === 0
+      ? (heardEntry.rawWord || heardEntry.raw_word || heardEntry.display || heardEntry.word || word)
+      : word,
+    ...(index > 0 ? {
+      start: null,
+      end: null,
+      startTime: null,
+      endTime: null,
+      // Drop provider token IDs on split tails so duplicate suppression cannot
+      // collapse the expanded pair back into one heard word.
+      token: undefined,
+      speechmaticsToken: undefined,
+      speechmatics_token: undefined,
+      id: undefined,
+    } : {}),
+    agglutinatedFrom: heardNormalized,
+    agglutinatedPartIndex: index,
+    agglutinatedPartCount: best.parts.length,
+  }))
+}
+
+/**
+ * Expand ASR agglutinations against the expected Qur'an sequence before DP.
+ * Also joins adjacent fragments (بسمالل + ه) that reconstruct a compound.
+ * After a split, absorbs a following Speechmatics echo of the glued tail
+ * (بسمالله then الله) so the duplicate cannot lock onto a later لله and
+ * jump the live AMD cursor through the rest of the range.
+ * Raw/audit streams stay untouched; only alignment input is expanded.
+ */
+export function expandAgglutinatedHeardWords(targetWords = [], heardWords = []) {
+  if (!Array.isArray(targetWords) || !targetWords.length) {
+    return { heardWords: Array.isArray(heardWords) ? heardWords : [], absorbedEchoes: [] }
+  }
+  if (!Array.isArray(heardWords) || !heardWords.length) {
+    return { heardWords: [], absorbedEchoes: [] }
+  }
+
+  const expanded = []
+  const absorbedEchoes = []
+  let cursor = 0
+  for (let index = 0; index < heardWords.length; index += 1) {
+    const heard = heardWords[index]
+    let parts = tryExpandAgglutinatedHeardWord(heard, targetWords, cursor)
+    let consumedExtra = 0
+    if (!parts?.length && index + 1 < heardWords.length) {
+      const next = heardWords[index + 1]
+      const left = normalizeArabicForRecitation(heard?.word || '')
+      const right = normalizeArabicForRecitation(next?.word || '')
+      // Join short/broken fragments only — never glue two full Qur'an words.
+      if (
+        left.length >= 2
+        && right.length >= 1
+        && left.length + right.length >= MIN_AGGLUTINATION_HEARD_LEN
+        && !heardMatchesSingleTargetWord(left, targetWords)
+        && !heardMatchesSingleTargetWord(right, targetWords)
+      ) {
+        const joined = {
+          ...heard,
+          word: `${left}${right}`,
+          display: `${heardRawWord(heard)}${heardRawWord(next)}`.trim() || `${left}${right}`,
+          rawWord: `${heardRawWord(heard)}${heardRawWord(next)}`.trim() || `${left}${right}`,
+        }
+        parts = tryExpandAgglutinatedHeardWord(joined, targetWords, cursor)
+        if (parts?.length) consumedExtra = 1
+      }
+    }
+    if (parts?.length) {
+      expanded.push(...parts)
+      cursor = Math.min(targetWords.length, cursor + parts.length)
+      index += consumedExtra
+      // Speechmatics often re-emits the glued tail as its own token. Keep it
+      // out of DP or الله locks onto later لله and the live cursor leaps ahead.
+      const echoIndex = index + 1
+      if (echoIndex < heardWords.length) {
+        const lastPart = parts[parts.length - 1]
+        const echo = heardWords[echoIndex]
+        if (
+          getRecitationWordSimilarity(lastPart.word, echo?.word || '') >= RECITATION_CORRECT_SIMILARITY
+        ) {
+          absorbedEchoes.push({
+            ...echo,
+            agglutinationEcho: true,
+            agglutinatedFrom: lastPart.agglutinatedFrom || heard?.word || '',
+          })
+          index = echoIndex
+        }
+      }
+      continue
+    }
+    expanded.push(heard)
+    if (
+      cursor < targetWords.length
+      && getRecitationWordSimilarity(targetWords[cursor], heard?.word || '') >= RECITATION_CORRECT_SIMILARITY
+    ) {
+      cursor += 1
+    }
+  }
+  return { heardWords: expanded, absorbedEchoes }
+}
+
+/**
+ * True when a leading ASR token is noise / filler rather than an attempt at the
+ * opening Qur'an word. Only short crumbs and low-confidence tokens qualify —
+ * longer out-of-range Qur'an words must stay so divergence/realignment still works.
+ */
+function isLikelyLeadingAsrJunk(heardWord = {}, targetWords = [], openingTarget = '') {
+  const word = normalizeArabicForRecitation(heardWord?.word || heardWord?.text || '')
+  if (!word) return true
+  if (getRecitationWordSimilarity(openingTarget, word) >= 0.48) return false
+  const appearsInTarget = targetWords.some(target => (
+    getRecitationWordSimilarity(target, word) >= RECITATION_CORRECT_SIMILARITY
+  ))
+  if (appearsInTarget) return false
+  if (word.length <= 3) return true
+  if (Number(heardWord?.confidence ?? 1) < RECITATION_UNCERTAIN_CONFIDENCE) return true
+  return false
+}
+
+/**
+ * Drop leading ASR junk when a later consecutive run clearly anchors the ayah.
+ * Prevents [في, الله, الرحمن, الرحيم] from painting بسم red under advanceOnIncorrect.
+ */
+export function stripLeadingHeardJunk(targetWords = [], heardWords = []) {
+  if (!Array.isArray(targetWords) || targetWords.length < 2) {
+    return { heardWords: Array.isArray(heardWords) ? heardWords : [], leadingExtras: [] }
+  }
+  if (!Array.isArray(heardWords) || heardWords.length < 2) {
+    return { heardWords: Array.isArray(heardWords) ? heardWords : [], leadingExtras: [] }
+  }
+
+  const openingTarget = targetWords[0] || ''
+  const openingSim = getRecitationWordSimilarity(openingTarget, heardWords[0]?.word || '')
+  // Real attempt at the opening word — keep for MATCH / PARTIAL / SUBSTITUTION.
+  if (openingSim >= 0.48) {
+    return { heardWords, leadingExtras: [] }
+  }
+
+  const maxDrop = Math.min(3, heardWords.length - 1)
+  let best = null
+  for (let drop = 1; drop <= maxDrop; drop += 1) {
+    const leading = heardWords.slice(0, drop)
+    if (!leading.every(word => isLikelyLeadingAsrJunk(word, targetWords, openingTarget))) continue
+    const rest = heardWords.slice(drop)
+    for (let startTarget = 0; startTarget <= Math.min(2, targetWords.length - 1); startTarget += 1) {
+      let length = 0
+      let reliable = 0
+      while (
+        length < rest.length
+        && startTarget + length < targetWords.length
+        && getRecitationWordSimilarity(
+          targetWords[startTarget + length],
+          rest[length]?.word || '',
+        ) >= RECITATION_CORRECT_SIMILARITY
+      ) {
+        if (Number(rest[length]?.confidence ?? 1) >= RECITATION_UNCERTAIN_CONFIDENCE) reliable += 1
+        length += 1
+      }
+      if (length < 2 || reliable < 2) continue
+      if (
+        !best
+        || length > best.length
+        || (length === best.length && drop < best.drop)
+        || (length === best.length && drop === best.drop && startTarget < best.startTarget)
+      ) {
+        best = { drop, startTarget, length, leading, rest }
+      }
+    }
+  }
+  if (!best) return { heardWords, leadingExtras: [] }
+  return { heardWords: best.rest, leadingExtras: best.leading }
+}
+
+/** Agglutination expand + leading-junk strip for alignment input only. */
+export function prepareHeardWordsForAlignment(targetWords = [], heardWords = []) {
+  const { heardWords: expanded, absorbedEchoes } = expandAgglutinatedHeardWords(targetWords, heardWords)
+  const stripped = stripLeadingHeardJunk(targetWords, expanded)
+  return {
+    heardWords: stripped.heardWords,
+    leadingExtras: stripped.leadingExtras,
+    absorbedEchoes: Array.isArray(absorbedEchoes) ? absorbedEchoes : [],
+  }
+}
+
 function isNearbyWord(left = {}, right = {}) {
   const leftEnd = finiteOrNull(left.end)
   const rightStart = finiteOrNull(right.start)
@@ -2272,6 +2627,17 @@ function getWeightedMatchCost(targetWord, heardWord, similarity, confidence, opt
   ) {
     return 0
   }
+  // Alef-optional equals (الرحمان↔الرحمن) are orthographic, not learner errors.
+  if (arabicAlefOptionalEqual(targetWord, heardWord)) return 0
+  if (
+    allowArticleMatch
+    && arabicAlefOptionalEqual(
+      stripArabicDefiniteArticle(targetWord),
+      stripArabicDefiniteArticle(heardWord),
+    )
+  ) {
+    return 0
+  }
   // Without article matching, treat article-only equals as a near-miss, not free.
   if (
     !allowArticleMatch
@@ -2280,6 +2646,7 @@ function getWeightedMatchCost(targetWord, heardWord, similarity, confidence, opt
   ) {
     return 0.55 + ((1 - confidence) * 0.2)
   }
+  if (similarity >= 0.99) return 0
   if (similarity >= 0.92) return 0.22 + ((1 - confidence) * 0.12)
   if (similarity >= 0.85) return 0.42 + ((1 - confidence) * 0.16)
   // Soft-capped near-misses (~0.74) must stay cheaper than omit+later-match,
@@ -2959,12 +3326,15 @@ function isOmissionWordStatus(status = '') {
 
 function buildStableProgression(statuses = [], extraWords = [], options = {}) {
   const strict = options.strictProgression !== false
-  // Soft-continue reds stay visible, but unlock later words only once a later
-  // green/amber proves the learner moved on (never unlock from a lone red).
+  // Soft-continue reds/omissions/pending skip holes stay visible, but unlock
+  // later words once a later green/amber proves the learner moved on.
   const firstBlockingIndex = statuses.findIndex((word, index) => {
     if (isProgressionAdvanceStatus(word.status, options)) return false
     if (
-      (word.status === 'incorrect' || word.status === 'omitted')
+      (word.status === 'incorrect'
+        || word.status === 'omitted'
+        || word.status === 'pending'
+        || word.status === 'skipped')
       && options.advanceOnIncorrect
     ) {
       const laterSettled = statuses

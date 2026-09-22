@@ -1243,7 +1243,7 @@
   --navbar-offset: 64px;
   --tools-width: 440px;
   --tools-footer-h: 78px;
-  --font-ar: 'UthmanicHafs', 'Amiri', 'Noto Naskh Arabic', serif;
+  --font-ar: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif;
   --font-ui: "SF Pro Text", "SF Pro Display", "Avenir Next", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
 }
 
@@ -7173,7 +7173,7 @@ html {
   /* Keep stacked Arabic readable without dwarfing the translation. */
   --verse-font-percent: 120;
   --verse-font-size: clamp(1.28rem, calc(var(--verse-font-percent, 120) * 0.0125rem), 1.95rem);
-  font-family: var(--font-ar);
+  font-family: var(--quran-font, var(--font-ar));
   font-size: calc(var(--verse-font-size) * var(--ui-scale, 1) * var(--text-scale, 1));
   line-height: 1.75;
   text-align: right;
@@ -10660,7 +10660,7 @@ html {
 }
 
 .word-arabic {
-  font-family: var(--font-ar);
+  font-family: var(--quran-font, var(--font-ar));
   font-size: 0.9rem;
 }
 
@@ -11180,7 +11180,7 @@ body.memorisation-page nav.navbar.app-navbar {
 
 .main.container,
 .main.container-fluid {
-  padding-top: 5px;
+  padding-top: clamp(12px, 1.1vw, 18px);
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
   min-height: 100dvh;
 }
@@ -54398,7 +54398,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
   box-sizing: border-box;
 }
 
-/* Keep all four top-card icons (layout, font, controls, menu) on one row — desktop + mobile */
+/* Keep top-card icons (layout, controls, menu) on one row — Qur'anic font is ellipsis-only */
 
 .top-card-icon-controls .top-card-layout-icons,
 .top-card-icon-controls .top-card-font-wrap,
@@ -54489,6 +54489,23 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
   z-index: 90;
 }
 
+/* Qur'anic font picker lives in the ellipsis menu — hide any standalone toolbar dropdown. */
+.top-card-icon-controls .top-card-font-wrap,
+.top-card-icon-controls > .font-dropdown.workspace-font-dropdown {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* Desktop: layout switch lives in workspace reading toggles — hide top-card icon + ellipsis layout item.
    Keep the top-card icon during post-session choice so stacked/mushaf stays reachable if the bottom bar collapses. */
 @media (min-width: 768px) {
@@ -54496,8 +54513,7 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
     display: none !important;
   }
 
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
-  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
+  .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
     display: inline-flex !important;
   }
 
@@ -63449,9 +63465,32 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"],
   [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"],
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="weak"],
-  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"] {
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"],
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"],
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] {
     background: color-mix(in srgb, #ef4444 24%, #2a1c1c) !important;
     border-color: color-mix(in srgb, #f87171 42%, transparent) !important;
+  }
+
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] > i,
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-label,
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-value,
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] > i,
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-label,
+  [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-value,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="weak"] > i,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-label,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-value,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"] > i,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-label,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-value,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] > i,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-label,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-value,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] > i,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-label,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-value {
+    color: #fecaca !important;
   }
 
   [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected,
@@ -63489,15 +63528,33 @@ html.mutqin-pwa-mobile .post-session-simple__actions [data-action="review_weak_a
   max-width: none !important;
 }
 
-html.mutqin-pwa-mobile .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected {
+html.mutqin-pwa-mobile:not([data-theme="dark"]) .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected {
   background: color-mix(in srgb, #15803d 20%, #ecfdf3) !important;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, #15803d 42%, transparent) !important;
 }
 
-html.mutqin-pwa-mobile .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
-html.mutqin-pwa-mobile .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect {
+html.mutqin-pwa-mobile:not([data-theme="dark"]) .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
+html.mutqin-pwa-mobile:not([data-theme="dark"]) .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect {
   background: color-mix(in srgb, #b91c1c 18%, #fff1f2) !important;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, #b91c1c 46%, transparent) !important;
+}
+
+html.mutqin-pwa-mobile[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected,
+html.mutqin-pwa-mobile[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected .post-session-simple__quran-token-text {
+  color: #86efac !important;
+  -webkit-text-fill-color: #86efac !important;
+  background: color-mix(in srgb, #22c55e 28%, #1f2a22) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #4ade80 55%, transparent) !important;
+}
+
+html.mutqin-pwa-mobile[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
+html.mutqin-pwa-mobile[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect,
+html.mutqin-pwa-mobile[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak .post-session-simple__quran-token-text,
+html.mutqin-pwa-mobile[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect .post-session-simple__quran-token-text {
+  color: #fecaca !important;
+  -webkit-text-fill-color: #fecaca !important;
+  background: color-mix(in srgb, #ef4444 32%, #2a1c1c) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #f87171 62%, transparent) !important;
 }
 
 html.mutqin-pwa-mobile .post-session-simple.workspace-tour-plan-active.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
@@ -64228,7 +64285,8 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
 }
 
 [data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] {
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"],
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
   --ps-pro-ink: #f7eadb;
   --ps-pro-muted: rgba(247, 234, 219, 0.74);
   --ps-pro-subtle: rgba(247, 234, 219, 0.58);
@@ -65355,4 +65413,156 @@ html body .app[data-theme="dark"] .verse-basmala {
   overflow-x: auto !important;
   overflow-y: hidden !important;
   scrollbar-width: none;
+}
+
+/*
+ * Isolate Quran-only faces from Latin chrome.
+ * Uthmanic Hafs claims Latin letters but its U+0020 is hairline, so UI
+ * strings paint as CHANGEQURANFONT / UthmanicHafs(QCF). Also keep the
+ * sticky progress rail below the reading-tools menu (sibling stacking).
+ */
+html body .app .session-progress-rail,
+html body .app .session-progress-rail__title,
+html body .app .session-progress-rail__meta,
+html body .app .session-progress-rail__hint,
+html body .app .session-progress-rail__value,
+html body .app .session-progress-rail__sep,
+html body .app .top-card-menu,
+html body .app .top-card-menu button,
+html body .app .top-card-menu button span,
+html body .app .top-card-menu .top-card-menu-label,
+html body .app .top-card-menu .top-card-menu-link,
+html body .app .workspace-shell-surah-en {
+  font-family: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif) !important;
+}
+
+html body .app .session-progress-rail {
+  z-index: 8;
+}
+
+html body .app .workspace:has(.top-card-menu-wrap.is-menu-open) {
+  overflow: visible;
+}
+
+html body .app .workspace:has(.top-card-menu-wrap.is-menu-open) .workspace-shell,
+html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) {
+  position: relative;
+  z-index: 130;
+  overflow: visible;
+}
+
+html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .workspace-shell-head,
+html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .top-card-icon-controls,
+html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .top-card-menu-wrap,
+html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .top-card-menu {
+  overflow: visible;
+  z-index: 130;
+}
+
+/* Post-session AI review — dark mode cascade guard (teleported modals + mobile pills). */
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2.workspace-recite-result,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"],
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2.workspace-recite-result[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--step,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--sub,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-eyebrow,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__section-kicker--step,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__section-kicker--sub,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__plan-eyebrow {
+  color: rgba(247, 234, 219, 0.78) !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-lead,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-block,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-summary,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review-summary,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__weak-spots-lead,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__why-block,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-summary,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__ai-review-summary {
+  color: rgba(247, 234, 219, 0.74) !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline > .post-session-simple__weak-spots-item,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__weak-spots-list--inline > .post-session-simple__weak-spots-item {
+  border-color: rgba(248, 113, 113, 0.42) !important;
+  background: color-mix(in srgb, #ef4444 18%, #2a1c1c) !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-ayah,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__weak-spots-ayah {
+  color: #f7eadb !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-words,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-word.is-incorrect,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-word.is-partial,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__weak-spots-words,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__weak-spots-word.is-incorrect,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__weak-spots-word.is-partial {
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"] .post-session-simple__outcome-chip-value,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="strong"] > i,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="strong"] .post-session-simple__outcome-chip-value,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="strong"] > i {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-value,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-value,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] > i,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] > i,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-label,
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-label,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-value,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-value,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="weak"] > i,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"] > i,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="weak"] .post-session-simple__outcome-chip-label,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__outcome-chip[data-tone="review"] .post-session-simple__outcome-chip-label {
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-focus {
+  border-color: rgba(247, 234, 219, 0.18) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-label,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__focus-ayah-label {
+  color: rgba(247, 234, 219, 0.72) !important;
+}
+
+@media (max-width: 720px) {
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-weak .post-session-simple__quran-token-text,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-incorrect .post-session-simple__quran-token-text,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-weak,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-incorrect,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-weak .post-session-simple__quran-token-text,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-incorrect .post-session-simple__quran-token-text {
+    color: #fecaca !important;
+    -webkit-text-fill-color: #fecaca !important;
+    background: color-mix(in srgb, #ef4444 32%, #2a1c1c) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #f87171 62%, transparent) !important;
+  }
+
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected,
+  html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-token.is-corrected .post-session-simple__quran-token-text,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-corrected,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__quran-token.is-corrected .post-session-simple__quran-token-text {
+    color: #86efac !important;
+    -webkit-text-fill-color: #86efac !important;
+    background: color-mix(in srgb, #22c55e 28%, #1f2a22) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #4ade80 55%, transparent) !important;
+  }
 }

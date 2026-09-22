@@ -27,6 +27,7 @@ assert.match(dashboard, /dash-drawer__row--analysis/, 'analysis rows use a dedic
 assert.match(dashboard, /dash-btn--primary[\s\S]*dash-drawer__analysis-cta/, 'View analysis is a primary tap target')
 assert.match(dashboard, /getSessionAnalysis|getAiReciteAttemptAnalysis/, 'detailed analysis is fetched on click')
 assert.match(dashboard, /<SessionAnalysisModal/, 'Dashboard reuses the existing Analysis Modal')
+assert.match(dashboard, /analysis_not_recited_label/, 'Dashboard passes the unread ayah label')
 assert.match(memorisation, /<SessionAnalysisModal/, 'Memorisation keeps the shared Analysis Modal')
 assert.doesNotMatch(memorisation, /@click\.self="closeSessionAnalyticsModal"/, 'backdrop click no longer closes the modal')
 assert.match(modal, /@click\.self\.prevent/, 'backdrop click is swallowed')
@@ -42,6 +43,14 @@ assert.match(modal, /session-analysis-modal-open/, 'background scroll/interactio
 assert.doesNotMatch(modal, /sa-ov__retention-panel/, 'retention panel is permanently removed from session analysis')
 assert.match(modal, /sa-ov__word/, 'recited words render individually for mistake highlighting')
 assert.match(modal, /correctText/, 'the correct ayah renders below the recitation')
+assert.match(modal, /isUnreadAyah\(row\)/, 'empty recitation rows do not render a stray ayah number')
+assert.match(modal, /analysis_not_recited_label/, 'unread ayahs use a Not recited label')
+assert.doesNotMatch(
+  overviewCss,
+  /\.sa-ov__ayah-label \{[\s\S]*?text-transform:\s*uppercase/,
+  'ayah comparison labels stay readable instead of looking like raw keys',
+)
+assert.equal(en.dashboard.analysis_not_recited_label, 'Not recited')
 assert.match(
   overviewCss,
   /\.sa-ov__ayah-ar \{[\s\S]*?unicode-bidi:\s*plaintext/,
@@ -129,9 +138,36 @@ const omissionHistory = buildSessionAnalysisView({
   },
 }, t)
 assert.deepEqual(
-  omissionHistory.ayahRows[0].parts.map((part) => part.tone),
-  ['is-correct', 'is-incorrect', 'is-correct'],
-  'confirmed missing words are red in saved session analysis',
+  omissionHistory.ayahRows[0].parts.map((part) => ({ text: part.text, tone: part.tone })),
+  [
+    { text: 'الحمد', tone: 'is-correct' },
+    { text: 'العالمين', tone: 'is-correct' },
+  ],
+  'confirmed omissions stay out of Your recitation instead of cloning the mushaf word in red',
+)
+assert.equal(omissionHistory.ayahRows[0].hasMistake, true)
+assert.equal(omissionHistory.ayahRows[0].correctText, 'الحمد رب العالمين')
+
+const skippedTailAyahs = buildSessionAnalysisView({
+  has_analysis: true,
+  ai_attempt: {
+    word_statuses: [
+      { text: 'ٱلْحَمْدُ', status: 'correct', type: 'MATCH', ayah_number: 2 },
+      { text: 'إِيَّاكَ', status: 'missing', type: 'DELETION', ayah_number: 5 },
+      { text: 'نَعْبُدُ', status: 'missing', type: 'DELETION', ayah_number: 5 },
+      { text: 'وَإِيَّاكَ', status: 'missing', type: 'DELETION', ayah_number: 5 },
+      { text: 'نَسْتَعِينُ', status: 'missing', type: 'DELETION', ayah_number: 5 },
+    ],
+  },
+}, t)
+const skippedAyah5 = skippedTailAyahs.ayahRows.find((row) => row.ayah === 5)
+assert.equal(skippedAyah5?.parts.length, 0, 'unread ayah Your recitation stays blank')
+assert.equal(skippedAyah5?.notRecited, true)
+assert.equal(skippedAyah5?.hasMistake, true)
+assert.equal(skippedAyah5?.correctText, 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ')
+assert.equal(
+  skippedTailAyahs.ayahRows.find((row) => row.ayah === 2)?.parts[0]?.tone,
+  'is-correct',
 )
 
 const incorrectHistory = buildSessionAnalysisView({

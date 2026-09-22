@@ -207,6 +207,11 @@ class SpeechmaticsRateLimit
             return false;
         }
 
+        // Local demo/dev: stall-recovery and soft retries should not block testers.
+        if (config('app.show_demo_accounts') && app()->environment('local')) {
+            return true;
+        }
+
         if (filter_var(config('services.speechmatics.rate_limit.bypass_admin', false), FILTER_VALIDATE_BOOL)
             && $user->isAdmin()) {
             return true;

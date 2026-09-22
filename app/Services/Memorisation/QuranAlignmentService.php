@@ -59,8 +59,14 @@ class QuranAlignmentService
     public function align(array $ayahs, array $recognitionWords, string $targetText = '', array $options = []): array
     {
         $units = $this->buildTargetUnits($ayahs, $targetText);
-        $heard = $this->normaliseHeardWords($recognitionWords);
         $targetWords = array_map(fn ($u) => $u['word'], $units);
+        $prepared = $this->prepareHeardWordsForAlignment(
+            $targetWords,
+            $this->normaliseHeardWords($recognitionWords)
+        );
+        $heard = $prepared['heard'];
+        $leadingExtras = $prepared['leading_extras'];
+        $absorbedEchoes = $prepared['absorbed_echoes'] ?? [];
         $displayWords = array_map(fn ($u) => $u['display'], $units);
         $heardWords = array_map(fn ($w) => $w['word'], $heard);
         $isFinal = (($options['mode'] ?? $options['lifecycle'] ?? 'final') !== 'live');
@@ -104,6 +110,7 @@ class QuranAlignmentService
                 // match/substitution decision.
                 $matchCost = $this->matchCost($targetWords[$t - 1], $heardWords[$h - 1], $similarity, $confidence)
                     + $this->startingAnchorAdjustment($startingAnchor, $t - 1, $h - 1)
+                    + (($t - 1) * 1e-6)
                     + (($h - 1) * 1e-9);
 
                 $candidates = [
@@ -174,6 +181,27 @@ class QuranAlignmentService
             }
         }
         $operations = array_reverse($operations);
+        foreach (array_reverse($absorbedEchoes) as $echoHeard) {
+            array_unshift($operations, [
+                'op' => 'extra',
+                'expected_index' => 0,
+                'recognised_index' => null,
+                'similarity' => 0.0,
+                'agglutination_echo' => true,
+                'leading_heard' => $echoHeard,
+                'type' => self::TYPE_REPETITION,
+            ]);
+        }
+        foreach (array_reverse($leadingExtras) as $leadIndex => $leadHeard) {
+            array_unshift($operations, [
+                'op' => 'extra',
+                'expected_index' => 0,
+                'recognised_index' => null,
+                'similarity' => 0.0,
+                'leading_asr_junk' => true,
+                'leading_heard' => $leadHeard,
+            ]);
+        }
 
         $operations = $this->classifyOperationContext($operations, $targetWords, $heard, $isFinal, $startingAnchor);
         [$statuses, $extraWords, $events] = $this->materialiseOperations($operations, $units, $heard, $isFinal);
@@ -399,6 +427,303 @@ class QuranAlignmentService
         return $out;
     }
 
+    /**
+     * Expand agglutinations and drop leading ASR junk before DP.
+     *
+     * @param  list<string>  $targetWords
+     * @param  list<array{word:string,confidence:float}>  $heard
+     * @return array{heard:list<array{word:string,confidence:float}>,leading_extras:list<array{word:string,confidence:float}>,absorbed_echoes:list<array{word:string,confidence:float}>}
+     */
+    private function prepareHeardWordsForAlignment(array $targetWords, array $heard): array
+    {
+        $expanded = $this->expandAgglutinatedHeardWords($targetWords, $heard);
+        $stripped = $this->stripLeadingHeardJunk($targetWords, $expanded['heard']);
+
+        return [
+            'heard' => $stripped['heard'],
+            'leading_extras' => $stripped['leading_extras'],
+            'absorbed_echoes' => $expanded['absorbed_echoes'],
+        ];
+    }
+
+    /**
+     * Speechmatics often glues adjacent ayah words (بسمالله, الحمدلله). Expand
+     * those compounds against the expected sequence before DP so the first
+     * slot is not painted as a false SUBSTITUTION. Also absorb a following
+     * echo of the glued tail so الله cannot lock onto a later لله.
+     *
+     * @param  list<string>  $targetWords
+     * @param  list<array{word:string,confidence:float}>  $heard
+     * @return array{heard:list<array{word:string,confidence:float}>,absorbed_echoes:list<array{word:string,confidence:float}>}
+     */
+    private function expandAgglutinatedHeardWords(array $targetWords, array $heard): array
+    {
+        if ($targetWords === [] || $heard === []) {
+            return ['heard' => $heard, 'absorbed_echoes' => []];
+        }
+
+        $expanded = [];
+        $absorbedEchoes = [];
+        $cursor = 0;
+        $count = count($heard);
+        for ($index = 0; $index < $count; $index++) {
+            $entry = $heard[$index];
+            $parts = $this->tryExpandAgglutinatedHeardWord($entry, $targetWords, $cursor);
+            $consumedExtra = 0;
+            if ($parts === null && $index + 1 < $count) {
+                $next = $heard[$index + 1];
+                $left = (string) ($entry['word'] ?? '');
+                $right = (string) ($next['word'] ?? '');
+                $leftInTarget = false;
+                $rightInTarget = false;
+                foreach ($targetWords as $target) {
+                    if ($this->similarity($target, $left) >= RecitationScoringThresholds::CORRECT_SIMILARITY) {
+                        $leftInTarget = true;
+                    }
+                    if ($this->similarity($target, $right) >= RecitationScoringThresholds::CORRECT_SIMILARITY) {
+                        $rightInTarget = true;
+                    }
+                }
+                if (
+                    mb_strlen($left) >= 2
+                    && mb_strlen($right) >= 1
+                    && (mb_strlen($left) + mb_strlen($right)) >= 4
+                    && ! $leftInTarget
+                    && ! $rightInTarget
+                ) {
+                    $joined = $entry;
+                    $joined['word'] = $left.$right;
+                    $joined['raw_word'] = ((string) ($entry['raw_word'] ?? $left)).((string) ($next['raw_word'] ?? $right));
+                    $parts = $this->tryExpandAgglutinatedHeardWord($joined, $targetWords, $cursor);
+                    if ($parts !== null) {
+                        $consumedExtra = 1;
+                    }
+                }
+            }
+            if ($parts !== null) {
+                foreach ($parts as $part) {
+                    $expanded[] = $part;
+                }
+                $cursor = min(count($targetWords), $cursor + count($parts));
+                $index += $consumedExtra;
+                $echoIndex = $index + 1;
+                if ($echoIndex < $count) {
+                    $lastPart = $parts[count($parts) - 1];
+                    $echo = $heard[$echoIndex];
+                    if ($this->similarity((string) ($lastPart['word'] ?? ''), (string) ($echo['word'] ?? '')) >= RecitationScoringThresholds::CORRECT_SIMILARITY) {
+                        $echo['agglutination_echo'] = true;
+                        $absorbedEchoes[] = $echo;
+                        $index = $echoIndex;
+                    }
+                }
+
+                continue;
+            }
+            $expanded[] = $entry;
+            $heardWord = (string) ($entry['word'] ?? '');
+            if (
+                $cursor < count($targetWords)
+                && $this->similarity($targetWords[$cursor], $heardWord) >= RecitationScoringThresholds::CORRECT_SIMILARITY
+            ) {
+                $cursor++;
+            }
+        }
+
+        return ['heard' => $expanded, 'absorbed_echoes' => $absorbedEchoes];
+    }
+
+    /**
+     * @param  array{word:string,confidence:float}  $entry
+     * @param  list<string>  $targetWords
+     * @return list<array{word:string,confidence:float}>|null
+     */
+    private function tryExpandAgglutinatedHeardWord(array $entry, array $targetWords, int $preferredStart = 0): ?array
+    {
+        $heardNormalized = (string) ($entry['word'] ?? '');
+        if ($heardNormalized === '' || mb_strlen($heardNormalized) < 4) {
+            return null;
+        }
+        foreach ($targetWords as $target) {
+            if ($this->similarity($target, $heardNormalized) >= RecitationScoringThresholds::CORRECT_SIMILARITY) {
+                return null;
+            }
+        }
+
+        $starts = [];
+        $preferred = max(0, min(count($targetWords) - 1, $preferredStart));
+        if ($targetWords !== []) {
+            $starts[] = $preferred;
+        }
+        for ($index = 0; $index < count($targetWords); $index++) {
+            if ($index !== $preferred) {
+                $starts[] = $index;
+            }
+        }
+
+        $best = null;
+        foreach ($starts as $start) {
+            $concat = '';
+            $parts = [];
+            for ($end = $start; $end < count($targetWords) && count($parts) < 4; $end++) {
+                $concat .= $targetWords[$end];
+                $parts[] = $targetWords[$end];
+                if (count($parts) < 2) {
+                    continue;
+                }
+                if (! $this->agglutinationFormsMatch($concat, $heardNormalized)) {
+                    continue;
+                }
+                if (
+                    $best === null
+                    || count($parts) > count($best['parts'])
+                    || (count($parts) === count($best['parts']) && $start < $best['start'])
+                ) {
+                    $best = ['parts' => $parts, 'start' => $start];
+                }
+            }
+        }
+        if ($best === null) {
+            return null;
+        }
+
+        $out = [];
+        foreach ($best['parts'] as $index => $word) {
+            $part = $entry;
+            $part['word'] = $word;
+            $part['agglutinated_from'] = $heardNormalized;
+            $part['agglutinated_part_index'] = $index;
+            $part['agglutinated_part_count'] = count($best['parts']);
+            if ($index > 0) {
+                unset($part['start'], $part['end'], $part['token'], $part['speechmatics_token'], $part['speechmaticsToken'], $part['id']);
+                $part['raw_word'] = $word;
+            }
+            $out[] = $part;
+        }
+
+        return $out;
+    }
+
+    private function agglutinationFormsMatch(string $concatenatedTarget, string $heardNormalized): bool
+    {
+        if ($concatenatedTarget === '' || $heardNormalized === '') {
+            return false;
+        }
+        if ($concatenatedTarget === $heardNormalized) {
+            return true;
+        }
+        if ($this->alefOptionalEqual($concatenatedTarget, $heardNormalized)) {
+            return true;
+        }
+        if (mb_strlen($concatenatedTarget) >= 5 && mb_strlen($heardNormalized) >= 5) {
+            $left = $this->stripAlefForCompare($concatenatedTarget);
+            $right = $this->stripAlefForCompare($heardNormalized);
+            if ($left !== '' && $right !== '' && $this->levenshteinDistance($left, $right) <= 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<string>  $targetWords
+     * @param  list<array{word:string,confidence:float}>  $heard
+     * @return array{heard:list<array{word:string,confidence:float}>,leading_extras:list<array{word:string,confidence:float}>}
+     */
+    private function stripLeadingHeardJunk(array $targetWords, array $heard): array
+    {
+        if (count($targetWords) < 2 || count($heard) < 2) {
+            return ['heard' => $heard, 'leading_extras' => []];
+        }
+
+        $openingTarget = $targetWords[0];
+        $openingSim = $this->similarity($openingTarget, (string) ($heard[0]['word'] ?? ''));
+        if ($openingSim >= 0.48) {
+            return ['heard' => $heard, 'leading_extras' => []];
+        }
+
+        $maxDrop = min(3, count($heard) - 1);
+        $best = null;
+        for ($drop = 1; $drop <= $maxDrop; $drop++) {
+            $leading = array_slice($heard, 0, $drop);
+            $allJunk = true;
+            foreach ($leading as $entry) {
+                if (! $this->isLikelyLeadingAsrJunk($entry, $targetWords, $openingTarget)) {
+                    $allJunk = false;
+                    break;
+                }
+            }
+            if (! $allJunk) {
+                continue;
+            }
+            $rest = array_slice($heard, $drop);
+            for ($startTarget = 0; $startTarget <= min(2, count($targetWords) - 1); $startTarget++) {
+                $length = 0;
+                $reliable = 0;
+                while (
+                    $length < count($rest)
+                    && ($startTarget + $length) < count($targetWords)
+                    && $this->similarity($targetWords[$startTarget + $length], (string) ($rest[$length]['word'] ?? '')) >= RecitationScoringThresholds::CORRECT_SIMILARITY
+                ) {
+                    if ((float) ($rest[$length]['confidence'] ?? 1) >= RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+                        $reliable++;
+                    }
+                    $length++;
+                }
+                if ($length < 2 || $reliable < 2) {
+                    continue;
+                }
+                if (
+                    $best === null
+                    || $length > $best['length']
+                    || ($length === $best['length'] && $drop < $best['drop'])
+                    || ($length === $best['length'] && $drop === $best['drop'] && $startTarget < $best['start_target'])
+                ) {
+                    $best = [
+                        'drop' => $drop,
+                        'start_target' => $startTarget,
+                        'length' => $length,
+                        'leading' => $leading,
+                        'rest' => $rest,
+                    ];
+                }
+            }
+        }
+        if ($best === null) {
+            return ['heard' => $heard, 'leading_extras' => []];
+        }
+
+        return ['heard' => $best['rest'], 'leading_extras' => $best['leading']];
+    }
+
+    /**
+     * @param  array{word:string,confidence?:float}  $heardWord
+     * @param  list<string>  $targetWords
+     */
+    private function isLikelyLeadingAsrJunk(array $heardWord, array $targetWords, string $openingTarget): bool
+    {
+        $word = (string) ($heardWord['word'] ?? '');
+        if ($word === '') {
+            return true;
+        }
+        if ($this->similarity($openingTarget, $word) >= 0.48) {
+            return false;
+        }
+        foreach ($targetWords as $target) {
+            if ($this->similarity($target, $word) >= RecitationScoringThresholds::CORRECT_SIMILARITY) {
+                return false;
+            }
+        }
+        if (mb_strlen($word) <= 3) {
+            return true;
+        }
+        if ((float) ($heardWord['confidence'] ?? 1) < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+            return true;
+        }
+
+        return false;
+    }
+
     private function stripArticle(string $word): string
     {
         if (str_starts_with($word, 'ال') && mb_strlen($word) > 3) {
@@ -611,7 +936,12 @@ class QuranAlignmentService
     {
         if ($target === $heard
             || $this->stripArticle($target) === $this->stripArticle($heard)
-            || $this->stripClitics($target) === $this->stripClitics($heard)) {
+            || $this->stripClitics($target) === $this->stripClitics($heard)
+            || $this->alefOptionalEqual($target, $heard)
+            || $this->alefOptionalEqual($this->stripArticle($target), $this->stripArticle($heard))) {
+            return 0.0;
+        }
+        if ($similarity >= 0.99) {
             return 0.0;
         }
         if ($similarity >= 0.92) {
@@ -1126,6 +1456,12 @@ class QuranAlignmentService
      */
     private function classifyExtraOperation(array $operations, int $index, array $targetWords, array $heard): string
     {
+        if (! empty($operations[$index]['agglutination_echo'])) {
+            return self::TYPE_REPETITION;
+        }
+        if (! empty($operations[$index]['leading_asr_junk'])) {
+            return self::TYPE_INSERTION;
+        }
         $recognisedIndex = (int) ($operations[$index]['recognised_index'] ?? -1);
         $expectedIndex = (int) ($operations[$index]['expected_index'] ?? -1);
         $word = (string) ($heard[$recognisedIndex]['word'] ?? '');
@@ -1352,6 +1688,36 @@ class QuranAlignmentService
      * @param  list<array<string,mixed>>  $heard
      * @return array<string,int>|null
      */
+    /**
+     * @param  list<array<string,mixed>>  $heard
+     * @param  list<string>  $targetWords
+     */
+    private function heardSpanShowsProgressPast(
+        array $heard,
+        int $fromHeard,
+        int $toHeard,
+        array $targetWords,
+        int $pastTargetIndex,
+    ): bool {
+        $start = max(0, $fromHeard);
+        $end = min(count($heard), max($start, $toHeard));
+        $floor = max(0, $pastTargetIndex);
+        for ($heardIndex = $start; $heardIndex < $end; $heardIndex++) {
+            $word = trim((string) ($heard[$heardIndex]['word'] ?? ''));
+            $confidence = (float) ($heard[$heardIndex]['confidence'] ?? 1);
+            if ($word === '' || $confidence < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE) {
+                continue;
+            }
+            for ($targetIndex = $floor + 1, $targetCount = count($targetWords); $targetIndex < $targetCount; $targetIndex++) {
+                if ($this->similarity($targetWords[$targetIndex], $word) >= RecitationScoringThresholds::CORRECT_SIMILARITY) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private function findLiveRestartEvidence(array $targetWords, array $heard): ?array
     {
         $matches = function (int $targetIndex, int $heardIndex) use ($targetWords, $heard): bool {
@@ -1373,6 +1739,16 @@ class QuranAlignmentService
                 }
                 for ($secondStart = $firstStart + 2; $secondStart + 1 < count($heard); $secondStart++) {
                     if (! $matches($restartStart, $secondStart) || ! $matches($restartStart + 1, $secondStart + 1)) {
+                        continue;
+                    }
+                    // Repeated phrases later in the passage (e.g. Al-Fatihah 1:3) are not restarts.
+                    if ($this->heardSpanShowsProgressPast(
+                        $heard,
+                        $firstStart + 2,
+                        $secondStart,
+                        $targetWords,
+                        $restartStart + 1,
+                    )) {
                         continue;
                     }
 
@@ -1682,9 +2058,13 @@ class QuranAlignmentService
      */
     private function extraWordPayload(array $operation, array $heard, array $units, string $type): array
     {
-        $recognisedIndex = (int) ($operation['recognised_index'] ?? -1);
+        $recognisedIndex = array_key_exists('recognised_index', $operation) && $operation['recognised_index'] !== null
+            ? (int) $operation['recognised_index']
+            : -1;
         $expectedIndex = (int) ($operation['expected_index'] ?? 0);
-        $word = $heard[$recognisedIndex] ?? [];
+        $word = is_array($operation['leading_heard'] ?? null)
+            ? $operation['leading_heard']
+            : ($heard[$recognisedIndex] ?? []);
         $expectedUnit = $units[max(0, min(count($units) - 1, $expectedIndex))] ?? null;
         $visual = $type === self::TYPE_UNASSESSED
             ? 'uncertain'
@@ -1699,7 +2079,7 @@ class QuranAlignmentService
             'expected_word' => $expectedUnit['display'] ?? '',
             'expected_index' => $expectedIndex,
             'recognised_word' => (string) ($word['raw_word'] ?? $word['word'] ?? ''),
-            'recognised_index' => $recognisedIndex,
+            'recognised_index' => $recognisedIndex >= 0 ? $recognisedIndex : null,
             'token' => $word['token'] ?? $word['speechmatics_token'] ?? $word['speechmaticsToken'] ?? $word['id'] ?? null,
             'speechmatics_token' => $word['speechmatics_token'] ?? $word['speechmaticsToken'] ?? $word['token'] ?? $word['id'] ?? null,
             'provider' => $word['provider'] ?? null,
@@ -1716,6 +2096,9 @@ class QuranAlignmentService
                 ? 'neutral'
                 : ($type === self::TYPE_INSERTION ? 'red' : 'amber'),
         ];
+        if (! empty($operation['leading_asr_junk'])) {
+            $payload['leading_asr_junk'] = true;
+        }
         if ($type === self::TYPE_SELF_CORRECTION) {
             $correctedWords = $this->correctedTargetWords(
                 $units,

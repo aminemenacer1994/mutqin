@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   QURAN_FONT_IDS,
+  QURAN_UI_ARABIC_FONT,
   normaliseQuranFontId,
   resolveQuranFontFamily,
   readPersistedQuranFontId,
@@ -33,7 +34,7 @@ test('resolveQuranFontFamily returns distinct stacks per font', () => {
   assert.notEqual(amiri, naskh)
 })
 
-test('readPersistedQuranFontId prefers owner-scoped uiState over default', () => {
+test('readPersistedQuranFontId always returns uthmanic (font picker disabled)', () => {
   const map = new Map([
     ['mutqin.uiState.42', JSON.stringify({ quranFont: 'naskh' })],
     ['mutqin.uiState', JSON.stringify({ quranFont: 'amiri' })],
@@ -41,8 +42,8 @@ test('readPersistedQuranFontId prefers owner-scoped uiState over default', () =>
   const storage = {
     getItem(key) { return map.has(key) ? map.get(key) : null },
   }
-  assert.equal(readPersistedQuranFontId({ userId: 42, storage }), 'naskh')
-  assert.equal(readPersistedQuranFontId({ userId: null, storage }), 'amiri')
+  assert.equal(readPersistedQuranFontId({ userId: 42, storage }), 'uthmanic')
+  assert.equal(readPersistedQuranFontId({ userId: null, storage }), 'uthmanic')
   assert.equal(readPersistedQuranFontId({ storage: { getItem() { return null } } }), 'uthmanic')
 })
 
@@ -63,12 +64,14 @@ test('bootPersistedQuranFont applies CSS vars without swapping to another Mutqin
     },
   }
   const id = bootPersistedQuranFont({ userId: 'guest', storage, root })
-  assert.equal(id, 'lateef')
-  assert.match(props.get('--quran-font'), /Lateef/)
-  assert.equal(attrs.get('data-quran-font'), 'lateef')
+  assert.equal(id, 'uthmanic')
+  assert.match(props.get('--quran-font'), /UthmanicHafs|KFGQPC/)
+  assert.equal(attrs.get('data-quran-font'), 'uthmanic')
   assert.equal(attrs.has('data-quran-font-ready'), false)
   applyQuranFontCssVariable('lateef', root)
-  assert.match(props.get('--font-ar'), /Lateef/)
+  assert.match(props.get('--quran-font'), /Lateef/)
+  assert.equal(props.get('--font-ar'), QURAN_UI_ARABIC_FONT)
+  assert.doesNotMatch(props.get('--font-ar'), /Lateef|Uthmanic|KFGQPC/)
 })
 
 test('buildMemorisationPlan consolidates recommendation settings', () => {

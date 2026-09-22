@@ -276,7 +276,7 @@ export function createDashboardAiReciteRecorder(options = {}) {
         provider = createSpeechmaticsRealtimeProvider({
           getAccessToken: () => fetchTranscriptionAccessToken(),
           getSampleRate: () => Number(bridge?.sampleRate || 48000),
-          handshakeTimeoutMs: 2800,
+          handshakeTimeoutMs: 4500,
           maxDelaySeconds: delays.maxDelaySeconds,
           endOfUtteranceSeconds: delays.endOfUtteranceSeconds,
         }).onTranscript((payload) => applyTranscriptPayload(payload))

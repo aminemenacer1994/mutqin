@@ -126,17 +126,25 @@
                       v-for="row in analysis.ayahRows"
                       :key="`ayah-${row.ayah || row.ayahLabel}`"
                       class="sa-ov__ayah"
-                      :class="{ 'sa-ov__ayah--needs-correction': row.hasMistake }"
+                      :class="{
+                        'sa-ov__ayah--needs-correction': row.hasMistake,
+                        'sa-ov__ayah--unread': isUnreadAyah(row),
+                      }"
                     >
-                      <span class="sa-ov__ayah-label">{{ recitationLabel || 'Your recitation' }}</span>
-                      <p class="sa-ov__ayah-ar sa-ov__ayah-ar--recitation" lang="ar" dir="rtl">
+                      <span class="sa-ov__ayah-label">{{ ayahRecitationLabel(row) }}</span>
+                      <p
+                        v-if="!isUnreadAyah(row)"
+                        class="sa-ov__ayah-ar sa-ov__ayah-ar--recitation"
+                        lang="ar"
+                        dir="rtl"
+                      >
                         <template v-for="(part, index) in row.parts || []" :key="`heard-${index}`">
                           <span class="sa-ov__word" :class="part.tone">{{ part.text }}</span>
                           <span v-if="index < (row.parts || []).length - 1" class="sa-ov__word-space" aria-hidden="true">&nbsp;</span>
                         </template>
                         <span v-if="ayahIndex(row)" class="sa-ov__ayah-no">{{ ayahIndex(row) }}</span>
                       </p>
-                      <span v-if="row.hasMistake" class="sa-ov__ayah-label sa-ov__ayah-label--correct">{{ correctAyahLabel || 'Correct ayah' }}</span>
+                      <span v-if="row.hasMistake" class="sa-ov__ayah-label sa-ov__ayah-label--correct">{{ resolvedCorrectAyahLabel }}</span>
                       <p v-if="row.hasMistake" class="sa-ov__ayah-ar sa-ov__ayah-ar--correct" lang="ar" dir="rtl">
                         <span class="sa-ov__ayah-text">{{ row.correctText || ayahText(row) }}</span>
                         <span v-if="ayahIndex(row)" class="sa-ov__ayah-no">{{ ayahIndex(row) }}</span>
@@ -204,6 +212,7 @@ export default {
     wordsTitle: { type: String, default: '' },
     recitationLabel: { type: String, default: '' },
     correctAyahLabel: { type: String, default: '' },
+    notRecitedLabel: { type: String, default: '' },
     recommendationsTitle: { type: String, default: '' },
     audioTitle: { type: String, default: '' },
     noRecommendations: { type: String, default: '' },
@@ -278,6 +287,15 @@ export default {
       }
       return this.audioUnavailable
     },
+    resolvedRecitationLabel() {
+      return this.recitationLabel || this.translate('dashboard.analysis_recitation_label', 'Your recitation')
+    },
+    resolvedCorrectAyahLabel() {
+      return this.correctAyahLabel || this.translate('dashboard.analysis_correct_ayah_label', 'Correct ayah')
+    },
+    resolvedNotRecitedLabel() {
+      return this.notRecitedLabel || this.translate('dashboard.analysis_not_recited_label', 'Not recited')
+    },
   },
   watch: {
     open: {
@@ -300,6 +318,19 @@ export default {
     this.syncBodyLock(false)
   },
   methods: {
+    translate(key, fallback) {
+      if (typeof this.$t === 'function') {
+        const value = this.$t(key)
+        if (value && value !== key) return value
+      }
+      return fallback
+    },
+    isUnreadAyah(row) {
+      return row?.notRecited === true || !(row?.parts || []).length
+    },
+    ayahRecitationLabel(row) {
+      return this.isUnreadAyah(row) ? this.resolvedNotRecitedLabel : this.resolvedRecitationLabel
+    },
     ayahIndex(row) {
       if (row?.ayah) return row.ayah
       const match = String(row?.ayahLabel || '').match(/\d+/)

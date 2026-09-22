@@ -16,10 +16,14 @@ export function buildSpeechmaticsRecitationConfig(options = {}) {
     language: String(options.language || 'ar').trim() || 'ar',
     model: 'enhanced',
     enable_partials: true,
-    diarization: 'speaker',
-    speaker_diarization_config: { speaker_sensitivity: 0.5 },
   }
-  // Language stays ar, operating point enhanced, diarization speaker.
+  // AMD live: single reciter on the mic — speaker diarization often drops words
+  // after the first ayah and the cursor never crosses the boundary.
+  if (!options.amdLive) {
+    config.diarization = 'speaker'
+    config.speaker_diarization_config = { speaker_sensitivity: 0.5 }
+  }
+  // Language stays ar, model enhanced.
   // No output_locale and no dialect switch. additional_vocab is never the selected ayah.
   if (additionalVocab.length) config.additional_vocab = additionalVocab
   return config

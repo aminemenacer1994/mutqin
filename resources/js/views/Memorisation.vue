@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v171 -->
+  <!-- mutqin-ui-build: v180 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
@@ -707,21 +707,6 @@
                     <i class="bi bi-palette" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.tajweed') }}</span>
                     <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                  <div class="top-card-menu-divider" aria-hidden="true"></div>
-                  <p class="top-card-menu-label">{{ t('memorisation.a11y.changeQuranFont') }}</p>
-                  <button
-                    v-for="font in quranFontOptions"
-                    :key="font.value"
-                    type="button"
-                    class="top-card-menu-toggle top-card-menu-font"
-                    :class="{ active: quranFont === font.value }"
-                    :aria-pressed="quranFont === font.value ? 'true' : 'false'"
-                    @click.stop="selectFont(font.value)"
-                  >
-                    <i class="bi" :class="getFontIcon(font.value)" aria-hidden="true"></i>
-                    <span>{{ font.label }}</span>
-                    <i v-if="quranFont === font.value" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <div class="top-card-menu-divider" aria-hidden="true"></div>
                   <button type="button" @click="toggleKeyboardShortcuts">
@@ -2986,6 +2971,7 @@
     </SessionAnalysisModal>
 
     <WorkspaceAiReciteResultModal
+      :theme="theme"
       :open="workspaceReciteAnalysisOpen"
       :loading="workspaceReciteAnalysisLoading"
       :error="workspaceReciteAnalysisError"
@@ -4519,6 +4505,7 @@
       :mic-guidance="amdMicGuidance"
       :live-hint="amdLiveHint"
       :recording-active-label="amdRecordingActiveLabel"
+      :stt-recovering="amdSttStallNotice || amdSttRecovering"
       :ayah-html="amdStaticAyahHtml"
       :blur-active="amdHiddenTextEnabled"
       :peeking="amdPeekActive"

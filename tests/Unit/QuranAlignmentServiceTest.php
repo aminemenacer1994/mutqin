@@ -1136,6 +1136,59 @@ class QuranAlignmentServiceTest extends TestCase
         $this->assertNotSame('green', $result['word_results'][5]['visual_status']);
     }
 
+    public function test_agglutinated_asr_tokens_split_before_alignment(): void
+    {
+        // Speechmatics often emits بسمالله as one token. Without a split the
+        // first basmala word paints as SUBSTITUTION while the rest stay MATCH.
+        $basmala = $this->alignWords(
+            ['بسم', 'الله', 'الرحمن', 'الرحيم'],
+            ['بسمالله', 'الله', 'الرحمن', 'الرحيم'],
+            ['lifecycle' => 'live']
+        );
+        $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'MATCH'], array_column($basmala['word_results'], 'type'));
+        $this->assertSame('correct', $basmala['word_results'][0]['status']);
+        $this->assertContains('REPETITION', array_column($basmala['extra_words'], 'type'));
+
+        $basmalaOnly = $this->alignWords(
+            ['بسم', 'الله', 'الرحمن', 'الرحيم'],
+            ['بسمالله', 'الرحمن', 'الرحيم'],
+            ['lifecycle' => 'live']
+        );
+        $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'MATCH'], array_column($basmalaOnly['word_results'], 'type'));
+
+        $alefVariant = $this->alignWords(
+            ['بسم', 'الله', 'الرحمن', 'الرحيم'],
+            ['باسمالله', 'الرحمن', 'الرحيم'],
+            ['lifecycle' => 'live']
+        );
+        $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'MATCH'], array_column($alefVariant['word_results'], 'type'));
+
+        $hamd = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين'],
+            ['الحمدلله', 'رب', 'العالمين'],
+            ['lifecycle' => 'live']
+        );
+        $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'MATCH'], array_column($hamd['word_results'], 'type'));
+        $this->assertSame('correct', $hamd['word_results'][0]['status']);
+
+        $leadingJunk = $this->alignWords(
+            ['بسم', 'الله', 'الرحمن', 'الرحيم'],
+            ['في', 'الله', 'الرحمن', 'الرحيم'],
+            ['lifecycle' => 'live']
+        );
+        $this->assertContains($leadingJunk['word_results'][0]['status'], ['pending', 'uncertain']);
+        $this->assertSame(['UNASSESSED', 'MATCH', 'MATCH', 'MATCH'], array_column($leadingJunk['word_results'], 'type'));
+        $this->assertContains('INSERTION', array_column($leadingJunk['extra_words'], 'type'));
+
+        $nearGlue = $this->alignWords(
+            ['بسم', 'الله', 'الرحمن', 'الرحيم'],
+            ['بسمالل', 'ه', 'الرحمن', 'الرحيم'],
+            ['lifecycle' => 'live']
+        );
+        $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'MATCH'], array_column($nearGlue['word_results'], 'type'));
+        $this->assertSame('correct', $nearGlue['word_results'][0]['status']);
+    }
+
     /**
      * @param  list<string>  $expected
      * @param  list<string|array<string,mixed>>  $heard

@@ -5837,10 +5837,14 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     z-index: 2 !important;
   }
 
-  /* Mobile: mushaf/stacked lives in the ellipsis menu — hide the outside icon. */
+  /* Mobile: mushaf/stacked + Qur'anic fonts live in the ellipsis menu — hide outside icons. */
   html body .app .top-card-icon-controls .top-card-layout-icons,
   html body .app .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons,
-  html body .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons {
+  html body .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-layout-icons,
+  html body .app .top-card-icon-controls .top-card-font-wrap,
+  html body .app .top-card-icon-controls > .font-dropdown.workspace-font-dropdown,
+  html body .app .workspace-shell-head > .top-card-icon-controls .top-card-font-wrap,
+  html body .app .workspace-shell--post-session-choice .top-card-icon-controls .top-card-font-wrap {
     display: none !important;
     width: 0 !important;
     height: 0 !important;

@@ -271,6 +271,12 @@ includesAll('quran font picker access', [
   /clearMushafAyahHtmlCache/,
 ])
 
+assert.doesNotMatch(
+  source,
+  /class="font-dropdown workspace-font-dropdown top-card-font-wrap"/,
+  'standalone toolbar font dropdown must be removed; fonts belong in the ellipsis menu'
+)
+
 includesAll('desktop control group swap', [
   /\/\* Session CTAs live inside \.workspace-shell-head-toolbar \(left of icon controls\)\./,
   /\.workspace-shell-head:not\(\.is-idle\) > \.workspace-shell-head-toolbar \{/,
@@ -392,6 +398,11 @@ includesAll('top toolbar feature spacing', [
     blade,
     /\.app \.top-card-menu \.top-card-menu-toggle--layout \{\s*display:\s*flex\s*!important/,
     'blade hotfix must show mushaf/stacked inside the ellipsis menu on mobile'
+  )
+  assert.match(
+    blade,
+    /Qur'anic font picker lives in the ellipsis menu only[\s\S]*?\.top-card-font-wrap[\s\S]*?display:\s*none\s*!important/,
+    'blade hotfix must hide the standalone Qur\'anic font toolbar icon'
   )
 }
 
@@ -640,6 +651,11 @@ includesAll('ai audio consent and retention wiring', [
   assert.match(amdVue, /amd-tools-bar__leading/)
   assert.match(amdVue, /recordingActiveLabel/)
   assert.match(amdVue, /displayMicStatusLabel/)
+  assert.match(amdVue, /sttRecovering/)
+  assert.match(amdVue, /amd-mic-status--reconnecting/)
+  assert.match(source, /resolveAmdRecordingPillLabel/)
+  assert.match(source, /amdSttStallNotice/)
+  assert.match(source, /:stt-recovering="amdSttStallNotice \|\| amdSttRecovering"/)
   // One Recording status pill — starting must not show a separate listening label.
   assert.match(amdVue, /stage === 'listening' \|\| this\.isStarting/)
   assert.doesNotMatch(amdVue, /amd-live-banner/)

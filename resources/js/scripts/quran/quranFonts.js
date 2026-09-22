@@ -18,6 +18,14 @@ export const QURAN_FONT_FALLBACK =
   "'Amiri Quran', 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif"
 
 /**
+ * Mixed/UI Arabic (labels, chrome, Latin+Arabic strings).
+ * Never put a Quran-only face here — KFGQPC Uthmanic Hafs has a ~0 Latin space,
+ * so "Change Quran font" paints as "CHANGEQURANFONT".
+ */
+export const QURAN_UI_ARABIC_FONT =
+  `'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif`
+
+/**
  * @type {Readonly<Record<string, string>>}
  */
 export const QURAN_FONT_FAMILIES = Object.freeze({
@@ -70,7 +78,8 @@ export function applyQuranFontCssVariable(fontId, root = typeof document !== 'un
   if (!root || typeof root.style?.setProperty !== 'function') return resolveQuranFontFamily(fontId)
   const family = resolveQuranFontFamily(fontId)
   root.style.setProperty('--quran-font', family)
-  root.style.setProperty('--font-ar', family)
+  // Reset any previous leak. --font-ar is UI Arabic, not the Mushaf face.
+  root.style.setProperty('--font-ar', QURAN_UI_ARABIC_FONT)
   root.setAttribute('data-quran-font', normaliseQuranFontId(fontId))
   return family
 }
@@ -114,28 +123,8 @@ function readQuranFontFromStorageKey(storage, key) {
  * @param {{ userId?: string|number|null, storage?: Storage|null }} [options]
  * @returns {string}
  */
-export function readPersistedQuranFontId(options = {}) {
-  const storage = options.storage
-    ?? (typeof localStorage !== 'undefined' ? localStorage : null)
-  if (!storage) return QURAN_FONT_DEFAULT
-
-  const explicitId = options.userId != null && String(options.userId).trim() !== ''
-    ? String(options.userId)
-    : null
-  const authId = typeof window !== 'undefined' && window.mutqinUserId != null
-    ? String(window.mutqinUserId)
-    : null
-  const ownerIds = [explicitId, authId, 'guest'].filter((id, index, list) => (
-    id && list.indexOf(id) === index
-  ))
-
-  // Prefer owner-scoped uiState, then legacy unscoped key.
-  for (const owner of ownerIds) {
-    const scoped = readQuranFontFromStorageKey(storage, `mutqin.uiState.${owner}`)
-    if (scoped) return scoped
-  }
-  const unscoped = readQuranFontFromStorageKey(storage, 'mutqin.uiState')
-  if (unscoped) return unscoped
+export function readPersistedQuranFontId(_options = {}) {
+  // Product lock: Mushaf/stacked Arabic always uses Uthmanic Hafs (QCF).
   return QURAN_FONT_DEFAULT
 }
 

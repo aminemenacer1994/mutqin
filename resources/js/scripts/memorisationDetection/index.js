@@ -80,6 +80,7 @@ export {
 export {
   isSettledLiveStatus,
   isPaintedLiveStatus,
+  hasLaterSettledLiveStatus,
   resolveConfirmedWordIndex,
   resolveCandidateWordIndex,
   resolveExpectedWordIndex,
@@ -97,6 +98,14 @@ export {
   mergeLiveRecitationStatuses,
   resolveLivePaceLimit,
 } from './liveCursor'
+
+export {
+  AMD_STT_STALL,
+  evaluateAmdSttStall,
+  resolveAmdRecordingPillLabel,
+  resolveLiveAlignmentWords,
+  shouldShowAmdSttStallNotice,
+} from './sttStallRecovery'
 
 export {
   applyRecitationTimingBuffer,
