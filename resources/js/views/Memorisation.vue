@@ -383,6 +383,7 @@
       'player-visible': playbackShellActive,
       'playback-pill-visible': playbackPillVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
+      'madani-qpc-mode-active': readingViewMode === 'madani_mushaf',
       'focus-mode-active': focusModeEnabled,
       'blur-mode-active': blurModeEnabled,
       'flow-practice': guidedUiStep === 'practice',
@@ -659,6 +660,17 @@
                     <i class="bi bi-journal-richtext" aria-hidden="true"></i>
                     <span>{{ t('memorisation.view.mushaf') }}</span>
                     <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="top-card-menu-toggle top-card-menu-toggle--layout"
+                    :class="{ active: readingViewMode === 'madani_mushaf' }"
+                    :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
+                    @click.stop="setReadingViewMode('madani_mushaf'); topCardMenuOpen = false"
+                  >
+                    <i class="bi bi-book-half" aria-hidden="true"></i>
+                    <span>{{ t('memorisation.view.madaniMushaf') }}</span>
+                    <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <div class="top-card-menu-divider top-card-menu-divider--layout" aria-hidden="true"></div>
                   <button
@@ -1016,12 +1028,12 @@
           </div>
           <div
             class="workspace-shell-reading-toggles workspace-shell-font-control"
-            :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
+            :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')} / ${t('memorisation.view.madaniMushaf')}`"
           >
             <div
               class="workspace-layout-toggle view-mode-toggle"
               role="group"
-              :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
+              :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')} / ${t('memorisation.view.madaniMushaf')}`"
             >
               <button
                 type="button"
@@ -1045,8 +1057,17 @@
                 <i class="bi bi-journal-richtext" aria-hidden="true"></i>
                 <span>{{ t('memorisation.view.mushaf') }}</span>
               </button>
-              
-              
+              <button
+                type="button"
+                class="view-mode-btn workspace-layout-btn"
+                :class="{ active: readingViewMode === 'madani_mushaf' }"
+                :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
+                @click.stop="setReadingViewMode('madani_mushaf')"
+                :title="t('memorisation.view.madaniMushafHint')"
+              >
+                <i class="bi bi-book-half" aria-hidden="true"></i>
+                <span>{{ t('memorisation.view.madaniMushaf') }}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1287,6 +1308,37 @@
                 </div>
               </section>
               </div>
+            </div>
+            <div v-else-if="readingViewMode === 'madani_mushaf'" class="madani-qpc-workspace">
+              <div v-if="qpcMadaniLoadError" class="mushaf-empty-page mushaf-empty-page--error">
+                <AppStatus
+                  :variant="networkOnline === false ? 'offline' : 'error'"
+                  fill
+                  compact
+                  :title="networkOnline === false ? t('common.status.offlineTitle') : t('memorisation.mushafLoad.errorTitle')"
+                  :description="networkOnline === false ? t('common.status.offlineDesc') : qpcMadaniLoadError"
+                  :action-label="t('memorisation.mushafLoad.retry')"
+                  :secondary-action-label="t('memorisation.mushafLoad.switchStacked')"
+                  @action="bootstrapQpcMadaniViewer()"
+                  @secondary-action="setReadingViewMode('stacked')"
+                />
+              </div>
+              <div v-else-if="!qpcVersePageIndex" class="mushaf-empty-page">
+                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                <strong>{{ workspaceLoadingLabel }}</strong>
+              </div>
+              <madani-spread
+                v-else-if="qpcMadaniCurrentPage"
+                :controlled-page-number="qpcMadaniCurrentPage"
+                :active-ayah="qpcMadaniActiveAyah"
+                :range-start-ayah="qpcMadaniSessionStartAyah"
+                :range-end-ayah="qpcMadaniSessionEndAyah"
+                :session-start-ayah="qpcMadaniSessionStartAyah"
+                :session-end-ayah="qpcMadaniSessionEndAyah"
+                hide-dev-nav
+                reader-mode
+                @select="onQpcMadaniWordSelect"
+              />
             </div>
             <div v-else class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{

@@ -30,13 +30,37 @@ assert.match(
 )
 assert.match(
   memorisationJs,
-  /\/\/ Mushaf is the permanent product default layout\.\s*this\.readingViewMode = 'mushaf'/,
-  'loadUiState always restores mushaf'
+  /this\.readingViewMode = this\.clampReadingViewMode\(state\.readingViewMode \|\| 'mushaf'\)/,
+  'loadUiState restores persisted reading layout'
 )
 assert.doesNotMatch(memorisationJs, /showOriginalMadaniViewToggle/, 'Printed scan mode removed')
-assert.doesNotMatch(memorisationJs, /showMadaniMushafViewToggle/, 'Madani Mushaf mode removed')
-assert.doesNotMatch(memorisationVue, /MadaniMushafReader|OriginalMadaniMushaf/, 'Madani reader components removed')
-assert.doesNotMatch(memorisationVue, /madani_mushaf|readingViewMode === 'original'/, 'Madani/original view modes removed from UI')
+assert.doesNotMatch(memorisationJs, /showMadaniMushafViewToggle/, 'legacy Madani toggle removed')
+assert.doesNotMatch(memorisationVue, /MadaniMushafReader|OriginalMadaniMushaf/, 'legacy Madani reader components removed')
+assert.match(
+  memorisationVue,
+  /readingViewMode === 'madani_mushaf'/,
+  'QPC Madani Mushaf layout is available in the reader'
+)
+assert.match(
+  memorisationVue,
+  /hide-dev-nav/,
+  'embedded Madani spread hides standalone dev navigation'
+)
+assert.match(
+  memorisationVue,
+  /:active-ayah="qpcMadaniActiveAyah"/,
+  'Madani renderer receives canonical activeAyah'
+)
+assert.doesNotMatch(
+  memorisationJs,
+  /madaniCurrentAyah|madaniCurrentSurah|madaniSession/,
+  'Madani does not duplicate Quran/session state'
+)
+assert.doesNotMatch(
+  readFileSync(join(root, 'resources/js/components/madani/MadaniSpread.vue'), 'utf8'),
+  /window\.location\.href = this\.pageHref/,
+  'Madani navigation stays client-side without full document reload'
+)
 assert.match(
   memorisationJs,
   /Only render session-filtered lines from mushafPages/,

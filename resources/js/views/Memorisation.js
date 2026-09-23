@@ -90,9 +90,24 @@ import {
   SURAH_NAMES_FONT_FAMILY
 } from '../scripts/mushaf/qcfFontLoader'
 import {
+  isQpcMadaniMushafView,
   isReadingViewMode,
   normalizeReadingViewMode,
 } from '../scripts/mushaf/readingViewModes'
+import {
+  loadQpcMadaniVersePageIndex,
+  resolveMadaniPage,
+  resolveQpcMadaniPageForVerseKey,
+  verseKeyFromQpcLocation,
+} from '../scripts/mushaf/qpcMadaniVersePage'
+import { parseAyahKey } from '../scripts/mushaf/qpcMadaniSelection'
+import {
+  collectQpcMadaniPlayingAyahNodes,
+  collectQpcMadaniWordHighlightNodes,
+} from '../scripts/mushaf/qpcMadaniAudioDom'
+import { loadMadaniPageLeaf, preloadMadaniNavigationTargets } from '../scripts/mushaf/qpcMadaniPageData'
+import { prefetchQpcMadaniPageFonts } from '../scripts/mushaf/qpcMadaniFontLoader'
+import { shouldShowTwoMadaniPages } from '../scripts/mushaf/madaniPagePair'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -839,6 +854,7 @@ export default {
         : {
             stacked: 150,
             mushaf: 160,
+            madani_mushaf: 160,
           },
       fontSizeStep: 10,
       minFontSize: 70,
@@ -928,6 +944,7 @@ export default {
       wordSyncEngine: null,
       currentPhraseIndex: -1,
       lastHighlightedWordNodes: [],
+      lastQpcMadaniPlayingAyahNodes: [],
       pendingWordHighlightState: null,
       wordHighlightNodeRegistry: markRaw(new Map()),
       wordClickHandler: null,
@@ -983,6 +1000,8 @@ export default {
       madaniPagesError: '',
       madaniLoadRequestId: 0,
       madaniFontsReady: {},
+      qpcVersePageIndex: null,
+      qpcMadaniLoadError: '',
       mushafBorderOptions: [
         { value: 'classic', label: 'Classic' },
         { value: 'fine', label: 'Fine' },
@@ -9329,6 +9348,36 @@ export default {
       return Number(this.currentMushafPage?.pageNumber || this.madaniPageNumbers?.[this.safeMushafPageIndex] || 0) || null
     },
 
+    qpcMadaniActiveAyah() {
+      return this.effectiveActiveVerseKey || this.activeVerseKey || ''
+    },
+
+    qpcMadaniSessionStartAyah() {
+      const chapter = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      const start = Number(this.rangeStart || this.currentConfig?.rangeStart || 0)
+      return chapter && start ? `${chapter}:${start}` : ''
+    },
+
+    qpcMadaniSessionEndAyah() {
+      const chapter = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      const end = Number(this.rangeEnd || this.currentConfig?.rangeEnd || this.rangeStart || this.currentConfig?.rangeStart || 0)
+      return chapter && end ? `${chapter}:${end}` : this.qpcMadaniSessionStartAyah
+    },
+
+    qpcMadaniCurrentPage() {
+      if (!isQpcMadaniMushafView(this.readingViewMode)) {
+        return null
+      }
+      const fromActive = resolveQpcMadaniPageForVerseKey(
+        this.qpcMadaniActiveAyah,
+        this.qpcVersePageIndex
+      )
+      if (fromActive) return fromActive
+      const surah = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      const ayah = Number(this.rangeStart || this.currentConfig?.rangeStart || this.activeAyahNumber || 0)
+      return resolveMadaniPage(surah, ayah, this.qpcVersePageIndex)
+    },
+
     mushafDisplayCacheKey() {
       return [
         this.tajweedEnabled ? 1 : 0,
@@ -9395,20 +9444,24 @@ export default {
 
     nextReadingViewMode() {
       if (this.readingViewMode === 'stacked') return 'mushaf'
+      if (this.readingViewMode === 'mushaf') return 'madani_mushaf'
       return 'stacked'
     },
 
     currentReadingViewModeIcon() {
+      if (this.readingViewMode === 'madani_mushaf') return 'bi-book-half'
       if (this.readingViewMode === 'mushaf') return 'bi-book'
       return 'bi-view-stacked'
     },
 
     nextReadingViewModeLabel() {
+      if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.madaniMushaf')
       if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushaf')
       return this.t('memorisation.view.stacked')
     },
 
     nextReadingViewModeHint() {
+      if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.madaniMushafHint')
       if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushafHint')
       return this.t('memorisation.view.stackedHint')
     },
@@ -9427,6 +9480,12 @@ export default {
           && this.shouldShowReadingWorkspace
           && !this.mushafPages.length
           && !this.madaniPagesError
+        )
+        || (
+          isQpcMadaniMushafView(this.readingViewMode)
+          && this.shouldShowReadingWorkspace
+          && !this.qpcVersePageIndex
+          && !this.qpcMadaniLoadError
         )
       ) {
         return this.t('memorisation.session_setup_in_progress')
@@ -10004,6 +10063,10 @@ export default {
       })
       this.$watch('effectiveActiveVerseKey', () => {
         if (this.readingViewMode === 'mushaf') this.syncMushafPageToActiveVerse()
+        if (isQpcMadaniMushafView(this.readingViewMode)) {
+          this.syncQpcMadaniPageToActiveVerse()
+          if (this.isPlaying) this.prefetchQpcMadaniPageForUpcomingAyah()
+        }
       })
       this.$watch(() => this.mushafPages.length, () => {
         this.syncMushafPageToActiveVerse()
@@ -10419,6 +10482,17 @@ export default {
             }
           })
         })
+      } else if (newVal === 'madani_mushaf') {
+        void this.bootstrapQpcMadaniViewer().then(() => {
+          this.syncQpcMadaniPageToActiveVerse()
+          this.$nextTick(() => {
+            this.scrollQpcMadaniActiveAyahIntoView()
+            if (this.isPlaying && this.activeVerseRef?.key) {
+              this.startWordHighlighting(this.activeVerseRef)
+            }
+            this.syncQpcMadaniPlaybackAyahDom()
+          })
+        })
       }
       this.applyMobileLayoutFontDefault(newVal)
       if (this.isMobileViewport()) {
@@ -10825,6 +10899,12 @@ export default {
     playerCompact: 'persistUiState',
     isPlaying(val) {
       this.persistAudioState()
+      this.$nextTick(() => {
+        if (isQpcMadaniMushafView(this.readingViewMode)) {
+          if (val) this.syncQpcMadaniPlaybackAyahDom()
+          else this.clearQpcMadaniPlaybackAyahDom()
+        }
+      })
       if (val && this.practiceFocusWeakWords?.length) {
         // Mobile: avoid multi-timeout focus sync storms during playback
         if (this.isMobileViewport()) {
@@ -35176,6 +35256,11 @@ export default {
             }
           })
         })
+      } else if (nextMode === 'madani_mushaf') {
+        void this.bootstrapQpcMadaniViewer().then(() => {
+          this.syncQpcMadaniPageToActiveVerse()
+          this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+        })
       } else {
         this.fontOpen = false
         this.bgOpen = false
@@ -35264,6 +35349,84 @@ export default {
       }
       this.mushafPageIndex = this.safeMushafPageIndex
     },
+    async ensureQpcVersePageIndex() {
+      if (this.qpcVersePageIndex && typeof this.qpcVersePageIndex === 'object') {
+        return this.qpcVersePageIndex
+      }
+      this.qpcVersePageIndex = await loadQpcMadaniVersePageIndex()
+      return this.qpcVersePageIndex
+    },
+    async bootstrapQpcMadaniViewer() {
+      this.qpcMadaniLoadError = ''
+      try {
+        await this.ensureQpcVersePageIndex()
+      } catch (error) {
+        console.error('QPC Madani viewer bootstrap failed:', error)
+        this.qpcMadaniLoadError = this.t('memorisation.mushafLoad.errorDesc')
+      }
+    },
+    syncQpcMadaniPageToActiveVerse() {
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return null
+      const page = this.qpcMadaniCurrentPage
+      this.$nextTick(() => {
+        if (this.currentHighlightedVerseKey && this.currentWordIndex >= 0) {
+          this.applyWordHighlightClasses(this.currentHighlightedVerseKey, this.currentWordIndex)
+        } else {
+          this.syncQpcMadaniPlaybackAyahDom()
+        }
+      })
+      return page
+    },
+    clearQpcMadaniPlaybackAyahDom() {
+      const previous = Array.isArray(this.lastQpcMadaniPlayingAyahNodes)
+        ? this.lastQpcMadaniPlayingAyahNodes
+        : []
+      previous.forEach((node) => {
+        node?.classList?.remove('is-playing-ayah')
+      })
+      this.lastQpcMadaniPlayingAyahNodes = []
+    },
+    syncQpcMadaniPlaybackAyahDom() {
+      if (typeof document === 'undefined') return
+      this.clearQpcMadaniPlaybackAyahDom()
+      if (!isQpcMadaniMushafView(this.readingViewMode) || !this.isPlaying) return
+      const verseKey = String(this.activeVerseKey || this.effectiveActiveVerseKey || '')
+      if (!verseKey) return
+      const nodes = collectQpcMadaniPlayingAyahNodes(document, verseKey)
+      nodes.forEach((node) => node.classList.add('is-playing-ayah'))
+      this.lastQpcMadaniPlayingAyahNodes = nodes
+    },
+    isQpcMadaniAyahSelectable(verseKey) {
+      const parsed = parseAyahKey(verseKey)
+      if (!parsed) return false
+      if (this.resolveVerseFromMadaniKey(parsed.key)) return true
+      const sessionKeys = this.mushafSessionVerseKeys
+      if (sessionKeys?.has?.(parsed.key)) return true
+      const chapter = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      const start = Number(this.rangeStart || this.currentConfig?.rangeStart || 0)
+      const end = Number(this.rangeEnd || this.currentConfig?.rangeEnd || start || 0)
+      return chapter === parsed.surah && parsed.ayah >= start && parsed.ayah <= end
+    },
+    onQpcMadaniWordSelect(location) {
+      const verseKey = verseKeyFromQpcLocation(location)
+      if (!verseKey || !this.isQpcMadaniAyahSelectable(verseKey)) return
+      const verse = this.resolveVerseFromMadaniKey(verseKey)
+      if (verse?.key) {
+        this.onMushafAyahClick(verse)
+        this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+        return
+      }
+      this.focusLinkedAyah(verseKey, { scroll: false })
+      this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+    },
+    scrollQpcMadaniActiveAyahIntoView() {
+      if (typeof document === 'undefined') return
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return
+      const key = this.qpcMadaniActiveAyah
+      if (!key) return
+      const el = document.querySelector(`.qpc-madani-word[data-ayah-key="${CSS.escape?.(key) || key}"]`)
+      el?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+    },
     scrollActiveMushafPageIntoView() {
       if (typeof document === 'undefined') return
       const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey
@@ -35300,6 +35463,10 @@ export default {
       this.goToMushafPage(this.safeMushafPageIndex + 1)
     },
     prefetchMushafPageForUpcomingAyah() {
+      if (isQpcMadaniMushafView(this.readingViewMode)) {
+        this.prefetchQpcMadaniPageForUpcomingAyah()
+        return
+      }
       if (this.readingViewMode !== 'mushaf' || !this.canNext) return
       const nextEntry = this.queue?.[this.queueIndex + 1]
       const nextKey = nextEntry?.verse?.key || nextEntry?.key
@@ -35311,6 +35478,20 @@ export default {
       if (nextPageIndex >= 0 && nextPageIndex !== this.safeMushafPageIndex) {
         this.goToMushafPage(nextPageIndex)
       }
+    },
+    prefetchQpcMadaniPageForUpcomingAyah() {
+      if (!isQpcMadaniMushafView(this.readingViewMode) || !this.canNext) return
+      if (!this.qpcVersePageIndex) return
+      const nextEntry = this.queue?.[this.queueIndex + 1]
+      const nextKey = nextEntry?.verse?.key || nextEntry?.key
+      if (!nextKey) return
+      const page = resolveQpcMadaniPageForVerseKey(nextKey, this.qpcVersePageIndex)
+      if (!page) return
+      const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1080
+      const mode = shouldShowTwoMadaniPages(viewportWidth) ? 'spread' : 'single'
+      preloadMadaniNavigationTargets(mode, page)
+      prefetchQpcMadaniPageFonts([page])
+      void loadMadaniPageLeaf(page).catch(() => {})
     },
     async ensureMadaniPagesLoaded(options = {}) {
       const verses = this.mushafDisplayVerses || []
@@ -36058,6 +36239,8 @@ export default {
         this.queueIndex = store.queueIndex || 0
         if (this.readingViewMode === 'mushaf') {
           this.$nextTick(() => this.syncMushafPageToActiveVerse())
+        } else if (isQpcMadaniMushafView(this.readingViewMode)) {
+          this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
         }
       }
 
@@ -40054,6 +40237,15 @@ export default {
       const activeWordItem = verseCard?.querySelectorAll('.word-item')?.[activeIndex]
       if (activeWordItem?.isConnected) nextNodes.push(activeWordItem)
 
+      if (isQpcMadaniMushafView(this.readingViewMode)) {
+        collectQpcMadaniWordHighlightNodes(
+          document,
+          verseKey,
+          activeIndex,
+          this.madaniAudioIndexMap
+        ).forEach((node) => nextNodes.push(node))
+      }
+
       registry.set(cacheKey, nextNodes)
       return nextNodes
     },
@@ -40087,6 +40279,9 @@ export default {
         nextNodes.add(node)
       })
       this.lastHighlightedWordNodes = Array.from(nextNodes)
+      if (isQpcMadaniMushafView(this.readingViewMode)) {
+        this.syncQpcMadaniPlaybackAyahDom()
+      }
       // Recitation highlighting must never force-follow / steal the viewport.
       // Users can scroll freely while audio continues; use an explicit follow action to re-centre.
     },
@@ -40204,6 +40399,7 @@ export default {
       this.wordHighlightHandler = null
       this.wordHighlightLoading = false
       this.wordHighlightNodeRegistry.clear()
+      this.clearQpcMadaniPlaybackAyahDom()
       this.applyWordHighlightClasses(null, -1)
       this.currentWordIndex = -1
       this.currentPhraseIndex = -1
@@ -40283,6 +40479,8 @@ export default {
           }
           if (this.readingViewMode === 'mushaf' && this.playMode !== 'manual') {
             this.prefetchMushafPageForUpcomingAyah()
+          } else if (isQpcMadaniMushafView(this.readingViewMode) && this.playMode !== 'manual') {
+            this.prefetchQpcMadaniPageForUpcomingAyah()
           }
           const gapSeconds = this.getCurrentPlaybackGapSeconds()
           const gapDelayMs = Math.max(0, Number.isFinite(gapSeconds) ? gapSeconds * 1000 : 0)
@@ -42615,8 +42813,7 @@ export default {
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = !!state.showWordByWord
           this.wordByWordAudioEnabled = true
-          // Mushaf is the permanent product default layout.
-          this.readingViewMode = 'mushaf'
+          this.readingViewMode = this.clampReadingViewMode(state.readingViewMode || 'mushaf')
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0
@@ -42673,6 +42870,7 @@ export default {
               mushaf: Number(state.layoutFontSizes.mushaf) === 120
                 ? 160
                 : Number(state.layoutFontSizes.mushaf || this.layoutFontSizes.mushaf || 160),
+              madani_mushaf: Number(state.layoutFontSizes.madani_mushaf || this.layoutFontSizes.madani_mushaf || 160),
               original: Number(state.layoutFontSizes.original || this.layoutFontSizes.original || 150),
             }
           } else {
@@ -42681,6 +42879,7 @@ export default {
             this.layoutFontSizes = {
               stacked: seed,
               mushaf: Math.min(seed, 150),
+              madani_mushaf: Math.min(seed, 150),
               original: seed,
             }
           }
@@ -42740,6 +42939,9 @@ export default {
       if (!state) this.showTools = false
       if (this.readingViewMode === 'mushaf') {
         this.wordByWordAudioEnabled = true
+      }
+      if (isQpcMadaniMushafView(this.readingViewMode)) {
+        void this.bootstrapQpcMadaniViewer()
       }
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
@@ -42801,6 +43003,7 @@ export default {
           layoutFontSizes: {
             stacked: Number(this.layoutFontSizes?.stacked || 150),
             mushaf: Number(this.layoutFontSizes?.mushaf || 160),
+            madani_mushaf: Number(this.layoutFontSizes?.madani_mushaf || 160),
           },
           chainingEnabled: this.chainingEnabled,
           chainingMethod: this.chainingMethod,

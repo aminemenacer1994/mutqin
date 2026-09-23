@@ -1624,8 +1624,10 @@
     "view": {
       "stacked": "Stacked",
       "mushaf": "Mushaf",
+      "madaniMushaf": "Madani Mushaf",
       "stackedHint": "Stacked: one ayah after another, calm for short ranges.",
-      "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help."
+      "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help.",
+      "madaniMushafHint": "Madani Mushaf: KFGQPC V2 printed pages with per-page QCF fonts."
     },
     "actions": {
       "newSession": "New set",

@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\MadaniPageController;
 use App\Http\Controllers\Internal\AlertTestController;
 use App\Http\Controllers\Internal\ErrorTestController;
 use App\Http\Controllers\Internal\HealthController as InternalHealthController;
@@ -38,6 +39,21 @@ Route::get('/auth/redirect', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/callback', [GoogleAuthController::class, 'callback']);
 
 Route::get('/health', HealthController::class)->name('health');
+
+Route::get('/madani/page/{page}', [MadaniPageController::class, 'show'])
+    ->whereNumber('page')
+    ->name('madani.page');
+Route::get('/madani/page/{page}/data', [MadaniPageController::class, 'data'])
+    ->whereNumber('page')
+    ->name('madani.page-data');
+Route::get('/madani/font/p{page}.woff2', [MadaniPageController::class, 'font'])
+    ->whereNumber('page')
+    ->name('madani.page-font');
+Route::get('/madani/verse-pages', [MadaniPageController::class, 'versePages'])
+    ->name('madani.verse-pages');
+Route::get('/madani/resolve/{surah}/{ayah}', [MadaniPageController::class, 'resolveVerse'])
+    ->whereNumber(['surah', 'ayah'])
+    ->name('madani.resolve-verse');
 
 Route::get('/internal/health', InternalHealthController::class)
     ->name('internal.health');

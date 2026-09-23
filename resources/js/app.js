@@ -215,6 +215,10 @@ function lazyPage(importer, options = {}) {
     });
 }
 
+const MadaniSpread = lazyPage(
+    () => import(/* webpackChunkName: "madani-page" */ './components/madani/MadaniSpread.vue'),
+    { feature: 'madani-page' }
+);
 const Homepage = lazyPage(
     () => import(/* webpackChunkName: "homepage" */ './views/Homepage.vue'),
     { feature: 'homepage' }
@@ -291,6 +295,7 @@ async function bootstrapApp() {
     window.dispatchEvent(new CustomEvent('mutqin:i18n-ready', { detail: { locale: i18n.global.locale.value } }));
 
     app.component('network-status-banner', NetworkStatusBanner);
+    app.component('madani-spread', MadaniSpread);
     app.component('homepage', Homepage);
     app.component('memorisation', Memorisation);
     app.component('user-dashboard', UserDashboard);
