@@ -22,6 +22,9 @@ final class RecitationScoringThresholds
 
     public const PARTIAL_SIMILARITY = 0.58;
 
+    /** DP / final alignment amber floor — matches recitation_analysis.js (0.48). */
+    public const ALIGNMENT_PARTIAL_SIMILARITY = 0.48;
+
     public const UNCERTAIN_CONFIDENCE = 0.42;
 
     public const MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT = 0.68;
@@ -50,6 +53,8 @@ final class RecitationScoringThresholds
 
     public const EXTRA_PENALTY = 0.28;
 
+    public const WRONG_ORDER_PENALTY = 0.22;
+
     public static function bandForAccuracy(int|float $accuracy): string
     {
         if ($accuracy >= self::STRONG_ACCURACY_MIN) {
@@ -74,6 +79,8 @@ final class RecitationScoringThresholds
             'soft_similarity_cap' => self::SOFT_SIMILARITY_CAP,
             'correct_similarity' => self::CORRECT_SIMILARITY,
             'partial_similarity' => self::PARTIAL_SIMILARITY,
+            'alignment_partial_similarity' => self::ALIGNMENT_PARTIAL_SIMILARITY,
+            'wrong_order_penalty' => self::WRONG_ORDER_PENALTY,
             'uncertain_confidence' => self::UNCERTAIN_CONFIDENCE,
             'min_confidence_for_similarity_correct' => self::MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT,
             'drop_heard_confidence_below' => self::DROP_HEARD_CONFIDENCE_BELOW,

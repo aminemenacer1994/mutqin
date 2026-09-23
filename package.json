@@ -10,6 +10,7 @@
         "test:mutqin:mobile": "node tests/js/mutqin-mobile-responsive.test.mjs",
         "test:mutqin:scroll": "node tests/js/mobile-scroll.test.mjs",
         "test:production-qa": "node scripts/production-qa-gate.mjs",
+        "audit:recitation-scenarios": "node scripts/recitation-scenario-accuracy.mjs",
         "test:quran-integrity": "node --experimental-vm-modules tests/js/quran-content-integrity.test.mjs",
         "perf:bundles": "node scripts/perf/analyze-bundles.mjs",
         "perf:bundles:json": "node scripts/perf/analyze-bundles.mjs --json",

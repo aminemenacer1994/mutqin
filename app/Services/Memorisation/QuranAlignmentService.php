@@ -1810,13 +1810,15 @@ class QuranAlignmentService
                 if (! isset($units[$expectedIndex], $heard[$recognisedIndex])) {
                     continue;
                 }
+                $targetWords = array_map(static fn (array $unit): string => (string) ($unit['word'] ?? ''), $units);
                 $status = $this->classifyMatch(
                     (string) $units[$expectedIndex]['display'],
                     (string) $units[$expectedIndex]['word'],
                     $heard[$recognisedIndex],
                     (float) ($operation['similarity'] ?? 0.0),
                     $expectedIndex,
-                    $units[$expectedIndex]
+                    $units[$expectedIndex],
+                    $targetWords
                 );
                 if (in_array($type, [self::TYPE_DIVERGENCE, self::TYPE_REALIGNMENT], true)) {
                     $status = $this->applyOperationType($status, $type);
@@ -2371,10 +2373,15 @@ class QuranAlignmentService
         array $heardWord,
         float $similarity,
         int $targetIndex,
-        array $unit
+        array $unit,
+        array $targetWords = []
     ): array {
         $actual = (string) ($heardWord['word'] ?? '');
         $confidence = (float) ($heardWord['confidence'] ?? 1);
+        $laterIndex = $actual !== '' && $expected !== '' && $actual !== $expected
+            ? $this->findWordLaterIndex($targetWords, $actual, $targetIndex)
+            : -1;
+        $outOfOrder = $laterIndex >= 0;
         $rawWord = (string) ($heardWord['raw_word'] ?? $heardWord['rawWord'] ?? $heardWord['display'] ?? $actual);
         $base = [
             'text' => $display,
@@ -2400,6 +2407,8 @@ class QuranAlignmentService
             'ayah_number' => $unit['ayah_number'] ?? null,
             'ayah_key' => $unit['ayah_key'] ?? '',
             'ayah_word_index' => $unit['ayah_word_index'] ?? $targetIndex,
+            'out_of_order' => $outOfOrder,
+            'outOfOrder' => $outOfOrder,
         ];
         if (isset($heardWord['start'])) {
             $base['start'] = (float) $heardWord['start'];
@@ -2469,7 +2478,7 @@ class QuranAlignmentService
             ]);
         }
 
-        if ($expected !== '' && $actual !== '' && $similarity >= RecitationScoringThresholds::PARTIAL_SIMILARITY) {
+        if ($expected !== '' && $actual !== '' && $similarity >= RecitationScoringThresholds::ALIGNMENT_PARTIAL_SIMILARITY) {
             return array_merge($base, [
                 'status' => 'minor_mistake',
                 'type' => self::TYPE_SUBSTITUTION,
@@ -2502,20 +2511,52 @@ class QuranAlignmentService
             $status = (string) ($word['status'] ?? '');
             if ($status === 'correct') {
                 $correct += 1.0;
-            } elseif ($status === 'minor_mistake') {
+            } elseif ($status === 'minor_mistake' || $status === 'partial') {
                 $confidence = max(0.25, min(1.0, (float) ($word['confidence'] ?? 1)));
                 $correct += RecitationScoringThresholds::PARTIAL_ACCURACY_WEIGHT * $confidence;
             } elseif ($status === 'uncertain') {
                 $correct += RecitationScoringThresholds::UNCERTAIN_ACCURACY_WEIGHT;
             }
         }
+
+        $wrongOrderPenalty = 0.0;
+        foreach ($statuses as $word) {
+            if (! empty($word['out_of_order']) || ! empty($word['outOfOrder'])) {
+                $wrongOrderPenalty += RecitationScoringThresholds::WRONG_ORDER_PENALTY;
+            }
+        }
+
+        // Recoverable learner patterns must not reduce accuracy (JS mistakes.extra).
         $penalisedExtras = count(array_filter(
             $extraWords,
-            static fn (array $word): bool => ($word['type'] ?? '') !== self::TYPE_UNASSESSED
+            static fn (array $word): bool => ! in_array((string) ($word['type'] ?? ''), [
+                self::TYPE_UNASSESSED,
+                self::TYPE_REPETITION,
+                self::TYPE_SELF_CORRECTION,
+                self::TYPE_RESTART,
+            ], true)
         ));
-        $penalty = min(8, $penalisedExtras * RecitationScoringThresholds::EXTRA_PENALTY);
+        $extraPenalty = $penalisedExtras * RecitationScoringThresholds::EXTRA_PENALTY;
 
-        return (int) max(0, min(100, round((($correct - $penalty) / $total) * 100)));
+        return (int) max(0, min(100, round((($correct - $wrongOrderPenalty - $extraPenalty) / $total) * 100)));
+    }
+
+    /**
+     * @param  list<string>  $targetWords
+     */
+    private function findWordLaterIndex(array $targetWords, string $word, int $fromIndex): int
+    {
+        if ($word === '') {
+            return -1;
+        }
+        $count = count($targetWords);
+        for ($index = max(0, $fromIndex); $index < $count; $index++) {
+            if (($targetWords[$index] ?? '') === $word) {
+                return $index;
+            }
+        }
+
+        return -1;
     }
 
     /**

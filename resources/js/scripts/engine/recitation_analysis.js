@@ -1806,7 +1806,9 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
     * RECITATION_THRESHOLDS.wrongOrderPenalty
   const extraPenalty = (mistakes.extra.length || 0) * RECITATION_THRESHOLDS.extraPenalty
   const baseAccuracyScore = Math.max(0, Math.min(100, Math.round(((correctScore + partialScore + uncertainScore - wrongOrderPenalty - extraPenalty) / targetCount) * 100)))
-  const structuralPenalty = getStructuralScorePenalty(alignment.structural || {})
+  const structuralPenalty = getStructuralScorePenalty(
+    structuralForAccuracyPenalty(alignment.structural || {}, alignment.extraWords || []),
+  )
   const accuracyScore = Math.max(0, Math.min(100, baseAccuracyScore - structuralPenalty))
   const confidence = getEvaluationConfidence({
     statuses,
@@ -4028,6 +4030,28 @@ function buildDetailedFeedback({ omissions = [], substitutions = [], extraWords 
 function formatAyahLabel(item = {}) {
   if (item.ayahNumber !== null && item.ayahNumber !== undefined) return `ayah ${item.ayahNumber}`
   return item.ayahKey ? `ayah ${item.ayahKey}` : `ayah ${Number(item.ayahIndex || 0) + 1}`
+}
+
+function structuralForAccuracyPenalty(structural = {}, extraWords = []) {
+  const restartRanges = extraWords
+    .filter(word => word?.type === 'RESTART')
+    .map(word => ({
+      start: Number(word.recognisedStartIndex ?? word.recognised_start_index ?? word.heardIndex ?? -1),
+      end: Number(word.recognisedEndIndex ?? word.recognised_end_index ?? word.heardIndex ?? -1),
+    }))
+    .filter(range => Number.isFinite(range.start) && Number.isFinite(range.end))
+
+  if (!restartRanges.length) {
+    return structural
+  }
+
+  const repeatedPhrases = (structural.repeatedPhrases || []).filter(phrase => {
+    const repeatedAt = Number(phrase.repeatedAtHeardIndex)
+    if (!Number.isFinite(repeatedAt)) return true
+    return !restartRanges.some(range => repeatedAt >= range.start && repeatedAt <= range.end)
+  })
+
+  return { ...structural, repeatedPhrases }
 }
 
 function getStructuralScorePenalty(structural = {}) {

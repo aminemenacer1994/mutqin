@@ -188,7 +188,9 @@ class QuranAlignmentServiceTest extends TestCase
             ]
         );
         $this->assertSame('SUBSTITUTION', $highConfidenceWrong['word_results'][3]['type']);
-        $this->assertSame('wrong', $highConfidenceWrong['word_results'][3]['status']);
+        $this->assertSame('minor_mistake', $highConfidenceWrong['word_results'][3]['status']);
+        $this->assertSame('amber', $highConfidenceWrong['word_results'][3]['visual_status']);
+        $this->assertSame(80, $highConfidenceWrong['accuracy']);
         $this->assertSame('الرحمن', $highConfidenceWrong['word_results'][3]['actual']);
     }
 
