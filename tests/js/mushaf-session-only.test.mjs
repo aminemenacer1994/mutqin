@@ -25,12 +25,12 @@ assert.match(
 )
 assert.match(
   memorisationJs,
-  /readingViewMode: 'mushaf'/,
-  'mushaf is the permanent default layout'
+  /readingViewMode: 'madani_mushaf'/,
+  'madani mushaf is the default layout'
 )
 assert.match(
   memorisationJs,
-  /this\.readingViewMode = this\.clampReadingViewMode\(state\.readingViewMode \|\| 'mushaf'\)/,
+  /this\.readingViewMode = this\.clampReadingViewMode\(state\.readingViewMode \|\| 'madani_mushaf'\)/,
   'loadUiState restores persisted reading layout'
 )
 assert.doesNotMatch(memorisationJs, /showOriginalMadaniViewToggle/, 'Printed scan mode removed')

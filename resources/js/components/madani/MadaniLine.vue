@@ -2,29 +2,30 @@
   <div
     class="qpc-madani-line"
     :class="[
-      `qpc-madani-line--${line.line_type}`,
+      `qpc-madani-line--${lineType}`,
       { 'qpc-madani-line--centered': Number(line.is_centered) === 1 },
     ]"
     :data-line="line.line_number"
-    :data-line-type="line.line_type"
+    :data-line-type="lineType"
     :data-centered="line.is_centered"
     :data-surah="line.surah_number"
   >
     <span
-      v-if="line.line_type === 'surah_name'"
+      v-if="isSurahNameLine"
       class="qpc-madani-surah-name"
+      :class="{ 'is-surah-font-ready': surahNamesReady }"
       :data-surah="line.surah_number"
       :style="{ fontFamily: `'${surahFontFamily}', serif` }"
       aria-hidden="true"
     >{{ headerText }}</span>
     <span
-      v-if="line.line_type === 'surah_name'"
+      v-if="isSurahNameLine"
       class="visually-hidden"
     >Surah {{ line.surah_number }}</span>
 
-    <template v-else-if="line.line_type === 'basmallah'">
+    <template v-else-if="isBasmalaLine">
       <span
-        v-if="line.words.length"
+        v-if="line.words?.length"
         class="qpc-madani-basmallah-words"
       >
         <MadaniWord
@@ -35,6 +36,7 @@
           :selected="selectedLocation === word.location"
           :selection="selection"
           :technique-snapshot="techniqueSnapshot"
+          :progress-snapshot="progressSnapshot"
           :audio-index-map="audioIndexMap"
           :tajweed-enabled="tajweedEnabled"
           :code-v2-by-location="codeV2ByLocation"
@@ -51,12 +53,13 @@
       <span
         v-else
         class="qpc-madani-basmallah"
-        :style="{ fontFamily: `'${surahFontFamily}', serif` }"
+        dir="rtl"
+        lang="ar"
         aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
-      >﷽</span>
+      >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
     </template>
 
-    <template v-else-if="line.line_type === 'ayah'">
+    <template v-else-if="lineType === 'ayah'">
       <MadaniWord
         v-for="word in line.words"
         :key="word.id"
@@ -65,6 +68,7 @@
         :selected="selectedLocation === word.location"
         :selection="selection"
         :technique-snapshot="techniqueSnapshot"
+        :progress-snapshot="progressSnapshot"
         :audio-index-map="audioIndexMap"
         :tajweed-enabled="tajweedEnabled"
         :code-v2-by-location="codeV2ByLocation"
@@ -111,6 +115,10 @@ export default {
       type: Object,
       default: null,
     },
+    progressSnapshot: {
+      type: Object,
+      default: null,
+    },
     audioIndexMap: {
       type: Object,
       default: null,
@@ -123,10 +131,23 @@ export default {
       type: Object,
       default: null,
     },
+    surahNamesReady: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
+    lineType() {
+      return String(this.line?.line_type || this.line?.type || '')
+    },
+    isSurahNameLine() {
+      return this.lineType === 'surah_name'
+    },
+    isBasmalaLine() {
+      return this.lineType === 'basmallah' || this.lineType === 'basmala'
+    },
     headerText() {
-      if (this.line.line_type !== 'surah_name' || this.line.surah_number === '') {
+      if (!this.isSurahNameLine || this.line.surah_number === '' || this.line.surah_number == null) {
         return ''
       }
 
@@ -149,21 +170,25 @@ export default {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-height: var(--qpc-line-min-height, 1.95em);
+  min-height: calc(var(--qpc-word-size, 22px) * 1.68);
   padding-inline: 0;
-  overflow: hidden;
+  padding-block: calc(var(--qpc-word-size, 22px) * 0.11);
+  overflow: visible;
   white-space: nowrap;
-  line-height: var(--qpc-line-height, 1.72);
+  line-height: 1;
 }
 
 .qpc-madani-line--centered,
 .qpc-madani-line--surah_name,
-.qpc-madani-line--basmallah {
+.qpc-madani-line--basmallah,
+.qpc-madani-line--basmala {
   justify-content: center;
+  overflow: visible;
 }
 
 .qpc-madani-line--surah_name,
-.qpc-madani-line--basmallah {
+.qpc-madani-line--basmallah,
+.qpc-madani-line--basmala {
   min-height: 2.15em;
 }
 
@@ -173,12 +198,29 @@ export default {
   justify-content: center;
 }
 
-.qpc-madani-surah-name,
-.qpc-madani-basmallah {
-  font-size: calc(var(--qpc-word-size, 22px) * 1.16);
+.qpc-madani-surah-name {
+  font-family: surahnames, serif !important;
+  font-size: calc(var(--qpc-word-size, 22px) * 1.28);
   font-weight: 400;
   line-height: 1.2;
   white-space: nowrap;
+  letter-spacing: 0;
+  font-variant-ligatures: common-ligatures discretionary-ligatures;
+  font-feature-settings: "liga" 1, "dlig" 1, "calt" 1;
+  opacity: 0;
+}
+
+.qpc-madani-surah-name.is-surah-font-ready {
+  opacity: 1;
+}
+
+.qpc-madani-basmallah {
+  font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif !important;
+  font-size: calc(var(--qpc-word-size, 22px) * 1.08);
+  font-weight: 400;
+  line-height: 1.35;
+  white-space: nowrap;
+  letter-spacing: 0;
 }
 
 .visually-hidden {

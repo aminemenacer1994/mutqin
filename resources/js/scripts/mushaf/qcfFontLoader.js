@@ -80,7 +80,12 @@ export async function prefetchQcfPageFonts(pageNumbers = [], options = {}) {
 }
 
 export const SURAH_NAMES_FONT_FAMILY = 'surahnames'
-export const SURAH_NAMES_FONT_URL = `${CDN_BASE}/fonts/quran/surah-names/v1/sura_names.woff2`
+export const SURAH_NAMES_FONT_URL = '/madani/font/sura_names.woff2'
+export const SURAH_NAMES_FONT_URL_CDN = `${CDN_BASE}/fonts/quran/surah-names/v1/sura_names.woff2`
+
+function surahNamesFontFaceSource() {
+  return `url('${SURAH_NAMES_FONT_URL}') format('woff2'), url('${SURAH_NAMES_FONT_URL_CDN}') format('woff2')`
+}
 
 export async function loadSurahNamesFont() {
   if (typeof document === 'undefined' || typeof FontFace === 'undefined') {
@@ -93,19 +98,25 @@ export async function loadSurahNamesFont() {
     try {
       const fontFace = new FontFace(
         SURAH_NAMES_FONT_FAMILY,
-        `url('${SURAH_NAMES_FONT_URL}') format('woff2')`
+        surahNamesFontFaceSource()
       )
       fontFace.display = 'block'
       document.fonts.add(fontFace)
       await fontFace.load()
       loadedFonts.add(SURAH_NAMES_FONT_FAMILY)
+      return SURAH_NAMES_FONT_FAMILY
     } catch (error) {
+      surahNamesLoaded = null
       console.warn('[qcfFontLoader] Failed to load SurahNames font', error)
+      throw error
     }
-    return SURAH_NAMES_FONT_FAMILY
   })()
 
   return surahNamesLoaded
+}
+
+export function isSurahNamesFontLoaded() {
+  return loadedFonts.has(SURAH_NAMES_FONT_FAMILY)
 }
 
 export function resetQcfFontLoaderForTests() {

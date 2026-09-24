@@ -7,7 +7,6 @@ import {
 } from '../audio/recordingPlayback'
 import {
   getRecitationMicrophoneConstraints,
-  probeMicrophonePermission,
   validateRecordingEnvironment,
 } from '../audio/recordingResilience'
 import {
@@ -221,13 +220,6 @@ export function createDashboardAiReciteRecorder(options = {}) {
         error.code = env.reason || 'unsupported'
         throw error
       }
-      const probe = await probeMicrophonePermission()
-      if (probe.denied) {
-        const error = new Error('permission_denied')
-        error.code = 'permission_denied'
-        throw error
-      }
-
       revokeUrl()
       stopBrowserFallback()
       browserFallbackDisabled = false

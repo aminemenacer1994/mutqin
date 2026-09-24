@@ -72,6 +72,7 @@
           :session-start-ayah="sessionStartAyah"
           :session-end-ayah="sessionEndAyah"
           :technique-snapshot="techniqueSnapshot"
+          :progress-snapshot="progressSnapshot"
           :audio-index-map="audioIndexMap"
           :font-scale="fontScale"
           :tajweed-enabled="tajweedEnabled"
@@ -128,6 +129,7 @@ export default {
     sessionStartAyah: { type: String, default: '' },
     sessionEndAyah: { type: String, default: '' },
     techniqueSnapshot: { type: Object, default: null },
+    progressSnapshot: { type: Object, default: null },
     audioIndexMap: { type: Object, default: null },
     fontScale: { type: Number, default: 1 },
     tajweedEnabled: { type: Boolean, default: false },

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { probeMicrophonePermission, validateRecordingEnvironment } from '../audio/recordingResilience.js'
+import { validateRecordingEnvironment } from '../audio/recordingResilience.js'
 import {
   createSpeechmaticsRealtimeProvider,
   createTranscriptionAudioBridge,
@@ -117,13 +117,6 @@ export function createAskMutqinVoiceSession(options = {}) {
           error.code = env.reason || 'unsupported'
           throw error
         }
-        const probe = await probeMicrophonePermission()
-        if (probe.denied) {
-          const error = new Error('permission_denied')
-          error.code = 'permission_denied'
-          throw error
-        }
-
         stream = await navigator.mediaDevices.getUserMedia({
           audio: {
             echoCancellation: true,

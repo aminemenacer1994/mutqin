@@ -64,9 +64,15 @@ assert.equal(
 // --- Mic denied guidance ---
 
 const safariGuidance = resolveMicDeniedGuidance((key) => key, {
-  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
 })
-assert.match(safariGuidance, /Safari|iPhone|Microphone/i)
+assert.match(safariGuidance, /Safari/)
+
+const chromeIosGuidance = resolveMicDeniedGuidance((key) => key, {
+  userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/120.0.6099.119 Mobile/15E148 Safari/604.1',
+})
+assert.match(chromeIosGuidance, /Chrome/)
+assert.doesNotMatch(chromeIosGuidance, /Safari/)
 
 const chromeGuidance = resolveMicDeniedGuidance((key) => key, {
   userAgent: 'Mozilla/5.0 Chrome/120.0.0.0 Safari/537.36',

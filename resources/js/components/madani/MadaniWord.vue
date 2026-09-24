@@ -12,6 +12,7 @@
     :data-verse-key="ayahKey || null"
     :data-word-index="wordAudioIndex != null ? wordAudioIndex : null"
     :data-ayah-state="ayahStateAttr"
+    :data-qpc-progress="progressAttr"
     :class="wordClass"
     :style="{ fontFamily: `'${displayFontFamily}'` }"
     tabindex="0"
@@ -33,6 +34,11 @@ import {
   resolveQpcMadaniWordTechniqueState,
 } from '../../scripts/mushaf/qpcMadaniTechniques'
 import { resolveQpcMadaniWordGlyph } from '../../scripts/mushaf/qpcMadaniReadingTools'
+import {
+  qpcMadaniProgressAttribute,
+  qpcMadaniWordProgressClass,
+  resolveQpcMadaniWordProgressState,
+} from '../../scripts/mushaf/qpcMadaniProgress'
 
 export default {
   name: 'MadaniWord',
@@ -70,6 +76,10 @@ export default {
       type: Object,
       default: null,
     },
+    progressSnapshot: {
+      type: Object,
+      default: null,
+    },
   },
   computed: {
     glyphPresentation() {
@@ -102,6 +112,13 @@ export default {
       const index = this.techniqueState.wordAudioIndex
       return Number.isFinite(index) ? index : null
     },
+    progressState() {
+      return resolveQpcMadaniWordProgressState(
+        this.word,
+        this.progressSnapshot,
+        this.audioIndexMap
+      )
+    },
     visualState() {
       return resolveMadaniAyahVisualState(this.ayahKey, this.selection || {})
     },
@@ -109,12 +126,16 @@ export default {
       if (this.visualState.active) return 'active'
       return this.visualState.rangeRole || null
     },
+    progressAttr() {
+      return qpcMadaniProgressAttribute(this.progressState)
+    },
     wordClass() {
       return {
         'is-selected': this.selected,
         'qpc-madani-word--tajweed-glyph': this.glyphPresentation.useTajweedFont,
         ...madaniWordVisualClass(this.visualState),
         ...madaniQpcWordTechniqueClass(this.techniqueState),
+        ...qpcMadaniWordProgressClass(this.progressState),
       }
     },
   },
@@ -259,6 +280,37 @@ export default {
 .qpc-madani-word--tajweed-glyph {
   color: unset !important;
   -webkit-text-fill-color: unset !important;
+}
+
+.qpc-madani-word.qpc-progress-weak-word,
+.qpc-madani-word.qpc-progress-weak-ayah,
+.qpc-madani-word.qpc-progress-confidence-low,
+.qpc-madani-word.qpc-progress-confidence-building,
+.qpc-madani-word.qpc-progress-confidence-high,
+.qpc-madani-word.qpc-progress-retention-due,
+.qpc-madani-word.qpc-progress-review {
+  box-shadow: inset 0 -0.07em 0 color-mix(in srgb, #c4a35a 46%, transparent);
+}
+
+.qpc-madani-word.qpc-progress-weak-word {
+  box-shadow: inset 0 -0.11em 0 color-mix(in srgb, #c9891f 70%, transparent);
+}
+
+.qpc-madani-word.qpc-progress-weak-word--active {
+  box-shadow: inset 0 -0.14em 0 color-mix(in srgb, #8d6a35 78%, transparent);
+}
+
+.qpc-madani-word.qpc-progress-confidence-high {
+  box-shadow: inset 0 -0.06em 0 color-mix(in srgb, #2e7d32 42%, transparent);
+}
+
+.qpc-madani-word.qpc-progress-retention-due,
+.qpc-madani-word.qpc-progress-review {
+  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, #d97706 55%, transparent);
+}
+
+.qpc-madani-word.qpc-progress-weak-word {
+  box-shadow: inset 0 -0.11em 0 color-mix(in srgb, #c9891f 70%, transparent);
 }
 </style>
 

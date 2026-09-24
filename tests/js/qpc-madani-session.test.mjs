@@ -23,7 +23,7 @@ assert.equal(resolveMadaniPage(2, 30, index), 6)
 assert.equal(resolveMadaniPage(2, 37, index), 6)
 assert.notEqual(resolveMadaniPage(2, 29, index), resolveMadaniPage(2, 30, index))
 
-assert.match(sessionDefaults, /readingViewMode: 'mushaf'/)
+assert.match(sessionDefaults, /readingViewMode: 'madani_mushaf'/)
 assert.match(memorisationJs, /readingViewMode: this\.clampReadingViewMode\(this\.readingViewMode\)/)
 assert.match(memorisationJs, /readingViewMode: this\.readingViewMode/)
 assert.match(memorisationJs, /hydrateSessionFromPayload[\s\S]{0,900}payload\.readingViewMode/)

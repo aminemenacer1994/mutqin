@@ -109,10 +109,6 @@ import {
 import { loadMadaniPageLeaf, preloadMadaniNavigationTargets } from '../scripts/mushaf/qpcMadaniPageData'
 import { prefetchQpcMadaniPageFonts } from '../scripts/mushaf/qpcMadaniFontLoader'
 import {
-  buildMadaniAmdHiddenIndexesByAyah,
-  resolveMadaniAmdPeekAyahKey,
-} from '../scripts/mushaf/qpcMadaniTechniques'
-import {
   clearQpcMadaniRecitationDom,
   patchQpcMadaniRecitationDom,
   resolveAyahKeyForMadaniRecitationIndex,
@@ -122,8 +118,13 @@ import {
   buildQpcMadaniCodeV2FromMadaniApiVerses,
   mergeQpcMadaniCodeV2Maps,
   resolveQpcMadaniTajweedPresentation,
-  shouldShowQpcMadaniReadingAids,
 } from '../scripts/mushaf/qpcMadaniReadingTools'
+import {
+  buildQpcMadaniProgressSnapshot,
+  preserveDashboardMadaniContext,
+  resolveRecommendationMadaniNavigation,
+  resolveSimilarAyahCanonicalNavigation,
+} from '../scripts/mushaf/qpcMadaniProgress'
 import {
   clampMadaniPage,
   nextMadaniPage,
@@ -290,8 +291,9 @@ import {
   classifyRecitationFailure,
   createRecitationAttemptId,
   getRecitationMicrophoneConstraints,
-  probeMicrophonePermission,
   resolveMicDeniedGuidance,
+  resolveMicrophoneHelp,
+  classifyMicrophoneAccessError,
   resolveRecitationFailureMessage,
   scheduleSlowProcessingNotice,
   userFacingTranscriptionFailure,
@@ -451,6 +453,10 @@ const AskMutqinModal = lazyWorkspaceChunk(
 const AiAudioConsentModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue'),
   'ai-audio-consent'
+)
+const MicrophonePermissionModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "mic-permission-help" */ '../components/MicrophonePermissionModal.vue'),
+  'mic-permission-help'
 )
 const AyahNotesModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ayah-notes-modal" */ '../components/AyahNotesModal.vue'),
@@ -733,6 +739,7 @@ export default {
     AiMemorisationDetectionModal,
     AskMutqinModal,
     AiAudioConsentModal,
+    MicrophonePermissionModal,
     AyahNotesModal,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
@@ -867,7 +874,10 @@ export default {
       isDataReady: false,
       fontDropdownOpen: false,
       topCardMenuOpen: false,
+      topCardMenuFixedStyle: null,
       isAppFullscreen: false,
+      madaniMobileImmersiveDeclined: false,
+      madaniMobileFullscreenOfferHidden: false,
       openVerseActionKey: '',
       verseFontSizes: {},
       defaultFontSize: typeof window !== 'undefined'
@@ -1013,7 +1023,7 @@ export default {
       savedActiveSection: 'saved_in_progress',
       showTools: false,
       toolsPanelMounted: false,
-      readingViewMode: 'mushaf',
+      readingViewMode: 'madani_mushaf',
       mushafPageIndex: 0,
       mushafUiSkin: 'standard', // Paper/standard only; legacy skins remap here
       mushafBorder: 'classic',
@@ -1482,6 +1492,9 @@ export default {
       aiMemorisationCheckerRecordingMimeType: '',
       recordingsLibraryReturnToSelfCheckKey: '',
       showAiAudioConsentModal: false,
+      showMicrophonePermissionModal: false,
+      microphoneHelp: null,
+      microphoneHelpRetry: '',
       aiAudioConsentSnapshot: typeof window !== 'undefined' ? (window.mutqinAiAudioConsent || null) : null,
       showAiMemorisationCheckerModal: false,
       aiMemorisationCheckerVerseRef: null,
@@ -7711,8 +7724,10 @@ export default {
       })
     },
     amdMicGuidance() {
+      if (this.showMicrophonePermissionModal) return ''
       if (this.amdLearnerMicStatus === 'need_access') {
-        return resolveMicDeniedGuidance(this.t?.bind(this))
+        return this.microphoneHelp?.explanation
+          || resolveMicDeniedGuidance(this.t?.bind(this))
       }
       if (this.amdLearnerMicStatus === 'unavailable' || this.amdLearnerMicStatus === 'unsupported') {
         return this.t?.('memorisation.amd.micGuidanceUnsupported')
@@ -7739,6 +7754,23 @@ export default {
     },
     aiAudioConsentDeclineLabel() {
       return this.t('memorisation.aiCheck.consentDecline') || 'Not now'
+    },
+    microphoneHelpHeading() {
+      return this.microphoneHelp?.heading
+        || this.t('memorisation.aiCheck.micPermissionTitle')
+        || 'Allow microphone access'
+    },
+    microphoneHelpExplanation() {
+      return this.microphoneHelp?.explanation || ''
+    },
+    microphoneHelpSteps() {
+      return Array.isArray(this.microphoneHelp?.steps) ? this.microphoneHelp.steps : []
+    },
+    microphoneHelpTryAgainLabel() {
+      return this.t('common.tryAgain') || 'Try again'
+    },
+    microphoneHelpCancelLabel() {
+      return this.t('common.cancel') || 'Cancel'
     },
     amdErrorAction() {
       if (this.amdMicStatus === 'denied' || this.amdLearnerMicStatus === 'need_access') return 'enable-mic'
@@ -8464,6 +8496,7 @@ export default {
         || this.showAdvancedMetricsModal
         || this.postSessionAdaptiveCheckActive
         || this.showAiAudioConsentModal
+        || this.showMicrophonePermissionModal
         || this.workspaceTourActive
       )
     },
@@ -9440,32 +9473,6 @@ export default {
 
     qpcMadaniTechniqueSnapshot() {
       const revealed = this.hiddenRevealSession?.revealedWordIndexes
-      let checkerHiddenIndexesByAyah = {}
-      let checkerPeekActive = false
-      let checkerPeekAyah = ''
-      if (this.amdOpen && this.readingViewMode === 'madani_mushaf') {
-        const targets = this.recitationCheckPendingTargets?.length
-          ? this.recitationCheckPendingTargets
-          : this.getRecitationCheckTargetVerses()
-        const ayahBounds = this.getAmdAyahBoundsCached()
-        const ayahKeys = (Array.isArray(targets) ? targets : []).map((target) => {
-          const verse = this.getCanonicalVerseForCheck?.(target) || target
-          return String(verse?.key || target?.key || '').trim()
-        })
-        checkerHiddenIndexesByAyah = buildMadaniAmdHiddenIndexesByAyah({
-          ayahKeys,
-          ayahBounds,
-          globalHiddenIndexes: this.amdHiddenWordIndexes,
-          hideAllWords: normaliseDifficultyPercent(this.amdDifficultyPercent) === 100,
-          liveWords: this.recitationLiveWords,
-        })
-        checkerPeekActive = !!this.amdPeekActive
-        checkerPeekAyah = resolveMadaniAmdPeekAyahKey({
-          ayahKeys,
-          ayahBounds,
-          peekAyahBound: this._amdPeekAyahBound,
-        })
-      }
       return Object.freeze({
         blurModeEnabled: !!this.blurModeEnabled,
         blurPeekHoldingSpace: !!this.blurPeekHoldingSpace,
@@ -9478,9 +9485,34 @@ export default {
         hiddenRevealVerseKey: String(this.effectiveActiveVerseKey || ''),
         hiddenRevealRevealed: revealed instanceof Set ? [...revealed] : [],
         hiddenRevealCurrentIndex: Number(this.hiddenRevealSession?.currentWordIndex ?? -1),
-        checkerHiddenIndexesByAyah,
-        checkerPeekActive,
-        checkerPeekAyah,
+        checkerHiddenIndexesByAyah: {},
+        checkerPeekActive: false,
+        checkerPeekAyah: '',
+      })
+    },
+
+    qpcMadaniProgressSnapshot() {
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      const weakAyahKeys = []
+      const pushAyah = (value) => {
+        if (value == null || value === '') return
+        weakAyahKeys.push(value)
+      }
+      ;(this.postSessionRevisionWeakAyahs || []).forEach(pushAyah)
+      ;(this.aiReciteFinalPlan?.weakAyahs || []).forEach(pushAyah)
+      const focusAyahs = this.masteryTargetRange?.settings?.focus_ayahs
+        || this.postSessionRecommendation?.settings?.focus_ayahs
+        || []
+      if (Array.isArray(focusAyahs)) focusAyahs.forEach(pushAyah)
+      return buildQpcMadaniProgressSnapshot({
+        weakWords: this.practiceFocusWeakWords,
+        weakAyahKeys,
+        chapterId,
+        ayahProgress: this.hifzAyahProgress,
+        mutqinAyahs: this.mutqinState?.ayahs,
+        queue: this.queue,
+        todayToken: this.getHifzDateToken(new Date()),
+        activeWeakWordId: this.selectedPracticeWeakWordKey,
       })
     },
 
@@ -9842,16 +9874,30 @@ export default {
     qpcMadaniFontScale() {
       const base = 150
       const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || base)
-      return Math.max(0.75, Math.min(1.35, size / base))
+      let scale = Math.max(0.75, Math.min(1.35, size / base))
+      if (this.isMobileViewport()) {
+        scale = Math.min(1.48, scale * 1.36)
+      }
+      return scale
+    },
+
+    isMadaniMobileImmersive() {
+      return !!this.isAppFullscreen
+        && isQpcMadaniMushafView(this.readingViewMode)
+        && this.isMobileViewport?.() === true
+    },
+
+    showMadaniMobileFullscreenOffer() {
+      if (!this.isMobileViewport?.()) return false
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return false
+      if (!this.shouldShowReadingWorkspace) return false
+      if (this.isAppFullscreen) return false
+      if (this.madaniMobileFullscreenOfferHidden) return false
+      return true
     },
 
     showQpcMadaniReadingAids() {
-      return shouldShowQpcMadaniReadingAids({
-        showTranslation: this.showTranslation,
-        showTransliteration: this.showTransliteration,
-        showWordByWord: this.showWordByWord,
-        wordTooltipText: this.activeWordTooltip?.text,
-      })
+      return false
     },
 
     qpcMadaniTajweedPresentation() {
@@ -10371,6 +10417,11 @@ export default {
       this.isWorkspaceRefreshing = false
       this.workspaceRefreshReason = ''
       this.appReady = true
+      this.$nextTick(() => {
+        if (isQpcMadaniMushafView(this.readingViewMode)) {
+          this.offerMadaniMobileImmersiveReading()
+        }
+      })
       // Consent before tour — tour overlay (z-index 32000) would swallow button clicks.
       // Registration resume choice comes first; defer one-time prompts until resolved.
       if (!this.shouldDeferRegistrationFirstRunPrompts()) {
@@ -10403,9 +10454,13 @@ export default {
     window.addEventListener('keydown', this.handleGlobalKeydown)
     window.addEventListener('keyup', this.handleGlobalKeyup)
     window.addEventListener('scroll', this.handleWindowScroll, { passive: true })
+    this.handleNativeFullscreenChange = this.handleNativeFullscreenChange.bind(this)
+    document.addEventListener('fullscreenchange', this.handleNativeFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', this.handleNativeFullscreenChange)
     this.updateBackToTopVisibility()
     let readerViewportWidth = window.innerWidth
     this.handlePracticeTurnCalloutResize = () => {
+      if (this.topCardMenuOpen) this.syncTopCardMenuPosition()
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
       // Mobile browser chrome changes height while scrolling. The reader wraps
       // to its width, so only refit when that width actually changes.
@@ -10558,6 +10613,10 @@ export default {
     this.persistMutqinStateLocally()
     if (this.unwatchMutqinState) this.unwatchMutqinState()
     document.removeEventListener('click', this.handleClickOutside)
+    if (this.handleNativeFullscreenChange) {
+      document.removeEventListener('fullscreenchange', this.handleNativeFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', this.handleNativeFullscreenChange)
+    }
     if (this.handleMushafToolbarDocumentClick) {
       document.removeEventListener('click', this.handleMushafToolbarDocumentClick)
       this.handleMushafToolbarDocumentClick = null
@@ -10610,7 +10669,7 @@ export default {
         this.aiRecallModeAnnouncement = ''
       }
     },
-    readingViewMode(newVal) {
+    readingViewMode(newVal, oldVal) {
       if (newVal === 'mushaf') {
         this.wordByWordAudioEnabled = true
         this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
@@ -10626,6 +10685,8 @@ export default {
           })
         })
       } else if (newVal === 'madani_mushaf') {
+        this.madaniMobileImmersiveDeclined = false
+        this.madaniMobileFullscreenOfferHidden = false
         void this.bootstrapQpcMadaniViewer().then(() => {
           this.syncQpcMadaniPageToActiveVerse()
           this.$nextTick(() => {
@@ -10640,8 +10701,18 @@ export default {
                 this.patchAmdLiveWordStatuses(Array.from({ length: count }, (_, index) => ({ index })))
               }
             }
+            this.offerMadaniMobileImmersiveReading()
           })
         })
+      }
+      if (oldVal === 'madani_mushaf' && newVal !== 'madani_mushaf') {
+        this.madaniMobileImmersiveDeclined = false
+        this.madaniMobileFullscreenOfferHidden = false
+        if (this.isAppFullscreen) {
+          this.isAppFullscreen = false
+          this.syncAppFullscreenClass()
+          void this.leaveNativeFullscreen()
+        }
       }
       this.applyMobileLayoutFontDefault(newVal)
       if (this.isMobileViewport()) {
@@ -10988,6 +11059,10 @@ export default {
     },
 
     defaultFontSize: 'persistUiState',
+    topCardMenuOpen(open) {
+      if (open) this.$nextTick(() => this.syncTopCardMenuPosition())
+      else this.topCardMenuFixedStyle = null
+    },
     tajweedEnabled: 'persistUiState',
     mushafUiSkin: 'persistUiState',
     aiRecallModeEnabled: 'persistUiState',
@@ -11345,6 +11420,36 @@ export default {
       })
     },
 
+    presentMicrophoneHelp(error, options = {}) {
+      const help = resolveMicrophoneHelp(this.t?.bind(this), {
+        error,
+        unsupported: options.unsupported === true,
+      })
+      this.microphoneHelp = help
+      this.microphoneHelpRetry = String(options.retry || (this.amdOpen ? 'amd' : 'recitation'))
+      this.showMicrophonePermissionModal = true
+      return help
+    },
+    closeMicrophoneHelp() {
+      this.showMicrophonePermissionModal = false
+    },
+    async retryMicrophoneHelp() {
+      const retry = this.microphoneHelpRetry || (this.amdOpen ? 'amd' : 'recitation')
+      this.showMicrophonePermissionModal = false
+      if (retry === 'amd') {
+        await this.startAmdAssessment()
+        return
+      }
+      if (retry === 'checker') {
+        await this.startAiMemorisationCheckerRecording()
+        return
+      }
+      if (retry === 'insufficient') {
+        await this.checkMicrophoneForInsufficientAudio()
+        return
+      }
+      await this.startRecitationCheckRecording()
+    },
     reportRecitationCheckFailure(message = '', options = {}) {
       const fallback = this.safeErrorText(
         this.t('memorisation.aiCheck.recitationCheckFailed'),
@@ -11360,7 +11465,7 @@ export default {
       if (this.amdOpen) {
         this.failAmdAssessment(text, { toast: false })
       }
-      if (!text) return
+      if (!text || options.skipBanner) return
       const classification = classifyRecitationFailure(
         options.error || { message: text },
         { context: options.context || 'recitation_ui' }
@@ -11509,7 +11614,7 @@ export default {
       if (readPersistedFontPreferences({ userId: this.currentAuthUserId() }).found) return
       const isMobile = this.isMobileViewport?.() === true
       if (!isMobile) return
-      const target = 130
+      const target = mode === 'madani_mushaf' ? 175 : 130
       if (Number(this.defaultFontSize) !== target) this.defaultFontSize = target
       if (this.settingsDraft && Number(this.settingsDraft.defaultFontSize) !== target) {
         this.settingsDraft.defaultFontSize = target
@@ -11852,6 +11957,8 @@ export default {
         const from = Number(params.get('from') || params.get('ayah') || 0)
         const to = Number(params.get('to') || from || 0)
         const journey = String(params.get('journey') || '').trim().toLowerCase()
+        const view = String(params.get('view') || params.get('layout') || '').trim()
+        const weak = String(params.get('weak') || '').trim()
         const hasUrlIntent = !!(
           resume
           || setup
@@ -11876,6 +11983,8 @@ export default {
             surah: surah > 0 ? surah : 0,
             from: from > 0 ? from : 0,
             to: to > 0 ? to : 0,
+            view: view || null,
+            weak: weak || null,
           }
         }
         // Refresh mid-consume: URL may already be cleaned; restore stashed destination.
@@ -11889,7 +11998,7 @@ export default {
       if (typeof window === 'undefined') return
       try {
         const url = new URL(window.location.href)
-        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'journey']
+        ;['resume', 'session', 'recommendation', 'surah', 'from', 'to', 'ayah', 'setup', 'action', 'panel', 'ai_check', 'review', 'return', 'journey', 'view', 'layout', 'weak']
           .forEach((key) => url.searchParams.delete(key))
         const next = `${url.pathname}${url.search}${url.hash}`
         window.history.replaceState({}, '', next)
@@ -11903,10 +12012,17 @@ export default {
     async consumeDashboardEntryIntent(intent = null) {
       const entry = intent || this.readDashboardEntryIntent()
       if (!entry) return false
+      const dashboardContext = preserveDashboardMadaniContext(entry)
 
       // Persist before clearing the URL so refresh keeps the intended destination.
       stashDashboardEntryIntent(entry, null, this.currentAuthUserId())
       this.clearDashboardEntryIntentFromUrl()
+      if (dashboardContext.readingViewMode === 'madani_mushaf' && this.readingViewMode !== 'madani_mushaf') {
+        this.rememberLayoutFontSize(this.readingViewMode)
+        this.readingViewMode = 'madani_mushaf'
+        this.applyLayoutFontSize('madani_mushaf')
+        void this.bootstrapQpcMadaniViewer()
+      }
       if (this.welcomeBackRevealTimer) {
         window.clearTimeout(this.welcomeBackRevealTimer)
         this.welcomeBackRevealTimer = null
@@ -11946,6 +12062,7 @@ export default {
             sessionMode: 'revision',
             autoStart: true,
           })
+          this.finishDashboardMadaniEntry(entry)
           this.markDashboardEntryIntentConsumed()
           return true
         }
@@ -11979,6 +12096,7 @@ export default {
           }
           if (this.hasContinueSession || this.backendUnfinishedSession || this.continueSessionPayload) {
             await this.welcomeBackContinueSession({ preferredSessionId })
+            this.finishDashboardMadaniEntry(entry)
             this.markDashboardEntryIntentConsumed()
             return true
           }
@@ -12010,6 +12128,7 @@ export default {
                 sessionPayload: result?.session || null,
                 autoStart: true,
               })
+              this.finishDashboardMadaniEntry(entry)
               this.markDashboardEntryIntentConsumed()
               return true
             }
@@ -12027,6 +12146,7 @@ export default {
             sessionMode: 'new_learning',
             autoStart: true,
           })
+          this.finishDashboardMadaniEntry(entry)
           this.markDashboardEntryIntentConsumed()
           return true
         }
@@ -15492,6 +15612,22 @@ export default {
       const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen
       return exit ? Promise.resolve(exit.call(document)).catch(() => {}) : Promise.resolve()
     },
+    enterNativeFullscreen() {
+      if (typeof document === 'undefined') return Promise.resolve()
+      if (this.nativeFullscreenElement()) return Promise.resolve()
+      const root = document.documentElement
+      const request = root.requestFullscreen
+        || root.webkitRequestFullscreen
+        || root.msRequestFullscreen
+      if (!request) return Promise.resolve()
+      return Promise.resolve(request.call(root)).catch(() => {})
+    },
+    handleNativeFullscreenChange() {
+      if (this.nativeFullscreenElement()) return
+      if (!this.isAppFullscreen) return
+      this.isAppFullscreen = false
+      this.syncAppFullscreenClass()
+    },
     syncAppFullscreenClass() {
       const active = !!this.isAppFullscreen
       document.documentElement.classList.toggle('is-app-fullscreen', active)
@@ -15501,11 +15637,42 @@ export default {
         document.documentElement.style.removeProperty('overflow')
       }
     },
+    offerMadaniMobileImmersiveReading() {
+      if (!this.isMobileViewport?.() || !isQpcMadaniMushafView(this.readingViewMode)) return
+      if (this.madaniMobileImmersiveDeclined || this.isAppFullscreen) return
+      this.isAppFullscreen = true
+      this.syncAppFullscreenClass()
+    },
+    enterMadaniMobileImmersiveReading() {
+      this.madaniMobileFullscreenOfferHidden = true
+      this.madaniMobileImmersiveDeclined = false
+      this.isAppFullscreen = true
+      this.syncAppFullscreenClass()
+      if (this.isMobileViewport?.()) {
+        void this.enterNativeFullscreen()
+      }
+    },
+    dismissMadaniMobileFullscreenOffer() {
+      this.madaniMobileFullscreenOfferHidden = true
+    },
     toggleFullScreen() {
       this.topCardMenuOpen = false
-      void this.leaveNativeFullscreen()
-      this.isAppFullscreen = !this.isAppFullscreen
+      if (this.isAppFullscreen) {
+        void this.leaveNativeFullscreen()
+        this.isAppFullscreen = false
+        this.syncAppFullscreenClass()
+        if (this.isMobileViewport() && isQpcMadaniMushafView(this.readingViewMode)) {
+          this.madaniMobileImmersiveDeclined = true
+          this.madaniMobileFullscreenOfferHidden = false
+        }
+        return
+      }
+      this.isAppFullscreen = true
       this.syncAppFullscreenClass()
+      if (this.isMobileViewport() && isQpcMadaniMushafView(this.readingViewMode)) {
+        this.madaniMobileImmersiveDeclined = false
+        void this.enterNativeFullscreen()
+      }
     },
 
     // Fix banner positioning - update CSS
@@ -21153,6 +21320,62 @@ export default {
         this.individualAyahRepeatCounts || {},
       )
     },
+    followQpcMadaniCanonicalTarget(target = {}) {
+      const nav = resolveRecommendationMadaniNavigation({
+        readingViewMode: this.readingViewMode,
+        surah: target.surah || target.chapterId,
+        ayah: target.ayah || target.rangeStart,
+        rangeStart: target.rangeStart,
+        rangeEnd: target.rangeEnd,
+        session: target.session,
+        index: this.qpcVersePageIndex,
+        viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 1080,
+      })
+      if (!nav.applies) return nav
+      this.qpcMadaniPinnedPage = null
+      if (nav.verseKey) this.setActiveVerse(nav.verseKey, { scroll: false })
+      return nav
+    },
+    finishDashboardMadaniEntry(entry = {}) {
+      const ctx = preserveDashboardMadaniContext(entry)
+      if (ctx.weakWords.length) {
+        this.practiceFocusWeakWords = normaliseWeakWordRecords([
+          ...(Array.isArray(this.practiceFocusWeakWords) ? this.practiceFocusWeakWords : []),
+          ...ctx.weakWords,
+        ])
+        this.persistPracticeFocusWeakWords()
+      }
+      if (ctx.targetAyah) {
+        const [surah, ayah] = ctx.targetAyah.split(':')
+        this.followQpcMadaniCanonicalTarget({
+          surah,
+          ayah,
+          rangeStart: ayah,
+          rangeEnd: Number(String(ctx.rangeEndAyah || '').split(':')[1]) || ayah,
+          session: ctx.sessionId ? { id: ctx.sessionId, chapterId: Number(surah), rangeStart: Number(ayah) } : null,
+        })
+      }
+      return ctx
+    },
+    async openSimilarAyahPractice(target = {}) {
+      const nav = resolveSimilarAyahCanonicalNavigation(target)
+      if (!nav.verseKey) return null
+      const loaded = Number(this.chapterId) === nav.surah
+        && (this.verses || []).some((verse) => verse.key === nav.verseKey)
+      if (!loaded) {
+        await this.startSessionFromRecommendationPayload({
+          chapterId: nav.surah,
+          rangeStart: nav.ayah,
+          rangeEnd: nav.ayah,
+          sessionMode: 'revision',
+          autoStart: false,
+        })
+      } else if (isQpcMadaniMushafView(this.readingViewMode)) {
+        this.qpcMadaniPinnedPage = null
+      }
+      this.setActiveVerse(nav.verseKey, { scroll: true })
+      return nav
+    },
     async startSessionFromRecommendationPayload({
       chapterId,
       rangeStart,
@@ -21315,6 +21538,13 @@ export default {
       if (!autoStart) {
         this.landPostSessionPreparedWorkspace()
       }
+      this.followQpcMadaniCanonicalTarget({
+        surah: chapterId,
+        ayah: rangeStart,
+        rangeStart,
+        rangeEnd,
+        session: sessionPayload,
+      })
     },
     applyRecommendedTechnique(techniqueId, sessionMode = 'new_learning', settings = null) {
       // Standard setup only when moving to the next session — never auto-apply
@@ -21877,7 +22107,7 @@ export default {
       this.blurIntensity = 10
       this.anchorModeEnabled = false
       this.anchorCount = 2
-      this.readingViewMode = 'mushaf'
+      this.readingViewMode = 'madani_mushaf'
       this.tab = 'tools'
       this.showTools = false
     },
@@ -24611,6 +24841,12 @@ export default {
           : (fromWorkspaceAiRecite ? 'workspace-ai-recite' : 'test-with-ai'))
       this.clearQpcMadaniRecitationSurface()
       this.amdOpen = true
+      this.followQpcMadaniCanonicalTarget({
+        surah: Number(String(this.effectiveActiveVerseKey || '').split(':')[0]) || this.chapterId,
+        ayah: Number(String(this.effectiveActiveVerseKey || '').split(':')[1]) || this.rangeStart,
+        rangeStart: this.rangeStart,
+        rangeEnd: this.rangeEnd,
+      })
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
       await this.refreshAmdMushafSurface({ force: true })
@@ -25949,6 +26185,7 @@ export default {
       this.amdAssessOnStop = false
       this.clearQpcMadaniRecitationSurface()
       this.amdOpen = false
+      this.showMicrophonePermissionModal = false
       this.amdEntrySource = null
       this.amdStage = AMD_STAGES.IDLE
       this.amdBusy = false
@@ -26031,7 +26268,11 @@ export default {
       try {
         if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
           this.amdMicStatus = 'unsupported'
-          throw new Error(this.t?.('memorisation.amd.micUnsupported') || 'Speech recognition is not supported in this browser.')
+          const help = this.presentMicrophoneHelp({ name: 'NotSupportedError', code: 'unsupported' }, {
+            unsupported: true,
+            retry: 'amd',
+          })
+          throw new Error(help.heading)
         }
         const hasBrowserStt = !!(this.getSpeechRecognitionConstructor?.() || window.SpeechRecognition || window.webkitSpeechRecognition)
         // Browser STT is optional when Speechmatics can be used; require one path.
@@ -26082,19 +26323,32 @@ export default {
           return
         }
         this.amdStage = AMD_STAGES.ERROR
-        this.amdError = error?.message || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
-        this.playUiTone?.('error')
-        if (/Permission|NotAllowed|denied|micBlocked/i.test(String(error?.name || error?.message || ''))) {
-          this.amdMicStatus = 'denied'
-          this.amdError = this.t?.('memorisation.amd.micNeedAccess') || 'Microphone access needed'
-          if (this.postSessionAiReciteActive || this.showPostSessionModal) {
-            void this.applyInsufficientAudioAssessment(null, {
-              reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
-              micPermissionFailed: true,
-              failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
-            })
+        const kind = classifyMicrophoneAccessError(error)
+        const isMicError = this.showMicrophonePermissionModal
+          || ['not_allowed', 'not_found', 'not_readable', 'security', 'unsupported', 'aborted'].includes(kind)
+        if (isMicError) {
+          const help = this.showMicrophonePermissionModal
+            ? this.microphoneHelp
+            : this.presentMicrophoneHelp(error, { retry: 'amd' })
+          this.amdError = help?.heading
+            || error?.message
+            || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
+          if (help?.kind === 'not_allowed') {
+            this.amdMicStatus = 'denied'
+            if (this.postSessionAiReciteActive || this.showPostSessionModal) {
+              void this.applyInsufficientAudioAssessment(null, {
+                reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
+                micPermissionFailed: true,
+                failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
+              })
+            }
+          } else if (help?.kind === 'unsupported') {
+            this.amdMicStatus = 'unsupported'
           }
+        } else {
+          this.amdError = error?.message || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
         }
+        this.playUiTone?.('error')
       } finally {
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdBusy = false
@@ -26953,7 +27207,8 @@ export default {
         console.error('Failed to start memorisation check:', error)
         this.aiMemorisationCheckerPreparing = false
         this.aiMemorisationCheckerRecording = false
-        this.aiMemorisationCheckerError = resolveMicDeniedGuidance(this.t?.bind(this))
+        const help = this.presentMicrophoneHelp(error, { retry: 'checker' })
+        this.aiMemorisationCheckerError = help.heading
           || this.t('memorisation.aiCheck.micBlocked')
         this.cleanupAiMemorisationCheckerMedia()
       }
@@ -30079,12 +30334,10 @@ export default {
       this.clearFailedRecitationRecordingState({ preserveRange: true })
       try {
         if (!navigator?.mediaDevices?.getUserMedia) {
-          this.showBanner(
-            this.t('memorisation.aiCheck.micBlocked')
-              || 'Microphone access was blocked. Allow microphone permission, then try again.',
-            'error',
-            4200,
-          )
+          this.presentMicrophoneHelp({ name: 'NotSupportedError', code: 'unsupported' }, {
+            unsupported: true,
+            retry: 'insufficient',
+          })
           return
         }
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -30098,17 +30351,14 @@ export default {
         )
         await this.retryInsufficientAudioRecording()
       } catch (error) {
-        this.showBanner(
-          this.t('memorisation.aiCheck.micBlocked')
-            || 'Microphone access was blocked. Allow microphone permission, then try again.',
-          'error',
-          4200,
-        )
-        await this.applyInsufficientAudioAssessment(null, {
-          reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
-          micPermissionFailed: true,
-          failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
-        })
+        const help = this.presentMicrophoneHelp(error, { retry: 'insufficient' })
+        if (help.kind === 'not_allowed') {
+          await this.applyInsufficientAudioAssessment(null, {
+            reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
+            micPermissionFailed: true,
+            failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
+          })
+        }
       }
     },
     closeInsufficientAudioResult() {
@@ -30731,9 +30981,11 @@ export default {
     },
     async startRecitationCheckRecording(targetVerse = null, options = {}) {
       if (!this.supportsSelfCheckRecording()) {
-        this.reportRecitationCheckFailure(
-          this.t('memorisation.aiCheck.recordingUnsupported')
-        )
+        const help = this.presentMicrophoneHelp({ name: 'NotSupportedError', code: 'unsupported' }, {
+          unsupported: true,
+          retry: this.amdOpen ? 'amd' : 'recitation',
+        })
+        this.reportRecitationCheckFailure(help.heading, { skipBanner: true })
         return
       }
       this.selfCheckModeChoiceVisible = false
@@ -30758,25 +31010,8 @@ export default {
       // Fresh attempt owns the mic lifecycle — clear leftover discard from a prior cancel.
       this.recitationCheckDiscardOnStop = false
       const startedWhileAmd = !!this.amdOpen
-      const micProbe = await probeMicrophonePermission()
       if (!this.isActiveRecitationAttempt(attemptId) || this.recitationCheckDiscardOnStop) {
         this.recitationCheckPreparing = false
-        return
-      }
-      if (micProbe.denied) {
-        const micMessage = resolveMicDeniedGuidance(this.t?.bind(this))
-          || this.resolveRecitationFailureText(
-            { name: 'NotAllowedError', message: 'permission_denied' },
-            { context: 'mic_permission_probe' },
-          )
-        this.reportRecitationCheckFailure(micMessage)
-        if (this.postSessionAiReciteActive || this.showPostSessionModal) {
-          void this.applyInsufficientAudioAssessment(null, {
-            reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
-            micPermissionFailed: true,
-            failureReason: 'mic_permission_denied',
-          })
-        }
         return
       }
 
@@ -31119,21 +31354,22 @@ export default {
         console.error('Failed to start recitation check:', error)
         this.recitationCheckAutoStopArmed = false
         this.cleanupRecitationCheckMedia()
-        const micDenied = /Permission|NotAllowed|denied|micBlocked|NotFound|NotReadable/i
-          .test(String(error?.name || error?.message || ''))
-        const failureText = micDenied
-          ? (resolveMicDeniedGuidance(this.t?.bind(this))
-            || this.t('memorisation.aiCheck.micRequired')
-            || this.resolveRecitationFailureText(error, { context: 'mic_start' }))
-          : this.resolveRecitationFailureText(error, { context: 'mic_start' })
-        this.reportRecitationCheckFailure(failureText)
-        if (micDenied && (this.postSessionAiReciteActive || this.showPostSessionModal)) {
-          void this.applyInsufficientAudioAssessment(null, {
-            reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
-            micPermissionFailed: true,
-            failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
+        const kind = classifyMicrophoneAccessError(error)
+        if (kind !== 'unknown') {
+          const help = this.presentMicrophoneHelp(error, {
+            retry: this.amdOpen ? 'amd' : 'recitation',
           })
+          this.reportRecitationCheckFailure(help.heading, { error, skipBanner: true })
+          if (help.kind === 'not_allowed' && (this.postSessionAiReciteActive || this.showPostSessionModal)) {
+            void this.applyInsufficientAudioAssessment(null, {
+              reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
+              micPermissionFailed: true,
+              failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
+            })
+          }
+          return
         }
+        this.reportRecitationCheckFailure(this.resolveRecitationFailureText(error, { context: 'mic_start' }))
       }
     },
     stopRecitationCheckRecording() {
@@ -35392,7 +35628,7 @@ export default {
       this.setReadingViewMode(this.nextReadingViewMode)
     },
     clampReadingViewMode(mode) {
-      return normalizeReadingViewMode(mode, this.readingViewMode || 'mushaf')
+      return normalizeReadingViewMode(mode, this.readingViewMode || 'madani_mushaf')
     },
     setReadingViewMode(mode) {
       const nextMode = this.clampReadingViewMode(mode)
@@ -35552,6 +35788,7 @@ export default {
       this.qpcMadaniLoadError = ''
       try {
         await this.ensureQpcVersePageIndex()
+        void loadSurahNamesFont().catch(() => null)
         if (this.tajweedEnabled) {
           await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
         }
@@ -35878,7 +36115,7 @@ export default {
         }
         this.madaniPageByVerseKey = pageMap
         this.madaniPageNumbers = pages.length ? pages : [1]
-        await loadSurahNamesFont()
+        await loadSurahNamesFont().catch(() => null)
 
         // Eager-load every session page so the full range is painted in the stack.
         const sessionPages = [...this.madaniPageNumbers]
@@ -37023,6 +37260,7 @@ export default {
     },
 
     handleWindowScroll() {
+      if (this.topCardMenuOpen) this.syncTopCardMenuPosition()
       // Back-to-top is hidden on phones; do not enqueue work on every swipe
       // unless a visible practice callout needs to follow its anchor.
       if (this.isMobileViewport() && (!this.practiceTurnCalloutVisible || this.talqinRecitationTurnActive)) return
@@ -39362,11 +39600,54 @@ export default {
     },
     toggleTopCardMenu() {
       const nextOpen = !this.topCardMenuOpen
-      this.topCardMenuOpen = nextOpen
       if (nextOpen) {
         this.openVerseActionKey = ''
         this.fontDropdownOpen = false
+        this.topCardMenuOpen = true
+        this.syncTopCardMenuPosition()
+        this.$nextTick(() => this.syncTopCardMenuPosition())
+      } else {
+        this.topCardMenuOpen = false
+        this.topCardMenuFixedStyle = null
       }
+    },
+    syncTopCardMenuPosition() {
+      const wrap = this.$refs.topCardMenuWrap
+      if (!wrap || !this.topCardMenuOpen) {
+        this.topCardMenuFixedStyle = null
+        return
+      }
+      const rect = wrap.getBoundingClientRect()
+      const gutter = 8
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const maxWidth = Math.min(280, vw - gutter * 2)
+      const spaceBelow = vh - rect.bottom - gutter
+      const spaceAbove = rect.top - gutter
+      const openAbove = spaceBelow < 220 && spaceAbove > spaceBelow
+      const maxHeight = Math.max(160, Math.floor((openAbove ? spaceAbove : spaceBelow) - 8))
+      const style = {
+        position: 'fixed',
+        maxWidth: `${maxWidth}px`,
+        width: `${maxWidth}px`,
+        maxHeight: `${maxHeight}px`,
+        zIndex: 5000,
+      }
+      if (openAbove) {
+        style.bottom = `${Math.round(vh - rect.top + 8)}px`
+        style.top = 'auto'
+      } else {
+        style.top = `${Math.round(rect.bottom + 8)}px`
+        style.bottom = 'auto'
+      }
+      if (this.isRtlLocale) {
+        style.left = `${Math.round(Math.min(Math.max(gutter, rect.left), vw - maxWidth - gutter))}px`
+        style.right = 'auto'
+      } else {
+        style.right = `${Math.round(Math.max(gutter, vw - rect.right))}px`
+        style.left = 'auto'
+      }
+      this.topCardMenuFixedStyle = style
     },
     toggleVerseActionMenu(verseKey) {
       this.openVerseActionKey = this.openVerseActionKey === verseKey ? '' : verseKey
@@ -43216,7 +43497,7 @@ export default {
           this.showTransliteration = state.showTransliteration ?? this.showTransliteration
           this.showWordByWord = !!state.showWordByWord
           this.wordByWordAudioEnabled = true
-          this.readingViewMode = this.clampReadingViewMode(state.readingViewMode || 'mushaf')
+          this.readingViewMode = this.clampReadingViewMode(state.readingViewMode || 'madani_mushaf')
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0

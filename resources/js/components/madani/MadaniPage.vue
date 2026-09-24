@@ -33,9 +33,11 @@
           :selected-location="selectedLocation"
           :selection="selection"
           :technique-snapshot="techniqueSnapshot"
+          :progress-snapshot="progressSnapshot"
           :audio-index-map="audioIndexMap"
           :tajweed-enabled="tajweedEnabled"
           :code-v2-by-location="codeV2ByLocation"
+          :surah-names-ready="surahNamesReady"
           @select="onWordSelect"
           @ayah-enter="onAyahEnter"
           @ayah-leave="onAyahLeave"
@@ -110,6 +112,10 @@ export default {
       type: Object,
       default: null,
     },
+    progressSnapshot: {
+      type: Object,
+      default: null,
+    },
     audioIndexMap: {
       type: Object,
       default: null,
@@ -137,6 +143,7 @@ export default {
       fitted: false,
       fitting: false,
       fontReady: false,
+      surahNamesReady: false,
     }
   },
   computed: {
@@ -167,6 +174,7 @@ export default {
     pageNumber() {
       this.fontReady = false
       this.fitted = false
+      this.surahNamesReady = false
       this.readyAndFit()
     },
     fontScale() {
@@ -251,8 +259,13 @@ export default {
         console.warn('[MadaniPage] page font load failed', this.pageNumber, error)
       }
       this.fontReady = true
-      if (this.lines.some(line => line.line_type === 'surah_name' || line.line_type === 'basmallah')) {
-        await loadSurahNamesFont().catch(() => null)
+      if (this.lines.some(line => {
+        const type = String(line?.line_type || line?.type || '')
+        return type === 'surah_name' || type === 'basmallah' || type === 'basmala'
+      })) {
+        await loadSurahNamesFont()
+          .then(() => { this.surahNamesReady = true })
+          .catch(() => { this.surahNamesReady = false })
       }
       await this.$nextTick()
       this.fitLines()
@@ -309,12 +322,18 @@ export default {
       }
 
       const narrow = available < 440
-      const safety = this.embedded ? (narrow ? 0.9 : 0.94) : (narrow ? 0.88 : 0.94)
-      const cap = this.embedded ? (narrow ? 30 : 34) : (narrow ? 32 : 36)
-      const scale = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
+      const mobile = typeof window !== 'undefined' && window.innerWidth < 768
+      const safety = this.embedded
+        ? (narrow ? 0.9 : 0.94)
+        : (mobile ? 0.94 : (narrow ? 0.88 : 0.94))
+      const cap = this.embedded
+        ? (narrow ? 30 : 34)
+        : (mobile ? 52 : (narrow ? 32 : 36))
+      const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
         ? Number(this.fontScale)
         : 1
-      const size = Math.min(cap, available / widest * MEASURE_SIZE * safety) * scale
+      const widthFit = (available / widest) * MEASURE_SIZE * safety
+      const size = Math.min(cap * requested, widthFit)
       root.style.setProperty('--qpc-word-size', `${size.toFixed(2)}px`)
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
@@ -336,6 +355,8 @@ export default {
 <style scoped>
 .qpc-madani-page {
   --qpc-word-size: 18px;
+  --qpc-line-min-height: 2.22em;
+  --qpc-line-height: 1.96;
   --qpc-ink: var(--mushaf-reading-ink, #1b140d);
   --qpc-rule: color-mix(in srgb, var(--accent, #8d6a35) 48%, transparent);
   box-sizing: border-box;
@@ -354,9 +375,17 @@ export default {
   opacity: 0.35;
 }
 
+.qpc-madani-page--embedded:not(.is-font-ready) {
+  opacity: 1;
+}
+
 .qpc-madani-page.is-font-ready {
   opacity: 1;
   transition: opacity 120ms ease;
+}
+
+.qpc-madani-page--embedded.is-font-ready {
+  transition: none;
 }
 
 .qpc-madani-page__ornament {
@@ -364,7 +393,7 @@ export default {
   padding: 0.28rem;
   border: 2px solid var(--qpc-rule);
   background: #fffdf8;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .qpc-madani-page__sheet {
@@ -374,7 +403,7 @@ export default {
   justify-content: flex-start;
   padding: 0.95rem 1.15rem 0.45rem;
   border: 1px solid rgba(141, 106, 53, 0.42);
-  overflow-x: clip;
+  overflow-x: visible;
   overflow-y: visible;
   max-width: 100%;
 }
@@ -434,8 +463,8 @@ export default {
 }
 
 .qpc-madani-page--single {
-  --qpc-line-min-height: 1.62em;
-  --qpc-line-height: 1.42;
+  --qpc-line-min-height: 1.98em;
+  --qpc-line-height: 1.68;
   width: 100%;
   max-width: min(100%, 36rem);
   height: auto;

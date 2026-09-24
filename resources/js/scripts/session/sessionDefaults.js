@@ -2,7 +2,7 @@
 export const DEFAULT_SESSION_REPETITIONS = 1
 
 /** Tajweed colouring is on by default (saved per account / device). */
-export const DEFAULT_TAJWEED_ENABLED = true
+export const DEFAULT_TAJWEED_ENABLED = false
 
 /** Matches memorisationRuntime.DEFAULT_ALQURAN_RECITER without importing that module graph. */
 const DEFAULT_RECITER_ID = 'ar.alafasy'
@@ -67,7 +67,7 @@ export function buildDefaultWorkspaceSessionConfig(overrides = {}) {
     showTransliteration: false,
     showWordByWord: false,
     wordByWordAudioEnabled: true,
-    readingViewMode: 'mushaf',
+    readingViewMode: 'madani_mushaf',
     ...overrides,
   }
 }

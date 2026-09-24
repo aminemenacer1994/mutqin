@@ -289,6 +289,16 @@
         </div>
       </div>
     </div>
+    <MicrophonePermissionModal
+      :open="showMicrophoneHelp"
+      :heading="microphoneHelp.heading"
+      :explanation="microphoneHelp.explanation"
+      :steps="microphoneHelp.steps"
+      :try-again-label="t('common.tryAgain')"
+      :cancel-label="t('common.cancel')"
+      @try-again="retryMicrophoneHelp"
+      @cancel="closeMicrophoneHelp"
+    />
   </Teleport>
 </template>
 
@@ -298,7 +308,8 @@ import { learningApi } from '../scripts/api/learning'
 import { isAiAudioConsentDeclined, resolveAiAudioConsentRecord } from '../scripts/audio/aiAudioConsent'
 import { buildAssessmentAyahs, buildRecognitionWords } from '../scripts/memorisationDetection/api'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
-import { resolveMicDeniedGuidance } from '../scripts/audio/recordingResilience'
+import { resolveMicrophoneHelp } from '../scripts/audio/recordingResilience'
+import MicrophonePermissionModal from './MicrophonePermissionModal.vue'
 import { playRecordingStartBeep } from '../scripts/audio/recordingStartBeep.js'
 import { loadAyah } from '../scripts/dashboardAiRecite/ayahText'
 import { audioGateBlocksTranscript, evaluateSpeechmaticsAudioGate } from '../scripts/audio/speechmaticsAudioGate.js'
@@ -317,7 +328,7 @@ import { createDashboardAiReciteRecorder } from '../scripts/dashboardAiRecite/re
 
 export default {
   name: 'DashboardAiReciteModal',
-  components: { AppStatus },
+  components: { AppStatus, MicrophonePermissionModal },
   props: {
     open: { type: Boolean, default: false },
     userId: { type: [Number, String], default: 0 },
@@ -337,6 +348,8 @@ export default {
       processingLabel: '',
       errorTitle: '',
       errorDesc: '',
+      showMicrophoneHelp: false,
+      microphoneHelp: { heading: '', explanation: '', steps: [] },
       peekUsed: false,
       peekRevealed: false,
       peekAyah: null,
@@ -451,6 +464,7 @@ export default {
       this.submitKey = ''
       this.errorTitle = ''
       this.errorDesc = ''
+      this.showMicrophoneHelp = false
       this.ensureRecorder()
       let lastTested = null
       try {
@@ -534,16 +548,31 @@ export default {
       }
     },
     handleStartError(error) {
-      const code = String(error?.code || error?.message || '')
-      if (code === 'permission_denied') {
-        this.showError(this.t('dashboard.ai_recite.error_title'), resolveMicDeniedGuidance(this.t.bind(this)))
-        return
-      }
-      if (code === 'unsupported' || code === 'no_get_user_media') {
-        this.showError(this.t('dashboard.ai_recite.error_title'), this.t('memorisation.aiCheck.recordingUnsupported'))
+      const help = resolveMicrophoneHelp(this.t.bind(this), {
+        error,
+        unsupported: ['unsupported', 'no_get_user_media', 'no_media_recorder'].includes(String(error?.code || '')),
+      })
+      if (help.kind !== 'unknown') {
+        this.presentMicrophoneHelp(help)
         return
       }
       this.showError(this.t('dashboard.ai_recite.error_title'), this.t('memorisation.amd.startFailed'))
+    },
+    presentMicrophoneHelp(help) {
+      this.microphoneHelp = {
+        heading: help.heading,
+        explanation: help.explanation,
+        steps: Array.isArray(help.steps) ? help.steps : [],
+      }
+      this.showMicrophoneHelp = true
+      this.stage = 'ready'
+    },
+    closeMicrophoneHelp() {
+      this.showMicrophoneHelp = false
+    },
+    async retryMicrophoneHelp() {
+      this.showMicrophoneHelp = false
+      await this.startRecording()
     },
     async stopRecording() {
       if (this.stopping || this.stage !== 'recording') return

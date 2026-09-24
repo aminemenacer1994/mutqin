@@ -15,6 +15,7 @@
     'session-exit-flow-active': showSessionExitModal,
     'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools,
     'ai-audio-consent-active': showAiAudioConsentModal,
+    'microphone-help-active': showMicrophonePermissionModal,
     'is-fullscreen': isAppFullscreen
   }" :style="appStyleVars" v-cloak>
     <div v-if="showAppBootLoader" class="app-boot-loading" role="status" aria-live="polite">
@@ -384,6 +385,7 @@
       'playback-pill-visible': playbackPillVisible,
       'mushaf-mode-active': readingViewMode === 'mushaf',
       'madani-qpc-mode-active': readingViewMode === 'madani_mushaf',
+      'is-madani-mobile-immersive': isMadaniMobileImmersive,
       'focus-mode-active': focusModeEnabled,
       'blur-mode-active': blurModeEnabled,
       'flow-practice': guidedUiStep === 'practice',
@@ -437,6 +439,29 @@
               ></div>
             </div>
           </div>
+        </div>
+        <div
+          v-if="showMadaniMobileFullscreenOffer"
+          class="madani-qpc-mobile-fullscreen-offer"
+          role="region"
+          :aria-label="t('memorisation.reading.mobileFullScreenOffer')"
+        >
+          <p class="madani-qpc-mobile-fullscreen-offer__text">{{ t('memorisation.reading.mobileFullScreenOffer') }}</p>
+          <button
+            type="button"
+            class="madani-qpc-mobile-fullscreen-offer__enter"
+            @click.stop="enterMadaniMobileImmersiveReading"
+          >
+            {{ t('memorisation.reading.fullScreen') }}
+          </button>
+          <button
+            type="button"
+            class="madani-qpc-mobile-fullscreen-offer__dismiss"
+            :aria-label="t('common.dismiss')"
+            @click.stop="dismissMadaniMobileFullscreenOffer"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
         </div>
         <section
           v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
@@ -624,7 +649,7 @@
                 <i class="bi bi-sliders" aria-hidden="true"></i>
               </div>
             </div>
-            <div class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
+            <div ref="topCardMenuWrap" class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
               <div
                 class="top-card-ellipsis top-card-action-trigger top-card-icon-control"
                 role="button"
@@ -637,7 +662,12 @@
                 <i class="bi bi-three-dots-vertical"></i>
               </div>
               <transition name="dropdown-fade">
-                <div v-if="topCardMenuOpen" class="top-card-menu">
+                <div
+                  v-if="topCardMenuOpen"
+                  class="top-card-menu"
+                  :class="{ 'top-card-menu--fixed': !!topCardMenuFixedStyle }"
+                  :style="topCardMenuFixedStyle"
+                >
                   <p class="top-card-menu-label top-card-menu-label--layout">{{ t('memorisation.a11y.changeReadingLayout') }}</p>
                   <button
                     type="button"
@@ -674,7 +704,7 @@
                   </button>
                   <div class="top-card-menu-divider top-card-menu-divider--layout" aria-hidden="true"></div>
                   <button
-                    v-if="readingViewMode === 'stacked' || readingViewMode === 'madani_mushaf'"
+                    v-if="readingViewMode === 'stacked'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showTranslation }"
@@ -686,7 +716,7 @@
                     <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <button
-                    v-if="readingViewMode === 'stacked' || readingViewMode === 'madani_mushaf'"
+                    v-if="readingViewMode === 'stacked'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showTransliteration }"
@@ -698,7 +728,7 @@
                     <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <button
-                    v-if="readingViewMode === 'stacked' || readingViewMode === 'madani_mushaf'"
+                    v-if="readingViewMode === 'stacked'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showWordByWord }"
@@ -738,9 +768,15 @@
                     <i class="bi bi-compass" aria-hidden="true"></i>
                     <span>{{ t('memorisation.revisitOnboarding') }}</span>
                   </button>
-                  <button @click="toggleFullScreen(); topCardMenuOpen = false" type="button">
-                    <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+                  <button
+                    type="button"
+                    :class="{ active: isAppFullscreen }"
+                    :aria-pressed="isAppFullscreen ? 'true' : 'false'"
+                    @click="toggleFullScreen(); topCardMenuOpen = false"
+                  >
+                    <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
                     <span>{{ t('memorisation.reading.fullScreen') }}</span>
+                    <i v-if="isAppFullscreen" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                 </div>
               </transition>
@@ -1298,7 +1334,10 @@
                 class="mushaf-shell madani-qpc-shell"
                 :aria-label="t('memorisation.view.madaniMushaf')"
               >
-                <div ref="qpcMadaniViewport" class="madani-qpc-viewport">
+                <div
+                  ref="qpcMadaniViewport"
+                  class="madani-qpc-viewport"
+                >
                   <header class="madani-qpc-chrome">
                     <div
                       class="madani-qpc-chrome__tools"
@@ -1342,7 +1381,9 @@
                       :aria-label="t('memorisation.player.previous')"
                       @click.stop="goToPreviousQpcMadaniPage"
                     >
-                      <span class="madani-qpc-nav-glyph" aria-hidden="true">›</span>
+                      <svg class="madani-qpc-nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8.7 4.7a1.2 1.2 0 0 0 0 1.7L14.3 12 8.7 17.6a1.2 1.2 0 1 0 1.7 1.7l6.4-6.4a1.2 1.2 0 0 0 0-1.8L10.4 4.7a1.2 1.2 0 0 0-1.7 0z"/>
+                      </svg>
                     </button>
 
                     <div class="madani-qpc-stage__pages">
@@ -1365,7 +1406,6 @@
               </div>
               <madani-spread
                 v-else-if="qpcMadaniCurrentPage"
-                :key="qpcMadaniCurrentPage"
                 :controlled-page-number="qpcMadaniCurrentPage"
                 :active-ayah="qpcMadaniSelectionActiveAyah"
                 :range-start-ayah="''"
@@ -1373,6 +1413,7 @@
                 :session-start-ayah="qpcMadaniSessionStartAyah"
                 :session-end-ayah="qpcMadaniSessionEndAyah"
                 :technique-snapshot="qpcMadaniTechniqueSnapshot"
+                :progress-snapshot="qpcMadaniProgressSnapshot"
                 :audio-index-map="madaniAudioIndexMap"
                 :font-scale="qpcMadaniFontScale"
                 :tajweed-enabled="qpcMadaniTajweedPresentation.effectiveEnabled"
@@ -1398,41 +1439,12 @@
                       :aria-label="t('memorisation.player.next')"
                       @click.stop="goToNextQpcMadaniPage"
                     >
-                      <span class="madani-qpc-nav-glyph" aria-hidden="true">‹</span>
+                      <svg class="madani-qpc-nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M15.3 4.7a1.2 1.2 0 0 1 0 1.7L9.7 12l5.6 5.6a1.2 1.2 0 1 1-1.7 1.7l-6.4-6.4a1.2 1.2 0 0 1 0-1.8l6.4-6.4a1.2 1.2 0 0 1 1.7 0z"/>
+                      </svg>
                     </button>
                   </div>
 
-              <div
-                v-if="qpcMadaniAidVerse && showQpcMadaniReadingAids"
-                class="mushaf-verse-aids mushaf-translation-panel"
-                dir="ltr"
-                lang="en"
-              >
-                <div class="verse-aid-title" dir="ltr" lang="en">
-                  <i class="bi bi-book-half" aria-hidden="true"></i>
-                  <em>{{ t('memorisation.a11y.ayahNumberLabel', { number: resolveVerseAyahNumber(qpcMadaniAidVerse) || qpcMadaniAidVerse.number }) }}</em>
-                </div>
-                <div
-                  v-if="showWordByWord && activeWordTooltip?.text && activeWordTooltip.verseKey === qpcMadaniAidVerse.key"
-                  class="mushaf-word-tooltip"
-                >
-                  {{ activeWordTooltip.text }}
-                </div>
-                <div v-if="showTransliteration && qpcMadaniAidVerse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
-                  <div class="verse-aid-title">{{ t('memorisation.reading.transliteration') }}</div>
-                  <div class="verse-transliteration verse-aid mushaf-translation-text">
-                    {{ qpcMadaniAidVerse.transliteration }}
-                  </div>
-                  <p class="verse-aid-source">— {{ transliterationReference }}</p>
-                </div>
-                <div v-if="showTranslation && qpcMadaniAidVerse.translation" class="verse-aid-block" dir="ltr" lang="en">
-                  <div class="verse-aid-title">{{ t('memorisation.reading.translation') }}</div>
-                  <div class="verse-translation verse-aid mushaf-translation-text">
-                    {{ qpcMadaniAidVerse.translation }}
-                  </div>
-                  <p class="verse-aid-source">— {{ translationReference }}</p>
-                </div>
-              </div>
                 </div>
               </section>
               </div>
@@ -4485,6 +4497,18 @@
     </transition>
 
     <Teleport to="body">
+      <button
+        v-if="isAppFullscreen && isMobileViewport() && readingViewMode === 'madani_mushaf'"
+        type="button"
+        class="madani-qpc-fullscreen-exit"
+        :aria-label="t('memorisation.reading.exitFullScreen')"
+        @click.stop="toggleFullScreen"
+      >
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </Teleport>
+
+    <Teleport to="body">
       <div
         v-if="readingViewMode === 'madani_mushaf' && shouldShowReadingWorkspace && qpcMadaniCurrentPage && isMobileViewport()"
         class="madani-qpc-mobile-nav-rail"
@@ -4496,7 +4520,9 @@
           :aria-label="t('memorisation.player.previous')"
           @click.stop="goToPreviousQpcMadaniPage"
         >
-          <span class="madani-qpc-nav-glyph" aria-hidden="true">›</span>
+          <svg class="madani-qpc-nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8.7 4.7a1.2 1.2 0 0 0 0 1.7L14.3 12 8.7 17.6a1.2 1.2 0 1 0 1.7 1.7l6.4-6.4a1.2 1.2 0 0 0 0-1.8L10.4 4.7a1.2 1.2 0 0 0-1.7 0z"/>
+          </svg>
         </button>
         <button
           type="button"
@@ -4505,7 +4531,9 @@
           :aria-label="t('memorisation.player.next')"
           @click.stop="goToNextQpcMadaniPage"
         >
-          <span class="madani-qpc-nav-glyph" aria-hidden="true">‹</span>
+          <svg class="madani-qpc-nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15.3 4.7a1.2 1.2 0 0 1 0 1.7L9.7 12l5.6 5.6a1.2 1.2 0 1 1-1.7 1.7l-6.4-6.4a1.2 1.2 0 0 1 0-1.8l6.4-6.4a1.2 1.2 0 0 1 1.7 0z"/>
+          </svg>
         </button>
       </div>
     </Teleport>
@@ -4770,6 +4798,18 @@
       :decline-label="aiAudioConsentDeclineLabel"
       @accept="onAiAudioConsentAccept"
       @decline="onAiAudioConsentDecline"
+    />
+
+    <MicrophonePermissionModal
+      :open="showMicrophonePermissionModal"
+      :theme="theme"
+      :heading="microphoneHelpHeading"
+      :explanation="microphoneHelpExplanation"
+      :steps="microphoneHelpSteps"
+      :try-again-label="microphoneHelpTryAgainLabel"
+      :cancel-label="microphoneHelpCancelLabel"
+      @try-again="retryMicrophoneHelp"
+      @cancel="closeMicrophoneHelp"
     />
 
   <div

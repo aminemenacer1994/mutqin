@@ -72,17 +72,8 @@ export function resolveQpcMadaniTajweedPresentation(requested = false) {
   }
 }
 
-export function shouldShowQpcMadaniReadingAids({
-  showTranslation = false,
-  showTransliteration = false,
-  showWordByWord = false,
-  wordTooltipText = '',
-} = {}) {
-  return !!(
-    showTranslation
-    || showTransliteration
-    || (showWordByWord && String(wordTooltipText || '').trim())
-  )
+export function shouldShowQpcMadaniReadingAids() {
+  return false
 }
 
 /**

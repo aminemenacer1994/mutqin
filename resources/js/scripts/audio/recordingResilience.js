@@ -6,6 +6,13 @@
 import { RECITATION_AUDIO_THRESHOLDS } from '../recommendations/recitationResultState.js'
 import { chooseSupportedRecorderMimeType } from './recordingPlayback.js'
 
+export { resolveMicDeniedGuidance } from './microphonePermissionHelp.js'
+export {
+  MICROPHONE_ACCESS_KIND,
+  classifyMicrophoneAccessError,
+  resolveMicrophoneHelp,
+} from './microphonePermissionHelp.js'
+
 export const RECITATION_PROCESSING_STAGE = Object.freeze({
   IDLE: 'idle',
   RECORDING: 'recording',
@@ -175,39 +182,6 @@ export async function probeMicrophonePermission() {
   return { granted: false, denied: false, prompt: true }
 }
 
-/**
- * Browser-specific guidance when the microphone permission is denied.
- * Does not request permission — copy only.
- *
- * @param {(key: string, fallback?: string) => string} [t]
- * @param {{ userAgent?: string }} [options]
- * @returns {string}
- */
-export function resolveMicDeniedGuidance(t, options = {}) {
-  const ua = String(options.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : '') || '')
-  const translate = (key, fallback) => {
-    if (typeof t !== 'function') return fallback
-    const value = String(t(key) || '').trim()
-    return value && value !== key ? value : fallback
-  }
-
-  if (/iPad|iPhone|iPod/.test(ua)) {
-    return translate(
-      'memorisation.aiCheck.micDeniedGuidanceSafari',
-      'On iPhone or iPad: Settings → Safari → Microphone → Allow for this site, then return and try again. Other memorisation tools still work without the microphone.',
-    )
-  }
-  if (/Chrome|CriOS|Edg\//.test(ua) && !/OPR\//.test(ua)) {
-    return translate(
-      'memorisation.aiCheck.micDeniedGuidanceChrome',
-      'In Chrome: site settings → Microphone → Allow, then reload and try again. Other memorisation tools still work without the microphone.',
-    )
-  }
-  return translate(
-    'memorisation.aiCheck.micDeniedGuidance',
-    'Allow microphone access for this site in your browser settings, then return here and try again. Other memorisation tools still work without the microphone.',
-  )
-}
 
 /**
  * @param {Blob|null|undefined} blob

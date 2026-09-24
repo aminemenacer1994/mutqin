@@ -240,7 +240,7 @@ import {
   resolveAskMutqinReciter,
   ASK_MUTQIN_MIN_WORDS,
 } from '../scripts/askMutqin/index.js'
-import { resolveMicDeniedGuidance } from '../scripts/audio/recordingResilience.js'
+import { classifyMicrophoneAccessError, resolveMicrophoneHelp } from '../scripts/audio/recordingResilience.js'
 
 const EMPTY_COMMAND = () => ({
   intent: 'open',
@@ -881,8 +881,12 @@ export default {
       const code = String(error?.code || '')
       this.errorCode = code
       this.recoverableState = this.state
-      if (code === 'permission_denied') {
-        this.errorMessage = resolveMicDeniedGuidance((key) => this.t(key))
+      const micKind = classifyMicrophoneAccessError(error, {
+        unsupported: code === 'unsupported' || code === 'no_get_user_media',
+      })
+      if (micKind !== 'unknown') {
+        const help = resolveMicrophoneHelp((key) => this.t(key), { error, kind: micKind })
+        this.errorMessage = [help.explanation, ...help.steps].filter(Boolean).join(' ')
       } else if (code === 'usage_cap') {
         this.errorMessage = this.t('memorisation.aiCheck.usageCapReached')
       } else if (code === 'transcription_unavailable') {
