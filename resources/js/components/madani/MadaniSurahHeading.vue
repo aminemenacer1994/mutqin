@@ -178,6 +178,7 @@ export default {
   max-width: 100%;
   min-width: 0;
   padding-inline: 0.2rem;
+  padding-block: 0.12rem 0;
   color: inherit;
 }
 

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import {
   QPC_MADANI_TAJWEED_SUPPORTED,
   buildQpcMadaniCodeV2ByLocation,
+  isQcfPageGlyphText,
   resolveQpcMadaniTajweedPresentation,
   resolveQpcMadaniWordGlyph,
   shouldShowQpcMadaniReadingAids,
@@ -51,6 +52,18 @@ assert.equal(glyph.useTajweedFont, true)
 assert.equal(glyph.text, 'ﱁ')
 assert.match(glyph.fontFamily, /^p6-v4$/)
 
+assert.equal(isQcfPageGlyphText('ﱁ'), true)
+assert.equal(isQcfPageGlyphText('mercy'), false)
+
+const glyphFromPageJson = resolveQpcMadaniWordGlyph({
+  word: { location: '4:2:14', text: 'ﱰ', page: 77 },
+  tajweedEnabled: true,
+  codeV2ByLocation: {},
+})
+assert.equal(glyphFromPageJson.useTajweedFont, true)
+assert.equal(glyphFromPageJson.text, 'ﱰ')
+assert.match(glyphFromPageJson.fontFamily, /^p77-v4$/)
+
 assert.match(memorisationJs, /qpcMadaniAidVerse/)
 assert.match(memorisationJs, /showQpcMadaniReadingAids/)
 assert.match(memorisationJs, /qpcMadaniFontScale/)
@@ -75,12 +88,16 @@ assert.match(memorisationJs, /syncTopCardMenuPosition/)
 assert.doesNotMatch(memorisationJs, /buildMadaniAmdHiddenIndexesByAyah[\s\S]{0,400}qpcMadaniTechniqueSnapshot/)
 assert.match(memorisationJs, /enterNativeFullscreen/)
 assert.match(memorisationVue, /madani-qpc-fullscreen-exit/)
-assert.match(pageVue, /--qpc-line-height: 1\.72/)
+assert.match(pageVue, /--qpc-line-height: 1\.32/)
+assert.match(pageVue, /--qpc-surah-title-scale: 2\.45/)
+assert.match(memorisationCss, /invert\(1\) hue-rotate\(180deg\)/)
 assert.match(lineVue, /overflow: visible/)
-assert.match(lineVue, /--qpc-line-height, 1\.72\)/)
+assert.match(lineVue, /--qpc-line-height, 1\.32\)/)
+assert.match(lineVue, /qpc-madani-line--ayah/)
 assert.match(lineVue, /qpc-madani-surah-header/)
-assert.match(lineVue, /MadaniSurahHeading/)
-assert.match(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../resources/js/components/madani/MadaniSurahHeading.vue'), 'utf8'), /madani-surah-heading__cartouche/)
+assert.match(lineVue, /qpc-madani-surah-name/)
+assert.doesNotMatch(lineVue, /qpc-madani-surah-header__frame/)
+assert.doesNotMatch(lineVue, /MadaniSurahHeading/)
 assert.match(pageVue, /Math\.min\(cap \* requested, widthFit\)/)
 assert.doesNotMatch(memorisationJs, /scale \* 1\.72/)
 assert.match(memorisationJs, /offerMadaniMobileImmersiveReading/)
@@ -103,6 +120,6 @@ assert.match(lineVue, /lineType === 'basmallah' \|\| this\.lineType === 'basmala
 assert.match(lineVue, /بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ/)
 assert.match(lineVue, /font-feature-settings: "liga" 1/)
 assert.match(memorisationVue, /madani-qpc-nav-chevron/)
-assert.match(memorisationCss, /qpc-madani-page--tajweed \.qpc-madani-surah-name/)
+assert.match(memorisationCss, /\[data-theme="dark"\] \.madani-qpc-viewport \.qpc-madani-surah-name/)
 
 console.log('qpc-madani-reading-tools.test.mjs: ok')

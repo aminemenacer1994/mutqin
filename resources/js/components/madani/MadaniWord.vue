@@ -183,11 +183,11 @@ export default {
   min-height: 0;
   width: auto;
   height: auto;
-  padding: 0.08em 0.02em 0.1em;
+  padding: 0.03em 0.02em 0.04em;
   cursor: pointer;
   font-size: var(--qpc-word-size, 22px);
   font-weight: 400;
-  line-height: var(--qpc-line-height, 1.72);
+  line-height: var(--qpc-line-height, 1.32);
   overflow: visible;
   white-space: nowrap;
   border-radius: 0.12em;
@@ -284,8 +284,8 @@ export default {
   font-synthesis: none;
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
-  line-height: 1.45;
-  padding-block: 0.1em;
+  line-height: 1.4;
+  padding-block: 0.04em;
 }
 
 .qpc-madani-word.qpc-progress-weak-word,

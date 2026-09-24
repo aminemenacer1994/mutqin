@@ -193,7 +193,7 @@ export default {
 }
 
 .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
-  margin-top: 0.35rem;
+  margin-top: 0.08rem;
 }
 
 .qpc-madani-session-scroll__placeholder {

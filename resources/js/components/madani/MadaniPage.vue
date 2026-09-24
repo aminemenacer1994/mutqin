@@ -279,6 +279,13 @@ export default {
       } catch (error) {
         console.warn('[MadaniPage] page font load failed', this.pageNumber, error)
       }
+      if (this.tajweedEnabled) {
+        try {
+          await loadQcfPageFont(this.pageNumber, { tajweed: true })
+        } catch {
+          // Page JSON glyphs still paint once v4 loads from prefetch.
+        }
+      }
       this.fontReady = true
       const needsSurahFont = this.sessionScoped || this.lines.some((line) => {
         const type = String(line?.line_type || line?.type || '')
@@ -292,11 +299,6 @@ export default {
       await this.$nextTick()
       this.fitLines()
       window.requestAnimationFrame(() => this.fitLines())
-      if (this.tajweedEnabled) {
-        void loadQcfPageFont(this.pageNumber, { tajweed: true })
-          .then(() => this.scheduleFit())
-          .catch(() => null)
-      }
     },
     fitLines(retry = 0) {
       if (this.fitting) return
@@ -353,10 +355,10 @@ export default {
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
       const safety = this.embedded
         ? (narrow ? 0.9 : 0.94)
-        : (mobile ? 0.9 : (narrow ? 0.88 : 0.94))
+        : (mobile ? 0.96 : (narrow ? 0.9 : 0.95))
       const cap = this.embedded
-        ? (narrow ? 30 : 34)
-        : (narrow ? 32 : 36)
+        ? (narrow ? 34 : 38)
+        : (narrow ? 40 : 46)
       const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
         ? Number(this.fontScale)
         : 1
@@ -385,8 +387,9 @@ export default {
 <style scoped>
 .qpc-madani-page {
   --qpc-word-size: 18px;
-  --qpc-line-min-height: 2.85;
-  --qpc-line-height: 1.72;
+  --qpc-line-min-height: 1.62;
+  --qpc-line-height: 1.32;
+  --qpc-surah-title-scale: 2.45;
   --qpc-ink: var(--mushaf-reading-ink, #1b140d);
   --qpc-rule: color-mix(in srgb, var(--accent, #8d6a35) 48%, transparent);
   box-sizing: border-box;
@@ -493,8 +496,9 @@ export default {
 }
 
 .qpc-madani-page--single {
-  --qpc-line-min-height: 2.85;
-  --qpc-line-height: 1.72;
+  --qpc-line-min-height: 1.62;
+  --qpc-line-height: 1.32;
+  --qpc-surah-title-scale: 2.45;
   width: 100%;
   max-width: min(100%, 36rem);
   height: auto;

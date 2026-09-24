@@ -5,6 +5,13 @@ import { qcfFontFamily } from './qcfFontLoader.js'
  */
 export const QPC_MADANI_TAJWEED_SUPPORTED = true
 
+/** True when `text` is a QCF page glyph (Presentation Forms / tajweed codepoint). */
+export function isQcfPageGlyphText(text = '') {
+  const value = String(text || '').trim()
+  if (!value) return false
+  return /[\uFB50-\uFDFF\uFE70-\uFEFF]/.test(value)
+}
+
 /**
  * @param {Array<{ key?: string, verse_key?: string, words?: Array<{ position?: number, word?: number, location?: string, code_v2?: string }> }>} verses
  * @returns {Record<string, string>}
@@ -47,7 +54,8 @@ export function resolveQpcMadaniWordGlyph({
     }
   }
   const location = String(word?.location || '').trim()
-  const codeV2 = location ? String(codeV2ByLocation[location] || '').trim() : ''
+  const fromMap = location ? String(codeV2ByLocation[location] || '').trim() : ''
+  const codeV2 = fromMap || (isQcfPageGlyphText(baseText) ? baseText : '')
   const page = Number(word?.page)
   if (!codeV2 || !Number.isFinite(page) || page < 1) {
     return {

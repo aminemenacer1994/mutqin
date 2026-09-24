@@ -18,12 +18,12 @@
       class="qpc-madani-surah-header"
       :data-surah="line.surah_number"
     >
-      <MadaniSurahHeading
-        :surah-number="line.surah_number"
-        :glyph="headerText"
-        :font-family="surahFontFamily"
-        :ready="surahNamesReady"
-      />
+      <span
+        class="qpc-madani-surah-name"
+        :class="{ 'is-surah-font-ready': surahNamesReady }"
+        :style="{ fontFamily: `'${surahFontFamily}', serif` }"
+        aria-hidden="true"
+      >{{ headerText }}</span>
       <span class="visually-hidden">Surah {{ line.surah_number }}</span>
     </div>
 
@@ -92,12 +92,11 @@
 <script>
 import { surahNameGlyphText } from '../../scripts/mushaf/madaniPageLayout'
 import { SURAH_NAMES_FONT_FAMILY } from '../../scripts/mushaf/qcfFontLoader'
-import MadaniSurahHeading from './MadaniSurahHeading.vue'
 import MadaniWord from './MadaniWord.vue'
 
 export default {
   name: 'MadaniLine',
-  components: { MadaniSurahHeading, MadaniWord },
+  components: { MadaniWord },
   emits: ['select', 'ayah-enter', 'ayah-leave', 'peek-enter', 'peek-leave', 'peek-touchstart', 'peek-touchend', 'peek-touchcancel'],
   props: {
     line: {
@@ -182,13 +181,17 @@ export default {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 2.85));
+  min-height: 0;
   padding-inline: 0;
-  padding-block: calc(var(--qpc-word-size, 22px) * 0.18);
+  padding-block: calc(var(--qpc-word-size, 22px) * 0.02);
   overflow: visible;
   contain: none;
   white-space: nowrap;
-  line-height: var(--qpc-line-height, 1.72);
+  line-height: var(--qpc-line-height, 1.32);
+}
+
+.qpc-madani-line--ayah {
+  min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62));
 }
 
 .qpc-madani-line--centered,
@@ -203,7 +206,7 @@ export default {
   align-items: center;
   width: 100%;
   min-height: 0;
-  padding-block: calc(var(--qpc-word-size, 22px) * 0.12);
+  padding: 0.12rem 0 0;
   margin-block-end: calc(var(--qpc-word-size, 22px) * 0.48);
 }
 
@@ -223,16 +226,31 @@ export default {
 }
 
 .qpc-madani-surah-header {
-  position: relative;
-  display: block;
+  display: flex;
+  justify-content: center;
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  text-align: center;
   color: var(--qpc-ink, #1b140d);
 }
 
-:deep(.qpc-madani-surah-name) {
+.qpc-madani-surah-name {
+  display: inline-block;
+  font-family: surahnames, serif !important;
+  font-size: calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.45));
+  font-weight: 400;
+  line-height: 1.05;
+  white-space: nowrap;
+  letter-spacing: 0;
+  color: inherit;
+  font-variant-ligatures: common-ligatures discretionary-ligatures;
   font-feature-settings: "liga" 1, "dlig" 1, "calt" 1;
+  opacity: 0.35;
+}
+
+.qpc-madani-surah-name.is-surah-font-ready {
+  opacity: 1;
 }
 
 .qpc-madani-basmallah {

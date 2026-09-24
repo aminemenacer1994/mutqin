@@ -166,17 +166,27 @@ export async function getMadaniPageVerses(pageNumber, options = {}) {
     return madaniPageCache.get(cacheKey)
   }
 
-  const response = await quranComClient.get(`/verses/by_page/${page}`, {
-    params: {
-      language: 'en',
-      words: true,
-      mushaf,
-      per_page: 50,
-      word_fields: 'code_v2,text_qpc_hafs,text_uthmani,line_number,page_number,translation'
-    }
-  })
+  /** @type {Array<Record<string, unknown>>} */
+  let verses = []
+  let apiPage = 1
+  let totalPages = 1
+  do {
+    const response = await quranComClient.get(`/verses/by_page/${page}`, {
+      params: {
+        language: 'en',
+        words: true,
+        mushaf,
+        page: apiPage,
+        per_page: 50,
+        word_fields: 'code_v2,location,text_qpc_hafs,text_uthmani,line_number,page_number,translation',
+      },
+    })
+    const batch = response.data?.verses || []
+    verses = verses.concat(batch)
+    totalPages = Math.max(1, Number(response.data?.pagination?.total_pages) || 1)
+    apiPage += 1
+  } while (apiPage <= totalPages)
 
-  const verses = response.data?.verses || []
   madaniPageCache.set(cacheKey, verses)
   return verses
 }

@@ -904,7 +904,7 @@ export default {
         : {
             stacked: 125,
             mushaf: 160,
-            madani_mushaf: 160,
+            madani_mushaf: 195,
           },
       fontSizeStep: 10,
       minFontSize: 70,
@@ -9904,8 +9904,8 @@ export default {
 
     qpcMadaniFontScale() {
       const base = 150
-      const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || base)
-      return Math.max(0.75, Math.min(1.35, size / base))
+      const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || 195)
+      return Math.max(1.2, Math.min(1.6, size / base))
     },
 
     isMadaniMobileImmersive() {
@@ -11649,7 +11649,7 @@ export default {
       if (readPersistedFontPreferences({ userId: this.currentAuthUserId() }).found) return
       const isMobile = this.isMobileViewport?.() === true
       if (!isMobile) return
-      const target = mode === 'madani_mushaf' ? 175 : 115
+      const target = mode === 'madani_mushaf' ? 205 : 115
       if (Number(this.defaultFontSize) !== target) this.defaultFontSize = target
       if (this.settingsDraft && Number(this.settingsDraft.defaultFontSize) !== target) {
         this.settingsDraft.defaultFontSize = target
@@ -35749,7 +35749,11 @@ export default {
     applyLayoutFontSize(mode = this.readingViewMode) {
       const key = isReadingViewMode(mode) ? mode : 'mushaf'
       const stored = Number(this.layoutFontSizes?.[key])
-      const fallback = key === 'stacked' ? 125 : 160
+      const fallback = key === 'stacked'
+        ? 125
+        : key === 'madani_mushaf'
+          ? 195
+          : 160
       const next = Math.max(
         this.minFontSize,
         Math.min(this.maxFontSize, Number.isFinite(stored) && stored > 0 ? stored : fallback)
@@ -35902,14 +35906,20 @@ export default {
     },
     async syncQpcMadaniTajweedGlyphsForViewport(options = {}) {
       if (!isQpcMadaniMushafView(this.readingViewMode) || !this.tajweedEnabled) return
-      const page = this.qpcMadaniCurrentPage
-      if (!page) return
-      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const pages = new Set([page])
-      if (shouldShowTwoMadaniPages(width)) {
-        const spread = resolveMadaniSpread(page)
-        if (spread.left) pages.add(spread.left)
-        pages.add(spread.right)
+      const pages = new Set()
+      const sessionPages = this.qpcMadaniSessionPageNumbers
+      if (sessionPages.length) {
+        sessionPages.forEach((pageNumber) => pages.add(Number(pageNumber)))
+      } else {
+        const page = this.qpcMadaniCurrentPage
+        if (!page) return
+        pages.add(Number(page))
+        const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+        if (shouldShowTwoMadaniPages(width)) {
+          const spread = resolveMadaniSpread(page)
+          if (spread.left) pages.add(spread.left)
+          pages.add(spread.right)
+        }
       }
       await Promise.all([...pages].map((pageNumber) => (
         this.ensureQpcMadaniTajweedGlyphsForPage(pageNumber, options)
@@ -35922,9 +35932,11 @@ export default {
       try {
         const verses = await getMadaniPageVerses(page, { force: !!options.force })
         const patch = buildQpcMadaniCodeV2FromMadaniApiVerses(verses)
-        this.qpcMadaniTajweedCodeByLocation = {
-          ...(this.qpcMadaniTajweedCodeByLocation || {}),
-          ...patch,
+        if (Object.keys(patch).length) {
+          this.qpcMadaniTajweedCodeByLocation = {
+            ...(this.qpcMadaniTajweedCodeByLocation || {}),
+            ...patch,
+          }
         }
         this.qpcMadaniTajweedGlyphPages = {
           ...(this.qpcMadaniTajweedGlyphPages || {}),
@@ -43705,7 +43717,7 @@ export default {
               mushaf: Number(state.layoutFontSizes.mushaf) === 120
                 ? 160
                 : Number(state.layoutFontSizes.mushaf || this.layoutFontSizes.mushaf || 160),
-              madani_mushaf: Number(state.layoutFontSizes.madani_mushaf || this.layoutFontSizes.madani_mushaf || 160),
+              madani_mushaf: Number(state.layoutFontSizes.madani_mushaf || this.layoutFontSizes.madani_mushaf || 195),
               original: Number(state.layoutFontSizes.original || this.layoutFontSizes.original || 150),
             }
           } else {
@@ -43838,7 +43850,7 @@ export default {
           layoutFontSizes: {
             stacked: Number(this.layoutFontSizes?.stacked || 150),
             mushaf: Number(this.layoutFontSizes?.mushaf || 160),
-            madani_mushaf: Number(this.layoutFontSizes?.madani_mushaf || 160),
+            madani_mushaf: Number(this.layoutFontSizes?.madani_mushaf || 195),
           },
           chainingEnabled: this.chainingEnabled,
           chainingMethod: this.chainingMethod,
