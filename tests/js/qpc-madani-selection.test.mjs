@@ -7,6 +7,7 @@ import {
   buildMadaniSelection,
   compareAyahKeys,
   filterQpcPageLinesToSession,
+  prepareQpcMadaniSessionLines,
   isAyahInCanonicalRange,
   madaniWordVisualClass,
   resolveMadaniAyahVisualState,
@@ -93,5 +94,22 @@ assert.equal(sessionLines.length, 3)
 assert.equal(sessionLines[0].line_type, 'surah_name')
 assert.equal(sessionLines[2].words.length, 1)
 assert.equal(sessionLines[2].words[0].location, '52:1:1')
+
+const midSurah = prepareQpcMadaniSessionLines([
+  { line_type: 'ayah', line_number: 4, words: [{ surah: '85', ayah: '12', location: '85:12:1' }] },
+  { line_type: 'ayah', line_number: 5, words: [{ surah: '85', ayah: '13', location: '85:13:1' }] },
+], '85:12', '85:13')
+assert.equal(midSurah.length, 3)
+assert.equal(midSurah[0].line_type, 'surah_name')
+assert.equal(Number(midSurah[0].surah_number), 85)
+
+const burujPage = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/pages/590.json'), 'utf8'))
+const buruj = prepareQpcMadaniSessionLines(
+  burujPage.page?.lines || burujPage.lines || [],
+  '85:12',
+  '85:22',
+)
+assert.ok(buruj.some((line) => String(line.line_type) === 'surah_name'))
+assert.equal(buruj.filter((line) => String(line.line_type) === 'ayah').length, 4)
 
 console.log('qpc-madani-selection.test.mjs: ok')

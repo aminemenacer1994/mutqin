@@ -100,13 +100,20 @@ import {
   resolveQpcMadaniPageForVerseKey,
   verseKeyFromQpcLocation,
 } from '../scripts/mushaf/qpcMadaniVersePage'
-import { parseAyahKey } from '../scripts/mushaf/qpcMadaniSelection'
+import {
+  pageHasQpcMadaniSessionLines,
+  parseAyahKey,
+} from '../scripts/mushaf/qpcMadaniSelection'
 import {
   collectQpcMadaniPlayingAyahNodes,
   collectQpcMadaniWordHighlightNodes,
   resolveQpcWordAudioIndex,
 } from '../scripts/mushaf/qpcMadaniAudioDom'
-import { loadMadaniPageLeaf, preloadMadaniNavigationTargets } from '../scripts/mushaf/qpcMadaniPageData'
+import {
+  getCachedMadaniPageLeaf,
+  loadMadaniPageLeaf,
+  preloadMadaniNavigationTargets,
+} from '../scripts/mushaf/qpcMadaniPageData'
 import { prefetchQpcMadaniPageFonts } from '../scripts/mushaf/qpcMadaniFontLoader'
 import {
   clearQpcMadaniRecitationDom,
@@ -114,9 +121,7 @@ import {
   resolveAyahKeyForMadaniRecitationIndex,
 } from '../scripts/mushaf/qpcMadaniRecitationDom'
 import {
-  buildQpcMadaniCodeV2ByLocation,
   buildQpcMadaniCodeV2FromMadaniApiVerses,
-  mergeQpcMadaniCodeV2Maps,
   resolveQpcMadaniTajweedPresentation,
 } from '../scripts/mushaf/qpcMadaniReadingTools'
 import {
@@ -9434,7 +9439,16 @@ export default {
         const page = resolveQpcMadaniPageForVerseKey(key, index)
         if (page) pages.add(Number(page))
       }
-      return [...pages].sort((left, right) => left - right)
+      const sorted = [...pages].sort((left, right) => left - right)
+      const startKey = this.qpcMadaniSessionStartAyah
+      const endKey = this.qpcMadaniSessionEndAyah
+      if (!startKey || !endKey) return sorted
+      const withContent = sorted.filter((pageNumber) => {
+        const leaf = getCachedMadaniPageLeaf(pageNumber)
+        if (!leaf?.page?.lines) return true
+        return pageHasQpcMadaniSessionLines(leaf.page.lines, startKey, endKey)
+      })
+      return withContent.length ? withContent : sorted
     },
 
     qpcMadaniCurrentPage() {
@@ -9450,7 +9464,10 @@ export default {
       const surah = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
       const ayah = Number(this.rangeStart || this.currentConfig?.rangeStart || this.activeAyahNumber || 0)
       const fallback = resolveMadaniPage(surah, ayah, this.qpcVersePageIndex)
-      if (sessionPages.length && !sessionPages.includes(Number(fallback))) return sessionPages[0]
+      if (sessionPages.length) {
+        if (fallback && sessionPages.includes(Number(fallback))) return fallback
+        return sessionPages[0]
+      }
       return fallback
     },
 
@@ -9871,11 +9888,7 @@ export default {
     qpcMadaniFontScale() {
       const base = 150
       const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || base)
-      let scale = Math.max(0.75, Math.min(1.35, size / base))
-      if (this.isMobileViewport()) {
-        scale = Math.min(2, scale * 1.72)
-      }
-      return scale
+      return Math.max(0.75, Math.min(1.35, size / base))
     },
 
     isMadaniMobileImmersive() {
@@ -9903,11 +9916,8 @@ export default {
 
     qpcMadaniCodeV2ByLocation() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return {}
-      const fromSession = buildQpcMadaniCodeV2ByLocation(this.verses || [])
-      return mergeQpcMadaniCodeV2Maps(
-        fromSession,
-        this.qpcMadaniTajweedCodeByLocation || {},
-      )
+      if (!this.qpcMadaniTajweedPresentation.effectiveEnabled) return {}
+      return { ...(this.qpcMadaniTajweedCodeByLocation || {}) }
     },
 
     mushafAidWords() {
@@ -10253,6 +10263,7 @@ export default {
       this.$watch('qpcMadaniCurrentPage', (page) => {
         if (!isQpcMadaniMushafView(this.readingViewMode) || !page) return
         void this.syncQpcMadaniTajweedGlyphsForViewport()
+        void this.reconcileQpcMadaniEmptySessionPage()
       })
       this.$watch(() => this.mushafPages.length, () => {
         this.syncMushafPageToActiveVerse()
@@ -35795,6 +35806,26 @@ export default {
       } catch (error) {
         console.error('QPC Madani viewer bootstrap failed:', error)
         this.qpcMadaniLoadError = this.t('memorisation.mushafLoad.errorDesc')
+      }
+    },
+    async reconcileQpcMadaniEmptySessionPage() {
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return
+      const startKey = this.qpcMadaniSessionStartAyah
+      const endKey = this.qpcMadaniSessionEndAyah
+      if (!startKey || !endKey) return
+      const page = Number(this.qpcMadaniCurrentPage)
+      if (!page) return
+      let lines = getCachedMadaniPageLeaf(page)?.page?.lines
+      if (!lines) {
+        const leaf = await loadMadaniPageLeaf(page).catch(() => null)
+        lines = leaf?.page?.lines
+      }
+      if (!lines || pageHasQpcMadaniSessionLines(lines, startKey, endKey)) return
+      const sessionPages = this.qpcMadaniSessionPageNumbers
+      const replacement = sessionPages.find((candidate) => candidate !== page)
+        || sessionPages[0]
+      if (replacement && replacement !== page) {
+        this.qpcMadaniPinnedPage = replacement
       }
     },
     syncQpcMadaniPageToActiveVerse() {

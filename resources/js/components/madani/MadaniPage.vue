@@ -17,6 +17,7 @@
       'is-fitted': fitted,
       'qpc-madani-page--tajweed': tajweedEnabled,
       'qpc-madani-page--borderless': borderless,
+      'qpc-madani-page--session-scoped': sessionScoped,
     }"
     :aria-busy="!fontReady || !fitted ? 'true' : 'false'"
   >
@@ -27,8 +28,9 @@
       >
         <MadaniLine
           v-for="line in lines"
-          :key="line.line_number"
+          :key="`${line.line_type || line.type}-${line.line_number}-${line.surah_number || 0}`"
           :line="line"
+          :session-scoped="sessionScoped"
           :font-family="fontFamily"
           :selected-location="selectedLocation"
           :selection="selection"
@@ -59,7 +61,7 @@
 <script>
 import { loadSurahNamesFont, loadQcfPageFont } from '../../scripts/mushaf/qcfFontLoader'
 import { ensureQpcMadaniPageFont } from '../../scripts/mushaf/qpcMadaniFontLoader'
-import { buildMadaniSelection, filterQpcPageLinesToSession } from '../../scripts/mushaf/qpcMadaniSelection'
+import { buildMadaniSelection, prepareQpcMadaniSessionLines } from '../../scripts/mushaf/qpcMadaniSelection'
 import MadaniLine from './MadaniLine.vue'
 
 const MEASURE_SIZE = 40
@@ -152,7 +154,7 @@ export default {
     },
     lines() {
       const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
-      return filterQpcPageLinesToSession(raw, this.sessionStartAyah, this.sessionEndAyah)
+      return prepareQpcMadaniSessionLines(raw, this.sessionStartAyah, this.sessionEndAyah)
     },
     isOpening() {
       if (this.sessionStartAyah) return false
@@ -162,6 +164,9 @@ export default {
     folioLabel() {
       if (this.embedded) return String(this.pageNumber)
       return new Intl.NumberFormat('ar-EG', { useGrouping: false }).format(this.pageNumber)
+    },
+    sessionScoped() {
+      return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
     },
     selection() {
       return buildMadaniSelection({
@@ -268,10 +273,11 @@ export default {
         console.warn('[MadaniPage] page font load failed', this.pageNumber, error)
       }
       this.fontReady = true
-      if (this.lines.some(line => {
+      const needsSurahFont = this.sessionScoped || this.lines.some((line) => {
         const type = String(line?.line_type || line?.type || '')
         return type === 'surah_name' || type === 'basmallah' || type === 'basmala'
-      })) {
+      })
+      if (needsSurahFont) {
         await loadSurahNamesFont()
           .then(() => { this.surahNamesReady = true })
           .catch(() => { this.surahNamesReady = false })
@@ -300,7 +306,10 @@ export default {
       }
 
       const lines = [...sheet.querySelectorAll('.qpc-madani-line')]
-      if (!lines.length) return
+      if (!lines.length) {
+        this.fitted = true
+        return
+      }
 
       this.fitting = true
       root.style.setProperty('--qpc-word-size', `${MEASURE_SIZE}px`)
@@ -334,10 +343,10 @@ export default {
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
       const safety = this.embedded
         ? (narrow ? 0.9 : 0.94)
-        : (mobile ? 1 : (narrow ? 0.88 : 0.94))
+        : (mobile ? 0.94 : (narrow ? 0.88 : 0.94))
       const cap = this.embedded
         ? (narrow ? 30 : 34)
-        : (mobile ? 86 : (narrow ? 32 : 36))
+        : (narrow ? 32 : 36)
       const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
         ? Number(this.fontScale)
         : 1
@@ -348,7 +357,7 @@ export default {
       this.fitted = true
     },
     lineAdvanceWidth(line) {
-      const nodes = [...line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-basmallah')]
+      const nodes = [...line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-surah-header, .qpc-madani-basmallah')]
       if (!nodes.length) return line.scrollWidth
       return nodes.reduce((sum, node) => sum + node.offsetWidth, 0)
     },
@@ -472,8 +481,8 @@ export default {
 }
 
 .qpc-madani-page--single {
-  --qpc-line-min-height: 1.98em;
-  --qpc-line-height: 1.68;
+  --qpc-line-min-height: 2.22em;
+  --qpc-line-height: 1.96;
   width: 100%;
   max-width: min(100%, 36rem);
   height: auto;

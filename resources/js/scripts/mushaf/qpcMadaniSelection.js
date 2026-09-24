@@ -82,9 +82,124 @@ export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = 
       const key = ayahKeyFromWord(word)
       return key && isAyahInCanonicalRange(key, start.key, end.key)
     })
-    if (words.length) kept.push({ ...line, words })
+    if (words.length) {
+      const originalCount = (line.words || []).length
+      kept.push({
+        ...line,
+        words,
+        session_partial_line: originalCount > 0 && words.length < originalCount ? 1 : 0,
+      })
+    }
   }
   return kept
+}
+
+/** Merge a trailing fragment line (page break) into the following ayah row. */
+export function compactQpcMadaniSessionAyahLines(lines = []) {
+  const source = Array.isArray(lines) ? lines : []
+  const compacted = []
+  let index = 0
+  while (index < source.length) {
+    const current = source[index]
+    const type = String(current?.line_type || current?.type || '')
+    const next = source[index + 1]
+    const nextType = String(next?.line_type || next?.type || '')
+    if (
+      type === 'ayah'
+      && Number(current?.session_partial_line) === 1
+      && next
+      && nextType === 'ayah'
+    ) {
+      compacted.push({
+        ...next,
+        words: [...(current.words || []), ...(next.words || [])],
+        session_partial_line: 0,
+        line_number: current.line_number ?? next.line_number,
+      })
+      index += 2
+      continue
+    }
+    compacted.push(current)
+    index += 1
+  }
+  return compacted
+}
+
+function firstSessionAyahLineNumber(lines, surah, startKey, endKey) {
+  let min = Number.POSITIVE_INFINITY
+  for (const line of lines) {
+    const type = String(line?.line_type || line?.type || '')
+    if (type !== 'ayah') continue
+    const lineNumber = Number(line?.line_number)
+    for (const word of line.words || []) {
+      const key = ayahKeyFromWord(word)
+      if (!key || !isAyahInCanonicalRange(key, startKey, endKey)) continue
+      const parsed = parseAyahKey(key)
+      if (!parsed || parsed.surah !== surah) continue
+      if (Number.isFinite(lineNumber)) min = Math.min(min, lineNumber)
+    }
+  }
+  return Number.isFinite(min) ? min : null
+}
+
+/**
+ * Inject a surah title row when the session starts mid-page (no printed surah_name line).
+ */
+export function injectQpcMadaniSessionSurahHeaders(lines = [], filtered = [], startKey = '', endKey = '') {
+  const source = Array.isArray(lines) ? lines : []
+  const kept = Array.isArray(filtered) ? [...filtered] : []
+  const start = parseAyahKey(startKey)
+  const end = parseAyahKey(endKey) || start
+  if (!start || !end || !kept.length) return kept
+
+  const sessionSurahs = new Set()
+  for (const line of kept) {
+    const type = String(line?.line_type || line?.type || '')
+    if (type !== 'ayah') continue
+    for (const word of line.words || []) {
+      const key = ayahKeyFromWord(word)
+      if (!key || !isAyahInCanonicalRange(key, start.key, end.key)) continue
+      const parsed = parseAyahKey(key)
+      if (parsed) sessionSurahs.add(parsed.surah)
+    }
+  }
+
+  const headerSurahs = new Set()
+  for (const line of kept) {
+    if (String(line?.line_type || line?.type || '') === 'surah_name') {
+      headerSurahs.add(Number(line.surah_number))
+    }
+  }
+
+  const injected = []
+  for (const surah of sessionSurahs) {
+    if (headerSurahs.has(surah)) continue
+    const anchor = firstSessionAyahLineNumber(source, surah, start.key, end.key)
+      ?? firstSessionAyahLineNumber(kept, surah, start.key, end.key)
+    injected.push({
+      line_type: 'surah_name',
+      type: 'surah_name',
+      surah_number: surah,
+      line_number: anchor != null ? anchor - 0.01 : 0,
+      is_centered: 1,
+      words: [],
+    })
+  }
+
+  if (!injected.length) return kept
+  return [...kept, ...injected].sort((left, right) => (
+    Number(left?.line_number) - Number(right?.line_number)
+  ))
+}
+
+export function prepareQpcMadaniSessionLines(lines = [], startKey = '', endKey = '') {
+  const filtered = filterQpcPageLinesToSession(lines, startKey, endKey)
+  const withHeaders = injectQpcMadaniSessionSurahHeaders(lines, filtered, startKey, endKey)
+  return compactQpcMadaniSessionAyahLines(withHeaders)
+}
+
+export function pageHasQpcMadaniSessionLines(lines = [], startKey = '', endKey = '') {
+  return prepareQpcMadaniSessionLines(lines, startKey, endKey).length > 0
 }
 
 export function buildMadaniSelection({

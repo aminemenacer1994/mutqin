@@ -1097,13 +1097,12 @@
           role="region"
           :aria-label="t('memorisation.reading.mobileFullScreenOffer')"
         >
-          <p class="madani-qpc-mobile-fullscreen-offer__text">{{ t('memorisation.reading.mobileFullScreenOffer') }}</p>
           <button
             type="button"
             class="madani-qpc-mobile-fullscreen-offer__enter"
             @click.stop="enterMadaniMobileImmersiveReading"
           >
-            {{ t('memorisation.reading.fullScreen') }}
+            {{ t('memorisation.reading.mobileFullScreenOffer') }}
           </button>
           <button
             type="button"
@@ -1413,6 +1412,7 @@
                 :range-end-ayah="''"
                 :session-start-ayah="qpcMadaniSessionStartAyah"
                 :session-end-ayah="qpcMadaniSessionEndAyah"
+                :session-printed-page-count="qpcMadaniSessionPageNumbers.length"
                 :technique-snapshot="qpcMadaniTechniqueSnapshot"
                 :progress-snapshot="qpcMadaniProgressSnapshot"
                 :audio-index-map="madaniAudioIndexMap"

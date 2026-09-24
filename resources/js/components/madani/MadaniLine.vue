@@ -3,25 +3,31 @@
     class="qpc-madani-line"
     :class="[
       `qpc-madani-line--${lineType}`,
-      { 'qpc-madani-line--centered': Number(line.is_centered) === 1 },
+      {
+        'qpc-madani-line--centered': Number(line.is_centered) === 1,
+        'qpc-madani-line--session-partial': sessionPartialLine,
+      },
     ]"
     :data-line="line.line_number"
     :data-line-type="lineType"
     :data-centered="line.is_centered"
     :data-surah="line.surah_number"
   >
-    <span
+    <div
       v-if="isSurahNameLine"
-      class="qpc-madani-surah-name"
-      :class="{ 'is-surah-font-ready': surahNamesReady }"
+      class="qpc-madani-surah-header"
       :data-surah="line.surah_number"
-      :style="{ fontFamily: `'${surahFontFamily}', serif` }"
-      aria-hidden="true"
-    >{{ headerText }}</span>
-    <span
-      v-if="isSurahNameLine"
-      class="visually-hidden"
-    >Surah {{ line.surah_number }}</span>
+    >
+      <div class="qpc-madani-surah-header__frame">
+        <span
+          class="qpc-madani-surah-name"
+          :class="{ 'is-surah-font-ready': surahNamesReady }"
+          :style="{ fontFamily: `'${surahFontFamily}', serif` }"
+          aria-hidden="true"
+        >{{ headerText }}</span>
+      </div>
+      <span class="visually-hidden">Surah {{ line.surah_number }}</span>
+    </div>
 
     <template v-else-if="isBasmalaLine">
       <span
@@ -135,8 +141,15 @@ export default {
       type: Boolean,
       default: false,
     },
+    sessionScoped: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
+    sessionPartialLine() {
+      return this.sessionScoped && Number(this.line?.session_partial_line) === 1
+    },
     lineType() {
       return String(this.line?.line_type || this.line?.type || '')
     },
@@ -170,9 +183,9 @@ export default {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-height: calc(var(--qpc-word-size, 22px) * 1.68);
+  min-height: calc(var(--qpc-word-size, 22px) * 1.32);
   padding-inline: 0;
-  padding-block: calc(var(--qpc-word-size, 22px) * 0.11);
+  padding-block: calc(var(--qpc-word-size, 22px) * 0.05);
   overflow: visible;
   white-space: nowrap;
   line-height: 1;
@@ -186,10 +199,18 @@ export default {
   overflow: visible;
 }
 
-.qpc-madani-line--surah_name,
+.qpc-madani-line--surah_name {
+  min-height: 0;
+  padding-block: calc(var(--qpc-word-size, 22px) * 0.12);
+}
+
 .qpc-madani-line--basmallah,
 .qpc-madani-line--basmala {
-  min-height: 2.15em;
+  min-height: 1.6em;
+}
+
+.qpc-madani-line--session-partial {
+  justify-content: flex-start !important;
 }
 
 .qpc-madani-basmallah-words {
@@ -198,16 +219,46 @@ export default {
   justify-content: center;
 }
 
+.qpc-madani-surah-header {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  padding-block: calc(var(--qpc-word-size, 22px) * 0.18);
+}
+
+.qpc-madani-surah-header__frame {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 22rem);
+  min-height: calc(var(--qpc-word-size, 22px) * 1.55);
+  padding: calc(var(--qpc-word-size, 22px) * 0.14) calc(var(--qpc-word-size, 22px) * 0.55);
+  border: 1px solid color-mix(in srgb, var(--qpc-ink, #1b140d) 42%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--qpc-ink, #1b140d) 18%, transparent);
+  outline-offset: 3px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--qpc-ink, #1b140d) 4%, transparent),
+      transparent 42%,
+      color-mix(in srgb, var(--qpc-ink, #1b140d) 3%, transparent)
+    );
+}
+
 .qpc-madani-surah-name {
   font-family: surahnames, serif !important;
-  font-size: calc(var(--qpc-word-size, 22px) * 1.28);
+  font-size: calc(var(--qpc-word-size, 22px) * 1.34);
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1;
   white-space: nowrap;
   letter-spacing: 0;
+  color: var(--qpc-ink, #1b140d);
   font-variant-ligatures: common-ligatures discretionary-ligatures;
   font-feature-settings: "liga" 1, "dlig" 1, "calt" 1;
-  opacity: 0;
+  opacity: 0.35;
 }
 
 .qpc-madani-surah-name.is-surah-font-ready {

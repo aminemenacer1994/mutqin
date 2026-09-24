@@ -10,6 +10,7 @@
     :data-range-end="rangeEndAyah || null"
     :data-session-start="sessionStartAyah || null"
     :data-session-end="sessionEndAyah || null"
+    :data-session-single-page="centerSingleSessionPage ? 'true' : null"
     :data-last-selected="selectedLocation"
     tabindex="0"
     @keydown="onKeydown"
@@ -49,7 +50,7 @@
 
     <div
       class="qpc-madani-spread"
-      :class="`qpc-madani-spread--${mode}`"
+      :class="[`qpc-madani-spread--${mode}`, spreadLayoutClass]"
       dir="rtl"
     >
       <div
@@ -111,6 +112,7 @@ import {
 } from '../../scripts/mushaf/qpcMadaniPageData'
 import { prefetchQpcMadaniPageFonts } from '../../scripts/mushaf/qpcMadaniFontLoader'
 import { prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
+import { pageHasQpcMadaniSessionLines } from '../../scripts/mushaf/qpcMadaniSelection'
 
 export default {
   name: 'MadaniSpread',
@@ -128,6 +130,7 @@ export default {
     rangeEndAyah: { type: String, default: '' },
     sessionStartAyah: { type: String, default: '' },
     sessionEndAyah: { type: String, default: '' },
+    sessionPrintedPageCount: { type: Number, default: null },
     techniqueSnapshot: { type: Object, default: null },
     progressSnapshot: { type: Object, default: null },
     audioIndexMap: { type: Object, default: null },
@@ -187,19 +190,46 @@ export default {
       }
       return { page: null, fontFamily: '', fontUrl: '' }
     },
+    sessionBoundsActive() {
+      return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
+    },
+    centerSingleSessionPage() {
+      return this.mode === 'spread' && Number(this.sessionPrintedPageCount) === 1
+    },
     visibleLeaves() {
+      let leaves
       if (this.mode !== 'spread') {
-        return [{ number: this.displayedPageNumber, ...this.currentLeaf }]
+        leaves = [{ number: this.displayedPageNumber, ...this.currentLeaf }]
+      } else if (this.centerSingleSessionPage) {
+        leaves = [{ number: this.displayedPageNumber, ...this.currentLeaf }]
+      } else {
+        leaves = this.spread.pages.map((number) => {
+          if (number === this.displayedPageNumber) {
+            return { number, ...this.currentLeaf }
+          }
+          if (this.sibling && Number(this.sibling.page?.page_number) === number) {
+            return { number, ...this.sibling }
+          }
+          return { number, page: null }
+        })
       }
-      return this.spread.pages.map((number) => {
-        if (number === this.displayedPageNumber) {
-          return { number, ...this.currentLeaf }
-        }
-        if (this.sibling && Number(this.sibling.page?.page_number) === number) {
-          return { number, ...this.sibling }
-        }
-        return { number, page: null }
+      if (!this.sessionBoundsActive) return leaves
+      const filtered = leaves.filter((leaf) => {
+        if (!leaf.page?.lines) return true
+        return pageHasQpcMadaniSessionLines(
+          leaf.page.lines,
+          this.sessionStartAyah,
+          this.sessionEndAyah,
+        )
       })
+      return filtered.length ? filtered : leaves.filter((leaf) => leaf.page)
+    },
+    spreadLayoutClass() {
+      if (this.mode !== 'spread') return ''
+      if (this.centerSingleSessionPage || this.visibleLeaves.length === 1) {
+        return 'qpc-madani-spread--single-leaf'
+      }
+      return ''
     },
     visiblePageNumbers() {
       return this.visibleLeaves.filter(leaf => leaf.page).map(leaf => Number(leaf.number))
@@ -492,6 +522,23 @@ export default {
   padding-inline: 1.15rem 1.65rem;
 }
 
+.qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
+  justify-content: center;
+  width: min(100%, 42rem);
+  max-width: min(100%, 42rem);
+  margin-inline: auto;
+}
+
+.qpc-madani-spread--spread.qpc-madani-spread--single-leaf .qpc-madani-spread__leaf {
+  flex: 0 1 min(100%, 40rem);
+  max-width: min(100%, 40rem);
+  box-shadow: none !important;
+}
+
+.qpc-madani-spread--spread.qpc-madani-spread--single-leaf .qpc-madani-spread__leaf :deep(.qpc-madani-page__sheet) {
+  padding-inline: clamp(0.38rem, 0.9vw, 0.72rem);
+}
+
 .qpc-madani-shell[data-spread-mode="spread"] {
   display: grid;
   grid-template-columns: 2.6rem minmax(0, 70rem) 2.6rem;
@@ -606,6 +653,12 @@ export default {
   background: transparent;
   border: 0;
   box-shadow: none;
+}
+
+.qpc-madani-shell--reader[data-spread-mode="spread"][data-session-single-page="true"] .qpc-madani-spread--spread {
+  width: min(100%, 42rem);
+  max-width: min(100%, 42rem);
+  margin-inline: auto;
 }
 
 .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf {

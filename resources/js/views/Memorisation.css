@@ -62404,7 +62404,22 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
 
 @media (max-width: 767.98px) {
   .madani-qpc-viewport .qpc-madani-line {
-    padding-block: calc(var(--qpc-word-size, 22px) * 0.13);
+    padding-block: calc(var(--qpc-word-size, 22px) * 0.05);
+  }
+
+  .madani-qpc-viewport .qpc-madani-line--surah_name {
+    min-height: 0;
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet,
+  .madani-qpc-viewport .qpc-madani-page--session-scoped.qpc-madani-page--borderless .qpc-madani-page__sheet {
+    min-height: 0 !important;
+    height: auto !important;
+    justify-content: flex-start !important;
+  }
+
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
+    justify-content: flex-start !important;
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .session-progress-rail,
@@ -65959,6 +65974,32 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   border-radius: 0;
 }
 
+@media (min-width: 1080px) {
+  .madani-qpc-viewport .qpc-madani-shell--reader .qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
+    justify-content: center;
+    width: min(100%, 42rem);
+    max-width: min(100%, 42rem);
+    margin-inline: auto;
+  }
+
+  .madani-qpc-viewport .qpc-madani-shell--reader .qpc-madani-spread--spread.qpc-madani-spread--single-leaf .qpc-madani-spread__leaf {
+    flex: 0 1 min(100%, 40rem);
+    max-width: min(100%, 40rem);
+  }
+
+  .madani-qpc-stage__pages:has(.qpc-madani-spread--single-leaf) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: min(72vh, calc(100dvh - 14rem));
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
+    justify-content: flex-start;
+  }
+}
+
 .madani-qpc-viewport .mushaf-verse-aids {
   width: min(100%, 36rem);
   margin: 0.85rem auto 1.25rem;
@@ -66206,13 +66247,14 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     position: relative;
     z-index: 2;
     display: flex;
-    flex-flow: row wrap;
+    flex-flow: row nowrap;
     align-items: center;
-    gap: 0.45rem 0.5rem;
-    width: calc(100% - 1.1rem);
-    max-width: 100%;
-    margin: 0.65rem auto 0.35rem;
-    padding: 0.55rem 0.5rem 0.55rem 0.75rem;
+    justify-content: center;
+    gap: 0.35rem;
+    width: auto;
+    max-width: calc(100% - 1.1rem);
+    margin: 0.5rem auto 0.25rem;
+    padding: 0.35rem 0.4rem 0.35rem 0.55rem;
     overflow: visible;
     border-radius: 1.15rem;
     border: 1px solid color-mix(in srgb, var(--text, #1b140d) 16%, transparent);
@@ -66232,7 +66274,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-mobile-fullscreen-offer__enter {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     align-self: center;
     position: relative;
     z-index: 3;
