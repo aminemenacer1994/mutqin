@@ -68,9 +68,13 @@ const memorisationJs = readFileSync(join(root, 'resources/js/views/Memorisation.
 const memorisationVue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 const wordVue = readFileSync(join(root, 'resources/js/components/madani/MadaniWord.vue'), 'utf8')
 
-assert.match(memorisationJs, /onQpcMadaniWordSelect[\s\S]{0,320}onMushafAyahClick/)
-assert.match(memorisationVue, /:range-start-ayah="qpcMadaniSessionStartAyah"/)
-assert.match(memorisationVue, /:active-ayah="qpcMadaniActiveAyah"/)
+const selectIdx = memorisationJs.indexOf('onQpcMadaniWordSelect(location)')
+assert.ok(selectIdx >= 0)
+assert.match(memorisationJs.slice(selectIdx, selectIdx + 1400), /resolveQpcWordAudioIndex/)
+assert.match(memorisationJs.slice(selectIdx, selectIdx + 1400), /onMushafAyahClick/)
+assert.match(memorisationVue, /:range-start-ayah="''"/)
+assert.match(memorisationVue, /:active-ayah="qpcMadaniSelectionActiveAyah"/)
+assert.match(memorisationVue, /:active-ayah="qpcMadaniSelectionActiveAyah"/)
 assert.match(wordVue, /data-ayah-key/)
 assert.match(wordVue, /is-ayah-active/)
 assert.doesNotMatch(

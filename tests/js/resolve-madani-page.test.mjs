@@ -36,7 +36,7 @@ assert.deepEqual(resolveMadaniSpread(603).pages, [603, 604])
 assert.deepEqual(resolveMadaniSpread(604).pages, [603, 604])
 
 const memorisationVue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
-assert.match(memorisationVue, /:active-ayah="qpcMadaniActiveAyah"/, 'reader exposes activeAyah to Madani')
+assert.match(memorisationVue, /:active-ayah="qpcMadaniSelectionActiveAyah"/, 'reader exposes activeAyah to Madani')
 assert.match(memorisationVue, /hide-dev-nav/, 'production Madani hides standalone pager')
 
 console.log('resolve-madani-page.test.mjs: ok')

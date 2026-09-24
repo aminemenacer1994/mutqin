@@ -15,6 +15,8 @@
       'qpc-madani-page--opening': isOpening,
       'is-font-ready': fontReady,
       'is-fitted': fitted,
+      'qpc-madani-page--tajweed': tajweedEnabled,
+      'qpc-madani-page--borderless': borderless,
     }"
     :aria-busy="!fontReady || !fitted ? 'true' : 'false'"
   >
@@ -30,7 +32,18 @@
           :font-family="fontFamily"
           :selected-location="selectedLocation"
           :selection="selection"
+          :technique-snapshot="techniqueSnapshot"
+          :audio-index-map="audioIndexMap"
+          :tajweed-enabled="tajweedEnabled"
+          :code-v2-by-location="codeV2ByLocation"
           @select="onWordSelect"
+          @ayah-enter="onAyahEnter"
+          @ayah-leave="onAyahLeave"
+          @peek-enter="onPeekEnter"
+          @peek-leave="onPeekLeave"
+          @peek-touchstart="onPeekTouchStart"
+          @peek-touchend="onPeekTouchEnd"
+          @peek-touchcancel="onPeekTouchCancel"
         />
       </div>
       <div
@@ -42,7 +55,7 @@
 </template>
 
 <script>
-import { loadSurahNamesFont } from '../../scripts/mushaf/qcfFontLoader'
+import { loadSurahNamesFont, loadQcfPageFont } from '../../scripts/mushaf/qcfFontLoader'
 import { ensureQpcMadaniPageFont } from '../../scripts/mushaf/qpcMadaniFontLoader'
 import { buildMadaniSelection } from '../../scripts/mushaf/qpcMadaniSelection'
 import MadaniLine from './MadaniLine.vue'
@@ -69,6 +82,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    borderless: {
+      type: Boolean,
+      default: false,
+    },
     activeAyah: {
       type: String,
       default: '',
@@ -89,8 +106,28 @@ export default {
       type: String,
       default: '',
     },
+    techniqueSnapshot: {
+      type: Object,
+      default: null,
+    },
+    audioIndexMap: {
+      type: Object,
+      default: null,
+    },
+    fontScale: {
+      type: Number,
+      default: 1,
+    },
+    tajweedEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    codeV2ByLocation: {
+      type: Object,
+      default: null,
+    },
   },
-  emits: ['select'],
+  emits: ['select', 'ayah-enter', 'ayah-leave', 'peek-enter', 'peek-leave', 'peek-touchstart', 'peek-touchend', 'peek-touchcancel'],
   data() {
     return {
       selectedLocation: '',
@@ -132,6 +169,21 @@ export default {
       this.fitted = false
       this.readyAndFit()
     },
+    fontScale() {
+      this.scheduleFit()
+    },
+    tajweedEnabled() {
+      this.fontReady = false
+      this.fitted = false
+      this.readyAndFit()
+    },
+    codeV2ByLocation: {
+      deep: true,
+      handler() {
+        if (!this.tajweedEnabled) return
+        this.scheduleFit()
+      },
+    },
   },
   mounted() {
     this.observeResize()
@@ -147,6 +199,27 @@ export default {
       this.selectedLocation = String(location || '')
       this.$emit('select', this.selectedLocation)
     },
+    onAyahEnter(ayahKey) {
+      this.$emit('ayah-enter', ayahKey)
+    },
+    onAyahLeave(ayahKey) {
+      this.$emit('ayah-leave', ayahKey)
+    },
+    onPeekEnter(ayahKey) {
+      this.$emit('peek-enter', ayahKey)
+    },
+    onPeekLeave(ayahKey) {
+      this.$emit('peek-leave', ayahKey)
+    },
+    onPeekTouchStart(payload) {
+      this.$emit('peek-touchstart', payload)
+    },
+    onPeekTouchEnd(payload) {
+      this.$emit('peek-touchend', payload)
+    },
+    onPeekTouchCancel() {
+      this.$emit('peek-touchcancel')
+    },
     observeResize() {
       if (typeof ResizeObserver === 'undefined' || !(this.$el instanceof HTMLElement)) return
       this.resizeObserver = new ResizeObserver((entries) => {
@@ -156,6 +229,10 @@ export default {
       })
       this.resizeObserver.observe(this.$el)
       if (this.$el.parentElement) this.resizeObserver.observe(this.$el.parentElement)
+      this.$nextTick(() => {
+        const sheet = this.$refs.sheet
+        if (sheet instanceof HTMLElement) this.resizeObserver.observe(sheet)
+      })
     },
     sheetWidth() {
       const sheet = this.$refs.sheet
@@ -167,25 +244,38 @@ export default {
     },
     async readyAndFit() {
       try {
-        await ensureQpcMadaniPageFont(this.pageNumber, this.fontFamily, this.fontUrl)
-        this.fontReady = true
-      } catch {
-        this.fontReady = false
-        return
+        if (this.fontFamily && this.fontUrl) {
+          await ensureQpcMadaniPageFont(this.pageNumber, this.fontFamily, this.fontUrl)
+        }
+      } catch (error) {
+        console.warn('[MadaniPage] page font load failed', this.pageNumber, error)
       }
+      this.fontReady = true
       if (this.lines.some(line => line.line_type === 'surah_name' || line.line_type === 'basmallah')) {
         await loadSurahNamesFont().catch(() => null)
       }
       await this.$nextTick()
       this.fitLines()
-      window.setTimeout(() => this.fitLines(), 200)
+      window.requestAnimationFrame(() => this.fitLines())
+      if (this.tajweedEnabled) {
+        void loadQcfPageFont(this.pageNumber, { tajweed: true })
+          .then(() => this.scheduleFit())
+          .catch(() => null)
+      }
     },
-    fitLines() {
+    fitLines(retry = 0) {
       if (this.fitting) return
       const root = this.$el
       const sheet = this.$refs.sheet
-      if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) return
-      if (sheet.clientWidth < 40) return
+      if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) {
+        if (retry < 30) window.requestAnimationFrame(() => this.fitLines(retry + 1))
+        return
+      }
+      if (sheet.clientWidth < 40) {
+        if (retry < 30) window.requestAnimationFrame(() => this.fitLines(retry + 1))
+        else this.fitted = true
+        return
+      }
 
       const lines = [...sheet.querySelectorAll('.qpc-madani-line')]
       if (!lines.length) return
@@ -212,11 +302,19 @@ export default {
 
       const available = this.contentWidth(sheet)
       this.fitting = false
-      if (available <= 0) return
+      if (available <= 0) {
+        if (retry < 30) window.requestAnimationFrame(() => this.fitLines(retry + 1))
+        else this.fitted = true
+        return
+      }
 
-      const safety = this.embedded ? 0.97 : 0.995
-      const cap = this.embedded ? 34 : 36
-      const size = Math.min(cap, available / widest * MEASURE_SIZE * safety)
+      const narrow = available < 440
+      const safety = this.embedded ? (narrow ? 0.9 : 0.94) : (narrow ? 0.88 : 0.94)
+      const cap = this.embedded ? (narrow ? 30 : 34) : (narrow ? 32 : 36)
+      const scale = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
+        ? Number(this.fontScale)
+        : 1
+      const size = Math.min(cap, available / widest * MEASURE_SIZE * safety) * scale
       root.style.setProperty('--qpc-word-size', `${size.toFixed(2)}px`)
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
@@ -238,8 +336,8 @@ export default {
 <style scoped>
 .qpc-madani-page {
   --qpc-word-size: 18px;
-  --qpc-ink: #1b140d;
-  --qpc-rule: #8d6a35;
+  --qpc-ink: var(--mushaf-reading-ink, #1b140d);
+  --qpc-rule: color-mix(in srgb, var(--accent, #8d6a35) 48%, transparent);
   box-sizing: border-box;
   width: min(100%, 40rem);
   max-width: 100%;
@@ -252,9 +350,13 @@ export default {
   box-shadow: 0 10px 28px rgba(62, 41, 18, 0.1);
 }
 
-.qpc-madani-page:not(.is-font-ready),
-.qpc-madani-page:not(.is-fitted) {
-  opacity: 0;
+.qpc-madani-page:not(.is-font-ready) {
+  opacity: 0.35;
+}
+
+.qpc-madani-page.is-font-ready {
+  opacity: 1;
+  transition: opacity 120ms ease;
 }
 
 .qpc-madani-page__ornament {
@@ -262,6 +364,7 @@ export default {
   padding: 0.28rem;
   border: 2px solid var(--qpc-rule);
   background: #fffdf8;
+  overflow: hidden;
 }
 
 .qpc-madani-page__sheet {
@@ -271,6 +374,9 @@ export default {
   justify-content: flex-start;
   padding: 0.95rem 1.15rem 0.45rem;
   border: 1px solid rgba(141, 106, 53, 0.42);
+  overflow-x: clip;
+  overflow-y: visible;
+  max-width: 100%;
 }
 
 .qpc-madani-page--opening .qpc-madani-page__sheet {
@@ -331,11 +437,11 @@ export default {
   --qpc-line-min-height: 1.62em;
   --qpc-line-height: 1.42;
   width: 100%;
-  max-width: none;
+  max-width: min(100%, 36rem);
   height: auto;
   min-height: 0;
-  margin: 0.4rem auto 1rem;
-  padding: 0.28rem;
+  margin: 0 auto;
+  padding: 0.12rem;
   box-shadow: 0 6px 18px rgba(62, 41, 18, 0.08);
 }
 
@@ -350,7 +456,7 @@ export default {
 
 .qpc-madani-page--single .qpc-madani-page__sheet {
   flex: none;
-  padding: 0.55rem 0.45rem 0.2rem;
+  padding: 0.5rem 0.38rem 0.18rem;
 }
 
 .qpc-madani-page--single.qpc-madani-page--opening .qpc-madani-page__sheet {
@@ -361,5 +467,48 @@ export default {
   min-height: 1.35rem;
   padding: 0.18rem 0 0.04rem;
   font-size: 0.88rem;
+}
+
+.qpc-madani-page--borderless,
+.qpc-madani-page--borderless.qpc-madani-page--single {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.qpc-madani-page--borderless .qpc-madani-page__ornament {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.qpc-madani-page--borderless .qpc-madani-page__sheet {
+  border: 0;
+  background: transparent;
+}
+
+.qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
+  padding: 0.22rem 0.1rem 0.05rem;
+}
+
+.qpc-madani-page--borderless.qpc-madani-page--opening .qpc-madani-page__sheet {
+  padding-block: 0.85rem 0.35rem;
+}
+
+.qpc-madani-page--borderless .qpc-madani-page__folio {
+  color: #8a7048;
+}
+
+.qpc-madani-page--borderless.qpc-madani-page--embedded {
+  background: transparent;
+}
+
+.qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__ornament {
+  padding: 0;
+}
+
+.qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
+  padding: clamp(0.55rem, 1.4vw, 0.95rem) clamp(0.45rem, 1.1vw, 0.85rem) clamp(0.28rem, 0.8vw, 0.42rem);
 }
 </style>

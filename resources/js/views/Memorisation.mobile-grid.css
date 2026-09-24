@@ -42,6 +42,15 @@
     overflow-x: clip;
   }
 
+  .main.madani-qpc-mode-active .workspace-main,
+  .main.madani-qpc-mode-active .madani-qpc-workspace,
+  .main.madani-qpc-mode-active .madani-qpc-viewport,
+  .main.madani-qpc-mode-active .madani-qpc-stage,
+  .main.madani-qpc-mode-active .madani-qpc-stage__pages {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
   .app :where(
     .main,
     .content,
@@ -7690,6 +7699,15 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     .mushaf-page--madani,
     .mushaf-page-body,
     .madani-page-sheet
+  ) {
+    overflow: visible !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active :is(
+    .madani-qpc-workspace,
+    .madani-qpc-viewport,
+    .madani-qpc-stage,
+    .madani-qpc-stage__pages
   ) {
     overflow: visible !important;
   }

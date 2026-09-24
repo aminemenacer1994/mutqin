@@ -49,7 +49,10 @@ assert.equal(collectQpcMadaniPlayingAyahNodes(doc, '2:30').length, 2)
 assert.match(memorisationJs, /prefetchQpcMadaniPageForUpcomingAyah/)
 assert.match(memorisationJs, /syncQpcMadaniPlaybackAyahDom/)
 assert.match(memorisationJs, /collectQpcMadaniWordHighlightNodes/)
-assert.match(memorisationJs, /onQpcMadaniWordSelect[\s\S]{0,320}onMushafAyahClick/)
+const onSelectIdx = memorisationJs.indexOf('onQpcMadaniWordSelect(location)')
+assert.ok(onSelectIdx >= 0)
+assert.match(memorisationJs.slice(onSelectIdx, onSelectIdx + 1400), /playWordAudio/)
+assert.match(memorisationJs.slice(onSelectIdx, onSelectIdx + 1400), /onMushafAyahClick/)
 assert.doesNotMatch(
   memorisationJs,
   /playingAyah|qpcMadaniWordIndex|madaniAudioPlayer/,

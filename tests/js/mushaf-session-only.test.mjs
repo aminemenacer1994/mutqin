@@ -48,7 +48,7 @@ assert.match(
 )
 assert.match(
   memorisationVue,
-  /:active-ayah="qpcMadaniActiveAyah"/,
+  /:active-ayah="qpcMadaniSelectionActiveAyah"/,
   'Madani renderer receives canonical activeAyah'
 )
 assert.doesNotMatch(

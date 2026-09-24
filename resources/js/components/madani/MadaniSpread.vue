@@ -60,18 +60,32 @@
       >
         <MadaniPage
           v-if="leaf.page"
+          :key="`${leaf.number}-${leaf.page?.page_number || 0}`"
           :page="leaf.page"
           :font-family="leaf.fontFamily"
           :font-url="leaf.fontUrl"
+          :borderless="hideDevNav || readerMode"
           :embedded="mode === 'spread'"
           :active-ayah="activeAyah"
           :range-start-ayah="rangeStartAyah"
           :range-end-ayah="rangeEndAyah"
           :session-start-ayah="sessionStartAyah"
           :session-end-ayah="sessionEndAyah"
+          :technique-snapshot="techniqueSnapshot"
+          :audio-index-map="audioIndexMap"
+          :font-scale="fontScale"
+          :tajweed-enabled="tajweedEnabled"
+          :code-v2-by-location="codeV2ByLocation"
           @select="onWordSelect"
+          @ayah-enter="onAyahEnter"
+          @ayah-leave="onAyahLeave"
+          @peek-enter="onPeekEnter"
+          @peek-leave="onPeekLeave"
+          @peek-touchstart="onPeekTouchStart"
+          @peek-touchend="onPeekTouchEnd"
+          @peek-touchcancel="onPeekTouchCancel"
         />
-        <div v-else class="qpc-madani-spread__placeholder" aria-hidden="true"></div>
+        <div v-else class="qpc-madani-spread__placeholder" aria-busy="true" :aria-label="`Page ${leaf.number}`"></div>
       </div>
     </div>
   </section>
@@ -95,11 +109,12 @@ import {
   preloadMadaniNavigationTargets,
 } from '../../scripts/mushaf/qpcMadaniPageData'
 import { prefetchQpcMadaniPageFonts } from '../../scripts/mushaf/qpcMadaniFontLoader'
+import { prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
 
 export default {
   name: 'MadaniSpread',
   components: { MadaniPage },
-  emits: ['select'],
+  emits: ['select', 'ayah-enter', 'ayah-leave', 'peek-enter', 'peek-leave', 'peek-touchstart', 'peek-touchend', 'peek-touchcancel'],
   props: {
     page: { type: Object, default: null },
     fontFamily: { type: String, default: '' },
@@ -112,6 +127,11 @@ export default {
     rangeEndAyah: { type: String, default: '' },
     sessionStartAyah: { type: String, default: '' },
     sessionEndAyah: { type: String, default: '' },
+    techniqueSnapshot: { type: Object, default: null },
+    audioIndexMap: { type: Object, default: null },
+    fontScale: { type: Number, default: 1 },
+    tajweedEnabled: { type: Boolean, default: false },
+    codeV2ByLocation: { type: Object, default: null },
   },
   data() {
     return {
@@ -213,6 +233,12 @@ export default {
     displayedPageNumber() {
       this.ensureCurrentLeaf()
     },
+    controlledPageNumber() {
+      this.ensureCurrentLeaf()
+    },
+    tajweedEnabled() {
+      this.schedulePreload()
+    },
   },
   created() {
     if (
@@ -255,6 +281,27 @@ export default {
       this.selectedLocation = String(location || '')
       this.$emit('select', location)
     },
+    onAyahEnter(ayahKey) {
+      this.$emit('ayah-enter', ayahKey)
+    },
+    onAyahLeave(ayahKey) {
+      this.$emit('ayah-leave', ayahKey)
+    },
+    onPeekEnter(ayahKey) {
+      this.$emit('peek-enter', ayahKey)
+    },
+    onPeekLeave(ayahKey) {
+      this.$emit('peek-leave', ayahKey)
+    },
+    onPeekTouchStart(payload) {
+      this.$emit('peek-touchstart', payload)
+    },
+    onPeekTouchEnd(payload) {
+      this.$emit('peek-touchend', payload)
+    },
+    onPeekTouchCancel() {
+      this.$emit('peek-touchcancel')
+    },
     onKeydown(event) {
       if (this.readerMode) return
       if (event.target.closest('input, textarea, select, [contenteditable="true"], .qpc-madani-word')) return
@@ -280,35 +327,52 @@ export default {
       if (this.preloadTimer) window.clearTimeout(this.preloadTimer)
       this.preloadTimer = window.setTimeout(() => {
         preloadMadaniNavigationTargets(this.mode, this.displayedPageNumber)
-        prefetchQpcMadaniPageFonts(this.visibleLeaves.map((leaf) => leaf.number))
+        const pages = this.visibleLeaves.map((leaf) => leaf.number)
+        prefetchQpcMadaniPageFonts(pages)
+        if (this.tajweedEnabled) {
+          prefetchQcfPageFonts(pages, { tajweed: true }).catch(() => {})
+        }
       }, 120)
     },
     async ensureCurrentLeaf() {
       const page = this.displayedPageNumber
       const cached = getCachedMadaniPageLeaf(page)
-      if (cached) {
+      if (cached?.page) {
         this.fetchedLeaf = cached
-      } else if (
+        await this.ensureSibling()
+        this.schedulePreload()
+        return
+      }
+
+      if (Number(this.fetchedLeaf?.page?.page_number) !== page) {
+        this.fetchedLeaf = null
+      }
+
+      if (
         this.page
         && Number(this.page.page_number) === page
         && this.fontFamily
         && this.fontUrl
       ) {
-        this.fetchedLeaf = {
+        const leaf = {
           page: this.page,
           fontFamily: this.fontFamily,
           fontUrl: this.fontUrl,
         }
-        cacheMadaniPageLeaf(page, this.fetchedLeaf)
-      } else {
-        const token = ++this.fetchToken
-        try {
-          const leaf = await loadMadaniPageLeaf(page)
-          if (token !== this.fetchToken) return
-          this.fetchedLeaf = leaf
-        } catch {
-          if (token === this.fetchToken) this.fetchedLeaf = null
-        }
+        cacheMadaniPageLeaf(page, leaf)
+        this.fetchedLeaf = leaf
+        await this.ensureSibling()
+        this.schedulePreload()
+        return
+      }
+
+      const token = ++this.fetchToken
+      try {
+        const leaf = await loadMadaniPageLeaf(page)
+        if (token !== this.fetchToken) return
+        this.fetchedLeaf = leaf
+      } catch {
+        if (token === this.fetchToken) this.fetchedLeaf = null
       }
       await this.ensureSibling()
       this.schedulePreload()
@@ -343,7 +407,7 @@ export default {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  padding-inline: 0.7rem;
+  padding-inline: 0;
   overflow: visible;
   outline: none;
 }
@@ -522,20 +586,51 @@ export default {
   height: auto;
 }
 
+.qpc-madani-shell--reader[data-spread-mode="single"] {
+  padding-inline: 0;
+}
+
 .qpc-madani-shell--reader[data-spread-mode="spread"] {
   display: block;
-  max-width: 86rem;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 1.2rem 0.75rem 2rem;
+  padding: 0 0 0.2rem;
 }
 
 .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread--spread {
-  max-width: 70rem;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf {
+  background: transparent;
+  box-shadow: none !important;
+}
+
+.qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf + .qpc-madani-spread__leaf {
+  border-inline-start: 1px solid color-mix(in srgb, var(--zone-divider, rgba(132, 104, 64, 0.12)) 100%, transparent);
+  box-shadow: none;
+}
+
+.qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf:first-child :deep(.qpc-madani-page__sheet) {
+  padding-inline: clamp(0.38rem, 0.9vw, 0.72rem) clamp(0.22rem, 0.55vw, 0.42rem);
+}
+
+.qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf:last-child :deep(.qpc-madani-page__sheet) {
+  padding-inline: clamp(0.22rem, 0.55vw, 0.42rem) clamp(0.38rem, 0.9vw, 0.72rem);
 }
 
 .qpc-madani-spread__placeholder {
   flex: 1 1 auto;
   min-height: 12rem;
+  width: 100%;
+}
+
+.qpc-madani-shell--reader .qpc-madani-spread__placeholder {
+  min-height: 55dvh;
 }
 </style>

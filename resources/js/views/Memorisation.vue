@@ -674,7 +674,7 @@
                   </button>
                   <div class="top-card-menu-divider top-card-menu-divider--layout" aria-hidden="true"></div>
                   <button
-                    v-if="readingViewMode === 'stacked'"
+                    v-if="readingViewMode === 'stacked' || readingViewMode === 'madani_mushaf'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showTranslation }"
@@ -686,7 +686,7 @@
                     <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <button
-                    v-if="readingViewMode === 'stacked'"
+                    v-if="readingViewMode === 'stacked' || readingViewMode === 'madani_mushaf'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showTransliteration }"
@@ -698,7 +698,7 @@
                     <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <button
-                    v-if="readingViewMode === 'stacked'"
+                    v-if="readingViewMode === 'stacked' || readingViewMode === 'madani_mushaf'"
                     type="button"
                     class="top-card-menu-toggle"
                     :class="{ active: showWordByWord }"
@@ -1101,24 +1101,7 @@
               :aria-label="t('memorisation.open_controls')"
               v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"
             -->
-            <div
-              v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
-              class="workspace-recite-dock workspace-recite-dock--mobile"
-              aria-live="polite"
-            >
-              <button
-                type="button"
-                class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
-                :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                data-testid="workspace-ai-recite-mobile"
-                :title="t('dashboard.ai_recite.cta_label')"
-                :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                @click="openWorkspaceAiRecite"
-              >
-                <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-              </button>
-            </div>
+            <!-- Mobile recite dock lives after the reading surface (see bottom of workspace-main). -->
             <section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t('memorisation.a11y.sessionSetup')">
               <div class="workspace-empty-card">
                 <span class="workspace-empty-kicker">{{ t('memorisation.workspaceEmpty.kicker') }}</span>
@@ -1310,6 +1293,59 @@
               </div>
             </div>
             <div v-else-if="readingViewMode === 'madani_mushaf'" class="madani-qpc-workspace">
+              <div class="container mushaf-workspace__fluid">
+              <section
+                class="mushaf-shell madani-qpc-shell"
+                :aria-label="t('memorisation.view.madaniMushaf')"
+              >
+                <div ref="qpcMadaniViewport" class="madani-qpc-viewport">
+                  <header class="madani-qpc-chrome">
+                    <div
+                      class="madani-qpc-chrome__tools"
+                      role="group"
+                      :aria-label="t('common.fontSize')"
+                    >
+                      <button
+                        type="button"
+                        class="madani-qpc-icon-btn"
+                        :disabled="Number(defaultFontSize) <= Number(minFontSize)"
+                        :title="t('memorisation.a11y.decreaseFontSize')"
+                        :aria-label="t('memorisation.a11y.decreaseFontSize')"
+                        @click.stop="decreaseMushafFontSize"
+                      >
+                        <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="madani-qpc-icon-btn"
+                        :disabled="Number(defaultFontSize) >= Number(maxFontSize)"
+                        :title="t('memorisation.a11y.increaseFontSize')"
+                        :aria-label="t('memorisation.a11y.increaseFontSize')"
+                        @click.stop="increaseMushafFontSize"
+                      >
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                    <span
+                      v-if="qpcMadaniCurrentPage"
+                      class="madani-qpc-chrome__page"
+                      aria-hidden="true"
+                    >{{ qpcMadaniCurrentPage }}</span>
+                  </header>
+
+                  <div class="madani-qpc-stage">
+                    <button
+                      v-if="!isMobileViewport()"
+                      type="button"
+                      class="madani-qpc-icon-btn madani-qpc-icon-btn--nav madani-qpc-icon-btn--prev"
+                      :disabled="!qpcMadaniCanGoPrev"
+                      :aria-label="t('memorisation.player.previous')"
+                      @click.stop="goToPreviousQpcMadaniPage"
+                    >
+                      <span class="madani-qpc-nav-glyph" aria-hidden="true">›</span>
+                    </button>
+
+                    <div class="madani-qpc-stage__pages">
               <div v-if="qpcMadaniLoadError" class="mushaf-empty-page mushaf-empty-page--error">
                 <AppStatus
                   :variant="networkOnline === false ? 'offline' : 'error'"
@@ -1329,16 +1365,77 @@
               </div>
               <madani-spread
                 v-else-if="qpcMadaniCurrentPage"
+                :key="qpcMadaniCurrentPage"
                 :controlled-page-number="qpcMadaniCurrentPage"
-                :active-ayah="qpcMadaniActiveAyah"
-                :range-start-ayah="qpcMadaniSessionStartAyah"
-                :range-end-ayah="qpcMadaniSessionEndAyah"
+                :active-ayah="qpcMadaniSelectionActiveAyah"
+                :range-start-ayah="''"
+                :range-end-ayah="''"
                 :session-start-ayah="qpcMadaniSessionStartAyah"
                 :session-end-ayah="qpcMadaniSessionEndAyah"
+                :technique-snapshot="qpcMadaniTechniqueSnapshot"
+                :audio-index-map="madaniAudioIndexMap"
+                :font-scale="qpcMadaniFontScale"
+                :tajweed-enabled="qpcMadaniTajweedPresentation.effectiveEnabled"
+                :code-v2-by-location="qpcMadaniCodeV2ByLocation"
                 hide-dev-nav
                 reader-mode
                 @select="onQpcMadaniWordSelect"
+                @ayah-enter="onQpcMadaniAyahEnter"
+                @ayah-leave="onQpcMadaniAyahLeave"
+                @peek-enter="onVersePeekEnter"
+                @peek-leave="onVersePeekLeave"
+                @peek-touchstart="onQpcMadaniPeekTouchStart"
+                @peek-touchend="onQpcMadaniPeekTouchEnd"
+                @peek-touchcancel="clearTouchPeek"
               />
+                    </div>
+
+                    <button
+                      v-if="!isMobileViewport()"
+                      type="button"
+                      class="madani-qpc-icon-btn madani-qpc-icon-btn--nav madani-qpc-icon-btn--next"
+                      :disabled="!qpcMadaniCanGoNext"
+                      :aria-label="t('memorisation.player.next')"
+                      @click.stop="goToNextQpcMadaniPage"
+                    >
+                      <span class="madani-qpc-nav-glyph" aria-hidden="true">‹</span>
+                    </button>
+                  </div>
+
+              <div
+                v-if="qpcMadaniAidVerse && showQpcMadaniReadingAids"
+                class="mushaf-verse-aids mushaf-translation-panel"
+                dir="ltr"
+                lang="en"
+              >
+                <div class="verse-aid-title" dir="ltr" lang="en">
+                  <i class="bi bi-book-half" aria-hidden="true"></i>
+                  <em>{{ t('memorisation.a11y.ayahNumberLabel', { number: resolveVerseAyahNumber(qpcMadaniAidVerse) || qpcMadaniAidVerse.number }) }}</em>
+                </div>
+                <div
+                  v-if="showWordByWord && activeWordTooltip?.text && activeWordTooltip.verseKey === qpcMadaniAidVerse.key"
+                  class="mushaf-word-tooltip"
+                >
+                  {{ activeWordTooltip.text }}
+                </div>
+                <div v-if="showTransliteration && qpcMadaniAidVerse.transliteration" class="verse-aid-block" dir="ltr" lang="en">
+                  <div class="verse-aid-title">{{ t('memorisation.reading.transliteration') }}</div>
+                  <div class="verse-transliteration verse-aid mushaf-translation-text">
+                    {{ qpcMadaniAidVerse.transliteration }}
+                  </div>
+                  <p class="verse-aid-source">— {{ transliterationReference }}</p>
+                </div>
+                <div v-if="showTranslation && qpcMadaniAidVerse.translation" class="verse-aid-block" dir="ltr" lang="en">
+                  <div class="verse-aid-title">{{ t('memorisation.reading.translation') }}</div>
+                  <div class="verse-translation verse-aid mushaf-translation-text">
+                    {{ qpcMadaniAidVerse.translation }}
+                  </div>
+                  <p class="verse-aid-source">— {{ translationReference }}</p>
+                </div>
+              </div>
+                </div>
+              </section>
+              </div>
             </div>
             <div v-else class="verses-grid">
               <div v-for="verse in verses" :key="verse.key" :data-verse-key="verse.key" class="verse-card" :class="{
@@ -1437,6 +1534,24 @@
               </div>
 
             </div>
+            </div>
+            <div
+              v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
+              class="workspace-recite-dock workspace-recite-dock--mobile"
+              aria-live="polite"
+            >
+              <button
+                type="button"
+                class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
+                :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                data-testid="workspace-ai-recite-mobile"
+                :title="t('dashboard.ai_recite.cta_label')"
+                :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                @click="openWorkspaceAiRecite"
+              >
+                <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+              </button>
             </div>
           </main>
         </div>
@@ -4368,6 +4483,32 @@
         </div>
       </div>
     </transition>
+
+    <Teleport to="body">
+      <div
+        v-if="readingViewMode === 'madani_mushaf' && shouldShowReadingWorkspace && qpcMadaniCurrentPage && isMobileViewport()"
+        class="madani-qpc-mobile-nav-rail"
+      >
+        <button
+          type="button"
+          class="madani-qpc-mobile-nav-rail__btn madani-qpc-mobile-nav-rail__btn--prev"
+          :disabled="!qpcMadaniCanGoPrev"
+          :aria-label="t('memorisation.player.previous')"
+          @click.stop="goToPreviousQpcMadaniPage"
+        >
+          <span class="madani-qpc-nav-glyph" aria-hidden="true">›</span>
+        </button>
+        <button
+          type="button"
+          class="madani-qpc-mobile-nav-rail__btn madani-qpc-mobile-nav-rail__btn--next"
+          :disabled="!qpcMadaniCanGoNext"
+          :aria-label="t('memorisation.player.next')"
+          @click.stop="goToNextQpcMadaniPage"
+        >
+          <span class="madani-qpc-nav-glyph" aria-hidden="true">‹</span>
+        </button>
+      </div>
+    </Teleport>
 
     <Teleport to="body">
       <div

@@ -104,10 +104,35 @@ import { parseAyahKey } from '../scripts/mushaf/qpcMadaniSelection'
 import {
   collectQpcMadaniPlayingAyahNodes,
   collectQpcMadaniWordHighlightNodes,
+  resolveQpcWordAudioIndex,
 } from '../scripts/mushaf/qpcMadaniAudioDom'
 import { loadMadaniPageLeaf, preloadMadaniNavigationTargets } from '../scripts/mushaf/qpcMadaniPageData'
 import { prefetchQpcMadaniPageFonts } from '../scripts/mushaf/qpcMadaniFontLoader'
-import { shouldShowTwoMadaniPages } from '../scripts/mushaf/madaniPagePair'
+import {
+  buildMadaniAmdHiddenIndexesByAyah,
+  resolveMadaniAmdPeekAyahKey,
+} from '../scripts/mushaf/qpcMadaniTechniques'
+import {
+  clearQpcMadaniRecitationDom,
+  patchQpcMadaniRecitationDom,
+  resolveAyahKeyForMadaniRecitationIndex,
+} from '../scripts/mushaf/qpcMadaniRecitationDom'
+import {
+  buildQpcMadaniCodeV2ByLocation,
+  buildQpcMadaniCodeV2FromMadaniApiVerses,
+  mergeQpcMadaniCodeV2Maps,
+  resolveQpcMadaniTajweedPresentation,
+  shouldShowQpcMadaniReadingAids,
+} from '../scripts/mushaf/qpcMadaniReadingTools'
+import {
+  clampMadaniPage,
+  nextMadaniPage,
+  nextMadaniSpread,
+  previousMadaniPage,
+  previousMadaniSpread,
+  resolveMadaniSpread,
+  shouldShowTwoMadaniPages,
+} from '../scripts/mushaf/madaniPagePair'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -1002,6 +1027,10 @@ export default {
       madaniFontsReady: {},
       qpcVersePageIndex: null,
       qpcMadaniLoadError: '',
+      qpcMadaniRecitationFollowAyah: '',
+      qpcMadaniPinnedPage: null,
+      qpcMadaniTajweedCodeByLocation: {},
+      qpcMadaniTajweedGlyphPages: {},
       mushafBorderOptions: [
         { value: 'classic', label: 'Classic' },
         { value: 'fine', label: 'Fine' },
@@ -9368,14 +9397,91 @@ export default {
       if (!isQpcMadaniMushafView(this.readingViewMode)) {
         return null
       }
+      if (this.qpcMadaniPinnedPage != null) {
+        return clampMadaniPage(this.qpcMadaniPinnedPage)
+      }
+      const followAyah = this.amdOpen ? String(this.qpcMadaniRecitationFollowAyah || '').trim() : ''
+      const pageAyahKey = followAyah || this.qpcMadaniActiveAyah
       const fromActive = resolveQpcMadaniPageForVerseKey(
-        this.qpcMadaniActiveAyah,
+        pageAyahKey,
         this.qpcVersePageIndex
       )
       if (fromActive) return fromActive
       const surah = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
       const ayah = Number(this.rangeStart || this.currentConfig?.rangeStart || this.activeAyahNumber || 0)
       return resolveMadaniPage(surah, ayah, this.qpcVersePageIndex)
+    },
+
+    qpcMadaniSelectionActiveAyah() {
+      return String(this.hoveredMushafVerseKey || '').trim()
+    },
+
+    qpcMadaniCanGoPrev() {
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return false
+      const current = this.qpcMadaniCurrentPage
+      if (!current) return false
+      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+      const prev = shouldShowTwoMadaniPages(width)
+        ? previousMadaniSpread(current)
+        : previousMadaniPage(current)
+      return prev != null && prev >= 1
+    },
+
+    qpcMadaniCanGoNext() {
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return false
+      const current = this.qpcMadaniCurrentPage
+      if (!current) return false
+      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+      const next = shouldShowTwoMadaniPages(width)
+        ? nextMadaniSpread(current)
+        : nextMadaniPage(current)
+      return next != null && next <= 604
+    },
+
+    qpcMadaniTechniqueSnapshot() {
+      const revealed = this.hiddenRevealSession?.revealedWordIndexes
+      let checkerHiddenIndexesByAyah = {}
+      let checkerPeekActive = false
+      let checkerPeekAyah = ''
+      if (this.amdOpen && this.readingViewMode === 'madani_mushaf') {
+        const targets = this.recitationCheckPendingTargets?.length
+          ? this.recitationCheckPendingTargets
+          : this.getRecitationCheckTargetVerses()
+        const ayahBounds = this.getAmdAyahBoundsCached()
+        const ayahKeys = (Array.isArray(targets) ? targets : []).map((target) => {
+          const verse = this.getCanonicalVerseForCheck?.(target) || target
+          return String(verse?.key || target?.key || '').trim()
+        })
+        checkerHiddenIndexesByAyah = buildMadaniAmdHiddenIndexesByAyah({
+          ayahKeys,
+          ayahBounds,
+          globalHiddenIndexes: this.amdHiddenWordIndexes,
+          hideAllWords: normaliseDifficultyPercent(this.amdDifficultyPercent) === 100,
+          liveWords: this.recitationLiveWords,
+        })
+        checkerPeekActive = !!this.amdPeekActive
+        checkerPeekAyah = resolveMadaniAmdPeekAyahKey({
+          ayahKeys,
+          ayahBounds,
+          peekAyahBound: this._amdPeekAyahBound,
+        })
+      }
+      return Object.freeze({
+        blurModeEnabled: !!this.blurModeEnabled,
+        blurPeekHoldingSpace: !!this.blurPeekHoldingSpace,
+        hoverPeekAyah: String(this.hoverPeekVerseKey || ''),
+        touchPeekAyah: String(this.touchPeekVerseKey || ''),
+        effectiveActiveAyah: String(this.effectiveActiveVerseKey || ''),
+        focusModeEnabled: !!this.focusModeEnabled,
+        hasSessionStarted: !!(this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback),
+        hiddenRevealModeEnabled: !!(this.hiddenRevealModeEnabled && this.hiddenRevealSession?.sessionStarted),
+        hiddenRevealVerseKey: String(this.effectiveActiveVerseKey || ''),
+        hiddenRevealRevealed: revealed instanceof Set ? [...revealed] : [],
+        hiddenRevealCurrentIndex: Number(this.hiddenRevealSession?.currentWordIndex ?? -1),
+        checkerHiddenIndexesByAyah,
+        checkerPeekActive,
+        checkerPeekAyah,
+      })
     },
 
     mushafDisplayCacheKey() {
@@ -9728,6 +9834,39 @@ export default {
         || null
     },
 
+    qpcMadaniAidVerse() {
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return null
+      return this.mushafAidVerse
+    },
+
+    qpcMadaniFontScale() {
+      const base = 150
+      const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || base)
+      return Math.max(0.75, Math.min(1.35, size / base))
+    },
+
+    showQpcMadaniReadingAids() {
+      return shouldShowQpcMadaniReadingAids({
+        showTranslation: this.showTranslation,
+        showTransliteration: this.showTransliteration,
+        showWordByWord: this.showWordByWord,
+        wordTooltipText: this.activeWordTooltip?.text,
+      })
+    },
+
+    qpcMadaniTajweedPresentation() {
+      return resolveQpcMadaniTajweedPresentation(this.tajweedEnabled)
+    },
+
+    qpcMadaniCodeV2ByLocation() {
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return {}
+      const fromSession = buildQpcMadaniCodeV2ByLocation(this.verses || [])
+      return mergeQpcMadaniCodeV2Maps(
+        fromSession,
+        this.qpcMadaniTajweedCodeByLocation || {},
+      )
+    },
+
     mushafAidWords() {
       const verse = this.mushafAidVerse
       if (!verse || !this.showWordByWord) return []
@@ -10067,6 +10206,10 @@ export default {
           this.syncQpcMadaniPageToActiveVerse()
           if (this.isPlaying) this.prefetchQpcMadaniPageForUpcomingAyah()
         }
+      })
+      this.$watch('qpcMadaniCurrentPage', (page) => {
+        if (!isQpcMadaniMushafView(this.readingViewMode) || !page) return
+        void this.syncQpcMadaniTajweedGlyphsForViewport()
       })
       this.$watch(() => this.mushafPages.length, () => {
         this.syncMushafPageToActiveVerse()
@@ -10491,6 +10634,12 @@ export default {
               this.startWordHighlighting(this.activeVerseRef)
             }
             this.syncQpcMadaniPlaybackAyahDom()
+            if (this.amdOpen) {
+              const count = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords.length : 0
+              if (count) {
+                this.patchAmdLiveWordStatuses(Array.from({ length: count }, (_, index) => ({ index })))
+              }
+            }
           })
         })
       }
@@ -12797,7 +12946,7 @@ export default {
       const verseKey = this.effectiveActiveVerseKey;
       const currentIdx = this.hiddenRevealSession.currentWordIndex;
       
-      const selector = `.verse-card[data-verse-key="${verseKey}"] .wbw-word[data-word-index="${currentIdx}"]`;
+      const selector = `.verse-card[data-verse-key="${verseKey}"] .wbw-word[data-word-index="${currentIdx}"], .qpc-madani-word[data-verse-key="${CSS.escape?.(verseKey) || verseKey}"][data-word-index="${currentIdx}"]`;
       const element = document.querySelector(selector);
       
       if (element) {
@@ -12811,7 +12960,7 @@ export default {
       this.hiddenRevealSession.errorCount++;
     },
     applyWordRevealAnimation(verseKey, wordIndex) {
-      const selector = `.verse-card[data-verse-key="${verseKey}"] .wbw-word[data-word-index="${wordIndex}"]`;
+      const selector = `.verse-card[data-verse-key="${verseKey}"] .wbw-word[data-word-index="${wordIndex}"], .qpc-madani-word[data-verse-key="${CSS.escape?.(verseKey) || verseKey}"][data-word-index="${wordIndex}"]`;
       const element = document.querySelector(selector);
       if (!element) return;
       
@@ -15555,8 +15704,12 @@ export default {
 
       this.currentMode = mode
       this.tab = payload.tab || this.tab || 'tools'
-      // Mushaf is the permanent default — do not restore stacked from older sessions.
-      this.readingViewMode = 'mushaf'
+      this.readingViewMode = this.clampReadingViewMode(
+        payload.readingViewMode
+        || payload.config?.readingViewMode
+        || this.readingViewMode
+      )
+      this.applyLayoutFontSize(this.readingViewMode)
       if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0) {
         this.mushafPageIndex = savedMushafPageIndex
       }
@@ -15621,7 +15774,11 @@ export default {
       }
       this.playerVisible = false
       this.$nextTick(async () => {
-        if (this.readingViewMode === 'mushaf') {
+        if (isQpcMadaniMushafView(this.readingViewMode)) {
+          await this.bootstrapQpcMadaniViewer()
+          this.syncQpcMadaniPageToActiveVerse()
+          this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+        } else if (this.readingViewMode === 'mushaf') {
           if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0 && this.mushafPages.length) {
             this.mushafPageIndex = Math.min(savedMushafPageIndex, this.mushafPages.length - 1)
           } else {
@@ -20724,7 +20881,7 @@ export default {
         })
       })
 
-      root.querySelectorAll('.wbw-word, word.wbw-word, .madani-word[data-word-index]').forEach((el) => {
+      root.querySelectorAll('.wbw-word, word.wbw-word, .madani-word[data-word-index], .qpc-madani-word[data-word-index]').forEach((el) => {
         el.classList.remove('practice-focus-word', 'practice-focus-word--active', 'practice-focus-word--emphasis')
         el.removeAttribute('data-practice-focus')
         el.removeAttribute('data-practice-emphasis')
@@ -20738,7 +20895,7 @@ export default {
         || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
         || readPracticeScopeFromSettings(this.masteryTargetRange?.settings || this.postSessionRecommendation?.settings || {}) === PRACTICE_SCOPE.FULL_RANGE
 
-      root.querySelectorAll('.wbw-word[data-verse-key], word.wbw-word[data-verse-key], .madani-word[data-verse-key][data-word-index]').forEach((el) => {
+      root.querySelectorAll('.wbw-word[data-verse-key], word.wbw-word[data-verse-key], .madani-word[data-verse-key][data-word-index], .qpc-madani-word[data-verse-key][data-word-index]').forEach((el) => {
         const verseKey = String(el.getAttribute('data-verse-key') || '')
         const wordIndex = Number(el.getAttribute('data-word-index'))
         const text = this.normalizePracticeFocusWordText(
@@ -24452,6 +24609,7 @@ export default {
         : (fromSavedSessionReview
           ? 'saved-session-review'
           : (fromWorkspaceAiRecite ? 'workspace-ai-recite' : 'test-with-ai'))
+      this.clearQpcMadaniRecitationSurface()
       this.amdOpen = true
       this.syncBodyScrollLock(true)
       this.playUiTone?.('open')
@@ -25128,6 +25286,12 @@ export default {
         }
       })
       const ok = modal.patchWordStatuses(patches)
+      this.patchQpcMadaniAmdRecitationFromPatches(patches)
+      const followAyah = resolveAyahKeyForMadaniRecitationIndex(
+        confirmedIndex,
+        this.buildQpcMadaniRecitationContext()
+      )
+      if (followAyah) this.qpcMadaniRecitationFollowAyah = followAyah
       // Never fall back to a full mushaf rebuild mid-listen — that is the main freeze.
       if (!ok && !this.recitationCheckRecording) this.syncAmdMushafSurface({ force: true })
       // Paint is not recognition — do not refresh the STT idle clock here.
@@ -25783,6 +25947,7 @@ export default {
       this._amdAyahBounds = null
       this._amdCompleting = false
       this.amdAssessOnStop = false
+      this.clearQpcMadaniRecitationSurface()
       this.amdOpen = false
       this.amdEntrySource = null
       this.amdStage = AMD_STAGES.IDLE
@@ -33353,6 +33518,9 @@ export default {
         speed: Number(data.config?.speed || this.speed || 1),
         isPlaying: false,
       }
+      this.$nextTick(() => {
+        void this.ensureReadingLayoutReadyForSession()
+      })
       return true
     },
 
@@ -33897,9 +34065,7 @@ export default {
       this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
       this.markPracticeSetupRestored()
       this.scheduleSessionWorkspaceScroll(SESSION_WORKSPACE_SCROLL_REASON.RESUME_SESSION)
-      if (this.readingViewMode === 'mushaf') {
-        this.syncMushafPageToActiveVerse()
-      }
+      void this.ensureReadingLayoutReadyForSession()
       if (!autoplay) {
         this.prepareRestoredSessionAudio({ autoplay: false })
         return
@@ -35259,7 +35425,13 @@ export default {
       } else if (nextMode === 'madani_mushaf') {
         void this.bootstrapQpcMadaniViewer().then(() => {
           this.syncQpcMadaniPageToActiveVerse()
-          this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+          this.$nextTick(() => {
+            this.scrollQpcMadaniActiveAyahIntoView()
+            if (this.isPlaying && this.activeVerseRef?.key) {
+              this.startWordHighlighting(this.activeVerseRef)
+            }
+            this.syncQpcMadaniPlaybackAyahDom()
+          })
         })
       } else {
         this.fontOpen = false
@@ -35321,6 +35493,26 @@ export default {
     syncMushafColorsToAppTheme() {
       // Desktop palette is CSS-driven (paper / charcoal), not plain white / black.
     },
+    syncReadingLayoutToActiveVerse() {
+      if (this.readingViewMode === 'mushaf') {
+        this.syncMushafPageToActiveVerse()
+        return
+      }
+      if (isQpcMadaniMushafView(this.readingViewMode)) {
+        this.syncQpcMadaniPageToActiveVerse()
+      }
+    },
+    async ensureReadingLayoutReadyForSession() {
+      if (isQpcMadaniMushafView(this.readingViewMode)) {
+        await this.bootstrapQpcMadaniViewer()
+        this.syncQpcMadaniPageToActiveVerse()
+        return
+      }
+      if (this.readingViewMode === 'mushaf') {
+        await this.ensureMadaniPagesLoaded()
+        this.syncMushafPageToActiveVerse()
+      }
+    },
     syncMushafPageToActiveVerse() {
       if (!this.mushafPages.length) {
         this.mushafPageIndex = 0
@@ -35360,6 +35552,9 @@ export default {
       this.qpcMadaniLoadError = ''
       try {
         await this.ensureQpcVersePageIndex()
+        if (this.tajweedEnabled) {
+          await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
+        }
       } catch (error) {
         console.error('QPC Madani viewer bootstrap failed:', error)
         this.qpcMadaniLoadError = this.t('memorisation.mushafLoad.errorDesc')
@@ -35367,7 +35562,9 @@ export default {
     },
     syncQpcMadaniPageToActiveVerse() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return null
+      this.qpcMadaniPinnedPage = null
       const page = this.qpcMadaniCurrentPage
+      void this.syncQpcMadaniTajweedGlyphsForViewport()
       this.$nextTick(() => {
         if (this.currentHighlightedVerseKey && this.currentWordIndex >= 0) {
           this.applyWordHighlightClasses(this.currentHighlightedVerseKey, this.currentWordIndex)
@@ -35376,6 +35573,78 @@ export default {
         }
       })
       return page
+    },
+    async syncQpcMadaniTajweedGlyphsForViewport(options = {}) {
+      if (!isQpcMadaniMushafView(this.readingViewMode) || !this.tajweedEnabled) return
+      const page = this.qpcMadaniCurrentPage
+      if (!page) return
+      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+      const pages = new Set([page])
+      if (shouldShowTwoMadaniPages(width)) {
+        const spread = resolveMadaniSpread(page)
+        if (spread.left) pages.add(spread.left)
+        pages.add(spread.right)
+      }
+      await Promise.all([...pages].map((pageNumber) => (
+        this.ensureQpcMadaniTajweedGlyphsForPage(pageNumber, options)
+      )))
+    },
+    async ensureQpcMadaniTajweedGlyphsForPage(pageNumber, options = {}) {
+      if (!this.tajweedEnabled) return
+      const page = clampMadaniPage(pageNumber)
+      if (!options.force && this.qpcMadaniTajweedGlyphPages?.[page]) return
+      try {
+        const verses = await getMadaniPageVerses(page, { force: !!options.force })
+        const patch = buildQpcMadaniCodeV2FromMadaniApiVerses(verses)
+        this.qpcMadaniTajweedCodeByLocation = {
+          ...(this.qpcMadaniTajweedCodeByLocation || {}),
+          ...patch,
+        }
+        this.qpcMadaniTajweedGlyphPages = {
+          ...(this.qpcMadaniTajweedGlyphPages || {}),
+          [page]: true,
+        }
+      } catch (error) {
+        console.warn('[qpcMadani] Failed to load tajweed glyphs for page', page, error)
+      }
+    },
+    goToQpcMadaniPageTarget(pageNumber) {
+      const target = clampMadaniPage(pageNumber)
+      if (!target) return
+      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+      const mode = shouldShowTwoMadaniPages(width) ? 'spread' : 'single'
+      preloadMadaniNavigationTargets(mode, target)
+      void loadMadaniPageLeaf(target).catch(() => {})
+      this.qpcMadaniPinnedPage = target
+      const pages = [target]
+      if (mode === 'spread') {
+        const spread = resolveMadaniSpread(target)
+        if (spread.left) pages.push(spread.left)
+      }
+      prefetchQpcMadaniPageFonts(pages)
+      if (this.tajweedEnabled) {
+        prefetchQcfPageFonts(pages, { tajweed: true }).catch(() => {})
+      }
+      void this.syncQpcMadaniTajweedGlyphsForViewport()
+      this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+    },
+    goToPreviousQpcMadaniPage() {
+      const current = this.qpcMadaniCurrentPage
+      if (!current) return
+      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+      const prev = shouldShowTwoMadaniPages(width)
+        ? previousMadaniSpread(current)
+        : previousMadaniPage(current)
+      if (prev) this.goToQpcMadaniPageTarget(prev)
+    },
+    goToNextQpcMadaniPage() {
+      const current = this.qpcMadaniCurrentPage
+      if (!current) return
+      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+      const next = shouldShowTwoMadaniPages(width)
+        ? nextMadaniSpread(current)
+        : nextMadaniPage(current)
+      if (next) this.goToQpcMadaniPageTarget(next)
     },
     clearQpcMadaniPlaybackAyahDom() {
       const previous = Array.isArray(this.lastQpcMadaniPlayingAyahNodes)
@@ -35411,21 +35680,104 @@ export default {
       const verseKey = verseKeyFromQpcLocation(location)
       if (!verseKey || !this.isQpcMadaniAyahSelectable(verseKey)) return
       const verse = this.resolveVerseFromMadaniKey(verseKey)
-      if (verse?.key) {
-        this.onMushafAyahClick(verse)
+      if (!verse?.key) {
+        this.focusLinkedAyah(verseKey, { scroll: false })
         this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
         return
       }
-      this.focusLinkedAyah(verseKey, { scroll: false })
+      const parts = String(location || '').trim().split(':')
+      const wordPosition = Number(parts[2])
+      const wordIndex = resolveQpcWordAudioIndex(wordPosition, verseKey, this.madaniAudioIndexMap)
+      if (
+        this.wordByWordAudioEnabled
+        && this.currentReciterSupportsWordHighlighting
+        && Number.isFinite(wordIndex)
+        && wordIndex >= 0
+      ) {
+        if (this.showWordByWord) {
+          const gloss = resolveWordGlossFromVerse(verse, wordIndex)
+          if (gloss) {
+            this.activeWordTooltip = {
+              verseKey: verse.key,
+              wordIndex,
+              text: gloss,
+            }
+          }
+        }
+        void this.playWordAudio('', verse, wordIndex)
+        this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+        return
+      }
+      this.onMushafAyahClick(verse)
       this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+    },
+    onQpcMadaniAyahEnter(ayahKey) {
+      const verse = this.resolveVerseFromMadaniKey(ayahKey)
+      if (verse?.key) this.onMushafAyahEnter(verse)
+    },
+    onQpcMadaniAyahLeave(ayahKey) {
+      const verse = this.resolveVerseFromMadaniKey(ayahKey)
+      this.onMushafAyahLeave(verse || { key: ayahKey })
+    },
+    onQpcMadaniPeekTouchStart(payload = {}) {
+      this.onVerseTouchStart(payload.event, payload.ayahKey)
+    },
+    onQpcMadaniPeekTouchEnd(payload = {}) {
+      this.onVerseTouchEnd(payload.event, payload.ayahKey)
     },
     scrollQpcMadaniActiveAyahIntoView() {
       if (typeof document === 'undefined') return
       if (!isQpcMadaniMushafView(this.readingViewMode)) return
-      const key = this.qpcMadaniActiveAyah
+      const key = this.qpcMadaniRecitationFollowAyah || this.qpcMadaniActiveAyah
       if (!key) return
-      const el = document.querySelector(`.qpc-madani-word[data-ayah-key="${CSS.escape?.(key) || key}"]`)
+      const root = this.$refs?.workspaceMain || this.$el || document
+      const current = root?.querySelector?.(
+        `.qpc-madani-word.amd-word-current[data-verse-key="${CSS.escape?.(key) || key}"]`
+      )
+      const el = current || root?.querySelector?.(
+        `.qpc-madani-word[data-verse-key="${CSS.escape?.(key) || key}"]`
+      )
       el?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+    },
+    buildQpcMadaniRecitationContext() {
+      const targets = this.recitationCheckPendingTargets?.length
+        ? this.recitationCheckPendingTargets
+        : this.getRecitationCheckTargetVerses()
+      const ayahBounds = this.getAmdAyahBoundsCached?.() || []
+      const ayahKeys = (Array.isArray(targets) ? targets : []).map((target) => {
+        const verse = this.getCanonicalVerseForCheck?.(target) || target
+        return String(verse?.key || target?.key || '').trim()
+      })
+      return {
+        verses: this.verses || [],
+        audioIndexMap: this.madaniAudioIndexMap,
+        evaluationMap: this.recitationSessionEvaluationMap || {},
+        ayahBounds,
+        ayahKeys,
+      }
+    },
+    getQpcMadaniRecitationRoot() {
+      return this.$refs?.workspaceMain || this.$el || (typeof document !== 'undefined' ? document : null)
+    },
+    patchQpcMadaniAmdRecitationFromPatches(patches = []) {
+      if (!this.amdOpen || !isQpcMadaniMushafView(this.readingViewMode)) return false
+      const list = Array.isArray(patches) ? patches : []
+      if (!list.length) return false
+      const root = this.getQpcMadaniRecitationRoot()
+      const result = patchQpcMadaniRecitationDom(root, list, this.buildQpcMadaniRecitationContext(), {
+        applyPresentation: (node, status) => this.applyLiveWordPresentation(node, status, 'verse'),
+      })
+      if (result.currentAyahKey) {
+        this.$nextTick(() => {
+          this.syncQpcMadaniPageToActiveVerse()
+          this.scrollQpcMadaniActiveAyahIntoView()
+        })
+      }
+      return result.changed
+    },
+    clearQpcMadaniRecitationSurface() {
+      this.qpcMadaniRecitationFollowAyah = ''
+      clearQpcMadaniRecitationDom(this.getQpcMadaniRecitationRoot())
     },
     scrollActiveMushafPageIntoView() {
       if (typeof document === 'undefined') return
@@ -35491,6 +35843,9 @@ export default {
       const mode = shouldShowTwoMadaniPages(viewportWidth) ? 'spread' : 'single'
       preloadMadaniNavigationTargets(mode, page)
       prefetchQpcMadaniPageFonts([page])
+      if (this.tajweedEnabled) {
+        prefetchQcfPageFonts([page], { tajweed: true }).catch(() => {})
+      }
       void loadMadaniPageLeaf(page).catch(() => {})
     },
     async ensureMadaniPagesLoaded(options = {}) {
@@ -36329,7 +36684,8 @@ export default {
         chainingEnabled: this.chainingEnabled,
         chainingMethod: this.chainingMethod,
         chainingRepetitions: this.chainingRepetitions,
-        theme: this.theme
+        theme: this.theme,
+        readingViewMode: this.clampReadingViewMode(this.readingViewMode),
       }
     },
 
@@ -36607,6 +36963,18 @@ export default {
       if (this.readingViewMode === 'mushaf' && (event.key === 'PageUp' || event.key === '[')) {
         event.preventDefault()
         this.goToPreviousMushafPage()
+        return
+      }
+
+      if (isQpcMadaniMushafView(this.readingViewMode) && (event.key === 'PageDown' || event.key === ']')) {
+        event.preventDefault()
+        this.goToNextQpcMadaniPage()
+        return
+      }
+
+      if (isQpcMadaniMushafView(this.readingViewMode) && (event.key === 'PageUp' || event.key === '[')) {
+        event.preventDefault()
+        this.goToPreviousQpcMadaniPage()
         return
       }
 
@@ -38787,6 +39155,33 @@ export default {
       this.syncSettingsDraft()
       this.persistUiState()
       this.persistCentralSessionState()
+      if (isQpcMadaniMushafView(this.readingViewMode)) {
+        if (next) {
+          this.qpcMadaniTajweedGlyphPages = {}
+          try {
+            await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
+            await prefetchQcfPageFonts([this.qpcMadaniCurrentPage].filter(Boolean), { tajweed: true })
+          } catch (_) { /* fonts load per page */ }
+        } else {
+          this.qpcMadaniTajweedCodeByLocation = {}
+          this.qpcMadaniTajweedGlyphPages = {}
+        }
+        const page = this.qpcMadaniCurrentPage
+        if (page) {
+          const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1080
+          const mode = shouldShowTwoMadaniPages(viewportWidth) ? 'spread' : 'single'
+          preloadMadaniNavigationTargets(mode, page)
+          prefetchQpcMadaniPageFonts([page])
+        }
+        if (announce) {
+          this.showBanner(
+            this.tajweedEnabled ? 'Tajweed text enabled' : 'Tajweed text disabled',
+            'info',
+            1500,
+          )
+        }
+        return
+      }
       if (this.readingViewMode === 'mushaf') {
         this.rebuildCurrentMadaniLayoutsForTajweed()
         const page = this.currentMadaniPageNumber
@@ -41775,6 +42170,14 @@ export default {
           await this.playQueueEntry(first, { force: true, queueIndex: playbackIndex })
         }
       }
+
+      void this.ensureReadingLayoutReadyForSession().then(() => {
+        this.$nextTick(() => {
+          if (isQpcMadaniMushafView(this.readingViewMode)) {
+            this.scrollQpcMadaniActiveAyahIntoView()
+          }
+        })
+      })
 
       this.showTools = false
       this.flowStep = 'learn'

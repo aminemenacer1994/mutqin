@@ -34,7 +34,18 @@
           :font-family="fontFamily"
           :selected="selectedLocation === word.location"
           :selection="selection"
+          :technique-snapshot="techniqueSnapshot"
+          :audio-index-map="audioIndexMap"
+          :tajweed-enabled="tajweedEnabled"
+          :code-v2-by-location="codeV2ByLocation"
           @select="$emit('select', $event)"
+          @ayah-enter="$emit('ayah-enter', $event)"
+          @ayah-leave="$emit('ayah-leave', $event)"
+          @peek-enter="$emit('peek-enter', $event)"
+          @peek-leave="$emit('peek-leave', $event)"
+          @peek-touchstart="$emit('peek-touchstart', $event)"
+          @peek-touchend="$emit('peek-touchend', $event)"
+          @peek-touchcancel="$emit('peek-touchcancel')"
         />
       </span>
       <span
@@ -53,7 +64,18 @@
         :font-family="fontFamily"
         :selected="selectedLocation === word.location"
         :selection="selection"
+        :technique-snapshot="techniqueSnapshot"
+        :audio-index-map="audioIndexMap"
+        :tajweed-enabled="tajweedEnabled"
+        :code-v2-by-location="codeV2ByLocation"
         @select="$emit('select', $event)"
+        @ayah-enter="$emit('ayah-enter', $event)"
+        @ayah-leave="$emit('ayah-leave', $event)"
+        @peek-enter="$emit('peek-enter', $event)"
+        @peek-leave="$emit('peek-leave', $event)"
+        @peek-touchstart="$emit('peek-touchstart', $event)"
+        @peek-touchend="$emit('peek-touchend', $event)"
+        @peek-touchcancel="$emit('peek-touchcancel')"
       />
     </template>
   </div>
@@ -67,7 +89,7 @@ import MadaniWord from './MadaniWord.vue'
 export default {
   name: 'MadaniLine',
   components: { MadaniWord },
-  emits: ['select'],
+  emits: ['select', 'ayah-enter', 'ayah-leave', 'peek-enter', 'peek-leave', 'peek-touchstart', 'peek-touchend', 'peek-touchcancel'],
   props: {
     line: {
       type: Object,
@@ -82,6 +104,22 @@ export default {
       default: '',
     },
     selection: {
+      type: Object,
+      default: null,
+    },
+    techniqueSnapshot: {
+      type: Object,
+      default: null,
+    },
+    audioIndexMap: {
+      type: Object,
+      default: null,
+    },
+    tajweedEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    codeV2ByLocation: {
       type: Object,
       default: null,
     },
@@ -110,9 +148,10 @@ export default {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   min-height: var(--qpc-line-min-height, 1.95em);
   padding-inline: 0;
-  overflow: visible;
+  overflow: hidden;
   white-space: nowrap;
   line-height: var(--qpc-line-height, 1.72);
 }

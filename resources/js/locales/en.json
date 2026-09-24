@@ -1627,7 +1627,8 @@
       "madaniMushaf": "Madani Mushaf",
       "stackedHint": "Stacked: one ayah after another, calm for short ranges.",
       "mushafHint": "Mushaf: page-style layout. Reading aids and tajweed live in Controls and Help.",
-      "madaniMushafHint": "Madani Mushaf: KFGQPC V2 printed pages with per-page QCF fonts."
+      "madaniMushafHint": "Madani Mushaf: KFGQPC V2 printed pages with per-page QCF fonts.",
+      "madaniQpcTajweedUnsupported": "Tajweed colours are not available on QPC Madani Mushaf. The authentic printed page layout is shown unchanged."
     },
     "actions": {
       "newSession": "New set",
