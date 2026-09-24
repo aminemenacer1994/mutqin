@@ -59,7 +59,7 @@
 <script>
 import { loadSurahNamesFont, loadQcfPageFont } from '../../scripts/mushaf/qcfFontLoader'
 import { ensureQpcMadaniPageFont } from '../../scripts/mushaf/qpcMadaniFontLoader'
-import { buildMadaniSelection } from '../../scripts/mushaf/qpcMadaniSelection'
+import { buildMadaniSelection, filterQpcPageLinesToSession } from '../../scripts/mushaf/qpcMadaniSelection'
 import MadaniLine from './MadaniLine.vue'
 
 const MEASURE_SIZE = 40
@@ -151,10 +151,13 @@ export default {
       return Number(this.page?.page_number) || 1
     },
     lines() {
-      return Array.isArray(this.page?.lines) ? this.page.lines : []
+      const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
+      return filterQpcPageLinesToSession(raw, this.sessionStartAyah, this.sessionEndAyah)
     },
     isOpening() {
-      return this.lines.length > 0 && this.lines.length < 15
+      if (this.sessionStartAyah) return false
+      const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
+      return raw.length > 0 && raw.length < 15
     },
     folioLabel() {
       if (this.embedded) return String(this.pageNumber)
@@ -178,6 +181,12 @@ export default {
       this.readyAndFit()
     },
     fontScale() {
+      this.scheduleFit()
+    },
+    sessionStartAyah() {
+      this.scheduleFit()
+    },
+    sessionEndAyah() {
       this.scheduleFit()
     },
     tajweedEnabled() {
@@ -325,10 +334,10 @@ export default {
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
       const safety = this.embedded
         ? (narrow ? 0.9 : 0.94)
-        : (mobile ? 0.94 : (narrow ? 0.88 : 0.94))
+        : (mobile ? 1 : (narrow ? 0.88 : 0.94))
       const cap = this.embedded
         ? (narrow ? 30 : 34)
-        : (mobile ? 52 : (narrow ? 32 : 36))
+        : (mobile ? 86 : (narrow ? 32 : 36))
       const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
         ? Number(this.fontScale)
         : 1

@@ -9426,23 +9426,32 @@ export default {
       return chapter && end ? `${chapter}:${end}` : this.qpcMadaniSessionStartAyah
     },
 
+    qpcMadaniSessionPageNumbers() {
+      const index = this.qpcVersePageIndex
+      if (!index) return []
+      const pages = new Set()
+      for (const key of this.mushafSessionVerseKeyList) {
+        const page = resolveQpcMadaniPageForVerseKey(key, index)
+        if (page) pages.add(Number(page))
+      }
+      return [...pages].sort((left, right) => left - right)
+    },
+
     qpcMadaniCurrentPage() {
-      if (!isQpcMadaniMushafView(this.readingViewMode)) {
-        return null
-      }
-      if (this.qpcMadaniPinnedPage != null) {
-        return clampMadaniPage(this.qpcMadaniPinnedPage)
-      }
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return null
       const followAyah = this.amdOpen ? String(this.qpcMadaniRecitationFollowAyah || '').trim() : ''
-      const pageAyahKey = followAyah || this.qpcMadaniActiveAyah
-      const fromActive = resolveQpcMadaniPageForVerseKey(
-        pageAyahKey,
-        this.qpcVersePageIndex
-      )
-      if (fromActive) return fromActive
+      const fromActive = resolveQpcMadaniPageForVerseKey(followAyah || this.qpcMadaniActiveAyah, this.qpcVersePageIndex)
+      const sessionPages = this.qpcMadaniSessionPageNumbers
+      if (this.qpcMadaniPinnedPage != null) {
+        const pinned = clampMadaniPage(this.qpcMadaniPinnedPage)
+        if (!sessionPages.length || sessionPages.includes(pinned)) return pinned
+      }
+      if (fromActive && (!sessionPages.length || sessionPages.includes(Number(fromActive)))) return fromActive
       const surah = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
       const ayah = Number(this.rangeStart || this.currentConfig?.rangeStart || this.activeAyahNumber || 0)
-      return resolveMadaniPage(surah, ayah, this.qpcVersePageIndex)
+      const fallback = resolveMadaniPage(surah, ayah, this.qpcVersePageIndex)
+      if (sessionPages.length && !sessionPages.includes(Number(fallback))) return sessionPages[0]
+      return fallback
     },
 
     qpcMadaniSelectionActiveAyah() {
@@ -9451,24 +9460,12 @@ export default {
 
     qpcMadaniCanGoPrev() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return false
-      const current = this.qpcMadaniCurrentPage
-      if (!current) return false
-      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const prev = shouldShowTwoMadaniPages(width)
-        ? previousMadaniSpread(current)
-        : previousMadaniPage(current)
-      return prev != null && prev >= 1
+      return this.qpcMadaniAdjacentSessionPage(-1) != null
     },
 
     qpcMadaniCanGoNext() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return false
-      const current = this.qpcMadaniCurrentPage
-      if (!current) return false
-      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const next = shouldShowTwoMadaniPages(width)
-        ? nextMadaniSpread(current)
-        : nextMadaniPage(current)
-      return next != null && next <= 604
+      return this.qpcMadaniAdjacentSessionPage(1) != null
     },
 
     qpcMadaniTechniqueSnapshot() {
@@ -9876,7 +9873,7 @@ export default {
       const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || base)
       let scale = Math.max(0.75, Math.min(1.35, size / base))
       if (this.isMobileViewport()) {
-        scale = Math.min(1.48, scale * 1.36)
+        scale = Math.min(2, scale * 1.72)
       }
       return scale
     },
@@ -15623,10 +15620,19 @@ export default {
       return Promise.resolve(request.call(root)).catch(() => {})
     },
     handleNativeFullscreenChange() {
-      if (this.nativeFullscreenElement()) return
+      if (this.nativeFullscreenElement()) {
+        this._sawNativeFullscreen = true
+        return
+      }
+      if (!this._sawNativeFullscreen) return
+      this._sawNativeFullscreen = false
       if (!this.isAppFullscreen) return
       this.isAppFullscreen = false
       this.syncAppFullscreenClass()
+      if (this.isMobileViewport?.() && isQpcMadaniMushafView(this.readingViewMode)) {
+        this.madaniMobileImmersiveDeclined = true
+        this.madaniMobileFullscreenOfferHidden = false
+      }
     },
     syncAppFullscreenClass() {
       const active = !!this.isAppFullscreen
@@ -15638,19 +15644,13 @@ export default {
       }
     },
     offerMadaniMobileImmersiveReading() {
-      if (!this.isMobileViewport?.() || !isQpcMadaniMushafView(this.readingViewMode)) return
-      if (this.madaniMobileImmersiveDeclined || this.isAppFullscreen) return
-      this.isAppFullscreen = true
-      this.syncAppFullscreenClass()
+      // Madani stays in the normal layout until the reader chooses full screen.
     },
     enterMadaniMobileImmersiveReading() {
       this.madaniMobileFullscreenOfferHidden = true
       this.madaniMobileImmersiveDeclined = false
       this.isAppFullscreen = true
       this.syncAppFullscreenClass()
-      if (this.isMobileViewport?.()) {
-        void this.enterNativeFullscreen()
-      }
     },
     dismissMadaniMobileFullscreenOffer() {
       this.madaniMobileFullscreenOfferHidden = true
@@ -15671,7 +15671,7 @@ export default {
       this.syncAppFullscreenClass()
       if (this.isMobileViewport() && isQpcMadaniMushafView(this.readingViewMode)) {
         this.madaniMobileImmersiveDeclined = false
-        void this.enterNativeFullscreen()
+        this.madaniMobileFullscreenOfferHidden = true
       }
     },
 
@@ -35865,22 +35865,24 @@ export default {
       void this.syncQpcMadaniTajweedGlyphsForViewport()
       this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
     },
+    qpcMadaniAdjacentSessionPage(direction) {
+      const pages = this.qpcMadaniSessionPageNumbers
+      const current = Number(this.qpcMadaniCurrentPage)
+      if (!pages.length || !current) return null
+      if (direction < 0) {
+        for (let index = pages.length - 1; index >= 0; index -= 1) {
+          if (pages[index] < current) return pages[index]
+        }
+        return null
+      }
+      return pages.find(page => page > current) || null
+    },
     goToPreviousQpcMadaniPage() {
-      const current = this.qpcMadaniCurrentPage
-      if (!current) return
-      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const prev = shouldShowTwoMadaniPages(width)
-        ? previousMadaniSpread(current)
-        : previousMadaniPage(current)
+      const prev = this.qpcMadaniAdjacentSessionPage(-1)
       if (prev) this.goToQpcMadaniPageTarget(prev)
     },
     goToNextQpcMadaniPage() {
-      const current = this.qpcMadaniCurrentPage
-      if (!current) return
-      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const next = shouldShowTwoMadaniPages(width)
-        ? nextMadaniSpread(current)
-        : nextMadaniPage(current)
+      const next = this.qpcMadaniAdjacentSessionPage(1)
       if (next) this.goToQpcMadaniPageTarget(next)
     },
     clearQpcMadaniPlaybackAyahDom() {

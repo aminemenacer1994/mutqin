@@ -6,6 +6,7 @@ import {
   ayahKeyFromWord,
   buildMadaniSelection,
   compareAyahKeys,
+  filterQpcPageLinesToSession,
   isAyahInCanonicalRange,
   madaniWordVisualClass,
   resolveMadaniAyahVisualState,
@@ -81,5 +82,16 @@ assert.doesNotMatch(
   memorisationJs,
   /madaniCurrentAyah|madaniSelectedRange|madaniAudioPlayer/,
 )
+
+const sessionLines = filterQpcPageLinesToSession([
+  { line_type: 'ayah', words: [{ surah: '51', ayah: '60', location: '51:60:1' }] },
+  { line_type: 'surah_name', surah_number: 52, words: [] },
+  { line_type: 'basmallah', surah_number: 52, words: [] },
+  { line_type: 'ayah', words: [{ surah: '52', ayah: '1', location: '52:1:1' }, { surah: '52', ayah: '4', location: '52:4:1' }] },
+], '52:1', '52:3')
+assert.equal(sessionLines.length, 3)
+assert.equal(sessionLines[0].line_type, 'surah_name')
+assert.equal(sessionLines[2].words.length, 1)
+assert.equal(sessionLines[2].words[0].location, '52:1:1')
 
 console.log('qpc-madani-selection.test.mjs: ok')

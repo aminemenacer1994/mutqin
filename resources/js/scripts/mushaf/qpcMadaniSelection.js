@@ -36,6 +36,57 @@ export function isAyahInCanonicalRange(key, startKey, endKey) {
   return compareAyahKeys(current.key, lo.key) >= 0 && compareAyahKeys(current.key, hi.key) <= 0
 }
 
+/**
+ * Keep surah header, opening basmala, and ayah words that fall inside the session.
+ * Neighbouring ayahs on the same printed page are dropped.
+ */
+export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = '') {
+  const source = Array.isArray(lines) ? lines : []
+  const start = parseAyahKey(startKey)
+  const end = parseAyahKey(endKey) || start
+  if (!start || !end) return source
+
+  const sessionSurahs = new Set()
+  const surahsOpeningAtOne = new Set()
+  for (const line of source) {
+    const type = String(line?.line_type || line?.type || '')
+    if (type !== 'ayah') continue
+    for (const word of line.words || []) {
+      const key = ayahKeyFromWord(word)
+      if (!key || !isAyahInCanonicalRange(key, start.key, end.key)) continue
+      const parsed = parseAyahKey(key)
+      if (!parsed) continue
+      sessionSurahs.add(parsed.surah)
+      if (parsed.ayah === 1) surahsOpeningAtOne.add(parsed.surah)
+    }
+  }
+  if (!sessionSurahs.size) return []
+
+  const kept = []
+  for (const line of source) {
+    const type = String(line?.line_type || line?.type || '')
+    if (type === 'surah_name') {
+      if (sessionSurahs.has(Number(line.surah_number))) kept.push(line)
+      continue
+    }
+    if (type === 'basmallah' || type === 'basmala') {
+      const surah = Number(line.surah_number)
+      const opening = Number.isFinite(surah) && surah > 0
+        ? surahsOpeningAtOne.has(surah)
+        : surahsOpeningAtOne.size > 0
+      if (opening) kept.push(line)
+      continue
+    }
+    if (type !== 'ayah') continue
+    const words = (line.words || []).filter((word) => {
+      const key = ayahKeyFromWord(word)
+      return key && isAyahInCanonicalRange(key, start.key, end.key)
+    })
+    if (words.length) kept.push({ ...line, words })
+  }
+  return kept
+}
+
 export function buildMadaniSelection({
   activeAyah = '',
   rangeStartAyah = '',

@@ -440,29 +440,6 @@
             </div>
           </div>
         </div>
-        <div
-          v-if="showMadaniMobileFullscreenOffer"
-          class="madani-qpc-mobile-fullscreen-offer"
-          role="region"
-          :aria-label="t('memorisation.reading.mobileFullScreenOffer')"
-        >
-          <p class="madani-qpc-mobile-fullscreen-offer__text">{{ t('memorisation.reading.mobileFullScreenOffer') }}</p>
-          <button
-            type="button"
-            class="madani-qpc-mobile-fullscreen-offer__enter"
-            @click.stop="enterMadaniMobileImmersiveReading"
-          >
-            {{ t('memorisation.reading.fullScreen') }}
-          </button>
-          <button
-            type="button"
-            class="madani-qpc-mobile-fullscreen-offer__dismiss"
-            :aria-label="t('common.dismiss')"
-            @click.stop="dismissMadaniMobileFullscreenOffer"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
-        </div>
         <section
           v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
@@ -1113,6 +1090,30 @@
 
 
 </section>
+
+        <div
+          v-if="showMadaniMobileFullscreenOffer"
+          class="madani-qpc-mobile-fullscreen-offer"
+          role="region"
+          :aria-label="t('memorisation.reading.mobileFullScreenOffer')"
+        >
+          <p class="madani-qpc-mobile-fullscreen-offer__text">{{ t('memorisation.reading.mobileFullScreenOffer') }}</p>
+          <button
+            type="button"
+            class="madani-qpc-mobile-fullscreen-offer__enter"
+            @click.stop="enterMadaniMobileImmersiveReading"
+          >
+            {{ t('memorisation.reading.fullScreen') }}
+          </button>
+          <button
+            type="button"
+            class="madani-qpc-mobile-fullscreen-offer__dismiss"
+            :aria-label="t('common.dismiss')"
+            @click.stop="dismissMadaniMobileFullscreenOffer"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </div>
 
           <div v-if="showWorkspaceRefreshSpinner" class="loading-spinner" :class="{ 'is-reciter-refresh': workspaceRefreshReason === 'reciter' }">
             <i class="bi bi-hourglass-split"></i>
