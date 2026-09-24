@@ -110,6 +110,10 @@ export default {
       type: String,
       default: '',
     },
+    showSessionSurahHeader: {
+      type: Boolean,
+      default: true,
+    },
     techniqueSnapshot: {
       type: Object,
       default: null,
@@ -154,10 +158,13 @@ export default {
     },
     lines() {
       const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
-      return prepareQpcMadaniSessionLines(raw, this.sessionStartAyah, this.sessionEndAyah)
+      const showHeader = !this.sessionScoped || this.showSessionSurahHeader
+      return prepareQpcMadaniSessionLines(raw, this.sessionStartAyah, this.sessionEndAyah, {
+        showSurahHeader: showHeader,
+      })
     },
     isOpening() {
-      if (this.sessionStartAyah) return false
+      if (this.sessionScoped || this.sessionStartAyah) return false
       const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
       return raw.length > 0 && raw.length < 15
     },
@@ -311,21 +318,24 @@ export default {
         return
       }
 
+      const measurable = lines.filter((line) => line.dataset.lineType !== 'surah_name')
+      const targets = measurable.length ? measurable : lines
+
       this.fitting = true
       root.style.setProperty('--qpc-word-size', `${MEASURE_SIZE}px`)
-      const previous = lines.map(line => ({
+      const previous = targets.map(line => ({
         width: line.style.width,
         justify: line.style.justifyContent,
       }))
-      for (const line of lines) {
+      for (const line of targets) {
         line.style.width = 'max-content'
         line.style.maxWidth = 'none'
         line.style.justifyContent = 'flex-start'
       }
       void sheet.offsetWidth
 
-      const widest = Math.max(1, ...lines.map(line => this.lineAdvanceWidth(line)))
-      for (const [index, line] of lines.entries()) {
+      const widest = Math.max(1, ...targets.map(line => this.lineAdvanceWidth(line)))
+      for (const [index, line] of targets.entries()) {
         line.style.width = previous[index].width
         line.style.maxWidth = ''
         line.style.justifyContent = previous[index].justify
@@ -351,13 +361,15 @@ export default {
         ? Number(this.fontScale)
         : 1
       const widthFit = (available / widest) * MEASURE_SIZE * safety
-      const size = Math.min(cap * requested, widthFit)
-      root.style.setProperty('--qpc-word-size', `${size.toFixed(2)}px`)
+      const rawSize = Math.min(cap * requested, widthFit)
+      // Whole-pixel sizes avoid COLR / QCF glyph clipping in WebKit.
+      const size = Math.max(8, Math.round(rawSize))
+      root.style.setProperty('--qpc-word-size', `${size}px`)
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
     },
     lineAdvanceWidth(line) {
-      const nodes = [...line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-surah-header, .qpc-madani-basmallah')]
+      const nodes = [...line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-basmallah')]
       if (!nodes.length) return line.scrollWidth
       return nodes.reduce((sum, node) => sum + node.offsetWidth, 0)
     },
@@ -373,8 +385,8 @@ export default {
 <style scoped>
 .qpc-madani-page {
   --qpc-word-size: 18px;
-  --qpc-line-min-height: 2.22em;
-  --qpc-line-height: 1.96;
+  --qpc-line-min-height: 2.85;
+  --qpc-line-height: 1.72;
   --qpc-ink: var(--mushaf-reading-ink, #1b140d);
   --qpc-rule: color-mix(in srgb, var(--accent, #8d6a35) 48%, transparent);
   box-sizing: border-box;
@@ -481,8 +493,8 @@ export default {
 }
 
 .qpc-madani-page--single {
-  --qpc-line-min-height: 2.22em;
-  --qpc-line-height: 1.96;
+  --qpc-line-min-height: 2.85;
+  --qpc-line-height: 1.72;
   width: 100%;
   max-width: min(100%, 36rem);
   height: auto;

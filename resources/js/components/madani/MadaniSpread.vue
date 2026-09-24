@@ -72,6 +72,7 @@
           :range-end-ayah="rangeEndAyah"
           :session-start-ayah="sessionStartAyah"
           :session-end-ayah="sessionEndAyah"
+          :show-session-surah-header="sessionHeaderPageNumber != null && leaf.number === sessionHeaderPageNumber"
           :technique-snapshot="techniqueSnapshot"
           :progress-snapshot="progressSnapshot"
           :audio-index-map="audioIndexMap"
@@ -131,6 +132,7 @@ export default {
     sessionStartAyah: { type: String, default: '' },
     sessionEndAyah: { type: String, default: '' },
     sessionPrintedPageCount: { type: Number, default: null },
+    sessionHeaderPageNumber: { type: Number, default: null },
     techniqueSnapshot: { type: Object, default: null },
     progressSnapshot: { type: Object, default: null },
     audioIndexMap: { type: Object, default: null },

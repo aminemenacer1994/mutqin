@@ -37,8 +37,8 @@ export function isAyahInCanonicalRange(key, startKey, endKey) {
 }
 
 /**
- * Keep surah header, opening basmala, and ayah words that fall inside the session.
- * Neighbouring ayahs on the same printed page are dropped.
+ * Keep surah header and ayah words that fall inside the session.
+ * Basmala rows are omitted in session reading. Neighbouring ayahs on the same page are dropped.
  */
 export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = '') {
   const source = Array.isArray(lines) ? lines : []
@@ -47,7 +47,6 @@ export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = 
   if (!start || !end) return source
 
   const sessionSurahs = new Set()
-  const surahsOpeningAtOne = new Set()
   for (const line of source) {
     const type = String(line?.line_type || line?.type || '')
     if (type !== 'ayah') continue
@@ -57,7 +56,6 @@ export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = 
       const parsed = parseAyahKey(key)
       if (!parsed) continue
       sessionSurahs.add(parsed.surah)
-      if (parsed.ayah === 1) surahsOpeningAtOne.add(parsed.surah)
     }
   }
   if (!sessionSurahs.size) return []
@@ -70,11 +68,6 @@ export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = 
       continue
     }
     if (type === 'basmallah' || type === 'basmala') {
-      const surah = Number(line.surah_number)
-      const opening = Number.isFinite(surah) && surah > 0
-        ? surahsOpeningAtOne.has(surah)
-        : surahsOpeningAtOne.size > 0
-      if (opening) kept.push(line)
       continue
     }
     if (type !== 'ayah') continue
@@ -192,14 +185,32 @@ export function injectQpcMadaniSessionSurahHeaders(lines = [], filtered = [], st
   ))
 }
 
-export function prepareQpcMadaniSessionLines(lines = [], startKey = '', endKey = '') {
+function stripQpcSessionSurahNameLines(lines = []) {
+  return (Array.isArray(lines) ? lines : []).filter((line) => (
+    String(line?.line_type || line?.type || '') !== 'surah_name'
+  ))
+}
+
+export function prepareQpcMadaniSessionLines(
+  lines = [],
+  startKey = '',
+  endKey = '',
+  { showSurahHeader = true } = {},
+) {
   const filtered = filterQpcPageLinesToSession(lines, startKey, endKey)
-  const withHeaders = injectQpcMadaniSessionSurahHeaders(lines, filtered, startKey, endKey)
-  return compactQpcMadaniSessionAyahLines(withHeaders)
+  let prepared = filtered
+  if (showSurahHeader) {
+    prepared = injectQpcMadaniSessionSurahHeaders(lines, filtered, startKey, endKey)
+  } else {
+    prepared = stripQpcSessionSurahNameLines(filtered)
+  }
+  return compactQpcMadaniSessionAyahLines(prepared)
 }
 
 export function pageHasQpcMadaniSessionLines(lines = [], startKey = '', endKey = '') {
-  return prepareQpcMadaniSessionLines(lines, startKey, endKey).length > 0
+  return compactQpcMadaniSessionAyahLines(
+    filterQpcPageLinesToSession(lines, startKey, endKey),
+  ).length > 0
 }
 
 export function buildMadaniSelection({

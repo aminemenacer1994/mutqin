@@ -219,6 +219,10 @@ const MadaniSpread = lazyPage(
     () => import(/* webpackChunkName: "madani-page" */ './components/madani/MadaniSpread.vue'),
     { feature: 'madani-page' }
 );
+const MadaniSessionScroll = lazyPage(
+    () => import(/* webpackChunkName: "madani-page" */ './components/madani/MadaniSessionScroll.vue'),
+    { feature: 'madani-page' }
+);
 const Homepage = lazyPage(
     () => import(/* webpackChunkName: "homepage" */ './views/Homepage.vue'),
     { feature: 'homepage' }
@@ -296,6 +300,7 @@ async function bootstrapApp() {
 
     app.component('network-status-banner', NetworkStatusBanner);
     app.component('madani-spread', MadaniSpread);
+    app.component('madani-session-scroll', MadaniSessionScroll);
     app.component('homepage', Homepage);
     app.component('memorisation', Memorisation);
     app.component('user-dashboard', UserDashboard);

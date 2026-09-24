@@ -73,7 +73,7 @@ export const FONT_SIZE_MAX = 280
 export const FONT_SIZE_STEP = 10
 export const UI_SCALE_OPTIONS = Object.freeze([1, 1.1, 1.2])
 export const DEFAULT_LAYOUT_FONT_SIZES = Object.freeze({
-  stacked: 150,
+  stacked: 125,
   mushaf: 160,
 })
 

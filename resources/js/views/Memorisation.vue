@@ -1091,29 +1091,6 @@
 
 </section>
 
-        <div
-          v-if="showMadaniMobileFullscreenOffer"
-          class="madani-qpc-mobile-fullscreen-offer"
-          role="region"
-          :aria-label="t('memorisation.reading.mobileFullScreenOffer')"
-        >
-          <button
-            type="button"
-            class="madani-qpc-mobile-fullscreen-offer__enter"
-            @click.stop="enterMadaniMobileImmersiveReading"
-          >
-            {{ t('memorisation.reading.mobileFullScreenOffer') }}
-          </button>
-          <button
-            type="button"
-            class="madani-qpc-mobile-fullscreen-offer__dismiss"
-            :aria-label="t('common.dismiss')"
-            @click.stop="dismissMadaniMobileFullscreenOffer"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
-        </div>
-
           <div v-if="showWorkspaceRefreshSpinner" class="loading-spinner" :class="{ 'is-reciter-refresh': workspaceRefreshReason === 'reciter' }">
             <i class="bi bi-hourglass-split"></i>
             <span>{{ workspaceLoadingLabel }}</span>
@@ -1364,6 +1341,16 @@
                       >
                         <i class="bi bi-plus-lg" aria-hidden="true"></i>
                       </button>
+                      <button
+                        v-if="showMadaniMobileFullscreenOffer"
+                        type="button"
+                        class="madani-qpc-icon-btn madani-qpc-icon-btn--fullscreen"
+                        :title="t('memorisation.reading.mobileFullScreenOffer')"
+                        :aria-label="t('memorisation.reading.mobileFullScreenOffer')"
+                        @click.stop="enterMadaniMobileImmersiveReading"
+                      >
+                        <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+                      </button>
                     </div>
                     <span
                       v-if="qpcMadaniCurrentPage"
@@ -1404,9 +1391,35 @@
                 <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                 <strong>{{ workspaceLoadingLabel }}</strong>
               </div>
+              <madani-session-scroll
+                v-else-if="qpcMadaniCurrentPage && isMobileViewport()"
+                :page-numbers="qpcMadaniSessionPageNumbers"
+                :focus-page-number="qpcMadaniCurrentPage"
+                :active-ayah="qpcMadaniSelectionActiveAyah"
+                :range-start-ayah="''"
+                :range-end-ayah="''"
+                :session-start-ayah="qpcMadaniSessionStartAyah"
+                :session-end-ayah="qpcMadaniSessionEndAyah"
+                :session-header-page-number="qpcMadaniSessionHeaderPage"
+                :technique-snapshot="qpcMadaniTechniqueSnapshot"
+                :progress-snapshot="qpcMadaniProgressSnapshot"
+                :audio-index-map="madaniAudioIndexMap"
+                :font-scale="qpcMadaniFontScale"
+                :tajweed-enabled="qpcMadaniTajweedPresentation.effectiveEnabled"
+                :code-v2-by-location="qpcMadaniCodeV2ByLocation"
+                @select="onQpcMadaniWordSelect"
+                @ayah-enter="onQpcMadaniAyahEnter"
+                @ayah-leave="onQpcMadaniAyahLeave"
+                @peek-enter="onVersePeekEnter"
+                @peek-leave="onVersePeekLeave"
+                @peek-touchstart="onQpcMadaniPeekTouchStart"
+                @peek-touchend="onQpcMadaniPeekTouchEnd"
+                @peek-touchcancel="clearTouchPeek"
+              />
               <madani-spread
                 v-else-if="qpcMadaniCurrentPage"
                 :controlled-page-number="qpcMadaniCurrentPage"
+                :session-header-page-number="qpcMadaniSessionHeaderPage"
                 :active-ayah="qpcMadaniSelectionActiveAyah"
                 :range-start-ayah="''"
                 :range-end-ayah="''"
@@ -4507,36 +4520,6 @@
       >
         <i class="bi bi-x-lg" aria-hidden="true"></i>
       </button>
-    </Teleport>
-
-    <Teleport to="body">
-      <div
-        v-if="readingViewMode === 'madani_mushaf' && shouldShowReadingWorkspace && qpcMadaniCurrentPage && isMobileViewport()"
-        class="madani-qpc-mobile-nav-rail"
-      >
-        <button
-          type="button"
-          class="madani-qpc-mobile-nav-rail__btn madani-qpc-mobile-nav-rail__btn--prev"
-          :disabled="!qpcMadaniCanGoPrev"
-          :aria-label="t('memorisation.player.previous')"
-          @click.stop="goToPreviousQpcMadaniPage"
-        >
-          <svg class="madani-qpc-nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M8.7 4.7a1.2 1.2 0 0 0 0 1.7L14.3 12 8.7 17.6a1.2 1.2 0 1 0 1.7 1.7l6.4-6.4a1.2 1.2 0 0 0 0-1.8L10.4 4.7a1.2 1.2 0 0 0-1.7 0z"/>
-          </svg>
-        </button>
-        <button
-          type="button"
-          class="madani-qpc-mobile-nav-rail__btn madani-qpc-mobile-nav-rail__btn--next"
-          :disabled="!qpcMadaniCanGoNext"
-          :aria-label="t('memorisation.player.next')"
-          @click.stop="goToNextQpcMadaniPage"
-        >
-          <svg class="madani-qpc-nav-chevron" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M15.3 4.7a1.2 1.2 0 0 1 0 1.7L9.7 12l5.6 5.6a1.2 1.2 0 1 1-1.7 1.7l-6.4-6.4a1.2 1.2 0 0 1 0-1.8l6.4-6.4a1.2 1.2 0 0 1 1.7 0z"/>
-          </svg>
-        </button>
-      </div>
     </Teleport>
 
     <Teleport to="body">

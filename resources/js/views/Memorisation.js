@@ -131,6 +131,13 @@ import {
   resolveSimilarAyahCanonicalNavigation,
 } from '../scripts/mushaf/qpcMadaniProgress'
 import {
+  buildMadaniAutosaveFingerprint,
+  buildMadaniSessionPersistence,
+  resolveMadaniResumeView,
+  shouldKeepSessionOnReload,
+  shouldWriteMadaniAutosave,
+} from '../scripts/mushaf/qpcMadaniPersistence'
+import {
   clampMadaniPage,
   nextMadaniPage,
   nextMadaniSpread,
@@ -883,6 +890,9 @@ export default {
       isAppFullscreen: false,
       madaniMobileImmersiveDeclined: false,
       madaniMobileFullscreenOfferHidden: false,
+      workspaceIsMobileViewport: typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        ? window.matchMedia('(max-width: 767.98px)').matches
+        : false,
       openVerseActionKey: '',
       verseFontSizes: {},
       defaultFontSize: typeof window !== 'undefined'
@@ -892,7 +902,7 @@ export default {
       layoutFontSizes: typeof window !== 'undefined'
         ? readPersistedFontPreferences({ userId: window.mutqinUserId }).layoutFontSizes
         : {
-            stacked: 150,
+            stacked: 125,
             mushaf: 160,
             madani_mushaf: 160,
           },
@@ -9431,6 +9441,13 @@ export default {
       return chapter && end ? `${chapter}:${end}` : this.qpcMadaniSessionStartAyah
     },
 
+    qpcMadaniSessionHeaderPage() {
+      const startKey = this.qpcMadaniSessionStartAyah
+      const index = this.qpcVersePageIndex
+      if (!startKey || !index) return null
+      return resolveQpcMadaniPageForVerseKey(startKey, index)
+    },
+
     qpcMadaniSessionPageNumbers() {
       const index = this.qpcVersePageIndex
       if (!index) return []
@@ -10222,6 +10239,7 @@ export default {
         if (this._workspaceViewportFrame) window.cancelAnimationFrame(this._workspaceViewportFrame)
         this._workspaceViewportFrame = window.requestAnimationFrame(() => {
           this._workspaceViewportFrame = null
+          this.syncWorkspaceIsMobileViewport?.()
           this.syncWorkspaceViewportMetrics?.()
         })
       }
@@ -10262,6 +10280,7 @@ export default {
       })
       this.$watch('qpcMadaniCurrentPage', (page) => {
         if (!isQpcMadaniMushafView(this.readingViewMode) || !page) return
+        void shouldWriteMadaniAutosave({ reason: 'page-render' })
         void this.syncQpcMadaniTajweedGlyphsForViewport()
         void this.reconcileQpcMadaniEmptySessionPage()
       })
@@ -10475,6 +10494,7 @@ export default {
       const nextWidth = window.innerWidth
       if (nextWidth !== readerViewportWidth) {
         readerViewportWidth = nextWidth
+        void shouldWriteMadaniAutosave({ reason: 'viewport' })
         this.scheduleMadaniPageFit()
       }
       this.updateBackToTopVisibility()
@@ -10727,6 +10747,7 @@ export default {
         this.playerCompact = true
       }
       this.persistUiState()
+      this.commitMadaniSessionPersistence('layout')
       if (this.practiceFocusWeakWords?.length && !this.isMobileViewport()) {
         this.schedulePracticeFocusWordDomSync()
       } else if (this.practiceFocusWeakWords?.length) {
@@ -11371,8 +11392,14 @@ export default {
       this.openFeedbackModal(payload)
     },
     isMobileViewport() {
-      if (typeof window === 'undefined' || !window.matchMedia) return false
-      return window.matchMedia('(max-width: 767.98px)').matches
+      return !!this.workspaceIsMobileViewport
+    },
+    syncWorkspaceIsMobileViewport() {
+      if (typeof window === 'undefined' || !window.matchMedia) return
+      const mobile = window.matchMedia('(max-width: 767.98px)').matches
+      if (this.workspaceIsMobileViewport !== mobile) {
+        this.workspaceIsMobileViewport = mobile
+      }
     },
 
     goToRegister() {
@@ -11622,7 +11649,7 @@ export default {
       if (readPersistedFontPreferences({ userId: this.currentAuthUserId() }).found) return
       const isMobile = this.isMobileViewport?.() === true
       if (!isMobile) return
-      const target = mode === 'madani_mushaf' ? 175 : 130
+      const target = mode === 'madani_mushaf' ? 175 : 115
       if (Number(this.defaultFontSize) !== target) this.defaultFontSize = target
       if (this.settingsDraft && Number(this.settingsDraft.defaultFontSize) !== target) {
         this.settingsDraft.defaultFontSize = target
@@ -15888,8 +15915,17 @@ export default {
         || this.readingViewMode
       )
       this.applyLayoutFontSize(this.readingViewMode)
-      if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0) {
+      const resumeView = resolveMadaniResumeView(payload, {
+        index: this.qpcVersePageIndex || {},
+        viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 1080,
+      })
+      if (isQpcMadaniMushafView(this.readingViewMode)) {
+        this.qpcMadaniPinnedPage = null
+      } else if (Number.isFinite(savedMushafPageIndex) && savedMushafPageIndex >= 0) {
         this.mushafPageIndex = savedMushafPageIndex
+      }
+      if (resumeView.activeVerseKey && !payload.activeVerseKey) {
+        payload.activeVerseKey = resumeView.activeVerseKey
       }
       const incomingConfig = { ...(payload.config || {}), mode }
       delete incomingConfig.verses
@@ -15954,6 +15990,15 @@ export default {
       this.$nextTick(async () => {
         if (isQpcMadaniMushafView(this.readingViewMode)) {
           await this.bootstrapQpcMadaniViewer()
+          const derived = resolveMadaniResumeView({
+            ...payload,
+            readingViewMode: this.readingViewMode,
+            activeVerseKey: this.activeVerseKey || payload.activeVerseKey,
+          }, {
+            index: this.qpcVersePageIndex || {},
+            viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 1080,
+          })
+          this.qpcMadaniPinnedPage = derived.usedSavedPage ? this.qpcMadaniPinnedPage : null
           this.syncQpcMadaniPageToActiveVerse()
           this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
         } else if (this.readingViewMode === 'mushaf') {
@@ -35704,7 +35749,7 @@ export default {
     applyLayoutFontSize(mode = this.readingViewMode) {
       const key = isReadingViewMode(mode) ? mode : 'mushaf'
       const stored = Number(this.layoutFontSizes?.[key])
-      const fallback = key === 'stacked' ? 150 : 160
+      const fallback = key === 'stacked' ? 125 : 160
       const next = Math.max(
         this.minFontSize,
         Math.min(this.maxFontSize, Number.isFinite(stored) && stored > 0 ? stored : fallback)
@@ -35752,6 +35797,19 @@ export default {
     async ensureReadingLayoutReadyForSession() {
       if (isQpcMadaniMushafView(this.readingViewMode)) {
         await this.bootstrapQpcMadaniViewer()
+        resolveMadaniResumeView({
+          readingViewMode: this.readingViewMode,
+          activeVerseKey: this.effectiveActiveVerseKey || this.activeVerseKey,
+          chapterId: this.chapterId,
+          rangeStart: this.rangeStart,
+          rangeEnd: this.rangeEnd,
+          sessionId: this.backendSessionSnapshot?.id || this.continueSessionPayload?.backendSessionId,
+          stage: this.continueSessionPayload?.mutqinPhase,
+          status: this.sessionPaused ? 'paused' : 'active',
+        }, {
+          index: this.qpcVersePageIndex || {},
+          viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 1080,
+        })
         this.syncQpcMadaniPageToActiveVerse()
         return
       }
@@ -35894,6 +35952,7 @@ export default {
         prefetchQcfPageFonts(pages, { tajweed: true }).catch(() => {})
       }
       void this.syncQpcMadaniTajweedGlyphsForViewport()
+      this.commitMadaniSessionPersistence('page-navigation')
       this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
     },
     qpcMadaniAdjacentSessionPage(direction) {
@@ -37504,6 +37563,30 @@ export default {
       )
     },
 
+    commitMadaniSessionPersistence(reason) {
+      let payload = null
+      try {
+        payload = this.buildContinueSessionPayload?.()
+      } catch (_) {
+        return false
+      }
+      if (!payload?.config?.chapterId && !payload?.activeVerseKey) return false
+      const nextFingerprint = buildMadaniAutosaveFingerprint(payload || {})
+      const previousFingerprint = this.sessionAutosave?.madaniFingerprint || ''
+      if (!shouldWriteMadaniAutosave({
+        reason,
+        previousFingerprint,
+        nextFingerprint,
+      })) {
+        return false
+      }
+      if (this.sessionAutosave) this.sessionAutosave.madaniFingerprint = nextFingerprint
+      this.persistContinueSession?.()
+      this.scheduleSavedSessionAutosave?.()
+      this.scheduleSessionCheckpoint?.()
+      return true
+    },
+
     buildContinueSessionPayload() {
       const mutqinSession = this.mutqinState?.sessionState || {}
       const mutqinIndex = Math.max(0, Number(mutqinSession.current_index || 0))
@@ -37524,27 +37607,54 @@ export default {
         || this.continueSessionPayload?.backendSessionId
         || 0
       ) || null
+      const madaniPersistence = buildMadaniSessionPersistence({
+        sessionId: backendSessionId,
+        readingViewMode: this.readingViewMode,
+        stage: mutqinItem?.phase || mutqinSession.phase || '',
+        activeVerseKey,
+        chapterId: config.chapterId,
+        rangeStart: config.rangeStart,
+        rangeEnd: config.rangeEnd,
+        queueIndex: this.queueIndex,
+        progress: this.queueIndex,
+        speed: config.speed,
+        reciterId: config.reciterId,
+        currentTime: this.currentTime,
+        isPlaying: !!this.isPlaying,
+        technique: this.liveSessionTechniqueId,
+        aiAttemptId: mutqinSession.lastSilentEvaluation?.attemptId
+          || mutqinSession.lastSilentEvaluation?.id
+          || null,
+        aiResultId: mutqinSession.lastSilentEvaluation?.resultId || null,
+        paused: !!this.sessionPaused,
+        completed: !!this.sessionCompleted,
+        endedEarly: !!this.sessionEndedEarly,
+      })
       return {
         timestamp: Date.now(),
         mode: this.currentMode,
         tab: this.tab,
-        activeKey: verse || activeVerseKey || null,
-        activeVerseKey,
+        activeKey: verse || madaniPersistence.activeVerseKey || activeVerseKey || null,
+        activeVerseKey: madaniPersistence.activeVerseKey || activeVerseKey,
         queueIndex: this.queueIndex || 0,
         mutqinSessionIndex: mutqinIndex,
-        mutqinPhase: mutqinItem?.phase || mutqinSession.phase || 'Takrar',
-        currentTime: this.currentTime || 0,
+        mutqinPhase: madaniPersistence.stage || mutqinItem?.phase || mutqinSession.phase || 'Takrar',
+        currentTime: madaniPersistence.playback.currentTime,
         duration: this.duration || 0,
-        isPlaying: !!this.isPlaying,
+        isPlaying: madaniPersistence.playback.isPlaying,
         playerVisible: !!this.playerVisible,
         audioSrc: this.audioElement?.currentSrc || '',
-        readingViewMode: this.readingViewMode,
+        readingViewMode: madaniPersistence.readingViewMode,
         mushafPageIndex: this.mushafPageIndex,
         sessionStartedAt: Number(this.sessionStartedAt || 0) || null,
-        backendSessionId,
-        backendStatus: this.backendSessionSnapshot?.status
-          || this.continueSessionPayload?.backendStatus
-          || null,
+        backendSessionId: madaniPersistence.sessionId,
+        backendStatus: madaniPersistence.status === 'active'
+          ? (this.backendSessionSnapshot?.status || this.continueSessionPayload?.backendStatus || null)
+          : madaniPersistence.status,
+        sessionStatus: madaniPersistence.status,
+        technique: madaniPersistence.technique,
+        aiAttemptId: madaniPersistence.aiAttemptId,
+        aiResultId: madaniPersistence.aiResultId,
         config,
         appliedPracticeSetup: this.appliedPracticeSetupSnapshot
           || this.captureAppliedPracticeSetup(),
@@ -37557,7 +37667,7 @@ export default {
         // Sample sessions must never become resumable user sessions.
         return
       }
-      if (this.sessionCompleted || this.mutqinState?.sessionState?.completed) {
+      if (this.sessionCompleted || this.sessionEndedEarly || this.mutqinState?.sessionState?.completed) {
         this.clearExitSessionStorage()
         return
       }
@@ -37584,6 +37694,9 @@ export default {
         }
         this.continueSessionPayload = payload
         this.hasContinueSession = true
+        if (this.sessionAutosave) {
+          this.sessionAutosave.madaniFingerprint = buildMadaniAutosaveFingerprint(payload)
+        }
       } catch (e) { console.error(e) }
       this.markActiveSessionSnapshot()
     },
@@ -37683,6 +37796,10 @@ export default {
             const legacy = localStorage.getItem('mutqin.continueSession')
             return legacy ? JSON.parse(legacy) : null
           })()
+        if (persistedContinue && !shouldKeepSessionOnReload(persistedContinue)) {
+          this.clearExitSessionStorage()
+          return
+        }
         const persistedAudioState = this.learningBackendEnabled()
           ? this.readWorkspaceStateValue('audioState', null)
           : (() => {
@@ -40960,6 +41077,7 @@ export default {
     },
 
     applyWordHighlightClasses(verseKey, activeIndex) {
+      void shouldWriteMadaniAutosave({ reason: 'word-highlight' })
       const previousNodes = Array.isArray(this.lastHighlightedWordNodes) ? this.lastHighlightedWordNodes : []
       previousNodes.forEach(node => {
         if (node?.classList) {

@@ -62402,13 +62402,26 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   min-height: 100dvh;
 }
 
+.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page,
+.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__ornament,
+.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__sheet {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__sheet {
+  justify-content: flex-start !important;
+}
+
 @media (max-width: 767.98px) {
   .madani-qpc-viewport .qpc-madani-line {
-    padding-block: calc(var(--qpc-word-size, 22px) * 0.05);
+    padding-block: calc(var(--qpc-word-size, 22px) * 0.18);
+    min-height: calc(var(--qpc-word-size, 22px) * 2.85);
   }
 
   .madani-qpc-viewport .qpc-madani-line--surah_name {
     min-height: 0;
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.28);
   }
 
   .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet,
@@ -62416,6 +62429,17 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
     min-height: 0 !important;
     height: auto !important;
     justify-content: flex-start !important;
+    padding-top: 0.08rem !important;
+    padding-bottom: 0.12rem !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio {
+    min-height: 0;
+    padding-top: 0.08rem;
+  }
+
+  .madani-qpc-viewport .qpc-madani-session-scroll__page:not(:last-child) .qpc-madani-page__folio {
+    display: none;
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
@@ -62445,14 +62469,22 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
     min-height: 100dvh;
   }
 
-  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page,
-  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__ornament,
-  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__sheet {
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--session-scoped),
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--session-scoped) .qpc-madani-page__ornament,
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet {
     min-height: calc(100dvh - 5.5rem);
   }
 
-  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__sheet {
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet {
     justify-content: space-evenly;
+  }
+
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page,
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__ornament,
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__sheet {
+    min-height: 0 !important;
+    height: auto !important;
+    justify-content: flex-start !important;
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless .qpc-madani-page__sheet {
@@ -65736,8 +65768,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .madani-qpc-workspace {
   width: 100%;
   max-width: 100%;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: visible;
 }
 
 @media (max-width: 767.98px) {
@@ -65784,6 +65815,10 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .madani-qpc-viewport .qpc-madani-page--borderless .qpc-madani-page__folio {
   color: var(--qpc-folio);
+}
+
+.madani-qpc-chrome__tools .madani-qpc-icon-btn--fullscreen {
+  margin-inline-start: 0.15rem;
 }
 
 .main.madani-qpc-mode-active .madani-qpc-chrome {
@@ -65854,6 +65889,41 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   max-width: 100%;
   min-width: 0;
   overflow: visible;
+}
+
+@media (min-width: 768px) {
+  .madani-qpc-stage {
+    display: grid;
+    grid-template-columns: minmax(2.75rem, auto) minmax(0, 1fr) minmax(2.75rem, auto);
+    align-items: center;
+    column-gap: 0.35rem;
+  }
+
+  .madani-qpc-stage .madani-qpc-icon-btn--nav {
+    position: relative;
+    top: auto;
+    inset-inline-start: auto;
+    inset-inline-end: auto;
+    transform: none;
+    justify-self: center;
+    align-self: center;
+    z-index: 24;
+  }
+
+  .madani-qpc-stage__pages {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .madani-qpc-stage .madani-qpc-icon-btn--prev {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .madani-qpc-stage .madani-qpc-icon-btn--next {
+    grid-column: 3;
+    grid-row: 1;
+  }
 }
 
 .madani-qpc-stage__pages {
@@ -66015,31 +66085,78 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   -webkit-text-fill-color: var(--qpc-ink);
 }
 
+.madani-qpc-viewport .qpc-madani-surah-header,
 .madani-qpc-viewport .qpc-madani-surah-name,
 .madani-qpc-viewport .qpc-madani-basmallah {
   color: #1b140d;
   -webkit-text-fill-color: #1b140d;
 }
 
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--tajweed) .qpc-madani-surah-header,
 [data-theme="dark"] .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--tajweed) .qpc-madani-surah-name,
 [data-theme="dark"] .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--tajweed) .qpc-madani-basmallah,
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--tajweed) .qpc-madani-surah-header,
 .app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--tajweed) .qpc-madani-surah-name,
 .app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page:not(.qpc-madani-page--tajweed) .qpc-madani-basmallah {
   color: var(--mushaf-reading-ink, #f7ebdf) !important;
   -webkit-text-fill-color: var(--mushaf-reading-ink, #f7ebdf) !important;
 }
 
+/* Dark mode + tajweed: keep COLR glyphs on a light mushaf surface (no CSS invert — it clips glyphs). */
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed,
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed {
+  color-scheme: light;
+  --qpc-ink: #1b140d;
+  background: #f7f1e6;
+  color: #1b140d;
+}
+
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-page__ornament,
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-page__sheet,
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-page__ornament,
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-page__sheet {
+  filter: none !important;
+  overflow: visible;
+  background: transparent;
+}
+
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-line,
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-line {
+  filter: none !important;
+  transform: none !important;
+  isolation: auto;
+  overflow: visible;
+}
+
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-surah-header,
 [data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-surah-name,
 [data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-basmallah,
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-surah-header,
 .app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-surah-name,
 .app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-basmallah {
   color: #1b140d !important;
   -webkit-text-fill-color: #1b140d !important;
 }
 
-[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-page__sheet,
-.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-page__sheet {
-  filter: invert(1) hue-rotate(180deg);
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-word:not(.qpc-madani-word--tajweed-glyph):not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden),
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-page--tajweed .qpc-madani-word:not(.qpc-madani-word--tajweed-glyph):not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden) {
+  color: #1b140d !important;
+  -webkit-text-fill-color: #1b140d !important;
+}
+
+.madani-qpc-viewport .qpc-madani-line,
+.madani-qpc-viewport .qpc-madani-word,
+.madani-qpc-viewport .qpc-madani-page__sheet,
+.madani-qpc-viewport .qpc-madani-page__ornament {
+  overflow: visible;
+  contain: none;
+}
+
+.madani-qpc-viewport .qpc-madani-word--tajweed-glyph {
+  color: unset !important;
+  -webkit-text-fill-color: unset !important;
+  filter: none !important;
+  transform: none !important;
 }
 
 [data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:hover:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden),
@@ -66108,7 +66225,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 @media (max-width: 767px) {
   .madani-qpc-stage {
-    min-height: 55dvh;
+    min-height: 0;
   }
 
   .madani-qpc-stage__pages {
@@ -66116,6 +66233,14 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-viewport .madani-qpc-icon-btn--nav {
+    display: none !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-session-scroll {
+    padding-bottom: 0.5rem;
+  }
+
+  .madani-qpc-viewport .madani-qpc-icon-btn--nav.madani-qpc-icon-btn--nav {
     position: fixed;
     top: 50%;
     transform: translateY(-50%);

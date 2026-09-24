@@ -90,10 +90,10 @@ const sessionLines = filterQpcPageLinesToSession([
   { line_type: 'basmallah', surah_number: 52, words: [] },
   { line_type: 'ayah', words: [{ surah: '52', ayah: '1', location: '52:1:1' }, { surah: '52', ayah: '4', location: '52:4:1' }] },
 ], '52:1', '52:3')
-assert.equal(sessionLines.length, 3)
+assert.equal(sessionLines.length, 2)
 assert.equal(sessionLines[0].line_type, 'surah_name')
-assert.equal(sessionLines[2].words.length, 1)
-assert.equal(sessionLines[2].words[0].location, '52:1:1')
+assert.equal(sessionLines[1].words.length, 1)
+assert.equal(sessionLines[1].words[0].location, '52:1:1')
 
 const midSurah = prepareQpcMadaniSessionLines([
   { line_type: 'ayah', line_number: 4, words: [{ surah: '85', ayah: '12', location: '85:12:1' }] },
