@@ -353,7 +353,7 @@ export default {
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
       const safety = this.embedded
         ? (narrow ? 0.9 : 0.94)
-        : (mobile ? 0.94 : (narrow ? 0.88 : 0.94))
+        : (mobile ? 0.9 : (narrow ? 0.88 : 0.94))
       const cap = this.embedded
         ? (narrow ? 30 : 34)
         : (narrow ? 32 : 36)
@@ -548,7 +548,10 @@ export default {
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
-  padding: 0.22rem 0.1rem 0.05rem;
+  padding:
+    0.35rem
+    max(0.65rem, env(safe-area-inset-right, 0px), env(safe-area-inset-left, 0px))
+    0.5rem;
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--opening .qpc-madani-page__sheet {

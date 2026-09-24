@@ -62421,7 +62421,7 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
 
   .madani-qpc-viewport .qpc-madani-line--surah_name {
     min-height: 0;
-    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.28);
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.48);
   }
 
   .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet,
@@ -62429,8 +62429,10 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
     min-height: 0 !important;
     height: auto !important;
     justify-content: flex-start !important;
-    padding-top: 0.08rem !important;
-    padding-bottom: 0.12rem !important;
+    padding:
+      0.35rem
+      max(0.65rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))
+      0.45rem !important;
   }
 
   .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio {
@@ -62488,7 +62490,10 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless .qpc-madani-page__sheet {
-    padding: 0.12rem 0 0.2rem !important;
+    padding:
+      0.35rem
+      max(0.65rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))
+      0.45rem !important;
   }
 
   body.memorisation-page .main.madani-qpc-mode-active .content,
@@ -62496,6 +62501,11 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   body.memorisation-page .main.madani-qpc-mode-active .workspace-main {
     padding-inline: 0 !important;
     max-width: 100%;
+    overflow-x: visible !important;
+  }
+
+  body.memorisation-page .main.madani-qpc-mode-active .workspace-reading-surface {
+    margin-top: 0.15rem;
   }
 
   body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-workspace .container.mushaf-workspace__fluid {
@@ -62505,12 +62515,35 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
     margin-inline: 0;
   }
 
-  body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless .qpc-madani-page__sheet {
-    padding: 0.1rem 0 0.15rem !important;
+  body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless .qpc-madani-page__sheet,
+  body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
+    padding:
+      0.35rem
+      max(0.65rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))
+      0.45rem !important;
   }
 
-  body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
-    padding: 0.1rem 0 0.15rem !important;
+  body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport {
+    overflow: visible;
+  }
+
+  [data-theme="dark"] body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport,
+  .app[data-theme="dark"] body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport {
+    background: #f7f1e6;
+    color: #1b140d;
+    padding-block: 0.35rem 0;
+  }
+
+  [data-theme="dark"] body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--tajweed,
+  .app[data-theme="dark"] body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--tajweed {
+    background: transparent;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .madani-qpc-viewport .qpc-madani-line--surah_name {
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.48);
   }
 
   body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless .qpc-madani-page__ornament {
@@ -66355,7 +66388,23 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-main {
-    padding-block-end: 0.35rem !important;
+    padding-block-end: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-block-end: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-main {
+    padding-block-end: calc(9rem + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-block-end: calc(9rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll {
+    padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
   }
 
   body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio {

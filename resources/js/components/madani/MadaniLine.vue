@@ -203,8 +203,8 @@ export default {
   align-items: center;
   width: 100%;
   min-height: 0;
-  padding-block: calc(var(--qpc-word-size, 22px) * 0.1);
-  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.26);
+  padding-block: calc(var(--qpc-word-size, 22px) * 0.12);
+  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.48);
 }
 
 .qpc-madani-line--basmallah,

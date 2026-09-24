@@ -173,9 +173,11 @@ export default {
 <style scoped>
 .madani-surah-heading {
   position: relative;
+  box-sizing: border-box;
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  padding-inline: 0.2rem;
   color: inherit;
 }
 
