@@ -7,6 +7,7 @@ import {
   buildMadaniSelection,
   compareAyahKeys,
   filterQpcPageLinesToSession,
+  padQpcMadaniLinesToPrintedGrid,
   prepareQpcMadaniSessionLines,
   isAyahInCanonicalRange,
   madaniWordVisualClass,
@@ -111,5 +112,18 @@ const buruj = prepareQpcMadaniSessionLines(
 )
 assert.ok(buruj.some((line) => String(line.line_type) === 'surah_name'))
 assert.equal(buruj.filter((line) => String(line.line_type) === 'ayah').length, 4)
+
+const nahlPage = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/pages/267.json'), 'utf8'))
+const nahlSource = nahlPage.page?.lines || nahlPage.lines || []
+const nahlSession = prepareQpcMadaniSessionLines(nahlSource, '16:1', '16:14')
+assert.ok(nahlSession.length < 15)
+const nahlGrid = prepareQpcMadaniSessionLines(nahlSource, '16:1', '16:14', { preservePrintedGrid: true })
+assert.equal(nahlGrid.length, 15)
+assert.equal(String(nahlGrid[0].line_type), 'surah_name')
+assert.equal(String(nahlGrid[1].line_type), 'basmallah')
+assert.equal(String(nahlGrid[2].line_type), 'ayah')
+assert.ok(nahlGrid.slice(0, 9).every((line) => String(line.line_type) !== 'empty'))
+assert.ok(nahlGrid.slice(9).every((line) => String(line.line_type) === 'empty'))
+assert.equal(padQpcMadaniLinesToPrintedGrid(nahlSource, nahlSession).length, 15)
 
 console.log('qpc-madani-selection.test.mjs: ok')

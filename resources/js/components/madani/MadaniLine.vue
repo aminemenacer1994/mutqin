@@ -219,6 +219,13 @@ export default {
   justify-content: flex-start !important;
 }
 
+@media (min-width: 1080px) {
+  .qpc-madani-line--empty {
+    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62));
+    pointer-events: none;
+  }
+}
+
 .qpc-madani-basmallah-words {
   display: flex;
   flex-flow: row nowrap;

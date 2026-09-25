@@ -1,4 +1,57 @@
 import { verseKeyFromQpcLocation } from './qpcMadaniVersePage.js'
+import { MADANI_LINES_PER_PAGE } from './madaniPageLayout.js'
+
+export { MADANI_LINES_PER_PAGE }
+
+function emptyPrintedLine(lineNumber) {
+  return {
+    line_type: 'empty',
+    type: 'empty',
+    line_number: lineNumber,
+    is_centered: 0,
+    surah_number: '',
+    words: [],
+  }
+}
+
+function lineTypeOf(line) {
+  return String(line?.line_type || line?.type || '')
+}
+
+/**
+ * Build a 15-row page: session lines packed from the top, empty slots below.
+ * Restores a printed basmala under the surah title when session filtering dropped it.
+ */
+export function padQpcMadaniLinesToPrintedGrid(source = [], prepared = []) {
+  const original = Array.isArray(source) ? source : []
+  const packed = []
+  for (const line of (Array.isArray(prepared) ? prepared : [])) {
+    if (lineTypeOf(line) === 'empty') continue
+    packed.push(line)
+  }
+
+  const hasBasmala = packed.some((line) => {
+    const type = lineTypeOf(line)
+    return type === 'basmallah' || type === 'basmala'
+  })
+  const printedBasmala = original.find((line) => {
+    const type = lineTypeOf(line)
+    return type === 'basmallah' || type === 'basmala'
+  })
+  if (!hasBasmala && printedBasmala) {
+    const headerIndex = packed.findIndex((line) => lineTypeOf(line) === 'surah_name')
+    packed.splice(headerIndex >= 0 ? headerIndex + 1 : 0, 0, printedBasmala)
+  }
+
+  const target = Math.max(
+    MADANI_LINES_PER_PAGE,
+    ...original.map((line) => Math.trunc(Number(line?.line_number) || 0)),
+  )
+  while (packed.length < target) {
+    packed.push(emptyPrintedLine(packed.length + 1))
+  }
+  return packed.slice(0, target)
+}
 
 export function parseAyahKey(key) {
   const parts = String(key || '').trim().split(':')
@@ -195,7 +248,7 @@ export function prepareQpcMadaniSessionLines(
   lines = [],
   startKey = '',
   endKey = '',
-  { showSurahHeader = true } = {},
+  { showSurahHeader = true, preservePrintedGrid = false } = {},
 ) {
   const filtered = filterQpcPageLinesToSession(lines, startKey, endKey)
   let prepared = filtered
@@ -204,7 +257,11 @@ export function prepareQpcMadaniSessionLines(
   } else {
     prepared = stripQpcSessionSurahNameLines(filtered)
   }
-  return compactQpcMadaniSessionAyahLines(prepared)
+  prepared = compactQpcMadaniSessionAyahLines(prepared)
+  if (preservePrintedGrid) {
+    return padQpcMadaniLinesToPrintedGrid(lines, prepared)
+  }
+  return prepared
 }
 
 export function pageHasQpcMadaniSessionLines(lines = [], startKey = '', endKey = '') {

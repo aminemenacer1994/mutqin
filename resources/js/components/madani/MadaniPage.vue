@@ -18,6 +18,8 @@
       'qpc-madani-page--tajweed': tajweedEnabled,
       'qpc-madani-page--borderless': borderless,
       'qpc-madani-page--session-scoped': sessionScoped,
+      'qpc-madani-page--session-viewport-fill': sessionViewportFill,
+      'qpc-madani-page--spread-viewport-fill': spreadViewportFill,
     }"
     :aria-busy="!fontReady || !fitted ? 'true' : 'false'"
   >
@@ -86,6 +88,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    spreadViewportFill: {
+      type: Boolean,
+      default: false,
+    },
+    spreadUnifiedWordSize: {
+      type: Number,
+      default: null,
+    },
     borderless: {
       type: Boolean,
       default: false,
@@ -139,13 +149,14 @@ export default {
       default: null,
     },
   },
-  emits: ['select', 'ayah-enter', 'ayah-leave', 'peek-enter', 'peek-leave', 'peek-touchstart', 'peek-touchend', 'peek-touchcancel'],
+  emits: ['select', 'ayah-enter', 'ayah-leave', 'peek-enter', 'peek-leave', 'peek-touchstart', 'peek-touchend', 'peek-touchcancel', 'fit-word-size'],
   data() {
     return {
       selectedLocation: '',
       resizeObserver: null,
       fitTimer: null,
       lastFitWidth: 0,
+      lastFitHeight: 0,
       fitted: false,
       fitting: false,
       fontReady: false,
@@ -161,9 +172,11 @@ export default {
       const showHeader = !this.sessionScoped || this.showSessionSurahHeader
       return prepareQpcMadaniSessionLines(raw, this.sessionStartAyah, this.sessionEndAyah, {
         showSurahHeader: showHeader,
+        preservePrintedGrid: this.spreadViewportFill,
       })
     },
     isOpening() {
+      if (this.spreadViewportFill) return false
       if (this.sessionScoped || this.sessionStartAyah) return false
       const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
       return raw.length > 0 && raw.length < 15
@@ -174,6 +187,9 @@ export default {
     },
     sessionScoped() {
       return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
+    },
+    sessionViewportFill() {
+      return false
     },
     selection() {
       return buildMadaniSelection({
@@ -193,6 +209,12 @@ export default {
       this.readyAndFit()
     },
     fontScale() {
+      this.scheduleFit()
+    },
+    spreadViewportFill() {
+      this.scheduleFit()
+    },
+    spreadUnifiedWordSize() {
       this.scheduleFit()
     },
     sessionStartAyah() {
@@ -252,8 +274,15 @@ export default {
     observeResize() {
       if (typeof ResizeObserver === 'undefined' || !(this.$el instanceof HTMLElement)) return
       this.resizeObserver = new ResizeObserver((entries) => {
-        const width = Math.round(entries[0]?.contentRect?.width || this.sheetWidth())
-        if (width < 40 || Math.abs(width - this.lastFitWidth) < 2) return
+        const entry = entries[0]
+        const width = Math.round(entry?.contentRect?.width || this.sheetWidth())
+        const height = Math.round(entry?.contentRect?.height || 0)
+        const widthChanged = width >= 40 && Math.abs(width - this.lastFitWidth) >= 2
+        const heightChanged = (this.sessionViewportFill || this.spreadViewportFill)
+          && height >= 80
+          && Math.abs(height - (this.lastFitHeight || 0)) >= 8
+        if (!widthChanged && !heightChanged) return
+        if (heightChanged) this.lastFitHeight = height
         this.scheduleFit()
       })
       this.resizeObserver.observe(this.$el)
@@ -320,7 +349,10 @@ export default {
         return
       }
 
-      const measurable = lines.filter((line) => line.dataset.lineType !== 'surah_name')
+      const measurable = lines.filter((line) => {
+        const type = String(line.dataset.lineType || '')
+        return type !== 'surah_name' && type !== 'empty'
+      })
       const targets = measurable.length ? measurable : lines
 
       this.fitting = true
@@ -363,12 +395,67 @@ export default {
         ? Number(this.fontScale)
         : 1
       const widthFit = (available / widest) * MEASURE_SIZE * safety
-      const rawSize = Math.min(cap * requested, widthFit)
+      let rawSize = Math.min(cap * requested, widthFit)
+      if (this.sessionViewportFill) {
+        const heightFit = this.viewportBandHeightFit(root, sheet, targets.length)
+        if (Number.isFinite(heightFit) && heightFit > 0) {
+          rawSize = Math.min(cap * requested, widthFit, heightFit)
+        }
+      } else if (this.spreadViewportFill) {
+        const heightFit = this.viewportBandHeightFit(root, sheet, 15)
+        if (Number.isFinite(heightFit) && heightFit > 0) {
+          rawSize = Math.min(cap * requested, widthFit, heightFit)
+        }
+      }
+      const syncedSize = Math.max(8, Math.round(rawSize))
+      let size = syncedSize
+      if (
+        this.spreadViewportFill
+        && Number.isFinite(Number(this.spreadUnifiedWordSize))
+        && Number(this.spreadUnifiedWordSize) > 0
+      ) {
+        size = Math.min(syncedSize, Math.round(Number(this.spreadUnifiedWordSize)))
+      }
       // Whole-pixel sizes avoid COLR / QCF glyph clipping in WebKit.
-      const size = Math.max(8, Math.round(rawSize))
       root.style.setProperty('--qpc-word-size', `${size}px`)
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
+      if (this.spreadViewportFill) {
+        this.$emit('fit-word-size', syncedSize)
+        this.applySpreadViewportLayout(root, sheet)
+        window.requestAnimationFrame(() => this.applySpreadViewportLayout(root, sheet))
+      }
+    },
+    applySpreadViewportLayout(root, sheet) {
+      if (!this.spreadViewportFill) return
+      if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) return
+      const spread = root.closest('.qpc-madani-spread--viewport-fill')
+      let bandPx = this.sessionViewportTargetHeight()
+      if (spread instanceof HTMLElement) {
+        const fromSpread = Number.parseFloat(spread.style.getPropertyValue('--qpc-spread-band'))
+        if (Number.isFinite(fromSpread) && fromSpread > 0) bandPx = fromSpread
+      }
+      const ornament = root.querySelector('.qpc-madani-page__ornament')
+      const folio = root.querySelector('.qpc-madani-page__folio')
+      if (ornament instanceof HTMLElement) {
+        ornament.style.minHeight = `${bandPx}px`
+        ornament.style.display = 'flex'
+        ornament.style.flexDirection = 'column'
+      }
+      const folioHeight = folio instanceof HTMLElement ? folio.offsetHeight : 0
+      const rowCount = Math.max(15, sheet.querySelectorAll('.qpc-madani-line').length)
+      sheet.style.flex = '1 1 auto'
+      sheet.style.display = 'grid'
+      sheet.style.gridTemplateRows = `repeat(${rowCount}, minmax(0, 1fr))`
+      sheet.style.alignContent = 'stretch'
+      sheet.style.justifyContent = 'stretch'
+      sheet.style.minHeight = `${Math.max(160, bandPx - folioHeight)}px`
+      sheet.querySelectorAll('.qpc-madani-line').forEach((line) => {
+        if (!(line instanceof HTMLElement)) return
+        line.style.minHeight = '0'
+        line.style.margin = '0'
+        line.style.flex = 'unset'
+      })
     },
     lineAdvanceWidth(line) {
       const nodes = [...line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-basmallah')]
@@ -379,6 +466,29 @@ export default {
       const styles = getComputedStyle(sheet)
       const padding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight)
       return Math.max(0, sheet.clientWidth - padding)
+    },
+    sessionViewportTargetHeight() {
+      if (typeof window === 'undefined') return 0
+      const viewport = window.visualViewport?.height || window.innerHeight || 0
+      const desktop = window.innerWidth >= 1080
+      const band = desktop
+        ? Math.min(viewport * 0.74, viewport - 184)
+        : Math.min(viewport * 0.72, viewport - 168)
+      return Math.max(320, Math.round(band))
+    },
+    viewportBandHeightFit(root, sheet, lineSlots) {
+      if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement) || lineSlots < 1) return null
+      const targetHeight = this.sessionViewportTargetHeight()
+      const folio = root.querySelector('.qpc-madani-page__folio')
+      const folioHeight = folio instanceof HTMLElement ? folio.offsetHeight : 0
+      const sheetStyles = getComputedStyle(sheet)
+      const sheetPadding = Number.parseFloat(sheetStyles.paddingTop) + Number.parseFloat(sheetStyles.paddingBottom)
+      const availableHeight = Math.max(0, targetHeight - folioHeight - sheetPadding)
+      if (availableHeight < 96) return null
+      const lineMinHeight = Number.parseFloat(
+        getComputedStyle(root).getPropertyValue('--qpc-line-min-height') || '1.62',
+      ) || 1.62
+      return (availableHeight / lineSlots) / lineMinHeight * MEASURE_SIZE * 0.92
     },
   },
 }
@@ -484,6 +594,38 @@ export default {
 .qpc-madani-page--embedded .qpc-madani-page__sheet {
   flex: 1 1 auto;
   padding: 1.45rem 1.5rem 0.55rem;
+}
+
+@media (min-width: 1080px) {
+  .qpc-madani-page--embedded.qpc-madani-page--spread-viewport-fill {
+    flex: 1 1 auto;
+    min-height: 100%;
+  }
+
+  .qpc-madani-page--spread-viewport-fill .qpc-madani-page__ornament {
+    min-height: 100%;
+  }
+
+  .qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet {
+    display: grid;
+    grid-template-rows: repeat(15, minmax(0, 1fr));
+    justify-content: stretch;
+    height: 100%;
+  }
+
+  .qpc-madani-page--spread-viewport-fill .qpc-madani-line {
+    min-height: 0;
+    margin: 0;
+  }
+
+  .qpc-madani-page--spread-viewport-fill .qpc-madani-line--surah_name {
+    margin-block-end: 0;
+    padding: 0;
+  }
+
+  .qpc-madani-page--spread-viewport-fill :deep(.qpc-madani-surah-name) {
+    font-size: calc(var(--qpc-word-size, 22px) * 1.55);
+  }
 }
 
 .qpc-madani-page--embedded .qpc-madani-page__folio {

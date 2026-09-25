@@ -50,7 +50,7 @@
 
     <div
       class="qpc-madani-spread"
-      :class="[`qpc-madani-spread--${mode}`, spreadLayoutClass]"
+      :class="[`qpc-madani-spread--${mode}`, spreadLayoutClass, spreadViewportFillClass]"
       dir="rtl"
     >
       <div
@@ -67,6 +67,8 @@
           :font-url="leaf.fontUrl"
           :borderless="hideDevNav || readerMode"
           :embedded="mode === 'spread'"
+          :spread-viewport-fill="spreadViewportFill"
+          :spread-unified-word-size="spreadUnifiedWordSize"
           :active-ayah="activeAyah"
           :range-start-ayah="rangeStartAyah"
           :range-end-ayah="rangeEndAyah"
@@ -87,6 +89,7 @@
           @peek-touchstart="onPeekTouchStart"
           @peek-touchend="onPeekTouchEnd"
           @peek-touchcancel="onPeekTouchCancel"
+          @fit-word-size="onLeafFitWordSize(leaf.number, $event)"
         />
         <div v-else class="qpc-madani-spread__placeholder" aria-busy="true" :aria-label="`Page ${leaf.number}`"></div>
       </div>
@@ -151,9 +154,22 @@ export default {
       fetchedLeaf: null,
       fetchToken: 0,
       preloadTimer: null,
+      spreadLeafWordSizes: {},
+      spreadUnifiedWordSize: null,
+      spreadBandTimer: null,
     }
   },
   computed: {
+    spreadViewportFill() {
+      return this.readerMode
+        && this.mode === 'spread'
+        && this.viewportWidth >= 1080
+        && this.visibleLeaves.length > 1
+        && !this.centerSingleSessionPage
+    },
+    spreadViewportFillClass() {
+      return this.spreadViewportFill ? 'qpc-madani-spread--viewport-fill' : ''
+    },
     displayedPageNumber() {
       if (this.controlledPageNumber != null) {
         return clampMadaniPage(this.controlledPageNumber)
@@ -265,9 +281,18 @@ export default {
       this.schedulePreload()
     },
     displayedPageNumber() {
+      this.resetSpreadWordSizeSync()
       this.ensureCurrentLeaf()
     },
+    spreadViewportFill() {
+      this.resetSpreadWordSizeSync()
+      this.scheduleSpreadViewportBand()
+    },
+    sibling() {
+      this.resetSpreadWordSizeSync()
+    },
     controlledPageNumber() {
+      this.resetSpreadWordSizeSync()
       this.ensureCurrentLeaf()
     },
     tajweedEnabled() {
@@ -293,6 +318,7 @@ export default {
     this.viewportWidth = window.innerWidth
     this.onResize = () => {
       this.viewportWidth = window.innerWidth
+      this.scheduleSpreadViewportBand()
     }
     window.addEventListener('resize', this.onResize)
     if (this.controlledPageNumber == null && typeof window !== 'undefined') {
@@ -304,13 +330,57 @@ export default {
       window.addEventListener('popstate', this.onPopState)
     }
     void this.ensureCurrentLeaf()
+    this.scheduleSpreadViewportBand()
   },
   beforeUnmount() {
     if (this.onResize) window.removeEventListener('resize', this.onResize)
     if (this.onPopState) window.removeEventListener('popstate', this.onPopState)
     if (this.preloadTimer) window.clearTimeout(this.preloadTimer)
+    if (this.spreadBandTimer) window.clearTimeout(this.spreadBandTimer)
   },
   methods: {
+    scheduleSpreadViewportBand() {
+      if (this.spreadBandTimer) window.clearTimeout(this.spreadBandTimer)
+      this.spreadBandTimer = window.setTimeout(() => this.syncSpreadViewportBand(), 40)
+    },
+    syncSpreadViewportBand() {
+      if (!this.spreadViewportFill) return
+      const spread = this.$el?.querySelector?.('.qpc-madani-spread--viewport-fill')
+      if (!(spread instanceof HTMLElement)) return
+      const viewport = window.visualViewport?.height || window.innerHeight || 720
+      const band = Math.round(Math.min(viewport * 0.74, viewport - 184))
+      spread.style.setProperty('--qpc-spread-band', `${band}px`)
+      spread.style.minHeight = `${band}px`
+      spread.querySelectorAll('.qpc-madani-page__ornament').forEach((ornament) => {
+        if (ornament instanceof HTMLElement) ornament.style.minHeight = `${band}px`
+      })
+    },
+    resetSpreadWordSizeSync() {
+      this.spreadLeafWordSizes = {}
+      this.spreadUnifiedWordSize = null
+    },
+    onLeafFitWordSize(leafNumber, size) {
+      if (!this.spreadViewportFill) return
+      const page = Number(leafNumber)
+      const px = Number(size)
+      if (!Number.isFinite(px) || px <= 0) return
+      this.spreadLeafWordSizes = {
+        ...this.spreadLeafWordSizes,
+        [page]: px,
+      }
+      const activeNumbers = this.visibleLeaves
+        .filter((leaf) => leaf.page)
+        .map((leaf) => Number(leaf.number))
+      const sizes = activeNumbers
+        .map((number) => this.spreadLeafWordSizes[number])
+        .filter((value) => Number.isFinite(value) && value > 0)
+      if (sizes.length !== activeNumbers.length) return
+      const unified = Math.min(...sizes)
+      if (unified !== this.spreadUnifiedWordSize) {
+        this.spreadUnifiedWordSize = unified
+      }
+      this.scheduleSpreadViewportBand()
+    },
     onWordSelect(location) {
       this.selectedLocation = String(location || '')
       this.$emit('select', location)
@@ -642,19 +712,37 @@ export default {
 }
 
 .qpc-madani-shell--reader[data-spread-mode="spread"] {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 100%;
   max-width: 100%;
   margin: 0 auto;
   padding: 0 0 0.2rem;
 }
 
 .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread--spread {
+  flex: 1 1 auto;
+  min-height: 100%;
   max-width: 100%;
   width: 100%;
   margin: 0 auto;
   background: transparent;
   border: 0;
   box-shadow: none;
+}
+
+@media (min-width: 1080px) {
+  .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill {
+    align-items: stretch;
+    min-height: min(74vh, calc(100dvh - 11.5rem));
+  }
+
+  .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill .qpc-madani-spread__leaf {
+    display: flex;
+    min-height: 100%;
+    align-self: stretch;
+  }
 }
 
 .qpc-madani-shell--reader[data-spread-mode="spread"][data-session-single-page="true"] .qpc-madani-spread--spread {

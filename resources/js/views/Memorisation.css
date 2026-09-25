@@ -62413,6 +62413,15 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   justify-content: flex-start !important;
 }
 
+.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet,
+.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page--session-viewport-fill .qpc-madani-page__sheet {
+  display: flex !important;
+  grid-template-rows: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  justify-content: flex-start !important;
+}
+
 @media (max-width: 767.98px) {
   .madani-qpc-viewport .qpc-madani-line {
     padding-block: calc(var(--qpc-word-size, 22px) * 0.02);
@@ -66085,6 +66094,47 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 @media (min-width: 1080px) {
+  .main.madani-qpc-mode-active .madani-qpc-stage__pages:has(.qpc-madani-spread--viewport-fill) {
+    display: flex;
+    flex-direction: column;
+    min-height: min(74vh, calc(100dvh - 11.5rem));
+  }
+
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"]:has(.qpc-madani-spread--viewport-fill) {
+    flex: 1 1 auto;
+    min-height: min(74vh, calc(100dvh - 11.5rem));
+  }
+
+  .madani-qpc-viewport .qpc-madani-spread--viewport-fill {
+    flex: 1 1 auto;
+    min-height: 100%;
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill.qpc-madani-page--embedded .qpc-madani-page__sheet,
+  .madani-qpc-viewport .qpc-madani-page--session-scoped.qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet {
+    display: grid !important;
+    grid-template-rows: repeat(15, minmax(0, 1fr)) !important;
+    flex: 1 1 auto !important;
+    min-height: 100% !important;
+    height: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line {
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line--surah_name {
+    margin-block-end: 0 !important;
+    padding: 0 !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--session-scoped.qpc-madani-page--spread-viewport-fill .qpc-madani-page__ornament {
+    min-height: min(74vh, calc(100dvh - 11.5rem)) !important;
+    height: 100% !important;
+  }
+
   .madani-qpc-viewport .qpc-madani-shell--reader .qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
     justify-content: center;
     width: min(100%, 42rem);
@@ -66105,7 +66155,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     min-height: min(72vh, calc(100dvh - 14rem));
   }
 
-  .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
+  .madani-qpc-viewport .qpc-madani-page--session-scoped:not(.qpc-madani-page--spread-viewport-fill) .qpc-madani-page__sheet {
     justify-content: flex-start;
   }
 }
