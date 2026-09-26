@@ -886,12 +886,14 @@ export default {
       isDataReady: false,
       fontDropdownOpen: false,
       topCardMenuOpen: false,
-      topCardMenuFixedStyle: null,
       isAppFullscreen: false,
       madaniMobileImmersiveDeclined: false,
       madaniMobileFullscreenOfferHidden: false,
       workspaceIsMobileViewport: typeof window !== 'undefined' && typeof window.matchMedia === 'function'
         ? window.matchMedia('(max-width: 767.98px)').matches
+        : false,
+      workspaceQpcMadaniSpreadNavEnabled: typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        ? window.matchMedia('(min-width: 1080px)').matches
         : false,
       openVerseActionKey: '',
       verseFontSizes: {},
@@ -9492,14 +9494,67 @@ export default {
       return String(this.hoveredMushafVerseKey || '').trim()
     },
 
+    qpcMadaniSessionPageIndex() {
+      const pages = this.qpcMadaniSessionPageNumbers
+      const current = Number(this.qpcMadaniCurrentPage)
+      if (!pages.length || !current) return -1
+      return pages.indexOf(current)
+    },
+
+    qpcMadaniVisibleSessionPageExtent() {
+      const pages = this.qpcMadaniSessionPageNumbers
+      const current = Number(this.qpcMadaniCurrentPage)
+      if (!pages.length || !current) {
+        return { min: null, max: null }
+      }
+      const inSession = (pageNumber) => pages.includes(Number(pageNumber))
+      let visible = inSession(current) ? [current] : []
+      if (this.showQpcMadaniSpreadPageNav) {
+        const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+        if (shouldShowTwoMadaniPages(width)) {
+          const spread = resolveMadaniSpread(current)
+          visible = [spread.left, spread.right]
+            .filter((pageNumber) => pageNumber && inSession(pageNumber))
+            .map(Number)
+        }
+      }
+      if (!visible.length && inSession(current)) visible = [current]
+      if (!visible.length) return { min: null, max: null }
+      return {
+        min: Math.min(...visible),
+        max: Math.max(...visible),
+      }
+    },
+
     qpcMadaniCanGoPrev() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return false
-      return this.qpcMadaniAdjacentSessionPage(-1) != null
+      const pages = this.qpcMadaniSessionPageNumbers
+      const { min } = this.qpcMadaniVisibleSessionPageExtent
+      if (!pages.length || min == null) return false
+      return min > pages[0]
     },
 
     qpcMadaniCanGoNext() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return false
-      return this.qpcMadaniAdjacentSessionPage(1) != null
+      const pages = this.qpcMadaniSessionPageNumbers
+      const { max } = this.qpcMadaniVisibleSessionPageExtent
+      if (!pages.length || max == null) return false
+      return max < pages[pages.length - 1]
+    },
+
+    showQpcMadaniSpreadPageNav() {
+      if (this.isMobileViewport()) return false
+      return !!this.workspaceQpcMadaniSpreadNavEnabled
+    },
+
+    qpcMadaniStageNavClass() {
+      if (!this.showQpcMadaniSpreadPageNav) return null
+      const canPrev = this.qpcMadaniCanGoPrev
+      const canNext = this.qpcMadaniCanGoNext
+      if (canPrev && canNext) return 'madani-qpc-stage--nav-both'
+      if (canPrev) return 'madani-qpc-stage--nav-prev-only'
+      if (canNext) return 'madani-qpc-stage--nav-next-only'
+      return 'madani-qpc-stage--nav-none'
     },
 
     qpcMadaniTechniqueSnapshot() {
@@ -9612,26 +9667,22 @@ export default {
     },
 
     nextReadingViewMode() {
-      if (this.readingViewMode === 'stacked') return 'mushaf'
-      if (this.readingViewMode === 'mushaf') return 'madani_mushaf'
+      if (this.readingViewMode === 'stacked') return 'madani_mushaf'
       return 'stacked'
     },
 
     currentReadingViewModeIcon() {
       if (this.readingViewMode === 'madani_mushaf') return 'bi-book-half'
-      if (this.readingViewMode === 'mushaf') return 'bi-book'
       return 'bi-view-stacked'
     },
 
     nextReadingViewModeLabel() {
-      if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.madaniMushaf')
-      if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushaf')
+      if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.mushaf')
       return this.t('memorisation.view.stacked')
     },
 
     nextReadingViewModeHint() {
       if (this.nextReadingViewMode === 'madani_mushaf') return this.t('memorisation.view.madaniMushafHint')
-      if (this.nextReadingViewMode === 'mushaf') return this.t('memorisation.view.mushafHint')
       return this.t('memorisation.view.stackedHint')
     },
 
@@ -10082,6 +10133,8 @@ export default {
   },
 
   async mounted() {
+    this.migrateLegacyReadingViewMode()
+    this.syncWorkspaceIsMobileViewport()
     let clearBootstrapWatchdog = null
     const bootstrapWatchdog = new Promise((resolve) => {
       const timer = setTimeout(() => {
@@ -10486,8 +10539,7 @@ export default {
     document.addEventListener('webkitfullscreenchange', this.handleNativeFullscreenChange)
     this.updateBackToTopVisibility()
     let readerViewportWidth = window.innerWidth
-    this.handlePracticeTurnCalloutResize = () => {
-      if (this.topCardMenuOpen) this.syncTopCardMenuPosition()
+    this.    handlePracticeTurnCalloutResize = () => {
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
       // Mobile browser chrome changes height while scrolling. The reader wraps
       // to its width, so only refit when that width actually changes.
@@ -10666,6 +10718,11 @@ export default {
   },
 
   watch: {
+    readingViewMode(mode) {
+      if (mode === 'mushaf' || mode === 'original') {
+        this.migrateLegacyReadingViewMode()
+      }
+    },
     analyticsModalRecord: {
       handler() {
         if (this.analyticsModalRecord) {
@@ -11088,10 +11145,6 @@ export default {
     },
 
     defaultFontSize: 'persistUiState',
-    topCardMenuOpen(open) {
-      if (open) this.$nextTick(() => this.syncTopCardMenuPosition())
-      else this.topCardMenuFixedStyle = null
-    },
     tajweedEnabled: 'persistUiState',
     mushafUiSkin: 'persistUiState',
     aiRecallModeEnabled: 'persistUiState',
@@ -11397,8 +11450,12 @@ export default {
     syncWorkspaceIsMobileViewport() {
       if (typeof window === 'undefined' || !window.matchMedia) return
       const mobile = window.matchMedia('(max-width: 767.98px)').matches
+      const spreadNav = !mobile && window.matchMedia('(min-width: 1080px)').matches
       if (this.workspaceIsMobileViewport !== mobile) {
         this.workspaceIsMobileViewport = mobile
+      }
+      if (this.workspaceQpcMadaniSpreadNavEnabled !== spreadNav) {
+        this.workspaceQpcMadaniSpreadNavEnabled = spreadNav
       }
     },
 
@@ -12787,7 +12844,7 @@ export default {
       this.showTransliteration = defaults.showTransliteration
       this.showWordByWord = defaults.showWordByWord
       this.wordByWordAudioEnabled = true
-      this.readingViewMode = defaults.readingViewMode
+      this.readingViewMode = this.clampReadingViewMode(defaults.readingViewMode)
       this.tab = 'tools'
       this.showTools = !!openSetup
       this.enforceSubscriptionFeatureLimits()
@@ -17327,7 +17384,7 @@ export default {
         reciterId: 'ar.alafasy',
         repetitionsPerStep: 2,
         selectedLoopCount: 2,
-        readingViewMode: isReadingViewMode(this.readingViewMode) ? this.readingViewMode : 'mushaf',
+        readingViewMode: isReadingViewMode(this.readingViewMode) ? this.readingViewMode : 'madani_mushaf',
       })
     },
     async applyWorkspaceTourPracticePreview() {
@@ -17355,7 +17412,7 @@ export default {
       this.reciterId = snap.reciterId
       this.repetitionsPerStep = snap.repetitionsPerStep
       this.selectedLoopCount = snap.selectedLoopCount
-      if (snap.readingViewMode) this.readingViewMode = snap.readingViewMode
+      if (snap.readingViewMode) this.readingViewMode = this.clampReadingViewMode(snap.readingViewMode)
       try {
         if (Number(snap.chapterId) > 0) await this.loadChapter(this.currentMode)
       } catch { /* ignore */ }
@@ -22212,16 +22269,16 @@ export default {
       const stepMeta = this.onboardingSteps[step] || {}
       this.applyOnboardingGoalPreset()
       const stepConfig = [
-        { tab: 'tools', section: 'advanced_setup', mode: 'mushaf', blur: false, chaining: false, anchor: false },
-        { tab: 'techniques', section: 'focus_mode', mode: 'mushaf', blur: false, chaining: false, anchor: false },
-        { tab: 'techniques', section: 'advanced_playback', mode: 'mushaf', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'advanced_setup', mode: 'mushaf', blur: false, chaining: false, anchor: false },
-        { tab: 'tools', section: 'advanced_setup', mode: 'mushaf', blur: false, chaining: false, anchor: false }
+        { tab: 'tools', section: 'advanced_setup', mode: 'madani_mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'techniques', section: 'focus_mode', mode: 'madani_mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'techniques', section: 'advanced_playback', mode: 'madani_mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_setup', mode: 'madani_mushaf', blur: false, chaining: false, anchor: false },
+        { tab: 'tools', section: 'advanced_setup', mode: 'madani_mushaf', blur: false, chaining: false, anchor: false }
       ][step] || { tab: 'tools', section: 'advanced_setup' }
       if (stepMeta.targetSection) stepConfig.section = stepMeta.targetSection
       this.tab = stepConfig.tab
       this.showTools = false
-      if (stepConfig.mode) this.readingViewMode = stepConfig.mode
+      if (stepConfig.mode) this.readingViewMode = this.clampReadingViewMode(stepConfig.mode)
       if (stepMeta.key !== 'practice') {
         this.blurModeEnabled = !!stepConfig.blur
         this.focusModeEnabled = false
@@ -35863,7 +35920,7 @@ export default {
         await this.ensureQpcVersePageIndex()
         void loadSurahNamesFont().catch(() => null)
         if (this.tajweedEnabled) {
-          await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
+          await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true, scope: 'session' })
         }
       } catch (error) {
         console.error('QPC Madani viewer bootstrap failed:', error)
@@ -35908,7 +35965,8 @@ export default {
       if (!isQpcMadaniMushafView(this.readingViewMode) || !this.tajweedEnabled) return
       const pages = new Set()
       const sessionPages = this.qpcMadaniSessionPageNumbers
-      if (sessionPages.length) {
+      const useSessionScope = options.scope === 'session' && sessionPages.length
+      if (useSessionScope) {
         sessionPages.forEach((pageNumber) => pages.add(Number(pageNumber)))
       } else {
         const page = this.qpcMadaniCurrentPage
@@ -35949,11 +36007,11 @@ export default {
     goToQpcMadaniPageTarget(pageNumber) {
       const target = clampMadaniPage(pageNumber)
       if (!target) return
+      this.qpcMadaniPinnedPage = target
       const width = typeof window !== 'undefined' ? window.innerWidth : 1080
       const mode = shouldShowTwoMadaniPages(width) ? 'spread' : 'single'
       preloadMadaniNavigationTargets(mode, target)
       void loadMadaniPageLeaf(target).catch(() => {})
-      this.qpcMadaniPinnedPage = target
       const pages = [target]
       if (mode === 'spread') {
         const spread = resolveMadaniSpread(target)
@@ -35963,9 +36021,13 @@ export default {
       if (this.tajweedEnabled) {
         prefetchQcfPageFonts(pages, { tajweed: true }).catch(() => {})
       }
-      void this.syncQpcMadaniTajweedGlyphsForViewport()
-      this.commitMadaniSessionPersistence('page-navigation')
-      this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
+      if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(() => {
+          this.commitMadaniSessionPersistence('page-navigation')
+        })
+      } else {
+        this.commitMadaniSessionPersistence('page-navigation')
+      }
     },
     qpcMadaniAdjacentSessionPage(direction) {
       const pages = this.qpcMadaniSessionPageNumbers
@@ -37364,7 +37426,6 @@ export default {
     },
 
     handleWindowScroll() {
-      if (this.topCardMenuOpen) this.syncTopCardMenuPosition()
       // Back-to-top is hidden on phones; do not enqueue work on every swipe
       // unless a visible practice callout needs to follow its anchor.
       if (this.isMobileViewport() && (!this.practiceTurnCalloutVisible || this.talqinRecitationTurnActive)) return
@@ -39766,50 +39827,14 @@ export default {
         this.openVerseActionKey = ''
         this.fontDropdownOpen = false
         this.topCardMenuOpen = true
-        this.syncTopCardMenuPosition()
-        this.$nextTick(() => this.syncTopCardMenuPosition())
       } else {
         this.topCardMenuOpen = false
-        this.topCardMenuFixedStyle = null
       }
     },
-    syncTopCardMenuPosition() {
-      const wrap = this.$refs.topCardMenuWrap
-      if (!wrap || !this.topCardMenuOpen) {
-        this.topCardMenuFixedStyle = null
-        return
+    migrateLegacyReadingViewMode() {
+      if (this.readingViewMode === 'mushaf' || this.readingViewMode === 'original') {
+        this.readingViewMode = 'madani_mushaf'
       }
-      const rect = wrap.getBoundingClientRect()
-      const gutter = 8
-      const vw = window.innerWidth
-      const vh = window.innerHeight
-      const maxWidth = Math.min(280, vw - gutter * 2)
-      const spaceBelow = vh - rect.bottom - gutter
-      const spaceAbove = rect.top - gutter
-      const openAbove = spaceBelow < 220 && spaceAbove > spaceBelow
-      const maxHeight = Math.max(160, Math.floor((openAbove ? spaceAbove : spaceBelow) - 8))
-      const style = {
-        position: 'fixed',
-        maxWidth: `${maxWidth}px`,
-        width: `${maxWidth}px`,
-        maxHeight: `${maxHeight}px`,
-        zIndex: 5000,
-      }
-      if (openAbove) {
-        style.bottom = `${Math.round(vh - rect.top + 8)}px`
-        style.top = 'auto'
-      } else {
-        style.top = `${Math.round(rect.bottom + 8)}px`
-        style.bottom = 'auto'
-      }
-      if (this.isRtlLocale) {
-        style.left = `${Math.round(Math.min(Math.max(gutter, rect.left), vw - maxWidth - gutter))}px`
-        style.right = 'auto'
-      } else {
-        style.right = `${Math.round(Math.max(gutter, vw - rect.right))}px`
-        style.left = 'auto'
-      }
-      this.topCardMenuFixedStyle = style
     },
     toggleVerseActionMenu(verseKey) {
       this.openVerseActionKey = this.openVerseActionKey === verseKey ? '' : verseKey

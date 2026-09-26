@@ -4,11 +4,11 @@ export function isReadingViewMode(mode) {
   return READING_VIEW_MODES.includes(mode)
 }
 
-export function normalizeReadingViewMode(mode, fallback = 'mushaf') {
-  if (mode === 'original') {
-    return 'mushaf'
+export function normalizeReadingViewMode(mode, fallback = 'madani_mushaf') {
+  if (mode === 'original' || mode === 'mushaf') {
+    return 'madani_mushaf'
   }
-  return isReadingViewMode(mode) ? mode : (isReadingViewMode(fallback) ? fallback : 'mushaf')
+  return isReadingViewMode(mode) ? mode : (isReadingViewMode(fallback) ? fallback : 'madani_mushaf')
 }
 
 export function isPageLayoutView(mode) {

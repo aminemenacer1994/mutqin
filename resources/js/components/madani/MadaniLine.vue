@@ -213,6 +213,8 @@ export default {
 .qpc-madani-line--basmallah,
 .qpc-madani-line--basmala {
   min-height: 1.6em;
+  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.42);
+  padding-block-end: calc(var(--qpc-word-size, 22px) * 0.08);
 }
 
 .qpc-madani-line--session-partial {

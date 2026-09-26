@@ -628,6 +628,7 @@
             </div>
             <div ref="topCardMenuWrap" class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
               <div
+                ref="topCardMenuTrigger"
                 class="top-card-ellipsis top-card-action-trigger top-card-icon-control"
                 role="button"
                 tabindex="0"
@@ -642,8 +643,6 @@
                 <div
                   v-if="topCardMenuOpen"
                   class="top-card-menu"
-                  :class="{ 'top-card-menu--fixed': !!topCardMenuFixedStyle }"
-                  :style="topCardMenuFixedStyle"
                 >
                   <p class="top-card-menu-label top-card-menu-label--layout">{{ t('memorisation.a11y.changeReadingLayout') }}</p>
                   <button
@@ -660,23 +659,12 @@
                   <button
                     type="button"
                     class="top-card-menu-toggle top-card-menu-toggle--layout"
-                    :class="{ active: readingViewMode === 'mushaf' }"
-                    :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
-                    @click.stop="setReadingViewMode('mushaf'); topCardMenuOpen = false"
-                  >
-                    <i class="bi bi-journal-richtext" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.view.mushaf') }}</span>
-                    <i v-if="readingViewMode === 'mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="top-card-menu-toggle top-card-menu-toggle--layout"
                     :class="{ active: readingViewMode === 'madani_mushaf' }"
                     :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
                     @click.stop="setReadingViewMode('madani_mushaf'); topCardMenuOpen = false"
                   >
                     <i class="bi bi-book-half" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.view.madaniMushaf') }}</span>
+                    <span>{{ t('memorisation.view.mushaf') }}</span>
                     <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <div class="top-card-menu-divider top-card-menu-divider--layout" aria-hidden="true"></div>
@@ -1041,12 +1029,12 @@
           </div>
           <div
             class="workspace-shell-reading-toggles workspace-shell-font-control"
-            :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')} / ${t('memorisation.view.madaniMushaf')}`"
+            :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
           >
             <div
               class="workspace-layout-toggle view-mode-toggle"
               role="group"
-              :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')} / ${t('memorisation.view.madaniMushaf')}`"
+              :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
             >
               <button
                 type="button"
@@ -1062,24 +1050,13 @@
               <button
                 type="button"
                 class="view-mode-btn workspace-layout-btn"
-                :class="{ active: readingViewMode === 'mushaf' }"
-                :aria-pressed="readingViewMode === 'mushaf' ? 'true' : 'false'"
-                @click.stop="setReadingViewMode('mushaf')"
-                :title="t('memorisation.view.mushafHint')"
-              >
-                <i class="bi bi-journal-richtext" aria-hidden="true"></i>
-                <span>{{ t('memorisation.view.mushaf') }}</span>
-              </button>
-              <button
-                type="button"
-                class="view-mode-btn workspace-layout-btn"
                 :class="{ active: readingViewMode === 'madani_mushaf' }"
                 :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
                 @click.stop="setReadingViewMode('madani_mushaf')"
                 :title="t('memorisation.view.madaniMushafHint')"
               >
                 <i class="bi bi-book-half" aria-hidden="true"></i>
-                <span>{{ t('memorisation.view.madaniMushaf') }}</span>
+                <span>{{ t('memorisation.view.mushaf') }}</span>
               </button>
             </div>
           </div>
@@ -1309,7 +1286,7 @@
               <div class="container mushaf-workspace__fluid">
               <section
                 class="mushaf-shell madani-qpc-shell"
-                :aria-label="t('memorisation.view.madaniMushaf')"
+                :aria-label="t('memorisation.view.mushaf')"
               >
                 <div
                   ref="qpcMadaniViewport"
@@ -1359,12 +1336,14 @@
                     >{{ qpcMadaniCurrentPage }}</span>
                   </header>
 
-                  <div class="madani-qpc-stage">
+                  <div
+                    class="madani-qpc-stage"
+                    :class="qpcMadaniStageNavClass"
+                  >
                     <button
-                      v-if="!isMobileViewport()"
+                      v-if="showQpcMadaniSpreadPageNav && qpcMadaniCanGoPrev"
                       type="button"
                       class="madani-qpc-icon-btn madani-qpc-icon-btn--nav madani-qpc-icon-btn--prev"
-                      :disabled="!qpcMadaniCanGoPrev"
                       :aria-label="t('memorisation.player.previous')"
                       @click.stop="goToPreviousQpcMadaniPage"
                     >
@@ -1392,7 +1371,7 @@
                 <strong>{{ workspaceLoadingLabel }}</strong>
               </div>
               <madani-session-scroll
-                v-else-if="qpcMadaniCurrentPage && isMobileViewport()"
+                v-else-if="qpcMadaniCurrentPage && !showQpcMadaniSpreadPageNav"
                 :page-numbers="qpcMadaniSessionPageNumbers"
                 :focus-page-number="qpcMadaniCurrentPage"
                 :active-ayah="qpcMadaniSelectionActiveAyah"
@@ -1446,10 +1425,9 @@
                     </div>
 
                     <button
-                      v-if="!isMobileViewport()"
+                      v-if="showQpcMadaniSpreadPageNav && qpcMadaniCanGoNext"
                       type="button"
                       class="madani-qpc-icon-btn madani-qpc-icon-btn--nav madani-qpc-icon-btn--next"
-                      :disabled="!qpcMadaniCanGoNext"
                       :aria-label="t('memorisation.player.next')"
                       @click.stop="goToNextQpcMadaniPage"
                     >
