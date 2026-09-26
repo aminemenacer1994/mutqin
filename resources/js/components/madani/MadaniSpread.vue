@@ -160,12 +160,13 @@ export default {
     }
   },
   computed: {
-    spreadViewportFill() {
+    readerDesktopSpread() {
       return this.readerMode
         && this.mode === 'spread'
-        && this.viewportWidth >= 1080
-        && this.visibleLeaves.length > 1
-        && !this.centerSingleSessionPage
+        && shouldShowTwoMadaniPages(this.viewportWidth)
+    },
+    spreadViewportFill() {
+      return this.readerDesktopSpread
     },
     spreadViewportFillClass() {
       return this.spreadViewportFill ? 'qpc-madani-spread--viewport-fill' : ''
@@ -231,6 +232,9 @@ export default {
           return { number, page: null }
         })
       }
+      if (this.readerDesktopSpread) {
+        return leaves
+      }
       if (!this.sessionBoundsActive) return leaves
       const filtered = leaves.filter((leaf) => {
         if (!leaf.page?.lines) return true
@@ -244,7 +248,13 @@ export default {
     },
     spreadLayoutClass() {
       if (this.mode !== 'spread') return ''
-      if (this.centerSingleSessionPage || this.visibleLeaves.length === 1) {
+      if (this.centerSingleSessionPage) {
+        return 'qpc-madani-spread--single-leaf'
+      }
+      if (this.readerDesktopSpread) {
+        return ''
+      }
+      if (this.visibleLeaves.length === 1) {
         return 'qpc-madani-spread--single-leaf'
       }
       return ''

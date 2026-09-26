@@ -66159,15 +66159,30 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 @media (min-width: 1080px) {
-  .main.madani-qpc-mode-active .madani-qpc-stage__pages:has(.qpc-madani-spread--viewport-fill) {
+  .main.madani-qpc-mode-active .madani-qpc-stage__pages:has(.qpc-madani-shell--reader[data-spread-mode="spread"]) {
     display: flex;
     flex-direction: column;
     min-height: min(74vh, calc(100dvh - 11.5rem));
   }
 
-  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"]:has(.qpc-madani-spread--viewport-fill) {
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] {
     flex: 1 1 auto;
     min-height: min(74vh, calc(100dvh - 11.5rem));
+  }
+
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread--spread {
+    flex: 1 1 auto;
+    min-height: min(74vh, calc(100dvh - 11.5rem));
+    align-items: stretch;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf {
+    display: flex;
+    flex: 1 1 50%;
+    min-width: 0;
+    align-self: stretch;
   }
 
   .madani-qpc-viewport .qpc-madani-spread--viewport-fill {
@@ -66176,7 +66191,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill.qpc-madani-page--embedded .qpc-madani-page__sheet,
-  .madani-qpc-viewport .qpc-madani-page--session-scoped.qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet {
+  .madani-qpc-viewport .qpc-madani-page--session-scoped.qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet,
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-page--session-scoped.qpc-madani-page--embedded .qpc-madani-page__sheet {
     display: grid !important;
     grid-template-rows: repeat(15, minmax(0, 1fr)) !important;
     flex: 1 1 auto !important;
@@ -66185,49 +66201,55 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     justify-content: stretch !important;
   }
 
-  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line {
+  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line,
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-page--session-scoped .qpc-madani-line {
     min-height: 0 !important;
     margin: 0 !important;
   }
 
   .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line--basmallah,
-  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line--basmala {
+  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line--basmala,
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-line--basmallah,
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-line--basmala {
     margin-block-end: calc(var(--qpc-word-size, 22px) * 0.42) !important;
     padding-block-end: calc(var(--qpc-word-size, 22px) * 0.1) !important;
   }
 
-  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line--surah_name {
-    margin-block-end: 0 !important;
-    padding: 0 !important;
+  .madani-qpc-viewport .qpc-madani-page--spread-viewport-fill .qpc-madani-line--surah_name,
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-line--surah_name {
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.18) !important;
+    padding-block-start: calc(var(--qpc-word-size, 22px) * 0.06) !important;
   }
 
-  .madani-qpc-viewport .qpc-madani-page--session-scoped.qpc-madani-page--spread-viewport-fill .qpc-madani-page__ornament {
+  .madani-qpc-viewport .qpc-madani-page--session-scoped.qpc-madani-page--spread-viewport-fill .qpc-madani-page__ornament,
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-page--session-scoped .qpc-madani-page__ornament {
     min-height: min(74vh, calc(100dvh - 11.5rem)) !important;
     height: 100% !important;
   }
 
   .madani-qpc-viewport .qpc-madani-shell--reader .qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
     justify-content: center;
-    width: min(100%, 42rem);
-    max-width: min(100%, 42rem);
+    width: min(100%, 46rem);
+    max-width: min(100%, 46rem);
     margin-inline: auto;
+    min-height: min(74vh, calc(100dvh - 11.5rem));
   }
 
   .madani-qpc-viewport .qpc-madani-shell--reader .qpc-madani-spread--spread.qpc-madani-spread--single-leaf .qpc-madani-spread__leaf {
-    flex: 0 1 min(100%, 40rem);
-    max-width: min(100%, 40rem);
+    flex: 0 1 min(100%, 44rem);
+    max-width: min(100%, 44rem);
   }
 
-  .madani-qpc-stage__pages:has(.qpc-madani-spread--single-leaf) {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: min(72vh, calc(100dvh - 14rem));
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
+    padding: 1.15rem clamp(0.65rem, 1.1vw, 0.95rem) 0.45rem !important;
   }
 
-  .madani-qpc-viewport .qpc-madani-page--session-scoped:not(.qpc-madani-page--spread-viewport-fill) .qpc-madani-page__sheet {
-    justify-content: flex-start;
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-page__folio {
+    min-height: 1.55rem;
+    padding: 0.2rem 0 0.45rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-align: center;
   }
 }
 
