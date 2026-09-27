@@ -375,6 +375,9 @@ function sliceMethod(source, name) {
   assert.match(sliceMethod(memorisationJs, 'setActiveTab'), /workspaceTourActive/)
   assert.match(sliceMethod(memorisationJs, 'workspaceTourDashboardGreeting'), /dashboard\.greeting/)
   assert.match(memorisationVue, /workspace-tour__dashboard-preview/)
+  assert.match(memorisationVue, /container-fluid user-dashboard__shell workspace-tour__dashboard-shell/)
+  assert.match(memorisationVue, /workspaceTourDashboardWeakItems/)
+  assert.match(memorisationVue, /tour-dashboard-murajaah/)
   assert.match(memorisationVue, /workspace-tour__dash-chrome/)
   assert.match(memorisationVue, /workspace-tour__dash-continue/)
   assert.match(memorisationVue, /workspace-tour__dash-grid/)
@@ -389,6 +392,14 @@ function sliceMethod(source, name) {
   assert.match(
     memorisationCss,
     /\[data-theme="dark"\] \.workspace-tour__dashboard-preview[\s\S]*?background:\s*#14110f/,
+  )
+  assert.match(
+    memorisationCss,
+    /\.workspace-tour__dashboard-shell\.container-fluid\.user-dashboard__shell[\s\S]*?max-width:\s*100%/,
+  )
+  assert.match(
+    memorisationCss,
+    /\.workspace-tour__dash-skel[\s\S]*?workspace-tour-dash-shimmer/,
   )
   assert.match(
     memorisationCss,

@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v183 -->
+  <!-- mutqin-ui-build: v185 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
@@ -79,6 +79,7 @@
           state only — skeleton while loading, honest empty when there is no data.
         -->
         <div class="workspace-tour__dashboard-preview" aria-hidden="true">
+          <div class="container-fluid user-dashboard__shell workspace-tour__dashboard-shell">
           <template v-if="workspaceTourDashboardPreviewLoading">
             <div class="workspace-tour__dash-skeleton" data-tour-dashboard-state="loading">
               <span class="workspace-tour__dash-skel workspace-tour__dash-skel--title"></span>
@@ -234,7 +235,57 @@
                 </div>
               </section>
             </div>
+
+            <section
+              v-if="workspaceTourDashboardWeakItems.length || workspaceTourDashboardShowWeakEmpty"
+              class="workspace-tour__dash-panel workspace-tour__dash-panel--murajaah"
+              data-tour="tour-dashboard-murajaah"
+            >
+              <div class="workspace-tour__dash-panel-head">
+                <span class="workspace-tour__dash-panel-icon" aria-hidden="true">
+                  <i class="bi bi-arrow-repeat"></i>
+                </span>
+                <div>
+                  <h4>{{ t('dashboard.strengthen_title') }}</h4>
+                  <p>{{ workspaceTourDashboardMurajaahSubtitle }}</p>
+                </div>
+              </div>
+
+              <div
+                v-if="workspaceTourDashboardShowWeakEmpty"
+                class="workspace-tour__dash-empty workspace-tour__dash-empty--murajaah"
+              >
+                <strong>{{ t('dashboard.murajaah_no_urgent') }}</strong>
+                <span>{{ t('dashboard.weak_empty_message') }}</span>
+              </div>
+
+              <ul v-else class="workspace-tour__dash-murajaah-list">
+                <li
+                  v-for="(item, index) in workspaceTourDashboardWeakItems"
+                  :key="item.key || `murajaah-${index}`"
+                >
+                  <div class="workspace-tour__dash-murajaah-row">
+                    <div class="workspace-tour__dash-murajaah-copy">
+                      <strong>
+                        {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                      </strong>
+                      <span
+                        v-if="item.phrase"
+                        class="workspace-tour__dash-murajaah-phrase"
+                        lang="ar"
+                        dir="rtl"
+                      >{{ item.phrase }}</span>
+                    </div>
+                    <span class="workspace-tour__dash-murajaah-cta">
+                      <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                      {{ t('dashboard.review_now') }}
+                    </span>
+                  </div>
+                </li>
+              </ul>
+            </section>
           </template>
+          </div>
         </div>
       </div>
 
@@ -379,7 +430,7 @@
       />
     </div>
 
-    <div v-else-if="appReady && isLoggedIn" class="main container" :class="{
+    <div v-else-if="appReady && isLoggedIn" class="main container-fluid" :class="{
       'tools-open': showTools,
       'player-visible': playbackShellActive,
       'playback-pill-visible': playbackPillVisible,
@@ -451,6 +502,7 @@
           :class="{
             collapsed: mainCardCollapsed,
             'workspace-shell--post-session-choice': isPostSessionChoiceVisible,
+            'workspace-shell--mobile-resume-only': showMobileSessionDashboardResumeOnly,
             'is-idle-card': showSessionOverviewIdleActions,
           }"
           :data-reading-mode="readingViewMode"
@@ -627,6 +679,21 @@
                 :aria-label="t('memorisation.open_controls')"
               >
                 <i class="bi bi-sliders" aria-hidden="true"></i>
+              </div>
+            </div>
+            <div v-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap">
+              <div
+                class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
+                role="button"
+                tabindex="0"
+                data-tour="dashboard"
+                @click="openDashboardView"
+                @keydown.enter.prevent="openDashboardView"
+                @keydown.space.prevent="openDashboardView"
+                :title="t('memorisation.open_dashboard')"
+                :aria-label="t('memorisation.open_dashboard')"
+              >
+                <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
               </div>
             </div>
             <div ref="topCardMenuWrap" class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
@@ -1130,7 +1197,7 @@
               :class="`workspace-reading-surface--${readingViewMode}`"
             >
             <div v-if="readingViewMode === 'mushaf'" class="mushaf-workspace">
-              <div class="container mushaf-workspace__fluid">
+              <div class="container-fluid mushaf-workspace__fluid">
               <section
                 class="mushaf-shell row g-0"
                 :aria-label="t('memorisation.view.mushaf')"
@@ -1302,7 +1369,7 @@
               </div>
             </div>
             <div v-else-if="readingViewMode === 'madani_mushaf'" class="madani-qpc-workspace">
-              <div class="container mushaf-workspace__fluid">
+              <div class="container-fluid mushaf-workspace__fluid">
               <section
                 class="mushaf-shell madani-qpc-shell"
                 :aria-label="t('memorisation.view.mushaf')"

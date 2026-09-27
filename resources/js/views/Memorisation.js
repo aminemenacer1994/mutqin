@@ -3173,7 +3173,15 @@ export default {
         sessionCompleted: forceFreshStart ? false : !!this.isSessionCompleted,
         // Only local mid-sitting pause — backend "paused" alone is soft-exit /
         // resumable and must not keep the End session companion on screen.
-        sessionPaused: forceFreshStart ? false : !!this.sessionPaused,
+        sessionPaused: forceFreshStart
+          ? false
+          : (
+            !!this.sessionPaused
+            && (
+              !!this.mutqinState?.sessionState?.paused
+              || !!this.isSessionLive
+            )
+          ),
         completionModalOpen: !!this.showPostSessionModal,
         hasValidatedContinuePayload: forceFreshStart ? false : this.hasValidatedResumableSession,
         backendUnfinished: forceFreshStart ? false : !!this.backendUnfinishedSession,
@@ -3279,6 +3287,17 @@ export default {
         && !this.showPostSessionModal
         && !this.isSessionCompleted
         && !this.isPostSessionChoiceVisible
+    },
+    showTopCardDashboardIcon() {
+      if (this.isMobileViewport?.()) {
+        return !!this.isPostSessionChoiceVisible
+      }
+      return !this.isPostSessionChoiceVisible
+    },
+    showMobileSessionDashboardResumeOnly() {
+      if (!this.isMobileViewport?.()) return false
+      if (this.isPostSessionChoiceVisible || this.showSessionOverviewIdleActions) return false
+      return this.showHeaderSessionAction && !this.showHeaderEndSessionAction
     },
     hasValidatedResumableSession() {
       if (this.workspaceTourFreshStartPending) return false
@@ -7200,6 +7219,21 @@ export default {
     workspaceTourDashboardShowWeakEmpty() {
       if (this.workspaceTourDashboardWeakItems.length) return false
       return this.journeyHasStarted || this.hasMemorisationHistory
+    },
+    workspaceTourDashboardMurajaahTotal() {
+      const weaknesses = this.learnerDashboardWeaknesses
+      const total = Number(weaknesses?.total ?? 0)
+      if (total > 0) return total
+      const all = weaknesses?.all_items
+      if (Array.isArray(all) && all.length) return all.length
+      const items = weaknesses?.items
+      return Array.isArray(items) ? items.length : 0
+    },
+    workspaceTourDashboardMurajaahSubtitle() {
+      if (this.workspaceTourDashboardWeakItems.length) {
+        return this.t('dashboard.journey_murajaah_hint', { count: this.workspaceTourDashboardMurajaahTotal })
+      }
+      return this.t('dashboard.strengthen_subtitle')
     },
     workspaceTourDashboardChartBars() {
       const points = this.learnerDashboardChart?.points

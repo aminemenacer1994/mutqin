@@ -1638,12 +1638,29 @@
   .sheet-toggle .st-right-group {
     grid-column: 3 / -1;
     grid-row: 1;
-    display: flex !important;
+    display: grid !important;
+    grid-template-columns: var(--sheet-control-radio) var(--sheet-control-chev) !important;
+    column-gap: var(--mq-grid-gap) !important;
     align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 2px !important;
+    justify-content: end !important;
+    justify-items: end !important;
     justify-self: end;
     align-self: center;
+    inline-size: calc(var(--sheet-control-radio) + var(--sheet-control-chev) + var(--mq-grid-gap)) !important;
+    min-inline-size: calc(var(--sheet-control-radio) + var(--sheet-control-chev) + var(--mq-grid-gap)) !important;
+    max-inline-size: calc(var(--sheet-control-radio) + var(--sheet-control-chev) + var(--mq-grid-gap)) !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+  }
+
+  .sheet-toggle .st-right-group .mode-radio-group {
+    grid-column: 1;
+    justify-self: end;
+  }
+
+  .sheet-toggle .st-right-group .st-chev {
+    grid-column: 2;
+    justify-self: end;
   }
 
   .sheet-toggle .mode-radio-group {
@@ -5883,7 +5900,6 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap,
-.workspace-shell-head > .top-card-icon-controls .top-card-dashboard-wrap,
 .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons,
 .workspace-shell-head > .top-card-icon-controls .top-card-menu-wrap {
     display: inline-flex !important;
@@ -5903,10 +5919,6 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .workspace-shell-head > .top-card-icon-controls .top-card-controls-wrap {
     order: 0;
-  }
-
-  .workspace-shell-head > .top-card-icon-controls .top-card-dashboard-wrap {
-    order: 1;
   }
 
   .workspace-shell-head > .top-card-icon-controls .top-card-layout-icons {
@@ -6766,10 +6778,12 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   html body .app .main.mushaf-mode-active .madani-page-sheet,
   html body .app .main.mushaf-mode-active .madani-page-sheet--unicode {
     display: block !important;
-    text-align: center !important;
-    text-align-last: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    text-align: justify !important;
+    text-align-last: justify !important;
     line-height: 1.85 !important;
-    padding-inline: 0 !important;
+    padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px)) !important;
     overflow-x: hidden !important;
   }
 
@@ -7753,6 +7767,30 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     display: none !important;
   }
 
+  /* Dashboard shortcut: post-session toolbar only (in-session link stays in ellipsis menu). */
+  html body .app .workspace-shell:not(.workspace-shell--post-session-choice) .top-card-icon-controls .top-card-dashboard-wrap {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Ready-to-resume: single primary CTA (no End companion row). */
+  html body .app .workspace-shell.workspace-shell--mobile-resume-only .top-card-session-hr {
+    margin-block: 0.35rem 0.25rem !important;
+  }
+
+  html body .app .workspace-shell.workspace-shell--mobile-resume-only .workspace-shell-actions .top-card-session-actions {
+    grid-template-rows: auto !important;
+    gap: 0 !important;
+  }
+
   html body .app .top-card-menu .top-card-menu-toggle--layout {
     display: flex !important;
   }
@@ -7874,6 +7912,8 @@ html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-p
 html body .app .workspace-shell-head > .workspace-shell-progress-pills {
   display: flex !important;
   flex-flow: row nowrap !important;
+  align-items: center !important;
+  align-content: center !important;
   min-width: 0 !important;
   max-width: 100% !important;
   overflow-x: auto !important;
@@ -7891,6 +7931,7 @@ html body .app .workspace-shell-metadata::-webkit-scrollbar {
 html body .app .workspace-shell-progress-pill,
 html body .app .workspace-shell-metadata-pill {
   flex: 0 0 auto !important;
+  align-self: center !important;
   max-width: none !important;
   white-space: nowrap !important;
 }

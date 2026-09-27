@@ -6093,15 +6093,15 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     justify-content: flex-start !important;
     column-gap: 1.85rem !important;
     gap: 1.85rem !important;
-    width: fit-content !important;
+    width: 100% !important;
     max-width: 100% !important;
     padding-inline: 0 !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
     text-wrap: nowrap !important;
     white-space: nowrap !important;
-    text-overflow: clip !important;
+    text-overflow: ellipsis !important;
     font-size: 1.05rem !important;
     line-height: 1.2 !important;
     padding-bottom: 0.2rem !important;

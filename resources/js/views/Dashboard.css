@@ -31,7 +31,7 @@
   --dash-tap: var(--tap, 44px);
   --dash-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --dash-section-gap: clamp(1.35rem, 3vw, 2rem);
-  --dash-content-max: 1180px;
+  --dash-content-max: 100%;
 
   width: 100%;
   max-width: 100%;
@@ -92,9 +92,9 @@ html[data-theme="dark"] .user-dashboard,
 
 .user-dashboard__shell.container-fluid {
   width: 100%;
-  max-width: min(var(--dash-content-max), 100%);
+  max-width: 100%;
   padding-inline: var(--dash-gutter);
-  margin-inline: auto;
+  margin-inline: 0;
   display: grid;
   gap: var(--dash-section-gap);
 }
@@ -3473,6 +3473,9 @@ a.dash-drawer__row--link:focus-visible,
 }
 
 .user-dashboard__shell.container-fluid {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-inline: 0 !important;
   gap: 0.85rem !important;
 }
 

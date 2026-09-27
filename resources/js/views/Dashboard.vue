@@ -168,6 +168,89 @@
           </div>
         </section>
 
+        <section
+          v-if="murajaahPreview.length || showMurajaahEmpty"
+          class="dash-section dash-section--flat dash-reveal"
+          aria-labelledby="dash-murajaah-heading"
+          style="--dash-delay: 20ms"
+        >
+          <div class="dash-murajaah-block">
+            <div class="dash-murajaah-block__head dash-murajaah-block__head--compact">
+              <div class="dash-murajaah-block__head-main">
+                <div class="dash-murajaah-block__title-row">
+                  <span class="dash-section__icon dash-section__icon--review" aria-hidden="true">
+                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                  </span>
+                  <div class="dash-section__title-copy">
+                    <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
+                      {{ t('dashboard.strengthen_title') }}
+                    </h2>
+                    <p class="dash-section__hint">{{ murajaahSectionSubtitle }}</p>
+                  </div>
+                </div>
+              </div>
+              <button
+                v-if="showMurajaahViewAll"
+                type="button"
+                class="dash-glance-action dash-glance-action--ghost dash-murajaah-block__view-all"
+                @click="openDrawer('murajaah')"
+              >
+                <i class="bi bi-list-ul" aria-hidden="true"></i>
+                {{ t('dashboard.view_all_reviews') }}
+              </button>
+            </div>
+
+            <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty">
+              <span class="dash-murajaah-block__empty-icon" aria-hidden="true">
+                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+              </span>
+              <p class="dash-murajaah-block__empty-title">{{ t('dashboard.murajaah_no_urgent') }}</p>
+              <p v-if="!optionalReviewSuggestion" class="dash-murajaah-block__empty-hint">
+                {{ t('dashboard.weak_empty_message') }}
+              </p>
+              <div v-else class="dash-murajaah-suggestion">
+                <span class="dash-kicker">{{ t('dashboard.murajaah_keep_fresh') }}</span>
+                <strong class="dash-murajaah-suggestion__title">{{ optionalReviewSuggestion.title }}</strong>
+                <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="optionalReviewSuggestion.href">
+                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                  {{ t('dashboard.murajaah_practise') }}
+                </a>
+              </div>
+            </div>
+
+            <ul v-else class="dash-murajaah-list">
+              <li v-for="(item, index) in murajaahPreview" :key="item.key">
+                <div class="dash-murajaah-row dash-reveal" :style="{ '--dash-delay': `${index * 50}ms` }">
+                  <a class="dash-murajaah-row__info" :href="item.href || memorisationUrl">
+                    <span class="dash-murajaah-row__ref">
+                      {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                    </span>
+                    <span
+                      v-if="item.phrase"
+                      class="dash-murajaah-row__phrase"
+                      lang="ar"
+                      dir="rtl"
+                    >{{ item.phrase }}</span>
+                  </a>
+                  <div class="dash-murajaah-row__aside">
+                    <span
+                      v-if="item.strength"
+                      class="dash-strength"
+                      :class="`dash-strength--${item.strength}`"
+                    >
+                      {{ strengthLabel(item) }}
+                    </span>
+                    <a class="dash-btn dash-btn--ghost dash-btn--sm dash-murajaah-row__cta" :href="reviewNowHref(item)">
+                      <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                      {{ t('dashboard.review_now') }}
+                    </a>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         </div>
 
         <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">

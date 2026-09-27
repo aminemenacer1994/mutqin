@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v89';
-const RUNTIME_CACHE = 'mutqin-runtime-v89';
+const SHELL_CACHE = 'mutqin-shell-v90';
+const RUNTIME_CACHE = 'mutqin-runtime-v90';
 
 // Precache icons/manifest only — never HTML shells (stale HTML → deleted Mix chunks).
 const SHELL_URLS = [

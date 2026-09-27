@@ -316,6 +316,16 @@ includesAll('top toolbar feature spacing', [
   /\.top-card-icon-controls \.top-card-layout-icons,[\s\S]*margin:\s*0\s*!important;/,
 ])
 
+includesAll('top card dashboard visibility', [
+  /showTopCardDashboardIcon\(\)/,
+  /showMobileSessionDashboardResumeOnly\(\)/,
+  /workspace-shell--mobile-resume-only/,
+  /v-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap"/,
+  /class="[^"]*top-card-dashboard-trigger/,
+  /memorisation\.open_dashboard/,
+  /sessionPaused[\s\S]*mutqinState\?\.sessionState\?\.paused/,
+])
+
 {
   const memorisationCss = readFileSync(new URL('../../resources/js/views/Memorisation.css', import.meta.url), 'utf8')
   const mobileGridCss = readFileSync(new URL('../../resources/js/views/Memorisation.mobile-grid.css', import.meta.url), 'utf8')
@@ -389,6 +399,36 @@ includesAll('top toolbar feature spacing', [
     mobileGridCss,
     /mushaf layout icon is menu-only on mobile[\s\S]*?\.top-card-layout-icons,[\s\S]*?display:\s*none\s*!important/,
     'mobile-grid must hide the outside mushaf layout icon'
+  )
+  assert.match(
+    mobileGridCss,
+    /Dashboard shortcut: post-session toolbar only[\s\S]*?workspace-shell:not\(\.workspace-shell--post-session-choice\)[\s\S]*?top-card-dashboard-wrap[\s\S]*?display:\s*none\s*!important/,
+    'mobile-grid must hide dashboard toolbar icon outside post-session'
+  )
+  assert.match(
+    blade,
+    /In-session mobile: dashboard lives in the ellipsis menu only[\s\S]*?workspace-shell:not\(\.workspace-shell--post-session-choice\)[\s\S]*?top-card-dashboard-wrap[\s\S]*?display:\s*none\s*!important/,
+    'blade hotfix must hide mobile dashboard icon outside post-session'
+  )
+  assert.match(
+    mobileGridCss,
+    /Ready-to-resume: single primary CTA[\s\S]*?workspace-shell--mobile-resume-only[\s\S]*?grid-template-rows:\s*auto\s*!important/,
+    'mobile-grid must collapse resume-only session actions to a single row'
+  )
+  assert.match(
+    blade,
+    /Ready-to-resume: single primary CTA[\s\S]*?workspace-shell--mobile-resume-only[\s\S]*?grid-template-rows:\s*auto\s*!important/,
+    'blade hotfix must collapse resume-only session actions to a single row'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v185[\s\S]*?tools-body \.sheet-toggle \.st-right-group[\s\S]*?grid-template-columns:\s*var\(--sheet-control-radio\)\s*var\(--sheet-control-chev\)/,
+    'blade v184 must lock practice sheet-toggle radio and chevron columns'
+  )
+  assert.match(
+    source,
+    /class="main container-fluid"/,
+    'session workspace must use Bootstrap container-fluid'
   )
   assert.match(
     mobileGridCss,

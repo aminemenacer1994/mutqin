@@ -969,6 +969,7 @@
         .app .workspace-shell-head-toolbar > .workspace-shell-copy {
           grid-column: 1 !important;
           grid-row: 1 !important;
+          width: 100% !important;
           min-width: 0 !important;
         }
         .app .workspace-shell-head-utility-row {
@@ -1017,16 +1018,17 @@
           grid-column: 1 / -1 !important;
           grid-row: 2 !important;
           display: flex !important;
-          flex-flow: row wrap !important;
+          flex-flow: row nowrap !important;
           align-items: center !important;
+          align-content: center !important;
           gap: 0.3rem !important;
           width: 100% !important;
           max-width: 100% !important;
           min-width: 0 !important;
           margin: 0 !important;
           padding: 0.15rem 0 0 !important;
-          overflow-x: visible !important;
-          overflow-y: visible !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
         }
         .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills::-webkit-scrollbar {
           display: none !important;
@@ -1034,8 +1036,9 @@
         .app .workspace-shell-progress-pill {
           display: inline-flex !important;
           align-items: center !important;
-          flex: 0 1 auto !important;
-          max-width: 100% !important;
+          align-self: center !important;
+          flex: 0 0 auto !important;
+          max-width: none !important;
           min-width: 0 !important;
           min-height: 1.75rem !important;
           margin: 0 !important;
@@ -1183,7 +1186,7 @@
           grid-row: 1 !important;
           margin: 0 !important;
           justify-self: end !important;
-          align-self: start !important;
+          align-self: center !important;
           overflow: visible !important;
           z-index: 90 !important;
           pointer-events: auto !important;
@@ -1231,8 +1234,15 @@
           width: 100% !important;
           min-width: 0 !important;
         }
+        /* Ready-to-resume: single primary CTA (no End companion row). */
+        .app .workspace-shell.workspace-shell--mobile-resume-only .top-card-session-hr {
+          margin-block: 0.35rem 0.25rem !important;
+        }
+        .app .workspace-shell.workspace-shell--mobile-resume-only .workspace-shell-actions .top-card-session-actions {
+          grid-template-rows: auto !important;
+          gap: 0 !important;
+        }
         .app .top-card-icon-controls .top-card-controls-wrap,
-        .app .top-card-icon-controls .top-card-dashboard-wrap,
         .app .top-card-icon-controls .top-card-layout-icons,
         .app .top-card-icon-controls .top-card-menu-wrap {
           position: relative !important;
@@ -1250,11 +1260,22 @@
           box-sizing: border-box !important;
           pointer-events: auto !important;
         }
+        /* In-session mobile: dashboard lives in the ellipsis menu only. */
+        .app .workspace-shell:not(.workspace-shell--post-session-choice) .top-card-icon-controls .top-card-dashboard-wrap,
+        .app .workspace-shell:not(.workspace-shell--post-session-choice) .top-card-icon-controls .top-card-dashboard-trigger {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          max-width: 0 !important;
+          max-height: 0 !important;
+          overflow: hidden !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+        }
         .app .top-card-icon-controls .top-card-controls-wrap {
           order: 0 !important;
-        }
-        .app .top-card-icon-controls .top-card-dashboard-wrap {
-          order: 1 !important;
         }
         .app .top-card-icon-controls .top-card-layout-icons {
           order: 2 !important;
@@ -1263,7 +1284,6 @@
           order: 3 !important;
         }
         .app .top-card-icon-controls .top-card-controls-trigger,
-        .app .top-card-icon-controls .top-card-dashboard-trigger,
         .app .top-card-icon-controls .view-mode-btn,
         .app .top-card-icon-controls .workspace-layout-btn,
         .app .top-card-icon-controls .top-card-ellipsis,
@@ -1430,12 +1450,12 @@
           overflow-x: hidden !important;
           transform: none !important;
           margin-inline: 0 !important;
-          padding-inline: 1.15rem !important;
+          padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px)) !important;
           direction: rtl !important;
           gap: 0 !important;
-          text-align: center !important;
-          text-align-last: center !important;
-          text-justify: none !important;
+          text-align: justify !important;
+          text-align-last: justify !important;
+          text-justify: inter-word !important;
           justify-content: unset !important;
           line-height: 1.85 !important;
         }
@@ -1708,12 +1728,12 @@
           width: 100% !important;
           max-width: none !important;
           margin-inline: 0 !important;
-          padding-inline: 0 !important;
+          padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px)) !important;
           background: transparent !important;
           border-radius: 0 !important;
-          text-align: center !important;
-          text-align-last: center !important;
-          text-justify: none !important;
+          text-align: justify !important;
+          text-align-last: justify !important;
+          text-justify: inter-word !important;
           justify-content: unset !important;
           line-height: 1.75 !important;
         }
@@ -2266,7 +2286,18 @@
         html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
           display: flex !important;
           flex-flow: row nowrap !important;
+          align-items: center !important;
+          align-content: center !important;
           padding-bottom: 0.85rem !important;
+        }
+
+        html body .app .badge.workspace-shell-progress-pill,
+        html body .app .workspace-shell-progress-pill {
+          display: inline-flex !important;
+          align-items: center !important;
+          align-self: center !important;
+          flex: 0 0 auto !important;
+          vertical-align: middle !important;
         }
 
         html body .app .workspace-shell-progress-pill {
@@ -9425,11 +9456,13 @@ body.session-analysis-modal-open {
       padding-top: 0 !important;
     }
 
-    html body .app .main.container {
+    html body .app .main.container,
+    html body .app .main.container-fluid {
       margin-top: 0 !important;
     }
 
-    html body.memorisation-page .app .main.container {
+    html body.memorisation-page .app .main.container,
+    html body.memorisation-page .app .main.container-fluid {
       padding-top: clamp(14px, 1.25vw, 22px) !important;
     }
   }
@@ -9563,7 +9596,7 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
       min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62)) !important;
-      justify-content: flex-start !important;
+      justify-content: space-between !important;
     }
 
     html body .app .main.mushaf-mode-active .mushaf-session-stack {
@@ -9575,6 +9608,110 @@ body.session-analysis-modal-open {
       padding-top: 0 !important;
       margin-top: 0 !important;
     }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v185">
+  /* v185 — last-wins. Talqin radio had a unique start margin; ayah padding used inline-end (left in RTL). */
+  html body .app .main.container,
+  html body .app .main.container-fluid {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+
+  html body .app .workspace-shell,
+  html body .app .workspace-shell:not(.is-idle-card),
+  html body .app .workspace-shell.is-idle-card,
+  html body .app .main.mushaf-mode-active .workspace-shell:not(.is-idle-card) {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+
+  html body .app #talqin-mode-toggle,
+  html body .app .tools-body .sheet-toggle .mode-radio {
+    margin: 0 !important;
+    margin-inline: 0 !important;
+  }
+
+  html body .app .tools-body .sheet-toggle {
+    --sheet-control-radio: 32px;
+    --sheet-control-chev: 28px;
+  }
+
+  html body .app .tools-body .sheet-toggle .st-right-group {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-template-columns: var(--sheet-control-radio) var(--sheet-control-chev) !important;
+    column-gap: 8px !important;
+    align-items: center !important;
+    justify-content: end !important;
+    flex: 0 0 auto !important;
+    width: calc(var(--sheet-control-radio) + var(--sheet-control-chev) + 8px) !important;
+    min-width: calc(var(--sheet-control-radio) + var(--sheet-control-chev) + 8px) !important;
+    max-width: calc(var(--sheet-control-radio) + var(--sheet-control-chev) + 8px) !important;
+    overflow: visible !important;
+  }
+
+  html body .app .tools-body .sheet-toggle .st-right-group .mode-radio-group,
+  html body .app .tools-body .sheet-toggle .st-right-group .mode-radio {
+    grid-column: 1 !important;
+    justify-self: center !important;
+  }
+
+  html body .app .tools-body .sheet-toggle .st-right-group .st-chev {
+    grid-column: 2 !important;
+    justify-self: center !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title,
+  html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  html body .app .mushaf-workspace__fluid,
+  html body .app .container.mushaf-workspace__fluid,
+  html body .app .container-fluid.mushaf-workspace__fluid {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-page-sheet,
+  html body .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+  html body .app .main.mushaf-mode-active .mushaf-page-body,
+  html body .app .main.mushaf-mode-active .mushaf-ayah-text {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    text-align: justify !important;
+    text-align-last: justify !important;
+    padding-left: max(0.2rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: calc(var(--workspace-recite-size, 64px) + 0.75rem) !important;
+    padding-inline: unset !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  html body .app .workspace-tour__dashboard-shell.container-fluid.user-dashboard__shell,
+  html body .user-dashboard__shell.container-fluid {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    box-sizing: border-box !important;
   }
 </style>
 <script id="mutqin-mushaf-ayah-tap-v168">
