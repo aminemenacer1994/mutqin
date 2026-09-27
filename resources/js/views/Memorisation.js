@@ -9958,7 +9958,7 @@ export default {
       const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || 195)
       let scale = Math.max(1.2, Math.min(1.6, size / base))
       if (this.isMobileViewport?.()) {
-        scale = Math.min(1.72, scale * 1.14)
+        scale = Math.min(1.68, scale * 1.12)
       }
       return scale
     },

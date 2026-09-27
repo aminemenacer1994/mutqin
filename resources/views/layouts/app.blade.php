@@ -1407,7 +1407,7 @@
           padding: 0 !important;
           text-align: center !important;
           white-space: normal !important;
-          font-size: calc(clamp(1.55rem, 6.2vw, 2.15rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          font-size: calc(clamp(1.58rem, 6.1vw, 2.18rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
           line-height: 1.55 !important;
           color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
           -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
@@ -1421,7 +1421,7 @@
           width: auto !important;
           max-width: 100% !important;
           white-space: nowrap !important;
-          font-size: calc(clamp(1.55rem, 6.2vw, 2.15rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          font-size: calc(clamp(1.58rem, 6.1vw, 2.18rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
           line-height: 1.85 !important;
           margin: 0 !important;
           margin-inline: 0.1em 0.02em !important;
@@ -1946,7 +1946,7 @@
           margin: 0 auto !important;
           text-align: center !important;
           white-space: normal !important;
-          font-size: calc(clamp(1.55rem, 6.2vw, 2.15rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          font-size: calc(clamp(1.58rem, 6.1vw, 2.18rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
           line-height: 1.55 !important;
           color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
           -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
@@ -9414,7 +9414,7 @@ body.session-analysis-modal-open {
     html body .app .main.mushaf-mode-active .madani-word--unicode,
     html body .app .main.mushaf-mode-active .madani-word--fallback,
     html body .app .main.mushaf-mode-active .madani-basmala {
-      font-size: calc(clamp(1.45rem, 6vw, 2rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+      font-size: calc(clamp(1.46rem, 5.6vw, 1.96rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
       line-height: 1.42 !important;
     }
   }
@@ -9473,10 +9473,14 @@ body.session-analysis-modal-open {
 </style>
 @if(request()->routeIs('memorisation', 'memorisation.demo'))
 <style id="mutqin-memorisation-hotfix-v168">
-  /* Mushaf readability + session flow (network-first; survives stale memorisation chunks). */
+  /* Session flow + clip (network-first). Do not force min font-size — fitLines owns width. */
   @media (max-width: 767.98px) {
-    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page {
-      --qpc-word-size: max(var(--qpc-word-size, 22px), clamp(27px, 6.8vw, 36px)) !important;
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport,
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page,
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__sheet {
+      max-width: 100% !important;
+      overflow-x: clip !important;
+      box-sizing: border-box !important;
     }
 
     html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {

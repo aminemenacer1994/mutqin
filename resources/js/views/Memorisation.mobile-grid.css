@@ -4941,11 +4941,11 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 .main.mushaf-mode-active .madani-word--glyph,
 .main.mushaf-mode-active .madani-word--unicode,
 .main.mushaf-mode-active .madani-word--fallback {
-    font-size: calc(clamp(1.85rem, 7.2vw, 2.65rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.72rem, 6.8vw, 2.38rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   .main.mushaf-mode-active .madani-line--glyphs {
-    font-size: calc(clamp(1.9rem, 7.4vw, 2.75rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.76rem, 7vw, 2.45rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   /* Mushaf: centered ayat using the card width */
@@ -5316,14 +5316,14 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 .app .main.mushaf-mode-active .madani-word--glyph,
 .app .main.mushaf-mode-active .madani-word--unicode,
 .app .main.mushaf-mode-active .madani-word--fallback {
-    font-size: calc(clamp(1.85rem, 7.2vw, 2.65rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.72rem, 6.8vw, 2.38rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
     padding-inline: 0 !important;
     letter-spacing: 0 !important;
     word-spacing: 0 !important;
   }
 
   .app .main.mushaf-mode-active .madani-basmala {
-    font-size: calc(clamp(1.9rem, 7.4vw, 2.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.74rem, 6.6vw, 2.34rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   /* Mushaf portrait: continuous page using the card width */
@@ -5651,7 +5651,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     word-spacing: 0 !important;
     letter-spacing: 0 !important;
     vertical-align: baseline !important;
-    font-size: calc(clamp(1.9rem, 7.4vw, 2.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+    font-size: calc(clamp(1.74rem, 6.6vw, 2.34rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
   }
 
   .app .main.mushaf-mode-active .madani-word--end,
