@@ -361,6 +361,74 @@
     <style id="mutqin-memorisation-hotfix-v131">
       .amd-mic-dot { display: none !important; }
     </style>
+    <style id="mutqin-memorisation-hotfix-v183">
+      /* QPC mushaf: full-width phone page + no clipped desktop glyphs.
+         Session-scroll is the phone reader — do not gate it on 768px (device
+         toolbar / cached width can miss that breakpoint). */
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll),
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .content,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .workspace,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .workspace-main,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .madani-qpc-workspace,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .container,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .mushaf-workspace__fluid,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .container.mushaf-workspace__fluid,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .mushaf-shell,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .madani-qpc-shell,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .madani-qpc-viewport,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .madani-qpc-stage,
+      html body.memorisation-page .app .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) .madani-qpc-stage__pages {
+        --bs-gutter-x: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-inline: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-inline: 0 !important;
+      }
+      html body.memorisation-page .app .qpc-madani-session-scroll,
+      html body.memorisation-page .app .qpc-madani-session-scroll__page,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page--single,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page--borderless,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__ornament,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        margin-inline: 0 !important;
+        box-sizing: border-box !important;
+      }
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page--single,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__ornament {
+        padding-inline: 0 !important;
+      }
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+        padding-left: max(0.12rem, env(safe-area-inset-left, 0px)) !important;
+        padding-right: max(0.12rem, env(safe-area-inset-right, 0px)) !important;
+      }
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
+      html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--session-partial {
+        width: 100% !important;
+        max-width: 100% !important;
+        justify-content: space-between !important;
+      }
+      @media (min-width: 768px) {
+        html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page,
+        html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__ornament,
+        html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+        html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line,
+        html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-spread,
+        html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-spread__leaf {
+          overflow: visible !important;
+        }
+        html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-word {
+          font-size: calc(var(--qpc-word-size, 22px) * 0.86) !important;
+        }
+      }
+    </style>
     <style id="mutqin-memorisation-hotfix-v118">
       /* v118 — WBW interlinear: per-column horizontal padding + compact vertical stack */
       html body .app .verse-arabic.word-by-word-meanings word,

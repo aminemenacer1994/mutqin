@@ -386,9 +386,15 @@ export default {
       const narrow = available < 440
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
       const sessionSheet = mobile && (this.borderless || this.sessionScoped)
-      const safety = this.embedded || sessionSheet
+      let safety = this.embedded || sessionSheet
         ? (narrow ? 0.88 : 0.92)
         : (mobile ? 0.9 : (narrow ? 0.9 : 0.95))
+      if (sessionSheet) {
+        safety = 0.985
+      }
+      if (this.spreadViewportFill) {
+        safety = Math.min(safety, narrow ? 0.74 : 0.78)
+      }
       const cap = this.embedded
         ? (narrow ? 34 : 38)
         : (mobile ? (narrow ? 48 : 54) : (narrow ? 40 : 46))
@@ -461,16 +467,17 @@ export default {
     lineAdvanceWidth(line) {
       const nodes = [...line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-basmallah')]
       if (!nodes.length) return line.scrollWidth
-      return nodes.reduce((sum, node) => sum + node.offsetWidth, 0)
+      return nodes.reduce(
+        (sum, node) => sum + Math.max(node.offsetWidth, node.scrollWidth || 0),
+        0,
+      )
     },
     contentWidth(sheet) {
       const styles = getComputedStyle(sheet)
       const padding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight)
       let inner = Math.max(0, sheet.clientWidth - padding)
-      const mobile = typeof window !== 'undefined' && window.innerWidth < 768
-      if (mobile && (this.borderless || this.sessionScoped)) {
-        // QCF COLR glyphs extend past offsetWidth; keep ink inside clipped viewport.
-        inner = Math.max(0, inner - 14)
+      if (this.spreadViewportFill || this.embedded) {
+        inner = Math.max(0, inner - 28)
       }
       return inner
     },
@@ -649,7 +656,7 @@ export default {
   --qpc-line-height: 1.32;
   --qpc-surah-title-scale: 2.45;
   width: 100%;
-  max-width: min(100%, 36rem);
+  max-width: 100%;
   height: auto;
   min-height: 0;
   margin: 0 auto;
@@ -703,9 +710,17 @@ export default {
 .qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
   padding:
     max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.2rem))
-    max(1rem, calc(env(safe-area-inset-right, 0px) + 0.45rem))
+    max(0.35rem, calc(env(safe-area-inset-right, 0px) + 0.12rem))
     max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
-    max(1rem, calc(env(safe-area-inset-left, 0px) + 0.45rem));
+    max(0.35rem, calc(env(safe-area-inset-left, 0px) + 0.12rem));
+}
+
+@media (max-width: 767.98px) {
+  .qpc-madani-page--borderless.qpc-madani-page--single {
+    width: 100%;
+    max-width: 100%;
+    padding-inline: 0;
+  }
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--opening .qpc-madani-page__sheet {

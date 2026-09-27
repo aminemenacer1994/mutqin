@@ -9971,7 +9971,8 @@ export default {
     qpcMadaniFontScale() {
       const base = 150
       const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || 195)
-      return Math.max(1.2, Math.min(1.6, size / base))
+      const maxScale = this.showQpcMadaniSpreadPageNav ? 1.22 : 1.55
+      return Math.max(1.1, Math.min(maxScale, size / base))
     },
 
     isMadaniMobileImmersive() {

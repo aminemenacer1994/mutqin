@@ -7814,4 +7814,41 @@ html body .app .workspace-recite-dock__button:hover {
   html body .app .workspace-recite-dock__button:hover {
     transform: none !important;
   }
+
+  /* QPC mushaf: use the full phone width (this file wins over Memorisation.css). */
+  .app .main.madani-qpc-mode-active,
+  .main.madani-qpc-mode-active {
+    padding-inline: 0 !important;
+  }
+
+  .app .main.madani-qpc-mode-active .content,
+  .app .main.madani-qpc-mode-active .workspace,
+  .app .main.madani-qpc-mode-active .workspace-main,
+  .app .main.madani-qpc-mode-active .madani-qpc-workspace,
+  .app .main.madani-qpc-mode-active .madani-qpc-viewport,
+  .app .main.madani-qpc-mode-active .madani-qpc-stage,
+  .app .main.madani-qpc-mode-active .madani-qpc-stage__pages,
+  .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+  .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page,
+  .app .main.madani-qpc-mode-active .qpc-madani-page,
+  .app .main.madani-qpc-mode-active .qpc-madani-page--single,
+  .app .main.madani-qpc-mode-active .qpc-madani-page--borderless,
+  .app .main.madani-qpc-mode-active .qpc-madani-page__ornament,
+  .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+    padding-inline: max(0.18rem, env(safe-area-inset-left, 0px)) max(0.18rem, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .app .main.madani-qpc-mode-active .qpc-madani-line,
+  .app .main.madani-qpc-mode-active .qpc-madani-line--ayah {
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: space-between !important;
+  }
 }
