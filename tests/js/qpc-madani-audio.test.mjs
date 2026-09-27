@@ -51,8 +51,8 @@ assert.match(memorisationJs, /syncQpcMadaniPlaybackAyahDom/)
 assert.match(memorisationJs, /collectQpcMadaniWordHighlightNodes/)
 const onSelectIdx = memorisationJs.indexOf('onQpcMadaniWordSelect(location)')
 assert.ok(onSelectIdx >= 0)
-assert.match(memorisationJs.slice(onSelectIdx, onSelectIdx + 1400), /playWordAudio/)
-assert.match(memorisationJs.slice(onSelectIdx, onSelectIdx + 1400), /onMushafAyahClick/)
+assert.match(memorisationJs.slice(onSelectIdx, onSelectIdx + 1800), /shouldPlayFullAyahOnWordClick/)
+assert.match(memorisationJs.slice(onSelectIdx, onSelectIdx + 1800), /onMushafAyahClick/)
 assert.doesNotMatch(
   memorisationJs,
   /playingAyah|qpcMadaniWordIndex|madaniAudioPlayer/,

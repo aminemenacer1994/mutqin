@@ -1407,7 +1407,7 @@
           padding: 0 !important;
           text-align: center !important;
           white-space: normal !important;
-          font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          font-size: calc(clamp(1.55rem, 6.2vw, 2.15rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
           line-height: 1.55 !important;
           color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
           -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
@@ -1421,7 +1421,7 @@
           width: auto !important;
           max-width: 100% !important;
           white-space: nowrap !important;
-          font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          font-size: calc(clamp(1.55rem, 6.2vw, 2.15rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
           line-height: 1.85 !important;
           margin: 0 !important;
           margin-inline: 0.1em 0.02em !important;
@@ -1946,7 +1946,7 @@
           margin: 0 auto !important;
           text-align: center !important;
           white-space: normal !important;
-          font-size: calc(clamp(1.2rem, 4.8vw, 1.7rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+          font-size: calc(clamp(1.55rem, 6.2vw, 2.15rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
           line-height: 1.55 !important;
           color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
           -webkit-text-fill-color: var(--mushaf-reading-ink, var(--mushaf-text, #18181b)) !important;
@@ -3112,7 +3112,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-memorisation-hotfix-v168', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -9414,7 +9414,7 @@ body.session-analysis-modal-open {
     html body .app .main.mushaf-mode-active .madani-word--unicode,
     html body .app .main.mushaf-mode-active .madani-word--fallback,
     html body .app .main.mushaf-mode-active .madani-basmala {
-      font-size: calc(clamp(1.12rem, 4.6vw, 1.48rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
+      font-size: calc(clamp(1.45rem, 6vw, 2rem) * (var(--verse-font-percent, 120) * 0.01)) !important;
       line-height: 1.42 !important;
     }
   }
@@ -9471,5 +9471,56 @@ body.session-analysis-modal-open {
     pointer-events: none !important;
   }
 </style>
+@if(request()->routeIs('memorisation', 'memorisation.demo'))
+<style id="mutqin-memorisation-hotfix-v168">
+  /* Mushaf readability + session flow (network-first; survives stale memorisation chunks). */
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page {
+      --qpc-word-size: max(var(--qpc-word-size, 22px), clamp(27px, 6.8vw, 36px)) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
+      margin-top: 0 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
+      min-height: 0 !important;
+      justify-content: flex-start !important;
+    }
+
+    html body .app .main.mushaf-mode-active .mushaf-session-stack {
+      gap: 0 !important;
+    }
+
+    html body .app .main.mushaf-mode-active .mushaf-session-stack .mushaf-page--madani + .mushaf-page--madani {
+      border-top: 0 !important;
+      padding-top: 0 !important;
+      margin-top: 0 !important;
+    }
+  }
+</style>
+<script id="mutqin-mushaf-ayah-tap-v168">
+  (function () {
+    function shouldPlayFullAyah() {
+      var width = window.innerWidth;
+      return width <= 767.98 || width >= 1080;
+    }
+
+    document.addEventListener('click', function (event) {
+      if (!shouldPlayFullAyah()) return;
+      var target = event.target;
+      if (!(target instanceof Element)) return;
+      var word = target.closest('.qpc-madani-word, .madani-word[data-verse-key], .wbw-word[data-verse-key]');
+      if (!word || word.closest('.mushaf-ayah')) return;
+      var verseKey = word.getAttribute('data-verse-key') || word.dataset.verseKey;
+      if (!verseKey) return;
+      var tap = window.__mutqinMemorisationAyahTap;
+      if (typeof tap !== 'function') return;
+      tap(verseKey);
+      event.stopImmediatePropagation();
+    }, true);
+  })();
+</script>
+@endif
 </body>
 </html>

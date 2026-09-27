@@ -387,15 +387,18 @@ export default {
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
       const safety = this.embedded
         ? (narrow ? 0.9 : 0.94)
-        : (mobile ? 0.96 : (narrow ? 0.9 : 0.95))
+        : (mobile ? 0.99 : (narrow ? 0.9 : 0.95))
       const cap = this.embedded
         ? (narrow ? 34 : 38)
-        : (narrow ? 40 : 46)
+        : (mobile ? (narrow ? 50 : 56) : (narrow ? 40 : 46))
       const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
         ? Number(this.fontScale)
         : 1
       const widthFit = (available / widest) * MEASURE_SIZE * safety
       let rawSize = Math.min(cap * requested, widthFit)
+      if (mobile && !this.embedded) {
+        rawSize = Math.max(rawSize, Math.min(widthFit, cap * requested, 28))
+      }
       if (this.sessionViewportFill) {
         const heightFit = this.viewportBandHeightFit(root, sheet, targets.length)
         if (Number.isFinite(heightFit) && heightFit > 0) {

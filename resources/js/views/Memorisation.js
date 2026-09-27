@@ -9956,7 +9956,11 @@ export default {
     qpcMadaniFontScale() {
       const base = 150
       const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || 195)
-      return Math.max(1.2, Math.min(1.6, size / base))
+      let scale = Math.max(1.2, Math.min(1.6, size / base))
+      if (this.isMobileViewport?.()) {
+        scale = Math.min(1.72, scale * 1.14)
+      }
+      return scale
     },
 
     isMadaniMobileImmersive() {
@@ -10159,6 +10163,16 @@ export default {
     void bootstrapWatchdog
 
     document.body.classList.add('memorisation-page')
+    if (typeof window !== 'undefined') {
+      window.__mutqinMemorisationAyahTap = (verseKey) => {
+        const key = String(verseKey || '').trim()
+        if (!key) return
+        const verse = this.resolveVerseFromMadaniKey?.(key)
+          || (this.verses || []).find((item) => item.key === key)
+          || null
+        if (verse?.key) this.onMushafAyahClick(verse)
+      }
+    }
     this.initSessionWorkspaceScrollController()
     this.bindStaleScrollLockRelease()
     this.$nextTick(() => this.unstickPageScroll())
@@ -10588,6 +10602,9 @@ export default {
     this.recitationAttemptId = ''
     this.clearRecitationSlowProcessingNotice?.()
     document.body.classList.remove('memorisation-page')
+    if (typeof window !== 'undefined' && window.__mutqinMemorisationAyahTap) {
+      delete window.__mutqinMemorisationAyahTap
+    }
     this.sessionWorkspaceScrollController?.dispose?.()
     this.sessionWorkspaceScrollController = null
     if (this.practiceSetupStatusTimer) {
@@ -11446,6 +11463,11 @@ export default {
     },
     isMobileViewport() {
       return !!this.workspaceIsMobileViewport
+    },
+    shouldPlayFullAyahOnWordClick() {
+      if (typeof window === 'undefined') return true
+      const width = window.innerWidth
+      return width <= 767.98 || width >= 1080
     },
     syncWorkspaceIsMobileViewport() {
       if (typeof window === 'undefined' || !window.matchMedia) return
@@ -36091,22 +36113,23 @@ export default {
       const parts = String(location || '').trim().split(':')
       const wordPosition = Number(parts[2])
       const wordIndex = resolveQpcWordAudioIndex(wordPosition, verseKey, this.madaniAudioIndexMap)
+      if (this.showWordByWord && Number.isFinite(wordIndex) && wordIndex >= 0) {
+        const gloss = resolveWordGlossFromVerse(verse, wordIndex)
+        if (gloss) {
+          this.activeWordTooltip = {
+            verseKey: verse.key,
+            wordIndex,
+            text: gloss,
+          }
+        }
+      }
       if (
-        this.wordByWordAudioEnabled
+        !this.shouldPlayFullAyahOnWordClick()
+        && this.wordByWordAudioEnabled
         && this.currentReciterSupportsWordHighlighting
         && Number.isFinite(wordIndex)
         && wordIndex >= 0
       ) {
-        if (this.showWordByWord) {
-          const gloss = resolveWordGlossFromVerse(verse, wordIndex)
-          if (gloss) {
-            this.activeWordTooltip = {
-              verseKey: verse.key,
-              wordIndex,
-              text: gloss,
-            }
-          }
-        }
         void this.playWordAudio('', verse, wordIndex)
         this.$nextTick(() => this.scrollQpcMadaniActiveAyahIntoView())
         return
@@ -39719,16 +39742,19 @@ export default {
         if (wordElement?.closest('.mushaf-ayah')) return
         if (wordElement) {
           const verseKey = wordElement.dataset.verseKey
-          const wordIndex = parseInt(wordElement.dataset.wordIndex)
-          const wordAudio = wordElement.dataset.wordAudio
+          const wordIndex = parseInt(wordElement.dataset.wordIndex, 10)
+          const verse = this.verses.find(item => item.key === verseKey)
+          if (this.shouldPlayFullAyahOnWordClick() && verse?.audio) {
+            this.onMushafAyahClick(verse)
+            return
+          }
 
+          const wordAudio = wordElement.dataset.wordAudio
           if (wordAudio) {
-            const verse = this.verses.find(item => item.key === verseKey)
             this.playWordAudio(wordAudio, verse, wordIndex)
             return
           }
 
-          const verse = this.verses.find(item => item.key === verseKey)
           this.playWordAudio('', verse, wordIndex)
         }
       }

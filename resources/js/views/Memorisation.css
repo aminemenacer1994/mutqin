@@ -62444,7 +62444,7 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   }
 
   .madani-qpc-viewport .qpc-madani-line--ayah {
-    min-height: calc(var(--qpc-word-size, 22px) * 1.62);
+    min-height: 0;
   }
 
   .madani-qpc-viewport .qpc-madani-line--surah_name {
@@ -66425,6 +66425,30 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
   .madani-qpc-viewport .qpc-madani-session-scroll {
     padding-bottom: 0.5rem;
+  }
+
+  /* Continuous session mushaf: drop printed-page gaps on phones */
+  .madani-qpc-viewport .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
+    margin-top: 0 !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page--borderless.qpc-madani-page--single {
+    margin-block: 0 !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-session-stack {
+    gap: 0 !important;
+  }
+
+  .app .main.mushaf-mode-active .mushaf-session-stack .mushaf-page--madani + .mushaf-page--madani {
+    border-top: 0 !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
   }
 
   body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-recite-dock,
