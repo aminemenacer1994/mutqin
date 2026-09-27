@@ -7,8 +7,12 @@ import {
   buildQpcMadaniAnchorIndexesByAyah,
   collectQpcMadaniDomManagedClasses,
   isAyahBlurred,
+  isAyahChainDimmed,
   isAyahFocusDimmed,
+  isAyahInActiveChain,
   isAyahPeekRevealed,
+  isAyahTalqinListen,
+  isAyahTalqinRepeat,
   isQpcMadaniDomManagedClass,
   madaniQpcWordTechniqueClass,
   qpcWordLocationKey,
@@ -135,6 +139,34 @@ const anchorTechnique = resolveQpcMadaniWordTechniqueState(
 assert.equal(anchorTechnique.isAnchor, true)
 assert.equal(madaniQpcWordTechniqueClass(anchorTechnique)['anchor-highlight'], true)
 
+const chainSnap = {
+  chainingEnabled: true,
+  chainAyahKeys: ['2:30', '2:31'],
+}
+assert.equal(isAyahInActiveChain('2:30', chainSnap), true)
+assert.equal(isAyahChainDimmed('2:32', chainSnap), true)
+const chainTechnique = resolveQpcMadaniWordTechniqueState(word, chainSnap)
+assert.equal(chainTechnique.isChainMember, true)
+assert.equal(madaniQpcWordTechniqueClass(chainTechnique)['is-chain-member'], true)
+
+const talqinListen = resolveQpcMadaniWordTechniqueState(word, {
+  talqinModeEnabled: true,
+  talqinRepeatPhase: false,
+  effectiveActiveAyah: '2:31',
+})
+assert.equal(isAyahTalqinListen('2:31', {
+  talqinModeEnabled: true,
+  talqinRepeatPhase: false,
+  effectiveActiveAyah: '2:31',
+}), true)
+assert.equal(talqinListen.isTalqinListen, true)
+assert.equal(madaniQpcWordTechniqueClass(talqinListen)['is-talqin-listen'], true)
+assert.equal(isAyahTalqinRepeat('2:31', {
+  talqinModeEnabled: true,
+  talqinRepeatPhase: true,
+  effectiveActiveAyah: '2:31',
+}), true)
+
 const amdByAyah = buildMadaniAmdHiddenIndexesByAyah({
   ayahKeys: ['2:30', '2:31'],
   ayahBounds: [{ start: 0, end: 5 }, { start: 5, end: 12 }],
@@ -178,6 +210,10 @@ assert.match(wordVue, /::after/)
 assert.match(wordVue, /display: inline-block/)
 assert.match(wordVue, /anchor-highlight/)
 assert.match(wordVue, /data-anchor/)
+assert.match(wordVue, /data-chain/)
+assert.match(wordVue, /data-talqin/)
+assert.match(wordVue, /is-chain-member/)
+assert.match(wordVue, /is-talqin-repeat/)
 assert.match(wordVue, /collectQpcMadaniDomManagedClasses/)
 assert.match(wordVue, /amd-word-hidden/)
 assert.doesNotMatch(wordVue, /visibility:\s*hidden/)
@@ -188,6 +224,8 @@ assert.match(wordVue, /qpcMadaniTechniques/)
 assert.match(memorisationJs, /qpcMadaniTechniqueSnapshot/)
 assert.match(memorisationJs, /buildQpcMadaniAnchorIndexesByAyah/)
 assert.match(memorisationJs, /anchorIndexesByAyah/)
+assert.match(memorisationJs, /talqinRepeatPhase/)
+assert.match(memorisationJs, /chainAyahKeys/)
 assert.match(memorisationJs, /playbackAyahKey/)
 assert.match(memorisationJs, /highlightedAyahKey/)
 assert.match(memorisationJs, /resolveAnchorIndices/)

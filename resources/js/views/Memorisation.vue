@@ -388,6 +388,9 @@
       'is-madani-mobile-immersive': isMadaniMobileImmersive,
       'focus-mode-active': focusModeEnabled,
       'blur-mode-active': blurModeEnabled,
+      'talqin-mode-active': talqinModeEnabled,
+      'chaining-mode-active': chainingEnabled,
+      'anchor-mode-active': anchorModeEnabled,
       'flow-practice': guidedUiStep === 'practice',
       'flow-recall': guidedUiStep === 'recall'
     }"
@@ -1082,6 +1085,22 @@
             <i class="bi bi-mic" aria-hidden="true"></i>
             <span>{{ practiceTurnCalloutMessage }}</span>
           </div>
+          <div
+            v-if="isDataReady && practiceTechniqueStatusVisible"
+            class="practice-technique-status"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              v-for="item in practiceTechniqueStatusItems"
+              :key="item.key"
+              class="practice-technique-status__item"
+              :data-technique="item.key"
+            >
+              <i class="bi" :class="item.icon" aria-hidden="true"></i>
+              <span>{{ item.label }}</span>
+            </span>
+          </div>
 
           <main v-if="isDataReady && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden && shouldShowWorkspaceMain" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             data-tour="workspace-main"
@@ -1451,6 +1470,10 @@
                 'hifz-ayah-mastered': isMasteredAyah(verse.key),
                 'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
                 'peek-revealed': isVersePeekRevealed(verse.key),
+                'is-chain-member': chainingEnabled && isVerseInActiveChain(verse.key),
+                'is-chain-dim': chainingEnabled && !isVerseInActiveChain(verse.key),
+                'is-talqin-listen': talqinModeEnabled && !talqinRecitationTurnActive && isVerseVisuallyActive(verse.key),
+                'is-talqin-repeat': talqinRecitationTurnActive && isVerseVisuallyActive(verse.key),
                 'ai-recitation-active': shouldShowRecitationReviewHighlights(verse.key)
               }" @click="onVerseCardClick(verse)" role="button" tabindex="0" @mouseenter="onVersePeekEnter(verse.key)"
                 @mouseleave="onVersePeekLeave(verse.key)" @touchstart.passive="onVerseTouchStart($event, verse.key)"
@@ -1978,9 +2001,9 @@
                       :class="{ active: talqinModeEnabled }"
                       :aria-checked="talqinModeEnabled ? 'true' : 'false'"
                       :aria-label="t('memorisation.a11y.useTalqinMode')"
-                      @click.stop="talqinModeEnabled = !talqinModeEnabled"
-                      @keydown.enter.stop.prevent="talqinModeEnabled = !talqinModeEnabled"
-                      @keydown.space.stop.prevent="talqinModeEnabled = !talqinModeEnabled"
+                      @click.stop="toggleTalqinModeRadio"
+                      @keydown.enter.stop.prevent="toggleTalqinModeRadio"
+                      @keydown.space.stop.prevent="toggleTalqinModeRadio"
                     >
                       <i class="mode-radio-icon bi" :class="talqinModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
                     </span>

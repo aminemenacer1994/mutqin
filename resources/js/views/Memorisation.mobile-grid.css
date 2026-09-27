@@ -116,6 +116,18 @@
     padding-inline: 0 !important;
   }
 
+  .practice-technique-status {
+    margin-block: 0 8px;
+    padding-inline: 0;
+    gap: 6px;
+  }
+
+  .practice-technique-status__item {
+    min-height: 26px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+  }
+
   /* Workspace overview: title/utilities, actions, and metadata share one grid. */
   .workspace-shell,
 .main.mushaf-mode-active .workspace-shell {
@@ -1362,6 +1374,124 @@
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+  }
+
+  /* Saved Sessions tab (saved-sheet__*) — stack rows; Memorisation.css ≤560px nowrap fights this on phones */
+  .sheet.saved-sheet--beige,
+.tools-body > .sheet.saved-sheet--beige {
+    overflow-x: hidden !important;
+    padding-inline: 0 !important;
+  }
+
+  .saved-sheet__header,
+.saved-sheet__groups,
+.saved-sheet__card--current {
+    min-inline-size: 0 !important;
+    max-inline-size: 100% !important;
+  }
+
+  .saved-sheet__intro,
+.saved-sheet__row-title,
+.saved-sheet__row-meta,
+.saved-sheet__row-meta-line {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .saved-sheet__card--current {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    padding: 0.55rem 0.65rem !important;
+  }
+
+  .saved-sheet__current-copy {
+    display: grid !important;
+    gap: 0.04rem !important;
+    flex: 1 1 auto !important;
+    min-inline-size: 0 !important;
+  }
+
+  .saved-sheet__eyebrow {
+    font-size: 0.62rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .saved-sheet__current-copy strong {
+    font-size: 0.84rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .saved-sheet__current-copy small {
+    font-size: 0.72rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .saved-sheet__save-btn {
+    flex: 0 0 auto !important;
+    inline-size: auto !important;
+    max-inline-size: none !important;
+    min-block-size: 2rem !important;
+    padding: 0.35rem 0.65rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .saved-sheet__row {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    gap: 0.55rem !important;
+    min-inline-size: 0 !important;
+  }
+
+  .saved-sheet__row-main {
+    flex: 1 1 auto !important;
+    inline-size: 100% !important;
+    min-inline-size: 0 !important;
+  }
+
+  .saved-sheet__row-copy,
+.saved-sheet__row-meta {
+    min-inline-size: 0 !important;
+    max-inline-size: 100% !important;
+  }
+
+  .saved-sheet__row-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    inline-size: 100% !important;
+    max-inline-size: 100% !important;
+    flex: 0 0 auto !important;
+    gap: 0.45rem !important;
+    margin-top: 0.05rem !important;
+    padding-top: 0.45rem !important;
+    border-top: 1px solid color-mix(in srgb, var(--saved-border, var(--border)) 82%, transparent) !important;
+    white-space: normal !important;
+  }
+
+  .saved-sheet__action--primary,
+.saved-sheet__action--secondary {
+    flex: 1 1 auto !important;
+    inline-size: auto !important;
+    min-inline-size: 0 !important;
+    max-inline-size: 100% !important;
+    padding-inline: 0.75rem !important;
+  }
+
+  .saved-sheet__action--primary span,
+.saved-sheet__action--secondary span {
+    display: inline !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .saved-sheet__action--ghost {
+    flex: 0 0 auto !important;
   }
 
   .sheet > .sheet-section,

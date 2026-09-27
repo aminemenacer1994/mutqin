@@ -13,6 +13,8 @@
     :data-word-index="wordAudioIndex != null ? wordAudioIndex : null"
     :data-ayah-state="ayahStateAttr"
     :data-anchor="techniqueState.isAnchor ? '1' : null"
+    :data-chain="techniqueState.isChainMember ? '1' : null"
+    :data-talqin="techniqueState.isTalqinRepeat ? 'repeat' : (techniqueState.isTalqinListen ? 'listen' : null)"
     :data-qpc-progress="progressAttr"
     :class="wordClass"
     :style="{ fontFamily: `'${displayFontFamily}'` }"
@@ -373,6 +375,23 @@ export default {
 
 .qpc-madani-word.anchor-pulse {
   animation: qpcMadaniAnchorPulse 0.6s ease-out;
+}
+
+.qpc-madani-word.is-chain-member {
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #c9a36a 70%, transparent);
+}
+
+.qpc-madani-word.is-chain-dim:not(.is-ayah-active):not(.highlighted):not(.is-playing-ayah) {
+  opacity: 0.42;
+}
+
+.qpc-madani-word.is-talqin-listen {
+  box-shadow: inset 0 -0.12em 0 color-mix(in srgb, #7eb6c9 72%, transparent);
+}
+
+.qpc-madani-word.is-talqin-repeat {
+  background: color-mix(in srgb, #7eb6c9 16%, transparent);
+  box-shadow: inset 0 -0.14em 0 color-mix(in srgb, #4f8fa3 80%, transparent);
 }
 
 @keyframes qpcMadaniAnchorPulse {

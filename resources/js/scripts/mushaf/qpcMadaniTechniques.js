@@ -113,6 +113,40 @@ export function isAyahFocusDimmed(ayahKey, snapshot = {}) {
   return true
 }
 
+function chainAyahKeySet(snapshot = {}) {
+  return new Set(
+    (Array.isArray(snapshot.chainAyahKeys) ? snapshot.chainAyahKeys : [])
+      .map((key) => String(key || ''))
+      .filter(Boolean)
+  )
+}
+
+export function isAyahInActiveChain(ayahKey, snapshot = {}) {
+  if (!snapshot.chainingEnabled) return false
+  const keys = chainAyahKeySet(snapshot)
+  if (!keys.size) return false
+  return keys.has(String(ayahKey || ''))
+}
+
+export function isAyahChainDimmed(ayahKey, snapshot = {}) {
+  if (!snapshot.chainingEnabled) return false
+  const keys = chainAyahKeySet(snapshot)
+  if (!keys.size) return false
+  return !keys.has(String(ayahKey || ''))
+}
+
+export function isAyahTalqinListen(ayahKey, snapshot = {}) {
+  if (!snapshot.talqinModeEnabled || snapshot.talqinRepeatPhase) return false
+  return ayahMatchesSnapshotKey(ayahKey, snapshot.effectiveActiveAyah)
+    || ayahMatchesSnapshotKey(ayahKey, snapshot.playbackAyahKey)
+}
+
+export function isAyahTalqinRepeat(ayahKey, snapshot = {}) {
+  if (!snapshot.talqinModeEnabled || !snapshot.talqinRepeatPhase) return false
+  return ayahMatchesSnapshotKey(ayahKey, snapshot.effectiveActiveAyah)
+    || ayahMatchesSnapshotKey(ayahKey, snapshot.playbackAyahKey)
+}
+
 export function resolveHiddenRevealWordState(wordAudioIndex, ayahKey, snapshot = {}) {
   if (!snapshot.hiddenRevealModeEnabled) {
     return { masked: false, revealed: true, current: false, revealedProgress: false }
@@ -172,6 +206,10 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
     blurUpcoming: blur,
     peekRevealed: peek,
     focusDimmed: isAyahFocusDimmed(ayahKey, snapshot) && !peek,
+    isChainMember: isAyahInActiveChain(ayahKey, snapshot),
+    isChainDimmed: isAyahChainDimmed(ayahKey, snapshot),
+    isTalqinListen: isAyahTalqinListen(ayahKey, snapshot),
+    isTalqinRepeat: isAyahTalqinRepeat(ayahKey, snapshot),
     masked,
     hiddenRevealCurrent: hiddenReveal.current,
     hiddenRevealRevealed: hiddenReveal.revealedProgress,
@@ -191,6 +229,10 @@ export function madaniQpcWordTechniqueClass(state = {}) {
     'memory-word-hidden': !!state.checkerMasked,
     'anchor-highlight': !!state.isAnchor,
     'anchor-pulse': !!state.isAnchor,
+    'is-chain-member': !!state.isChainMember,
+    'is-chain-dim': !!state.isChainDimmed,
+    'is-talqin-listen': !!state.isTalqinListen,
+    'is-talqin-repeat': !!state.isTalqinRepeat,
   }
 }
 

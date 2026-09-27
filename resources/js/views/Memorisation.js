@@ -8681,10 +8681,63 @@ export default {
       // While paused, treat Talqin as inactive so deferred advance callbacks and
       // "your turn" overlays cannot keep running after Pause Session.
       if (this.sessionPaused) return false
-      if (this.mutqinState?.sessionState?.active) {
-        return !!this.mutqinState?.sessionState?.config?.talqinModeEnabled
+      return !!this.talqinModeEnabled
+    },
+    chainingVisualAyahKeys() {
+      if (!this.chainingEnabled) return []
+      const entry = this.activeQueueEntry
+      const verses = Array.isArray(this.verses) ? this.verses : []
+      if (!entry) {
+        if (this.chainingMethod === 'cumulative') {
+          return verses.slice(0, 1).map((verse) => String(verse?.key || '')).filter(Boolean)
+        }
+        return verses.slice(0, Math.min(2, verses.length)).map((verse) => String(verse?.key || '')).filter(Boolean)
       }
-      return !!this.currentConfig?.talqinModeEnabled
+      const chainKey = entry.chainKey
+      const currentKey = String(entry.verse?.key || entry.key || '')
+      if (!chainKey) return currentKey ? [currentKey] : []
+      const repeat = Number(entry.repeatCount || 1)
+      const keys = []
+      const seen = new Set()
+      for (const item of Array.isArray(this.queue) ? this.queue : []) {
+        if (item?.chainKey !== chainKey) continue
+        if (Number(item.repeatCount || 1) !== repeat) continue
+        const key = String(item.verse?.key || item.key || '')
+        if (!key || seen.has(key)) continue
+        seen.add(key)
+        keys.push(key)
+      }
+      return keys.length ? keys : (currentKey ? [currentKey] : [])
+    },
+    practiceTechniqueStatusVisible() {
+      return !!(this.talqinModeEnabled || this.chainingEnabled || this.anchorModeEnabled)
+    },
+    practiceTechniqueStatusItems() {
+      const items = []
+      if (this.talqinModeEnabled) {
+        items.push({
+          key: 'talqin',
+          icon: 'bi-soundwave',
+          label: this.talqinRecitationTurnActive
+            ? this.talqinRecitationPrompt
+            : this.getTechniqueDisplayLabel('talqin'),
+        })
+      }
+      if (this.chainingEnabled) {
+        items.push({
+          key: 'chaining',
+          icon: 'bi-link-45deg',
+          label: this.chainingProgressLabel || this.getTechniqueDisplayLabel('chaining'),
+        })
+      }
+      if (this.anchorModeEnabled) {
+        items.push({
+          key: 'anchor',
+          icon: 'bi-pin-angle-fill',
+          label: this.getTechniqueDisplayLabel('anchor'),
+        })
+      }
+      return items
     },
 
     sessionConfig() {
@@ -9586,6 +9639,10 @@ export default {
           anchorCount: this.anchorCount,
           wordCountForAyah: (verseKey) => this.getVerseAudioWordCount(verseKey),
         }),
+        talqinModeEnabled: !!this.talqinModeEnabled,
+        talqinRepeatPhase: !!this.talqinRecitationTurnActive,
+        chainingEnabled: !!this.chainingEnabled,
+        chainAyahKeys: this.chainingVisualAyahKeys,
         checkerHiddenIndexesByAyah: {},
         checkerPeekActive: false,
         checkerPeekAyah: '',
@@ -11065,6 +11122,10 @@ export default {
     },
     fadingVerseEnabled() {
       this.persistUiState()
+    },
+    talqinModeEnabled() {
+      this.persistUiState()
+      this.persistCentralSessionState()
     },
     focusModeEnabled(newVal) {
       if (this._techniqueConflictSilenced) {
@@ -15099,10 +15160,13 @@ export default {
     getTalqinModeToggleValue() {
       if (typeof document === 'undefined') return !!this.talqinModeEnabled
       const toggle = document.getElementById('talqin-mode-toggle')
-      if (toggle && 'checked' in toggle) return !!toggle.checked
-      if (toggle && typeof toggle.getAttribute === 'function') {
-        return toggle.getAttribute('aria-pressed') === 'true'
-      }
+      if (!toggle) return !!this.talqinModeEnabled
+      if (toggle.tagName === 'INPUT' && 'checked' in toggle) return !!toggle.checked
+      const pressed = typeof toggle.getAttribute === 'function' ? toggle.getAttribute('aria-pressed') : null
+      if (pressed === 'true' || pressed === 'false') return pressed === 'true'
+      const checked = typeof toggle.getAttribute === 'function' ? toggle.getAttribute('aria-checked') : null
+      if (checked === 'true' || checked === 'false') return checked === 'true'
+      if (toggle.classList?.contains('active')) return true
       return !!this.talqinModeEnabled
     },
 
@@ -16136,7 +16200,7 @@ export default {
         )
         await this.hydrateSessionFromPayload(restorePayload, {
           bannerText: this.t('toasts.sessionLoaded', { name: session.name }),
-          forcePlayback: false,
+          forcePlayback: !!this.workspaceIsMobileViewport,
         })
         this.showTools = false
         this.queueSessionWorkspaceScrollReason(SESSION_WORKSPACE_SCROLL_REASON.SAVED_SESSION)
@@ -16167,7 +16231,7 @@ export default {
             this.applyLocalActiveSessionState()
             this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
             this.queueBackendResumeAfterWelcomeContinue(this.continueSessionPayload)
-            this.$nextTick(() => this.resumeRestoredSessionWithCountdown())
+            this.scheduleSavedSessionResumePlayback()
             return
           }
 
@@ -16204,7 +16268,7 @@ export default {
             this.applyLocalActiveSessionState()
             this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
             this.queueBackendResumeAfterWelcomeContinue(this.continueSessionPayload)
-            this.$nextTick(() => this.resumeRestoredSessionWithCountdown())
+            this.scheduleSavedSessionResumePlayback()
             return
           }
 
@@ -16234,7 +16298,7 @@ export default {
 
         this.applyLocalActiveSessionState()
         this.transitionSessionLifecycle(SESSION_STATUS.ACTIVE, SESSION_MUTATION.IDLE)
-        this.$nextTick(() => this.resumeRestoredSessionWithCountdown())
+        this.scheduleSavedSessionResumePlayback()
       } catch (error) {
         console.error('loadSavedSession failed', error)
         this.showBanner(
@@ -34041,6 +34105,34 @@ export default {
       })
     },
 
+    scheduleSavedSessionResumePlayback() {
+      if (!this.workspaceIsMobileViewport) {
+        this.$nextTick(() => this.resumeRestoredSessionWithCountdown())
+        return
+      }
+      Promise.resolve()
+        .then(() => this.$nextTick())
+        .then(() => new Promise((resolve) => {
+          if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(() => requestAnimationFrame(resolve))
+          } else {
+            setTimeout(resolve, 50)
+          }
+        }))
+        .then(() => {
+          this.primeSessionAudioForCountdown()
+          const entry = this.queue?.[this.queueIndex] || this.queue?.[0]
+          if (entry) {
+            this.preloadQueueEntryAudio(entry, { playerVisible: false })
+          }
+          this.resumeRestoredSessionWithCountdown()
+        })
+        .catch((error) => {
+          console.error('scheduleSavedSessionResumePlayback failed', error)
+          this.resumeRestoredSessionWithCountdown()
+        })
+    },
+
     queueBackendResumeAfterWelcomeContinue(payload = this.continueSessionPayload) {
       if (!this.learningBackendEnabled() || !this.backendUnfinishedSession) return
       const chapterId = Number(payload?.config?.chapterId || this.chapterId || 0)
@@ -36483,10 +36575,20 @@ export default {
       const key = String(verseKey || '')
       if (!key) return 0
       const verse = (this.verses || []).find(item => item.key === key)
+        || (this.mushafDisplayVerses || []).find(item => item.key === key)
       const mapped = getMadaniAudioWordCountHelper(verse || { key }, this.madaniAudioIndexMap)
       if (mapped > 0) return mapped
-      const arabic = String(verse?.arabic || '').trim()
+      const words = Array.isArray(verse?.words)
+        ? verse.words.filter((word) => word && !word.isEnd && String(word.ar || word.text || word.textQpc || '').trim())
+        : []
+      if (words.length) return words.length
+      const arabic = String(verse?.arabic || verse?.text_uthmani || verse?.text || '').trim()
       return arabic ? tokenizeArabicText(arabic).length : 0
+    },
+    isVerseInActiveChain(verseKey) {
+      const key = String(verseKey || '')
+      if (!this.chainingEnabled || !key) return false
+      return this.chainingVisualAyahKeys.includes(key)
     },
     resolveMadaniAudioWordIndex(word, audioIndexMap = null) {
       return resolveMadaniAudioWordIndexHelper(word, audioIndexMap || this.madaniAudioIndexMap)
@@ -42358,8 +42460,9 @@ export default {
             sequenceTotal: chain.length
           })))
         }
-      } else if (chainingMethod === 'linking') {
-        // Linking method: practice ayahs individually, then adjacent ayah pairs.
+      } else {
+        // Linking is the default when Join ayahs is on but no method is chosen yet.
+        // An empty method used to skip both branches and wipe the playback queue.
         for (let index = 0; index < verses.length; index++) {
           const verse = verses[index]
           pushQueueEntry({
@@ -42479,8 +42582,23 @@ export default {
       this.chainingEnabled = nextEnabled
       if (!nextEnabled) {
         this.chainingMethod = ''
+      } else if (!['linking', 'cumulative'].includes(this.chainingMethod)) {
+        this.chainingMethod = 'linking'
       }
       this.applyChainingQueueChange(this.currentMode, { restart: true })
+    },
+    toggleTalqinModeRadio() {
+      this.talqinModeEnabled = !this.talqinModeEnabled
+      this.persistUiState()
+      this.persistCentralSessionState()
+      const label = this.getTechniqueDisplayLabel('talqin')
+      this.showBanner(
+        this.talqinModeEnabled
+          ? this.t('memorisation.activePracticeSetup.toasts.techniqueOn', { label })
+          : this.t('memorisation.activePracticeSetup.toasts.techniqueOff', { label }),
+        'info',
+        2200
+      )
     },
     toggleFocusModeRadio() {
       this.focusModeEnabled = !this.focusModeEnabled
@@ -43722,6 +43840,7 @@ export default {
           this.focusModeEnabled = !!state.focusModeEnabled
           this.blurModeEnabled = !!state.blurModeEnabled
           this.blurIntensity = Math.max(4, Math.min(18, Number(state.blurIntensity ?? this.blurIntensity ?? 10)))
+          this.talqinModeEnabled = !!state.talqinModeEnabled
           this.chainingEnabled = state.chainingEnabled ?? this.chainingEnabled
           this.chainingMethod = ['linking', 'cumulative'].includes(state.chainingMethod)
             ? state.chainingMethod
@@ -43894,6 +44013,7 @@ export default {
           focusModeEnabled: this.focusModeEnabled,
           blurModeEnabled: this.blurModeEnabled,
           blurIntensity: this.blurIntensity,
+          talqinModeEnabled: !!this.talqinModeEnabled,
           defaultFontSize: this.defaultFontSize,
           layoutFontSizes: {
             stacked: Number(this.layoutFontSizes?.stacked || 150),

@@ -2332,6 +2332,23 @@
   filter: blur(calc(var(--recall-blur, 10px) - 4px));
 }
 
+.verse-card.is-chain-member {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #c9a36a 42%, transparent);
+}
+
+.verse-card.is-chain-dim:not(.active) {
+  opacity: 0.46;
+}
+
+.verse-card.is-talqin-listen {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #7eb6c9 46%, transparent);
+}
+
+.verse-card.is-talqin-repeat {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #4f8fa3 58%, transparent);
+  background: color-mix(in srgb, #7eb6c9 8%, var(--surface, transparent));
+}
+
 .verse-small-play-btn i {
   font-size: 0.72rem;
 }
@@ -35031,6 +35048,41 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   line-height: 1.35;
 }
 
+.practice-technique-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0 2px;
+}
+
+.practice-technique-status__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-strong, #1b1612) 88%, var(--accent-light, #f3e6d2));
+  border: 1px solid color-mix(in srgb, var(--accent, #c9a36a) 22%, var(--border, #3a322a));
+  color: var(--text, #f4efe8);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.practice-technique-status__item[data-technique="talqin"] {
+  border-color: color-mix(in srgb, #7eb6c9 36%, var(--border, #3a322a));
+}
+
+.practice-technique-status__item[data-technique="chaining"] {
+  border-color: color-mix(in srgb, #c9a36a 40%, var(--border, #3a322a));
+}
+
+.practice-technique-status__item[data-technique="anchor"] {
+  border-color: color-mix(in srgb, #ff9800 36%, var(--border, #3a322a));
+}
+
 .practice-turn-callout.is-talqin {
   background: color-mix(in srgb, var(--surface-strong) 92%, var(--accent-light));
   border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
@@ -62609,7 +62661,8 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
 
   body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .session-progress-rail,
   body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .workspace-shell,
-  body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .workspace-shell-progress-pills {
+  body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .workspace-shell-progress-pills,
+  body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .practice-technique-status {
     display: none !important;
   }
 
