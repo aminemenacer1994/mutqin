@@ -15994,7 +15994,8 @@ body.memorisation-page nav.navbar.app-navbar {
   border-radius: 0.08em;
 }
 
-.madani-word.anchor-highlight::after {
+.madani-word.anchor-highlight::after,
+.qpc-madani-word.anchor-highlight::after {
   display: none;
 }
 
@@ -62439,12 +62440,11 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
 
 @media (max-width: 767.98px) {
   .madani-qpc-viewport .qpc-madani-line {
-    padding-block: calc(var(--qpc-word-size, 22px) * 0.02);
-    min-height: 0;
+    padding-block: calc(var(--qpc-word-size, 22px) * 0.04);
   }
 
   .madani-qpc-viewport .qpc-madani-line--ayah {
-    min-height: 0;
+    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62));
   }
 
   .madani-qpc-viewport .qpc-madani-line--surah_name {
@@ -62466,9 +62466,11 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
     height: auto !important;
     justify-content: flex-start !important;
     padding:
-      0.35rem
-      max(0.65rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))
-      0.45rem !important;
+      max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.2rem))
+      max(1rem, calc(env(safe-area-inset-right, 0px) + 0.45rem))
+      max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
+      max(1rem, calc(env(safe-area-inset-left, 0px) + 0.45rem))
+      !important;
   }
 
   .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio {
@@ -62554,13 +62556,20 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless .qpc-madani-page__sheet,
   body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
     padding:
-      0.35rem
-      max(0.65rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))
-      0.45rem !important;
+      max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.2rem))
+      max(1rem, calc(env(safe-area-inset-right, 0px) + 0.45rem))
+      max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
+      max(1rem, calc(env(safe-area-inset-left, 0px) + 0.45rem))
+      !important;
   }
 
   body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport {
     overflow: visible;
+  }
+
+  body.memorisation-page .main.madani-qpc-mode-active .workspace-main {
+    padding-block-end: calc(6.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-block-end: calc(6.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   [data-theme="dark"] body.memorisation-page .main.madani-qpc-mode-active .madani-qpc-viewport,
@@ -62603,6 +62612,22 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .madani-qpc-stage,
   body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .madani-qpc-viewport {
     min-height: calc(100dvh - 4.25rem);
+  }
+
+  body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .madani-qpc-viewport {
+    padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
+    box-sizing: border-box;
+  }
+
+  body.memorisation-page .main.madani-qpc-mode-active.is-madani-mobile-immersive .workspace-main {
+    padding-block-end: calc(6.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-block-end: calc(6.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body:has(.player-dock):has(.workspace-recite-dock__button)
+    .main.madani-qpc-mode-active.is-madani-mobile-immersive .workspace-main {
+    padding-block-end: calc(9.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-block-end: calc(9.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 
 }
@@ -66231,16 +66256,17 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-viewport .qpc-madani-shell--reader .qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
-    justify-content: center;
-    width: min(100%, 46rem);
-    max-width: min(100%, 46rem);
-    margin-inline: auto;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
     min-height: min(74vh, calc(100dvh - 11.5rem));
   }
 
   .madani-qpc-viewport .qpc-madani-shell--reader .qpc-madani-spread--spread.qpc-madani-spread--single-leaf .qpc-madani-spread__leaf {
-    flex: 0 1 min(100%, 44rem);
-    max-width: min(100%, 44rem);
+    flex: 0 1 50%;
+    max-width: 50%;
+    min-width: 0;
   }
 
   .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
@@ -66427,7 +66453,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-viewport .qpc-madani-session-scroll {
-    padding-bottom: 0.5rem;
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   /* Continuous session mushaf: drop printed-page gaps on phones */
@@ -66440,7 +66467,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
-    min-height: 0 !important;
+    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62)) !important;
     justify-content: flex-start !important;
   }
 
@@ -66514,23 +66541,23 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-main {
-    padding-block-end: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
-    scroll-padding-block-end: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    padding-block-end: calc(6.75rem + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-block-end: calc(6.75rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-main {
-    padding-block-end: calc(9rem + env(safe-area-inset-bottom, 0px)) !important;
-    scroll-padding-block-end: calc(9rem + env(safe-area-inset-bottom, 0px)) !important;
+    padding-block-end: calc(10rem + env(safe-area-inset-bottom, 0px)) !important;
+    scroll-padding-block-end: calc(10rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll {
-    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px));
   }
 
   body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll {
-    padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
-    scroll-padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(10rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(10rem + env(safe-area-inset-bottom, 0px));
   }
 
   body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio {

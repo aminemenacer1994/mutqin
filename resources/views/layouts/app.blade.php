@@ -9472,14 +9472,20 @@ body.session-analysis-modal-open {
   }
 </style>
 @if(request()->routeIs('memorisation', 'memorisation.demo'))
-<style id="mutqin-memorisation-hotfix-v168">
+<style id="mutqin-memorisation-hotfix-v169">
   /* Session flow + clip (network-first). Do not force min font-size — fitLines owns width. */
   @media (max-width: 767.98px) {
-    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport,
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport {
+      max-width: 100% !important;
+      overflow-x: clip !important;
+      box-sizing: border-box !important;
+    }
+
     html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page,
     html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__sheet {
       max-width: 100% !important;
-      overflow-x: clip !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
       box-sizing: border-box !important;
     }
 
@@ -9488,7 +9494,7 @@ body.session-analysis-modal-open {
     }
 
     html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
-      min-height: 0 !important;
+      min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62)) !important;
       justify-content: flex-start !important;
     }
 

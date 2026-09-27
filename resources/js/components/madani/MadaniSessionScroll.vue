@@ -183,8 +183,8 @@ export default {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
-  scroll-padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .qpc-madani-session-scroll__page {

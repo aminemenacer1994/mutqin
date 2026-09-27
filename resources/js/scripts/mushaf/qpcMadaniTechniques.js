@@ -1,6 +1,72 @@
 import { ayahKeyFromWord } from './qpcMadaniSelection.js'
 import { resolveQpcWordAudioIndex } from './qpcMadaniAudioDom.js'
 import { isWordHidden } from '../memorisationDetection/hiddenWords.js'
+import { resolveAnchorIndices } from '../techniques/anchorWords.js'
+
+export const QPC_MADANI_DOM_MANAGED_CLASSES = Object.freeze([
+  'highlighted',
+  'phrase-highlighted',
+  'is-playing-ayah',
+  'practice-focus-word',
+  'practice-focus-word--active',
+  'practice-focus-word--emphasis',
+  'word-error-flash',
+  'word-reveal-animate',
+  'tajweed-needs-review',
+  'is-tajweed-active',
+])
+
+export function isQpcMadaniDomManagedClass(className = '') {
+  const name = String(className || '')
+  if (!name) return false
+  if (QPC_MADANI_DOM_MANAGED_CLASSES.includes(name)) return true
+  return name.startsWith('recitation-word-') || name.startsWith('amd-word-')
+}
+
+export function collectQpcMadaniDomManagedClasses(classList) {
+  if (!classList) return []
+  return [...classList].filter(isQpcMadaniDomManagedClass)
+}
+
+export function restoreQpcMadaniDomManagedClasses(el, classes = []) {
+  if (!el?.classList || !Array.isArray(classes) || !classes.length) return
+  classes.forEach((name) => {
+    if (name) el.classList.add(name)
+  })
+}
+
+export function buildQpcMadaniAnchorIndexesByAyah({
+  verses = [],
+  anchorModeEnabled = false,
+  anchorCount = 1,
+  wordCountForAyah,
+} = {}) {
+  if (!anchorModeEnabled) return {}
+  const map = {}
+  for (const verse of Array.isArray(verses) ? verses : []) {
+    const key = String(verse?.key || '')
+    if (!key) continue
+    const total = typeof wordCountForAyah === 'function'
+      ? Number(wordCountForAyah(key, verse))
+      : 0
+    map[key] = resolveAnchorIndices(total, anchorCount)
+  }
+  return map
+}
+
+export function resolveAnchorWordState(wordAudioIndex, ayahKey, snapshot = {}) {
+  if (!snapshot.anchorModeEnabled) return false
+  const key = String(ayahKey || '')
+  const indexes = snapshot.anchorIndexesByAyah?.[key]
+  if (!Array.isArray(indexes) || !indexes.length) return false
+  const index = Number(wordAudioIndex)
+  return Number.isFinite(index) && indexes.includes(index)
+}
+
+function ayahMatchesSnapshotKey(ayahKey, snapshotKey) {
+  const key = String(ayahKey || '')
+  return !!key && key === String(snapshotKey || '')
+}
 
 export function qpcWordLocationKey(word = {}) {
   const location = String(word?.location || '').trim()
@@ -22,6 +88,8 @@ export function parseAyahNumberFromKey(ayahKey) {
 
 export function isAyahBlurred(ayahKey, snapshot = {}) {
   if (!snapshot.blurModeEnabled) return false
+  if (ayahMatchesSnapshotKey(ayahKey, snapshot.playbackAyahKey)) return false
+  if (ayahMatchesSnapshotKey(ayahKey, snapshot.highlightedAyahKey)) return false
   const activeNumber = parseAyahNumberFromKey(snapshot.effectiveActiveAyah)
   const verseNumber = parseAyahNumberFromKey(ayahKey)
   if (activeNumber === null || verseNumber === null) return false
@@ -40,6 +108,8 @@ export function isAyahFocusDimmed(ayahKey, snapshot = {}) {
   const key = String(ayahKey || '')
   if (!key) return false
   if (key === String(snapshot.effectiveActiveAyah || '')) return false
+  if (ayahMatchesSnapshotKey(key, snapshot.playbackAyahKey)) return false
+  if (ayahMatchesSnapshotKey(key, snapshot.highlightedAyahKey)) return false
   return true
 }
 
@@ -86,6 +156,7 @@ export function resolveCheckerHiddenWordState(wordAudioIndex, ayahKey, snapshot 
 export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, audioIndexMap = null) {
   const ayahKey = ayahKeyFromWord(word)
   const wordAudioIndex = resolveQpcWordAudioIndex(Number(word?.word), ayahKey, audioIndexMap)
+  const isAnchor = resolveAnchorWordState(wordAudioIndex, ayahKey, snapshot)
   const blur = isAyahBlurred(ayahKey, snapshot)
   const peek = blur && isAyahPeekRevealed(ayahKey, snapshot)
   const hiddenReveal = resolveHiddenRevealWordState(wordAudioIndex, ayahKey, snapshot)
@@ -97,6 +168,7 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
     ayahKey,
     wordAudioIndex,
     locationKey: qpcWordLocationKey(word),
+    isAnchor,
     blurUpcoming: blur,
     peekRevealed: peek,
     focusDimmed: isAyahFocusDimmed(ayahKey, snapshot) && !peek,
@@ -117,6 +189,8 @@ export function madaniQpcWordTechniqueClass(state = {}) {
     'word-revealed': !!state.hiddenRevealRevealed && !state.hiddenRevealCurrent,
     'word-current': !!state.hiddenRevealCurrent,
     'memory-word-hidden': !!state.checkerMasked,
+    'anchor-highlight': !!state.isAnchor,
+    'anchor-pulse': !!state.isAnchor,
   }
 }
 

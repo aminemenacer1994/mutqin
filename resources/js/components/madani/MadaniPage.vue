@@ -385,9 +385,10 @@ export default {
 
       const narrow = available < 440
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
-      const safety = this.embedded
-        ? (narrow ? 0.9 : 0.94)
-        : (mobile ? 0.93 : (narrow ? 0.9 : 0.95))
+      const sessionSheet = mobile && (this.borderless || this.sessionScoped)
+      const safety = this.embedded || sessionSheet
+        ? (narrow ? 0.88 : 0.92)
+        : (mobile ? 0.9 : (narrow ? 0.9 : 0.95))
       const cap = this.embedded
         ? (narrow ? 34 : 38)
         : (mobile ? (narrow ? 48 : 54) : (narrow ? 40 : 46))
@@ -395,10 +396,7 @@ export default {
         ? Number(this.fontScale)
         : 1
       const widthFit = (available / widest) * MEASURE_SIZE * safety
-      let rawSize = Math.min(cap * requested, widthFit)
-      if (mobile && !this.embedded) {
-        rawSize = Math.min(cap * requested, widthFit * 1.12)
-      }
+      const rawSize = Math.min(cap * requested, widthFit)
       if (this.sessionViewportFill) {
         const heightFit = this.viewportBandHeightFit(root, sheet, targets.length)
         if (Number.isFinite(heightFit) && heightFit > 0) {
@@ -468,7 +466,13 @@ export default {
     contentWidth(sheet) {
       const styles = getComputedStyle(sheet)
       const padding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight)
-      return Math.max(0, sheet.clientWidth - padding)
+      let inner = Math.max(0, sheet.clientWidth - padding)
+      const mobile = typeof window !== 'undefined' && window.innerWidth < 768
+      if (mobile && (this.borderless || this.sessionScoped)) {
+        // QCF COLR glyphs extend past offsetWidth; keep ink inside clipped viewport.
+        inner = Math.max(0, inner - 14)
+      }
+      return inner
     },
     sessionViewportTargetHeight() {
       if (typeof window === 'undefined') return 0
@@ -698,9 +702,10 @@ export default {
 
 .qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
   padding:
-    0.35rem
-    max(0.65rem, env(safe-area-inset-right, 0px), env(safe-area-inset-left, 0px))
-    0.5rem;
+    max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.2rem))
+    max(1rem, calc(env(safe-area-inset-right, 0px) + 0.45rem))
+    max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
+    max(1rem, calc(env(safe-area-inset-left, 0px) + 0.45rem));
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--opening .qpc-madani-page__sheet {
@@ -720,6 +725,10 @@ export default {
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
-  padding: clamp(0.55rem, 1.4vw, 0.95rem) clamp(0.45rem, 1.1vw, 0.85rem) clamp(0.28rem, 0.8vw, 0.42rem);
+  padding:
+    max(clamp(0.55rem, 1.4vw, 0.95rem), calc(env(safe-area-inset-top, 0px) + 0.2rem))
+    max(clamp(0.45rem, 1.1vw, 0.85rem), env(safe-area-inset-right, 0px))
+    max(clamp(0.28rem, 0.8vw, 0.42rem), env(safe-area-inset-bottom, 0px))
+    max(clamp(0.45rem, 1.1vw, 0.85rem), env(safe-area-inset-left, 0px));
 }
 </style>

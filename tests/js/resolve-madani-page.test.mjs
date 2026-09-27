@@ -7,7 +7,10 @@ import {
   resolveQpcMadaniPageForVerseKey,
   verseKeyFromCoordinates,
 } from '../../resources/js/scripts/mushaf/qpcMadaniVersePage.js'
-import { resolveMadaniSpread } from '../../resources/js/scripts/mushaf/madaniPagePair.js'
+import {
+  orderMadaniSpreadLeavesForOpening,
+  resolveMadaniSpread,
+} from '../../resources/js/scripts/mushaf/madaniPagePair.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const index = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/verse-pages.json'), 'utf8'))
@@ -34,6 +37,19 @@ assert.deepEqual(resolveMadaniSpread(2).pages, [1, 2])
 assert.deepEqual(resolveMadaniSpread(6).pages, [5, 6])
 assert.deepEqual(resolveMadaniSpread(603).pages, [603, 604])
 assert.deepEqual(resolveMadaniSpread(604).pages, [603, 604])
+
+const oddLeaf = { pageNumber: 5, page: { lines: [] } }
+const evenLeaf = { pageNumber: 6, page: { lines: ['x'] } }
+assert.deepEqual(
+  orderMadaniSpreadLeavesForOpening([oddLeaf, evenLeaf]),
+  [evenLeaf, oddLeaf],
+  'populated even page moves to RTL right slot',
+)
+assert.deepEqual(
+  orderMadaniSpreadLeavesForOpening([evenLeaf, oddLeaf]),
+  [evenLeaf, oddLeaf],
+  'already-right order unchanged',
+)
 
 const memorisationVue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 assert.match(memorisationVue, /:active-ayah="qpcMadaniSelectionActiveAyah"/, 'reader exposes activeAyah to Madani')

@@ -4,15 +4,22 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   buildMadaniAmdHiddenIndexesByAyah,
+  buildQpcMadaniAnchorIndexesByAyah,
+  collectQpcMadaniDomManagedClasses,
   isAyahBlurred,
+  isAyahFocusDimmed,
   isAyahPeekRevealed,
+  isQpcMadaniDomManagedClass,
   madaniQpcWordTechniqueClass,
   qpcWordLocationKey,
+  resolveAnchorWordState,
   resolveCheckerHiddenWordState,
   resolveHiddenRevealWordState,
   resolveMadaniAmdPeekAyahKey,
   resolveQpcMadaniWordTechniqueState,
+  restoreQpcMadaniDomManagedClasses,
 } from '../../resources/js/scripts/mushaf/qpcMadaniTechniques.js'
+import { resolveAnchorIndices } from '../../resources/js/scripts/techniques/anchorWords.js'
 import {
   normaliseDifficultyPercent,
   selectHiddenWordIndexes,
@@ -36,6 +43,40 @@ const blurSnap = {
 assert.equal(isAyahBlurred('2:31', blurSnap), true)
 assert.equal(isAyahBlurred('2:30', blurSnap), false)
 assert.equal(isAyahPeekRevealed('2:31', { ...blurSnap, hoverPeekAyah: '2:31' }), true)
+assert.equal(isAyahBlurred('2:31', { ...blurSnap, playbackAyahKey: '2:31' }), false)
+assert.equal(isAyahFocusDimmed('2:31', {
+  focusModeEnabled: true,
+  hasSessionStarted: true,
+  effectiveActiveAyah: '2:30',
+}), true)
+assert.equal(isAyahFocusDimmed('2:31', {
+  focusModeEnabled: true,
+  hasSessionStarted: true,
+  effectiveActiveAyah: '2:30',
+  playbackAyahKey: '2:31',
+}), false)
+
+assert.deepEqual(resolveAnchorIndices(1, 1), [0])
+assert.deepEqual(resolveAnchorIndices(7, 1), [3])
+assert.deepEqual(resolveAnchorIndices(7, 2), [0, 6])
+assert.deepEqual(resolveAnchorIndices(10, 3), [2, 5, 8])
+assert.deepEqual(
+  buildQpcMadaniAnchorIndexesByAyah({
+    verses: [{ key: '2:30' }],
+    anchorModeEnabled: true,
+    anchorCount: 2,
+    wordCountForAyah: () => 7,
+  }),
+  { '2:30': [0, 6] },
+)
+assert.equal(resolveAnchorWordState(0, '2:30', {
+  anchorModeEnabled: true,
+  anchorIndexesByAyah: { '2:30': [0, 6] },
+}), true)
+assert.equal(resolveAnchorWordState(3, '2:30', {
+  anchorModeEnabled: true,
+  anchorIndexesByAyah: { '2:30': [0, 6] },
+}), false)
 
 const wordCount = 12
 for (const pct of [25, 50, 75, 100]) {
@@ -84,6 +125,16 @@ const focusTechnique = resolveQpcMadaniWordTechniqueState(word, {
 })
 assert.equal(focusTechnique.focusDimmed, true)
 
+const anchorTechnique = resolveQpcMadaniWordTechniqueState(
+  { location: '2:30:1', surah: '2', ayah: '30', word: '1', text: 'x' },
+  {
+    anchorModeEnabled: true,
+    anchorIndexesByAyah: { '2:30': [0] },
+  },
+)
+assert.equal(anchorTechnique.isAnchor, true)
+assert.equal(madaniQpcWordTechniqueClass(anchorTechnique)['anchor-highlight'], true)
+
 const amdByAyah = buildMadaniAmdHiddenIndexesByAyah({
   ayahKeys: ['2:30', '2:31'],
   ayahBounds: [{ start: 0, end: 5 }, { start: 5, end: 12 }],
@@ -125,17 +176,40 @@ assert.equal(
 assert.match(wordVue, /is-word-masked/)
 assert.match(wordVue, /::after/)
 assert.match(wordVue, /display: inline-block/)
+assert.match(wordVue, /anchor-highlight/)
+assert.match(wordVue, /data-anchor/)
+assert.match(wordVue, /collectQpcMadaniDomManagedClasses/)
+assert.match(wordVue, /amd-word-hidden/)
 assert.doesNotMatch(wordVue, /visibility:\s*hidden/)
 assert.doesNotMatch(wordVue, /display:\s*none/)
 assert.match(wordVue, /data-verse-key/)
 assert.match(wordVue, /data-word-index/)
 assert.match(wordVue, /qpcMadaniTechniques/)
 assert.match(memorisationJs, /qpcMadaniTechniqueSnapshot/)
+assert.match(memorisationJs, /buildQpcMadaniAnchorIndexesByAyah/)
+assert.match(memorisationJs, /anchorIndexesByAyah/)
+assert.match(memorisationJs, /playbackAyahKey/)
+assert.match(memorisationJs, /highlightedAyahKey/)
+assert.match(memorisationJs, /resolveAnchorIndices/)
 assert.doesNotMatch(memorisationJs, /buildMadaniAmdHiddenIndexesByAyah/)
 assert.match(memorisationJs, /checkerHiddenIndexesByAyah: \{\}/)
 assert.match(memorisationVue, /:technique-snapshot="qpcMadaniTechniqueSnapshot"/)
 assert.match(memorisationVue, /@peek-enter="onVersePeekEnter"/)
 assert.match(memorisationJs, /qpc-madani-word\[data-verse-key/)
 assert.doesNotMatch(memorisationJs, /madaniTechniqueEngine|qpcTechniqueEngine/)
+
+assert.equal(isQpcMadaniDomManagedClass('highlighted'), true)
+assert.equal(isQpcMadaniDomManagedClass('amd-word-hidden'), true)
+assert.equal(isQpcMadaniDomManagedClass('recitation-word-correct'), true)
+assert.equal(isQpcMadaniDomManagedClass('is-focus-dim'), false)
+assert.deepEqual(collectQpcMadaniDomManagedClasses(['is-focus-dim', 'highlighted', 'amd-word-hidden']), [
+  'highlighted',
+  'amd-word-hidden',
+])
+const restored = []
+restoreQpcMadaniDomManagedClasses({
+  classList: { add(name) { restored.push(name) } },
+}, ['highlighted', 'amd-word-hidden'])
+assert.deepEqual(restored, ['highlighted', 'amd-word-hidden'])
 
 console.log('qpc-madani-techniques.test.mjs: ok')

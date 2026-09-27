@@ -12,6 +12,7 @@
     :data-verse-key="ayahKey || null"
     :data-word-index="wordAudioIndex != null ? wordAudioIndex : null"
     :data-ayah-state="ayahStateAttr"
+    :data-anchor="techniqueState.isAnchor ? '1' : null"
     :data-qpc-progress="progressAttr"
     :class="wordClass"
     :style="{ fontFamily: `'${displayFontFamily}'` }"
@@ -30,8 +31,10 @@
 <script>
 import { ayahKeyFromWord, madaniWordVisualClass, resolveMadaniAyahVisualState } from '../../scripts/mushaf/qpcMadaniSelection'
 import {
+  collectQpcMadaniDomManagedClasses,
   madaniQpcWordTechniqueClass,
   resolveQpcMadaniWordTechniqueState,
+  restoreQpcMadaniDomManagedClasses,
 } from '../../scripts/mushaf/qpcMadaniTechniques'
 import { resolveQpcMadaniWordGlyph } from '../../scripts/mushaf/qpcMadaniReadingTools'
 import {
@@ -80,6 +83,17 @@ export default {
       type: Object,
       default: null,
     },
+  },
+  data() {
+    return {
+      persistedDomClasses: [],
+    }
+  },
+  beforeUpdate() {
+    this.persistedDomClasses = collectQpcMadaniDomManagedClasses(this.$el?.classList)
+  },
+  updated() {
+    restoreQpcMadaniDomManagedClasses(this.$el, this.persistedDomClasses)
   },
   computed: {
     glyphPresentation() {
@@ -197,7 +211,8 @@ export default {
 
 .qpc-madani-word.is-word-masked,
 .qpc-madani-word.word-hidden,
-.qpc-madani-word.memory-word-hidden {
+.qpc-madani-word.memory-word-hidden,
+.qpc-madani-word.amd-word-hidden {
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
   text-shadow: none;
@@ -207,7 +222,8 @@ export default {
 
 .qpc-madani-word.is-word-masked::after,
 .qpc-madani-word.word-hidden::after,
-.qpc-madani-word.memory-word-hidden::after {
+.qpc-madani-word.memory-word-hidden::after,
+.qpc-madani-word.amd-word-hidden::after {
   content: '';
   position: absolute;
   inset: 0.02em 0.01em;
@@ -238,7 +254,8 @@ export default {
 }
 
 .qpc-madani-word.is-word-masked:hover::after,
-.qpc-madani-word.word-hidden:hover::after {
+.qpc-madani-word.word-hidden:hover::after,
+.qpc-madani-word.amd-word-hidden:hover::after {
   background: color-mix(in srgb, #a8a29e 28%, transparent);
 }
 
@@ -279,13 +296,16 @@ export default {
 
 .qpc-madani-word--tajweed-glyph {
   display: inline-block;
-  color: unset !important;
-  -webkit-text-fill-color: unset !important;
   font-synthesis: none;
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
   line-height: 1.4;
   padding-block: 0.04em;
+}
+
+.qpc-madani-word--tajweed-glyph:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden) {
+  color: unset !important;
+  -webkit-text-fill-color: unset !important;
 }
 
 .qpc-madani-word.qpc-progress-weak-word,
@@ -321,18 +341,51 @@ export default {
 </style>
 
 <style>
-.main.focus-mode-active .qpc-madani-word.is-focus-dim:not(.is-ayah-active):not(.highlighted):not(.peek-revealed) {
+.main.focus-mode-active .qpc-madani-word.is-focus-dim:not(.is-ayah-active):not(.highlighted):not(.peek-revealed):not(.is-playing-ayah) {
   opacity: var(--focus-dim-opacity, 0.46);
 }
 
-.main.blur-mode-active .qpc-madani-word.blur-upcoming:not(.peek-revealed):not(.is-ayah-active):not(.highlighted) {
+.main.blur-mode-active .qpc-madani-word.blur-upcoming:not(.peek-revealed):not(.is-ayah-active):not(.highlighted):not(.is-playing-ayah) {
   filter: blur(var(--recall-blur, 10px));
 }
 
 .main.blur-mode-active .qpc-madani-word.blur-upcoming.peek-revealed,
 .main.blur-mode-active .qpc-madani-word.is-ayah-active,
-.main.blur-mode-active .qpc-madani-word.highlighted {
+.main.blur-mode-active .qpc-madani-word.highlighted,
+.main.blur-mode-active .qpc-madani-word.is-playing-ayah {
   filter: none;
+}
+
+.main.blur-mode-active .qpc-madani-word.blur-upcoming.anchor-highlight:not(.peek-revealed) {
+  filter: blur(calc(var(--recall-blur, 10px) - 4px));
+}
+
+.qpc-madani-word.anchor-highlight {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.28), rgba(255, 152, 0, 0.34));
+  box-shadow: inset 0 -0.14em 0 #ff9800;
+  border-radius: 0.08em;
+}
+
+.qpc-madani-word.anchor-highlight::after {
+  content: none;
+}
+
+.qpc-madani-word.anchor-pulse {
+  animation: qpcMadaniAnchorPulse 0.6s ease-out;
+}
+
+@keyframes qpcMadaniAnchorPulse {
+  0%,
+  100% {
+    box-shadow: inset 0 -0.14em 0 #ff9800;
+  }
+
+  50% {
+    box-shadow:
+      inset 0 -0.14em 0 #ff9800,
+      0 0 0 0.18em rgba(255, 152, 0, 0);
+  }
 }
 
 .qpc-madani-word.practice-focus-word {

@@ -284,6 +284,8 @@ import {
   getTechniqueLabel,
   resolveTechniqueDisplay,
 } from '../scripts/techniques/techniqueDisplay'
+import { resolveAnchorIndices } from '../scripts/techniques/anchorWords'
+import { buildQpcMadaniAnchorIndexesByAyah } from '../scripts/mushaf/qpcMadaniTechniques'
 import {
   REVIEW_AUDIO_STATES,
   bindAudioSource,
@@ -9559,18 +9561,31 @@ export default {
 
     qpcMadaniTechniqueSnapshot() {
       const revealed = this.hiddenRevealSession?.revealedWordIndexes
+      const playbackAyahKey = this.isPlaying
+        ? String(this.activeVerseKey || this.effectiveActiveVerseKey || '')
+        : ''
       return Object.freeze({
         blurModeEnabled: !!this.blurModeEnabled,
         blurPeekHoldingSpace: !!this.blurPeekHoldingSpace,
         hoverPeekAyah: String(this.hoverPeekVerseKey || ''),
         touchPeekAyah: String(this.touchPeekVerseKey || ''),
         effectiveActiveAyah: String(this.effectiveActiveVerseKey || ''),
+        playbackAyahKey,
+        highlightedAyahKey: String(this.currentHighlightedVerseKey || ''),
         focusModeEnabled: !!this.focusModeEnabled,
         hasSessionStarted: !!(this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback),
         hiddenRevealModeEnabled: !!(this.hiddenRevealModeEnabled && this.hiddenRevealSession?.sessionStarted),
         hiddenRevealVerseKey: String(this.effectiveActiveVerseKey || ''),
         hiddenRevealRevealed: revealed instanceof Set ? [...revealed] : [],
         hiddenRevealCurrentIndex: Number(this.hiddenRevealSession?.currentWordIndex ?? -1),
+        anchorModeEnabled: !!this.anchorModeEnabled,
+        anchorCount: Number(this.anchorCount) || 1,
+        anchorIndexesByAyah: buildQpcMadaniAnchorIndexesByAyah({
+          verses: this.verses || [],
+          anchorModeEnabled: !!this.anchorModeEnabled,
+          anchorCount: this.anchorCount,
+          wordCountForAyah: (verseKey) => this.getVerseAudioWordCount(verseKey),
+        }),
         checkerHiddenIndexesByAyah: {},
         checkerPeekActive: false,
         checkerPeekAyah: '',
@@ -9956,11 +9971,7 @@ export default {
     qpcMadaniFontScale() {
       const base = 150
       const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || 195)
-      let scale = Math.max(1.2, Math.min(1.6, size / base))
-      if (this.isMobileViewport?.()) {
-        scale = Math.min(1.68, scale * 1.12)
-      }
-      return scale
+      return Math.max(1.2, Math.min(1.6, size / base))
     },
 
     isMadaniMobileImmersive() {
@@ -14891,8 +14902,14 @@ export default {
     highlightAnchorsForCard(card) {
       if (!this.anchorModeEnabled || !card) return
 
-      // Madani mushaf: anchors are reactive via currentMadaniLines.isAnchor.
-      if (card.classList?.contains('madani-word') || card.closest?.('.madani-page-sheet')) {
+      // Mushaf layouts own anchors reactively (legacy lines + QPC snapshot).
+      if (
+        card.classList?.contains('madani-word')
+        || card.classList?.contains('qpc-madani-word')
+        || card.closest?.('.madani-page-sheet')
+        || card.closest?.('.madani-qpc-workspace')
+        || card.closest?.('.qpc-madani-page')
+      ) {
         return
       }
 
@@ -14936,33 +14953,12 @@ export default {
     },
 
     getAnchorIndices(totalWords) {
-      if (totalWords === 0) return []
-      if (totalWords === 1) return [0]
-      if (totalWords === 2) return [0, 1]
-
-      if (this.anchorCount === 1) {
-        // Center word
-        return [Math.floor(totalWords / 2)]
-      }
-      else if (this.anchorCount === 2) {
-        // First and last
-        return [0, totalWords - 1]
-      }
-      else {
-        // 3 anchors: strategic positions (20%, 50%, 80%)
-        const positions = [
-          Math.floor(totalWords * 0.2),    // ~20% in
-          Math.floor(totalWords * 0.5),    // Middle
-          Math.floor(totalWords * 0.8)     // ~80% in
-        ]
-        // Remove duplicates and sort
-        return [...new Set(positions)].sort((a, b) => a - b)
-      }
+      return resolveAnchorIndices(totalWords, this.anchorCount)
     },
 
     // Clear all anchor highlights
     clearAnchorHighlights() {
-      const allWords = document.querySelectorAll('.wbw-word, word, .word-item, .mushaf-ayah-text .wbw-word')
+      const allWords = document.querySelectorAll('.wbw-word, word, .word-item, .mushaf-ayah-text .wbw-word, .qpc-madani-word')
       allWords.forEach(word => {
         word.classList.remove('anchor-highlight')
         word.classList.remove('anchor-pulse')
@@ -21291,7 +21287,7 @@ export default {
         )
         verseEl?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
         const words = root?.querySelectorAll?.(
-          `.wbw-word[data-verse-key="${verseKey}"], word.wbw-word[data-verse-key="${verseKey}"], .madani-word[data-verse-key="${verseKey}"][data-word-index]`,
+          `.wbw-word[data-verse-key="${verseKey}"], word.wbw-word[data-verse-key="${verseKey}"], .madani-word[data-verse-key="${verseKey}"][data-word-index], .qpc-madani-word[data-verse-key="${verseKey}"][data-word-index]`,
         ) || []
         words.forEach((el, index) => {
           el.classList.remove('practice-focus-word', 'practice-focus-word--active')

@@ -48,3 +48,17 @@ export function nextMadaniPage(page) {
 export function shouldShowTwoMadaniPages(width) {
   return Number(width) >= MADANI_TWO_PAGE_MIN_WIDTH
 }
+
+/**
+ * RTL mushaf spreads: the reader's first page is on the right.
+ * When only one side of the pair has loaded content, show that leaf on the right.
+ */
+export function orderMadaniSpreadLeavesForOpening(leaves = []) {
+  if (!Array.isArray(leaves) || leaves.length !== 2) return leaves
+  const populated = leaves.filter((leaf) => leaf?.page)
+  const empty = leaves.filter((leaf) => !leaf?.page)
+  if (populated.length === 1 && empty.length === 1) {
+    return [populated[0], empty[0]]
+  }
+  return leaves
+}

@@ -105,6 +105,7 @@ import {
   nextMadaniSpread,
   previousMadaniPage,
   previousMadaniSpread,
+  orderMadaniSpreadLeavesForOpening,
   resolveMadaniSpread,
   shouldShowTwoMadaniPages,
 } from '../../scripts/mushaf/madaniPagePair'
@@ -235,7 +236,9 @@ export default {
       if (this.readerDesktopSpread) {
         return leaves
       }
-      if (!this.sessionBoundsActive) return leaves
+      if (!this.sessionBoundsActive) {
+        return orderMadaniSpreadLeavesForOpening(leaves)
+      }
       const filtered = leaves.filter((leaf) => {
         if (!leaf.page?.lines) return true
         return pageHasQpcMadaniSessionLines(
@@ -244,7 +247,8 @@ export default {
           this.sessionEndAyah,
         )
       })
-      return filtered.length ? filtered : leaves.filter((leaf) => leaf.page)
+      const resolved = filtered.length ? filtered : leaves.filter((leaf) => leaf.page)
+      return orderMadaniSpreadLeavesForOpening(resolved)
     },
     spreadLayoutClass() {
       if (this.mode !== 'spread') return ''
@@ -605,15 +609,16 @@ export default {
 }
 
 .qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
-  justify-content: center;
-  width: min(100%, 42rem);
-  max-width: min(100%, 42rem);
-  margin-inline: auto;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
 }
 
 .qpc-madani-spread--spread.qpc-madani-spread--single-leaf .qpc-madani-spread__leaf {
-  flex: 0 1 min(100%, 40rem);
-  max-width: min(100%, 40rem);
+  flex: 0 1 50%;
+  max-width: 50%;
+  min-width: 0;
   box-shadow: none !important;
 }
 
