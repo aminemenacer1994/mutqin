@@ -6775,22 +6775,30 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     display: none !important;
   }
 
+  /* Mushaf portrait: keep each ayah line centered (wins over legacy justify/contents fit). */
   html body .app .main.mushaf-mode-active .madani-page-sheet,
   html body .app .main.mushaf-mode-active .madani-page-sheet--unicode {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    text-align: justify !important;
-    text-align-last: justify !important;
+    direction: rtl !important;
+    text-align: center !important;
+    text-align-last: center !important;
     line-height: 1.85 !important;
     padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px)) !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
   }
 
   html body .app .main.mushaf-mode-active .madani-line--ayah,
   html body .app .main.mushaf-mode-active .madani-line--glyphs,
   html body .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
-    display: contents !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    text-align: center !important;
+    text-align-last: center !important;
+    overflow: visible !important;
   }
 
   html body .app .main.mushaf-mode-active .madani-word,
@@ -6800,7 +6808,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     display: inline !important;
     white-space: nowrap !important;
     word-spacing: 0 !important;
-    margin-inline: 0.14em 0 !important;
+    margin-inline: 0.08em !important;
     padding-inline: 0 !important;
     line-height: inherit !important;
   }
@@ -7791,6 +7799,80 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     gap: 0 !important;
   }
 
+  /* Active session dashboard: inset from screen edges (v185 hotfix zeroes shell margins). */
+  html body .app .workspace-shell:not(.is-idle-card) {
+    margin-inline: var(--mq-mobile-gutter) !important;
+    inline-size: auto !important;
+    max-inline-size: none !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font: inherit !important;
+    text-align: start !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent) !important;
+    outline-offset: 3px !important;
+    border-radius: 8px !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    align-items: baseline !important;
+    gap: 0.35rem 0.5rem !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__chevron {
+    flex: 0 0 auto !important;
+    color: color-mix(in srgb, var(--text) 62%, var(--accent) 38%) !important;
+    opacity: 0.9 !important;
+    transition: transform 0.2s ease !important;
+    transform: rotate(0deg) !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__chevron.is-collapsed {
+    transform: rotate(-180deg) !important;
+  }
+
+  /* Collapsed: title + reading icons only (session CTAs + metadata hidden). */
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .workspace-shell-actions,
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .workspace-shell-head-actions,
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .top-card-session-hr,
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
+    display: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    grid-template-rows: auto !important;
+    row-gap: 0 !important;
+  }
+
+  html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) {
+    gap: 0 !important;
+    padding-block-end: var(--mq-card-pad) !important;
+  }
+
   html body .app .top-card-menu .top-card-menu-toggle--layout {
     display: flex !important;
   }
@@ -7875,9 +7957,21 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     .madani-qpc-workspace,
     .madani-qpc-viewport,
     .madani-qpc-stage,
-    .madani-qpc-stage__pages
+    .madani-qpc-stage__pages,
+    .qpc-madani-session-scroll,
+    .qpc-madani-session-scroll__page,
+    .qpc-madani-page,
+    .qpc-madani-page__ornament,
+    .qpc-madani-page__sheet,
+    .qpc-madani-line,
+    .qpc-madani-line--ayah,
+    .qpc-madani-line--basmala,
+    .qpc-madani-line--basmallah,
+    .qpc-madani-basmallah-words
   ) {
     overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
   }
 
   .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated,
@@ -7897,10 +7991,6 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   }
 
   .session-progress-rail {
-    margin: 0 !important;
-  }
-
-  .workspace-shell {
     margin: 0 !important;
   }
 
@@ -7986,7 +8076,7 @@ html body .app .workspace-recite-dock__button:hover {
     transform: none !important;
   }
 
-  /* QPC mushaf: use the full phone width (this file wins over Memorisation.css). */
+  /* QPC mushaf: full width shell, inset sheet so glyphs/markers are not clipped. */
   .app .main.madani-qpc-mode-active,
   .main.madani-qpc-mode-active {
     padding-inline: 0 !important;
@@ -8004,22 +8094,77 @@ html body .app .workspace-recite-dock__button:hover {
   .app .main.madani-qpc-mode-active .qpc-madani-page,
   .app .main.madani-qpc-mode-active .qpc-madani-page--single,
   .app .main.madani-qpc-mode-active .qpc-madani-page--borderless,
-  .app .main.madani-qpc-mode-active .qpc-madani-page__ornament,
-  .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+  .app .main.madani-qpc-mode-active .qpc-madani-page__ornament {
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: 0 !important;
     padding-inline: 0 !important;
+    overflow: visible !important;
   }
 
-  .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
-    padding-inline: max(0.18rem, env(safe-area-inset-left, 0px)) max(0.18rem, env(safe-area-inset-right, 0px)) !important;
-  }
-
-  .app .main.madani-qpc-mode-active .qpc-madani-line,
-  .app .main.madani-qpc-mode-active .qpc-madani-line--ayah {
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet {
+    box-sizing: border-box !important;
     width: 100% !important;
     max-width: 100% !important;
-    justify-content: space-between !important;
+    margin-inline: 0 !important;
+    padding:
+      max(0.55rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))
+      max(0.72rem, calc(env(safe-area-inset-right, 0px) + 0.42rem))
+      max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
+      max(0.72rem, calc(env(safe-area-inset-left, 0px) + 0.42rem))
+      !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
+    padding-top: calc(var(--qpc-word-size, 22px) * 0.14) !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding-inline: 0.08rem !important;
+    justify-content: center !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+    align-items: center !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-page--madani,
+  html body .app .main.mushaf-mode-active .mushaf-page-body {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-page-sheet--unicode {
+    margin-inline: auto !important;
+    text-align: center !important;
+    text-align-last: center !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah,
+  html body .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--glyphs {
+    text-align: center !important;
+    text-align-last: center !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-word--unicode,
+  html body .app .main.mushaf-mode-active .madani-word--fallback {
+    margin-inline: 0.08em !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-word.is-range-end {
+    overflow: visible !important;
+    flex-shrink: 0 !important;
   }
 }

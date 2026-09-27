@@ -500,9 +500,10 @@
           data-tour="workspace-welcome"
           data-session-scroll-target
           :class="{
-            collapsed: mainCardCollapsed,
+            collapsed: mainCardCollapsed && showMobileSessionOverviewCollapsible,
             'workspace-shell--post-session-choice': isPostSessionChoiceVisible,
             'workspace-shell--mobile-resume-only': showMobileSessionDashboardResumeOnly,
+            'workspace-shell--mobile-collapsible': showMobileSessionOverviewCollapsible,
             'is-idle-card': showSessionOverviewIdleActions,
           }"
           :data-reading-mode="readingViewMode"
@@ -513,7 +514,46 @@
           <div class="workspace-shell-head-toolbar">
           <div class="workspace-shell-copy">
             <p v-if="workspaceShellSubtitle" class="workspace-shell-subtitle">{{ workspaceShellSubtitle }}</p>
-            <h1 class="workspace-shell-main-title mutqin-surah-bilingual" :aria-label="topCardSessionLabel">
+            <button
+              v-if="showMobileSessionOverviewCollapsible"
+              type="button"
+              class="workspace-shell-main-title workspace-shell-overview-toggle mutqin-surah-bilingual"
+              data-testid="workspace-session-overview-collapse"
+              :aria-expanded="!mainCardCollapsed"
+              :aria-label="mainCardCollapsed ? t('memorisation.a11y.expandSessionOverview') : t('memorisation.a11y.collapseSessionOverview')"
+              @click="toggleMainCardCollapsed"
+            >
+              <span class="workspace-shell-overview-toggle__text" :aria-hidden="true">
+                <template v-if="topCardSurahArabic || topCardSurahLatin">
+                  <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en" dir="ltr">{{ topCardSurahLatin }}</span>
+                  <span v-if="topCardSurahArabic" class="workspace-shell-surah-ar" dir="rtl" lang="ar">{{ topCardSurahArabic }}</span>
+                </template>
+                <template v-else>{{ topCardSessionLabel }}</template>
+              </span>
+              <svg
+                class="workspace-shell-overview-toggle__chevron"
+                :class="{ 'is-collapsed': mainCardCollapsed }"
+                viewBox="0 0 20 20"
+                width="18"
+                height="18"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M5 7.5 10 12.5 15 7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.85"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+            <h1
+              v-else
+              class="workspace-shell-main-title mutqin-surah-bilingual"
+              :aria-label="topCardSessionLabel"
+            >
               <template v-if="topCardSurahArabic || topCardSurahLatin">
                 <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en" dir="ltr">{{ topCardSurahLatin }}</span>
                 <span v-if="topCardSurahArabic" class="workspace-shell-surah-ar" dir="rtl" lang="ar">{{ topCardSurahArabic }}</span>

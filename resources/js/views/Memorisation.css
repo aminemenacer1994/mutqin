@@ -66583,6 +66583,12 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   contain: none;
 }
 
+.madani-qpc-viewport .qpc-madani-line--ayah,
+.madani-qpc-viewport .qpc-madani-line--session-partial,
+.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
+  justify-content: center !important;
+}
+
 .madani-qpc-viewport .qpc-madani-word--tajweed-glyph {
   color: unset !important;
   -webkit-text-fill-color: unset !important;
@@ -66683,7 +66689,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
   .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
     min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62)) !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
   }
 
   .app .main.mushaf-mode-active .mushaf-session-stack {

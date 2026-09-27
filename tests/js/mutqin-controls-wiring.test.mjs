@@ -416,6 +416,56 @@ includesAll('top card dashboard visibility', [
     'mobile-grid must collapse resume-only session actions to a single row'
   )
   assert.match(
+    mobileGridCss,
+    /workspace-shell--mobile-collapsible\.collapsed[\s\S]*?workspace-shell-progress-pills[\s\S]*?display:\s*none\s*!important/,
+    'mobile-grid must hide session CTAs and pills when the mobile dashboard is collapsed'
+  )
+  assert.match(
+    mobileGridCss,
+    /Active session dashboard: inset from screen edges[\s\S]*?margin-inline:\s*var\(--mq-mobile-gutter\)\s*!important/,
+    'mobile-grid must inset the session dashboard from the screen edges'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v186[\s\S]*?--mq-session-dashboard-gutter[\s\S]*?margin-inline:\s*var\(--mq-session-dashboard-gutter\)\s*!important/,
+    'blade v186 must inset the mobile session dashboard from the screen edges'
+  )
+  assert.match(
+    mobileGridCss,
+    /QPC mushaf: full width shell, inset sheet[\s\S]*?qpc-madani-page__sheet[\s\S]*?0\.72rem[\s\S]*?overflow:\s*visible\s*!important/,
+    'mobile-grid must inset QPC mushaf sheets and keep glyphs visible on phones'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v187[\s\S]*?qpc-madani-page__sheet[\s\S]*?0\.72rem/,
+    'blade v187 must inset QPC mushaf sheets on phones'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v188[\s\S]*?text-align:\s*center\s*!important[\s\S]*?madani-line--ayah/,
+    'blade v188 must keep mobile mushaf ayah lines centered'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v189[\s\S]*?qpc-madani-line--ayah[\s\S]*?justify-content:\s*center\s*!important/,
+    'blade v189 must center mobile QPC ayah lines'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v190[\s\S]*?qpc-madani-line--ayah[\s\S]*?justify-content:\s*center\s*!important/,
+    'blade v190 must center QPC ayah lines on every viewport'
+  )
+  assert.match(
+    mobileGridCss,
+    /main\.madani-qpc-mode-active \.qpc-madani-line--ayah[\s\S]*?justify-content:\s*center\s*!important/,
+    'mobile-grid must center QPC ayah lines on phones'
+  )
+  assert.match(
+    source,
+    /unicodeSheet[\s\S]*?setProperty\('display',\s*'block'/,
+    'mobile mushaf fit must keep unicode ayah lines as centered blocks'
+  )
+  assert.match(
     blade,
     /Ready-to-resume: single primary CTA[\s\S]*?workspace-shell--mobile-resume-only[\s\S]*?grid-template-rows:\s*auto\s*!important/,
     'blade hotfix must collapse resume-only session actions to a single row'
@@ -737,6 +787,13 @@ includesAll('planner ui gated by premium tier rest', [
   /<section v-if="shouldShowWorkspaceEmptyState" class="workspace-empty-state" :aria-label="t\('memorisation\.a11y\.sessionSetup'\)">/,
   /t\('memorisation\.open_session_setup'\)/,
   /v-if="!isSessionCompleted && hasSessionStarted && topCardAppliedPills\.length" v-show="!mainCardCollapsed" class="workspace-quick-controls"/,
+  /showMobileSessionOverviewCollapsible/,
+  /toggleMainCardCollapsed/,
+  /workspace-shell--mobile-collapsible/,
+  /workspace-session-overview-collapse/,
+  /workspace-shell-overview-toggle__chevron/,
+  /resetPageScrollAfterReload/,
+  /coldPageLoadScrollGuard/,
   /class="top-card-icon-controls"/,
 ])
 

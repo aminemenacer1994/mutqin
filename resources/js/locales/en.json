@@ -953,6 +953,8 @@
     },
     "a11y": {
       "sessionOverview": "Session overview",
+      "collapseSessionOverview": "Collapse session overview",
+      "expandSessionOverview": "Expand session overview",
       "endSession": "End this set",
       "openReadingOptions": "Reading options",
       "sessionMetadata": "This set",

@@ -176,7 +176,7 @@ export default {
   display: flex;
   flex-flow: row nowrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
@@ -218,7 +218,7 @@ export default {
 }
 
 .qpc-madani-line--session-partial {
-  justify-content: flex-start !important;
+  justify-content: center !important;
 }
 
 @media (min-width: 1080px) {

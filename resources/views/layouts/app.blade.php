@@ -413,7 +413,7 @@
       html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--session-partial {
         width: 100% !important;
         max-width: 100% !important;
-        justify-content: space-between !important;
+        justify-content: center !important;
       }
       @media (min-width: 768px) {
         html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page,
@@ -9596,7 +9596,7 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
       min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62)) !important;
-      justify-content: space-between !important;
+      justify-content: center !important;
     }
 
     html body .app .main.mushaf-mode-active .mushaf-session-stack {
@@ -9691,11 +9691,11 @@ body.session-analysis-modal-open {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    text-align: justify !important;
-    text-align-last: justify !important;
-    padding-left: max(0.2rem, env(safe-area-inset-left, 0px)) !important;
-    padding-right: calc(var(--workspace-recite-size, 64px) + 0.75rem) !important;
-    padding-inline: unset !important;
+    text-align: center !important;
+    text-align-last: center !important;
+    padding-left: max(0.35rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(0.35rem, env(safe-area-inset-right, 0px)) !important;
+    padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px)) !important;
   }
 
   html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
@@ -9703,7 +9703,7 @@ body.session-analysis-modal-open {
   html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
     width: 100% !important;
     max-width: 100% !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
   }
 
   html body .app .workspace-tour__dashboard-shell.container-fluid.user-dashboard__shell,
@@ -9712,6 +9712,137 @@ body.session-analysis-modal-open {
     max-width: 100% !important;
     margin-inline: 0 !important;
     box-sizing: border-box !important;
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v186">
+  @media (max-width: 767.98px) {
+    html body .app {
+      --mq-session-dashboard-gutter: clamp(12px, 3.6vw, 18px);
+    }
+
+    html body .app .workspace-shell:not(.is-idle-card) {
+      margin-inline: var(--mq-session-dashboard-gutter) !important;
+      width: auto !important;
+      max-width: none !important;
+      box-sizing: border-box !important;
+    }
+
+    html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .workspace-shell-actions,
+    html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .workspace-shell-head-actions,
+    html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head-utility-row > .top-card-session-hr,
+    html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head:not(.is-idle) > .workspace-shell-progress-pills {
+      display: none !important;
+    }
+
+    html body .app .workspace-shell.workspace-shell--mobile-collapsible.collapsed:not(.is-idle-card) .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+      grid-template-rows: auto !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v187">
+  @media (max-width: 767.98px) {
+    html body.memorisation-page .app .main.madani-qpc-mode-active :is(
+      .madani-qpc-viewport,
+      .qpc-madani-session-scroll,
+      .qpc-madani-session-scroll__page,
+      .qpc-madani-page,
+      .qpc-madani-page__ornament,
+      .qpc-madani-page__sheet,
+      .qpc-madani-line,
+      .qpc-madani-line--ayah,
+      .qpc-madani-line--basmala,
+      .qpc-madani-line--basmallah
+    ) {
+      overflow: visible !important;
+    }
+
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet {
+      padding:
+        max(0.55rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))
+        max(0.72rem, calc(env(safe-area-inset-right, 0px) + 0.42rem))
+        max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
+        max(0.72rem, calc(env(safe-area-inset-left, 0px) + 0.42rem))
+        !important;
+    }
+
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--basmala,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--basmallah {
+      padding-top: calc(var(--qpc-word-size, 22px) * 0.14) !important;
+    }
+
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah {
+      padding-inline: 0.08rem !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v188">
+  @media (max-width: 767.98px) {
+    html body .app .main.mushaf-mode-active .madani-page-sheet,
+    html body .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+    html body .app .main.mushaf-mode-active .mushaf-page-body,
+    html body .app .main.mushaf-mode-active .mushaf-ayah-text {
+      text-align: center !important;
+      text-align-last: center !important;
+      padding-left: max(0.35rem, env(safe-area-inset-left, 0px)) !important;
+      padding-right: max(0.35rem, env(safe-area-inset-right, 0px)) !important;
+      padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px)) !important;
+    }
+
+    html body .app .main.mushaf-mode-active .madani-line--ayah,
+    html body .app .main.mushaf-mode-active .madani-line--glyphs,
+    html body .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
+      display: block !important;
+      width: 100% !important;
+      text-align: center !important;
+      text-align-last: center !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v189">
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-line--ayah,
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
+      justify-content: center !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+      align-items: center !important;
+    }
+
+    html body .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+    html body .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
+      text-align: center !important;
+      text-align-last: center !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v190">
+  /* Force every mushaf/QPC ayah line into the middle — all viewports. */
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--session-partial {
+    justify-content: center !important;
+    margin-inline: auto !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+    align-items: center !important;
+  }
+
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-page-sheet,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page-body,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--ayah,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--glyphs {
+    text-align: center !important;
+    text-align-last: center !important;
   }
 </style>
 <script id="mutqin-mushaf-ayah-tap-v168">

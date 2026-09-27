@@ -1027,6 +1027,7 @@ export default {
       audioStallRecoveryTimer: null,
       ignoreMainAudioPauseEvent: false,
       mainCardCollapsed: false,
+      coldPageLoadScrollGuard: true,
       feedbackCollapsed: true,
 
       // UI State
@@ -3298,6 +3299,11 @@ export default {
       if (!this.isMobileViewport?.()) return false
       if (this.isPostSessionChoiceVisible || this.showSessionOverviewIdleActions) return false
       return this.showHeaderSessionAction && !this.showHeaderEndSessionAction
+    },
+    showMobileSessionOverviewCollapsible() {
+      if (!this.isMobileViewport?.()) return false
+      if (this.showSessionOverviewIdleActions || this.isPostSessionChoiceVisible) return false
+      return !!(this.hasVerses || this.hasSessionStarted)
     },
     hasValidatedResumableSession() {
       if (this.workspaceTourFreshStartPending) return false
@@ -10278,6 +10284,14 @@ export default {
     }
     this.initSessionWorkspaceScrollController()
     this.bindStaleScrollLockRelease()
+    if (typeof window !== 'undefined' && window.history && 'scrollRestoration' in window.history) {
+      try {
+        window.history.scrollRestoration = 'manual'
+      } catch {
+        /* ignore */
+      }
+    }
+    this.resetPageScrollAfterReload({ immediate: true })
     this.$nextTick(() => this.unstickPageScroll())
     // Hard-close any leftover AI test overlays — this modal must never
     // appear unless the user clicks Session Complete → Test with AI.
@@ -10639,6 +10653,7 @@ export default {
       // No active session means setup is the page's primary task. Open the
       // existing setup prompt instead of leaving only an empty workspace shell.
       this.ensureEmptyWorkspaceEntrySurface()
+      this.resetPageScrollAfterReload({ delayed: true })
     }
 
     window.addEventListener('online', this.handleOnline)
@@ -11885,20 +11900,42 @@ export default {
         sheet.style.setProperty('white-space', 'normal', 'important')
         sheet.style.setProperty('transform', 'none', 'important')
         sheet.style.setProperty('text-align', 'center', 'important')
+        sheet.style.setProperty('text-align-last', 'center', 'important')
         sheet.style.setProperty('text-justify', 'none', 'important')
         sheet.style.setProperty('word-spacing', '0', 'important')
 
+        const unicodeSheet = sheet.classList.contains('madani-page-sheet--unicode')
+        sheet.style.setProperty('overflow-x', unicodeSheet ? 'visible' : 'clip', 'important')
+        sheet.style.setProperty(
+          'padding-inline',
+          'max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px))',
+          'important',
+        )
+
         sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs').forEach((line) => {
           if (!line?.style) return
-          line.style.setProperty('display', 'contents', 'important')
+          if (unicodeSheet) {
+            line.style.setProperty('display', 'block', 'important')
+            line.style.setProperty('width', '100%', 'important')
+            line.style.setProperty('max-width', '100%', 'important')
+            line.style.setProperty('text-align', 'center', 'important')
+            line.style.setProperty('text-align-last', 'center', 'important')
+            line.style.setProperty('white-space', 'normal', 'important')
+          } else {
+            line.style.setProperty('display', 'contents', 'important')
+          }
         })
         sheet.querySelectorAll('.madani-word').forEach((word) => {
           if (!word?.style) return
           word.style.setProperty('display', 'inline', 'important')
-          word.style.setProperty('margin-inline', '0.14em 0', 'important')
+          word.style.setProperty(
+            'margin-inline',
+            unicodeSheet ? '0.08em' : '0.14em 0',
+            'important',
+          )
           word.style.setProperty('padding-inline', '0', 'important')
           word.style.setProperty('word-spacing', '0', 'important')
-          word.style.setProperty('white-space', 'normal', 'important')
+          word.style.setProperty('white-space', unicodeSheet ? 'nowrap' : 'normal', 'important')
           word.style.setProperty('max-width', '100%', 'important')
           word.style.removeProperty('width')
           word.style.removeProperty('flex')
@@ -36276,6 +36313,7 @@ export default {
     },
     scrollQpcMadaniActiveAyahIntoView() {
       if (typeof document === 'undefined') return
+      if (this.coldPageLoadScrollGuard) return
       if (!isQpcMadaniMushafView(this.readingViewMode)) return
       const key = this.qpcMadaniRecitationFollowAyah || this.qpcMadaniActiveAyah
       if (!key) return
@@ -36330,6 +36368,7 @@ export default {
     },
     scrollActiveMushafPageIntoView() {
       if (typeof document === 'undefined') return
+      if (this.coldPageLoadScrollGuard) return
       const activeKey = this.effectiveActiveVerseKey || this.activeVerseKey
       if (!activeKey) return
       const word = this.$refs.mushafViewport?.querySelector?.(
@@ -37625,6 +37664,35 @@ export default {
         document.body.scrollTop = 0
       }
       this.showBackToTop = false
+    },
+
+    resetPageScrollAfterReload({ immediate = false, delayed = false } = {}) {
+      if (typeof window === 'undefined') return
+      const apply = () => {
+        try {
+          window.scrollTo(0, 0)
+        } catch {
+          /* ignore */
+        }
+        if (typeof document !== 'undefined') {
+          document.documentElement.scrollTop = 0
+          document.body.scrollTop = 0
+        }
+        this.showBackToTop = false
+      }
+      if (immediate) apply()
+      if (!delayed) return
+      this.$nextTick(() => {
+        const schedule = typeof window.requestAnimationFrame === 'function'
+          ? window.requestAnimationFrame.bind(window)
+          : (fn) => setTimeout(fn, 16)
+        schedule(() => {
+          schedule(() => {
+            apply()
+            this.coldPageLoadScrollGuard = false
+          })
+        })
+      })
     },
 
     initSessionWorkspaceScrollController() {
@@ -39989,6 +40057,11 @@ export default {
       } else {
         this.topCardMenuOpen = false
       }
+    },
+    toggleMainCardCollapsed() {
+      if (!this.showMobileSessionOverviewCollapsible) return
+      this.mainCardCollapsed = !this.mainCardCollapsed
+      this.persistUiState()
     },
     migrateLegacyReadingViewMode() {
       if (this.readingViewMode === 'mushaf' || this.readingViewMode === 'original') {
