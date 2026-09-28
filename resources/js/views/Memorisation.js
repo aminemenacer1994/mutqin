@@ -9545,6 +9545,14 @@ export default {
       return resolveQpcMadaniPageForVerseKey(startKey, index)
     },
 
+    workspaceDesktopShortSurahMushaf() {
+      if (this.isMobileViewport()) return false
+      const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
+      if (!chapterId) return false
+      const totalAyahs = surahAyahCount(chapterId)
+      return totalAyahs > 0 && totalAyahs <= SHORT_SURAH_AYAH_LIMIT
+    },
+
     qpcMadaniSessionPageNumbers() {
       const index = this.qpcVersePageIndex
       if (!index) return []
@@ -36215,15 +36223,22 @@ export default {
     },
     qpcMadaniAdjacentSessionPage(direction) {
       const pages = this.qpcMadaniSessionPageNumbers
-      const current = Number(this.qpcMadaniCurrentPage)
-      if (!pages.length || !current) return null
+      let anchor = Number(this.qpcMadaniCurrentPage)
+      if (!pages.length || !anchor) return null
+      // Two-page spread shows a pair at once; stepping from the pinned leaf only
+      // moves one page within the same spread (looks like a no-op until the second click).
+      if (this.showQpcMadaniSpreadPageNav && shouldShowTwoMadaniPages(typeof window !== 'undefined' ? window.innerWidth : 1080)) {
+        const { min, max } = this.qpcMadaniVisibleSessionPageExtent
+        if (direction < 0 && min != null) anchor = min
+        else if (direction > 0 && max != null) anchor = max
+      }
       if (direction < 0) {
         for (let index = pages.length - 1; index >= 0; index -= 1) {
-          if (pages[index] < current) return pages[index]
+          if (pages[index] < anchor) return pages[index]
         }
         return null
       }
-      return pages.find(page => page > current) || null
+      return pages.find(page => page > anchor) || null
     },
     goToPreviousQpcMadaniPage() {
       const prev = this.qpcMadaniAdjacentSessionPage(-1)

@@ -7716,6 +7716,24 @@ body:has(.workspace-recite-dock__button) .app .workspace {
     padding: 0 !important;
     border: 0 !important;
   }
+
+  /* One session page: vertically center ayah text in the desktop reading viewport */
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll:has(.mushaf-session-stack[data-desktop-short-surah="true"]) {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-session-stack[data-desktop-short-surah="true"] {
+    flex: 0 0 auto !important;
+    margin-block: auto !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-session-stack[data-desktop-short-surah="true"] .madani-page-sheet {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-height: 100% !important;
+  }
 }
 
 /* Final padding lock — beats earlier compact/fit-size shrinks. */

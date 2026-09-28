@@ -66631,6 +66631,53 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 @media (min-width: 768px) {
+  /* One printed page in the session: center ayah text in the desktop reading viewport */
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-desktop-short-surah="true"] .qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
+    justify-content: center !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-desktop-short-surah="true"] .qpc-madani-page--session-scoped .qpc-madani-page__sheet,
+  .madani-qpc-viewport .qpc-madani-session-scroll[data-desktop-short-surah="true"] .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    grid-template-rows: none !important;
+    min-height: min(74vh, calc(100dvh - 11.5rem)) !important;
+    height: 100% !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-desktop-short-surah="true"] .qpc-madani-page--session-scoped .qpc-madani-line--empty,
+  .madani-qpc-viewport .qpc-madani-session-scroll[data-desktop-short-surah="true"] .qpc-madani-page--session-scoped .qpc-madani-line--empty {
+    display: none !important;
+    min-height: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .madani-qpc-viewport .madani-qpc-stage__pages:has(.qpc-madani-session-scroll[data-desktop-short-surah="true"]),
+  .madani-qpc-viewport .madani-qpc-stage__pages:has(.qpc-madani-shell--reader[data-desktop-short-surah="true"]) {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-height: min(74vh, calc(100dvh - 11.5rem)) !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-session-scroll[data-desktop-short-surah="true"] {
+    flex: 0 0 auto !important;
+    margin-block: auto !important;
+    padding-bottom: 0 !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-shell--reader[data-desktop-short-surah="true"] .qpc-madani-page--session-scoped .qpc-madani-page__ornament {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-height: min(74vh, calc(100dvh - 11.5rem)) !important;
+    height: 100% !important;
+  }
+
   .madani-qpc-stage__pages {
     padding-inline: clamp(0.3rem, 1vw, 0.7rem);
   }

@@ -1302,7 +1302,12 @@
                     <strong>{{ workspaceLoadingLabel }}</strong>
                     <span>{{ t('memorisation.common.mushafSyncMessage') }}</span>
                   </div>
-                  <div v-else class="mushaf-session-stack" :data-session-signature="mushafSessionSignature">
+                  <div
+                    v-else
+                    class="mushaf-session-stack"
+                    :data-session-signature="mushafSessionSignature"
+                    :data-desktop-short-surah="workspaceDesktopShortSurahMushaf ? 'true' : null"
+                  >
                   <article
                     v-for="(mushafPage, mushafPageIdx) in mushafPages"
                     :key="`${mushafPage.id}-${mushafPageIdx}-${mushafSessionSignature}-${defaultFontSize}-${tajweedEnabled}-${quranFont}`"
@@ -1498,6 +1503,7 @@
               </div>
               <madani-session-scroll
                 v-else-if="qpcMadaniCurrentPage && !showQpcMadaniSpreadPageNav"
+                :desktop-short-surah-layout="workspaceDesktopShortSurahMushaf"
                 :page-numbers="qpcMadaniSessionPageNumbers"
                 :focus-page-number="qpcMadaniCurrentPage"
                 :active-ayah="qpcMadaniSelectionActiveAyah"
@@ -1525,6 +1531,7 @@
                 v-else-if="qpcMadaniCurrentPage"
                 :controlled-page-number="qpcMadaniCurrentPage"
                 :session-header-page-number="qpcMadaniSessionHeaderPage"
+                :desktop-short-surah-layout="workspaceDesktopShortSurahMushaf"
                 :active-ayah="qpcMadaniSelectionActiveAyah"
                 :range-start-ayah="''"
                 :range-end-ayah="''"

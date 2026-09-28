@@ -10,7 +10,7 @@
     :data-range-end="rangeEndAyah || null"
     :data-session-start="sessionStartAyah || null"
     :data-session-end="sessionEndAyah || null"
-    :data-session-single-page="centerSingleSessionPage ? 'true' : null"
+    :data-desktop-short-surah="desktopShortSurahLayout ? 'true' : null"
     :data-last-selected="selectedLocation"
     tabindex="0"
     @keydown="onKeydown"
@@ -136,6 +136,7 @@ export default {
     sessionStartAyah: { type: String, default: '' },
     sessionEndAyah: { type: String, default: '' },
     sessionPrintedPageCount: { type: Number, default: null },
+    desktopShortSurahLayout: { type: Boolean, default: false },
     sessionHeaderPageNumber: { type: Number, default: null },
     techniqueSnapshot: { type: Object, default: null },
     progressSnapshot: { type: Object, default: null },
@@ -214,7 +215,7 @@ export default {
       return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
     },
     centerSingleSessionPage() {
-      return this.mode === 'spread' && Number(this.sessionPrintedPageCount) === 1
+      return this.mode === 'spread' && this.desktopShortSurahLayout
     },
     visibleLeaves() {
       let leaves
@@ -760,7 +761,7 @@ export default {
   }
 }
 
-.qpc-madani-shell--reader[data-spread-mode="spread"][data-session-single-page="true"] .qpc-madani-spread--spread {
+.qpc-madani-shell--reader[data-spread-mode="spread"][data-desktop-short-surah="true"] .qpc-madani-spread--spread {
   width: min(100%, 42rem);
   max-width: min(100%, 42rem);
   margin-inline: auto;

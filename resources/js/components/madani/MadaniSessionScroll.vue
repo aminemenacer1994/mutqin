@@ -3,6 +3,7 @@
     class="qpc-madani-session-scroll"
     :data-pages="resolvedPageNumbers.join(',')"
     :data-focus-page="focusPageNumber || null"
+    :data-desktop-short-surah="desktopShortSurahLayout ? 'true' : null"
   >
     <div
       v-for="pageNumber in resolvedPageNumbers"
@@ -72,6 +73,7 @@ export default {
   ],
   props: {
     pageNumbers: { type: Array, default: () => [] },
+    desktopShortSurahLayout: { type: Boolean, default: false },
     focusPageNumber: { type: Number, default: null },
     activeAyah: { type: String, default: '' },
     rangeStartAyah: { type: String, default: '' },
