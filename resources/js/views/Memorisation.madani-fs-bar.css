@@ -28,6 +28,14 @@ html.has-madani-fullscreen-bar {
   }
 }
 
+@media (min-width: 768px) {
+  .madani-fullscreen-bar {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+
 .madani-fullscreen-bar {
   position: fixed;
   z-index: 228;
@@ -73,6 +81,12 @@ html.has-madani-fullscreen-bar {
     background: color-mix(in srgb, var(--zone-chrome, #fffdf8) 74%, transparent);
     -webkit-backdrop-filter: blur(24px) saturate(1.18);
     backdrop-filter: blur(24px) saturate(1.18);
+  }
+
+  .madani-fullscreen-bar[data-theme="light"] .madani-fullscreen-bar__shell {
+    background: #fff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 
@@ -284,10 +298,10 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   html.is-app-fullscreen.has-madani-fullscreen-bar {
     --madani-fs-bar-inset-x: clamp(1rem, 5vw, 1.35rem);
     --madani-fs-bar-inset-bottom: clamp(0.95rem, 4vw, 1.2rem);
-    --madani-fs-bar-icon: 1.75rem;
-    --madani-fs-bar-recite: 2.35rem;
-    --madani-fs-bar-shell-pad-x: 0.62rem;
-    --madani-fs-bar-shell-pad-y: 0.38rem;
+    --madani-fs-bar-icon: 2.45rem;
+    --madani-fs-bar-recite: 3.1rem;
+    --madani-fs-bar-shell-pad-x: 0.55rem;
+    --madani-fs-bar-shell-pad-y: 0.42rem;
     --madani-fs-bar-row: max(var(--madani-fs-bar-icon), var(--madani-fs-bar-recite));
     --madani-fs-bar-offset: calc(
       var(--madani-fs-bar-inset-bottom)
@@ -310,11 +324,23 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
       0 4px 14px color-mix(in srgb, #000 18%, transparent);
   }
 
+  .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__shell {
+    background: #fff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
   @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__shell {
+    .madani-fullscreen-bar--mobile:not([data-theme="light"]) .madani-fullscreen-bar__shell {
       background: color-mix(in srgb, var(--zone-chrome, #fff9f0) 78%, rgba(20, 16, 12, 0.55));
       -webkit-backdrop-filter: blur(26px) saturate(1.35) contrast(1.08);
       backdrop-filter: blur(26px) saturate(1.35) contrast(1.08);
+    }
+
+    .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__shell {
+      background: #fff;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
     }
   }
 
@@ -337,10 +363,18 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     display: grid;
     grid-template-columns: min-content minmax(0, 1fr) min-content;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.25rem;
     width: 100%;
     min-height: var(--madani-fs-bar-row);
     direction: ltr;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--no-recite {
+    grid-template-columns: min-content minmax(0, 1fr);
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {
+    justify-self: start;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster {
@@ -364,18 +398,66 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     width: var(--madani-fs-bar-icon);
     height: var(--madani-fs-bar-icon);
     min-width: var(--madani-fs-bar-icon);
-    border-radius: 8px;
-    color: color-mix(in srgb, var(--text, #f6eadc) 94%, #fff);
+    border-radius: 10px;
+    color: color-mix(in srgb, var(--text, #1b140d) 92%, #000);
     background: transparent !important;
     box-shadow: none !important;
   }
 
+  .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__icon {
+    color: color-mix(in srgb, var(--text, #f6eadc) 94%, #fff);
+  }
+
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon i {
-    font-size: 1rem;
+    font-size: 1.375rem;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon--play i {
-    font-size: 1.125rem;
+    font-size: 1.5rem;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    justify-self: start;
+    width: var(--madani-fs-bar-icon);
+    height: var(--madani-fs-bar-icon);
+    min-width: var(--madani-fs-bar-icon);
+    max-width: var(--madani-fs-bar-icon);
+    padding: 0;
+    margin: 0;
+    margin-inline-start: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: color-mix(in srgb, var(--text, #1b140d) 92%, #000);
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-glyph {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    font-size: 1.375rem;
+    line-height: 1;
+    opacity: 1;
+    color: inherit;
+    -webkit-text-fill-color: currentColor;
+    pointer-events: none;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-select {
+    z-index: 2;
+  }
+
+  .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-glyph {
+    color: color-mix(in srgb, var(--text, #f6eadc) 94%, #fff);
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon:hover,
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon:focus-within {
+    background: color-mix(in srgb, var(--accent, #c9925a) 22%, transparent);
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon:hover:not(:disabled),
@@ -392,11 +474,16 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   /* Recite lives on the navbar — perfect circle, physical right column. */
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
     box-sizing: border-box;
-    display: inline-flex;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
     justify-self: end;
+    position: relative;
+    z-index: 2;
+    pointer-events: auto !important;
     width: var(--madani-fs-bar-recite);
     height: var(--madani-fs-bar-recite);
     min-width: var(--madani-fs-bar-recite);
@@ -420,7 +507,7 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
-    font-size: 1.05rem;
+    font-size: 1.4rem;
     pointer-events: none;
   }
 

@@ -10098,15 +10098,14 @@ export default {
     },
 
     isMadaniMobileImmersive() {
+      if (typeof window !== 'undefined' && window.innerWidth >= 768) return false
       return !!this.isAppFullscreen
         && isQpcMadaniMushafView(this.readingViewMode)
         && this.isMobileViewport?.() === true
     },
 
     showMadaniFullscreenBar() {
-      return !!this.isAppFullscreen
-        && isQpcMadaniMushafView(this.readingViewMode)
-        && this.shouldShowReadingWorkspace
+      return this.isMadaniMobileImmersive && this.shouldShowReadingWorkspace
     },
 
     fullscreenReciterName() {
@@ -15926,9 +15925,7 @@ export default {
     },
     syncAppFullscreenClass() {
       const active = !!this.isAppFullscreen
-      const showBar = active
-        && isQpcMadaniMushafView(this.readingViewMode)
-        && !!this.shouldShowReadingWorkspace
+      const showBar = !!this.showMadaniFullscreenBar
       document.documentElement.classList.toggle('is-app-fullscreen', active)
       document.body.classList.toggle('is-app-fullscreen', active)
       document.documentElement.classList.toggle('has-madani-fullscreen-bar', showBar)

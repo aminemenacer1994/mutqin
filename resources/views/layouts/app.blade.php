@@ -9869,6 +9869,162 @@ body.session-analysis-modal-open {
     text-align-last: center !important;
   }
 </style>
+<style id="mutqin-madani-fs-bar-v191">
+  /* Network-first immersive Madani toolbar — survives stale memorisation chunks. */
+  @media (min-width: 768px) {
+    .madani-fullscreen-bar {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    html.has-madani-fullscreen-bar,
+    html.is-app-fullscreen.has-madani-fullscreen-bar {
+      --madani-fs-bar-offset: 0px;
+      --madani-fs-recite-clearance: 0px;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    html.is-app-fullscreen:has(.madani-fullscreen-bar),
+    html.is-app-fullscreen.has-madani-fullscreen-bar {
+      --madani-fs-bar-icon: 2.45rem;
+      --madani-fs-bar-recite: 3.1rem;
+      --madani-fs-bar-shell-pad-y: 0.42rem;
+      --madani-fs-bar-row: max(var(--madani-fs-bar-icon), var(--madani-fs-bar-recite));
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
+      display: grid !important;
+      grid-template-columns: min-content minmax(0, 1fr) min-content !important;
+      align-items: center !important;
+      gap: 0.25rem !important;
+      min-height: var(--madani-fs-bar-row, 3.1rem) !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--no-recite {
+      grid-template-columns: min-content minmax(0, 1fr) !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {
+      justify-self: start !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon {
+      width: var(--madani-fs-bar-icon, 2.45rem) !important;
+      height: var(--madani-fs-bar-icon, 2.45rem) !important;
+      min-width: var(--madani-fs-bar-icon, 2.45rem) !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon i {
+      font-size: 1.375rem !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon--play i {
+      font-size: 1.5rem !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+      display: inline-flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: relative !important;
+      inset: auto !important;
+      width: var(--madani-fs-bar-recite, 3.1rem) !important;
+      height: var(--madani-fs-bar-recite, 3.1rem) !important;
+      min-width: var(--madani-fs-bar-recite, 3.1rem) !important;
+      min-height: var(--madani-fs-bar-recite, 3.1rem) !important;
+      border: 2px solid #2ea86a !important;
+      border-radius: 50% !important;
+      background: linear-gradient(165deg, #9ef0c4 0%, #5fd699 48%, #43c07f 100%) !important;
+      color: #0f4a32 !important;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+        0 6px 16px rgba(47, 168, 106, 0.45) !important;
+      pointer-events: auto !important;
+      z-index: 2 !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
+      font-size: 1.4rem !important;
+      color: #0f4a32 !important;
+      opacity: 1 !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: var(--madani-fs-bar-icon, 2.45rem) !important;
+      height: var(--madani-fs-bar-icon, 2.45rem) !important;
+      min-width: var(--madani-fs-bar-icon, 2.45rem) !important;
+      border-radius: 10px !important;
+      position: relative !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-glyph {
+      display: inline-block !important;
+      font-size: 1.375rem !important;
+      line-height: 1 !important;
+      opacity: 1 !important;
+      color: #1b140d !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
+
+    .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-glyph {
+      color: #f6eadc !important;
+    }
+
+    .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__shell {
+      background: #fff !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+
+    .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__icon,
+    .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-glyph {
+      color: #1b140d !important;
+    }
+  }
+
+  .madani-fullscreen-bar[data-theme="light"] .madani-fullscreen-bar__shell {
+    background: #fff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+</style>
+<script id="mutqin-madani-fs-bar-v192">
+  (function () {
+    function fixReciterToolbarIcon() {
+      document.querySelectorAll('.madani-fullscreen-bar__reciter-glyph').forEach(function (el) {
+        if (!(el instanceof HTMLElement)) return;
+        el.classList.remove('bi-person-voice');
+        if (!el.classList.contains('bi-headphones') && !el.classList.contains('bi-mic') && !el.classList.contains('bi-mic-fill')) {
+          el.classList.add('bi-headphones');
+        }
+      });
+    }
+
+    function hideBarOnWideViewports() {
+      var bar = document.querySelector('.madani-fullscreen-bar');
+      if (!bar) return;
+      var wide = window.innerWidth >= 768;
+      bar.hidden = wide;
+      bar.style.display = wide ? 'none' : '';
+      bar.setAttribute('aria-hidden', wide ? 'true' : 'false');
+      document.documentElement.classList.toggle('has-madani-fullscreen-bar', !wide && !!bar && !bar.hidden);
+    }
+    function syncMadaniToolbarChrome() {
+      hideBarOnWideViewports();
+      fixReciterToolbarIcon();
+    }
+    window.addEventListener('resize', syncMadaniToolbarChrome);
+    if (typeof MutationObserver !== 'undefined') {
+      new MutationObserver(syncMadaniToolbarChrome).observe(document.body, { childList: true, subtree: true });
+    }
+    syncMadaniToolbarChrome();
+  })();
+</script>
 <script id="mutqin-mushaf-ayah-tap-v168">
   (function () {
     function shouldPlayFullAyah() {

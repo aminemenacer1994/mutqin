@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v185 -->
+  <!-- mutqin-ui-build: v186 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'is-rtl': isRtlLocale,
     'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
@@ -4641,8 +4641,7 @@
     <Teleport to="body">
       <div
         v-if="showMadaniFullscreenBar"
-        class="madani-fullscreen-bar"
-        :class="{ 'madani-fullscreen-bar--mobile': isMadaniMobileImmersive }"
+        class="madani-fullscreen-bar madani-fullscreen-bar--mobile"
         data-testid="madani-fullscreen-bar"
         :data-theme="theme"
         :dir="isRtlLocale ? 'rtl' : 'ltr'"
@@ -4651,33 +4650,26 @@
       >
         <div class="madani-fullscreen-bar__shell">
           <div class="madani-fullscreen-bar__inner">
-            <div
-              class="madani-fullscreen-bar__cluster"
-              role="group"
-              :aria-label="t('common.fontSize')"
+            <label
+              class="madani-fullscreen-bar__reciter madani-fullscreen-bar__reciter--mobile-icon"
+              :title="fullscreenReciterName"
             >
-              <button
-                type="button"
-                class="madani-fullscreen-bar__icon"
-                :disabled="immersiveMadaniFontSize <= Number(minFontSize)"
-                :title="t('memorisation.a11y.decreaseFontSize')"
-                :aria-label="t('memorisation.a11y.decreaseFontSize')"
-                @click.stop="decreaseMushafFontSize"
+              <span class="sr-only">{{ t('sessionSetup.reciter') }}: {{ fullscreenReciterName }}</span>
+              <i class="bi bi-headphones madani-fullscreen-bar__reciter-glyph" aria-hidden="true"></i>
+              <select
+                v-model="reciterId"
+                class="madani-fullscreen-bar__reciter-select"
+                :aria-label="t('sessionSetup.reciter')"
+                @change="onMadaniFullscreenReciterChange"
               >
-                <i class="bi bi-dash-lg" aria-hidden="true"></i>
-              </button>
-              <span class="madani-fullscreen-bar__sep" aria-hidden="true"></span>
-              <button
-                type="button"
-                class="madani-fullscreen-bar__icon"
-                :disabled="immersiveMadaniFontSize >= Number(maxFontSize)"
-                :title="t('memorisation.a11y.increaseFontSize')"
-                :aria-label="t('memorisation.a11y.increaseFontSize')"
-                @click.stop="increaseMushafFontSize"
-              >
-                <i class="bi bi-plus-lg" aria-hidden="true"></i>
-              </button>
-            </div>
+                <optgroup v-if="recitersWithWordHighlight.length" :label="t('sessionSetup.recitersWithWordHighlight')">
+                  <option v-for="r in recitersWithWordHighlight" :key="r.id" :value="r.id">{{ r.name }}</option>
+                </optgroup>
+                <optgroup v-if="recitersAudioOnly.length" :label="t('sessionSetup.recitersAudioOnly')">
+                  <option v-for="r in recitersAudioOnly" :key="r.id" :value="r.id">{{ r.name }}</option>
+                </optgroup>
+              </select>
+            </label>
 
             <div
               class="madani-fullscreen-bar__cluster madani-fullscreen-bar__cluster--transport"
@@ -4717,7 +4709,6 @@
             </div>
 
             <button
-              v-if="isMadaniMobileImmersive && showWorkspaceAiReciteCta"
               type="button"
               class="madani-fullscreen-bar__recite"
               :class="{ 'is-animated': workspaceAiReciteAnimated }"
@@ -4728,29 +4719,6 @@
             >
               <i class="bi bi-mic-fill" aria-hidden="true"></i>
             </button>
-
-            <label
-              v-if="!isMadaniMobileImmersive"
-              class="madani-fullscreen-bar__reciter"
-              :title="fullscreenReciterName"
-            >
-              <span class="sr-only">{{ t('sessionSetup.reciter') }}: {{ fullscreenReciterName }}</span>
-              <span class="madani-fullscreen-bar__reciter-name">{{ fullscreenReciterName }}</span>
-              <i class="bi bi-chevron-down madani-fullscreen-bar__reciter-caret" aria-hidden="true"></i>
-              <select
-                v-model="reciterId"
-                class="madani-fullscreen-bar__reciter-select"
-                :aria-label="t('sessionSetup.reciter')"
-                @change="onMadaniFullscreenReciterChange"
-              >
-                <optgroup v-if="recitersWithWordHighlight.length" :label="t('sessionSetup.recitersWithWordHighlight')">
-                  <option v-for="r in recitersWithWordHighlight" :key="r.id" :value="r.id">{{ r.name }}</option>
-                </optgroup>
-                <optgroup v-if="recitersAudioOnly.length" :label="t('sessionSetup.recitersAudioOnly')">
-                  <option v-for="r in recitersAudioOnly" :key="r.id" :value="r.id">{{ r.name }}</option>
-                </optgroup>
-              </select>
-            </label>
           </div>
         </div>
       </div>
