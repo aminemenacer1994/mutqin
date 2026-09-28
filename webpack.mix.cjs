@@ -105,6 +105,37 @@ function collectReferencedChunkFiles(appJs) {
     return keep;
 }
 
+/** @returns {string[]} webpack JSONP chunk ids from the file header (e.g. "madani-page", "807") */
+function readStableChunkWebpackIds(filePath) {
+    try {
+        const head = fs.readFileSync(filePath, 'utf8').slice(0, 8192);
+        const match = head.match(/\.push\(\[(\[[^\]]+\])\s*,/);
+        if (!match) return [];
+        const inner = match[1].slice(1, -1);
+        if (!inner.trim()) return [];
+        return inner
+            .split(',')
+            .map((part) => part.trim().replace(/^["']|["']$/g, ''))
+            .filter(Boolean);
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * Dev/watch chunks must declare the same string id app.js loads (e.g. "madani-page").
+ * Stale numeric-only ids (e.g. [807]) load with HTTP 200 but webpack reports ChunkLoadError "missing".
+ */
+function stableChunkMatchesRuntime(filePath, expectedFamilyName) {
+    const ids = readStableChunkWebpackIds(filePath);
+    if (ids.length === 0) return true;
+    return ids.includes(expectedFamilyName);
+}
+
+function isStableNamedChunkFile(name) {
+    return /^[a-z][a-z0-9_-]+\.js$/i.test(name) && name !== 'app.js';
+}
+
 // Mix keeps prior contenthashed keys in memory across watch rebuilds. Our
 // mix.then() prune deletes the old files from disk, then mix.version() tries
 // to hash those ghost keys and ENOENTs. Strip missing entries before Mix's
@@ -253,10 +284,17 @@ mix.then(() => {
             // A watch/dev build may have just emitted the stable alias. Do not
             // overwrite that current chunk with an older hashed generation;
             // its JSONP chunk id can differ from the current app runtime.
-            if (!aliasExists || aliasMtime < newestMtime) {
+            const hashedDeclaresFamily = stableChunkMatchesRuntime(newestPath, family);
+            if (!hashedDeclaresFamily) {
+                console.warn(
+                    `[mix] Skipping alias copy for ${alias}; ${newest} JSONP ids do not include "${family}". Run \`npm run dev\` or \`npm run watch\`.`
+                );
+            } else if (!aliasExists || aliasMtime < newestMtime) {
                 fs.copyFileSync(newestPath, aliasPath);
             }
-            keepNames.add(alias);
+            if (fs.existsSync(aliasPath) && stableChunkMatchesRuntime(aliasPath, family)) {
+                keepNames.add(alias);
+            }
         } catch {
             /* ignore locked files during watch */
         }
@@ -285,6 +323,24 @@ mix.then(() => {
         for (const name of referenced) {
             keepNames.add(name);
         }
+
+        for (const name of referenced) {
+            if (!isStableNamedChunkFile(name)) continue;
+            const abs = path.join(jsDir, name);
+            if (!fs.existsSync(abs)) continue;
+            const family = name.replace(/\.js$/i, '');
+            if (stableChunkMatchesRuntime(abs, family)) continue;
+            try {
+                fs.unlinkSync(abs);
+                console.warn(
+                    `[mix] Removed stale ${name} (JSONP chunk id mismatch). Rebuilding that chunk — refresh the browser after watch finishes.`
+                );
+            } catch {
+                /* ignore locked files during watch */
+            }
+            keepNames.delete(name);
+        }
+
         const missingReferenced = [...referenced].filter(
             (name) => !fs.existsSync(path.join(jsDir, name))
         );

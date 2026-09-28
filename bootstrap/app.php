@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\NormalizeLocalDevelopmentHost;
 use App\Http\Middleware\EnsureSubscriptionTier;
 use App\Http\Middleware\LogMutqinApiRequest;
 use App\Http\Middleware\PreventStaleHtmlCache;
@@ -41,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(prepend: [
             AssignRequestId::class,
+            NormalizeLocalDevelopmentHost::class,
         ]);
 
         $middleware->web(append: [

@@ -8109,12 +8109,13 @@ html body .app .workspace-recite-dock__button:hover {
     max-width: 100% !important;
     margin-inline: 0 !important;
     padding:
-      max(0.55rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))
-      max(0.72rem, calc(env(safe-area-inset-right, 0px) + 0.42rem))
+      max(0.45rem, calc(env(safe-area-inset-top, 0px) + 0.28rem))
+      max(0.04rem, env(safe-area-inset-right, 0px))
       max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
-      max(0.72rem, calc(env(safe-area-inset-left, 0px) + 0.42rem))
+      max(0.04rem, env(safe-area-inset-left, 0px))
       !important;
     overflow: visible !important;
+    align-items: stretch !important;
   }
 
   html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
@@ -8129,13 +8130,9 @@ html body .app .workspace-recite-dock__button:hover {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    padding-inline: 0.08rem !important;
+    padding-inline: 0 !important;
     justify-content: center !important;
     overflow: visible !important;
-  }
-
-  html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
-    align-items: center !important;
   }
 
   html body .app .main.mushaf-mode-active .mushaf-page--madani,
@@ -8166,5 +8163,44 @@ html body .app .workspace-recite-dock__button:hover {
   html body .app .main.madani-qpc-mode-active .qpc-madani-word.is-range-end {
     overflow: visible !important;
     flex-shrink: 0 !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  html.is-app-fullscreen.has-madani-fullscreen-bar
+    body
+    .app
+    .main.madani-qpc-mode-active
+    .workspace-recite-dock--mobile,
+  html.is-app-fullscreen:has(.madani-fullscreen-bar)
+    body
+    .app
+    .main.madani-qpc-mode-active
+    .workspace-recite-dock--mobile,
+  html.is-app-fullscreen:has(.madani-fullscreen-bar)
+    body
+    .app
+    .workspace-recite-dock--mobile,
+  html.is-app-fullscreen:has(.madani-fullscreen-bar)
+    body
+    .workspace-recite-dock--mobile {
+    position: fixed !important;
+    top: auto !important;
+    inset-block-end: auto !important;
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  html.is-app-fullscreen:has(.madani-fullscreen-bar)
+    body.memorisation-page
+    .main.madani-qpc-mode-active
+    .workspace-main,
+  html.is-app-fullscreen:has(.madani-fullscreen-bar)
+    body.memorisation-page
+    .main.madani-qpc-mode-active.is-madani-mobile-immersive
+    .workspace-main {
+    padding-block-end: var(--madani-fs-recite-clearance, 9.2rem) !important;
+    scroll-padding-block-end: var(--madani-fs-recite-clearance, 9.2rem) !important;
   }
 }

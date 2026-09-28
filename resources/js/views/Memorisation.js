@@ -1638,24 +1638,24 @@ export default {
       recitationWindowRemaining: 0,
       recitationWindowTimer: null,
 
-      // Section open state - Expanded for consistency
+      // Tools panel sections — collapsed by default for a calmer workspace.
       sectionOpen: {
-        beginner_setup: true,
-        beginner_audio: true,
+        beginner_setup: false,
+        beginner_audio: false,
         beginner_saved: false,
-        advanced_setup: true,
+        advanced_setup: false,
         advanced_playback: false,
         advanced_practice: false,
         advanced_saved: false,
         session_tools: false,
         live_stats: false,
-        analytics_overview: true,
-        analytics_planner: true,
+        analytics_overview: false,
+        analytics_planner: false,
         analytics_weak: false,
         memorisation_techniques: false,
-        saved_sessions: true,
-        saved_in_progress: true,
-        saved_completed: true,
+        saved_sessions: false,
+        saved_in_progress: false,
+        saved_completed: false,
         focus_mode: false,
         blur_mode: false,
         chaining: false,
@@ -9545,8 +9545,14 @@ export default {
       return resolveQpcMadaniPageForVerseKey(startKey, index)
     },
 
-    workspaceDesktopShortSurahMushaf() {
+    isDesktopMushafLayoutViewport() {
       if (this.isMobileViewport()) return false
+      if (typeof window !== 'undefined') return window.innerWidth >= 1080
+      return false
+    },
+
+    workspaceDesktopShortSurahMushaf() {
+      if (!this.isDesktopMushafLayoutViewport) return false
       const chapterId = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
       if (!chapterId) return false
       const totalAyahs = surahAyahCount(chapterId)
@@ -9997,6 +10003,7 @@ export default {
     },
 
     showPlayerDock() {
+      if (this.showMadaniFullscreenBar) return false
       if (this.showCountdownOverlay) return false
       if (
         this.playerVisible
@@ -10075,15 +10082,39 @@ export default {
 
     qpcMadaniFontScale() {
       const base = 150
-      const size = Number(this.defaultFontSize || this.layoutFontSizes?.madani_mushaf || 195)
-      const maxScale = this.showQpcMadaniSpreadPageNav ? 1.22 : 1.55
-      return Math.max(1.1, Math.min(maxScale, size / base))
+      const size = Number(this.layoutFontSizes?.madani_mushaf ?? this.defaultFontSize ?? 195)
+      const ratio = size / base
+      if (this.showMadaniFullscreenBar || this.isMadaniMobileImmersive) {
+        return Math.max(0.9, Math.min(2.2, ratio))
+      }
+      if (this.isMobileViewport()) {
+        return Math.max(1.12, Math.min(1.72, ratio))
+      }
+      let maxScale = 1.55
+      if (this.showQpcMadaniSpreadPageNav) {
+        maxScale = this.isDesktopMushafLayoutViewport ? 1.72 : 1.22
+      }
+      return Math.max(1.1, Math.min(maxScale, ratio))
     },
 
     isMadaniMobileImmersive() {
       return !!this.isAppFullscreen
         && isQpcMadaniMushafView(this.readingViewMode)
         && this.isMobileViewport?.() === true
+    },
+
+    showMadaniFullscreenBar() {
+      return !!this.isAppFullscreen
+        && isQpcMadaniMushafView(this.readingViewMode)
+        && this.shouldShowReadingWorkspace
+    },
+
+    fullscreenReciterName() {
+      return this.getReciterName()
+    },
+
+    immersiveMadaniFontSize() {
+      return Number(this.layoutFontSizes?.madani_mushaf ?? this.defaultFontSize ?? 195)
     },
 
     showMadaniMobileFullscreenOffer() {
@@ -15895,8 +15926,16 @@ export default {
     },
     syncAppFullscreenClass() {
       const active = !!this.isAppFullscreen
+      const showBar = active
+        && isQpcMadaniMushafView(this.readingViewMode)
+        && !!this.shouldShowReadingWorkspace
       document.documentElement.classList.toggle('is-app-fullscreen', active)
       document.body.classList.toggle('is-app-fullscreen', active)
+      document.documentElement.classList.toggle('has-madani-fullscreen-bar', showBar)
+      document.body.classList.toggle('has-madani-fullscreen-bar', showBar)
+      if (showBar && this.showTools) {
+        this.showTools = false
+      }
       if (active && !this.showTools && !this.isAnyModalOverlayActive) {
         document.body.style.removeProperty('overflow')
         document.documentElement.style.removeProperty('overflow')
@@ -29515,7 +29554,7 @@ export default {
       if (expected.host === window.location.host) return
       const fixUrl = `${expected.origin}${window.location.pathname}${window.location.search}${window.location.hash}`
       this.showBanner(
-        `Wrong local server (${window.location.host}). Mutqin is running on ${expected.host}, so Speechmatics and audio will fail here.`,
+        `Wrong local server (${window.location.host}). Mutqin is configured for ${expected.host}. Use that URL in Chrome or Safari (not an embedded IDE preview), then hard-refresh so scripts and audio chunks load.`,
         'warning',
         15000,
         { key: 'open-local-app-url', label: `Switch to ${expected.host}`, payload: { url: fixUrl } },
@@ -36928,6 +36967,7 @@ export default {
       if (next === current) return
       this.defaultFontSize = next
       this.applyMushafFontSizeChange({ silent: true })
+      this.showImmersiveReadingSuccessToast('memorisation.reading.toastFontSizeUpdated', { size: next })
     },
     decreaseMushafFontSize() {
       const current = Number(this.defaultFontSize || 150)
@@ -36935,6 +36975,11 @@ export default {
       if (next === current) return
       this.defaultFontSize = next
       this.applyMushafFontSizeChange({ silent: true })
+      this.showImmersiveReadingSuccessToast('memorisation.reading.toastFontSizeUpdated', { size: next })
+    },
+    showImmersiveReadingSuccessToast(messageKey, params = {}) {
+      if (!this.showMadaniFullscreenBar) return
+      this.showBanner(this.t(messageKey, params), 'success', 1400)
     },
     applyMushafFontSizeChange(options = {}) {
       const { silent = true } = options
@@ -36955,6 +37000,7 @@ export default {
         }
       }
       this.syncSettingsDraft()
+      this.persistUserFontSize()
       this.persistVerseFontSizes()
       this.persistUiState()
       // Prefer Vue :style bindings — avoid leaking !important inline vars across layouts.
@@ -37097,7 +37143,7 @@ export default {
       const chapterId = Number(store?.chapterId || 0)
       const reason = String(options.reason || 'config')
       const forceReload = options.force === true
-        || ['chapter', 'range', 'reciter', 'start', 'post-session-adjust'].includes(reason)
+        || ['chapter', 'range', 'start', 'post-session-adjust'].includes(reason)
 
       if (this.workspaceSyncTimer) clearTimeout(this.workspaceSyncTimer)
       this.persistUiState()
@@ -37119,6 +37165,10 @@ export default {
       // If Surah/range/reciter/display already match the loaded mushaf, do not wipe it.
       // Never rebuild the queue here — that was resetting live session progress on open/close.
       const hasLoadedVerses = Array.isArray(store.verses) && store.verses.length > 0
+      if (reason === 'reciter' && hasLoadedVerses) {
+        this.applyReciterChangeInPlace(mode)
+        return
+      }
       if (!forceReload && hasLoadedVerses && this.modeDataMatchesConfig(mode)) {
         this.isWorkspaceRefreshing = false
         this.workspaceRefreshReason = ''
@@ -45240,6 +45290,79 @@ export default {
 
     refreshVerses() {
       this.applyWorkspaceControls({ reason: 'reciter' })
+    },
+
+    applyReciterChangeInPlace(mode = this.currentMode) {
+      const store = this.getModeStore(mode)
+      if (!store?.verses?.length) {
+        this.applyWorkspaceControls({ reason: 'reciter', mode })
+        return
+      }
+
+      const reciterId = typeof store.reciterId === 'string' && store.reciterId
+        ? store.reciterId
+        : (this.reciterId || DEFAULT_ALQURAN_RECITER)
+      const wasPlaying = !!this.isPlaying
+      const resumeAt = Number(this.audioElement?.currentTime || 0)
+
+      store.loadedConfig = {
+        ...(store.loadedConfig || {}),
+        ...this.buildSessionConfig(mode),
+        reciterId,
+      }
+
+      store.verses = store.verses.map((verse) => {
+        const clean = this.sanitizeVerseDisplayText({ ...verse, reciterId })
+        const audio = this.ensureVerseAudioUrl(clean)
+        return audio && clean.audio !== audio ? { ...clean, audio } : clean
+      })
+
+      if (Array.isArray(store.queue) && store.queue.length) {
+        const byKey = new Map(store.verses.map((verse) => [verse.key, verse]))
+        store.queue = store.queue.map((item) => {
+          const key = item?.verse?.key || item?.key
+          const updated = key ? byKey.get(key) : null
+          if (!updated) return item
+          if (item?.verse) {
+            return { ...item, verse: { ...item.verse, ...updated } }
+          }
+          return { ...item, ...updated }
+        })
+      }
+
+      this.persistModeState(mode)
+      this.persistUiState()
+      this.syncWordHighlightingForReciter(reciterId)
+      this.isWorkspaceRefreshing = false
+      this.workspaceRefreshReason = ''
+      this.isDataReady = true
+      this.persistCentralSessionState()
+
+      const activeKey = store.activeKey || this.activeVerseKey
+      const activeVerse = store.verses.find((verse) => verse.key === activeKey)
+        || this.activeVerseRef
+      if (this.audioElement && activeVerse) {
+        const url = this.toPlayableAudioUrl(this.ensureVerseAudioUrl(activeVerse))
+        if (url) {
+          const currentSrc = this.audioElement.currentSrc || this.audioElement.src || ''
+          if (!currentSrc.includes(url)) {
+            try {
+              this.audioElement.src = url
+              if (wasPlaying) {
+                if (resumeAt > 0) this.audioElement.currentTime = resumeAt
+                void this.audioElement.play()
+              }
+            } catch { /* ignore */ }
+          }
+        }
+      }
+    },
+
+    onMadaniFullscreenReciterChange() {
+      this.applyReciterChangeInPlace(this.currentMode)
+      this.showImmersiveReadingSuccessToast('memorisation.reading.toastReciterUpdated', {
+        name: this.fullscreenReciterName,
+      })
     },
 
     async handleSelfCheckReciterChange(event) {

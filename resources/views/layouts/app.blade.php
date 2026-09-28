@@ -9029,6 +9029,12 @@ body.session-analysis-modal-open {
     html body .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button i {
       font-size: 1.45rem !important;
     }
+
+    html.is-app-fullscreen:has(.madani-fullscreen-bar) body .workspace-float-rail,
+    html.is-app-fullscreen:has(.madani-fullscreen-bar) body .workspace-float-rail--desktop,
+    html.is-app-fullscreen:has(.madani-fullscreen-bar) body > .workspace-float-rail {
+      bottom: calc(var(--madani-fs-bar-offset, 4.6rem) + 0.75rem) !important;
+    }
   }
 
   @media (min-width: 768px) and (max-width: 1399.98px) {
@@ -9060,9 +9066,18 @@ body.session-analysis-modal-open {
       display: none !important;
     }
 
-    /* Original mobile: sticky centered recite inside the workspace. */
-    html body .app .workspace-recite-dock--mobile,
-    html body .workspace-recite-dock--mobile {
+    html.is-app-fullscreen:has(.madani-fullscreen-bar)
+      body .app .workspace-recite-dock--mobile,
+    html.is-app-fullscreen:has(.madani-fullscreen-bar)
+      body .workspace-recite-dock--mobile,
+    html.is-app-fullscreen:has(.madani-fullscreen-bar)
+      body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile {
+      display: none !important;
+    }
+
+    /* Original mobile: sticky centered recite inside the workspace (not immersive full-screen). */
+    html:not(.is-app-fullscreen) body .app .workspace-recite-dock--mobile,
+    html:not(.is-app-fullscreen) body .workspace-recite-dock--mobile {
       display: flex !important;
       position: sticky !important;
       top: var(--workspace-recite-sticky-top, calc(100dvh - 5.5rem)) !important;
@@ -9086,10 +9101,19 @@ body.session-analysis-modal-open {
       box-shadow: none !important;
     }
 
-    html body .app .workspace-recite-dock--mobile .workspace-recite-dock__button,
-    html body .workspace-recite-dock--mobile .workspace-recite-dock__button {
+    html:not(.is-app-fullscreen) body .app .workspace-recite-dock--mobile .workspace-recite-dock__button,
+    html:not(.is-app-fullscreen) body .workspace-recite-dock--mobile .workspace-recite-dock__button {
       margin: 0 auto !important;
       pointer-events: auto !important;
+    }
+
+    html.is-app-fullscreen:has(.madani-fullscreen-bar)
+      body .app .workspace-recite-dock--mobile,
+    html.is-app-fullscreen:has(.madani-fullscreen-bar)
+      body .workspace-recite-dock--mobile,
+    html.is-app-fullscreen:has(.madani-fullscreen-bar)
+      body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile {
+      display: none !important;
     }
   }
 

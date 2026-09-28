@@ -761,10 +761,12 @@ export default {
   }
 }
 
-.qpc-madani-shell--reader[data-spread-mode="spread"][data-desktop-short-surah="true"] .qpc-madani-spread--spread {
-  width: min(100%, 42rem);
-  max-width: min(100%, 42rem);
-  margin-inline: auto;
+@media (min-width: 1080px) {
+  .qpc-madani-shell--reader[data-spread-mode="spread"][data-desktop-short-surah="true"] .qpc-madani-spread--spread {
+    width: min(100%, 42rem);
+    max-width: min(100%, 42rem);
+    margin-inline: auto;
+  }
 }
 
 .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf {

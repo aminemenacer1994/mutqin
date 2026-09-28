@@ -16,7 +16,8 @@
     'session-exit-offcanvas-open': showSessionExitModal && sessionExitOffcanvasOpen && showTools,
     'ai-audio-consent-active': showAiAudioConsentModal,
     'microphone-help-active': showMicrophonePermissionModal,
-    'is-fullscreen': isAppFullscreen
+    'is-fullscreen': isAppFullscreen,
+    'has-madani-fullscreen-bar': showMadaniFullscreenBar
   }" :style="appStyleVars" v-cloak>
     <div v-if="showAppBootLoader" class="app-boot-loading" role="status" aria-live="polite">
       <i class="bi bi-hourglass-split" aria-hidden="true"></i>
@@ -1677,7 +1678,7 @@
             </div>
             </div>
             <div
-              v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
+              v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace && !showMadaniFullscreenBar"
               class="workspace-recite-dock workspace-recite-dock--mobile"
               aria-live="polite"
             >
@@ -4639,6 +4640,124 @@
 
     <Teleport to="body">
       <div
+        v-if="showMadaniFullscreenBar"
+        class="madani-fullscreen-bar"
+        :class="{ 'madani-fullscreen-bar--mobile': isMadaniMobileImmersive }"
+        data-testid="madani-fullscreen-bar"
+        :data-theme="theme"
+        :dir="isRtlLocale ? 'rtl' : 'ltr'"
+        role="toolbar"
+        :aria-label="t('memorisation.reading.immersiveBar')"
+      >
+        <div class="madani-fullscreen-bar__shell">
+          <div class="madani-fullscreen-bar__inner">
+            <div
+              class="madani-fullscreen-bar__cluster"
+              role="group"
+              :aria-label="t('common.fontSize')"
+            >
+              <button
+                type="button"
+                class="madani-fullscreen-bar__icon"
+                :disabled="immersiveMadaniFontSize <= Number(minFontSize)"
+                :title="t('memorisation.a11y.decreaseFontSize')"
+                :aria-label="t('memorisation.a11y.decreaseFontSize')"
+                @click.stop="decreaseMushafFontSize"
+              >
+                <i class="bi bi-dash-lg" aria-hidden="true"></i>
+              </button>
+              <span class="madani-fullscreen-bar__sep" aria-hidden="true"></span>
+              <button
+                type="button"
+                class="madani-fullscreen-bar__icon"
+                :disabled="immersiveMadaniFontSize >= Number(maxFontSize)"
+                :title="t('memorisation.a11y.increaseFontSize')"
+                :aria-label="t('memorisation.a11y.increaseFontSize')"
+                @click.stop="increaseMushafFontSize"
+              >
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div
+              class="madani-fullscreen-bar__cluster madani-fullscreen-bar__cluster--transport"
+              role="group"
+              :aria-label="t('memorisation.player.audioPlayer')"
+            >
+              <button
+                type="button"
+                class="madani-fullscreen-bar__icon"
+                :disabled="!canPrev"
+                :title="t('memorisation.player.previous')"
+                :aria-label="t('memorisation.player.previousAyah')"
+                @click.stop="prev"
+              >
+                <i class="bi bi-skip-backward-fill" aria-hidden="true"></i>
+              </button>
+              <button
+                type="button"
+                class="madani-fullscreen-bar__icon madani-fullscreen-bar__icon--play"
+                :class="{ 'is-playing': isPlaying }"
+                :title="t('memorisation.player.playPause')"
+                :aria-label="isPlaying ? t('memorisation.player.pauseAudio') : t('memorisation.player.playAudio')"
+                @click.stop="togglePlay"
+              >
+                <i class="bi" :class="isPlaying ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+              </button>
+              <button
+                type="button"
+                class="madani-fullscreen-bar__icon"
+                :disabled="!canNext"
+                :title="t('memorisation.player.next')"
+                :aria-label="t('memorisation.player.nextAyah')"
+                @click.stop="next"
+              >
+                <i class="bi bi-skip-forward-fill" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <button
+              v-if="isMadaniMobileImmersive && showWorkspaceAiReciteCta"
+              type="button"
+              class="madani-fullscreen-bar__recite"
+              :class="{ 'is-animated': workspaceAiReciteAnimated }"
+              data-testid="madani-fullscreen-bar-recite"
+              :title="t('dashboard.ai_recite.cta_label')"
+              :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+              @click.stop="openWorkspaceAiRecite"
+            >
+              <i class="bi bi-mic-fill" aria-hidden="true"></i>
+            </button>
+
+            <label
+              v-if="!isMadaniMobileImmersive"
+              class="madani-fullscreen-bar__reciter"
+              :title="fullscreenReciterName"
+            >
+              <span class="sr-only">{{ t('sessionSetup.reciter') }}: {{ fullscreenReciterName }}</span>
+              <span class="madani-fullscreen-bar__reciter-name">{{ fullscreenReciterName }}</span>
+              <i class="bi bi-chevron-down madani-fullscreen-bar__reciter-caret" aria-hidden="true"></i>
+              <select
+                v-model="reciterId"
+                class="madani-fullscreen-bar__reciter-select"
+                :aria-label="t('sessionSetup.reciter')"
+                @change="onMadaniFullscreenReciterChange"
+              >
+                <optgroup v-if="recitersWithWordHighlight.length" :label="t('sessionSetup.recitersWithWordHighlight')">
+                  <option v-for="r in recitersWithWordHighlight" :key="r.id" :value="r.id">{{ r.name }}</option>
+                </optgroup>
+                <optgroup v-if="recitersAudioOnly.length" :label="t('sessionSetup.recitersAudioOnly')">
+                  <option v-for="r in recitersAudioOnly" :key="r.id" :value="r.id">{{ r.name }}</option>
+                </optgroup>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
         v-if="(showWorkspaceAiReciteCta && shouldShowReadingWorkspace && readingViewMode !== 'mushaf') || showBackToTop"
         class="workspace-float-rail workspace-float-rail--desktop"
       >
@@ -5538,6 +5657,7 @@
 <script src="./Memorisation.js"></script>
 
 <style src="./Memorisation.css"></style>
+<style src="./Memorisation.madani-fs-bar.css"></style>
 <style src="./Memorisation.mobile-grid.css"></style>
 <style src="./Memorisation.amd.css"></style>
 <!-- Must load last: shared mushaf rules use display:contents on .madani-line--glyphs -->

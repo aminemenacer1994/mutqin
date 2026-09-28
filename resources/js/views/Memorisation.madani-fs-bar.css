@@ -1,0 +1,503 @@
+/* Immersive Madani bottom chrome — icon strip, inset from screen edges. */
+html:has(.madani-fullscreen-bar),
+html.has-madani-fullscreen-bar {
+  --madani-fs-bar-inset-x: clamp(1rem, 5.5vw, 1.65rem);
+  --madani-fs-bar-inset-bottom: clamp(0.85rem, 3.5vw, 1.25rem);
+  --madani-fs-bar-shell-pad-x: 0.65rem;
+  --madani-fs-bar-shell-pad-y: 0.42rem;
+  --madani-fs-bar-icon: 2.05rem;
+  --madani-fs-bar-offset: calc(
+    var(--madani-fs-bar-inset-bottom)
+    + env(safe-area-inset-bottom, 0px)
+    + var(--madani-fs-bar-shell-pad-y)
+    + var(--madani-fs-bar-icon)
+    + var(--madani-fs-bar-shell-pad-y)
+  );
+  --madani-fs-recite-clearance: calc(var(--madani-fs-bar-offset) + 4.35rem);
+}
+
+@keyframes madani-fs-bar-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.madani-fullscreen-bar {
+  position: fixed;
+  z-index: 228;
+  box-sizing: border-box;
+  inset-inline-start: max(var(--madani-fs-bar-inset-x), env(safe-area-inset-left, 0px));
+  inset-inline-end: max(var(--madani-fs-bar-inset-x), env(safe-area-inset-right, 0px));
+  bottom: calc(var(--madani-fs-bar-inset-bottom) + env(safe-area-inset-bottom, 0px));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text, #1b140d);
+  pointer-events: none;
+  animation: madani-fs-bar-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .madani-fullscreen-bar {
+    animation: none;
+  }
+}
+
+.madani-fullscreen-bar__shell {
+  position: relative;
+  pointer-events: auto;
+  box-sizing: border-box;
+  padding: var(--madani-fs-bar-shell-pad-y) var(--madani-fs-bar-shell-pad-x);
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent, #c9925a) 26%, var(--text, #1b140d) 10%);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--zone-chrome, #fffdf8) 97%, #fff) 0%,
+      color-mix(in srgb, var(--zone-chrome, #fffdf8) 86%, #f5efe6) 100%
+    );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #fff 72%, transparent) inset,
+    0 16px 44px color-mix(in srgb, var(--text, #1b140d) 16%, transparent),
+    0 4px 12px color-mix(in srgb, var(--text, #1b140d) 8%, transparent);
+}
+
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .madani-fullscreen-bar__shell {
+    background: color-mix(in srgb, var(--zone-chrome, #fffdf8) 74%, transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(1.18);
+    backdrop-filter: blur(24px) saturate(1.18);
+  }
+}
+
+.madani-fullscreen-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+  min-height: var(--madani-fs-bar-icon);
+}
+
+.madani-fullscreen-bar__cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  min-width: 0;
+  padding: 2px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--text, #1b140d) 4%, transparent);
+}
+
+.madani-fullscreen-bar__cluster--transport {
+  position: absolute;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  gap: 0.2rem;
+  padding-inline: 4px;
+  background: color-mix(in srgb, var(--accent, #c9925a) 8%, transparent);
+}
+
+.madani-fullscreen-bar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--madani-fs-bar-icon);
+  height: var(--madani-fs-bar-icon);
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--text, #1b140d) 88%, #000);
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+}
+
+.madani-fullscreen-bar__icon i {
+  font-size: 1.0625rem;
+  pointer-events: none;
+}
+
+.madani-fullscreen-bar__icon:hover:not(:disabled),
+.madani-fullscreen-bar__icon:focus-visible {
+  background: color-mix(in srgb, var(--accent, #c9925a) 16%, transparent);
+  color: var(--text, #1b140d);
+}
+
+.madani-fullscreen-bar__icon:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent, #c9925a) 50%, transparent);
+  outline-offset: 1px;
+}
+
+.madani-fullscreen-bar__icon:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.madani-fullscreen-bar__icon:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
+
+.madani-fullscreen-bar__icon--play {
+  width: calc(var(--madani-fs-bar-icon) + 0.15rem);
+  color: color-mix(in srgb, var(--accent-strong, #8d6a35) 85%, #000);
+}
+
+.madani-fullscreen-bar__icon--play i {
+  font-size: 1.1875rem;
+}
+
+.madani-fullscreen-bar__icon--play.is-playing {
+  background: color-mix(in srgb, var(--accent, #c9925a) 28%, transparent);
+  color: #1a1208;
+}
+
+.madani-fullscreen-bar__sep {
+  width: 1px;
+  height: 1.1rem;
+  margin-inline: 1px;
+  background: color-mix(in srgb, var(--text, #1b140d) 14%, transparent);
+  flex-shrink: 0;
+}
+
+.madani-fullscreen-bar__reciter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.28rem;
+  min-width: 0;
+  max-width: min(11rem, 38vw);
+  height: var(--madani-fs-bar-icon);
+  padding-inline: 0.45rem 0.4rem;
+  margin-inline-start: auto;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--text, #1b140d) 82%, #000);
+  cursor: pointer;
+  transition: background 0.22s ease, color 0.22s ease;
+}
+
+.madani-fullscreen-bar__reciter-glyph,
+.madani-fullscreen-bar__reciter-caret {
+  flex: 0 0 auto;
+  font-size: 0.9375rem;
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+.madani-fullscreen-bar__reciter-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.madani-fullscreen-bar__reciter-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.madani-fullscreen-bar__reciter:hover,
+.madani-fullscreen-bar__reciter:focus-within {
+  background: color-mix(in srgb, var(--accent, #c9925a) 12%, transparent);
+}
+
+[data-theme="dark"] .madani-fullscreen-bar__shell,
+.madani-fullscreen-bar[data-theme="dark"] .madani-fullscreen-bar__shell {
+  border-color: rgba(212, 165, 116, 0.24);
+  background: color-mix(in srgb, #1c1814 84%, #000);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 18px 48px rgba(0, 0, 0, 0.58);
+  color: #f6eadc;
+}
+
+[data-theme="dark"] .madani-fullscreen-bar__cluster,
+.madani-fullscreen-bar[data-theme="dark"] .madani-fullscreen-bar__cluster {
+  background: rgba(255, 236, 210, 0.06);
+}
+
+[data-theme="dark"] .madani-fullscreen-bar__icon,
+.madani-fullscreen-bar[data-theme="dark"] .madani-fullscreen-bar__icon,
+[data-theme="dark"] .madani-fullscreen-bar__reciter,
+.madani-fullscreen-bar[data-theme="dark"] .madani-fullscreen-bar__reciter {
+  color: #f3e6d8;
+}
+
+[data-theme="sepia"] .madani-fullscreen-bar__shell,
+.madani-fullscreen-bar[data-theme="sepia"] .madani-fullscreen-bar__shell {
+  border-color: rgba(120, 88, 52, 0.22);
+  background: color-mix(in srgb, #ebe0cc 92%, #fff8ed);
+  color: #352516;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar) .player-dock,
+html.is-app-fullscreen.has-madani-fullscreen-bar .player-dock {
+  display: none !important;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar) body .app .main.madani-qpc-mode-active .workspace-main,
+html.is-app-fullscreen:has(.madani-fullscreen-bar)
+  body.memorisation-page
+  .main.madani-qpc-mode-active.is-madani-mobile-immersive
+  .workspace-main {
+  padding-block-end: var(--madani-fs-recite-clearance) !important;
+  scroll-padding-block-end: var(--madani-fs-recite-clearance) !important;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar)
+  body.memorisation-page
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-session-scroll {
+  padding-bottom: var(--madani-fs-recite-clearance);
+  scroll-padding-bottom: var(--madani-fs-recite-clearance);
+}
+
+/* ——— Mobile full-screen: navbar-integrated round recite, high-contrast chrome ——— */
+@media (max-width: 767.98px) {
+  html.is-app-fullscreen:has(.madani-fullscreen-bar),
+  html.is-app-fullscreen.has-madani-fullscreen-bar {
+    --madani-fs-bar-inset-x: clamp(1rem, 5vw, 1.35rem);
+    --madani-fs-bar-inset-bottom: clamp(0.95rem, 4vw, 1.2rem);
+    --madani-fs-bar-icon: 1.75rem;
+    --madani-fs-bar-recite: 2.35rem;
+    --madani-fs-bar-shell-pad-x: 0.62rem;
+    --madani-fs-bar-shell-pad-y: 0.38rem;
+    --madani-fs-bar-row: max(var(--madani-fs-bar-icon), var(--madani-fs-bar-recite));
+    --madani-fs-bar-offset: calc(
+      var(--madani-fs-bar-inset-bottom)
+      + env(safe-area-inset-bottom, 0px)
+      + var(--madani-fs-bar-shell-pad-y)
+      + var(--madani-fs-bar-row)
+      + var(--madani-fs-bar-shell-pad-y)
+    );
+    --madani-fs-recite-clearance: calc(var(--madani-fs-bar-offset) + 0.65rem);
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__shell {
+    border-radius: 18px;
+    border: 2px solid color-mix(in srgb, var(--accent, #c9925a) 58%, #fff 8%);
+    background: color-mix(in srgb, var(--zone-chrome, #fff9f0) 92%, #fff);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, #000 8%, transparent) inset,
+      0 0 0 1px color-mix(in srgb, #fff 70%, transparent),
+      0 16px 40px color-mix(in srgb, #000 34%, transparent),
+      0 4px 14px color-mix(in srgb, #000 18%, transparent);
+  }
+
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__shell {
+      background: color-mix(in srgb, var(--zone-chrome, #fff9f0) 78%, rgba(20, 16, 12, 0.55));
+      -webkit-backdrop-filter: blur(26px) saturate(1.35) contrast(1.08);
+      backdrop-filter: blur(26px) saturate(1.35) contrast(1.08);
+    }
+  }
+
+  [data-theme="dark"] .madani-fullscreen-bar--mobile .madani-fullscreen-bar__shell,
+  .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__shell {
+    border-color: color-mix(in srgb, #e8c9a0 62%, #fff 10%);
+    background: color-mix(in srgb, #14110e 88%, #000);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+      0 18px 44px rgba(0, 0, 0, 0.72);
+  }
+
+  [data-theme="sepia"] .madani-fullscreen-bar--mobile .madani-fullscreen-bar__shell,
+  .madani-fullscreen-bar--mobile[data-theme="sepia"] .madani-fullscreen-bar__shell {
+    border-color: color-mix(in srgb, #8a6238 55%, #fff 10%);
+    background: color-mix(in srgb, #f3e8d4 94%, #fff);
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
+    display: grid;
+    grid-template-columns: min-content minmax(0, 1fr) min-content;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    min-height: var(--madani-fs-bar-row);
+    direction: ltr;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster {
+    background: transparent !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    gap: 0.05rem;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
+    position: static;
+    transform: none;
+    justify-self: center;
+    justify-content: center;
+    gap: 0.05rem;
+    max-width: 100%;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon {
+    width: var(--madani-fs-bar-icon);
+    height: var(--madani-fs-bar-icon);
+    min-width: var(--madani-fs-bar-icon);
+    border-radius: 8px;
+    color: color-mix(in srgb, var(--text, #f6eadc) 94%, #fff);
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon i {
+    font-size: 1rem;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon--play i {
+    font-size: 1.125rem;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon:hover:not(:disabled),
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon:focus-visible {
+    background: color-mix(in srgb, var(--accent, #c9925a) 22%, transparent) !important;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__sep {
+    height: 0.7rem;
+    opacity: 0.45;
+    background: color-mix(in srgb, var(--text, #fff) 28%, transparent);
+  }
+
+  /* Recite lives on the navbar — perfect circle, physical right column. */
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    justify-self: end;
+    width: var(--madani-fs-bar-recite);
+    height: var(--madani-fs-bar-recite);
+    min-width: var(--madani-fs-bar-recite);
+    min-height: var(--madani-fs-bar-recite);
+    max-width: var(--madani-fs-bar-recite);
+    max-height: var(--madani-fs-bar-recite);
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    margin: 0;
+    border: 2px solid #2ea86a;
+    border-radius: 50%;
+    background: linear-gradient(165deg, #9ef0c4 0%, #5fd699 48%, #43c07f 100%);
+    color: #0f4a32;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+      0 6px 16px rgba(47, 168, 106, 0.45);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
+    font-size: 1.05rem;
+    pointer-events: none;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite:hover,
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite:focus-visible {
+    filter: brightness(1.04);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+      0 8px 20px rgba(47, 168, 106, 0.52);
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite:active {
+    transform: scale(0.94);
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite.is-animated {
+    animation: madani-fs-recite-pulse 2.6s ease-in-out infinite;
+  }
+
+  @keyframes madani-fs-recite-pulse {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+        0 6px 16px rgba(47, 168, 106, 0.42);
+    }
+
+    50% {
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+        0 6px 16px rgba(47, 168, 106, 0.42),
+        0 0 0 4px rgba(94, 214, 153, 0.28);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite.is-animated {
+      animation: none;
+    }
+  }
+
+  /* Legacy floating dock hidden — recite is in the navbar. */
+  html.is-app-fullscreen:has(.madani-fullscreen-bar) body .app .workspace-recite-dock--mobile,
+  html.is-app-fullscreen:has(.madani-fullscreen-bar) body .workspace-recite-dock--mobile,
+  html.is-app-fullscreen.has-madani-fullscreen-bar body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  html:has(.madani-fullscreen-bar) {
+    --madani-fs-bar-inset-x: clamp(1.25rem, 6vw, 2rem);
+    --madani-fs-bar-inset-bottom: clamp(1rem, 3vw, 1.35rem);
+    --madani-fs-bar-icon: 2.15rem;
+    --madani-fs-bar-shell-pad-x: 0.75rem;
+  }
+
+  .madani-fullscreen-bar__reciter-name {
+    font-size: 0.75rem;
+  }
+
+  html.is-app-fullscreen:has(.madani-fullscreen-bar) body .workspace-float-rail,
+  html.is-app-fullscreen:has(.madani-fullscreen-bar) body > .workspace-float-rail,
+  html.is-app-fullscreen:has(.madani-fullscreen-bar) body .workspace-float-rail--desktop {
+    bottom: calc(var(--madani-fs-bar-offset) + 0.75rem) !important;
+  }
+}
+
+@media (min-width: 1080px) {
+  .madani-fullscreen-bar__reciter {
+    max-width: 14rem;
+  }
+}

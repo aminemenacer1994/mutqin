@@ -154,6 +154,7 @@ export default {
     return {
       selectedLocation: '',
       resizeObserver: null,
+      visualViewportHandler: null,
       fitTimer: null,
       lastFitWidth: 0,
       lastFitHeight: 0,
@@ -243,6 +244,10 @@ export default {
   beforeUnmount() {
     this.resizeObserver?.disconnect()
     this.resizeObserver = null
+    if (this.visualViewportHandler && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this.visualViewportHandler)
+    }
+    this.visualViewportHandler = null
     if (this.fitTimer) window.clearTimeout(this.fitTimer)
   },
   methods: {
@@ -291,6 +296,10 @@ export default {
         const sheet = this.$refs.sheet
         if (sheet instanceof HTMLElement) this.resizeObserver.observe(sheet)
       })
+      if (typeof window !== 'undefined' && window.innerWidth < 768 && window.visualViewport) {
+        this.visualViewportHandler = () => this.scheduleFit()
+        window.visualViewport.addEventListener('resize', this.visualViewportHandler)
+      }
     },
     sheetWidth() {
       const sheet = this.$refs.sheet
@@ -385,30 +394,41 @@ export default {
 
       const narrow = available < 440
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
-      const sessionSheet = mobile && (this.borderless || this.sessionScoped)
+      const desktopSpread = typeof window !== 'undefined'
+        && window.innerWidth >= 1080
+        && this.spreadViewportFill
+      const sessionSheet = mobile && !this.embedded
       let safety = this.embedded || sessionSheet
         ? (narrow ? 0.88 : 0.92)
         : (mobile ? 0.9 : (narrow ? 0.9 : 0.95))
       if (sessionSheet) {
         safety = 0.985
       }
-      if (this.spreadViewportFill) {
+      if (this.spreadViewportFill && !desktopSpread && !mobile) {
         safety = Math.min(safety, narrow ? 0.74 : 0.78)
+      } else if (desktopSpread && this.embedded) {
+        safety = narrow ? 0.9 : 0.95
       }
-      const cap = this.embedded
+      let cap = this.embedded
         ? (narrow ? 34 : 38)
-        : (mobile ? (narrow ? 48 : 54) : (narrow ? 40 : 46))
+        : (mobile ? (narrow ? 52 : 60) : (narrow ? 40 : 46))
+      if (sessionSheet) {
+        cap = narrow ? 58 : 68
+      }
+      if (desktopSpread && this.embedded) {
+        cap = narrow ? 48 : 64
+      }
       const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
         ? Number(this.fontScale)
         : 1
       const widthFit = (available / widest) * MEASURE_SIZE * safety
-      const rawSize = Math.min(cap * requested, widthFit)
+      let rawSize = Math.min(cap * requested, widthFit)
       if (this.sessionViewportFill) {
         const heightFit = this.viewportBandHeightFit(root, sheet, targets.length)
         if (Number.isFinite(heightFit) && heightFit > 0) {
           rawSize = Math.min(cap * requested, widthFit, heightFit)
         }
-      } else if (this.spreadViewportFill) {
+      } else if (this.spreadViewportFill && !this.sessionScoped) {
         const heightFit = this.viewportBandHeightFit(root, sheet, 15)
         if (Number.isFinite(heightFit) && heightFit > 0) {
           rawSize = Math.min(cap * requested, widthFit, heightFit)
@@ -476,8 +496,10 @@ export default {
       const styles = getComputedStyle(sheet)
       const padding = Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight)
       let inner = Math.max(0, sheet.clientWidth - padding)
-      if (this.spreadViewportFill || this.embedded) {
-        inner = Math.max(0, inner - 28)
+      const mobile = typeof window !== 'undefined' && window.innerWidth < 768
+      if ((this.spreadViewportFill || this.embedded) && !mobile) {
+        const desktopSpread = typeof window !== 'undefined' && window.innerWidth >= 1080
+        inner = Math.max(0, inner - (desktopSpread ? 6 : 28))
       }
       return inner
     },
@@ -710,16 +732,23 @@ export default {
 .qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
   padding:
     max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.2rem))
-    max(0.35rem, calc(env(safe-area-inset-right, 0px) + 0.12rem))
+    max(0.04rem, env(safe-area-inset-right, 0px))
     max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
-    max(0.35rem, calc(env(safe-area-inset-left, 0px) + 0.12rem));
+    max(0.04rem, env(safe-area-inset-left, 0px));
 }
 
 @media (max-width: 767.98px) {
+  .qpc-madani-page--single,
   .qpc-madani-page--borderless.qpc-madani-page--single {
     width: 100%;
     max-width: 100%;
-    padding-inline: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  .qpc-madani-page--borderless .qpc-madani-page__sheet {
+    width: 100%;
+    max-width: 100%;
   }
 }
 

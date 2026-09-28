@@ -7716,8 +7716,9 @@ body:has(.workspace-recite-dock__button) .app .workspace {
     padding: 0 !important;
     border: 0 !important;
   }
+}
 
-  /* One session page: vertically center ayah text in the desktop reading viewport */
+@media (min-width: 1080px) {
   html body .app .main.mushaf-mode-active .mushaf-viewport-scroll:has(.mushaf-session-stack[data-desktop-short-surah="true"]) {
     display: flex !important;
     flex-direction: column !important;
@@ -7822,4 +7823,21 @@ html body .amd-overlay .amd-modal .amd-tools-bar__hint {
     padding-block: 0.2rem 0.35rem !important;
     padding-inline: 0.15rem !important;
   }
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar) body .workspace-recite-dock,
+html.is-app-fullscreen:has(.madani-fullscreen-bar) body .app .workspace-recite-dock,
+html.is-app-fullscreen:has(.madani-fullscreen-bar) body > .workspace-recite-dock {
+  bottom: auto !important;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar)
+  body
+  .app
+  .main.madani-qpc-mode-active
+  .workspace-recite-dock--mobile,
+html.is-app-fullscreen:has(.madani-fullscreen-bar)
+  body
+  .workspace-recite-dock--mobile {
+  display: none !important;
 }
