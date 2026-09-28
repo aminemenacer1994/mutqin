@@ -2,7 +2,7 @@ const THEME_STORAGE_KEY = 'mutqin-theme';
 const THEME_PREFERENCE_KEY = 'mutqin-theme-preference';
 const THEME_COOKIE_KEY = 'mutqin_theme';
 const THEME_CHOSEN_COOKIE_KEY = 'mutqin_theme_set';
-export const DEFAULT_THEME = 'light';
+export const DEFAULT_THEME = 'dark';
 
 /** Legacy unscoped keys — cleared on logout; never authoritative for signed-in users. */
 export const SHARED_THEME_STORAGE_KEYS = Object.freeze([

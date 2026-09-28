@@ -7884,7 +7884,7 @@
                 } catch (e) {}
             }
             const themeModes = Array.isArray(window.mutqinThemeModes) ? window.mutqinThemeModes : [];
-            const defaultTheme = window.mutqinDefaultTheme || 'light';
+            const defaultTheme = window.mutqinDefaultTheme || 'dark';
 
             function findThemeMode(value) {
                 const raw = String(value || '').toLowerCase();

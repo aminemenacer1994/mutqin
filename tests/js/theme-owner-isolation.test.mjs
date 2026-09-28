@@ -137,10 +137,10 @@ clearSharedMutqinBrowserResidue({ localStorage: globalThis.localStorage, session
 assert.equal(store.has('mutqin-theme'), false)
 assert.equal(store.has('mutqin-theme-preference'), false)
 
-assert.equal(DEFAULT_THEME, 'light')
+assert.equal(DEFAULT_THEME, 'dark')
 assert.deepEqual(THEME_MODE_IDS, ['light', 'sepia', 'dark'])
 assert.equal(getThemeMode('sepia-mode').id, 'sepia')
-assert.equal(getThemeMode('night').id, 'light')
+assert.equal(getThemeMode('night').id, 'dark')
 assert.equal(THEME_MODES.length, 3)
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')

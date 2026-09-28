@@ -10490,6 +10490,7 @@ export default {
       }
       this.loadRecommendedSessionTemplates()
       this.loadUiState()
+      this.applyMemorisationPageLoadDefaults()
       this.loadVerseFontSizes()
       this.applyMobileLayoutFontDefault(this.readingViewMode)
       if (this.isMobileViewport()) this.playerCompact = true
@@ -10509,7 +10510,7 @@ export default {
       if (this.showTools) this.ensureSecondaryToolsLoaded()
       this.initAudio()
       this.restoreAudioState()
-      this.syncGlobalTheme(getSavedTheme())
+      this.applyMemorisationPageLoadDefaults()
       this.loadBookmarksPins()
       this.setupWordClickHandler()
       if (!authenticatedWorkspace) {
@@ -10653,7 +10654,8 @@ export default {
       // No active session means setup is the page's primary task. Open the
       // existing setup prompt instead of leaving only an empty workspace shell.
       this.ensureEmptyWorkspaceEntrySurface()
-      this.resetPageScrollAfterReload({ delayed: true })
+      this.applyMemorisationPageLoadDefaults()
+      this.resetPageScrollAfterReload({ immediate: true, delayed: true })
     }
 
     window.addEventListener('online', this.handleOnline)
@@ -37666,8 +37668,19 @@ export default {
       this.showBackToTop = false
     },
 
+    applyMemorisationPageLoadDefaults() {
+      this.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+      this.readingViewMode = this.clampReadingViewMode('madani_mushaf')
+      this.syncGlobalTheme(DEFAULT_THEME)
+      this.applyLayoutFontSize(this.readingViewMode)
+      if (this.settingsDraft && typeof this.settingsDraft === 'object') {
+        this.settingsDraft.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+      }
+    },
+
     resetPageScrollAfterReload({ immediate = false, delayed = false } = {}) {
       if (typeof window === 'undefined') return
+      this.coldPageLoadScrollGuard = true
       const apply = () => {
         try {
           window.scrollTo(0, 0)
@@ -37682,16 +37695,22 @@ export default {
       }
       if (immediate) apply()
       if (!delayed) return
+      const schedule = typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame.bind(window)
+        : (fn) => setTimeout(fn, 16)
       this.$nextTick(() => {
-        const schedule = typeof window.requestAnimationFrame === 'function'
-          ? window.requestAnimationFrame.bind(window)
-          : (fn) => setTimeout(fn, 16)
         schedule(() => {
-          schedule(() => {
-            apply()
-            this.coldPageLoadScrollGuard = false
-          })
+          schedule(() => apply())
         })
+      })
+      const delayedPassesMs = [0, 50, 150, 400, 800, 1200]
+      delayedPassesMs.forEach((ms, index) => {
+        setTimeout(() => {
+          apply()
+          if (index === delayedPassesMs.length - 1) {
+            this.coldPageLoadScrollGuard = false
+          }
+        }, ms)
       })
     },
 
@@ -37720,6 +37739,7 @@ export default {
     },
 
     isSessionWorkspaceScrollBlocked() {
+      if (this.coldPageLoadScrollGuard) return true
       // Never fight live recitation, AMD auto-follow, or modal-owned scrolling.
       if (this.isSelfCheckRecording || this.recitationCheckRecording || this.recitationCheckPreparing) {
         return true

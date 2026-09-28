@@ -793,7 +793,9 @@ includesAll('planner ui gated by premium tier rest', [
   /workspace-session-overview-collapse/,
   /workspace-shell-overview-toggle__chevron/,
   /resetPageScrollAfterReload/,
+  /applyMemorisationPageLoadDefaults/,
   /coldPageLoadScrollGuard/,
+  /if \(this\.coldPageLoadScrollGuard\) return true/,
   /class="top-card-icon-controls"/,
 ])
 
