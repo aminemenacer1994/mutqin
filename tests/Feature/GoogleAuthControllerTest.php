@@ -433,7 +433,7 @@ class GoogleAuthControllerTest extends TestCase
 
         $user = User::where('google_id', 'google-dup')->firstOrFail();
         $this->assertSame(1, User::count());
-        $this->assertSame('light-mode', $user->theme);
+        $this->assertSame('dark-mode', $user->theme);
 
         $this->post(route('logout'));
         $this->assertGuest();

@@ -81,8 +81,8 @@ class SetLocale
             return Theme::DEFAULT_PREFERENCE;
         }
 
-        // Guests stay on light unless they actually picked a mode (mutqin_theme_set).
-        // Leftover sepia cookies/session from an older default must not stick.
+        // Guests stay on the app default unless they actually picked a mode (mutqin_theme_set).
+        // Leftover cookies/session from an older default must not stick.
         if (! $this->guestExplicitlyChoseTheme($request)) {
             return Theme::DEFAULT_PREFERENCE;
         }

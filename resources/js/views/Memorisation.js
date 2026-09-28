@@ -37344,7 +37344,6 @@ export default {
       this.anchorModeEnabled = !!config.anchorModeEnabled
       this.anchorCount = Math.max(1, Math.min(3, Number(config.anchorCount || this.anchorCount || 2)))
       this.enforceSubscriptionFeatureLimits()
-      this.syncGlobalTheme(getSavedTheme())
     },
 
     loadModeState(mode) {
@@ -44087,7 +44086,7 @@ export default {
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
       this.planner = this.loadModeState('planner')
-      this.syncGlobalTheme(getSavedTheme())
+      this.syncGlobalTheme(DEFAULT_THEME)
       if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
       if (this.isMobileViewport()) {
         this.playerCompact = true
