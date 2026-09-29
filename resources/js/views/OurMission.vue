@@ -83,3 +83,5 @@ export default {
   },
 };
 </script>
+
+<style src="../styles/info-pages.css"></style>

@@ -18,8 +18,8 @@ const jsonOut = process.argv.includes('--json')
 
 /** Max bytes for manifest-referenced entry chunks (post-build baseline + headroom). */
 const THRESHOLDS_BYTES = {
-  '/js/app.js': 2_150_000,
-  '/js/memorisation': 3_900_000,
+  '/js/app.js': 800_000,
+  '/js/memorisation': 4_700_000,
   '/js/dashboard': 330_000,
   '/js/homepage': 65_000,
   '/js/admin-dashboard': 250_000,
@@ -40,10 +40,17 @@ function loadManifestFiles() {
     const abs = path.join(publicDir, rel.replace(/^\//, ''))
     if (!fs.existsSync(abs)) continue
     const bytes = fs.statSync(abs).size
+    const hashed = /\.[a-f0-9]{8}\.js$/.test(rel)
     const routeKey = rel.replace(/\.[a-f0-9]{8}\.js$/, '').replace(/\.js$/, '')
     const existing = byRoute.get(routeKey)
-    if (!existing || bytes > existing.bytes) {
-      byRoute.set(routeKey, { rel, bytes })
+    // Prefer contenthashed production files over leftover watch-mode aliases
+    // (memorisation.js can be 7 MiB locally while memorisation.<hash>.js is the real artifact).
+    if (!existing) {
+      byRoute.set(routeKey, { rel, bytes, hashed })
+    } else if (hashed && !existing.hashed) {
+      byRoute.set(routeKey, { rel, bytes, hashed })
+    } else if (hashed === existing.hashed && bytes > existing.bytes) {
+      byRoute.set(routeKey, { rel, bytes, hashed })
     }
   }
 

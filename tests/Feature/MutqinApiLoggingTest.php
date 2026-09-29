@@ -30,4 +30,18 @@ class MutqinApiLoggingTest extends TestCase
                     && isset($context['duration_ms']);
             }));
     }
+
+    public function test_state_poll_skips_structured_request_log(): void
+    {
+        Log::spy();
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/api/state')
+            ->assertOk()
+            ->assertHeader('X-Request-Id');
+
+        Log::shouldNotHaveReceived('info', ['api.request.completed']);
+    }
 }

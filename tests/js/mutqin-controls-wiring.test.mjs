@@ -794,6 +794,7 @@ includesAll('planner ui gated by premium tier rest', [
   /workspace-shell-overview-toggle__chevron/,
   /resetPageScrollAfterReload/,
   /applyMemorisationPageLoadDefaults/,
+  /DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED[\s\S]*?mainCardCollapsed = false/,
   /coldPageLoadScrollGuard/,
   /if \(this\.coldPageLoadScrollGuard\) return true/,
   /class="top-card-icon-controls"/,

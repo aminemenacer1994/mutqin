@@ -1609,9 +1609,9 @@
 .amd-mushaf-ayah--premium .wbw-word,
 .amd-mushaf-ayah--premium word {
   display: inline;
-  padding: 0.12rem 0.22rem;
-  margin: 0.08rem 0.06rem;
-  border-radius: 0.35rem;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
   background: transparent;
   color: inherit;
 }
@@ -3391,7 +3391,7 @@
   flex: 1 1 auto !important;
   min-height: 0 !important;
   min-width: 0 !important;
-  max-height: min(58vh, 560px) !important;
+  max-height: min(46vh, 440px) !important;
   height: auto !important;
   overflow-x: clip !important;
   overflow-y: auto !important;
@@ -6462,8 +6462,8 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
 .amd-mushaf-stream .recitation-word-uncertain {
   color: #8b9198 !important;
   -webkit-text-fill-color: #8b9198 !important;
-  background: color-mix(in srgb, #94a3b8 10%, transparent) !important;
-  border-radius: 0.18em;
+  background: transparent !important;
+  border-radius: 0;
 }
 
 [data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-correct,
@@ -6502,7 +6502,7 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
 .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .recitation-word-uncertain {
   color: #a9a19a !important;
   -webkit-text-fill-color: #a9a19a !important;
-  background: rgba(169, 161, 154, 0.1) !important;
+  background: transparent !important;
 }
 
 [data-theme="sepia"] .amd-mushaf-ayah--premium .recitation-word-correct,
@@ -6635,7 +6635,7 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
 
 .amd-modal--spacious .amd-mushaf-ayah--premium {
   max-width: min(56rem, 100%) !important;
-  line-height: 2.5 !important;
+  line-height: 1.78 !important;
 }
 
 .amd-modal--spacious .amd-mushaf-page--flow .amd-ayah-run + .amd-ayah-run {
@@ -6743,7 +6743,7 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
   flex: 0 0 auto !important;
   height: auto !important;
   min-height: 0 !important;
-  padding-block: 0.45rem 0.75rem;
+  padding-block: 0.15rem 0.3rem;
 }
 
 .amd-modal--spacious .amd-mushaf-page.amd-mushaf-page--flow {
@@ -6794,6 +6794,7 @@ html body .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet .mada
 /* Words flow like a line of text — no chips, columns, or rigid boxes. */
 html body .amd-overlay .amd-mushaf-page--flow .amd-ayah-run,
 html body .amd-overlay .amd-mushaf-page--flow .amd-ayah-run__text,
+html body .amd-overlay .amd-mushaf-page--flow .amd-ayah-end,
 html body .amd-overlay .amd-mushaf-ayah--premium word,
 html body .amd-overlay .amd-mushaf-ayah--premium .wbw-word,
 html body .app .verse-arabic:not(.word-by-word-meanings) word,
@@ -6816,8 +6817,9 @@ html body .app .verse-arabic:not(.word-by-word-meanings) .wbw-word {
 html body .amd-overlay .amd-mushaf-ayah--premium word,
 html body .amd-overlay .amd-mushaf-ayah--premium .wbw-word,
 html body .app .verse-arabic:not(.word-by-word-meanings) .wbw-word {
-  margin-inline: 0.14em 0 !important;
+  margin-inline: 0.08em 0 !important;
   white-space: nowrap !important;
+  line-height: inherit !important;
 }
 
 html body .amd-overlay .amd-mushaf-ayah--premium word.amd-word-hidden,
@@ -6835,7 +6837,7 @@ html body .amd-overlay .amd-mushaf-page--flow .amd-mushaf-stream {
   display: block !important;
   height: auto !important;
   text-align: center !important;
-  line-height: 2.15 !important;
+  line-height: 2.05 !important;
 }
 
 /* Dark Bismillah. Tajweed pages invert the whole sheet, so the basmala
@@ -7776,7 +7778,7 @@ html body .amd-overlay .amd-modal .amd-toolbar--tools.amd-tools-bar {
 html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--premium,
 html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--primary,
 html body .amd-overlay .amd-modal .amd-mushaf-shell.amd-mushaf-shell--premium.amd-mushaf-shell--primary {
-  padding: 1.55rem 1.35rem 1.2rem !important;
+  padding: 0.85rem 1rem 0.75rem !important;
 }
 
 html body .amd-overlay .amd-modal .amd-mushaf-page,
@@ -7786,8 +7788,8 @@ html body .amd-overlay .amd-modal .amd-mushaf-page--flow {
 }
 
 html body .amd-overlay .amd-modal .amd-mushaf-ayah.amd-mushaf-ayah--premium {
-  padding-block: 0.65rem 0.95rem !important;
-  padding-inline: 0.35rem !important;
+  padding-block: 0.2rem 0.35rem !important;
+  padding-inline: 0.2rem !important;
 }
 
 html body .amd-overlay .amd-modal .amd-tools-bar__hint {
@@ -7877,4 +7879,85 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     padding-inline: var(--mq-card-pad, clamp(12px, 3.6vw, 16px)) !important;
     box-sizing: border-box !important;
   }
+}
+
+/* Recite AI modal — compact text; last word + ornament stay on one baseline */
+html body .amd-overlay .amd-mushaf-ayah.amd-mushaf-ayah--premium {
+  font-size: calc(clamp(1.4rem, 3.4vw, 2.05rem) * var(--amd-font-scale, 1)) !important;
+  line-height: 2.05 !important;
+}
+
+html body .amd-overlay .amd-mushaf-page--flow .amd-mushaf-stream {
+  line-height: 2.05 !important;
+}
+
+html body .amd-overlay .amd-mushaf-page--flow .amd-ayah-run,
+html body .amd-overlay .amd-mushaf-page--flow .amd-ayah-run__text,
+html body .amd-overlay .amd-mushaf-page--flow .amd-ayah-end {
+  display: inline !important;
+  vertical-align: baseline !important;
+}
+
+html body .amd-overlay .amd-mushaf-page--flow .amd-ayah-end {
+  white-space: nowrap !important;
+}
+
+html body .amd-overlay .amd-mushaf-ayah .amd-word-hidden,
+html body .amd-overlay .amd-mushaf-shell.is-gap-mask .amd-mushaf-ayah--premium .amd-word-hidden,
+html body .amd-overlay .amd-mushaf-ayah--premium word.amd-word-hidden,
+html body .amd-overlay .amd-mushaf-ayah--premium .wbw-word.amd-word-hidden,
+html body .amd-overlay .amd-mushaf-shell.is-gap-mask .amd-word-hidden {
+  display: inline-block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  border-bottom: none !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+  line-height: inherit !important;
+}
+
+html body .amd-overlay .amd-mushaf-ayah--premium word.amd-word-hidden::after,
+html body .amd-overlay .amd-mushaf-ayah--premium .wbw-word.amd-word-hidden::after {
+  content: "" !important;
+  position: absolute !important;
+  inset-inline: 0.1em !important;
+  bottom: 0.16em !important;
+  height: max(1px, 0.045em) !important;
+  background: color-mix(in srgb, #a8a29e 48%, transparent) !important;
+  border-radius: 1px !important;
+  pointer-events: none !important;
+}
+
+html body .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium word.amd-word-hidden::after,
+html body .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .wbw-word.amd-word-hidden::after {
+  background: color-mix(in srgb, #d6d3d1 40%, transparent) !important;
+}
+
+html body .amd-overlay .amd-ayah-end word.amd-word-hidden::after,
+html body .amd-overlay .amd-ayah-end .wbw-word.amd-word-hidden::after {
+  inset-inline-end: 0.28em !important;
+}
+
+html body .amd-overlay .verse-ayah-end-number,
+html body .amd-overlay .amd-mushaf-stream .verse-ayah-end-number,
+html body .amd-overlay .amd-mushaf-ayah--premium .verse-ayah-end-number {
+  margin-inline: 0.22em 0.14em !important;
+  margin-block: 0 !important;
+  vertical-align: -0.22em !important;
+  transform: none !important;
+  overflow: visible !important;
+}
+
+html body .amd-overlay .amd-mushaf-ayah--premium .amd-word-current:not(.amd-word-hidden) {
+  background: color-mix(in srgb, #b08a4a 10%, transparent) !important;
+  box-shadow: none !important;
+  border-radius: 0.08em !important;
+}
+
+html body .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .amd-word-current:not(.amd-word-hidden) {
+  background: color-mix(in srgb, #d6d3d1 8%, transparent) !important;
 }

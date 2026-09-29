@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SaveProgressRequest;
 use App\Models\MemorisationProgress;
 use App\Services\DashboardService;
+use App\Services\LearningStateDeriver;
 use App\Support\QuranMetadata;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -119,6 +120,7 @@ class ProgressController extends Controller
         }
 
         DashboardService::forgetForUser($request->user());
+        LearningStateDeriver::forgetProgressFingerprint($request->user());
 
         return response()->json(['saved' => true, 'count' => count($rows)]);
     }

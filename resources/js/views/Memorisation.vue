@@ -1335,7 +1335,7 @@
                       }"
                     >
                       <div
-                        v-for="line in buildMadaniLinesForPage(mushafPage)"
+                        v-for="line in (madaniLinesByPageId[mushafPage.id] || [])"
                         :key="line.key"
                         class="madani-line"
                         :class="[

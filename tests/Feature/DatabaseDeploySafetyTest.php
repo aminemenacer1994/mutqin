@@ -48,6 +48,18 @@ class DatabaseDeploySafetyTest extends TestCase
         );
     }
 
+    public function test_user_sessions_status_activity_indexes_exist(): void
+    {
+        $this->assertTrue(
+            Schema::hasIndex('user_sessions', 'user_sessions_user_status_activity_idx'),
+            'Dashboard activity expects user_sessions_user_status_activity_idx.'
+        );
+        $this->assertTrue(
+            Schema::hasIndex('user_sessions', 'user_sessions_user_status_ended_idx'),
+            'Session history expects user_sessions_user_status_ended_idx.'
+        );
+    }
+
     public function test_destructive_migrate_fresh_is_prohibited_in_production(): void
     {
         DB::prohibitDestructiveCommands(true);

@@ -2,11 +2,7 @@ require('./bootstrap.js');
 
 import { createApp, defineAsyncComponent } from 'vue';
 import NetworkStatusBanner from './components/NetworkStatusBanner.vue';
-import './styles/info-pages.css';
-import './styles/about-page.css';
-import './styles/pricing-page.css';
-import './components/SessionAnalysisOverview.css';
-import { setupI18n, setLocale } from './i18n';
+import { setupI18n, setLocale, resolveEnMessage } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
 import { clearSharedMutqinBrowserResidue } from './utils/mutqinStorageKeys';
@@ -18,7 +14,6 @@ import {
 import { installErrorTracking, reportError } from './scripts/observability/errorTracking';
 import { openFeedbackModal } from './scripts/feedback/feedbackLauncher';
 import FeedbackModal from './components/FeedbackModal.vue';
-import enLocale from './locales/en.json';
 import { bootPersistedQuranFont } from './scripts/quran/quranFonts';
 import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 
@@ -32,7 +27,7 @@ try {
 }
 
 function resolveEn(key) {
-    return key.split('.').reduce((node, part) => (node && node[part] !== undefined ? node[part] : undefined), enLocale) ?? key;
+    return resolveEnMessage(key);
 }
 
 function bindLogoutStorageCleanup() {

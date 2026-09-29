@@ -491,6 +491,7 @@ import {
   shouldApplyAmdHidePercentImmediately,
 } from '../scripts/session/aiSessionSettings'
 import {
+  DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED,
   DEFAULT_SESSION_REPETITIONS,
   DEFAULT_TAJWEED_ENABLED,
   FIRST_ONBOARDING_RANGE_END,
@@ -10070,9 +10071,21 @@ export default {
       return buildMadaniAudioIndexMapHelper(this.verses || [])
     },
 
+    madaniLinesByPageId() {
+      const pages = this.mushafPages || []
+      const out = Object.create(null)
+      for (const page of pages) {
+        if (!page?.id) continue
+        out[page.id] = this.buildMadaniLinesForPage(page)
+      }
+      return out
+    },
+
     currentMadaniLines() {
       // Only render session-filtered lines from mushafPages — never raw layout.
-      return this.buildMadaniLinesForPage(this.currentMushafPage)
+      const page = this.currentMushafPage
+      if (!page?.id) return this.buildMadaniLinesForPage(page)
+      return this.madaniLinesByPageId[page.id] || this.buildMadaniLinesForPage(page)
     },
 
     mushafAidVerse() {
@@ -25664,7 +25677,7 @@ export default {
         const peekCursor = Number.isFinite(highlightIndex) && highlightIndex >= 0 ? highlightIndex : 0
         const peekThisAyah = !!this.amdPeekActive && peekCursor >= offset && peekCursor < offset + words.length
         const isFutureAyah = highlightIndex < offset
-        const wordHtml = words.map((word, index) => {
+        const wordTags = words.map((word, index) => {
           const globalIndex = offset + index
           const statusEntry = statuses[globalIndex] || {}
           // Never paint colours on ayahs/words the learner has not confirmed yet.
@@ -25708,15 +25721,19 @@ export default {
             ? (this.sanitizeHtml?.(tajweedTokens[index]) || this.escapeHtml(painted))
             : this.escapeHtml(painted)
           return `<word class="${classes}" data-recitation-word-index="${globalIndex}" data-verse-key="${this.escapeHtml(verse?.key || '')}" data-word-index="${index}"${safeAttrs}>${tokenHtml}</word>`
-        }).join(' ')
+        })
         offset += words.length
+        const lastWordHtml = wordTags.length ? wordTags.pop() : ''
+        const wordHtml = wordTags.join(' ')
         const endMarker = this.buildStackedAyahEndMarkerHtml?.(verse)
           || `<span class="verse-ayah-end-number verse-ayah-number-digits-1" role="img" aria-hidden="true"><img class="verse-ayah-end-number__img" src="/images/ayah-markers/${Number(ayahNumber) || 1}.png" alt="" width="90" height="96" draggable="false" decoding="async"></span>`
-        // Inline runs so ayahs wrap continuously like a printed mushaf page.
+        // Keep the last word + end ornament together so the marker never
+        // orphans onto a previous line of gap underlines.
         runs.push(
           `<span class="amd-ayah-run${ayahActive ? ' is-active' : ''}${peekThisAyah ? ' is-peeking' : ''}" data-ayah-key="${this.escapeHtml(verse?.key || '')}">`
           + `<span class="amd-ayah-run__text">${wordHtml}</span>`
-          + `${wordHtml ? ' ' : ''}${endMarker}`
+          + `${wordHtml && lastWordHtml ? ' ' : ''}`
+          + `<span class="amd-ayah-end">${lastWordHtml}${lastWordHtml ? '\u2009' : ''}${endMarker}</span>`
           + `</span>`
         )
       }
@@ -25749,7 +25766,17 @@ export default {
         this._amdPatchRaf = null
         const batch = this._amdPendingPatches
         this._amdPendingPatches = []
-        if (batch?.length) this.patchAmdLiveWordStatuses(batch)
+        if (!batch?.length) return
+        const seen = new Set()
+        const deduped = []
+        for (let i = batch.length - 1; i >= 0; i -= 1) {
+          const idx = Number(batch[i]?.index)
+          if (!Number.isFinite(idx) || seen.has(idx)) continue
+          seen.add(idx)
+          deduped.push(batch[i])
+        }
+        deduped.reverse()
+        this.patchAmdLiveWordStatuses(deduped)
       }
       if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
         this._amdPatchRaf = window.requestAnimationFrame(flush)
@@ -25795,7 +25822,14 @@ export default {
       if (Number.isFinite(confirmedIndex) && prevConfirmed !== confirmedIndex) {
         const from = Math.min(prevConfirmed ?? confirmedIndex, confirmedIndex)
         const to = Math.max(prevConfirmed ?? confirmedIndex, confirmedIndex)
-        for (let i = from; i <= to; i += 1) indexes.add(i)
+        const span = to - from
+        if (span <= 40) {
+          for (let i = from; i <= to; i += 1) indexes.add(i)
+        } else {
+          indexes.add(from)
+          indexes.add(to)
+          if (Number.isFinite(prevConfirmed)) indexes.add(prevConfirmed)
+        }
         this._amdLastPatchedConfirmedIndex = confirmedIndex
       } else if (!Number.isFinite(this._amdLastPatchedConfirmedIndex) && Number.isFinite(confirmedIndex)) {
         this._amdLastPatchedConfirmedIndex = confirmedIndex
@@ -25810,13 +25844,26 @@ export default {
         ? (this.getAmdAyahBoundForWordIndex(peekCursor) || this.getAmdAyahBoundForWordIndex(0) || null)
         : null
       if (peekAyah) {
-        for (let i = peekAyah.start; i < peekAyah.end; i += 1) indexes.add(i)
         const prevPeek = this._amdPeekAyahBound
-        if (prevPeek && (prevPeek.start !== peekAyah.start || prevPeek.end !== peekAyah.end)) {
+        const peekBoundChanged = !prevPeek
+          || prevPeek.start !== peekAyah.start
+          || prevPeek.end !== peekAyah.end
+        const peekWordTouched = (Array.isArray(changedWords) ? changedWords : []).some((change) => {
+          const i = Number(change?.index)
+          return Number.isFinite(i) && i >= peekAyah.start && i < peekAyah.end
+        })
+        if (peekBoundChanged || peekWordTouched) {
+          for (let i = peekAyah.start; i < peekAyah.end; i += 1) indexes.add(i)
+        }
+        if (prevPeek && peekBoundChanged) {
           for (let i = prevPeek.start; i < prevPeek.end; i += 1) indexes.add(i)
         }
         this._amdPeekAyahBound = peekAyah
       } else {
+        if (this._amdPeekAyahBound) {
+          const prevPeek = this._amdPeekAyahBound
+          for (let i = prevPeek.start; i < prevPeek.end; i += 1) indexes.add(i)
+        }
         this._amdPeekAyahBound = null
       }
       const isFutureWord = (index) => {
@@ -37754,6 +37801,9 @@ export default {
       this.applyLayoutFontSize(this.readingViewMode)
       if (this.settingsDraft && typeof this.settingsDraft === 'object') {
         this.settingsDraft.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+      }
+      if (DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED && this.isMobileViewport?.()) {
+        this.mainCardCollapsed = false
       }
     },
 

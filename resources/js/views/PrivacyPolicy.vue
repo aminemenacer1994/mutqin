@@ -125,6 +125,7 @@ export default {
 }
 </script>
 
+<style src="../styles/info-pages.css"></style>
 <style scoped>
 .privacy-meta {
   margin-top: 0.65rem;

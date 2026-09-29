@@ -43,6 +43,9 @@ class DashboardService
         try {
             Cache::forget('dashboard:v1:'.$user->id.':7');
             Cache::forget('dashboard:v1:'.$user->id.':30');
+            foreach ([25, 50, 100, 200] as $limit) {
+                Cache::forget('dashboard:activity:v1:'.$user->id.':'.$limit);
+            }
         } catch (\Throwable $e) {
             report($e);
         }
@@ -272,6 +275,23 @@ class DashboardService
     public function activityLog(User $user, int $limit = 100): array
     {
         $limit = max(1, min(200, $limit));
+        $skipCache = app()->runningUnitTests() && ! config('mutqin.perf_benchmarks', false);
+        if ($skipCache) {
+            return $this->buildActivityLog($user, $limit);
+        }
+
+        $cacheKey = 'dashboard:activity:v1:'.$user->id.':'.$limit;
+
+        return Cache::remember($cacheKey, self::BUILD_CACHE_TTL_SECONDS, function () use ($user, $limit) {
+            return $this->utf8Safe($this->buildActivityLog($user, $limit));
+        });
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function buildActivityLog(User $user, int $limit): array
+    {
         $events = collect();
 
         UserSession::query()

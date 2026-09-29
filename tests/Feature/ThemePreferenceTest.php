@@ -217,6 +217,16 @@ class ThemePreferenceTest extends TestCase
             ->assertCookie('mutqin_theme', 'dark-mode', false);
     }
 
+    public function test_api_requests_do_not_refresh_theme_cookie(): void
+    {
+        $user = User::factory()->create(['theme' => 'sepia-mode']);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertCookieMissing('mutqin_theme');
+    }
+
     public function test_logout_resets_shared_theme_cookie_to_dark(): void
     {
         $user = User::factory()->create([

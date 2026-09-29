@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {
+  DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED,
   DEFAULT_SESSION_REPETITIONS,
   DEFAULT_TAJWEED_ENABLED,
   buildDefaultWorkspaceSessionConfig,
@@ -19,6 +20,7 @@ import { dirname, join } from 'node:path'
 
 assert.equal(DEFAULT_SESSION_REPETITIONS, 1, 'new sessions default to 1x')
 assert.equal(DEFAULT_TAJWEED_ENABLED, false, 'tajweed is off by default')
+assert.equal(DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED, true, 'mobile session dashboard is expanded by default')
 
 // Fresh workspace / reset config
 {

@@ -122,3 +122,6 @@ export default {
   },
 };
 </script>
+
+<style src="../styles/info-pages.css"></style>
+<style src="../styles/about-page.css"></style>

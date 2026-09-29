@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -31,6 +32,15 @@ class LearningStateDeriver
         'learning' => 'learning',
         'new' => 'learning',
     ];
+
+    public static function forgetProgressFingerprint(User $user): void
+    {
+        try {
+            Cache::forget('learning:progress-fp:'.$user->id);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
 
     public function derive(User $user, array $state, ?array $continue = null): void
     {
@@ -163,6 +173,12 @@ class LearningStateDeriver
             return;
         }
 
+        $fingerprint = $this->progressFingerprint($ayahs);
+        $fingerprintKey = 'learning:progress-fp:'.$user->id;
+        if ($fingerprint !== '' && Cache::get($fingerprintKey) === $fingerprint) {
+            return;
+        }
+
         $now = now();
         $existing = $this->existingProgressKeyedByAyah($user->id, $ayahs);
 
@@ -238,6 +254,10 @@ class LearningStateDeriver
                 ['user_id', 'surah_number', 'ayah_number'],
                 ['status', 'mastery_level', 'repetitions', 'metadata', 'completed_at', 'updated_at']
             );
+        }
+
+        if ($fingerprint !== '') {
+            Cache::put($fingerprintKey, $fingerprint, 3600);
         }
     }
 
@@ -349,6 +369,36 @@ class LearningStateDeriver
                 'completed_at',
             ])
             ->keyBy(fn ($row) => $row->surah_number.':'.$row->ayah_number);
+    }
+
+    /**
+     * @param  array<string|int, mixed>  $ayahs
+     */
+    private function progressFingerprint(array $ayahs): string
+    {
+        $parts = [];
+        foreach ($ayahs as $id => $ayah) {
+            if (! is_array($ayah)) {
+                continue;
+            }
+            $parts[] = implode('|', [
+                (string) ($ayah['id'] ?? $id),
+                (string) ($ayah['status'] ?? ''),
+                (string) ($ayah['mastery_level'] ?? ''),
+                (string) ($ayah['repetition_count'] ?? ''),
+                (string) ($ayah['zone'] ?? ''),
+                (string) ($ayah['zone_step'] ?? ''),
+                (string) ($ayah['weak_count'] ?? ''),
+                (string) ($ayah['last_review'] ?? ''),
+                (string) ($ayah['next_review'] ?? ''),
+            ]);
+        }
+        if ($parts === []) {
+            return '';
+        }
+        sort($parts);
+
+        return hash('sha256', implode("\n", $parts));
     }
 
     private function encodedProgressMetadata(mixed $metadata): string

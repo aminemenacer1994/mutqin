@@ -1,11 +1,5 @@
 import { createI18n } from 'vue-i18n'
 import enMessages from './locales/en.json'
-import frMessages from './locales/fr.json'
-import esMessages from './locales/es.json'
-import arMessages from './locales/ar.json'
-import idMessages from './locales/id.json'
-import trMessages from './locales/tr.json'
-import urMessages from './locales/ur.json'
 
 export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur']
 /** Locales shown in the UI language switcher. */
@@ -18,19 +12,35 @@ export const SWITCHER_LOCALE_LABELS = {
 export const RTL_LOCALES = ['ar', 'ur']
 const STORAGE_KEY = 'mutqin.locale'
 
-/** Eager message packs so locale switching never depends on async chunks Mix may prune. */
+/** English stays in the shell so boot fallbacks never wait on a locale chunk. */
 const STATIC_MESSAGES = {
   en: enMessages,
-  fr: frMessages,
-  es: esMessages,
-  ar: arMessages,
-  id: idMessages,
-  tr: trMessages,
-  ur: urMessages,
 }
+
+/**
+ * Named Mix chunks so language switching does not depend on numeric ids
+ * that the watch/prod prune pass can drop.
+ */
+const LOCALE_LOADERS = {
+  fr: () => import(/* webpackChunkName: "locale-fr" */ './locales/fr.json'),
+  es: () => import(/* webpackChunkName: "locale-es" */ './locales/es.json'),
+  ar: () => import(/* webpackChunkName: "locale-ar" */ './locales/ar.json'),
+  id: () => import(/* webpackChunkName: "locale-id" */ './locales/id.json'),
+  tr: () => import(/* webpackChunkName: "locale-tr" */ './locales/tr.json'),
+  ur: () => import(/* webpackChunkName: "locale-ur" */ './locales/ur.json'),
+}
+
+const pendingLocaleLoads = new Map()
 
 function normalizeLocale(locale) {
   return SUPPORT_LOCALES.includes(locale) ? locale : 'en'
+}
+
+export function resolveEnMessage(key) {
+  return key.split('.').reduce(
+    (node, part) => (node && node[part] !== undefined ? node[part] : undefined),
+    enMessages
+  ) ?? key
 }
 
 function getCookieLocale() {
@@ -67,10 +77,33 @@ function setDocumentLanguage(locale) {
   document.body?.setAttribute('dir', isRtl ? 'rtl' : 'ltr')
 }
 
+function unwrapLocaleModule(mod) {
+  return (mod && (mod.default || mod)) || enMessages
+}
+
+async function importLocaleMessages(locale) {
+  if (STATIC_MESSAGES[locale]) return STATIC_MESSAGES[locale]
+  const loader = LOCALE_LOADERS[locale]
+  if (!loader) return enMessages
+  if (pendingLocaleLoads.has(locale)) return pendingLocaleLoads.get(locale)
+
+  const pending = loader()
+    .then((mod) => {
+      const pack = unwrapLocaleModule(mod)
+      STATIC_MESSAGES[locale] = pack
+      return pack
+    })
+    .finally(() => {
+      pendingLocaleLoads.delete(locale)
+    })
+  pendingLocaleLoads.set(locale, pending)
+  return pending
+}
+
 export async function loadLocaleMessages(i18n, locale) {
   const normalized = normalizeLocale(locale)
   if (!i18n.global.availableLocales.includes(normalized)) {
-    const pack = STATIC_MESSAGES[normalized] || STATIC_MESSAGES.en
+    const pack = await importLocaleMessages(normalized)
     i18n.global.setLocaleMessage(normalized, pack)
   }
   i18n.global.locale.value = normalized
@@ -118,7 +151,7 @@ export async function setupI18n() {
     fallbackLocale: 'en',
     missingWarn: false,
     fallbackWarn: false,
-    messages: { ...STATIC_MESSAGES },
+    messages: { en: enMessages },
   })
   await loadLocaleMessages(i18n, getSavedLocale())
   return i18n

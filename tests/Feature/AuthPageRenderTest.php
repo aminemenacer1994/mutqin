@@ -231,6 +231,15 @@ class AuthPageRenderTest extends TestCase
         }
     }
 
+    public function test_layout_preloads_app_shell_and_limits_inline_ui_labels(): void
+    {
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('rel="preload"', $html);
+        $this->assertStringContainsString('as="script"', $html);
+        $this->assertStringContainsString('window.mutqinUiLabels', $html);
+    }
+
     public function test_pricing_and_legal_pages_render(): void
     {
         $this->get(route('pricing'))

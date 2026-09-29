@@ -4,6 +4,9 @@ export const DEFAULT_SESSION_REPETITIONS = 1
 /** Tajweed colouring is off by default (saved per account / device). */
 export const DEFAULT_TAJWEED_ENABLED = false
 
+/** Mobile session overview (Pause/Resume, pills) starts expanded on each page load. */
+export const DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED = true
+
 /** Matches memorisationRuntime.DEFAULT_ALQURAN_RECITER without importing that module graph. */
 const DEFAULT_RECITER_ID = 'ar.alafasy'
 

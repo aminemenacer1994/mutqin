@@ -66,6 +66,13 @@ function collectReferencedChunkFiles(appJs) {
         keep.add(`${match[1]}.js`);
     }
 
+    // Locale JSON chunks are requested only after a language switch. Keep the
+    // stable family names so Mix prune cannot drop a pack the switcher needs.
+    // Do not use locale-[a-z]{2} — that also matches "locale-ch" in locale-change.
+    for (const match of appJs.matchAll(/locale-(?:fr|es|ar|id|tr|ur)/gi)) {
+        keep.add(`${match[0]}.js`);
+    }
+
     // Webpack 5 / Mix production templates look like:
     //   "js/"+{131:"homepage",...}[e]+"."+{131:"20283d40",...}[e]+".js"
     // Older builds used an extra paren: "js/"+({...}[e]||e)+"."+{...}

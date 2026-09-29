@@ -470,4 +470,5 @@ function initialBillingCycle() {
 }
 </script>
 
+<style src="../styles/pricing-page.css"></style>
 <style src="./Homepage.css"></style>

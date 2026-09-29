@@ -14,7 +14,7 @@ const [vue, css, js] = await Promise.all([
 ])
 
 assert.match(vue, /madani-page-sheet/)
-assert.match(vue, /currentMadaniLines/)
+assert.match(vue, /madaniLinesByPageId/)
 assert.match(vue, /madani-word/)
 assert.match(vue, /madani-surah-name/)
 assert.match(vue, /onMadaniWordClick/)

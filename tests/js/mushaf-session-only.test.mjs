@@ -84,6 +84,11 @@ assert.doesNotMatch(
 
 assert.match(
   memorisationVue,
+  /madaniLinesByPageId\[mushafPage\.id\]/,
+  'mushaf lines come from a memoized per-page computed, not a template method'
+)
+assert.match(
+  memorisationVue,
   /v-for="\(mushafPage, mushafPageIdx\) in mushafPages"/,
   'mushaf renders the full session page stack, not a single page'
 )

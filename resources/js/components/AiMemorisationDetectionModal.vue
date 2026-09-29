@@ -385,7 +385,7 @@ export default {
       _htmlSyncTimer: null,
       _lastMushafHtml: '',
       _peekKeyHeld: false,
-      fontScale: 1.12,
+      fontScale: 1,
       minFontScale: 0.9,
       maxFontScale: 1.45,
       themeAttr: 'light',
@@ -531,10 +531,10 @@ export default {
     theme() {
       this.syncThemeAttr()
     },
-    ayahHtml(html) {
-      // Apply immediately so masked HTML is in the DOM before the next paint.
-      // Delayed/stage-driven replaces caused a full-text flash on record start/stop.
-      if (this.open) this.scheduleMushafHtml(html, true)
+    ayahHtml() {
+      if (!this.open) return
+      const listening = this.stage === 'listening' || this.stage === 'starting'
+      this.scheduleMushafHtml(this.ayahHtml, !listening)
     },
     fontScale() {
       if (this.open) this.scheduleAutoFollow()
@@ -564,6 +564,10 @@ export default {
     if (this._htmlSyncTimer) {
       clearTimeout(this._htmlSyncTimer)
       this._htmlSyncTimer = null
+    }
+    if (this._autoFollowResizeTimer) {
+      clearTimeout(this._autoFollowResizeTimer)
+      this._autoFollowResizeTimer = null
     }
     if (this._themeObserver) {
       this._themeObserver.disconnect()
@@ -641,7 +645,13 @@ export default {
       if (!shell) return
       if (typeof ResizeObserver !== 'undefined') {
         this._shellResizeObserver?.disconnect?.()
-        this._shellResizeObserver = new ResizeObserver(() => this.scheduleAutoFollow())
+        this._shellResizeObserver = new ResizeObserver(() => {
+          if (this._autoFollowResizeTimer) return
+          this._autoFollowResizeTimer = setTimeout(() => {
+            this._autoFollowResizeTimer = null
+            this.scheduleAutoFollow()
+          }, 120)
+        })
         this._shellResizeObserver.observe(shell)
       }
       if (typeof window !== 'undefined') {
@@ -706,13 +716,32 @@ export default {
         if (!node?.classList) continue
         const status = this.normaliseLiveStatus(patch.status)
         const statusClass = `recitation-word-${status}`
+        const shouldMask = patch.masked === true || patch.hidden === true
+        const isCurrent = !!patch.current
+        const isPeeked = !!patch.peeked
+        const isRevealed = !!patch.revealed
+        const needsReview = status === 'incorrect' || status === 'partial'
+        const tajweedActive = patch.tajweedActive != null ? !!patch.tajweedActive : isCurrent
+        const hasTajweedMarkup = node.classList.contains('tajweed-segment-host')
+          || !!node.querySelector?.('.tajweed-mark, .tajweed-segment')
+        if (
+          node.classList.contains(statusClass)
+          && node.classList.contains('amd-word-hidden') === shouldMask
+          && node.classList.contains('amd-word-current') === isCurrent
+          && node.classList.contains('amd-word-peeked') === isPeeked
+          && node.classList.contains('amd-word-revealed') === isRevealed
+          && node.classList.contains('tajweed-needs-review') === needsReview
+          && node.classList.contains('is-tajweed-active') === (tajweedActive && !hasTajweedMarkup)
+        ) {
+          if (isCurrent || tajweedActive) currentIndex = index
+          continue
+        }
         if (!node.classList.contains(statusClass)) {
           ;['correct', 'partial', 'incorrect', 'omitted', 'notAttempted', 'pending', 'uncertain'].forEach((name) => {
             node.classList.remove(`recitation-word-${name}`)
           })
           node.classList.add(statusClass)
         }
-        const shouldMask = patch.masked === true || patch.hidden === true
         if (shouldMask) {
           node.classList.add('amd-word-hidden')
           node.setAttribute('aria-hidden', 'true')
@@ -722,22 +751,21 @@ export default {
           node.removeAttribute('aria-hidden')
           node.removeAttribute('data-masked')
         }
-        node.classList.toggle('amd-word-revealed', !!patch.revealed)
-        node.classList.toggle('amd-word-current', !!patch.current)
-        node.classList.toggle('amd-word-peeked', !!patch.peeked)
-        node.classList.toggle('tajweed-needs-review', status === 'incorrect' || status === 'partial')
-        const tajweedActive = patch.tajweedActive != null ? !!patch.tajweedActive : !!patch.current
+        node.classList.toggle('amd-word-revealed', isRevealed)
+        node.classList.toggle('amd-word-current', isCurrent)
+        node.classList.toggle('amd-word-peeked', isPeeked)
+        node.classList.toggle('tajweed-needs-review', needsReview)
         // Skip child-mark scans when the word has no tajweed markup.
-        if (node.classList.contains('tajweed-segment-host') || node.querySelector?.('.tajweed-mark, .tajweed-segment')) {
+        if (hasTajweedMarkup) {
           this.syncTajweedSegmentState(node, {
             active: tajweedActive,
             completed: status === 'correct',
-            needsReview: status === 'incorrect' || status === 'partial',
+            needsReview,
           })
         } else {
-          node.classList.toggle('is-tajweed-active', !!tajweedActive)
+          node.classList.toggle('is-tajweed-active', tajweedActive)
         }
-        if (patch.current || tajweedActive) currentIndex = index
+        if (isCurrent || tajweedActive) currentIndex = index
         changed = true
       }
       if (currentIndex != null) {
@@ -823,7 +851,9 @@ export default {
         this._lastMushafHtml = next
         const controller = this.ensureAutoFollowController()
         controller.rebuildWordCache(el)
-        this.decorateTajweedSegments(el)
+        if (el.querySelector?.('.tajweed-mark, [class*="tajweed-"]')) {
+          this.decorateTajweedSegments(el)
+        }
         const current = el.querySelector('.amd-word-current')
         if (current) {
           const idx = Number(current.getAttribute('data-recitation-word-index'))

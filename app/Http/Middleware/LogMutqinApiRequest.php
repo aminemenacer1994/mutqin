@@ -25,13 +25,17 @@ class LogMutqinApiRequest
             return $response;
         }
 
-        MutqinLog::info('api.request.completed', array_merge(
-            MutqinLog::requestContext($request),
-            [
-                'status' => $response->getStatusCode(),
-                'duration_ms' => (int) round((microtime(true) - $started) * 1000),
-            ]
-        ));
+        // State polls are high-frequency; skip the structured log while still
+        // returning a request id for client correlation.
+        if (! ($request->isMethod('GET') && $request->is('api/state'))) {
+            MutqinLog::info('api.request.completed', array_merge(
+                MutqinLog::requestContext($request),
+                [
+                    'status' => $response->getStatusCode(),
+                    'duration_ms' => (int) round((microtime(true) - $started) * 1000),
+                ]
+            ));
+        }
 
         $response->headers->set('X-Request-Id', $requestId);
 

@@ -96,7 +96,10 @@
     <link rel="icon" href="/favicon.ico?v=20260730c" sizes="any">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+    <link rel="preconnect" href="https://verses.quran.foundation" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preload" href="{{ mix('js/app.js') }}" as="script">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
     <style id="mutqin-no-horizontal-scroll">
@@ -470,7 +473,7 @@
         font-family: 'MutqinHideQuranCircles';
         src: url('{{ asset('fonts/MutqinHideQuranCircles.ttf') }}') format('truetype');
         unicode-range: U+06DD, U+06DE, U+06DF, U+06E0, U+06E3, U+06E9, U+25CC;
-        font-display: block;
+        font-display: swap;
       }
       html body .app .verse-arabic,
       html body .app .verse-arabic .wbw-word,
@@ -7830,13 +7833,9 @@
         window.mutqinSubscriptionTier = @json($navUser?->billingSubscriptionTier() ?? 'free');
         window.mutqinBilling = @json($mutqinBillingDisplay);
         window.mutqinUiLabels = {
-            en: @json(trans('ui', [], 'en')),
-            fr: @json(trans('ui', [], 'fr')),
-            ar: @json(trans('ui', [], 'ar')),
-            id: @json(trans('ui', [], 'id')),
-            tr: @json(trans('ui', [], 'tr')),
-            es: @json(trans('ui', [], 'es')),
-            ur: @json(trans('ui', [], 'ur')),
+            @foreach (array_values(array_unique(array_merge($switcherLocales, [$appLocale, 'en']))) as $uiLocale)
+            {{ $uiLocale }}: @json(trans('ui', [], $uiLocale)),
+            @endforeach
         };
         window.mutqinInitialThemePreference = @json($appThemePreference);
         window.mutqinInitialTheme = @json($appTheme);
