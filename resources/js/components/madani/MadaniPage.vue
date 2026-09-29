@@ -54,8 +54,12 @@
       </div>
       <div
         class="qpc-madani-page__folio"
+        :class="{ 'qpc-madani-page__folio--session-break': sessionScoped }"
         aria-hidden="true"
-      >{{ folioLabel }}</div>
+      >
+        <span class="qpc-madani-page__folio-number">{{ folioLabel }}</span>
+        <br v-if="sessionScoped" class="qpc-madani-page__folio-break" aria-hidden="true" />
+      </div>
     </div>
   </article>
 </template>
@@ -602,6 +606,29 @@ export default {
   font-family: "Amiri Quran", "Amiri", serif;
   font-size: 0.98rem;
   line-height: 1;
+}
+
+.qpc-madani-page__folio--session-break {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.qpc-madani-page__folio-number {
+  display: block;
+  line-height: 1;
+}
+
+.qpc-madani-page__folio-break {
+  display: block;
+  width: 100%;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  line-height: 0;
+  font-size: 0;
 }
 
 .qpc-madani-page--embedded {

@@ -1321,6 +1321,7 @@ export default {
       selfCheckRatingsByAyahKey: {},
       themeObserver: null,
       navbarResizeObserver: null,
+      madaniFullscreenTopBarResizeObserver: null,
       syncNavbarOffset: null,
       syncWorkspaceViewportMetrics: null,
       scheduleWorkspaceViewportMetrics: null,
@@ -2980,6 +2981,32 @@ export default {
           if (pill.key === 'repetition') return { ...pill, value: this.t('memorisation.topCard.metadata.repetitionCompact', { value: pill.value }) }
           return pill
         })
+    },
+
+    /** Immersive top bar: range + reciter pills, surah as pill (replaces repetition). */
+    madaniFullscreenTopBarPills() {
+      if (!this.hasVerses) return []
+
+      const meta = this.mobileProgressPills.filter((pill) => pill.key !== 'repetition')
+      const surahLatin = String(this.topCardSurahLatin || '').trim()
+      const surahArabic = String(this.topCardSurahArabic || '').trim()
+      const surahValue = [surahLatin, surahArabic].filter(Boolean).join(' · ')
+        || String(this.topCardSessionLabel || '').trim()
+      if (!surahValue) return meta
+
+      const surahPill = {
+        key: 'surah',
+        label: this.t('memorisation.topCard.metadata.surah'),
+        value: surahValue,
+      }
+
+      const ordered = []
+      for (const key of ['range', 'reciter']) {
+        const pill = meta.find((entry) => entry.key === key)
+        if (pill) ordered.push(pill)
+      }
+      ordered.push(surahPill)
+      return ordered
     },
     workspaceProgressSummary() {
       const sessionTotal = Math.max(0, Number(this.totalVerses || 0))
@@ -10129,6 +10156,12 @@ export default {
       return this.isMadaniMobileImmersive && this.shouldShowReadingWorkspace
     },
 
+    showMadaniFullscreenTopBar() {
+      return !!this.isAppFullscreen
+        && this.readingViewMode === 'madani_mushaf'
+        && this.isMobileViewport?.() === true
+    },
+
     fullscreenReciterName() {
       return this.getReciterName()
     },
@@ -10810,6 +10843,10 @@ export default {
     if (this.themeObserver) this.themeObserver.disconnect()
     if (this.navbarResizeObserver) this.navbarResizeObserver.disconnect()
     this.navbarResizeObserver = null
+    this.teardownMadaniFullscreenTopBarObserver?.()
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.removeProperty('--madani-fs-top-clearance')
+    }
     this.syncNavbarOffset = null
     window.removeEventListener('resize', this.scheduleWorkspaceViewportMetrics)
     window.visualViewport?.removeEventListener?.('resize', this.scheduleWorkspaceViewportMetrics)
@@ -10921,6 +10958,25 @@ export default {
   },
 
   watch: {
+    showMadaniFullscreenTopBar() {
+      this.scheduleMadaniFullscreenTopBarClearance()
+    },
+    mobileProgressPills: {
+      handler() {
+        if (this.showMadaniFullscreenTopBar) {
+          this.scheduleMadaniFullscreenTopBarClearance()
+        }
+      },
+      deep: true,
+    },
+    madaniFullscreenTopBarPills: {
+      handler() {
+        if (this.showMadaniFullscreenTopBar) {
+          this.scheduleMadaniFullscreenTopBarClearance()
+        }
+      },
+      deep: true,
+    },
     readingViewMode(mode) {
       if (mode === 'mushaf' || mode === 'original') {
         this.migrateLegacyReadingViewMode()
@@ -15965,6 +16021,52 @@ export default {
         document.body.style.removeProperty('overflow')
         document.documentElement.style.removeProperty('overflow')
       }
+      if (this.showMadaniFullscreenTopBar && this.banner?.actionKey === 'resume-playback') {
+        this.banner = null
+      }
+      this.scheduleMadaniFullscreenTopBarClearance()
+    },
+    scheduleMadaniFullscreenTopBarClearance() {
+      if (typeof window === 'undefined') return
+      if (this._madaniTopBarClearanceRaf) {
+        window.cancelAnimationFrame(this._madaniTopBarClearanceRaf)
+      }
+      this._madaniTopBarClearanceRaf = window.requestAnimationFrame(() => {
+        this._madaniTopBarClearanceRaf = null
+        this.syncMadaniFullscreenTopBarClearance()
+      })
+    },
+    syncMadaniFullscreenTopBarClearance() {
+      if (typeof document === 'undefined') return
+      const root = document.documentElement
+      if (!this.showMadaniFullscreenTopBar) {
+        root.style.removeProperty('--madani-fs-top-clearance')
+        this.teardownMadaniFullscreenTopBarObserver()
+        return
+      }
+      this.$nextTick(() => {
+        const bar = document.querySelector('[data-testid="madani-fullscreen-top-bar"]')
+        if (!bar) return
+        const apply = () => {
+          const rect = bar.getBoundingClientRect()
+          const gap = 10
+          root.style.setProperty('--madani-fs-top-clearance', `${Math.ceil(rect.bottom + gap)}px`)
+        }
+        apply()
+        this.setupMadaniFullscreenTopBarObserver(bar, apply)
+      })
+    },
+    setupMadaniFullscreenTopBarObserver(bar, apply) {
+      this.teardownMadaniFullscreenTopBarObserver()
+      if (typeof ResizeObserver !== 'function' || !bar) return
+      this.madaniFullscreenTopBarResizeObserver = new ResizeObserver(() => apply())
+      this.madaniFullscreenTopBarResizeObserver.observe(bar)
+    },
+    teardownMadaniFullscreenTopBarObserver() {
+      if (this.madaniFullscreenTopBarResizeObserver) {
+        this.madaniFullscreenTopBarResizeObserver.disconnect()
+      }
+      this.madaniFullscreenTopBarResizeObserver = null
     },
     offerMadaniMobileImmersiveReading() {
       // Madani stays in the normal layout until the reader chooses full screen.
@@ -35275,9 +35377,27 @@ export default {
       this.topCardMenuOpen = false
       this.openSessionExitModal()
     },
+    shouldSuppressPlaybackErrorBanner(audio = null) {
+      const el = audio || this.audioElement
+      if (this.isAudioLoadAbortError(el)) return true
+      const src = String(el?.getAttribute?.('src') || el?.currentSrc || '').trim()
+      const noSrc = !src || src === 'about:blank' || src.startsWith('data:')
+      if (noSrc && !this.playRequestLocked) return true
+      if (
+        (this.isMadaniMobileImmersive || this.showMadaniFullscreenBar)
+        && !this.playRequestLocked
+        && !this.isPlaying
+        && (el?.paused !== false)
+      ) {
+        return true
+      }
+      return false
+    },
+
     promptTapToPlay(message = '') {
       this.playbackAwaitingGesture = true
       if (!this.playerDismissed) this.playerVisible = true
+      if (this.isMadaniMobileImmersive && this.showMadaniFullscreenBar) return
       this.showBanner(message || this.t('toasts.playbackTapToPlay'), 'warning', 9000, {
         key: 'resume-playback',
         label: this.t('memorisation.player.tapToPlay')
@@ -35288,6 +35408,7 @@ export default {
       this.isPlaying = false
       this.playbackAwaitingGesture = true
       if (!this.playerDismissed) this.playerVisible = true
+      if (this.shouldSuppressPlaybackErrorBanner()) return
       this.showBanner(message || this.t('toasts.audioPlaybackError'), 'error', 12000, {
         key: 'resume-playback',
         label: this.t('common.tryAgain')
@@ -41887,6 +42008,12 @@ export default {
         if (this.isAudioLoadAbortError(audio)) {
           // Expected when unlock/preload/playVerse supersede an in-flight load,
           // or when session media is cleared before AI Recite.
+          return
+        }
+        if (this.shouldSuppressPlaybackErrorBanner(audio)) {
+          this.isPlaying = false
+          this.playRequestLocked = false
+          this.audioBuffering = false
           return
         }
         if (this.amdOpen || this.recitationCheckRecording || this.recitationCheckPreparing) {

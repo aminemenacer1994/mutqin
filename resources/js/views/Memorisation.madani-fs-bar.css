@@ -16,6 +16,19 @@ html.has-madani-fullscreen-bar {
   --madani-fs-recite-clearance: calc(var(--madani-fs-bar-offset) + 4.35rem);
 }
 
+html:has(.madani-fullscreen-bar--top) {
+  --madani-fs-bar-inset-top: var(--madani-fs-bar-inset-bottom);
+  --madani-fs-top-bar-row: 2.35rem;
+  --madani-fs-top-offset: calc(
+    var(--madani-fs-bar-inset-top)
+    + env(safe-area-inset-top, 0px)
+    + (var(--madani-fs-bar-shell-pad-y) * 2)
+    + var(--madani-fs-top-bar-row)
+  );
+  /* Measured from the live top bar when present; fallback until sync runs. */
+  --madani-fs-top-clearance: calc(var(--madani-fs-top-offset) + 0.65rem);
+}
+
 @keyframes madani-fs-bar-enter {
   from {
     opacity: 0;
@@ -294,6 +307,29 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
 
 /* ——— Mobile full-screen: navbar-integrated round recite, high-contrast chrome ——— */
 @media (max-width: 767.98px) {
+  html:has(.madani-fullscreen-bar--top) {
+    --madani-fs-top-bar-row: 2.45rem;
+  }
+
+  .madani-fullscreen-bar--top {
+    inset-inline-start: max(0.45rem, env(safe-area-inset-left, 0px));
+    inset-inline-end: max(0.45rem, env(safe-area-inset-right, 0px));
+  }
+
+  .madani-fullscreen-bar--top.madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--session {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    grid-template-areas: none !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+  }
+
+  .madani-fullscreen-bar--top.madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
+    position: static !important;
+    transform: none !important;
+  }
+
   html.is-app-fullscreen:has(.madani-fullscreen-bar),
   html.is-app-fullscreen.has-madani-fullscreen-bar {
     --madani-fs-bar-inset-x: clamp(1rem, 5vw, 1.35rem);
@@ -587,4 +623,279 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .madani-fullscreen-bar__reciter {
     max-width: 14rem;
   }
+}
+
+@keyframes madani-fs-bar-enter-top {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Session metadata (surah + pills) in a top twin of the bottom bar; close lives inside. */
+.madani-fullscreen-bar--top {
+  top: calc(var(--madani-fs-bar-inset-top, var(--madani-fs-bar-inset-bottom)) + env(safe-area-inset-top, 0px));
+  bottom: auto;
+  z-index: 236;
+  font-family: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif);
+  animation-name: madani-fs-bar-enter-top;
+  inset-inline-start: max(0.55rem, env(safe-area-inset-left, 0px));
+  inset-inline-end: max(0.55rem, env(safe-area-inset-right, 0px));
+}
+
+.madani-fullscreen-bar--top .madani-fullscreen-bar__shell--session-top {
+  width: 100%;
+  box-sizing: border-box;
+  padding-block: 0.5rem;
+  padding-inline: 0.52rem 0.48rem;
+  border-radius: 14px;
+  border-width: 2px;
+  background: color-mix(in srgb, var(--zone-chrome, #fff9f0) 94%, #fff);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #000 6%, transparent) inset,
+    0 10px 28px color-mix(in srgb, #000 28%, transparent),
+    0 2px 8px color-mix(in srgb, #000 14%, transparent);
+}
+
+.madani-fullscreen-bar--top[data-theme="dark"] .madani-fullscreen-bar__shell--session-top,
+[data-theme="dark"] .madani-fullscreen-bar--top .madani-fullscreen-bar__shell--session-top {
+  border-color: color-mix(in srgb, #e8c9a0 58%, #fff 8%);
+  background: color-mix(in srgb, #14110e 92%, #000);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 12px 32px rgba(0, 0, 0, 0.62);
+  color: #f6eadc;
+}
+
+.madani-fullscreen-bar--top.madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--session {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.38rem;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--madani-fs-bar-icon);
+}
+
+.madani-fullscreen-bar--top.madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--session-only-exit {
+  display: flex !important;
+  justify-content: flex-end;
+  min-height: var(--madani-fs-bar-icon);
+}
+
+.madani-fullscreen-bar--top .madani-fullscreen-bar__pills {
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.34rem;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  direction: ltr;
+  padding-block: 0;
+}
+
+.madani-fullscreen-bar--top .madani-fullscreen-bar__pills::-webkit-scrollbar {
+  display: none;
+}
+
+.madani-fullscreen-bar--top .madani-fullscreen-bar__pill {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  max-width: none;
+  padding: 0.3rem 0.72rem;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: color-mix(in srgb, currentColor 92%, transparent);
+  font-family: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif);
+  font-size: 0.67rem;
+  font-weight: 650;
+  line-height: 1.28;
+  white-space: nowrap;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.madani-fullscreen-bar--top .madani-fullscreen-bar__pill--surah {
+  font-weight: 700;
+  border-color: color-mix(in srgb, var(--accent, #c9925a) 42%, currentColor);
+  background: color-mix(in srgb, var(--accent, #c9925a) 14%, transparent);
+  color: inherit;
+}
+
+[data-theme="dark"] .madani-fullscreen-bar--top .madani-fullscreen-bar__pill,
+.madani-fullscreen-bar--top[data-theme="dark"] .madani-fullscreen-bar__pill {
+  border-color: rgba(255, 236, 210, 0.22);
+  background: rgba(255, 236, 210, 0.08);
+  color: color-mix(in srgb, #f6eadc 82%, transparent);
+}
+
+.madani-fullscreen-bar--top .madani-fullscreen-bar__exit {
+  flex: 0 0 auto;
+  align-self: center;
+  width: var(--madani-fs-bar-icon);
+  height: var(--madani-fs-bar-icon);
+  min-width: var(--madani-fs-bar-icon);
+  margin-inline-start: 0.08rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.madani-fullscreen-bar--top .madani-fullscreen-bar__exit i {
+  font-size: 1.125rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .madani-fullscreen-bar--top {
+    animation: none;
+  }
+}
+
+/* Keep the first ayah below the fixed bar. Scroll stays inside the reading column
+   so the bars (teleported to body) are not clipped. */
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top) .app.is-fullscreen {
+  overflow: hidden !important;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top) .app .banner {
+  top: calc(var(--madani-fs-top-clearance, 4.25rem) + 6px);
+  min-width: min(560px, calc(100vw - 18px));
+  padding: 7px 9px;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active {
+  box-sizing: border-box;
+  margin-top: var(--madani-fs-top-clearance) !important;
+  padding-top: 0 !important;
+  height: calc(100dvh - var(--madani-fs-top-clearance)) !important;
+  max-height: calc(100dvh - var(--madani-fs-top-clearance)) !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .content,
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .workspace,
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .workspace-main,
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-workspace,
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-stage,
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport {
+  min-height: 0 !important;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport {
+  padding-top: 0 !important;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-page--session-scoped
+  .qpc-madani-page__sheet {
+  padding-top: 0.28rem !important;
+  padding-bottom: max(0.45rem, calc(env(safe-area-inset-bottom, 0px) + 0.25rem)) !important;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-session-scroll
+  .qpc-madani-page--session-scoped
+  .qpc-madani-page__folio {
+  min-height: 1.55rem;
+  margin-top: 0.14rem;
+  padding: 0.34rem 0 0.85rem;
+  font-family: "Amiri Quran", "Amiri", serif;
+  font-size: 1.22rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 96%, #fff);
+  -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 96%, #fff);
+  opacity: 0.94;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-session-scroll__page
+  + .qpc-madani-session-scroll__page
+  .qpc-madani-page__sheet {
+  padding-top: 0.52rem !important;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-page--session-scoped
+  .qpc-madani-page__folio--session-break
+  .qpc-madani-page__folio-break {
+  display: block;
+  height: 0.55rem;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-session-scroll__page
+  + .qpc-madani-session-scroll__page
+  .qpc-madani-line--ayah:first-of-type,
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-session-scroll__page
+  + .qpc-madani-session-scroll__page
+  .qpc-madani-line--session-partial:first-of-type {
+  margin-top: 0.08rem;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-session-scroll__page:first-child
+  .qpc-madani-line--surah_name {
+  margin-block-start: 0.12rem;
 }

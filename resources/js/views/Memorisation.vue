@@ -4633,15 +4633,66 @@
     </transition>
 
     <Teleport to="body">
-      <button
-        v-if="isAppFullscreen && isMobileViewport() && readingViewMode === 'madani_mushaf'"
-        type="button"
-        class="madani-qpc-fullscreen-exit"
-        :aria-label="t('memorisation.reading.exitFullScreen')"
-        @click.stop="toggleFullScreen"
+      <div
+        v-if="showMadaniFullscreenTopBar"
+        class="madani-fullscreen-bar madani-fullscreen-bar--mobile madani-fullscreen-bar--top"
+        data-testid="madani-fullscreen-top-bar"
+        :data-theme="theme"
+        :dir="isRtlLocale ? 'rtl' : 'ltr'"
+        role="toolbar"
+        :aria-label="t('memorisation.a11y.sessionMetadata')"
       >
-        <i class="bi bi-x-lg" aria-hidden="true"></i>
-      </button>
+        <div class="madani-fullscreen-bar__shell madani-fullscreen-bar__shell--session-top">
+          <div
+            v-if="hasVerses"
+            class="madani-fullscreen-bar__inner madani-fullscreen-bar__inner--session"
+            :aria-label="t('memorisation.a11y.sessionMetadata')"
+          >
+            <div
+              v-if="madaniFullscreenTopBarPills.length"
+              class="madani-fullscreen-bar__pills"
+              role="list"
+            >
+              <span
+                v-for="item in madaniFullscreenTopBarPills"
+                :key="item.key"
+                class="madani-fullscreen-bar__pill"
+                :class="{ 'madani-fullscreen-bar__pill--surah': item.key === 'surah' }"
+                role="listitem"
+                dir="auto"
+                :data-pill="item.key"
+                :title="`${item.label}: ${item.value}`"
+                :aria-label="`${item.label}: ${item.value}`"
+              >{{ item.value }}</span>
+            </div>
+            <button
+              type="button"
+              class="madani-fullscreen-bar__icon madani-fullscreen-bar__exit"
+              data-testid="madani-fullscreen-exit"
+              :title="t('memorisation.reading.exitFullScreen')"
+              :aria-label="t('memorisation.reading.exitFullScreen')"
+              @click.stop="toggleFullScreen"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div
+            v-else
+            class="madani-fullscreen-bar__inner madani-fullscreen-bar__inner--session madani-fullscreen-bar__inner--session-only-exit"
+          >
+            <button
+              type="button"
+              class="madani-fullscreen-bar__icon madani-fullscreen-bar__exit"
+              data-testid="madani-fullscreen-exit"
+              :title="t('memorisation.reading.exitFullScreen')"
+              :aria-label="t('memorisation.reading.exitFullScreen')"
+              @click.stop="toggleFullScreen"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </div>
     </Teleport>
 
     <Teleport to="body">

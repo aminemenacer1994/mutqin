@@ -23,6 +23,7 @@ export function isBenignMediaError(audio = null) {
   const code = Number(audio?.error?.code || 0)
   if (code === MEDIA_ERR_ABORTED) return true
   const src = String(audio?.getAttribute?.('src') || audio?.currentSrc || '').trim()
+  if (!src || src === 'about:blank' || src.startsWith('data:')) return true
   if (code === MEDIA_ERR_SRC_NOT_SUPPORTED && !src) return true
   return false
 }
