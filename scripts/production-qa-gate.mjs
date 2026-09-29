@@ -91,6 +91,21 @@ const checks = [
     cmd: ['node', '--experimental-vm-modules', 'tests/js/practice-saved-sessions-flow.test.mjs'],
   },
   {
+    id: 'js-recitation-parity',
+    label: 'Recitation edge JS/PHP accuracy parity',
+    cmd: ['node', 'scripts/recitation-scenario-accuracy.mjs'],
+  },
+  {
+    id: 'js-edge-scenarios',
+    label: 'Canonical recitation edge fixture scoring',
+    cmd: ['node', '--experimental-vm-modules', 'tests/js/recitation-edge-scenarios.test.mjs'],
+  },
+  {
+    id: 'js-captured-sessions',
+    label: 'Captured Speechmatics session fixtures',
+    cmd: ['node', '--experimental-vm-modules', 'tests/js/recitation-captured-sessions.test.mjs'],
+  },
+  {
     id: 'js-ai-guard',
     label: 'AI attempt guard + silent evaluation',
     cmd: ['node', '--experimental-vm-modules', 'tests/js/recitation-attempt-guard.test.mjs'],

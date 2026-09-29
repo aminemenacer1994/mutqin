@@ -134,6 +134,18 @@ AI Recite checks spoken recitation (often per ayah or after a completed range).
 
 **Also test from session end:** After completing a range, the post-session screen may offer **Check memorisation** or AI-related follow-ups depending on your result.
 
+### Device / room cases (before launch)
+
+Use a real phone. Fill Pass / Fail / Blocked on [recitation-device-qa.md](./recitation-device-qa.md).
+
+| Case | What to try | Success looks like |
+|---|---|---|
+| Mic denied | Start AI Recite, tap Don’t Allow | Help + retry; no score saved |
+| Quiet room | Recite Al-Fatiha 1:2 clearly | Mostly green; strong / high score |
+| Noisy room | Same ayah with TV or talk nearby | Check finishes; no freeze; may be developing |
+| Pause between ayahs | Finish 1:1, wait ~2 seconds, recite 1:2 | Next ayah still colours; pause is not “skipped ayah” |
+| Live colours | Watch words while speaking (AMD) | Colours update during recitation, not only at the end |
+
 ---
 
 ## 7. How to test AI Memorisation
@@ -279,6 +291,7 @@ Use this during a test pass:
 - [ ] Play Quran audio
 - [ ] Record recitation
 - [ ] Complete AI Recitation (AI Recite)
+- [ ] Device pass: quiet / noisy / pause / live colours ([recitation-device-qa.md](./recitation-device-qa.md))
 - [ ] View result modal
 - [ ] Retry
 - [ ] Continue

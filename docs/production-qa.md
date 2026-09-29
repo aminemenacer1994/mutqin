@@ -2,7 +2,7 @@
 
 Final pre-launch gate for real devices, browsers, core flows, and failure scenarios. Do not ship while any **Critical** or **High** item is Fail.
 
-Related runbooks: [TESTER_GUIDE.md](./TESTER_GUIDE.md), [ASSET_DEPLOYMENT.md](./ASSET_DEPLOYMENT.md), [email-verification-resend.md](./email-verification-resend.md), [speechmatics-capacity.md](./speechmatics-capacity.md), [monitoring.md](./monitoring.md).
+Related runbooks: [TESTER_GUIDE.md](./TESTER_GUIDE.md), [recitation-device-qa.md](./recitation-device-qa.md), [ASSET_DEPLOYMENT.md](./ASSET_DEPLOYMENT.md), [email-verification-resend.md](./email-verification-resend.md), [speechmatics-capacity.md](./speechmatics-capacity.md), [monitoring.md](./monitoring.md).
 
 ## How to run
 
@@ -11,6 +11,7 @@ Automated slice (this repo):
 ```bash
 php artisan test
 npm run test:production-qa
+npm run audit:recitation-scenarios
 MUTQIN_BASE_URL=http://127.0.0.1:8001 npm run test:mutqin:browser
 MUTQIN_TEST_QUICK=1 MUTQIN_BASE_URL=http://127.0.0.1:8001 npm run test:mutqin:mobile
 ```
@@ -50,7 +51,7 @@ Viewports: **small phone** 360×800, **phone** 390×844, **tablet** 834×1112, *
 | Onboarding / workspace tour | Manual | Manual | Pass (`onboarding-journey`) | Manual | — | Automated |
 | Start / pause / resume / complete | Manual | Manual | Pass (`SessionLifecycleTest`, `session-lifecycle`) | Manual | — | Automated |
 | Saved sessions | Manual | Manual | Pass (`practice-saved-sessions-flow`, `LearningPersistenceTest`) | Manual | — | Automated |
-| AI Recite | Manual (mic) | Manual (mic) | Pass (guards, not live Speechmatics) | Manual | — | Automated + device |
+| AI Recite | Manual (mic) — [recitation-device-qa.md](./recitation-device-qa.md) | Manual (mic) | Pass (guards + scenario parity, not live Speechmatics) | Manual | — | Automated + device |
 | Spaced retention / next session | Manual | Manual | Pass (`NextSessionRecommendationTest`, rec. JS tests) | Manual | — | Automated |
 | Mushaf + translation / transliteration | Manual | Manual | Pass (`mushaf-session-only`, stacked toggles) | Manual | — | Automated + visual |
 | Profile / account deletion | Manual | Manual | Pass (`ProfileControllerTest`) | Manual | — | Automated |
@@ -103,15 +104,17 @@ Run `npm run test:production-qa`. Recorded **2026-09-03**: all listed checks **P
 
 1. iPhone Safari: lock screen during an active session, then resume; AI Recite with real mic.
 2. Android Chrome: same, plus Chrome “offline” toggle mid-session.
-3. Desktop Safari: Google OAuth + password reset mail.
-4. Edge: open verification and reset links from Outlook.
-5. Post-deploy: leave `/memorisation` open, ship assets, confirm chunk recovery (one reload, then usable).
-6. Confirm Speechmatics portal real-time limit and env caps (`docs/speechmatics-capacity.md`).
+3. Recitation device pass: quiet room, noisy room, pause between ayahs, AMD live paint — [recitation-device-qa.md](./recitation-device-qa.md).
+4. Desktop Safari: Google OAuth + password reset mail.
+5. Edge: open verification and reset links from Outlook.
+6. Post-deploy: leave `/memorisation` open, ship assets, confirm chunk recovery (one reload, then usable).
+7. Confirm Speechmatics portal real-time limit and env caps (`docs/speechmatics-capacity.md`).
 
 ## Do not mark launch complete until
 
 - [ ] All Critical/High rows in this document are Pass after retest
 - [ ] `npm run test:production-qa` exits 0
 - [ ] Device Manual cells for iPhone Safari and Android Chrome are filled on staging
+- [ ] Recitation device pass (quiet / noisy / pause / live paint) is filled — [recitation-device-qa.md](./recitation-device-qa.md)
 - [ ] Health URL `https://app.mutqin.ai/health` returns 200 with `{ "status": "ok" }` or `"degraded"` (never 404)
 )

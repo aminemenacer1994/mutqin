@@ -10025,6 +10025,34 @@ body.session-analysis-modal-open {
     syncMadaniToolbarChrome();
   })();
 </script>
+<script id="mutqin-mobile-reciter-v194">
+  (function () {
+    function isMobileWidth() {
+      return window.innerWidth <= 767.98;
+    }
+
+    function isReciterSelect(el) {
+      if (!(el instanceof HTMLSelectElement)) return false;
+      if (el.classList.contains('madani-fullscreen-bar__reciter-select')) return true;
+      var field = el.closest('.field');
+      if (!field) return false;
+      var label = field.querySelector('label');
+      if (!label) return false;
+      var text = (label.textContent || '').toLowerCase();
+      return text.indexOf('reciter') !== -1 || text.indexOf('qari') !== -1 || text.indexOf('قار') !== -1;
+    }
+
+    document.addEventListener('change', function (event) {
+      if (!isMobileWidth()) return;
+      var target = event.target;
+      if (!isReciterSelect(target)) return;
+      var apply = window.__mutqinMobileReciterChange;
+      if (typeof apply === 'function') {
+        window.requestAnimationFrame(function () { apply(); });
+      }
+    }, true);
+  })();
+</script>
 <script id="mutqin-mushaf-ayah-tap-v168">
   (function () {
     function shouldPlayFullAyah() {
@@ -10047,6 +10075,36 @@ body.session-analysis-modal-open {
     }, true);
   })();
 </script>
+<style id="mutqin-memorisation-hotfix-v195">
+  /* Last-wins phone inset. QPC/mushaf rules set width:100% and margin:0 after v186. */
+  @media (max-width: 767.98px) {
+    html body.memorisation-page .app .main.madani-qpc-mode-active .session-progress-rail,
+    html body.memorisation-page .app .main.mushaf-mode-active .session-progress-rail,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .workspace-shell:not(.is-idle-card),
+    html body.memorisation-page .app .main.mushaf-mode-active .workspace-shell:not(.is-idle-card) {
+      box-sizing: border-box !important;
+      width: calc(100% - 2 * clamp(16px, 4.8vw, 22px)) !important;
+      max-width: none !important;
+      inline-size: calc(100% - 2 * clamp(16px, 4.8vw, 22px)) !important;
+      max-inline-size: none !important;
+      margin-inline: auto !important;
+    }
+
+    html body.memorisation-page .app .main.madani-qpc-mode-active .session-progress-rail__inner,
+    html body.memorisation-page .app .main.mushaf-mode-active .session-progress-rail__inner {
+      border-radius: 14px !important;
+      border-inline-width: 1px !important;
+      padding-inline: clamp(12px, 3.6vw, 16px) !important;
+    }
+
+    html body.memorisation-page .app .main.madani-qpc-mode-active .workspace-shell:not(.is-idle-card),
+    html body.memorisation-page .app .main.mushaf-mode-active .workspace-shell:not(.is-idle-card) {
+      border-radius: 20px !important;
+      border-inline-width: 1px !important;
+      padding: 0.72rem 0.82rem 0.62rem !important;
+    }
+  }
+</style>
 @endif
 </body>
 </html>

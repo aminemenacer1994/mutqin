@@ -1808,7 +1808,13 @@
                   </div>
                   <div class="field setup-field-row">
                     <label><i class="bi bi-mic-fill"></i> {{ t('sessionSetup.reciter') }}</label>
-                    <select v-model="reciterId" @change="refreshVerses" class="select" :disabled="isWorkspaceRefreshing && workspaceRefreshReason === 'reciter'">
+                    <select
+                      v-model="reciterId"
+                      :key="mobileReciterSelectRenderKey"
+                      @change="onSessionReciterChange"
+                      class="select"
+                      :disabled="isWorkspaceRefreshing && workspaceRefreshReason === 'reciter'"
+                    >
                       <optgroup v-if="recitersWithWordHighlight.length" :label="t('sessionSetup.recitersWithWordHighlight')">
                         <option v-for="r in recitersWithWordHighlight" :key="r.id" :value="r.id">{{ r.name }}</option>
                       </optgroup>
@@ -4658,6 +4664,7 @@
               <i class="bi bi-headphones madani-fullscreen-bar__reciter-glyph" aria-hidden="true"></i>
               <select
                 v-model="reciterId"
+                :key="mobileReciterSelectRenderKey"
                 class="madani-fullscreen-bar__reciter-select"
                 :aria-label="t('sessionSetup.reciter')"
                 @change="onMadaniFullscreenReciterChange"

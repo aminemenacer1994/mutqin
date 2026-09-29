@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import vm from 'node:vm'
+import { recitationEdgeScenarios, scenarioById } from './fixtures/recitation-edge-scenarios.mjs'
 
 const root = process.cwd()
 const context = vm.createContext({ console, Date, Math, JSON })
@@ -36,9 +37,10 @@ const types = result => Array.from(result.wordStatuses, word => String(word.type
 const fields = (result, key) => Array.from(result.wordStatuses, word => word[key])
 const extras = result => Array.from(result.extraWords, word => String(word.type))
 
-assert.deepEqual(types(align(words(['الحمد', 'لله', 'رب', 'العالمين']))), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
-assert.deepEqual(types(align(words(['الحمد', 'لله', 'رب', 'الرحمن']))), ['MATCH', 'MATCH', 'MATCH', 'SUBSTITUTION'])
-assert.deepEqual(types(align(words(['الحمد', 'لله', 'العالمين']))), ['MATCH', 'MATCH', 'DELETION', 'MATCH'])
+assert.equal(recitationEdgeScenarios.length, 16, 'add new product scenarios to recitation-edge-scenarios.mjs first')
+assert.deepEqual(types(align(scenarioById('perfect_fatiha_fragment').recognitionWords)), ['MATCH', 'MATCH', 'MATCH', 'MATCH'])
+assert.deepEqual(types(align(scenarioById('substitution_wrong_word').recognitionWords)), ['MATCH', 'MATCH', 'MATCH', 'SUBSTITUTION'])
+assert.deepEqual(types(align(scenarioById('skipped_middle_word').recognitionWords)), ['MATCH', 'MATCH', 'DELETION', 'MATCH'])
 const oneSkippedWord = align([
   { word: 'الحمد', confidence: 0.95, start: 0.0, end: 0.2, token: 'sm-0' },
   { word: 'لله', confidence: 0.95, start: 0.3, end: 0.5, token: 'sm-1' },

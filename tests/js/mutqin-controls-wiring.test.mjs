@@ -45,7 +45,7 @@ includesAll('session setup controls', [
   /<select :value="chapterId" @change="onChapterChange"/,
   /v-model\.number="rangeStart" @input="adjustRange\(\)" @change="adjustRange\(\{ immediate: true \}\)"/,
   /v-model\.number="rangeEnd" @input="adjustRange\(\)" @change="adjustRange\(\{ immediate: true \}\)"/,
-  /<select v-model="reciterId" @change="refreshVerses"/,
+  /@change="onSessionReciterChange"/,
   /@change="setPlaybackSpeed\(option\)"/,
   /value="auto" v-model="playMode"/,
   /value="manual" v-model="playMode"/,
@@ -1089,6 +1089,34 @@ includesAll('offcanvas workspace sync', [
   /adjustRange\(options = \{\}\)/,
   /openToolsPanel\(options = \{\}\)[\s\S]*if \(this\.showPostSessionModal\) \{\s*this\.postSessionOffcanvasOpen = true/,
   /resolveCurrentSurahAyahCount\(\)/,
+])
+
+includesAll('reciter catalog refresh', [
+  /async loadReciters\(\)/,
+  /applyReciterCatalog\(cachedReciters\)/,
+  /fetchReciterCatalogFromApi\(\)/,
+  /applyReciterCatalog\(fresh\)/,
+  /const cachedReciters = mobile \? null : this\.readApiCache\('reciters\.v3'\)/,
+  /const shouldFetchFresh = mobile \|\| !hasCache/,
+  /if \(!shouldFetchFresh\) return/,
+  /mobileReciterSelectRenderKey\(\)/,
+  /onSessionReciterChange\(\)/,
+  /if \(this\.isMobileViewport\(\)\) \{\s*void this\.loadReciters\(\)/,
+  /window\.__mutqinMobileReciterChange/,
+])
+
+includesAll('mobile reciter change', [
+  /:key="mobileReciterSelectRenderKey"/,
+  /@change="onSessionReciterChange"/,
+  /stripVerseAudioFields/,
+  /verseAudioMatchesReciter/,
+  /listAyahAudioCandidates\(clean\)/,
+  /if \(this\.isMobileViewport\(\) && playbackVerse\?\.key\)/,
+  /autoplayAfterMobileReciterChange/,
+  /options\.autoPlay/,
+  /curatedReciterCatalog/,
+  /applyReciterChangeInPlace\(this\.currentMode, \{ autoPlay: true \}\)/,
+  /_mobileReciterAutoplayPending/,
 ])
 
 assert.doesNotMatch(

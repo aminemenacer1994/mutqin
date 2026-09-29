@@ -7799,7 +7799,15 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     gap: 0 !important;
   }
 
-  /* Active session dashboard: inset from screen edges (v185 hotfix zeroes shell margins). */
+  /* Active session chrome: inset when legacy mushaf/QPC rules zero shell margins. */
+  html body .app .session-progress-rail {
+    margin-inline: var(--mq-mobile-gutter) !important;
+    inline-size: auto !important;
+    width: auto !important;
+    max-inline-size: none !important;
+    box-sizing: border-box !important;
+  }
+
   html body .app .workspace-shell:not(.is-idle-card) {
     margin-inline: var(--mq-mobile-gutter) !important;
     inline-size: auto !important;
@@ -7991,7 +7999,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   }
 
   .session-progress-rail {
-    margin: 0 !important;
+    margin-block: 0 !important;
   }
 
 }
@@ -8205,8 +8213,7 @@ html body .app .workspace-recite-dock__button:hover {
   }
 }
 
-/* QPC mobile: top chrome (nav + progress + shell) uses the same full-bleed
-   contract as the fixed recite dock and mushaf sheet — safe-area only. */
+/* QPC mobile: reading surface stays full-bleed; session progress + dashboard inset. */
 @media (max-width: 767.98px) {
   html body.memorisation-page:has(.main.madani-qpc-mode-active) nav.navbar.app-navbar {
     padding-inline: 0 !important;
@@ -8228,32 +8235,16 @@ html body .app .workspace-recite-dock__button:hover {
     width: 100% !important;
   }
 
-  html body .app .main.madani-qpc-mode-active .session-progress-rail {
-    width: 100% !important;
-    max-width: none !important;
-    margin-inline: 0 !important;
-  }
-
   html body .app .main.madani-qpc-mode-active .session-progress-rail__inner {
-    border-radius: 0 !important;
-    border-inline-width: 0 !important;
-    padding-inline:
-      max(0.04rem, env(safe-area-inset-left, 0px))
-      max(0.04rem, env(safe-area-inset-right, 0px))
-      !important;
+    border-radius: var(--mq-radius-compact, 14px) !important;
+    border-inline-width: 1px !important;
+    padding-inline: var(--mq-card-pad) !important;
   }
 
   html body .app .main.madani-qpc-mode-active .workspace-shell:not(.is-idle-card) {
-    margin-inline: 0 !important;
-    inline-size: 100% !important;
-    width: 100% !important;
-    max-inline-size: none !important;
-    border-radius: 0 !important;
-    border-inline-width: 0 !important;
-    padding-inline:
-      max(0.04rem, env(safe-area-inset-left, 0px))
-      max(0.04rem, env(safe-area-inset-right, 0px))
-      !important;
+    border-radius: 20px !important;
+    border-inline-width: 1px !important;
+    padding-inline: var(--mq-card-pad) !important;
   }
 
   html body .app .main.madani-qpc-mode-active .workspace-reading-surface,

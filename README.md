@@ -76,6 +76,9 @@ npm run test:quran-integrity
 npm run test:mutqin
 node tests/js/billing.test.mjs
 
+# Recitation JS/PHP scenario parity (needs PHP + Node)
+npm run audit:recitation-scenarios
+
 # Optional Playwright smoke / mobile checks (requires running app)
 npm run test:mutqin:browser
 npm run test:mutqin:mobile
@@ -83,7 +86,7 @@ npm run test:mutqin:mobile
 
 Protected Qur'an fixtures live under `resources/quran/integrity/`. Intentional corpus updates must follow [`resources/quran/integrity/UPDATE.md`](resources/quran/integrity/UPDATE.md) — never edit Uthmani text by hand or regenerate silently in CI.
 
-CI runs PHPUnit, JS tests, Qur'an integrity checks, and a production asset build on push/PR (see `.github/workflows/test.yml`).
+CI runs PHPUnit, JS tests, recitation JS/PHP scenario parity, Qur'an integrity checks, and a production asset build on push/PR (see `.github/workflows/test.yml`).
 
 ## Environment variables
 

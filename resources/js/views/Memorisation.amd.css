@@ -7853,9 +7853,28 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     padding-inline: 0 !important;
   }
 
+  html body .app .main.madani-qpc-mode-active .session-progress-rail {
+    margin-inline: var(--mq-mobile-gutter, var(--mobile-page-gutter, clamp(16px, 4.8vw, 22px))) !important;
+    inline-size: auto !important;
+    width: auto !important;
+    max-inline-size: none !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .session-progress-rail__inner {
+    border-radius: var(--mq-radius-compact, 14px) !important;
+    border-inline-width: 1px !important;
+    padding-inline: var(--mq-card-pad, clamp(12px, 3.6vw, 16px)) !important;
+  }
+
   html body .app .main.madani-qpc-mode-active .workspace-shell:not(.is-idle-card) {
-    margin-inline: 0 !important;
-    inline-size: 100% !important;
-    width: 100% !important;
+    margin-inline: var(--mq-mobile-gutter, var(--mobile-page-gutter, clamp(16px, 4.8vw, 22px))) !important;
+    inline-size: auto !important;
+    width: auto !important;
+    max-inline-size: none !important;
+    border-radius: 20px !important;
+    border-inline-width: 1px !important;
+    padding-inline: var(--mq-card-pad, clamp(12px, 3.6vw, 16px)) !important;
+    box-sizing: border-box !important;
   }
 }

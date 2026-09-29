@@ -12,38 +12,20 @@ import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
-import {
-  buildDeterministicRecitationResult,
-  createRecognitionState,
-  selectPrimaryReciterWords,
-  stabilizeRecognitionEvent,
-} from '../resources/js/scripts/engine/recitation_analysis.js'
 import { recitationEdgeScenarios } from '../tests/js/fixtures/recitation-edge-scenarios.mjs'
+import { scoreSpeechmaticsPath } from '../tests/js/helpers/scoreRecitationScenario.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const phpProbe = path.join(root, 'scripts/recitation-alignment-probe.php')
 const jsonOut = process.argv.includes('--json')
 
-function scoreSpeechmaticsPath(scenario) {
-  let state = stabilizeRecognitionEvent(createRecognitionState(), {
-    provider: 'speechmatics',
-    isFinal: true,
-    speechFinal: true,
-    segmentId: scenario.id,
-    words: scenario.recognitionWords,
-  }, { confidenceThreshold: 0.35 })
-
-  const selected = selectPrimaryReciterWords(state.committedWords, scenario.targetText)
-  const words = selected.reliable ? selected.words : []
-  const result = buildDeterministicRecitationResult(scenario.targetText, words, {
-    strictProgression: false,
-  })
-
+function scoreSpeechmaticsFixture(scenario) {
+  const scored = scoreSpeechmaticsPath(scenario)
   return {
-    accuracy: Number(result.accuracyScore ?? 0),
-    reliable: selected.reliable,
-    speakerStatus: selected.status ?? 'clear',
-    wordCount: words.length,
+    accuracy: scored.accuracy,
+    reliable: scored.reliable,
+    speakerStatus: scored.speakerStatus,
+    wordCount: scored.wordCount,
   }
 }
 
@@ -89,7 +71,7 @@ let apiBehaviorTotal = 0
 let parityTotal = 0
 
 for (const scenario of recitationEdgeScenarios) {
-  const speechmatics = scoreSpeechmaticsPath(scenario)
+  const speechmatics = scoreSpeechmaticsFixture(scenario)
   const api = scoreApiPath(scenario)
 
   const expectedSpeechmatics = scenario.expectedSpeechmaticsAccuracy ?? scenario.expectedAccuracy
