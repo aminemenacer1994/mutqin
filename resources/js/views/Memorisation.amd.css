@@ -7841,3 +7841,21 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .workspace-recite-dock--mobile {
   display: none !important;
 }
+
+@media (max-width: 767.98px) {
+  html body.memorisation-page:has(.main.madani-qpc-mode-active) nav.navbar.app-navbar .navbar-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+  }
+
+  html body .app .main.container-fluid.madani-qpc-mode-active {
+    padding-inline: 0 !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .workspace-shell:not(.is-idle-card) {
+    margin-inline: 0 !important;
+    inline-size: 100% !important;
+    width: 100% !important;
+  }
+}

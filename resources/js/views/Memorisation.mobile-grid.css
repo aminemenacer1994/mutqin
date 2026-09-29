@@ -8204,3 +8204,64 @@ html body .app .workspace-recite-dock__button:hover {
     scroll-padding-block-end: var(--madani-fs-recite-clearance, 9.2rem) !important;
   }
 }
+
+/* QPC mobile: top chrome (nav + progress + shell) uses the same full-bleed
+   contract as the fixed recite dock and mushaf sheet — safe-area only. */
+@media (max-width: 767.98px) {
+  html body.memorisation-page:has(.main.madani-qpc-mode-active) nav.navbar.app-navbar {
+    padding-inline: 0 !important;
+  }
+
+  html body.memorisation-page:has(.main.madani-qpc-mode-active) nav.navbar.app-navbar .navbar-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    padding-inline:
+      max(0.04rem, env(safe-area-inset-left, 0px))
+      max(0.04rem, env(safe-area-inset-right, 0px))
+      !important;
+  }
+
+  html body .app .main.container-fluid.madani-qpc-mode-active {
+    padding-inline: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .session-progress-rail {
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .session-progress-rail__inner {
+    border-radius: 0 !important;
+    border-inline-width: 0 !important;
+    padding-inline:
+      max(0.04rem, env(safe-area-inset-left, 0px))
+      max(0.04rem, env(safe-area-inset-right, 0px))
+      !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .workspace-shell:not(.is-idle-card) {
+    margin-inline: 0 !important;
+    inline-size: 100% !important;
+    width: 100% !important;
+    max-inline-size: none !important;
+    border-radius: 0 !important;
+    border-inline-width: 0 !important;
+    padding-inline:
+      max(0.04rem, env(safe-area-inset-left, 0px))
+      max(0.04rem, env(safe-area-inset-right, 0px))
+      !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .workspace-reading-surface,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-workspace,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport {
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+  }
+}

@@ -26637,7 +26637,8 @@ never mint green */
   }
 }
 
-.main.container-fluid.mushaf-mode-active {
+.main.container-fluid.mushaf-mode-active,
+.main.container-fluid.madani-qpc-mode-active {
   padding-inline: 0;
 }
 
