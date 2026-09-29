@@ -57,8 +57,16 @@
         :class="{ 'qpc-madani-page__folio--session-break': sessionScoped }"
         aria-hidden="true"
       >
-        <span class="qpc-madani-page__folio-number">{{ folioLabel }}</span>
-        <br v-if="sessionScoped" class="qpc-madani-page__folio-break" aria-hidden="true" />
+        <div
+          v-if="sessionScoped"
+          class="qpc-madani-page__folio-break"
+        >
+          <span class="qpc-madani-page__folio-number">{{ folioLabel }}</span>
+        </div>
+        <span
+          v-else
+          class="qpc-madani-page__folio-number"
+        >{{ folioLabel }}</span>
       </div>
     </div>
   </article>
@@ -609,10 +617,19 @@ export default {
 }
 
 .qpc-madani-page__folio--session-break {
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  display: block;
   width: 100%;
+  padding: 0;
+}
+
+.qpc-madani-page__folio-break {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.45rem 0 0.62rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--qpc-rule, #8d6a35) 42%, transparent);
 }
 
 .qpc-madani-page__folio-number {
@@ -620,15 +637,29 @@ export default {
   line-height: 1;
 }
 
-.qpc-madani-page__folio-break {
-  display: block;
-  width: 100%;
-  height: 0;
-  margin: 0;
+.qpc-madani-page__folio--session-break .qpc-madani-page__folio-number {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio {
+  min-height: 0;
   padding: 0;
-  border: 0;
-  line-height: 0;
-  font-size: 0;
+}
+
+.qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+  padding: 0.48rem 0 0.72rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--mushaf-reading-ink, #8a7048) 36%, transparent);
+}
+
+.qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
+  -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
 }
 
 .qpc-madani-page--embedded {

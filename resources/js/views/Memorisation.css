@@ -62550,14 +62550,20 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   }
 
   .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio {
-    display: flex;
-    min-height: 1.35rem;
-    padding: 0.28rem 0 0.55rem;
+    display: block;
+    min-height: 0;
+    padding: 0;
   }
 
-  .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio--session-break .qpc-madani-page__folio-break {
-    display: block;
-    height: 0.48rem;
+  .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+    padding: 0.42rem 0 0.68rem;
+    margin-bottom: 0.38rem;
+    border-bottom-color: color-mix(in srgb, var(--mushaf-reading-ink, #8a7048) 34%, transparent);
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
+    font-size: 1.75rem !important;
+    font-weight: 700;
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
@@ -66129,19 +66135,23 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 @media (max-width: 767.98px) {
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__folio {
-    min-height: 1.5rem;
+    min-height: 0;
     margin-top: 0.12rem;
-    padding: 0.32rem 0 0.72rem;
-    font-size: 1.18rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    padding: 0;
     color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
     -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
   }
 
-  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio--session-break .qpc-madani-page__folio-break {
-    display: block;
-    height: 0.5rem;
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+    padding: 0.48rem 0 0.78rem;
+    margin-bottom: 0.42rem;
+    border-bottom-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 32%, transparent);
+  }
+
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
+    font-size: 1.82rem !important;
+    font-weight: 700;
+    letter-spacing: 0.06em;
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
@@ -66896,8 +66906,14 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio {
-    padding-bottom: 0.25rem;
+    padding-bottom: 0;
     margin-bottom: 0;
+  }
+
+  html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+    padding: 0.52rem 0 0.85rem;
+    margin-bottom: 0.48rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 34%, transparent);
   }
 
   body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio {

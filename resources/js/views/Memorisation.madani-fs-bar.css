@@ -335,7 +335,7 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     --madani-fs-bar-inset-x: clamp(1rem, 5vw, 1.35rem);
     --madani-fs-bar-inset-bottom: clamp(0.95rem, 4vw, 1.2rem);
     --madani-fs-bar-icon: 2.45rem;
-    --madani-fs-bar-recite: 3.1rem;
+    --madani-fs-bar-recite: 3.55rem;
     --madani-fs-bar-shell-pad-x: 0.55rem;
     --madani-fs-bar-shell-pad-y: 0.42rem;
     --madani-fs-bar-row: max(var(--madani-fs-bar-icon), var(--madani-fs-bar-recite));
@@ -519,6 +519,8 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     justify-self: end;
     position: relative;
     z-index: 2;
+    overflow: visible;
+    isolation: isolate;
     pointer-events: auto !important;
     width: var(--madani-fs-bar-recite);
     height: var(--madani-fs-bar-recite);
@@ -539,11 +541,36 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.55) inset,
       0 6px 16px rgba(47, 168, 106, 0.45);
-    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    transition: transform 0.18s ease, filter 0.18s ease;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite::before,
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite::before {
+    z-index: -1;
+    inset: -2px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    opacity: 0;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite::after {
+    z-index: -2;
+    inset: -4px;
+    border: 1.5px solid rgba(94, 214, 153, 0.42);
+    opacity: 0;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
-    font-size: 1.4rem;
+    position: relative;
+    z-index: 1;
+    font-size: 1.58rem;
     pointer-events: none;
   }
 
@@ -564,8 +591,22 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     transform: scale(0.94);
   }
 
-  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite.is-animated {
-    animation: madani-fs-recite-pulse 2.6s ease-in-out infinite;
+  @media (prefers-reduced-motion: no-preference) {
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+      animation: madani-fs-recite-pulse 2.8s ease-in-out infinite;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite::before {
+      animation: madani-fs-recite-glow 2.8s ease-in-out infinite;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite::after {
+      animation: madani-fs-recite-ring 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
+      animation: madani-fs-recite-mic 2.8s ease-in-out infinite;
+    }
   }
 
   @keyframes madani-fs-recite-pulse {
@@ -573,20 +614,61 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     100% {
       box-shadow:
         0 0 0 1px rgba(255, 255, 255, 0.55) inset,
-        0 6px 16px rgba(47, 168, 106, 0.42);
+        0 6px 16px rgba(47, 168, 106, 0.4);
     }
 
     50% {
       box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.55) inset,
-        0 6px 16px rgba(47, 168, 106, 0.42),
-        0 0 0 4px rgba(94, 214, 153, 0.28);
+        0 0 0 1px rgba(255, 255, 255, 0.62) inset,
+        0 8px 18px rgba(47, 168, 106, 0.48),
+        0 0 0 3px rgba(94, 214, 153, 0.22);
+    }
+  }
+
+  @keyframes madani-fs-recite-glow {
+    0%,
+    100% {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+
+    45%,
+    55% {
+      opacity: 0.35;
+      transform: scale(1.02);
+    }
+  }
+
+  @keyframes madani-fs-recite-ring {
+    0% {
+      opacity: 0.62;
+      transform: scale(0.92);
+    }
+
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(1.28);
+    }
+  }
+
+  @keyframes madani-fs-recite-mic {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.06);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite.is-animated {
-      animation: none;
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite,
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite::before,
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite::after,
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
+      animation: none !important;
     }
   }
 
@@ -840,17 +922,36 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
   .qpc-madani-session-scroll
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio {
-  min-height: 1.55rem;
+  min-height: 0;
   margin-top: 0.14rem;
-  padding: 0.34rem 0 0.85rem;
+  padding: 0;
   font-family: "Amiri Quran", "Amiri", serif;
-  font-size: 1.22rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
   line-height: 1;
   color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 96%, #fff);
   -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 96%, #fff);
   opacity: 0.94;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-page--session-scoped
+  .qpc-madani-page__folio-break {
+  padding: 0.5rem 0 0.82rem;
+  margin-bottom: 0.46rem;
+  border-bottom-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 30%, transparent);
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-page--session-scoped
+  .qpc-madani-page__folio-number {
+  font-size: 1.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
 html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
@@ -863,15 +964,49 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
   padding-top: 0.52rem !important;
 }
 
-html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+html.is-app-fullscreen:has(.madani-fullscreen-bar)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-session-scroll
+  .qpc-madani-page--session-scoped
+  .qpc-madani-page__folio {
+  min-height: 0;
+  margin-top: 0.14rem;
+  padding: 0;
+  font-family: "Amiri Quran", "Amiri", serif;
+  line-height: 1;
+  color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 96%, #fff);
+  -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 96%, #fff);
+  opacity: 0.94;
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .app.is-fullscreen
   .main.madani-qpc-mode-active
   .madani-qpc-viewport
   .qpc-madani-page--session-scoped
-  .qpc-madani-page__folio--session-break
   .qpc-madani-page__folio-break {
-  display: block;
-  height: 0.55rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.52rem 0 0.85rem;
+  margin-bottom: 0.48rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 34%, transparent);
+}
+
+html.is-app-fullscreen:has(.madani-fullscreen-bar)
+  .app.is-fullscreen
+  .main.madani-qpc-mode-active
+  .madani-qpc-viewport
+  .qpc-madani-page--session-scoped
+  .qpc-madani-page__folio-number {
+  font-size: 1.82rem !important;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
 }
 
 html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
