@@ -36104,34 +36104,6 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   margin-inline-start: auto;
 }
 
-.top-card-menu-section--mushaf-edition {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  margin-top: 0.35rem;
-  padding-top: 0.15rem;
-}
-
-.top-card-menu .top-card-menu-divider--mushaf-edition {
-  height: 1px;
-  margin: 0.5rem 0.15rem 0.4rem;
-  background: color-mix(in srgb, var(--border) 88%, transparent);
-}
-
-.top-card-menu .top-card-menu-label--mushaf-edition {
-  margin: 0 0 0.15rem;
-  padding: 0.15rem 0.7rem 0;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  opacity: 0.62;
-}
-
-.top-card-menu .top-card-menu-toggle--mushaf-edition {
-  padding-inline-start: 1.35rem;
-}
-
 .top-card-menu-section--tajweed {
   display: flex;
   flex-direction: column;
@@ -36156,8 +36128,57 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   opacity: 0.62;
 }
 
-.top-card-menu .top-card-menu-toggle--tajweed {
-  padding-inline-start: 1.35rem;
+.top-card-menu-section--utilities {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.top-card-menu .top-card-menu-divider--utilities {
+  height: 1px;
+  margin: 0.35rem 0.15rem 0.12rem;
+  background: color-mix(in srgb, var(--border) 88%, transparent);
+}
+
+.top-card-menu-section--utilities > .top-card-menu-utility-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  justify-content: flex-start !important;
+  box-sizing: border-box;
+}
+
+.top-card-menu-section--utilities > .top-card-menu-utility-item > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: start;
+}
+
+.top-card-menu-section--utilities > .top-card-menu-utility-item .check-icon {
+  margin-inline-start: auto;
+}
+
+.top-card-menu-section--utilities > button.top-card-menu-utility-item:hover,
+.top-card-menu-section--utilities > button.top-card-menu-utility-item.active,
+.top-card-menu-section--utilities > a.top-card-menu-utility-item:hover,
+.top-card-menu-section--utilities > a.top-card-menu-utility-item:focus-visible {
+  background: var(--accent-light);
+  color: var(--accent-strong);
+  outline: none;
 }
 
 .top-card-menu .top-card-menu-toggle__stack {
@@ -54766,16 +54787,6 @@ html body .app[data-theme="dark"] .main.mushaf-mode-active .mushaf-page--madani 
     display: none !important;
   }
 
-  /* Desktop: layout items are already hidden — drop the lone rule above Mushaf edition. */
-  .top-card-menu .top-card-menu-divider--mushaf-edition {
-    display: none !important;
-  }
-
-  .top-card-menu .top-card-menu-section--mushaf-edition {
-    margin-top: 0;
-    padding-top: 0;
-  }
-
   /* Keep analytics/dashboard icon visible next to controls on desktop */
   .workspace-shell-head > .top-card-icon-controls {
     width: auto !important;
@@ -66177,6 +66188,8 @@ html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .top-card-
   z-index: 130;
 }
 
+html body .top-card-menu.top-card-menu--fixed,
+html body .top-card-menu.top-card-menu--portal.top-card-menu--fixed,
 html body .app .top-card-menu.top-card-menu--fixed,
 html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .top-card-menu.top-card-menu--fixed {
   position: fixed !important;
@@ -66185,7 +66198,31 @@ html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .top-card-
   overflow-y: auto !important;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  z-index: 5000 !important;
+  z-index: 12000 !important;
+}
+
+html body .top-card-menu.top-card-menu--portal,
+html body .top-card-menu--portal.top-card-menu {
+  margin: 0;
+}
+
+html body .top-card-menu--portal,
+html body .top-card-menu--portal button,
+html body .top-card-menu--portal button span,
+html body .top-card-menu--portal .top-card-menu-label,
+html body .top-card-menu--portal .top-card-menu-link {
+  font-family: var(--font-ui, system-ui, sans-serif) !important;
+}
+
+/* Float Recite rail sits at 1056 — keep the reading-options menu above it when fixed. */
+html body:has(.top-card-menu-wrap.is-menu-open) .workspace-float-rail,
+html body:has(.top-card-menu-wrap.is-menu-open) > .workspace-float-rail {
+  z-index: 1050 !important;
+}
+
+html body:has(.top-card-menu-wrap.is-menu-open) .workspace-recite-dock,
+html body:has(.top-card-menu-wrap.is-menu-open) .workspace-recite-dock--mobile {
+  z-index: 20 !important;
 }
 
 /* Post-session AI review — dark mode cascade guard (teleported modals + mobile pills). */

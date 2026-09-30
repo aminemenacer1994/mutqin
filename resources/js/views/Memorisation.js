@@ -10604,6 +10604,7 @@ export default {
           this._workspaceViewportFrame = null
           this.syncWorkspaceIsMobileViewport?.()
           this.syncWorkspaceViewportMetrics?.()
+          if (this.topCardMenuOpen) this.syncTopCardMenuPosition?.()
         })
       }
       window.addEventListener('resize', this.scheduleWorkspaceViewportMetrics, { passive: true })
@@ -11506,6 +11507,18 @@ export default {
     defaultFontSize: 'persistUiState',
     tajweedEnabled: 'persistUiState',
     mushafUiSkin: 'persistUiState',
+    topCardMenuOpen(open) {
+      if (open) {
+        this.$nextTick(() => {
+          this.syncTopCardMenuPosition()
+          if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(() => this.syncTopCardMenuPosition())
+          }
+        })
+      } else {
+        this.$nextTick(() => this.syncTopCardMenuPosition())
+      }
+    },
     mushafLayoutId() {
       this.syncWorkspaceIsMobileViewport()
       this.persistUiState()
@@ -40584,9 +40597,57 @@ export default {
         this.openVerseActionKey = ''
         this.fontDropdownOpen = false
         this.topCardMenuOpen = true
+        this.$nextTick(() => {
+          this.syncTopCardMenuPosition()
+          if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(() => this.syncTopCardMenuPosition())
+          }
+        })
       } else {
         this.topCardMenuOpen = false
+        this.$nextTick(() => this.syncTopCardMenuPosition())
       }
+    },
+    resolveTopCardMenuElement() {
+      const ref = this.$refs.topCardMenu
+      if (!ref) return null
+      return ref.$el ?? ref
+    },
+    resolveTopCardMenuTriggerElement() {
+      const ref = this.$refs.topCardMenuTrigger
+      if (!ref) return null
+      return ref.$el ?? ref
+    },
+    clearTopCardMenuFixedPosition(menu) {
+      if (!menu) return
+      menu.classList.remove('top-card-menu--fixed')
+      for (const prop of ['position', 'top', 'left', 'right', 'max-height', 'inset-inline-end']) {
+        menu.style.removeProperty(prop)
+      }
+    },
+    syncTopCardMenuPosition() {
+      if (typeof window === 'undefined') return
+      const menu = this.resolveTopCardMenuElement()
+      const trigger = this.resolveTopCardMenuTriggerElement()
+      if (!menu) return
+      if (!this.topCardMenuOpen || !trigger) {
+        this.clearTopCardMenuFixedPosition(menu)
+        return
+      }
+      const rect = trigger.getBoundingClientRect()
+      menu.classList.add('top-card-menu--fixed')
+      const width = menu.offsetWidth || Math.min(304, window.innerWidth - 16)
+      const gap = 6
+      const top = Math.round(rect.bottom + gap)
+      let left = Math.round(rect.right - width)
+      left = Math.max(8, Math.min(left, window.innerWidth - width - 8))
+      menu.style.setProperty('position', 'fixed', 'important')
+      menu.style.setProperty('top', `${top}px`, 'important')
+      menu.style.setProperty('left', `${left}px`, 'important')
+      menu.style.setProperty('right', 'auto', 'important')
+      menu.style.setProperty('inset-inline-end', 'auto', 'important')
+      const maxHeight = window.innerHeight - top - 12
+      menu.style.setProperty('max-height', `${Math.max(120, maxHeight)}px`, 'important')
     },
     toggleMainCardCollapsed() {
       if (!this.showMobileSessionOverviewCollapsible) return
@@ -40671,7 +40732,11 @@ export default {
       if (this.fontDropdownOpen && !event.target.closest('.font-dropdown')) {
         this.fontDropdownOpen = false
       }
-      if (this.topCardMenuOpen && !event.target.closest('.top-card-menu-wrap')) {
+      if (
+        this.topCardMenuOpen
+        && !event.target.closest('.top-card-menu-wrap')
+        && !event.target.closest('.top-card-menu')
+      ) {
         this.topCardMenuOpen = false
       }
       if (this.openVerseActionKey && !event.target.closest('.verse-menu-wrap')) {

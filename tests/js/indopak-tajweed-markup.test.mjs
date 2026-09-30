@@ -13,6 +13,7 @@ import {
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const memorisationJs = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
+const memorisationVue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
 const memorisationCss = readFileSync(join(root, 'resources/js/views/Memorisation.css'), 'utf8')
 const wordVue = readFileSync(join(root, 'resources/js/components/madani/MadaniWord.vue'), 'utf8')
 
@@ -63,10 +64,12 @@ assert.match(
   /qpc-madani-word--indopak-tajweed[\s\S]*?currentColor\s*!important/,
   'tajweed spans must paint via currentColor fill',
 )
-assert.match(
-  memorisationCss,
-  /@media \(min-width:\s*768px\)[\s\S]*?\.top-card-menu-divider--mushaf-edition[\s\S]*?display:\s*none/,
-)
+assert.doesNotMatch(memorisationVue, /top-card-menu-label--mushaf-edition/)
+assert.doesNotMatch(memorisationVue, /top-card-menu-divider--mushaf-edition/)
 assert.match(memorisationJs, /wordByWordAudioEnabled = true[\s\S]{0,80}ensureWordAudioHighlighting/)
+assert.match(memorisationJs, /syncTopCardMenuPosition/)
+assert.match(memorisationVue, /top-card-menu--fixed|ref="topCardMenu"/)
+assert.match(memorisationVue, /top-card-menu-divider--layout[\s\S]*v-if="readingViewMode === 'stacked'"/)
+assert.doesNotMatch(memorisationVue, /toggleKeyboardShortcuts[\s\S]{0,120}top-card-menu/)
 
 console.log('indopak-tajweed-markup.test.mjs: ok')

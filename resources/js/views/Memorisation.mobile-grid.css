@@ -4660,7 +4660,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .top-card-icon-controls .top-card-font-menu,
 .top-card-icon-controls .font-dropdown-menu,
-.top-card-icon-controls .top-card-menu {
+.top-card-icon-controls .top-card-menu:not(.top-card-menu--fixed):not(.top-card-menu--portal) {
     position: absolute !important;
     inset-inline-end: 0 !important;
     top: calc(100% + 0.4rem) !important;

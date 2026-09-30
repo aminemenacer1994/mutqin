@@ -750,11 +750,13 @@
               >
                 <i class="bi bi-three-dots-vertical"></i>
               </div>
-              <transition name="dropdown-fade">
-                <div
-                  v-if="topCardMenuOpen"
-                  class="top-card-menu"
-                >
+              <Teleport to="body">
+                <transition name="dropdown-fade" @after-enter="syncTopCardMenuPosition">
+                  <div
+                    v-if="topCardMenuOpen"
+                    ref="topCardMenu"
+                    class="top-card-menu top-card-menu--portal"
+                  >
                   <p class="top-card-menu-label top-card-menu-label--layout">{{ t('memorisation.a11y.changeReadingLayout') }}</p>
                   <button
                     type="button"
@@ -779,37 +781,37 @@
                     <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <template v-if="readingViewMode === 'madani_mushaf'">
-                    <div class="top-card-menu-section top-card-menu-section--mushaf-edition" role="group" :aria-label="t('memorisation.view.mushafEdition')">
-                      <div class="top-card-menu-divider top-card-menu-divider--mushaf-edition" aria-hidden="true"></div>
-                      <p class="top-card-menu-label top-card-menu-label--mushaf-edition">{{ t('memorisation.view.mushafEdition') }}</p>
-                      <button
-                        type="button"
-                        class="top-card-menu-toggle top-card-menu-toggle--mushaf-edition"
-                        :class="{ active: mushafLayoutId === 'madani-v2' }"
-                        :aria-pressed="mushafLayoutId === 'madani-v2' ? 'true' : 'false'"
-                        @click.stop="setMushafLayoutId('madani-v2')"
-                      >
-                        <i class="bi bi-journal-richtext" aria-hidden="true"></i>
-                        <span>{{ t('memorisation.view.madinahV2') }}</span>
-                        <i v-if="mushafLayoutId === 'madani-v2'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                      </button>
-                      <button
-                        type="button"
-                        class="top-card-menu-toggle top-card-menu-toggle--mushaf-edition top-card-menu-toggle--mushaf-edition-stacked"
-                        :class="{ active: mushafLayoutId === 'indopak-15-qudratullah' }"
-                        :aria-pressed="mushafLayoutId === 'indopak-15-qudratullah' ? 'true' : 'false'"
-                        @click.stop="setMushafLayoutId('indopak-15-qudratullah')"
-                      >
-                        <i class="bi bi-journal-text" aria-hidden="true"></i>
-                        <span class="top-card-menu-toggle__stack">
-                          <span class="top-card-menu-toggle__title">{{ t('memorisation.view.indopak15') }}</span>
-                          <span class="top-card-menu-toggle__subtitle">{{ t('memorisation.view.qudratullah') }}</span>
-                        </span>
-                        <i v-if="mushafLayoutId === 'indopak-15-qudratullah'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      class="top-card-menu-toggle"
+                      :class="{ active: mushafLayoutId === 'madani-v2' }"
+                      :aria-pressed="mushafLayoutId === 'madani-v2' ? 'true' : 'false'"
+                      @click.stop="setMushafLayoutId('madani-v2')"
+                    >
+                      <i class="bi bi-journal-richtext" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.view.madinahV2') }}</span>
+                      <i v-if="mushafLayoutId === 'madani-v2'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="top-card-menu-toggle"
+                      :class="{ active: mushafLayoutId === 'indopak-15-qudratullah' }"
+                      :aria-pressed="mushafLayoutId === 'indopak-15-qudratullah' ? 'true' : 'false'"
+                      @click.stop="setMushafLayoutId('indopak-15-qudratullah')"
+                    >
+                      <i class="bi bi-journal-text" aria-hidden="true"></i>
+                      <span class="top-card-menu-toggle__stack">
+                        <span class="top-card-menu-toggle__title">{{ t('memorisation.view.indopak15') }}</span>
+                        <span class="top-card-menu-toggle__subtitle">{{ t('memorisation.view.qudratullah') }}</span>
+                      </span>
+                      <i v-if="mushafLayoutId === 'indopak-15-qudratullah'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
                   </template>
-                  <div class="top-card-menu-divider top-card-menu-divider--layout" aria-hidden="true"></div>
+                  <div
+                    v-if="readingViewMode === 'stacked'"
+                    class="top-card-menu-divider top-card-menu-divider--layout"
+                    aria-hidden="true"
+                  ></div>
                   <button
                     v-if="readingViewMode === 'stacked'"
                     type="button"
@@ -846,12 +848,11 @@
                     <span>{{ t('memorisation.reading.wordByWord') }}</span>
                     <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
-                  <div class="top-card-menu-section top-card-menu-section--tajweed" role="group" :aria-label="t('memorisation.reading.tajweed')">
-                    <div class="top-card-menu-divider top-card-menu-divider--tajweed" aria-hidden="true"></div>
-                    <p class="top-card-menu-label top-card-menu-label--tajweed">{{ t('memorisation.reading.tajweed') }}</p>
+                  <div class="top-card-menu-section top-card-menu-section--utilities" role="group" :aria-label="t('memorisation.a11y.readingTools')">
+                    <div class="top-card-menu-divider top-card-menu-divider--utilities" aria-hidden="true"></div>
                     <button
                       type="button"
-                      class="top-card-menu-toggle top-card-menu-toggle--tajweed"
+                      class="top-card-menu-utility-item"
                       :class="{ active: tajweedEnabled }"
                       :aria-pressed="tajweedEnabled ? 'true' : 'false'"
                       @click.stop="toggleTajweed"
@@ -860,37 +861,34 @@
                       <span>{{ t('memorisation.reading.tajweed') }}</span>
                       <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
+                    <a
+                      :href="isAdmin ? adminDashboardUrl : learnerDashboardUrl"
+                      class="top-card-menu-link top-card-menu-utility-item"
+                      data-tour="dashboard"
+                      @click.stop="topCardMenuOpen = false; isAdmin ? null : openDashboardView()"
+                    >
+                      <i class="bi bi-grid-1x2" aria-hidden="true"></i>
+                      <span>{{ t('common.dashboard') }}</span>
+                    </a>
+                    <button type="button" class="top-card-menu-utility-item" @click="openOnboardingFromTopMenu">
+                      <i class="bi bi-compass" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.revisitOnboarding') }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="top-card-menu-utility-item"
+                      :class="{ active: isAppFullscreen }"
+                      :aria-pressed="isAppFullscreen ? 'true' : 'false'"
+                      @click="toggleFullScreen(); topCardMenuOpen = false"
+                    >
+                      <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.reading.fullScreen') }}</span>
+                      <i v-if="isAppFullscreen" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
                   </div>
-                  <div class="top-card-menu-divider" aria-hidden="true"></div>
-                  <button type="button" @click="toggleKeyboardShortcuts">
-                    <i class="bi bi-keyboard" aria-hidden="true"></i>
-                    <span>{{ t('shortcuts.title') }}</span>
-                  </button>
-                  <a
-                    :href="isAdmin ? adminDashboardUrl : learnerDashboardUrl"
-                    class="top-card-menu-link"
-                    data-tour="dashboard"
-                    @click.stop="topCardMenuOpen = false; isAdmin ? null : openDashboardView()"
-                  >
-                    <i class="bi bi-grid-1x2" aria-hidden="true"></i>
-                    <span>{{ t('common.dashboard') }}</span>
-                  </a>
-                  <button type="button" @click="openOnboardingFromTopMenu">
-                    <i class="bi bi-compass" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.revisitOnboarding') }}</span>
-                  </button>
-                  <button
-                    type="button"
-                    :class="{ active: isAppFullscreen }"
-                    :aria-pressed="isAppFullscreen ? 'true' : 'false'"
-                    @click="toggleFullScreen(); topCardMenuOpen = false"
-                  >
-                    <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.reading.fullScreen') }}</span>
-                    <i v-if="isAppFullscreen" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </transition>
+                  </div>
+                </transition>
+              </Teleport>
             </div>
           </div>
           </div>
