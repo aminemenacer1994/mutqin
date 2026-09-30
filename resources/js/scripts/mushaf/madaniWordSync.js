@@ -1,5 +1,6 @@
 /**
- * Align Madani page words with session audio word indices used by WordSyncEngine.
+ * Align mushaf page words with session audio word indices used by WordSyncEngine.
+ * Mapping key is always verseKey:wordPosition (layout-agnostic).
  */
 
 export function buildAudioIndexMap(verses = []) {
@@ -27,7 +28,7 @@ export function resolveAudioWordIndex(word, audioIndexMap = new Map()) {
   if (!word || word.isEnd) return null
   const verseKey = String(word.verseKey || '')
   if (!verseKey) return null
-  const position = Number(word.position)
+  const position = Number(word.position ?? word.wordPosition ?? word.word)
   if (Number.isFinite(position) && position > 0 && audioIndexMap.has(`${verseKey}:${position}`)) {
     return audioIndexMap.get(`${verseKey}:${position}`)
   }
@@ -44,4 +45,16 @@ export function getAudioWordCount(verse, audioIndexMap = new Map()) {
   }
   if (!Array.isArray(verse?.words)) return 0
   return verse.words.filter(word => String(word?.ar || word?.text || '').trim()).length
+}
+
+/**
+ * True when token text has no spoken Arabic letters (ayah-end / pause ornaments).
+ * Used by Unicode mushaf adapters so end marks keep layout width without joining
+ * Progressive Hide / word-audio index streams.
+ */
+export function isMushafOrnamentWordText(text = '') {
+  const raw = String(text || '').trim()
+  if (!raw) return true
+  // Arabic letters only — combining marks, digits, and pause glyphs do not count.
+  return !/[\u0621-\u063A\u0641-\u064A\u066E\u066F\u0671-\u06D3\u06EE\u06EF\u06FA-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(raw)
 }

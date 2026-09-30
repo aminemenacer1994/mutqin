@@ -229,7 +229,10 @@ export function resolveQpcMadaniWordProgressState(word = {}, snapshot = null, au
   const view = snapshot || emptyProgressSnapshot()
   const ayahKey = ayahKeyFromWord(word)
   const location = qpcWordLocationKey(word)
-  const audioIndex = resolveQpcWordAudioIndex(Number(word?.word), ayahKey, audioIndexMap)
+  const wordPosition = Number(word?.wordPosition ?? word?.word_position ?? word?.word)
+  const audioIndex = word?.isEnd
+    ? null
+    : resolveQpcWordAudioIndex(wordPosition, ayahKey, audioIndexMap)
   const audioHit = Number.isFinite(audioIndex)
     && !!view.weakAudioByAyah?.[ayahKey]?.[audioIndex]
   return {

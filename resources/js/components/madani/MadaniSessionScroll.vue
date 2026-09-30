@@ -4,6 +4,7 @@
     :data-pages="resolvedPageNumbers.join(',')"
     :data-focus-page="focusPageNumber || null"
     :data-desktop-short-surah="desktopShortSurahLayout ? 'true' : null"
+    :data-layout="layoutId"
   >
     <div
       v-for="pageNumber in resolvedPageNumbers"
@@ -17,6 +18,7 @@
         :page="leafByPage[pageNumber].page"
         :font-family="leafByPage[pageNumber].fontFamily"
         :font-url="leafByPage[pageNumber].fontUrl"
+        :layout-id="layoutId"
         :borderless="true"
         :active-ayah="activeAyah"
         :range-start-ayah="rangeStartAyah"
@@ -55,8 +57,15 @@ import {
   getCachedMadaniPageLeaf,
   loadMadaniPageLeaf,
 } from '../../scripts/mushaf/qpcMadaniPageData'
+import {
+  getCachedMushafPageLeaf,
+  loadMushafPageLeaf,
+} from '../../scripts/mushaf/mushafPageData'
 import { prefetchQpcMadaniPageFonts } from '../../scripts/mushaf/qpcMadaniFontLoader'
 import { prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
+import { ensureIndopakNastaleeqFontForLayout } from '../../scripts/mushaf/indopakNastaleeqFont'
+import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
+import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
 
 export default {
   name: 'MadaniSessionScroll',
@@ -73,6 +82,7 @@ export default {
   ],
   props: {
     pageNumbers: { type: Array, default: () => [] },
+    layoutId: { type: String, default: MUSHAF_LAYOUT_MADANI_V2 },
     desktopShortSurahLayout: { type: Boolean, default: false },
     focusPageNumber: { type: Number, default: null },
     activeAyah: { type: String, default: '' },
@@ -96,6 +106,9 @@ export default {
     }
   },
   computed: {
+    isIndopakLayout() {
+      return isIndopakMushafLayout(this.layoutId)
+    },
     resolvedPageNumbers() {
       const pages = (this.pageNumbers || [])
         .map((value) => Number(value))
@@ -111,6 +124,9 @@ export default {
       handler() {
         void this.ensurePagesLoaded()
       },
+    },
+    layoutId() {
+      void this.ensurePagesLoaded()
     },
     focusPageNumber() {
       this.$nextTick(() => this.scrollToFocusPage({ smooth: true }))
@@ -139,13 +155,17 @@ export default {
 
       const next = { ...this.leafByPage }
       for (const pageNumber of pages) {
-        const cached = getCachedMadaniPageLeaf(pageNumber)
+        const cached = this.isIndopakLayout
+          ? getCachedMushafPageLeaf(pageNumber, this.layoutId)
+          : getCachedMadaniPageLeaf(pageNumber)
         if (cached?.page) {
           next[pageNumber] = cached
           continue
         }
         try {
-          const leaf = await loadMadaniPageLeaf(pageNumber)
+          const leaf = this.isIndopakLayout
+            ? await loadMushafPageLeaf(pageNumber, this.layoutId)
+            : await loadMadaniPageLeaf(pageNumber)
           if (token !== this.loadToken) return
           if (leaf?.page) next[pageNumber] = leaf
         } catch {
@@ -160,6 +180,10 @@ export default {
     prefetchFonts() {
       const pages = this.resolvedPageNumbers
       if (!pages.length) return
+      if (this.isIndopakLayout) {
+        void ensureIndopakNastaleeqFontForLayout(this.layoutId)
+        return
+      }
       prefetchQpcMadaniPageFonts(pages)
       if (this.tajweedEnabled) {
         prefetchQcfPageFonts(pages, { tajweed: true }).catch(() => {})
@@ -185,13 +209,27 @@ export default {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  overflow-x: clip;
   padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
   scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.qpc-madani-session-scroll[data-layout='indopak-15-qudratullah'] {
+  /* Mobile/tablet single-page: fit viewport width; vertical scroll only. */
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .qpc-madani-session-scroll__page {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.qpc-madani-session-scroll[data-layout='indopak-15-qudratullah'] .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
+  margin-top: 0.55rem;
 }
 
 .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {

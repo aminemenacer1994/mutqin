@@ -1665,6 +1665,11 @@
       "stackedHint": "Stacked: one ayah after another, calm for short ranges.",
       "mushafHint": "Mushaf: KFGQPC V2 printed pages with per-page QCF fonts.",
       "madaniMushafHint": "Mushaf: KFGQPC V2 printed pages with per-page QCF fonts.",
+      "mushafEdition": "Mushaf edition",
+      "madinahV2": "Madinah V2",
+      "indopak15": "IndoPak 15 Lines",
+      "qudratullah": "Qudratullah",
+      "indopakHint": "IndoPak 15 Lines (Qudratullah): Unicode Nastaleeq pages.",
       "madaniQpcTajweedUnsupported": "Tajweed colours are not available on QPC Madani Mushaf. The authentic printed page layout is shown unchanged."
     },
     "actions": {

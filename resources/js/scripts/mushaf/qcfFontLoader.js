@@ -1,21 +1,30 @@
+import { getMushafLayout, MUSHAF_LAYOUT_MADANI_V2 } from './mushafLayouts.js'
+
 const CDN_BASE = 'https://verses.quran.foundation'
 const loadedFonts = new Set()
 const loadingFonts = new Map()
 let surahNamesLoaded = null
 
+/** QCF page fonts exist only for Madani V2 (never IndoPak's pageCount). */
+const MADANI_PAGE_COUNT = getMushafLayout(MUSHAF_LAYOUT_MADANI_V2).pageCount
+
+function clampMadaniQcfPage(pageNumber) {
+  return Math.max(1, Math.min(MADANI_PAGE_COUNT, Number(pageNumber) || 1))
+}
+
 export function qcfFontFamily(pageNumber, { tajweed = false } = {}) {
-  const page = Math.max(1, Math.min(604, Number(pageNumber) || 1))
+  const page = clampMadaniQcfPage(pageNumber)
   return tajweed ? `p${page}-v4` : `p${page}-v2`
 }
 
 export function qcfLocalFontName(pageNumber, { tajweed = false } = {}) {
-  const page = Math.max(1, Math.min(604, Number(pageNumber) || 1))
+  const page = clampMadaniQcfPage(pageNumber)
   const padded = String(page).padStart(3, '0')
   return tajweed ? `QCF4_P${padded}` : `QCF2${padded}`
 }
 
 export function qcfFontUrl(pageNumber, { tajweed = false } = {}) {
-  const page = Math.max(1, Math.min(604, Number(pageNumber) || 1))
+  const page = clampMadaniQcfPage(pageNumber)
   if (tajweed) {
     return {
       woff2: `${CDN_BASE}/fonts/quran/hafs/v4/colrv1/woff2/p${page}.woff2`,
@@ -74,7 +83,11 @@ export async function loadQcfPageFont(pageNumber, options = {}) {
 }
 
 export async function prefetchQcfPageFonts(pageNumbers = [], options = {}) {
-  const unique = [...new Set((pageNumbers || []).map(n => Number(n)).filter(n => n >= 1 && n <= 604))]
+  const unique = [...new Set(
+    (pageNumbers || [])
+      .map(n => Number(n))
+      .filter(n => n >= 1 && n <= MADANI_PAGE_COUNT),
+  )]
   await Promise.all(unique.map(page => loadQcfPageFont(page, options).catch(() => null)))
   return unique.map(page => qcfFontFamily(page, options))
 }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\IndopakFontController;
 use App\Http\Controllers\MadaniPageController;
 use App\Http\Controllers\Internal\AlertTestController;
 use App\Http\Controllers\Internal\ErrorTestController;
@@ -54,6 +55,17 @@ Route::get('/madani/verse-pages', [MadaniPageController::class, 'versePages'])
 Route::get('/madani/resolve/{surah}/{ayah}', [MadaniPageController::class, 'resolveVerse'])
     ->whereNumber(['surah', 'ayah'])
     ->name('madani.resolve-verse');
+
+Route::get('/indopak/font/indopak-nastaleeq.woff2', [IndopakFontController::class, 'nastaleeq'])
+    ->name('indopak.nastaleeq-font');
+Route::get('/indopak/page/{page}', [IndopakFontController::class, 'page'])
+    ->whereNumber('page')
+    ->name('indopak.page');
+Route::get('/indopak/page/{page}/data', [IndopakFontController::class, 'pageData'])
+    ->whereNumber('page')
+    ->name('indopak.page-data');
+Route::get('/indopak/verse-pages', [IndopakFontController::class, 'versePages'])
+    ->name('indopak.verse-pages');
 
 Route::get('/internal/health', InternalHealthController::class)
     ->name('internal.health');

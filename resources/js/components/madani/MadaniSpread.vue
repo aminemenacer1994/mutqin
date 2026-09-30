@@ -3,6 +3,7 @@
     class="qpc-madani-shell"
     :class="{ 'qpc-madani-shell--reader': hideDevNav }"
     :data-spread-mode="mode"
+    :data-layout="layoutId"
     :data-current-page="displayedPageNumber"
     :data-spread-pages="visiblePageNumbers.join(',')"
     :data-active-ayah="activeAyah || null"
@@ -61,10 +62,11 @@
       >
         <MadaniPage
           v-if="leaf.page"
-          :key="`${leaf.number}-${leaf.page?.page_number || 0}`"
+          :key="`${leaf.number}-${leaf.page?.page_number || 0}-${layoutId}`"
           :page="leaf.page"
           :font-family="leaf.fontFamily"
           :font-url="leaf.fontUrl"
+          :layout-id="layoutId"
           :borderless="hideDevNav || readerMode"
           :embedded="mode === 'spread'"
           :spread-viewport-fill="spreadViewportFill"
@@ -100,14 +102,13 @@
 <script>
 import MadaniPage from './MadaniPage.vue'
 import {
-  clampMadaniPage,
-  nextMadaniPage,
-  nextMadaniSpread,
-  previousMadaniPage,
-  previousMadaniSpread,
+  nextMushafPage,
+  nextMushafSpread,
+  previousMushafPage,
+  previousMushafSpread,
   orderMadaniSpreadLeavesForOpening,
-  resolveMadaniSpread,
-  shouldShowTwoMadaniPages,
+  resolveMushafSpread,
+  shouldShowTwoMushafPages,
 } from '../../scripts/mushaf/madaniPagePair'
 import {
   cacheMadaniPageLeaf,
@@ -115,8 +116,21 @@ import {
   loadMadaniPageLeaf,
   preloadMadaniNavigationTargets,
 } from '../../scripts/mushaf/qpcMadaniPageData'
+import {
+  cacheMushafPageLeaf,
+  getCachedMushafPageLeaf,
+  loadMushafPageLeaf,
+  prefetchMushafPageData,
+} from '../../scripts/mushaf/mushafPageData'
 import { prefetchQpcMadaniPageFonts } from '../../scripts/mushaf/qpcMadaniFontLoader'
 import { prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
+import { ensureIndopakNastaleeqFontForLayout } from '../../scripts/mushaf/indopakNastaleeqFont'
+import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
+import {
+  clampMushafPage,
+  getMushafLayout,
+  MUSHAF_LAYOUT_MADANI_V2,
+} from '../../scripts/mushaf/mushafLayouts'
 import { pageHasQpcMadaniSessionLines } from '../../scripts/mushaf/qpcMadaniSelection'
 
 export default {
@@ -127,6 +141,7 @@ export default {
     page: { type: Object, default: null },
     fontFamily: { type: String, default: '' },
     fontUrl: { type: String, default: '' },
+    layoutId: { type: String, default: MUSHAF_LAYOUT_MADANI_V2 },
     controlledPageNumber: { type: Number, default: null },
     hideDevNav: { type: Boolean, default: false },
     readerMode: { type: Boolean, default: false },
@@ -162,10 +177,16 @@ export default {
     }
   },
   computed: {
+    activeLayout() {
+      return getMushafLayout(this.layoutId)
+    },
+    isIndopakLayout() {
+      return isIndopakMushafLayout(this.layoutId)
+    },
     readerDesktopSpread() {
       return this.readerMode
         && this.mode === 'spread'
-        && shouldShowTwoMadaniPages(this.viewportWidth)
+        && shouldShowTwoMushafPages(this.viewportWidth, this.activeLayout)
     },
     spreadViewportFill() {
       return this.readerDesktopSpread
@@ -175,16 +196,16 @@ export default {
     },
     displayedPageNumber() {
       if (this.controlledPageNumber != null) {
-        return clampMadaniPage(this.controlledPageNumber)
+        return clampMushafPage(this.controlledPageNumber, this.activeLayout)
       }
-      const seeded = Number(this.page?.page_number) || 1
-      return clampMadaniPage(this.activePageNumber ?? seeded)
+      const seeded = Number(this.page?.page_number ?? this.page?.pageNumber) || 1
+      return clampMushafPage(this.activePageNumber ?? seeded, this.activeLayout)
     },
     mode() {
-      return shouldShowTwoMadaniPages(this.viewportWidth) ? 'spread' : 'single'
+      return shouldShowTwoMushafPages(this.viewportWidth, this.activeLayout) ? 'spread' : 'single'
     },
     spread() {
-      return resolveMadaniSpread(this.displayedPageNumber)
+      return resolveMushafSpread(this.displayedPageNumber, this.activeLayout)
     },
     currentLeaf() {
       if (
@@ -193,13 +214,15 @@ export default {
       ) {
         return this.fetchedLeaf
       }
-      const cached = getCachedMadaniPageLeaf(this.displayedPageNumber)
+      const cached = this.isIndopakLayout
+        ? getCachedMushafPageLeaf(this.displayedPageNumber, this.layoutId)
+        : getCachedMadaniPageLeaf(this.displayedPageNumber)
       if (cached) {
         return cached
       }
       if (
         this.page
-        && Number(this.page.page_number) === this.displayedPageNumber
+        && Number(this.page.page_number ?? this.page.pageNumber) === this.displayedPageNumber
         && this.fontFamily
         && this.fontUrl
       ) {
@@ -207,9 +230,10 @@ export default {
           page: this.page,
           fontFamily: this.fontFamily,
           fontUrl: this.fontUrl,
+          layoutId: this.layoutId,
         }
       }
-      return { page: null, fontFamily: '', fontUrl: '' }
+      return { page: null, fontFamily: '', fontUrl: '', layoutId: this.layoutId }
     },
     sessionBoundsActive() {
       return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
@@ -269,13 +293,14 @@ export default {
     },
     previousTarget() {
       return this.mode === 'spread'
-        ? previousMadaniSpread(this.displayedPageNumber)
-        : previousMadaniPage(this.displayedPageNumber)
+        ? previousMushafSpread(this.displayedPageNumber, this.activeLayout)
+        : previousMushafPage(this.displayedPageNumber, this.activeLayout)
     },
     nextTarget() {
+      // Bounds from activeLayout.pageCount (Madani 604 / IndoPak 610).
       return this.mode === 'spread'
-        ? nextMadaniSpread(this.displayedPageNumber)
-        : nextMadaniPage(this.displayedPageNumber)
+        ? nextMushafSpread(this.displayedPageNumber, this.activeLayout)
+        : nextMushafPage(this.displayedPageNumber, this.activeLayout)
     },
     navLabel() {
       if (this.mode === 'spread' && this.visiblePageNumbers.length === 2) {
@@ -288,6 +313,12 @@ export default {
     },
     nextLabel() {
       return this.mode === 'spread' ? 'Next spread' : 'Next page'
+    },
+    canGoPreviousPage() {
+      return this.previousTarget != null
+    },
+    canGoNextPage() {
+      return this.nextTarget != null
     },
   },
   watch: {
@@ -319,12 +350,13 @@ export default {
       this.page
       && this.fontFamily
       && this.fontUrl
-      && Number(this.page.page_number) > 0
+      && Number(this.page.page_number ?? this.page.pageNumber) > 0
     ) {
-      cacheMadaniPageLeaf(Number(this.page.page_number), {
+      this.cacheLeaf(Number(this.page.page_number ?? this.page.pageNumber), {
         page: this.page,
         fontFamily: this.fontFamily,
         fontUrl: this.fontUrl,
+        layoutId: this.layoutId,
       })
     }
     this.activePageNumber = this.displayedPageNumber
@@ -340,7 +372,7 @@ export default {
       this.onPopState = () => {
         const match = String(window.location.pathname || '').match(/\/madani\/page\/(\d+)/)
         if (!match) return
-        this.activePageNumber = clampMadaniPage(Number(match[1]))
+        this.activePageNumber = clampMushafPage(Number(match[1]), this.activeLayout)
       }
       window.addEventListener('popstate', this.onPopState)
     }
@@ -435,7 +467,7 @@ export default {
     },
     navigateClient(page) {
       if (this.controlledPageNumber != null) return
-      const target = clampMadaniPage(page)
+      const target = clampMushafPage(page, this.activeLayout)
       if (target === this.displayedPageNumber) return
       this.activePageNumber = target
       if (typeof window !== 'undefined' && window.history?.pushState) {
@@ -445,17 +477,41 @@ export default {
     schedulePreload() {
       if (this.preloadTimer) window.clearTimeout(this.preloadTimer)
       this.preloadTimer = window.setTimeout(() => {
-        preloadMadaniNavigationTargets(this.mode, this.displayedPageNumber)
         const pages = this.visibleLeaves.map((leaf) => leaf.number)
+        if (this.isIndopakLayout) {
+          prefetchMushafPageData(pages, this.layoutId)
+          void ensureIndopakNastaleeqFontForLayout(this.layoutId)
+          return
+        }
+        preloadMadaniNavigationTargets(this.mode, this.displayedPageNumber)
         prefetchQpcMadaniPageFonts(pages)
         if (this.tajweedEnabled) {
           prefetchQcfPageFonts(pages, { tajweed: true }).catch(() => {})
         }
       }, 120)
     },
+    async loadLeaf(page) {
+      if (this.isIndopakLayout) {
+        return loadMushafPageLeaf(page, this.layoutId)
+      }
+      return loadMadaniPageLeaf(page)
+    },
+    getCachedLeaf(page) {
+      if (this.isIndopakLayout) {
+        return getCachedMushafPageLeaf(page, this.layoutId)
+      }
+      return getCachedMadaniPageLeaf(page)
+    },
+    cacheLeaf(page, leaf) {
+      if (this.isIndopakLayout) {
+        cacheMushafPageLeaf(page, leaf, this.layoutId)
+        return
+      }
+      cacheMadaniPageLeaf(page, leaf)
+    },
     async ensureCurrentLeaf() {
       const page = this.displayedPageNumber
-      const cached = getCachedMadaniPageLeaf(page)
+      const cached = this.getCachedLeaf(page)
       if (cached?.page) {
         this.fetchedLeaf = cached
         await this.ensureSibling()
@@ -469,7 +525,7 @@ export default {
 
       if (
         this.page
-        && Number(this.page.page_number) === page
+        && Number(this.page.page_number ?? this.page.pageNumber) === page
         && this.fontFamily
         && this.fontUrl
       ) {
@@ -477,8 +533,9 @@ export default {
           page: this.page,
           fontFamily: this.fontFamily,
           fontUrl: this.fontUrl,
+          layoutId: this.layoutId,
         }
-        cacheMadaniPageLeaf(page, leaf)
+        this.cacheLeaf(page, leaf)
         this.fetchedLeaf = leaf
         await this.ensureSibling()
         this.schedulePreload()
@@ -487,7 +544,7 @@ export default {
 
       const token = ++this.fetchToken
       try {
-        const leaf = await loadMadaniPageLeaf(page)
+        const leaf = await this.loadLeaf(page)
         if (token !== this.fetchToken) return
         this.fetchedLeaf = leaf
       } catch {
@@ -506,13 +563,13 @@ export default {
         this.sibling = null
         return
       }
-      const cached = getCachedMadaniPageLeaf(other)
+      const cached = this.getCachedLeaf(other)
       if (cached) {
         this.sibling = cached
         return
       }
       try {
-        this.sibling = await loadMadaniPageLeaf(other)
+        this.sibling = await this.loadLeaf(other)
       } catch {
         this.sibling = null
       }
@@ -761,8 +818,30 @@ export default {
   }
 }
 
+/* IndoPak: two-page only at comfortable Nastaleeq width (≥1200). */
+@media (min-width: 1200px) {
+  .qpc-madani-shell[data-layout='indopak-15-qudratullah'] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill {
+    align-items: stretch;
+    min-height: min(74vh, calc(100dvh - 11.5rem));
+  }
+
+  .qpc-madani-shell[data-layout='indopak-15-qudratullah'] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill .qpc-madani-spread__leaf {
+    display: flex;
+    min-height: 100%;
+    align-self: stretch;
+  }
+}
+
 @media (min-width: 1080px) {
   .qpc-madani-shell--reader[data-spread-mode="spread"][data-desktop-short-surah="true"] .qpc-madani-spread--spread {
+    width: min(100%, 42rem);
+    max-width: min(100%, 42rem);
+    margin-inline: auto;
+  }
+}
+
+@media (min-width: 1200px) {
+  .qpc-madani-shell[data-layout='indopak-15-qudratullah'].qpc-madani-shell--reader[data-spread-mode="spread"][data-desktop-short-surah="true"] .qpc-madani-spread--spread {
     width: min(100%, 42rem);
     max-width: min(100%, 42rem);
     margin-inline: auto;

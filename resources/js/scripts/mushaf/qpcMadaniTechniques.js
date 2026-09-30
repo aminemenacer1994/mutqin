@@ -189,14 +189,21 @@ export function resolveCheckerHiddenWordState(wordAudioIndex, ayahKey, snapshot 
 
 export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, audioIndexMap = null) {
   const ayahKey = ayahKeyFromWord(word)
-  const wordAudioIndex = resolveQpcWordAudioIndex(Number(word?.word), ayahKey, audioIndexMap)
+  // Canonical spoken-word identity: verseKey + wordPosition (shared Madani/IndoPak).
+  const wordPosition = Number(word?.wordPosition ?? word?.word_position ?? word?.word)
+  const wordAudioIndex = word?.isEnd
+    ? null
+    : resolveQpcWordAudioIndex(wordPosition, ayahKey, audioIndexMap)
   const isAnchor = resolveAnchorWordState(wordAudioIndex, ayahKey, snapshot)
   const blur = isAyahBlurred(ayahKey, snapshot)
   const peek = blur && isAyahPeekRevealed(ayahKey, snapshot)
   const hiddenReveal = resolveHiddenRevealWordState(wordAudioIndex, ayahKey, snapshot)
   const checker = resolveCheckerHiddenWordState(wordAudioIndex, ayahKey, snapshot)
-  const masked = (hiddenReveal.masked && !hiddenReveal.revealedProgress)
+  // Ornaments keep layout space but are never Progressive-Hide targets.
+  const masked = !word?.isEnd && (
+    (hiddenReveal.masked && !hiddenReveal.revealedProgress)
     || (checker.masked && !checker.peeked)
+  )
 
   return {
     ayahKey,
@@ -213,7 +220,7 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
     masked,
     hiddenRevealCurrent: hiddenReveal.current,
     hiddenRevealRevealed: hiddenReveal.revealedProgress,
-    checkerMasked: checker.masked && !checker.peeked,
+    checkerMasked: !word?.isEnd && checker.masked && !checker.peeked,
   }
 }
 

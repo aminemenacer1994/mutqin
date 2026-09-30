@@ -20,7 +20,9 @@
       'qpc-madani-page--session-scoped': sessionScoped,
       'qpc-madani-page--session-viewport-fill': sessionViewportFill,
       'qpc-madani-page--spread-viewport-fill': spreadViewportFill,
+      'qpc-madani-page--indopak': isIndopakLayout,
     }"
+    :data-layout="layoutId"
     :aria-busy="!fontReady || !fitted ? 'true' : 'false'"
   >
     <div class="qpc-madani-page__ornament">
@@ -32,6 +34,7 @@
           v-for="line in lines"
           :key="`${line.line_type || line.type}-${line.line_number}-${line.surah_number || 0}`"
           :line="line"
+          :layout-id="layoutId"
           :session-scoped="sessionScoped"
           :font-family="fontFamily"
           :selected-location="selectedLocation"
@@ -75,10 +78,23 @@
 <script>
 import { loadSurahNamesFont, loadQcfPageFont } from '../../scripts/mushaf/qcfFontLoader'
 import { ensureQpcMadaniPageFont } from '../../scripts/mushaf/qpcMadaniFontLoader'
+import { ensureIndopakNastaleeqFontForLayout } from '../../scripts/mushaf/indopakNastaleeqFont'
+import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
+import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
+import {
+  applyIndopakPageTypographyVars,
+  clearIndopakPageTypographyVars,
+  indopakFitSafety,
+  indopakFitWordSizeCap,
+  INDOPAK_PAGE_TYPOGRAPHY,
+  mushafTwoPageMinWidth,
+} from '../../scripts/mushaf/indopakPageTypography'
 import { buildMadaniSelection, prepareQpcMadaniSessionLines } from '../../scripts/mushaf/qpcMadaniSelection'
 import MadaniLine from './MadaniLine.vue'
 
-const MEASURE_SIZE = 40
+const MADANI_MEASURE_SIZE = 40
+/** IndoPak Nastaleeq measure base — independent of Madani QCF 40px probe. */
+const INDOPAK_MEASURE_SIZE = 36
 
 export default {
   name: 'MadaniPage',
@@ -95,6 +111,10 @@ export default {
     fontUrl: {
       type: String,
       required: true,
+    },
+    layoutId: {
+      type: String,
+      default: MUSHAF_LAYOUT_MADANI_V2,
     },
     embedded: {
       type: Boolean,
@@ -177,11 +197,19 @@ export default {
     }
   },
   computed: {
+    isIndopakLayout() {
+      return isIndopakMushafLayout(this.layoutId)
+    },
     pageNumber() {
-      return Number(this.page?.page_number) || 1
+      return Number(this.page?.page_number ?? this.page?.pageNumber) || 1
     },
     lines() {
-      const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
+      const raw = Array.isArray(this.page?.lines) ? [...this.page.lines] : []
+      raw.sort((a, b) => {
+        const left = Math.trunc(Number(a?.line_number ?? a?.lineNumber) || 0)
+        const right = Math.trunc(Number(b?.line_number ?? b?.lineNumber) || 0)
+        return left - right
+      })
       const showHeader = !this.sessionScoped || this.showSessionSurahHeader
       return prepareQpcMadaniSessionLines(raw, this.sessionStartAyah, this.sessionEndAyah, {
         showSurahHeader: showHeader,
@@ -224,6 +252,12 @@ export default {
     fontScale() {
       this.scheduleFit()
     },
+    layoutId() {
+      this.applyLayoutTypography()
+      this.fontReady = false
+      this.fitted = false
+      this.readyAndFit()
+    },
     spreadViewportFill() {
       this.scheduleFit()
     },
@@ -250,6 +284,7 @@ export default {
     },
   },
   mounted() {
+    this.applyLayoutTypography()
     this.observeResize()
     this.readyAndFit()
   },
@@ -261,8 +296,27 @@ export default {
     }
     this.visualViewportHandler = null
     if (this.fitTimer) window.clearTimeout(this.fitTimer)
+    clearIndopakPageTypographyVars(this.$el)
   },
   methods: {
+    applyLayoutTypography() {
+      const root = this.$el
+      if (!(root instanceof HTMLElement)) return
+      if (this.isIndopakLayout) {
+        applyIndopakPageTypographyVars(root)
+        if (!root.style.getPropertyValue('--qpc-word-size')) {
+          root.style.setProperty('--qpc-word-size', INDOPAK_PAGE_TYPOGRAPHY.wordSize)
+        }
+      } else {
+        clearIndopakPageTypographyVars(root)
+      }
+    },
+    measureSize() {
+      return this.isIndopakLayout ? INDOPAK_MEASURE_SIZE : MADANI_MEASURE_SIZE
+    },
+    twoPageMinWidth() {
+      return mushafTwoPageMinWidth(this.layoutId)
+    },
     onWordSelect(location) {
       this.selectedLocation = String(location || '')
       this.$emit('select', this.selectedLocation)
@@ -323,13 +377,15 @@ export default {
     },
     async readyAndFit() {
       try {
-        if (this.fontFamily && this.fontUrl) {
+        if (this.isIndopakLayout) {
+          await ensureIndopakNastaleeqFontForLayout(this.layoutId)
+        } else if (this.fontFamily && this.fontUrl) {
           await ensureQpcMadaniPageFont(this.pageNumber, this.fontFamily, this.fontUrl)
         }
       } catch (error) {
         console.warn('[MadaniPage] page font load failed', this.pageNumber, error)
       }
-      if (this.tajweedEnabled) {
+      if (!this.isIndopakLayout && this.tajweedEnabled) {
         try {
           await loadQcfPageFont(this.pageNumber, { tajweed: true })
         } catch {
@@ -377,7 +433,9 @@ export default {
       const targets = measurable.length ? measurable : lines
 
       this.fitting = true
-      root.style.setProperty('--qpc-word-size', `${MEASURE_SIZE}px`)
+      const measureSize = this.measureSize()
+      this.applyLayoutTypography()
+      root.style.setProperty('--qpc-word-size', `${measureSize}px`)
       const previous = targets.map(line => ({
         width: line.style.width,
         justify: line.style.justifyContent,
@@ -406,42 +464,57 @@ export default {
 
       const narrow = available < 440
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
+      const twoPageMin = this.twoPageMinWidth()
       const desktopSpread = typeof window !== 'undefined'
-        && window.innerWidth >= 1080
+        && window.innerWidth >= twoPageMin
         && this.spreadViewportFill
       const sessionSheet = mobile && !this.embedded
-      let safety = this.embedded || sessionSheet
-        ? (narrow ? 0.88 : 0.92)
-        : (mobile ? 0.9 : (narrow ? 0.9 : 0.95))
-      if (sessionSheet) {
-        safety = 0.985
+      const fitCtx = {
+        mobile,
+        narrow,
+        desktopSpread,
+        sessionSheet,
+        embedded: !!this.embedded,
       }
-      if (this.spreadViewportFill && !desktopSpread && !mobile) {
-        safety = Math.min(safety, narrow ? 0.74 : 0.78)
-      } else if (desktopSpread && this.embedded) {
-        safety = narrow ? 0.9 : 0.95
-      }
-      let cap = this.embedded
-        ? (narrow ? 34 : 38)
-        : (mobile ? (narrow ? 52 : 60) : (narrow ? 40 : 46))
-      if (sessionSheet) {
-        cap = narrow ? 58 : 68
-      }
-      if (desktopSpread && this.embedded) {
-        cap = narrow ? 48 : 64
+      let safety
+      let cap
+      if (this.isIndopakLayout) {
+        safety = indopakFitSafety(fitCtx)
+        cap = indopakFitWordSizeCap(fitCtx)
+      } else {
+        safety = this.embedded || sessionSheet
+          ? (narrow ? 0.88 : 0.92)
+          : (mobile ? 0.9 : (narrow ? 0.9 : 0.95))
+        if (sessionSheet) {
+          safety = 0.985
+        }
+        if (this.spreadViewportFill && !desktopSpread && !mobile) {
+          safety = Math.min(safety, narrow ? 0.74 : 0.78)
+        } else if (desktopSpread && this.embedded) {
+          safety = narrow ? 0.9 : 0.95
+        }
+        cap = this.embedded
+          ? (narrow ? 34 : 38)
+          : (mobile ? (narrow ? 52 : 60) : (narrow ? 40 : 46))
+        if (sessionSheet) {
+          cap = narrow ? 58 : 68
+        }
+        if (desktopSpread && this.embedded) {
+          cap = narrow ? 48 : 64
+        }
       }
       const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
         ? Number(this.fontScale)
         : 1
-      const widthFit = (available / widest) * MEASURE_SIZE * safety
+      const widthFit = (available / widest) * measureSize * safety
       let rawSize = Math.min(cap * requested, widthFit)
       if (this.sessionViewportFill) {
-        const heightFit = this.viewportBandHeightFit(root, sheet, targets.length)
+        const heightFit = this.viewportBandHeightFit(root, sheet, targets.length, measureSize)
         if (Number.isFinite(heightFit) && heightFit > 0) {
           rawSize = Math.min(cap * requested, widthFit, heightFit)
         }
       } else if (this.spreadViewportFill && !this.sessionScoped) {
-        const heightFit = this.viewportBandHeightFit(root, sheet, 15)
+        const heightFit = this.viewportBandHeightFit(root, sheet, 15, measureSize)
         if (Number.isFinite(heightFit) && heightFit > 0) {
           rawSize = Math.min(cap * requested, widthFit, heightFit)
         }
@@ -510,7 +583,7 @@ export default {
       let inner = Math.max(0, sheet.clientWidth - padding)
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
       if ((this.spreadViewportFill || this.embedded) && !mobile) {
-        const desktopSpread = typeof window !== 'undefined' && window.innerWidth >= 1080
+        const desktopSpread = typeof window !== 'undefined' && window.innerWidth >= this.twoPageMinWidth()
         inner = Math.max(0, inner - (desktopSpread ? 6 : 28))
       }
       return inner
@@ -518,13 +591,13 @@ export default {
     sessionViewportTargetHeight() {
       if (typeof window === 'undefined') return 0
       const viewport = window.visualViewport?.height || window.innerHeight || 0
-      const desktop = window.innerWidth >= 1080
+      const desktop = window.innerWidth >= this.twoPageMinWidth()
       const band = desktop
         ? Math.min(viewport * 0.74, viewport - 184)
         : Math.min(viewport * 0.72, viewport - 168)
       return Math.max(320, Math.round(band))
     },
-    viewportBandHeightFit(root, sheet, lineSlots) {
+    viewportBandHeightFit(root, sheet, lineSlots, measureSize = this.measureSize()) {
       if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement) || lineSlots < 1) return null
       const targetHeight = this.sessionViewportTargetHeight()
       const folio = root.querySelector('.qpc-madani-page__folio')
@@ -533,10 +606,13 @@ export default {
       const sheetPadding = Number.parseFloat(sheetStyles.paddingTop) + Number.parseFloat(sheetStyles.paddingBottom)
       const availableHeight = Math.max(0, targetHeight - folioHeight - sheetPadding)
       if (availableHeight < 96) return null
+      const defaultMin = this.isIndopakLayout
+        ? Number.parseFloat(INDOPAK_PAGE_TYPOGRAPHY.lineMinHeight)
+        : 1.62
       const lineMinHeight = Number.parseFloat(
-        getComputedStyle(root).getPropertyValue('--qpc-line-min-height') || '1.62',
-      ) || 1.62
-      return (availableHeight / lineSlots) / lineMinHeight * MEASURE_SIZE * 0.92
+        getComputedStyle(root).getPropertyValue('--qpc-line-min-height') || String(defaultMin),
+      ) || defaultMin
+      return (availableHeight / lineSlots) / lineMinHeight * measureSize * 0.92
     },
   },
 }
@@ -832,5 +908,104 @@ export default {
     max(clamp(0.45rem, 1.1vw, 0.85rem), env(safe-area-inset-right, 0px))
     max(clamp(0.28rem, 0.8vw, 0.42rem), env(safe-area-inset-bottom, 0px))
     max(clamp(0.45rem, 1.1vw, 0.85rem), env(safe-area-inset-left, 0px));
+}
+
+/*
+ * IndoPak 15 Lines — Qudratullah typography (layout-specific; not Madani QCF values).
+ * Word allocation / line breaks stay fixed — only box metrics scale.
+ */
+.qpc-madani-page--indopak {
+  --qpc-word-size: 17px;
+  --qpc-line-height: 1.92;
+  --qpc-line-min-height: 2.12;
+  --qpc-line-gap: 0.14;
+  --qpc-surah-title-scale: 2.0;
+  --qpc-page-padding-block: 0.62rem;
+  --qpc-page-padding-inline: 0.48rem;
+  --indopak-embedded-padding-block: 1.15rem;
+  --indopak-embedded-padding-inline: 1.05rem;
+  --indopak-mobile-padding-block: 0.55rem;
+  --indopak-mobile-padding-inline: 0.42rem;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.qpc-madani-page--indopak.qpc-madani-page--single {
+  --qpc-line-height: 1.92;
+  --qpc-line-min-height: 2.12;
+  --qpc-surah-title-scale: 2.0;
+  width: 100%;
+  max-width: 100%;
+  padding: 0.08rem;
+}
+
+.qpc-madani-page--indopak.qpc-madani-page--single .qpc-madani-page__sheet {
+  padding:
+    var(--qpc-page-padding-block, 0.62rem)
+    var(--qpc-page-padding-inline, 0.48rem)
+    0.28rem;
+}
+
+.qpc-madani-page--indopak.qpc-madani-page--embedded .qpc-madani-page__sheet {
+  padding:
+    var(--indopak-embedded-padding-block, 1.15rem)
+    var(--indopak-embedded-padding-inline, 1.05rem)
+    0.5rem;
+}
+
+.qpc-madani-page--indopak.qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
+  padding:
+    max(var(--indopak-mobile-padding-block, 0.55rem), calc(env(safe-area-inset-top, 0px) + 0.2rem))
+    max(var(--indopak-mobile-padding-inline, 0.42rem), env(safe-area-inset-right, 0px))
+    max(0.85rem, calc(env(safe-area-inset-bottom, 0px) + 0.4rem))
+    max(var(--indopak-mobile-padding-inline, 0.42rem), env(safe-area-inset-left, 0px));
+}
+
+.qpc-madani-page--indopak .qpc-madani-page__sheet {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.qpc-madani-page--indopak :deep(.qpc-madani-line--ayah) {
+  /* 15 fixed lines — preserve geometry; gap from --qpc-line-gap only. */
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .qpc-madani-page--indopak,
+  .qpc-madani-page--indopak.qpc-madani-page--single,
+  .qpc-madani-page--indopak.qpc-madani-page--borderless {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    overflow-x: clip;
+  }
+
+  .qpc-madani-page--indopak .qpc-madani-page__ornament,
+  .qpc-madani-page--indopak .qpc-madani-page__sheet {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+}
+
+@media (min-width: 1200px) {
+  .qpc-madani-page--indopak.qpc-madani-page--embedded.qpc-madani-page--spread-viewport-fill {
+    flex: 1 1 auto;
+    min-height: 100%;
+  }
+
+  .qpc-madani-page--indopak.qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet {
+    display: grid;
+    grid-template-rows: repeat(15, minmax(0, 1fr));
+    justify-content: stretch;
+    height: 100%;
+  }
+
+  .qpc-madani-page--indopak.qpc-madani-page--spread-viewport-fill .qpc-madani-line {
+    min-height: 0;
+    margin: 0;
+  }
 }
 </style>

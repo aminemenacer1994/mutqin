@@ -1,13 +1,21 @@
 /**
- * DOM helpers for QPC Madani audio highlighting without Vue re-renders per tick.
+ * DOM helpers for shared mushaf audio highlighting (Madani + IndoPak).
+ * Canonical identity: verseKey + wordPosition — never layout page numbers.
  */
 
 export function resolveQpcWordAudioIndex(wordPosition, verseKey, audioIndexMap) {
   const position = Number(wordPosition)
   if (!Number.isFinite(position) || position < 1 || !verseKey) return null
   const mapKey = `${verseKey}:${position}`
-  if (audioIndexMap instanceof Map && audioIndexMap.has(mapKey)) {
-    return audioIndexMap.get(mapKey)
+  if (audioIndexMap instanceof Map) {
+    if (audioIndexMap.has(mapKey)) {
+      return audioIndexMap.get(mapKey)
+    }
+    // Map present but position absent (ayah-end / pause ornaments): do not
+    // fall back to position-1 — that skews hide/highlight onto the wrong word.
+    if (audioIndexMap.size > 0) {
+      return null
+    }
   }
   return position - 1
 }

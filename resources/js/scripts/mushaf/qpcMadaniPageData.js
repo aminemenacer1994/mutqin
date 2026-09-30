@@ -5,6 +5,7 @@ import {
   previousMadaniSpread,
   resolveMadaniSpread,
 } from './madaniPagePair.js'
+import { MUSHAF_LAYOUT_MADANI_V2, mushafPageJsonUrl } from './mushafLayouts.js'
 
 /** @typedef {{ page: object, fontFamily: string, fontUrl: string }} MadaniPageLeaf */
 
@@ -17,8 +18,7 @@ const pageDataInflight = new Map()
 export const MADANI_V2_PAGES_BASE = '/quran/madani-v2/pages'
 
 export function madaniPageJsonUrl(pageNumber) {
-  const page = clampMadaniPage(pageNumber)
-  return `${MADANI_V2_PAGES_BASE}/${String(page).padStart(3, '0')}.json`
+  return mushafPageJsonUrl(pageNumber, MUSHAF_LAYOUT_MADANI_V2)
 }
 
 export function getCachedMadaniPageLeaf(pageNumber) {

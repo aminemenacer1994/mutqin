@@ -21,6 +21,11 @@ const map = new Map([
 assert.equal(resolveQpcWordAudioIndex(1, '2:30', map), 0)
 assert.equal(resolveQpcWordAudioIndex(5, '2:30', map), 4)
 assert.equal(resolveQpcWordAudioIndex(3, '2:30', null), 2)
+assert.equal(
+  resolveQpcWordAudioIndex(9, '2:30', map),
+  null,
+  'missing map position must not fall back when the session map is loaded',
+)
 
 const doc = {
   querySelectorAll(selector) {

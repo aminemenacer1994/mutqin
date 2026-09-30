@@ -1588,7 +1588,12 @@
       "stacked": "Bertumpuk",
       "mushaf": "« Mushaf»",
       "stackedHint": "Bertumpuk: satu ayat demi satu, tenang untuk rentang pendek.",
-      "mushafHint": "Mushaf: tata letak halaman. Bantuan baca dan tajwid ada di Kontrol dan Bantuan."
+      "mushafHint": "Mushaf: tata letak halaman. Bantuan baca dan tajwid ada di Kontrol dan Bantuan.",
+      "mushafEdition": "Edisi mushaf",
+      "madinahV2": "Madinah V2",
+      "indopak15": "IndoPak 15 Lines",
+      "qudratullah": "Qudratullah",
+      "indopakHint": "IndoPak 15 Lines (Qudratullah)"
     },
     "actions": {
       "newSession": "Sesi Baru",

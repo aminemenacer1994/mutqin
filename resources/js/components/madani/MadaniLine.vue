@@ -4,17 +4,27 @@
     :class="[
       `qpc-madani-line--${lineType}`,
       {
-        'qpc-madani-line--centered': Number(line.is_centered) === 1,
+        'qpc-madani-line--centered': isCentered,
         'qpc-madani-line--session-partial': sessionPartialLine,
+        'qpc-madani-line--indopak': isIndopakLayout,
       },
     ]"
-    :data-line="line.line_number"
+    :data-line="lineNumber"
     :data-line-type="lineType"
-    :data-centered="line.is_centered"
-    :data-surah="line.surah_number"
+    :data-centered="isCentered ? 1 : 0"
+    :data-surah="line.surah_number ?? line.surahNumber"
+    :data-layout="layoutId"
   >
+    <MadaniSurahHeading
+      v-if="isSurahNameLine && isIndopakLayout"
+      :surah-number="line.surah_number ?? line.surahNumber"
+      :glyph="headerText"
+      :font-family="surahFontFamily"
+      :ready="surahNamesReady"
+    />
+
     <div
-      v-if="isSurahNameLine"
+      v-else-if="isSurahNameLine"
       class="qpc-madani-surah-header"
       :data-surah="line.surah_number"
     >
@@ -34,8 +44,9 @@
       >
         <MadaniWord
           v-for="word in line.words"
-          :key="word.id"
+          :key="wordKey(word)"
           :word="word"
+          :layout-id="layoutId"
           :font-family="fontFamily"
           :selected="selectedLocation === word.location"
           :selection="selection"
@@ -57,8 +68,10 @@
       <span
         v-else
         class="qpc-madani-basmallah"
+        :class="{ 'qpc-madani-basmallah--indopak': isIndopakLayout }"
         dir="rtl"
         lang="ar"
+        :style="basmalaStyle"
         aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
       >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
     </template>
@@ -66,8 +79,9 @@
     <template v-else-if="lineType === 'ayah'">
       <MadaniWord
         v-for="word in line.words"
-        :key="word.id"
+        :key="wordKey(word)"
         :word="word"
+        :layout-id="layoutId"
         :font-family="fontFamily"
         :selected="selectedLocation === word.location"
         :selection="selection"
@@ -92,11 +106,15 @@
 <script>
 import { surahNameGlyphText } from '../../scripts/mushaf/madaniPageLayout'
 import { SURAH_NAMES_FONT_FAMILY } from '../../scripts/mushaf/qcfFontLoader'
+import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
+import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
+import { INDOPAK_NASTALEEQ_FONT_STACK } from '../../scripts/mushaf/indopakNastaleeqFont'
 import MadaniWord from './MadaniWord.vue'
+import MadaniSurahHeading from './MadaniSurahHeading.vue'
 
 export default {
   name: 'MadaniLine',
-  components: { MadaniWord },
+  components: { MadaniWord, MadaniSurahHeading },
   emits: ['select', 'ayah-enter', 'ayah-leave', 'peek-enter', 'peek-leave', 'peek-touchstart', 'peek-touchend', 'peek-touchcancel'],
   props: {
     line: {
@@ -106,6 +124,10 @@ export default {
     fontFamily: {
       type: String,
       required: true,
+    },
+    layoutId: {
+      type: String,
+      default: MUSHAF_LAYOUT_MADANI_V2,
     },
     selectedLocation: {
       type: String,
@@ -145,11 +167,22 @@ export default {
     },
   },
   computed: {
+    isIndopakLayout() {
+      return isIndopakMushafLayout(this.layoutId)
+    },
     sessionPartialLine() {
       return this.sessionScoped && Number(this.line?.session_partial_line) === 1
     },
+    lineNumber() {
+      return this.line?.line_number ?? this.line?.lineNumber
+    },
     lineType() {
       return String(this.line?.line_type || this.line?.type || '')
+    },
+    isCentered() {
+      return this.line?.centered === true
+        || this.line?.centered === 1
+        || Number(this.line?.is_centered) === 1
     },
     isSurahNameLine() {
       return this.lineType === 'surah_name'
@@ -158,14 +191,24 @@ export default {
       return this.lineType === 'basmallah' || this.lineType === 'basmala'
     },
     headerText() {
-      if (!this.isSurahNameLine || this.line.surah_number === '' || this.line.surah_number == null) {
+      const surah = this.line.surah_number ?? this.line.surahNumber
+      if (!this.isSurahNameLine || surah === '' || surah == null) {
         return ''
       }
 
-      return surahNameGlyphText(this.line.surah_number)
+      return surahNameGlyphText(surah)
     },
     surahFontFamily() {
       return SURAH_NAMES_FONT_FAMILY
+    },
+    basmalaStyle() {
+      if (!this.isIndopakLayout) return null
+      return { fontFamily: INDOPAK_NASTALEEQ_FONT_STACK }
+    },
+  },
+  methods: {
+    wordKey(word) {
+      return word?.location || word?.id || word?.wordIndex || JSON.stringify(word)
     },
   },
 }
@@ -192,6 +235,7 @@ export default {
 
 .qpc-madani-line--ayah {
   min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62));
+  margin-block-end: calc(var(--qpc-word-size, 22px) * var(--qpc-line-gap, 0));
 }
 
 .qpc-madani-line--centered,
@@ -269,6 +313,10 @@ export default {
   line-height: 1.35;
   white-space: nowrap;
   letter-spacing: 0;
+}
+
+.qpc-madani-basmallah--indopak {
+  font-family: IndopakNastaleeq, "Noto Nastaliq Urdu", "Amiri Quran", "Noto Naskh Arabic", serif !important;
 }
 
 .visually-hidden {

@@ -2,6 +2,8 @@
 
 namespace App\Support\Madani;
 
+use App\Support\Mushaf\MushafLayoutRegistry;
+
 /**
  * Open-mushaf pairing: odd page on the right, even page on the left.
  * Spreads are (1,2), (3,4), …, (603,604). Never emits 0 or 605.
@@ -10,7 +12,12 @@ final class MadaniPagePair
 {
     public static function clamp(int $page): int
     {
-        return max(QpcV2PageAdapter::MIN_PAGE, min(QpcV2PageAdapter::MAX_PAGE, $page));
+        return MushafLayoutRegistry::madaniV2()->clampPage($page);
+    }
+
+    private static function maxPage(): int
+    {
+        return MushafLayoutRegistry::madaniV2()->pageCount;
     }
 
     /**
@@ -21,7 +28,7 @@ final class MadaniPagePair
         $page = self::clamp($page);
         $right = $page % 2 === 1 ? $page : $page - 1;
         $left = $right + 1;
-        if ($left > QpcV2PageAdapter::MAX_PAGE) {
+        if ($left > self::maxPage()) {
             return [
                 'right' => $right,
                 'left' => null,
@@ -40,7 +47,7 @@ final class MadaniPagePair
     {
         $right = self::spread($page)['right'];
 
-        return $right > QpcV2PageAdapter::MIN_PAGE ? $right - 2 : null;
+        return $right > 1 ? $right - 2 : null;
     }
 
     public static function nextSpread(int $page): ?int
@@ -48,20 +55,20 @@ final class MadaniPagePair
         $spread = self::spread($page);
         $last = $spread['left'] ?? $spread['right'];
 
-        return $last < QpcV2PageAdapter::MAX_PAGE ? $last + 1 : null;
+        return $last < self::maxPage() ? $last + 1 : null;
     }
 
     public static function previousPage(int $page): ?int
     {
         $page = self::clamp($page);
 
-        return $page > QpcV2PageAdapter::MIN_PAGE ? $page - 1 : null;
+        return $page > 1 ? $page - 1 : null;
     }
 
     public static function nextPage(int $page): ?int
     {
         $page = self::clamp($page);
 
-        return $page < QpcV2PageAdapter::MAX_PAGE ? $page + 1 : null;
+        return $page < self::maxPage() ? $page + 1 : null;
     }
 }

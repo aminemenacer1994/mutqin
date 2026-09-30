@@ -2,14 +2,15 @@
   <span
     class="qpc-madani-word"
     :data-location="word.location"
+    :data-verse-key="verseKey || null"
+    :data-word-position="wordPosition || null"
     :data-surah="word.surah"
     :data-ayah="word.ayah"
     :data-word="word.word"
     :data-page="word.page"
     :data-line="word.line"
     :data-word-id="word.id"
-    :data-ayah-key="ayahKey || null"
-    :data-verse-key="ayahKey || null"
+    :data-ayah-key="verseKey || null"
     :data-word-index="wordAudioIndex != null ? wordAudioIndex : null"
     :data-ayah-state="ayahStateAttr"
     :data-anchor="techniqueState.isAnchor ? '1' : null"
@@ -44,6 +45,8 @@ import {
   qpcMadaniWordProgressClass,
   resolveQpcMadaniWordProgressState,
 } from '../../scripts/mushaf/qpcMadaniProgress'
+import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
+import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
 
 export default {
   name: 'MadaniWord',
@@ -56,6 +59,10 @@ export default {
     fontFamily: {
       type: String,
       required: true,
+    },
+    layoutId: {
+      type: String,
+      default: MUSHAF_LAYOUT_MADANI_V2,
     },
     selected: {
       type: Boolean,
@@ -98,7 +105,18 @@ export default {
     restoreQpcMadaniDomManagedClasses(this.$el, this.persistedDomClasses)
   },
   computed: {
+    isIndopakLayout() {
+      return isIndopakMushafLayout(this.layoutId)
+    },
     glyphPresentation() {
+      // IndoPak is Unicode text + IndopakNastaleeq — never swap to QCF page glyphs.
+      if (this.isIndopakLayout) {
+        return {
+          text: String(this.word?.text || ''),
+          useTajweedFont: false,
+          fontFamily: '',
+        }
+      }
       return resolveQpcMadaniWordGlyph({
         word: this.word,
         tajweedEnabled: this.tajweedEnabled,
@@ -114,8 +132,17 @@ export default {
       }
       return this.fontFamily
     },
-    ayahKey() {
+    verseKey() {
+      const fromWord = String(this.word?.verseKey || this.word?.verse_key || '').trim()
+      if (fromWord && fromWord.split(':').length === 2) return fromWord
       return ayahKeyFromWord(this.word)
+    },
+    wordPosition() {
+      const n = Number(this.word?.wordPosition ?? this.word?.word_position ?? this.word?.word)
+      return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null
+    },
+    ayahKey() {
+      return this.verseKey
     },
     techniqueState() {
       return resolveQpcMadaniWordTechniqueState(
@@ -149,6 +176,8 @@ export default {
       return {
         'is-selected': this.selected,
         'qpc-madani-word--tajweed-glyph': this.glyphPresentation.useTajweedFont,
+        'qpc-madani-word--indopak': this.isIndopakLayout,
+        'qpc-madani-word--ornament': !!this.word?.isEnd,
         ...madaniWordVisualClass(this.visualState),
         ...madaniQpcWordTechniqueClass(this.techniqueState),
         ...qpcMadaniWordProgressClass(this.progressState),
@@ -157,6 +186,7 @@ export default {
   },
   methods: {
     onSelect() {
+      // Ornaments stay in layout for ayah selection, but do not drive word-audio.
       this.$emit('select', this.word.location)
     },
     onMouseEnter() {
@@ -195,6 +225,7 @@ export default {
   position: relative;
   display: inline-block;
   flex: 0 0 auto;
+  flex-shrink: 0;
   min-width: 0;
   min-height: 0;
   width: auto;
@@ -211,6 +242,10 @@ export default {
   vertical-align: baseline;
 }
 
+/*
+ * Progressive Mushaf Hiding — preserve occupied width/space.
+ * Keep the node in flow; hide via transparent ink + overlay only.
+ */
 .qpc-madani-word.is-word-masked,
 .qpc-madani-word.word-hidden,
 .qpc-madani-word.memory-word-hidden,
@@ -220,6 +255,10 @@ export default {
   text-shadow: none;
   user-select: none;
   -webkit-user-select: none;
+  /* Keep the glyph box in flow so reveal cannot reflow the line. */
+  visibility: visible;
+  display: inline-block;
+  opacity: 1;
 }
 
 .qpc-madani-word.is-word-masked::after,

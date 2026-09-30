@@ -64,6 +64,11 @@ export function parseAyahKey(key) {
 }
 
 export function ayahKeyFromWord(word = {}) {
+  const verseKey = String(word?.verseKey || word?.verse_key || '').trim()
+  if (verseKey) {
+    const parsed = parseAyahKey(verseKey)
+    if (parsed?.key) return parsed.key
+  }
   if (word?.surah && word?.ayah) {
     const parsed = parseAyahKey(`${word.surah}:${word.ayah}`)
     return parsed?.key || ''

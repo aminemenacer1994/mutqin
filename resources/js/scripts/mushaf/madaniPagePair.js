@@ -1,27 +1,52 @@
-export const MADANI_MIN_PAGE = 1
-export const MADANI_MAX_PAGE = 604
+import {
+  clampMushafPage,
+  DEFAULT_MUSHAF_LAYOUT_ID,
+  getMushafLayout,
+  MUSHAF_LAYOUT_MADANI_V2,
+} from './mushafLayouts.js'
+import {
+  MADANI_TWO_PAGE_MIN_WIDTH as INDOPAK_SHARED_MADANI_TWO_PAGE,
+  mushafTwoPageMinWidth,
+  shouldShowTwoMushafPages,
+} from './indopakPageTypography.js'
 
-/** Two pages only when each leaf stays at least this wide. */
-export const MADANI_TWO_PAGE_MIN_WIDTH = 1080
+const MADANI_LAYOUT = getMushafLayout(MUSHAF_LAYOUT_MADANI_V2)
+
+export const MADANI_MIN_PAGE = 1
+export const MADANI_MAX_PAGE = MADANI_LAYOUT.pageCount
+
+/** Two pages only when each leaf stays at least this wide (Madani V2). */
+export const MADANI_TWO_PAGE_MIN_WIDTH = INDOPAK_SHARED_MADANI_TWO_PAGE
 
 export function clampMadaniPage(page) {
-  const n = Number(page)
-  if (!Number.isFinite(n)) return MADANI_MIN_PAGE
-  return Math.max(MADANI_MIN_PAGE, Math.min(MADANI_MAX_PAGE, Math.trunc(n)))
+  return clampMushafPage(page, MUSHAF_LAYOUT_MADANI_V2)
 }
 
 /**
  * RTL open-mushaf pair: odd page on the right, even page on the left.
- * Spreads are (1,2) … (603,604). Never returns 0 or 605.
+ * Page bounds come from activeLayout.pageCount (Madani 604 vs IndoPak 610).
+ *
+ * @param {number|string} page
+ * @param {string | { id?: string, pageCount?: number } | null | undefined} [layoutId]
+ * @returns {{ right: number, left: number | null, pages: number[] }}
  */
-export function resolveMadaniSpread(page) {
-  const current = clampMadaniPage(page)
+export function resolveMushafSpread(page, layoutId = DEFAULT_MUSHAF_LAYOUT_ID) {
+  const layout = getMushafLayout(layoutId)
+  const maxPage = layout.pageCount
+  const current = clampMushafPage(page, layout)
   const right = current % 2 === 1 ? current : current - 1
   const left = right + 1
-  if (left > MADANI_MAX_PAGE) {
+  if (left > maxPage) {
     return { right, left: null, pages: [right] }
   }
   return { right, left, pages: [right, left] }
+}
+
+/**
+ * RTL open-mushaf pair for Madani V2: (1,2) … (pageCount-1, pageCount).
+ */
+export function resolveMadaniSpread(page) {
+  return resolveMushafSpread(page, MUSHAF_LAYOUT_MADANI_V2)
 }
 
 export function previousMadaniSpread(page) {
@@ -30,24 +55,48 @@ export function previousMadaniSpread(page) {
 }
 
 export function nextMadaniSpread(page) {
+  const layout = getMushafLayout(MUSHAF_LAYOUT_MADANI_V2)
   const spread = resolveMadaniSpread(page)
   const last = spread.left ?? spread.right
-  return last < MADANI_MAX_PAGE ? last + 1 : null
+  return last < layout.pageCount ? last + 1 : null
+}
+
+export function previousMushafPage(page, layoutId = DEFAULT_MUSHAF_LAYOUT_ID) {
+  const current = clampMushafPage(page, layoutId)
+  return current > 1 ? current - 1 : null
+}
+
+export function nextMushafPage(page, layoutId = DEFAULT_MUSHAF_LAYOUT_ID) {
+  const layout = getMushafLayout(layoutId)
+  const current = clampMushafPage(page, layout)
+  return current < layout.pageCount ? current + 1 : null
+}
+
+export function previousMushafSpread(page, layoutId = DEFAULT_MUSHAF_LAYOUT_ID) {
+  const right = resolveMushafSpread(page, layoutId).right
+  return right > 1 ? right - 2 : null
+}
+
+export function nextMushafSpread(page, layoutId = DEFAULT_MUSHAF_LAYOUT_ID) {
+  const layout = getMushafLayout(layoutId)
+  const spread = resolveMushafSpread(page, layout)
+  const last = spread.left ?? spread.right
+  return last < layout.pageCount ? last + 1 : null
 }
 
 export function previousMadaniPage(page) {
-  const current = clampMadaniPage(page)
-  return current > MADANI_MIN_PAGE ? current - 1 : null
+  return previousMushafPage(page, MUSHAF_LAYOUT_MADANI_V2)
 }
 
 export function nextMadaniPage(page) {
-  const current = clampMadaniPage(page)
-  return current < MADANI_MAX_PAGE ? current + 1 : null
+  return nextMushafPage(page, MUSHAF_LAYOUT_MADANI_V2)
 }
 
 export function shouldShowTwoMadaniPages(width) {
-  return Number(width) >= MADANI_TWO_PAGE_MIN_WIDTH
+  return shouldShowTwoMushafPages(width, MUSHAF_LAYOUT_MADANI_V2)
 }
+
+export { mushafTwoPageMinWidth, shouldShowTwoMushafPages }
 
 /**
  * RTL mushaf spreads: the reader's first page is on the right.

@@ -1,5 +1,9 @@
 import axios from 'axios'
 import { attachHttpErrorTracking } from '../observability/errorTracking'
+import { getMushafLayout, MUSHAF_LAYOUT_MADANI_V2 } from '../mushaf/mushafLayouts.js'
+
+/** Madani V2 printed-page ceiling for Quran.com mushaf APIs (not IndoPak). */
+const MADANI_PAGE_COUNT = getMushafLayout(MUSHAF_LAYOUT_MADANI_V2).pageCount
 
 /**
  * Quran text clients.
@@ -159,7 +163,7 @@ export async function getChapterWordByWordMeanings(chapterId, rangeStart = 1, ra
  * Cached in-memory for the session.
  */
 export async function getMadaniPageVerses(pageNumber, options = {}) {
-  const page = Math.max(1, Math.min(604, Number(pageNumber) || 1))
+  const page = Math.max(1, Math.min(MADANI_PAGE_COUNT, Number(pageNumber) || 1))
   const mushaf = Number(options.mushaf) || MADANI_MUSHAF_ID
   const cacheKey = `${mushaf}:${page}`
   if (!options.force && madaniPageCache.has(cacheKey)) {
@@ -277,7 +281,7 @@ export async function getMadaniPagesForChapterRange(chapterId, rangeStart = 1, r
       const pageFromVerse = Number(verse.page_number)
       const pageFromWord = Number(verse.words?.[0]?.page_number)
       const page = Number.isFinite(pageFromVerse) ? pageFromVerse : pageFromWord
-      if (Number.isFinite(page) && page >= 1 && page <= 604) {
+      if (Number.isFinite(page) && page >= 1 && page <= MADANI_PAGE_COUNT) {
         pageNumbers.add(page)
         pageByVerseKey.set(key, page)
       }

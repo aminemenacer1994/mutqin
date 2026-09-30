@@ -36030,6 +36030,40 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   margin-inline-start: auto;
 }
 
+.top-card-menu .top-card-menu-label--mushaf-edition {
+  margin: 0.35rem 0 0.15rem;
+  padding: 0.15rem 0.7rem 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.62;
+}
+
+.top-card-menu .top-card-menu-toggle--mushaf-edition {
+  padding-inline-start: 1.35rem;
+}
+
+.top-card-menu .top-card-menu-toggle__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  min-width: 0;
+  text-align: start;
+}
+
+.top-card-menu .top-card-menu-toggle__title {
+  line-height: 1.2;
+}
+
+.top-card-menu .top-card-menu-toggle__subtitle {
+  font-size: 0.78em;
+  line-height: 1.15;
+  opacity: 0.72;
+  font-weight: 500;
+}
+
 .top-card-menu button > i:not(.check-icon),
 .top-card-menu .top-card-menu-link > i {
   flex: 0 0 auto;
@@ -62498,6 +62532,45 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   justify-content: flex-start !important;
 }
 
+/* IndoPak 15 Lines — fit viewport width; no horizontal scroll; keep 15-line geometry. */
+.madani-qpc-viewport:has(.qpc-madani-page--indopak),
+.madani-qpc-viewport:has([data-layout='indopak-15-qudratullah']) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.madani-qpc-viewport .qpc-madani-page--indopak,
+.madani-qpc-viewport .qpc-madani-session-scroll[data-layout='indopak-15-qudratullah'] {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.madani-qpc-viewport .qpc-madani-page--indopak .qpc-madani-line--ayah {
+  min-height: calc(var(--qpc-word-size, 17px) * var(--qpc-line-min-height, 2.12));
+  margin-block-end: calc(var(--qpc-word-size, 17px) * var(--qpc-line-gap, 0.14));
+  line-height: var(--qpc-line-height, 1.92);
+}
+
+@media (max-width: 767.98px) {
+  .madani-qpc-viewport .qpc-madani-page--indopak .qpc-madani-line {
+    padding-block: calc(var(--qpc-word-size, 17px) * 0.06);
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--indopak .qpc-madani-line--ayah {
+    min-height: calc(var(--qpc-word-size, 17px) * var(--qpc-line-min-height, 2.12));
+  }
+
+  .madani-qpc-viewport .qpc-madani-page--indopak,
+  .madani-qpc-viewport .qpc-madani-page--indopak.qpc-madani-page--single {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+}
+
 @media (max-width: 767.98px) {
   .madani-qpc-viewport .qpc-madani-line {
     padding-block: calc(var(--qpc-word-size, 22px) * 0.04);
@@ -66627,7 +66700,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   -webkit-text-fill-color: unset;
 }
 
-.madani-qpc-viewport .qpc-madani-page .qpc-madani-word:not(.qpc-madani-word--tajweed-glyph):not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden) {
+.madani-qpc-viewport .qpc-madani-page .qpc-madani-word:not(.qpc-madani-word--tajweed-glyph):not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden) {
   color: var(--qpc-ink);
   -webkit-text-fill-color: var(--qpc-ink);
 }
@@ -66683,8 +66756,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   -webkit-text-fill-color: var(--mushaf-reading-ink, #f7ebdf) !important;
 }
 
-[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:not(.qpc-madani-word--tajweed-glyph):not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden),
-.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:not(.qpc-madani-word--tajweed-glyph):not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden) {
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:not(.qpc-madani-word--tajweed-glyph):not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden),
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:not(.qpc-madani-word--tajweed-glyph):not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden) {
   color: var(--mushaf-reading-ink, #f7ebdf) !important;
   -webkit-text-fill-color: var(--mushaf-reading-ink, #f7ebdf) !important;
 }
@@ -66720,10 +66793,10 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   filter: invert(1) hue-rotate(180deg);
 }
 
-[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:hover:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden),
-[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:focus-visible:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden),
-.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:hover:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden),
-.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:focus-visible:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden) {
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:hover:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden),
+[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:focus-visible:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden),
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:hover:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden),
+.app[data-theme="dark"] .madani-qpc-viewport .qpc-madani-word:focus-visible:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden) {
   background: color-mix(in srgb, var(--accent) 20%, transparent) !important;
 }
 

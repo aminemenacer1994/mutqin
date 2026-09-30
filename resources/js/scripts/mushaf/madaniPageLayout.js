@@ -1,7 +1,10 @@
 import { qcfFontFamily } from './qcfFontLoader.js'
+import { getMushafLayout, MUSHAF_LAYOUT_MADANI_V2 } from './mushafLayouts.js'
 
-export const MADANI_LINES_PER_PAGE = 15
-export const MADANI_TOTAL_PAGES = 604
+const MADANI_LAYOUT = getMushafLayout(MUSHAF_LAYOUT_MADANI_V2)
+
+export const MADANI_LINES_PER_PAGE = MADANI_LAYOUT.defaultLinesPerPage
+export const MADANI_TOTAL_PAGES = MADANI_LAYOUT.pageCount
 export const MADANI_LAYOUT_VERSION = 8
 
 /** Al-Fatihah ayah 1 is itself the basmala — isolate it onto its own row. */

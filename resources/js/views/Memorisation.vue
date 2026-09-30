@@ -778,6 +778,34 @@
                     <span>{{ t('memorisation.view.mushaf') }}</span>
                     <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
+                  <template v-if="readingViewMode === 'madani_mushaf'">
+                    <p class="top-card-menu-label top-card-menu-label--mushaf-edition">{{ t('memorisation.view.mushafEdition') }}</p>
+                    <button
+                      type="button"
+                      class="top-card-menu-toggle top-card-menu-toggle--mushaf-edition"
+                      :class="{ active: mushafLayoutId === 'madani-v2' }"
+                      :aria-pressed="mushafLayoutId === 'madani-v2' ? 'true' : 'false'"
+                      @click.stop="setMushafLayoutId('madani-v2')"
+                    >
+                      <i class="bi bi-journal-richtext" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.view.madinahV2') }}</span>
+                      <i v-if="mushafLayoutId === 'madani-v2'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="top-card-menu-toggle top-card-menu-toggle--mushaf-edition top-card-menu-toggle--mushaf-edition-stacked"
+                      :class="{ active: mushafLayoutId === 'indopak-15-qudratullah' }"
+                      :aria-pressed="mushafLayoutId === 'indopak-15-qudratullah' ? 'true' : 'false'"
+                      @click.stop="setMushafLayoutId('indopak-15-qudratullah')"
+                    >
+                      <i class="bi bi-journal-text" aria-hidden="true"></i>
+                      <span class="top-card-menu-toggle__stack">
+                        <span class="top-card-menu-toggle__title">{{ t('memorisation.view.indopak15') }}</span>
+                        <span class="top-card-menu-toggle__subtitle">{{ t('memorisation.view.qudratullah') }}</span>
+                      </span>
+                      <i v-if="mushafLayoutId === 'indopak-15-qudratullah'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                  </template>
                   <div class="top-card-menu-divider top-card-menu-divider--layout" aria-hidden="true"></div>
                   <button
                     v-if="readingViewMode === 'stacked'"
@@ -1164,7 +1192,7 @@
                 :class="{ active: readingViewMode === 'madani_mushaf' }"
                 :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
                 @click.stop="setReadingViewMode('madani_mushaf')"
-                :title="t('memorisation.view.madaniMushafHint')"
+                :title="mushafLayoutHint"
               >
                 <i class="bi bi-book-half" aria-hidden="true"></i>
                 <span>{{ t('memorisation.view.mushaf') }}</span>
@@ -1504,6 +1532,7 @@
               </div>
               <madani-session-scroll
                 v-else-if="qpcMadaniCurrentPage && !showQpcMadaniSpreadPageNav"
+                :layout-id="mushafLayoutId"
                 :desktop-short-surah-layout="workspaceDesktopShortSurahMushaf"
                 :page-numbers="qpcMadaniSessionPageNumbers"
                 :focus-page-number="qpcMadaniCurrentPage"
@@ -1530,6 +1559,7 @@
               />
               <madani-spread
                 v-else-if="qpcMadaniCurrentPage"
+                :layout-id="mushafLayoutId"
                 :controlled-page-number="qpcMadaniCurrentPage"
                 :session-header-page-number="qpcMadaniSessionHeaderPage"
                 :desktop-short-surah-layout="workspaceDesktopShortSurahMushaf"

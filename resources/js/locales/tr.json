@@ -1588,7 +1588,12 @@
       "stacked": "Yığılmış",
       "mushaf": "« Mushaf»",
       "stackedHint": "Yığın: peş peşe ayet, kısa aralıklar için sakin.",
-      "mushafHint": "Mushaf: sayfa düzeni. Okuma yardımcıları ve tecvid Kontroller ve Yardım’da."
+      "mushafHint": "Mushaf: sayfa düzeni. Okuma yardımcıları ve tecvid Kontroller ve Yardım’da.",
+      "mushafEdition": "Mushaf baskısı",
+      "madinahV2": "Madinah V2",
+      "indopak15": "IndoPak 15 Lines",
+      "qudratullah": "Qudratullah",
+      "indopakHint": "IndoPak 15 Lines (Qudratullah)"
     },
     "actions": {
       "newSession": "New Session",

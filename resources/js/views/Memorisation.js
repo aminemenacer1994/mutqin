@@ -95,9 +95,9 @@ import {
   normalizeReadingViewMode,
 } from '../scripts/mushaf/readingViewModes'
 import {
-  loadQpcMadaniVersePageIndex,
+  loadMushafVersePageIndex,
   resolveMadaniPage,
-  resolveQpcMadaniPageForVerseKey,
+  resolveMushafPageForVerseKey,
   verseKeyFromQpcLocation,
 } from '../scripts/mushaf/qpcMadaniVersePage'
 import {
@@ -138,14 +138,24 @@ import {
   shouldWriteMadaniAutosave,
 } from '../scripts/mushaf/qpcMadaniPersistence'
 import {
-  clampMadaniPage,
-  nextMadaniPage,
-  nextMadaniSpread,
-  previousMadaniPage,
-  previousMadaniSpread,
-  resolveMadaniSpread,
-  shouldShowTwoMadaniPages,
+  shouldShowTwoMushafPages,
+  mushafTwoPageMinWidth,
+  resolveMushafSpread,
 } from '../scripts/mushaf/madaniPagePair'
+import {
+  clampMushafPage,
+  DEFAULT_MUSHAF_LAYOUT_ID,
+  getMushafLayout,
+  isMushafLayoutId,
+  MUSHAF_LAYOUT_MADANI_V2,
+} from '../scripts/mushaf/mushafLayouts'
+import {
+  getCachedMushafPageLeaf,
+  loadMushafPageLeaf,
+  prefetchMushafPageData,
+} from '../scripts/mushaf/mushafPageData'
+import { ensureIndopakNastaleeqFontForLayout } from '../scripts/mushaf/indopakNastaleeqFont'
+import { isIndopakMushafLayout } from '../scripts/mushaf/indopakPageAdapter'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -1045,6 +1055,7 @@ export default {
       showTools: false,
       toolsPanelMounted: false,
       readingViewMode: 'madani_mushaf',
+      mushafLayoutId: DEFAULT_MUSHAF_LAYOUT_ID,
       mushafPageIndex: 0,
       mushafUiSkin: 'standard', // Paper/standard only; legacy skins remap here
       mushafBorder: 'classic',
@@ -1057,6 +1068,7 @@ export default {
       madaniLoadRequestId: 0,
       madaniFontsReady: {},
       qpcVersePageIndex: null,
+      qpcVersePageIndexLayoutId: null,
       qpcMadaniLoadError: '',
       qpcMadaniRecitationFollowAyah: '',
       qpcMadaniPinnedPage: null,
@@ -2506,10 +2518,11 @@ export default {
       return labels[this.quranSearchFilterType] || this.t('memorisation.common.filterValue')
     },
     quranSearchFilterPlaceholder() {
+      const pageMax = this.activeLayout.pageCount
       const placeholders = {
         juz: '1-30',
         hizb: '1-60',
-        page: '1-604',
+        page: `1-${pageMax}`,
         ayah: this.t('memorisation.search.ayahNumber'),
         word: this.t('memorisation.search.wordNumber')
       }
@@ -2519,11 +2532,11 @@ export default {
       const max = {
         juz: 30,
         hizb: 60,
-        page: 604,
+        page: this.activeLayout.pageCount,
         ayah: 286,
         word: 80
       }
-      return max[this.quranSearchFilterType] || 604
+      return max[this.quranSearchFilterType] || this.activeLayout.pageCount
     },
     filteredQuranSearchResults() {
       const type = this.quranSearchFilterType
@@ -9562,6 +9575,20 @@ export default {
       return this.effectiveActiveVerseKey || this.activeVerseKey || ''
     },
 
+    mushafLayoutHint() {
+      if (isIndopakMushafLayout(this.mushafLayoutId)) {
+        return this.t('memorisation.view.indopakHint')
+      }
+      return this.t('memorisation.view.madaniMushafHint')
+    },
+
+    /** Active mushaf edition — page bounds always come from layout.pageCount. */
+    activeLayout() {
+      return getMushafLayout(
+        isMushafLayoutId(this.mushafLayoutId) ? this.mushafLayoutId : DEFAULT_MUSHAF_LAYOUT_ID,
+      )
+    },
+
     qpcMadaniSessionStartAyah() {
       const chapter = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
       const start = Number(this.rangeStart || this.currentConfig?.rangeStart || 0)
@@ -9578,12 +9605,14 @@ export default {
       const startKey = this.qpcMadaniSessionStartAyah
       const index = this.qpcVersePageIndex
       if (!startKey || !index) return null
-      return resolveQpcMadaniPageForVerseKey(startKey, index)
+      return resolveMushafPageForVerseKey(startKey, index, this.mushafLayoutId)
     },
 
     isDesktopMushafLayoutViewport() {
       if (this.isMobileViewport()) return false
-      if (typeof window !== 'undefined') return window.innerWidth >= 1080
+      if (typeof window !== 'undefined') {
+        return window.innerWidth >= mushafTwoPageMinWidth(this.mushafLayoutId)
+      }
       return false
     },
 
@@ -9600,7 +9629,7 @@ export default {
       if (!index) return []
       const pages = new Set()
       for (const key of this.mushafSessionVerseKeyList) {
-        const page = resolveQpcMadaniPageForVerseKey(key, index)
+        const page = resolveMushafPageForVerseKey(key, index, this.mushafLayoutId)
         if (page) pages.add(Number(page))
       }
       const sorted = [...pages].sort((left, right) => left - right)
@@ -9608,7 +9637,9 @@ export default {
       const endKey = this.qpcMadaniSessionEndAyah
       if (!startKey || !endKey) return sorted
       const withContent = sorted.filter((pageNumber) => {
-        const leaf = getCachedMadaniPageLeaf(pageNumber)
+        const leaf = isIndopakMushafLayout(this.mushafLayoutId)
+          ? getCachedMushafPageLeaf(pageNumber, this.mushafLayoutId)
+          : getCachedMadaniPageLeaf(pageNumber)
         if (!leaf?.page?.lines) return true
         return pageHasQpcMadaniSessionLines(leaf.page.lines, startKey, endKey)
       })
@@ -9618,16 +9649,20 @@ export default {
     qpcMadaniCurrentPage() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return null
       const followAyah = this.amdOpen ? String(this.qpcMadaniRecitationFollowAyah || '').trim() : ''
-      const fromActive = resolveQpcMadaniPageForVerseKey(followAyah || this.qpcMadaniActiveAyah, this.qpcVersePageIndex)
+      const fromActive = resolveMushafPageForVerseKey(
+        followAyah || this.qpcMadaniActiveAyah,
+        this.qpcVersePageIndex,
+        this.mushafLayoutId,
+      )
       const sessionPages = this.qpcMadaniSessionPageNumbers
       if (this.qpcMadaniPinnedPage != null) {
-        const pinned = clampMadaniPage(this.qpcMadaniPinnedPage)
+        const pinned = clampMushafPage(this.qpcMadaniPinnedPage, this.mushafLayoutId)
         if (!sessionPages.length || sessionPages.includes(pinned)) return pinned
       }
       if (fromActive && (!sessionPages.length || sessionPages.includes(Number(fromActive)))) return fromActive
       const surah = Number(this.chapterId || this.currentChapter?.id || this.currentConfig?.chapterId || 0)
       const ayah = Number(this.rangeStart || this.currentConfig?.rangeStart || this.activeAyahNumber || 0)
-      const fallback = resolveMadaniPage(surah, ayah, this.qpcVersePageIndex)
+      const fallback = resolveMadaniPage(surah, ayah, this.qpcVersePageIndex, this.mushafLayoutId)
       if (sessionPages.length) {
         if (fallback && sessionPages.includes(Number(fallback))) return fallback
         return sessionPages[0]
@@ -9656,8 +9691,8 @@ export default {
       let visible = inSession(current) ? [current] : []
       if (this.showQpcMadaniSpreadPageNav) {
         const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-        if (shouldShowTwoMadaniPages(width)) {
-          const spread = resolveMadaniSpread(current)
+        if (shouldShowTwoMushafPages(width, this.mushafLayoutId)) {
+          const spread = resolveMushafSpread(current, this.mushafLayoutId)
           visible = [spread.left, spread.right]
             .filter((pageNumber) => pageNumber && inSession(pageNumber))
             .map(Number)
@@ -10130,19 +10165,33 @@ export default {
 
     qpcMadaniFontScale() {
       const base = 150
-      const size = Number(this.layoutFontSizes?.madani_mushaf ?? this.defaultFontSize ?? 195)
+      // IndoPak uses its own default ink size preference slot when present.
+      const indopakSize = Number(this.layoutFontSizes?.indopak_15_qudratullah)
+      const madaniSize = Number(this.layoutFontSizes?.madani_mushaf ?? this.defaultFontSize ?? 195)
+      const size = isIndopakMushafLayout(this.mushafLayoutId) && Number.isFinite(indopakSize) && indopakSize > 0
+        ? indopakSize
+        : isIndopakMushafLayout(this.mushafLayoutId)
+          ? Math.min(madaniSize, 180)
+          : madaniSize
       const ratio = size / base
       if (this.showMadaniFullscreenBar || this.isMadaniMobileImmersive) {
-        return Math.max(0.9, Math.min(2.2, ratio))
+        return Math.max(0.9, Math.min(2.05, ratio))
       }
       if (this.isMobileViewport()) {
-        return Math.max(1.12, Math.min(1.72, ratio))
+        // Slightly lower ceiling than Madani — Nastaleeq needs vertical room for 15 lines.
+        return isIndopakMushafLayout(this.mushafLayoutId)
+          ? Math.max(1.05, Math.min(1.48, ratio))
+          : Math.max(1.12, Math.min(1.72, ratio))
       }
       let maxScale = 1.55
       if (this.showQpcMadaniSpreadPageNav) {
-        maxScale = this.isDesktopMushafLayoutViewport ? 1.72 : 1.22
+        maxScale = this.isDesktopMushafLayoutViewport
+          ? (isIndopakMushafLayout(this.mushafLayoutId) ? 1.45 : 1.72)
+          : 1.22
+      } else if (isIndopakMushafLayout(this.mushafLayoutId)) {
+        maxScale = 1.35
       }
-      return Math.max(1.1, Math.min(maxScale, ratio))
+      return Math.max(1.05, Math.min(maxScale, ratio))
     },
 
     isMadaniMobileImmersive() {
@@ -10184,6 +10233,13 @@ export default {
     },
 
     qpcMadaniTajweedPresentation() {
+      if (isIndopakMushafLayout(this.mushafLayoutId)) {
+        return {
+          supported: false,
+          requested: !!this.tajweedEnabled,
+          effectiveEnabled: false,
+        }
+      }
       return resolveQpcMadaniTajweedPresentation(this.tajweedEnabled)
     },
 
@@ -10210,7 +10266,7 @@ export default {
     },
 
     mushafPaginationLabel() {
-      // Session-scoped only — never advertise the full 604-page mushaf.
+      // Session-scoped only — never advertise the full mushaf pageCount.
       const total = this.mushafPages.length
       if (!total) return ''
       return `${this.safeMushafPageIndex + 1} / ${total}`
@@ -11410,6 +11466,10 @@ export default {
     defaultFontSize: 'persistUiState',
     tajweedEnabled: 'persistUiState',
     mushafUiSkin: 'persistUiState',
+    mushafLayoutId() {
+      this.syncWorkspaceIsMobileViewport()
+      this.persistUiState()
+    },
     aiRecallModeEnabled: 'persistUiState',
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
@@ -11718,7 +11778,8 @@ export default {
     syncWorkspaceIsMobileViewport() {
       if (typeof window === 'undefined' || !window.matchMedia) return
       const mobile = window.matchMedia('(max-width: 767.98px)').matches
-      const spreadNav = !mobile && window.matchMedia('(min-width: 1080px)').matches
+      const twoPageMin = mushafTwoPageMinWidth(this.mushafLayoutId)
+      const spreadNav = !mobile && window.matchMedia(`(min-width: ${twoPageMin}px)`).matches
       if (this.workspaceIsMobileViewport !== mobile) {
         this.workspaceIsMobileViewport = mobile
       }
@@ -36322,18 +36383,30 @@ export default {
       this.mushafPageIndex = this.safeMushafPageIndex
     },
     async ensureQpcVersePageIndex() {
-      if (this.qpcVersePageIndex && typeof this.qpcVersePageIndex === 'object') {
+      const layoutId = isMushafLayoutId(this.mushafLayoutId)
+        ? this.mushafLayoutId
+        : DEFAULT_MUSHAF_LAYOUT_ID
+      if (
+        this.qpcVersePageIndex
+        && typeof this.qpcVersePageIndex === 'object'
+        && this.qpcVersePageIndexLayoutId === layoutId
+      ) {
         return this.qpcVersePageIndex
       }
-      this.qpcVersePageIndex = await loadQpcMadaniVersePageIndex()
+      this.qpcVersePageIndex = await loadMushafVersePageIndex(layoutId)
+      this.qpcVersePageIndexLayoutId = layoutId
       return this.qpcVersePageIndex
     },
     async bootstrapQpcMadaniViewer() {
       this.qpcMadaniLoadError = ''
       try {
         await this.ensureQpcVersePageIndex()
-        void loadSurahNamesFont().catch(() => null)
-        if (this.tajweedEnabled) {
+        if (isIndopakMushafLayout(this.mushafLayoutId)) {
+          void ensureIndopakNastaleeqFontForLayout(this.mushafLayoutId).catch(() => null)
+        } else {
+          void loadSurahNamesFont().catch(() => null)
+        }
+        if (this.tajweedEnabled && !isIndopakMushafLayout(this.mushafLayoutId)) {
           await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true, scope: 'session' })
         }
       } catch (error) {
@@ -36348,9 +36421,13 @@ export default {
       if (!startKey || !endKey) return
       const page = Number(this.qpcMadaniCurrentPage)
       if (!page) return
-      let lines = getCachedMadaniPageLeaf(page)?.page?.lines
+      let lines = (isIndopakMushafLayout(this.mushafLayoutId)
+        ? getCachedMushafPageLeaf(page, this.mushafLayoutId)
+        : getCachedMadaniPageLeaf(page))?.page?.lines
       if (!lines) {
-        const leaf = await loadMadaniPageLeaf(page).catch(() => null)
+        const leaf = isIndopakMushafLayout(this.mushafLayoutId)
+          ? await loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => null)
+          : await loadMadaniPageLeaf(page).catch(() => null)
         lines = leaf?.page?.lines
       }
       if (!lines || pageHasQpcMadaniSessionLines(lines, startKey, endKey)) return
@@ -36377,6 +36454,7 @@ export default {
     },
     async syncQpcMadaniTajweedGlyphsForViewport(options = {}) {
       if (!isQpcMadaniMushafView(this.readingViewMode) || !this.tajweedEnabled) return
+      if (isIndopakMushafLayout(this.mushafLayoutId)) return
       const pages = new Set()
       const sessionPages = this.qpcMadaniSessionPageNumbers
       const useSessionScope = options.scope === 'session' && sessionPages.length
@@ -36387,8 +36465,8 @@ export default {
         if (!page) return
         pages.add(Number(page))
         const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-        if (shouldShowTwoMadaniPages(width)) {
-          const spread = resolveMadaniSpread(page)
+        if (shouldShowTwoMushafPages(width, this.mushafLayoutId)) {
+          const spread = resolveMushafSpread(page, this.mushafLayoutId)
           if (spread.left) pages.add(spread.left)
           pages.add(spread.right)
         }
@@ -36398,8 +36476,8 @@ export default {
       )))
     },
     async ensureQpcMadaniTajweedGlyphsForPage(pageNumber, options = {}) {
-      if (!this.tajweedEnabled) return
-      const page = clampMadaniPage(pageNumber)
+      if (!this.tajweedEnabled || isIndopakMushafLayout(this.mushafLayoutId)) return
+      const page = clampMushafPage(pageNumber, this.mushafLayoutId)
       if (!options.force && this.qpcMadaniTajweedGlyphPages?.[page]) return
       try {
         const verses = await getMadaniPageVerses(page, { force: !!options.force })
@@ -36419,21 +36497,27 @@ export default {
       }
     },
     goToQpcMadaniPageTarget(pageNumber) {
-      const target = clampMadaniPage(pageNumber)
+      const target = clampMushafPage(pageNumber, this.mushafLayoutId)
       if (!target) return
       this.qpcMadaniPinnedPage = target
       const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const mode = shouldShowTwoMadaniPages(width) ? 'spread' : 'single'
-      preloadMadaniNavigationTargets(mode, target)
-      void loadMadaniPageLeaf(target).catch(() => {})
+      const mode = shouldShowTwoMushafPages(width, this.mushafLayoutId) ? 'spread' : 'single'
       const pages = [target]
       if (mode === 'spread') {
-        const spread = resolveMadaniSpread(target)
+        const spread = resolveMushafSpread(target, this.mushafLayoutId)
         if (spread.left) pages.push(spread.left)
       }
-      prefetchQpcMadaniPageFonts(pages)
-      if (this.tajweedEnabled) {
-        prefetchQcfPageFonts(pages, { tajweed: true }).catch(() => {})
+      if (isIndopakMushafLayout(this.mushafLayoutId)) {
+        prefetchMushafPageData(pages, this.mushafLayoutId)
+        void ensureIndopakNastaleeqFontForLayout(this.mushafLayoutId).catch(() => null)
+        void loadMushafPageLeaf(target, this.mushafLayoutId).catch(() => {})
+      } else {
+        preloadMadaniNavigationTargets(mode, target)
+        void loadMadaniPageLeaf(target).catch(() => {})
+        prefetchQpcMadaniPageFonts(pages)
+        if (this.tajweedEnabled) {
+          prefetchQcfPageFonts(pages, { tajweed: true }).catch(() => {})
+        }
       }
       if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
         window.requestAnimationFrame(() => {
@@ -36443,13 +36527,76 @@ export default {
         this.commitMadaniSessionPersistence('page-navigation')
       }
     },
+    /**
+     * Switch mushaf edition (Madinah V2 ↔ IndoPak) without changing workspace mode.
+     * Remaps via current verseKey — never copies the numeric page across layouts.
+     * After switch, clamps any page to activeLayout.pageCount (604 Madani / 610 IndoPak).
+     */
+    async setMushafLayoutId(layoutId) {
+      const next = isMushafLayoutId(layoutId) ? String(layoutId) : DEFAULT_MUSHAF_LAYOUT_ID
+      const previous = isMushafLayoutId(this.mushafLayoutId)
+        ? this.mushafLayoutId
+        : DEFAULT_MUSHAF_LAYOUT_ID
+      const alreadyActive = previous === next && isQpcMadaniMushafView(this.readingViewMode)
+      if (alreadyActive) {
+        this.topCardMenuOpen = false
+        this.fontDropdownOpen = false
+        return
+      }
+
+      const verseKey = String(
+        this.qpcMadaniActiveAyah
+        || this.effectiveActiveVerseKey
+        || this.activeVerseKey
+        || ''
+      ).trim()
+
+      this.mushafLayoutId = next
+      this.qpcMadaniPinnedPage = null
+      this.qpcVersePageIndex = null
+      this.qpcVersePageIndexLayoutId = null
+      this.qpcMadaniLoadError = ''
+      this.topCardMenuOpen = false
+      this.fontDropdownOpen = false
+
+      if (!isQpcMadaniMushafView(this.readingViewMode)) {
+        this.setReadingViewMode('madani_mushaf')
+        this.persistUiState()
+        return
+      }
+
+      await this.bootstrapQpcMadaniViewer()
+      const mapped = verseKey
+        ? resolveMushafPageForVerseKey(verseKey, this.qpcVersePageIndex, next)
+        : null
+      if (mapped) {
+        this.goToQpcMadaniPageTarget(clampMushafPage(mapped, next))
+      } else {
+        this.syncQpcMadaniPageToActiveVerse()
+      }
+      // Defensive clamp if a pin/session page survived outside the new layout.
+      if (this.qpcMadaniPinnedPage != null) {
+        this.qpcMadaniPinnedPage = clampMushafPage(this.qpcMadaniPinnedPage, this.activeLayout)
+      }
+      this.$nextTick(() => {
+        this.scrollQpcMadaniActiveAyahIntoView()
+        if (this.isPlaying && this.activeVerseRef?.key) {
+          this.startWordHighlighting(this.activeVerseRef)
+        }
+        this.syncQpcMadaniPlaybackAyahDom()
+      })
+      this.persistUiState()
+    },
+    clampMushafLayoutId(layoutId) {
+      return isMushafLayoutId(layoutId) ? String(layoutId) : DEFAULT_MUSHAF_LAYOUT_ID
+    },
     qpcMadaniAdjacentSessionPage(direction) {
       const pages = this.qpcMadaniSessionPageNumbers
       let anchor = Number(this.qpcMadaniCurrentPage)
       if (!pages.length || !anchor) return null
       // Two-page spread shows a pair at once; stepping from the pinned leaf only
       // moves one page within the same spread (looks like a no-op until the second click).
-      if (this.showQpcMadaniSpreadPageNav && shouldShowTwoMadaniPages(typeof window !== 'undefined' ? window.innerWidth : 1080)) {
+      if (this.showQpcMadaniSpreadPageNav && shouldShowTwoMushafPages(typeof window !== 'undefined' ? window.innerWidth : 1080, this.mushafLayoutId)) {
         const { min, max } = this.qpcMadaniVisibleSessionPageExtent
         if (direction < 0 && min != null) anchor = min
         else if (direction > 0 && max != null) anchor = max
@@ -36664,10 +36811,15 @@ export default {
       const nextEntry = this.queue?.[this.queueIndex + 1]
       const nextKey = nextEntry?.verse?.key || nextEntry?.key
       if (!nextKey) return
-      const page = resolveQpcMadaniPageForVerseKey(nextKey, this.qpcVersePageIndex)
+      const page = resolveMushafPageForVerseKey(nextKey, this.qpcVersePageIndex, this.mushafLayoutId)
       if (!page) return
       const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const mode = shouldShowTwoMadaniPages(viewportWidth) ? 'spread' : 'single'
+      const mode = shouldShowTwoMushafPages(viewportWidth, this.mushafLayoutId) ? 'spread' : 'single'
+      if (isIndopakMushafLayout(this.mushafLayoutId)) {
+        prefetchMushafPageData([page], this.mushafLayoutId)
+        void loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => {})
+        return
+      }
       preloadMadaniNavigationTargets(mode, page)
       prefetchQpcMadaniPageFonts([page])
       if (this.tajweedEnabled) {
@@ -36738,7 +36890,7 @@ export default {
       }
     },
     async ensureMadaniPageLoaded(pageNumber, options = {}) {
-      const page = Math.max(1, Math.min(604, Number(pageNumber) || 0))
+      const page = clampMushafPage(pageNumber, MUSHAF_LAYOUT_MADANI_V2)
       if (!page) return null
       const sessionKeys = this.mushafSessionVerseKeys
       const sessionChapterId = Number(
@@ -36847,7 +36999,9 @@ export default {
       if (!page) return
       // Mobile: skip neighbor prefetch to cut network + decode cost.
       if (this.isMobileViewport()) return
-      const neighbors = [page - 1, page + 1].filter(n => n >= 1 && n <= 604)
+      const neighbors = [page - 1, page + 1].filter(
+        n => n >= 1 && n <= getMushafLayout(MUSHAF_LAYOUT_MADANI_V2).pageCount,
+      )
       prefetchQcfPageFonts(neighbors, { tajweed: !!this.tajweedEnabled }).catch(() => {})
       neighbors.forEach(neighbor => {
         if (!this.madaniPageLayouts?.[neighbor] && this.madaniPageNumbers.includes(neighbor)) {
@@ -40124,7 +40278,7 @@ export default {
         const page = this.qpcMadaniCurrentPage
         if (page) {
           const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1080
-          const mode = shouldShowTwoMadaniPages(viewportWidth) ? 'spread' : 'single'
+          const mode = shouldShowTwoMushafPages(viewportWidth, this.mushafLayoutId) ? 'spread' : 'single'
           preloadMadaniNavigationTargets(mode, page)
           prefetchQpcMadaniPageFonts([page])
         }
@@ -44236,6 +44390,7 @@ export default {
           this.showWordByWord = !!state.showWordByWord
           this.wordByWordAudioEnabled = true
           this.readingViewMode = this.clampReadingViewMode(state.readingViewMode || 'madani_mushaf')
+          this.mushafLayoutId = this.clampMushafLayoutId(state.mushafLayoutId || DEFAULT_MUSHAF_LAYOUT_ID)
           this.mushafPageIndex = Number.isFinite(Number(state.mushafPageIndex))
             ? Math.max(0, Number(state.mushafPageIndex))
             : 0
@@ -44414,6 +44569,7 @@ export default {
 	          hiddenRevealModeEnabled: false,
 	          aiRecallModeEnabled: this.aiRecallModeEnabled,
 	          readingViewMode: this.readingViewMode,
+          mushafLayoutId: this.clampMushafLayoutId(this.mushafLayoutId),
         mushafPageIndex: this.mushafPageIndex,
         mushafBackground: this.mushafBackground,
         mushafBackgroundTouched: this.mushafBackgroundTouched,

@@ -1588,7 +1588,12 @@
       "stacked": "Apilado",
       "mushaf": "« Mushaf»",
       "stackedHint": "Apiladas: una aleya tras otra, sereno para rangos cortos.",
-      "mushafHint": "Mushaf: diseño de página. Las ayudas de lectura y el Tajweed están en Controles y Ayuda."
+      "mushafHint": "Mushaf: diseño de página. Las ayudas de lectura y el Tajweed están en Controles y Ayuda.",
+      "mushafEdition": "Edición del mushaf",
+      "madinahV2": "Madinah V2",
+      "indopak15": "IndoPak 15 Lines",
+      "qudratullah": "Qudratullah",
+      "indopakHint": "IndoPak 15 Lines (Qudratullah)"
     },
     "actions": {
       "newSession": "Nouvelle sesión",
