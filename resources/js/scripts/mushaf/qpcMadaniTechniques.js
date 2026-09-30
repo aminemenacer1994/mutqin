@@ -1,4 +1,4 @@
-import { ayahKeyFromWord } from './qpcMadaniSelection.js'
+import { ayahKeyFromWord, isAyahInCanonicalRange } from './qpcMadaniSelection.js'
 import { resolveQpcWordAudioIndex } from './qpcMadaniAudioDom.js'
 import { isWordHidden } from '../memorisationDetection/hiddenWords.js'
 import { resolveAnchorIndices } from '../techniques/anchorWords.js'
@@ -56,6 +56,7 @@ export function buildQpcMadaniAnchorIndexesByAyah({
 
 export function resolveAnchorWordState(wordAudioIndex, ayahKey, snapshot = {}) {
   if (!snapshot.anchorModeEnabled) return false
+  if (!isAyahInSessionScope(ayahKey, snapshot)) return false
   const key = String(ayahKey || '')
   const indexes = snapshot.anchorIndexesByAyah?.[key]
   if (!Array.isArray(indexes) || !indexes.length) return false
@@ -86,8 +87,35 @@ export function parseAyahNumberFromKey(ayahKey) {
   return Number.isFinite(ayah) ? Math.trunc(ayah) : null
 }
 
+function sessionAyahKeySet(snapshot = {}) {
+  const raw = snapshot.sessionAyahKeys
+  if (raw instanceof Set && raw.size) return raw
+  if (Array.isArray(raw) && raw.length) {
+    return new Set(raw.map((key) => String(key || '')).filter(Boolean))
+  }
+  return null
+}
+
+/** Technique overlays (chain, anchor, blur, …) apply only inside the active session range. */
+export function isAyahInSessionScope(ayahKey, snapshot = {}) {
+  const key = String(ayahKey || '').trim()
+  if (!key) return false
+
+  const explicit = sessionAyahKeySet(snapshot)
+  if (explicit) return explicit.has(key)
+
+  const start = String(snapshot.sessionStartAyah || '').trim()
+  const end = String(snapshot.sessionEndAyah || snapshot.sessionStartAyah || '').trim()
+  if (start && end) {
+    return isAyahInCanonicalRange(key, start, end)
+  }
+
+  return true
+}
+
 export function isAyahBlurred(ayahKey, snapshot = {}) {
   if (!snapshot.blurModeEnabled) return false
+  if (!isAyahInSessionScope(ayahKey, snapshot)) return false
   if (ayahMatchesSnapshotKey(ayahKey, snapshot.playbackAyahKey)) return false
   if (ayahMatchesSnapshotKey(ayahKey, snapshot.highlightedAyahKey)) return false
   const activeNumber = parseAyahNumberFromKey(snapshot.effectiveActiveAyah)
@@ -107,6 +135,7 @@ export function isAyahFocusDimmed(ayahKey, snapshot = {}) {
   if (!snapshot.focusModeEnabled || !snapshot.hasSessionStarted) return false
   const key = String(ayahKey || '')
   if (!key) return false
+  if (!isAyahInSessionScope(key, snapshot)) return false
   if (key === String(snapshot.effectiveActiveAyah || '')) return false
   if (ayahMatchesSnapshotKey(key, snapshot.playbackAyahKey)) return false
   if (ayahMatchesSnapshotKey(key, snapshot.highlightedAyahKey)) return false
@@ -123,6 +152,7 @@ function chainAyahKeySet(snapshot = {}) {
 
 export function isAyahInActiveChain(ayahKey, snapshot = {}) {
   if (!snapshot.chainingEnabled) return false
+  if (!isAyahInSessionScope(ayahKey, snapshot)) return false
   const keys = chainAyahKeySet(snapshot)
   if (!keys.size) return false
   return keys.has(String(ayahKey || ''))
@@ -130,6 +160,7 @@ export function isAyahInActiveChain(ayahKey, snapshot = {}) {
 
 export function isAyahChainDimmed(ayahKey, snapshot = {}) {
   if (!snapshot.chainingEnabled) return false
+  if (!isAyahInSessionScope(ayahKey, snapshot)) return false
   const keys = chainAyahKeySet(snapshot)
   if (!keys.size) return false
   return !keys.has(String(ayahKey || ''))
@@ -137,12 +168,14 @@ export function isAyahChainDimmed(ayahKey, snapshot = {}) {
 
 export function isAyahTalqinListen(ayahKey, snapshot = {}) {
   if (!snapshot.talqinModeEnabled || snapshot.talqinRepeatPhase) return false
+  if (!isAyahInSessionScope(ayahKey, snapshot)) return false
   return ayahMatchesSnapshotKey(ayahKey, snapshot.effectiveActiveAyah)
     || ayahMatchesSnapshotKey(ayahKey, snapshot.playbackAyahKey)
 }
 
 export function isAyahTalqinRepeat(ayahKey, snapshot = {}) {
   if (!snapshot.talqinModeEnabled || !snapshot.talqinRepeatPhase) return false
+  if (!isAyahInSessionScope(ayahKey, snapshot)) return false
   return ayahMatchesSnapshotKey(ayahKey, snapshot.effectiveActiveAyah)
     || ayahMatchesSnapshotKey(ayahKey, snapshot.playbackAyahKey)
 }
@@ -152,6 +185,9 @@ export function resolveHiddenRevealWordState(wordAudioIndex, ayahKey, snapshot =
     return { masked: false, revealed: true, current: false, revealedProgress: false }
   }
   const key = String(ayahKey || '')
+  if (!isAyahInSessionScope(key, snapshot)) {
+    return { masked: false, revealed: true, current: false, revealedProgress: false }
+  }
   if (key !== String(snapshot.hiddenRevealVerseKey || '')) {
     return { masked: false, revealed: true, current: false, revealedProgress: false }
   }
@@ -174,6 +210,9 @@ export function resolveHiddenRevealWordState(wordAudioIndex, ayahKey, snapshot =
 
 export function resolveCheckerHiddenWordState(wordAudioIndex, ayahKey, snapshot = {}) {
   const key = String(ayahKey || '')
+  if (!isAyahInSessionScope(key, snapshot)) {
+    return { masked: false, peeked: false }
+  }
   const indexes = snapshot.checkerHiddenIndexesByAyah?.[key]
   if (!Array.isArray(indexes) || !indexes.length) {
     return { masked: false, peeked: false }

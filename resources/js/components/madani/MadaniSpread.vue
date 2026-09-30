@@ -62,7 +62,7 @@
       >
         <MadaniPage
           v-if="leaf.page"
-          :key="`${leaf.number}-${leaf.page?.page_number || 0}-${layoutId}`"
+          :key="`spread-page-${leaf.number}-${layoutId}`"
           :page="leaf.page"
           :font-family="leaf.fontFamily"
           :font-url="leaf.fontUrl"
@@ -106,8 +106,12 @@ import {
   nextMushafSpread,
   previousMushafPage,
   previousMushafSpread,
+  nextSessionSpreadPage,
   orderMadaniSpreadLeavesForOpening,
+  previousSessionSpreadPage,
   resolveMushafSpread,
+  resolveSessionAwareSpread,
+  resolveSpreadLeafPageNumbers,
   shouldShowTwoMushafPages,
 } from '../../scripts/mushaf/madaniPagePair'
 import {
@@ -151,6 +155,7 @@ export default {
     sessionStartAyah: { type: String, default: '' },
     sessionEndAyah: { type: String, default: '' },
     sessionPrintedPageCount: { type: Number, default: null },
+    sessionPageNumbers: { type: Array, default: () => [] },
     desktopShortSurahLayout: { type: Boolean, default: false },
     sessionHeaderPageNumber: { type: Number, default: null },
     techniqueSnapshot: { type: Object, default: null },
@@ -174,6 +179,7 @@ export default {
       spreadLeafWordSizes: {},
       spreadUnifiedWordSize: null,
       spreadBandTimer: null,
+      spreadLeavesByPage: {},
     }
   },
   computed: {
@@ -207,10 +213,16 @@ export default {
     spread() {
       return resolveMushafSpread(this.displayedPageNumber, this.activeLayout)
     },
+    displaySpread() {
+      if (this.readerDesktopSpread && this.sessionBoundsActive && this.sessionPageNumbers.length) {
+        return resolveSessionAwareSpread(this.displayedPageNumber, this.sessionPageNumbers)
+      }
+      return this.spread
+    },
     currentLeaf() {
       if (
         this.fetchedLeaf
-        && Number(this.fetchedLeaf.page?.page_number) === this.displayedPageNumber
+        && this.leafPageNumber(this.fetchedLeaf.page) === this.displayedPageNumber
       ) {
         return this.fetchedLeaf
       }
@@ -239,24 +251,33 @@ export default {
       return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
     },
     centerSingleSessionPage() {
-      return this.mode === 'spread' && this.desktopShortSurahLayout
+      return this.mode === 'spread'
+        && this.desktopShortSurahLayout
+        && !this.readerDesktopSpread
+    },
+    sessionSpreadPageNumbers() {
+      if (this.mode !== 'spread' || !this.sessionBoundsActive) return []
+      return resolveSpreadLeafPageNumbers({
+        spreadPages: this.spread.pages,
+        sessionPageNumbers: this.sessionPageNumbers,
+        currentPage: this.displayedPageNumber,
+        keepPrintedPair: this.readerDesktopSpread,
+      })
     },
     visibleLeaves() {
       let leaves
       if (this.mode !== 'spread') {
-        leaves = [{ number: this.displayedPageNumber, ...this.currentLeaf }]
-      } else if (this.centerSingleSessionPage) {
-        leaves = [{ number: this.displayedPageNumber, ...this.currentLeaf }]
+        leaves = [{ number: this.displayedPageNumber, ...this.leafBundleFor(this.displayedPageNumber) }]
+      } else if (this.centerSingleSessionPage && !this.readerDesktopSpread) {
+        leaves = [{ number: this.displayedPageNumber, ...this.leafBundleFor(this.displayedPageNumber) }]
       } else {
-        leaves = this.spread.pages.map((number) => {
-          if (number === this.displayedPageNumber) {
-            return { number, ...this.currentLeaf }
-          }
-          if (this.sibling && Number(this.sibling.page?.page_number) === number) {
-            return { number, ...this.sibling }
-          }
-          return { number, page: null }
-        })
+        const pageNumbers = this.readerDesktopSpread
+          ? this.displaySpread.pages
+          : (this.sessionSpreadPageNumbers.length ? this.sessionSpreadPageNumbers : this.spread.pages)
+        leaves = pageNumbers.map((number) => ({
+          number,
+          ...this.leafBundleFor(number),
+        }))
       }
       if (this.readerDesktopSpread) {
         return leaves
@@ -264,8 +285,11 @@ export default {
       if (!this.sessionBoundsActive) {
         return orderMadaniSpreadLeavesForOpening(leaves)
       }
+      if (this.sessionSpreadPageNumbers.length === 2) {
+        return leaves
+      }
       const filtered = leaves.filter((leaf) => {
-        if (!leaf.page?.lines) return true
+        if (!leaf.page?.lines?.length) return false
         return pageHasQpcMadaniSessionLines(
           leaf.page.lines,
           this.sessionStartAyah,
@@ -273,15 +297,16 @@ export default {
         )
       })
       const resolved = filtered.length ? filtered : leaves.filter((leaf) => leaf.page)
+      if (resolved.length === 2) {
+        return resolved
+      }
       return orderMadaniSpreadLeavesForOpening(resolved)
     },
     spreadLayoutClass() {
       if (this.mode !== 'spread') return ''
+      if (this.readerDesktopSpread) return ''
       if (this.centerSingleSessionPage) {
         return 'qpc-madani-spread--single-leaf'
-      }
-      if (this.readerDesktopSpread) {
-        return ''
       }
       if (this.visibleLeaves.length === 1) {
         return 'qpc-madani-spread--single-leaf'
@@ -292,19 +317,24 @@ export default {
       return this.visibleLeaves.filter(leaf => leaf.page).map(leaf => Number(leaf.number))
     },
     previousTarget() {
+      if (this.mode === 'spread' && this.readerDesktopSpread && this.sessionPageNumbers.length) {
+        return previousSessionSpreadPage(this.displayedPageNumber, this.sessionPageNumbers)
+      }
       return this.mode === 'spread'
         ? previousMushafSpread(this.displayedPageNumber, this.activeLayout)
         : previousMushafPage(this.displayedPageNumber, this.activeLayout)
     },
     nextTarget() {
-      // Bounds from activeLayout.pageCount (Madani 604 / IndoPak 610).
+      if (this.mode === 'spread' && this.readerDesktopSpread && this.sessionPageNumbers.length) {
+        return nextSessionSpreadPage(this.displayedPageNumber, this.sessionPageNumbers)
+      }
       return this.mode === 'spread'
         ? nextMushafSpread(this.displayedPageNumber, this.activeLayout)
         : nextMushafPage(this.displayedPageNumber, this.activeLayout)
     },
     navLabel() {
       if (this.mode === 'spread' && this.visiblePageNumbers.length === 2) {
-        return `${this.spread.right} – ${this.spread.left}`
+        return `${this.displaySpread.right} – ${this.displaySpread.left}`
       }
       return `Page ${this.displayedPageNumber}`
     },
@@ -328,6 +358,12 @@ export default {
     },
     displayedPageNumber() {
       this.resetSpreadWordSizeSync()
+      const allowed = new Set(this.displaySpread.pages.map(Number))
+      const next = {}
+      for (const [key, leaf] of Object.entries(this.spreadLeavesByPage)) {
+        if (allowed.has(Number(key))) next[key] = leaf
+      }
+      this.spreadLeavesByPage = next
       this.ensureCurrentLeaf()
     },
     spreadViewportFill() {
@@ -343,6 +379,24 @@ export default {
     },
     tajweedEnabled() {
       this.schedulePreload()
+    },
+    sessionPageNumbers: {
+      deep: true,
+      handler() {
+        void this.ensureSpreadLeaves()
+      },
+    },
+    sessionStartAyah() {
+      void this.ensureSpreadLeaves()
+    },
+    sessionEndAyah() {
+      void this.ensureSpreadLeaves()
+    },
+    layoutId() {
+      this.sibling = null
+      this.fetchedLeaf = null
+      this.spreadLeavesByPage = {}
+      void this.ensureCurrentLeaf()
     },
   },
   created() {
@@ -386,6 +440,31 @@ export default {
     if (this.spreadBandTimer) window.clearTimeout(this.spreadBandTimer)
   },
   methods: {
+    leafPageNumber(page) {
+      if (!page) return 0
+      return Number(page.page_number ?? page.pageNumber) || 0
+    },
+    emptyLeafBundle() {
+      return {
+        page: null,
+        fontFamily: '',
+        fontUrl: '',
+        layoutId: this.layoutId,
+      }
+    },
+    leafBundleFor(pageNumber) {
+      const wanted = Number(pageNumber)
+      const cached = this.spreadLeavesByPage[wanted]
+      if (cached?.page) return cached
+      if (wanted === this.displayedPageNumber) {
+        const current = this.currentLeaf
+        if (current?.page) return current
+      }
+      if (this.sibling && this.leafPageNumber(this.sibling.page) === wanted) {
+        return this.sibling
+      }
+      return this.emptyLeafBundle()
+    },
     scheduleSpreadViewportBand() {
       if (this.spreadBandTimer) window.clearTimeout(this.spreadBandTimer)
       this.spreadBandTimer = window.setTimeout(() => this.syncSpreadViewportBand(), 40)
@@ -421,7 +500,7 @@ export default {
       const sizes = activeNumbers
         .map((number) => this.spreadLeafWordSizes[number])
         .filter((value) => Number.isFinite(value) && value > 0)
-      if (sizes.length !== activeNumbers.length) return
+      if (!sizes.length) return
       const unified = Math.min(...sizes)
       if (unified !== this.spreadUnifiedWordSize) {
         this.spreadUnifiedWordSize = unified
@@ -477,7 +556,11 @@ export default {
     schedulePreload() {
       if (this.preloadTimer) window.clearTimeout(this.preloadTimer)
       this.preloadTimer = window.setTimeout(() => {
-        const pages = this.visibleLeaves.map((leaf) => leaf.number)
+        const pages = [...new Set([
+          ...this.visibleLeaves.map((leaf) => leaf.number),
+          ...(this.sessionSpreadPageNumbers.length ? this.sessionSpreadPageNumbers : []),
+          ...this.spread.pages,
+        ])]
         if (this.isIndopakLayout) {
           prefetchMushafPageData(pages, this.layoutId)
           void ensureIndopakNastaleeqFontForLayout(this.layoutId)
@@ -510,22 +593,27 @@ export default {
       cacheMadaniPageLeaf(page, leaf)
     },
     async ensureCurrentLeaf() {
+      if (this.mode === 'spread') {
+        await this.ensureSpreadLeaves()
+        this.schedulePreload()
+        return
+      }
       const page = this.displayedPageNumber
       const cached = this.getCachedLeaf(page)
       if (cached?.page) {
         this.fetchedLeaf = cached
-        await this.ensureSibling()
+        this.sibling = null
         this.schedulePreload()
         return
       }
 
-      if (Number(this.fetchedLeaf?.page?.page_number) !== page) {
+      if (this.leafPageNumber(this.fetchedLeaf?.page) !== page) {
         this.fetchedLeaf = null
       }
 
       if (
         this.page
-        && Number(this.page.page_number ?? this.page.pageNumber) === page
+        && this.leafPageNumber(this.page) === page
         && this.fontFamily
         && this.fontUrl
       ) {
@@ -537,7 +625,7 @@ export default {
         }
         this.cacheLeaf(page, leaf)
         this.fetchedLeaf = leaf
-        await this.ensureSibling()
+        this.sibling = null
         this.schedulePreload()
         return
       }
@@ -550,29 +638,78 @@ export default {
       } catch {
         if (token === this.fetchToken) this.fetchedLeaf = null
       }
-      await this.ensureSibling()
+      this.sibling = null
       this.schedulePreload()
+    },
+    async ensureSpreadLeaves() {
+      const pages = [...new Set([
+        ...this.displaySpread.pages,
+        ...this.spread.pages,
+        ...(this.sessionSpreadPageNumbers.length ? this.sessionSpreadPageNumbers : []),
+      ])]
+      const current = this.displayedPageNumber
+      const token = ++this.fetchToken
+
+      if (this.leafPageNumber(this.fetchedLeaf?.page) !== current) {
+        this.fetchedLeaf = null
+      }
+      const other = pages.find((number) => number !== current)
+      if (other == null) {
+        this.sibling = null
+      } else if (this.leafPageNumber(this.sibling?.page) !== other) {
+        this.sibling = null
+      }
+
+      const loadPage = async (pageNum) => {
+        const cached = this.getCachedLeaf(pageNum)
+        if (cached?.page) return { pageNum, leaf: cached }
+        if (
+          this.page
+          && this.leafPageNumber(this.page) === pageNum
+          && this.fontFamily
+          && this.fontUrl
+        ) {
+          const leaf = {
+            page: this.page,
+            fontFamily: this.fontFamily,
+            fontUrl: this.fontUrl,
+            layoutId: this.layoutId,
+          }
+          this.cacheLeaf(pageNum, leaf)
+          return { pageNum, leaf }
+        }
+        try {
+          const leaf = await this.loadLeaf(pageNum)
+          if (leaf?.page) {
+            this.cacheLeaf(pageNum, leaf)
+            return { pageNum, leaf }
+          }
+        } catch {
+          /* pair page may retry on next ensure */
+        }
+        return { pageNum, leaf: null }
+      }
+
+      const results = await Promise.all(pages.map((pageNum) => loadPage(pageNum)))
+      if (token !== this.fetchToken) return
+
+      const nextLeaves = { ...this.spreadLeavesByPage }
+      for (const { pageNum, leaf } of results) {
+        if (leaf?.page) {
+          nextLeaves[pageNum] = leaf
+        }
+      }
+      this.spreadLeavesByPage = nextLeaves
+
+      this.fetchedLeaf = nextLeaves[current] || null
+      this.sibling = other != null ? (nextLeaves[other] || null) : null
     },
     async ensureSibling() {
       if (this.mode !== 'spread') {
         this.sibling = null
         return
       }
-      const other = this.spread.pages.find(number => number !== this.displayedPageNumber)
-      if (!other) {
-        this.sibling = null
-        return
-      }
-      const cached = this.getCachedLeaf(other)
-      if (cached) {
-        this.sibling = cached
-        return
-      }
-      try {
-        this.sibling = await this.loadLeaf(other)
-      } catch {
-        this.sibling = null
-      }
+      await this.ensureSpreadLeaves()
     },
   },
 }
@@ -658,15 +795,34 @@ export default {
   box-shadow: inset 12px 0 16px -14px rgba(78, 54, 24, 0.14);
 }
 
+.qpc-madani-spread__placeholder {
+  flex: 1 1 50%;
+  min-height: 12rem;
+  min-width: 0;
+  background: color-mix(in srgb, #846840 8%, transparent);
+  animation: qpc-madani-spread-placeholder-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes qpc-madani-spread-placeholder-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
 .qpc-madani-spread--spread .qpc-madani-spread__leaf:first-child :deep(.qpc-madani-page__sheet) {
-  padding-inline: 1.65rem 1.15rem;
+  padding-inline: clamp(0.85rem, 1.8vw, 1.25rem) clamp(0.55rem, 1.1vw, 0.85rem);
 }
 
 .qpc-madani-spread--spread .qpc-madani-spread__leaf:last-child :deep(.qpc-madani-page__sheet) {
-  padding-inline: 1.15rem 1.65rem;
+  padding-inline: clamp(0.55rem, 1.1vw, 0.85rem) clamp(0.85rem, 1.8vw, 1.25rem);
 }
 
 .qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
+  /* RTL spread: anchor the lone leaf on the reader's right side */
   justify-content: flex-start;
   width: 100%;
   max-width: 100%;

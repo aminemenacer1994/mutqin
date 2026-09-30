@@ -96,7 +96,8 @@ export function isAyahInCanonicalRange(key, startKey, endKey) {
 
 /**
  * Keep surah header and ayah words that fall inside the session.
- * Basmala rows are omitted in session reading. Neighbouring ayahs on the same page are dropped.
+ * Neighbouring ayahs on the same page are dropped. Basmala is kept only
+ * when the session includes that surah’s first ayah.
  */
 export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = '') {
   const source = Array.isArray(lines) ? lines : []
@@ -126,6 +127,12 @@ export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = 
       continue
     }
     if (type === 'basmallah' || type === 'basmala') {
+      const lineSurah = Number(line.surah_number)
+      const showBasmala = [...sessionSurahs].some((surah) => (
+        (!lineSurah || lineSurah === surah)
+        && isAyahInCanonicalRange(`${surah}:1`, start.key, end.key)
+      ))
+      if (showBasmala) kept.push(line)
       continue
     }
     if (type !== 'ayah') continue
@@ -255,16 +262,17 @@ export function prepareQpcMadaniSessionLines(
   endKey = '',
   { showSurahHeader = true, preservePrintedGrid = false } = {},
 ) {
-  const filtered = filterQpcPageLinesToSession(lines, startKey, endKey)
+  const source = Array.isArray(lines) ? lines : []
+  const filtered = filterQpcPageLinesToSession(source, startKey, endKey)
   let prepared = filtered
   if (showSurahHeader) {
-    prepared = injectQpcMadaniSessionSurahHeaders(lines, filtered, startKey, endKey)
+    prepared = injectQpcMadaniSessionSurahHeaders(source, filtered, startKey, endKey)
   } else {
     prepared = stripQpcSessionSurahNameLines(filtered)
   }
   prepared = compactQpcMadaniSessionAyahLines(prepared)
   if (preservePrintedGrid) {
-    return padQpcMadaniLinesToPrintedGrid(lines, prepared)
+    return padQpcMadaniLinesToPrintedGrid(source, prepared)
   }
   return prepared
 }

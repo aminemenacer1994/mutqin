@@ -98,6 +98,81 @@ export function shouldShowTwoMadaniPages(width) {
 
 export { mushafTwoPageMinWidth, shouldShowTwoMushafPages }
 
+function uniqueSortedPages(pages = []) {
+  return [...new Set(
+    (Array.isArray(pages) ? pages : [])
+      .map((page) => Number(page))
+      .filter((page) => Number.isFinite(page) && page > 0),
+  )].sort((left, right) => left - right)
+}
+
+/**
+ * Pair session pages for a two-page reader: earlier page on the right.
+ * Avoids showing a blank leaf when the printed odd/even partner is outside the session.
+ */
+export function pairSessionPages(sessionPages = []) {
+  const pages = uniqueSortedPages(sessionPages)
+  const pairs = []
+  for (let index = 0; index < pages.length; index += 2) {
+    const right = pages[index]
+    const left = pages[index + 1] ?? null
+    pairs.push({
+      right,
+      left,
+      pages: left != null ? [right, left] : [right],
+    })
+  }
+  return pairs
+}
+
+export function resolveSessionAwareSpread(currentPage, sessionPages = []) {
+  const pages = uniqueSortedPages(sessionPages)
+  const current = Number(currentPage)
+  if (!pages.length) {
+    return {
+      right: current,
+      left: null,
+      pages: Number.isFinite(current) && current > 0 ? [current] : [],
+    }
+  }
+  const pairs = pairSessionPages(pages)
+  return pairs.find((pair) => pair.pages.includes(current)) || pairs[0]
+}
+
+export function previousSessionSpreadPage(currentPage, sessionPages = []) {
+  const pairs = pairSessionPages(sessionPages)
+  const index = pairs.findIndex((pair) => pair.pages.includes(Number(currentPage)))
+  if (index <= 0) return null
+  return pairs[index - 1].right
+}
+
+export function nextSessionSpreadPage(currentPage, sessionPages = []) {
+  const pairs = pairSessionPages(sessionPages)
+  const index = pairs.findIndex((pair) => pair.pages.includes(Number(currentPage)))
+  if (index < 0 || index >= pairs.length - 1) return null
+  return pairs[index + 1].right
+}
+
+/**
+ * Desktop two-page reader uses consecutive session pages when the printed
+ * partner is outside the session (e.g. Baqarah 2+3 instead of empty page 1).
+ */
+export function resolveSpreadLeafPageNumbers({
+  spreadPages = [],
+  sessionPageNumbers = [],
+  currentPage = 0,
+  keepPrintedPair = false,
+} = {}) {
+  const session = uniqueSortedPages(sessionPageNumbers)
+  if (keepPrintedPair && session.length) {
+    return resolveSessionAwareSpread(currentPage || session[0], session).pages
+  }
+  const pair = uniqueSortedPages(spreadPages)
+  if (!session.length) return pair
+  const inSession = pair.filter((page) => session.includes(page))
+  return inSession.length ? inSession : pair
+}
+
 /**
  * RTL mushaf spreads: the reader's first page is on the right.
  * When only one side of the pair has loaded content, show that leaf on the right.

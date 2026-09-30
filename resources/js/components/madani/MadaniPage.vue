@@ -213,12 +213,11 @@ export default {
       const showHeader = !this.sessionScoped || this.showSessionSurahHeader
       return prepareQpcMadaniSessionLines(raw, this.sessionStartAyah, this.sessionEndAyah, {
         showSurahHeader: showHeader,
-        preservePrintedGrid: this.spreadViewportFill,
+        preservePrintedGrid: !!this.spreadViewportFill,
       })
     },
     isOpening() {
       if (this.spreadViewportFill) return false
-      if (this.sessionScoped || this.sessionStartAyah) return false
       const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
       return raw.length > 0 && raw.length < 15
     },
@@ -398,9 +397,13 @@ export default {
         return type === 'surah_name' || type === 'basmallah' || type === 'basmala'
       })
       if (needsSurahFont) {
-        await loadSurahNamesFont()
-          .then(() => { this.surahNamesReady = true })
-          .catch(() => { this.surahNamesReady = false })
+        if (this.isIndopakLayout) {
+          this.surahNamesReady = this.fontReady
+        } else {
+          await loadSurahNamesFont()
+            .then(() => { this.surahNamesReady = true })
+            .catch(() => { this.surahNamesReady = false })
+        }
       }
       await this.$nextTick()
       this.fitLines()
@@ -494,13 +497,13 @@ export default {
           safety = narrow ? 0.9 : 0.95
         }
         cap = this.embedded
-          ? (narrow ? 34 : 38)
-          : (mobile ? (narrow ? 52 : 60) : (narrow ? 40 : 46))
+          ? (narrow ? 36 : 42)
+          : (mobile ? (narrow ? 56 : 66) : (narrow ? 44 : 50))
         if (sessionSheet) {
-          cap = narrow ? 58 : 68
+          cap = narrow ? 62 : 72
         }
         if (desktopSpread && this.embedded) {
-          cap = narrow ? 48 : 64
+          cap = narrow ? 52 : 68
         }
       }
       const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
@@ -513,7 +516,7 @@ export default {
         if (Number.isFinite(heightFit) && heightFit > 0) {
           rawSize = Math.min(cap * requested, widthFit, heightFit)
         }
-      } else if (this.spreadViewportFill && !this.sessionScoped) {
+      } else if (this.spreadViewportFill) {
         const heightFit = this.viewportBandHeightFit(root, sheet, 15, measureSize)
         if (Number.isFinite(heightFit) && heightFit > 0) {
           rawSize = Math.min(cap * requested, widthFit, heightFit)
@@ -553,6 +556,7 @@ export default {
         ornament.style.minHeight = `${bandPx}px`
         ornament.style.display = 'flex'
         ornament.style.flexDirection = 'column'
+        ornament.style.justifyContent = 'stretch'
       }
       const folioHeight = folio instanceof HTMLElement ? folio.offsetHeight : 0
       const rowCount = Math.max(15, sheet.querySelectorAll('.qpc-madani-line').length)
@@ -703,7 +707,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  margin-inline: clamp(0.75rem, 4.5vw, 1.85rem);
   padding: 0.45rem 0 0.62rem;
   border-bottom: 1px solid color-mix(in srgb, var(--qpc-rule, #8d6a35) 42%, transparent);
 }
@@ -726,6 +732,7 @@ export default {
 
 .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
   padding: 0.48rem 0 0.72rem;
+  margin-inline: clamp(0.85rem, 5vw, 2.25rem);
   margin-bottom: 0.4rem;
   border-bottom: 1px solid color-mix(in srgb, var(--mushaf-reading-ink, #8a7048) 36%, transparent);
 }

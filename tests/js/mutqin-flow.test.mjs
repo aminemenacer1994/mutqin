@@ -64,6 +64,7 @@ const hifzSessionEngine = await loadModule('resources/js/scripts/engine/hifz_ses
 const memorisationSource = (await fs.readFile(path.join(root, 'resources/js/views/Memorisation.vue'), 'utf8'))
   + '\n'
   + (await fs.readFile(path.join(root, 'resources/js/views/Memorisation.js'), 'utf8'))
+const chainingQueueSource = await fs.readFile(path.join(root, 'resources/js/scripts/techniques/chainingQueue.js'), 'utf8')
 
 const { loadMutqinState, saveMutqinState, useMutqinPersistence, watchMutqinState } = persistence.namespace
 const { seedAyahs, updateAyah } = ayahState.namespace
@@ -342,7 +343,7 @@ assert.match(memorisationSource, /playQueueEntry\(first, \{ force: true, queueIn
 assert.match(memorisationSource, /setActiveVerse\(verseKey, \{[^}]*queueIndex: this\.queueIndex[^}]*\}\)/, 'next navigation must preserve duplicate queue entry index')
 assert.match(memorisationSource, /queueIndex: Number\.isFinite\(options\.queueIndex\)/, 'playback must not reset repeated ayah entries to first queue match')
 assert.doesNotMatch(memorisationSource, /createAyahSegments/, 'linking must be ayah-level, not word-segment based')
-assert.match(memorisationSource, /linking:single:\$\{verse\.key\}/, 'linking must include individual ayah practice')
-assert.match(memorisationSource, /linking:\$\{verse\.key\}->\$\{nextVerse\.key\}/, 'linking must include adjacent ayah pairs')
+assert.match(chainingQueueSource, /linking:single:\$\{verseKey\(verse\)\}/, 'linking must include individual ayah practice')
+assert.match(chainingQueueSource, /linking:\$\{verseKey\(verse\)\}->\$\{verseKey\(nextVerse\)\}/, 'linking must include adjacent ayah pairs')
 
 console.log('mutqin-flow composable integration passed')

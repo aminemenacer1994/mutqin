@@ -27,16 +27,16 @@ export const INDOPAK_TWO_PAGE_MIN_WIDTH = 1200
  * Fit still sets `--qpc-word-size` in px at runtime; these are the base geometry.
  */
 export const INDOPAK_PAGE_TYPOGRAPHY = Object.freeze({
-  /** Fallback before fit; slightly smaller than Madani QCF ink. */
-  wordSize: '17px',
+  /** Fallback before fit; slightly larger for readability. */
+  wordSize: '19px',
   /** Nastaleeq needs more leading than QCF page glyphs (Madani ≈ 1.32). */
   lineHeight: '1.92',
   /** Min row band for 15-line geometry (Madani ≈ 1.62). */
-  lineMinHeight: '2.12',
+  lineMinHeight: '2.02',
   /** Extra gap between ayah lines as a multiple of word-size (Madani ≈ 0). */
-  lineGap: '0.14',
-  /** Surah banner scale vs word-size (Madani ≈ 2.45). */
-  surahTitleScale: '2.0',
+  lineGap: '0.08',
+  /** Surah banner scale vs word-size — cleaner container title. */
+  surahTitleScale: '2.35',
   /** Sheet padding (block / inline) — single & borderless mobile. */
   pagePaddingBlock: '0.62rem',
   pagePaddingInline: '0.48rem',
@@ -55,10 +55,10 @@ export const INDOPAK_PAGE_TYPOGRAPHY = Object.freeze({
  */
 export function indopakFitWordSizeCap(ctx = {}) {
   const { mobile = false, narrow = false, desktopSpread = false, sessionSheet = false } = ctx
-  if (desktopSpread) return narrow ? 36 : 46
-  if (sessionSheet) return narrow ? 42 : 50
-  if (mobile) return narrow ? 38 : 46
-  return narrow ? 32 : 38
+  if (desktopSpread) return narrow ? 40 : 50
+  if (sessionSheet) return narrow ? 46 : 54
+  if (mobile) return narrow ? 42 : 50
+  return narrow ? 36 : 42
 }
 
 /**

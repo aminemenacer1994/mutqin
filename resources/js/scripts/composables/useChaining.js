@@ -1,34 +1,6 @@
 import { createAyahRecord, mutateMutqinState } from './useMutqinPersistence'
 
-function uniqueVerses(verses = []) {
-  const seen = new Set()
-  return (Array.isArray(verses) ? verses : []).filter(verse => {
-    const key = verse?.key || verse?.id
-    if (!key || seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-}
-
-export function buildChainQueue(verses = []) {
-  const unique = uniqueVerses(verses)
-  const queue = []
-
-  unique.forEach((_, endIndex) => {
-    unique.slice(0, endIndex + 1).forEach((verse, chainIndex) => {
-      queue.push({
-        phase: 'Cumulative',
-        ayahId: verse.key || verse.id,
-        verse,
-        chainKey: `cumulative:${endIndex + 1}`,
-        sequencePosition: chainIndex + 1,
-        sequenceTotal: endIndex + 1
-      })
-    })
-  })
-
-  return queue
-}
+export { buildCumulativeChainSteps as buildChainQueue } from '../techniques/chainingQueue.js'
 
 export function recordChainResult(state, fromAyahId, toAyahId, success = true) {
   if (!state || !fromAyahId || !toAyahId) return null

@@ -174,27 +174,44 @@
 
   .workspace-shell-idle .workspace-shell-main-title,
   .workspace-shell-idle .workspace-shell-copy h1 {
-    white-space: normal !important;
-    overflow-wrap: anywhere;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: baseline !important;
+    gap: 0.45rem !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    overflow-wrap: normal !important;
+  }
+
+  .workspace-shell-idle .workspace-shell-idle-title-en,
+  .workspace-shell-idle .workspace-shell-idle-title-ar {
+    display: inline !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .workspace-shell-idle--fresh .workspace-shell-main-title,
   .workspace-shell-idle--fresh .workspace-shell-copy h1 {
-    font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", sans-serif) !important;
-    font-size: clamp(1.05rem, 0.95rem + 1.8vw, 1.25rem) !important;
-    font-weight: 650 !important;
-    letter-spacing: -0.02em !important;
+    font-family: var(--font-surah-latin) !important;
+    font-size: clamp(1.02rem, 0.9rem + 1.8vw, 1.22rem) !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.01em !important;
     line-height: 1.25 !important;
     color: var(--text) !important;
   }
 
   .workspace-shell-idle--continuing .workspace-shell-main-title,
   .workspace-shell-idle--continuing .workspace-shell-copy h1 {
-    font-family: "Amiri", "Scheherazade New", "Times New Roman", serif !important;
-    font-size: clamp(1.1rem, 0.95rem + 2vw, 1.35rem) !important;
+    font-family: var(--font-surah-latin) !important;
+    font-size: clamp(1.05rem, 0.92rem + 2vw, 1.28rem) !important;
     line-height: 1.22 !important;
-    font-weight: 400 !important;
-    letter-spacing: 0.02em !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.015em !important;
     color: color-mix(in srgb, var(--text) 82%, var(--accent) 18%) !important;
   }
 
@@ -345,14 +362,27 @@
   .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
   .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1 {
     margin: 0;
-    font-family: "Amiri", "Scheherazade New", "Times New Roman", serif !important;
-    font-size: clamp(1.15rem, 0.95rem + 2.4vw, 1.4rem) !important;
+    padding-inline: 0.05rem;
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
+    font-size: clamp(1.05rem, 0.92rem + 2.2vw, 1.32rem) !important;
     line-height: 1.22 !important;
-    font-weight: 400 !important;
-    letter-spacing: 0.03em !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.015em !important;
     color: color-mix(in srgb, var(--text) 78%, var(--accent) 22%) !important;
-    white-space: normal !important;
-    overflow-wrap: anywhere;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    overflow-wrap: normal !important;
+  }
+
+  .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.015em !important;
+  }
+
+  .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+    font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif !important;
+    font-weight: 400 !important;
   }
 
   .workspace-shell-lead {
@@ -4995,7 +5025,20 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     width: 100% !important;
     margin: 0 !important;
     display: flex !important;
-    align-items: center !important;
+    align-items: flex-start !important;
+  }
+
+  .tools-body .sheet .sheet-content .techniques-choice-group .radio input[type="radio"] {
+    flex: 0 0 18px !important;
+    flex-shrink: 0 !important;
+    align-self: flex-start !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    aspect-ratio: 1 / 1 !important;
   }
 
   /* Saved: clean Bootstrap list (override earlier dense grid) */
@@ -6234,12 +6277,12 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   width: 100% !important;
   min-width: 0 !important;
   max-width: 100% !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .workspace-shell-head-toolbar > .workspace-shell-main-title {
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
   white-space: nowrap !important;
 }
 
@@ -6373,38 +6416,56 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   text-overflow: ellipsis !important;
 }
 
-/* Wide + single session CTA only: Resume/Start left, reading icons right on one row */
+/* Wide + single session CTA: Start/Resume flush against vertical br, then icons */
 @media (min-width: 768px) {
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)),
   .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) {
     flex-flow: row nowrap !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    gap: clamp(0.55rem, 1.6vw, 0.85rem) !important;
+    justify-content: flex-end !important;
+    gap: var(--top-card-utility-cluster-gap, 0.65rem) !important;
+    width: max-content !important;
+    max-width: 100% !important;
   }
 
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .workspace-shell-head-actions,
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .workspace-shell-actions,
   .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .workspace-shell-head-actions,
   .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .workspace-shell-actions {
     order: 1 !important;
-    flex: 1 1 auto !important;
-    width: auto !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
     max-width: none !important;
   }
 
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .top-card-session-hr,
+  .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .top-card-session-hr {
+    order: 2 !important;
+    margin: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .action-buttons-group,
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .action-buttons-group.w-100,
   .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .action-buttons-group {
     flex-flow: row nowrap !important;
     align-items: center !important;
-    width: auto !important;
+    width: max-content !important;
+    max-width: none !important;
   }
 
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .top-card-icon-controls,
   .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) > .top-card-icon-controls {
-    order: 2 !important;
+    order: 3 !important;
     align-self: center !important;
     max-width: none !important;
   }
 
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .top-card-action-trigger.session-primary-action,
+  html body .app .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .top-card-action-trigger.session-primary-action.w-100,
   .workspace-shell-head-utility-row:not(:has(.top-card-session-actions.has-paired-actions)) .top-card-action-trigger.session-primary-action {
     width: auto !important;
-    flex: 0 1 auto !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
   }
 }
 
@@ -6540,7 +6601,8 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     flex-flow: row nowrap !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    gap: 0.55rem !important;
+    --top-card-utility-cluster-gap: 0.65rem;
+    gap: var(--top-card-utility-cluster-gap) !important;
     width: auto !important;
     max-width: none !important;
     flex: 0 0 auto !important;
@@ -6557,8 +6619,13 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     flex: 0 0 auto !important;
   }
 
-  .workspace-shell-head-utility-row > .top-card-icon-controls {
+  .workspace-shell-head-utility-row > .top-card-session-hr {
     order: 2 !important;
+    margin: 0 !important;
+  }
+
+  .workspace-shell-head-utility-row > .top-card-icon-controls {
+    order: 3 !important;
     align-self: center !important;
     flex: 0 0 auto !important;
   }
@@ -6569,7 +6636,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     align-items: center !important;
     width: auto !important;
     max-width: none !important;
-    gap: 0.5rem !important;
+    gap: 0.35rem !important;
   }
 
   .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
@@ -6839,7 +6906,8 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     flex-flow: row nowrap !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    gap: 0.55rem !important;
+    --top-card-utility-cluster-gap: 0.65rem;
+    gap: var(--top-card-utility-cluster-gap) !important;
     width: auto !important;
     max-width: none !important;
     flex: 0 0 auto !important;
@@ -6856,8 +6924,13 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     flex: 0 0 auto !important;
   }
 
-  .workspace-shell-head-utility-row > .top-card-icon-controls {
+  .workspace-shell-head-utility-row > .top-card-session-hr {
     order: 2 !important;
+    margin: 0 !important;
+  }
+
+  .workspace-shell-head-utility-row > .top-card-icon-controls {
+    order: 3 !important;
     align-self: center !important;
     flex: 0 0 auto !important;
   }
@@ -6868,7 +6941,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     align-items: center !important;
     width: auto !important;
     max-width: none !important;
-    gap: 0.5rem !important;
+    gap: 0.35rem !important;
   }
 
   .workspace-shell-head-utility-row .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
@@ -7273,7 +7346,8 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
     flex-flow: row nowrap !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    gap: 0.55rem !important;
+    --top-card-utility-cluster-gap: 0.65rem;
+    gap: var(--top-card-utility-cluster-gap) !important;
     width: auto !important;
     max-width: none !important;
     flex: 0 0 auto !important;
@@ -7290,8 +7364,13 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
     flex: 0 0 auto !important;
   }
 
-  html body .app .workspace-shell-head-utility-row > .top-card-icon-controls {
+  html body .app .workspace-shell-head-utility-row > .top-card-session-hr {
     order: 2 !important;
+    margin: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row > .top-card-icon-controls {
+    order: 3 !important;
     align-self: center !important;
     flex: 0 0 auto !important;
   }
@@ -7303,7 +7382,7 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
     align-items: center !important;
     width: auto !important;
     max-width: none !important;
-    gap: 0.5rem !important;
+    gap: 0 !important;
   }
 
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster,
@@ -7322,12 +7401,12 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: center !important;
-    gap: 0.4rem !important;
+    gap: 0.35rem !important;
     width: auto !important;
     min-width: 0 !important;
     max-width: none !important;
-    margin-inline-end: 1.65rem !important;
-    padding-inline-end: 1.65rem !important;
+    margin-inline-end: 0.35rem !important;
+    padding-inline-end: 0 !important;
   }
 
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster > .workspace-ai-cta-pair::after {
@@ -7618,12 +7697,13 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     flex-flow: row nowrap !important;
     align-items: baseline !important;
     justify-content: flex-start !important;
-    column-gap: 1.85rem !important;
-    gap: 1.85rem !important;
+    column-gap: 0.45rem !important;
+    gap: 0.45rem !important;
     width: fit-content !important;
     max-width: 100% !important;
     overflow: visible !important;
     white-space: nowrap !important;
+    font-size: clamp(0.82rem, 0.72rem + 1.8vw, 1.05rem) !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
@@ -7633,7 +7713,14 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     flex: 0 0 auto !important;
     min-width: 0 !important;
     white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     isolation: isolate;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
+    font-family: var(--font-surah-latin) !important;
+    font-weight: 500 !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
@@ -7826,7 +7913,11 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     border: 0 !important;
     background: transparent !important;
     color: inherit !important;
-    font: inherit !important;
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
+    font-size: inherit !important;
+    font-weight: 500 !important;
+    line-height: inherit !important;
+    letter-spacing: 0.01em !important;
     text-align: start !important;
     cursor: pointer !important;
     -webkit-tap-highlight-color: transparent !important;
@@ -7842,9 +7933,28 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     flex: 1 1 auto !important;
     min-width: 0 !important;
     display: inline-flex !important;
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
     align-items: baseline !important;
-    gap: 0.35rem 0.5rem !important;
+    gap: 0.45rem 0.55rem !important;
+    overflow: hidden !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-en,
+  html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-en {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
+    font-weight: 500 !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar {
+    font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif !important;
   }
 
   html body .app .workspace-shell-overview-toggle__chevron {

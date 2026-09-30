@@ -10,6 +10,7 @@ import {
   isAyahChainDimmed,
   isAyahFocusDimmed,
   isAyahInActiveChain,
+  isAyahInSessionScope,
   isAyahPeekRevealed,
   isAyahTalqinListen,
   isAyahTalqinRepeat,
@@ -145,6 +146,23 @@ const chainSnap = {
 }
 assert.equal(isAyahInActiveChain('2:30', chainSnap), true)
 assert.equal(isAyahChainDimmed('2:32', chainSnap), true)
+assert.equal(isAyahChainDimmed('2:32', {
+  ...chainSnap,
+  sessionAyahKeys: ['2:30', '2:31'],
+}), false, 'neighbouring-page ayahs must not receive chain dim outside session')
+assert.equal(isAyahInActiveChain('2:32', {
+  ...chainSnap,
+  sessionStartAyah: '2:30',
+  sessionEndAyah: '2:31',
+}), false)
+assert.equal(isAyahInSessionScope('21:8', {
+  sessionStartAyah: '21:1',
+  sessionEndAyah: '21:7',
+}), false)
+assert.equal(isAyahInSessionScope('21:5', {
+  sessionStartAyah: '21:1',
+  sessionEndAyah: '21:7',
+}), true)
 const chainTechnique = resolveQpcMadaniWordTechniqueState(word, chainSnap)
 assert.equal(chainTechnique.isChainMember, true)
 assert.equal(madaniQpcWordTechniqueClass(chainTechnique)['is-chain-member'], true)

@@ -18,9 +18,9 @@
     <MadaniSurahHeading
       v-if="isSurahNameLine && isIndopakLayout"
       :surah-number="line.surah_number ?? line.surahNumber"
-      :glyph="headerText"
-      :font-family="surahFontFamily"
-      :ready="surahNamesReady"
+      :glyph="indopakHeaderText"
+      :font-family="indopakSurahFontFamily"
+      :ready="indopakSurahFontReady"
     />
 
     <div
@@ -105,6 +105,7 @@
 
 <script>
 import { surahNameGlyphText } from '../../scripts/mushaf/madaniPageLayout'
+import { getSurahArabicBannerText } from '../../scripts/mushaf/surahArabicNameCache.js'
 import { SURAH_NAMES_FONT_FAMILY } from '../../scripts/mushaf/qcfFontLoader'
 import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
 import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
@@ -198,8 +199,21 @@ export default {
 
       return surahNameGlyphText(surah)
     },
+    indopakHeaderText() {
+      const surah = this.line.surah_number ?? this.line.surahNumber
+      if (!this.isSurahNameLine || surah === '' || surah == null) {
+        return ''
+      }
+      return getSurahArabicBannerText(surah) || `سُورَة ${surah}`
+    },
     surahFontFamily() {
       return SURAH_NAMES_FONT_FAMILY
+    },
+    indopakSurahFontFamily() {
+      return INDOPAK_NASTALEEQ_FONT_STACK
+    },
+    indopakSurahFontReady() {
+      return this.isIndopakLayout ? this.surahNamesReady : false
     },
     basmalaStyle() {
       if (!this.isIndopakLayout) return null
@@ -226,7 +240,7 @@ export default {
   min-width: 0;
   min-height: 0;
   padding-inline: 0;
-  padding-block: calc(var(--qpc-word-size, 22px) * 0.02);
+  padding-block: calc(var(--qpc-word-size, 22px) * 0.01);
   overflow: visible;
   contain: none;
   white-space: nowrap;
@@ -250,15 +264,15 @@ export default {
   align-items: center;
   width: 100%;
   min-height: 0;
-  padding: 0.12rem 0 0;
-  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.48);
+  padding: 0.08rem 0 0;
+  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.36);
 }
 
 .qpc-madani-line--basmallah,
 .qpc-madani-line--basmala {
   min-height: 1.6em;
-  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.42);
-  padding-block-end: calc(var(--qpc-word-size, 22px) * 0.08);
+  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.32);
+  padding-block-end: calc(var(--qpc-word-size, 22px) * 0.05);
 }
 
 .qpc-madani-line--session-partial {

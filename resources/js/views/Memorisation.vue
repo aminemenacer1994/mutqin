@@ -779,32 +779,35 @@
                     <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
                   <template v-if="readingViewMode === 'madani_mushaf'">
-                    <p class="top-card-menu-label top-card-menu-label--mushaf-edition">{{ t('memorisation.view.mushafEdition') }}</p>
-                    <button
-                      type="button"
-                      class="top-card-menu-toggle top-card-menu-toggle--mushaf-edition"
-                      :class="{ active: mushafLayoutId === 'madani-v2' }"
-                      :aria-pressed="mushafLayoutId === 'madani-v2' ? 'true' : 'false'"
-                      @click.stop="setMushafLayoutId('madani-v2')"
-                    >
-                      <i class="bi bi-journal-richtext" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.view.madinahV2') }}</span>
-                      <i v-if="mushafLayoutId === 'madani-v2'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                    </button>
-                    <button
-                      type="button"
-                      class="top-card-menu-toggle top-card-menu-toggle--mushaf-edition top-card-menu-toggle--mushaf-edition-stacked"
-                      :class="{ active: mushafLayoutId === 'indopak-15-qudratullah' }"
-                      :aria-pressed="mushafLayoutId === 'indopak-15-qudratullah' ? 'true' : 'false'"
-                      @click.stop="setMushafLayoutId('indopak-15-qudratullah')"
-                    >
-                      <i class="bi bi-journal-text" aria-hidden="true"></i>
-                      <span class="top-card-menu-toggle__stack">
-                        <span class="top-card-menu-toggle__title">{{ t('memorisation.view.indopak15') }}</span>
-                        <span class="top-card-menu-toggle__subtitle">{{ t('memorisation.view.qudratullah') }}</span>
-                      </span>
-                      <i v-if="mushafLayoutId === 'indopak-15-qudratullah'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                    </button>
+                    <div class="top-card-menu-section top-card-menu-section--mushaf-edition" role="group" :aria-label="t('memorisation.view.mushafEdition')">
+                      <div class="top-card-menu-divider top-card-menu-divider--mushaf-edition" aria-hidden="true"></div>
+                      <p class="top-card-menu-label top-card-menu-label--mushaf-edition">{{ t('memorisation.view.mushafEdition') }}</p>
+                      <button
+                        type="button"
+                        class="top-card-menu-toggle top-card-menu-toggle--mushaf-edition"
+                        :class="{ active: mushafLayoutId === 'madani-v2' }"
+                        :aria-pressed="mushafLayoutId === 'madani-v2' ? 'true' : 'false'"
+                        @click.stop="setMushafLayoutId('madani-v2')"
+                      >
+                        <i class="bi bi-journal-richtext" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.view.madinahV2') }}</span>
+                        <i v-if="mushafLayoutId === 'madani-v2'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="top-card-menu-toggle top-card-menu-toggle--mushaf-edition top-card-menu-toggle--mushaf-edition-stacked"
+                        :class="{ active: mushafLayoutId === 'indopak-15-qudratullah' }"
+                        :aria-pressed="mushafLayoutId === 'indopak-15-qudratullah' ? 'true' : 'false'"
+                        @click.stop="setMushafLayoutId('indopak-15-qudratullah')"
+                      >
+                        <i class="bi bi-journal-text" aria-hidden="true"></i>
+                        <span class="top-card-menu-toggle__stack">
+                          <span class="top-card-menu-toggle__title">{{ t('memorisation.view.indopak15') }}</span>
+                          <span class="top-card-menu-toggle__subtitle">{{ t('memorisation.view.qudratullah') }}</span>
+                        </span>
+                        <i v-if="mushafLayoutId === 'indopak-15-qudratullah'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      </button>
+                    </div>
                   </template>
                   <div class="top-card-menu-divider top-card-menu-divider--layout" aria-hidden="true"></div>
                   <button
@@ -1569,6 +1572,7 @@
                 :session-start-ayah="qpcMadaniSessionStartAyah"
                 :session-end-ayah="qpcMadaniSessionEndAyah"
                 :session-printed-page-count="qpcMadaniSessionPageNumbers.length"
+                :session-page-numbers="qpcMadaniSessionPageNumbers"
                 :technique-snapshot="qpcMadaniTechniqueSnapshot"
                 :progress-snapshot="qpcMadaniProgressSnapshot"
                 :audio-index-map="madaniAudioIndexMap"
@@ -1616,7 +1620,7 @@
                 'blur-upcoming': blurModeEnabled && isVerseBlurred(verse.key),
                 'peek-revealed': isVersePeekRevealed(verse.key),
                 'is-chain-member': chainingEnabled && isVerseInActiveChain(verse.key),
-                'is-chain-dim': chainingEnabled && !isVerseInActiveChain(verse.key),
+                'is-chain-dim': chainingEnabled && isVerseInSessionScope(verse.key) && !isVerseInActiveChain(verse.key),
                 'is-talqin-listen': talqinModeEnabled && !talqinRecitationTurnActive && isVerseVisuallyActive(verse.key),
                 'is-talqin-repeat': talqinRecitationTurnActive && isVerseVisuallyActive(verse.key),
                 'ai-recitation-active': shouldShowRecitationReviewHighlights(verse.key)
@@ -4744,11 +4748,12 @@
               <span class="sr-only">{{ t('sessionSetup.reciter') }}: {{ fullscreenReciterName }}</span>
               <i class="bi bi-headphones madani-fullscreen-bar__reciter-glyph" aria-hidden="true"></i>
               <select
-                v-model="reciterId"
+                ref="madaniFullscreenReciterSelect"
+                :value="reciterId"
                 :key="mobileReciterSelectRenderKey"
                 class="madani-fullscreen-bar__reciter-select"
                 :aria-label="t('sessionSetup.reciter')"
-                @change="onMadaniFullscreenReciterChange"
+                @change="onMadaniFullscreenReciterChange($event)"
               >
                 <optgroup v-if="recitersWithWordHighlight.length" :label="t('sessionSetup.recitersWithWordHighlight')">
                   <option v-for="r in recitersWithWordHighlight" :key="r.id" :value="r.id">{{ r.name }}</option>

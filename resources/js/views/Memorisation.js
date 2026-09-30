@@ -141,6 +141,7 @@ import {
   shouldShowTwoMushafPages,
   mushafTwoPageMinWidth,
   resolveMushafSpread,
+  resolveSessionAwareSpread,
 } from '../scripts/mushaf/madaniPagePair'
 import {
   clampMushafPage,
@@ -156,6 +157,7 @@ import {
 } from '../scripts/mushaf/mushafPageData'
 import { ensureIndopakNastaleeqFontForLayout } from '../scripts/mushaf/indopakNastaleeqFont'
 import { isIndopakMushafLayout } from '../scripts/mushaf/indopakPageAdapter'
+import { setSurahArabicNameCache } from '../scripts/mushaf/surahArabicNameCache.js'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { progressBarDisplay } from '../utils/progressDisplay'
@@ -295,6 +297,7 @@ import {
   resolveTechniqueDisplay,
 } from '../scripts/techniques/techniqueDisplay'
 import { resolveAnchorIndices } from '../scripts/techniques/anchorWords'
+import { buildChainingGroups } from '../scripts/techniques/chainingQueue.js'
 import { buildQpcMadaniAnchorIndexesByAyah } from '../scripts/mushaf/qpcMadaniTechniques'
 import {
   REVIEW_AUDIO_STATES,
@@ -8771,9 +8774,13 @@ export default {
       const verses = Array.isArray(this.verses) ? this.verses : []
       if (!entry) {
         if (this.chainingMethod === 'cumulative') {
-          return verses.slice(0, 1).map((verse) => String(verse?.key || '')).filter(Boolean)
+          return this.sessionScopedAyahKeys(
+            verses.slice(0, 1).map((verse) => String(verse?.key || '')).filter(Boolean)
+          )
         }
-        return verses.slice(0, Math.min(2, verses.length)).map((verse) => String(verse?.key || '')).filter(Boolean)
+        return this.sessionScopedAyahKeys(
+          verses.slice(0, Math.min(2, verses.length)).map((verse) => String(verse?.key || '')).filter(Boolean)
+        )
       }
       const chainKey = entry.chainKey
       const currentKey = String(entry.verse?.key || entry.key || '')
@@ -8789,7 +8796,7 @@ export default {
         seen.add(key)
         keys.push(key)
       }
-      return keys.length ? keys : (currentKey ? [currentKey] : [])
+      return this.sessionScopedAyahKeys(keys.length ? keys : (currentKey ? [currentKey] : []))
     },
     practiceTechniqueStatusVisible() {
       return !!(this.talqinModeEnabled || this.chainingEnabled || this.anchorModeEnabled)
@@ -9692,8 +9699,10 @@ export default {
       if (this.showQpcMadaniSpreadPageNav) {
         const width = typeof window !== 'undefined' ? window.innerWidth : 1080
         if (shouldShowTwoMushafPages(width, this.mushafLayoutId)) {
-          const spread = resolveMushafSpread(current, this.mushafLayoutId)
-          visible = [spread.left, spread.right]
+          const spread = pages.length
+            ? resolveSessionAwareSpread(current, pages)
+            : resolveMushafSpread(current, this.mushafLayoutId)
+          visible = (spread.pages || [])
             .filter((pageNumber) => pageNumber && inSession(pageNumber))
             .map(Number)
         }
@@ -9768,6 +9777,9 @@ export default {
         talqinRepeatPhase: !!this.talqinRecitationTurnActive,
         chainingEnabled: !!this.chainingEnabled,
         chainAyahKeys: this.chainingVisualAyahKeys,
+        sessionAyahKeys: this.mushafSessionVerseKeyList,
+        sessionStartAyah: this.qpcMadaniSessionStartAyah,
+        sessionEndAyah: this.qpcMadaniSessionEndAyah,
         checkerHiddenIndexesByAyah: {},
         checkerPeekActive: false,
         checkerPeekAyah: '',
@@ -11017,6 +11029,15 @@ export default {
     showMadaniFullscreenTopBar() {
       this.scheduleMadaniFullscreenTopBarClearance()
     },
+    showMadaniFullscreenBar(isVisible) {
+      if (!isVisible || !this.isMobileViewport()) return
+      void this.prepareMobileImmersiveReciterSelect()
+    },
+    mobileReciterSelectRenderKey() {
+      if (!this.isMobileViewport()) return
+      this.armMobileReciterSelectSilence(450)
+      this.scheduleMobileReciterSelectDomSync()
+    },
     mobileProgressPills: {
       handler() {
         if (this.showMadaniFullscreenTopBar) {
@@ -11431,9 +11452,6 @@ export default {
     rangeEnd() {
       this.persistUiState()
     },
-    reciterId() {
-      this.persistUiState()
-    },
     speed() {
       this.applySpeed()
       this.persistUiState()
@@ -11489,7 +11507,9 @@ export default {
       }
     },
     reciterId(newVal) {
+      this.persistUiState()
       this.syncWordHighlightingForReciter(newVal)
+      this.scheduleMobileReciterSelectDomSync()
     },
     fontScale: 'persistUiState',
     quranFont(newVal) {
@@ -14368,7 +14388,8 @@ export default {
     },
 
     getReciterName() {
-      const reciter = this.reciters.find(r => r.id === this.reciterId)
+      const wanted = String(this.reciterId || '')
+      const reciter = (this.reciters || []).find(r => String(r?.id || '') === wanted)
       return reciter ? reciter.name : 'Alafasy'
     },
 
@@ -16135,6 +16156,9 @@ export default {
     enterMadaniMobileImmersiveReading() {
       this.madaniMobileFullscreenOfferHidden = true
       this.madaniMobileImmersiveDeclined = false
+      if (this.isMobileViewport() && isQpcMadaniMushafView(this.readingViewMode)) {
+        void this.prepareMobileImmersiveReciterSelect()
+      }
       this.isAppFullscreen = true
       this.syncAppFullscreenClass()
     },
@@ -16152,6 +16176,9 @@ export default {
           this.madaniMobileFullscreenOfferHidden = false
         }
         return
+      }
+      if (this.isMobileViewport() && isQpcMadaniMushafView(this.readingViewMode)) {
+        void this.prepareMobileImmersiveReciterSelect()
       }
       this.isAppFullscreen = true
       this.syncAppFullscreenClass()
@@ -36409,6 +36436,19 @@ export default {
         if (this.tajweedEnabled && !isIndopakMushafLayout(this.mushafLayoutId)) {
           await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true, scope: 'session' })
         }
+        const sessionPages = this.qpcMadaniSessionPageNumbers
+        if (sessionPages.length) {
+          if (isIndopakMushafLayout(this.mushafLayoutId)) {
+            prefetchMushafPageData(sessionPages, this.mushafLayoutId)
+            await Promise.all(
+              sessionPages.map((page) => loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => null)),
+            )
+          } else {
+            await Promise.all(
+              sessionPages.map((page) => loadMadaniPageLeaf(page).catch(() => null)),
+            )
+          }
+        }
       } catch (error) {
         console.error('QPC Madani viewer bootstrap failed:', error)
         this.qpcMadaniLoadError = this.t('memorisation.mushafLoad.errorDesc')
@@ -36466,9 +36506,10 @@ export default {
         pages.add(Number(page))
         const width = typeof window !== 'undefined' ? window.innerWidth : 1080
         if (shouldShowTwoMushafPages(width, this.mushafLayoutId)) {
-          const spread = resolveMushafSpread(page, this.mushafLayoutId)
-          if (spread.left) pages.add(spread.left)
-          pages.add(spread.right)
+          const spread = sessionPages.length
+            ? resolveSessionAwareSpread(page, sessionPages)
+            : resolveMushafSpread(page, this.mushafLayoutId)
+          ;(spread.pages || []).forEach((pageNumber) => pages.add(Number(pageNumber)))
         }
       }
       await Promise.all([...pages].map((pageNumber) => (
@@ -36504,13 +36545,20 @@ export default {
       const mode = shouldShowTwoMushafPages(width, this.mushafLayoutId) ? 'spread' : 'single'
       const pages = [target]
       if (mode === 'spread') {
-        const spread = resolveMushafSpread(target, this.mushafLayoutId)
-        if (spread.left) pages.push(spread.left)
+        const sessionPages = this.qpcMadaniSessionPageNumbers
+        const spread = sessionPages.length
+          ? resolveSessionAwareSpread(target, sessionPages)
+          : resolveMushafSpread(target, this.mushafLayoutId)
+        ;(spread.pages || []).forEach((page) => {
+          if (page && !pages.includes(Number(page))) pages.push(Number(page))
+        })
       }
       if (isIndopakMushafLayout(this.mushafLayoutId)) {
         prefetchMushafPageData(pages, this.mushafLayoutId)
         void ensureIndopakNastaleeqFontForLayout(this.mushafLayoutId).catch(() => null)
-        void loadMushafPageLeaf(target, this.mushafLayoutId).catch(() => {})
+        void Promise.all(
+          pages.map((page) => loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => null)),
+        )
       } else {
         preloadMadaniNavigationTargets(mode, target)
         void loadMadaniPageLeaf(target).catch(() => {})
@@ -37053,8 +37101,17 @@ export default {
     },
     isVerseInActiveChain(verseKey) {
       const key = String(verseKey || '')
-      if (!this.chainingEnabled || !key) return false
+      if (!this.chainingEnabled || !key || !this.isVerseInSessionScope(key)) return false
       return this.chainingVisualAyahKeys.includes(key)
+    },
+    isVerseInSessionScope(verseKey) {
+      return isVerseInteractiveOnPage(verseKey, this.mushafSessionVerseKeys)
+    },
+    sessionScopedAyahKeys(keys = []) {
+      const sessionKeys = this.mushafSessionVerseKeys
+      return (Array.isArray(keys) ? keys : []).filter((key) => (
+        isVerseInteractiveOnPage(key, sessionKeys)
+      ))
     },
     resolveMadaniAudioWordIndex(word, audioIndexMap = null) {
       return resolveMadaniAudioWordIndexHelper(word, audioIndexMap || this.madaniAudioIndexMap)
@@ -40176,11 +40233,14 @@ export default {
         this.blurIntensity = Math.max(4, Math.min(18, Number(this.centralSession.blurIntensity || 10)))
         this.anchorModeEnabled = !!this.centralSession.anchorModeEnabled
         this.anchorCount = Math.max(1, Math.min(2, Number(this.centralSession.anchorCount || 2)))
-        if (!uiChaining) {
-          this.chainingEnabled = !!this.centralSession.chaining.enabled
-          this.chainingMethod = ['linking', 'cumulative'].includes(this.centralSession.chaining.method) ? this.centralSession.chaining.method : ''
-          this.chainingRepetitions = Math.max(1, Math.min(5, Number(this.centralSession.chaining.repetitions || 1)))
-        }
+        this.chainingEnabled = !!this.centralSession.chaining.enabled
+        this.chainingMethod = ['linking', 'cumulative'].includes(this.centralSession.chaining.method)
+          ? this.centralSession.chaining.method
+          : ''
+        this.chainingRepetitions = Math.max(
+          1,
+          Math.min(5, Number(this.centralSession.chaining.repetitions || 1))
+        )
         this.speed = this.normalizePlaybackSpeed(this.centralSession.audio.speed)
         this.applySpeed()
         this.sessionCompleted = this.centralSession.sessionStatus === 'completed'
@@ -42991,51 +43051,16 @@ export default {
             sequenceTotal: 1
           })
         })
-      } else if (chainingMethod === 'cumulative') {
-        // Cumulative method: 1, then 1-2, then 1-2-3, etc.
-        for (let endIndex = 0; endIndex < verses.length; endIndex++) {
-          const chain = verses.slice(0, endIndex + 1)
-          pushQueueGroup(chain.map((verse, chainIndex) => ({
-            verse: chain[chainIndex],
-            phase: 'Cumulative',
-            chainKey: `cumulative:${endIndex + 1}`,
-            sequencePosition: chainIndex + 1,
-            sequenceTotal: chain.length
-          })))
-        }
       } else {
-        // Linking is the default when Join ayahs is on but no method is chosen yet.
-        // An empty method used to skip both branches and wipe the playback queue.
-        for (let index = 0; index < verses.length; index++) {
-          const verse = verses[index]
-          pushQueueEntry({
-            verse,
-            phase: 'Linking',
-            chainKey: `linking:single:${verse.key}`,
-            sequencePosition: 1,
-            sequenceTotal: 1
-          })
-
-          const nextVerse = verses[index + 1]
-          if (nextVerse) {
-            pushQueueGroup([
-              {
-                verse,
-                phase: 'Linking',
-                chainKey: `linking:${verse.key}->${nextVerse.key}`,
-                sequencePosition: 1,
-                sequenceTotal: 2
-              },
-              {
-                verse: nextVerse,
-                phase: 'Linking',
-                chainKey: `linking:${verse.key}->${nextVerse.key}`,
-                sequencePosition: 2,
-                sequenceTotal: 2
-              }
-            ])
+        const method = chainingMethod === 'cumulative' ? 'cumulative' : 'linking'
+        const groups = buildChainingGroups(verses, method)
+        groups.forEach((group) => {
+          if (group.length === 1) {
+            pushQueueEntry(group[0])
+            return
           }
-        }
+          pushQueueGroup(group)
+        })
       }
 
       // Restore previous position if possible
@@ -45277,12 +45302,14 @@ export default {
       const cached = this.readApiCache('chapters.en.v2')
       if (Array.isArray(cached) && cached.length && cached.some(c => c?.name_arabic)) {
         this.chapters = cached
+        setSurahArabicNameCache(this.chapters)
         if (this.chapterId) await this.loadChapter()
         return
       }
       try {
         const res = await getChapters({ language: 'en' })
         this.chapters = res.data?.chapters || []
+        setSurahArabicNameCache(this.chapters)
         if (this.chapters.length) this.writeApiCache('chapters.en.v2', this.chapters)
         if (this.chapterId) await this.loadChapter()
       } catch (e) {
@@ -45317,12 +45344,24 @@ export default {
 
     applyReciterCatalog(list) {
       if (!Array.isArray(list) || !list.length) return
+      const nextIds = list.map(reciter => String(reciter?.id || '')).join('\0')
+      const prevIds = (this.reciters || []).map(reciter => String(reciter?.id || '')).join('\0')
+      const catalogChanged = nextIds !== prevIds
+      if (catalogChanged && this.isMobileViewport()) {
+        this.armMobileReciterSelectSilence(650)
+      }
       this.reciters = list
-      this.reciterCatalogRevision = Number(this.reciterCatalogRevision || 0) + 1
-      if (!this.reciters.some(reciter => reciter.id === this.reciterId)) {
+      if (catalogChanged) {
+        this.reciterCatalogRevision = Number(this.reciterCatalogRevision || 0) + 1
+      }
+      const active = String(this.reciterId || '')
+      if (!this.reciters.some(reciter => String(reciter?.id || '') === active)) {
         this.reciterId = this.reciters[0]?.id || DEFAULT_ALQURAN_RECITER
       }
       this.syncWordHighlightingForReciter(this.reciterId)
+      if (this.isMobileViewport()) {
+        this.scheduleMobileReciterSelectDomSync()
+      }
     },
 
     async fetchReciterCatalogFromApi() {
@@ -45691,15 +45730,90 @@ export default {
       this.applyWorkspaceControls({ reason: 'reciter' })
     },
 
+    armMobileReciterSelectSilence(durationMs = 500) {
+      const ms = Math.max(0, Number(durationMs || 0))
+      this._mobileReciterSelectSilenceUntil = Date.now() + ms
+      this._mobileReciterSelectSilenceReciterId = String(this.reciterId || DEFAULT_ALQURAN_RECITER)
+    },
+
+    ensureImmersiveReciterFromSession() {
+      const store = this.getModeStore(this.currentMode)
+      const fromLoaded = store?.loadedConfig?.reciterId
+      const fromVerses = (store?.verses || []).find((verse) => verse?.reciterId)?.reciterId
+      const resolved = String(fromLoaded || fromVerses || this.reciterId || DEFAULT_ALQURAN_RECITER)
+      if (resolved !== String(this.reciterId || '')) {
+        this.reciterId = resolved
+      }
+    },
+
+    async prepareMobileImmersiveReciterSelect() {
+      if (!this.isMobileViewport()) return
+      this.ensureImmersiveReciterFromSession()
+      this.armMobileReciterSelectSilence(900)
+      await this.loadReciters()
+      this.scheduleMobileReciterSelectDomSync()
+    },
+
+    scheduleMobileReciterSelectDomSync() {
+      this.syncMobileReciterSelectDom()
+      if (typeof window === 'undefined') return
+      window.requestAnimationFrame(() => {
+        this.syncMobileReciterSelectDom()
+        window.requestAnimationFrame(() => this.syncMobileReciterSelectDom())
+      })
+    },
+
     guardReciterSelectChange() {
+      if (this._syncingMobileReciterSelect) return false
       const now = Date.now()
+      if (now < Number(this._mobileReciterSelectSilenceUntil || 0)) {
+        const expected = String(this._mobileReciterSelectSilenceReciterId || '')
+        if (expected && String(this.reciterId || '') !== expected) {
+          this.reciterId = expected
+        }
+        this.scheduleMobileReciterSelectDomSync()
+        return false
+      }
       if (now - Number(this._reciterSelectChangeGuardAt || 0) < 120) return false
       this._reciterSelectChangeGuardAt = now
       return true
     },
 
-    async onSessionReciterChange() {
+    /** iOS WebKit often leaves native <select> on the first option after Teleport/remount despite v-model. */
+    syncMobileReciterSelectDom() {
+      if (!this.isMobileViewport()) return
+      const wanted = String(this.reciterId || DEFAULT_ALQURAN_RECITER)
+      this.$nextTick(() => {
+        if (typeof document === 'undefined') return
+        const selects = new Set()
+        const refSelect = this.$refs.madaniFullscreenReciterSelect
+        if (refSelect instanceof HTMLSelectElement) selects.add(refSelect)
+        document.querySelectorAll(
+          'select.madani-fullscreen-bar__reciter-select, .setup-field-row select.select'
+        ).forEach((select) => selects.add(select))
+        selects.forEach((select) => {
+          if (!(select instanceof HTMLSelectElement)) return
+          if (String(select.value) === wanted) return
+          const hasOption = Array.from(select.options).some(
+            (option) => String(option.value) === wanted
+          )
+          if (!hasOption) return
+          this._syncingMobileReciterSelect = true
+          try {
+            select.value = wanted
+          } finally {
+            this._syncingMobileReciterSelect = false
+          }
+        })
+      })
+    },
+
+    async onSessionReciterChange(event) {
       if (!this.guardReciterSelectChange()) return
+      const nextReciterId = String(event?.target?.value || this.reciterId || DEFAULT_ALQURAN_RECITER)
+      if (nextReciterId !== String(this.reciterId || '')) {
+        this.reciterId = nextReciterId
+      }
       if (!this.isMobileViewport()) {
         this.refreshVerses()
         return
@@ -45835,8 +45949,12 @@ export default {
       }
     },
 
-    onMadaniFullscreenReciterChange() {
+    onMadaniFullscreenReciterChange(event) {
       if (!this.guardReciterSelectChange()) return
+      const nextReciterId = String(event?.target?.value || this.reciterId || DEFAULT_ALQURAN_RECITER)
+      if (nextReciterId !== String(this.reciterId || '')) {
+        this.reciterId = nextReciterId
+      }
       this.applyReciterChangeInPlace(this.currentMode, { autoPlay: true })
       this.showImmersiveReadingSuccessToast('memorisation.reading.toastReciterUpdated', {
         name: this.fullscreenReciterName,

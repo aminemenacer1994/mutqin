@@ -9556,9 +9556,18 @@ body.session-analysis-modal-open {
   html body .app .top-card-menu button,
   html body .app .top-card-menu button span,
   html body .app .top-card-menu .top-card-menu-label,
-  html body .app .top-card-menu .top-card-menu-link,
-  html body .app .workspace-shell-surah-en {
+  html body .app .top-card-menu .top-card-menu-link {
     font-family: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif) !important;
+  }
+
+  html body .app .workspace-shell-surah-en,
+  html body .app .workspace-shell-idle-title-en,
+  html body .app .workspace-shell-main-title.mutqin-surah-bilingual,
+  html body .app .workspace-shell-overview-toggle .workspace-shell-surah-en {
+    font-family: var(--font-surah-latin, "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, "Noto Serif", ui-serif, Georgia, serif) !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.015em !important;
+    text-rendering: optimizeLegibility;
   }
 
   html body .app .session-progress-rail {

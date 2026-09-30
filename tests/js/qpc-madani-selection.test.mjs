@@ -91,10 +91,11 @@ const sessionLines = filterQpcPageLinesToSession([
   { line_type: 'basmallah', surah_number: 52, words: [] },
   { line_type: 'ayah', words: [{ surah: '52', ayah: '1', location: '52:1:1' }, { surah: '52', ayah: '4', location: '52:4:1' }] },
 ], '52:1', '52:3')
-assert.equal(sessionLines.length, 2)
+assert.equal(sessionLines.length, 3)
 assert.equal(sessionLines[0].line_type, 'surah_name')
-assert.equal(sessionLines[1].words.length, 1)
-assert.equal(sessionLines[1].words[0].location, '52:1:1')
+assert.equal(sessionLines[1].line_type, 'basmallah')
+assert.equal(sessionLines[2].words.length, 1)
+assert.equal(sessionLines[2].words[0].location, '52:1:1')
 
 const midSurah = prepareQpcMadaniSessionLines([
   { line_type: 'ayah', line_number: 4, words: [{ surah: '85', ayah: '12', location: '85:12:1' }] },
@@ -117,13 +118,28 @@ const nahlPage = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/page
 const nahlSource = nahlPage.page?.lines || nahlPage.lines || []
 const nahlSession = prepareQpcMadaniSessionLines(nahlSource, '16:1', '16:14')
 assert.ok(nahlSession.length < 15)
+assert.ok(!nahlSession.some((line) => (line.words || []).some((word) => String(word.surah) === '15')))
 const nahlGrid = prepareQpcMadaniSessionLines(nahlSource, '16:1', '16:14', { preservePrintedGrid: true })
 assert.equal(nahlGrid.length, 15)
 assert.equal(String(nahlGrid[0].line_type), 'surah_name')
 assert.equal(String(nahlGrid[1].line_type), 'basmallah')
-assert.equal(String(nahlGrid[2].line_type), 'ayah')
-assert.ok(nahlGrid.slice(0, 9).every((line) => String(line.line_type) !== 'empty'))
-assert.ok(nahlGrid.slice(9).every((line) => String(line.line_type) === 'empty'))
+assert.ok(nahlGrid.some((line) => (line.words || []).some((word) => word.location === '16:1:1')))
+assert.ok(!nahlGrid.some((line) => (line.words || []).some((word) => String(word.surah) === '15')))
 assert.equal(padQpcMadaniLinesToPrintedGrid(nahlSource, nahlSession).length, 15)
+
+const hadidPage = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/pages/537.json'), 'utf8'))
+const hadidSource = hadidPage.page?.lines || hadidPage.lines || []
+const hadidSession = prepareQpcMadaniSessionLines(hadidSource, '57:1', '57:29')
+assert.ok(hadidSession.length < 15)
+assert.ok(!hadidSession.some((line) => (line.words || []).some((word) => String(word.surah) === '56')))
+assert.ok(hadidSession.some((line) => String(line.line_type) === 'surah_name'))
+assert.ok(hadidSession.some((line) => ['basmallah', 'basmala'].includes(String(line.line_type))))
+assert.ok(hadidSession.some((line) => (line.words || []).some((word) => word.location === '57:1:1')))
+assert.ok(hadidSession.every((line) => String(line.line_type) !== 'empty'))
+const hadidPageGrid = prepareQpcMadaniSessionLines(hadidSource, '57:1', '57:29', { preservePrintedGrid: true })
+assert.equal(hadidPageGrid.length, 15)
+assert.ok(!hadidPageGrid.some((line) => (line.words || []).some((word) => String(word.surah) === '56')))
+assert.ok(hadidPageGrid.some((line) => (line.words || []).some((word) => word.location === '57:1:1')))
+assert.ok(hadidPageGrid.some((line) => String(line.line_type) === 'empty'))
 
 console.log('qpc-madani-selection.test.mjs: ok')

@@ -14,6 +14,8 @@ const source = readFileSync(new URL('../../resources/js/views/Memorisation.vue',
   + readFileSync(new URL('../../resources/js/views/Memorisation.css', import.meta.url), 'utf8')
   + '\n'
   + readFileSync(new URL('../../resources/js/scripts/memorisationRuntime.js', import.meta.url), 'utf8')
+  + '\n'
+  + readFileSync(new URL('../../resources/js/scripts/techniques/chainingQueue.js', import.meta.url), 'utf8')
 const hifzPlanModalSource = readFileSync(new URL('../../resources/js/components/HifzPlanCreatorModal.vue', import.meta.url), 'utf8')
 
 const memorisationDataBlock = (() => {
@@ -1219,10 +1221,10 @@ includesAll('chaining runtime application', [
   /applyChainingQueueChange\(mode = this\.currentMode, options = \{\}\)/,
   /playQueueEntry\(entry, options = \{\}\)/,
   /segment: null/,
-  /pushQueueGroup\(chain\.map/,
-  /pushQueueGroup\(\[/,
-  /linking:single:\$\{verse\.key\}/,
-  /linking:\$\{verse\.key\}->\$\{nextVerse\.key\}/,
+  /buildChainingGroups\(verses, method\)/,
+  /pushQueueGroup\(group\)/,
+  /linking:single:\$\{verseKey\(verse\)\}/,
+  /linking:\$\{verseKey\(verse\)\}->\$\{verseKey\(nextVerse\)\}/,
   /uiChaining/,
   /\.\.\.\(uiChaining \|\| \{\}\)/,
   /if \(!uiChaining\)/
