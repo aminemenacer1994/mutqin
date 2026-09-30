@@ -846,17 +846,21 @@
                     <span>{{ t('memorisation.reading.wordByWord') }}</span>
                     <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                   </button>
-                  <button
-                    type="button"
-                    class="top-card-menu-toggle"
-                    :class="{ active: tajweedEnabled }"
-                    :aria-pressed="tajweedEnabled ? 'true' : 'false'"
-                    @click.stop="toggleTajweed"
-                  >
-                    <i class="bi bi-palette" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.reading.tajweed') }}</span>
-                    <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
+                  <div class="top-card-menu-section top-card-menu-section--tajweed" role="group" :aria-label="t('memorisation.reading.tajweed')">
+                    <div class="top-card-menu-divider top-card-menu-divider--tajweed" aria-hidden="true"></div>
+                    <p class="top-card-menu-label top-card-menu-label--tajweed">{{ t('memorisation.reading.tajweed') }}</p>
+                    <button
+                      type="button"
+                      class="top-card-menu-toggle top-card-menu-toggle--tajweed"
+                      :class="{ active: tajweedEnabled }"
+                      :aria-pressed="tajweedEnabled ? 'true' : 'false'"
+                      @click.stop="toggleTajweed"
+                    >
+                      <i class="bi bi-palette" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.reading.tajweed') }}</span>
+                      <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                  </div>
                   <div class="top-card-menu-divider" aria-hidden="true"></div>
                   <button type="button" @click="toggleKeyboardShortcuts">
                     <i class="bi bi-keyboard" aria-hidden="true"></i>
@@ -1551,6 +1555,7 @@
                 :font-scale="qpcMadaniFontScale"
                 :tajweed-enabled="qpcMadaniTajweedPresentation.effectiveEnabled"
                 :code-v2-by-location="qpcMadaniCodeV2ByLocation"
+                :tajweed-html-by-location="qpcIndopakTajweedHtmlByLocation"
                 @select="onQpcMadaniWordSelect"
                 @ayah-enter="onQpcMadaniAyahEnter"
                 @ayah-leave="onQpcMadaniAyahLeave"
@@ -1579,6 +1584,7 @@
                 :font-scale="qpcMadaniFontScale"
                 :tajweed-enabled="qpcMadaniTajweedPresentation.effectiveEnabled"
                 :code-v2-by-location="qpcMadaniCodeV2ByLocation"
+                :tajweed-html-by-location="qpcIndopakTajweedHtmlByLocation"
                 hide-dev-nav
                 reader-mode
                 @select="onQpcMadaniWordSelect"

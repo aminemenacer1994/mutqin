@@ -28,7 +28,11 @@
     @touchstart.passive="onPeekTouchStart"
     @touchend.passive="onPeekTouchEnd"
     @touchcancel.passive="onPeekTouchCancel"
-  >{{ displayText }}</span>
+  ><span
+    v-if="indopakTajweedHtml"
+    class="qpc-madani-word__tajweed"
+    v-html="indopakTajweedHtml"
+  ></span><template v-else>{{ displayText }}</template></span>
 </template>
 
 <script>
@@ -47,6 +51,7 @@ import {
 } from '../../scripts/mushaf/qpcMadaniProgress'
 import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
 import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
+import { paintUnicodeTextWithTajweedToken } from '../../scripts/mushaf/indopakTajweedMarkup'
 
 export default {
   name: 'MadaniWord',
@@ -88,6 +93,10 @@ export default {
       type: Object,
       default: null,
     },
+    tajweedHtmlByLocation: {
+      type: Object,
+      default: null,
+    },
     progressSnapshot: {
       type: Object,
       default: null,
@@ -125,6 +134,15 @@ export default {
     },
     displayText() {
       return this.glyphPresentation.text
+    },
+    indopakTajweedHtml() {
+      if (!this.isIndopakLayout || !this.tajweedEnabled || this.word?.isEnd) return ''
+      const location = String(this.word?.location || '').trim()
+      const token = location
+        ? String(this.tajweedHtmlByLocation?.[location] || '').trim()
+        : ''
+      if (!token) return ''
+      return paintUnicodeTextWithTajweedToken(this.displayText, token)
     },
     displayFontFamily() {
       if (this.glyphPresentation.useTajweedFont && this.glyphPresentation.fontFamily) {
@@ -177,6 +195,7 @@ export default {
         'is-selected': this.selected,
         'qpc-madani-word--tajweed-glyph': this.glyphPresentation.useTajweedFont,
         'qpc-madani-word--indopak': this.isIndopakLayout,
+        'qpc-madani-word--indopak-tajweed': !!this.indopakTajweedHtml,
         'qpc-madani-word--ornament': !!this.word?.isEnd,
         ...madaniWordVisualClass(this.visualState),
         ...madaniQpcWordTechniqueClass(this.techniqueState),
@@ -261,6 +280,15 @@ export default {
   opacity: 1;
 }
 
+.qpc-madani-word.is-word-masked :deep(.tajweed-mark),
+.qpc-madani-word.word-hidden :deep(.tajweed-mark),
+.qpc-madani-word.memory-word-hidden :deep(.tajweed-mark),
+.qpc-madani-word.amd-word-hidden :deep(.tajweed-mark) {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background: transparent !important;
+}
+
 .qpc-madani-word.is-word-masked::after,
 .qpc-madani-word.word-hidden::after,
 .qpc-madani-word.memory-word-hidden::after,
@@ -342,6 +370,20 @@ export default {
   -webkit-font-smoothing: antialiased;
   line-height: 1.4;
   padding-block: 0.04em;
+}
+
+.qpc-madani-word__tajweed {
+  display: inline;
+}
+
+.qpc-madani-word__tajweed :deep(.tajweed-mark),
+.qpc-madani-word__tajweed :deep([class*="tajweed-"]) {
+  display: inline;
+  padding: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  -webkit-text-fill-color: currentColor !important;
 }
 
 .qpc-madani-word--tajweed-glyph:not(.is-word-masked):not(.word-hidden):not(.memory-word-hidden):not(.amd-word-hidden) {

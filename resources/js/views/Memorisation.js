@@ -124,6 +124,7 @@ import {
   buildQpcMadaniCodeV2FromMadaniApiVerses,
   resolveQpcMadaniTajweedPresentation,
 } from '../scripts/mushaf/qpcMadaniReadingTools'
+import { buildIndopakTajweedTokenByLocation } from '../scripts/mushaf/indopakTajweedMarkup'
 import {
   buildQpcMadaniProgressSnapshot,
   preserveDashboardMadaniContext,
@@ -10245,11 +10246,12 @@ export default {
     },
 
     qpcMadaniTajweedPresentation() {
+      // IndoPak uses CSS markup tajweed on Unicode Nastaleeq (not QCF COLRv1).
       if (isIndopakMushafLayout(this.mushafLayoutId)) {
         return {
-          supported: false,
+          supported: true,
           requested: !!this.tajweedEnabled,
-          effectiveEnabled: false,
+          effectiveEnabled: !!this.tajweedEnabled,
         }
       }
       return resolveQpcMadaniTajweedPresentation(this.tajweedEnabled)
@@ -10258,7 +10260,20 @@ export default {
     qpcMadaniCodeV2ByLocation() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return {}
       if (!this.qpcMadaniTajweedPresentation.effectiveEnabled) return {}
+      // IndoPak never uses QCF code_v2 glyphs.
+      if (isIndopakMushafLayout(this.mushafLayoutId)) return {}
       return { ...(this.qpcMadaniTajweedCodeByLocation || {}) }
+    },
+
+    qpcIndopakTajweedHtmlByLocation() {
+      if (!isQpcMadaniMushafView(this.readingViewMode)) return {}
+      if (!isIndopakMushafLayout(this.mushafLayoutId)) return {}
+      if (!this.qpcMadaniTajweedPresentation.effectiveEnabled) return {}
+      return buildIndopakTajweedTokenByLocation(this.verses || [], {
+        normalizeMarkup: (text) => this.normalizeTajweedMarkup(text),
+        splitIntoWordHtml: (markup) => this.splitTajweedMarkupIntoWordHtml(markup),
+        sanitizeHtml: (html) => this.sanitizeHtml(html),
+      })
     },
 
     mushafAidWords() {
@@ -11091,8 +11106,10 @@ export default {
       }
     },
     readingViewMode(newVal, oldVal) {
+      // Keep word-for-word audio highlighting armed across every reading mode.
+      this.wordByWordAudioEnabled = true
+      this.ensureWordAudioHighlighting()
       if (newVal === 'mushaf') {
-        this.wordByWordAudioEnabled = true
         this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
         this.ensureMadaniPagesLoaded({ force: true }).then(() => {
           this.syncMushafPageToActiveVerse()
@@ -11100,6 +11117,7 @@ export default {
             this.scheduleMadaniPageFit()
             // Re-arm word highlighting after the page rebuild (mobile + desktop).
             this.wordByWordAudioEnabled = true
+            this.ensureWordAudioHighlighting()
             if (this.isPlaying && this.activeVerseRef?.key) {
               this.startWordHighlighting(this.activeVerseRef)
             }
@@ -11112,6 +11130,8 @@ export default {
           this.syncQpcMadaniPageToActiveVerse()
           this.$nextTick(() => {
             this.scrollQpcMadaniActiveAyahIntoView()
+            this.wordByWordAudioEnabled = true
+            this.ensureWordAudioHighlighting()
             if (this.isPlaying && this.activeVerseRef?.key) {
               this.startWordHighlighting(this.activeVerseRef)
             }
@@ -11125,6 +11145,8 @@ export default {
             this.offerMadaniMobileImmersiveReading()
           })
         })
+      } else if (this.isPlaying && this.activeVerseRef?.key) {
+        this.startWordHighlighting(this.activeVerseRef)
       }
       if (oldVal === 'madani_mushaf' && newVal !== 'madani_mushaf') {
         this.madaniMobileImmersiveDeclined = false
@@ -36257,8 +36279,10 @@ export default {
       this.readingViewMode = nextMode
       this.applyLayoutFontSize(nextMode)
       this.clearMadaniInlineFontOverrides()
+      // Product rule: word-for-word audio highlighting is on for every reading mode.
+      this.wordByWordAudioEnabled = true
+      this.ensureWordAudioHighlighting()
       if (nextMode === 'mushaf') {
-        this.wordByWordAudioEnabled = true
         this.applyMobileLayoutFontDefault('mushaf')
         // Force rebuild so full-page caches are replaced with session-only layouts.
         this.ensureMadaniPagesLoaded({ force: true }).then(() => {
@@ -36267,6 +36291,7 @@ export default {
             this.scheduleMadaniPageFit()
             // Keep word-audio highlighting armed and restart if already playing.
             this.wordByWordAudioEnabled = true
+            this.ensureWordAudioHighlighting()
             const verse = this.activeVerseRef
             if (verse?.key && this.isPlaying) {
               this.startWordHighlighting(verse)
@@ -36278,6 +36303,8 @@ export default {
           this.syncQpcMadaniPageToActiveVerse()
           this.$nextTick(() => {
             this.scrollQpcMadaniActiveAyahIntoView()
+            this.wordByWordAudioEnabled = true
+            this.ensureWordAudioHighlighting()
             if (this.isPlaying && this.activeVerseRef?.key) {
               this.startWordHighlighting(this.activeVerseRef)
             }
@@ -36288,6 +36315,9 @@ export default {
         this.fontOpen = false
         this.bgOpen = false
         this.borderOpen = false
+        if (this.isPlaying && this.activeVerseRef?.key) {
+          this.startWordHighlighting(this.activeVerseRef)
+        }
       }
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
@@ -36628,6 +36658,8 @@ export default {
       }
       this.$nextTick(() => {
         this.scrollQpcMadaniActiveAyahIntoView()
+        this.wordByWordAudioEnabled = true
+        this.ensureWordAudioHighlighting()
         if (this.isPlaying && this.activeVerseRef?.key) {
           this.startWordHighlighting(this.activeVerseRef)
         }
@@ -38128,11 +38160,14 @@ export default {
 
     applyMemorisationPageLoadDefaults() {
       this.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+      this.wordByWordAudioEnabled = true
+      this.ensureWordAudioHighlighting?.()
       this.readingViewMode = this.clampReadingViewMode('madani_mushaf')
       this.syncGlobalTheme(DEFAULT_THEME)
       this.applyLayoutFontSize(this.readingViewMode)
       if (this.settingsDraft && typeof this.settingsDraft === 'object') {
         this.settingsDraft.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+        this.settingsDraft.wordByWordAudioEnabled = true
       }
       if (DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED && this.isMobileViewport?.()) {
         this.mainCardCollapsed = false
@@ -40326,11 +40361,22 @@ export default {
       this.persistCentralSessionState()
       if (isQpcMadaniMushafView(this.readingViewMode)) {
         if (next) {
-          this.qpcMadaniTajweedGlyphPages = {}
-          try {
-            await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
-            await prefetchQcfPageFonts([this.qpcMadaniCurrentPage].filter(Boolean), { tajweed: true })
-          } catch (_) { /* fonts load per page */ }
+          // IndoPak CSS tajweed needs arabic_tajweed markup on session verses.
+          if (isIndopakMushafLayout(this.mushafLayoutId)) {
+            const missingTajweed = (this.verses || []).some(verse => !String(verse?.arabic_tajweed || '').trim())
+            if (missingTajweed && this.chapterId) {
+              try {
+                this.clearVerseCache?.(this.currentMode)
+                await this.loadVerses(this.currentMode)
+              } catch (_) { /* keep whatever markup we have */ }
+            }
+          } else {
+            this.qpcMadaniTajweedGlyphPages = {}
+            try {
+              await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
+              await prefetchQcfPageFonts([this.qpcMadaniCurrentPage].filter(Boolean), { tajweed: true })
+            } catch (_) { /* fonts load per page */ }
+          }
         } else {
           this.qpcMadaniTajweedCodeByLocation = {}
           this.qpcMadaniTajweedGlyphPages = {}

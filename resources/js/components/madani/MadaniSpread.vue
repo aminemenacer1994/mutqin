@@ -83,6 +83,7 @@
           :font-scale="fontScale"
           :tajweed-enabled="tajweedEnabled"
           :code-v2-by-location="codeV2ByLocation"
+          :tajweed-html-by-location="tajweedHtmlByLocation"
           @select="onWordSelect"
           @ayah-enter="onAyahEnter"
           @ayah-leave="onAyahLeave"
@@ -164,6 +165,7 @@ export default {
     fontScale: { type: Number, default: 1 },
     tajweedEnabled: { type: Boolean, default: false },
     codeV2ByLocation: { type: Object, default: null },
+    tajweedHtmlByLocation: { type: Object, default: null },
   },
   data() {
     return {

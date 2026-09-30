@@ -44,6 +44,7 @@
           :audio-index-map="audioIndexMap"
           :tajweed-enabled="tajweedEnabled"
           :code-v2-by-location="codeV2ByLocation"
+          :tajweed-html-by-location="tajweedHtmlByLocation"
           :surah-names-ready="surahNamesReady"
           @select="onWordSelect"
           @ayah-enter="onAyahEnter"
@@ -177,6 +178,10 @@ export default {
       default: false,
     },
     codeV2ByLocation: {
+      type: Object,
+      default: null,
+    },
+    tajweedHtmlByLocation: {
       type: Object,
       default: null,
     },
