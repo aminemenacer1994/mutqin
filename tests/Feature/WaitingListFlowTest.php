@@ -15,7 +15,34 @@ class WaitingListFlowTest extends TestCase
     {
         $this->get(route('waiting-list'))
             ->assertOk()
-            ->assertSee('<waiting-list-page>', false);
+            ->assertSee('<waiting-list-page', false);
+    }
+
+    public function test_public_waiting_list_page_exposes_real_signup_count(): void
+    {
+        WaitingListEntry::query()->create([
+            'name' => 'Amina',
+            'email' => 'amina@example.com',
+        ]);
+
+        $this->get(route('waiting-list'))
+            ->assertOk()
+            ->assertSee('count="1"', false);
+    }
+
+    public function test_public_waiting_list_accepts_email_only_submissions(): void
+    {
+        $response = $this->postJson(route('api.waiting-list.store'), [
+            'email' => 'solo@example.com',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('already_joined', false)
+            ->assertJsonPath('data.email', 'solo@example.com');
+
+        $this->assertDatabaseHas('waiting_list_entries', [
+            'email' => 'solo@example.com',
+        ]);
     }
 
     public function test_public_waiting_list_web_route_accepts_submissions(): void
@@ -75,7 +102,8 @@ class WaitingListFlowTest extends TestCase
             'name' => '',
             'email' => 'not-an-email',
         ])->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email']);
+            ->assertJsonValidationErrors(['email'])
+            ->assertJsonMissingValidationErrors(['name']);
 
         $this->assertDatabaseCount('waiting_list_entries', 0);
     }

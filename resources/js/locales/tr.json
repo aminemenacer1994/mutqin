@@ -4219,38 +4219,75 @@
     "brand": "Mutqin",
     "kicker": "Erken erişim",
     "title": "Hıfzını yakın tut",
-    "subtitle": "Kısa bir bölüm çalış, ezberini kontrol et, sonra ne açacağını bil. Yer hazır olunca e-posta yazarız.",
+    "subtitle": "Yapay zekâ destekli tilavet geri bildirimi, akıllı tekrar ve rehberli alıştırma ile hıfzını güçlü tut.",
+    "trust": "Kur’an ezber çalışmanı desteklemek için yapıldı — öğretmeninin yerini almak için değil.",
     "formKicker": "Bekleme listesi",
-    "formTitle": "Yerini ayırt",
-    "formLead": "Sadece adın ve e-postan.",
+    "formTitle": "Bekleme listesine katıl",
+    "formLead": "Mutqin’i ilk deneyenlerden ol.",
     "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
     "ayah": "Kur’an’ı tane tane oku.",
     "ayahRef": "El-Müzzemmil 73:4",
     "benefits": {
-      "access": {
-        "title": "İlk sen duy",
-        "desc": "Erişim açılınca yazarız."
+      "recitation": {
+        "title": "YZ tilavet geri bildirimi",
+        "desc": "Okurken ezber hatalarını yakala."
       },
-      "place": {
-        "title": "Kayıtlı bir yer",
-        "desc": "Yarın kaldığın yerden devam et."
+      "revision": {
+        "title": "Akıllı tekrar",
+        "desc": "Neyi, ne zaman tekrar edeceğini bil."
       },
-      "note": {
-        "title": "Spam yok",
-        "desc": "Mutqin hazır olunca bir e-posta."
+      "hifz": {
+        "title": "Zayıf ayetleri güçlendir",
+        "desc": "En çok dikkat isteyen ayetlere odaklan ve onları güçlendir."
       }
     },
     "name": "Ad",
     "email": "E-posta",
     "namePlaceholder": "Adınız",
     "emailPlaceholder": "sen{'@'}ornek.com",
-    "join": "Yerimi ayırt",
-    "joining": "Ayırtılıyor…",
-    "success": "Listedesin",
-    "alreadyJoined": "Zaten listedesin",
+    "join": "Bekleme listesine katıl",
+    "joining": "Katılıyor…",
+    "success": "Listedesin.",
+    "alreadyJoined": "Zaten listedesin.",
     "successHint": "Mutqin senin için hazır olunca e-posta yazarız.",
     "joinAnother": "Başka bir e-posta kullan",
-    "privacyNote": "Bunu yalnızca haber vermek için kullanırız. Spam yok.",
+    "privacyNote": "Sana yalnızca Mutqin erken erişimi hakkında yazarız.",
+    "socialProof": "Şimdiden bekleyen {count} kişiye katıl.",
+    "socialProofOne": "Şimdiden bekleyen {count} kişiye katıl.",
+    "previewAlt": "Mutqin her kelimeyi takip edip işaretlerken ezberden oku.",
+    "faq": {
+      "title": "Sorular",
+      "items": {
+        "what": {
+          "question": "Mutqin nedir?",
+          "answer": "Mutqin bir Kur’an ezber arkadaşıdır. Dinlemene, okumana, tekrara ve geri dönüşe yardım eder; dersler arasında çalışmanı destekler. Bir öğretmenin yerini almaz."
+        },
+        "feedback": {
+          "question": "YZ tilavet geri bildirimi nasıl çalışır?",
+          "answer": "Mutqin okurken dinler ve her kelimeyi işaretler; böylece neyin güçlü, neyin daha fazla dikkat istediğini görürsün. Geri bildirimi bir rehber olarak gör ve önemli soruları nitelikli bir öğretmenle doğrula."
+        },
+        "teacher": {
+          "question": "Mutqin bir Kur’an öğretmeninin yerini alır mı?",
+          "answer": "Hayır. Mutqin, Kur’an ezber çalışmanı desteklemek için yapıldı — öğretmeninin yerini almak için değil."
+        },
+        "when": {
+          "question": "Erken erişim ne zaman açılacak?",
+          "answer": "Erken erişimden önce daha fazla ayrıntı duyurulacak."
+        },
+        "include": {
+          "question": "Erken erişim neleri kapsayacak?",
+          "answer": "Mutqin, tilavet geri bildirimi, akıllı tekrar ve rehberli alıştırma sunan bir ezber arkadaşı olarak hazırlanıyor. Erken erişimden önce daha fazla ayrıntı duyurulacak."
+        },
+        "platforms": {
+          "question": "Mutqin hangi platformları destekleyecek?",
+          "answer": "Mutqin tarayıcıda kullanabileceğin bir web uygulamasıdır. Erken erişimden önce daha fazla ayrıntı duyurulacak."
+        }
+      }
+    },
+    "footer": {
+      "navLabel": "Yasal",
+      "privacy": "Gizlilik"
+    },
     "errorFields": "İşaretli alanları kontrol edip tekrar dene.",
     "errorSend": "Bir şeyler ters gitti. Biraz sonra tekrar dene.",
     "errors": {

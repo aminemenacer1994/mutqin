@@ -16,7 +16,7 @@
     <meta name="theme-color" content="{{ $appThemeColor }}">
     <meta name="color-scheme" content="{{ $appColorScheme }}">
     <meta name="robots" content="index, follow">
-    <meta name="description" content="Mutqin — join the waiting list for early access.">
+    <meta name="description" content="Mutqin — AI-powered recitation feedback, smart revision and guided practice. Join the waiting list.">
     <title>Mutqin</title>
     @include('partials.google-analytics')
     <link rel="icon" href="/favicon.ico?v=20260730c" sizes="any">
@@ -56,7 +56,16 @@
       }
       body.mutqin-waiting-list-public {
         min-height: 100dvh;
-        background: var(--bg, #f6f3ee);
+        background: var(--bg, #14110f);
+      }
+      :root {
+        --text-on-accent: #fffaf5;
+      }
+      html[data-theme="dark"] {
+        --text-on-accent: #1c140e;
+      }
+      html[data-theme="sepia"] {
+        --text-on-accent: #fff7ec;
       }
     </style>
 </head>

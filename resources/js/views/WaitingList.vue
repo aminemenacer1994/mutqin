@@ -16,6 +16,17 @@
     </div>
 
     <div class="waiting-list-shell">
+      <div v-if="showBrand" class="waiting-list-brand waiting-list-reveal">
+        <img
+          class="waiting-list-brand-mark"
+          src="/images/logo_main.png"
+          alt=""
+          width="36"
+          height="36"
+        >
+        <span class="waiting-list-brand-name">{{ t('waitingList.brand') }}</span>
+      </div>
+
       <header class="waiting-list-hero waiting-list-reveal">
         <p class="waiting-list-kicker">
           <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
@@ -23,28 +34,12 @@
         </p>
         <h1 id="waitingListTitle">{{ t('waitingList.title') }}</h1>
         <p class="waiting-list-lead">{{ t('waitingList.subtitle') }}</p>
-
-        <ul class="waiting-list-benefits">
-          <li
-            v-for="benefit in benefits"
-            :key="benefit.id"
-            class="waiting-list-benefit"
-          >
-            <span class="waiting-list-benefit-icon" aria-hidden="true">
-              <i class="bi" :class="benefit.icon"></i>
-            </span>
-            <div>
-              <strong>{{ t(`waitingList.benefits.${benefit.id}.title`) }}</strong>
-              <p>{{ t(`waitingList.benefits.${benefit.id}.desc`) }}</p>
-            </div>
-          </li>
-        </ul>
-
       </header>
 
       <div
+        ref="panelEl"
         class="waiting-list-panel waiting-list-reveal"
-        style="--d: 90ms"
+        style="--d: 70ms"
         :class="{ 'is-joined': joined }"
       >
         <div
@@ -70,7 +65,6 @@
           novalidate
         >
           <div class="waiting-list-panel-head">
-            <p class="waiting-list-panel-kicker">{{ t('waitingList.formKicker') }}</p>
             <h2>{{ t('waitingList.formTitle') }}</h2>
             <p>{{ t('waitingList.formLead') }}</p>
           </div>
@@ -86,36 +80,6 @@
           </div>
 
           <div class="waiting-list-field">
-            <label class="waiting-list-label" for="waitingListName">
-              {{ t('waitingList.name') }}
-            </label>
-            <div class="waiting-list-input-wrap" :class="{ 'is-invalid': errors.name }">
-              <i class="bi bi-person" aria-hidden="true"></i>
-              <input
-                id="waitingListName"
-                ref="nameInput"
-                v-model.trim="form.name"
-                type="text"
-                class="waiting-list-input"
-                autocomplete="name"
-                enterkeyhint="next"
-                :disabled="submitting"
-                :aria-invalid="errors.name ? 'true' : 'false'"
-                :aria-describedby="errors.name ? 'waitingListNameError' : undefined"
-                :placeholder="t('waitingList.namePlaceholder')"
-                @input="clearFieldError('name')"
-              >
-            </div>
-            <p
-              v-if="errors.name"
-              id="waitingListNameError"
-              class="waiting-list-field-error"
-            >
-              {{ errors.name }}
-            </p>
-          </div>
-
-          <div class="waiting-list-field">
             <label class="waiting-list-label" for="waitingListEmail">
               {{ t('waitingList.email') }}
             </label>
@@ -126,13 +90,17 @@
                 ref="emailInput"
                 v-model.trim="form.email"
                 type="email"
+                name="email"
                 class="waiting-list-input"
                 autocomplete="email"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck="false"
                 enterkeyhint="done"
                 inputmode="email"
                 :disabled="submitting"
                 :aria-invalid="errors.email ? 'true' : 'false'"
-                :aria-describedby="errors.email ? 'waitingListEmailError' : undefined"
+                :aria-describedby="emailDescribedBy"
                 :placeholder="t('waitingList.emailPlaceholder')"
                 @input="clearFieldError('email')"
               >
@@ -149,9 +117,9 @@
           <button
             type="submit"
             class="waiting-list-submit"
-            :disabled="submitting"
+            :disabled="submitDisabled"
             :aria-busy="submitting ? 'true' : 'false'"
-            :aria-disabled="submitting ? 'true' : 'false'"
+            :aria-disabled="submitDisabled ? 'true' : 'false'"
           >
             <span>{{ submitting ? t('waitingList.joining') : t('waitingList.join') }}</span>
             <i
@@ -161,24 +129,96 @@
             ></i>
           </button>
 
-          <p class="waiting-list-note">
+          <p v-if="socialProofCount > 0" class="waiting-list-social">
+            {{ socialProofCount === 1
+              ? t('waitingList.socialProofOne', { count: socialProofCount })
+              : t('waitingList.socialProof', { count: socialProofCount }) }}
+          </p>
+
+          <p id="waitingListEmailHint" class="waiting-list-note">
             <i class="bi bi-shield-check" aria-hidden="true"></i>
             {{ t('waitingList.privacyNote') }}
           </p>
         </form>
       </div>
 
-      <blockquote class="waiting-list-ayah waiting-list-reveal" style="--d: 120ms">
+      <figure class="waiting-list-preview waiting-list-reveal" style="--d: 110ms">
+        <img
+          src="/images/landing/journey-05-check.jpg"
+          :alt="t('waitingList.previewAlt')"
+          width="444"
+          height="929"
+          loading="lazy"
+          decoding="async"
+        >
+      </figure>
+
+      <div class="waiting-list-support waiting-list-reveal" style="--d: 130ms">
+        <ul class="waiting-list-benefits">
+          <li
+            v-for="benefit in benefits"
+            :key="benefit.id"
+            class="waiting-list-benefit"
+          >
+            <span class="waiting-list-benefit-icon" aria-hidden="true">
+              <i class="bi" :class="benefit.icon"></i>
+            </span>
+            <div>
+              <strong>{{ t(`waitingList.benefits.${benefit.id}.title`) }}</strong>
+              <p>{{ t(`waitingList.benefits.${benefit.id}.desc`) }}</p>
+            </div>
+          </li>
+        </ul>
+
+        <p class="waiting-list-trust">
+          {{ t('waitingList.trust') }}
+        </p>
+      </div>
+
+      <blockquote class="waiting-list-ayah waiting-list-reveal" style="--d: 170ms">
         <p class="waiting-list-ayah-ar" lang="ar" dir="rtl">{{ t('waitingList.ayahArabic') }}</p>
         <p class="waiting-list-ayah-tr">{{ t('waitingList.ayah') }}</p>
         <cite>{{ t('waitingList.ayahRef') }}</cite>
       </blockquote>
+
+      <section
+        class="waiting-list-faq waiting-list-reveal"
+        style="--d: 190ms"
+        aria-labelledby="waitingListFaqTitle"
+      >
+        <h2 id="waitingListFaqTitle">{{ t('waitingList.faq.title') }}</h2>
+        <div class="waiting-list-faq-list">
+          <details
+            v-for="item in faqItems"
+            :key="item.id"
+            class="waiting-list-faq-item"
+          >
+            <summary>
+              <span>{{ t(`waitingList.faq.items.${item.id}.question`) }}</span>
+              <i class="bi bi-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <p>{{ t(`waitingList.faq.items.${item.id}.answer`) }}</p>
+          </details>
+        </div>
+      </section>
+
+      <footer v-if="footerLinks.length" class="waiting-list-footer waiting-list-reveal" style="--d: 210ms">
+        <nav :aria-label="t('waitingList.footer.navLabel')">
+          <a
+            v-for="link in footerLinks"
+            :key="link.id"
+            :href="link.href"
+          >
+            {{ link.label }}
+          </a>
+        </nav>
+      </footer>
     </div>
   </section>
 </template>
 
 <script>
-import { nextTick, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const BENEFITS = [
@@ -187,13 +227,35 @@ const BENEFITS = [
   { id: 'hifz', icon: 'bi-bullseye' },
 ];
 
+const FAQ_ITEMS = [
+  { id: 'what' },
+  { id: 'feedback' },
+  { id: 'teacher' },
+  { id: 'when' },
+  { id: 'include' },
+  { id: 'platforms' },
+];
+
+function readWaitingListCount(raw) {
+  const count = Number(raw);
+  if (!Number.isFinite(count) || count < 1) {
+    return 0;
+  }
+  return Math.floor(count);
+}
+
 export default {
   name: 'WaitingListPage',
-  setup() {
+  props: {
+    count: {
+      type: [Number, String],
+      default: 0,
+    },
+  },
+  setup(props) {
     const { t } = useI18n();
 
     const form = reactive({
-      name: '',
       email: '',
     });
     const errors = reactive({});
@@ -205,8 +267,45 @@ export default {
     const joined = ref(false);
     const alreadyJoined = ref(false);
     const submittedEmail = ref('');
-    const nameInput = ref(null);
     const emailInput = ref(null);
+    const panelEl = ref(null);
+    const showBrand = ref(false);
+
+    const socialProofCount = computed(() => {
+      const fromProp = readWaitingListCount(props.count);
+      if (fromProp > 0) {
+        return fromProp;
+      }
+      if (typeof window === 'undefined') {
+        return 0;
+      }
+      return readWaitingListCount(window.mutqinWaitingListCount);
+    });
+
+    const submitDisabled = computed(() => submitting.value || form.email.trim() === '');
+
+    const emailDescribedBy = computed(() => {
+      const ids = ['waitingListEmailHint'];
+      if (errors.email) {
+        ids.unshift('waitingListEmailError');
+      }
+      return ids.join(' ');
+    });
+
+    const footerLinks = computed(() => {
+      const appUrl = (typeof window !== 'undefined' && typeof window.mutqinAppUrl === 'string')
+        ? window.mutqinAppUrl.replace(/\/$/, '')
+        : '';
+      const privacyHref = appUrl ? `${appUrl}/privacy` : '/privacy';
+
+      return [
+        {
+          id: 'privacy',
+          href: privacyHref,
+          label: t('waitingList.footer.privacy'),
+        },
+      ];
+    });
 
     const clearFieldError = (field) => {
       if (errors[field]) {
@@ -226,10 +325,6 @@ export default {
 
     const focusFirstInvalid = async () => {
       await nextTick();
-      if (errors.name) {
-        nameInput.value?.focus();
-        return;
-      }
       if (errors.email) {
         emailInput.value?.focus();
       }
@@ -238,12 +333,7 @@ export default {
     const validate = () => {
       resetFeedback();
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const name = form.name.trim();
       const email = form.email.trim();
-
-      if (!name) {
-        errors.name = t('waitingList.errors.name');
-      }
 
       if (!email) {
         errors.email = t('waitingList.errors.email');
@@ -267,7 +357,6 @@ export default {
       submitting.value = true;
 
       try {
-        const name = form.name.trim();
         const email = form.email.trim();
 
         const endpoint = (typeof window !== 'undefined' && window.mutqinWaitingListEndpoint)
@@ -275,7 +364,6 @@ export default {
           : '/api/waiting-list';
 
         const response = await window.axios.post(endpoint, {
-          name,
           email,
         });
 
@@ -284,14 +372,17 @@ export default {
         status.type = 'success';
         status.message = '';
         joined.value = true;
-        form.name = '';
         form.email = '';
+        await nextTick();
+        const reduceMotion = typeof window !== 'undefined'
+          && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        panelEl.value?.scrollIntoView({
+          block: 'nearest',
+          behavior: reduceMotion ? 'auto' : 'smooth',
+        });
       } catch (error) {
         const validationErrors = error?.response?.data?.errors || {};
 
-        if (validationErrors.name) {
-          errors.name = t('waitingList.errors.name');
-        }
         if (validationErrors.email) {
           errors.email = form.email.trim()
             ? t('waitingList.errors.emailInvalid')
@@ -312,23 +403,30 @@ export default {
     };
 
     onMounted(() => {
+      showBrand.value = Boolean(typeof window !== 'undefined' && window.mutqinMinimalPublicPage);
       if (window.matchMedia('(min-width: 900px)').matches) {
-        nameInput.value?.focus();
+        emailInput.value?.focus();
       }
     });
 
     return {
       t,
       benefits: BENEFITS,
+      faqItems: FAQ_ITEMS,
       form,
       errors,
       status,
       submitting,
+      submitDisabled,
       joined,
       alreadyJoined,
       submittedEmail,
-      nameInput,
       emailInput,
+      panelEl,
+      showBrand,
+      socialProofCount,
+      emailDescribedBy,
+      footerLinks,
       clearFieldError,
       submit,
     };
@@ -342,12 +440,13 @@ export default {
 .waiting-list-page {
   --wl-ease: cubic-bezier(0.16, 1, 0.3, 1);
   --wl-display: "Source Serif 4", "Iowan Old Style", Palatino, "Amiri", "Noto Naskh Arabic", Georgia, serif;
+  --wl-cta-fg: var(--text-on-accent, #fffaf5);
   position: relative;
   isolation: isolate;
   min-height: calc(100dvh - var(--nav-h, 64px) - 2rem);
   display: grid;
-  align-content: center;
-  padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(2.75rem, 7vw, 4.5rem);
+  align-content: start;
+  padding: clamp(1.15rem, 3.6vw, 2.4rem) 0 clamp(2.25rem, 6vw, 3.75rem);
   overflow-x: hidden;
   overflow: hidden;
   overflow: clip;
@@ -405,11 +504,11 @@ export default {
 }
 
 .waiting-list-shell {
-  width: min(68rem, calc(100% - clamp(1.35rem, 5vw, 3.25rem)));
+  width: min(60rem, calc(100% - clamp(1.35rem, 5vw, 3.25rem)));
   margin: 0 auto;
   display: grid;
-  gap: clamp(1.75rem, 4vw, 3.25rem);
-  align-items: center;
+  gap: clamp(1.15rem, 3.2vw, 1.75rem);
+  align-items: start;
   min-width: 0;
 }
 
@@ -417,9 +516,30 @@ export default {
   min-width: 0;
 }
 
+.waiting-list-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  justify-self: center;
+  color: var(--text);
+}
+
+.waiting-list-brand-mark {
+  width: 1.85rem;
+  height: 1.85rem;
+  object-fit: contain;
+}
+
+.waiting-list-brand-name {
+  font-family: var(--wl-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
 .waiting-list-hero {
   display: grid;
-  gap: 0.85rem;
+  gap: 0.8rem;
   text-align: center;
   justify-items: center;
 }
@@ -458,20 +578,28 @@ export default {
 
 .waiting-list-lead {
   margin: 0;
-  max-width: 46ch;
-  color: var(--text-muted);
+  max-width: 42ch;
+  color: color-mix(in srgb, var(--text-muted) 88%, var(--text));
   font-size: 1.02rem;
   line-height: 1.65;
   font-weight: 450;
+  text-wrap: pretty;
+}
+
+.waiting-list-support {
+  display: grid;
+  gap: 1rem;
+  width: min(34rem, 100%);
+  justify-self: center;
 }
 
 .waiting-list-benefits {
   list-style: none;
-  margin: 0.55rem 0 0;
+  margin: 0;
   padding: 0;
   display: grid;
   gap: 0.85rem;
-  width: min(34rem, 100%);
+  width: 100%;
   text-align: start;
 }
 
@@ -506,36 +634,48 @@ export default {
 
 .waiting-list-benefit p {
   margin: 0;
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--text));
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
+.waiting-list-trust {
+  margin: 0;
+  max-width: 42ch;
+  justify-self: center;
+  text-align: center;
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--text));
+  font-size: 0.92rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
 .waiting-list-ayah {
   margin: 0;
-  padding: 0.95rem 0 0;
+  padding: 0.85rem 0 0;
   max-width: 38ch;
   width: 100%;
   justify-self: center;
   text-align: center;
-  border-top: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-top: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
 }
 
 .waiting-list-ayah-ar {
-  display: inline-block;
+  display: block;
   margin: 0;
   color: var(--text);
-  font-family: var(--font-ar, "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif);
-  font-size: clamp(1.45rem, 3.2vw, 1.75rem);
+  font-family: "Amiri Quran", var(--quran-font, "KFGQPC Uthmanic Script HAFS"), "UthmanicHafs", "Amiri", "Noto Naskh Arabic", serif;
+  font-size: clamp(1.6rem, 3.6vw, 2rem);
   font-style: normal;
   font-weight: 400;
-  line-height: 1.85;
+  line-height: 1.9;
+  direction: rtl;
   unicode-bidi: isolate;
 }
 
 .waiting-list-ayah-tr {
-  margin: 0.35rem 0 0;
-  color: var(--text-muted);
+  margin: 0.4rem 0 0;
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--text));
   font-family: var(--wl-display);
   font-size: 0.95rem;
   font-style: italic;
@@ -545,11 +685,30 @@ export default {
 .waiting-list-ayah cite {
   display: block;
   margin-top: 0.3rem;
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-muted) 88%, var(--text));
   font-size: 0.78rem;
   font-style: normal;
   font-weight: 650;
   letter-spacing: 0.02em;
+}
+
+.waiting-list-preview {
+  margin: 0 auto;
+  width: min(16.5rem, 68%);
+  justify-self: center;
+}
+
+.waiting-list-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 22px;
+  opacity: 0.94;
+  box-shadow:
+    0 16px 36px -22px color-mix(in srgb, var(--text) 38%, transparent),
+    0 28px 48px -32px color-mix(in srgb, var(--accent) 20%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent);
+  mask-image: linear-gradient(180deg, #000 72%, transparent);
 }
 
 .waiting-list-panel {
@@ -557,15 +716,16 @@ export default {
   display: grid;
   gap: 1rem;
   padding: clamp(1.25rem, 3.2vw, 1.7rem);
+  scroll-margin-top: calc(var(--nav-h, 64px) + 0.85rem);
   border-radius: 26px;
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border-strong, var(--border)));
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--accent-light) 28%, transparent), transparent 38%),
     color-mix(in srgb, var(--surface-strong) 96%, transparent);
   box-shadow:
     0 1px 0 color-mix(in srgb, #fff 42%, transparent) inset,
-    0 22px 48px -24px color-mix(in srgb, var(--text) 28%, transparent),
-    0 36px 64px -36px color-mix(in srgb, var(--accent) 22%, transparent);
+    0 18px 40px -22px color-mix(in srgb, var(--text) 32%, transparent),
+    0 32px 56px -30px color-mix(in srgb, var(--accent) 26%, transparent);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -592,15 +752,6 @@ export default {
   margin-bottom: 0.15rem;
 }
 
-.waiting-list-panel-kicker {
-  margin: 0;
-  color: var(--accent-strong);
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .waiting-list-panel-head h2 {
   margin: 0;
   color: var(--text);
@@ -613,7 +764,7 @@ export default {
 
 .waiting-list-panel-head p {
   margin: 0;
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--text));
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -644,13 +795,13 @@ export default {
   min-height: 50px;
   padding: 0 0.95rem;
   border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-strong, var(--border)) 92%, var(--text-muted));
   background: color-mix(in srgb, var(--bg) 58%, var(--surface-strong));
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .waiting-list-input-wrap i {
-  color: color-mix(in srgb, var(--text-muted) 82%, var(--accent));
+  color: color-mix(in srgb, var(--text-muted) 70%, var(--accent));
   font-size: 1.05rem;
   line-height: 1;
 }
@@ -662,12 +813,13 @@ export default {
   border: 0;
   background: transparent;
   color: var(--text);
-  font-size: 1rem;
+  font-size: 16px;
   line-height: 1.35;
 }
 
 .waiting-list-input::placeholder {
-  color: color-mix(in srgb, var(--text-muted) 78%, transparent);
+  color: color-mix(in srgb, var(--text-muted) 92%, var(--text));
+  opacity: 1;
 }
 
 .waiting-list-input:focus {
@@ -675,7 +827,7 @@ export default {
 }
 
 .waiting-list-input-wrap:hover:not(:focus-within):not(.is-invalid) {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
 }
 
 .waiting-list-input-wrap:focus-within {
@@ -717,7 +869,7 @@ export default {
   border: 0;
   border-radius: 14px;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: var(--text-on-accent, #fffaf5);
+  color: var(--wl-cta-fg);
   font-size: 1.02rem;
   font-weight: 680;
   letter-spacing: -0.015em;
@@ -749,18 +901,23 @@ export default {
 }
 
 .waiting-list-submit:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent-strong) 85%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--accent-strong) 85%, var(--text));
   outline-offset: 3px;
 }
 
 .waiting-list-submit:disabled {
-  opacity: 0.72;
-  cursor: wait;
+  opacity: 0.62;
+  cursor: not-allowed;
   transform: none;
   filter: none;
   box-shadow: none;
 }
 
+.waiting-list-submit[aria-busy="true"] {
+  cursor: wait;
+}
+
+.waiting-list-social,
 .waiting-list-note {
   display: inline-flex;
   align-items: center;
@@ -768,9 +925,10 @@ export default {
   gap: 0.4rem;
   margin: 0;
   text-align: center;
-  color: var(--text-muted);
-  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--text));
+  font-size: 0.82rem;
   line-height: 1.45;
+  justify-self: center;
 }
 
 .waiting-list-note i {
@@ -836,7 +994,7 @@ export default {
 .waiting-list-success p {
   margin: 0;
   max-width: 32ch;
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--text));
   font-size: 0.95rem;
   line-height: 1.55;
 }
@@ -844,10 +1002,107 @@ export default {
 .waiting-list-success-email {
   margin-top: 0.15rem !important;
   max-width: 100% !important;
-  color: color-mix(in srgb, var(--text-muted) 88%, transparent) !important;
-  font-size: 0.84rem !important;
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--text)) !important;
+  font-size: 0.86rem !important;
   line-height: 1.4 !important;
   word-break: break-word;
+}
+
+.waiting-list-faq {
+  display: grid;
+  gap: 0.7rem;
+  width: min(40rem, 100%);
+  justify-self: center;
+}
+
+.waiting-list-faq h2 {
+  margin: 0;
+  color: var(--text);
+  font-family: var(--wl-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.waiting-list-faq-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.waiting-list-faq-item {
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 88%, transparent);
+}
+
+.waiting-list-faq-item summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0.7rem 0.9rem;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 650;
+  cursor: pointer;
+  list-style: none;
+}
+
+.waiting-list-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.waiting-list-faq-item summary i {
+  color: var(--accent-strong);
+  transition: transform 0.2s var(--wl-ease);
+}
+
+.waiting-list-faq-item[open] summary i {
+  transform: rotate(180deg);
+}
+
+.waiting-list-faq-item summary:focus-visible,
+.waiting-list-footer a:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-strong) 85%, var(--text));
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+.waiting-list-faq-item p {
+  margin: 0;
+  padding: 0 0.9rem 0.85rem;
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--text));
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.waiting-list-footer {
+  justify-self: center;
+  padding-top: 0.25rem;
+}
+
+.waiting-list-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 1.1rem;
+}
+
+.waiting-list-footer a {
+  color: color-mix(in srgb, var(--text-muted) 86%, var(--text));
+  font-size: 0.82rem;
+  font-weight: 550;
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.waiting-list-footer a:hover {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .waiting-list-reveal {
@@ -897,43 +1152,93 @@ html[dir="rtl"] .waiting-list-mark {
   transform: scaleX(-1);
 }
 
+:global(html[data-theme="dark"]) .waiting-list-page {
+  --wl-cta-fg: #1c140e;
+}
+
 @media (min-width: 900px) {
   .waiting-list-page {
     min-height: calc(100dvh - var(--nav-h, 64px) - 3rem);
+    align-content: center;
+    padding-top: clamp(1.5rem, 4vw, 2.75rem);
   }
 
   .waiting-list-shell {
-    grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 25.5rem);
-    grid-template-rows: auto auto;
-    gap: clamp(2.5rem, 5vw, 4.25rem);
+    grid-template-columns: minmax(0, 1fr) minmax(21.5rem, 23.75rem);
+    grid-template-areas:
+      "brand brand"
+      "intro panel"
+      "support preview"
+      "ayah ayah"
+      "faq faq"
+      "footer footer";
+    column-gap: clamp(1.4rem, 3vw, 2.15rem);
+    row-gap: 1.05rem;
+    align-items: start;
+  }
+
+  .waiting-list-brand {
+    grid-area: brand;
+    justify-self: start;
   }
 
   .waiting-list-hero {
-    grid-column: 1;
-    grid-row: 1;
+    grid-area: intro;
     text-align: start;
     justify-items: start;
   }
 
-  .waiting-list-ayah {
-    grid-column: 1;
-    grid-row: 2;
-    align-self: start;
+  .waiting-list-support {
+    grid-area: support;
+    justify-self: start;
+    margin-top: 0.35rem;
+  }
+
+  .waiting-list-trust {
     justify-self: start;
     text-align: start;
   }
 
+  .waiting-list-ayah {
+    grid-area: ayah;
+    align-self: start;
+    justify-self: start;
+    text-align: start;
+    padding-top: 0.7rem;
+  }
+
   .waiting-list-panel {
-    grid-column: 2;
-    grid-row: 1 / -1;
-    align-self: center;
+    grid-area: panel;
+    align-self: start;
+  }
+
+  .waiting-list-preview {
+    grid-area: preview;
+    width: min(15.25rem, 100%);
+    justify-self: center;
+    align-self: start;
+    margin-top: 0.15rem;
+  }
+
+  .waiting-list-faq {
+    grid-area: faq;
+  }
+
+  .waiting-list-footer {
+    grid-area: footer;
+    justify-self: start;
+  }
+
+  .waiting-list-footer nav {
+    justify-content: start;
   }
 
   .waiting-list-hero h1 {
-    max-width: 18ch;
+    max-width: 14ch;
   }
 
   .waiting-list-lead,
+  .waiting-list-trust,
   .waiting-list-ayah {
     max-width: 38ch;
   }
@@ -947,26 +1252,23 @@ html[dir="rtl"] .waiting-list-mark {
 }
 
 @media (max-width: 899px) {
-  .waiting-list-benefits {
+  .waiting-list-support,
+  .waiting-list-faq {
     width: 100%;
-  }
-
-  .waiting-list-lead {
-    text-wrap: pretty;
   }
 }
 
 @media (max-width: 419px) {
-  .waiting-list-ayah-tr {
-    display: none;
-  }
-
   .waiting-list-page {
     padding-bottom: clamp(2rem, 6vw, 3rem);
   }
 
   .waiting-list-shell {
-    gap: 1.5rem;
+    gap: 1.2rem;
+  }
+
+  .waiting-list-preview {
+    width: min(14.5rem, 72%);
   }
 }
 
@@ -978,7 +1280,9 @@ html[dir="rtl"] .waiting-list-mark {
   }
 
   .waiting-list-submit:hover:not(:disabled),
-  .waiting-list-submit:hover:not(:disabled) i {
+  .waiting-list-submit:hover:not(:disabled) i,
+  .waiting-list-faq-item summary i,
+  .waiting-list-faq-item[open] summary i {
     transform: none;
   }
 }

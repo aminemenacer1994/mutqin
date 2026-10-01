@@ -4202,44 +4202,81 @@
     "brand": "Mutqin",
     "kicker": "Acceso anticipado",
     "title": "Mantén tu hifz cerca",
-    "subtitle": "Practica un tramo corto, comprueba tu recuerdo y sabe qué abrir después. Te escribiremos cuando haya un lugar listo.",
+    "subtitle": "Comentarios de recitación con IA, revisión inteligente y práctica guiada para mantener tu hifz fuerte.",
+    "trust": "Hecho para apoyar tu práctica de memorización del Corán — no para sustituir a tu profesor.",
     "formKicker": "Lista de espera",
-    "formTitle": "Reserva tu lugar",
-    "formLead": "Solo tu nombre y correo.",
+    "formTitle": "Únete a la lista de espera",
+    "formLead": "Sé de los primeros en probar Mutqin.",
     "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
     "ayah": "Y recita el Corán con recitación mesurada.",
     "ayahRef": "Al-Muzzammil 73:4",
+    "previewAlt": "Recita de memoria mientras Mutqin sigue y marca cada palabra.",
     "benefits": {
-      "access": {
-        "title": "Entérate primero",
-        "desc": "Te escribimos cuando se abra el acceso."
+      "recitation": {
+        "title": "Comentarios de recitación con IA",
+        "desc": "Detecta errores de memorización mientras recitas."
       },
-      "place": {
-        "title": "Un lugar guardado",
-        "desc": "Mañana sigues desde donde te detuviste."
+      "revision": {
+        "title": "Revisión inteligente",
+        "desc": "Sabe qué revisar y cuándo."
       },
-      "note": {
-        "title": "Sin spam",
-        "desc": "Un correo cuando Mutqin esté listo."
+      "hifz": {
+        "title": "Refuerza las aleyas débiles",
+        "desc": "Enfócate y fortalece las aleyas que más atención necesitan."
       }
     },
     "name": "Nombre",
     "email": "Correo",
     "namePlaceholder": "Tu nombre",
     "emailPlaceholder": "tu{'@'}ejemplo.com",
-    "join": "Reservar mi lugar",
-    "joining": "Reservando…",
-    "success": "Ya estás en la lista",
-    "alreadyJoined": "Ya estabas en la lista",
+    "join": "Unirse a la lista de espera",
+    "joining": "Uniéndote…",
+    "success": "Ya estás en la lista.",
+    "alreadyJoined": "Ya estabas en la lista.",
     "successHint": "Te escribiremos cuando Mutqin esté listo para ti.",
     "joinAnother": "Usar otro correo",
-    "privacyNote": "Solo lo usaremos para avisarte. Sin spam.",
+    "privacyNote": "Solo te escribiremos sobre el acceso anticipado a Mutqin.",
+    "socialProof": "Únete a {count} personas que ya esperan.",
+    "socialProofOne": "Únete a {count} persona que ya espera.",
     "errorFields": "Revisa los campos resaltados e inténtalo de nuevo.",
     "errorSend": "Algo ha salido mal. Inténtalo de nuevo en un momento.",
     "errors": {
       "name": "Introduce tu nombre.",
       "email": "Introduce tu correo electrónico.",
       "emailInvalid": "Introduce un correo electrónico válido."
+    },
+    "faq": {
+      "title": "Preguntas",
+      "items": {
+        "what": {
+          "question": "¿Qué es Mutqin?",
+          "answer": "Mutqin es un compañero de memorización del Corán. Te ayuda a escuchar, recitar, revisar y volver, y apoya la práctica entre lecciones. No sustituye a un profesor."
+        },
+        "feedback": {
+          "question": "¿Cómo funciona el comentario de recitación con IA?",
+          "answer": "Mutqin escucha mientras recitas y marca cada palabra, para ver qué está fuerte y qué necesita más atención. Trata el comentario como una guía y verifica las preguntas importantes con un profesor cualificado."
+        },
+        "teacher": {
+          "question": "¿Mutqin sustituye a un profesor de Corán?",
+          "answer": "No. Mutqin está hecho para apoyar tu práctica de memorización del Corán — no para sustituir a tu profesor."
+        },
+        "when": {
+          "question": "¿Cuándo se abrirá el acceso anticipado?",
+          "answer": "Se anunciarán más detalles antes del acceso anticipado."
+        },
+        "include": {
+          "question": "¿Qué incluirá el acceso anticipado?",
+          "answer": "Mutqin se prepara como un compañero de memorización con comentarios de recitación, revisión inteligente y práctica guiada. Se anunciarán más detalles antes del acceso anticipado."
+        },
+        "platforms": {
+          "question": "¿Qué plataformas admitirá Mutqin?",
+          "answer": "Mutqin es una aplicación web que puedes usar en el navegador. Se anunciarán más detalles antes del acceso anticipado."
+        }
+      }
+    },
+    "footer": {
+      "navLabel": "Legal",
+      "privacy": "Privacidad"
     }
   },
   "hifzPlan": {

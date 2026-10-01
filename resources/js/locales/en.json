@@ -4224,13 +4224,15 @@
     "brand": "Mutqin",
     "kicker": "Early access",
     "title": "Keep your hifz close",
-    "subtitle": "Strengthen your hifz with AI-powered recitation feedback, guided practice and smart revision. Join the waiting list for early access.",
+    "subtitle": "AI-powered recitation feedback, smart revision and guided practice to keep your hifz strong.",
+    "trust": "Built to support your Quran memorisation practice — not replace your teacher.",
     "formKicker": "Waiting list",
-    "formTitle": "Get early access",
+    "formTitle": "Join the waiting list",
     "formLead": "Be among the first to try Mutqin.",
     "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
     "ayah": "And recite the Quran with measured recitation.",
     "ayahRef": "Al-Muzzammil 73:4",
+    "previewAlt": "Recite from memory while Mutqin follows along and marks each word.",
     "benefits": {
       "recitation": {
         "title": "AI recitation feedback",
@@ -4242,7 +4244,7 @@
       },
       "hifz": {
         "title": "Strengthen weak ayahs",
-        "desc": "Practise, test yourself and focus on the ayahs that need attention."
+        "desc": "Target and strengthen the ayahs that need the most attention."
       }
     },
     "name": "Name",
@@ -4254,13 +4256,48 @@
     "success": "You’re on the list.",
     "alreadyJoined": "You’re already on the list.",
     "successHint": "We’ll email you when Mutqin is ready for you.",
-    "privacyNote": "We’ll only use this to notify you. No spam.",
+    "privacyNote": "We’ll only email you about Mutqin early access.",
+    "socialProof": "Join {count} people already waiting.",
+    "socialProofOne": "Join {count} person already waiting.",
     "errorFields": "Please check the highlighted fields and try again.",
     "errorSend": "Something went wrong. Please try again in a moment.",
     "errors": {
       "name": "Please enter your name.",
       "email": "Please enter your email address.",
       "emailInvalid": "Please enter a valid email address."
+    },
+    "faq": {
+      "title": "Questions",
+      "items": {
+        "what": {
+          "question": "What is Mutqin?",
+          "answer": "Mutqin is a Qur’an memorisation companion. It helps you listen, recite, review and return, and supports practice between lessons. It does not replace a teacher."
+        },
+        "feedback": {
+          "question": "How does AI recitation feedback work?",
+          "answer": "Mutqin listens as you recite and marks each word, so you can see what is strong and what needs more attention. Treat the feedback as a guide, and verify important questions with a qualified teacher."
+        },
+        "teacher": {
+          "question": "Does Mutqin replace a Quran teacher?",
+          "answer": "No. Mutqin is built to support your Quran memorisation practice — not replace your teacher."
+        },
+        "when": {
+          "question": "When will early access open?",
+          "answer": "More details will be announced before early access."
+        },
+        "include": {
+          "question": "What will early access include?",
+          "answer": "Mutqin is being prepared as a memorisation companion with recitation feedback, smart revision and guided practice. More details will be announced before early access."
+        },
+        "platforms": {
+          "question": "Which platforms will Mutqin support?",
+          "answer": "Mutqin is a web app you can use in the browser. More details will be announced before early access."
+        }
+      }
+    },
+    "footer": {
+      "navLabel": "Legal",
+      "privacy": "Privacy"
     }
   },
   "hifzPlan": {

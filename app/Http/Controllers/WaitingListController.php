@@ -25,6 +25,9 @@ class WaitingListController extends Controller
         }
 
         $validated = $request->validated();
+        $validated['name'] = isset($validated['name']) && is_string($validated['name'])
+            ? $validated['name']
+            : '';
 
         $existing = WaitingListEntry::query()
             ->where('email', $validated['email'])

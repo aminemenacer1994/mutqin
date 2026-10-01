@@ -4219,38 +4219,75 @@
     "brand": "Mutqin",
     "kicker": "Akses awal",
     "title": "Jaga hafalanmu dekat",
-    "subtitle": "Ulang set pendek, periksa hafalan, dan tahu apa yang dibuka berikutnya. Kami mengirim email saat tempat siap.",
+    "subtitle": "Umpan balik tilawah berbantuan AI, revisi cerdas, dan latihan terarah agar hafalanmu tetap kuat.",
+    "trust": "Dibangun untuk mendukung latihan menghafal Quran Anda — bukan menggantikan guru.",
     "formKicker": "Daftar tunggu",
-    "formTitle": "Pesan tempatmu",
-    "formLead": "Cukup nama dan email.",
+    "formTitle": "Gabung daftar tunggu",
+    "formLead": "Jadilah yang pertama mencoba Mutqin.",
     "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
     "ayah": "Dan bacalah Al-Qur’an dengan tartil.",
     "ayahRef": "Al-Muzzammil 73:4",
     "benefits": {
-      "access": {
-        "title": "Dengar lebih dulu",
-        "desc": "Kami menulis saat akses dibuka."
+      "recitation": {
+        "title": "Umpan balik tilawah AI",
+        "desc": "Tangkap kesalahan hafalan saat Anda membaca."
       },
-      "place": {
-        "title": "Tempat tersimpan",
-        "desc": "Besok lanjut dari tempat kamu berhenti."
+      "revision": {
+        "title": "Revisi cerdas",
+        "desc": "Tahu apa yang perlu diulang dan kapan."
       },
-      "note": {
-        "title": "Tanpa spam",
-        "desc": "Satu email saat Mutqin siap."
+      "hifz": {
+        "title": "Perkuat ayat yang lemah",
+        "desc": "Fokus dan perkuat ayat yang paling butuh perhatian."
       }
     },
     "name": "Nama",
     "email": "Email",
     "namePlaceholder": "Namamu",
     "emailPlaceholder": "anda{'@'}contoh.com",
-    "join": "Pesan tempat saya",
-    "joining": "Memesan…",
-    "success": "Anda sudah masuk daftar",
-    "alreadyJoined": "Anda sudah ada di daftar",
+    "join": "Gabung daftar tunggu",
+    "joining": "Bergabung…",
+    "success": "Anda sudah masuk daftar.",
+    "alreadyJoined": "Anda sudah ada di daftar.",
     "successHint": "Kami akan mengirim email saat Mutqin siap untuk Anda.",
     "joinAnother": "Gunakan email lain",
-    "privacyNote": "Kami hanya menggunakannya untuk memberi kabar. Tanpa spam.",
+    "privacyNote": "Kami hanya akan mengirim email tentang akses awal Mutqin.",
+    "socialProof": "Bergabunglah dengan {count} orang yang sudah menunggu.",
+    "socialProofOne": "Bergabunglah dengan {count} orang yang sudah menunggu.",
+    "previewAlt": "Bacalah dari hafalan sementara Mutqin mengikuti dan menandai setiap kata.",
+    "faq": {
+      "title": "Pertanyaan",
+      "items": {
+        "what": {
+          "question": "Apa itu Mutqin?",
+          "answer": "Mutqin adalah pendamping menghafal Al-Qur’an. Membantu Anda mendengar, membaca, mengulang, dan kembali, serta mendukung latihan di antara pelajaran. Mutqin tidak menggantikan guru."
+        },
+        "feedback": {
+          "question": "Bagaimana umpan balik tilawah AI bekerja?",
+          "answer": "Mutqin mendengarkan saat Anda membaca dan menandai setiap kata, sehingga Anda melihat yang kuat dan yang perlu perhatian. Anggap umpan balik sebagai panduan, dan verifikasi hal penting dengan guru yang kompeten."
+        },
+        "teacher": {
+          "question": "Apakah Mutqin menggantikan guru Quran?",
+          "answer": "Tidak. Mutqin dibangun untuk mendukung latihan menghafal Quran Anda — bukan menggantikan guru."
+        },
+        "when": {
+          "question": "Kapan akses awal dibuka?",
+          "answer": "Detail lebih lanjut akan diumumkan sebelum akses awal."
+        },
+        "include": {
+          "question": "Apa yang akan termasuk dalam akses awal?",
+          "answer": "Mutqin disiapkan sebagai pendamping hafalan dengan umpan balik tilawah, revisi cerdas, dan latihan terarah. Detail lebih lanjut akan diumumkan sebelum akses awal."
+        },
+        "platforms": {
+          "question": "Platform apa yang akan didukung Mutqin?",
+          "answer": "Mutqin adalah aplikasi web yang dapat digunakan di peramban. Detail lebih lanjut akan diumumkan sebelum akses awal."
+        }
+      }
+    },
+    "footer": {
+      "navLabel": "Legal",
+      "privacy": "Privasi"
+    },
     "errorFields": "Periksa kolom yang ditandai, lalu coba lagi.",
     "errorSend": "Ada yang salah. Coba lagi sebentar.",
     "errors": {
