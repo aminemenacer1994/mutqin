@@ -357,8 +357,8 @@
             <h4>{{ t('homepage.footer.company') }}</h4>
             <a href="#contact" @click.prevent="scrollToId('contact')">{{ t('homepage.footer.contact') }}</a>
             <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
-            <a href="/login">{{ t('homepage.footer.login') }}</a>
-            <a href="/register">{{ t('homepage.footer.register') }}</a>
+            <a :href="mutqinAppHref('/login')">{{ t('homepage.footer.login') }}</a>
+            <a :href="mutqinAppHref('/register')">{{ t('homepage.footer.register') }}</a>
           </div>
         </div>
         <div class="footer__bottom">
@@ -387,6 +387,16 @@
 import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
+
+function mutqinAppHref(path) {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  const base = typeof window !== 'undefined' ? window.mutqinAppUrl : '';
+  if (typeof base === 'string' && base.trim() !== '') {
+    return `${base.replace(/\/$/, '')}${normalized}`;
+  }
+
+  return normalized;
+}
 
 export default {
   name: 'Homepage',
@@ -560,7 +570,7 @@ export default {
     };
 
     const startFreeHref = computed(() => (
-      window.mutqinAuthCheck ? '/memorisation' : '/register'
+      window.mutqinAuthCheck ? mutqinAppHref('/memorisation') : mutqinAppHref('/register')
     ));
 
     const socialLinks = [
@@ -750,6 +760,7 @@ export default {
     return {
       t,
       currentTheme,
+      mutqinAppHref,
       startFreeHref,
       socialLinks,
       FEATURES_CAROUSEL_START_INDEX,

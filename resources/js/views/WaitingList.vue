@@ -40,11 +40,6 @@
           </li>
         </ul>
 
-        <blockquote class="waiting-list-ayah">
-          <p class="waiting-list-ayah-ar" lang="ar" dir="rtl">{{ t('waitingList.ayahArabic') }}</p>
-          <p class="waiting-list-ayah-tr">{{ t('waitingList.ayah') }}</p>
-          <cite>{{ t('waitingList.ayahRef') }}</cite>
-        </blockquote>
       </header>
 
       <div
@@ -61,15 +56,11 @@
           <div class="waiting-list-success-icon" aria-hidden="true">
             <i class="bi bi-check-lg"></i>
           </div>
-          <h2>{{ status.message }}</h2>
+          <h2>{{ alreadyJoined ? t('waitingList.alreadyJoined') : t('waitingList.success') }}</h2>
           <p>{{ t('waitingList.successHint') }}</p>
-          <button
-            type="button"
-            class="waiting-list-ghost-btn"
-            @click="resetToForm"
-          >
-            {{ t('waitingList.joinAnother') }}
-          </button>
+          <p v-if="submittedEmail" class="waiting-list-success-email">
+            {{ submittedEmail }}
+          </p>
         </div>
 
         <form
@@ -160,6 +151,7 @@
             class="waiting-list-submit"
             :disabled="submitting"
             :aria-busy="submitting ? 'true' : 'false'"
+            :aria-disabled="submitting ? 'true' : 'false'"
           >
             <span>{{ submitting ? t('waitingList.joining') : t('waitingList.join') }}</span>
             <i
@@ -175,6 +167,12 @@
           </p>
         </form>
       </div>
+
+      <blockquote class="waiting-list-ayah waiting-list-reveal" style="--d: 120ms">
+        <p class="waiting-list-ayah-ar" lang="ar" dir="rtl">{{ t('waitingList.ayahArabic') }}</p>
+        <p class="waiting-list-ayah-tr">{{ t('waitingList.ayah') }}</p>
+        <cite>{{ t('waitingList.ayahRef') }}</cite>
+      </blockquote>
     </div>
   </section>
 </template>
@@ -184,9 +182,9 @@ import { nextTick, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const BENEFITS = [
-  { id: 'access', icon: 'bi-bell' },
-  { id: 'place', icon: 'bi-bookmark-heart' },
-  { id: 'note', icon: 'bi-envelope-open' },
+  { id: 'recitation', icon: 'bi-mic' },
+  { id: 'revision', icon: 'bi-calendar2-check' },
+  { id: 'hifz', icon: 'bi-bullseye' },
 ];
 
 export default {
@@ -205,6 +203,8 @@ export default {
     });
     const submitting = ref(false);
     const joined = ref(false);
+    const alreadyJoined = ref(false);
+    const submittedEmail = ref('');
     const nameInput = ref(null);
     const emailInput = ref(null);
 
@@ -238,14 +238,16 @@ export default {
     const validate = () => {
       resetFeedback();
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const name = form.name.trim();
+      const email = form.email.trim();
 
-      if (!form.name) {
+      if (!name) {
         errors.name = t('waitingList.errors.name');
       }
 
-      if (!form.email) {
+      if (!email) {
         errors.email = t('waitingList.errors.email');
-      } else if (!emailPattern.test(form.email)) {
+      } else if (!emailPattern.test(email)) {
         errors.email = t('waitingList.errors.emailInvalid');
       }
 
@@ -265,23 +267,32 @@ export default {
       submitting.value = true;
 
       try {
+        const name = form.name.trim();
+        const email = form.email.trim();
+
         const response = await window.axios.post('/api/waiting-list', {
-          name: form.name,
-          email: form.email,
+          name,
+          email,
         });
 
+        alreadyJoined.value = Boolean(response?.data?.already_joined);
+        submittedEmail.value = email;
         status.type = 'success';
-        status.message = response?.data?.already_joined
-          ? t('waitingList.alreadyJoined')
-          : t('waitingList.success');
+        status.message = '';
         joined.value = true;
         form.name = '';
         form.email = '';
       } catch (error) {
         const validationErrors = error?.response?.data?.errors || {};
-        Object.entries(validationErrors).forEach(([field, messages]) => {
-          errors[field] = Array.isArray(messages) ? messages[0] : messages;
-        });
+
+        if (validationErrors.name) {
+          errors.name = t('waitingList.errors.name');
+        }
+        if (validationErrors.email) {
+          errors.email = form.email.trim()
+            ? t('waitingList.errors.emailInvalid')
+            : t('waitingList.errors.email');
+        }
 
         status.type = 'error';
         status.message = Object.keys(validationErrors).length
@@ -291,13 +302,6 @@ export default {
       } finally {
         submitting.value = false;
       }
-    };
-
-    const resetToForm = async () => {
-      joined.value = false;
-      resetFeedback();
-      await nextTick();
-      nameInput.value?.focus();
     };
 
     onMounted(() => {
@@ -314,11 +318,12 @@ export default {
       status,
       submitting,
       joined,
+      alreadyJoined,
+      submittedEmail,
       nameInput,
       emailInput,
       clearFieldError,
       submit,
-      resetToForm,
     };
   },
 };
@@ -398,6 +403,11 @@ export default {
   display: grid;
   gap: clamp(1.75rem, 4vw, 3.25rem);
   align-items: center;
+  min-width: 0;
+}
+
+.waiting-list-shell > * {
+  min-width: 0;
 }
 
 .waiting-list-hero {
@@ -441,7 +451,7 @@ export default {
 
 .waiting-list-lead {
   margin: 0;
-  max-width: 42ch;
+  max-width: 46ch;
   color: var(--text-muted);
   font-size: 1.02rem;
   line-height: 1.65;
@@ -495,10 +505,12 @@ export default {
 }
 
 .waiting-list-ayah {
-  margin: 0.55rem 0 0;
+  margin: 0;
   padding: 0.95rem 0 0;
   max-width: 38ch;
   width: 100%;
+  justify-self: center;
+  text-align: center;
   border-top: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
 }
 
@@ -724,7 +736,14 @@ export default {
 }
 
 .waiting-list-submit:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(1px);
+  filter: brightness(0.98);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.waiting-list-submit:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-strong) 85%, transparent);
+  outline-offset: 3px;
 }
 
 .waiting-list-submit:disabled {
@@ -815,22 +834,13 @@ export default {
   line-height: 1.55;
 }
 
-.waiting-list-ghost-btn {
-  margin-top: 0.35rem;
-  padding: 0.55rem 0.9rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--accent-strong);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s ease, background 0.2s ease;
-}
-
-.waiting-list-ghost-btn:hover {
-  background: var(--accent-light);
-  color: var(--accent);
+.waiting-list-success-email {
+  margin-top: 0.15rem !important;
+  max-width: 100% !important;
+  color: color-mix(in srgb, var(--text-muted) 88%, transparent) !important;
+  font-size: 0.84rem !important;
+  line-height: 1.4 !important;
+  word-break: break-word;
 }
 
 .waiting-list-reveal {
@@ -887,12 +897,29 @@ html[dir="rtl"] .waiting-list-mark {
 
   .waiting-list-shell {
     grid-template-columns: minmax(0, 1.05fr) minmax(22rem, 25.5rem);
+    grid-template-rows: auto auto;
     gap: clamp(2.5rem, 5vw, 4.25rem);
   }
 
   .waiting-list-hero {
+    grid-column: 1;
+    grid-row: 1;
     text-align: start;
     justify-items: start;
+  }
+
+  .waiting-list-ayah {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    justify-self: start;
+    text-align: start;
+  }
+
+  .waiting-list-panel {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
   }
 
   .waiting-list-hero h1 {
@@ -912,9 +939,27 @@ html[dir="rtl"] .waiting-list-mark {
   }
 }
 
+@media (max-width: 899px) {
+  .waiting-list-benefits {
+    width: 100%;
+  }
+
+  .waiting-list-lead {
+    text-wrap: pretty;
+  }
+}
+
 @media (max-width: 419px) {
   .waiting-list-ayah-tr {
     display: none;
+  }
+
+  .waiting-list-page {
+    padding-bottom: clamp(2rem, 6vw, 3rem);
+  }
+
+  .waiting-list-shell {
+    gap: 1.5rem;
   }
 }
 

@@ -11,6 +11,19 @@ if (! in_array($rawRecordingRetention, ['never', 'temporary', 'retain'], true)) 
 }
 
 return [
+    /*
+     | Host-based routing (production): mutqin.ai serves the public site; app.mutqin.ai
+     | serves the Laravel application. Disabled automatically when hosts match (local/tests).
+     */
+    'domains' => [
+        'marketing_host' => env('MUTQIN_MARKETING_HOST', 'mutqin.ai'),
+        'app_host' => env('MUTQIN_APP_HOST', ''),
+        'enable_in_local' => filter_var(env('MUTQIN_DOMAIN_ROUTING_IN_LOCAL', false), FILTER_VALIDATE_BOOL),
+        'enable_in_tests' => filter_var(env('MUTQIN_DOMAIN_ROUTING_IN_TESTS', false), FILTER_VALIDATE_BOOL),
+        'force_enabled' => filter_var(env('MUTQIN_DOMAIN_ROUTING_FORCE', false), FILTER_VALIDATE_BOOL),
+        'force_disabled' => filter_var(env('MUTQIN_DOMAIN_ROUTING_DISABLE', false), FILTER_VALIDATE_BOOL),
+    ],
+
     // MVP admin allowlist (MUTQIN_ADMIN_EMAILS). Used with users.is_admin + verified email.
     // Also blocks these mailboxes on register/profile for non-admins.
     'admin_emails' => array_values(array_filter(array_map(

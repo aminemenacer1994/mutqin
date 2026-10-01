@@ -69,7 +69,11 @@ assert.doesNotMatch(memorisationVue, /top-card-menu-divider--mushaf-edition/)
 assert.match(memorisationJs, /wordByWordAudioEnabled = true[\s\S]{0,80}ensureWordAudioHighlighting/)
 assert.match(memorisationJs, /syncTopCardMenuPosition/)
 assert.match(memorisationVue, /top-card-menu--fixed|ref="topCardMenu"/)
-assert.match(memorisationVue, /top-card-menu-divider--layout[\s\S]*v-if="readingViewMode === 'stacked'"/)
+assert.match(
+  memorisationVue,
+  /top-card-menu-group--stacked-reading[\s\S]{0,120}readingViewMode === 'stacked'|readingViewMode === 'stacked'[\s\S]{0,120}top-card-menu-group--stacked-reading/,
+)
+assert.match(memorisationVue, /top-card-menu-row--mushaf-edition/)
 assert.doesNotMatch(memorisationVue, /toggleKeyboardShortcuts[\s\S]{0,120}top-card-menu/)
 
 console.log('indopak-tajweed-markup.test.mjs: ok')

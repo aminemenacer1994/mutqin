@@ -121,9 +121,19 @@ import {
   resolveAyahKeyForMadaniRecitationIndex,
 } from '../scripts/mushaf/qpcMadaniRecitationDom'
 import {
+  buildQpcMadaniCodeV2ByLocation,
   buildQpcMadaniCodeV2FromMadaniApiVerses,
+  isQcfPageGlyphText,
   resolveQpcMadaniTajweedPresentation,
 } from '../scripts/mushaf/qpcMadaniReadingTools'
+import {
+  collectQpcPagesFromVerses,
+  ensureStackedQpcMadaniPageFonts,
+  loadStackedQpcWordsForVerses,
+  resolveStackedQpcWordInk,
+  shouldUseStackedQpcMadaniGlyphs,
+  verseWordsSupportQpcMadani as verseHasQpcMadaniWords,
+} from '../scripts/mushaf/stackedQpcMadaniDisplay.js'
 import { buildIndopakTajweedTokenByLocation } from '../scripts/mushaf/indopakTajweedMarkup'
 import {
   buildQpcMadaniProgressSnapshot,
@@ -1261,6 +1271,7 @@ export default {
       scrollFrame: null,
       pendingDeleteId: '',
       verseRequestId: 0,
+      stackedQpcFontEpoch: 0,
 
       // Session State
       activeVerseKey: null,
@@ -9271,6 +9282,18 @@ export default {
       return this.readingViewMode === 'mushaf' && normaliseQuranFontId(this.quranFont) === 'uthmanic'
     },
 
+    useStackedQpcMadaniGlyphs() {
+      return shouldUseStackedQpcMadaniGlyphs({
+        readingViewMode: this.readingViewMode,
+        mushafLayoutId: this.mushafLayoutId,
+      })
+    },
+
+    stackedQpcWordSizePx() {
+      const measure = 40
+      return `${Math.max(14, Math.round(measure * this.qpcMadaniFontScale))}px`
+    },
+
     collapsedPlayerTitle() {
       const verse = this.verses.find(v => v.key === this.activeKey)
       if (!verse) return this.currentChapter?.name_simple || this.t('memorisation.sessionType.nowPlaying')
@@ -11642,6 +11665,8 @@ export default {
       this.persistUiState()
       this.persistCentralSessionState()
       this.clearMushafAyahHtmlCache()
+      this.clearDisplayArabicCache()
+      void this.prefetchStackedQpcMadaniFonts()
     },
 
     activeVerseKey(newVal) {
@@ -15173,8 +15198,12 @@ export default {
           if (!word || typeof word !== 'object') return word
           return {
             ...word,
-            ar: this.stripRedundantQuranCircles(word.ar || word.text || word.word || ''),
-            text: word.text != null ? this.stripRedundantQuranCircles(word.text) : word.text,
+            ar: isQcfPageGlyphText(word.ar || word.text)
+              ? (word.ar || word.text)
+              : this.stripRedundantQuranCircles(word.ar || word.text || word.word || ''),
+            text: word.text != null && isQcfPageGlyphText(word.text)
+              ? word.text
+              : (word.text != null ? this.stripRedundantQuranCircles(word.text) : word.text),
             word: word.word != null ? this.stripRedundantQuranCircles(word.word) : word.word
           }
         })
@@ -36257,6 +36286,129 @@ export default {
       if (Number.isFinite(direct) && direct >= 1) return Math.floor(direct)
       return null
     },
+    verseHasQpcMadaniWords(verse) {
+      return verseHasQpcMadaniWords(verse)
+    },
+
+    async enrichVersesWithQpcMadaniWords(verses) {
+      if (isIndopakMushafLayout(this.mushafLayoutId) || !Array.isArray(verses) || !verses.length) {
+        return verses
+      }
+      if (verses.every((verse) => verseHasQpcMadaniWords(verse))) {
+        return verses
+      }
+      try {
+        const index = await this.ensureQpcVersePageIndex()
+        const wordsByKey = await loadStackedQpcWordsForVerses(verses, index || {})
+        if (!wordsByKey.size) return verses
+        return verses.map((verse) => {
+          const qpcWords = wordsByKey.get(String(verse?.key || ''))
+          if (!qpcWords?.length) return verse
+          return {
+            ...verse,
+            words: qpcWords,
+            qpcMadaniWords: true,
+          }
+        })
+      } catch (error) {
+        console.warn('[stackedQpcMadani] Failed to enrich ayah glyphs', error)
+        return verses
+      }
+    },
+
+    async applyStackedQpcMadaniToCurrentVerses() {
+      if (!this.useStackedQpcMadaniGlyphs) return
+      const store = this.getModeStore(this.currentMode)
+      const current = Array.isArray(store?.verses) ? store.verses : this.verses
+      const next = await this.enrichVersesWithQpcMadaniWords(current)
+      if (store && next !== current) {
+        store.verses = next
+      }
+      await this.prefetchStackedQpcMadaniFonts(next)
+      this.clearDisplayArabicCache()
+    },
+
+    async prefetchStackedQpcMadaniFonts(verses = this.verses) {
+      if (!this.useStackedQpcMadaniGlyphs) return
+      const pages = collectQpcPagesFromVerses(verses)
+      if (!pages.length) return
+      const tajweed = !!this.qpcMadaniTajweedPresentation?.effectiveEnabled
+      await ensureStackedQpcMadaniPageFonts(pages, { tajweed })
+      if (tajweed) {
+        await Promise.all(
+          pages.map((page) => this.ensureQpcMadaniTajweedGlyphsForPage(page).catch(() => null)),
+        )
+      }
+      this.stackedQpcFontEpoch = Number(this.stackedQpcFontEpoch || 0) + 1
+      this.clearDisplayArabicCache()
+    },
+
+    buildStackedQpcMadaniDisplayArabic(verse) {
+      if (!verse?.key || !verseHasQpcMadaniWords(verse)) return ''
+      const verseKey = String(verse.key)
+      const codeV2ByLocation = {
+        ...buildQpcMadaniCodeV2ByLocation([verse]),
+        ...(this.qpcMadaniTajweedCodeByLocation || {}),
+      }
+      const tajweedEnabled = !!this.qpcMadaniTajweedPresentation?.effectiveEnabled
+      const parts = []
+      let audioWordIndex = -1
+
+      for (const rawWord of verse.words || []) {
+        const page = Number(rawWord?.page || rawWord?.page_number || 0)
+        const location = String(rawWord?.location || '').trim()
+        const isEnd = String(rawWord?.char_type_name || '').toLowerCase() === 'end'
+          || Number(rawWord?.word) === 0
+        const ink = resolveStackedQpcWordInk(rawWord, {
+          tajweedEnabled,
+          codeV2ByLocation,
+        })
+        let displayText = String(ink.text || '').trim()
+        if (isEnd && !displayText) {
+          displayText = formatMadaniAyahEndLabel({ verseKey, ...rawWord })
+        }
+        if (!displayText) continue
+
+        if (isEnd) {
+          const fontFamily = ink.fontFamily || ''
+          const style = fontFamily ? ` style="font-family:'${this.escapeHtml(fontFamily)}'"` : ''
+          const glyphClass = ink.tajweedGlyph ? ' qpc-madani-word--tajweed-glyph' : ''
+          parts.push(
+            `<span class="qpc-madani-word qpc-madani-word--ornament${glyphClass}"${style} data-verse-key="${this.escapeHtml(verseKey)}" data-page="${page || ''}">${this.escapeHtml(displayText)}</span>`,
+          )
+          continue
+        }
+
+        audioWordIndex += 1
+        const fontFamily = ink.fontFamily || ''
+        const isActive = this.currentHighlightedVerseKey === verseKey
+          && this.currentWordIndex === audioWordIndex
+        const recitationStatus = this.getRenderedRecitationWordStatusForVerse(verseKey, audioWordIndex, verse.sessionTargetKey || '')
+        const plainText = String(rawWord?.text_uthmani || rawWord?.text_qpc_hafs || normalized.textQpc || '').trim()
+        const focusWeak = this.isPracticeFocusWeakWord(verseKey, audioWordIndex, plainText)
+        const emphasizeWeak = focusWeak && (
+          this.postSessionPracticeEmphasizeWeakAreas
+          || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
+          || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
+        )
+        const weakClass = focusWeak
+          ? ` practice-focus-word${emphasizeWeak ? ' practice-focus-word--emphasis' : ''}${isActive ? ' practice-focus-word--active' : ''}`
+          : ''
+        const recitationClass = recitationStatus ? ` recitation-word-${recitationStatus}` : ''
+        const glyphClass = ink.tajweedGlyph ? ' qpc-madani-word--tajweed-glyph' : ''
+        const activeClass = isActive ? ' highlighted phrase-highlighted is-ayah-active' : ''
+        const style = fontFamily ? ` style="font-family:'${this.escapeHtml(fontFamily)}'"` : ''
+
+        parts.push(
+          `<span class="qpc-madani-word${glyphClass}${activeClass}${weakClass}${recitationClass}"${style}`
+          + ` data-verse-key="${this.escapeHtml(verseKey)}" data-word-index="${audioWordIndex}"`
+          + ` data-location="${this.escapeHtml(location)}" data-page="${page || ''}">${this.escapeHtml(displayText)}</span>`,
+        )
+      }
+
+      return parts.join(' ')
+    },
+
     buildStackedAyahEndMarkerHtml(verse) {
       // Always use Qur'an ayah number from verse data / verse key — never a list index.
       const n = this.resolveVerseAyahNumber(verse)
@@ -36328,6 +36480,7 @@ export default {
         this.fontOpen = false
         this.bgOpen = false
         this.borderOpen = false
+        void this.applyStackedQpcMadaniToCurrentVerses()
         if (this.isPlaying && this.activeVerseRef?.key) {
           this.startWordHighlighting(this.activeVerseRef)
         }
@@ -41256,8 +41409,11 @@ export default {
         || (Array.isArray(this.practiceFocusWeakWords) && this.practiceFocusWeakWords.length > 0)
       )
       let html = ''
+      const stackedQpc = this.useStackedQpcMadaniGlyphs && verseHasQpcMadaniWords(cleanVerse)
       if (this.shouldShowRecitationReviewHighlights(cleanVerse.key)) {
         html = this.splitRecitationDisplayIntoWords(cleanVerse)
+      } else if (stackedQpc) {
+        html = this.buildStackedQpcMadaniDisplayArabic(cleanVerse)
       } else if (this.tajweedEnabled && cleanVerse.arabic_tajweed) {
         html = this.renderWordLevelTajweedMarkup(cleanVerse, { wrapWords: needsInteractiveWords })
       } else if (needsInteractiveWords) {
@@ -41268,7 +41424,7 @@ export default {
       html = this.stripEmbeddedAyahEndMarkers(html)
       // Stacked layout: ornate PNG ayah number after the ayah text.
       // Mushaf layout keeps its own page glyphs / end marks.
-      if (this.readingViewMode !== 'mushaf') {
+      if (this.readingViewMode !== 'mushaf' && !stackedQpc) {
         html = `${html || ''}${this.buildStackedAyahEndMarkerHtml(cleanVerse)}`
       }
 
@@ -41298,6 +41454,9 @@ export default {
       return [
         verse.key,
         this.readingViewMode,
+        this.useStackedQpcMadaniGlyphs ? 'sq1' : 'sq0',
+        verseHasQpcMadaniWords(verse) ? 'sqw1' : 'sqw0',
+        String(this.stackedQpcFontEpoch || 0),
         this.tajweedEnabled ? 't1' : 't0',
         this.showWordByWord ? 'w1' : 'w0',
         this.anchorModeEnabled ? 'a1' : 'a0',
@@ -42874,6 +43033,12 @@ export default {
               resolvedVerses = applyWordByWordMeaningsToVerses(resolvedVerses, wbwByNumber)
                 .map(verse => this.sanitizeVerseDisplayText(verse))
             }
+            resolvedVerses = await this.enrichVersesWithQpcMadaniWords(
+              resolvedVerses,
+              chapterId,
+              rangeStart,
+              rangeEnd,
+            )
             target.verses = resolvedVerses
             target.loadedConfig = {
               ...(cached.loadedConfig || {}),
@@ -42884,6 +43049,9 @@ export default {
                 verses: resolvedVerses,
                 loadedConfig: target.loadedConfig,
               })
+            }
+            if (this.useStackedQpcMadaniGlyphs) {
+              await this.prefetchStackedQpcMadaniFonts(resolvedVerses)
             }
             this.buildQueue(mode)
             this.syncActiveVerseState(mode)
@@ -43017,7 +43185,14 @@ export default {
           throw new Error('No ayahs in the selected range')
         }
 
-        target.verses = this.sanitizeVersesDisplayText(mappedVerses)
+        let enrichedVerses = this.sanitizeVersesDisplayText(mappedVerses)
+        enrichedVerses = await this.enrichVersesWithQpcMadaniWords(
+          enrichedVerses,
+          chapterId,
+          start,
+          end,
+        )
+        target.verses = enrichedVerses
         target.loadedConfig = {
           chapterId,
           rangeStart: start,
@@ -43026,11 +43201,14 @@ export default {
           showWordByWord: this.showWordByWord,
           tajweedEnabled: this.tajweedEnabled
         }
-        this.syncMutqinAyahs(mappedVerses)
+        this.syncMutqinAyahs(enrichedVerses)
         this.clearDisplayArabicCache()
+        if (this.useStackedQpcMadaniGlyphs) {
+          await this.prefetchStackedQpcMadaniFonts(enrichedVerses)
+        }
 
         this.setCachedVerses(mode, targetConfig, {
-          verses: mappedVerses,
+          verses: enrichedVerses,
           loadedConfig: target.loadedConfig
         })
 

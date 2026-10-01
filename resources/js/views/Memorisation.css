@@ -59463,7 +59463,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigg
  */
 html:not([data-quran-font-ready="1"]) .main .madani-page-sheet .madani-line--ayah,
 html:not([data-quran-font-ready="1"]) .main .madani-page-sheet .madani-line--basmala-ayah,
-html:not([data-quran-font-ready="1"]) .main .verse-arabic.verse-arabic-primary {
+html:not([data-quran-font-ready="1"]) .main .verse-arabic.verse-arabic-primary:not(.verse-arabic--qpc-madani) {
   visibility: hidden;
 }
 
@@ -66203,7 +66203,70 @@ html body .app .workspace-shell:has(.top-card-menu-wrap.is-menu-open) .top-card-
 
 html body .top-card-menu.top-card-menu--portal,
 html body .top-card-menu--portal.top-card-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin: 0;
+}
+
+html body .top-card-menu--portal .top-card-menu-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+html body .top-card-menu--portal .top-card-menu-group + .top-card-menu-group {
+  margin-top: 0.32rem;
+  padding-top: 0.32rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+}
+
+html body .top-card-menu--portal .top-card-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.96rem;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  justify-content: flex-start !important;
+  box-sizing: border-box;
+  box-shadow: none !important;
+}
+
+html body .top-card-menu--portal .top-card-menu-row > span:not(.top-card-menu-toggle__stack),
+html body .top-card-menu--portal .top-card-menu-row .top-card-menu-toggle__stack {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: start;
+}
+
+html body .top-card-menu--portal .top-card-menu-row .check-icon {
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+}
+
+html body .top-card-menu--portal .top-card-menu-row:hover,
+html body .top-card-menu--portal .top-card-menu-row:focus-visible,
+html body .top-card-menu--portal .top-card-menu-row.active {
+  background: var(--accent-light);
+  color: var(--accent-strong);
+  outline: none;
+}
+
+html body .top-card-menu--portal .top-card-menu-label--layout {
+  margin: 0 0 0.12rem;
+  padding: 0.15rem 0.7rem 0.1rem;
 }
 
 html body .top-card-menu--portal,
@@ -66212,6 +66275,18 @@ html body .top-card-menu--portal button span,
 html body .top-card-menu--portal .top-card-menu-label,
 html body .top-card-menu--portal .top-card-menu-link {
   font-family: var(--font-ui, system-ui, sans-serif) !important;
+}
+
+@media (min-width: 768px) {
+  html body .top-card-menu--portal .top-card-menu-group--layout:not(:has(.top-card-menu-row--mushaf-edition)) {
+    display: none;
+  }
+
+  html body .top-card-menu--portal .top-card-menu-group--layout:has(.top-card-menu-row--mushaf-edition) {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
 }
 
 /* Float Recite rail sits at 1056 — keep the reading-options menu above it when fixed. */
@@ -67015,6 +67090,52 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   color: unset !important;
   -webkit-text-fill-color: unset !important;
   transform: none !important;
+}
+
+/* Stacked ayah cards — same QCF Madani ink + word metrics as mushaf reader */
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--qpc-madani {
+  text-align: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.12rem 0.08rem;
+  --qpc-ink: var(--mushaf-reading-ink, #f7ebdf);
+  color: var(--qpc-ink) !important;
+  -webkit-text-fill-color: var(--qpc-ink) !important;
+  line-height: 1.62 !important;
+  font-family: inherit !important;
+}
+
+.verses-grid .verse-arabic--qpc-madani .qpc-madani-word {
+  display: inline-block;
+  font-size: var(--qpc-word-size, 22px);
+  font-weight: 400;
+  line-height: var(--qpc-line-height, 1.32);
+  padding: 0.03em 0.02em 0.04em;
+  vertical-align: baseline;
+  border-radius: 0.12em;
+  color: var(--qpc-ink, #f7ebdf);
+  -webkit-text-fill-color: var(--qpc-ink, #f7ebdf);
+  font-synthesis: none;
+}
+
+.verses-grid .verse-arabic--qpc-madani .qpc-madani-word--tajweed-glyph {
+  color: unset !important;
+  -webkit-text-fill-color: unset !important;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-theme="dark"] .verses-grid .verse-arabic--qpc-madani .qpc-madani-word--tajweed-glyph,
+.app[data-theme="dark"] .verses-grid .verse-arabic--qpc-madani .qpc-madani-word--tajweed-glyph {
+  filter: invert(1) hue-rotate(180deg);
+  padding-block: 0.12em;
+}
+
+.verses-grid .verse-arabic--qpc-madani .qpc-madani-word.highlighted,
+.verses-grid .verse-arabic--qpc-madani .qpc-madani-word.is-ayah-active {
+  background: color-mix(in srgb, #c4a35a 22%, transparent);
+  box-shadow: inset 0 -0.08em 0 color-mix(in srgb, #8d6a35 38%, transparent);
 }
 
 [data-theme="dark"] .madani-qpc-viewport .qpc-madani-word--tajweed-glyph,

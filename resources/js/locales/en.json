@@ -4224,37 +4224,36 @@
     "brand": "Mutqin",
     "kicker": "Early access",
     "title": "Keep your hifz close",
-    "subtitle": "Practise a short set, check your recall, and know what to open next. We will email you when a place is ready.",
+    "subtitle": "Strengthen your hifz with AI-powered recitation feedback, guided practice and smart revision. Join the waiting list for early access.",
     "formKicker": "Waiting list",
-    "formTitle": "Reserve your place",
-    "formLead": "Just your name and email.",
+    "formTitle": "Get early access",
+    "formLead": "Be among the first to try Mutqin.",
     "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
     "ayah": "And recite the Quran with measured recitation.",
     "ayahRef": "Al-Muzzammil 73:4",
     "benefits": {
-      "access": {
-        "title": "Hear first",
-        "desc": "We email you when access opens."
+      "recitation": {
+        "title": "AI recitation feedback",
+        "desc": "Catch memorisation mistakes as you recite."
       },
-      "place": {
-        "title": "A saved place",
-        "desc": "Continue tomorrow from where you stopped."
+      "revision": {
+        "title": "Smart revision",
+        "desc": "Know what to revise and when."
       },
-      "note": {
-        "title": "No spam",
-        "desc": "One email when Mutqin is ready."
+      "hifz": {
+        "title": "Strengthen weak ayahs",
+        "desc": "Practise, test yourself and focus on the ayahs that need attention."
       }
     },
     "name": "Name",
     "email": "Email",
     "namePlaceholder": "Your name",
     "emailPlaceholder": "you{'@'}example.com",
-    "join": "Reserve my place",
-    "joining": "Reserving…",
-    "success": "You’re on the list",
-    "alreadyJoined": "You’re already on the list",
+    "join": "Join the waiting list",
+    "joining": "Joining...",
+    "success": "You’re on the list.",
+    "alreadyJoined": "You’re already on the list.",
     "successHint": "We’ll email you when Mutqin is ready for you.",
-    "joinAnother": "Use a different email",
     "privacyNote": "We’ll only use this to notify you. No spam.",
     "errorFields": "Please check the highlighted fields and try again.",
     "errorSend": "Something went wrong. Please try again in a moment.",

@@ -757,102 +757,99 @@
                     ref="topCardMenu"
                     class="top-card-menu top-card-menu--portal"
                   >
-                  <p class="top-card-menu-label top-card-menu-label--layout">{{ t('memorisation.a11y.changeReadingLayout') }}</p>
-                  <button
-                    type="button"
-                    class="top-card-menu-toggle top-card-menu-toggle--layout"
-                    :class="{ active: readingViewMode === 'stacked' }"
-                    :aria-pressed="readingViewMode === 'stacked' ? 'true' : 'false'"
-                    @click.stop="setReadingViewMode('stacked'); topCardMenuOpen = false"
-                  >
-                    <i class="bi bi-view-stacked" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.view.stacked') }}</span>
-                    <i v-if="readingViewMode === 'stacked'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                  <button
-                    type="button"
-                    class="top-card-menu-toggle top-card-menu-toggle--layout"
-                    :class="{ active: readingViewMode === 'madani_mushaf' }"
-                    :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
-                    @click.stop="setReadingViewMode('madani_mushaf'); topCardMenuOpen = false"
-                  >
-                    <i class="bi bi-book-half" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.view.mushaf') }}</span>
-                    <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                  <template v-if="readingViewMode === 'madani_mushaf'">
+                  <div class="top-card-menu-group top-card-menu-group--layout" role="group" :aria-label="t('memorisation.a11y.changeReadingLayout')">
+                    <p class="top-card-menu-label top-card-menu-label--layout">{{ t('memorisation.a11y.changeReadingLayout') }}</p>
                     <button
                       type="button"
-                      class="top-card-menu-toggle"
-                      :class="{ active: mushafLayoutId === 'madani-v2' }"
-                      :aria-pressed="mushafLayoutId === 'madani-v2' ? 'true' : 'false'"
-                      @click.stop="setMushafLayoutId('madani-v2')"
+                      class="top-card-menu-row top-card-menu-toggle--layout"
+                      :class="{ active: readingViewMode === 'stacked' }"
+                      :aria-pressed="readingViewMode === 'stacked' ? 'true' : 'false'"
+                      @click.stop="setReadingViewMode('stacked'); topCardMenuOpen = false"
                     >
-                      <i class="bi bi-journal-richtext" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.view.madinahV2') }}</span>
-                      <i v-if="mushafLayoutId === 'madani-v2'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      <i class="bi bi-view-stacked" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.view.stacked') }}</span>
+                      <i v-if="readingViewMode === 'stacked'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
                     <button
                       type="button"
-                      class="top-card-menu-toggle"
-                      :class="{ active: mushafLayoutId === 'indopak-15-qudratullah' }"
-                      :aria-pressed="mushafLayoutId === 'indopak-15-qudratullah' ? 'true' : 'false'"
-                      @click.stop="setMushafLayoutId('indopak-15-qudratullah')"
+                      class="top-card-menu-row top-card-menu-toggle--layout"
+                      :class="{ active: readingViewMode === 'madani_mushaf' }"
+                      :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
+                      @click.stop="setReadingViewMode('madani_mushaf'); topCardMenuOpen = false"
                     >
-                      <i class="bi bi-journal-text" aria-hidden="true"></i>
-                      <span class="top-card-menu-toggle__stack">
-                        <span class="top-card-menu-toggle__title">{{ t('memorisation.view.indopak15') }}</span>
-                        <span class="top-card-menu-toggle__subtitle">{{ t('memorisation.view.qudratullah') }}</span>
-                      </span>
-                      <i v-if="mushafLayoutId === 'indopak-15-qudratullah'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      <i class="bi bi-book-half" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.view.mushaf') }}</span>
+                      <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
-                  </template>
+                    <template v-if="readingViewMode === 'madani_mushaf'">
+                      <button
+                        type="button"
+                        class="top-card-menu-row top-card-menu-row--mushaf-edition"
+                        :class="{ active: mushafLayoutId === 'madani-v2' }"
+                        :aria-pressed="mushafLayoutId === 'madani-v2' ? 'true' : 'false'"
+                        @click.stop="setMushafLayoutId('madani-v2')"
+                      >
+                        <i class="bi bi-journal-richtext" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.view.madinahV2') }}</span>
+                        <i v-if="mushafLayoutId === 'madani-v2'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="top-card-menu-row top-card-menu-row--mushaf-edition"
+                        :class="{ active: mushafLayoutId === 'indopak-15-qudratullah' }"
+                        :aria-pressed="mushafLayoutId === 'indopak-15-qudratullah' ? 'true' : 'false'"
+                        @click.stop="setMushafLayoutId('indopak-15-qudratullah')"
+                      >
+                        <i class="bi bi-journal-text" aria-hidden="true"></i>
+                        <span>{{ t('memorisation.view.indopak15') }}</span>
+                        <i v-if="mushafLayoutId === 'indopak-15-qudratullah'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      </button>
+                    </template>
+                  </div>
                   <div
                     v-if="readingViewMode === 'stacked'"
-                    class="top-card-menu-divider top-card-menu-divider--layout"
-                    aria-hidden="true"
-                  ></div>
-                  <button
-                    v-if="readingViewMode === 'stacked'"
-                    type="button"
-                    class="top-card-menu-toggle"
-                    :class="{ active: showTranslation }"
-                    :aria-pressed="showTranslation ? 'true' : 'false'"
-                    @click.stop="toggleReadingOption('translation')"
+                    class="top-card-menu-group top-card-menu-group--stacked-reading"
+                    role="group"
+                    :aria-label="t('memorisation.a11y.readingTools')"
                   >
-                    <i class="bi bi-translate" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.reading.translation') }}</span>
-                    <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                  <button
-                    v-if="readingViewMode === 'stacked'"
-                    type="button"
-                    class="top-card-menu-toggle"
-                    :class="{ active: showTransliteration }"
-                    :aria-pressed="showTransliteration ? 'true' : 'false'"
-                    @click.stop="toggleReadingOption('transliteration')"
-                  >
-                    <i class="bi bi-type" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.reading.transliteration') }}</span>
-                    <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                  <button
-                    v-if="readingViewMode === 'stacked'"
-                    type="button"
-                    class="top-card-menu-toggle"
-                    :class="{ active: showWordByWord }"
-                    :aria-pressed="showWordByWord ? 'true' : 'false'"
-                    @click.stop="toggleReadingOption('wbw')"
-                  >
-                    <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i>
-                    <span>{{ t('memorisation.reading.wordByWord') }}</span>
-                    <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
-                  </button>
-                  <div class="top-card-menu-section top-card-menu-section--utilities" role="group" :aria-label="t('memorisation.a11y.readingTools')">
-                    <div class="top-card-menu-divider top-card-menu-divider--utilities" aria-hidden="true"></div>
                     <button
                       type="button"
-                      class="top-card-menu-utility-item"
+                      class="top-card-menu-row"
+                      :class="{ active: showTranslation }"
+                      :aria-pressed="showTranslation ? 'true' : 'false'"
+                      @click.stop="toggleReadingOption('translation')"
+                    >
+                      <i class="bi bi-translate" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.reading.translation') }}</span>
+                      <i v-if="showTranslation" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="top-card-menu-row"
+                      :class="{ active: showTransliteration }"
+                      :aria-pressed="showTransliteration ? 'true' : 'false'"
+                      @click.stop="toggleReadingOption('transliteration')"
+                    >
+                      <i class="bi bi-type" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.reading.transliteration') }}</span>
+                      <i v-if="showTransliteration" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="top-card-menu-row"
+                      :class="{ active: showWordByWord }"
+                      :aria-pressed="showWordByWord ? 'true' : 'false'"
+                      @click.stop="toggleReadingOption('wbw')"
+                    >
+                      <i class="bi bi-grid-3x2-gap" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.reading.wordByWord') }}</span>
+                      <i v-if="showWordByWord" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div class="top-card-menu-group top-card-menu-group--utilities" role="group" :aria-label="t('memorisation.a11y.readingTools')">
+                    <button
+                      type="button"
+                      class="top-card-menu-row"
                       :class="{ active: tajweedEnabled }"
                       :aria-pressed="tajweedEnabled ? 'true' : 'false'"
                       @click.stop="toggleTajweed"
@@ -863,20 +860,20 @@
                     </button>
                     <a
                       :href="isAdmin ? adminDashboardUrl : learnerDashboardUrl"
-                      class="top-card-menu-link top-card-menu-utility-item"
+                      class="top-card-menu-link top-card-menu-row"
                       data-tour="dashboard"
                       @click.stop="topCardMenuOpen = false; isAdmin ? null : openDashboardView()"
                     >
                       <i class="bi bi-grid-1x2" aria-hidden="true"></i>
                       <span>{{ t('common.dashboard') }}</span>
                     </a>
-                    <button type="button" class="top-card-menu-utility-item" @click="openOnboardingFromTopMenu">
+                    <button type="button" class="top-card-menu-row" @click="openOnboardingFromTopMenu">
                       <i class="bi bi-compass" aria-hidden="true"></i>
                       <span>{{ t('memorisation.revisitOnboarding') }}</span>
                     </button>
                     <button
                       type="button"
-                      class="top-card-menu-utility-item"
+                      class="top-card-menu-row"
                       :class="{ active: isAppFullscreen }"
                       :aria-pressed="isAppFullscreen ? 'true' : 'false'"
                       @click="toggleFullScreen(); topCardMenuOpen = false"
@@ -1665,9 +1662,10 @@
 
                 <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
                   @click.stop
-                  :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}`"
+                  :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}`"
                   v-html="getDisplayArabic(verse)" :class="{
-                    'tajweed-enabled': tajweedEnabled,
+                    'tajweed-enabled': tajweedEnabled && !useStackedQpcMadaniGlyphs,
+                    'verse-arabic--qpc-madani': useStackedQpcMadaniGlyphs && verseHasQpcMadaniWords(verse),
                     'word-highlight-enabled': true,
                     'word-by-word-meanings': showWordByWord,
                     'verse-weak': isWeakAyah(verse.key),
@@ -1677,7 +1675,10 @@
                   }"                   :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
                     '--quran-font': quranFontFamily,
-                    'font-family': quranFontFamily
+                    '--qpc-word-size': stackedQpcWordSizePx,
+                    '--qpc-line-height': '1.32',
+                    '--qpc-ink': 'var(--mushaf-reading-ink, #f7ebdf)',
+                    'font-family': useStackedQpcMadaniGlyphs && verseHasQpcMadaniWords(verse) ? 'inherit' : quranFontFamily
                   }">
                 </div>
                 <AppStatus

@@ -7526,7 +7526,7 @@
 <body dir="{{ $appDirection }}">
     <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
         <div class="container-fluid shell navbar-shell">
-            <a class="navbar-brand" href="{{ route('home') }}" aria-label="{{ __('ui.mutqin_brand') }}">
+            <a class="navbar-brand" href="{{ url('/') }}" aria-label="{{ __('ui.mutqin_brand') }}">
                 <img
                     src="/images/logo.png"
                     alt=""
@@ -7827,6 +7827,7 @@
         window.mutqinInitialDirection = @json($appDirection);
         window.mutqinForceInitialLocale = @json(request()->query('lang') ? true : false);
         window.mutqinAuthCheck = @json(Auth::check());
+        window.mutqinAppUrl = @json(\App\Support\MutqinDomains::hostRoutingEnabled() ? \App\Support\MutqinDomains::appOrigin() : '');
         window.mutqinUserId = @json(Auth::id());
         window.mutqinHasPaidAccess = @json($navUser?->hasPaidAccess() ?? false);
         window.mutqinCanManageBilling = @json($navUser !== null && $navUser->hasBillableStripeCustomer());

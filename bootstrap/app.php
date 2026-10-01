@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AssignRequestId;
+use App\Support\MutqinDomains;
 use App\Http\Middleware\NormalizeLocalDevelopmentHost;
 use App\Http\Middleware\EnsureSubscriptionTier;
 use App\Http\Middleware\LogMutqinApiRequest;
@@ -16,6 +17,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,10 +25,21 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function (): void {
+            Route::middleware('web')->group(function (): void {
+                if (MutqinDomains::hostRoutingEnabled()) {
+                    Route::domain(MutqinDomains::marketingHost())
+                        ->group(base_path('routes/web/marketing.php'));
+                    Route::domain(MutqinDomains::appHost())
+                        ->group(base_path('routes/web/app.php'));
+                } else {
+                    require base_path('routes/web/app.php');
+                }
+            });
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Laravel Cloud (and any TLS terminator) forwards proto/host. Trust the
