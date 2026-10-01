@@ -75,16 +75,26 @@ final class MutqinDomains
         return self::hostsDiffer();
     }
 
-    public static function isMarketingHost(?string $host): bool
+    public static function normalizeHost(?string $host): string
     {
         $host = strtolower(trim((string) $host));
+        if (str_starts_with($host, 'www.')) {
+            $host = substr($host, 4);
+        }
+
+        return $host;
+    }
+
+    public static function isMarketingHost(?string $host): bool
+    {
+        $host = self::normalizeHost($host);
 
         return $host !== '' && $host === self::marketingHost();
     }
 
     public static function isAppHost(?string $host): bool
     {
-        $host = strtolower(trim((string) $host));
+        $host = self::normalizeHost($host);
 
         return $host !== '' && $host === self::appHost();
     }

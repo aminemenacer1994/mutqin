@@ -340,6 +340,11 @@ function syncDisplayModeClass() {
 }
 
 export function initPwa() {
+    if (typeof window !== 'undefined' && window.mutqinMinimalPublicPage) {
+        unregisterServiceWorkers().catch(() => {});
+        return;
+    }
+
     syncDisplayModeClass();
 
     // Desktop: keep Mutqin free of SW shells. Mobile: register once and update

@@ -165,6 +165,7 @@ return [
     'error_expired_title' => 'Session expired',
     'waiting_list_already_joined' => 'You are already on the waiting list.',
     'waiting_list_joined' => 'You have joined the waiting list.',
+    'waiting_list_unavailable' => 'The waiting list is temporarily unavailable. Please try again shortly.',
     'contact_message_sent' => 'Your message has been sent successfully.',
     'contact_name_required' => 'Please enter your name.',
     'contact_email_required' => 'Please enter your email address.',

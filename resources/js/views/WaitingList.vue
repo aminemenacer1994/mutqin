@@ -270,7 +270,11 @@ export default {
         const name = form.name.trim();
         const email = form.email.trim();
 
-        const response = await window.axios.post('/api/waiting-list', {
+        const endpoint = (typeof window !== 'undefined' && window.mutqinWaitingListEndpoint)
+          ? window.mutqinWaitingListEndpoint
+          : '/api/waiting-list';
+
+        const response = await window.axios.post(endpoint, {
           name,
           email,
         });
@@ -295,9 +299,12 @@ export default {
         }
 
         status.type = 'error';
+        const serverMessage = error?.response?.data?.message;
         status.message = Object.keys(validationErrors).length
           ? t('waitingList.errorFields')
-          : t('waitingList.errorSend');
+          : (typeof serverMessage === 'string' && serverMessage.trim() !== ''
+            ? serverMessage
+            : t('waitingList.errorSend'));
         await focusFirstInvalid();
       } finally {
         submitting.value = false;

@@ -315,6 +315,10 @@ async function bootstrapApp() {
     document.documentElement.dataset.mutqinAppMounted = '1';
     window.dispatchEvent(new CustomEvent('mutqin:app-mounted'));
 
+    if (typeof window !== 'undefined' && window.mutqinMinimalPublicPage) {
+        return;
+    }
+
     const feedbackRoot = document.createElement('div');
     feedbackRoot.id = 'mutqinFeedbackRoot';
     document.body.appendChild(feedbackRoot);

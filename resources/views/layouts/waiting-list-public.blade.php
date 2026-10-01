@@ -67,6 +67,10 @@
         </main>
     </div>
 
+    <script>
+        window.mutqinMinimalPublicPage = true;
+        window.mutqinWaitingListEndpoint = @json(url('/waiting-list'));
+    </script>
     <script src="{{ mix('js/app.js') }}" defer></script>
     <script>
         window.mutqinInitialLocale = @json($appLocale);
@@ -76,6 +80,8 @@
         window.mutqinInitialTheme = @json($appTheme);
         window.mutqinThemeModes = @json(\App\Support\Theme::clientCatalog());
         window.mutqinDefaultTheme = @json(\App\Support\Theme::DEFAULT);
+        window.mutqinRelease = @json(\App\Support\ErrorReporting::release());
+        window.mutqinEnvironment = @json(app()->environment());
     </script>
 </body>
 </html>

@@ -53,9 +53,11 @@ class MarketingHostPolicyTest extends TestCase
         $response = $this->getOnMarketingHost('/waiting-list');
         $response->assertOk()
             ->assertSee('waiting-list-page', false)
+            ->assertSee('mutqinMinimalPublicPage', false)
             ->assertDontSee('id="primaryNavbar"', false)
             ->assertDontSee(__('ui.login'), false)
             ->assertDontSee(__('ui.register'), false)
             ->assertDontSee('nav-link-memorisation', false);
     }
+
 }

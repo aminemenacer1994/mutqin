@@ -18,6 +18,17 @@ class WaitingListFlowTest extends TestCase
             ->assertSee('<waiting-list-page>', false);
     }
 
+    public function test_public_waiting_list_web_route_accepts_submissions(): void
+    {
+        $response = $this->postJson(route('waiting-list.store'), [
+            'name' => '  Yusuf  ',
+            'email' => '  yusuf.web@Example.COM ',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.email', 'yusuf.web@example.com');
+    }
+
     public function test_public_waiting_list_submission_is_stored_with_normalised_email(): void
     {
         $response = $this->postJson(route('api.waiting-list.store'), [

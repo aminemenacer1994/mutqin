@@ -17,6 +17,7 @@ use App\Http\Controllers\Internal\ErrorTestController;
 use App\Http\Controllers\Internal\HealthController as InternalHealthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuranProxyController;
+use App\Http\Controllers\WaitingListController;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
 use App\Support\ErrorReporting;
@@ -126,6 +127,9 @@ Route::view('/privacy', 'content.privacy')->name('privacy');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
 Route::view('/donate', 'content.donate')->name('donate');
 Route::view('/waiting-list', 'content.waiting-list')->name('waiting-list');
+Route::post('/waiting-list', [WaitingListController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('waiting-list.store');
 
 // Profile stays auth-only so unverified users can update email / sign out.
 Route::middleware(['auth'])->group(function () {
