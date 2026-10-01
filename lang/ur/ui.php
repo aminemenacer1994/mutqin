@@ -18,6 +18,7 @@ return [
     'logout' => 'تسجيل الخروج',
     'user' => 'مستخدم',
     'home' => 'الرئيسية',
+    'waiting_list' => 'انتظار کی فہرست',
     'memorisation' => 'الحفظ',
     'dashboard' => 'ڈیش بورڈ',
     'profile' => 'الملف الشخصي',

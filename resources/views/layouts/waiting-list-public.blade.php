@@ -16,7 +16,7 @@
     <meta name="theme-color" content="{{ $appThemeColor }}">
     <meta name="color-scheme" content="{{ $appColorScheme }}">
     <meta name="robots" content="index, follow">
-    <meta name="description" content="Mutqin — AI-powered recitation feedback, smart revision and guided practice. Join the waiting list.">
+    <meta name="description" content="Mutqin early access — join the waiting list to be invited first to try Qur'an memorisation support between lessons.">
     <title>Mutqin</title>
     @include('partials.google-analytics')
     <link rel="icon" href="/favicon.ico?v=20260730c" sizes="any">
@@ -70,9 +70,12 @@
         min-height: var(--nav-h, 64px);
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
         padding-top: env(safe-area-inset-top, 0px);
       }
       .waiting-list-public-nav .navbar-brand {
+        flex-shrink: 0;
         margin: 0;
         padding: 0;
       }
@@ -98,8 +101,8 @@
 </head>
 <body class="mutqin-waiting-list-public">
     <nav class="waiting-list-public-nav app-navbar navbar" aria-label="{{ __('ui.mutqin_brand') }}">
-        <div class="container-fluid shell navbar-shell">
-            <a class="navbar-brand" href="{{ url('/waiting-list') }}" aria-label="{{ __('ui.mutqin_brand') }}">
+        <div class="container-fluid shell navbar-shell w-100">
+            <a class="navbar-brand" href="{{ \App\Support\MutqinDomains::appUrl('/') }}" aria-label="{{ __('ui.mutqin_brand') }}">
                 <img
                     src="/images/logo.png"
                     alt=""
@@ -115,6 +118,7 @@
                     height="32"
                 >
             </a>
+            @include('partials.waiting-list-minimal-nav')
         </div>
     </nav>
     <div id="app">

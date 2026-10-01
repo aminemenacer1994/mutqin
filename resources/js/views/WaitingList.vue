@@ -6,6 +6,7 @@
           <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
           {{ t('waitingList.kicker') }}
         </p>
+        <p class="waiting-list-promo">{{ t('waitingList.promoOffer') }}</p>
         <h1 id="waitingListTitle">{{ t('waitingList.title') }}</h1>
         <p class="waiting-list-lead">{{ t('waitingList.subtitle') }}</p>
         <p class="waiting-list-trust">{{ t('waitingList.trust') }}</p>
@@ -142,29 +143,6 @@
           </div>
         </form>
       </div>
-
-      <div class="waiting-list-pointers">
-        <p class="waiting-list-pointers-title">{{ t('waitingList.pointersTitle') }}</p>
-        <ul class="waiting-list-benefits">
-          <li
-            v-for="benefit in benefits"
-            :key="benefit.id"
-            class="waiting-list-benefit"
-          >
-            <span class="waiting-list-benefit-icon" aria-hidden="true">
-              <i class="bi" :class="benefit.icon"></i>
-            </span>
-            <div class="waiting-list-benefit-body">
-              <p class="waiting-list-benefit-title">
-                {{ t(`waitingList.benefits.${benefit.id}.title`) }}
-              </p>
-              <p class="waiting-list-benefit-desc">
-                {{ t(`waitingList.benefits.${benefit.id}.desc`) }}
-              </p>
-            </div>
-          </li>
-        </ul>
-      </div>
     </div>
   </section>
 </template>
@@ -172,12 +150,6 @@
 <script>
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-const BENEFITS = [
-  { id: 'recitation', icon: 'bi-mic' },
-  { id: 'revision', icon: 'bi-calendar2-check' },
-  { id: 'hifz', icon: 'bi-bullseye' },
-];
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -356,16 +328,15 @@ export default {
     };
 
     onMounted(() => {
-      document.body.classList.add('mutqin-waiting-list-active');
+      document.body.classList.add('mutqin-early-access-nav');
     });
 
     onUnmounted(() => {
-      document.body.classList.remove('mutqin-waiting-list-active');
+      document.body.classList.remove('mutqin-early-access-nav');
     });
 
     return {
       t,
-      benefits: BENEFITS,
       form,
       errors,
       status,
@@ -389,12 +360,6 @@ export default {
 <style scoped>
 @import url('https://fonts.bunny.net/css?family=source-serif-4:400,500,600,700');
 
-:global(body.mutqin-waiting-list-active .app-navbar .offcanvas),
-:global(body.mutqin-waiting-list-active .app-navbar .navbar-quick-actions),
-:global(body.mutqin-waiting-list-active .app-navbar .navbar-toggler) {
-  display: none !important;
-}
-
 .waiting-list-page {
   --wl-display: "Source Serif 4", "Iowan Old Style", Palatino, "Amiri", "Noto Naskh Arabic", Georgia, serif;
   --wl-cta-fg: var(--text-on-accent, #fffaf5);
@@ -402,7 +367,7 @@ export default {
   min-height: calc(100dvh - var(--nav-h, 64px) - 2rem);
   display: grid;
   align-content: start;
-  padding: clamp(1.15rem, 3.6vw, 2rem) 0 clamp(2rem, 5vw, 3rem);
+  padding: clamp(1.5rem, 4.5vw, 2.75rem) 0 clamp(2rem, 5vw, 3rem);
   overflow-x: clip;
   background:
     radial-gradient(ellipse 70% 45% at 50% -10%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%);
@@ -449,6 +414,16 @@ export default {
   font-size: 0.85rem;
 }
 
+.waiting-list-promo {
+  margin: 0;
+  max-width: 32ch;
+  color: color-mix(in srgb, var(--accent-strong) 88%, var(--text));
+  font-size: clamp(0.92rem, 2.4vw, 1rem);
+  font-weight: 650;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
 .waiting-list-hero h1 {
   margin: 0;
   max-width: 18ch;
@@ -476,71 +451,6 @@ export default {
   color: color-mix(in srgb, var(--text-muted) 82%, var(--text));
   font-size: 0.9rem;
   line-height: 1.5;
-  text-wrap: pretty;
-}
-
-.waiting-list-pointers {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.waiting-list-pointers-title {
-  margin: 0;
-  color: var(--text);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.waiting-list-benefits {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.95rem;
-}
-
-.waiting-list-benefit {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.75rem;
-  align-items: start;
-}
-
-.waiting-list-benefit-icon {
-  width: 2.15rem;
-  height: 2.15rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface-strong));
-  color: var(--accent-strong);
-  font-size: 1rem;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
-}
-
-.waiting-list-benefit-body {
-  display: grid;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.waiting-list-benefit-title {
-  margin: 0;
-  color: var(--text);
-  font-size: 0.94rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.3;
-}
-
-.waiting-list-benefit-desc {
-  margin: 0;
-  color: color-mix(in srgb, var(--text-muted) 84%, var(--text));
-  font-size: 0.88rem;
-  line-height: 1.48;
   text-wrap: pretty;
 }
 
@@ -835,17 +745,16 @@ export default {
   .waiting-list-page {
     min-height: calc(100dvh - var(--nav-h, 64px) - 2rem);
     align-content: center;
-    padding-top: clamp(1.25rem, 3vw, 2rem);
+    padding-top: clamp(1.75rem, 4vw, 3rem);
   }
 
   .waiting-list-shell {
     grid-template-columns: minmax(0, 1fr) minmax(20.5rem, 23.5rem);
     grid-template-areas:
-      "intro panel"
-      "pointers panel";
+      "intro panel";
     column-gap: clamp(1.35rem, 3vw, 2rem);
     row-gap: 1.1rem;
-    align-items: start;
+    align-items: center;
   }
 
   .waiting-list-hero {
@@ -854,13 +763,8 @@ export default {
     justify-items: start;
   }
 
-  .waiting-list-pointers {
-    grid-area: pointers;
-  }
-
   .waiting-list-panel {
     grid-area: panel;
-    grid-row: 1 / -1;
     align-self: center;
   }
 
@@ -875,8 +779,7 @@ export default {
 }
 
 @media (max-width: 899px) {
-  .waiting-list-hero,
-  .waiting-list-pointers {
+  .waiting-list-hero {
     width: 100%;
   }
 }

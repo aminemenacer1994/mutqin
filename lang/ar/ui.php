@@ -18,6 +18,7 @@ return [
     'logout' => 'تسجيل الخروج',
     'user' => 'مستخدم',
     'home' => 'الرئيسية',
+    'waiting_list' => 'قائمة الانتظار',
     'memorisation' => 'الحفظ',
     'dashboard' => 'لوحة التحكم',
     'profile' => 'الملف الشخصي',

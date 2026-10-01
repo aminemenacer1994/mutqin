@@ -18,6 +18,7 @@ return [
     'logout' => 'Keluar',
     'user' => 'Pengguna',
     'home' => 'Beranda',
+    'waiting_list' => 'Daftar tunggu',
     'memorisation' => 'Hafalan',
     'dashboard' => 'Dasbor',
     'profile' => 'Profil',

@@ -18,6 +18,7 @@ return [
     'logout' => 'Çıkış yap',
     'user' => 'Kullanıcı',
     'home' => 'Ana sayfa',
+    'waiting_list' => 'Bekleme listesi',
     'memorisation' => 'Hıfz',
     'dashboard' => 'Kontrol paneli',
     'profile' => 'Profil',

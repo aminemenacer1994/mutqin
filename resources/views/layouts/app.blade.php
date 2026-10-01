@@ -4005,6 +4005,83 @@
             filter: none !important;
         }
 
+        body.mutqin-early-access-nav .app-navbar .navbar-shell,
+        body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-shell {
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem 1rem;
+        }
+
+        body.mutqin-early-access-nav .app-navbar .navbar-brand {
+            flex-shrink: 0;
+            grid-column: auto !important;
+            max-width: min(58vw, 11rem);
+        }
+
+        .waiting-list-early-access-bar {
+            display: flex;
+            flex: 1 1 auto;
+            align-items: center;
+            justify-content: center;
+            gap: 0.65rem 1rem;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        body.mutqin-early-access-nav .waiting-list-minimal-nav,
+        body.mutqin-waiting-list-public .waiting-list-minimal-nav {
+            flex: 1 1 auto;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .waiting-list-navbar-lang {
+            flex: 0 0 auto;
+            margin-inline-start: auto;
+        }
+
+        @media (max-width: 991.98px) {
+            body.mutqin-early-access-nav .app-navbar .navbar-shell,
+            body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-shell {
+                flex-wrap: wrap;
+                row-gap: 0.55rem;
+            }
+
+            body.mutqin-early-access-nav .waiting-list-early-access-bar,
+            body.mutqin-waiting-list-public .waiting-list-early-access-bar {
+                flex: 1 1 100%;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            body.mutqin-early-access-nav .app-navbar .navbar-shell,
+            body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-shell {
+                display: flex !important;
+                grid-template-columns: none !important;
+            }
+
+            .waiting-list-early-access-bar {
+                align-items: center;
+            }
+
+            .waiting-list-minimal-nav {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 419.98px) {
+            .waiting-list-minimal-nav .nav-link-copy strong {
+                font-size: 0.88rem;
+            }
+
+            .waiting-list-navbar-lang .app-lang-label {
+                max-width: 3.5rem;
+            }
+        }
+
         .app-navbar .nav-link-home,
         .app-navbar .nav-link-home:hover,
         .app-navbar .nav-link-home:focus,
@@ -7523,9 +7600,27 @@
       }
     </style>
 </head>
-<body dir="{{ $appDirection }}">
+<body dir="{{ $appDirection }}" @if (\App\Support\MutqinDomains::usesEarlyAccessNav(request())) class="mutqin-early-access-nav" @endif>
+    @php
+        $usesEarlyAccessNav = \App\Support\MutqinDomains::usesEarlyAccessNav(request());
+    @endphp
     <nav class="navbar navbar-expand-lg app-navbar" aria-label="{{ __('ui.primary_navigation') }}">
         <div class="container-fluid shell navbar-shell">
+            @if ($usesEarlyAccessNav)
+                <a class="navbar-brand" href="{{ route('home') }}" aria-label="{{ __('ui.mutqin_brand') }}">
+                    <img
+                        src="/images/logo.png"
+                        alt=""
+                        class="app-navbar-logo app-navbar-logo--full app-navbar-logo--light"
+                    >
+                    <img
+                        src="/images/dark_logo.png"
+                        alt=""
+                        class="app-navbar-logo app-navbar-logo--full app-navbar-logo--dark"
+                    >
+                </a>
+                @include('partials.waiting-list-minimal-nav')
+            @else
             <a class="navbar-brand" href="{{ url('/') }}" aria-label="{{ __('ui.mutqin_brand') }}">
                 <img
                     src="/images/logo.png"
@@ -7762,6 +7857,7 @@
                     <i class="bi bi-list" aria-hidden="true"></i>
                 </button>
             </div>
+            @endif
         </div>
     </nav>
 

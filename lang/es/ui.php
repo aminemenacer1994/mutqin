@@ -18,6 +18,7 @@ return [
     'logout' => 'Cerrar sesión',
     'user' => 'Usuario',
     'home' => 'Inicio',
+    'waiting_list' => 'Lista de espera',
     'memorisation' => 'Memorización',
     'dashboard' => 'Progreso',
     'profile' => 'Perfil',

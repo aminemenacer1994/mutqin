@@ -18,6 +18,7 @@ return [
     'logout' => 'Déconnexion',
     'user' => 'Utilisateur',
     'home' => 'Accueil',
+    'waiting_list' => 'Liste d’attente',
     'memorisation' => 'Mémorisation',
     'dashboard' => 'Progrès',
     'profile' => 'Profil',

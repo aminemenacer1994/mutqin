@@ -37,6 +37,15 @@ final class MutqinDomains
     /**
      * Apply waiting-list-only policy for the marketing host (runtime Host header).
      */
+    /**
+     * Waiting-list shell: only Home, Waiting list, and language on these routes.
+     */
+    public static function usesEarlyAccessNav(Request $request): bool
+    {
+        return $request->routeIs('home', 'waiting-list')
+            || $request->is('/', 'waiting-list');
+    }
+
     public static function restrictMarketingHost(Request $request): bool
     {
         if (filter_var(config('mutqin.domains.force_disabled'), FILTER_VALIDATE_BOOL)) {

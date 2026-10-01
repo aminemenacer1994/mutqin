@@ -19,6 +19,7 @@ return [
     'logout' => 'Logout',
     'user' => 'User',
     'home' => 'Home',
+    'waiting_list' => 'Waiting list',
     'memorisation' => 'Memorise',
     'pricing' => 'Pricing',
     'dashboard' => 'Progress',
