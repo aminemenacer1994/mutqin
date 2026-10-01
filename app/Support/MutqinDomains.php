@@ -2,12 +2,15 @@
 
 namespace App\Support;
 
+use Illuminate\Http\Request;
+
 /**
  * Production host split: mutqin.ai (marketing) vs app.mutqin.ai (application).
  * Local and automated tests keep a single host unless explicitly enabled.
  */
 final class MutqinDomains
 {
+    private const DEFAULT_APP_HOST = 'app.mutqin.ai';
     public static function marketingHost(): string
     {
         return strtolower(trim((string) config('mutqin.domains.marketing_host', 'mutqin.ai')));
@@ -20,9 +23,35 @@ final class MutqinDomains
             return $configured;
         }
 
-        $host = parse_url((string) config('app.url'), PHP_URL_HOST);
+        $fromAppUrl = parse_url((string) config('app.url'), PHP_URL_HOST);
+        $fromAppUrl = is_string($fromAppUrl) ? strtolower($fromAppUrl) : '';
+        $marketing = self::marketingHost();
 
-        return is_string($host) ? strtolower($host) : '';
+        if ($fromAppUrl !== '' && $fromAppUrl !== $marketing) {
+            return $fromAppUrl;
+        }
+
+        return self::DEFAULT_APP_HOST;
+    }
+
+    /**
+     * Apply waiting-list-only policy for the marketing host (runtime Host header).
+     */
+    public static function restrictMarketingHost(Request $request): bool
+    {
+        if (filter_var(config('mutqin.domains.force_disabled'), FILTER_VALIDATE_BOOL)) {
+            return false;
+        }
+
+        if (app()->runningUnitTests() && ! filter_var(config('mutqin.domains.enable_in_tests'), FILTER_VALIDATE_BOOL)) {
+            return false;
+        }
+
+        if (app()->environment('local') && ! filter_var(config('mutqin.domains.enable_in_local'), FILTER_VALIDATE_BOOL)) {
+            return false;
+        }
+
+        return self::isMarketingHost($request->getHost());
     }
 
     public static function hostRoutingEnabled(): bool
@@ -65,7 +94,13 @@ final class MutqinDomains
      */
     public static function appOrigin(): string
     {
-        return rtrim((string) config('app.url'), '/');
+        $appUrl = rtrim((string) config('app.url'), '/');
+        $scheme = parse_url($appUrl, PHP_URL_SCHEME);
+        if (! is_string($scheme) || $scheme === '') {
+            $scheme = 'https';
+        }
+
+        return $scheme.'://'.self::appHost();
     }
 
     public static function appUrl(string $path = '/'): string

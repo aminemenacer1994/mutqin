@@ -39,4 +39,15 @@ class MutqinDomainsTest extends TestCase
 
         $this->assertSame('https://app.mutqin.ai/register', MutqinDomains::appUrl('/register'));
     }
+
+    public function test_app_host_defaults_to_app_subdomain_when_app_url_is_marketing(): void
+    {
+        config([
+            'app.url' => 'https://mutqin.ai',
+            'mutqin.domains.marketing_host' => 'mutqin.ai',
+            'mutqin.domains.app_host' => 'app.mutqin.ai',
+        ]);
+
+        $this->assertSame('app.mutqin.ai', MutqinDomains::appHost());
+    }
 }

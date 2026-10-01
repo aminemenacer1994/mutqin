@@ -17,7 +17,7 @@ return [
      */
     'domains' => [
         'marketing_host' => env('MUTQIN_MARKETING_HOST', 'mutqin.ai'),
-        'app_host' => env('MUTQIN_APP_HOST', ''),
+        'app_host' => env('MUTQIN_APP_HOST', 'app.mutqin.ai'),
         'enable_in_local' => filter_var(env('MUTQIN_DOMAIN_ROUTING_IN_LOCAL', false), FILTER_VALIDATE_BOOL),
         'enable_in_tests' => filter_var(env('MUTQIN_DOMAIN_ROUTING_IN_TESTS', false), FILTER_VALIDATE_BOOL),
         'force_enabled' => filter_var(env('MUTQIN_DOMAIN_ROUTING_FORCE', false), FILTER_VALIDATE_BOOL),

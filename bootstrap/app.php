@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\EnforceMarketingHostPolicy;
 use App\Support\MutqinDomains;
 use App\Http\Middleware\NormalizeLocalDevelopmentHost;
 use App\Http\Middleware\EnsureSubscriptionTier;
@@ -55,6 +56,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(prepend: [
             AssignRequestId::class,
+            EnforceMarketingHostPolicy::class,
             NormalizeLocalDevelopmentHost::class,
         ]);
 
