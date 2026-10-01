@@ -58,6 +58,33 @@
         min-height: 100dvh;
         background: var(--bg, #14110f);
       }
+      .waiting-list-public-nav {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-bottom: 1px solid color-mix(in srgb, var(--border, rgba(255,255,255,.22)) 88%, transparent);
+        background: color-mix(in srgb, var(--bg, #14110f) 92%, transparent);
+        backdrop-filter: blur(10px);
+      }
+      .waiting-list-public-nav .navbar-shell {
+        min-height: var(--nav-h, 64px);
+        display: flex;
+        align-items: center;
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+      .waiting-list-public-nav .navbar-brand {
+        margin: 0;
+        padding: 0;
+      }
+      html[data-theme="dark"] .waiting-list-public-nav .app-navbar-logo--light {
+        display: none;
+      }
+      html[data-theme="dark"] .waiting-list-public-nav .app-navbar-logo--dark {
+        display: block;
+      }
+      html:not([data-theme="dark"]) .waiting-list-public-nav .app-navbar-logo--dark {
+        display: none;
+      }
       :root {
         --text-on-accent: #fffaf5;
       }
@@ -70,6 +97,26 @@
     </style>
 </head>
 <body class="mutqin-waiting-list-public">
+    <nav class="waiting-list-public-nav app-navbar navbar" aria-label="{{ __('ui.mutqin_brand') }}">
+        <div class="container-fluid shell navbar-shell">
+            <a class="navbar-brand" href="{{ url('/waiting-list') }}" aria-label="{{ __('ui.mutqin_brand') }}">
+                <img
+                    src="/images/logo.png"
+                    alt=""
+                    class="app-navbar-logo app-navbar-logo--full app-navbar-logo--light"
+                    width="120"
+                    height="32"
+                >
+                <img
+                    src="/images/dark_logo.png"
+                    alt=""
+                    class="app-navbar-logo app-navbar-logo--full app-navbar-logo--dark"
+                    width="120"
+                    height="32"
+                >
+            </a>
+        </div>
+    </nav>
     <div id="app">
         <main id="mainContent" tabindex="-1">
             @yield('content')

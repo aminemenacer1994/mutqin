@@ -4217,41 +4217,42 @@
   },
   "waitingList": {
     "brand": "Mutqin",
-    "kicker": "Erken erişim",
+    "kicker": "Hoş geldin",
     "title": "Hıfzını yakın tut",
-    "subtitle": "Yapay zekâ destekli tilavet geri bildirimi, akıllı tekrar ve rehberli alıştırma ile hıfzını güçlü tut.",
-    "trust": "Kur’an ezber çalışmanı desteklemek için yapıldı — öğretmeninin yerini almak için değil.",
+    "subtitle": "Mutqin, ezberden tekrar ve tilavette sakin bir yol arkadaşı; kalbinin bildiği tempoda.",
+    "trust": "Dersler arasında yanında olmak için. Öğretmenin merkezde kalır.",
+    "pointersTitle": "Yolda küçük bir refakat",
     "formKicker": "Bekleme listesi",
-    "formTitle": "Bekleme listesine katıl",
-    "formLead": "Mutqin’i ilk deneyenlerden ol.",
+    "formTitle": "Yerini ayır",
+    "formLead": "Adını ve sana ulaşacağımız yeri bırak. Erken erişim açılınca kişisel bir not göndeririz.",
     "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
     "ayah": "Kur’an’ı tane tane oku.",
     "ayahRef": "El-Müzzemmil 73:4",
     "benefits": {
       "recitation": {
-        "title": "YZ tilavet geri bildirimi",
-        "desc": "Okurken ezber hatalarını yakala."
+        "title": "Ezberden tilavet",
+        "desc": "Ayet ayet ilerle. Bir nazik tur daha isteyen kelimeleri fark et."
       },
       "revision": {
-        "title": "Akıllı tekrar",
-        "desc": "Neyi, ne zaman tekrar edeceğini bil."
+        "title": "Önemli olana dönmek",
+        "desc": "Tekrar etmek istediğin surelere dön; dünkü ezberin yakında kalsın."
       },
       "hifz": {
-        "title": "Zayıf ayetleri güçlendir",
-        "desc": "En çok dikkat isteyen ayetlere odaklan ve onları güçlendir."
+        "title": "Sabır isteyen ayetler",
+        "desc": "Hâlâ titreyen ayetlerle biraz daha kal. Bu zamanı hak ediyorlar."
       }
     },
     "name": "Ad",
     "email": "E-posta",
-    "namePlaceholder": "Adınız",
+    "namePlaceholder": "Sana nasıl hitap edelim?",
     "emailPlaceholder": "sen{'@'}ornek.com",
-    "join": "Bekleme listesine katıl",
-    "joining": "Katılıyor…",
-    "success": "Listedesin.",
-    "alreadyJoined": "Zaten listedesin.",
-    "successHint": "Mutqin senin için hazır olunca e-posta yazarız.",
+    "join": "Beni yaz",
+    "joining": "Yerin kaydediliyor…",
+    "success": "Tamam. Hoş geldin.",
+    "alreadyJoined": "Zaten bizimle birliktesin.",
+    "successHint": "Sıra sana gelince, bıraktığın e-postaya yazarız.",
     "joinAnother": "Başka bir e-posta kullan",
-    "privacyNote": "Sana yalnızca Mutqin erken erişimi hakkında yazarız.",
+    "privacyNote": "Yalnızca Mutqin hakkında sakin güncellemeler. Spam yok.",
     "socialProof": "Şimdiden bekleyen {count} kişiye katıl.",
     "socialProofOne": "Şimdiden bekleyen {count} kişiye katıl.",
     "previewAlt": "Mutqin her kelimeyi takip edip işaretlerken ezberden oku.",

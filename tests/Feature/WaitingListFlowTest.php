@@ -30,17 +30,23 @@ class WaitingListFlowTest extends TestCase
             ->assertSee('count="1"', false);
     }
 
-    public function test_public_waiting_list_accepts_email_only_submissions(): void
+    public function test_public_waiting_list_requires_name_and_email(): void
     {
+        $this->postJson(route('api.waiting-list.store'), [
+            'email' => 'solo@example.com',
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['name']);
+
         $response = $this->postJson(route('api.waiting-list.store'), [
+            'name' => 'Yusuf',
             'email' => 'solo@example.com',
         ]);
 
         $response->assertCreated()
-            ->assertJsonPath('already_joined', false)
             ->assertJsonPath('data.email', 'solo@example.com');
 
         $this->assertDatabaseHas('waiting_list_entries', [
+            'name' => 'Yusuf',
             'email' => 'solo@example.com',
         ]);
     }
@@ -102,8 +108,7 @@ class WaitingListFlowTest extends TestCase
             'name' => '',
             'email' => 'not-an-email',
         ])->assertStatus(422)
-            ->assertJsonValidationErrors(['email'])
-            ->assertJsonMissingValidationErrors(['name']);
+            ->assertJsonValidationErrors(['name', 'email']);
 
         $this->assertDatabaseCount('waiting_list_entries', 0);
     }

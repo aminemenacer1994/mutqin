@@ -5,6 +5,16 @@
 )
 
 @section('content')
+    @unless(\App\Support\MutqinDomains::restrictMarketingHost(request()))
+        <script>document.body.classList.add('mutqin-waiting-list-active');</script>
+        <style>
+            body.mutqin-waiting-list-active .app-navbar .offcanvas,
+            body.mutqin-waiting-list-active .app-navbar .navbar-quick-actions,
+            body.mutqin-waiting-list-active .app-navbar .navbar-toggler {
+                display: none !important;
+            }
+        </style>
+    @endunless
     @php
         $waitingListCount = 0;
         try {

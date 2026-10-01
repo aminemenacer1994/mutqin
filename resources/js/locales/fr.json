@@ -4217,42 +4217,43 @@
   },
   "waitingList": {
     "brand": "Mutqin",
-    "kicker": "Accès anticipé",
+    "kicker": "Vous êtes le bienvenu",
     "title": "Gardez votre hifz près du cœur",
-    "subtitle": "Retour de récitation assisté par l’IA, révision intelligente et pratique guidée pour garder votre hifz solide.",
-    "trust": "Conçu pour soutenir votre pratique de mémorisation du Coran — pas pour remplacer votre professeur.",
+    "subtitle": "Mutqin vous accompagne doucement dans la révision et la récitation de mémoire, au rythme que votre cœur connaît déjà.",
+    "trust": "Fait pour être à vos côtés entre les leçons. Votre professeur reste au centre.",
+    "pointersTitle": "Un peu de compagnie sur le chemin",
     "formKicker": "Liste d’attente",
-    "formTitle": "Rejoindre la liste d’attente",
-    "formLead": "Soyez parmi les premiers à essayer Mutqin.",
+    "formTitle": "Réserver votre place",
+    "formLead": "Laissez votre nom et où vous joindre. À l’ouverture, nous vous enverrons un mot personnel.",
     "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
     "ayah": "Et récitez le Coran d’une récitation mesurée.",
     "ayahRef": "Al-Muzzammil 73:4",
     "previewAlt": "Récitez de mémoire pendant que Mutqin suit et marque chaque mot.",
     "benefits": {
       "recitation": {
-        "title": "Retour de récitation IA",
-        "desc": "Repérez les erreurs de mémorisation pendant que vous récitez."
+        "title": "Réciter de mémoire",
+        "desc": "Verset par verset. Repérez les mots qui demandent encore un passage doux."
       },
       "revision": {
-        "title": "Révision intelligente",
-        "desc": "Sachez quoi réviser, et quand."
+        "title": "Revenir à l’essentiel",
+        "desc": "Retrouvez les sourates que vous vouliez reprendre, pour garder hier près de vous."
       },
       "hifz": {
-        "title": "Renforcer les ayahs faibles",
-        "desc": "Ciblez et renforcez les ayahs qui demandent le plus d’attention."
+        "title": "Ayahs qui demandent patience",
+        "desc": "Restez un peu avec les versets encore fragiles. Ils méritent ce temps."
       }
     },
     "name": "Nom",
     "email": "E-mail",
-    "namePlaceholder": "Votre nom",
+    "namePlaceholder": "Comment vous appeler ?",
     "emailPlaceholder": "vous{'@'}exemple.com",
-    "join": "Rejoindre la liste d’attente",
-    "joining": "Inscription…",
-    "success": "Vous êtes sur la liste.",
-    "alreadyJoined": "Vous êtes déjà sur la liste.",
-    "successHint": "Nous vous écrirons quand Mutqin sera prêt pour vous.",
+    "join": "Je m’inscris",
+    "joining": "On enregistre votre place…",
+    "success": "C’est bon. Bienvenue.",
+    "alreadyJoined": "Vous êtes déjà avec nous.",
+    "successHint": "Quand ce sera votre tour, nous vous écrirons à l’adresse indiquée.",
     "joinAnother": "Utiliser un autre e-mail",
-    "privacyNote": "Nous vous écrirons seulement à propos de l’accès anticipé à Mutqin.",
+    "privacyNote": "Seulement de douces nouvelles sur Mutqin. Pas de bruit.",
     "socialProof": "Rejoignez {count} personnes déjà en attente.",
     "socialProofOne": "Rejoignez {count} personne déjà en attente.",
     "errorFields": "Vérifiez les champs signalés et réessayez.",

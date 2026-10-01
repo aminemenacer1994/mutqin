@@ -4222,49 +4222,50 @@
   },
   "waitingList": {
     "brand": "Mutqin",
-    "kicker": "Early access",
+    "kicker": "You're welcome here",
     "title": "Keep your hifz close",
-    "subtitle": "AI-powered recitation feedback, smart revision and guided practice to keep your hifz strong.",
-    "trust": "Built to support your Quran memorisation practice — not replace your teacher.",
+    "subtitle": "Mutqin is a quiet companion for revising and reciting from memory, at the pace your heart already knows.",
+    "trust": "Made to sit with you between lessons. Your teacher stays at the centre.",
+    "pointersTitle": "A little company on the path",
     "formKicker": "Waiting list",
-    "formTitle": "Join the waiting list",
-    "formLead": "Be among the first to try Mutqin.",
+    "formTitle": "Save your spot",
+    "formLead": "Leave your name and where we can reach you. When early access opens, we'll send you a personal note.",
     "ayahArabic": "وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا",
     "ayah": "And recite the Quran with measured recitation.",
     "ayahRef": "Al-Muzzammil 73:4",
     "previewAlt": "Recite from memory while Mutqin follows along and marks each word.",
     "benefits": {
       "recitation": {
-        "title": "AI recitation feedback",
-        "desc": "Catch memorisation mistakes as you recite."
+        "title": "Reciting from memory",
+        "desc": "Go ayah by ayah. Notice the words that ask for one more gentle pass."
       },
       "revision": {
-        "title": "Smart revision",
-        "desc": "Know what to revise and when."
+        "title": "Coming back to what matters",
+        "desc": "Return to the surahs you meant to revisit, so what you memorised yesterday stays near."
       },
       "hifz": {
-        "title": "Strengthen weak ayahs",
-        "desc": "Target and strengthen the ayahs that need the most attention."
+        "title": "Ayahs that need patience",
+        "desc": "Stay a little longer with the verses that still feel unsteady. They are worth the time."
       }
     },
     "name": "Name",
     "email": "Email",
-    "namePlaceholder": "Your name",
+    "namePlaceholder": "What should we call you?",
     "emailPlaceholder": "you{'@'}example.com",
-    "join": "Join the waiting list",
-    "joining": "Joining...",
-    "success": "You’re on the list.",
-    "alreadyJoined": "You’re already on the list.",
-    "successHint": "We’ll email you when Mutqin is ready for you.",
-    "privacyNote": "We’ll only email you about Mutqin early access.",
+    "join": "Count me in",
+    "joining": "Saving your spot...",
+    "success": "You’re in. Welcome.",
+    "alreadyJoined": "You’re already with us.",
+    "successHint": "When it’s your turn, we’ll write to you at the email you shared.",
+    "privacyNote": "Only quiet updates about Mutqin. No spam.",
     "socialProof": "Join {count} people already waiting.",
     "socialProofOne": "Join {count} person already waiting.",
     "errorFields": "Please check the highlighted fields and try again.",
     "errorSend": "Something went wrong. Please try again in a moment.",
     "errors": {
-      "name": "Please enter your name.",
-      "email": "Please enter your email address.",
-      "emailInvalid": "Please enter a valid email address."
+      "name": "We’d love to know your name.",
+      "email": "Where can we reach you?",
+      "emailInvalid": "That email doesn’t look quite right."
     },
     "faq": {
       "title": "Questions",
