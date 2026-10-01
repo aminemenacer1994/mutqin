@@ -67,11 +67,23 @@ class MutqinDomainRoutingTest extends TestCase
         return $this->getOnHost('app.mutqin.ai', $uri);
     }
 
-    public function test_marketing_host_serves_landing_without_redirecting_to_login(): void
+    public function test_marketing_host_root_redirects_to_waiting_list_only(): void
     {
         $this->onMarketingHost('/')
+            ->assertRedirect('/waiting-list');
+
+        $this->onMarketingHost('/waiting-list')
             ->assertOk()
-            ->assertSee('homepage', false);
+            ->assertSee('waiting-list-page', false);
+    }
+
+    public function test_marketing_host_redirects_other_public_pages_to_app_host(): void
+    {
+        $this->onMarketingHost('/pricing')
+            ->assertRedirect('https://app.mutqin.ai/pricing');
+
+        $this->onMarketingHost('/about')
+            ->assertRedirect('https://app.mutqin.ai/about');
     }
 
     public function test_marketing_host_redirects_application_paths_to_app_host(): void
@@ -92,10 +104,4 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertOk();
     }
 
-    public function test_marketing_host_keeps_waiting_list_page(): void
-    {
-        $this->onMarketingHost('/waiting-list')
-            ->assertOk()
-            ->assertSee('waiting-list-page', false);
-    }
 }
