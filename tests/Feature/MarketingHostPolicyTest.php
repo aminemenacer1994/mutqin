@@ -50,8 +50,12 @@ class MarketingHostPolicyTest extends TestCase
         $this->getOnMarketingHost('/pricing')
             ->assertRedirect('https://app.mutqin.ai/pricing');
 
-        $this->getOnMarketingHost('/waiting-list')
-            ->assertOk()
-            ->assertSee('waiting-list-page', false);
+        $response = $this->getOnMarketingHost('/waiting-list');
+        $response->assertOk()
+            ->assertSee('waiting-list-page', false)
+            ->assertDontSee('id="primaryNavbar"', false)
+            ->assertDontSee(__('ui.login'), false)
+            ->assertDontSee(__('ui.register'), false)
+            ->assertDontSee('nav-link-memorisation', false);
     }
 }
