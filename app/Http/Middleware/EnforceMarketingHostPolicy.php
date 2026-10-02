@@ -27,15 +27,7 @@ class EnforceMarketingHostPolicy
         }
 
         $path = '/'.ltrim($request->path(), '/');
-        if ($path === '/' || $path === '//') {
-            return redirect(self::WAITING_LIST);
-        }
-
-        if (strtolower($path) === self::WAITING_LIST) {
-            return $next($request);
-        }
-
-        if (MutqinDomains::marketingHostWebPathAllowed($request)) {
+        if ($path === '/' || $path === '//' || strtolower($path) === self::WAITING_LIST) {
             return $next($request);
         }
 

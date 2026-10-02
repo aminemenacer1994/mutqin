@@ -46,20 +46,6 @@ final class MutqinDomains
             || $request->is('/', 'waiting-list');
     }
 
-    /**
-     * Paths served on mutqin.ai instead of redirecting to app.mutqin.ai.
-     */
-    public static function marketingHostWebPathAllowed(Request $request): bool
-    {
-        return $request->is(
-            'waiting-list',
-            'login',
-            'logout',
-            'admin/waiting-list',
-            'admin/waiting-list/export',
-        );
-    }
-
     public static function restrictMarketingHost(Request $request): bool
     {
         if (filter_var(config('mutqin.domains.force_disabled'), FILTER_VALIDATE_BOOL)) {

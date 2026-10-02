@@ -530,7 +530,7 @@ export default {
 
 .waiting-list-promo {
   margin: 0;
-  max-width: 32ch;
+  max-width: 36ch;
   color: color-mix(in srgb, var(--accent-strong) 88%, var(--text));
   font-size: clamp(0.92rem, 2.4vw, 1rem);
   font-weight: 650;

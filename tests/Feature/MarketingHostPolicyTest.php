@@ -39,10 +39,11 @@ class MarketingHostPolicyTest extends TestCase
         return $this->createTestResponse($response, $request);
     }
 
-    public function test_marketing_root_redirects_to_waiting_list_when_app_url_is_marketing(): void
+    public function test_marketing_root_is_the_homepage_when_app_url_is_marketing(): void
     {
         $this->getOnMarketingHost('/')
-            ->assertRedirect('/waiting-list');
+            ->assertOk()
+            ->assertSee('<homepage', false);
     }
 
     public function test_marketing_host_blocks_homepage_and_public_pages(): void
@@ -60,10 +61,11 @@ class MarketingHostPolicyTest extends TestCase
             ->assertDontSee('id="primaryNavbar"', false)
             ->assertDontSee('href="'.route('memorisation').'"', false)
             ->assertDontSee('href="'.route('login').'"', false)
-            ->assertDontSee('href="'.route('register').'"', false);
+            ->assertDontSee('href="'.route('register').'"', false)
+            ->assertDontSee('admin/waiting-list', false);
     }
 
-    public function test_marketing_host_admin_waiting_list_is_not_redirected_to_app(): void
+    public function test_marketing_host_admin_waiting_list_redirects_to_app(): void
     {
         $kernel = $this->app->make(HttpKernel::class);
         $request = Request::create('/admin/waiting-list', 'GET', [], [], [], [
@@ -75,9 +77,10 @@ class MarketingHostPolicyTest extends TestCase
         $kernel->terminate($request, $response);
 
         $this->assertTrue($response->isRedirection());
-        $location = (string) $response->headers->get('Location');
-        $this->assertStringContainsString('/login', $location);
-        $this->assertStringNotContainsString('app.mutqin.ai', $location);
+        $this->assertSame(
+            'https://app.mutqin.ai/admin/waiting-list',
+            (string) $response->headers->get('Location')
+        );
     }
 
 }

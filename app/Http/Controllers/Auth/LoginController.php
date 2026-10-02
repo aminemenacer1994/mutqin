@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\AuthRedirect;
 use App\Support\BillingIntent;
-use App\Support\MutqinDomains;
 use App\Support\EmailVerification;
 use App\Support\Theme;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
@@ -42,14 +41,7 @@ class LoginController extends Controller
      */
     protected function redirectTo(): string
     {
-        $user = $this->guard()->user();
-        if ($user instanceof User
-            && $user->can('access-admin')
-            && MutqinDomains::isMarketingHost(request()->getHost())) {
-            return '/admin/waiting-list';
-        }
-
-        return AuthRedirect::path($user);
+        return AuthRedirect::path($this->guard()->user());
     }
 
     protected function authenticated(Request $request, $user): RedirectResponse
