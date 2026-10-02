@@ -4070,11 +4070,12 @@
             }
         }
 
-        body.mutqin-early-access-nav .waiting-list-minimal-nav--mobile,
-        body.mutqin-waiting-list-public .waiting-list-minimal-nav--mobile {
-            display: grid !important;
-            gap: 8px;
-            width: 100%;
+        html[data-theme="dark"] body.mutqin-early-access-nav,
+        html[data-theme="dark"] body.mutqin-waiting-list-public,
+        body.mutqin-early-access-nav,
+        body.mutqin-waiting-list-public {
+            background: var(--bg) !important;
+            color-scheme: dark;
         }
 
         .app-navbar .nav-link-home,
@@ -6893,10 +6894,17 @@
                 display: none !important;
             }
 
-            .app-navbar #earlyAccessNavbar {
+            .app-navbar #earlyAccessNavbar.early-access-mobile-offcanvas {
+                display: grid;
+                grid-template-rows: auto minmax(0, 1fr);
                 --bs-offcanvas-width: 100%;
+                --bs-offcanvas-bg: var(--surface-strong);
                 width: 100% !important;
                 max-width: 100% !important;
+                background: var(--surface-strong);
+                background-image: none;
+                border-inline-start: 0;
+                box-shadow: none;
                 z-index: var(--bs-offcanvas-zindex, 1045) !important;
             }
 
@@ -8150,14 +8158,20 @@
             window.mutqinSetTheme = setTheme;
 
             // Signed-in accounts use users.theme from SSR. Guests keep an explicit cookie.
-            const cookieTheme = readCookie('mutqin_theme');
-            let initialTheme = window.mutqinInitialTheme
-                || window.mutqinInitialThemePreference
-                || defaultTheme;
-            if (!window.mutqinAuthCheck && guestChoseTheme() && knownThemeValue(cookieTheme)) {
-                initialTheme = cookieTheme;
+            const earlyAccessShell = document.body.classList.contains('mutqin-early-access-nav')
+                || document.body.classList.contains('mutqin-waiting-list-public');
+            if (earlyAccessShell) {
+                setTheme('dark', { persist: false });
+            } else {
+                const cookieTheme = readCookie('mutqin_theme');
+                let initialTheme = window.mutqinInitialTheme
+                    || window.mutqinInitialThemePreference
+                    || defaultTheme;
+                if (!window.mutqinAuthCheck && guestChoseTheme() && knownThemeValue(cookieTheme)) {
+                    initialTheme = cookieTheme;
+                }
+                setTheme(initialTheme, { persist: false });
             }
-            setTheme(initialTheme, { persist: false });
 
             function bindThemeDropdown() {
                 const toggle = document.getElementById('globalThemeToggle');

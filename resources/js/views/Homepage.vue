@@ -20,9 +20,9 @@
             </div>
 
             <div class="hero__actions">
-              <a :href="startFreeHref" class="btn btn--primary">
-                <i class="bi bi-play-fill" aria-hidden="true"></i>
-                {{ t('homepage.hero.startFree') }}
+              <a href="/waiting-list" class="btn btn--primary">
+                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                {{ t('homepage.waitlist.cta') }}
               </a>
               <a href="#how-it-works" class="btn btn--secondary" @click.prevent="scrollToId('how-it-works')">
                 <i class="bi bi-arrow-down" aria-hidden="true"></i>
@@ -268,23 +268,6 @@
       </div>
     </section>
 
-    <section id="start" class="closing" aria-labelledby="closing-title">
-      <div class="wrap">
-        <div class="closing__card" data-reveal>
-          <p class="section-kicker">{{ t('homepage.cta.kicker') }}</p>
-          <h2 id="closing-title" class="closing__title">{{ t('homepage.cta.title') }}</h2>
-          <p class="closing__sub">{{ t('homepage.cta.subtitle') }}</p>
-          <div class="closing__actions">
-            <a :href="startFreeHref" class="btn btn--primary">
-              <i class="bi bi-play-fill" aria-hidden="true"></i>
-              {{ t('homepage.cta.button') }}
-            </a>
-          </div>
-          <p class="closing__note">{{ t('homepage.cta.note') }}</p>
-        </div>
-      </div>
-    </section>
-
     <section id="contact" class="contact">
       <div class="wrap wrap--narrow">
         <div class="contact__card" data-reveal>
@@ -350,15 +333,13 @@
             <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
             <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
-            <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
-            <a href="/waiting-list">{{ t('homepage.footer.waitlist') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
             <a href="#contact" @click.prevent="scrollToId('contact')">{{ t('homepage.footer.contact') }}</a>
             <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
-            <a :href="mutqinAppHref('/login')">{{ t('homepage.footer.login') }}</a>
-            <a :href="mutqinAppHref('/register')">{{ t('homepage.footer.register') }}</a>
+            <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
+            <a href="/waiting-list">{{ t('homepage.footer.waitlist') }}</a>
           </div>
         </div>
         <div class="footer__bottom">
@@ -387,16 +368,6 @@
 import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
-
-function mutqinAppHref(path) {
-  const normalized = path.startsWith('/') ? path : `/${path}`;
-  const base = typeof window !== 'undefined' ? window.mutqinAppUrl : '';
-  if (typeof base === 'string' && base.trim() !== '') {
-    return `${base.replace(/\/$/, '')}${normalized}`;
-  }
-
-  return normalized;
-}
 
 export default {
   name: 'Homepage',
@@ -568,10 +539,6 @@ export default {
     const scrollToId = (id) => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
-
-    const startFreeHref = computed(() => (
-      window.mutqinAuthCheck ? mutqinAppHref('/memorisation') : mutqinAppHref('/register')
-    ));
 
     const socialLinks = [
       { id: 'instagram', href: 'https://www.instagram.com/mutqinai/', icon: 'bi-instagram' },
@@ -760,8 +727,6 @@ export default {
     return {
       t,
       currentTheme,
-      mutqinAppHref,
-      startFreeHref,
       socialLinks,
       FEATURES_CAROUSEL_START_INDEX,
       isFeaturesMobile,

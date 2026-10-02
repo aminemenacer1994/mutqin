@@ -35,7 +35,7 @@
 
 @push('early-access-offcanvas')
 <div
-    class="offcanvas offcanvas-end d-lg-none"
+    class="offcanvas offcanvas-end d-lg-none early-access-mobile-offcanvas"
     tabindex="-1"
     id="{{ $earlyAccessOffcanvasId }}"
     aria-labelledby="{{ $earlyAccessOffcanvasId }}Label"
@@ -50,12 +50,9 @@
             aria-label="{{ __('ui.close_navigation') }}"
         ></button>
     </div>
-    <div class="offcanvas-body d-flex flex-column gap-3 pt-3">
-        <div class="navbar-nav-shell d-flex w-100">
-            <nav
-                class="waiting-list-minimal-nav waiting-list-minimal-nav--mobile navbar-nav w-100"
-                aria-label="{{ __('ui.primary_navigation') }}"
-            >
+    <div class="offcanvas-body d-flex flex-column flex-lg-row align-items-lg-center gap-3 pt-3 pt-lg-0">
+        <div class="navbar-nav-shell d-flex justify-content-lg-center w-100">
+            <div class="navbar-nav nav-links-desktop gap-2 gap-lg-3 justify-content-lg-center w-100">
                 <a
                     class="nav-link nav-link-home {{ request()->routeIs('home') ? 'active' : '' }}"
                     href="{{ route('home') }}"
@@ -63,9 +60,9 @@
                     <i class="bi bi-house-door nav-link-icon" aria-hidden="true"></i>
                     <span class="nav-link-copy">
                         <strong data-i18n="home">{{ __('ui.home') }}</strong>
-                        <small>{{ __('ui.nav_home_sub') }}</small>
+                        <small class="d-lg-none">{{ __('ui.nav_home_sub') }}</small>
                     </span>
-                    <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                    <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                 </a>
                 <a
                     class="nav-link nav-link-waiting-list {{ request()->routeIs('waiting-list') ? 'active' : '' }}"
@@ -75,11 +72,11 @@
                     <i class="bi bi-hourglass-split nav-link-icon" aria-hidden="true"></i>
                     <span class="nav-link-copy">
                         <strong>{{ __('ui.waiting_list') }}</strong>
-                        <small>{{ __('ui.nav_waiting_list_sub') }}</small>
+                        <small class="d-lg-none">{{ __('ui.nav_waiting_list_sub') }}</small>
                     </span>
-                    <i class="bi bi-chevron-right nav-link-chevron" aria-hidden="true"></i>
+                    <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                 </a>
-            </nav>
+            </div>
         </div>
     </div>
 </div>

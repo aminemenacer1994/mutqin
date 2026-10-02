@@ -1,8 +1,8 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
     $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
-    $appThemePreference = $appThemePreference ?? session('mutqin_theme', \App\Support\Theme::DEFAULT_PREFERENCE);
-    $appTheme = $appTheme ?? \App\Support\Theme::toDataTheme($appThemePreference);
+    $appThemePreference = \App\Support\Theme::DEFAULT_PREFERENCE;
+    $appTheme = \App\Support\Theme::DEFAULT;
     $appThemeChrome = \App\Support\Theme::chrome($appTheme);
     $appThemeColor = $appThemeChrome['theme_color'];
     $appColorScheme = $appThemeChrome['color_scheme'];
@@ -36,9 +36,8 @@
           }
           return defaultTheme;
         }
-        var theme = document.documentElement.getAttribute('data-theme') || defaultTheme;
-        theme = normalize(theme);
-        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-theme', defaultTheme);
+        var theme = defaultTheme;
         var chrome = byId[theme] || byId[defaultTheme];
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta && chrome) meta.setAttribute('content', chrome.themeColor);
@@ -56,6 +55,12 @@
       }
       body.mutqin-waiting-list-public {
         min-height: 100dvh;
+        background: var(--bg, #14110f);
+        color-scheme: dark;
+      }
+
+      html[data-theme="dark"],
+      html[data-theme="dark"] body.mutqin-waiting-list-public {
         background: var(--bg, #14110f);
       }
       .waiting-list-public-nav {
@@ -173,10 +178,15 @@
       }
 
       @media (max-width: 991.98px) {
-        .waiting-list-public-nav #earlyAccessNavbar {
+        .waiting-list-public-nav #earlyAccessNavbar.early-access-mobile-offcanvas {
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
           --bs-offcanvas-width: 100%;
           --bs-offcanvas-bg: var(--bg, #14110f);
+          width: 100% !important;
+          max-width: 100% !important;
           background: var(--bg, #14110f) !important;
+          border-inline-start: 0;
         }
 
         .waiting-list-public-nav #earlyAccessNavbar .offcanvas-header {
@@ -196,13 +206,24 @@
         }
 
         .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body {
-          padding: 16px 14px calc(20px + env(safe-area-inset-bottom));
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr);
+          align-content: start;
+          gap: 16px;
+          padding: 16px 14px calc(20px + env(safe-area-inset-bottom)) !important;
+          overflow-x: hidden;
           overflow-y: auto;
         }
 
-        .waiting-list-public-nav .waiting-list-minimal-nav--mobile {
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body > * {
+          grid-column: 1 / -1;
+          min-width: 0;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .nav-links-desktop {
           display: grid !important;
-          gap: 8px;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 8px !important;
           width: 100%;
         }
 
@@ -267,6 +288,7 @@
         }
 
         .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link-chevron {
+          display: block !important;
           grid-column: 3;
           justify-self: end;
           color: var(--text-muted, rgba(245, 239, 232, 0.72));
@@ -274,6 +296,10 @@
 
         html[dir="rtl"] .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link-chevron {
           transform: scaleX(-1);
+        }
+
+        html[dir="rtl"] .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link.active {
+          box-shadow: inset -3px 0 0 var(--success-text, #6fb896);
         }
       }
     </style>
@@ -318,7 +344,8 @@
         window.mutqinForceInitialLocale = true;
         window.mutqinAuthCheck = false;
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::appOrigin());
-        window.mutqinInitialTheme = @json($appTheme);
+        window.mutqinInitialTheme = 'dark';
+        window.mutqinInitialThemePreference = @json($appThemePreference);
         window.mutqinThemeModes = @json(\App\Support\Theme::clientCatalog());
         window.mutqinDefaultTheme = @json(\App\Support\Theme::DEFAULT);
         window.mutqinRelease = @json(\App\Support\ErrorReporting::release());

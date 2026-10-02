@@ -76,6 +76,10 @@ class SetLocale
 
     private function resolveThemePreference(Request $request): string
     {
+        if (MutqinDomains::usesEarlyAccessNav($request)) {
+            return Theme::DEFAULT_PREFERENCE;
+        }
+
         $user = $request->user();
         if ($user) {
             $userTheme = $user->theme;
