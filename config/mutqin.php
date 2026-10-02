@@ -103,4 +103,9 @@ return [
         // Laravel Cloud MySQL automated snapshot retention (dashboard), documented for ops.
         'cloud_mysql_retention_days' => (int) env('MUTQIN_CLOUD_MYSQL_BACKUP_RETENTION_DAYS', 30),
     ],
+
+    'waiting_list' => [
+        // Set true only in local/dev if DNS checks block legitimate test signups.
+        'skip_mail_domain_dns_check' => filter_var(env('MUTQIN_WAITING_LIST_SKIP_DNS', false), FILTER_VALIDATE_BOOL),
+    ],
 ];

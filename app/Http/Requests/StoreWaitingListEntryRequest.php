@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\WaitingListEmail;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreWaitingListEntryRequest extends FormRequest
@@ -26,7 +27,7 @@ class StoreWaitingListEntryRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email:filter', 'max:255'],
+            'email' => ['required', 'string', 'max:255', new WaitingListEmail()],
         ];
     }
 
@@ -35,7 +36,7 @@ class StoreWaitingListEntryRequest extends FormRequest
         return [
             'name.required' => 'Please enter your name.',
             'email.required' => 'Please enter your email address.',
-            'email.email' => 'Please enter a valid email address.',
+            'email' => 'Please enter a valid email address.',
         ];
     }
 }

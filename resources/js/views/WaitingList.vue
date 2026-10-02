@@ -34,6 +34,7 @@
 
         <form
           v-else
+          :key="formResetKey"
           class="waiting-list-form"
           @submit.prevent="submit"
           novalidate
@@ -179,6 +180,87 @@ export default {
     const nameInput = ref(null);
     const emailInput = ref(null);
     const panelEl = ref(null);
+    const formResetKey = ref(0);
+
+    let errorStatusTimer = null;
+    let successRestoreTimer = null;
+    let emailErrorTimer = null;
+
+    const clearErrorStatusTimer = () => {
+      if (errorStatusTimer !== null) {
+        clearTimeout(errorStatusTimer);
+        errorStatusTimer = null;
+      }
+    };
+
+    const clearSuccessRestoreTimer = () => {
+      if (successRestoreTimer !== null) {
+        clearTimeout(successRestoreTimer);
+        successRestoreTimer = null;
+      }
+    };
+
+    const clearEmailErrorTimer = () => {
+      if (emailErrorTimer !== null) {
+        clearTimeout(emailErrorTimer);
+        emailErrorTimer = null;
+      }
+    };
+
+    const setEmailFieldError = (message) => {
+      if (!message) {
+        clearEmailErrorTimer();
+        delete errors.email;
+
+        return;
+      }
+
+      errors.email = message;
+      clearEmailErrorTimer();
+      emailErrorTimer = setTimeout(() => {
+        delete errors.email;
+        form.email = '';
+        emailErrorTimer = null;
+      }, 5000);
+    };
+
+    const resetFormFields = () => {
+      form.name = '';
+      form.email = '';
+      if (errors.name) {
+        delete errors.name;
+      }
+      setEmailFieldError('');
+    };
+
+    const clearFormInputs = () => {
+      resetFormFields();
+      formResetKey.value += 1;
+    };
+
+    const scheduleValidationBannerDismiss = () => {
+      clearErrorStatusTimer();
+      errorStatusTimer = setTimeout(() => {
+        if (status.type === 'error' && status.message === t('waitingList.errorFields')) {
+          status.type = '';
+          status.message = '';
+        }
+        errorStatusTimer = null;
+      }, 5000);
+    };
+
+    const scheduleSuccessFormRestore = () => {
+      clearSuccessRestoreTimer();
+      successRestoreTimer = setTimeout(() => {
+        joined.value = false;
+        alreadyJoined.value = false;
+        submittedEmail.value = '';
+        status.type = '';
+        status.message = '';
+        clearFormInputs();
+        successRestoreTimer = null;
+      }, 5000);
+    };
 
     const submitDisabled = computed(() => (
       submitting.value
@@ -191,16 +273,22 @@ export default {
     ));
 
     const clearFieldError = (field) => {
-      if (errors[field]) {
+      if (field === 'email') {
+        setEmailFieldError('');
+      } else if (errors[field]) {
         delete errors[field];
       }
       if (status.type === 'error') {
+        clearErrorStatusTimer();
         status.type = '';
         status.message = '';
       }
     };
 
     const resetFeedback = () => {
+      clearErrorStatusTimer();
+      clearSuccessRestoreTimer();
+      clearEmailErrorTimer();
       Object.keys(errors).forEach((key) => delete errors[key]);
       status.type = '';
       status.message = '';
@@ -234,13 +322,14 @@ export default {
     const validateEmailField = () => {
       const email = form.email.trim();
       if (!email) {
-        delete errors.email;
+        setEmailFieldError('');
+
         return;
       }
       if (!isEmailValid(email)) {
-        errors.email = t('waitingList.errors.emailInvalid');
+        setEmailFieldError(t('waitingList.errors.emailInvalid'));
       } else {
-        delete errors.email;
+        setEmailFieldError('');
       }
     };
 
@@ -254,9 +343,9 @@ export default {
       }
 
       if (!email) {
-        errors.email = t('waitingList.errors.email');
+        setEmailFieldError(t('waitingList.errors.email'));
       } else if (!isEmailValid(email)) {
-        errors.email = t('waitingList.errors.emailInvalid');
+        setEmailFieldError(t('waitingList.errors.emailInvalid'));
       }
 
       return Object.keys(errors).length === 0;
@@ -292,8 +381,7 @@ export default {
         status.type = 'success';
         status.message = '';
         joined.value = true;
-        form.name = '';
-        form.email = '';
+        resetFormFields();
         await nextTick();
         const reduceMotion = typeof window !== 'undefined'
           && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -301,6 +389,7 @@ export default {
           block: 'nearest',
           behavior: reduceMotion ? 'auto' : 'smooth',
         });
+        scheduleSuccessFormRestore();
       } catch (error) {
         const validationErrors = error?.response?.data?.errors || {};
 
@@ -308,18 +397,24 @@ export default {
           errors.name = t('waitingList.errors.name');
         }
         if (validationErrors.email) {
-          errors.email = form.email.trim()
-            ? t('waitingList.errors.emailInvalid')
-            : t('waitingList.errors.email');
+          const serverEmailError = Array.isArray(validationErrors.email)
+            ? validationErrors.email[0]
+            : validationErrors.email;
+          setEmailFieldError(form.email.trim()
+            ? (serverEmailError || t('waitingList.errors.emailInvalid'))
+            : t('waitingList.errors.email'));
         }
 
         status.type = 'error';
         const serverMessage = error?.response?.data?.message;
-        status.message = Object.keys(validationErrors).length
-          ? t('waitingList.errorFields')
-          : (typeof serverMessage === 'string' && serverMessage.trim() !== ''
+        if (Object.keys(validationErrors).length) {
+          status.message = t('waitingList.errorFields');
+          scheduleValidationBannerDismiss();
+        } else {
+          status.message = typeof serverMessage === 'string' && serverMessage.trim() !== ''
             ? serverMessage
-            : t('waitingList.errorSend'));
+            : t('waitingList.errorSend');
+        }
         await focusFirstInvalid();
       } finally {
         submitting.value = false;
@@ -331,6 +426,9 @@ export default {
     });
 
     onUnmounted(() => {
+      clearErrorStatusTimer();
+      clearSuccessRestoreTimer();
+      clearEmailErrorTimer();
       document.body.classList.remove('mutqin-early-access-nav');
     });
 
@@ -344,6 +442,7 @@ export default {
       joined,
       alreadyJoined,
       submittedEmail,
+      formResetKey,
       nameInput,
       emailInput,
       panelEl,
@@ -450,22 +549,15 @@ export default {
   gap: 1rem;
   padding: clamp(1.25rem, 3.2vw, 1.7rem);
   scroll-margin-top: calc(var(--nav-h, 64px) + 0.85rem);
-  border-radius: 26px;
-  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border-strong, var(--border)));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent-light) 28%, transparent), transparent 38%),
-    color-mix(in srgb, var(--surface-strong) 96%, transparent);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 42%, transparent) inset,
-    0 18px 40px -22px color-mix(in srgb, var(--text) 32%, transparent),
-    0 32px 56px -30px color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--surface-strong) 92%, var(--bg));
+  box-shadow: 0 10px 28px -24px color-mix(in srgb, var(--text) 22%, transparent);
 }
 
 .waiting-list-panel.is-joined {
-  border-color: color-mix(in srgb, var(--success) 28%, var(--border));
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 30%, transparent) inset,
-    0 18px 40px color-mix(in srgb, var(--success) 8%, transparent);
+  border-color: color-mix(in srgb, var(--success) 22%, var(--border));
+  box-shadow: 0 10px 28px -24px color-mix(in srgb, var(--success) 12%, transparent);
 }
 
 .waiting-list-form-head {
@@ -533,12 +625,12 @@ export default {
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 0.55rem;
-  min-height: 50px;
-  padding: 0 0.95rem;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--border-strong, var(--border)) 92%, var(--text-muted));
-  background: color-mix(in srgb, var(--bg) 58%, var(--surface-strong));
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  min-height: 48px;
+  padding: 0 0.85rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--bg) 40%, var(--surface));
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .waiting-list-input-wrap i {
@@ -568,21 +660,20 @@ export default {
 }
 
 .waiting-list-input-wrap:hover:not(:focus-within):not(.is-invalid) {
-  border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
+  border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted));
 }
 
 .waiting-list-input-wrap:focus-within {
-  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
-  box-shadow: var(--ring, 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent));
-  background: var(--surface-strong);
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 88%, var(--bg));
 }
 
 .waiting-list-input-wrap.is-invalid {
-  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
 }
 
 .waiting-list-input-wrap.is-invalid:focus-within {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
 }
 
 .waiting-list-input:disabled {
@@ -604,18 +695,18 @@ export default {
   justify-content: center;
   gap: 0.55rem;
   width: 100%;
-  min-height: 52px;
+  min-height: 48px;
   margin-top: 0;
-  padding: 0.85rem 1.15rem;
+  padding: 0.8rem 1.1rem;
   border: 0;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-radius: 12px;
+  background: var(--accent);
   color: var(--wl-cta-fg);
-  font-size: 1.02rem;
-  font-weight: 680;
+  font-size: 1rem;
+  font-weight: 650;
   letter-spacing: -0.015em;
   cursor: pointer;
-  box-shadow: 0 12px 26px color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow: none;
   transition: filter 0.15s ease, opacity 0.15s ease;
 }
 
@@ -629,8 +720,8 @@ export default {
 }
 
 .waiting-list-submit:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent-strong) 85%, var(--text));
-  outline-offset: 3px;
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, var(--text));
+  outline-offset: 2px;
 }
 
 .waiting-list-submit:disabled {
@@ -663,9 +754,9 @@ export default {
 }
 
 .waiting-list-alert--error {
-  background: var(--danger-soft, color-mix(in srgb, var(--danger) 12%, transparent));
+  background: var(--danger-soft, color-mix(in srgb, var(--danger) 10%, transparent));
   color: var(--danger-strong, var(--danger));
-  border: 1px solid color-mix(in srgb, var(--danger) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 18%, transparent);
 }
 
 .waiting-list-success {

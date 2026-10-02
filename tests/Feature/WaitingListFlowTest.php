@@ -113,6 +113,33 @@ class WaitingListFlowTest extends TestCase
         $this->assertDatabaseCount('waiting_list_entries', 0);
     }
 
+    public function test_waiting_list_rejects_disposable_email_domains(): void
+    {
+        $this->postJson(route('api.waiting-list.store'), [
+            'name' => 'Test User',
+            'email' => 'someone@mailinator.com',
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['email']);
+
+        $this->assertDatabaseCount('waiting_list_entries', 0);
+    }
+
+    public function test_duplicate_email_is_not_inserted_twice_under_race(): void
+    {
+        WaitingListEntry::query()->create([
+            'name' => 'First',
+            'email' => 'race@example.com',
+        ]);
+
+        $this->postJson(route('api.waiting-list.store'), [
+            'name' => 'Second',
+            'email' => 'race@example.com',
+        ])->assertOk()
+            ->assertJsonPath('already_joined', true);
+
+        $this->assertSame(1, WaitingListEntry::query()->where('email', 'race@example.com')->count());
+    }
+
     public function test_admin_can_view_waiting_list_entries(): void
     {
         config()->set('mutqin.admin_emails', ['admin@example.com']);
