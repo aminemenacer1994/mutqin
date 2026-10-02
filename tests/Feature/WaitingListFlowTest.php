@@ -98,6 +98,27 @@ class WaitingListFlowTest extends TestCase
             ->assertSee('join-waiting-list', false);
     }
 
+    public function test_local_waiting_list_store_url_stays_on_the_current_host(): void
+    {
+        config([
+            'app.url' => 'http://localhost:8000',
+            'mutqin.domains.enable_in_tests' => true,
+        ]);
+
+        $request = \Illuminate\Http\Request::create('http://localhost:8000/waiting-list', 'GET', [], [], [], [
+            'HTTP_HOST' => 'localhost:8000',
+        ]);
+
+        $this->assertSame(
+            'http://localhost:8000/join-waiting-list',
+            \App\Support\MutqinDomains::waitingListStoreUrl($request)
+        );
+        $this->assertStringNotContainsString(
+            'app.mutqin.ai',
+            \App\Support\MutqinDomains::waitingListStoreUrl($request)
+        );
+    }
+
     public function test_public_waiting_list_submission_is_stored_with_normalised_email(): void
     {
         $response = $this->postJson(route('api.waiting-list.store'), [

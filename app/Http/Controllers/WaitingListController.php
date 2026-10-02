@@ -47,11 +47,26 @@ class WaitingListController extends Controller
 
             $entry = WaitingListEntry::query()->create($validated);
         } catch (UniqueConstraintViolationException) {
+            $existing = WaitingListEntry::query()
+                ->where('email', $request->validated('email'))
+                ->first();
+
+            if (! $existing) {
+                MutqinLog::error('waiting_list.store_failed', [
+                    'reason' => 'unique_without_row',
+                ]);
+
+                return response()->json([
+                    'message' => __('ui.waiting_list_unavailable'),
+                ], 503);
+            }
+
             return response()->json([
                 'message' => __('ui.waiting_list_already_joined'),
                 'already_joined' => true,
                 'data' => [
-                    'email' => $request->validated('email'),
+                    'name' => $existing->name,
+                    'email' => $existing->email,
                 ],
             ]);
         } catch (QueryException $exception) {

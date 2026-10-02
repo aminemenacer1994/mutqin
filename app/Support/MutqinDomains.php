@@ -137,13 +137,10 @@ final class MutqinDomains
     public static function waitingListStoreUrl(?Request $request = null): string
     {
         $request ??= request();
-        $appUrlHost = parse_url((string) config('app.url'), PHP_URL_HOST);
-        $appUrlHost = is_string($appUrlHost) ? self::normalizeHost($appUrlHost) : '';
 
-        if (self::hostsDiffer() && (
-            self::isMarketingHost($request->getHost())
-            || self::isMarketingHost($appUrlHost)
-        )) {
+        // Only the live marketing host posts to the app host. Local/dev must
+        // keep a same-origin URL so signups land in the local database.
+        if (self::hostsDiffer() && self::isMarketingHost($request->getHost())) {
             return self::appUrl('/join-waiting-list');
         }
 
