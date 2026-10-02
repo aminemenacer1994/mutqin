@@ -14,7 +14,12 @@ class MemorisationRoutingTest extends TestCase
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('homepage');
+            ->assertSee('homepage')
+            ->assertSee('id="primaryNavbar"', false)
+            ->assertSee('class="nav-link nav-link-memorisation', false)
+            ->assertSee('class="nav-link nav-link-home', false)
+            ->assertDontSee('class="mutqin-early-access-nav"', false)
+            ->assertDontSee('id="earlyAccessNavbar"', false);
     }
 
     public function test_authenticated_users_can_open_the_landing_page_from_root(): void
@@ -24,7 +29,12 @@ class MemorisationRoutingTest extends TestCase
         $this->actingAs($user)
             ->get('/')
             ->assertOk()
-            ->assertSee('homepage');
+            ->assertSee('homepage')
+            ->assertSee('id="primaryNavbar"', false)
+            ->assertSee('class="nav-link nav-link-memorisation', false)
+            ->assertSee('class="nav-link nav-link-dashboard', false)
+            ->assertDontSee('class="mutqin-early-access-nav"', false)
+            ->assertDontSee('id="earlyAccessNavbar"', false);
     }
 
     public function test_authenticated_users_visiting_guest_auth_pages_redirect_to_memorisation(): void

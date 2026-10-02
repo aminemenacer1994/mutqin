@@ -35,15 +35,22 @@ final class MutqinDomains
     }
 
     /**
-     * Apply waiting-list-only policy for the marketing host (runtime Host header).
-     */
-    /**
      * Early-access shell: Home and Waiting list only (English, no language switcher).
+     * Marketing host keeps that reduced nav. The application host homepage uses
+     * the full product navigation.
      */
     public static function usesEarlyAccessNav(Request $request): bool
     {
-        return $request->routeIs('home', 'waiting-list')
-            || $request->is('/', 'waiting-list');
+        $isWaitingList = $request->routeIs('waiting-list', 'marketing.waiting-list')
+            || $request->is('waiting-list');
+
+        if ($isWaitingList) {
+            return true;
+        }
+
+        $isHome = $request->routeIs('home', 'marketing.home') || $request->is('/');
+
+        return $isHome && self::restrictMarketingHost($request);
     }
 
     public static function restrictMarketingHost(Request $request): bool

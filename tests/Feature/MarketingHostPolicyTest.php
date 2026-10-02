@@ -43,7 +43,11 @@ class MarketingHostPolicyTest extends TestCase
     {
         $this->getOnMarketingHost('/')
             ->assertOk()
-            ->assertSee('<homepage', false);
+            ->assertSee('<homepage', false)
+            ->assertSee('class="mutqin-early-access-nav"', false)
+            ->assertSee('id="earlyAccessNavbar"', false)
+            ->assertDontSee('id="primaryNavbar"', false)
+            ->assertDontSee('class="nav-link nav-link-memorisation', false);
     }
 
     public function test_marketing_host_blocks_homepage_and_public_pages(): void

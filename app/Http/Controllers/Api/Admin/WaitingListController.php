@@ -108,7 +108,7 @@ class WaitingListController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, email: string, created_at: string|null}
+     * @return array{id: int, name: string, email: string, created_at: string|null, joined_at: string|null}
      */
     private function serialize(WaitingListEntry $entry): array
     {
@@ -117,6 +117,7 @@ class WaitingListController extends Controller
             'name' => (string) $entry->name,
             'email' => (string) $entry->email,
             'created_at' => $entry->created_at?->toIso8601String(),
+            'joined_at' => $entry->created_at?->format('j M Y, H:i'),
         ];
     }
 

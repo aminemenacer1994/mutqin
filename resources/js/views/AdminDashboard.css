@@ -2927,6 +2927,49 @@ html[data-theme="dark"] .admin-drawer-root {
   max-height: min(92vh, 44rem);
 }
 
+.admin-modal--waiting-list {
+  width: min(44rem, 96vw);
+  max-height: min(92vh, 52rem);
+}
+
+.admin-modal--waiting-list .admin-feedback-detail {
+  gap: 1.35rem;
+}
+
+.admin-modal--waiting-list .admin-feedback-detail__meta {
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.admin-modal--waiting-list .admin-feedback-detail__meta > div {
+  padding: 1rem 1.15rem;
+}
+
+.admin-modal--waiting-list .admin-feedback-detail__meta dt {
+  font-size: 0.72rem;
+}
+
+.admin-modal--waiting-list .admin-feedback-detail__meta dd {
+  margin-top: 0.45rem;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.admin-modal--waiting-list .admin-form {
+  gap: 1rem;
+}
+
+.admin-modal--waiting-list .admin-form label span {
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.admin-modal--waiting-list .admin-form input {
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  min-height: 3rem;
+}
+
 .admin-modal__head-copy {
   display: grid;
   gap: 0.3rem;
@@ -3872,11 +3915,11 @@ html[data-theme="dark"] .admin-kpi--feedback .admin-kpi__icon {
 }
 
 .admin-waiting-table col.admin-col-date {
-  width: 14%;
+  width: 20%;
 }
 
 .admin-waiting-table col.admin-col-wl-actions {
-  width: 22%;
+  width: 18%;
 }
 
 .admin-waiting-table th,

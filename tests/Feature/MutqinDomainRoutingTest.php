@@ -108,4 +108,16 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertOk();
     }
 
+    public function test_app_host_homepage_shows_full_navigation(): void
+    {
+        $this->onAppHost('/')
+            ->assertOk()
+            ->assertSee('<homepage', false)
+            ->assertSee('id="primaryNavbar"', false)
+            ->assertSee('class="nav-link nav-link-memorisation', false)
+            ->assertSee('class="nav-link nav-link-home', false)
+            ->assertDontSee('class="mutqin-early-access-nav"', false)
+            ->assertDontSee('id="earlyAccessNavbar"', false);
+    }
+
 }

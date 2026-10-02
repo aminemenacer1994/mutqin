@@ -781,7 +781,7 @@
                         <span class="admin-user-card__active">#{{ row.id }}</span>
                       </div>
                       <div class="admin-user-card__footer">
-                        <span class="admin-user-card__active">{{ formatDateShort(row.created_at) || '—' }}</span>
+                        <span class="admin-user-card__active">{{ formatWaitingJoinedAt(row) || '—' }}</span>
                       </div>
                     </button>
                     <div class="admin-table__inline-actions admin-user-card__actions">
@@ -853,7 +853,7 @@
                         <td>
                           <span class="admin-table__email" :title="row.email">{{ row.email }}</span>
                         </td>
-                        <td class="admin-num">{{ formatDateShort(row.created_at) || '—' }}</td>
+                        <td class="admin-num">{{ formatWaitingJoinedAt(row) || '—' }}</td>
                         <td class="admin-table__actions">
                           <div class="admin-table__inline-actions">
                             <button
@@ -1456,7 +1456,7 @@
       :aria-label="t('admin.waiting_list.detailTitle')"
     >
       <div class="admin-modal__backdrop" aria-hidden="true"></div>
-      <div class="admin-modal admin-modal--feedback">
+      <div class="admin-modal admin-modal--waiting-list">
         <header class="admin-modal__head">
           <div class="admin-modal__head-copy">
             <h2>{{ t('admin.waiting_list.detailTitle') }} #{{ waitingDetail.id }}</h2>
@@ -1478,7 +1478,7 @@
                 <input v-model.trim="waitingEditForm.email" type="email" required maxlength="255">
               </label>
               <p class="admin-muted">
-                {{ t('admin.waiting_list.colDate') }}: {{ formatDateShort(waitingDetail.created_at) || '—' }}
+                {{ t('admin.waiting_list.colDate') }}: {{ formatWaitingJoinedAt(waitingDetail) || '—' }}
               </p>
               <p v-if="waitingDetailError" class="admin-form__error" role="alert">{{ waitingDetailError }}</p>
               <div class="admin-form__actions admin-form__actions--split">
@@ -1521,7 +1521,7 @@
               </div>
               <div>
                 <dt>{{ t('admin.waiting_list.colDate') }}</dt>
-                <dd>{{ formatDateShort(waitingDetail.created_at) || '—' }}</dd>
+                <dd>{{ formatWaitingJoinedAt(waitingDetail) || '—' }}</dd>
               </div>
             </dl>
             <div class="admin-form__actions admin-form__actions--split">
@@ -2328,7 +2328,12 @@ export default {
           per_page: 25,
           q: this.waitingFilters.q,
         })
-        this.waitingItems = data.items
+        this.waitingItems = [...data.items].sort((a, b) => {
+          const aTime = Date.parse(a.created_at || '') || 0
+          const bTime = Date.parse(b.created_at || '') || 0
+          if (bTime !== aTime) return bTime - aTime
+          return Number(b.id) - Number(a.id)
+        })
         this.waitingTotal = data.total
         this.waitingPage = data.page
         this.waitingTotalPages = data.total_pages
@@ -3294,6 +3299,30 @@ export default {
       const date = new Date(value)
       if (Number.isNaN(date.getTime())) return ''
       return formatAppDate(date, unwrapLocale(this.$i18n?.locale))
+    },
+    formatWaitingJoinedAt(row) {
+      const label = row?.joined_at
+      if (label) return String(label)
+      if (!row?.created_at) return ''
+      const date = new Date(row.created_at)
+      if (Number.isNaN(date.getTime())) return ''
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+        timeZone: 'UTC',
+      }).formatToParts(date)
+      const pick = (type) => parts.find((part) => part.type === type)?.value || ''
+      const day = pick('day')
+      const month = pick('month')
+      const year = pick('year')
+      const hour = pick('hour')
+      const minute = pick('minute')
+      if (!day || !month || !year) return ''
+      return `${day} ${month} ${year}, ${hour}:${minute}`
     },
     formatRelative(value) {
       if (!value) return ''
