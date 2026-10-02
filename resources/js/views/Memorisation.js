@@ -79,7 +79,9 @@ import {
 } from '../scripts/mushaf/madaniPageLayout'
 import {
   buildAudioIndexMap as buildMadaniAudioIndexMapHelper,
+  buildEstimatedWordTimings,
   getAudioWordCount as getMadaniAudioWordCountHelper,
+  listSpokenAudioWords,
   resolveAudioWordIndex as resolveMadaniAudioWordIndexHelper
 } from '../scripts/mushaf/madaniWordSync'
 import {
@@ -37662,10 +37664,8 @@ export default {
         || (this.mushafDisplayVerses || []).find(item => item.key === key)
       const mapped = getMadaniAudioWordCountHelper(verse || { key }, this.madaniAudioIndexMap)
       if (mapped > 0) return mapped
-      const words = Array.isArray(verse?.words)
-        ? verse.words.filter((word) => word && !word.isEnd && String(word.ar || word.text || word.textQpc || '').trim())
-        : []
-      if (words.length) return words.length
+      const spoken = listSpokenAudioWords(verse || {})
+      if (spoken.length) return spoken.length
       const arabic = String(verse?.arabic || verse?.text_uthmani || verse?.text || '').trim()
       return arabic ? tokenizeArabicText(arabic).length : 0
     },
@@ -42291,14 +42291,9 @@ export default {
         return []
       }
 
-      // Get words from the verse object directly (not from HTML)
-      let sourceWords = []
-      if (verse.words && verse.words.length) {
-        sourceWords = verse.words.map(word => String(word?.ar || '').trim()).filter(Boolean)
-      } else {
-        // If no pre-parsed words, tokenize the Arabic text
-        const arabicText = verse.arabic || ''
-        sourceWords = tokenizeArabicText(arabicText)
+      let sourceWords = listSpokenAudioWords(verse).map((item) => item.text)
+      if (!sourceWords.length) {
+        sourceWords = tokenizeArabicText(verse.arabic || verse.arabic_uthmani || '')
       }
 
       if (!sourceWords.length) {
@@ -42306,7 +42301,6 @@ export default {
         return []
       }
 
-      // Get actual audio duration or estimate
       let safeDuration = 0
       if (Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0) {
         safeDuration = Number(actualDuration)
@@ -42316,38 +42310,13 @@ export default {
         safeDuration = this.estimateVerseDuration(verse)
       }
 
-      // Keep timestamps in media-time because audioElement.currentTime is also media-time.
-      const cacheKey = `${verse.key}_${this.reciterId}_${Math.round(safeDuration * 10)}`
+      const cacheKey = `${verse.key}_${this.reciterId}_${Math.round(safeDuration * 10)}_${sourceWords.length}`
 
       if (this.wordTimestampsMap.has(cacheKey)) {
         return this.wordTimestampsMap.get(cacheKey)
       }
 
-      // Build a normalized timing track so highlight end time always matches audio end time.
-      const cleanedWords = sourceWords.map(word => word.replace(/<[^>]+>/g, '').replace(/[^\u0621-\u064A]/g, ''))
-      const weightedUnits = cleanedWords.map((cleanWord, index) => {
-        const charCount = Math.max(1, cleanWord.length)
-        const leadInBoost = index === 0 ? 1.14 : 1
-        const shortWordLift = charCount <= 2 ? 1.18 : 1
-        return (charCount + 0.75) * leadInBoost * shortWordLift
-      })
-      const totalUnits = weightedUnits.reduce((sum, unit) => sum + unit, 0) || 1
-      const timestamps = []
-      let currentTime = 0
-
-      weightedUnits.forEach((unit, index) => {
-        const wordDuration = index === weightedUnits.length - 1
-          ? Math.max(0, safeDuration - currentTime)
-          : safeDuration * (unit / totalUnits)
-
-        timestamps.push({
-          index,
-          start: currentTime,
-          end: currentTime + wordDuration
-        })
-        currentTime += wordDuration
-      })
-
+      const timestamps = buildEstimatedWordTimings(sourceWords, safeDuration)
       this.wordTimestampsMap.set(cacheKey, timestamps)
       return timestamps
     },

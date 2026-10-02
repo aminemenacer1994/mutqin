@@ -3,6 +3,91 @@
  * Mapping key is always verseKey:wordPosition (layout-agnostic).
  */
 
+export function spokenAudioWordText(word) {
+  if (word == null) return ''
+  if (typeof word === 'string') return String(word).trim()
+  return String(
+    word.ar
+    || word.text_uthmani
+    || word.textUthmani
+    || word.text_qpc_hafs
+    || word.textQpc
+    || word.text
+    || ''
+  ).trim()
+}
+
+export function spokenAudioWordPosition(word, fallbackPosition = 0) {
+  const position = Number(
+    word?.position
+    ?? word?.word_position
+    ?? word?.wordPosition
+    ?? word?.word
+  )
+  if (Number.isFinite(position) && position > 0) return Math.trunc(position)
+  const fallback = Number(fallbackPosition)
+  return Number.isFinite(fallback) && fallback > 0 ? Math.trunc(fallback) : 0
+}
+
+export function isSpokenAudioWord(word) {
+  if (word == null) return false
+  if (typeof word === 'string') return !!String(word).trim()
+  if (word.isEnd === true) return false
+  const charType = String(word.char_type_name || word.charType || '').toLowerCase()
+  if (charType === 'end') return false
+  if (Number(word.word) === 0) return false
+  return !!spokenAudioWordText(word)
+}
+
+export function listSpokenAudioWords(verse = {}) {
+  const words = Array.isArray(verse?.words) ? verse.words : []
+  const spoken = []
+  for (const word of words) {
+    if (!isSpokenAudioWord(word)) continue
+    spoken.push({
+      text: spokenAudioWordText(word),
+      position: spokenAudioWordPosition(word, spoken.length + 1),
+      word,
+    })
+  }
+  return spoken
+}
+
+export function buildEstimatedWordTimings(sourceWords = [], duration = 0) {
+  const words = (Array.isArray(sourceWords) ? sourceWords : [])
+    .map((word) => String(word || '').trim())
+    .filter(Boolean)
+  if (!words.length) return []
+
+  const safeDuration = Number(duration)
+  const usableDuration = Number.isFinite(safeDuration) && safeDuration > 0 ? safeDuration : 0
+  const cleanedWords = words.map((word) => word.replace(/<[^>]+>/g, '').replace(/[^\u0621-\u064A]/g, ''))
+  const weightedUnits = cleanedWords.map((cleanWord, index) => {
+    const charCount = Math.max(1, cleanWord.length)
+    const leadInBoost = index === 0 ? 1.14 : 1
+    const shortWordLift = charCount <= 2 ? 1.18 : 1
+    return (charCount + 0.75) * leadInBoost * shortWordLift
+  })
+  const totalUnits = weightedUnits.reduce((sum, unit) => sum + unit, 0) || 1
+  const timestamps = []
+  let currentTime = 0
+
+  weightedUnits.forEach((unit, index) => {
+    const wordDuration = index === weightedUnits.length - 1
+      ? Math.max(0, usableDuration - currentTime)
+      : usableDuration * (unit / totalUnits)
+
+    timestamps.push({
+      index,
+      start: currentTime,
+      end: currentTime + wordDuration,
+    })
+    currentTime += wordDuration
+  })
+
+  return timestamps
+}
+
 export function buildAudioIndexMap(verses = []) {
   const map = new Map()
   for (const verse of verses) {
@@ -10,10 +95,9 @@ export function buildAudioIndexMap(verses = []) {
     if (!verseKey || !Array.isArray(verse.words)) continue
     let audioIndex = 0
     for (const sourceWord of verse.words) {
-      const arabic = String(sourceWord?.ar || sourceWord?.text || '').trim()
-      if (!arabic) continue
-      const position = Number(sourceWord?.position)
-      if (Number.isFinite(position) && position > 0) {
+      if (!isSpokenAudioWord(sourceWord)) continue
+      const position = spokenAudioWordPosition(sourceWord, audioIndex + 1)
+      if (position > 0) {
         map.set(`${verseKey}:${position}`, audioIndex)
       }
       map.set(`${verseKey}:#${audioIndex}`, audioIndex)
@@ -43,8 +127,7 @@ export function getAudioWordCount(verse, audioIndexMap = new Map()) {
   if (verseKey && audioIndexMap.has(`${verseKey}:__count`)) {
     return Number(audioIndexMap.get(`${verseKey}:__count`)) || 0
   }
-  if (!Array.isArray(verse?.words)) return 0
-  return verse.words.filter(word => String(word?.ar || word?.text || '').trim()).length
+  return listSpokenAudioWords(verse).length
 }
 
 /**
