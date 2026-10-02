@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\WaitingListEntry;
 use App\Rules\WaitingListEmail;
+use App\Services\AdminDashboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -101,6 +102,8 @@ class WaitingListController extends Controller
         $this->admin($request);
 
         $entry->delete();
+
+        AdminDashboardService::invalidateCaches();
 
         return response()->json([
             'message' => __('admin.waiting_list.deleted'),

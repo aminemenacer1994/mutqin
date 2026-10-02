@@ -11,6 +11,7 @@ use App\Models\MemorisationProgress;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use App\Models\WaitingListEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -130,6 +131,13 @@ class AdminDashboardTest extends TestCase
             'completed_at' => now()->subDay(),
         ]);
 
+        WaitingListEntry::query()->create([
+            'name' => 'Early Access',
+            'email' => 'early@example.com',
+            'created_at' => now()->subDay(),
+            'updated_at' => now()->subDay(),
+        ]);
+
         UserLastPosition::create([
             'user_id' => $learner->id,
             'surah_number' => 112,
@@ -143,7 +151,7 @@ class AdminDashboardTest extends TestCase
             ->assertJsonPath('data.meta.role', 'super_admin')
             ->assertJsonPath('data.chart.days', 7)
             ->assertJsonPath('data.snapshot.pending_contacts.value', 1)
-            ->assertJsonPath('data.snapshot.memorised_ayahs.value', 1)
+            ->assertJsonPath('data.snapshot.waiting_list_total.value', 1)
             ->assertJsonPath('data.learning.memorised_ayahs', 1)
             ->assertJsonPath('data.ai_health.total', 1)
             ->assertJsonPath('data.ai_health.complaints', 0)

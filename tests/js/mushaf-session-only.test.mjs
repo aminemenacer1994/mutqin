@@ -104,8 +104,8 @@ assert.match(
 )
 assert.match(
   memorisationJs,
-  /Eager-load every session page/,
-  'all session Madani pages load so the full range paints'
+  /Paint the active page first\. A long range keeps loading behind that first paint\./,
+  'the active page paints first and the rest of the session range still loads'
 )
 assert.match(memorisationJs, /verseBelongsToMadaniPage/, 'cross-page ayah words stay on the correct sheet')
 assert.match(

@@ -130,10 +130,16 @@ import {
   collectQpcPagesFromVerses,
   ensureStackedQpcMadaniPageFonts,
   loadStackedQpcWordsForVerses,
+  planStackedQpcPageFetch,
   resolveStackedQpcWordInk,
   shouldUseStackedQpcMadaniGlyphs,
   verseWordsSupportQpcMadani as verseHasQpcMadaniWords,
 } from '../scripts/mushaf/stackedQpcMadaniDisplay.js'
+import {
+  mapWithConcurrency,
+  orderPagesAroundFocus,
+  selectPriorityPages,
+} from '../scripts/mushaf/sessionPageLoad.js'
 import { buildIndopakTajweedTokenByLocation } from '../scripts/mushaf/indopakTajweedMarkup'
 import {
   buildQpcMadaniProgressSnapshot,
@@ -36291,7 +36297,12 @@ export default {
     },
 
     async enrichVersesWithQpcMadaniWords(verses) {
-      if (isIndopakMushafLayout(this.mushafLayoutId) || !Array.isArray(verses) || !verses.length) {
+      if (
+        isIndopakMushafLayout(this.mushafLayoutId)
+        || !this.useStackedQpcMadaniGlyphs
+        || !Array.isArray(verses)
+        || !verses.length
+      ) {
         return verses
       }
       if (verses.every((verse) => verseHasQpcMadaniWords(verse))) {
@@ -36299,21 +36310,88 @@ export default {
       }
       try {
         const index = await this.ensureQpcVersePageIndex()
-        const wordsByKey = await loadStackedQpcWordsForVerses(verses, index || {})
-        if (!wordsByKey.size) return verses
-        return verses.map((verse) => {
-          const qpcWords = wordsByKey.get(String(verse?.key || ''))
-          if (!qpcWords?.length) return verse
-          return {
-            ...verse,
-            words: qpcWords,
-            qpcMadaniWords: true,
-          }
+        const focusKey = String(
+          this.activeVerseKey
+          || this.effectiveActiveVerseKey
+          || verses[0]?.key
+          || ''
+        )
+        const focusPage = resolveMushafPageForVerseKey(focusKey, index || {}, this.mushafLayoutId) || 0
+        const plan = planStackedQpcPageFetch(verses, index || {}, focusPage)
+        if (!plan.priority.length) return verses
+        const requestId = this.verseRequestId
+        const wordsByKey = await loadStackedQpcWordsForVerses(verses, index || {}, {
+          pages: plan.priority,
+          concurrency: 3,
         })
+        const next = this.applyQpcWordsToVerseList(verses, wordsByKey)
+        if (plan.rest.length) {
+          void this.enrichRemainingStackedQpcPages(next, index || {}, plan.rest, requestId)
+        }
+        return next
       } catch (error) {
         console.warn('[stackedQpcMadani] Failed to enrich ayah glyphs', error)
         return verses
       }
+    },
+
+    applyQpcWordsToVerseList(verses, wordsByKey) {
+      if (!wordsByKey?.size || !Array.isArray(verses)) return verses
+      let changed = false
+      const next = verses.map((verse) => {
+        const qpcWords = wordsByKey.get(String(verse?.key || ''))
+        if (!qpcWords?.length || verseHasQpcMadaniWords(verse)) return verse
+        changed = true
+        return {
+          ...verse,
+          words: qpcWords,
+          qpcMadaniWords: true,
+        }
+      })
+      return changed ? next : verses
+    },
+
+    async enrichRemainingStackedQpcPages(verses, index, pages, requestId) {
+      const chunkSize = 3
+      for (let offset = 0; offset < pages.length; offset += chunkSize) {
+        if (requestId !== this.verseRequestId || !this.useStackedQpcMadaniGlyphs) return
+        const chunk = pages.slice(offset, offset + chunkSize)
+        let wordsByKey = new Map()
+        try {
+          wordsByKey = await loadStackedQpcWordsForVerses(verses, index, {
+            pages: chunk,
+            concurrency: 2,
+          })
+        } catch {
+          continue
+        }
+        if (requestId !== this.verseRequestId || !wordsByKey.size) continue
+        await ensureStackedQpcMadaniPageFonts(chunk, {
+          tajweed: !!this.qpcMadaniTajweedPresentation?.effectiveEnabled,
+        }).catch(() => null)
+        if (requestId !== this.verseRequestId) return
+        this.patchStoredVersesWithQpcWords(wordsByKey)
+        this.clearDisplayArabicCache()
+      }
+    },
+
+    patchStoredVersesWithQpcWords(wordsByKey) {
+      const store = this.getModeStore(this.currentMode)
+      const current = Array.isArray(store?.verses) ? store.verses : []
+      if (!current.length || !wordsByKey?.size) return
+      let changed = false
+      const apply = (verse) => {
+        if (!verse) return
+        const words = wordsByKey.get(String(verse.key || ''))
+        if (!words?.length || verseHasQpcMadaniWords(verse)) return
+        verse.words = words
+        verse.qpcMadaniWords = true
+        changed = true
+      }
+      current.forEach(apply)
+      const queue = Array.isArray(store?.queue) ? store.queue : []
+      queue.forEach((entry) => apply(entry?.verse))
+      if (changed && store) store.verses = current.slice()
     },
 
     async applyStackedQpcMadaniToCurrentVerses() {
@@ -36384,7 +36462,13 @@ export default {
         const isActive = this.currentHighlightedVerseKey === verseKey
           && this.currentWordIndex === audioWordIndex
         const recitationStatus = this.getRenderedRecitationWordStatusForVerse(verseKey, audioWordIndex, verse.sessionTargetKey || '')
-        const plainText = String(rawWord?.text_uthmani || rawWord?.text_qpc_hafs || normalized.textQpc || '').trim()
+        const plainText = String(
+          rawWord?.text_uthmani
+          || rawWord?.text_qpc_hafs
+          || rawWord?.textQpc
+          || rawWord?.ar
+          || ''
+        ).trim()
         const focusWeak = this.isPracticeFocusWeakWord(verseKey, audioWordIndex, plainText)
         const emphasizeWeak = focusWeak && (
           this.postSessionPracticeEmphasizeWeakAreas
@@ -36629,26 +36713,50 @@ export default {
         } else {
           void loadSurahNamesFont().catch(() => null)
         }
-        if (this.tajweedEnabled && !isIndopakMushafLayout(this.mushafLayoutId)) {
-          await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true, scope: 'session' })
-        }
         const sessionPages = this.qpcMadaniSessionPageNumbers
-        if (sessionPages.length) {
-          if (isIndopakMushafLayout(this.mushafLayoutId)) {
-            prefetchMushafPageData(sessionPages, this.mushafLayoutId)
-            await Promise.all(
-              sessionPages.map((page) => loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => null)),
-            )
-          } else {
-            await Promise.all(
-              sessionPages.map((page) => loadMadaniPageLeaf(page).catch(() => null)),
-            )
-          }
+        const focus = Number(this.qpcMadaniCurrentPage) || sessionPages[0]
+        const immediate = selectPriorityPages(sessionPages, focus, 1)
+        if (this.tajweedEnabled && !isIndopakMushafLayout(this.mushafLayoutId)) {
+          await this.syncQpcMadaniTajweedGlyphsForViewport({ force: true })
         }
+        if (immediate.length) {
+          await this.loadSessionMushafLeaves(immediate)
+        }
+        this.prefetchRemainingSessionMushaf(sessionPages, immediate)
       } catch (error) {
         console.error('QPC Madani viewer bootstrap failed:', error)
         this.qpcMadaniLoadError = this.t('memorisation.mushafLoad.errorDesc')
       }
+    },
+    loadSessionMushafLeaves(pages) {
+      const indopak = isIndopakMushafLayout(this.mushafLayoutId)
+      return mapWithConcurrency(pages, 3, (page) => (
+        indopak
+          ? loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => null)
+          : loadMadaniPageLeaf(page).catch(() => null)
+      ))
+    },
+    prefetchRemainingSessionMushaf(sessionPages, immediate) {
+      const done = new Set(immediate)
+      const focus = immediate[0] || sessionPages[0]
+      const rest = orderPagesAroundFocus(sessionPages, focus).filter((page) => !done.has(page))
+      if (!rest.length) return
+      const token = (this._qpcMadaniBootstrapToken || 0) + 1
+      this._qpcMadaniBootstrapToken = token
+      const indopak = isIndopakMushafLayout(this.mushafLayoutId)
+      // Let the visible page's font win the network before the rest of the range.
+      setTimeout(() => {
+        if (token !== this._qpcMadaniBootstrapToken) return
+        void mapWithConcurrency(rest, 2, (page) => (
+          indopak
+            ? loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => null)
+            : loadMadaniPageLeaf(page).catch(() => null)
+        ), () => token === this._qpcMadaniBootstrapToken)
+        if (!this.tajweedEnabled || indopak) return
+        void mapWithConcurrency(rest, 2, (page) => (
+          this.ensureQpcMadaniTajweedGlyphsForPage(page).catch(() => null)
+        ), () => token === this._qpcMadaniBootstrapToken && !!this.tajweedEnabled)
+      }, 200)
     },
     async reconcileQpcMadaniEmptySessionPage() {
       if (!isQpcMadaniMushafView(this.readingViewMode)) return
@@ -37105,13 +37213,24 @@ export default {
         this.madaniPageNumbers = pages.length ? pages : [1]
         await loadSurahNamesFont().catch(() => null)
 
-        // Eager-load every session page so the full range is painted in the stack.
+        // Paint the active page first. A long range keeps loading behind that first paint.
         const sessionPages = [...this.madaniPageNumbers]
         const primaryPage = sessionPages[this.safeMushafPageIndex] || sessionPages[0]
-        await Promise.all(sessionPages.map((pageNumber) => (
+        const immediate = selectPriorityPages(sessionPages, primaryPage, 1)
+        await mapWithConcurrency(immediate, 2, (pageNumber) => (
           this.ensureMadaniPageLoaded(pageNumber, { force: !!options.force })
-        )))
+        ))
+        if (requestId !== this.madaniLoadRequestId) return []
         this.prefetchAdjacentMadaniFonts(primaryPage)
+        const immediateSet = new Set(immediate)
+        const rest = orderPagesAroundFocus(sessionPages, primaryPage)
+          .filter((pageNumber) => !immediateSet.has(pageNumber))
+        if (rest.length) {
+          void mapWithConcurrency(rest, 2, (pageNumber) => {
+            if (requestId !== this.madaniLoadRequestId) return null
+            return this.ensureMadaniPageLoaded(pageNumber, { force: !!options.force })
+          }, () => requestId === this.madaniLoadRequestId)
+        }
         this.$nextTick(() => {
           this.scheduleMadaniPageFit()
           this.syncMushafPageToActiveVerse()

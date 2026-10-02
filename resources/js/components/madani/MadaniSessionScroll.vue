@@ -14,7 +14,7 @@
       :data-madani-page="pageNumber"
     >
       <MadaniPage
-        v-if="leafByPage[pageNumber]?.page"
+        v-if="shouldPaintPage(pageNumber) && leafByPage[pageNumber]?.page"
         :page="leafByPage[pageNumber].page"
         :font-family="leafByPage[pageNumber].fontFamily"
         :font-url="leafByPage[pageNumber].fontUrl"
@@ -45,6 +45,7 @@
       <div
         v-else
         class="qpc-madani-session-scroll__placeholder"
+        :style="placeholderStyle(pageNumber)"
         aria-busy="true"
         :aria-label="`Page ${pageNumber}`"
       />
@@ -67,6 +68,15 @@ import { prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
 import { ensureIndopakNastaleeqFontForLayout } from '../../scripts/mushaf/indopakNastaleeqFont'
 import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
 import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
+import {
+  mapWithConcurrency,
+  orderPagesAroundFocus,
+  selectPriorityPages,
+} from '../../scripts/mushaf/sessionPageLoad'
+
+/** Paint every page when the session is this short; window the rest. */
+const FULL_PAINT_PAGE_LIMIT = 4
+const FOCUS_RADIUS = 1
 
 export default {
   name: 'MadaniSessionScroll',
@@ -104,7 +114,12 @@ export default {
     return {
       leafByPage: {},
       pageAnchors: Object.create(null),
+      visiblePages: {},
+      pageHeights: {},
+      reservedPageHeight: 0,
       loadToken: 0,
+      pageObserver: null,
+      heightObserver: null,
     }
   },
   computed: {
@@ -119,6 +134,25 @@ export default {
       const focus = Number(this.focusPageNumber)
       return Number.isFinite(focus) && focus > 0 ? [focus] : []
     },
+    windowedSession() {
+      return this.resolvedPageNumbers.length > FULL_PAINT_PAGE_LIMIT
+        && typeof IntersectionObserver === 'function'
+    },
+    mountAllow() {
+      const pages = this.resolvedPageNumbers
+      if (!this.windowedSession) {
+        return Object.fromEntries(pages.map((page) => [page, true]))
+      }
+      const allow = { ...this.visiblePages }
+      const focus = Number(this.focusPageNumber) || pages[0]
+      const center = Math.max(0, pages.indexOf(focus))
+      const start = Math.max(0, center - FOCUS_RADIUS)
+      const end = Math.min(pages.length - 1, center + FOCUS_RADIUS)
+      for (let index = start; index <= end; index += 1) {
+        allow[pages[index]] = true
+      }
+      return allow
+    },
   },
   watch: {
     resolvedPageNumbers: {
@@ -128,59 +162,189 @@ export default {
       },
     },
     layoutId() {
+      this.leafByPage = {}
+      this.pageHeights = {}
+      this.reservedPageHeight = 0
       void this.ensurePagesLoaded()
     },
     focusPageNumber() {
+      this.hydrateMountedLeaves()
       this.$nextTick(() => this.scrollToFocusPage({ smooth: true }))
     },
+    mountAllow() {
+      this.hydrateMountedLeaves()
+    },
     tajweedEnabled() {
-      void this.prefetchFonts()
+      const painted = this.resolvedPageNumbers.filter((page) => this.shouldPaintPage(page))
+      this.prefetchFonts(painted)
     },
   },
   mounted() {
+    this.pageObserver = typeof IntersectionObserver === 'function'
+      ? new IntersectionObserver((entries) => this.onPageIntersect(entries), {
+        root: null,
+        rootMargin: '45% 0px 80% 0px',
+        threshold: 0,
+      })
+      : null
+    this.heightObserver = typeof ResizeObserver === 'function'
+      ? new ResizeObserver(() => this.rememberMountedPageHeights())
+      : null
+    for (const el of Object.values(this.pageAnchors)) {
+      if (!(el instanceof HTMLElement)) continue
+      this.pageObserver?.observe(el)
+      this.heightObserver?.observe(el)
+    }
     this.$nextTick(() => this.scrollToFocusPage({ smooth: false }))
+  },
+  beforeUnmount() {
+    this.loadToken += 1
+    if (this._restLoadTimer) clearTimeout(this._restLoadTimer)
+    this.pageObserver?.disconnect()
+    this.pageObserver = null
+    this.heightObserver?.disconnect()
+    this.heightObserver = null
   },
   methods: {
     setPageAnchor(pageNumber, el) {
       const key = Number(pageNumber)
       if (!Number.isFinite(key)) return
+      const previous = this.pageAnchors[key]
+      if (previous && previous !== el) {
+        this.pageObserver?.unobserve(previous)
+        this.heightObserver?.unobserve(previous)
+      }
       if (el instanceof HTMLElement) {
         this.pageAnchors[key] = el
+        this.pageObserver?.observe(el)
+        this.heightObserver?.observe(el)
       } else {
         delete this.pageAnchors[key]
       }
     },
+    shouldPaintPage(pageNumber) {
+      return !!this.mountAllow[Number(pageNumber)]
+    },
+    placeholderStyle(pageNumber) {
+      const height = Number(this.pageHeights[pageNumber] || this.reservedPageHeight || 0)
+      return height > 80 ? { minHeight: `${height}px` } : null
+    },
+    onPageIntersect(entries) {
+      if (!this.windowedSession) return
+      const next = { ...this.visiblePages }
+      let changed = false
+      for (const entry of entries) {
+        const page = Number(entry.target?.getAttribute?.('data-madani-page'))
+        if (!Number.isFinite(page) || page < 1) continue
+        if (entry.isIntersecting) {
+          if (!next[page]) {
+            next[page] = true
+            changed = true
+          }
+        } else if (next[page]) {
+          delete next[page]
+          changed = true
+        }
+      }
+      if (changed) this.visiblePages = next
+    },
+    cachedLeaf(pageNumber) {
+      return this.isIndopakLayout
+        ? getCachedMushafPageLeaf(pageNumber, this.layoutId)
+        : getCachedMadaniPageLeaf(pageNumber)
+    },
+    noteLeaf(pageNumber, leaf) {
+      if (!leaf?.page || !this.shouldPaintPage(pageNumber)) return
+      if (this.leafByPage[pageNumber] === leaf) return
+      this.leafByPage = {
+        ...this.leafByPage,
+        [pageNumber]: leaf,
+      }
+    },
+    hydrateMountedLeaves() {
+      const next = { ...this.leafByPage }
+      let changed = false
+      for (const pageNumber of this.resolvedPageNumbers) {
+        if (!this.shouldPaintPage(pageNumber) || next[pageNumber]?.page) continue
+        const cached = this.cachedLeaf(pageNumber)
+        if (!cached?.page) continue
+        next[pageNumber] = cached
+        changed = true
+      }
+      if (changed) this.leafByPage = next
+      this.$nextTick(() => this.rememberMountedPageHeights())
+    },
+    rememberMountedPageHeights() {
+      const next = { ...this.pageHeights }
+      let reserved = this.reservedPageHeight
+      let changed = false
+      for (const pageNumber of this.resolvedPageNumbers) {
+        const anchor = this.pageAnchors[pageNumber]
+        const pageEl = anchor?.querySelector?.('.qpc-madani-page')
+        const height = Math.round(pageEl?.getBoundingClientRect?.().height || 0)
+        if (height < 80) continue
+        if (Math.abs((next[pageNumber] || 0) - height) > 2) {
+          next[pageNumber] = height
+          changed = true
+        }
+        if (height > reserved) reserved = height
+      }
+      if (changed) this.pageHeights = next
+      if (reserved !== this.reservedPageHeight) this.reservedPageHeight = reserved
+    },
     async ensurePagesLoaded() {
       const token = ++this.loadToken
       const pages = this.resolvedPageNumbers
-      if (!pages.length) return
+      if (!pages.length) {
+        this.leafByPage = {}
+        return
+      }
 
-      const next = { ...this.leafByPage }
-      for (const pageNumber of pages) {
-        const cached = this.isIndopakLayout
-          ? getCachedMushafPageLeaf(pageNumber, this.layoutId)
-          : getCachedMadaniPageLeaf(pageNumber)
+      const focus = Number(this.focusPageNumber) || pages[0]
+      const immediate = this.windowedSession
+        ? selectPriorityPages(pages, focus, FOCUS_RADIUS)
+        : pages
+      await this.loadPageBatch(immediate, token, 3)
+      if (token !== this.loadToken) return
+      this.hydrateMountedLeaves()
+      this.prefetchFonts(immediate)
+      this.$nextTick(() => {
+        this.scrollToFocusPage({ smooth: false })
+        this.rememberMountedPageHeights()
+      })
+      if (!this.windowedSession) return
+
+      const immediateSet = new Set(immediate)
+      const rest = orderPagesAroundFocus(pages, focus).filter((page) => !immediateSet.has(page))
+      if (this._restLoadTimer) clearTimeout(this._restLoadTimer)
+      this._restLoadTimer = setTimeout(() => {
+        this._restLoadTimer = null
+        if (token !== this.loadToken) return
+        void this.loadPageBatch(rest, token, 2)
+      }, 200)
+    },
+    async loadPageBatch(pages, token, concurrency) {
+      await mapWithConcurrency(pages, concurrency, async (pageNumber) => {
+        if (token !== this.loadToken) return null
+        const cached = this.cachedLeaf(pageNumber)
         if (cached?.page) {
-          next[pageNumber] = cached
-          continue
+          this.noteLeaf(pageNumber, cached)
+          return cached
         }
         try {
           const leaf = this.isIndopakLayout
             ? await loadMushafPageLeaf(pageNumber, this.layoutId)
             : await loadMadaniPageLeaf(pageNumber)
-          if (token !== this.loadToken) return
-          if (leaf?.page) next[pageNumber] = leaf
+          if (token !== this.loadToken) return null
+          if (leaf?.page) this.noteLeaf(pageNumber, leaf)
+          return leaf
         } catch {
-          // keep placeholder until retry
+          return null
         }
-      }
-      if (token !== this.loadToken) return
-      this.leafByPage = next
-      void this.prefetchFonts()
-      this.$nextTick(() => this.scrollToFocusPage({ smooth: false }))
+      }, () => token === this.loadToken)
     },
-    prefetchFonts() {
-      const pages = this.resolvedPageNumbers
+    prefetchFonts(pageNumbers = []) {
+      const pages = (Array.isArray(pageNumbers) ? pageNumbers : []).filter((page) => page > 0)
       if (!pages.length) return
       if (this.isIndopakLayout) {
         void ensureIndopakNastaleeqFontForLayout(this.layoutId)
@@ -239,7 +403,7 @@ export default {
 }
 
 .qpc-madani-session-scroll__placeholder {
-  min-height: 8rem;
+  min-height: 85dvh;
   width: 100%;
 }
 </style>

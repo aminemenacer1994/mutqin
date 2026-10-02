@@ -13,12 +13,14 @@ use App\Models\MemorisationProgress;
 use App\Models\User;
 use App\Models\UserLastPosition;
 use App\Models\UserSession;
+use App\Models\WaitingListEntry;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Support\QuranMetadata;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -883,32 +885,26 @@ class AdminDashboardService
         $sessionsLast7d = (int) ($sessionsAgg->last_7d ?? 0);
         $sessionsPrev7d = (int) ($sessionsAgg->prev_7d ?? 0);
 
-        $memorisedAyahs = MemorisationProgress::query()
-            ->whereIn('status', ['memorised', 'mastered'])
-            ->count();
-        $memorisedLast7d = MemorisationProgress::query()
-            ->whereIn('status', ['memorised', 'mastered'])
-            ->where(function ($query) use ($now) {
-                $query->where('completed_at', '>=', $now->copy()->subDays(7))
-                    ->orWhere(function ($inner) use ($now) {
-                        $inner->whereNull('completed_at')
-                            ->where('updated_at', '>=', $now->copy()->subDays(7));
-                    });
-            })
-            ->count();
-        $memorisedPrev7d = MemorisationProgress::query()
-            ->whereIn('status', ['memorised', 'mastered'])
-            ->where(function ($query) use ($now) {
-                $query->where(function ($inner) use ($now) {
-                    $inner->where('completed_at', '>=', $now->copy()->subDays(14))
-                        ->where('completed_at', '<', $now->copy()->subDays(7));
-                })->orWhere(function ($inner) use ($now) {
-                    $inner->whereNull('completed_at')
-                        ->where('updated_at', '>=', $now->copy()->subDays(14))
-                        ->where('updated_at', '<', $now->copy()->subDays(7));
-                });
-            })
-            ->count();
+        $waitingListTotal = 0;
+        $waitingListLast7d = 0;
+        $waitingListPrev7d = 0;
+        if (Schema::hasTable('waiting_list_entries')) {
+            $waitingAgg = WaitingListEntry::query()
+                ->selectRaw(
+                    'COUNT(*) as total,
+                     SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as last_7d,
+                     SUM(CASE WHEN created_at >= ? AND created_at < ? THEN 1 ELSE 0 END) as prev_7d',
+                    [
+                        $now->copy()->subDays(7),
+                        $now->copy()->subDays(14),
+                        $now->copy()->subDays(7),
+                    ]
+                )
+                ->first();
+            $waitingListTotal = (int) ($waitingAgg->total ?? 0);
+            $waitingListLast7d = (int) ($waitingAgg->last_7d ?? 0);
+            $waitingListPrev7d = (int) ($waitingAgg->prev_7d ?? 0);
+        }
 
         $aiChecks = AiReciteAttempt::query()->count();
         $notes = AyahNote::query()->count();
@@ -972,10 +968,10 @@ class AdminDashboardService
                 'value' => $sessionsCompleted,
                 'trend_percent' => $this->trendPercent($sessionsLast7d, $sessionsPrev7d),
             ],
-            'memorised_ayahs' => [
-                'key' => 'memorised_ayahs',
-                'value' => $memorisedAyahs,
-                'trend_percent' => $this->trendPercent($memorisedLast7d, $memorisedPrev7d),
+            'waiting_list_total' => [
+                'key' => 'waiting_list_total',
+                'value' => $waitingListTotal,
+                'trend_percent' => $this->trendPercent($waitingListLast7d, $waitingListPrev7d),
             ],
             'ai_recite_attempts' => [
                 'key' => 'ai_recite_attempts',

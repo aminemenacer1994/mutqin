@@ -4921,6 +4921,7 @@
     "metric_feedback": "Feedback",
     "metric_sessions": "Sessions",
     "metric_memorised": "Memorised",
+    "metric_waiting_list": "Waiting list",
     "metric_ai": "AI checks",
     "metric_notes": "Notes",
     "metric_contacts": "Pending messages",

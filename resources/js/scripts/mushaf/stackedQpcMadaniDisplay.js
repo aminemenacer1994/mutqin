@@ -8,6 +8,7 @@ import {
 import { isIndopakMushafLayout } from './indopakPageAdapter.js'
 import { resolveMushafPageForVerseKey } from './qpcMadaniVersePage.js'
 import { MUSHAF_LAYOUT_MADANI_V2 } from './mushafLayouts.js'
+import { mapWithConcurrency, selectPriorityPages } from './sessionPageLoad.js'
 
 /**
  * Stacked ayah cards use the same QCF Madani page fonts as madani_mushaf (not Unicode Uthmanic).
@@ -163,25 +164,68 @@ export async function ensureStackedQpcMadaniPageFonts(pages = [], { tajweed = fa
 }
 
 /**
- * Load page leaves covering the given ayahs, then return ayah → mushaf words.
+ * Split a session's printed pages into a small first-paint set and the remainder.
+ * Ranges of a few pages stay eager so short surahs do not flash in two passes.
+ * @param {object[]} verses
+ * @param {Record<string, number>} index
+ * @param {number} focusPage
+ * @param {{ radius?: number, fullThreshold?: number }} [options]
  */
-export async function loadStackedQpcWordsForVerses(verses = [], index = {}) {
+export function planStackedQpcPageFetch(verses = [], index = {}, focusPage = 0, options = {}) {
   const keys = (Array.isArray(verses) ? verses : [])
     .map((verse) => String(verse?.key || '').trim())
     .filter(Boolean)
   const pages = collectQpcPagesForVerseKeys(keys, index)
+  const threshold = Math.max(1, Math.trunc(Number(options.fullThreshold) || 3))
+  if (pages.length <= threshold) {
+    return { pages, priority: pages, rest: [] }
+  }
+  const priority = selectPriorityPages(pages, focusPage, options.radius ?? 1)
+  const prioritySet = new Set(priority)
+  return {
+    pages,
+    priority,
+    rest: pages.filter((page) => !prioritySet.has(page)),
+  }
+}
+
+/**
+ * Load page leaves covering the given ayahs, then return ayah → mushaf words.
+ * `options.pages` limits the fetch to a window. `options.concurrency` caps
+ * parallel page JSON downloads (0 keeps a single Promise.all).
+ * @param {object[]} verses
+ * @param {Record<string, number>} index
+ * @param {{ pages?: number[], concurrency?: number }} [options]
+ */
+export async function loadStackedQpcWordsForVerses(verses = [], index = {}, options = {}) {
+  const keys = (Array.isArray(verses) ? verses : [])
+    .map((verse) => String(verse?.key || '').trim())
+    .filter(Boolean)
+  let pages = collectQpcPagesForVerseKeys(keys, index)
+  if (Array.isArray(options.pages)) {
+    const allow = new Set(
+      options.pages.map((page) => Math.trunc(Number(page))).filter((page) => page > 0),
+    )
+    pages = pages.filter((page) => allow.has(page))
+  }
   if (!pages.length) return new Map()
 
-  const leaves = await Promise.all(pages.map(async (page) => {
+  const concurrency = Math.max(0, Math.trunc(Number(options.concurrency) || 0))
+  const loadOne = async (page) => {
     try {
       return [page, await loadMadaniPageLeaf(page)]
     } catch {
       return [page, null]
     }
-  }))
+  }
+  const leaves = concurrency > 0
+    ? await mapWithConcurrency(pages, concurrency, (page) => loadOne(page))
+    : await Promise.all(pages.map((page) => loadOne(page)))
   /** @type {Record<number, object>} */
   const leavesByPage = {}
-  for (const [page, leaf] of leaves) {
+  for (const entry of leaves) {
+    const page = entry?.[0]
+    const leaf = entry?.[1]
     if (leaf?.page) leavesByPage[page] = leaf
   }
   return collectStackedQpcWordsFromLeaves(leavesByPage, keys)

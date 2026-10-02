@@ -254,37 +254,25 @@ export async function getMadaniPagesForChapterRange(chapterId, rangeStart = 1, r
   }
 
   const perPage = Math.max(1, Math.min(50, Number(options.perPage) || 50))
-  const startApiPage = Math.max(1, Math.ceil(start / perPage))
-  const endApiPage = Math.max(startApiPage, Math.ceil(end / perPage))
+  // Reuse the verse payload so page discovery and layout do not download the range twice.
+  const verses = await getMadaniChapterRangeVerses(chapter, start, end, {
+    mushaf,
+    perPage,
+    force: !!options.force,
+  })
   const pageNumbers = new Set()
   const pageByVerseKey = new Map()
-  const apiPages = []
-  for (let apiPage = startApiPage; apiPage <= endApiPage; apiPage += 1) apiPages.push(apiPage)
 
-  const responses = await Promise.all(apiPages.map((apiPage) => quranComClient.get(`/verses/by_chapter/${chapter}`, {
-    params: {
-      language: 'en',
-      words: true,
-      mushaf,
-      page: apiPage,
-      per_page: perPage,
-      word_fields: 'page_number,line_number,code_v2'
-    }
-  })))
-
-  for (const response of responses) {
-    const verses = response.data?.verses || []
-    for (const verse of verses) {
-      const verseNumber = Number(verse?.verse_number)
-      if (!Number.isFinite(verseNumber) || verseNumber < start || verseNumber > end) continue
-      const key = String(verse.verse_key || `${chapter}:${verseNumber}`)
-      const pageFromVerse = Number(verse.page_number)
-      const pageFromWord = Number(verse.words?.[0]?.page_number)
-      const page = Number.isFinite(pageFromVerse) ? pageFromVerse : pageFromWord
-      if (Number.isFinite(page) && page >= 1 && page <= MADANI_PAGE_COUNT) {
-        pageNumbers.add(page)
-        pageByVerseKey.set(key, page)
-      }
+  for (const verse of verses) {
+    const verseNumber = Number(verse?.verse_number)
+    if (!Number.isFinite(verseNumber)) continue
+    const key = String(verse.verse_key || `${chapter}:${verseNumber}`)
+    const pageFromVerse = Number(verse.page_number)
+    const pageFromWord = Number(verse.words?.[0]?.page_number)
+    const page = Number.isFinite(pageFromVerse) ? pageFromVerse : pageFromWord
+    if (Number.isFinite(page) && page >= 1 && page <= MADANI_PAGE_COUNT) {
+      pageNumbers.add(page)
+      pageByVerseKey.set(key, page)
     }
   }
 

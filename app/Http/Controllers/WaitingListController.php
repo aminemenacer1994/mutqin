@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreWaitingListEntryRequest;
 use App\Models\WaitingListEntry;
+use App\Services\AdminDashboardService;
 use App\Support\MutqinLog;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -46,6 +47,7 @@ class WaitingListController extends Controller
             }
 
             $entry = WaitingListEntry::query()->create($validated);
+            AdminDashboardService::invalidateCaches();
         } catch (UniqueConstraintViolationException) {
             $existing = WaitingListEntry::query()
                 ->where('email', $request->validated('email'))

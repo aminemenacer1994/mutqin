@@ -1800,14 +1800,14 @@ export default {
           trendDir: this.trendDir(snapshot.feedback_open?.trend_percent),
         },
         {
-          key: 'memorised_ayahs',
-          label: this.t('admin.metric_memorised'),
-          value: Number(snapshot.memorised_ayahs?.value || 0),
-          action: 'users',
-          toneClass: 'admin-kpi--memorised',
-          icon: 'bi bi-stars',
-          trendLabel: this.formatTrend(snapshot.memorised_ayahs?.trend_percent),
-          trendDir: this.trendDir(snapshot.memorised_ayahs?.trend_percent),
+          key: 'waiting_list_total',
+          label: this.t('admin.metric_waiting_list'),
+          value: Number(snapshot.waiting_list_total?.value || 0),
+          action: 'waiting',
+          toneClass: 'admin-kpi--waiting',
+          icon: 'bi bi-hourglass-split',
+          trendLabel: this.formatTrend(snapshot.waiting_list_total?.trend_percent),
+          trendDir: this.trendDir(snapshot.waiting_list_total?.trend_percent),
         },
         {
           key: 'sessions_completed',
@@ -2131,6 +2131,8 @@ export default {
       }
       if (metric.action === 'feedback') {
         this.setDirectoryTab('feedback')
+      } else if (metric.action === 'waiting') {
+        this.setDirectoryTab('waiting')
       } else if (metric.action === 'users_active') {
         this.setDirectoryTab('learners')
         this.filters.activity = 'active_7d'
@@ -2447,6 +2449,7 @@ export default {
           this.waitingDeleteFromModal = false
         }
         await this.loadWaitingList(this.waitingPage)
+        await this.refreshSnapshotQuiet()
         this.showToast(this.t('admin.waiting_list.deleted'))
       } catch (error) {
         this.waitingError = error?.response?.data?.message || this.t('admin.waiting_list.deleteError')
@@ -2469,6 +2472,7 @@ export default {
           this.waitingDeleteFromModal = false
         }
         await this.loadWaitingList(this.waitingPage)
+        await this.refreshSnapshotQuiet()
         this.showToast(this.t('admin.waiting_list.bulkDeleted', { n: ids.length }))
       } catch (error) {
         this.showToast(error?.response?.data?.message || this.t('admin.waiting_list.deleteError'))

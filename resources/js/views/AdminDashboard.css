@@ -444,8 +444,10 @@ html[data-theme="dark"] .admin-console {
 .admin-kpi--active-mid { --kpi-accent: var(--admin-green); --kpi-tint: color-mix(in srgb, var(--admin-green) 12%, transparent); }
 .admin-kpi--active-low::before { background: var(--admin-red); }
 .admin-kpi--active-low { --kpi-accent: var(--admin-red); --kpi-tint: color-mix(in srgb, var(--admin-red) 10%, transparent); }
-.admin-kpi--memorised::before { background: var(--admin-gold); }
-.admin-kpi--memorised { --kpi-accent: var(--admin-gold); --kpi-tint: color-mix(in srgb, var(--admin-gold) 14%, transparent); }
+.admin-kpi--memorised::before,
+.admin-kpi--waiting::before { background: var(--admin-gold); }
+.admin-kpi--memorised,
+.admin-kpi--waiting { --kpi-accent: var(--admin-gold); --kpi-tint: color-mix(in srgb, var(--admin-gold) 14%, transparent); }
 .admin-kpi--sessions::before { background: var(--admin-teal); }
 .admin-kpi--sessions { --kpi-accent: var(--admin-teal); --kpi-tint: color-mix(in srgb, var(--admin-teal) 12%, transparent); }
 .admin-kpi--pending::before { background: var(--admin-amber); }
@@ -476,7 +478,8 @@ html[data-theme="dark"] .admin-console {
   background: color-mix(in srgb, var(--admin-red) 10%, var(--dash-card));
 }
 
-.admin-kpi--memorised .admin-kpi__icon {
+.admin-kpi--memorised .admin-kpi__icon,
+.admin-kpi--waiting .admin-kpi__icon {
   color: var(--admin-gold);
   border-color: color-mix(in srgb, var(--admin-gold) 28%, var(--dash-line));
   background: color-mix(in srgb, var(--admin-gold) 12%, var(--dash-card));
@@ -504,7 +507,8 @@ html[data-theme="dark"] .admin-console {
 .admin-kpi--active-low {
   background: color-mix(in srgb, var(--admin-red) 7%, var(--dash-soft));
 }
-.admin-kpi--memorised {
+.admin-kpi--memorised,
+.admin-kpi--waiting {
   background: color-mix(in srgb, var(--admin-gold) 8%, var(--dash-soft));
 }
 .admin-kpi--sessions {
@@ -529,7 +533,9 @@ html[data-theme="dark"] .admin-console {
   background: color-mix(in srgb, var(--admin-red) 10%, var(--dash-card));
 }
 .admin-kpi--memorised:hover,
-.admin-kpi--memorised:focus-visible {
+.admin-kpi--memorised:focus-visible,
+.admin-kpi--waiting:hover,
+.admin-kpi--waiting:focus-visible {
   background: color-mix(in srgb, var(--admin-gold) 12%, var(--dash-card));
 }
 .admin-kpi--sessions:hover,
