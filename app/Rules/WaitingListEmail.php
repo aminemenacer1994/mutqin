@@ -43,8 +43,12 @@ class WaitingListEmail implements ValidationRule
             return;
         }
 
-        if ($this->shouldVerifyMailDomain() && ! $this->domainAcceptsMail($domain)) {
-            $fail(__('ui.waiting_list_email_unreachable'));
+        try {
+            if ($this->shouldVerifyMailDomain() && ! $this->domainAcceptsMail($domain)) {
+                $fail(__('ui.waiting_list_email_unreachable'));
+            }
+        } catch (\Throwable) {
+            // DNS lookups can warn/throw on locked-down hosts — do not fail the request.
         }
     }
 
@@ -59,11 +63,15 @@ class WaitingListEmail implements ValidationRule
 
     private function domainAcceptsMail(string $domain): bool
     {
-        if (function_exists('checkdnsrr') && checkdnsrr($domain, 'MX')) {
+        if (! function_exists('checkdnsrr')) {
             return true;
         }
 
-        if (function_exists('checkdnsrr') && checkdnsrr($domain, 'A')) {
+        try {
+            if (@checkdnsrr($domain, 'MX') || @checkdnsrr($domain, 'A')) {
+                return true;
+            }
+        } catch (\Throwable) {
             return true;
         }
 

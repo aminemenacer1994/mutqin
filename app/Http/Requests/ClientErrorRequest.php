@@ -29,7 +29,6 @@ class ClientErrorRequest extends FormRequest
             'latency_ms' => ['nullable', 'integer', 'min:0', 'max:120000'],
             'environment' => ['nullable', 'string', 'max:40'],
             'meta' => ['nullable', 'array', 'max:20'],
-            'meta.*' => ['nullable', 'string', 'max:200'],
         ];
     }
 }

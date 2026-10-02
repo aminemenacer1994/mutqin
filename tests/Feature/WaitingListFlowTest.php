@@ -62,6 +62,20 @@ class WaitingListFlowTest extends TestCase
             ->assertJsonPath('data.email', 'yusuf.web@example.com');
     }
 
+    public function test_marketing_host_waiting_list_post_accepts_real_email(): void
+    {
+        $this->withServerVariables([
+            'HTTP_HOST' => 'mutqin.ai',
+            'HTTPS' => 'on',
+            'SERVER_NAME' => 'mutqin.ai',
+        ])->postJson('/waiting-list', [
+            'name' => 'Mohamed',
+            'email' => 'menacer72@gmail.com',
+        ])->assertCreated()
+            ->assertJsonPath('already_joined', false)
+            ->assertJsonPath('data.email', 'menacer72@gmail.com');
+    }
+
     public function test_public_waiting_list_submission_is_stored_with_normalised_email(): void
     {
         $response = $this->postJson(route('api.waiting-list.store'), [
