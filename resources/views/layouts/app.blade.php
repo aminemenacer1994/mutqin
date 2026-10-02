@@ -7947,7 +7947,7 @@
 
     <script src="{{ mix('js/app.js') }}" defer></script>
 
-    @if (request()->routeIs('waiting-list'))
+    @if (request()->is('waiting-list'))
     <script>
         window.mutqinMinimalPublicPage = true;
         window.mutqinWaitingListEndpoint = @json(\App\Support\MutqinDomains::waitingListStoreUrl(request()));

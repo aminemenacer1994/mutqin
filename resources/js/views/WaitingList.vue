@@ -153,6 +153,22 @@ import { useI18n } from 'vue-i18n';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function resolveWaitingListEndpoint() {
+  if (typeof window !== 'undefined' && window.mutqinWaitingListEndpoint) {
+    return window.mutqinWaitingListEndpoint;
+  }
+
+  const host = typeof window !== 'undefined'
+    ? String(window.location.hostname || '').replace(/^www\./, '')
+    : '';
+
+  if (host === 'mutqin.ai') {
+    return 'https://app.mutqin.ai/join-waiting-list';
+  }
+
+  return '/join-waiting-list';
+}
+
 export default {
   name: 'WaitingListPage',
   props: {
@@ -367,9 +383,7 @@ export default {
         const name = form.name.trim();
         const email = form.email.trim();
 
-        const endpoint = (typeof window !== 'undefined' && window.mutqinWaitingListEndpoint)
-          ? window.mutqinWaitingListEndpoint
-          : '/join-waiting-list';
+        const endpoint = resolveWaitingListEndpoint();
 
         // fetch + omit credentials: axios defaults attach the marketing-host
         // CSRF cookie/token, which Sanctum rejects on app.mutqin.ai (419).

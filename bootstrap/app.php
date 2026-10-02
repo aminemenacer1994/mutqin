@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\WaitingListController;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\ForwardMarketingWaitingListSignup;
 use App\Http\Middleware\EnforceMarketingHostPolicy;
 use App\Support\MutqinDomains;
 use App\Http\Middleware\NormalizeLocalDevelopmentHost;
@@ -34,10 +35,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // Public signup must not use web/api stacks — Sanctum treats
             // Origin mutqin.ai as stateful and CSRF-checks /api/* (419).
             Route::post('/join-waiting-list', [WaitingListController::class, 'store'])
-                ->middleware(['throttle:5,1'])
+                ->middleware([ForwardMarketingWaitingListSignup::class, 'throttle:5,1'])
                 ->name('waiting-list.public-store');
             Route::post('/api/waiting-list', [WaitingListController::class, 'store'])
-                ->middleware(['throttle:5,1'])
+                ->middleware([ForwardMarketingWaitingListSignup::class, 'throttle:5,1'])
                 ->name('api.waiting-list.store');
 
             Route::middleware('web')->group(function (): void {
