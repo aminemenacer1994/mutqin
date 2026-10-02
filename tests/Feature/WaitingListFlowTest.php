@@ -119,6 +119,29 @@ class WaitingListFlowTest extends TestCase
         );
     }
 
+    public function test_marketing_hostname_on_local_app_still_posts_to_same_origin(): void
+    {
+        $this->app->detectEnvironment(fn () => 'local');
+
+        config([
+            'app.url' => 'http://mutqin.test',
+            'mutqin.domains.enable_in_local' => false,
+        ]);
+
+        $request = \Illuminate\Http\Request::create('http://mutqin.test/waiting-list', 'GET', [], [], [], [
+            'HTTP_HOST' => 'mutqin.ai',
+        ]);
+
+        $this->assertStringNotContainsString(
+            'app.mutqin.ai',
+            \App\Support\MutqinDomains::waitingListStoreUrl($request)
+        );
+        $this->assertStringContainsString(
+            '/join-waiting-list',
+            \App\Support\MutqinDomains::waitingListStoreUrl($request)
+        );
+    }
+
     public function test_public_waiting_list_submission_is_stored_with_normalised_email(): void
     {
         $response = $this->postJson(route('api.waiting-list.store'), [
@@ -215,6 +238,15 @@ class WaitingListFlowTest extends TestCase
             ->assertOk()
             ->assertSee('Amina')
             ->assertSee('amina@example.com');
+
+        $export = $this->actingAs($admin)
+            ->get(route('admin.waiting-list.export'))
+            ->assertOk()
+            ->assertHeader('content-disposition');
+
+        $csv = $export->streamedContent();
+        $this->assertStringContainsString('name,email,joined_at', $csv);
+        $this->assertStringContainsString('amina@example.com', $csv);
     }
 
     public function test_non_admin_cannot_view_waiting_list_entries(): void

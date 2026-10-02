@@ -363,6 +363,7 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
     Route::patch('/contact-messages/{contactMessage}/resolve', [ContactMessageController::class, 'resolve'])->name('contact-messages.resolve');
     Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
     Route::get('/waiting-list', [AdminWaitingListController::class, 'index'])->name('waiting-list.index');
+    Route::get('/waiting-list/export', [AdminWaitingListController::class, 'export'])->name('waiting-list.export');
     Route::get('/feedback', [AdminFeedbackPageController::class, 'index'])->name('feedback.index');
 });
 

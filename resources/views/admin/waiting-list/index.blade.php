@@ -7,10 +7,16 @@
                 <span class="profile-kicker">{{ __('admin.kicker') }}</span>
                 <h1>{{ __('admin.waiting_list.title') }}</h1>
                 <p>{{ __('admin.waiting_list.description') }}</p>
+                @if ($totalEntries > 0)
+                    <p class="mb-0 text-muted">{{ trans_choice('admin.waiting_list.total', $totalEntries, ['count' => $totalEntries]) }}</p>
+                @endif
             </div>
             <div class="admin-filter-tabs">
                 <a class="billing-secondary-btn" href="{{ route('admin.dashboard') }}">{{ __('admin.dashboard') }}</a>
                 <a class="billing-secondary-btn" href="{{ route('admin.contact-messages.index') }}">{{ __('admin.waiting_list.contact_messages') }}</a>
+                @if ($totalEntries > 0)
+                    <a class="billing-secondary-btn" href="{{ route('admin.waiting-list.export') }}">{{ __('admin.waiting_list.export_csv') }}</a>
+                @endif
             </div>
         </div>
 

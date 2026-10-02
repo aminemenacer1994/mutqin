@@ -138,9 +138,10 @@ final class MutqinDomains
     {
         $request ??= request();
 
-        // Only the live marketing host posts to the app host. Local/dev must
-        // keep a same-origin URL so signups land in the local database.
-        if (self::hostsDiffer() && self::isMarketingHost($request->getHost())) {
+        // Real mutqin.ai (marketing-only host) posts to app.mutqin.ai. Local dev,
+        // including /etc/hosts mutqin.ai → 127.0.0.1, keeps same-origin so rows
+        // show up in local phpMyAdmin.
+        if (self::restrictMarketingHost($request)) {
             return self::appUrl('/join-waiting-list');
         }
 

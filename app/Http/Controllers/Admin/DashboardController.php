@@ -29,6 +29,7 @@ class DashboardController extends Controller
                     'csrf_token' => csrf_token(),
                     'admin_api_url' => url('/api/admin/dashboard'),
                     'contact_inbox_url' => route('admin.contact-messages.index'),
+                    'waiting_list_url' => route('admin.waiting-list.index'),
                     'feedback_inbox_url' => route('admin.feedback.index'),
                     'login_url' => route('login'),
                 ],

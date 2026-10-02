@@ -11,6 +11,8 @@ return [
         'name' => 'Name',
         'email' => 'Email',
         'joined' => 'Joined',
+        'export_csv' => 'Download CSV',
+        'total' => '{0} No signups yet.|{1} :count signup.|[2,*] :count signups.',
     ],
     'contact_messages' => [
         'title' => 'Contact Messages',
