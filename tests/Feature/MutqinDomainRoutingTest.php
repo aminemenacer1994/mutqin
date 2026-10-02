@@ -89,10 +89,19 @@ class MutqinDomainRoutingTest extends TestCase
     public function test_marketing_host_redirects_application_paths_to_app_host(): void
     {
         $this->onMarketingHost('/login')
-            ->assertRedirect('https://app.mutqin.ai/login');
+            ->assertOk();
 
         $this->onMarketingHost('/memorisation')
             ->assertRedirect('https://app.mutqin.ai/memorisation');
+    }
+
+    public function test_marketing_host_serves_admin_waiting_list_for_guest_via_login(): void
+    {
+        $response = $this->onMarketingHost('/admin/waiting-list');
+
+        $response->assertRedirect();
+        $this->assertStringContainsString('/login', (string) $response->headers->get('Location'));
+        $this->assertStringNotContainsString('app.mutqin.ai', (string) $response->headers->get('Location'));
     }
 
     public function test_app_host_keeps_login_and_memorisation_routes(): void

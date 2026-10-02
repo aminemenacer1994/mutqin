@@ -63,4 +63,21 @@ class MarketingHostPolicyTest extends TestCase
             ->assertDontSee('href="'.route('register').'"', false);
     }
 
+    public function test_marketing_host_admin_waiting_list_is_not_redirected_to_app(): void
+    {
+        $kernel = $this->app->make(HttpKernel::class);
+        $request = Request::create('/admin/waiting-list', 'GET', [], [], [], [
+            'HTTP_HOST' => 'mutqin.ai',
+            'HTTPS' => 'on',
+            'SERVER_NAME' => 'mutqin.ai',
+        ]);
+        $response = $kernel->handle($request);
+        $kernel->terminate($request, $response);
+
+        $this->assertTrue($response->isRedirection());
+        $location = (string) $response->headers->get('Location');
+        $this->assertStringContainsString('/login', $location);
+        $this->assertStringNotContainsString('app.mutqin.ai', $location);
+    }
+
 }

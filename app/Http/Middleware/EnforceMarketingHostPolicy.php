@@ -35,6 +35,10 @@ class EnforceMarketingHostPolicy
             return $next($request);
         }
 
+        if (MutqinDomains::marketingHostWebPathAllowed($request)) {
+            return $next($request);
+        }
+
         $target = MutqinDomains::appUrl($path);
         $query = $request->getQueryString();
         if (is_string($query) && $query !== '') {

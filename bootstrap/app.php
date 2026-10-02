@@ -98,6 +98,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'plan' => EnsureSubscriptionTier::class,
         ]);
 
+        $middleware->redirectGuestsTo(static function (Request $request): string {
+            if (MutqinDomains::isMarketingHost($request->getHost())) {
+                return url('/login');
+            }
+
+            return route('login');
+        });
+
         $middleware->redirectUsersTo(static function (Request $request): string {
             $user = $request->user();
 

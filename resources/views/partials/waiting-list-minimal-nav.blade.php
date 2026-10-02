@@ -19,6 +19,17 @@
         >
             <span class="nav-link-copy"><strong>{{ __('ui.waiting_list') }}</strong></span>
         </a>
+        @auth
+            @can('access-admin')
+                <a
+                    class="nav-link nav-link-waiting-list-admin {{ request()->is('admin/waiting-list*') ? 'active' : '' }}"
+                    href="{{ url('/admin/waiting-list') }}"
+                    @if (request()->is('admin/waiting-list*')) aria-current="page" @endif
+                >
+                    <span class="nav-link-copy"><strong>{{ __('admin.waiting_list.nav') }}</strong></span>
+                </a>
+            @endcan
+        @endauth
     </nav>
     <button
         class="navbar-toggler waiting-list-early-access-menu-btn d-lg-none ms-auto flex-shrink-0"
@@ -76,6 +87,22 @@
                     </span>
                     <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                 </a>
+                @auth
+                    @can('access-admin')
+                        <a
+                            class="nav-link nav-link-waiting-list-admin {{ request()->is('admin/waiting-list*') ? 'active' : '' }}"
+                            href="{{ url('/admin/waiting-list') }}"
+                            @if (request()->is('admin/waiting-list*')) aria-current="page" @endif
+                        >
+                            <i class="bi bi-people nav-link-icon" aria-hidden="true"></i>
+                            <span class="nav-link-copy">
+                                <strong>{{ __('admin.waiting_list.nav') }}</strong>
+                                <small class="d-lg-none">{{ __('admin.waiting_list.title') }}</small>
+                            </span>
+                            <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                        </a>
+                    @endcan
+                @endauth
             </div>
         </div>
     </div>

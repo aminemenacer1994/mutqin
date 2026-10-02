@@ -12,10 +12,14 @@
                 @endif
             </div>
             <div class="admin-filter-tabs">
-                <a class="billing-secondary-btn" href="{{ route('admin.dashboard') }}">{{ __('admin.dashboard') }}</a>
-                <a class="billing-secondary-btn" href="{{ route('admin.contact-messages.index') }}">{{ __('admin.waiting_list.contact_messages') }}</a>
+                @if (\App\Support\MutqinDomains::restrictMarketingHost(request()))
+                    <a class="billing-secondary-btn" href="{{ url('/waiting-list') }}">{{ __('ui.waiting_list') }}</a>
+                @else
+                    <a class="billing-secondary-btn" href="{{ route('admin.dashboard') }}">{{ __('admin.dashboard') }}</a>
+                    <a class="billing-secondary-btn" href="{{ route('admin.contact-messages.index') }}">{{ __('admin.waiting_list.contact_messages') }}</a>
+                @endif
                 @if ($totalEntries > 0)
-                    <a class="billing-secondary-btn" href="{{ route('admin.waiting-list.export') }}">{{ __('admin.waiting_list.export_csv') }}</a>
+                    <a class="billing-secondary-btn" href="{{ \App\Support\MutqinDomains::restrictMarketingHost(request()) ? url('/admin/waiting-list/export') : route('admin.waiting-list.export') }}">{{ __('admin.waiting_list.export_csv') }}</a>
                 @endif
             </div>
         </div>

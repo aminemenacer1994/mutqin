@@ -10,4 +10,15 @@ class WaitingListEntry extends Model
         'name',
         'email',
     ];
+
+    public function getConnectionName(): ?string
+    {
+        $connection = config('mutqin.waiting_list.database_connection');
+
+        if (is_string($connection) && $connection !== '') {
+            return $connection;
+        }
+
+        return parent::getConnectionName();
+    }
 }
