@@ -54,10 +54,12 @@ class MarketingHostPolicyTest extends TestCase
         $response->assertOk()
             ->assertSee('waiting-list-page', false)
             ->assertSee('mutqinMinimalPublicPage', false)
+            ->assertSee('mutqin-early-access-nav', false)
+            ->assertSee('id="earlyAccessNavbar"', false)
             ->assertDontSee('id="primaryNavbar"', false)
-            ->assertDontSee(__('ui.login'), false)
-            ->assertDontSee(__('ui.register'), false)
-            ->assertDontSee('nav-link-memorisation', false);
+            ->assertDontSee('href="'.route('memorisation').'"', false)
+            ->assertDontSee('href="'.route('login').'"', false)
+            ->assertDontSee('href="'.route('register').'"', false);
     }
 
 }

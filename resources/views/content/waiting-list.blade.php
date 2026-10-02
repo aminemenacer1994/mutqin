@@ -1,13 +1,6 @@
-@extends(
-    \App\Support\MutqinDomains::restrictMarketingHost(request())
-        ? 'layouts.waiting-list-public'
-        : 'layouts.app'
-)
+@extends('layouts.app')
 
 @section('content')
-    @unless(\App\Support\MutqinDomains::restrictMarketingHost(request()))
-        <script>document.body.classList.add('mutqin-early-access-nav');</script>
-    @endunless
     @php
         $waitingListCount = 0;
         try {

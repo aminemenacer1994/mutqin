@@ -7946,6 +7946,13 @@
     @endauth
 
     <script src="{{ mix('js/app.js') }}" defer></script>
+
+    @if (request()->routeIs('waiting-list'))
+    <script>
+        window.mutqinMinimalPublicPage = true;
+        window.mutqinWaitingListEndpoint = @json(url('/waiting-list'));
+    </script>
+    @endif
     
     <script>
         window.mutqinInitialLocale = @json($appLocale);
