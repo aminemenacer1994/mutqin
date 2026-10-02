@@ -13,6 +13,7 @@ return [
         'joined' => 'Joined',
         'export_csv' => 'Download CSV',
         'total' => '{0} No signups yet.|{1} :count signup.|[2,*] :count signups.',
+        'deleted' => 'Waiting list signup removed.',
     ],
     'contact_messages' => [
         'title' => 'Contact Messages',

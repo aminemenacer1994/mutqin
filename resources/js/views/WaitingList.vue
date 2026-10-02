@@ -254,10 +254,22 @@ export default {
       formResetKey.value += 1;
     };
 
-    const scheduleValidationBannerDismiss = () => {
+    const scheduleErrorDismiss = ({ clearAll = false } = {}) => {
       clearErrorStatusTimer();
       errorStatusTimer = setTimeout(() => {
-        if (status.type === 'error' && status.message === t('waitingList.errorFields')) {
+        form.name = '';
+        if (errors.name) {
+          delete errors.name;
+        }
+        if (clearAll) {
+          form.email = '';
+          if (errors.email) {
+            delete errors.email;
+          }
+          clearEmailErrorTimer();
+          formResetKey.value += 1;
+        }
+        if (status.type === 'error') {
           status.type = '';
           status.message = '';
         }
@@ -373,6 +385,7 @@ export default {
       }
 
       if (!validate()) {
+        scheduleErrorDismiss();
         await focusFirstInvalid();
         return;
       }
@@ -406,7 +419,16 @@ export default {
           throw error;
         }
 
-        alreadyJoined.value = Boolean(payload?.already_joined);
+        if (payload?.already_joined) {
+          alreadyJoined.value = false;
+          joined.value = false;
+          status.type = 'error';
+          status.message = t('waitingList.alreadyJoined');
+          scheduleErrorDismiss({ clearAll: true });
+          return;
+        }
+
+        alreadyJoined.value = false;
         submittedEmail.value = email;
         status.type = 'success';
         status.message = '';
@@ -439,12 +461,12 @@ export default {
         const serverMessage = error?.response?.data?.message;
         if (Object.keys(validationErrors).length) {
           status.message = t('waitingList.errorFields');
-          scheduleValidationBannerDismiss();
         } else {
           status.message = typeof serverMessage === 'string' && serverMessage.trim() !== ''
             ? serverMessage
             : t('waitingList.errorSend');
         }
+        scheduleErrorDismiss();
         await focusFirstInvalid();
       } finally {
         submitting.value = false;

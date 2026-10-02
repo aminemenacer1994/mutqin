@@ -1609,7 +1609,9 @@ html[data-theme="dark"] .admin-toolbar__select {
 }
 
 .admin-col-check { width: 48px; }
+.admin-col-id { width: 72px; }
 .admin-col-learner { width: 240px; }
+.admin-col-email { width: auto; }
 .admin-col-num { width: 128px; }
 .admin-col-sessions { width: 128px; }
 .admin-col-date { width: 140px; }
@@ -3845,6 +3847,83 @@ html[data-theme="dark"] .admin-kpi--feedback .admin-kpi__icon {
 
 .admin-feedback-table {
   min-width: 860px;
+}
+
+.admin-waiting-table {
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.admin-waiting-table col.admin-col-check {
+  width: 3rem;
+}
+
+.admin-waiting-table col.admin-col-id {
+  width: 8%;
+}
+
+.admin-waiting-table col.admin-col-wl-name {
+  width: 24%;
+}
+
+.admin-waiting-table col.admin-col-wl-email {
+  width: 24%;
+}
+
+.admin-waiting-table col.admin-col-date {
+  width: 14%;
+}
+
+.admin-waiting-table col.admin-col-wl-actions {
+  width: 22%;
+}
+
+.admin-waiting-table th,
+.admin-waiting-table td {
+  padding: 12px 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-waiting-table td.admin-num {
+  white-space: nowrap;
+}
+
+.admin-waiting-table td strong,
+.admin-waiting-table .admin-table__email {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-waiting-table .admin-table__actions {
+  width: auto;
+  min-width: 0;
+  padding-inline: 12px 16px !important;
+  text-align: end;
+  overflow: visible;
+}
+
+.admin-table__inline-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+.admin-table__inline-actions .admin-btn {
+  min-height: 2rem;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.admin-user-card__actions {
+  margin-inline-start: auto;
+  padding-inline-end: 0.35rem;
 }
 
 html[data-theme="dark"] .admin-feedback-type[data-type="suggestion"] {

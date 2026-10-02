@@ -68,6 +68,44 @@ export const adminApi = {
     return !!data?.message
   },
 
+  async getWaitingList({ page = 1, per_page = 25, q = '' } = {}) {
+    const { data } = await withRetry(() =>
+      http.get('/admin/waiting-list', {
+        params: {
+          page,
+          per_page,
+          q: q || undefined,
+        },
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      })
+    )
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      total: Number(data?.total || 0),
+      page: Number(data?.page || page || 1),
+      per_page: Number(data?.per_page || per_page || 25),
+      total_pages: Number(data?.total_pages || 1),
+    }
+  },
+
+  async getWaitingListEntry(id) {
+    const { data } = await withRetry(() => http.get(`/admin/waiting-list/${id}`))
+    return data?.entry || null
+  },
+
+  async updateWaitingListEntry(id, payload) {
+    const { data } = await http.patch(`/admin/waiting-list/${id}`, payload)
+    return data?.entry || null
+  },
+
+  async deleteWaitingListEntry(id) {
+    const { data } = await http.delete(`/admin/waiting-list/${id}`)
+    return !!data?.message
+  },
+
   async getUsers({
     limit = 20,
     page = 1,

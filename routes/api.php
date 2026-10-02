@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\FeedbackController as AdminFeedbackController;
+use App\Http\Controllers\Api\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\Api\ClientErrorController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FeedbackController;
@@ -58,6 +59,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'update'])->name('api.admin.feedback.update');
         Route::delete('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'destroy'])->name('api.admin.feedback.destroy');
         Route::get('/admin/feedback/{feedback}/screenshot', [AdminFeedbackController::class, 'screenshot'])->name('api.admin.feedback.screenshot');
+        Route::get('/admin/waiting-list', [AdminWaitingListController::class, 'index'])->name('api.admin.waiting-list.index');
+        Route::get('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'show'])
+            ->whereNumber('entry')
+            ->name('api.admin.waiting-list.show');
+        Route::patch('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'update'])
+            ->whereNumber('entry')
+            ->name('api.admin.waiting-list.update');
+        Route::delete('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'destroy'])
+            ->whereNumber('entry')
+            ->name('api.admin.waiting-list.destroy');
     });
 
     // Preferences remain available while waiting to verify email.

@@ -101,18 +101,18 @@
         </header>
 
         <!-- DIRECTORY -->
-        <section ref="usersSection" class="admin-users admin-reveal" style="--admin-delay: 120ms" :aria-label="directoryTab === 'feedback' ? t('admin.feedback_title') : t('admin.users_title')">
+        <section ref="usersSection" class="admin-users admin-reveal" style="--admin-delay: 120ms" :aria-label="directoryHeading.title">
           <header class="admin-users__header">
             <div class="admin-users__title-block">
-              <p class="admin-eyebrow">{{ directoryTab === 'feedback' ? t('admin.feedback_kicker') : t('admin.learners_title') }}</p>
+              <p class="admin-eyebrow">{{ directoryHeading.kicker }}</p>
               <div class="admin-users__title-row">
                 <span class="admin-users__title-icon" aria-hidden="true">
-                  <i class="bi" :class="directoryTab === 'feedback' ? 'bi-chat-left-text-fill' : 'bi-people-fill'" aria-hidden="true"></i>
+                  <i class="bi" :class="directoryHeading.icon" aria-hidden="true"></i>
                 </span>
-                <h2 class="admin-users__title">{{ directoryTab === 'feedback' ? t('admin.feedback_title') : t('admin.users_title') }}</h2>
-                <span class="admin-users__count">{{ directoryTab === 'feedback' ? feedbackTotal : usersTotal }}</span>
+                <h2 class="admin-users__title">{{ directoryHeading.title }}</h2>
+                <span class="admin-users__count">{{ directoryHeading.count }}</span>
               </div>
-              <p class="admin-users__subtitle">{{ directoryTab === 'feedback' ? t('admin.feedback_subtitle') : t('admin.users_subtitle') }}</p>
+              <p class="admin-users__subtitle">{{ directoryHeading.subtitle }}</p>
               <div class="admin-directory-tabs" role="tablist" :aria-label="t('admin.directory_tabs')">
                 <button
                   type="button"
@@ -134,6 +134,16 @@
                 >
                   {{ t('admin.tab_feedback') }}
                   <span v-if="feedbackOpenCount > 0" class="admin-directory-tab__badge">{{ feedbackOpenCount }}</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  class="admin-directory-tab"
+                  :class="{ 'is-active': directoryTab === 'waiting' }"
+                  :aria-selected="directoryTab === 'waiting' ? 'true' : 'false'"
+                  @click="setDirectoryTab('waiting')"
+                >
+                  {{ t('admin.tab_waiting_list') }}
                 </button>
               </div>
             </div>
@@ -490,7 +500,7 @@
           </div>
           </template>
 
-          <template v-else>
+          <template v-else-if="directoryTab === 'feedback'">
             <div class="admin-toolbar">
               <div class="admin-toolbar__row">
                 <div class="admin-toolbar__search-wrap">
@@ -707,6 +717,193 @@
                   class="admin-btn admin-btn--ghost admin-btn--sm"
                   :disabled="feedbackPage >= feedbackTotalPages || feedbackLoading"
                   @click="loadFeedback(feedbackPage + 1)"
+                >
+                  {{ t('admin.pagination_next') }}
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <template v-else-if="directoryTab === 'waiting'">
+            <div class="admin-toolbar">
+              <div class="admin-toolbar__row">
+                <div class="admin-toolbar__search-wrap">
+                  <i class="bi bi-search admin-toolbar__search-icon" aria-hidden="true"></i>
+                  <input
+                    v-model.trim="waitingFilters.q"
+                    type="search"
+                    class="admin-toolbar__search"
+                    :placeholder="t('admin.waiting_list_search')"
+                    @input="onWaitingSearchInput"
+                  >
+                </div>
+              </div>
+              <p class="admin-results-count">
+                {{ t('admin.waiting_list_showing', { shown: waitingItems.length, total: waitingTotal }) }}
+              </p>
+            </div>
+
+            <p v-if="waitingLoading" class="admin-empty">{{ t('admin.drawer_loading') }}</p>
+            <p v-else-if="waitingError" class="admin-empty" role="alert">{{ waitingError }}</p>
+            <div v-else-if="!waitingItems.length" class="admin-users-empty" role="status">
+              <i class="bi bi-hourglass admin-users-empty__icon" aria-hidden="true"></i>
+              <p class="admin-users-empty__title">
+                {{ waitingFilters.q ? t('admin.waiting_list.emptySearch') : t('admin.waiting_list.empty') }}
+              </p>
+            </div>
+            <div v-else class="admin-users-list">
+              <ul class="admin-user-cards" role="list" :aria-label="t('admin.waiting_list_title')">
+                <li
+                  v-for="row in waitingItems"
+                  :key="`wl-card-${row.id}`"
+                  class="admin-user-card"
+                  :class="{ 'is-selected': selectedWaitingIds.includes(row.id) }"
+                >
+                  <div class="admin-user-card__row">
+                    <label class="admin-user-card__check" @click.stop>
+                      <input
+                        type="checkbox"
+                        :checked="selectedWaitingIds.includes(row.id)"
+                        :aria-label="row.name || t('admin.unnamed')"
+                        @change="toggleWaitingSelect(row.id)"
+                      >
+                    </label>
+                    <button
+                      type="button"
+                      class="admin-user-card__main"
+                      @click="openWaitingDetail(row.id)"
+                    >
+                      <div class="admin-user-card__top">
+                        <div class="admin-user-card__who">
+                          <strong>{{ row.name || t('admin.unnamed') }}</strong>
+                          <span class="admin-user-card__email">{{ row.email }}</span>
+                        </div>
+                        <span class="admin-user-card__active">#{{ row.id }}</span>
+                      </div>
+                      <div class="admin-user-card__footer">
+                        <span class="admin-user-card__active">{{ formatDateShort(row.created_at) || '—' }}</span>
+                      </div>
+                    </button>
+                    <div class="admin-table__inline-actions admin-user-card__actions">
+                      <button
+                        type="button"
+                        class="admin-btn admin-btn--ghost admin-btn--sm"
+                        @click="openWaitingDetail(row.id)"
+                      >
+                        {{ t('admin.waiting_list.view') }}
+                      </button>
+                      <button
+                        type="button"
+                        class="admin-btn admin-btn--ghost admin-btn--sm"
+                        @click="openWaitingEdit(row.id)"
+                      >
+                        {{ t('admin.waiting_list.edit') }}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+
+              <div class="admin-table-shell">
+                <div class="admin-table-wrap" role="listbox" :aria-label="t('admin.waiting_list_title')">
+                  <table class="admin-table admin-waiting-table">
+                    <colgroup>
+                      <col class="admin-col-check">
+                      <col class="admin-col-id">
+                      <col class="admin-col-wl-name">
+                      <col class="admin-col-wl-email">
+                      <col class="admin-col-date">
+                      <col class="admin-col-wl-actions">
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th class="admin-table__check">
+                          <input
+                            type="checkbox"
+                            :checked="allVisibleWaitingSelected"
+                            :aria-label="t('admin.select_all')"
+                            @change="toggleSelectAllWaiting"
+                          >
+                        </th>
+                        <th>{{ t('admin.waiting_list.colId') }}</th>
+                        <th>{{ t('admin.waiting_list.colName') }}</th>
+                        <th>{{ t('admin.waiting_list.colEmail') }}</th>
+                        <th>{{ t('admin.waiting_list.colDate') }}</th>
+                        <th class="admin-table__actions"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="row in waitingItems"
+                        :key="row.id"
+                        :class="{ 'is-selected': selectedWaitingIds.includes(row.id) }"
+                      >
+                        <td class="admin-table__check">
+                          <input
+                            type="checkbox"
+                            :checked="selectedWaitingIds.includes(row.id)"
+                            :aria-label="row.name || t('admin.unnamed')"
+                            @change="toggleWaitingSelect(row.id)"
+                          >
+                        </td>
+                        <td class="admin-num">{{ row.id }}</td>
+                        <td>
+                          <strong :title="row.name">{{ row.name || t('admin.unnamed') }}</strong>
+                        </td>
+                        <td>
+                          <span class="admin-table__email" :title="row.email">{{ row.email }}</span>
+                        </td>
+                        <td class="admin-num">{{ formatDateShort(row.created_at) || '—' }}</td>
+                        <td class="admin-table__actions">
+                          <div class="admin-table__inline-actions">
+                            <button
+                              type="button"
+                              class="admin-btn admin-btn--ghost admin-btn--sm"
+                              @click="openWaitingDetail(row.id)"
+                            >
+                              {{ t('admin.waiting_list.view') }}
+                            </button>
+                            <button
+                              type="button"
+                              class="admin-btn admin-btn--ghost admin-btn--sm"
+                              @click="openWaitingEdit(row.id)"
+                            >
+                              {{ t('admin.waiting_list.edit') }}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div v-if="waitingTotalPages > 1" class="admin-pagination">
+              <div class="admin-pagination__controls">
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--ghost admin-btn--sm"
+                  :disabled="waitingPage <= 1 || waitingLoading"
+                  @click="loadWaitingList(waitingPage - 1)"
+                >
+                  {{ t('admin.pagination_prev') }}
+                </button>
+                <button
+                  v-for="page in waitingPageNumbers"
+                  :key="`wl-p-${page}`"
+                  type="button"
+                  class="admin-btn admin-btn--ghost admin-btn--sm admin-pagination__page"
+                  :class="{ 'is-active': page === waitingPage }"
+                  :disabled="waitingLoading"
+                  @click="loadWaitingList(page)"
+                >
+                  {{ page }}
+                </button>
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--ghost admin-btn--sm"
+                  :disabled="waitingPage >= waitingTotalPages || waitingLoading"
+                  @click="loadWaitingList(waitingPage + 1)"
                 >
                   {{ t('admin.pagination_next') }}
                 </button>
@@ -1131,6 +1328,37 @@
           </button>
         </div>
       </div>
+      <div
+        v-else-if="directoryTab === 'waiting' && selectedWaitingIds.length"
+        key="waiting-bulk"
+        class="admin-bulkbar-float"
+        role="toolbar"
+        :aria-label="t('admin.bulk_selected', { n: selectedWaitingIds.length })"
+      >
+        <div class="admin-bulkbar-float__inner">
+          <span class="admin-bulkbar-float__count">
+            {{ t('admin.bulk_selected', { n: selectedWaitingIds.length }) }}
+          </span>
+          <div class="admin-bulkbar-float__actions">
+            <button
+              type="button"
+              class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn"
+              :disabled="bulkBusy || !!waitingDeletingId"
+              @click="askBulkDeleteWaiting"
+            >
+              {{ t('admin.waiting_list.bulkDelete') }}
+            </button>
+          </div>
+          <button
+            type="button"
+            class="admin-bulkbar-float__close"
+            :aria-label="t('admin.bulk_dismiss')"
+            @click="selectedWaitingIds = []"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
     </Transition>
 
     <!-- Toast -->
@@ -1216,6 +1444,109 @@
               </div>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="waitingDetail"
+      class="admin-modal-root"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="t('admin.waiting_list.detailTitle')"
+    >
+      <div class="admin-modal__backdrop" aria-hidden="true"></div>
+      <div class="admin-modal admin-modal--feedback">
+        <header class="admin-modal__head">
+          <div class="admin-modal__head-copy">
+            <h2>{{ t('admin.waiting_list.detailTitle') }} #{{ waitingDetail.id }}</h2>
+            <p class="admin-muted">{{ waitingDetail.name || t('admin.unnamed') }}</p>
+          </div>
+          <button type="button" class="admin-icon-btn" :aria-label="t('common.close')" @click="closeWaitingDetail">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+        <div class="admin-feedback-detail">
+          <template v-if="waitingDetailMode === 'edit'">
+            <form class="admin-form" @submit.prevent="saveWaitingDetail">
+              <label>
+                <span>{{ t('admin.waiting_list.colName') }}</span>
+                <input v-model.trim="waitingEditForm.name" type="text" required maxlength="255">
+              </label>
+              <label>
+                <span>{{ t('admin.waiting_list.colEmail') }}</span>
+                <input v-model.trim="waitingEditForm.email" type="email" required maxlength="255">
+              </label>
+              <p class="admin-muted">
+                {{ t('admin.waiting_list.colDate') }}: {{ formatDateShort(waitingDetail.created_at) || '—' }}
+              </p>
+              <p v-if="waitingDetailError" class="admin-form__error" role="alert">{{ waitingDetailError }}</p>
+              <div class="admin-form__actions admin-form__actions--split">
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--danger"
+                  :disabled="waitingDeletingId === waitingDetail.id || confirmBusy"
+                  @click="askDeleteWaiting(waitingDetail, true)"
+                >
+                  {{ t('admin.waiting_list.delete') }}
+                </button>
+                <div class="admin-form__actions-end">
+                  <button
+                    type="button"
+                    class="admin-btn admin-btn--ghost"
+                    @click="waitingDetailMode = 'view'; hydrateWaitingEditForm(waitingDetail)"
+                  >
+                    {{ t('admin.cancel') }}
+                  </button>
+                  <button type="submit" class="admin-btn admin-btn--primary" :disabled="waitingDetailSaving">
+                    {{ waitingDetailSaving ? t('admin.waiting_list.saving') : t('admin.waiting_list.save') }}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </template>
+          <template v-else>
+            <dl class="admin-feedback-detail__meta">
+              <div>
+                <dt>{{ t('admin.waiting_list.colId') }}</dt>
+                <dd>{{ waitingDetail.id }}</dd>
+              </div>
+              <div>
+                <dt>{{ t('admin.waiting_list.colName') }}</dt>
+                <dd>{{ waitingDetail.name || t('admin.unnamed') }}</dd>
+              </div>
+              <div>
+                <dt>{{ t('admin.waiting_list.colEmail') }}</dt>
+                <dd>{{ waitingDetail.email }}</dd>
+              </div>
+              <div>
+                <dt>{{ t('admin.waiting_list.colDate') }}</dt>
+                <dd>{{ formatDateShort(waitingDetail.created_at) || '—' }}</dd>
+              </div>
+            </dl>
+            <div class="admin-form__actions admin-form__actions--split">
+              <button
+                type="button"
+                class="admin-btn admin-btn--danger"
+                :disabled="waitingDeletingId === waitingDetail.id || confirmBusy"
+                @click="askDeleteWaiting(waitingDetail, true)"
+              >
+                {{ t('admin.waiting_list.delete') }}
+              </button>
+              <div class="admin-form__actions-end">
+                  <button
+                    type="button"
+                    class="admin-btn admin-btn--ghost"
+                    @click="waitingDetailMode = 'edit'; hydrateWaitingEditForm(waitingDetail)"
+                  >
+                  {{ t('admin.waiting_list.edit') }}
+                </button>
+                <button type="button" class="admin-btn admin-btn--ghost" @click="closeWaitingDetail">
+                  {{ t('common.close') }}
+                </button>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -1378,6 +1709,22 @@ export default {
       feedbackDeleteFromModal: false,
       feedbackTypes: ['suggestion', 'bug', 'ai_recitation', 'design', 'other'],
       feedbackStatuses: ['new', 'reviewing', 'planned', 'resolved', 'closed'],
+      waitingItems: [],
+      waitingTotal: 0,
+      waitingPage: 1,
+      waitingTotalPages: 1,
+      waitingLoading: false,
+      waitingError: '',
+      waitingFilters: { q: '' },
+      waitingSearchTimer: null,
+      waitingDetail: null,
+      waitingDetailMode: 'view',
+      waitingEditForm: { name: '', email: '' },
+      waitingDetailSaving: false,
+      waitingDetailError: '',
+      waitingDeletingId: null,
+      selectedWaitingIds: [],
+      waitingDeleteFromModal: false,
       syncTimer: null,
       syncInFlight: false,
       rowMenuId: null,
@@ -1477,6 +1824,33 @@ export default {
     feedbackOpenCount() {
       return Number(this.data?.snapshot?.feedback_open?.value || 0)
     },
+    directoryHeading() {
+      if (this.directoryTab === 'feedback') {
+        return {
+          kicker: this.t('admin.feedback_kicker'),
+          icon: 'bi-chat-left-text-fill',
+          title: this.t('admin.feedback_title'),
+          count: this.feedbackTotal,
+          subtitle: this.t('admin.feedback_subtitle'),
+        }
+      }
+      if (this.directoryTab === 'waiting') {
+        return {
+          kicker: this.t('admin.waiting_list_kicker'),
+          icon: 'bi-hourglass-split',
+          title: this.t('admin.waiting_list_title'),
+          count: this.waitingTotal,
+          subtitle: this.t('admin.waiting_list_subtitle'),
+        }
+      }
+      return {
+        kicker: this.t('admin.learners_title'),
+        icon: 'bi-people-fill',
+        title: this.t('admin.users_title'),
+        count: this.usersTotal,
+        subtitle: this.t('admin.users_subtitle'),
+      }
+    },
     allVisibleSelected() {
       return this.users.length > 0 && this.users.every((row) => this.selectedIds.includes(row.id))
     },
@@ -1544,6 +1918,8 @@ export default {
       if (this.confirmKind === 'deactivate') return this.t('admin.action_deactivate')
       if (this.confirmKind === 'delete_feedback') return this.t('admin.feedback.delete')
       if (this.confirmKind === 'bulk_delete_feedback') return this.t('admin.feedback.bulkDelete')
+      if (this.confirmKind === 'delete_waiting') return this.t('admin.waiting_list.delete')
+      if (this.confirmKind === 'bulk_delete_waiting') return this.t('admin.waiting_list.bulkDelete')
       return ''
     },
     confirmMessage() {
@@ -1560,14 +1936,24 @@ export default {
       if (this.confirmKind === 'bulk_delete_feedback') {
         return this.t('admin.feedback.bulkDeleteConfirm', { n: this.selectedFeedbackIds.length })
       }
+      if (this.confirmKind === 'delete_waiting') {
+        const name = this.confirmRow?.name || this.t('admin.unnamed')
+        return this.t('admin.waiting_list.deleteConfirm', { name })
+      }
+      if (this.confirmKind === 'bulk_delete_waiting') {
+        return this.t('admin.waiting_list.bulkDeleteConfirm', { n: this.selectedWaitingIds.length })
+      }
       return ''
     },
     confirmIsDanger() {
-      return ['deactivate', 'delete_feedback', 'bulk_delete_feedback'].includes(this.confirmKind)
+      return ['deactivate', 'delete_feedback', 'bulk_delete_feedback', 'delete_waiting', 'bulk_delete_waiting'].includes(this.confirmKind)
     },
     confirmConfirmLabel() {
       if (this.confirmKind === 'delete_feedback' || this.confirmKind === 'bulk_delete_feedback') {
         return this.t('admin.feedback.delete')
+      }
+      if (this.confirmKind === 'delete_waiting' || this.confirmKind === 'bulk_delete_waiting') {
+        return this.t('admin.waiting_list.delete')
       }
       return this.confirmTitle
     },
@@ -1576,6 +1962,10 @@ export default {
     },
     feedbackMenuRow() {
       return this.feedbackItems.find((row) => row.id === this.feedbackMenuId) || null
+    },
+    allVisibleWaitingSelected() {
+      return this.waitingItems.length > 0
+        && this.waitingItems.every((row) => this.selectedWaitingIds.includes(row.id))
     },
     allVisibleFeedbackSelected() {
       return this.feedbackItems.length > 0
@@ -1618,6 +2008,17 @@ export default {
       start = Math.max(1, end - 6)
       return Array.from({ length: end - start + 1 }, (_, index) => start + index)
     },
+    waitingPageNumbers() {
+      const total = this.waitingTotalPages
+      const current = this.waitingPage
+      if (total <= 7) {
+        return Array.from({ length: total }, (_, index) => index + 1)
+      }
+      let start = Math.max(1, current - 3)
+      let end = Math.min(total, start + 6)
+      start = Math.max(1, end - 6)
+      return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+    },
   },
   mounted() {
     this.boot(true)
@@ -1632,6 +2033,7 @@ export default {
   beforeUnmount() {
     if (this.searchTimer) clearTimeout(this.searchTimer)
     if (this.feedbackSearchTimer) clearTimeout(this.feedbackSearchTimer)
+    if (this.waitingSearchTimer) clearTimeout(this.waitingSearchTimer)
     if (this.toastTimer) clearTimeout(this.toastTimer)
     this.stopLiveSync()
     if (typeof this.unsubscribeNetwork === 'function') this.unsubscribeNetwork()
@@ -1671,6 +2073,7 @@ export default {
         const sanitized = this.sanitizePayload(payload)
         if (sanitized) this.data = sanitized
         if (this.directoryTab === 'learners') await this.reloadUsers()
+        else if (this.directoryTab === 'waiting') await this.loadWaitingList(this.waitingPage)
         else await this.loadFeedback(this.feedbackPage)
       } catch (_) {
         /* ignore quiet sync errors */
@@ -1690,6 +2093,7 @@ export default {
         this.chartDays = Number(sanitized?.meta?.chart_days) === 7 ? 7 : 30
         await this.reloadUsers()
         if (this.directoryTab === 'feedback') await this.loadFeedback(1)
+        if (this.directoryTab === 'waiting') await this.loadWaitingList(1)
       } catch (error) {
         console.error(error)
         if (!this.data) {
@@ -1711,6 +2115,7 @@ export default {
         }
         await this.reloadUsers()
         if (this.directoryTab === 'feedback') await this.loadFeedback(this.feedbackPage)
+        if (this.directoryTab === 'waiting') await this.loadWaitingList(this.waitingPage)
         if (this.selectedUserId) {
           delete this.detailCache[this.selectedUserId]
           await this.loadDetail(this.selectedUserId)
@@ -1743,14 +2148,21 @@ export default {
       })
     },
     setDirectoryTab(tab) {
-      this.directoryTab = tab === 'feedback' ? 'feedback' : 'learners'
+      const next = tab === 'feedback' || tab === 'waiting' ? tab : 'learners'
+      this.directoryTab = next
       this.rowMenuId = null
       this.feedbackMenuId = null
-      if (this.directoryTab === 'feedback') {
+      if (next === 'feedback') {
         this.selectedIds = []
+        this.selectedWaitingIds = []
         this.loadFeedback(1)
+      } else if (next === 'waiting') {
+        this.selectedIds = []
+        this.selectedFeedbackIds = []
+        this.loadWaitingList(1)
       } else {
         this.selectedFeedbackIds = []
+        this.selectedWaitingIds = []
         this.reloadUsers()
       }
     },
@@ -1899,6 +2311,163 @@ export default {
       } catch (error) {
         this.showToast(error?.response?.data?.message || this.t('admin.feedback.deleteError'))
         await this.loadFeedback(this.feedbackPage)
+      } finally {
+        this.bulkBusy = false
+      }
+    },
+    onWaitingSearchInput() {
+      if (this.waitingSearchTimer) clearTimeout(this.waitingSearchTimer)
+      this.waitingSearchTimer = setTimeout(() => this.loadWaitingList(1), 220)
+    },
+    async loadWaitingList(page = 1) {
+      this.waitingLoading = true
+      this.waitingError = ''
+      try {
+        const data = await adminApi.getWaitingList({
+          page,
+          per_page: 25,
+          q: this.waitingFilters.q,
+        })
+        this.waitingItems = data.items
+        this.waitingTotal = data.total
+        this.waitingPage = data.page
+        this.waitingTotalPages = data.total_pages
+        this.selectedWaitingIds = this.selectedWaitingIds.filter((id) => (
+          this.waitingItems.some((row) => row.id === id)
+        ))
+      } catch (error) {
+        this.waitingError = error?.response?.data?.message || this.t('admin.waiting_list.loadError')
+      } finally {
+        this.waitingLoading = false
+      }
+    },
+    toggleWaitingSelect(id) {
+      if (this.selectedWaitingIds.includes(id)) {
+        this.selectedWaitingIds = this.selectedWaitingIds.filter((row) => row !== id)
+      } else {
+        this.selectedWaitingIds = [...this.selectedWaitingIds, id]
+      }
+    },
+    toggleSelectAllWaiting() {
+      if (this.allVisibleWaitingSelected) {
+        this.selectedWaitingIds = []
+      } else {
+        this.selectedWaitingIds = this.waitingItems.map((row) => row.id)
+      }
+    },
+    hydrateWaitingEditForm(entry) {
+      this.waitingEditForm = {
+        name: String(entry?.name || '').trim(),
+        email: String(entry?.email || '').trim(),
+      }
+    },
+    async openWaitingDetail(id) {
+      this.feedbackMenuId = null
+      this.rowMenuId = null
+      this.waitingDetailMode = 'view'
+      this.waitingDetailError = ''
+      const listed = this.waitingItems.find((row) => row.id === id) || null
+      this.waitingDetail = listed ? { ...listed } : null
+      if (this.waitingDetail) this.hydrateWaitingEditForm(this.waitingDetail)
+      try {
+        const fresh = await adminApi.getWaitingListEntry(id)
+        if (fresh) {
+          this.waitingDetail = fresh
+          this.hydrateWaitingEditForm(fresh)
+        }
+      } catch (error) {
+        if (!this.waitingDetail) {
+          this.showToast(error?.response?.data?.message || this.t('admin.waiting_list.loadError'))
+        }
+      }
+    },
+    async openWaitingEdit(id) {
+      await this.openWaitingDetail(id)
+      if (!this.waitingDetail) return
+      this.waitingDetailMode = 'edit'
+    },
+    closeWaitingDetail() {
+      if (this.confirmOpen && (this.confirmKind === 'delete_waiting' || this.confirmKind === 'bulk_delete_waiting')) {
+        return
+      }
+      this.waitingDetail = null
+      this.waitingDetailMode = 'view'
+      this.waitingDetailError = ''
+      this.waitingDeleteFromModal = false
+    },
+    async saveWaitingDetail() {
+      if (!this.waitingDetail?.id || this.waitingDetailSaving) return
+      this.waitingDetailSaving = true
+      this.waitingDetailError = ''
+      try {
+        const updated = await adminApi.updateWaitingListEntry(this.waitingDetail.id, this.waitingEditForm)
+        if (updated) {
+          this.waitingDetail = updated
+          this.hydrateWaitingEditForm(updated)
+          this.waitingDetailMode = 'view'
+          await this.loadWaitingList(this.waitingPage)
+          this.showToast(this.t('admin.toast_saved'))
+        }
+      } catch (error) {
+        const data = error?.response?.data
+        const firstFieldError = data?.errors
+          ? Object.values(data.errors).flat().find(Boolean)
+          : ''
+        this.waitingDetailError = firstFieldError || data?.message || this.t('admin.waiting_list.saveError')
+      } finally {
+        this.waitingDetailSaving = false
+      }
+    },
+    askDeleteWaiting(row, fromModal = false) {
+      if (!row?.id) return
+      this.waitingDeleteFromModal = !!fromModal
+      this.confirmKind = 'delete_waiting'
+      this.confirmRow = row
+      this.confirmOpen = true
+    },
+    askBulkDeleteWaiting() {
+      if (!this.selectedWaitingIds.length) return
+      this.confirmKind = 'bulk_delete_waiting'
+      this.confirmRow = { id: 'bulk' }
+      this.confirmOpen = true
+    },
+    async deleteWaitingRow(row, fromModal = false) {
+      if (!row?.id || this.waitingDeletingId) return
+      this.waitingDeletingId = row.id
+      try {
+        await adminApi.deleteWaitingListEntry(row.id)
+        this.selectedWaitingIds = this.selectedWaitingIds.filter((id) => id !== row.id)
+        if (fromModal || this.waitingDetail?.id === row.id) {
+          this.waitingDetail = null
+          this.waitingDeleteFromModal = false
+        }
+        await this.loadWaitingList(this.waitingPage)
+        this.showToast(this.t('admin.waiting_list.deleted'))
+      } catch (error) {
+        this.waitingError = error?.response?.data?.message || this.t('admin.waiting_list.deleteError')
+        this.showToast(this.waitingError)
+      } finally {
+        this.waitingDeletingId = null
+      }
+    },
+    async bulkDeleteWaiting() {
+      const ids = [...this.selectedWaitingIds]
+      if (!ids.length) return
+      this.bulkBusy = true
+      try {
+        for (const id of ids) {
+          await adminApi.deleteWaitingListEntry(id)
+        }
+        this.selectedWaitingIds = []
+        if (this.waitingDetail && ids.includes(this.waitingDetail.id)) {
+          this.waitingDetail = null
+          this.waitingDeleteFromModal = false
+        }
+        await this.loadWaitingList(this.waitingPage)
+        this.showToast(this.t('admin.waiting_list.bulkDeleted', { n: ids.length }))
+      } catch (error) {
+        this.showToast(error?.response?.data?.message || this.t('admin.waiting_list.deleteError'))
+        await this.loadWaitingList(this.waitingPage)
       } finally {
         this.bulkBusy = false
       }
@@ -2180,6 +2749,10 @@ export default {
         this.closeConfirmModal()
         return
       }
+      if (this.waitingDetail) {
+        this.closeWaitingDetail()
+        return
+      }
       if (this.feedbackDetail) {
         this.closeFeedbackDetail()
         return
@@ -2222,10 +2795,11 @@ export default {
       this.confirmKind = ''
       this.confirmRow = null
       this.feedbackDeleteFromModal = false
+      this.waitingDeleteFromModal = false
     },
     async runConfirmAction() {
       if (!this.confirmKind) return
-      if (this.confirmKind !== 'bulk_delete_feedback' && !this.confirmRow?.id) return
+      if (this.confirmKind !== 'bulk_delete_feedback' && this.confirmKind !== 'bulk_delete_waiting' && !this.confirmRow?.id) return
       this.confirmBusy = true
       try {
         if (this.confirmKind === 'reset') {
@@ -2236,11 +2810,16 @@ export default {
           await this.deleteFeedbackRow(this.confirmRow, this.feedbackDeleteFromModal)
         } else if (this.confirmKind === 'bulk_delete_feedback') {
           await this.bulkDeleteFeedback()
+        } else if (this.confirmKind === 'delete_waiting') {
+          await this.deleteWaitingRow(this.confirmRow, this.waitingDeleteFromModal)
+        } else if (this.confirmKind === 'bulk_delete_waiting') {
+          await this.bulkDeleteWaiting()
         }
         this.confirmOpen = false
         this.confirmKind = ''
         this.confirmRow = null
         this.feedbackDeleteFromModal = false
+        this.waitingDeleteFromModal = false
       } finally {
         this.confirmBusy = false
       }

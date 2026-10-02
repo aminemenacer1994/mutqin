@@ -259,4 +259,58 @@ class WaitingListFlowTest extends TestCase
             ->get(route('admin.waiting-list.index'))
             ->assertForbidden();
     }
+
+    public function test_admin_waiting_list_api_lists_new_signups_and_deletes_them(): void
+    {
+        config()->set('mutqin.admin_emails', ['admin@example.com']);
+
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
+
+        $this->postJson(route('api.waiting-list.store'), [
+            'name' => 'Layla Beginner',
+            'email' => 'layla.beginner@example.com',
+        ])->assertCreated();
+
+        $entry = WaitingListEntry::query()->where('email', 'layla.beginner@example.com')->first();
+        $this->assertNotNull($entry);
+
+        $this->actingAs($admin)
+            ->getJson('/api/admin/waiting-list?q=layla')
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('items.0.id', $entry->id)
+            ->assertJsonPath('items.0.name', 'Layla Beginner')
+            ->assertJsonPath('items.0.email', 'layla.beginner@example.com');
+
+        $this->actingAs($admin)
+            ->getJson("/api/admin/waiting-list/{$entry->id}")
+            ->assertOk()
+            ->assertJsonPath('entry.email', 'layla.beginner@example.com');
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/waiting-list/{$entry->id}")
+            ->assertOk();
+
+        $this->assertDatabaseMissing('waiting_list_entries', [
+            'id' => $entry->id,
+        ]);
+    }
+
+    public function test_non_admin_cannot_use_waiting_list_admin_api(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'learner@example.com',
+        ]);
+
+        $entry = WaitingListEntry::query()->create([
+            'name' => 'Amina',
+            'email' => 'amina@example.com',
+        ]);
+
+        $this->actingAs($user)->getJson('/api/admin/waiting-list')->assertForbidden();
+        $this->actingAs($user)->getJson("/api/admin/waiting-list/{$entry->id}")->assertForbidden();
+        $this->actingAs($user)->deleteJson("/api/admin/waiting-list/{$entry->id}")->assertForbidden();
+    }
 }
