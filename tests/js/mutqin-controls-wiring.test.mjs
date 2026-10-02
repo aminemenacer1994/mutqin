@@ -1120,7 +1120,15 @@ includesAll('mobile reciter change', [
   /curatedReciterCatalog/,
   /applyReciterChangeInPlace\(this\.currentMode, \{ autoPlay: true \}\)/,
   /_mobileReciterAutoplayPending/,
+  /commitSessionReciter\(/,
+  /shouldApplyReciterSelectChange/,
 ])
+
+assert.doesNotMatch(
+  source,
+  /_mobileReciterSelectSilenceUntil|armMobileReciterSelectSilence|this\.reciterId = expected/,
+  'mobile reciter silence must not revert a user-selected reciter',
+)
 
 assert.doesNotMatch(
   source,

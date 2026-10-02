@@ -45,6 +45,13 @@ export function collectQpcMadaniWordHighlightNodes(documentRoot, verseKey, activ
       nodes.push(node)
     }
   })
+  if (!nodes.length) {
+    documentRoot.querySelectorAll(
+      `.qpc-madani-word[data-verse-key="${escaped}"][data-word-index="${activeIndex}"]`
+    ).forEach((node) => {
+      if (node) nodes.push(node)
+    })
+  }
   return nodes
 }
 

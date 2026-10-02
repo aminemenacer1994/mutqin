@@ -1878,18 +1878,12 @@
                       class="select"
                       :disabled="isWorkspaceRefreshing && workspaceRefreshReason === 'reciter'"
                     >
-                      <optgroup v-if="recitersWithWordHighlight.length" :label="t('sessionSetup.recitersWithWordHighlight')">
-                        <option v-for="r in recitersWithWordHighlight" :key="r.id" :value="r.id">{{ r.name }}</option>
-                      </optgroup>
-                      <optgroup v-if="recitersAudioOnly.length" :label="t('sessionSetup.recitersAudioOnly')">
-                        <option v-for="r in recitersAudioOnly" :key="r.id" :value="r.id">{{ r.name }}</option>
-                      </optgroup>
+                      <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
                     </select>
                     <small v-if="isWorkspaceRefreshing && workspaceRefreshReason === 'reciter'" class="field-hint field-hint-loading">
                       <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
                       {{ t('memorisation.loading.reciterRefresh') }}
                     </small>
-                    <small v-else-if="!currentReciterSupportsWordHighlighting" class="field-hint">{{ t('sessionSetup.reciterNoWordHighlight') }}</small>
                     <small v-else class="field-hint">{{ t('sessionSetup.reciterHint') }}</small>
                   </div>
                   <div class="field field-repetitions-clean setup-field-row">
@@ -4779,17 +4773,11 @@
               <select
                 ref="madaniFullscreenReciterSelect"
                 :value="reciterId"
-                :key="mobileReciterSelectRenderKey"
                 class="madani-fullscreen-bar__reciter-select"
                 :aria-label="t('sessionSetup.reciter')"
                 @change="onMadaniFullscreenReciterChange($event)"
               >
-                <optgroup v-if="recitersWithWordHighlight.length" :label="t('sessionSetup.recitersWithWordHighlight')">
-                  <option v-for="r in recitersWithWordHighlight" :key="r.id" :value="r.id">{{ r.name }}</option>
-                </optgroup>
-                <optgroup v-if="recitersAudioOnly.length" :label="t('sessionSetup.recitersAudioOnly')">
-                  <option v-for="r in recitersAudioOnly" :key="r.id" :value="r.id">{{ r.name }}</option>
-                </optgroup>
+                <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
               </select>
             </label>
 

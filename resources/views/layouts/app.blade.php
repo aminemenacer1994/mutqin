@@ -10173,15 +10173,15 @@ body.session-analysis-modal-open {
     syncMadaniToolbarChrome();
   })();
 </script>
-<script id="mutqin-mobile-reciter-v194">
+<script id="mutqin-mobile-reciter-v196">
   (function () {
     function isMobileWidth() {
       return window.innerWidth <= 767.98;
     }
 
-    function isReciterSelect(el) {
+    function isSetupReciterSelect(el) {
       if (!(el instanceof HTMLSelectElement)) return false;
-      if (el.classList.contains('madani-fullscreen-bar__reciter-select')) return true;
+      if (el.classList.contains('madani-fullscreen-bar__reciter-select')) return false;
       var field = el.closest('.field');
       if (!field) return false;
       var label = field.querySelector('label');
@@ -10193,10 +10193,10 @@ body.session-analysis-modal-open {
     document.addEventListener('change', function (event) {
       if (!isMobileWidth()) return;
       var target = event.target;
-      if (!isReciterSelect(target)) return;
+      if (!isSetupReciterSelect(target)) return;
       var apply = window.__mutqinMobileReciterChange;
       if (typeof apply === 'function') {
-        window.requestAnimationFrame(function () { apply(); });
+        apply(event);
       }
     }, true);
   })();
@@ -10223,6 +10223,21 @@ body.session-analysis-modal-open {
     }, true);
   })();
 </script>
+<style id="mutqin-word-audio-highlight-v196">
+  /* Network-first word cursor. Survives stale memorisation chunks. */
+  html body.memorisation-page .qpc-madani-word.highlighted,
+  html body.memorisation-page .qpc-madani-word.phrase-highlighted,
+  html body.memorisation-page .madani-word.highlighted,
+  html body.memorisation-page .madani-word.phrase-highlighted,
+  html body.memorisation-page .wbw-word.highlighted,
+  html body.memorisation-page word.wbw-word.highlighted {
+    background: color-mix(in srgb, #2b8a9a 40%, transparent) !important;
+    box-shadow:
+      inset 0 -0.14em 0 color-mix(in srgb, #1f5f6c 72%, transparent),
+      0 0 0 0.08em color-mix(in srgb, #2b8a9a 42%, transparent) !important;
+    border-radius: 0.18em !important;
+  }
+</style>
 <style id="mutqin-memorisation-hotfix-v195">
   /* Last-wins phone inset. QPC/mushaf rules set width:100% and margin:0 after v186. */
   @media (max-width: 767.98px) {

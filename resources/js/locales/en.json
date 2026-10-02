@@ -172,7 +172,7 @@
     "noAudioPlayed": "No ayah audio played yet for this session.",
     "to": "to",
     "rangeHint": "Keep ranges small for focused memorisation.",
-    "reciterHint": "Changes the audio voice for the session. Word highlighting stays on for this reciter.",
+    "reciterHint": "Changes the audio voice for the session. Word highlighting stays on for every reciter.",
     "reciterNoWordHighlight": "Audio only for this reciter — word highlighting is unavailable.",
     "recitersWithWordHighlight": "With word highlighting",
     "recitersAudioOnly": "Audio only",

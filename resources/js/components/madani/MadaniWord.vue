@@ -355,8 +355,11 @@ export default {
 
 .qpc-madani-word.highlighted,
 .qpc-madani-word.phrase-highlighted {
-  background: color-mix(in srgb, #4a90a4 26%, transparent);
-  box-shadow: inset 0 -0.1em 0 color-mix(in srgb, #2d6a7a 42%, transparent);
+  background: color-mix(in srgb, #2b8a9a 38%, transparent);
+  box-shadow:
+    inset 0 -0.14em 0 color-mix(in srgb, #1f5f6c 70%, transparent),
+    0 0 0 0.08em color-mix(in srgb, #2b8a9a 45%, transparent);
+  border-radius: 0.18em;
 }
 
 .qpc-madani-word.is-selected:not(.is-ayah-active) {

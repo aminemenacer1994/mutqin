@@ -34,12 +34,12 @@ export const SETTINGS_RECITER_OPTIONS = Object.freeze([
   { id: 'ar.muhammadayyoub', name: 'Muhammad Ayyoub', supportsWordHighlighting: true },
   { id: 'ar.muhammadjibreel', name: 'Muhammad Jibreel', supportsWordHighlighting: true },
   { id: 'ar.ahmedajamy', name: 'Ahmed ibn Ali al-Ajamy', supportsWordHighlighting: true },
-  { id: 'ar.husarymujawwad', name: 'Husary (Mujawwad)', supportsWordHighlighting: false },
-  { id: 'ar.minshawimujawwad', name: 'Minshawi (Mujawwad)', supportsWordHighlighting: false },
-  { id: 'ar.abdulsamad', name: 'Abdul Basit (Mujawwad)', supportsWordHighlighting: false },
-  { id: 'ar.ibrahimakhbar', name: 'Ibrahim Akhdar', supportsWordHighlighting: false },
-  { id: 'ar.parhizgar', name: 'Shahriar Parhizgar', supportsWordHighlighting: false },
-  { id: 'ar.aymanswoaid', name: 'Ayman Sowaid', supportsWordHighlighting: false },
+  { id: 'ar.husarymujawwad', name: 'Husary (Mujawwad)', supportsWordHighlighting: true },
+  { id: 'ar.minshawimujawwad', name: 'Minshawi (Mujawwad)', supportsWordHighlighting: true },
+  { id: 'ar.abdulsamad', name: 'Abdul Basit (Mujawwad)', supportsWordHighlighting: true },
+  { id: 'ar.ibrahimakhbar', name: 'Ibrahim Akhdar', supportsWordHighlighting: true },
+  { id: 'ar.parhizgar', name: 'Shahriar Parhizgar', supportsWordHighlighting: true },
+  { id: 'ar.aymanswoaid', name: 'Ayman Sowaid', supportsWordHighlighting: true },
 ])
 
 export const WORKSPACE_PREF_KEYS = Object.freeze([

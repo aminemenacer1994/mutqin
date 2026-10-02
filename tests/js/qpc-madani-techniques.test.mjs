@@ -179,6 +179,19 @@ assert.equal(isAyahTalqinListen('2:31', {
 }), true)
 assert.equal(talqinListen.isTalqinListen, true)
 assert.equal(madaniQpcWordTechniqueClass(talqinListen)['is-talqin-listen'], true)
+
+const audioHighlight = resolveQpcMadaniWordTechniqueState(word, {
+  highlightedAyahKey: '2:31',
+  highlightedWordIndex: 2,
+})
+assert.equal(audioHighlight.isAudioHighlighted, true)
+assert.equal(madaniQpcWordTechniqueClass(audioHighlight).highlighted, true)
+assert.equal(madaniQpcWordTechniqueClass(audioHighlight)['phrase-highlighted'], true)
+const audioHighlightOther = resolveQpcMadaniWordTechniqueState(word, {
+  highlightedAyahKey: '2:31',
+  highlightedWordIndex: 0,
+})
+assert.equal(audioHighlightOther.isAudioHighlighted, false)
 assert.equal(isAyahTalqinRepeat('2:31', {
   talqinModeEnabled: true,
   talqinRepeatPhase: true,

@@ -392,6 +392,13 @@ import {
   isBenignMediaError as isSessionBenignMediaError,
 } from '../scripts/audio/sessionAudioPlayer'
 import {
+  ayahUrlMatchesReciter,
+  isDuplicateReciterCommit,
+  orderAyahAudioCandidateUrls,
+  resolvePickedReciterId,
+  shouldApplyReciterSelectChange,
+} from '../scripts/audio/sessionReciter'
+import {
   END_SESSION_CONFIRM_ACTION,
   PRIMARY_SESSION_ACTION,
   SESSION_MUTATION,
@@ -9815,6 +9822,9 @@ export default {
         effectiveActiveAyah: String(this.effectiveActiveVerseKey || ''),
         playbackAyahKey,
         highlightedAyahKey: String(this.currentHighlightedVerseKey || ''),
+        highlightedWordIndex: Number.isFinite(Number(this.currentWordIndex))
+          ? Number(this.currentWordIndex)
+          : -1,
         focusModeEnabled: !!this.focusModeEnabled,
         hasSessionStarted: !!(this.hasSessionStarted || this.isPlaying || this.manualOnlyPlayback),
         hiddenRevealModeEnabled: !!(this.hiddenRevealModeEnabled && this.hiddenRevealSession?.sessionStarted),
@@ -10511,9 +10521,11 @@ export default {
           || null
         if (verse?.key) this.onMushafAyahClick(verse)
       }
-      window.__mutqinMobileReciterChange = () => {
+      window.__mutqinMobileReciterChange = (event) => {
         if (!this.isMobileViewport()) return
-        this.onSessionReciterChange()
+        const target = event?.target
+        if (target?.classList?.contains('madani-fullscreen-bar__reciter-select')) return
+        this.onSessionReciterChange(event)
       }
     }
     this.initSessionWorkspaceScrollController()
@@ -11107,7 +11119,6 @@ export default {
     },
     mobileReciterSelectRenderKey() {
       if (!this.isMobileViewport()) return
-      this.armMobileReciterSelectSilence(450)
       this.scheduleMobileReciterSelectDomSync()
     },
     mobileProgressPills: {
@@ -11587,17 +11598,12 @@ export default {
     showTranslation: 'persistUiState',
     showTransliteration: 'persistUiState',
     wordByWordAudioEnabled(val) {
-      // Product rule: word highlighting stays on whenever the reciter can support it.
-      if (!val && this.currentReciterSupportsWordHighlighting) {
+      if (!val) {
         this.wordByWordAudioEnabled = true
         return
       }
-      if (val && !this.currentReciterSupportsWordHighlighting) {
-        this.wordByWordAudioEnabled = false
-        return
-      }
       this.persistUiState()
-      if (val && this.isPlaying && this.activeVerseRef?.key) {
+      if (this.isPlaying && this.activeVerseRef?.key) {
         this.startWordHighlighting(this.activeVerseRef)
       }
     },
@@ -15057,19 +15063,13 @@ export default {
       this.ensureWordAudioHighlighting()
       this.persistUiState()
       this.persistCentralSessionState()
-      if (this.wordByWordAudioEnabled) {
-        this.showBanner(this.t('memorisation.common.wordAudioOn'), 'info', 1000)
-      } else {
-        this.showBanner(this.t('sessionSetup.reciterNoWordHighlight'), 'info', 1600)
-      }
+      this.showBanner(this.t('memorisation.common.wordAudioOn'), 'info', 1000)
     },
     ensureWordAudioHighlighting() {
-      this.wordByWordAudioEnabled = this.currentReciterSupportsWordHighlighting
+      this.wordByWordAudioEnabled = true
     },
-    syncWordHighlightingForReciter(reciterId = this.reciterId) {
-      const supported = reciterSupportsWordHighlighting(reciterId, this.reciters)
-      this.wordByWordAudioEnabled = supported
-      if (!supported) this.stopWordHighlighting()
+    syncWordHighlightingForReciter() {
+      this.wordByWordAudioEnabled = true
     },
     applyRecommendedSetup() {
       this.playMode = 'auto'
@@ -37280,7 +37280,6 @@ export default {
       if (
         !this.shouldPlayFullAyahOnWordClick()
         && this.wordByWordAudioEnabled
-        && this.currentReciterSupportsWordHighlighting
         && Number.isFinite(wordIndex)
         && wordIndex >= 0
       ) {
@@ -42411,7 +42410,7 @@ export default {
 
     async startWordHighlighting(verse, options = {}) {
       this.ensureWordAudioHighlighting()
-      if (!verse?.key || !this.wordByWordAudioEnabled || !this.currentReciterSupportsWordHighlighting) return
+      if (!verse?.key || !this.wordByWordAudioEnabled) return
       const timestamps = await this.ensureWordHighlightTrack(verse, options)
       if (!timestamps.length) return
       this.queueWordHighlightFrame(verse)
@@ -42558,7 +42557,7 @@ export default {
 
     async ensureWordHighlightTrack(verse, options = {}) {
       const { force = false } = options
-      if (!verse?.key || !this.wordByWordAudioEnabled || !this.currentReciterSupportsWordHighlighting) return []
+      if (!verse?.key || !this.wordByWordAudioEnabled) return []
       if (!force && this.currentHighlightedVerseKey === verse.key && this.wordHighlightTimestamps?.length) {
         return this.wordHighlightTimestamps
       }
@@ -44104,22 +44103,14 @@ export default {
       return ''
     },
     listAyahAudioCandidates(verse = {}) {
-      const urls = []
-      const push = (url) => {
-        const normalized = this.normalizeAudioUrl(url)
-        if (normalized && !urls.includes(normalized)) urls.push(normalized)
-      }
-      const reciter = String(this.reciterId || verse.reciterId || 'ar.alafasy').trim() || 'ar.alafasy'
+      const reciter = String(this.reciterId || verse.reciterId || DEFAULT_ALQURAN_RECITER).trim() || DEFAULT_ALQURAN_RECITER
       const global = this.resolveGlobalAyahNumber(verse)
-      push(this.bundledAyahAudioUrl(reciter, global))
-      push(this.resolveAyahAudioUrl(verse))
-      if (global > 0) {
-        push(`https://cdn.islamic.network/quran/audio/128/${reciter}/${global}.mp3`)
-        push(`https://cdn.islamic.network/quran/audio/128/ar.alafasy/${global}.mp3`)
-        push(`https://cdn.alquran.cloud/media/audio/ayah/${reciter}/${global}`)
-        push(`https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/${global}`)
-      }
-      return urls
+      return orderAyahAudioCandidateUrls({
+        reciterId: reciter,
+        globalAyahNumber: global,
+        bundledUrl: this.bundledAyahAudioUrl(reciter, global),
+        existingUrl: this.resolveAyahAudioUrl(verse),
+      }).map((url) => this.normalizeAudioUrl(url)).filter(Boolean)
     },
     toPlayableAudioUrl(url) {
       return this.normalizeAudioUrl(url)
@@ -44210,10 +44201,7 @@ export default {
     },
 
     verseAudioMatchesReciter(audioUrl, reciterId) {
-      const url = String(audioUrl || '').trim()
-      const reciter = String(reciterId || '').trim()
-      if (!url || !reciter) return false
-      return url.includes(`/${reciter}/`) || url.includes(`${reciter}.`)
+      return ayahUrlMatchesReciter(audioUrl, reciterId)
     },
 
     ensureVerseAudioUrl(verse = {}) {
@@ -45176,7 +45164,7 @@ export default {
             showTranslation: state.showTranslation ?? this.showTranslation,
             showTransliteration: state.showTransliteration ?? this.showTransliteration,
             showWordByWord: state.showWordByWord ?? this.showWordByWord,
-            wordByWordAudioEnabled: state.wordByWordAudioEnabled ?? this.wordByWordAudioEnabled,
+            wordByWordAudioEnabled: true,
             defaultFontSize: Number(this.defaultFontSize ?? state.defaultFontSize ?? 160)
           }
           this.uiScale = Number(state.uiScale ?? this.uiScale)
@@ -46018,9 +46006,6 @@ export default {
       const nextIds = list.map(reciter => String(reciter?.id || '')).join('\0')
       const prevIds = (this.reciters || []).map(reciter => String(reciter?.id || '')).join('\0')
       const catalogChanged = nextIds !== prevIds
-      if (catalogChanged && this.isMobileViewport()) {
-        this.armMobileReciterSelectSilence(650)
-      }
       this.reciters = list
       if (catalogChanged) {
         this.reciterCatalogRevision = Number(this.reciterCatalogRevision || 0) + 1
@@ -46401,28 +46386,23 @@ export default {
       this.applyWorkspaceControls({ reason: 'reciter' })
     },
 
-    armMobileReciterSelectSilence(durationMs = 500) {
-      const ms = Math.max(0, Number(durationMs || 0))
-      this._mobileReciterSelectSilenceUntil = Date.now() + ms
-      this._mobileReciterSelectSilenceReciterId = String(this.reciterId || DEFAULT_ALQURAN_RECITER)
-    },
-
     ensureImmersiveReciterFromSession() {
+      if (String(this.reciterId || '').trim()) return
       const store = this.getModeStore(this.currentMode)
       const fromLoaded = store?.loadedConfig?.reciterId
       const fromVerses = (store?.verses || []).find((verse) => verse?.reciterId)?.reciterId
-      const resolved = String(fromLoaded || fromVerses || this.reciterId || DEFAULT_ALQURAN_RECITER)
-      if (resolved !== String(this.reciterId || '')) {
-        this.reciterId = resolved
-      }
+      this.reciterId = String(fromLoaded || fromVerses || DEFAULT_ALQURAN_RECITER)
     },
 
     async prepareMobileImmersiveReciterSelect() {
       if (!this.isMobileViewport()) return
+      this._mobileReciterSelectReady = false
       this.ensureImmersiveReciterFromSession()
-      this.armMobileReciterSelectSilence(900)
-      await this.loadReciters()
+      void this.loadReciters()
       this.scheduleMobileReciterSelectDomSync()
+      await this.$nextTick()
+      this.syncMobileReciterSelectDom()
+      this._mobileReciterSelectReady = true
     },
 
     scheduleMobileReciterSelectDomSync() {
@@ -46434,20 +46414,49 @@ export default {
       })
     },
 
-    guardReciterSelectChange() {
-      if (this._syncingMobileReciterSelect) return false
-      const now = Date.now()
-      if (now < Number(this._mobileReciterSelectSilenceUntil || 0)) {
-        const expected = String(this._mobileReciterSelectSilenceReciterId || '')
-        if (expected && String(this.reciterId || '') !== expected) {
-          this.reciterId = expected
-        }
+    guardReciterSelectChange(event) {
+      const pickedId = String(event?.target?.value || '').trim()
+      const accept = shouldApplyReciterSelectChange({
+        syncing: !!this._syncingMobileReciterSelect,
+        selectReady: this._mobileReciterSelectReady !== false,
+        pickedId: pickedId || (event ? '' : resolvePickedReciterId('', this.reciterId)),
+      })
+      if (!accept) {
         this.scheduleMobileReciterSelectDomSync()
         return false
       }
-      if (now - Number(this._reciterSelectChangeGuardAt || 0) < 120) return false
-      this._reciterSelectChangeGuardAt = now
       return true
+    },
+
+    commitSessionReciter(nextReciterId, { autoPlay = false, toast = false } = {}) {
+      const next = resolvePickedReciterId(nextReciterId, this.reciterId)
+      const now = Date.now()
+      if (isDuplicateReciterCommit(next, this._lastCommittedReciterId, this._lastCommittedReciterAt, now)) {
+        return
+      }
+      this._lastCommittedReciterId = next
+      this._lastCommittedReciterAt = now
+      if (String(this.reciterId || '') !== next) {
+        this.reciterId = next
+      }
+      if (!this.isMobileViewport()) {
+        this.refreshVerses()
+        return
+      }
+      const store = this.getModeStore(this.currentMode)
+      const hasLoadedVerses = Array.isArray(store?.verses) && store.verses.length > 0
+      if (hasLoadedVerses || autoPlay) {
+        this.applyReciterChangeInPlace(this.currentMode, { autoPlay: true })
+      } else {
+        this._mobileReciterAutoplayPending = true
+        void this.applyWorkspaceControls({ reason: 'reciter' })
+      }
+      this.scheduleMobileReciterSelectDomSync()
+      if (toast) {
+        this.showImmersiveReadingSuccessToast('memorisation.reading.toastReciterUpdated', {
+          name: this.fullscreenReciterName,
+        })
+      }
     },
 
     /** iOS WebKit often leaves native <select> on the first option after Teleport/remount despite v-model. */
@@ -46480,23 +46489,10 @@ export default {
     },
 
     async onSessionReciterChange(event) {
-      if (!this.guardReciterSelectChange()) return
-      const nextReciterId = String(event?.target?.value || this.reciterId || DEFAULT_ALQURAN_RECITER)
-      if (nextReciterId !== String(this.reciterId || '')) {
-        this.reciterId = nextReciterId
-      }
-      if (!this.isMobileViewport()) {
-        this.refreshVerses()
-        return
-      }
-      const store = this.getModeStore(this.currentMode)
-      const hasLoadedVerses = Array.isArray(store?.verses) && store.verses.length > 0
-      if (hasLoadedVerses) {
-        this.applyReciterChangeInPlace(this.currentMode, { autoPlay: true })
-        return
-      }
-      this._mobileReciterAutoplayPending = true
-      await this.applyWorkspaceControls({ reason: 'reciter' })
+      if (!this.guardReciterSelectChange(event)) return
+      this.commitSessionReciter(event?.target?.value || this.reciterId, {
+        autoPlay: this.isMobileViewport(),
+      })
     },
 
     autoplayAfterMobileReciterChange(options = {}) {
@@ -46621,14 +46617,10 @@ export default {
     },
 
     onMadaniFullscreenReciterChange(event) {
-      if (!this.guardReciterSelectChange()) return
-      const nextReciterId = String(event?.target?.value || this.reciterId || DEFAULT_ALQURAN_RECITER)
-      if (nextReciterId !== String(this.reciterId || '')) {
-        this.reciterId = nextReciterId
-      }
-      this.applyReciterChangeInPlace(this.currentMode, { autoPlay: true })
-      this.showImmersiveReadingSuccessToast('memorisation.reading.toastReciterUpdated', {
-        name: this.fullscreenReciterName,
+      if (!this.guardReciterSelectChange(event)) return
+      this.commitSessionReciter(event?.target?.value || this.reciterId, {
+        autoPlay: true,
+        toast: true,
       })
     },
 

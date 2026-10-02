@@ -238,6 +238,13 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
   const peek = blur && isAyahPeekRevealed(ayahKey, snapshot)
   const hiddenReveal = resolveHiddenRevealWordState(wordAudioIndex, ayahKey, snapshot)
   const checker = resolveCheckerHiddenWordState(wordAudioIndex, ayahKey, snapshot)
+  const highlightIndex = Number(snapshot.highlightedWordIndex)
+  const isAudioHighlighted = !word?.isEnd
+    && Number.isFinite(wordAudioIndex)
+    && Number.isFinite(highlightIndex)
+    && highlightIndex >= 0
+    && wordAudioIndex === highlightIndex
+    && ayahMatchesSnapshotKey(ayahKey, snapshot.highlightedAyahKey)
   // Ornaments keep layout space but are never Progressive-Hide targets.
   const masked = !word?.isEnd && (
     (hiddenReveal.masked && !hiddenReveal.revealedProgress)
@@ -260,6 +267,7 @@ export function resolveQpcMadaniWordTechniqueState(word = {}, snapshot = {}, aud
     hiddenRevealCurrent: hiddenReveal.current,
     hiddenRevealRevealed: hiddenReveal.revealedProgress,
     checkerMasked: !word?.isEnd && checker.masked && !checker.peeked,
+    isAudioHighlighted,
   }
 }
 
@@ -279,6 +287,8 @@ export function madaniQpcWordTechniqueClass(state = {}) {
     'is-chain-dim': !!state.isChainDimmed,
     'is-talqin-listen': !!state.isTalqinListen,
     'is-talqin-repeat': !!state.isTalqinRepeat,
+    highlighted: !!state.isAudioHighlighted,
+    'phrase-highlighted': !!state.isAudioHighlighted,
   }
 }
 
