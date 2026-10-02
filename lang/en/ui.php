@@ -41,6 +41,7 @@ return [
     'theme_dark' => 'Dark',
     'about' => 'About',
     'nav_home_sub' => 'Overview and product guidance',
+    'nav_waiting_list_sub' => 'Join before public launch',
     'nav_memorisation_sub' => 'Continue your Quran practice',
     'nav_pricing_sub' => 'Plans and billing',
     'nav_dashboard_sub' => 'Your memorisation overview',

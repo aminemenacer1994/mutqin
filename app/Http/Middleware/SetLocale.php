@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\MutqinDomains;
 use App\Support\Theme;
 use Closure;
 use Illuminate\Http\Request;
@@ -55,6 +56,10 @@ class SetLocale
 
     private function resolveLocale(Request $request): string
     {
+        if (MutqinDomains::usesEarlyAccessNav($request)) {
+            return 'en';
+        }
+
         $userLocale = $request->user()?->locale;
 
         $candidate = ($userLocale && in_array($userLocale, self::SUPPORTED_LOCALES, true))

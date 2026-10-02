@@ -9,7 +9,6 @@
         <p class="waiting-list-promo">{{ t('waitingList.promoOffer') }}</p>
         <h1 id="waitingListTitle">{{ t('waitingList.title') }}</h1>
         <p class="waiting-list-lead">{{ t('waitingList.subtitle') }}</p>
-        <p class="waiting-list-trust">{{ t('waitingList.trust') }}</p>
       </header>
 
       <div
@@ -445,15 +444,6 @@ export default {
   text-wrap: pretty;
 }
 
-.waiting-list-trust {
-  margin: 0;
-  max-width: 38ch;
-  color: color-mix(in srgb, var(--text-muted) 82%, var(--text));
-  font-size: 0.9rem;
-  line-height: 1.5;
-  text-wrap: pretty;
-}
-
 .waiting-list-panel {
   position: relative;
   display: grid;
@@ -772,8 +762,7 @@ export default {
     max-width: 14ch;
   }
 
-  .waiting-list-lead,
-  .waiting-list-trust {
+  .waiting-list-lead {
     max-width: 36ch;
   }
 }

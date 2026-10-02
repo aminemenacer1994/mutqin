@@ -4005,81 +4005,76 @@
             filter: none !important;
         }
 
-        body.mutqin-early-access-nav .app-navbar .navbar-shell,
-        body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-shell {
-            display: flex !important;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.75rem 1rem;
+        body.mutqin-early-access-nav .global-lang-switcher,
+        body.mutqin-waiting-list-public .global-lang-switcher {
+            display: none !important;
         }
 
-        body.mutqin-early-access-nav .app-navbar .navbar-brand {
-            flex-shrink: 0;
-            grid-column: auto !important;
-            max-width: min(58vw, 11rem);
-        }
+        @media (min-width: 992px) {
+            body.mutqin-early-access-nav .app-navbar .navbar-shell,
+            body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-shell {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+                align-items: center;
+                gap: 0.75rem 1rem;
+            }
 
-        .waiting-list-early-access-bar {
-            display: flex;
-            flex: 1 1 auto;
-            align-items: center;
-            justify-content: center;
-            gap: 0.65rem 1rem;
-            min-width: 0;
-            max-width: 100%;
-        }
+            body.mutqin-early-access-nav .app-navbar .navbar-brand,
+            body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-brand {
+                grid-column: 1;
+                justify-self: start;
+                max-width: min(58vw, 11rem);
+            }
 
-        body.mutqin-early-access-nav .waiting-list-minimal-nav,
-        body.mutqin-waiting-list-public .waiting-list-minimal-nav {
-            flex: 1 1 auto;
-            justify-content: center;
-            flex-wrap: wrap;
-            min-width: 0;
-        }
-
-        .waiting-list-navbar-lang {
-            flex: 0 0 auto;
-            margin-inline-start: auto;
+            body.mutqin-early-access-nav .waiting-list-early-access-bar,
+            body.mutqin-waiting-list-public .waiting-list-early-access-bar {
+                grid-column: 2;
+                justify-self: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: auto;
+                min-width: 0;
+            }
         }
 
         @media (max-width: 991.98px) {
             body.mutqin-early-access-nav .app-navbar .navbar-shell,
             body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-shell {
-                flex-wrap: wrap;
-                row-gap: 0.55rem;
+                display: flex !important;
+                grid-template-columns: none !important;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.65rem;
+                min-height: 56px;
+                padding-block: 6px;
+            }
+
+            body.mutqin-early-access-nav .app-navbar .navbar-brand,
+            body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-brand {
+                flex-shrink: 0;
+                max-width: min(58vw, 11rem);
             }
 
             body.mutqin-early-access-nav .waiting-list-early-access-bar,
             body.mutqin-waiting-list-public .waiting-list-early-access-bar {
-                flex: 1 1 100%;
-                width: 100%;
+                flex: 0 0 auto;
+                width: auto;
+                margin-inline-start: auto;
+                justify-content: flex-end;
+            }
+
+            body.mutqin-early-access-nav .waiting-list-minimal-nav--desktop,
+            body.mutqin-waiting-list-public .waiting-list-minimal-nav--desktop {
+                display: none !important;
             }
         }
 
-        @media (max-width: 767.98px) {
-            body.mutqin-early-access-nav .app-navbar .navbar-shell,
-            body.mutqin-waiting-list-public .waiting-list-public-nav .navbar-shell {
-                display: flex !important;
-                grid-template-columns: none !important;
-            }
-
-            .waiting-list-early-access-bar {
-                align-items: center;
-            }
-
-            .waiting-list-minimal-nav {
-                justify-content: flex-start;
-            }
-        }
-
-        @media (max-width: 419.98px) {
-            .waiting-list-minimal-nav .nav-link-copy strong {
-                font-size: 0.88rem;
-            }
-
-            .waiting-list-navbar-lang .app-lang-label {
-                max-width: 3.5rem;
-            }
+        body.mutqin-early-access-nav .waiting-list-minimal-nav--mobile,
+        body.mutqin-waiting-list-public .waiting-list-minimal-nav--mobile {
+            display: grid !important;
+            gap: 8px;
+            width: 100%;
         }
 
         .app-navbar .nav-link-home,
@@ -6885,6 +6880,26 @@
                 align-items: center;
             }
 
+            body.mutqin-early-access-nav .app-navbar .navbar-shell {
+                display: flex !important;
+                grid-template-columns: none !important;
+                justify-content: space-between;
+                gap: 0.65rem;
+                min-height: 56px;
+                padding-block: 6px;
+            }
+
+            body.mutqin-early-access-nav .waiting-list-minimal-nav--desktop {
+                display: none !important;
+            }
+
+            .app-navbar #earlyAccessNavbar {
+                --bs-offcanvas-width: 100%;
+                width: 100% !important;
+                max-width: 100% !important;
+                z-index: var(--bs-offcanvas-zindex, 1045) !important;
+            }
+
             .navbar-brand {
                 grid-column: 1 / span 2;
                 min-width: 0;
@@ -6991,7 +7006,13 @@
             html[data-theme="dark"] #primaryNavbar .offcanvas-header,
             [data-theme="dark"] #primaryNavbar .offcanvas-header,
             html[data-theme="dark"] #primaryNavbar .offcanvas-body,
-            [data-theme="dark"] #primaryNavbar .offcanvas-body {
+            [data-theme="dark"] #primaryNavbar .offcanvas-body,
+            html[data-theme="dark"] #earlyAccessNavbar,
+            [data-theme="dark"] #earlyAccessNavbar,
+            html[data-theme="dark"] #earlyAccessNavbar .offcanvas-header,
+            [data-theme="dark"] #earlyAccessNavbar .offcanvas-header,
+            html[data-theme="dark"] #earlyAccessNavbar .offcanvas-body,
+            [data-theme="dark"] #earlyAccessNavbar .offcanvas-body {
                 --bs-offcanvas-bg: var(--bg);
                 background: var(--bg) !important;
                 background-color: var(--bg) !important;
@@ -7859,6 +7880,7 @@
             </div>
             @endif
         </div>
+        @stack('early-access-offcanvas')
     </nav>
 
     <div id="app">
@@ -7921,7 +7943,7 @@
         window.mutqinInitialLocale = @json($appLocale);
         window.mutqinLanguageEndonyms = @json($languageEndonyms);
         window.mutqinInitialDirection = @json($appDirection);
-        window.mutqinForceInitialLocale = @json(request()->query('lang') ? true : false);
+        window.mutqinForceInitialLocale = @json($usesEarlyAccessNav || request()->query('lang') ? true : false);
         window.mutqinAuthCheck = @json(Auth::check());
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::hostRoutingEnabled() ? \App\Support\MutqinDomains::appOrigin() : '');
         window.mutqinUserId = @json(Auth::id());

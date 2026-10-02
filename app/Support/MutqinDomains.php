@@ -38,7 +38,7 @@ final class MutqinDomains
      * Apply waiting-list-only policy for the marketing host (runtime Host header).
      */
     /**
-     * Waiting-list shell: only Home, Waiting list, and language on these routes.
+     * Early-access shell: Home and Waiting list only (English, no language switcher).
      */
     public static function usesEarlyAccessNav(Request $request): bool
     {

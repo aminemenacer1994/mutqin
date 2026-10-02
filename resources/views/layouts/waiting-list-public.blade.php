@@ -66,13 +66,45 @@
         background: color-mix(in srgb, var(--bg, #14110f) 92%, transparent);
         backdrop-filter: blur(10px);
       }
-      .waiting-list-public-nav .navbar-shell {
-        min-height: var(--nav-h, 64px);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        padding-top: env(safe-area-inset-top, 0px);
+      @media (min-width: 992px) {
+        .waiting-list-public-nav .navbar-shell {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+          align-items: center;
+          gap: 0.75rem 1rem;
+          min-height: var(--nav-h, 64px);
+          padding-top: env(safe-area-inset-top, 0px);
+        }
+
+        .waiting-list-public-nav .navbar-brand {
+          grid-column: 1;
+          justify-self: start;
+        }
+
+        .waiting-list-public-nav .waiting-list-early-access-bar {
+          grid-column: 2;
+          justify-self: center;
+        }
+      }
+
+      @media (max-width: 991.98px) {
+        .waiting-list-public-nav .navbar-shell {
+          min-height: 56px;
+          display: flex !important;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.65rem;
+          padding: calc(env(safe-area-inset-top, 0px) + 6px) max(var(--gutter, 14px), 14px) 6px;
+        }
+
+        .waiting-list-public-nav .waiting-list-minimal-nav--desktop {
+          display: none !important;
+        }
+
+        .waiting-list-public-nav .waiting-list-early-access-bar {
+          flex: 0 0 auto;
+          margin-inline-start: auto;
+        }
       }
       .waiting-list-public-nav .navbar-brand {
         flex-shrink: 0;
@@ -97,6 +129,153 @@
       html[data-theme="sepia"] {
         --text-on-accent: #fff7ec;
       }
+
+      .waiting-list-public-nav.app-navbar .navbar-toggler {
+        all: unset;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0;
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.22));
+        border-radius: 10px;
+        background: transparent;
+        color: var(--text, #f5efe8);
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+
+      .waiting-list-public-nav.app-navbar .navbar-toggler:hover,
+      .waiting-list-public-nav.app-navbar .navbar-toggler:focus-visible {
+        border-color: var(--accent, #c9a227);
+        color: var(--accent, #c9a227);
+        outline: none;
+      }
+
+      .waiting-list-public-nav.app-navbar .navbar-toggler:focus-visible {
+        outline: 2px solid var(--accent, #c9a227);
+        outline-offset: 2px;
+      }
+
+      .waiting-list-public-nav.app-navbar .navbar-toggler i {
+        font-size: 20px;
+      }
+
+      @media (min-width: 992px) {
+        .waiting-list-public-nav.app-navbar .waiting-list-early-access-menu-btn {
+          display: none !important;
+        }
+      }
+
+      @media (max-width: 991.98px) {
+        .waiting-list-public-nav #earlyAccessNavbar {
+          --bs-offcanvas-width: 100%;
+          --bs-offcanvas-bg: var(--bg, #14110f);
+          background: var(--bg, #14110f) !important;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-header {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 44px;
+          gap: 10px;
+          align-items: center;
+          min-height: 56px;
+          padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+          border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.22));
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-title {
+          margin: 0;
+          color: var(--text, #f5efe8);
+          font-weight: 650;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body {
+          padding: 16px 14px calc(20px + env(safe-area-inset-bottom));
+          overflow-y: auto;
+        }
+
+        .waiting-list-public-nav .waiting-list-minimal-nav--mobile {
+          display: grid !important;
+          gap: 8px;
+          width: 100%;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link {
+          display: grid;
+          grid-template-columns: 44px minmax(0, 1fr) 20px;
+          gap: 10px;
+          align-items: center;
+          width: 100%;
+          min-height: 60px;
+          padding: 8px 10px;
+          color: var(--text-muted, rgba(245, 239, 232, 0.72));
+          font-weight: 500;
+          text-decoration: none;
+          border: 1px solid transparent;
+          border-radius: 14px;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link:hover,
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link:focus-visible {
+          color: var(--text, #f5efe8);
+          background: var(--surface-2, color-mix(in srgb, var(--text, #f5efe8) 6%, transparent));
+          border-color: var(--border, rgba(255, 255, 255, 0.22));
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link.active {
+          color: var(--text, #f5efe8);
+          background: color-mix(in srgb, var(--success-text, #6fb896) 9%, var(--surface, #14110f) 91%);
+          border-color: color-mix(in srgb, var(--success-text, #6fb896) 24%, var(--border, rgba(255, 255, 255, 0.22)) 76%);
+          box-shadow: inset 3px 0 0 var(--success-text, #6fb896);
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link-icon {
+          display: grid !important;
+          grid-column: 1;
+          place-items: center;
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+          background: var(--surface-soft, color-mix(in srgb, var(--text, #f5efe8) 8%, transparent));
+          font-size: 1.1rem;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link-copy {
+          display: grid !important;
+          grid-column: 2;
+          gap: 2px;
+          min-width: 0;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link-copy strong {
+          display: block;
+          font-size: 0.96rem;
+          line-height: 1.2;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link-copy small {
+          display: block !important;
+          color: var(--text-muted, rgba(245, 239, 232, 0.72));
+          font-size: 0.74rem;
+          line-height: 1.3;
+        }
+
+        .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link-chevron {
+          grid-column: 3;
+          justify-self: end;
+          color: var(--text-muted, rgba(245, 239, 232, 0.72));
+        }
+
+        html[dir="rtl"] .waiting-list-public-nav #earlyAccessNavbar .offcanvas-body .nav-link-chevron {
+          transform: scaleX(-1);
+        }
+      }
     </style>
 </head>
 <body class="mutqin-waiting-list-public">
@@ -120,6 +299,7 @@
             </a>
             @include('partials.waiting-list-minimal-nav')
         </div>
+        @stack('early-access-offcanvas')
     </nav>
     <div id="app">
         <main id="mainContent" tabindex="-1">
@@ -133,8 +313,9 @@
     </script>
     <script src="{{ mix('js/app.js') }}" defer></script>
     <script>
-        window.mutqinInitialLocale = @json($appLocale);
-        window.mutqinInitialDirection = @json($appDirection);
+        window.mutqinInitialLocale = 'en';
+        window.mutqinInitialDirection = 'ltr';
+        window.mutqinForceInitialLocale = true;
         window.mutqinAuthCheck = false;
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::appOrigin());
         window.mutqinInitialTheme = @json($appTheme);
