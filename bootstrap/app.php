@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\WaitingListController;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnforceMarketingHostPolicy;
 use App\Support\MutqinDomains;
@@ -30,6 +31,15 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function (): void {
+            // Public signup must not use web/api stacks — Sanctum treats
+            // Origin mutqin.ai as stateful and CSRF-checks /api/* (419).
+            Route::post('/join-waiting-list', [WaitingListController::class, 'store'])
+                ->middleware(['throttle:5,1'])
+                ->name('waiting-list.public-store');
+            Route::post('/api/waiting-list', [WaitingListController::class, 'store'])
+                ->middleware(['throttle:5,1'])
+                ->name('api.waiting-list.store');
+
             Route::middleware('web')->group(function (): void {
                 if (MutqinDomains::hostRoutingEnabled()) {
                     Route::domain(MutqinDomains::marketingHost())
@@ -57,6 +67,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'waiting-list',
             'api/waiting-list',
+            'join-waiting-list',
         ]);
 
         $middleware->web(prepend: [

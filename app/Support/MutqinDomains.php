@@ -130,8 +130,9 @@ final class MutqinDomains
     }
 
     /**
-     * Public signup must hit the application host. mutqin.ai is a separate
-     * Cloud environment and its /api/* POST currently 500s.
+     * Public signup must hit the application host on a CSRF-free path.
+     * mutqin.ai is a separate Cloud app (its /api/* POSTs 500), and
+     * Sanctum CSRF-checks /api/* when Origin is mutqin.ai (419).
      */
     public static function waitingListStoreUrl(?Request $request = null): string
     {
@@ -143,10 +144,10 @@ final class MutqinDomains
             self::isMarketingHost($request->getHost())
             || self::isMarketingHost($appUrlHost)
         )) {
-            return self::appUrl('/api/waiting-list');
+            return self::appUrl('/join-waiting-list');
         }
 
-        return url('/api/waiting-list');
+        return url('/join-waiting-list');
     }
 
     private static function hostsDiffer(): bool

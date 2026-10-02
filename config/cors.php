@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'join-waiting-list'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
         'https://mutqin.ai',

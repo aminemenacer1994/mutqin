@@ -369,23 +369,30 @@ export default {
 
         const endpoint = (typeof window !== 'undefined' && window.mutqinWaitingListEndpoint)
           ? window.mutqinWaitingListEndpoint
-          : '/api/waiting-list';
-        const origin = typeof window !== 'undefined' ? window.location.origin : '';
-        const crossOrigin = /^https?:\/\//i.test(endpoint)
-          && origin !== ''
-          && !endpoint.startsWith(origin);
+          : '/join-waiting-list';
 
-        const response = await window.axios.post(endpoint, {
-          name,
-          email,
-        }, crossOrigin ? {
-          withCredentials: false,
+        // fetch + omit credentials: axios defaults attach the marketing-host
+        // CSRF cookie/token, which Sanctum rejects on app.mutqin.ai (419).
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          credentials: 'omit',
           headers: {
-            'X-CSRF-TOKEN': '',
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
           },
-        } : {});
+          body: JSON.stringify({ name, email }),
+        });
 
-        alreadyJoined.value = Boolean(response?.data?.already_joined);
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const error = new Error(payload.message || 'Request failed');
+          error.response = { data: payload, status: response.status };
+          throw error;
+        }
+
+        alreadyJoined.value = Boolean(payload?.already_joined);
         submittedEmail.value = email;
         status.type = 'success';
         status.message = '';

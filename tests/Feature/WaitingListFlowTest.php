@@ -76,6 +76,28 @@ class WaitingListFlowTest extends TestCase
             ->assertJsonPath('data.email', 'menacer72@gmail.com');
     }
 
+    public function test_public_join_route_accepts_signup_from_marketing_origin(): void
+    {
+        $response = $this->withHeaders([
+            'Origin' => 'https://mutqin.ai',
+            'Referer' => 'https://mutqin.ai/waiting-list',
+        ])->postJson(route('waiting-list.public-store'), [
+            'name' => 'Mohamed',
+            'email' => 'menacer72@gmail.com',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('already_joined', false)
+            ->assertJsonPath('data.email', 'menacer72@gmail.com');
+    }
+
+    public function test_waiting_list_page_exposes_csrf_free_join_endpoint(): void
+    {
+        $this->get(route('waiting-list'))
+            ->assertOk()
+            ->assertSee('join-waiting-list', false);
+    }
+
     public function test_public_waiting_list_submission_is_stored_with_normalised_email(): void
     {
         $response = $this->postJson(route('api.waiting-list.store'), [

@@ -21,7 +21,6 @@ use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactSubmissionController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\WaitingListController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/client-errors', [ClientErrorController::class, 'store'])
@@ -32,10 +31,6 @@ Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('str
 Route::post('/contact', [ContactSubmissionController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('api.contact.store');
-Route::post('/waiting-list', [WaitingListController::class, 'store'])
-    ->middleware('throttle:5,1')
-    ->name('api.waiting-list.store');
-
 // Backend-driven learning persistence (Sanctum SPA cookie auth, user scoped).
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('can:access-admin')->group(function () {
