@@ -54,6 +54,11 @@ return Application::configure(basePath: dirname(__DIR__))
             Theme::CHOSEN_COOKIE,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'waiting-list',
+            'api/waiting-list',
+        ]);
+
         $middleware->web(prepend: [
             AssignRequestId::class,
             EnforceMarketingHostPolicy::class,

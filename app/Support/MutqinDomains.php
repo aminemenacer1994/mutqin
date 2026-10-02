@@ -129,6 +129,26 @@ final class MutqinDomains
         return self::appOrigin().($path === '//' ? '/' : $path);
     }
 
+    /**
+     * Public signup must hit the application host. mutqin.ai is a separate
+     * Cloud environment and its /api/* POST currently 500s.
+     */
+    public static function waitingListStoreUrl(?Request $request = null): string
+    {
+        $request ??= request();
+        $appUrlHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+        $appUrlHost = is_string($appUrlHost) ? self::normalizeHost($appUrlHost) : '';
+
+        if (self::hostsDiffer() && (
+            self::isMarketingHost($request->getHost())
+            || self::isMarketingHost($appUrlHost)
+        )) {
+            return self::appUrl('/api/waiting-list');
+        }
+
+        return url('/api/waiting-list');
+    }
+
     private static function hostsDiffer(): bool
     {
         $marketing = self::marketingHost();

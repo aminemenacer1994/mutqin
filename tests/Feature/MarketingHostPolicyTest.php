@@ -54,6 +54,7 @@ class MarketingHostPolicyTest extends TestCase
         $response->assertOk()
             ->assertSee('waiting-list-page', false)
             ->assertSee('mutqinMinimalPublicPage', false)
+            ->assertSee('app.mutqin.ai\\/api\\/waiting-list', false)
             ->assertSee('mutqin-early-access-nav', false)
             ->assertSee('id="earlyAccessNavbar"', false)
             ->assertDontSee('id="primaryNavbar"', false)

@@ -106,6 +106,6 @@ return [
 
     'waiting_list' => [
         // Set true only in local/dev if DNS checks block legitimate test signups.
-        'skip_mail_domain_dns_check' => filter_var(env('MUTQIN_WAITING_LIST_SKIP_DNS', false), FILTER_VALIDATE_BOOL),
+        'skip_mail_domain_dns_check' => filter_var(env('MUTQIN_WAITING_LIST_SKIP_DNS', true), FILTER_VALIDATE_BOOL),
     ],
 ];

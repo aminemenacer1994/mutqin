@@ -370,11 +370,20 @@ export default {
         const endpoint = (typeof window !== 'undefined' && window.mutqinWaitingListEndpoint)
           ? window.mutqinWaitingListEndpoint
           : '/api/waiting-list';
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        const crossOrigin = /^https?:\/\//i.test(endpoint)
+          && origin !== ''
+          && !endpoint.startsWith(origin);
 
         const response = await window.axios.post(endpoint, {
           name,
           email,
-        });
+        }, crossOrigin ? {
+          withCredentials: false,
+          headers: {
+            'X-CSRF-TOKEN': '',
+          },
+        } : {});
 
         alreadyJoined.value = Boolean(response?.data?.already_joined);
         submittedEmail.value = email;

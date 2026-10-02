@@ -43,12 +43,12 @@ class WaitingListEmail implements ValidationRule
             return;
         }
 
+        // MX lookups are skipped by default — they 500 on locked-down hosts.
         try {
             if ($this->shouldVerifyMailDomain() && ! $this->domainAcceptsMail($domain)) {
                 $fail(__('ui.waiting_list_email_unreachable'));
             }
         } catch (\Throwable) {
-            // DNS lookups can warn/throw on locked-down hosts — do not fail the request.
         }
     }
 

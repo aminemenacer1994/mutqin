@@ -68,7 +68,7 @@ class WaitingListFlowTest extends TestCase
             'HTTP_HOST' => 'mutqin.ai',
             'HTTPS' => 'on',
             'SERVER_NAME' => 'mutqin.ai',
-        ])->postJson('/waiting-list', [
+        ])->postJson('/api/waiting-list', [
             'name' => 'Mohamed',
             'email' => 'menacer72@gmail.com',
         ])->assertCreated()
