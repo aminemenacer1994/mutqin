@@ -1330,6 +1330,7 @@
       "commandHeard": "Your instruction",
       "title": "Find an ayah",
       "ctaLabel": "Find ayah",
+      "searchForAyahMenu": "Search for an ayah",
       "ctaShort": "Find",
       "ctaHint": "Recite a few words to find an ayah, then say what to open",
       "introLead": "Recite a few words from an ayah, then say what to open.",

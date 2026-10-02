@@ -70,15 +70,6 @@
                 <p v-else-if="primaryContinueAction.range" class="dash-continue-card__learning">
                   {{ primaryContinueAction.range }}
                 </p>
-                <dl v-if="heroContextItems.length" class="dash-continue-card__context" :aria-label="t('dashboard.hifz_progress_aria')">
-                  <div v-for="item in heroContextItems" :key="item.key" class="dash-continue-card__context-item">
-                    <dt>
-                      <i :class="item.icon" aria-hidden="true"></i>
-                      {{ item.label }}
-                    </dt>
-                    <dd>{{ item.value }}</dd>
-                  </div>
-                </dl>
               </div>
               <span class="dash-continue-card__cta">
                 <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
@@ -98,11 +89,10 @@
               </span>
               <div class="dash-section__title-copy">
                 <h2 id="dash-data-heading">{{ t('dashboard.journey_data_title') }}</h2>
-                <p class="dash-section__hint">{{ t('dashboard.journey_data_subtitle') }}</p>
               </div>
             </div>
           </div>
-          <div class="dash-section__body dash-section__body--spacious">
+          <div class="dash-section__body">
             <div class="dash-glance">
               <div class="dash-glance__stats" role="list" :aria-label="t('dashboard.journey_data_title')">
                 <div
@@ -130,7 +120,6 @@
                     <span id="dash-overall-heading" class="dash-glance__overall-label">
                       {{ t('dashboard.journey_overall_label') }}
                     </span>
-                    <p class="dash-glance__overall-desc">{{ t('dashboard.glance_quran_share') }}</p>
                   </div>
                   <strong class="dash-glance__percent">
                     <DashAnimatedNumber :value="journeyOverallPercent" :reduce-motion="reduceMotion" />%
@@ -167,10 +156,12 @@
             </div>
           </div>
         </section>
+        </div>
 
+        <div class="user-dashboard__review-row">
         <section
           v-if="murajaahPreview.length || showMurajaahEmpty"
-          class="dash-section dash-section--flat dash-reveal"
+          class="dash-section dash-section--flat dash-reveal dash-section--murajaah"
           aria-labelledby="dash-murajaah-heading"
           style="--dash-delay: 20ms"
         >
@@ -185,7 +176,6 @@
                     <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
                       {{ t('dashboard.strengthen_title') }}
                     </h2>
-                    <p class="dash-section__hint">{{ murajaahSectionSubtitle }}</p>
                   </div>
                 </div>
               </div>
@@ -251,87 +241,6 @@
           </div>
         </section>
 
-        </div>
-
-        <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
-          <div class="dash-section__head dash-section__head--compact">
-            <div class="dash-section__head-row">
-              <div class="dash-section__title">
-                <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
-                  <i class="bi bi-calendar-week" aria-hidden="true"></i>
-                </span>
-                <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
-              </div>
-              <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
-                <button
-                  type="button"
-                  class="dash-btn dash-btn--ghost dash-btn--sm"
-                  :class="{ 'is-active': chartDays === 7 }"
-                  :aria-pressed="chartDays === 7 ? 'true' : 'false'"
-                  :disabled="loading"
-                  @click="setChartDays(7)"
-                >
-                  {{ t('dashboard.days_7') }}
-                </button>
-                <button
-                  type="button"
-                  class="dash-btn dash-btn--ghost dash-btn--sm"
-                  :class="{ 'is-active': chartDays === 30 }"
-                  :aria-pressed="chartDays === 30 ? 'true' : 'false'"
-                  :disabled="loading"
-                  @click="setChartDays(30)"
-                >
-                  {{ t('dashboard.days_30') }}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="dash-section__body dash-section__body--spacious">
-            <div v-if="showWeeklyEmpty" class="dash-chart__empty">
-              <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
-              <span>{{ t('dashboard.weekly_empty_message') }}</span>
-            </div>
-            <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
-              <Bar
-                v-if="chartReady"
-                :key="chartInstanceKey"
-                :data="chartData"
-                :options="chartOptions"
-                :aria-label="t('dashboard.chart_aria')"
-              />
-            </div>
-            <p v-if="chartSummaryText" class="dash-chart__summary">
-              {{ chartSummaryText }}
-            </p>
-
-            <div
-              class="dash-analytics"
-              role="list"
-              :aria-label="t('dashboard.weekly_stats_aria')"
-            >
-              <button
-                v-for="(item, index) in weeklyAnalytics"
-                :key="item.key"
-                type="button"
-                class="dash-analytic dash-reveal"
-                :style="{ '--dash-delay': `${index * 60}ms` }"
-                role="listitem"
-                :title="item.hint || item.label"
-                :aria-label="`${item.label}: ${item.value}`"
-                @click="onAnalyticActivate(item)"
-              >
-                <span v-if="item.icon" class="dash-analytic__icon" aria-hidden="true">
-                  <i :class="item.icon" aria-hidden="true"></i>
-                </span>
-                <p class="dash-analytic__value">
-                  <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
-                </p>
-                <p class="dash-analytic__label">{{ item.label }}</p>
-              </button>
-            </div>
-          </div>
-        </section>
-
         <section
           id="ai-recite-results"
           ref="aiReciteResults"
@@ -347,7 +256,6 @@
                 </span>
                 <div class="dash-section__title-copy">
                   <h2 id="dash-ai-results-heading">{{ t('dashboard.ai_recite.results_title') }}</h2>
-                  <p class="dash-section__hint">{{ t('dashboard.ai_recite.results_subtitle') }}</p>
                 </div>
               </div>
               <button
@@ -362,7 +270,7 @@
             </div>
           </div>
 
-          <div class="dash-section__body dash-section__body--spacious">
+          <div class="dash-section__body">
             <div v-if="aiReciteLoading && !aiReciteStats" class="dash-ai-results__status" role="status">
               <span>{{ t('dashboard.loading') }}</span>
             </div>
@@ -467,6 +375,86 @@
 
             </div>
             </template>
+          </div>
+        </section>
+        </div>
+
+        <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
+          <div class="dash-section__head dash-section__head--compact">
+            <div class="dash-section__head-row">
+              <div class="dash-section__title">
+                <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
+                  <i class="bi bi-calendar-week" aria-hidden="true"></i>
+                </span>
+                <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
+              </div>
+              <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
+                <button
+                  type="button"
+                  class="dash-btn dash-btn--ghost dash-btn--sm"
+                  :class="{ 'is-active': chartDays === 7 }"
+                  :aria-pressed="chartDays === 7 ? 'true' : 'false'"
+                  :disabled="loading"
+                  @click="setChartDays(7)"
+                >
+                  {{ t('dashboard.days_7') }}
+                </button>
+                <button
+                  type="button"
+                  class="dash-btn dash-btn--ghost dash-btn--sm"
+                  :class="{ 'is-active': chartDays === 30 }"
+                  :aria-pressed="chartDays === 30 ? 'true' : 'false'"
+                  :disabled="loading"
+                  @click="setChartDays(30)"
+                >
+                  {{ t('dashboard.days_30') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="dash-section__body">
+            <div v-if="showWeeklyEmpty" class="dash-chart__empty">
+              <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
+              <span>{{ t('dashboard.weekly_empty_message') }}</span>
+            </div>
+            <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
+              <Bar
+                v-if="chartReady"
+                :key="chartInstanceKey"
+                :data="chartData"
+                :options="chartOptions"
+                :aria-label="t('dashboard.chart_aria')"
+              />
+            </div>
+            <p v-if="chartSummaryText" class="dash-chart__summary">
+              {{ chartSummaryText }}
+            </p>
+
+            <div
+              class="dash-analytics"
+              role="list"
+              :aria-label="t('dashboard.weekly_stats_aria')"
+            >
+              <button
+                v-for="(item, index) in weeklyAnalytics"
+                :key="item.key"
+                type="button"
+                class="dash-analytic dash-reveal"
+                :style="{ '--dash-delay': `${index * 60}ms` }"
+                role="listitem"
+                :title="item.hint || item.label"
+                :aria-label="`${item.label}: ${item.value}`"
+                @click="onAnalyticActivate(item)"
+              >
+                <span v-if="item.icon" class="dash-analytic__icon" aria-hidden="true">
+                  <i :class="item.icon" aria-hidden="true"></i>
+                </span>
+                <p class="dash-analytic__value">
+                  <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
+                </p>
+                <p class="dash-analytic__label">{{ item.label }}</p>
+              </button>
+            </div>
           </div>
         </section>
         </div>
@@ -1044,41 +1032,6 @@ export default {
         parts.push(this.primaryContinueAction.title)
       }
       return parts.join(' · ')
-    },
-    heroContextItems() {
-      if (!this.primaryContinueAction || this.primaryContinueAction.kind === 'fresh') return []
-      const items = []
-      if (this.currentlyLearningText) {
-        items.push({
-          key: 'learning',
-          label: this.t('dashboard.hero_context_learning'),
-          value: this.currentlyLearningText,
-          icon: 'bi bi-book',
-        })
-      }
-      items.push({
-        key: 'memorised',
-        label: this.t('dashboard.hero_context_memorised'),
-        value: this.t('dashboard.hero_memorised_summary', { count: this.journeyMemorisedCount }),
-        icon: 'bi bi-stars',
-      })
-      if (this.journeyOverallPercent > 0 || this.journeyMemorisedCount > 0) {
-        items.push({
-          key: 'overall',
-          label: this.t('dashboard.hero_context_overall'),
-          value: this.t('dashboard.hero_overall_summary', { percent: this.journeyOverallPercent }),
-          icon: 'bi bi-bar-chart',
-        })
-      }
-      if (this.aiReciteView && !this.aiReciteView.empty) {
-        items.push({
-          key: 'ai',
-          label: this.t('dashboard.hero_context_ai_recite'),
-          value: this.t('dashboard.hero_ai_recite_summary', { count: Number(this.aiReciteStats?.total_attempts || 0) }),
-          icon: 'bi bi-mic',
-        })
-      }
-      return items
     },
     earlyProgressMessage() {
       const pct = this.journeyOverallPercent

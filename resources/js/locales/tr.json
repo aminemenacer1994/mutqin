@@ -3776,6 +3776,7 @@
       "kicker": "Sesle bul",
       "title": "Ayet bul",
       "ctaLabel": "Ayet bul",
+      "searchForAyahMenu": "Ayet ara",
       "ctaHint": "Recite a few words, then say what you would like to do",
       "introLead": "Bir ayetten birkaç kelime oku, sonra ne yapmak istediğini söyle.",
       "exampleFive": "Give me five ayahs from here.",

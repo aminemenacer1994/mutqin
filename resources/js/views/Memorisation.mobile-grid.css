@@ -4714,6 +4714,17 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     overflow: visible !important;
   }
 
+  .verses-grid .verse-arabic.verse-arabic--indopak,
+  .verses-grid .verse-arabic.verse-arabic--indopak .wbw-word,
+  .verses-grid .verse-arabic.verse-arabic--indopak .qpc-madani-word,
+  .verses-grid .verse-arabic.verse-arabic--indopak .tajweed-mark {
+    font-family: var(--indopak-nastaleeq-font, var(--quran-font), IndopakNastaleeq, "Noto Nastaliq Urdu", "Amiri Quran", serif) !important;
+  }
+
+  .verses-grid .verse-arabic.verse-arabic--indopak {
+    line-height: 2.2 !important;
+  }
+
   /* Stacked ayah end number — pre-rendered PNG (digit centered in asset) */
   .verses-grid .verse-arabic .verse-ayah-end-number,
 .verses-grid .verse-arabic-with-end .verse-ayah-end-number {

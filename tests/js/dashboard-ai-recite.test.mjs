@@ -40,8 +40,14 @@ assert.match(dashboard, /item.has_audio/, 'recent attempts expose a listen affor
 assert.match(dashboard, /dashboard\.ai_recite\.listen/, 'listen copy is used on saved checks')
 assert.match(
   dashboardCss,
-  /max-width:\s*1023\.98px[\s\S]*?\.dash-ai-results[\s\S]*?order:\s*2[\s\S]*?\.dash-section--weekly[\s\S]*?order:\s*3/,
-  'mobile progress page shows AI Recite results above Days with the Qur’an',
+  /max-width:\s*1023\.98px[\s\S]*?\.user-dashboard__review-row[\s\S]*?order:\s*2[\s\S]*?\.dash-section--weekly[\s\S]*?order:\s*3/,
+  'mobile progress page shows Muraja’ah + AI Recite above Days with the Qur’an',
+)
+assert.match(dashboard, /user-dashboard__review-row/, 'progress page pairs Muraja’ah with AI Recite results')
+assert.match(
+  dashboardCss,
+  /min-width:\s*1024px[\s\S]*?\.user-dashboard__review-row[\s\S]*?grid-column:\s*1 \/ -1[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(0,\s*1fr\)/,
+  'desktop progress page shows Muraja’ah beside AI Recite results',
 )
 assert.match(dashboard, /loadAiReciteResults/, 'progress page loads saved AI Recite results')
 assert.match(dashboard, /aiReciteStats:\s*initial\?\.ai_recite_stats \|\| null/, 'progress page hydrates AI Recite results from dashboard DB payload')
@@ -109,7 +115,7 @@ assert.doesNotMatch(dashboard, /dash-ai-results__word-detail/, 'often-missed doe
 
 assert.equal(en.dashboard.ai_recite.cta_label, 'Recite')
 assert.match(en.dashboard.ai_recite.cta_hint, /memorisation/i)
-assert.match(dashboard, /heroContextItems/, 'hifz hero adds compact progress context')
+assert.match(dashboard, /heroProgressSummary/, 'hero keeps a single summary line under the greeting')
 assert.match(dashboard, /currently_learning_with_surah/, 'hifz hero names the current surah with its ayah range')
 assert.equal(en.dashboard.hero_context_ai_recite, 'AI Recite')
 

@@ -136,11 +136,22 @@ import {
   verseWordsSupportQpcMadani as verseHasQpcMadaniWords,
 } from '../scripts/mushaf/stackedQpcMadaniDisplay.js'
 import {
+  joinStackedIndopakAyahText,
+  loadStackedIndopakWordsForVerses,
+  planStackedIndopakPageFetch,
+  shouldUseStackedIndopakText,
+  stackedIndopakFontFamily,
+  verseHasStackedIndopakWords,
+} from '../scripts/mushaf/stackedIndopakDisplay.js'
+import {
   mapWithConcurrency,
   orderPagesAroundFocus,
   selectPriorityPages,
 } from '../scripts/mushaf/sessionPageLoad.js'
-import { buildIndopakTajweedTokenByLocation } from '../scripts/mushaf/indopakTajweedMarkup'
+import {
+  buildIndopakTajweedTokenByLocation,
+  paintUnicodeTextWithTajweedToken,
+} from '../scripts/mushaf/indopakTajweedMarkup'
 import {
   buildQpcMadaniProgressSnapshot,
   preserveDashboardMadaniContext,
@@ -172,7 +183,10 @@ import {
   loadMushafPageLeaf,
   prefetchMushafPageData,
 } from '../scripts/mushaf/mushafPageData'
-import { ensureIndopakNastaleeqFontForLayout } from '../scripts/mushaf/indopakNastaleeqFont'
+import {
+  applyIndopakNastaleeqFontForLayout,
+  ensureIndopakNastaleeqFontForLayout,
+} from '../scripts/mushaf/indopakNastaleeqFont'
 import { isIndopakMushafLayout } from '../scripts/mushaf/indopakPageAdapter'
 import { setSurahArabicNameCache } from '../scripts/mushaf/surahArabicNameCache.js'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
@@ -9284,12 +9298,24 @@ export default {
       return resolveQuranFontFamily(this.quranFont)
     },
 
+    stackedAyahFontFamily() {
+      if (this.useStackedIndopakText) return stackedIndopakFontFamily()
+      return this.quranFontFamily
+    },
+
     useMadaniQcfGlyphs() {
       return this.readingViewMode === 'mushaf' && normaliseQuranFontId(this.quranFont) === 'uthmanic'
     },
 
     useStackedQpcMadaniGlyphs() {
       return shouldUseStackedQpcMadaniGlyphs({
+        readingViewMode: this.readingViewMode,
+        mushafLayoutId: this.mushafLayoutId,
+      })
+    },
+
+    useStackedIndopakText() {
+      return shouldUseStackedIndopakText({
         readingViewMode: this.readingViewMode,
         mushafLayoutId: this.mushafLayoutId,
       })
@@ -10295,9 +10321,9 @@ export default {
     },
 
     qpcIndopakTajweedHtmlByLocation() {
-      if (!isQpcMadaniMushafView(this.readingViewMode)) return {}
       if (!isIndopakMushafLayout(this.mushafLayoutId)) return {}
       if (!this.qpcMadaniTajweedPresentation.effectiveEnabled) return {}
+      if (!isQpcMadaniMushafView(this.readingViewMode) && this.readingViewMode !== 'stacked') return {}
       return buildIndopakTajweedTokenByLocation(this.verses || [], {
         normalizeMarkup: (text) => this.normalizeTajweedMarkup(text),
         splitIntoWordHtml: (markup) => this.splitTajweedMarkupIntoWordHtml(markup),
@@ -10524,6 +10550,7 @@ export default {
     this.enforceSubscriptionFeatureLimits()
     applyQuranFontCssVariable(this.quranFont)
     void this.ensureSelectedQuranFontReady(this.quranFont)
+    void this.syncStackedEditionFont()
     this.activeLocale = this.$i18n?.locale?.value || 'en'
     this.ensureWordAudioHighlighting()
 
@@ -11551,6 +11578,10 @@ export default {
     mushafLayoutId() {
       this.syncWorkspaceIsMobileViewport()
       this.persistUiState()
+      void this.syncStackedEditionFont()
+      if (this.readingViewMode === 'stacked') {
+        void this.applyStackedEditionToCurrentVerses()
+      }
     },
     aiRecallModeEnabled: 'persistUiState',
     showTranslation: 'persistUiState',
@@ -11672,7 +11703,7 @@ export default {
       this.persistCentralSessionState()
       this.clearMushafAyahHtmlCache()
       this.clearDisplayArabicCache()
-      void this.prefetchStackedQpcMadaniFonts()
+      void this.prefetchStackedEditionFonts()
     },
 
     activeVerseKey(newVal) {
@@ -36296,6 +36327,28 @@ export default {
       return verseHasQpcMadaniWords(verse)
     },
 
+    verseHasStackedIndopakWords(verse) {
+      return verseHasStackedIndopakWords(verse)
+    },
+
+    mergeStackedEditionWords(existingWords, editionWords) {
+      const previous = Array.isArray(existingWords) ? existingWords : []
+      const byLocation = new Map()
+      previous.forEach((word) => {
+        const location = String(word?.location || '').trim()
+        if (location) byLocation.set(location, word)
+      })
+      return (Array.isArray(editionWords) ? editionWords : []).map((word, index) => {
+        const prev = byLocation.get(String(word?.location || '').trim()) || previous[index] || {}
+        return {
+          ...word,
+          en: word?.en || prev.en || '',
+          transliteration: word?.transliteration || prev.transliteration || '',
+          ar: word?.text || word?.ar || prev.ar || '',
+        }
+      })
+    },
+
     async enrichVersesWithQpcMadaniWords(verses) {
       if (
         isIndopakMushafLayout(this.mushafLayoutId)
@@ -36346,6 +36399,8 @@ export default {
           ...verse,
           words: qpcWords,
           qpcMadaniWords: true,
+          indopakWords: false,
+          arabic_indopak: '',
         }
       })
       return changed ? next : verses
@@ -36386,6 +36441,7 @@ export default {
         if (!words?.length || verseHasQpcMadaniWords(verse)) return
         verse.words = words
         verse.qpcMadaniWords = true
+        verse.indopakWords = false
         changed = true
       }
       current.forEach(apply)
@@ -36404,6 +36460,193 @@ export default {
       }
       await this.prefetchStackedQpcMadaniFonts(next)
       this.clearDisplayArabicCache()
+    },
+
+    async applyStackedEditionToCurrentVerses() {
+      if (this.useStackedIndopakText) {
+        await this.applyStackedIndopakToCurrentVerses()
+        return
+      }
+      await this.applyStackedQpcMadaniToCurrentVerses()
+    },
+
+    async syncStackedEditionFont() {
+      if (isIndopakMushafLayout(this.mushafLayoutId)) {
+        await applyIndopakNastaleeqFontForLayout(this.mushafLayoutId).catch(() => null)
+        return
+      }
+      await applyIndopakNastaleeqFontForLayout(this.mushafLayoutId).catch(() => null)
+      applyQuranFontCssVariable(this.quranFont)
+    },
+
+    async prefetchStackedEditionFonts(verses = this.verses) {
+      if (this.useStackedIndopakText) {
+        await this.prefetchStackedIndopakFonts(verses)
+        return
+      }
+      await this.prefetchStackedQpcMadaniFonts(verses)
+    },
+
+    async enrichVersesWithIndopakWords(verses) {
+      if (!this.useStackedIndopakText || !Array.isArray(verses) || !verses.length) {
+        return verses
+      }
+      if (verses.every((verse) => verseHasStackedIndopakWords(verse))) {
+        return verses
+      }
+      try {
+        const index = await this.ensureQpcVersePageIndex()
+        const focusKey = String(
+          this.activeVerseKey
+          || this.effectiveActiveVerseKey
+          || verses[0]?.key
+          || ''
+        )
+        const focusPage = resolveMushafPageForVerseKey(focusKey, index || {}, this.mushafLayoutId) || 0
+        const plan = planStackedIndopakPageFetch(verses, index || {}, focusPage)
+        if (!plan.priority.length) return verses
+        const requestId = this.verseRequestId
+        const wordsByKey = await loadStackedIndopakWordsForVerses(verses, index || {}, {
+          pages: plan.priority,
+          concurrency: 3,
+        })
+        const next = this.applyIndopakWordsToVerseList(verses, wordsByKey)
+        if (plan.rest.length) {
+          void this.enrichRemainingStackedIndopakPages(next, index || {}, plan.rest, requestId)
+        }
+        return next
+      } catch (error) {
+        console.warn('[stackedIndopak] Failed to enrich ayah text', error)
+        return verses
+      }
+    },
+
+    applyIndopakWordsToVerseList(verses, wordsByKey) {
+      if (!wordsByKey?.size || !Array.isArray(verses)) return verses
+      let changed = false
+      const next = verses.map((verse) => {
+        const indopakWords = wordsByKey.get(String(verse?.key || ''))
+        if (!indopakWords?.length || verseHasStackedIndopakWords(verse)) return verse
+        changed = true
+        const words = this.mergeStackedEditionWords(verse.words, indopakWords)
+        return {
+          ...verse,
+          words,
+          arabic_indopak: joinStackedIndopakAyahText(words),
+          indopakWords: true,
+          qpcMadaniWords: false,
+        }
+      })
+      return changed ? next : verses
+    },
+
+    async enrichRemainingStackedIndopakPages(verses, index, pages, requestId) {
+      const chunkSize = 3
+      for (let offset = 0; offset < pages.length; offset += chunkSize) {
+        if (requestId !== this.verseRequestId || !this.useStackedIndopakText) return
+        const chunk = pages.slice(offset, offset + chunkSize)
+        let wordsByKey = new Map()
+        try {
+          wordsByKey = await loadStackedIndopakWordsForVerses(verses, index, {
+            pages: chunk,
+            concurrency: 2,
+          })
+        } catch {
+          continue
+        }
+        if (requestId !== this.verseRequestId || !wordsByKey.size) continue
+        await ensureIndopakNastaleeqFontForLayout(this.mushafLayoutId).catch(() => null)
+        if (requestId !== this.verseRequestId) return
+        this.patchStoredVersesWithIndopakWords(wordsByKey)
+        this.clearDisplayArabicCache()
+      }
+    },
+
+    patchStoredVersesWithIndopakWords(wordsByKey) {
+      const store = this.getModeStore(this.currentMode)
+      const current = Array.isArray(store?.verses) ? store.verses : []
+      if (!current.length || !wordsByKey?.size) return
+      let changed = false
+      const apply = (verse) => {
+        if (!verse) return
+        const words = wordsByKey.get(String(verse.key || ''))
+        if (!words?.length || verseHasStackedIndopakWords(verse)) return
+        verse.words = this.mergeStackedEditionWords(verse.words, words)
+        verse.arabic_indopak = joinStackedIndopakAyahText(verse.words)
+        verse.indopakWords = true
+        verse.qpcMadaniWords = false
+        changed = true
+      }
+      current.forEach(apply)
+      const queue = Array.isArray(store?.queue) ? store.queue : []
+      queue.forEach((entry) => apply(entry?.verse))
+      if (changed && store) store.verses = current.slice()
+    },
+
+    async applyStackedIndopakToCurrentVerses() {
+      if (!this.useStackedIndopakText) return
+      const store = this.getModeStore(this.currentMode)
+      const current = Array.isArray(store?.verses) ? store.verses : this.verses
+      const next = await this.enrichVersesWithIndopakWords(current)
+      if (store && next !== current) {
+        store.verses = next
+      }
+      await this.prefetchStackedIndopakFonts(next)
+      this.clearDisplayArabicCache()
+    },
+
+    async prefetchStackedIndopakFonts() {
+      if (!this.useStackedIndopakText) return
+      await ensureIndopakNastaleeqFontForLayout(this.mushafLayoutId).catch(() => null)
+      this.stackedQpcFontEpoch = Number(this.stackedQpcFontEpoch || 0) + 1
+      this.clearDisplayArabicCache()
+    },
+
+    buildStackedIndopakDisplayArabic(verse) {
+      if (!verse?.key || !verseHasStackedIndopakWords(verse)) return ''
+      const verseKey = String(verse.key)
+      const tajweedEnabled = !!this.tajweedEnabled
+      const tajweedByLocation = tajweedEnabled ? (this.qpcIndopakTajweedHtmlByLocation || {}) : {}
+      const parts = []
+      let audioWordIndex = -1
+
+      for (const rawWord of verse.words || []) {
+        const isEnd = rawWord?.isEnd === true
+          || String(rawWord?.char_type_name || '').toLowerCase() === 'end'
+        const displayText = String(rawWord?.text || '').trim()
+        if (!displayText || isEnd) continue
+
+        audioWordIndex += 1
+        const location = String(rawWord?.location || '').trim()
+        const page = Number(rawWord?.page || rawWord?.page_number || 0)
+        const isActive = this.currentHighlightedVerseKey === verseKey
+          && this.currentWordIndex === audioWordIndex
+        const recitationStatus = this.getRenderedRecitationWordStatusForVerse(verseKey, audioWordIndex, verse.sessionTargetKey || '')
+        const plainText = String(rawWord?.ar || rawWord?.text || '').trim()
+        const focusWeak = this.isPracticeFocusWeakWord(verseKey, audioWordIndex, plainText)
+        const emphasizeWeak = focusWeak && (
+          this.postSessionPracticeEmphasizeWeakAreas
+          || this.postSessionRecommendation?.settings?.emphasize_weak_areas === true
+          || this.masteryTargetRange?.settings?.emphasize_weak_areas === true
+        )
+        const weakClass = focusWeak
+          ? ` practice-focus-word${emphasizeWeak ? ' practice-focus-word--emphasis' : ''}${isActive ? ' practice-focus-word--active' : ''}`
+          : ''
+        const recitationClass = recitationStatus ? ` recitation-word-${recitationStatus}` : ''
+        const activeClass = isActive ? ' highlighted phrase-highlighted is-ayah-active' : ''
+        const token = location ? String(tajweedByLocation[location] || '').trim() : ''
+        const inner = tajweedEnabled && token
+          ? paintUnicodeTextWithTajweedToken(displayText, token)
+          : this.escapeHtml(displayText)
+
+        parts.push(
+          `<span class="qpc-madani-word qpc-madani-word--indopak${activeClass}${weakClass}${recitationClass}"`
+          + ` data-verse-key="${this.escapeHtml(verseKey)}" data-word-index="${audioWordIndex}"`
+          + ` data-location="${this.escapeHtml(location)}" data-page="${page || ''}">${inner}</span>`,
+        )
+      }
+
+      return parts.join(' ')
     },
 
     async prefetchStackedQpcMadaniFonts(verses = this.verses) {
@@ -36564,7 +36807,7 @@ export default {
         this.fontOpen = false
         this.bgOpen = false
         this.borderOpen = false
-        void this.applyStackedQpcMadaniToCurrentVerses()
+        void this.applyStackedEditionToCurrentVerses()
         if (this.isPlaying && this.activeVerseRef?.key) {
           this.startWordHighlighting(this.activeVerseRef)
         }
@@ -36889,7 +37132,10 @@ export default {
       const previous = isMushafLayoutId(this.mushafLayoutId)
         ? this.mushafLayoutId
         : DEFAULT_MUSHAF_LAYOUT_ID
-      const alreadyActive = previous === next && isQpcMadaniMushafView(this.readingViewMode)
+      const inStacked = this.readingViewMode === 'stacked'
+      const alreadyActive = previous === next && (
+        isQpcMadaniMushafView(this.readingViewMode) || inStacked
+      )
       if (alreadyActive) {
         this.topCardMenuOpen = false
         this.fontDropdownOpen = false
@@ -36910,6 +37156,14 @@ export default {
       this.qpcMadaniLoadError = ''
       this.topCardMenuOpen = false
       this.fontDropdownOpen = false
+      this.clearDisplayArabicCache()
+
+      if (inStacked) {
+        await this.syncStackedEditionFont()
+        await this.applyStackedEditionToCurrentVerses()
+        this.persistUiState()
+        return
+      }
 
       if (!isQpcMadaniMushafView(this.readingViewMode)) {
         this.setReadingViewMode('madani_mushaf')
@@ -41529,10 +41783,13 @@ export default {
       )
       let html = ''
       const stackedQpc = this.useStackedQpcMadaniGlyphs && verseHasQpcMadaniWords(cleanVerse)
+      const stackedIndopak = this.useStackedIndopakText && verseHasStackedIndopakWords(cleanVerse)
       if (this.shouldShowRecitationReviewHighlights(cleanVerse.key)) {
         html = this.splitRecitationDisplayIntoWords(cleanVerse)
       } else if (stackedQpc) {
         html = this.buildStackedQpcMadaniDisplayArabic(cleanVerse)
+      } else if (stackedIndopak) {
+        html = this.buildStackedIndopakDisplayArabic(cleanVerse)
       } else if (this.tajweedEnabled && cleanVerse.arabic_tajweed) {
         html = this.renderWordLevelTajweedMarkup(cleanVerse, { wrapWords: needsInteractiveWords })
       } else if (needsInteractiveWords) {
@@ -41573,9 +41830,13 @@ export default {
       return [
         verse.key,
         this.readingViewMode,
+        this.mushafLayoutId || '',
         this.useStackedQpcMadaniGlyphs ? 'sq1' : 'sq0',
         verseHasQpcMadaniWords(verse) ? 'sqw1' : 'sqw0',
+        this.useStackedIndopakText ? 'si1' : 'si0',
+        verseHasStackedIndopakWords(verse) ? 'siw1' : 'siw0',
         String(this.stackedQpcFontEpoch || 0),
+        String(verse.arabic_indopak || '').length,
         this.tajweedEnabled ? 't1' : 't0',
         this.showWordByWord ? 'w1' : 'w0',
         this.anchorModeEnabled ? 'a1' : 'a0',
@@ -43158,6 +43419,7 @@ export default {
               rangeStart,
               rangeEnd,
             )
+            resolvedVerses = await this.enrichVersesWithIndopakWords(resolvedVerses)
             target.verses = resolvedVerses
             target.loadedConfig = {
               ...(cached.loadedConfig || {}),
@@ -43169,8 +43431,8 @@ export default {
                 loadedConfig: target.loadedConfig,
               })
             }
-            if (this.useStackedQpcMadaniGlyphs) {
-              await this.prefetchStackedQpcMadaniFonts(resolvedVerses)
+            if (this.useStackedQpcMadaniGlyphs || this.useStackedIndopakText) {
+              await this.prefetchStackedEditionFonts(resolvedVerses)
             }
             this.buildQueue(mode)
             this.syncActiveVerseState(mode)
@@ -43311,6 +43573,7 @@ export default {
           start,
           end,
         )
+        enrichedVerses = await this.enrichVersesWithIndopakWords(enrichedVerses)
         target.verses = enrichedVerses
         target.loadedConfig = {
           chapterId,
@@ -43322,8 +43585,8 @@ export default {
         }
         this.syncMutqinAyahs(enrichedVerses)
         this.clearDisplayArabicCache()
-        if (this.useStackedQpcMadaniGlyphs) {
-          await this.prefetchStackedQpcMadaniFonts(enrichedVerses)
+        if (this.useStackedQpcMadaniGlyphs || this.useStackedIndopakText) {
+          await this.prefetchStackedEditionFonts(enrichedVerses)
         }
 
         this.setCachedVerses(mode, targetConfig, {

@@ -3776,6 +3776,7 @@
       "kicker": "Trouver par la voix",
       "title": "Trouver une ayah",
       "ctaLabel": "Trouver une ayah",
+      "searchForAyahMenu": "Rechercher une ayah",
       "ctaHint": "Récitez quelques mots pour trouver une ayah, puis dites quoi ouvrir",
       "introLead": "Récitez quelques mots d’une ayah, puis dites quoi ouvrir.",
       "exampleFive": "Donne-moi cinq ayahs à partir d’ici.",

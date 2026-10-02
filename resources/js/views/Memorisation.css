@@ -59463,7 +59463,7 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigg
  */
 html:not([data-quran-font-ready="1"]) .main .madani-page-sheet .madani-line--ayah,
 html:not([data-quran-font-ready="1"]) .main .madani-page-sheet .madani-line--basmala-ayah,
-html:not([data-quran-font-ready="1"]) .main .verse-arabic.verse-arabic-primary:not(.verse-arabic--qpc-madani) {
+html:not([data-quran-font-ready="1"]) .main .verse-arabic.verse-arabic-primary:not(.verse-arabic--qpc-madani):not(.verse-arabic--indopak) {
   visibility: hidden;
 }
 
@@ -67136,6 +67136,25 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .verses-grid .verse-arabic--qpc-madani .qpc-madani-word.is-ayah-active {
   background: color-mix(in srgb, #c4a35a 22%, transparent);
   box-shadow: inset 0 -0.08em 0 color-mix(in srgb, #8d6a35 38%, transparent);
+}
+
+/* Stacked ayah cards — same IndoPak Nastaleeq face + Unicode text as mushaf */
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--indopak,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--indopak .wbw-word,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--indopak .qpc-madani-word,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--indopak .tajweed-mark,
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--indopak [class*="tajweed-"] {
+  font-family: var(--indopak-nastaleeq-font, var(--quran-font), IndopakNastaleeq, "Noto Nastaliq Urdu", "Amiri Quran", serif) !important;
+}
+
+.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--indopak {
+  line-height: 2.45 !important;
+}
+
+.verses-grid .verse-arabic--indopak .qpc-madani-word--indopak {
+  display: inline;
+  font-weight: 400;
+  font-synthesis: none;
 }
 
 [data-theme="dark"] .madani-qpc-viewport .qpc-madani-word--tajweed-glyph,

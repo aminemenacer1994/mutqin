@@ -670,7 +670,7 @@
           />
           <div class="top-card-icon-controls" :aria-label="t('memorisation.a11y.readingTools')">
             <button
-              v-if="!isPostSessionChoiceVisible"
+              v-if="!isPostSessionChoiceVisible && !isMobileViewport()"
               type="button"
               class="top-card-search-trigger top-card-action-trigger top-card-icon-control is-featured"
               data-testid="workspace-ayah-search"
@@ -689,6 +689,18 @@
                 <circle cx="10.5" cy="10.5" r="6.25" fill="none" stroke="currentColor" stroke-width="2.25" />
                 <path d="M15.4 15.4 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
               </svg>
+            </button>
+            <button
+              v-if="!isPostSessionChoiceVisible && isMobileViewport()"
+              type="button"
+              class="top-card-fullscreen-trigger top-card-action-trigger top-card-icon-control is-featured"
+              data-testid="workspace-mobile-fullscreen"
+              :title="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
+              :aria-label="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
+              :aria-pressed="isAppFullscreen ? 'true' : 'false'"
+              @click="toggleFullScreen"
+            >
+              <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
             </button>
             <div
               class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
@@ -781,7 +793,7 @@
                       <span>{{ t('memorisation.view.mushaf') }}</span>
                       <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
-                    <template v-if="readingViewMode === 'madani_mushaf'">
+                    <template v-if="readingViewMode === 'madani_mushaf' || readingViewMode === 'stacked'">
                       <button
                         type="button"
                         class="top-card-menu-row top-card-menu-row--mushaf-edition"
@@ -847,6 +859,16 @@
                     </button>
                   </div>
                   <div class="top-card-menu-group top-card-menu-group--utilities" role="group" :aria-label="t('memorisation.a11y.readingTools')">
+                    <button
+                      v-if="isMobileViewport() && !isPostSessionChoiceVisible"
+                      type="button"
+                      class="top-card-menu-row"
+                      data-testid="workspace-ayah-search-menu"
+                      @click.stop="openAskMutqin(); topCardMenuOpen = false"
+                    >
+                      <i class="bi bi-search" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.askMutqin.searchForAyahMenu') }}</span>
+                    </button>
                     <button
                       type="button"
                       class="top-card-menu-row"
@@ -1662,10 +1684,11 @@
 
                 <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
                   @click.stop
-                  :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}`"
+                  :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}-${mushafLayoutId}`"
                   v-html="getDisplayArabic(verse)" :class="{
                     'tajweed-enabled': tajweedEnabled && !useStackedQpcMadaniGlyphs,
                     'verse-arabic--qpc-madani': useStackedQpcMadaniGlyphs && verseHasQpcMadaniWords(verse),
+                    'verse-arabic--indopak': useStackedIndopakText,
                     'word-highlight-enabled': true,
                     'word-by-word-meanings': showWordByWord,
                     'verse-weak': isWeakAyah(verse.key),
@@ -1674,11 +1697,12 @@
                     'recitation-word-review-active': shouldShowRecitationReviewHighlights(verse.key)
                   }"                   :style="{
                     '--verse-font-percent': getVerseFontSize(verse.key),
-                    '--quran-font': quranFontFamily,
+                    '--quran-font': stackedAyahFontFamily,
+                    '--indopak-nastaleeq-font': stackedAyahFontFamily,
                     '--qpc-word-size': stackedQpcWordSizePx,
-                    '--qpc-line-height': '1.32',
+                    '--qpc-line-height': useStackedIndopakText ? '1.72' : '1.32',
                     '--qpc-ink': 'var(--mushaf-reading-ink, #f7ebdf)',
-                    'font-family': useStackedQpcMadaniGlyphs && verseHasQpcMadaniWords(verse) ? 'inherit' : quranFontFamily
+                    'font-family': useStackedQpcMadaniGlyphs && verseHasQpcMadaniWords(verse) ? 'inherit' : stackedAyahFontFamily
                   }">
                 </div>
                 <AppStatus
