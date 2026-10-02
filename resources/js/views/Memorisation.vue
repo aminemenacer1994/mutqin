@@ -785,36 +785,51 @@
                     <button
                       type="button"
                       class="top-card-menu-row top-card-menu-toggle--layout"
-                      :class="{ active: readingViewMode === 'madani_mushaf' }"
+                      :class="{
+                        active: readingViewMode === 'madani_mushaf' && !showReadingLayoutEditions,
+                        'top-card-menu-row--mode-selected': readingViewMode === 'madani_mushaf' && showReadingLayoutEditions,
+                      }"
                       :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
                       @click.stop="setReadingViewMode('madani_mushaf'); topCardMenuOpen = false"
                     >
                       <i class="bi bi-book-half" aria-hidden="true"></i>
                       <span>{{ t('memorisation.view.mushaf') }}</span>
-                      <i v-if="readingViewMode === 'madani_mushaf'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                      <i
+                        v-if="readingViewMode === 'madani_mushaf' && !showReadingLayoutEditions"
+                        class="bi bi-check-lg check-icon"
+                        aria-hidden="true"
+                      ></i>
                     </button>
-                    <template v-if="readingViewMode === 'madani_mushaf' || readingViewMode === 'stacked'">
+                    <template v-if="showReadingLayoutEditions">
                       <button
                         type="button"
                         class="top-card-menu-row top-card-menu-row--mushaf-edition"
-                        :class="{ active: mushafLayoutId === 'madani-v2' }"
-                        :aria-pressed="mushafLayoutId === 'madani-v2' ? 'true' : 'false'"
-                        @click.stop="setMushafLayoutId('madani-v2')"
+                        :class="{ active: isReadingLayoutEditionActive('madani-v2') }"
+                        :aria-pressed="isReadingLayoutEditionActive('madani-v2') ? 'true' : 'false'"
+                        @click.stop="selectReadingLayoutEdition('madani-v2')"
                       >
                         <i class="bi bi-journal-richtext" aria-hidden="true"></i>
                         <span>{{ t('memorisation.view.madinahV2') }}</span>
-                        <i v-if="mushafLayoutId === 'madani-v2'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                        <i
+                          v-if="isReadingLayoutEditionActive('madani-v2')"
+                          class="bi bi-check-lg check-icon"
+                          aria-hidden="true"
+                        ></i>
                       </button>
                       <button
                         type="button"
                         class="top-card-menu-row top-card-menu-row--mushaf-edition"
-                        :class="{ active: mushafLayoutId === 'indopak-15-qudratullah' }"
-                        :aria-pressed="mushafLayoutId === 'indopak-15-qudratullah' ? 'true' : 'false'"
-                        @click.stop="setMushafLayoutId('indopak-15-qudratullah')"
+                        :class="{ active: isReadingLayoutEditionActive('indopak-15-qudratullah') }"
+                        :aria-pressed="isReadingLayoutEditionActive('indopak-15-qudratullah') ? 'true' : 'false'"
+                        @click.stop="selectReadingLayoutEdition('indopak-15-qudratullah')"
                       >
                         <i class="bi bi-journal-text" aria-hidden="true"></i>
                         <span>{{ t('memorisation.view.indopak15') }}</span>
-                        <i v-if="mushafLayoutId === 'indopak-15-qudratullah'" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
+                        <i
+                          v-if="isReadingLayoutEditionActive('indopak-15-qudratullah')"
+                          class="bi bi-check-lg check-icon"
+                          aria-hidden="true"
+                        ></i>
                       </button>
                     </template>
                   </div>
@@ -1262,7 +1277,7 @@
             </span>
           </div>
 
-          <main v-if="isDataReady && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden && shouldShowWorkspaceMain" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
+          <main v-if="(isDataReady || hasVerses) && !isOnboardingExperienceActive && !isWelcomeBackWorkspaceHidden && shouldShowWorkspaceMain" id="memorisationWorkspaceMain" ref="workspaceMain" class="workspace-main"
             data-tour="workspace-main"
             :aria-label="t('memorisation.a11y.memorisationWorkspace')">
             <!-- Source-guard references:
@@ -1682,7 +1697,7 @@
                   </div>
                 </div>
 
-                <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && isDataReady"
+                <div class="verse-arabic verse-arabic-primary verse-arabic-with-end" dir="rtl" lang="ar" v-if="verse.arabic && (isDataReady || hasVerses)"
                   @click.stop
                   :key="`ar-${verse.key}-${practiceFocusSignature}-${tajweedEnabled ? 'tj' : 'plain'}-${quranFont}-${stackedQpcFontEpoch}-${mushafLayoutId}`"
                   v-html="getDisplayArabic(verse)" :class="{

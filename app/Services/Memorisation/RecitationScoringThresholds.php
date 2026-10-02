@@ -55,6 +55,17 @@ final class RecitationScoringThresholds
 
     public const WRONG_ORDER_PENALTY = 0.22;
 
+    /**
+     * DP gap / mismatch costs. A clear mismatch MUST cost more than one
+     * omission so a skip or ASR insertion can realign. It must stay cheaper
+     * than omit+extra so an isolated wrong word remains a substitution.
+     */
+    public const ALIGNMENT_OMISSION_COST = 1.02;
+
+    public const ALIGNMENT_WEAK_SIMILARITY_COST = 1.15;
+
+    public const ALIGNMENT_CLEAR_MISMATCH_COST = 1.25;
+
     public static function bandForAccuracy(int|float $accuracy): string
     {
         if ($accuracy >= self::STRONG_ACCURACY_MIN) {
@@ -95,6 +106,9 @@ final class RecitationScoringThresholds
             'partial_accuracy_weight' => self::PARTIAL_ACCURACY_WEIGHT,
             'uncertain_accuracy_weight' => self::UNCERTAIN_ACCURACY_WEIGHT,
             'extra_penalty' => self::EXTRA_PENALTY,
+            'alignment_omission_cost' => self::ALIGNMENT_OMISSION_COST,
+            'alignment_weak_similarity_cost' => self::ALIGNMENT_WEAK_SIMILARITY_COST,
+            'alignment_clear_mismatch_cost' => self::ALIGNMENT_CLEAR_MISMATCH_COST,
         ];
     }
 }

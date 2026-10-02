@@ -28,6 +28,10 @@ assert.doesNotMatch(homepage, /carousel-control-next/)
 
 assert.match(bootstrap, /import Carousel from 'bootstrap\/js\/dist\/carousel'/)
 assert.match(en, /"carouselLabel": "Feature screenshots"/)
+assert.match(homepage, /href="\/memorisation"/)
+assert.match(homepage, /homepage\.hero\.startMemorisation/)
+assert.doesNotMatch(homepage, /href="#how-it-works" class="btn btn--secondary"/)
+assert.match(en, /"startMemorisation": "Start memorisation"/)
 
 assert.match(css, /\.features__carousel-media \{/)
 assert.match(css, /\.features__carousel-indicators \{/)

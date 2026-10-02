@@ -74,6 +74,14 @@ assert.match(
   /top-card-menu-group--stacked-reading[\s\S]{0,120}readingViewMode === 'stacked'|readingViewMode === 'stacked'[\s\S]{0,120}top-card-menu-group--stacked-reading/,
 )
 assert.match(memorisationVue, /top-card-menu-row--mushaf-edition/)
+assert.match(memorisationVue, /showReadingLayoutEditions/)
+assert.match(memorisationVue, /isReadingLayoutEditionActive/)
+assert.match(memorisationVue, /top-card-menu-row--mode-selected/)
+assert.doesNotMatch(
+  memorisationVue,
+  /readingViewMode === 'madani_mushaf'[\s\S]{0,220}class="bi bi-check-lg check-icon"[\s\S]{0,220}top-card-menu-row--mushaf-edition[\s\S]{0,220}mushafLayoutId === 'madani-v2'[\s\S]{0,120}class="bi bi-check-lg check-icon"/,
+  'page mushaf mode must not show duplicate checks on parent and edition rows',
+)
 assert.doesNotMatch(memorisationVue, /toggleKeyboardShortcuts[\s\S]{0,120}top-card-menu/)
 
 console.log('indopak-tajweed-markup.test.mjs: ok')

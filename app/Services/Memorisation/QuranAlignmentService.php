@@ -76,16 +76,11 @@ class QuranAlignmentService
         $startingAnchor = $this->findStartingAnchor($targetWords, $heard);
 
         $matrix = [];
-        for ($t = 0; $t <= $targetCount; $t++) {
-            for ($h = 0; $h <= $heardCount; $h++) {
-                $matrix[$t][$h] = ['cost' => INF, 'prev' => null, 'op' => 'start', 'similarity' => 0.0];
-            }
-        }
         $matrix[0][0] = ['cost' => 0.0, 'prev' => null, 'op' => 'start', 'similarity' => 0.0];
 
         for ($t = 1; $t <= $targetCount; $t++) {
             $matrix[$t][0] = [
-                'cost' => $matrix[$t - 1][0]['cost'] + 1.0,
+                'cost' => $matrix[$t - 1][0]['cost'] + RecitationScoringThresholds::ALIGNMENT_OMISSION_COST,
                 'prev' => [$t - 1, 0],
                 'op' => 'omission',
                 'similarity' => 0.0,
@@ -121,7 +116,7 @@ class QuranAlignmentService
                         'similarity' => $similarity,
                     ],
                     [
-                        'cost' => $matrix[$t - 1][$h]['cost'] + 1.02,
+                        'cost' => $matrix[$t - 1][$h]['cost'] + RecitationScoringThresholds::ALIGNMENT_OMISSION_COST,
                         'prev' => [$t - 1, $h],
                         'op' => 'omission',
                         'similarity' => 0.0,
@@ -133,14 +128,20 @@ class QuranAlignmentService
                         'similarity' => 0.0,
                     ],
                 ];
-                usort($candidates, function ($a, $b) {
-                    if ($a['cost'] === $b['cost']) {
-                        return $this->opTie($a['op']) <=> $this->opTie($b['op']);
+                $best = $candidates[0];
+                for ($c = 1; $c < 3; $c++) {
+                    $candidate = $candidates[$c];
+                    if (
+                        $candidate['cost'] < $best['cost']
+                        || (
+                            $candidate['cost'] === $best['cost']
+                            && $this->opTie($candidate['op']) < $this->opTie($best['op'])
+                        )
+                    ) {
+                        $best = $candidate;
                     }
-
-                    return $a['cost'] <=> $b['cost'];
-                });
-                $matrix[$t][$h] = $candidates[0];
+                }
+                $matrix[$t][$h] = $best;
             }
         }
 
@@ -955,13 +956,15 @@ class QuranAlignmentService
             return 0.5 + ((1 - $confidence) * 0.18);
         }
         if ($similarity >= 0.35) {
-            return 0.78 + ((1 - $confidence) * 0.24);
+            return RecitationScoringThresholds::ALIGNMENT_WEAK_SIMILARITY_COST + ((1 - $confidence) * 0.24);
         }
 
-        // Keep a clear mismatch attached to the current expected slot. A
-        // higher cost lets DP skip the beginning of a coherent wrong phrase
-        // and attach its tokens to later words, losing drift indexes.
-        return $confidence < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE ? 1.45 : 0.85;
+        // Clear mismatch must beat a single omission (so a skip can realign)
+        // and stay cheaper than omit+extra (so an isolated wrong word stays
+        // a substitution instead of deletion+insertion).
+        return $confidence < RecitationScoringThresholds::UNCERTAIN_CONFIDENCE
+            ? 1.45
+            : RecitationScoringThresholds::ALIGNMENT_CLEAR_MISMATCH_COST;
     }
 
     /**
@@ -1227,6 +1230,20 @@ class QuranAlignmentService
                 $nextExpected = (int) ($operations[$anchor['end']]['expected_index'] ?? -1) + 1;
                 $nextRecognised = (int) ($operations[$anchor['end']]['recognised_index'] ?? -1) + 1;
                 $rebased = array_slice($operations, 0, $anchor['end'] + 1);
+                while (
+                    $nextRecognised < count($heard)
+                    && ($heard[$nextRecognised]['word'] ?? '') !== ''
+                    && ($heard[$nextRecognised]['word'] ?? null) === ($heard[$nextRecognised - 1]['word'] ?? null)
+                ) {
+                    $rebased[] = [
+                        'op' => 'extra',
+                        'expected_index' => $nextExpected,
+                        'recognised_index' => $nextRecognised,
+                        'similarity' => 0.0,
+                        'type' => self::TYPE_REPETITION,
+                    ];
+                    $nextRecognised++;
+                }
                 while ($nextExpected < count($targetWords) && $nextRecognised < count($heard)) {
                     $similarity = $this->similarity($targetWords[$nextExpected], $heard[$nextRecognised]['word']);
                     $confidence = (float) ($heard[$nextRecognised]['confidence'] ?? 1);

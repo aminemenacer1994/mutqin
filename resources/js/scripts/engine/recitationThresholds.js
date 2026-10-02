@@ -67,6 +67,14 @@ export const RECITATION_THRESHOLDS = Object.freeze({
   /** Extra / wrong-order accuracy penalties per item. */
   extraPenalty: 0.28,
   wrongOrderPenalty: 0.22,
+  /**
+   * DP gap / mismatch costs. A clear mismatch MUST cost more than one
+   * omission so a skip or ASR insertion can realign. It must stay cheaper
+   * than omit+extra so an isolated wrong word remains a substitution.
+   */
+  alignmentOmissionCost: 1.02,
+  alignmentWeakSimilarityCost: 1.15,
+  alignmentClearMismatchCost: 1.25,
 })
 
 /** Shared pause classification policy used by live and final alignment. */

@@ -32,6 +32,14 @@ class RecitationScoringThresholdsTest extends TestCase
             RecitationScoringThresholds::UNCERTAIN_CONFIDENCE,
             RecitationScoringThresholds::MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT
         );
+        $this->assertGreaterThan(
+            RecitationScoringThresholds::ALIGNMENT_OMISSION_COST,
+            RecitationScoringThresholds::ALIGNMENT_CLEAR_MISMATCH_COST
+        );
+        $this->assertGreaterThan(
+            RecitationScoringThresholds::ALIGNMENT_OMISSION_COST,
+            RecitationScoringThresholds::ALIGNMENT_WEAK_SIMILARITY_COST
+        );
     }
 
     public function test_low_confidence_similarity_is_uncertain_not_correct(): void

@@ -140,10 +140,10 @@ export const LIVE_PACE_MAX_WORDS_PER_SECOND = 2.4
 export const LIVE_PACE_SLACK_WORDS = 1
 /**
  * Speechmatics (and browser STT) often finalise a whole phrase in one event.
- * Without a burst brake the spoken-word budget jumps by five and five words
- * paint in a single frame — the “racing” feel on short surahs.
+ * Without a burst brake the spoken-word budget jumps a whole ayah in one
+ * frame. Three words still lets a phrase dump catch up without racing.
  */
-export const LIVE_PACE_MAX_ADVANCE_PER_UPDATE = 1
+export const LIVE_PACE_MAX_ADVANCE_PER_UPDATE = 3
 /** How often held-back words may drip forward while recognition is quiet. */
 export const LIVE_PACE_DRIP_MS = 180
 

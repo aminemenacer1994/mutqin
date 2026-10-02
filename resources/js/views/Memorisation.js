@@ -960,7 +960,7 @@ export default {
       layoutFontSizes: typeof window !== 'undefined'
         ? readPersistedFontPreferences({ userId: window.mutqinUserId }).layoutFontSizes
         : {
-            stacked: 125,
+            stacked: 108,
             mushaf: 160,
             madani_mushaf: 195,
           },
@@ -1697,13 +1697,13 @@ export default {
       recitationWindowRemaining: 0,
       recitationWindowTimer: null,
 
-      // Tools panel sections — collapsed by default for a calmer workspace.
+      // Tools panel sections — session setup + audio open by default in the offcanvas.
       sectionOpen: {
-        beginner_setup: false,
-        beginner_audio: false,
+        beginner_setup: true,
+        beginner_audio: true,
         beginner_saved: false,
-        advanced_setup: false,
-        advanced_playback: false,
+        advanced_setup: true,
+        advanced_playback: true,
         advanced_practice: false,
         advanced_saved: false,
         session_tools: false,
@@ -9331,8 +9331,8 @@ export default {
     },
 
     stackedQpcWordSizePx() {
-      const measure = 40
-      return `${Math.max(14, Math.round(measure * this.qpcMadaniFontScale))}px`
+      const measure = 32
+      return `${Math.max(13, Math.round(measure * this.qpcMadaniFontScale))}px`
     },
 
     collapsedPlayerTitle() {
@@ -9654,6 +9654,11 @@ export default {
       return this.t('memorisation.view.madaniMushafHint')
     },
 
+    /** Stacked and page mushaf share Madinah / IndoPak edition rows in the ellipsis menu. */
+    showReadingLayoutEditions() {
+      return this.readingViewMode === 'stacked' || this.readingViewMode === 'madani_mushaf'
+    },
+
     /** Active mushaf edition — page bounds always come from layout.pageCount. */
     activeLayout() {
       return getMushafLayout(
@@ -9967,23 +9972,30 @@ export default {
       if (this.isWorkspaceRefreshing && this.workspaceRefreshReason === 'reciter') {
         return this.t('memorisation.loading.reciterRefresh')
       }
+      if (this.hasVerses) {
+        if (
+          this.readingViewMode === 'mushaf'
+          && this.shouldShowReadingWorkspace
+          && !this.mushafPages.length
+          && !this.madaniPagesError
+        ) {
+          return this.t('memorisation.session_setup_in_progress')
+        }
+        if (
+          isQpcMadaniMushafView(this.readingViewMode)
+          && this.shouldShowReadingWorkspace
+          && !this.qpcVersePageIndex
+          && !this.qpcMadaniLoadError
+        ) {
+          return this.t('memorisation.session_setup_in_progress')
+        }
+        return this.t('common.loading')
+      }
       if (
         this.isRestoringWorkspace
         || this.isWorkspaceRefreshing
         || !this.isDataReady
         || (Number(this.chapterId || 0) > 0 && !this.hasVerses)
-        || (
-          this.readingViewMode === 'mushaf'
-          && this.shouldShowReadingWorkspace
-          && !this.mushafPages.length
-          && !this.madaniPagesError
-        )
-        || (
-          isQpcMadaniMushafView(this.readingViewMode)
-          && this.shouldShowReadingWorkspace
-          && !this.qpcVersePageIndex
-          && !this.qpcMadaniLoadError
-        )
       ) {
         return this.t('memorisation.session_setup_in_progress')
       }
@@ -9991,15 +10003,16 @@ export default {
     },
 
     showAppBootLoader() {
+      if (this.hasVerses && !this.isBootstrapping && !this.isRestoringWorkspace) return false
       if (!this.appReady || this.isBootstrapping || this.isRestoringWorkspace) return true
-      if (!this.isDataReady) return true
-      // Mushaf page paint has its own inline spinner — never block the whole
-      // workspace shell forever when Madani data is slow or empty.
+      if (Number(this.chapterId || 0) > 0 && !this.hasVerses && !this.isDataReady) return true
+      if (!this.isDataReady && !Number(this.chapterId || 0)) return true
+      // Surah selected but ayahs still fetching — keep the shell visible, not a full-page veil.
       return false
     },
 
     showWorkspaceRefreshSpinner() {
-      return !!this.isWorkspaceRefreshing
+      return !!this.isWorkspaceRefreshing && !this.hasVerses
     },
 
     chainingSetupBlocking() {
@@ -10900,6 +10913,10 @@ export default {
       this.applyRestoredPostSessionChoice({ clearPending: true })
       if (this.isDemoMode) {
         this.initGuestDemoWorkspace()
+      }
+      const bootstrapChapterId = Number(this.chapterId || 0)
+      if (bootstrapChapterId > 0 && !this.hasVerses) {
+        void this.loadVerses(this.currentMode)
       }
       // No active session means setup is the page's primary task. Open the
       // existing setup prompt instead of leaving only an empty workspace shell.
@@ -15085,7 +15102,7 @@ export default {
       this.chainingRepetitions = 1
       this.anchorModeEnabled = false
       this.sectionOpen.advanced_setup = true
-      this.sectionOpen.advanced_playback = false
+      this.sectionOpen.advanced_playback = true
       this.sectionOpen.repetitions = false
       this.sectionOpen.gap_between = false
       this.persistUiState()
@@ -28888,10 +28905,26 @@ export default {
       const targetKeys = (Array.isArray(targetVerses) ? targetVerses : [])
         .map(verse => verse?.key || `${verse?.chapterId || ''}:${verse?.number || ''}`)
         .join(',')
-      const wordKey = words => (Array.isArray(words) ? words : [])
-        .map(word => `${word?.text || word?.word || ''}:${word?.speaker || ''}:${word?.final ? 1 : 0}:${Number(word?.confidence || 0).toFixed(2)}`)
-        .join(' ')
-      return `${kind}|${targetKeys}|${wordKey(committedWords)}|${wordKey(displayWords)}`
+      return `${kind}|${targetKeys}|${this.cheapRecognitionListKey(committedWords)}|${this.cheapRecognitionListKey(displayWords)}`
+    },
+    cheapRecognitionListKey(words = []) {
+      const list = Array.isArray(words) ? words : []
+      let hash = list.length * 2654435761
+      for (let index = 0; index < list.length; index += 1) {
+        const word = list[index] || {}
+        const text = String(word.word || word.text || '')
+        hash = (
+          hash
+          + (text.length * 31)
+          + (text.charCodeAt(0) || 0) * 17
+          + (text.charCodeAt(text.length - 1) || 0)
+          + ((Number(word.confidence) * 100) | 0)
+          + (word.final ? 7 : 0)
+          + String(word.speaker || '').length
+        ) | 0
+      }
+      const last = list[list.length - 1] || {}
+      return `${list.length}:${hash}:${last.word || last.text || ''}:${String(last.speaker || '')}`
     },
     getCommittedAlignmentCacheKey(kind = 'recitation') {
       return kind === 'memorisation'
@@ -28904,10 +28937,20 @@ export default {
       if (this[signatureField] === signature && this[cacheField]) {
         return this[cacheField]
       }
-      const alignment = buildQuranAlignment(targetText, committedWords, {
-        ...options,
-        targetAyahs: this.buildRecitationTargetAyahMetadata(targetVerses)
-      })
+      const lifecycle = String(options.lifecycle || '').toLowerCase()
+      const live = lifecycle === 'live' || lifecycle === 'recording' || lifecycle === 'paused'
+      const targetAyahs = this.buildRecitationTargetAyahMetadata(targetVerses)
+      // Live paint uses the sequential matcher. Full DP on every committed
+      // word froze the tab mid-ayah and then remapped the tail as red.
+      const alignment = live
+        ? buildRealtimePreviewAlignment(targetText, committedWords, {
+          ...options,
+          targetAyahs,
+        })
+        : buildQuranAlignment(targetText, committedWords, {
+          ...options,
+          targetAyahs,
+        })
       this[signatureField] = signature
       this[cacheField] = alignment
       return alignment
@@ -28995,8 +29038,7 @@ export default {
         livePreviewAlignmentOptions.uncertainConfidence = RECITATION_AMD_UNCERTAIN_CONFIDENCE
       }
       const targetAyahMeta = this.buildRecitationTargetAyahMetadata(targetVerses)
-      // Committed alignment is cached — rebuilding full DP on every interim partial
-      // froze / crashed the tab mid-session (especially multi-ayah AMD).
+      // Live committed paint is sequential + cached. Full DP waits for stop.
       const committedAlignment = this.getCachedCommittedAlignment(
         kind,
         committedSig,
@@ -34297,6 +34339,9 @@ export default {
       this.showConfirmModal = false
       this.showWelcomeBackModal = false
       this.showTools = true
+      if (this.tab === 'tools') {
+        this.ensureDefaultToolsSectionsOpen()
+      }
       this.persistUiState()
       if (this.isMobileViewport()) {
         void this.loadReciters()
@@ -36834,7 +36879,7 @@ export default {
       const key = isReadingViewMode(mode) ? mode : 'mushaf'
       const stored = Number(this.layoutFontSizes?.[key])
       const fallback = key === 'stacked'
-        ? 125
+        ? 108
         : key === 'madani_mushaf'
           ? 195
           : 160
@@ -37129,6 +37174,23 @@ export default {
      * Remaps via current verseKey — never copies the numeric page across layouts.
      * After switch, clamps any page to activeLayout.pageCount (604 Madani / 610 IndoPak).
      */
+    isReadingLayoutEditionActive(layoutId) {
+      const next = String(layoutId || '')
+      if (!next || this.mushafLayoutId !== next) return false
+      return this.readingViewMode === 'stacked' || this.readingViewMode === 'madani_mushaf'
+    },
+
+    async selectReadingLayoutEdition(layoutId) {
+      if (this.readingViewMode === 'stacked') {
+        await this.setMushafLayoutId(layoutId)
+        return
+      }
+      if (this.readingViewMode !== 'madani_mushaf') {
+        this.setReadingViewMode('madani_mushaf')
+      }
+      await this.setMushafLayoutId(layoutId)
+    },
+
     async setMushafLayoutId(layoutId) {
       const next = isMushafLayoutId(layoutId) ? String(layoutId) : DEFAULT_MUSHAF_LAYOUT_ID
       const previous = isMushafLayoutId(this.mushafLayoutId)
@@ -40706,6 +40768,9 @@ export default {
         return
       }
 
+      if (this.tab === 'tools') {
+        this.ensureDefaultToolsSectionsOpen()
+      }
       if (this.tab === 'saved') {
         this.ensureSavedSectionVisible()
         this.loadSavedSessions()
@@ -43347,7 +43412,11 @@ export default {
     async loadVerses(mode = this.currentMode) {
       const target = this.getModeStore(mode)
       const chapterId = Number(target.chapterId || 0)
-      if (!chapterId) return
+      if (!chapterId) {
+        this.isWorkspaceRefreshing = false
+        this.workspaceRefreshReason = ''
+        return
+      }
 
       const rangeStart = Number(target.rangeStart || 1)
       const rangeEnd = Number(target.rangeEnd || rangeStart || 1)
@@ -43355,7 +43424,8 @@ export default {
       const requestId = ++this.verseRequestId
       const targetConfig = this.buildSessionConfig(mode)
 
-      this.isDataReady = false
+      const hadVisibleVerses = Array.isArray(target.verses) && target.verses.length > 0
+      if (!hadVisibleVerses) this.isDataReady = false
 
       try {
         const cached = this.getCachedVerses(mode, targetConfig)
@@ -43381,26 +43451,10 @@ export default {
               resolvedVerses = applyWordByWordMeaningsToVerses(resolvedVerses, wbwByNumber)
                 .map(verse => this.sanitizeVerseDisplayText(verse))
             }
-            resolvedVerses = await this.enrichVersesWithQpcMadaniWords(
-              resolvedVerses,
-              chapterId,
-              rangeStart,
-              rangeEnd,
-            )
-            resolvedVerses = await this.enrichVersesWithIndopakWords(resolvedVerses)
             target.verses = resolvedVerses
             target.loadedConfig = {
               ...(cached.loadedConfig || {}),
               showWordByWord: this.showWordByWord,
-            }
-            if (this.showWordByWord && versesHaveWordMeanings(resolvedVerses)) {
-              this.setCachedVerses(mode, targetConfig, {
-                verses: resolvedVerses,
-                loadedConfig: target.loadedConfig,
-              })
-            }
-            if (this.useStackedQpcMadaniGlyphs || this.useStackedIndopakText) {
-              await this.prefetchStackedEditionFonts(resolvedVerses)
             }
             this.buildQueue(mode)
             this.syncActiveVerseState(mode)
@@ -43408,6 +43462,26 @@ export default {
             this.isDataReady = true
             this.isWorkspaceRefreshing = false
             this.workspaceRefreshReason = ''
+
+            resolvedVerses = await this.enrichVersesWithQpcMadaniWords(
+              resolvedVerses,
+              chapterId,
+              rangeStart,
+              rangeEnd,
+            )
+            if (requestId !== this.verseRequestId) return
+            resolvedVerses = await this.enrichVersesWithIndopakWords(resolvedVerses)
+            if (requestId !== this.verseRequestId) return
+            target.verses = resolvedVerses
+            if (this.showWordByWord && versesHaveWordMeanings(resolvedVerses)) {
+              this.setCachedVerses(mode, targetConfig, {
+                verses: resolvedVerses,
+                loadedConfig: target.loadedConfig,
+              })
+            }
+            if (this.useStackedQpcMadaniGlyphs || this.useStackedIndopakText) {
+              void this.prefetchStackedEditionFonts(resolvedVerses)
+            }
             if (this.readingViewMode === 'mushaf') {
               this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
             }
@@ -43535,13 +43609,22 @@ export default {
         }
 
         let enrichedVerses = this.sanitizeVersesDisplayText(mappedVerses)
+        target.verses = enrichedVerses
+        this.buildQueue(mode)
+        this.syncActiveVerseState(mode)
+        this.isDataReady = true
+        this.isWorkspaceRefreshing = false
+        this.workspaceRefreshReason = ''
+
         enrichedVerses = await this.enrichVersesWithQpcMadaniWords(
           enrichedVerses,
           chapterId,
           start,
           end,
         )
+        if (requestId !== this.verseRequestId) return
         enrichedVerses = await this.enrichVersesWithIndopakWords(enrichedVerses)
+        if (requestId !== this.verseRequestId) return
         target.verses = enrichedVerses
         target.loadedConfig = {
           chapterId,
@@ -43553,9 +43636,6 @@ export default {
         }
         this.syncMutqinAyahs(enrichedVerses)
         this.clearDisplayArabicCache()
-        if (this.useStackedQpcMadaniGlyphs || this.useStackedIndopakText) {
-          await this.prefetchStackedEditionFonts(enrichedVerses)
-        }
 
         this.setCachedVerses(mode, targetConfig, {
           verses: enrichedVerses,
@@ -43566,8 +43646,9 @@ export default {
         this.syncActiveVerseState(mode)
         this.clearMushafAyahHtmlCache()
 
-        // Set ready after data loads
-        this.isDataReady = true
+        if (this.useStackedQpcMadaniGlyphs || this.useStackedIndopakText) {
+          void this.prefetchStackedEditionFonts(enrichedVerses)
+        }
         if (this.readingViewMode === 'mushaf') {
           this.ensureMadaniPagesLoaded({ force: true }).then(() => this.syncMushafPageToActiveVerse())
         }
@@ -44938,6 +45019,12 @@ export default {
       if (!session) return
       const targetKey = this.isSavedSessionComplete(session) ? 'saved_completed' : 'saved_in_progress'
       this.setSavedActiveSection(targetKey)
+    },
+
+    ensureDefaultToolsSectionsOpen() {
+      if (!this.sectionOpen || typeof this.sectionOpen !== 'object') return
+      this.sectionOpen.advanced_setup = true
+      this.sectionOpen.advanced_playback = true
     },
 
     toggleSection(key) {

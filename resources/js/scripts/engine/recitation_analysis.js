@@ -341,6 +341,119 @@ export function getRecognitionDisplayWords(state = createRecognitionState()) {
     .map((word, index) => ({ ...word, displayIndex: index }))
 }
 
+function paintLiveSkipGap(
+  statuses,
+  targetUnits,
+  displayWords,
+  targetWords,
+  fromIndex,
+  toIndex,
+  isLiveLifecycle,
+) {
+  for (let skipIndex = fromIndex; skipIndex < toIndex; skipIndex += 1) {
+    const skipUnit = targetUnits[skipIndex] || null
+    statuses[skipIndex] = {
+      text: displayWords[skipIndex] || targetWords[skipIndex] || '',
+      targetWord: targetWords[skipIndex] || '',
+      status: isLiveLifecycle ? 'pending' : 'omitted',
+      type: isLiveLifecycle ? 'UNASSESSED' : 'DELETION',
+      note: isLiveLifecycle ? '' : `Skipped. Expected ${displayWords[skipIndex] || targetWords[skipIndex] || ''} before continuing.`,
+      actual: '',
+      confidence: 0,
+      similarity: 0,
+      visualStatus: isLiveLifecycle ? 'neutral' : 'red',
+      highlight: isLiveLifecycle ? 'neutral' : 'red',
+      targetIndex: skipIndex,
+      ayahKey: skipUnit?.ayahKey || '',
+      ayahNumber: skipUnit?.ayahNumber ?? null,
+      ayahIndex: Number.isFinite(Number(skipUnit?.ayahIndex)) ? Number(skipUnit.ayahIndex) : 0,
+      ayahWordIndex: Number.isFinite(Number(skipUnit?.ayahWordIndex)) ? Number(skipUnit.ayahWordIndex) : skipIndex,
+      ...unmatchedTargetAlignmentFields(),
+    }
+  }
+}
+
+/**
+ * After two consecutive live reds the sequential matcher has lost the lock.
+ * Resume only on a two-word exact/high-similarity anchor so the unread tail
+ * is not painted red one substitution at a time.
+ */
+function findLiveTwoWordRecovery({
+  heardWords = [],
+  heardIndex = 0,
+  targetWords = [],
+  cursor = 0,
+  matchThresholds = {},
+  allowArticleMatch = true,
+  window = 8,
+} = {}) {
+  const floor = Number.isFinite(Number(matchThresholds.correctSimilarity))
+    ? Number(matchThresholds.correctSimilarity)
+    : RECITATION_CORRECT_SIMILARITY
+  const targetLimit = Math.min(targetWords.length - 1, cursor + Math.max(2, window))
+  if (targetLimit <= cursor) return null
+  for (let h = Math.max(0, heardIndex); h + 1 < heardWords.length; h += 1) {
+    const first = heardWords[h] || {}
+    const second = heardWords[h + 1] || {}
+    if (!first.word || !second.word) continue
+    for (let start = cursor; start < targetLimit; start += 1) {
+      const firstSim = getRecitationWordSimilarity(targetWords[start], first.word, { allowArticleMatch })
+      const secondSim = getRecitationWordSimilarity(targetWords[start + 1], second.word, { allowArticleMatch })
+      if (firstSim >= floor && secondSim >= floor) {
+        return { targetIndex: start, heardIndex: h }
+      }
+    }
+  }
+  return null
+}
+
+function pushLiveHeldExtra(extraWords, heardWord, heardIndex) {
+  extraWords.push({
+    word: heardWord.word || '',
+    display: heardWord.display || heardWord.rawWord || heardWord.word || '',
+    rawWord: heardRawWord(heardWord),
+    displayWord: '',
+    heardIndex,
+    confidence: Number(heardWord.confidence ?? 1),
+    start: finiteOrNull(heardWord.start ?? heardWord.startTime),
+    end: finiteOrNull(heardWord.end ?? heardWord.endTime),
+    type: 'uncertain',
+    lostLockHold: true,
+  })
+}
+
+/**
+ * Live restart DP is only worth it for a real opening repeat in the recent
+ * tail. Scanning every repeated phrase (الرحمن الرحيم) on each STT tick
+ * froze Al-Fatiha and then remapped the range.
+ */
+function findLiveOpeningRestartHint(targetWords = [], heardWords = []) {
+  if (targetWords.length < 2 || heardWords.length < 6) return false
+  const opening = (heardIndex) => {
+    const first = heardWords[heardIndex]
+    const second = heardWords[heardIndex + 1]
+    return !!first?.word
+      && !!second?.word
+      && !isLowConfidenceRecognitionWord(first)
+      && !isLowConfidenceRecognitionWord(second)
+      && getRecitationWordSimilarity(targetWords[0], first.word) >= RECITATION_CORRECT_SIMILARITY
+      && getRecitationWordSimilarity(targetWords[1], second.word) >= RECITATION_CORRECT_SIMILARITY
+  }
+  let firstAt = -1
+  const firstLimit = Math.min(heardWords.length - 3, 8)
+  for (let index = 0; index < firstLimit; index += 1) {
+    if (!opening(index)) continue
+    firstAt = index
+    break
+  }
+  if (firstAt < 0) return false
+  const tailStart = Math.max(firstAt + 2, heardWords.length - 8)
+  for (let index = tailStart; index + 1 < heardWords.length; index += 1) {
+    if (opening(index)) return true
+  }
+  return false
+}
+
 export function buildRealtimePreviewAlignment(targetText = '', recognitionWords = [], options = {}) {
   const targetAyahs = normalizeTargetAyahs(options.targetAyahs || options.ayahs || [], targetText)
   const targetUnits = buildTargetWordUnits(targetAyahs, targetText)
@@ -356,7 +469,13 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   // it must yield to the same anchor-gated DP once a real backward move is
   // visible. Otherwise a restart is mistaken for a long omission/red cascade
   // while the recording is still live.
-  if (heardWords.length >= 4 && targetWords.length >= 3 && findLiveRestartEvidence(targetWords, heardWords)) {
+  if (
+    isLiveLifecycle
+    && heardWords.length >= 6
+    && targetWords.length >= 3
+    && findLiveOpeningRestartHint(targetWords, heardWords)
+    && findLiveRestartEvidence(targetWords, heardWords)
+  ) {
     const restartAlignment = buildQuranAlignment(targetText, heardWords, {
       ...options,
       lifecycle: 'live',
@@ -423,10 +542,32 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   const extraWords = []
   let cursor = 0
   let firstBlockingIndex = -1
+  let consecutiveIncorrect = 0
+  let lostLock = false
 
   for (let heardIndex = 0; heardIndex < heardWords.length; heardIndex += 1) {
     const heardWord = heardWords[heardIndex] || {}
     if (isLikelyTransientNoiseWord(heardWord, matchThresholds)) {
+      continue
+    }
+    if (lostLock) {
+      const recovery = findLiveTwoWordRecovery({
+        heardWords,
+        heardIndex,
+        targetWords,
+        cursor,
+        matchThresholds,
+        allowArticleMatch,
+      })
+      if (recovery) {
+        paintLiveSkipGap(statuses, targetUnits, displayWords, targetWords, cursor, recovery.targetIndex, isLiveLifecycle)
+        lostLock = false
+        consecutiveIncorrect = 0
+        cursor = recovery.targetIndex
+        heardIndex = recovery.heardIndex - 1
+        continue
+      }
+      pushLiveHeldExtra(extraWords, heardWord, heardIndex)
       continue
     }
     if (isLikelyOffTargetTransientNoise(heardWord, targetWords, cursor, matchThresholds)) {
@@ -471,6 +612,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       || (classified.status === 'uncertain' && options.partialAdvances !== false && similarity >= correctSimilarity)) {
       statuses[cursor] = classified
       cursor += 1
+      consecutiveIncorrect = 0
       continue
     }
     if (classified.status === 'partial' || classified.status === 'uncertain') {
@@ -519,6 +661,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         statuses[cursor + 1] = nextClassified
         firstBlockingIndex = cursor
         cursor += 2
+        consecutiveIncorrect = 0
         continue
       }
     }
@@ -585,6 +728,7 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
         ...matchThresholds,
       })
       cursor = exactAheadIndex + 1
+      consecutiveIncorrect = 0
       // Stop-on-mistake modes still record the skip, then freeze further painting.
       if (strict && !options.advanceOnIncorrect) {
         break
@@ -599,6 +743,35 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
     if (strict) {
       if (options.advanceOnIncorrect) {
         cursor += 1
+        if (classified.status === 'incorrect') {
+          consecutiveIncorrect += 1
+          if (consecutiveIncorrect >= 2) {
+            const recovery = findLiveTwoWordRecovery({
+              heardWords,
+              heardIndex: heardIndex + 1,
+              targetWords,
+              cursor,
+              matchThresholds,
+              allowArticleMatch,
+            })
+            if (recovery) {
+              paintLiveSkipGap(statuses, targetUnits, displayWords, targetWords, cursor, recovery.targetIndex, isLiveLifecycle)
+              consecutiveIncorrect = 0
+              lostLock = false
+              cursor = recovery.targetIndex
+              if (recovery.heardIndex > heardIndex) {
+                heardIndex = recovery.heardIndex - 1
+              }
+              continue
+            }
+            // Hold the unread tail pending and keep scanning this utterance
+            // for a two-word return. Do not paint the rest red.
+            lostLock = true
+            continue
+          }
+        } else {
+          consecutiveIncorrect = 0
+        }
         continue
       }
       const recovered = findSameSlotRecovery({
@@ -769,7 +942,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
   matrix[0][0] = { cost: 0, prev: null, op: 'start', similarity: 0 }
 
   for (let targetIndex = 1; targetIndex <= targetCount; targetIndex += 1) {
-    matrix[targetIndex][0] = { cost: matrix[targetIndex - 1][0].cost + 1, prev: [targetIndex - 1, 0], op: 'omission', similarity: 0 }
+    matrix[targetIndex][0] = { cost: matrix[targetIndex - 1][0].cost + RECITATION_THRESHOLDS.alignmentOmissionCost, prev: [targetIndex - 1, 0], op: 'omission', similarity: 0 }
   }
   for (let heardIndex = 1; heardIndex <= heardCount; heardIndex += 1) {
     matrix[0][heardIndex] = {
@@ -796,7 +969,7 @@ export function buildQuranAlignment(targetText = '', recognitionWords = [], opti
         + (heardIndex - 1) * 1e-9
       const candidates = [
         { cost: matrix[targetIndex - 1][heardIndex - 1].cost + matchCost, prev: [targetIndex - 1, heardIndex - 1], op: 'match', similarity },
-        { cost: matrix[targetIndex - 1][heardIndex].cost + 1.02, prev: [targetIndex - 1, heardIndex], op: 'omission', similarity: 0 },
+        { cost: matrix[targetIndex - 1][heardIndex].cost + RECITATION_THRESHOLDS.alignmentOmissionCost, prev: [targetIndex - 1, heardIndex], op: 'omission', similarity: 0 },
         { cost: matrix[targetIndex][heardIndex - 1].cost + duplicateAdjustedExtraCost(heardWords, heardIndex - 1), prev: [targetIndex, heardIndex - 1], op: 'extra', similarity: 0 }
       ]
       matrix[targetIndex][heardIndex] = candidates.sort((left, right) => left.cost - right.cost || operationTieBreak(left.op) - operationTieBreak(right.op))[0]
@@ -1280,6 +1453,22 @@ function classifyQuranAwareOperations({
       let nextExpected = Number(operations[anchor.end]?.expectedIndex) + 1
       let nextRecognised = Number(operations[anchor.end]?.recognisedIndex) + 1
       const rebased = operations.slice(0, anchor.end + 1)
+      while (
+        nextRecognised < heardWords.length
+        && heardWords[nextRecognised]?.word
+        && heardWords[nextRecognised].word === heardWords[nextRecognised - 1]?.word
+      ) {
+        rebased.push({
+          op: 'extra',
+          expectedIndex: nextExpected,
+          targetIndex: nextExpected,
+          heardIndex: nextRecognised,
+          recognisedIndex: nextRecognised,
+          similarity: 0,
+          type: 'REPETITION',
+        })
+        nextRecognised += 1
+      }
       while (nextExpected < targetWords.length && nextRecognised < heardWords.length) {
         const heard = heardWords[nextRecognised] || {}
         const similarity = getRecitationWordSimilarity(targetWords[nextExpected], heard.word)
@@ -1430,8 +1619,24 @@ function classifyQuranAwareOperations({
   const extrasByHeardIndex = new Map(extraWords.map(extra => [Number(extra.heardIndex), extra]))
   for (const operation of operations) {
     if (operation.op !== 'extra') continue
-    const extra = extrasByHeardIndex.get(Number(operation.recognisedIndex))
-    if (!extra) continue
+    let extra = extrasByHeardIndex.get(Number(operation.recognisedIndex))
+    if (!extra) {
+      const heard = heardWords[Number(operation.recognisedIndex)] || {}
+      extra = {
+        word: heard.word || '',
+        display: heard.display || heardRawWord(heard),
+        rawWord: heardRawWord(heard),
+        displayWord: '',
+        heardIndex: Number(operation.recognisedIndex),
+        confidence: Number(heard.confidence ?? 1),
+        start: finiteOrNull(heard.start ?? heard.startTime),
+        end: finiteOrNull(heard.end ?? heard.endTime),
+        type: operation.type,
+        legacyType: operation.type === 'REPETITION' ? 'repetition' : 'extra',
+      }
+      extraWords.push(extra)
+      extrasByHeardIndex.set(Number(operation.recognisedIndex), extra)
+    }
     extra.type = operation.type
     extra.classificationType = operation.type
     extra.highlight = ['REPETITION', 'SELF_CORRECTION', 'RESTART'].includes(operation.type)
@@ -2708,11 +2913,12 @@ function getWeightedMatchCost(targetWord, heardWord, similarity, confidence, opt
   // Soft-capped near-misses (~0.74) must stay cheaper than omit+later-match,
   // otherwise DP skips الصراط and wrongly attaches السراط to المستقيم.
   if (similarity >= 0.72) return 0.5 + ((1 - confidence) * 0.18)
-  if (similarity >= 0.35) return 0.78 + ((1 - confidence) * 0.24)
-  // Keep a clear mismatch attached to the current expected slot. A higher
-  // cost lets DP skip the beginning of a coherent wrong phrase and attach its
-  // tokens to later words, losing drift indexes.
-  return confidence < RECITATION_UNCERTAIN_CONFIDENCE ? 1.45 : 0.85
+  if (similarity >= 0.35) return RECITATION_THRESHOLDS.alignmentWeakSimilarityCost + ((1 - confidence) * 0.24)
+  // Clear mismatch must beat a single omission (so a skip can realign) and
+  // stay cheaper than omit+extra (so an isolated wrong word stays a substitution).
+  return confidence < RECITATION_UNCERTAIN_CONFIDENCE
+    ? 1.45
+    : RECITATION_THRESHOLDS.alignmentClearMismatchCost
 }
 
 function duplicateAdjustedExtraCost(words = [], index = 0) {

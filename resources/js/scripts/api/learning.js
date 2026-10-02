@@ -75,6 +75,11 @@ http.interceptors.request.use(async (config) => {
   return syncCsrfHeaders(config)
 })
 
+/** 409 = stale/conflict body; callers handle it — avoid axios reject + console noise. */
+const HTTP_VALIDATE_WITH_CONFLICT = {
+  validateStatus: (status) => (status >= 200 && status < 300) || status === 409,
+}
+
 http.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -278,7 +283,7 @@ export const learningApi = {
    */
   async checkpointSession(payload = {}) {
     const body = { ...(payload || {}), action: 'save' }
-    const { data } = await http.post('/session', body)
+    const { data } = await http.post('/session', body, HTTP_VALIDATE_WITH_CONFLICT)
     return data
   },
   async startSession(payload = {}) {
@@ -379,7 +384,7 @@ export const learningApi = {
     return data ?? { state: null, meta: { has_state: false } }
   },
   async saveState(payload) {
-    const { data } = await http.post('/state', payload)
+    const { data } = await http.post('/state', payload, HTTP_VALIDATE_WITH_CONFLICT)
     return data
   },
 

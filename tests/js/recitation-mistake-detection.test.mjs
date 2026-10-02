@@ -24,6 +24,7 @@ async function loadModule(specifier, referrer = path.join(root, 'tests/js/recita
 const recitation = await loadModule('resources/js/scripts/engine/recitation_analysis.js')
 const {
   buildDeterministicRecitationResult,
+  buildQuranAlignment,
   buildRealtimePreviewAlignment,
   createWordsFromTranscript,
   getRecitationWordSimilarity,
@@ -517,6 +518,98 @@ function assertStatuses(result, expected) {
   assert.equal(soft.statuses[1].status, 'partial', 'ص↔س must be amber, not green')
   assert.equal(soft.statuses[0].status, 'correct')
   assert.equal(soft.statuses[2].status, 'correct')
+}
+
+// A skipped word must realign — not substitute the rest of the ayah red.
+{
+  const skipped = buildQuranAlignment(
+    'الحمد لله رب العالمين الرحمن الرحيم',
+    createWordsFromTranscript('الحمد لله العالمين الرحمن الرحيم'),
+  )
+  assert.equal(skipped.statuses[0].status, 'correct')
+  assert.equal(skipped.statuses[1].status, 'correct')
+  assert.equal(skipped.statuses[2].status, 'omitted', 'رب is the only skipped slot')
+  assert.equal(skipped.statuses[3].status, 'correct')
+  assert.equal(skipped.statuses[4].status, 'correct')
+  assert.equal(skipped.statuses[5].status, 'correct')
+  assert.ok(!skipped.statuses.slice(3).some((word) => word.status === 'incorrect'))
+}
+
+// An extra ASR token must not shift the rest of the ayah into red substitutions.
+{
+  const extra = buildQuranAlignment(
+    'الحمد لله رب العالمين الرحمن الرحيم',
+    createWordsFromTranscript('الحمد لله رب كتاب العالمين الرحمن الرحيم'),
+  )
+  assert.equal(
+    extra.statuses.map((word) => word.status).join('|'),
+    'correct|correct|correct|correct|correct|correct',
+  )
+  assert.equal(extra.extraWords.length, 1)
+}
+
+// Isolated wrong word stays a substitution; the following words stay green.
+{
+  const isolated = buildQuranAlignment(
+    'الحمد لله رب العالمين الرحمن الرحيم',
+    createWordsFromTranscript('الحمد لله رب صمد الرحمن الرحيم'),
+  )
+  assert.equal(isolated.statuses[3].status, 'incorrect')
+  assert.equal(isolated.statuses[3].actual, 'صمد')
+  assert.equal(isolated.statuses[4].status, 'correct')
+  assert.equal(isolated.statuses[5].status, 'correct')
+}
+
+// Live lost-lock: two consecutive garbage tokens must not paint the unread tail red.
+{
+  const live = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين الرحمن الرحيم',
+    createWordsFromTranscript('الحمد لله كتاب مسجد قلم بيت'),
+    {
+      lifecycle: 'live',
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      strictProgression: true,
+      advanceOnIncorrect: true,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+      partialSimilarity: 0.45,
+    },
+  )
+  assert.equal(live.statuses[0].status, 'correct')
+  assert.equal(live.statuses[1].status, 'correct')
+  assert.equal(live.statuses[2].status, 'incorrect')
+  assert.equal(live.statuses[3].status, 'incorrect')
+  assert.ok(
+    live.statuses.slice(4).every((word) => word.status === 'pending'),
+    'unread tail stays pending after lost lock',
+  )
+}
+
+// Lost-lock must resume when the learner returns later in the same utterance.
+{
+  const recovered = buildRealtimePreviewAlignment(
+    'الحمد لله رب العالمين الرحمن الرحيم',
+    createWordsFromTranscript('الحمد لله كتاب مسجد قلم الرحمن الرحيم'),
+    {
+      lifecycle: 'live',
+      lookahead: 0,
+      exactSkipLookahead: 3,
+      strictProgression: true,
+      advanceOnIncorrect: true,
+      partialAdvances: true,
+      correctSimilarity: 0.79,
+      partialSimilarity: 0.45,
+    },
+  )
+  assert.equal(recovered.statuses[0].status, 'correct')
+  assert.equal(recovered.statuses[1].status, 'correct')
+  assert.equal(recovered.statuses[4].status, 'correct', 'الرحمن must recover after junk')
+  assert.equal(recovered.statuses[5].status, 'correct')
+  assert.ok(
+    recovered.statuses.slice(4).every((word) => word.status !== 'incorrect'),
+    'recovered tail must not stay red',
+  )
 }
 
 console.log('recitation-mistake-detection: ok')

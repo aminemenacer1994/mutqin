@@ -24,9 +24,9 @@
                 <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                 {{ t('homepage.waitlist.cta') }}
               </a>
-              <a href="#how-it-works" class="btn btn--secondary" @click.prevent="scrollToId('how-it-works')">
-                <i class="bi bi-arrow-down" aria-hidden="true"></i>
-                {{ t('homepage.hero.seeHow') }}
+              <a href="/memorisation" class="btn btn--secondary">
+                <i class="bi bi-journal-text" aria-hidden="true"></i>
+                {{ t('homepage.hero.startMemorisation') }}
               </a>
             </div>
           </div>

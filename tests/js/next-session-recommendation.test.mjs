@@ -395,6 +395,8 @@ function t(key, params = {}) {
   assert.match(js, /lookahead\s*=\s*0/, 'no skip-ahead: colouring must not run past the voice')
   assert.match(js, /clampCursorToPaceLimit/, 'pace guard keeps colouring with the reciter')
   assert.match(js, /buildRealtimePreviewAlignment\(targetText, displayWords/)
+  assert.match(js, /buildRealtimePreviewAlignment\(targetText, committedWords/, 'live committed paint must stay sequential')
+  assert.match(js, /cheapRecognitionListKey/, 'live signatures must not stringify every token')
   assert.match(js, /preferVisible/)
   assert.match(js, /amdDifficultyPercent = normaliseDifficultyPercent\(/)
   assert.match(js, /rebuildAmdHiddenWordMask\(\)/)

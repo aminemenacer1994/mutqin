@@ -251,8 +251,8 @@ const {
       elapsedMs: 60_000,
       previousConfirmed: 2,
     }),
-    3,
-    'a phrase dump may only paint one step past the last confirmed word',
+    5,
+    'a phrase dump may only paint a short step past the last confirmed word',
   )
 }
 

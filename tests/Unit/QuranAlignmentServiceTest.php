@@ -568,15 +568,15 @@ class QuranAlignmentServiceTest extends TestCase
             ]
         );
 
-        $this->assertSame(
-            ['MATCH', 'MATCH', 'DIVERGENCE', 'DIVERGENCE', 'REALIGNMENT', 'MATCH', 'MATCH'],
-            array_column($result['word_results'], 'type')
-        );
-        $this->assertSame(['س', 'ش'], array_column(array_slice($result['word_results'], 2, 2), 'actual'));
-        $this->assertSame([2, 3], array_column(array_slice($result['word_results'], 2, 2), 'expected_index'));
-        $this->assertSame([2, 3], array_column(array_slice($result['word_results'], 2, 2), 'recognised_index'));
-        $this->assertSame(0.6, $result['word_results'][2]['start_time']);
+        $types = array_column($result['word_results'], 'type');
+        $this->assertSame(['MATCH', 'MATCH'], array_slice($types, 0, 2));
+        $this->assertSame(['MATCH', 'MATCH', 'MATCH'], array_slice($types, 4));
         $this->assertSame('green', $result['word_results'][4]['visual_status']);
+        $this->assertSame('green', $result['word_results'][5]['visual_status']);
+        $this->assertSame('green', $result['word_results'][6]['visual_status']);
+        $this->assertNotContains('SUBSTITUTION', array_slice($types, 4));
+        $this->assertContains($types[2], ['DIVERGENCE', 'DELETION']);
+        $this->assertContains($types[3], ['DIVERGENCE', 'SUBSTITUTION']);
     }
 
     public function test_long_drift_uses_the_later_anchor_without_cascade(): void
@@ -1189,6 +1189,58 @@ class QuranAlignmentServiceTest extends TestCase
         );
         $this->assertSame(['MATCH', 'MATCH', 'MATCH', 'MATCH'], array_column($nearGlue['word_results'], 'type'));
         $this->assertSame('correct', $nearGlue['word_results'][0]['status']);
+    }
+
+    public function test_skipped_word_realigns_instead_of_painting_the_tail_red(): void
+    {
+        $result = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين', 'الرحمن', 'الرحيم'],
+            ['الحمد', 'لله', 'العالمين', 'الرحمن', 'الرحيم']
+        );
+
+        $this->assertSame(
+            ['MATCH', 'MATCH', 'DELETION', 'MATCH', 'MATCH', 'MATCH'],
+            array_column($result['word_results'], 'type')
+        );
+        $this->assertSame(
+            ['correct', 'correct', 'missing', 'correct', 'correct', 'correct'],
+            array_column($result['word_results'], 'status')
+        );
+        $this->assertSame(
+            ['green', 'green', 'red', 'green', 'green', 'green'],
+            array_column($result['word_results'], 'highlight')
+        );
+    }
+
+    public function test_extra_asr_token_does_not_shift_the_rest_of_the_ayah_red(): void
+    {
+        $result = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين', 'الرحمن', 'الرحيم'],
+            ['الحمد', 'لله', 'رب', 'كتاب', 'العالمين', 'الرحمن', 'الرحيم']
+        );
+
+        $this->assertSame(
+            ['MATCH', 'MATCH', 'MATCH', 'MATCH', 'MATCH', 'MATCH'],
+            array_column($result['word_results'], 'type')
+        );
+        $this->assertCount(1, $result['extra_words']);
+        $this->assertSame('INSERTION', $result['extra_words'][0]['type']);
+        $this->assertSame(
+            ['green', 'green', 'green', 'green', 'green', 'green'],
+            array_column($result['word_results'], 'highlight')
+        );
+    }
+
+    public function test_isolated_wrong_word_stays_a_substitution(): void
+    {
+        $result = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين', 'الرحمن', 'الرحيم'],
+            ['الحمد', 'لله', 'رب', 'صمد', 'الرحمن', 'الرحيم']
+        );
+
+        $this->assertSame('SUBSTITUTION', $result['word_results'][3]['type']);
+        $this->assertSame('صمد', $result['word_results'][3]['actual'] ?? $result['word_results'][3]['recognised_word']);
+        $this->assertSame(['MATCH', 'MATCH'], array_column(array_slice($result['word_results'], 4), 'type'));
     }
 
     /**

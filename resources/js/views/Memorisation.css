@@ -66264,6 +66264,17 @@ html body .top-card-menu--portal .top-card-menu-row.active {
   outline: none;
 }
 
+html body .top-card-menu--portal .top-card-menu-row.top-card-menu-row--mode-selected {
+  background: transparent;
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+html body .top-card-menu--portal .top-card-menu-row.top-card-menu-row--mushaf-edition {
+  padding-inline-start: 1.35rem;
+  font-size: 0.92rem;
+}
+
 html body .top-card-menu--portal .top-card-menu-label--layout {
   margin: 0 0 0.12rem;
   padding: 0.15rem 0.7rem 0.1rem;
@@ -67093,9 +67104,23 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 /* Stacked ayah cards — same QCF Madani ink + word metrics as mushaf reader */
+.main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic,
+.main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verse-card .verse-arabic {
+  --verse-font-percent: 102;
+  width: 100%;
+  text-align: right !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+.main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic.verse-arabic--qpc-madani {
+  text-align: right !important;
+  justify-content: flex-start !important;
+  flex-wrap: wrap;
+  gap: 0.12rem 0.08rem;
+}
+
 .main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--qpc-madani {
-  text-align: center;
-  justify-content: center;
   flex-wrap: wrap;
   gap: 0.12rem 0.08rem;
   --qpc-ink: var(--mushaf-reading-ink, #f7ebdf);
@@ -67147,8 +67172,11 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   font-family: var(--indopak-nastaleeq-font, var(--quran-font), IndopakNastaleeq, "Noto Nastaliq Urdu", "Amiri Quran", serif) !important;
 }
 
-.main:not(.mushaf-mode-active) .verses-grid .verse-arabic.verse-arabic--indopak {
-  line-height: 2.45 !important;
+.main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic.verse-arabic--indopak {
+  text-align: right !important;
+  justify-content: flex-start !important;
+  line-height: 2.2 !important;
+  --verse-font-percent: 102;
 }
 
 .verses-grid .verse-arabic--indopak .qpc-madani-word--indopak {

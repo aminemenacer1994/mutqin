@@ -136,6 +136,7 @@ export function fingerprintEvent(event) {
 export function isExpectedHttpStatus(status) {
   const code = Number(status || 0)
   if (!code) return false
+  if (code === 409) return true
   return code < 500 && code !== 429
 }
 
