@@ -43,6 +43,7 @@ class MarketingHostPolicyTest extends TestCase
     {
         $this->getOnMarketingHost('/')
             ->assertOk()
+            ->assertSee('window.mutqinRestrictMarketingHost = true', false)
             ->assertSee('<homepage', false)
             ->assertSee('class="mutqin-early-access-nav"', false)
             ->assertSee('id="earlyAccessNavbar"', false)

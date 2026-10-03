@@ -7960,6 +7960,7 @@
         window.mutqinInitialDirection = @json($appDirection);
         window.mutqinForceInitialLocale = @json($usesEarlyAccessNav || request()->query('lang') ? true : false);
         window.mutqinAuthCheck = @json(Auth::check());
+        window.mutqinRestrictMarketingHost = @json(\App\Support\MutqinDomains::restrictMarketingHost(request()));
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::hostRoutingEnabled() ? \App\Support\MutqinDomains::appOrigin() : '');
         window.mutqinUserId = @json(Auth::id());
         window.mutqinHasPaidAccess = @json($navUser?->hasPaidAccess() ?? false);

@@ -24,7 +24,7 @@
                 <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                 {{ t('homepage.waitlist.cta') }}
               </a>
-              <a href="/memorisation" class="btn btn--secondary">
+              <a v-if="showStartMemorisationCta" href="/memorisation" class="btn btn--secondary">
                 <i class="bi bi-journal-text" aria-hidden="true"></i>
                 {{ t('homepage.hero.startMemorisation') }}
               </a>
@@ -372,6 +372,7 @@ export default {
   name: 'Homepage',
   setup() {
     const { t, locale } = useI18n();
+    const showStartMemorisationCta = typeof window === 'undefined' || !window.mutqinRestrictMarketingHost;
     const currentTheme = ref(getSavedTheme());
     const FEATURES_CAROUSEL_START_INDEX = 2;
     const FEATURES_MOBILE_MQ = '(max-width: 767.98px)';
@@ -725,6 +726,7 @@ export default {
 
     return {
       t,
+      showStartMemorisationCta,
       currentTheme,
       socialLinks,
       FEATURES_CAROUSEL_START_INDEX,
