@@ -11555,6 +11555,18 @@ export default {
       const id = Number(val || 0)
       this.currentChapter = id ? (this.chapters.find(c => Number(c.id) === id) || null) : null
     },
+    hasVerses(ready) {
+      if (!ready) return
+      this.isWorkspaceRefreshing = false
+      this.workspaceRefreshReason = ''
+      if (
+        isQpcMadaniMushafView(this.readingViewMode)
+        && !this.qpcVersePageIndex
+        && !this.qpcMadaniLoadError
+      ) {
+        void this.bootstrapQpcMadaniViewer()
+      }
+    },
     rangeStart() {
       this.persistUiState()
     },
@@ -43484,6 +43496,8 @@ export default {
             }
             if (this.readingViewMode === 'mushaf') {
               this.ensureMadaniPagesLoaded().then(() => this.syncMushafPageToActiveVerse())
+            } else if (isQpcMadaniMushafView(this.readingViewMode) && !this.qpcVersePageIndex) {
+              void this.bootstrapQpcMadaniViewer()
             }
             this.refreshAyahNoteCounts(chapterId)
             return
@@ -43651,6 +43665,8 @@ export default {
         }
         if (this.readingViewMode === 'mushaf') {
           this.ensureMadaniPagesLoaded({ force: true }).then(() => this.syncMushafPageToActiveVerse())
+        } else if (isQpcMadaniMushafView(this.readingViewMode) && !this.qpcVersePageIndex) {
+          void this.bootstrapQpcMadaniViewer()
         }
         this.refreshAyahNoteCounts(chapterId)
 

@@ -1246,7 +1246,7 @@
 
 </section>
 
-          <div v-if="showWorkspaceRefreshSpinner" class="loading-spinner" :class="{ 'is-reciter-refresh': workspaceRefreshReason === 'reciter' }">
+          <div v-if="showWorkspaceRefreshSpinner && !hasVerses" class="loading-spinner" :class="{ 'is-reciter-refresh': workspaceRefreshReason === 'reciter' }">
             <i class="bi bi-hourglass-split"></i>
             <span>{{ workspaceLoadingLabel }}</span>
           </div>
@@ -1304,7 +1304,7 @@
               class="workspace-reading-surface"
               :class="`workspace-reading-surface--${readingViewMode}`"
             >
-            <div v-if="readingViewMode === 'mushaf'" class="mushaf-workspace">
+            <div v-if="readingViewMode === 'mushaf' && (mushafPages.length || madaniPagesError)" class="mushaf-workspace">
               <div class="container-fluid mushaf-workspace__fluid">
               <section
                 class="mushaf-shell row g-0"
@@ -1364,11 +1364,6 @@
                       @action="ensureMadaniPagesLoaded({ force: true })"
                       @secondary-action="setReadingViewMode('stacked')"
                     />
-                  </div>
-                  <div v-else-if="!mushafPages.length" class="mushaf-empty-page">
-                    <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                    <strong>{{ workspaceLoadingLabel }}</strong>
-                    <span>{{ t('memorisation.common.mushafSyncMessage') }}</span>
                   </div>
                   <div
                     v-else
@@ -1481,7 +1476,7 @@
               </section>
               </div>
             </div>
-            <div v-else-if="readingViewMode === 'madani_mushaf'" class="madani-qpc-workspace">
+            <div v-else-if="readingViewMode === 'madani_mushaf' && (qpcMadaniLoadError || (qpcVersePageIndex && qpcMadaniCurrentPage))" class="madani-qpc-workspace">
               <div class="container-fluid mushaf-workspace__fluid">
               <section
                 class="mushaf-shell madani-qpc-shell"
@@ -1564,10 +1559,6 @@
                   @action="bootstrapQpcMadaniViewer()"
                   @secondary-action="setReadingViewMode('stacked')"
                 />
-              </div>
-              <div v-else-if="!qpcVersePageIndex" class="mushaf-empty-page">
-                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                <strong>{{ workspaceLoadingLabel }}</strong>
               </div>
               <madani-session-scroll
                 v-else-if="qpcMadaniCurrentPage && !showQpcMadaniSpreadPageNav"
