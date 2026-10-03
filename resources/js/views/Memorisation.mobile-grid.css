@@ -6264,6 +6264,35 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 }
 
+@media (min-width: 768px) and (max-width: 1440px) and (orientation: portrait) {
+  html body .app .workspace-shell-bottom {
+    justify-content: flex-end !important;
+  }
+
+  html body .app .workspace-shell-reading-toggles {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin-inline-start: auto !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    justify-content: flex-end !important;
+    align-self: flex-end !important;
+  }
+
+  html body .app .workspace-layout-toggle {
+    width: auto !important;
+    max-width: none !important;
+    margin-inline-start: auto !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+  }
+
+  html body .app .workspace-layout-toggle .view-mode-btn {
+    flex: 0 0 auto !important;
+  }
+}
+
 /*
  * Head toolbar contract (all viewports).
  * Row 1: title. Row 2: session CTAs full width, reading icons on row 3 (right).
@@ -8375,5 +8404,35 @@ html body .app .workspace-recite-dock__button:hover {
     max-width: none !important;
     margin-inline: 0 !important;
     padding-inline: 0 !important;
+  }
+}
+
+/*
+ * Tablet portrait + landscape: session chrome inset, centered body recite dock.
+ */
+@media (min-width: 768px) and (max-width: 1440px) {
+  html body .app .workspace > .session-progress-rail,
+  html body .app .main.mushaf-mode-active .workspace > .session-progress-rail,
+  html body .app .main.madani-qpc-mode-active .workspace > .session-progress-rail,
+  html body .app .workspace > .workspace-shell:not(.is-idle-card),
+  html body .app .main.mushaf-mode-active .workspace > .workspace-shell:not(.is-idle-card),
+  html body .app .main.madani-qpc-mode-active .workspace > .workspace-shell:not(.is-idle-card) {
+    box-sizing: border-box !important;
+    width: auto !important;
+    inline-size: auto !important;
+    max-width: none !important;
+    max-inline-size: none !important;
+    margin-inline: clamp(20px, 3.6vw, 40px) !important;
+  }
+
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite,
+  html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  html body .app .main.mushaf-mode-active .workspace-recite-dock--mobile {
+    display: none !important;
   }
 }

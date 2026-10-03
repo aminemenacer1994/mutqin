@@ -11,6 +11,9 @@ return [
         'name' => 'Nombre',
         'email' => 'Correo',
         'joined' => 'Alta',
+        'export_csv' => 'Descargar CSV',
+        'total' => '{0} Aún no hay inscripciones.|{1} :count inscripción.|[2,*] :count inscripciones.',
+        'deleted' => 'Inscripción en la lista de espera eliminada.',
     ],
     'contact_messages' => [
         'title' => 'Mensajes de contacto',

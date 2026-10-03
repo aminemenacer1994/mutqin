@@ -1,3 +1,5 @@
+import { resolveEnMessage } from '../i18n.js'
+
 export const POST_SESSION_ENCOURAGEMENT_COUNT = 6
 
 export const STREAK_MILESTONES = [3, 7, 14, 21, 30]
@@ -174,9 +176,11 @@ export function buildWelcomeBackRemembrance({
   const n = index + 1
 
   const translate = (key, fallbackValue) => {
-    if (typeof t !== 'function') return fallbackValue
+    const englishFallback = resolveEnMessage(key)
+    const resolvedFallback = englishFallback !== key ? englishFallback : fallbackValue
+    if (typeof t !== 'function') return resolvedFallback
     const value = t(key)
-    if (!value || value === key || String(value).includes(key)) return fallbackValue
+    if (value == null || value === '' || value === key) return resolvedFallback
     return String(value)
   }
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
 use App\Http\Controllers\Api\Learning\HifzPlanController;
 use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
+use App\Http\Controllers\Api\Learning\MutashabihatController;
 use App\Http\Controllers\Api\Learning\ProgressController;
 use App\Http\Controllers\Api\Learning\RecommendationController;
 use App\Http\Controllers\Api\Learning\SessionController;
@@ -32,6 +33,14 @@ Route::post('/stripe/webhook', [BillingController::class, 'webhook'])->name('str
 Route::post('/contact', [ContactSubmissionController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('api.contact.store');
+
+Route::middleware('throttle:120,1')->group(function () {
+    Route::get('/mutashabihat/catalog', [MutashabihatController::class, 'catalog'])
+        ->name('api.mutashabihat.catalog');
+    Route::get('/mutashabihat/for-ayah', [MutashabihatController::class, 'forAyah'])
+        ->name('api.mutashabihat.for-ayah');
+});
+
 // Backend-driven learning persistence (Sanctum SPA cookie auth, user scoped).
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('can:access-admin')->group(function () {
@@ -125,6 +134,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/progress', [ProgressController::class, 'index'])->name('api.progress.index');
         Route::post('/progress', [ProgressController::class, 'store'])->name('api.progress.store');
+
+        Route::post('/mutashabihat/compare', [MutashabihatController::class, 'compare'])
+            ->middleware('throttle:60,1')
+            ->name('api.mutashabihat.compare');
+        Route::get('/mutashabihat/progress', [MutashabihatController::class, 'progressIndex'])
+            ->name('api.mutashabihat.progress.index');
+        Route::post('/mutashabihat/confusion', [MutashabihatController::class, 'recordConfusion'])
+            ->middleware('throttle:30,1')
+            ->name('api.mutashabihat.confusion.store');
+        Route::post('/mutashabihat/practice', [MutashabihatController::class, 'recordPractice'])
+            ->middleware('throttle:60,1')
+            ->name('api.mutashabihat.practice.store');
 
         Route::get('/hifz-plan', [HifzPlanController::class, 'show'])->name('api.hifz-plan.show');
         Route::put('/hifz-plan', [HifzPlanController::class, 'upsert'])

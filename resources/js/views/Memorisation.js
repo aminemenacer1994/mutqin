@@ -487,6 +487,19 @@ import { WordSyncEngine } from '../scripts/audioSync'
 import AppStatus from '../components/AppStatus.vue'
 import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
 import WorkspaceAiReciteResultModal from '../components/WorkspaceAiReciteResultModal.vue'
+import {
+  buildMutashabihatCompareView,
+  refreshMutashabihatProgress,
+  startMutashabihatPractice,
+  currentMutashabihatPracticeStep,
+  advanceMutashabihatPractice,
+  detectDriftForWorkspaceRecite,
+  persistMutashabihatConfusion,
+  mutashabihatStatusLabel,
+  gradeMutashabihatIdentify,
+  resolveArabicFromSearchIndex,
+} from '../scripts/mutashabihat/workspaceBridge.js'
+import { listAllMutashabihatPairs } from '../scripts/mutashabihat/pairsIndex.js'
 import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
 import ViewportConfetti from '../components/ViewportConfetti.vue'
 import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
@@ -516,6 +529,14 @@ const preloadAskMutqinModal = () => wrapChunkImport(
 const AskMutqinModal = lazyWorkspaceChunk(
   () => preloadAskMutqinModal(),
   'ask-mutqin-modal'
+)
+const MutashabihatCompareModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "mutashabihat-compare" */ '../components/MutashabihatCompareModal.vue'),
+  'mutashabihat-compare'
+)
+const MutashabihatPracticeModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "mutashabihat-practice" */ '../components/MutashabihatPracticeModal.vue'),
+  'mutashabihat-practice'
 )
 const AiAudioConsentModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue'),
@@ -811,6 +832,8 @@ export default {
     AyahNotesModal,
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
+    MutashabihatCompareModal,
+    MutashabihatPracticeModal,
     AppStatus,
     ViewportConfetti,
   },
@@ -1491,6 +1514,12 @@ export default {
       // AI Memorisation Detection (post-session "Test with AI" only)
       amdOpen: false,
       askMutqinOpen: false,
+      mutashabihatCompareOpen: false,
+      mutashabihatCompareView: null,
+      mutashabihatPracticeOpen: false,
+      mutashabihatPracticeSession: null,
+      mutashabihatProgressRows: [],
+      mutashabihatPendingDrift: null,
       amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | 'saved-session-review' | 'workspace-ai-recite' | null
       savedSessionReviewMode: false,
       dashboardAiCheckReturnTo: null,
@@ -1720,6 +1749,7 @@ export default {
         chaining: false,
         talqin_mode: false,
         anchor_mode: false,
+        mutashabihat: false,
         quiz_lab: false,
         presets: true,
         repetitions: false,
@@ -6472,6 +6502,58 @@ export default {
       if (tone === 'almost') return this.t('memorisation.postSession.adaptiveCheck.feedbackAlmost')
       if (tone === 'incorrect') return this.t('memorisation.postSession.adaptiveCheck.feedbackIncorrect')
       return ''
+    },
+    mutashabihatPracticeStepView() {
+      const session = this.mutashabihatPracticeSession
+      if (!session) return null
+      if (session.finished) {
+        return {
+          kind: 'result',
+        }
+      }
+      return currentMutashabihatPracticeStep(this)
+    },
+    mutashabihatPracticeProgressLabel() {
+      const session = this.mutashabihatPracticeSession
+      if (!session) return ''
+      const current = Math.min(session.steps.length, session.stepIndex + 1)
+      return this.t('memorisation.mutashabihat.practiceProgress', {
+        current,
+        total: session.steps.length,
+      })
+    },
+    mutashabihatPracticeAnchorRef() {
+      const session = this.mutashabihatPracticeSession
+      if (!session?.anchorVerseKey) return ''
+      const [s, a] = session.anchorVerseKey.split(':')
+      return `${this.getChapterLatinName(Number(s)) || `Surah ${s}`} · ${s}:${a}`
+    },
+    mutashabihatPracticeOtherRef() {
+      const session = this.mutashabihatPracticeSession
+      if (!session?.otherVerseKey) return ''
+      const [s, a] = session.otherVerseKey.split(':')
+      return `${this.getChapterLatinName(Number(s)) || `Surah ${s}`} · ${s}:${a}`
+    },
+    mutashabihatWeakPairRows() {
+      const progress = Array.isArray(this.mutashabihatProgressRows) ? this.mutashabihatProgressRows : []
+      if (progress.length) {
+        return progress.slice(0, 8).map((row) => ({
+          key: `progress-${row.id}`,
+          label: this.mutashabihatPairLabel(row.pair || row),
+          status: row.status,
+          statusLabel: this.mutashabihatStatusLabelFor(row.status),
+          pair: row.pair,
+          expected_verse_key: row.expected_verse_key,
+        }))
+      }
+      return listAllMutashabihatPairs().slice(0, 6).map((pair) => ({
+        key: `catalog-${pair.id}`,
+        label: this.mutashabihatPairLabel(pair),
+        status: 'needs_practice',
+        statusLabel: this.mutashabihatStatusLabelFor('needs_practice'),
+        pair,
+        expected_verse_key: pair.verse_key_1,
+      }))
     },
     postSessionAdaptivePrimaryActionLabel() {
       const key = this.postSessionAdaptiveResultView?.primaryActionLabelKey || 'continue'
@@ -11815,10 +11897,41 @@ export default {
       this.workspaceReciteAttemptSaved = false
     },
     presentWorkspaceReciteAnalysis(submitData, result, audioUrl = '') {
+      const expectedSurah = Number(submitData?.assessment?.surah_number || this.chapterId || 0)
+      const expectedAyah = Number(submitData?.assessment?.start_ayah || this.rangeStart || 0)
+      const expectedVerseKey = expectedSurah > 0 && expectedAyah > 0 ? `${expectedSurah}:${expectedAyah}` : ''
+      const expectedArabic = resolveArabicFromSearchIndex(this.quranSearchIndex, expectedVerseKey)
+        || String(result?.targetText || '')
+      const driftRaw = expectedVerseKey
+        ? detectDriftForWorkspaceRecite(this, {
+          expectedVerseKey,
+          expectedArabic,
+          wordStatuses: result?.wordStatuses,
+        })
+        : null
+      let mutashabihatDrift = null
+      if (driftRaw) {
+        const [es, ea] = String(driftRaw.expectedVerseKey || '').split(':')
+        const [cs, ca] = String(driftRaw.confusedVerseKey || '').split(':')
+        mutashabihatDrift = {
+          pair: driftRaw.pair,
+          expectedVerseKey: driftRaw.expectedVerseKey,
+          confusedVerseKey: driftRaw.confusedVerseKey,
+          confidence: driftRaw.confidence,
+          expectedLabel: `${this.getChapterLatinName(Number(es)) || `Surah ${es}`} · ${es}:${ea}`,
+          confusedLabel: `${this.getChapterLatinName(Number(cs)) || `Surah ${cs}`} · ${cs}:${ca}`,
+        }
+        this.mutashabihatPendingDrift = driftRaw
+        void persistMutashabihatConfusion(this, driftRaw)
+      } else {
+        this.mutashabihatPendingDrift = null
+      }
+
       const view = buildWorkspaceAiReciteResultView({
         submitData,
         result,
         audioUrl,
+        mutashabihatDrift,
         surahName: this.currentChapter?.name_simple || this.topCardSurahLatin || '',
         rangeStart: Number(this.rangeStart || 1),
         rangeEnd: Number(this.rangeEnd || this.rangeStart || 1),
@@ -11854,10 +11967,117 @@ export default {
       void import('../scripts/askMutqin/matchingIndex.js')
         .then(({ loadAskMutqinMatchingIndex }) => loadAskMutqinMatchingIndex(this.quranSearchIndex))
         .catch(() => {})
+      void this.ensureQuranSearchIndex?.().catch(() => {})
       this.askMutqinOpen = true
     },
     closeAskMutqin() {
       this.askMutqinOpen = false
+    },
+    closeMutashabihatCompare() {
+      this.mutashabihatCompareOpen = false
+      this.mutashabihatCompareView = null
+    },
+    openMutashabihatCompareFromPayload(payload = {}) {
+      const pair = payload?.pair
+      const anchorVerseKey = String(payload?.anchorVerseKey || '').trim()
+      const view = buildMutashabihatCompareView(this, { pair, anchorVerseKey })
+      if (!view) return
+      this.mutashabihatCompareView = view
+      this.mutashabihatCompareOpen = true
+    },
+    onAskMutqinMutashabihatCompare(payload = {}) {
+      this.openMutashabihatCompareFromPayload(payload)
+    },
+    onAskMutqinMutashabihatPractice(payload = {}) {
+      if (!startMutashabihatPractice(this, payload)) return
+    },
+    closeMutashabihatPractice() {
+      this.mutashabihatPracticeOpen = false
+      this.mutashabihatPracticeSession = null
+    },
+    advanceMutashabihatPracticeStep(options = {}) {
+      advanceMutashabihatPractice(this, options)
+    },
+    onMutashabihatPracticeNext() {
+      this.advanceMutashabihatPracticeStep({ success: true })
+    },
+    onMutashabihatIdentifySubmit(selectedId) {
+      gradeMutashabihatIdentify(this, selectedId)
+    },
+    async onMutashabihatPracticeAiRecite() {
+      const session = this.mutashabihatPracticeSession
+      const step = currentMutashabihatPracticeStep(this)
+      const targetKey = step?.anchorVerseKey || session?.anchorVerseKey
+      if (!targetKey) return
+      const [surah, ayah] = targetKey.split(':')
+      await this.openSimilarAyahPractice({
+        surah,
+        ayah,
+        chapterId: Number(surah),
+        rangeStart: Number(ayah),
+      })
+      this.closeMutashabihatPractice()
+      await this.openWorkspaceAiRecite()
+    },
+    onMutashabihatComparePractice() {
+      const view = this.mutashabihatCompareView
+      if (!view?.pair) return
+      startMutashabihatPractice(this, {
+        pair: view.pair,
+        anchorVerseKey: view.anchorVerseKey,
+      })
+    },
+    onMutashabihatCompareOpenAyah(verseKey) {
+      const key = String(verseKey || '').trim()
+      if (!key) return
+      const [surah, ayah] = key.split(':')
+      void this.openSimilarAyahPractice({ surah, ayah, chapterId: Number(surah), rangeStart: Number(ayah) })
+      this.closeMutashabihatCompare()
+      this.closeAskMutqin()
+    },
+    onMutashabihatComparePlayAyah(verseKey) {
+      const key = String(verseKey || '').trim()
+      if (!key) return
+      const ayah = Number(key.split(':')[1] || 0)
+      if (ayah > 0 && typeof this.playAyahByNumber === 'function') {
+        try { this.playAyahByNumber(ayah) } catch (_) { /* ignore */ }
+      }
+    },
+    onWorkspaceReciteMutashabihatCompare() {
+      const drift = this.mutashabihatPendingDrift
+      if (!drift?.pair) return
+      this.openMutashabihatCompareFromPayload({
+        pair: drift.pair,
+        anchorVerseKey: drift.expectedVerseKey,
+      })
+    },
+    onWorkspaceReciteMutashabihatPractice() {
+      const drift = this.mutashabihatPendingDrift
+      if (!drift?.pair) return
+      startMutashabihatPractice(this, {
+        pair: drift.pair,
+        anchorVerseKey: drift.expectedVerseKey,
+      })
+    },
+    async ensureMutashabihatProgressLoaded() {
+      await refreshMutashabihatProgress(this)
+    },
+    openMutashabihatPracticePair(row = {}) {
+      const pair = row?.pair || row
+      if (!pair?.verse_key_1) return
+      startMutashabihatPractice(this, {
+        pair,
+        anchorVerseKey: row.expected_verse_key || row.anchorVerseKey || pair.verse_key_1,
+      })
+    },
+    mutashabihatPairLabel(pair) {
+      if (!pair) return ''
+      const left = pair.verse_key_1 || `${pair.surah_number_1}:${pair.ayah_number_1}`
+      const right = pair.verse_key_2 || `${pair.surah_number_2}:${pair.ayah_number_2}`
+      return `${left} ↔ ${right}`
+    },
+    mutashabihatStatusLabelFor(status) {
+      return mutashabihatStatusLabel(this, status)
     },
     async applyAskMutqinCommand(payload = {}) {
       const surah = Number(payload.surah || 0)

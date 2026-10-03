@@ -7627,6 +7627,43 @@
           padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px)) !important;
         }
       }
+
+      /* Tablet portrait: full-width offcanvas header — identity left, close right. */
+      @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+        #primaryNavbar .offcanvas-header,
+        #earlyAccessNavbar .offcanvas-header,
+        .app-navbar .offcanvas-lg .offcanvas-header {
+          display: grid !important;
+          grid-template-columns: minmax(0, 1fr) 44px !important;
+          gap: 10px !important;
+          align-items: center !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+          padding: max(12px, env(safe-area-inset-top)) 16px 12px !important;
+        }
+
+        #primaryNavbar .mobile-nav-identity,
+        #earlyAccessNavbar .mobile-nav-identity,
+        .app-navbar .offcanvas-lg .mobile-nav-identity {
+          display: flex !important;
+          align-items: center !important;
+          gap: 12px !important;
+          min-width: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+
+        #primaryNavbar .offcanvas-header .btn-close,
+        #earlyAccessNavbar .offcanvas-header .btn-close,
+        .app-navbar .offcanvas-lg .offcanvas-header .btn-close {
+          grid-column: 2 !important;
+          justify-self: end !important;
+          align-self: center !important;
+          margin: 0 !important;
+          flex-shrink: 0 !important;
+        }
+      }
     </style>
 </head>
 <body dir="{{ $appDirection }}" @if (\App\Support\MutqinDomains::usesEarlyAccessNav(request())) class="mutqin-early-access-nav" @endif>
@@ -9052,10 +9089,7 @@ body.session-analysis-modal-open {
       --workspace-recite-size: 56px;
       position: fixed !important;
       top: auto !important;
-      bottom: calc(var(--fixed-player-height, 0px) + 12px) !important;
-      inset-inline: auto !important;
-      inset-inline-start: auto !important;
-      inset-inline-end: auto !important;
+      bottom: calc(1.35rem + env(safe-area-inset-bottom, 0px) + var(--fixed-player-height, 0px)) !important;
       left: auto !important;
       right: var(--back-to-top-rail) !important;
       display: flex !important;
@@ -10266,6 +10300,143 @@ body.session-analysis-modal-open {
       border-radius: 20px !important;
       border-inline-width: 1px !important;
       padding: 0.72rem 0.82rem 0.62rem !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v198">
+  /*
+   * Tablet portrait + landscape: session chrome inset.
+   * Do not use body.memorisation-page — that class is not always present.
+   */
+  @media (min-width: 768px) and (max-width: 1440px) {
+    html body .app .workspace > .session-progress-rail,
+    html body .app .main .workspace > .session-progress-rail,
+    html body .app .main.mushaf-mode-active .workspace > .session-progress-rail,
+    html body .app .main.madani-qpc-mode-active .workspace > .session-progress-rail,
+    html body .app .workspace > .workspace-shell:not(.is-idle-card),
+    html body .app .main.mushaf-mode-active .workspace > .workspace-shell:not(.is-idle-card),
+    html body .app .main.madani-qpc-mode-active .workspace > .workspace-shell:not(.is-idle-card) {
+      box-sizing: border-box !important;
+      width: auto !important;
+      inline-size: auto !important;
+      max-width: none !important;
+      max-inline-size: none !important;
+      margin-inline: clamp(20px, 3.6vw, 40px) !important;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1440px) and (orientation: portrait) {
+    html body .app .workspace-shell-bottom {
+      justify-content: flex-end !important;
+    }
+
+    html body .app .workspace-shell-reading-toggles,
+    html body .app .workspace-shell-bottom .workspace-shell-reading-toggles {
+      display: flex !important;
+      flex: 0 0 auto !important;
+      width: auto !important;
+      max-width: none !important;
+      margin-left: auto !important;
+      margin-right: 0 !important;
+      margin-inline-start: auto !important;
+      margin-inline-end: 0 !important;
+      justify-content: flex-end !important;
+      align-self: flex-end !important;
+    }
+
+    html body .app .workspace-layout-toggle,
+    html body .app .workspace-shell-reading-toggles .workspace-layout-toggle {
+      width: auto !important;
+      max-width: none !important;
+      margin-left: auto !important;
+      margin-right: 0 !important;
+    }
+
+    html body .app .workspace-layout-toggle .view-mode-btn {
+      flex: 0 0 auto !important;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1440px) {
+    /* Hide the in-rail Mushaf mic — a parent transform keeps position:fixed in the rail. */
+    html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite,
+    html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button,
+    html body .app .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-ai-recite-cta.workspace-recite-dock__button,
+    html body .main.mushaf-mode-active .mushaf-font-zoom .mushaf-font-zoom__recite.workspace-recite-dock__button {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    html body .app .main.mushaf-mode-active .workspace-recite-dock--mobile {
+      display: none !important;
+    }
+
+    /*
+     * FAB lives on the physical right of the content container.
+     * Do not set inset-inline after `right` — that resets the physical right
+     * and drops the rail to the left. Do not use bottom: 0.
+     */
+    html body .workspace-float-rail,
+    html body .workspace-float-rail--desktop,
+    body > .workspace-float-rail {
+      --back-to-top-rail: calc(clamp(20px, 3.6vw, 40px) + 12px);
+      position: fixed !important;
+      top: auto !important;
+      bottom: calc(1.35rem + env(safe-area-inset-bottom, 0px) + var(--fixed-player-height, 0px)) !important;
+      left: auto !important;
+      right: var(--back-to-top-rail) !important;
+      width: max-content !important;
+      min-width: 52px !important;
+      max-width: 64px !important;
+      margin: 0 !important;
+      transform: none !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+    }
+
+    html body .workspace-float-rail .back-to-top-fab,
+    html body .workspace-float-rail .back-to-top-fab.fab-btn,
+    body > .workspace-float-rail .back-to-top-fab,
+    body > .workspace-float-rail .back-to-top-fab.fab-btn,
+    html body .back-to-top-fab.fab-btn,
+    html body .back-to-top-fab {
+      position: relative !important;
+      top: auto !important;
+      bottom: auto !important;
+      left: auto !important;
+      right: auto !important;
+      margin: 0 !important;
+      transform: none !important;
+    }
+
+    /* Recite is viewport-centered; FAB stays in the right rail. */
+    html body .workspace-float-rail .workspace-recite-dock,
+    body > .workspace-float-rail .workspace-recite-dock {
+      display: flex !important;
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      inset-inline: 0 !important;
+      width: 100% !important;
+      justify-content: center !important;
+      align-items: center !important;
+      bottom: calc(1.65rem + env(safe-area-inset-bottom, 0px) + var(--fixed-player-height, 0px)) !important;
+      pointer-events: none !important;
+    }
+
+    html body .workspace-float-rail .workspace-recite-dock__button,
+    html body .workspace-float-rail .workspace-ai-recite-cta.workspace-recite-dock__button,
+    body > .workspace-float-rail .workspace-recite-dock__button {
+      margin-inline: auto !important;
+      pointer-events: auto !important;
+    }
+  }
+
+  /* Wide desktop Mushaf keeps the font-rail mic only. */
+  @media (min-width: 1441px) {
+    body:has(.main.mushaf-mode-active) .workspace-float-rail .workspace-recite-dock {
+      display: none !important;
     }
   }
 </style>

@@ -121,6 +121,50 @@
                 </div>
 
                 <div
+                  v-if="view.mutashabihatDrift"
+                  class="post-session-simple__support-block mutashabihat-drift-block"
+                  data-testid="workspace-recite-mutashabihat-drift"
+                >
+                  <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
+                    {{ mutashabihatTitle }}
+                  </p>
+                  <p class="post-session-simple__why-block post-session-simple__next-line">
+                    {{ mutashabihatLead }}
+                  </p>
+                  <ul class="post-session-simple__focus-ayah-list">
+                    <li class="post-session-simple__focus-ayah-item">
+                      <p class="post-session-simple__focus-ayah-label">{{ view.mutashabihatDrift.expectedLabel }}</p>
+                    </li>
+                    <li class="post-session-simple__focus-ayah-item">
+                      <p class="post-session-simple__focus-ayah-label">{{ view.mutashabihatDrift.confusedLabel }}</p>
+                    </li>
+                  </ul>
+                  <div class="post-session-simple__actions post-session-simple__actions--3 mutashabihat-drift-actions">
+                    <button
+                      type="button"
+                      class="post-session-simple__btn post-session-simple__btn--secondary"
+                      @click="$emit('mutashabihat-compare')"
+                    >
+                      {{ compareDifferencesLabel }}
+                    </button>
+                    <button
+                      type="button"
+                      class="post-session-simple__btn post-session-simple__btn--secondary"
+                      @click="$emit('mutashabihat-practice')"
+                    >
+                      {{ practiceLabel }}
+                    </button>
+                    <button
+                      type="button"
+                      class="post-session-simple__btn post-session-simple__btn--primary"
+                      @click="$emit('try-again')"
+                    >
+                      {{ tryAgainLabel }}
+                    </button>
+                  </div>
+                </div>
+
+                <div
                   v-if="view.infoArchitecture?.mainFocus?.explanation || view.focusAyahRows?.length"
                   class="post-session-simple__focus-block post-session-simple__support-block"
                   data-testid="workspace-recite-main-focus"
@@ -360,8 +404,12 @@ export default {
     resultsHref: { type: String, default: '' },
     resultsLabel: { type: String, default: 'See all results' },
     theme: { type: String, default: '' },
+    mutashabihatTitle: { type: String, default: 'Possible similar ayah confusion' },
+    mutashabihatLead: { type: String, default: 'Your recitation may have drifted toward a similar ayah.' },
+    compareDifferencesLabel: { type: String, default: 'Compare differences' },
+    practiceLabel: { type: String, default: 'Practice' },
   },
-  emits: ['close', 'try-again'],
+  emits: ['close', 'try-again', 'mutashabihat-compare', 'mutashabihat-practice'],
   watch: {
     open(value) {
       if (!value) return

@@ -1,0 +1,77 @@
+.mutashabihat-practice .memory-check-card {
+  max-width: min(640px, calc(100vw - 1.5rem));
+}
+
+.mutashabihat-practice__lead {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted, #6d6256);
+  font-size: 0.92rem;
+}
+
+.mutashabihat-practice__ref {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--text-muted, #6d6256);
+  direction: ltr;
+  text-align: start;
+}
+
+.mutashabihat-practice__ayah {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.2rem, 2.8vw, 1.55rem);
+  line-height: 1.95;
+}
+
+.mutashabihat-practice__prompt {
+  margin: 0.5rem 0 0.75rem;
+  font-weight: 650;
+}
+
+.mutashabihat-practice__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.mutashabihat-practice__option {
+  width: 100%;
+  text-align: start;
+  border: 1px solid var(--border-soft, rgba(120, 98, 72, 0.22));
+  background: var(--surface-soft, rgba(255, 252, 246, 0.85));
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  line-height: 1.85;
+}
+
+.mutashabihat-practice__option.is-selected {
+  border-color: var(--accent-strong, #8a6230);
+  box-shadow: 0 0 0 1px rgba(138, 98, 48, 0.25);
+}
+
+.mutashabihat-practice__result-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.mutashabihat-practice__result-copy {
+  margin: 0;
+  color: var(--text-muted, #6d6256);
+}
+
+.mutashabihat-practice__result-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .mutashabihat-practice__result-actions {
+    grid-template-columns: 1fr;
+  }
+}

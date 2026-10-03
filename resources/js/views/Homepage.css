@@ -1441,6 +1441,14 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
   }
 }
 
+/* Tablet portrait: space between hero CTAs and device mockup */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .hero__actions {
+    margin-bottom: clamp(1.35rem, 3.8vw, 2.35rem);
+    padding-bottom: clamp(0.25rem, 1vw, 0.65rem);
+  }
+}
+
 /* Responsive */
 @media (max-width: 991.98px) {
   .hero__grid {
@@ -1477,6 +1485,25 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
 
   .waitlist__band { grid-template-columns: minmax(0, 1fr); }
   .waitlist__band .btn { width: 100%; }
+}
+
+/* Tablet portrait: two feature cards per row (Bootstrap col-md-6). */
+@media (min-width: 768px) and (max-width: 1366px) and (orientation: portrait) {
+  .homepage .features__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  .homepage .features__item {
+    min-width: 0;
+  }
+
+  .homepage .features__device {
+    flex-basis: 128px;
+    width: 128px;
+    max-width: 38%;
+  }
 }
 
 @media (max-width: 767.98px) {

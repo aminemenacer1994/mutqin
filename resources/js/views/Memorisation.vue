@@ -2362,6 +2362,50 @@
               </div>
             </section>
 
+            <section class="sheet-section">
+              <button class="sheet-toggle" @click="toggleSection('mutashabihat'); ensureMutashabihatProgressLoaded()" type="button">
+                <span class="st-left">
+                  <span class="st-ico"><i class="bi bi-shuffle"></i></span>
+                  <span class="st-txt">
+                    <span class="st-title">{{ t('memorisation.mutashabihat.title') }}</span>
+                    <span class="st-sub">{{ t('memorisation.mutashabihat.summary') }}</span>
+                  </span>
+                </span>
+                <div class="st-right-group">
+                  <span class="st-chev" :class="{ open: sectionOpen.mutashabihat }"><i class="bi bi-chevron-down"></i></span>
+                </div>
+              </button>
+              <div class="sheet-content" v-show="sectionOpen.mutashabihat">
+                <div class="field-stack">
+                  <div class="field">
+                    <div class="technique-description">
+                      <i class="bi bi-info-circle-fill"></i>
+                      <span>{{ t('memorisation.mutashabihat.description') }}</span>
+                    </div>
+                  </div>
+                  <ul class="mutashabihat-practice-list">
+                    <li
+                      v-for="row in mutashabihatWeakPairRows"
+                      :key="row.key"
+                      class="mutashabihat-practice-list__item"
+                    >
+                      <div class="mutashabihat-practice-list__copy">
+                        <strong>{{ row.label }}</strong>
+                        <span class="mutashabihat-practice-list__status" :data-status="row.status">{{ row.statusLabel }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="tools-btn tools-btn-secondary"
+                        @click="openMutashabihatPracticePair(row)"
+                      >
+                        {{ t('memorisation.mutashabihat.practice') }}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
             <!-- <section class="sheet-section retention-check-section">
               <button class="sheet-toggle" @click="toggleSection('quiz_lab')" type="button">
                 <span class="st-left">
@@ -3374,8 +3418,14 @@
       :saved-label="translateOrFallback('dashboard.ai_recite.attempt_saved', 'This attempt is saved.')"
       :results-href="aiReciteResultsHref"
       :results-label="translateOrFallback('dashboard.ai_recite.see_all_results', 'See all results')"
+      :mutashabihat-title="t('memorisation.mutashabihat.driftTitle')"
+      :mutashabihat-lead="t('memorisation.mutashabihat.driftLead')"
+      :compare-differences-label="t('memorisation.mutashabihat.compareDifferences')"
+      :practice-label="t('memorisation.mutashabihat.practice')"
       @close="closeWorkspaceReciteAnalysis"
       @try-again="retryWorkspaceAiRecite"
+      @mutashabihat-compare="onWorkspaceReciteMutashabihatCompare"
+      @mutashabihat-practice="onWorkspaceReciteMutashabihatPractice"
     />
 
     <div v-if="showAdvancedMetricsModal" class="modal-overlay mutqin-modal-overlay session-analytics-overlay advanced-metrics-overlay"
@@ -4842,11 +4892,11 @@
 
     <Teleport to="body">
       <div
-        v-if="(showWorkspaceAiReciteCta && shouldShowReadingWorkspace && readingViewMode !== 'mushaf') || showBackToTop"
+        v-if="(showWorkspaceAiReciteCta && shouldShowReadingWorkspace) || showBackToTop"
         class="workspace-float-rail workspace-float-rail--desktop"
       >
         <div
-          v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace && readingViewMode !== 'mushaf'"
+          v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
           class="workspace-recite-dock"
           aria-live="polite"
         >
@@ -5012,6 +5062,59 @@
       :search-index="quranSearchIndex"
       @close="closeAskMutqin"
       @apply="applyAskMutqinCommand"
+      @mutashabihat-compare="onAskMutqinMutashabihatCompare"
+      @mutashabihat-practice="onAskMutqinMutashabihatPractice"
+    />
+
+    <MutashabihatCompareModal
+      v-if="mutashabihatCompareOpen"
+      :open="true"
+      :theme="theme"
+      :quran-font-family="quranFontFamily"
+      :title="t('memorisation.mutashabihat.compareTitle')"
+      :subtitle="t('memorisation.mutashabihat.compareSubtitle')"
+      :left-label="mutashabihatCompareView?.leftLabel || ''"
+      :right-label="mutashabihatCompareView?.rightLabel || ''"
+      :left-html="mutashabihatCompareView?.leftHtml || ''"
+      :right-html="mutashabihatCompareView?.rightHtml || ''"
+      :left-verse-key="mutashabihatCompareView?.leftVerseKey || ''"
+      :right-verse-key="mutashabihatCompareView?.rightVerseKey || ''"
+      :close-label="t('common.close')"
+      :practice-label="t('memorisation.mutashabihat.practice')"
+      :open-left-label="t('memorisation.mutashabihat.openAyah')"
+      @close="closeMutashabihatCompare"
+      @practice="onMutashabihatComparePractice"
+      @open-ayah="onMutashabihatCompareOpenAyah"
+      @play-ayah="onMutashabihatComparePlayAyah"
+    />
+
+    <MutashabihatPracticeModal
+      v-if="mutashabihatPracticeOpen"
+      :open="true"
+      :theme="theme"
+      :quran-font-family="quranFontFamily"
+      :title="t('memorisation.mutashabihat.practiceTitle')"
+      :progress-label="mutashabihatPracticeProgressLabel"
+      :step="mutashabihatPracticeStepView"
+      :anchor-ref="mutashabihatPracticeAnchorRef"
+      :other-ref="mutashabihatPracticeOtherRef"
+      :study-lead="t('memorisation.mutashabihat.studyLead')"
+      :identify-prompt="t('memorisation.mutashabihat.identifyContinuation')"
+      :recite-prompt="t('memorisation.mutashabihat.reciteFromMemory')"
+      :hide-label="t('memorisation.mutashabihat.continueStudy')"
+      :ai-recite-label="t('memorisation.mutashabihat.reciteAction')"
+      :check-label="t('memorisation.mutashabihat.checkAnswer')"
+      :close-label="t('common.close')"
+      :retry-label="t('common.tryAgain')"
+      :continue-label="t('common.continue')"
+      :result-title="mutashabihatPracticeSession?.resultSuccess ? t('memorisation.mutashabihat.resultStrong') : t('memorisation.mutashabihat.resultKeepGoing')"
+      :result-copy="t('memorisation.mutashabihat.resultCopy')"
+      @close="closeMutashabihatPractice"
+      @next="onMutashabihatPracticeNext"
+      @ai-recite="onMutashabihatPracticeAiRecite"
+      @identify-submit="onMutashabihatIdentifySubmit"
+      @retry="openMutashabihatPracticePair(mutashabihatPracticeSession)"
+      @done="closeMutashabihatPractice"
     />
 
     <AiMemorisationDetectionModal

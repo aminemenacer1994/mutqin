@@ -92,6 +92,47 @@
                     <i></i><i></i><i></i>
                   </span>
                 </div>
+                <div
+                  v-if="similarAyahRows.length"
+                  class="ask-mutqin-similar"
+                  dir="ltr"
+                  :aria-label="t('memorisation.mutashabihat.similarAyahs')"
+                >
+                  <div class="ask-mutqin-similar__head">
+                    <span class="ask-mutqin-similar__title">{{ t('memorisation.mutashabihat.similarAyahs') }}</span>
+                  </div>
+                  <ul class="ask-mutqin-similar__list">
+                    <li
+                      v-for="row in similarAyahRows"
+                      :key="`similar-${row.pairId}-${row.verseKey}`"
+                      class="ask-mutqin-similar__item"
+                    >
+                      <div class="ask-mutqin-similar__meta">
+                        <span class="ask-mutqin-similar__ref">{{ row.label }}</span>
+                        <span v-if="row.matchCount > 1" class="ask-mutqin-similar__count">
+                          {{ t('memorisation.mutashabihat.matchCount', { count: row.matchCount }) }}
+                        </span>
+                      </div>
+                      <p
+                        v-if="row.preview"
+                        class="ask-mutqin-similar__preview"
+                        dir="rtl"
+                        lang="ar"
+                        :style="arabicTextStyle"
+                      >
+                        {{ row.preview }}
+                      </p>
+                      <div class="ask-mutqin-similar__actions">
+                        <button type="button" class="ask-mutqin-similar__btn" @click="emitCompare(row)">
+                          {{ t('memorisation.mutashabihat.compare') }}
+                        </button>
+                        <button type="button" class="ask-mutqin-similar__btn ask-mutqin-similar__btn--primary" @click="emitPractice(row)">
+                          {{ t('memorisation.mutashabihat.practice') }}
+                        </button>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </section>
 
@@ -240,6 +281,8 @@ import {
   resolveAskMutqinReciter,
   ASK_MUTQIN_MIN_WORDS,
 } from '../scripts/askMutqin/index.js'
+import { findPairsForVerseKey, otherVerseKeyInPair, resolveVerseKey } from '../scripts/mutashabihat/pairsIndex.js'
+import { fetchPairsForAyah } from '../scripts/mutashabihat/api.js'
 import { classifyMicrophoneAccessError, resolveMicrophoneHelp } from '../scripts/audio/recordingResilience.js'
 
 const EMPTY_COMMAND = () => ({
@@ -274,7 +317,7 @@ export default {
     quranFontFamily: { type: String, default: '' },
     searchIndex: { type: Array, default: () => [] },
   },
-  emits: ['close', 'apply'],
+  emits: ['close', 'apply', 'mutashabihat-compare', 'mutashabihat-practice'],
   data() {
     return {
       state: ASK_MUTQIN_STATES.INTRO,
@@ -305,6 +348,9 @@ export default {
       aidLoading: false,
       aidError: '',
       aidRequestKey: '',
+      similarPairsLoadedKey: '',
+      similarPairsLoading: false,
+      similarPairsRevision: 0,
     }
   },
   computed: {
@@ -421,6 +467,51 @@ export default {
         || '"KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif'
       return { fontFamily: family }
     },
+    matchVerseKey() {
+      return resolveVerseKey(this.match || {})
+    },
+    indexByVerseKey() {
+      const rows = Array.isArray(this.index) && this.index.length
+        ? this.index
+        : (Array.isArray(this.searchIndex) ? this.searchIndex : [])
+      const map = new Map()
+      for (const row of rows) {
+        const key = row.key || `${row.surah}:${row.ayah}`
+        if (key) map.set(String(key), row)
+      }
+      return map
+    },
+    similarAyahRows() {
+      // Bumped when the pair index merges API rows (non-reactive map).
+      void this.similarPairsRevision
+      const anchor = this.matchVerseKey
+      if (!anchor) return []
+      const pairs = findPairsForVerseKey(anchor)
+      if (!pairs.length) return []
+      const byOther = new Map()
+      for (const pair of pairs) {
+        const otherKey = otherVerseKeyInPair(pair, anchor)
+        const entry = this.indexByVerseKey.get(otherKey)
+        const previewSource = String(entry?.arabic || entry?.text || '').trim()
+        const previewTokens = previewSource.split(/\s+/).filter(Boolean)
+        const preview = previewTokens.slice(0, 6).join(' ') + (previewTokens.length > 6 ? ' …' : '')
+        const [s, a] = otherKey.split(':')
+        const label = `${entry?.surahName || this.match?.surahName || `Surah ${s}`} · ${s}:${a}`
+        if (!byOther.has(otherKey)) {
+          byOther.set(otherKey, {
+            pair,
+            pairId: pair.id,
+            verseKey: otherKey,
+            label,
+            preview,
+            matchCount: 1,
+          })
+        } else {
+          byOther.get(otherKey).matchCount += 1
+        }
+      }
+      return [...byOther.values()].slice(0, 4)
+    },
   },
   watch: {
     open: {
@@ -442,8 +533,12 @@ export default {
       if (next) {
         this.$nextTick(() => this.resetAyahScroll())
         this.loadSelectedAid()
+        this.similarPairsRevision += 1
+        void this.ensureSimilarPairsForMatch()
       } else {
         this.resetAidPanel()
+        this.similarPairsLoadedKey = ''
+        this.similarPairsRevision = 0
       }
     },
   },
@@ -457,6 +552,30 @@ export default {
     },
     reciterName(id) {
       return resolveAskMutqinReciter(id, this.reciters)?.name || ''
+    },
+    async ensureSimilarPairsForMatch() {
+      const anchor = this.matchVerseKey
+      if (!anchor || this.similarPairsLoadedKey === anchor) return
+      this.similarPairsLoading = true
+      try {
+        await fetchPairsForAyah(anchor)
+        this.similarPairsLoadedKey = anchor
+        this.similarPairsRevision += 1
+      } finally {
+        this.similarPairsLoading = false
+      }
+    },
+    emitCompare(row) {
+      this.$emit('mutashabihat-compare', {
+        pair: row.pair,
+        anchorVerseKey: this.matchVerseKey,
+      })
+    },
+    emitPractice(row) {
+      this.$emit('mutashabihat-practice', {
+        pair: row.pair,
+        anchorVerseKey: this.matchVerseKey,
+      })
     },
     containsArabic(text) {
       return /[\u0600-\u06FF]/.test(String(text || ''))

@@ -341,6 +341,10 @@ export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
   const rangeEnd = Number(input.rangeEnd || aiAttempt?.ayah_end || assessment?.end_ayah || rangeStart)
   const rangeLabel = resolveRangeLabel(rangeStart, rangeEnd, t)
   const headerLead = [surahName, rangeLabel].filter(Boolean).join(' · ')
+  const mutashabihatDrift = input.mutashabihatDrift && typeof input.mutashabihatDrift === 'object'
+    ? input.mutashabihatDrift
+    : null
+
   const hasContent = !!(
     reviewDetails
     && (
@@ -349,6 +353,7 @@ export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
       || focusAyahRows.length
       || weakSpotRows.length
       || detailsMetrics.length
+      || mutashabihatDrift
     )
   )
 
@@ -370,6 +375,7 @@ export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
     detailsMetrics,
     colourSegments,
     audioUrl: asText(input.audioUrl || submitData?.audio?.url || ''),
+    mutashabihatDrift,
   }
 }
 

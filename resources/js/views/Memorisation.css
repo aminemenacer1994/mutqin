@@ -9944,13 +9944,11 @@ html {
 .back-to-top-fab {
   --back-to-top-content-max: 1320px;
   --back-to-top-rail: max(12px, calc((100vw - min(100vw, var(--back-to-top-content-max))) / 2 + 12px));
-  position: fixed;
-  /* Physical right of the content rail (same as float-rail stack). */
-  inset-inline: auto;
-  inset-inline-end: auto;
+  position: relative;
+  top: auto;
   left: auto;
-  right: var(--back-to-top-rail);
-  bottom: calc(var(--fixed-player-height, 0px) + 12px);
+  right: auto;
+  bottom: auto;
   z-index: 1055;
   width: 52px;
   height: 52px;
@@ -66783,11 +66781,22 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-icon-btn--prev {
-    inset-inline-start: 0.05rem;
+    inset-inline-start: 0.35rem;
+    margin-inline-start: 0.15rem;
   }
 
   .madani-qpc-icon-btn--next {
-    inset-inline-end: 0.05rem;
+    inset-inline-end: 0.35rem;
+    margin-inline-end: 0.15rem;
+    padding-inline-end: 0.12rem;
+  }
+
+  .madani-qpc-icon-btn--prev .madani-qpc-nav-chevron {
+    padding-inline-start: 0.12rem;
+  }
+
+  .madani-qpc-icon-btn--next .madani-qpc-nav-chevron {
+    padding-inline-end: 0.12rem;
   }
 }
 
@@ -67600,5 +67609,48 @@ html body .app .workspace-shell-overview-toggle.mutqin-surah-bilingual {
 
 [data-theme="dark"] .madani-qpc-viewport .qpc-madani-spread__placeholder {
   background: color-mix(in srgb, var(--text, #f7ebdf) 8%, transparent);
+}
+
+.mutashabihat-practice-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.mutashabihat-practice-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border-soft, rgba(120, 98, 72, 0.18));
+  border-radius: 12px;
+}
+
+.mutashabihat-practice-list__copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.mutashabihat-practice-list__copy strong {
+  font-size: 0.86rem;
+  font-weight: 650;
+  word-break: break-word;
+}
+
+.mutashabihat-practice-list__status {
+  font-size: 0.75rem;
+  color: var(--text-muted, #6d6256);
+}
+
+.mutashabihat-practice-list__status[data-status="needs_practice"] {
+  color: var(--accent-strong, #8a6230);
+}
+
+.mutashabihat-drift-actions {
+  margin-top: 0.65rem;
 }
 

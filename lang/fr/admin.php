@@ -11,6 +11,9 @@ return [
         'name' => 'Nom',
         'email' => 'E-mail',
         'joined' => 'Inscription',
+        'export_csv' => 'Télécharger CSV',
+        'total' => '{0} Aucune inscription pour l’instant.|{1} :count inscription.|[2,*] :count inscriptions.',
+        'deleted' => 'Inscription à la liste d’attente retirée.',
     ],
     'contact_messages' => [
         'title' => 'Messages de contact',

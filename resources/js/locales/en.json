@@ -1396,6 +1396,37 @@
       "retryRecording": "Restart",
       "hideRange": "Hide range"
     },
+    "mutashabihat": {
+      "title": "Mutashābihāt",
+      "summary": "Similar ayahs that are easy to confuse",
+      "description": "Practice similar ayahs that can be easy to confuse during memorisation.",
+      "similarAyahs": "Similar ayahs",
+      "matchCount": "{count} similar matches",
+      "compare": "Compare",
+      "practice": "Practice",
+      "compareTitle": "Compare similar ayahs",
+      "compareSubtitle": "Shared wording stays normal; differences are highlighted.",
+      "openAyah": "Open ayah",
+      "practiceTitle": "Mutashābihāt practice",
+      "studyLead": "Study both ayahs, then continue with short recall checks.",
+      "continueStudy": "Continue",
+      "identifyContinuation": "Choose the correct continuation",
+      "reciteFromMemory": "Recite from memory",
+      "reciteAction": "Recite",
+      "checkAnswer": "Check",
+      "practiceProgress": "Step {current} of {total}",
+      "resultStrong": "Nice work",
+      "resultKeepGoing": "Keep practising this pair",
+      "resultCopy": "Repeating comparison and recall helps separate similar ayahs.",
+      "driftTitle": "Possible similar ayah confusion",
+      "driftLead": "Your recitation may have drifted toward a known similar ayah. Word-level feedback below still applies.",
+      "compareDifferences": "Compare differences",
+      "status": {
+        "needs_practice": "Needs Practice",
+        "improving": "Improving",
+        "strong": "Strong"
+      }
+    },
     "aiCheck": {
       "sessionRecite": "Session AI Recite",
       "ayahRecite": "Ayah AI Recite",

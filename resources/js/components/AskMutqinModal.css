@@ -136,6 +136,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   align-items: center;
   gap: 0.55rem;
   padding: 1.15rem var(--ask-pad) 0.45rem;
+  padding-inline-end: calc(var(--ask-pad) + 0.2rem);
 }
 
 .ask-mutqin-header__copy {
@@ -164,6 +165,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   width: 2rem;
   height: 2rem;
   flex: 0 0 2rem;
+  margin-inline-end: 0.15rem;
   border-radius: 999px;
   border: 1px solid var(--ask-line);
   background: color-mix(in srgb, var(--ask-chip) 80%, transparent);
@@ -298,9 +300,14 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   padding: 0.75rem 0.75rem 0.9rem;
 }
 
+.ask-mutqin-ayah.is-matched {
+  overflow: visible;
+}
+
 .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
   min-height: clamp(11.5rem, 28vh, 17rem);
   max-height: none;
+  justify-content: flex-start;
 }
 
 .ask-mutqin-ayah__text {
@@ -1259,4 +1266,106 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
     transform: none !important;
     animation: none !important;
   }
+}
+
+.ask-mutqin-similar {
+  width: 100%;
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.15rem 0.15rem;
+  border-top: 1px solid var(--ask-line, rgba(120, 98, 72, 0.14));
+  text-align: start;
+}
+
+.ask-mutqin-similar__head {
+  padding-inline: 0.1rem;
+}
+
+.ask-mutqin-similar__title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ask-accent, var(--ask-muted, #6d6256));
+}
+
+.ask-mutqin-similar__list {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.ask-mutqin-similar__item {
+  border: 1px solid var(--ask-line, rgba(120, 98, 72, 0.14));
+  border-radius: 12px;
+  padding: 0.55rem 0.75rem 0.65rem;
+  background: color-mix(in srgb, var(--ask-chip, #faf6ef) 55%, transparent);
+}
+
+.ask-mutqin-similar__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.ask-mutqin-similar__ref {
+  font-size: 0.84rem;
+  font-weight: 650;
+  color: var(--ask-ink, inherit);
+}
+
+.ask-mutqin-similar__count {
+  font-size: 0.75rem;
+  color: var(--ask-muted, #6d6256);
+  padding-inline-end: 0.15rem;
+}
+
+.ask-mutqin-similar__preview {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--ask-ink, #4f463c);
+  padding-inline: 0.1rem;
+}
+
+.ask-mutqin-similar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ask-mutqin-similar__btn {
+  border: 1px solid var(--ask-line, rgba(120, 98, 72, 0.22));
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.28rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--ask-ink, inherit);
+}
+
+.ask-mutqin-similar__btn--primary {
+  background: var(--ask-brown, var(--accent-strong, #8a6230));
+  border-color: transparent;
+  color: #fff;
+}
+
+.ask-mutqin-overlay[data-theme="dark"] .ask-mutqin-similar__item {
+  background: color-mix(in srgb, var(--ask-chip, #26201b) 70%, transparent);
+  border-color: color-mix(in srgb, var(--ask-line, #f7eadb) 35%, transparent);
+}
+
+.ask-mutqin-ayah__bar {
+  padding-inline: 0.12rem;
+}
+
+.ask-mutqin-ayah__meta {
+  padding-inline-end: 0.2rem;
+}
+
+.ask-mutqin-ayah__mark {
+  margin-inline-end: 0.22em;
 }
