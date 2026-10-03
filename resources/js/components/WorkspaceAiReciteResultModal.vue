@@ -139,20 +139,13 @@
                       <p class="post-session-simple__focus-ayah-label">{{ view.mutashabihatDrift.confusedLabel }}</p>
                     </li>
                   </ul>
-                  <div class="post-session-simple__actions post-session-simple__actions--3 mutashabihat-drift-actions">
+                  <div class="post-session-simple__actions post-session-simple__actions--2 mutashabihat-drift-actions">
                     <button
                       type="button"
                       class="post-session-simple__btn post-session-simple__btn--secondary"
                       @click="$emit('mutashabihat-compare')"
                     >
                       {{ compareDifferencesLabel }}
-                    </button>
-                    <button
-                      type="button"
-                      class="post-session-simple__btn post-session-simple__btn--secondary"
-                      @click="$emit('mutashabihat-practice')"
-                    >
-                      {{ practiceLabel }}
                     </button>
                     <button
                       type="button"
@@ -407,9 +400,8 @@ export default {
     mutashabihatTitle: { type: String, default: 'Possible similar ayah confusion' },
     mutashabihatLead: { type: String, default: 'Your recitation may have drifted toward a similar ayah.' },
     compareDifferencesLabel: { type: String, default: 'Compare differences' },
-    practiceLabel: { type: String, default: 'Practice' },
   },
-  emits: ['close', 'try-again', 'mutashabihat-compare', 'mutashabihat-practice'],
+  emits: ['close', 'try-again', 'mutashabihat-compare'],
   watch: {
     open(value) {
       if (!value) return

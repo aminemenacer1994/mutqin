@@ -89,4 +89,28 @@ class MutashabihatTest extends TestCase
             'status' => 'needs_practice',
         ]);
     }
+
+    public function test_successful_practice_marks_pair_improving_not_strong(): void
+    {
+        $this->seed(MutashabihatPairSeeder::class);
+        $pair = MutashabihatPair::query()->where('verse_key_1', '2:58')->orWhere('verse_key_2', '2:58')->first();
+        $this->assertNotNull($pair);
+
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)->postJson(route('api.mutashabihat.practice.store'), [
+            'pair_id' => $pair->id,
+            'success' => true,
+        ])->assertOk()->assertJsonPath('progress.status', 'improving');
+
+        $this->assertDatabaseHas('user_mutashabihat_progress', [
+            'user_id' => $user->id,
+            'mutashabihat_pair_id' => $pair->id,
+            'practice_attempts' => 1,
+            'successful_attempts' => 1,
+            'status' => 'improving',
+        ]);
+    }
 }

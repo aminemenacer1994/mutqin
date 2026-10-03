@@ -2372,7 +2372,7 @@
             </section>
 
             <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('mutashabihat'); ensureMutashabihatProgressLoaded()" type="button">
+              <button class="sheet-toggle" @click="toggleSection('mutashabihat')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-shuffle"></i></span>
                   <span class="st-txt">
@@ -2392,25 +2392,45 @@
                       <span>{{ t('memorisation.mutashabihat.description') }}</span>
                     </div>
                   </div>
-                  <ul class="mutashabihat-practice-list">
+                  <p
+                    v-if="mutashabihatPanelInitialLoading"
+                    class="mutashabihat-panel-status"
+                  >
+                    {{ t('common.loading') }}
+                  </p>
+                  <ul v-else-if="mutashabihatVisibleRows.length" class="mutashabihat-pair-list">
                     <li
-                      v-for="row in mutashabihatWeakPairRows"
+                      v-for="row in mutashabihatVisibleRows"
                       :key="row.key"
-                      class="mutashabihat-practice-list__item"
+                      class="mutashabihat-pair-list__item"
                     >
-                      <div class="mutashabihat-practice-list__copy">
-                        <strong>{{ row.label }}</strong>
-                        <span class="mutashabihat-practice-list__status" :data-status="row.status">{{ row.statusLabel }}</span>
-                      </div>
-                      <button
-                        type="button"
-                        class="tools-btn tools-btn-secondary"
-                        @click="openMutashabihatPracticePair(row)"
-                      >
-                        {{ t('memorisation.mutashabihat.practice') }}
-                      </button>
+                      <MutashabihatPairCard
+                        :row="row"
+                        :quran-font-family="quranFontFamily"
+                        :compare-label="t('memorisation.mutashabihat.compare')"
+                        :left-heading="row.leftCompareLabel || row.leftLabel"
+                        :right-heading="row.rightCompareLabel || row.rightLabel"
+                        @compare="openMutashabihatCompareFromPayload({ row, pair: row.pair, anchorVerseKey: row.leftVerseKey })"
+                      />
                     </li>
                   </ul>
+                  <button
+                    v-if="mutashabihatHasMore && !mutashabihatPanelInitialLoading && !mutashabihatHydrating"
+                    type="button"
+                    class="mutashabihat-load-more"
+                    :disabled="mutashabihatHydrating"
+                    @click="loadMoreMutashabihatPairs"
+                  >
+                    {{ t('memorisation.mutashabihat.loadMore') }}
+                  </button>
+                  <button
+                    v-else-if="mutashabihatHasMore && mutashabihatHydrating && !mutashabihatPanelInitialLoading"
+                    type="button"
+                    class="mutashabihat-load-more"
+                    disabled
+                  >
+                    {{ t('common.loading') }}
+                  </button>
                 </div>
               </div>
             </section>
@@ -3430,11 +3450,9 @@
       :mutashabihat-title="t('memorisation.mutashabihat.driftTitle')"
       :mutashabihat-lead="t('memorisation.mutashabihat.driftLead')"
       :compare-differences-label="t('memorisation.mutashabihat.compareDifferences')"
-      :practice-label="t('memorisation.mutashabihat.practice')"
       @close="closeWorkspaceReciteAnalysis"
       @try-again="retryWorkspaceAiRecite"
       @mutashabihat-compare="onWorkspaceReciteMutashabihatCompare"
-      @mutashabihat-practice="onWorkspaceReciteMutashabihatPractice"
     />
 
     <div v-if="showAdvancedMetricsModal" class="modal-overlay mutqin-modal-overlay session-analytics-overlay advanced-metrics-overlay"
@@ -5072,7 +5090,6 @@
       @close="closeAskMutqin"
       @apply="applyAskMutqinCommand"
       @mutashabihat-compare="onAskMutqinMutashabihatCompare"
-      @mutashabihat-practice="onAskMutqinMutashabihatPractice"
     />
 
     <MutashabihatCompareModal
@@ -5082,19 +5099,25 @@
       :quran-font-family="quranFontFamily"
       :title="t('memorisation.mutashabihat.compareTitle')"
       :subtitle="t('memorisation.mutashabihat.compareSubtitle')"
+      :focus-copy="t('memorisation.mutashabihat.compareFocus')"
       :left-label="mutashabihatCompareView?.leftLabel || ''"
       :right-label="mutashabihatCompareView?.rightLabel || ''"
       :left-html="mutashabihatCompareView?.leftHtml || ''"
       :right-html="mutashabihatCompareView?.rightHtml || ''"
+      :left-translation="mutashabihatCompareView?.leftTranslation || ''"
+      :right-translation="mutashabihatCompareView?.rightTranslation || ''"
       :left-verse-key="mutashabihatCompareView?.leftVerseKey || ''"
       :right-verse-key="mutashabihatCompareView?.rightVerseKey || ''"
       :close-label="t('common.close')"
-      :practice-label="t('memorisation.mutashabihat.practice')"
-      :open-left-label="t('memorisation.mutashabihat.openAyah')"
+      :pause-label="t('common.pause')"
+      :stop-label="t('memorisation.common.stop')"
+      :play-left-label="t('memorisation.mutashabihat.playAyah', { label: mutashabihatCompareView?.leftLabel || '' })"
+      :play-right-label="t('memorisation.mutashabihat.playAyah', { label: mutashabihatCompareView?.rightLabel || '' })"
+      :audio-verse-key="mutashabihatCompareAudioVerseKey"
+      :audio-playing="mutashabihatCompareAudioPlaying"
+      :audio-paused="mutashabihatCompareAudioPaused"
       @close="closeMutashabihatCompare"
-      @practice="onMutashabihatComparePractice"
-      @open-ayah="onMutashabihatCompareOpenAyah"
-      @play-ayah="onMutashabihatComparePlayAyah"
+      @audio-control="onMutashabihatCompareAudioControl"
     />
 
     <TajweedColourGuideModal
@@ -5108,35 +5131,6 @@
       :close-label="t('common.close')"
       :close-aria-label="t('memorisation.a11y.closeTajweedColourGuide')"
       @close="closeTajweedColourGuide"
-    />
-
-    <MutashabihatPracticeModal
-      v-if="mutashabihatPracticeOpen"
-      :open="true"
-      :theme="theme"
-      :quran-font-family="quranFontFamily"
-      :title="t('memorisation.mutashabihat.practiceTitle')"
-      :progress-label="mutashabihatPracticeProgressLabel"
-      :step="mutashabihatPracticeStepView"
-      :anchor-ref="mutashabihatPracticeAnchorRef"
-      :other-ref="mutashabihatPracticeOtherRef"
-      :study-lead="t('memorisation.mutashabihat.studyLead')"
-      :identify-prompt="t('memorisation.mutashabihat.identifyContinuation')"
-      :recite-prompt="t('memorisation.mutashabihat.reciteFromMemory')"
-      :hide-label="t('memorisation.mutashabihat.continueStudy')"
-      :ai-recite-label="t('memorisation.mutashabihat.reciteAction')"
-      :check-label="t('memorisation.mutashabihat.checkAnswer')"
-      :close-label="t('common.close')"
-      :retry-label="t('common.tryAgain')"
-      :continue-label="t('common.continue')"
-      :result-title="mutashabihatPracticeSession?.resultSuccess ? t('memorisation.mutashabihat.resultStrong') : t('memorisation.mutashabihat.resultKeepGoing')"
-      :result-copy="t('memorisation.mutashabihat.resultCopy')"
-      @close="closeMutashabihatPractice"
-      @next="onMutashabihatPracticeNext"
-      @ai-recite="onMutashabihatPracticeAiRecite"
-      @identify-submit="onMutashabihatIdentifySubmit"
-      @retry="openMutashabihatPracticePair(mutashabihatPracticeSession)"
-      @done="closeMutashabihatPractice"
     />
 
     <AiMemorisationDetectionModal

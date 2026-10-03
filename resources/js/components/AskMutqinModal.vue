@@ -123,11 +123,8 @@
                         {{ row.preview }}
                       </p>
                       <div class="ask-mutqin-similar__actions">
-                        <button type="button" class="ask-mutqin-similar__btn" @click="emitCompare(row)">
+                        <button type="button" class="ask-mutqin-similar__btn ask-mutqin-similar__btn--primary" @click="emitCompare(row)">
                           {{ t('memorisation.mutashabihat.compare') }}
-                        </button>
-                        <button type="button" class="ask-mutqin-similar__btn ask-mutqin-similar__btn--primary" @click="emitPractice(row)">
-                          {{ t('memorisation.mutashabihat.practice') }}
                         </button>
                       </div>
                     </li>
@@ -317,7 +314,7 @@ export default {
     quranFontFamily: { type: String, default: '' },
     searchIndex: { type: Array, default: () => [] },
   },
-  emits: ['close', 'apply', 'mutashabihat-compare', 'mutashabihat-practice'],
+  emits: ['close', 'apply', 'mutashabihat-compare'],
   data() {
     return {
       state: ASK_MUTQIN_STATES.INTRO,
@@ -567,12 +564,6 @@ export default {
     },
     emitCompare(row) {
       this.$emit('mutashabihat-compare', {
-        pair: row.pair,
-        anchorVerseKey: this.matchVerseKey,
-      })
-    },
-    emitPractice(row) {
-      this.$emit('mutashabihat-practice', {
         pair: row.pair,
         anchorVerseKey: this.matchVerseKey,
       })

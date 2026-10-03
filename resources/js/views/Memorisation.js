@@ -489,17 +489,17 @@ import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
 import WorkspaceAiReciteResultModal from '../components/WorkspaceAiReciteResultModal.vue'
 import {
   buildMutashabihatCompareView,
-  refreshMutashabihatProgress,
-  startMutashabihatPractice,
-  currentMutashabihatPracticeStep,
-  advanceMutashabihatPractice,
   detectDriftForWorkspaceRecite,
-  persistMutashabihatConfusion,
+  hydrateMutashabihatAyahs,
+  hydrateMutashabihatPanelRows,
+  listMutashabihatCardRows,
+  listMutashabihatRankedPairs,
   mutashabihatStatusLabel,
-  gradeMutashabihatIdentify,
+  persistMutashabihatConfusion,
+  refreshMutashabihatProgress,
   resolveArabicFromSearchIndex,
 } from '../scripts/mutashabihat/workspaceBridge.js'
-import { listAllMutashabihatPairs } from '../scripts/mutashabihat/pairsIndex.js'
+import MutashabihatPairCard from '../components/MutashabihatPairCard.vue'
 import { buildWorkspaceAiReciteResultView } from '../scripts/workspaceAiRecite/buildWorkspaceAiReciteResultView.js'
 import ViewportConfetti from '../components/ViewportConfetti.vue'
 import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
@@ -533,10 +533,6 @@ const AskMutqinModal = lazyWorkspaceChunk(
 const MutashabihatCompareModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "mutashabihat-compare" */ '../components/MutashabihatCompareModal.vue'),
   'mutashabihat-compare'
-)
-const MutashabihatPracticeModal = lazyWorkspaceChunk(
-  () => import(/* webpackChunkName: "mutashabihat-practice" */ '../components/MutashabihatPracticeModal.vue'),
-  'mutashabihat-practice'
 )
 const TajweedColourGuideModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "tajweed-colour-guide" */ '../components/TajweedColourGuideModal.vue'),
@@ -837,7 +833,7 @@ export default {
     SessionAnalysisModal,
     WorkspaceAiReciteResultModal,
     MutashabihatCompareModal,
-    MutashabihatPracticeModal,
+    MutashabihatPairCard,
     TajweedColourGuideModal,
     AppStatus,
     ViewportConfetti,
@@ -1521,11 +1517,14 @@ export default {
       askMutqinOpen: false,
       mutashabihatCompareOpen: false,
       mutashabihatCompareView: null,
-      mutashabihatPracticeOpen: false,
       showTajweedColourGuide: false,
-      mutashabihatPracticeSession: null,
       mutashabihatProgressRows: [],
       mutashabihatPendingDrift: null,
+      mutashabihatVisibleLimit: 3,
+      mutashabihatAyahByKey: {},
+      mutashabihatAyahRevision: 0,
+      mutashabihatPanelReady: false,
+      mutashabihatHydrating: false,
       amdEntrySource: null, // 'test-with-ai' | 'dashboard-review' | 'saved-session-review' | 'workspace-ai-recite' | null
       savedSessionReviewMode: false,
       dashboardAiCheckReturnTo: null,
@@ -6509,57 +6508,34 @@ export default {
       if (tone === 'incorrect') return this.t('memorisation.postSession.adaptiveCheck.feedbackIncorrect')
       return ''
     },
-    mutashabihatPracticeStepView() {
-      const session = this.mutashabihatPracticeSession
-      if (!session) return null
-      if (session.finished) {
-        return {
-          kind: 'result',
-        }
-      }
-      return currentMutashabihatPracticeStep(this)
+    mutashabihatVisibleRows() {
+      void this.mutashabihatAyahRevision
+      return listMutashabihatCardRows(this, { limit: this.mutashabihatVisibleLimit })
     },
-    mutashabihatPracticeProgressLabel() {
-      const session = this.mutashabihatPracticeSession
-      if (!session) return ''
-      const current = Math.min(session.steps.length, session.stepIndex + 1)
-      return this.t('memorisation.mutashabihat.practiceProgress', {
-        current,
-        total: session.steps.length,
-      })
+    mutashabihatPanelInitialLoading() {
+      if (this.mutashabihatVisibleRows.length) return false
+      return !!this.mutashabihatHydrating
     },
-    mutashabihatPracticeAnchorRef() {
-      const session = this.mutashabihatPracticeSession
-      if (!session?.anchorVerseKey) return ''
-      const [s, a] = session.anchorVerseKey.split(':')
-      return `${this.getChapterLatinName(Number(s)) || `Surah ${s}`} · ${s}:${a}`
+    mutashabihatHasMore() {
+      return listMutashabihatRankedPairs(this).length > this.mutashabihatVisibleLimit
     },
-    mutashabihatPracticeOtherRef() {
-      const session = this.mutashabihatPracticeSession
-      if (!session?.otherVerseKey) return ''
-      const [s, a] = session.otherVerseKey.split(':')
-      return `${this.getChapterLatinName(Number(s)) || `Surah ${s}`} · ${s}:${a}`
+    mutashabihatCompareAudioVerseKey() {
+      if (!this.mutashabihatCompareOpen || !this.manualOnlyPlayback) return ''
+      return String(this.activeKey || '').trim()
     },
-    mutashabihatWeakPairRows() {
-      const progress = Array.isArray(this.mutashabihatProgressRows) ? this.mutashabihatProgressRows : []
-      if (progress.length) {
-        return progress.slice(0, 8).map((row) => ({
-          key: `progress-${row.id}`,
-          label: this.mutashabihatPairLabel(row.pair || row),
-          status: row.status,
-          statusLabel: this.mutashabihatStatusLabelFor(row.status),
-          pair: row.pair,
-          expected_verse_key: row.expected_verse_key,
-        }))
-      }
-      return listAllMutashabihatPairs().slice(0, 6).map((pair) => ({
-        key: `catalog-${pair.id}`,
-        label: this.mutashabihatPairLabel(pair),
-        status: 'needs_practice',
-        statusLabel: this.mutashabihatStatusLabelFor('needs_practice'),
-        pair,
-        expected_verse_key: pair.verse_key_1,
-      }))
+    mutashabihatCompareAudioPlaying() {
+      const key = this.mutashabihatCompareAudioVerseKey
+      if (!key) return false
+      const audio = this.audioElement
+      return !!this.isPlaying && !!audio && !audio.paused
+    },
+    mutashabihatCompareAudioPaused() {
+      const key = this.mutashabihatCompareAudioVerseKey
+      if (!key) return false
+      const audio = this.audioElement
+      const src = String(audio?.currentSrc || audio?.src || '').trim()
+      if (!audio || !src || src === 'about:blank') return false
+      return !!audio.paused
     },
     postSessionAdaptivePrimaryActionLabel() {
       const key = this.postSessionAdaptiveResultView?.primaryActionLabelKey || 'continue'
@@ -8720,6 +8696,7 @@ export default {
         || this.showQuranSearchModal
         || this.amdOpen
         || this.askMutqinOpen
+        || this.mutashabihatCompareOpen
         || this.showTajweedColourGuide
         || this.showPlannerCompletionModal
         || this.showSessionEndedModal
@@ -11223,6 +11200,21 @@ export default {
   },
 
   watch: {
+    isDataReady(ready) {
+      if (!ready) return
+      if (this.mutashabihatPanelReady) return
+      void this.ensureMutashabihatProgressLoaded?.()
+    },
+    'sectionOpen.mutashabihat'(open) {
+      if (!open) return
+      if (this.mutashabihatVisibleRows.length && this.mutashabihatPanelReady) return
+      void this.ensureMutashabihatProgressLoaded?.()
+    },
+    chapterId(nextId, prevId) {
+      if (Number(nextId || 0) === Number(prevId || 0)) return
+      this.mutashabihatPanelReady = false
+      void this.ensureMutashabihatProgressLoaded?.()
+    },
     showMadaniFullscreenTopBar() {
       this.scheduleMadaniFullscreenTopBarClearance()
     },
@@ -11989,58 +11981,60 @@ export default {
       this.askMutqinOpen = false
     },
     closeMutashabihatCompare() {
+      this.stopMutashabihatCompareAudio()
       this.mutashabihatCompareOpen = false
       this.mutashabihatCompareView = null
     },
-    openMutashabihatCompareFromPayload(payload = {}) {
-      const pair = payload?.pair
-      const anchorVerseKey = String(payload?.anchorVerseKey || '').trim()
-      const view = buildMutashabihatCompareView(this, { pair, anchorVerseKey })
-      if (!view) return
+    stopMutashabihatCompareAudio() {
+      this.stopWordHighlighting()
+      this.manualOnlyPlayback = false
+      this.isPlaying = false
+      this.playRequestLocked = false
+      if (this.sessionAudioPlayer) {
+        try {
+          this.sessionAudioPlayer.pause({ bump: false })
+          if (typeof this.sessionAudioPlayer.seek === 'function') this.sessionAudioPlayer.seek(0)
+        } catch (_) { /* ignore */ }
+      }
+      if (this.audioElement) {
+        try {
+          this.audioElement.pause()
+          this.audioElement.currentTime = 0
+        } catch (_) { /* ignore */ }
+      }
+    },
+    async loadMoreMutashabihatPairs() {
+      this.mutashabihatVisibleLimit += 4
+      this.mutashabihatHydrating = true
+      try {
+        await hydrateMutashabihatPanelRows(this, { target: this.mutashabihatVisibleLimit })
+      } finally {
+        this.mutashabihatHydrating = false
+      }
+    },
+    async openMutashabihatCompareFromPayload(payload = {}) {
+      const keys = [
+        payload?.row?.leftVerseKey,
+        payload?.row?.rightVerseKey,
+        payload?.anchorVerseKey,
+        payload?.pair?.verse_key_1,
+        payload?.pair?.verse_key_2,
+      ].filter(Boolean)
+      await hydrateMutashabihatAyahs(this, { keys })
+      let view = buildMutashabihatCompareView(this, payload)
+      if (!view) {
+        await this.ensureQuranSearchIndex?.()
+        view = buildMutashabihatCompareView(this, payload)
+      }
+      if (!view) {
+        this.showBanner?.(this.t('memorisation.mutashabihat.ayahUnavailable'), 'info', 2800)
+        return
+      }
       this.mutashabihatCompareView = view
       this.mutashabihatCompareOpen = true
     },
     onAskMutqinMutashabihatCompare(payload = {}) {
-      this.openMutashabihatCompareFromPayload(payload)
-    },
-    onAskMutqinMutashabihatPractice(payload = {}) {
-      if (!startMutashabihatPractice(this, payload)) return
-    },
-    closeMutashabihatPractice() {
-      this.mutashabihatPracticeOpen = false
-      this.mutashabihatPracticeSession = null
-    },
-    advanceMutashabihatPracticeStep(options = {}) {
-      advanceMutashabihatPractice(this, options)
-    },
-    onMutashabihatPracticeNext() {
-      this.advanceMutashabihatPracticeStep({ success: true })
-    },
-    onMutashabihatIdentifySubmit(selectedId) {
-      gradeMutashabihatIdentify(this, selectedId)
-    },
-    async onMutashabihatPracticeAiRecite() {
-      const session = this.mutashabihatPracticeSession
-      const step = currentMutashabihatPracticeStep(this)
-      const targetKey = step?.anchorVerseKey || session?.anchorVerseKey
-      if (!targetKey) return
-      const [surah, ayah] = targetKey.split(':')
-      await this.openSimilarAyahPractice({
-        surah,
-        ayah,
-        chapterId: Number(surah),
-        rangeStart: Number(ayah),
-      })
-      this.closeMutashabihatPractice()
-      await this.openWorkspaceAiRecite()
-    },
-    onMutashabihatComparePractice() {
-      const view = this.mutashabihatCompareView
-      if (!view?.pair) return
-      startMutashabihatPractice(this, {
-        pair: view.pair,
-        anchorVerseKey: view.anchorVerseKey,
-      })
+      void this.openMutashabihatCompareFromPayload(payload)
     },
     onMutashabihatCompareOpenAyah(verseKey) {
       const key = String(verseKey || '').trim()
@@ -12050,12 +12044,67 @@ export default {
       this.closeMutashabihatCompare()
       this.closeAskMutqin()
     },
-    onMutashabihatComparePlayAyah(verseKey) {
+    onMutashabihatCompareAudioControl(payload = {}) {
+      const verseKey = String(payload?.verseKey || '').trim()
+      const action = String(payload?.action || '').trim()
+      if (!verseKey) return
+      if (action === 'stop') {
+        this.stopMutashabihatCompareAudio()
+        return
+      }
+      if (action === 'pause') {
+        if (verseKey === this.activeKey && this.mutashabihatCompareAudioPlaying) {
+          this.togglePlay()
+        }
+        return
+      }
+      if (action === 'play') {
+        if (verseKey === this.activeKey && this.mutashabihatCompareAudioPaused) {
+          this.togglePlay()
+          return
+        }
+        void this.playMutashabihatVerseAudio(verseKey)
+      }
+    },
+    buildMutashabihatVerse(verseKey) {
+      const key = String(verseKey || '').trim()
+      if (!/^\d{1,3}:\d{1,3}$/.test(key)) return null
+      const [surahPart, ayahPart] = key.split(':')
+      const chapterId = Number(surahPart)
+      const number = Number(ayahPart)
+      if (!(chapterId > 0 && number > 0)) return null
+      const arabic = resolveArabicFromSearchIndex(this, key)
+      const loaded = (this.verses || []).find((verse) => verse?.key === key)
+        || (this.mushafDisplayVerses || []).find((verse) => verse?.key === key)
+      return loaded || {
+        key,
+        number,
+        numberInSurah: number,
+        surah: chapterId,
+        chapterId,
+        arabic,
+        chapterName: this.getChapterLatinName(chapterId) || `Surah ${chapterId}`,
+      }
+    },
+    async playMutashabihatVerseAudio(verseKey) {
       const key = String(verseKey || '').trim()
       if (!key) return
-      const ayah = Number(key.split(':')[1] || 0)
-      if (ayah > 0 && typeof this.playAyahByNumber === 'function') {
-        try { this.playAyahByNumber(ayah) } catch (_) { /* ignore */ }
+      await this.ensureQuranSearchIndex?.().catch(() => {})
+      const verse = this.buildMutashabihatVerse(key)
+      if (!verse) return
+      this.ensureWordAudioHighlighting()
+      this.wordByWordAudioEnabled = true
+      this.primeAudioPlaybackUnlock?.(this.audioElement)
+      try {
+        await this.playVerse(verse, {
+          force: true,
+          primePlayback: true,
+          manualOnly: true,
+          allowDuringCountdown: true,
+        })
+      } catch (error) {
+        console.error('Mutashabihat ayah audio failed', error)
+        this.showBanner?.(this.t('toasts.unableToPlayAyahNow'), 'error', 2200)
       }
     },
     onWorkspaceReciteMutashabihatCompare() {
@@ -12066,30 +12115,39 @@ export default {
         anchorVerseKey: drift.expectedVerseKey,
       })
     },
-    onWorkspaceReciteMutashabihatPractice() {
-      const drift = this.mutashabihatPendingDrift
-      if (!drift?.pair) return
-      startMutashabihatPractice(this, {
-        pair: drift.pair,
-        anchorVerseKey: drift.expectedVerseKey,
-      })
-    },
     async ensureMutashabihatProgressLoaded() {
-      await refreshMutashabihatProgress(this)
+      if (this._mutashabihatEnsureInflight) {
+        return this._mutashabihatEnsureInflight
+      }
+      this._mutashabihatEnsureInflight = this._ensureMutashabihatProgressLoadedCore()
+      try {
+        return await this._mutashabihatEnsureInflight
+      } finally {
+        this._mutashabihatEnsureInflight = null
+      }
     },
-    openMutashabihatPracticePair(row = {}) {
-      const pair = row?.pair || row
-      if (!pair?.verse_key_1) return
-      startMutashabihatPractice(this, {
-        pair,
-        anchorVerseKey: row.expected_verse_key || row.anchorVerseKey || pair.verse_key_1,
-      })
-    },
-    mutashabihatPairLabel(pair) {
-      if (!pair) return ''
-      const left = pair.verse_key_1 || `${pair.surah_number_1}:${pair.ayah_number_1}`
-      const right = pair.verse_key_2 || `${pair.surah_number_2}:${pair.ayah_number_2}`
-      return `${left} ↔ ${right}`
+    async _ensureMutashabihatProgressLoadedCore() {
+      this.mutashabihatHydrating = true
+      try {
+        await refreshMutashabihatProgress(this)
+        await hydrateMutashabihatPanelRows(this, { target: this.mutashabihatVisibleLimit })
+        void this.ensureQuranSearchIndex?.().catch(() => {})
+        let readyCount = listMutashabihatCardRows(this, { limit: this.mutashabihatVisibleLimit }).length
+        if (readyCount < this.mutashabihatVisibleLimit) {
+          await hydrateMutashabihatPanelRows(this, { target: this.mutashabihatVisibleLimit })
+          readyCount = listMutashabihatCardRows(this, { limit: this.mutashabihatVisibleLimit }).length
+        }
+        if (!readyCount && listMutashabihatRankedPairs(this).length) {
+          const deeperTarget = Math.min(12, listMutashabihatRankedPairs(this).length)
+          await hydrateMutashabihatPanelRows(this, { target: deeperTarget })
+        }
+        this.mutashabihatAyahRevision = Number(this.mutashabihatAyahRevision || 0) + 1
+      } catch (error) {
+        console.warn('Mutashabihat panel hydrate failed', error)
+      } finally {
+        this.mutashabihatHydrating = false
+        this.mutashabihatPanelReady = true
+      }
     },
     mutashabihatStatusLabelFor(status) {
       return mutashabihatStatusLabel(this, status)
@@ -45336,7 +45394,13 @@ export default {
         return
       }
 
-      const nextValue = !this.sectionOpen[key];
+      const nextValue = !this.sectionOpen[key]
+      if (key === 'mutashabihat') {
+        this.sectionOpen[key] = nextValue
+        if (nextValue) void this.ensureMutashabihatProgressLoaded?.()
+        return
+      }
+
       Object.keys(this.sectionOpen).forEach(sectionKey => {
         if (['session_tools', 'live_stats'].includes(sectionKey)) {
           this.sectionOpen[sectionKey] = false;

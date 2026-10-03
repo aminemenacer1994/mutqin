@@ -67625,43 +67625,83 @@ html body .app .workspace-shell-overview-toggle.mutqin-surah-bilingual {
   background: color-mix(in srgb, var(--text, #f7ebdf) 8%, transparent);
 }
 
-.mutashabihat-practice-list {
+.mutashabihat-panel-status {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted, #6d6256);
+}
+
+.sheet-content .field-stack:has(.mutashabihat-pair-list) .technique-description {
+  margin-bottom: 0.15rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+}
+
+.mutashabihat-pair-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.55rem;
-}
-
-.mutashabihat-practice-list__item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 0.65rem;
-  padding: 0.55rem 0.65rem;
-  border: 1px solid var(--border-soft, rgba(120, 98, 72, 0.18));
-  border-radius: 12px;
 }
 
-.mutashabihat-practice-list__copy {
-  display: grid;
-  gap: 0.15rem;
+.mutashabihat-pair-list__item {
   min-width: 0;
+  animation: mutashabihat-card-in 0.32s ease both;
 }
 
-.mutashabihat-practice-list__copy strong {
-  font-size: 0.86rem;
-  font-weight: 650;
-  word-break: break-word;
+.mutashabihat-pair-list__item:nth-child(2) { animation-delay: 0.04s; }
+.mutashabihat-pair-list__item:nth-child(3) { animation-delay: 0.08s; }
+.mutashabihat-pair-list__item:nth-child(4) { animation-delay: 0.12s; }
+.mutashabihat-pair-list__item:nth-child(n+5) { animation-delay: 0.16s; }
+
+@keyframes mutashabihat-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.mutashabihat-practice-list__status {
-  font-size: 0.75rem;
-  color: var(--text-muted, #6d6256);
-}
-
-.mutashabihat-practice-list__status[data-status="needs_practice"] {
+.mutashabihat-load-more {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 0.15rem;
+  border: 1px dashed color-mix(in srgb, var(--accent-strong, #8a6230) 28%, transparent);
+  border-radius: 12px;
+  background: transparent;
   color: var(--accent-strong, #8a6230);
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.mutashabihat-load-more:hover {
+  background: color-mix(in srgb, var(--accent-strong, #8a6230) 7%, transparent);
+  border-style: solid;
+}
+
+.mutashabihat-load-more:focus-visible {
+  outline: 2px solid var(--accent-strong, #8a6230);
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] .mutashabihat-load-more,
+html[data-theme="dark"] .mutashabihat-load-more {
+  color: #e8c27a;
+  border-color: rgba(232, 194, 122, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mutashabihat-pair-list__item {
+    animation: none;
+  }
 }
 
 .mutashabihat-drift-actions {

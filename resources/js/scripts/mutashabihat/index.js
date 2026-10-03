@@ -1,4 +1,9 @@
-export { compareAyahTexts, renderComparedAyahHtml } from './compareAyahs.js'
+export {
+  buildAyahComparison,
+  compareAyahTexts,
+  renderComparedAyahHtml,
+  renderRecallBlankHtml,
+} from './compareAyahs.js'
 export {
   findPairsForVerseKey,
   listAllMutashabihatPairs,
@@ -15,3 +20,9 @@ export {
   compareMutashabihatAyahs,
 } from './api.js'
 export { registerApiMutashabihatPairs } from './pairsIndex.js'
+export {
+  deriveMutashabihatStatus,
+  filterMutashabihatRows,
+  mergeCatalogWithProgress,
+  prioritiseMutashabihatRows,
+} from './pairStatus.js'
