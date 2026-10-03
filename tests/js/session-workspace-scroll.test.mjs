@@ -112,6 +112,8 @@ function createElement({
   assert.ok(SESSION_ENTRY_SCROLL_REASONS.includes(SESSION_WORKSPACE_SCROLL_REASON.SAVED_SESSION))
   assert.ok(SESSION_ENTRY_SCROLL_REASONS.includes(SESSION_WORKSPACE_SCROLL_REASON.RECOMMENDED_REVISION))
   assert.ok(SESSION_SCROLL_EXCLUDED_SELECTORS.includes('.mushaf-viewport-scroll'))
+  assert.ok(SESSION_SCROLL_EXCLUDED_SELECTORS.includes('.qpc-madani-session-scroll'))
+  assert.ok(SESSION_SCROLL_EXCLUDED_SELECTORS.includes('.madani-qpc-viewport'))
 }
 
 // --- Reduced motion ---

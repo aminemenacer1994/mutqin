@@ -376,6 +376,7 @@ export default {
   max-width: 100%;
   min-width: 0;
   overflow-x: clip;
+  overflow-y: visible;
   padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
   scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
 }
@@ -385,6 +386,7 @@ export default {
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
+  overflow-y: visible;
 }
 
 .qpc-madani-session-scroll__page {
@@ -392,6 +394,7 @@ export default {
   max-width: 100%;
   min-width: 0;
   overflow-x: clip;
+  overflow-y: visible;
 }
 
 .qpc-madani-session-scroll[data-layout='indopak-15-qudratullah'] .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {

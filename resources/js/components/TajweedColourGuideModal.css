@@ -1,0 +1,458 @@
+.tajweed-colour-guide {
+  --tajweed-guide-display: var(
+    --font-surah-latin,
+    "Source Serif 4",
+    "Iowan Old Style",
+    "Palatino Linotype",
+    Palatino,
+    "Noto Serif",
+    ui-serif,
+    Georgia,
+    serif
+  );
+  --tajweed-guide-body: var(
+    --font-ui,
+    "SF Pro Text",
+    "SF Pro Display",
+    "Avenir Next",
+    "Segoe UI",
+    "Helvetica Neue",
+    system-ui,
+    sans-serif
+  );
+  --tajweed-guide-arabic-ui: "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif;
+  --tajweed-guide-arabic: var(
+    --quran-font,
+    "KFGQPC Uthmanic Script HAFS",
+    "UthmanicHafs",
+    "Amiri Quran",
+    "Amiri",
+    "Noto Naskh Arabic",
+    serif
+  );
+  z-index: 16000;
+  font-family: var(--tajweed-guide-body);
+  letter-spacing: normal;
+  word-spacing: normal;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.tajweed-colour-guide .post-session-simple__title,
+.tajweed-colour-guide__name {
+  font-family: var(--tajweed-guide-display) !important;
+  letter-spacing: -0.02em;
+  word-spacing: normal;
+  overflow-wrap: break-word;
+  font-variant-ligatures: common-ligatures;
+}
+
+.tajweed-colour-guide .post-session-simple__subtitle,
+.tajweed-colour-guide .post-session-simple__btn,
+.tajweed-colour-guide__description,
+.tajweed-colour-guide__example-label {
+  font-family: var(--tajweed-guide-body) !important;
+  letter-spacing: normal;
+  word-spacing: normal;
+  overflow-wrap: break-word;
+}
+
+.tajweed-colour-guide__description {
+  font-family: var(--tajweed-guide-body), var(--tajweed-guide-arabic-ui) !important;
+}
+
+/* calm-v2 forces a light cream gradient on all themes — override for this modal */
+.tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__dialog {
+  background: var(--mutqin-modal-surface-bg, #fffaf3) !important;
+  border-color: color-mix(in srgb, var(--border) 72%, transparent);
+  box-shadow: var(--mutqin-modal-shadow, 0 24px 64px rgba(20, 35, 28, 0.16));
+  color: var(--text);
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__header {
+  background: var(--mutqin-modal-hero-bg, transparent);
+  border-bottom-color: color-mix(in srgb, var(--border) 48%, transparent);
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__body {
+  background: transparent;
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__footer {
+  background: color-mix(in srgb, var(--mutqin-modal-surface-bg, var(--surface)) 94%, transparent);
+  border-top-color: color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__title {
+  font-family: var(--tajweed-guide-display) !important;
+  font-size: clamp(1.22rem, 2.4vw, 1.42rem) !important;
+  font-weight: 600 !important;
+  line-height: 1.22 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__subtitle {
+  margin-top: 0.28rem !important;
+  font-size: 0.86rem !important;
+  line-height: 1.45 !important;
+}
+
+.tajweed-colour-guide__dialog {
+  width: min(48rem, calc(100vw - 1.5rem));
+  max-width: min(48rem, calc(100vw - 1.5rem));
+  max-height: min(90vh, calc(100dvh - 1.5rem));
+  overflow-x: hidden;
+}
+
+.tajweed-colour-guide__header {
+  flex-shrink: 0;
+}
+
+.tajweed-colour-guide .post-session-simple__title {
+  font-size: clamp(1.12rem, 2.1vw, 1.28rem);
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.tajweed-colour-guide .post-session-simple__subtitle {
+  margin-top: 0.28rem;
+  max-width: 36rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.tajweed-colour-guide__close {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+}
+
+.tajweed-colour-guide__body {
+  padding-top: 1.05rem;
+  overflow-x: hidden;
+}
+
+.tajweed-colour-guide__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.tajweed-colour-guide__card {
+  --guide-ink: var(--text, #1f1a17);
+  --guide-muted: var(--text-muted, #5a5048);
+  --guide-line: color-mix(in srgb, var(--border) 72%, transparent);
+  --guide-card: color-mix(in srgb, var(--zone-elevated, var(--surface)) 88%, #fff 12%);
+  --guide-well: color-mix(in srgb, var(--surface) 78%, var(--zone-canvas, #f6f3ee));
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.95rem 1rem 0.9rem;
+  border: 1px solid var(--guide-line);
+  border-radius: 16px;
+  background: var(--guide-card);
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 42%, transparent) inset;
+  animation: tajweed-guide-rise 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--guide-index, 0) * 28ms);
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.tajweed-colour-guide__card:hover {
+  border-color: color-mix(in srgb, var(--accent, #9a6738) 28%, var(--guide-line));
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 42%, transparent) inset,
+    0 8px 20px color-mix(in srgb, #14231c 7%, transparent);
+}
+
+.tajweed-colour-guide__rule-head {
+  display: grid;
+  grid-template-columns: 0.7rem minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+}
+
+.tajweed-colour-guide__swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-top: 0.38rem;
+  border-radius: 999px;
+  border: 0;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--guide-swatch, currentColor) 16%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #fff 28%, transparent);
+}
+
+.tajweed-colour-guide__copy {
+  min-width: 0;
+}
+
+.tajweed-colour-guide__name {
+  display: block;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.32;
+  color: var(--guide-ink);
+}
+
+.tajweed-colour-guide__description {
+  margin: 0.22rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--guide-muted);
+}
+
+.tajweed-colour-guide__example-well {
+  display: flex;
+  justify-content: flex-end;
+  margin-inline-start: 1.4rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--guide-line) 80%, transparent);
+  background: var(--guide-well);
+}
+
+.tajweed-colour-guide__example-label {
+  margin: 0;
+  margin-inline-start: 1.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--guide-muted);
+}
+
+.tajweed-colour-guide__example {
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+  font-family: var(--tajweed-guide-arabic) !important;
+  font-size: clamp(1.5rem, 3.2vw, 1.85rem);
+  font-weight: 400;
+  line-height: 1.9;
+  text-align: right;
+  direction: rtl;
+  unicode-bidi: isolate;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  font-feature-settings: "liga" 1, "calt" 1;
+  color: var(--guide-ink);
+}
+
+.tajweed-colour-guide__example .tajweed-mark,
+.tajweed-colour-guide__example [class*="tajweed-"] {
+  display: inline;
+  padding: 0;
+  border-radius: 0;
+  background: transparent !important;
+  font-family: inherit;
+}
+
+.tajweed-colour-guide__footer {
+  flex-shrink: 0;
+}
+
+.tajweed-colour-guide__footer .post-session-simple__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tajweed-colour-guide__footer .post-session-simple__btn {
+  width: auto;
+  min-width: 7.5rem;
+  min-height: 2.6rem;
+}
+
+@keyframes tajweed-guide-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tajweed-colour-guide__card,
+  .tajweed-colour-guide__card:hover {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .tajweed-colour-guide__dialog {
+    width: min(40rem, calc(100vw - 1.25rem));
+    max-width: min(40rem, calc(100vw - 1.25rem));
+  }
+}
+
+@media (max-width: 720px) {
+  .tajweed-colour-guide__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tajweed-colour-guide__dialog {
+    width: min(100vw - 1rem, 34rem);
+    max-width: min(100vw - 1rem, 34rem);
+    max-height: min(92vh, calc(100dvh - 1rem));
+  }
+
+  .tajweed-colour-guide__body {
+    padding-inline: 1rem;
+  }
+
+  .tajweed-colour-guide__example-well,
+  .tajweed-colour-guide__example-label {
+    margin-inline-start: 0;
+  }
+}
+
+@media (max-height: 640px) {
+  .tajweed-colour-guide__dialog {
+    max-height: min(96vh, calc(100dvh - 0.5rem));
+  }
+}
+
+@media (max-width: 480px) {
+  .tajweed-colour-guide__dialog {
+    width: calc(100vw - 0.9rem);
+    max-width: calc(100vw - 0.9rem);
+  }
+
+  .tajweed-colour-guide__card {
+    padding: 0.85rem 0.85rem 0.8rem;
+  }
+
+  .tajweed-colour-guide__footer .post-session-simple__btn {
+    width: 100%;
+  }
+}
+
+[data-theme="sepia"] .tajweed-colour-guide__card,
+.post-session-simple[data-theme="sepia"] .tajweed-colour-guide__card {
+  --guide-card: var(--zone-elevated, #fdf6ea);
+  --guide-well: color-mix(in srgb, #f3e6d0 70%, #fff8ec);
+  --guide-line: color-mix(in srgb, var(--border) 90%, transparent);
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"],
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 {
+  --guide-ink: #f7efe5;
+  --guide-muted: color-mix(in srgb, #f7ebdf 68%, transparent);
+  --guide-card: #2a2420;
+  --guide-well: #171411;
+  --guide-line: rgba(247, 234, 219, 0.14);
+  color: #f7ebdf;
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__dialog,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__dialog {
+  background: linear-gradient(180deg, #2a2420 0%, #1f1a17 46%, #181412 100%) !important;
+  border-color: color-mix(in srgb, rgba(247, 234, 219, 0.16) 88%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 16px 40px rgba(0, 0, 0, 0.48);
+  color: #f7ebdf;
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__header,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__header {
+  background: #2a2420 !important;
+  border-bottom-color: rgba(247, 234, 219, 0.12);
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__body,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__body {
+  background: transparent !important;
+  scrollbar-color: rgba(247, 234, 219, 0.22) transparent;
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__footer,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__footer {
+  background: linear-gradient(180deg, #1f1a17 0%, #2a2420 100%) !important;
+  border-top-color: rgba(247, 234, 219, 0.12);
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__title,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__title {
+  color: #fff8f0;
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__subtitle,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .post-session-simple__subtitle {
+  color: color-mix(in srgb, #f7ebdf 74%, transparent);
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .tajweed-colour-guide__close,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .tajweed-colour-guide__close {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 236, 216, 0.14);
+  color: #f7ebdf;
+}
+
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .tajweed-colour-guide__close:hover,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .tajweed-colour-guide__close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 236, 216, 0.22);
+}
+
+[data-theme="dark"] .tajweed-colour-guide__card,
+.post-session-simple[data-theme="dark"] .tajweed-colour-guide__card,
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .tajweed-colour-guide__card,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .tajweed-colour-guide__card {
+  --guide-ink: #f7efe5;
+  --guide-muted: color-mix(in srgb, #f7ebdf 68%, transparent);
+  --guide-card: #2a2420;
+  --guide-well: #171411;
+  --guide-line: rgba(247, 234, 219, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 244, 230, 0.04);
+}
+
+[data-theme="dark"] .tajweed-colour-guide__card:hover,
+.post-session-simple[data-theme="dark"] .tajweed-colour-guide__card:hover,
+.tajweed-colour-guide.post-session-simple--calm-v2[data-theme="dark"] .tajweed-colour-guide__card:hover,
+html[data-theme="dark"] .tajweed-colour-guide.post-session-simple--calm-v2 .tajweed-colour-guide__card:hover {
+  border-color: rgba(247, 234, 219, 0.22);
+  background: #322c27 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 230, 0.05),
+    0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .tajweed-colour-guide__card:hover,
+.post-session-simple[data-theme="dark"] .tajweed-colour-guide__card:hover {
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .tajweed-colour-guide__swatch,
+.post-session-simple[data-theme="dark"] .tajweed-colour-guide__swatch {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--guide-swatch, #fff) 26%, transparent),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.32);
+}
+
+[data-theme="dark"] .tajweed-colour-guide__example,
+.post-session-simple[data-theme="dark"] .tajweed-colour-guide__example {
+  color: #f4ebe1;
+}
+
+[data-theme="dark"] .tajweed-colour-guide .post-session-simple__title {
+  color: #fff8f0;
+}
+
+[data-theme="dark"] .tajweed-colour-guide .post-session-simple__subtitle {
+  color: color-mix(in srgb, #f7ebdf 74%, transparent);
+}

@@ -10,14 +10,14 @@ class ThemePreferenceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_leftover_sepia_cookie_does_not_override_dark_default(): void
+    public function test_guest_leftover_dark_cookie_does_not_override_sepia_default(): void
     {
-        $this->withUnencryptedCookie('mutqin_theme', 'sepia-mode')
-            ->withSession(['mutqin_theme' => 'sepia-mode'])
+        $this->withUnencryptedCookie('mutqin_theme', 'dark-mode')
+            ->withSession(['mutqin_theme' => 'dark-mode'])
             ->get(route('home'))
             ->assertOk()
-            ->assertSee('data-theme="dark"', false)
-            ->assertCookie('mutqin_theme', 'dark-mode', false);
+            ->assertSee('data-theme="sepia"', false)
+            ->assertCookie('mutqin_theme', 'sepia-mode', false);
     }
 
     public function test_guest_keeps_sepia_after_explicitly_choosing_it(): void
@@ -50,7 +50,7 @@ class ThemePreferenceTest extends TestCase
         $this->assertSame('dark-mode', $themeCookie->getValue());
     }
 
-    public function test_registration_persists_dark_theme_as_default(): void
+    public function test_registration_persists_sepia_theme_as_default(): void
     {
         $this->post(route('register'), [
             'name' => 'New Learner',
@@ -60,14 +60,14 @@ class ThemePreferenceTest extends TestCase
         ])->assertRedirect(route('memorisation'));
 
         $user = User::where('email', 'new-learner@example.com')->firstOrFail();
-        $this->assertSame('dark-mode', $user->theme);
+        $this->assertSame('sepia-mode', $user->theme);
 
         $this->get(route('memorisation'))
             ->assertOk()
-            ->assertSee('data-theme="dark"', false);
+            ->assertSee('data-theme="sepia"', false);
     }
 
-    public function test_login_persists_dark_when_account_has_no_theme(): void
+    public function test_login_persists_sepia_when_account_has_no_theme(): void
     {
         $user = User::factory()->create([
             'email' => 'plain@example.com',
@@ -80,7 +80,7 @@ class ThemePreferenceTest extends TestCase
             'password' => 'secret12',
         ])->assertRedirect(route('memorisation'));
 
-        $this->assertSame('dark-mode', $user->fresh()->theme);
+        $this->assertSame('sepia-mode', $user->fresh()->theme);
     }
 
     public function test_authenticated_user_theme_overrides_cookie(): void
@@ -213,8 +213,8 @@ class ThemePreferenceTest extends TestCase
             ->withSession(['mutqin_theme' => 'dark-mode'])
             ->get(route('home'))
             ->assertOk()
-            ->assertSee('data-theme="dark"', false)
-            ->assertCookie('mutqin_theme', 'dark-mode', false);
+            ->assertSee('data-theme="sepia"', false)
+            ->assertCookie('mutqin_theme', 'sepia-mode', false);
     }
 
     public function test_api_requests_do_not_refresh_theme_cookie(): void
@@ -227,7 +227,41 @@ class ThemePreferenceTest extends TestCase
             ->assertCookieMissing('mutqin_theme');
     }
 
-    public function test_logout_resets_shared_theme_cookie_to_dark(): void
+    public function test_colour_mode_survives_logout_login_and_memorisation_reload(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'light-learner@example.com',
+            'password' => bcrypt('secret12'),
+            'theme' => 'light-mode',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('memorisation'))
+            ->assertOk()
+            ->assertSee('data-theme="light"', false)
+            ->assertSee('window.mutqinInitialTheme = "light"', false);
+
+        $this->actingAs($user)
+            ->post(route('logout'))
+            ->assertRedirect(route('memorisation'));
+
+        $this->assertSame('light-mode', $user->fresh()->theme);
+
+        $this->post(route('login'), [
+            'email' => 'light-learner@example.com',
+            'password' => 'secret12',
+        ])->assertRedirect(route('memorisation'));
+
+        $this->assertSame('light-mode', $user->fresh()->theme);
+
+        $this->actingAs($user->fresh())
+            ->get(route('memorisation'))
+            ->assertOk()
+            ->assertSee('data-theme="light"', false)
+            ->assertSee('window.mutqinInitialTheme = "light"', false);
+    }
+
+    public function test_logout_resets_shared_theme_cookie_to_sepia_default(): void
     {
         $user = User::factory()->create([
             'theme' => 'dark-mode',
@@ -237,6 +271,6 @@ class ThemePreferenceTest extends TestCase
             ->withCookie('mutqin_theme', 'dark-mode')
             ->post(route('logout'))
             ->assertRedirect(route('memorisation'))
-            ->assertCookie('mutqin_theme', 'dark-mode', false);
+            ->assertCookie('mutqin_theme', 'sepia-mode', false);
     }
 }

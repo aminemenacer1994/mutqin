@@ -11,8 +11,8 @@ class ThemeTest extends TestCase
     {
         $this->assertSame(['light', 'sepia', 'dark'], Theme::ids());
         $this->assertSame(['light-mode', 'sepia-mode', 'dark-mode'], Theme::preferences());
-        $this->assertSame('dark', Theme::DEFAULT);
-        $this->assertSame('dark-mode', Theme::DEFAULT_PREFERENCE);
+        $this->assertSame('sepia', Theme::DEFAULT);
+        $this->assertSame('sepia-mode', Theme::DEFAULT_PREFERENCE);
     }
 
     public function test_aliases_normalize_to_preference_strings(): void
@@ -20,15 +20,15 @@ class ThemeTest extends TestCase
         $this->assertSame('sepia-mode', Theme::normalizePreference('sepia'));
         $this->assertSame('dark-mode', Theme::normalizePreference('DARK'));
         $this->assertSame('light-mode', Theme::normalizePreference('light-mode'));
-        $this->assertSame('dark-mode', Theme::normalizePreference('night'));
-        $this->assertSame('dark-mode', Theme::normalizePreference(null));
+        $this->assertSame('sepia-mode', Theme::normalizePreference('night'));
+        $this->assertSame('sepia-mode', Theme::normalizePreference(null));
     }
 
     public function test_data_theme_and_chrome_come_from_the_catalog(): void
     {
         $this->assertSame('sepia', Theme::toDataTheme('sepia-mode'));
         $this->assertSame('dark', Theme::toDataTheme('dark'));
-        $this->assertSame('dark', Theme::toDataTheme('unknown'));
+        $this->assertSame('sepia', Theme::toDataTheme('unknown'));
 
         $this->assertSame('#14110f', Theme::chrome('dark')['theme_color']);
         $this->assertSame('#f1e7d8', Theme::chrome('sepia')['background_color']);

@@ -62636,12 +62636,26 @@ html.is-app-fullscreen .tools-backdrop:not(.open) {
   pointer-events: none !important;
 }
 
-html.is-app-fullscreen .player-dock,
+html.is-app-fullscreen .player-dock {
+  pointer-events: none !important;
+}
+
 html.is-app-fullscreen .player-dock > *,
 html.is-app-fullscreen .player-dock-card,
 html.is-app-fullscreen .player-bar,
 html.is-app-fullscreen .playback-pill {
   pointer-events: auto !important;
+}
+
+/* Leave and empty shells stay in the DOM briefly (or via a stale mount).
+   The fixed box must not keep capturing taps after the player is gone. */
+html body .player-dock.slide-up-leave-active,
+html body .player-dock.slide-up-leave-active *,
+html body .player-dock.slide-up-leave-to,
+html body .player-dock.slide-up-leave-to *,
+html body .player-dock:not(:has(.playback-pill, .player-bar, .player-talqin-strip)),
+html body .player-dock:not(:has(.playback-pill, .player-bar, .player-talqin-strip)) * {
+  pointer-events: none !important;
 }
 
 html.is-app-fullscreen,

@@ -1047,7 +1047,8 @@
       "closeRecordingsLibrary": "Kapat recordings library",
       "searchRecordedAyahs": "« Search recorded ayahs»",
       "pauseReplay": "Duraklat replay",
-      "replayRecitation": "« Replay recitation»"
+      "replayRecitation": "« Replay recitation»",
+      "closeTajweedColourGuide": "Tecvid renk rehberini kapat"
     },
     "recordings": {
       "sessionRecordings": "oturum recordings",
@@ -3846,7 +3847,75 @@
       "expandText": "Expand text",
       "collapseText": "Collapse text"
     },
-    "countdownPlayNow": "Şimdi oynat"
+    "countdownPlayNow": "Şimdi oynat",
+    "tajweedColourGuide": {
+      "menu": "Tecvid Renk Rehberi",
+      "title": "Tecvid Renk Rehberi",
+      "subtitle": "Kur’an okurken her rengin ne anlama geldiğini öğrenin.",
+      "example": "Örnek",
+      "rules": {
+        "ghunnah": {
+          "name": "Ghunnah",
+          "description": "Uygun süre boyunca tutulan burundan bir ses."
+        },
+        "idghamGhunnah": {
+          "name": "Gunnelı idgam",
+          "description": "Nunu sonraki harfe gunne ile birleştirin."
+        },
+        "iqlab": {
+          "name": "İklab",
+          "description": "Nunu, ب’den önce hafif bir mim sesine çevirin."
+        },
+        "ikhfa": {
+          "name": "İhfa",
+          "description": "Nunu, sonraki harften önce hafif bir gunne ile gizleyin."
+        },
+        "idghamNoGhunnah": {
+          "name": "Gunnesiz idgam",
+          "description": "Nunu ل veya ر harfine gunne tutmadan birleştirin."
+        },
+        "ikhfaShafawi": {
+          "name": "İhfa-i şefevi",
+          "description": "Ardından ب geldiğinde mimi hafifçe gizleyin."
+        },
+        "qalqalah": {
+          "name": "Kalkale",
+          "description": "ق ط ب ج د üzerinde dururken hafif bir sekme verin."
+        },
+        "maddNormal": {
+          "name": "Med (tabii)",
+          "description": "Harekeyi yaklaşık iki elif miktarı uzatın."
+        },
+        "maddPermissible": {
+          "name": "Med (caiz)",
+          "description": "Harfler ayrı kelimelerdeyken izin verilen daha uzun bir uzatma."
+        },
+        "maddObligatory": {
+          "name": "Med (vacip)",
+          "description": "Aynı kelimede hemze geldiğinde gereken uzatma."
+        },
+        "maddNecessary": {
+          "name": "Med (lazım)",
+          "description": "Daha uzun zorunlu uzatma; çoğu zaman şeddeden önce."
+        },
+        "idghamShafawi": {
+          "name": "Idgham shafawi",
+          "description": "İki mimi gunne ile birleştirin."
+        },
+        "idghamSimilar": {
+          "name": "Benzer harflerin idgamı",
+          "description": "Birbirine benzeyen iki harfi tek seste birleştirin."
+        },
+        "hamzatWasl": {
+          "name": "Vasıl hemzesi",
+          "description": "Birleştirirken okunmayan bir vasıl hemzesi."
+        },
+        "silent": {
+          "name": "Okunmayan harf",
+          "description": "Mushafta yazılı olan ama okunmayan bir harf."
+        }
+      }
+    }
   },
   "toasts": {
     "saved": "kaydedilmiş successfully.",

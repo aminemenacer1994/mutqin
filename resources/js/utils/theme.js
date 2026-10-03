@@ -2,7 +2,7 @@ const THEME_STORAGE_KEY = 'mutqin-theme';
 const THEME_PREFERENCE_KEY = 'mutqin-theme-preference';
 const THEME_COOKIE_KEY = 'mutqin_theme';
 const THEME_CHOSEN_COOKIE_KEY = 'mutqin_theme_set';
-export const DEFAULT_THEME = 'dark';
+export const DEFAULT_THEME = 'sepia';
 
 /** Legacy unscoped keys — cleared on logout; never authoritative for signed-in users. */
 export const SHARED_THEME_STORAGE_KEYS = Object.freeze([
@@ -229,6 +229,7 @@ async function persistThemeToServer(themePreference) {
     method: 'PATCH',
     headers: themeCsrfHeaders(),
     credentials: 'same-origin',
+    keepalive: true,
     body: JSON.stringify({ theme: themePreference }),
   });
 

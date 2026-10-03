@@ -1049,7 +1049,8 @@
       "closeRecordingsLibrary": "Cerrar recordings library",
       "searchRecordedAyahs": "« Search recorded ayahs»",
       "pauseReplay": "Pausar replay",
-      "replayRecitation": "« Replay recitation»"
+      "replayRecitation": "« Replay recitation»",
+      "closeTajweedColourGuide": "Cerrar la guía de colores del tajwid"
     },
     "recordings": {
       "sessionRecordings": "sesión recordings",
@@ -3865,7 +3866,75 @@
       "expandText": "Ampliar el texto",
       "collapseText": "Reducir el texto"
     },
-    "countdownPlayNow": "Reproducir ahora"
+    "countdownPlayNow": "Reproducir ahora",
+    "tajweedColourGuide": {
+      "menu": "Guía de colores del tajwid",
+      "title": "Guía de colores del tajwid",
+      "subtitle": "Aprende qué representa cada color al leer el Corán.",
+      "example": "Ejemplo",
+      "rules": {
+        "ghunnah": {
+          "name": "Ghunnah",
+          "description": "Un sonido nasal que se mantiene el tiempo adecuado."
+        },
+        "idghamGhunnah": {
+          "name": "Idgham con gunna",
+          "description": "Une la nun con la letra siguiente con un sonido nasal."
+        },
+        "iqlab": {
+          "name": "Iqlab",
+          "description": "Cambia la nun por un sonido suave de mim antes de ب."
+        },
+        "ikhfa": {
+          "name": "Ikhfa",
+          "description": "Oculta la nun con un leve sonido nasal antes de la letra siguiente."
+        },
+        "idghamNoGhunnah": {
+          "name": "Idgham sin gunna",
+          "description": "Une la nun con ل o ر sin sostener el sonido nasal."
+        },
+        "ikhfaShafawi": {
+          "name": "Ikhfa shafawí",
+          "description": "Oculta ligeramente la mim cuando le sigue ب."
+        },
+        "qalqalah": {
+          "name": "Qalqalah",
+          "description": "Da un leve rebote al detenerte en ق ط ب ج د."
+        },
+        "maddNormal": {
+          "name": "Madd natural",
+          "description": "Alarga la vocal unas dos cuentas."
+        },
+        "maddPermissible": {
+          "name": "Madd (permisible)",
+          "description": "Un alargamiento mayor permitido cuando las letras están en palabras distintas."
+        },
+        "maddObligatory": {
+          "name": "Madd (obligatorio)",
+          "description": "Un alargamiento necesario cuando una hamza sigue en la misma palabra."
+        },
+        "maddNecessary": {
+          "name": "Madd (necesario)",
+          "description": "Un alargamiento más largo, a menudo antes de una shadda."
+        },
+        "idghamShafawi": {
+          "name": "Idgham shafawi",
+          "description": "Une dos mim con un sonido nasal."
+        },
+        "idghamSimilar": {
+          "name": "Idgham de letras similares",
+          "description": "Une dos letras parecidas en un solo sonido."
+        },
+        "hamzatWasl": {
+          "name": "Hamza de enlace",
+          "description": "Una hamza de enlace que no se pronuncia al unir."
+        },
+        "silent": {
+          "name": "Letra muda",
+          "description": "Una letra escrita en el mushaf pero que no se pronuncia."
+        }
+      }
+    }
   },
   "toasts": {
     "saved": "Guardado correctamente.",

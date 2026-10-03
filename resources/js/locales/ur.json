@@ -1047,7 +1047,8 @@
       "closeRecordingsLibrary": "أغلق تسجيلات مكتبة",
       "searchRecordedAyahs": "Search recorded آيات",
       "pauseReplay": "إيقاف replay",
-      "replayRecitation": "Replay تلاوة"
+      "replayRecitation": "Replay تلاوة",
+      "closeTajweedColourGuide": "تجوید رنگ رہنما بند کریں"
     },
     "recordings": {
       "sessionRecordings": "جلسة تسجيلات",
@@ -3846,7 +3847,75 @@
       "expandText": "Expand text",
       "collapseText": "Collapse text"
     },
-    "countdownPlayNow": "اب چلائیں"
+    "countdownPlayNow": "اب چلائیں",
+    "tajweedColourGuide": {
+      "menu": "تجوید رنگ رہنما",
+      "title": "تجوید رنگ رہنما",
+      "subtitle": "قرآن پڑھتے ہوئے ہر رنگ کا مطلب جانیے۔",
+      "example": "مثال",
+      "rules": {
+        "ghunnah": {
+          "name": "غنہ",
+          "description": "ناک سے نکلنے والی آواز جسے مناسب مدت تک روکا جاتا ہے۔"
+        },
+        "idghamGhunnah": {
+          "name": "ادغام بغنہ",
+          "description": "نون کو اگلے حرف میں غنہ کے ساتھ شامل کریں۔"
+        },
+        "iqlab": {
+          "name": "اقلاب",
+          "description": "باء سے پہلے نون کو ہلکی میم میں بدل دیں۔"
+        },
+        "ikhfa": {
+          "name": "اخفاء",
+          "description": "اگلے حرف سے پہلے نون کو ہلکے غنہ کے ساتھ چھپائیں۔"
+        },
+        "idghamNoGhunnah": {
+          "name": "ادغام بغیر غنہ",
+          "description": "نون کو لام یا را میں بغیر غنہ کے شامل کریں۔"
+        },
+        "ikhfaShafawi": {
+          "name": "اخفاء شفوی",
+          "description": "اگر میم کے بعد باء آئے تو میم کو ہلکا چھپائیں۔"
+        },
+        "qalqalah": {
+          "name": "قلقلہ",
+          "description": "ق ط ب ج د پر رکتے وقت ہلکی سی بازگشت دیں۔"
+        },
+        "maddNormal": {
+          "name": "مد طبیعی",
+          "description": "حرکت کو تقریباً دو مقدار تک کھینچیں۔"
+        },
+        "maddPermissible": {
+          "name": "مد جائز",
+          "description": "جب حروف الگ کلمات میں ہوں تو لمبا کھینچاؤ جائز ہے۔"
+        },
+        "maddObligatory": {
+          "name": "مد واجب",
+          "description": "اگر اسی کلمے میں ہمزہ آئے تو مد ضروری ہے۔"
+        },
+        "maddNecessary": {
+          "name": "مد لازم",
+          "description": "لمبا واجب مد، اکثر تشدید سے پہلے۔"
+        },
+        "idghamShafawi": {
+          "name": "ادغام شفوی",
+          "description": "دو میم کو غنہ کے ساتھ ملا دیں۔"
+        },
+        "idghamSimilar": {
+          "name": "متجانس حروف کا ادغام",
+          "description": "دو ملتے جلتے حروف کو ایک آواز میں ملا دیں۔"
+        },
+        "hamzatWasl": {
+          "name": "ہمزہ وصل",
+          "description": "جوڑتے وقت نہ پڑھی جانے والی ہمزہ وصل۔"
+        },
+        "silent": {
+          "name": "خاموش حرف",
+          "description": "مصحف میں لکھا ہوا حرف جو پڑھا نہیں جاتا۔"
+        }
+      }
+    }
   },
   "toasts": {
     "saved": "تم الحفظ بنجاح.",

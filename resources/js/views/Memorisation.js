@@ -538,6 +538,10 @@ const MutashabihatPracticeModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "mutashabihat-practice" */ '../components/MutashabihatPracticeModal.vue'),
   'mutashabihat-practice'
 )
+const TajweedColourGuideModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "tajweed-colour-guide" */ '../components/TajweedColourGuideModal.vue'),
+  'tajweed-colour-guide'
+)
 const AiAudioConsentModal = lazyWorkspaceChunk(
   () => import(/* webpackChunkName: "ai-audio-consent" */ '../components/AiAudioConsentModal.vue'),
   'ai-audio-consent'
@@ -834,6 +838,7 @@ export default {
     WorkspaceAiReciteResultModal,
     MutashabihatCompareModal,
     MutashabihatPracticeModal,
+    TajweedColourGuideModal,
     AppStatus,
     ViewportConfetti,
   },
@@ -1107,10 +1112,10 @@ export default {
       coldPageLoadScrollGuard: true,
       feedbackCollapsed: true,
 
-      // UI State
+      // UI State. Colour mode is the account row (users.theme), painted by the server.
       currentMode: 'beginner',
       appState: createHifzAppState(),
-      theme: DEFAULT_THEME,
+      theme: getSavedTheme(),
       activeLocale: 'en',
       languageOptions: SWITCHER_LOCALES.map((value) => ({
         value,
@@ -1517,6 +1522,7 @@ export default {
       mutashabihatCompareOpen: false,
       mutashabihatCompareView: null,
       mutashabihatPracticeOpen: false,
+      showTajweedColourGuide: false,
       mutashabihatPracticeSession: null,
       mutashabihatProgressRows: [],
       mutashabihatPendingDrift: null,
@@ -8714,6 +8720,7 @@ export default {
         || this.showQuranSearchModal
         || this.amdOpen
         || this.askMutqinOpen
+        || this.showTajweedColourGuide
         || this.showPlannerCompletionModal
         || this.showSessionEndedModal
         || this.showPlannerModal
@@ -10251,11 +10258,16 @@ export default {
     showPlayerDock() {
       if (this.showMadaniFullscreenBar) return false
       if (this.showCountdownOverlay) return false
+      // Loaded audio alone is not a surface. Mounting the fixed dock without
+      // the bar, pill, or talqin strip leaves an invisible hit target.
+      const hasVisibleSurface = this.playbackPillVisible
+        || this.playerBarVisible
+        || this.talqinRecitationTurnActive
       if (
         this.playerVisible
         && this.isSessionLive
         && !this.playerDismissed
-        && (this.isPlaying || this.playbackAwaitingGesture || this.hasLoadedAudio)
+        && hasVisibleSurface
       ) {
         return true
       }
@@ -11527,6 +11539,9 @@ export default {
     showHelpLearningModal(newVal) {
       this.syncBodyScrollLock(newVal)
     },
+    showTajweedColourGuide(newVal) {
+      this.syncBodyScrollLock(newVal)
+    },
     recordingsLibrarySearch() {
       if (!this.showRecordingsLibrary) return
       this.ensureSelectedRecordingsSelection()
@@ -12454,7 +12469,6 @@ export default {
 
         sheet.style.setProperty('width', '100%', 'important')
         sheet.style.setProperty('max-width', '100%', 'important')
-        sheet.style.setProperty('overflow-x', 'clip', 'important')
         sheet.style.setProperty('overflow-wrap', 'anywhere', 'important')
         sheet.style.setProperty('white-space', 'normal', 'important')
         sheet.style.setProperty('transform', 'none', 'important')
@@ -12464,12 +12478,14 @@ export default {
         sheet.style.setProperty('word-spacing', '0', 'important')
 
         const unicodeSheet = sheet.classList.contains('madani-page-sheet--unicode')
-        sheet.style.setProperty('overflow-x', unicodeSheet ? 'visible' : 'clip', 'important')
-        sheet.style.setProperty(
-          'padding-inline',
-          'max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px))',
-          'important',
-        )
+        sheet.style.setProperty('overflow-x', 'visible', 'important')
+        const appEl = viewport?.closest?.('.app')
+        const appStyles = appEl ? getComputedStyle(appEl) : null
+        const padStart = appStyles?.getPropertyValue('--mq-mushaf-inline-start')?.trim()
+          || 'max(0.72rem, calc(env(safe-area-inset-left, 0px) + 0.42rem))'
+        const padEnd = appStyles?.getPropertyValue('--mq-mushaf-inline-end')?.trim()
+          || 'max(0.72rem, calc(env(safe-area-inset-right, 0px) + 0.42rem))'
+        sheet.style.setProperty('padding-inline', `${padStart} ${padEnd}`, 'important')
 
         sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs').forEach((line) => {
           if (!line?.style) return
@@ -12501,8 +12517,8 @@ export default {
         })
       }
 
-      viewport.style.overflowX = 'clip'
-      viewport.style.overflowY = 'auto'
+      viewport.style.overflowX = 'visible'
+      viewport.style.overflowY = 'visible'
       sheets.forEach((sheet) => applySheetFit(sheet))
     },
 
@@ -12542,6 +12558,8 @@ export default {
     },
 
     syncGlobalTheme(theme = this.theme) {
+      // Re-apply the account colour mode already on the page. Do not write it
+      // again — users.theme is updated only when the learner picks a mode.
       this.theme = setGlobalTheme(theme, { persist: false })
     },
 
@@ -23094,6 +23112,23 @@ export default {
     },
     closeHelpLearningModal() {
       this.showHelpLearningModal = false
+    },
+    openTajweedColourGuide() {
+      this.topCardMenuOpen = false
+      this.showTajweedColourGuide = true
+    },
+    closeTajweedColourGuide() {
+      this.showTajweedColourGuide = false
+      this.$nextTick(() => {
+        const trigger = this.$refs.topCardMenuTrigger
+        if (trigger && typeof trigger.focus === 'function') {
+          try {
+            trigger.focus({ preventScroll: true })
+          } catch (_) {
+            trigger.focus()
+          }
+        }
+      })
     },
     selectHelpLearningSection(sectionKey) {
       if (!this.helpLearningSections.some(section => section.key === sectionKey)) return
@@ -37227,9 +37262,12 @@ export default {
       return this.qpcVersePageIndex
     },
     async bootstrapQpcMadaniViewer() {
+      const bootstrapToken = (this._qpcMadaniBootstrapToken || 0) + 1
+      this._qpcMadaniBootstrapToken = bootstrapToken
       this.qpcMadaniLoadError = ''
       try {
         await this.ensureQpcVersePageIndex()
+        if (bootstrapToken !== this._qpcMadaniBootstrapToken) return
         if (isIndopakMushafLayout(this.mushafLayoutId)) {
           void ensureIndopakNastaleeqFontForLayout(this.mushafLayoutId).catch(() => null)
         } else {
@@ -37244,8 +37282,10 @@ export default {
         if (immediate.length) {
           await this.loadSessionMushafLeaves(immediate)
         }
+        if (bootstrapToken !== this._qpcMadaniBootstrapToken) return
         this.prefetchRemainingSessionMushaf(sessionPages, immediate)
       } catch (error) {
+        if (bootstrapToken !== this._qpcMadaniBootstrapToken) return
         console.error('QPC Madani viewer bootstrap failed:', error)
         this.qpcMadaniLoadError = this.t('memorisation.mushafLoad.errorDesc')
       }
@@ -37806,6 +37846,7 @@ export default {
     async ensureMadaniPageLoaded(pageNumber, options = {}) {
       const page = clampMushafPage(pageNumber, MUSHAF_LAYOUT_MADANI_V2)
       if (!page) return null
+      const loadGeneration = this.madaniLoadRequestId
       const sessionKeys = this.mushafSessionVerseKeys
       const sessionChapterId = Number(
         this.chapterId
@@ -37868,6 +37909,7 @@ export default {
         const layout = buildMadaniPageLayout(page, layoutVerses, { tajweed: !!this.tajweedEnabled })
         layout.sessionOnly = wantSessionOnly
         layout.sessionSignature = sessionSignature
+        if (loadGeneration !== this.madaniLoadRequestId) return null
         this.madaniPageLayouts = {
           ...this.madaniPageLayouts,
           [page]: layout
@@ -37878,8 +37920,10 @@ export default {
           const existing = Number(nextMap[key] || 0)
           if (!existing || page < existing) nextMap[key] = page
         }
+        if (loadGeneration !== this.madaniLoadRequestId) return null
         this.madaniPageByVerseKey = nextMap
         await this.ensureMadaniFontForPage(page)
+        if (loadGeneration !== this.madaniLoadRequestId) return null
         this.$nextTick(() => this.scheduleMadaniPageFit())
         return layout
       } catch (error) {
@@ -38370,6 +38414,23 @@ export default {
       }
     },
 
+    peekCachedSessionVerses(mode = this.currentMode, config = null) {
+      const targetConfig = config || this.buildSessionConfig(mode)
+      const cached = this.getCachedVerses(mode, targetConfig)
+      if (!cached?.verses?.length) return null
+      const rangeStart = Number(targetConfig?.rangeStart || 1)
+      const rangeEnd = Number(targetConfig?.rangeEnd || rangeStart || 1)
+      const cachedNeedsUthmaniRefresh = cached.verses.some((verse) => {
+        if (!Object.prototype.hasOwnProperty.call(verse || {}, 'arabic_uthmani')) return true
+        const arabic = String(verse?.arabic_uthmani || verse?.arabic || '').trim()
+        return arabic && !arabicHasTashkilEngine(arabic)
+      })
+      if (cachedNeedsUthmaniRefresh) return null
+      const expectedCount = Math.max(1, rangeEnd - rangeStart + 1)
+      if (cached.verses.length < expectedCount) return null
+      return cached
+    },
+
     setCachedVerses(mode = this.currentMode, config = null, payload = null) {
       if (!payload) return
       const key = this.getVerseCacheKey(mode, config)
@@ -38435,9 +38496,15 @@ export default {
         return
       }
 
+      const targetConfig = this.buildSessionConfig(mode)
+      const hasValidVerseCache = !!this.peekCachedSessionVerses(mode, targetConfig)
+
       this.isWorkspaceRefreshing = true
       this.workspaceRefreshReason = reason
-      this.clearWorkspaceForConfigChange(mode)
+      // Keep the current Mushaf visible when a valid cache can hydrate the new config.
+      if (!hasValidVerseCache) {
+        this.clearWorkspaceForConfigChange(mode)
+      }
 
       if (options.immediate) {
         this.loadVerses(mode)
@@ -38768,6 +38835,11 @@ export default {
           this.closeHifzPlanModal()
           return
         }
+        if (this.showTajweedColourGuide) {
+          event.preventDefault()
+          this.closeTajweedColourGuide()
+          return
+        }
         if (this.showHelpLearningModal) {
           event.preventDefault()
           this.closeHelpLearningModal()
@@ -38995,7 +39067,7 @@ export default {
       this.wordByWordAudioEnabled = true
       this.ensureWordAudioHighlighting?.()
       this.readingViewMode = this.clampReadingViewMode('madani_mushaf')
-      this.syncGlobalTheme(DEFAULT_THEME)
+      this.syncGlobalTheme()
       this.applyLayoutFontSize(this.readingViewMode)
       if (this.settingsDraft && typeof this.settingsDraft === 'object') {
         this.settingsDraft.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
@@ -43656,22 +43728,9 @@ export default {
       const requestId = ++this.verseRequestId
       const targetConfig = this.buildSessionConfig(mode)
 
-      const hadVisibleVerses = Array.isArray(target.verses) && target.verses.length > 0
-      if (!hadVisibleVerses) this.isDataReady = false
-
       try {
-        const cached = this.getCachedVerses(mode, targetConfig)
-        const cachedNeedsUthmaniRefresh = Array.isArray(cached?.verses) && cached.verses.length
-          && cached.verses.some((verse) => {
-            if (!Object.prototype.hasOwnProperty.call(verse || {}, 'arabic_uthmani')) return true
-            const arabic = String(verse?.arabic_uthmani || verse?.arabic || '').trim()
-            return arabic && !arabicHasTashkilEngine(arabic)
-          })
-        if (cached?.verses?.length && !cachedNeedsUthmaniRefresh) {
-          const expectedCount = Math.max(1, rangeEnd - rangeStart + 1)
-          // Reject incomplete session caches so stacked/mushaf always show the full range.
-          const cacheCoversSession = cached.verses.length >= expectedCount
-          if (cacheCoversSession) {
+        const cached = this.peekCachedSessionVerses(mode, targetConfig)
+        if (cached) {
             let resolvedVerses = cached.verses.map((verse) => {
               const clean = this.sanitizeVerseDisplayText(verse)
               const audio = this.ensureVerseAudioUrl(clean)
@@ -43721,8 +43780,10 @@ export default {
             }
             this.refreshAyahNoteCounts(chapterId)
             return
-          }
         }
+
+        const hadVisibleVerses = Array.isArray(target.verses) && target.verses.length > 0
+        if (!hadVisibleVerses) this.isDataReady = false
 
         // One editions call covers audio + tajweed (avoids a duplicate reciter round-trip).
         // Translation / transliteration / WBW wait until those overlays are actually on.
@@ -45500,7 +45561,8 @@ export default {
       this.beginner = this.loadModeState('beginner')
       this.advanced = this.loadModeState('advanced')
       this.planner = this.loadModeState('planner')
-      this.syncGlobalTheme(DEFAULT_THEME)
+      // Colour mode is users.theme (or the guest cookie). Workspace uiState must not replace it.
+      this.syncGlobalTheme()
       if (this.readingViewMode === 'mushaf') this.applyMushafThemeDefault(this.theme, { force: !this.mushafBackgroundTouched })
       if (this.isMobileViewport()) {
         this.playerCompact = true
@@ -45529,7 +45591,6 @@ export default {
         const nextUiState = {
           anchorModeEnabled: this.anchorModeEnabled,
           anchorCount: this.anchorCount,
-          theme: this.theme,
           showTools: this.showTools,
           tab: this.tab,
           currentMode: this.currentMode,

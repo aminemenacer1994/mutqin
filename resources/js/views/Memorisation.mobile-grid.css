@@ -22,6 +22,8 @@
     --mobile-page-gutter: var(--mq-mobile-gutter);
     --mobile-safe-top: var(--mq-safe-top);
     --mobile-safe-bottom: var(--mq-safe-bottom);
+    --mq-mushaf-inline-start: max(0.72rem, calc(var(--mq-safe-left) + 0.42rem));
+    --mq-mushaf-inline-end: max(0.72rem, calc(var(--mq-safe-right) + 0.42rem));
     inline-size: 100%;
     max-inline-size: 100%;
   }
@@ -38,8 +40,17 @@
   .mushaf-viewport,
   .mushaf-page {
     max-width: 100%;
-    overflow-x: hidden;
     overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  .main.mushaf-mode-active .mushaf-viewport,
+  .main.mushaf-mode-active .mushaf-viewport-scroll,
+  .main.mushaf-mode-active .mushaf-page,
+  .main.mushaf-mode-active .mushaf-page--madani,
+  .main.mushaf-mode-active .mushaf-page-body {
+    overflow-x: visible !important;
+    max-width: 100% !important;
   }
 
   .main.madani-qpc-mode-active .workspace-main,
@@ -4800,7 +4811,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     min-width: 0 !important;
     margin-inline: auto !important;
     padding-inline: 0 !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     box-sizing: border-box !important;
   }
 
@@ -4821,13 +4832,13 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .main.mushaf-mode-active .mushaf-shell {
     margin-inline: auto !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
   }
 
   .main.mushaf-mode-active .mushaf-shell__page {
     display: flex !important;
     justify-content: center !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     overflow-y: auto !important;
   }
 
@@ -4836,7 +4847,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: auto !important;
-    padding-inline: 0.08rem !important;
+    padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
     overflow: visible !important;
     transform-origin: top center !important;
     box-sizing: border-box !important;
@@ -5151,7 +5162,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   /* Mushaf: centered ayat using the card width */
   .main.mushaf-mode-active .mushaf-shell__page {
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     overflow-y: auto !important;
     padding-inline: 0 !important;
     width: 100% !important;
@@ -5160,9 +5171,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .main.mushaf-mode-active .mushaf-page {
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     overflow-y: visible !important;
-    padding: 0.45rem 0.2rem 0.75rem !important;
+    padding-block: 0.45rem 0.75rem !important;
+    padding-inline: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: auto !important;
@@ -5174,7 +5186,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     width: 100% !important;
     max-width: 100% !important;
     overflow: visible !important;
-    padding-inline: 0.08rem !important;
+    padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
     gap: 0.28rem !important;
     transform-origin: top center;
     margin-inline: auto !important;
@@ -5529,7 +5541,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   /* Mushaf portrait: continuous page using the card width */
   .app .main.mushaf-mode-active .mushaf-shell__page {
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     padding-inline: 0 !important;
     width: 100% !important;
     display: block !important;
@@ -5543,7 +5555,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     transform: none !important;
     overflow: visible !important;
     gap: 0 !important;
-    padding-inline: 0 !important;
+    padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
     margin-inline: 0 !important;
     text-align: center !important;
     text-align-last: center !important;
@@ -5773,13 +5785,14 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     text-align-last: center !important;
     text-justify: none !important;
     line-height: 1.85 !important;
-    padding-inline: 0 !important;
-    overflow-x: hidden !important;
+    padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
+    overflow-x: visible !important;
   }
 
   .app .main.mushaf-mode-active .mushaf-page--madani,
 .main.mushaf-mode-active .mushaf-page--madani {
-    padding: 0.35rem 0.08rem 0.55rem !important;
+    padding-block: 0.35rem 0.55rem !important;
+    padding-inline: 0 !important;
   }
 
   /* Let ayahs use the card width; avoid stacked inner gutters */
@@ -6892,7 +6905,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     text-align: center !important;
     text-align-last: center !important;
     line-height: 1.85 !important;
-    padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px)) !important;
+    padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
     overflow-x: visible !important;
   }
 
@@ -8092,26 +8105,47 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   }
 }
 
-/* Native document scrolling on phones. Pair clip with visible: hidden would
-   compute the other axis to auto, creating nested scroll areas in the reader. */
+/* Native document scrolling on phones. Pairing overflow-x: clip without an
+   explicit overflow-y: visible makes WebKit treat overflow-y as auto and
+   creates nested scroll areas in the Mushaf reader. */
 @media (max-width: 767.98px) {
   html body.memorisation-page:not(.tools-panel-open) {
     overflow-x: clip !important;
     overflow-y: visible !important;
+    height: auto !important;
+    max-height: none !important;
   }
 
-  html body.memorisation-page .app .main.mushaf-mode-active :is(
+  html:has(body.memorisation-page:not(.tools-panel-open)) {
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html body.memorisation-page:not(.tools-panel-open) .app,
+  html body.memorisation-page:not(.tools-panel-open) .app.is-fullscreen {
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
+
+  /* Do not set overflow on .main here — immersive QPC uses .main as the sole scroller. */
+  html body.memorisation-page:not(.tools-panel-open) .app .main:is(.mushaf-mode-active, .madani-qpc-mode-active) :is(
+    .content,
+    .workspace,
+    .workspace-main,
+    .workspace-reading-surface,
     .mushaf-workspace,
+    .mushaf-workspace__fluid,
     .mushaf-shell,
     .mushaf-viewport-scroll,
+    .mushaf-session-stack,
+    .mushaf-page,
     .mushaf-page--madani,
     .mushaf-page-body,
-    .madani-page-sheet
-  ) {
-    overflow: visible !important;
-  }
-
-  html body.memorisation-page .app .main.madani-qpc-mode-active :is(
+    .madani-page-sheet,
     .madani-qpc-workspace,
     .madani-qpc-viewport,
     .madani-qpc-stage,
@@ -8127,9 +8161,82 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     .qpc-madani-line--basmallah,
     .qpc-madani-basmallah-words
   ) {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
     overflow: visible !important;
     overflow-x: visible !important;
     overflow-y: visible !important;
+  }
+
+  /* Default mobile Mushaf: document scroll (html), not .app/.main/viewport boxes. */
+  html body.memorisation-page:not(.tools-panel-open) .app .main:is(.mushaf-mode-active, .madani-qpc-mode-active) {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Immersive fullscreen without top bar: still document scroll, not .app 100dvh scroll. */
+  html.is-app-fullscreen:not(:has(.madani-fullscreen-bar--top)),
+  html.is-app-fullscreen:not(:has(.madani-fullscreen-bar--top)) body.memorisation-page:not(.tools-panel-open) {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  html.is-app-fullscreen:not(:has(.madani-fullscreen-bar--top)) body.memorisation-page:not(.tools-panel-open) .app.is-fullscreen,
+  html.is-app-fullscreen:not(:has(.madani-fullscreen-bar--top)) body.memorisation-page:not(.tools-panel-open) .app.is-fullscreen .main:is(.mushaf-mode-active, .madani-qpc-mode-active) {
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  /* Immersive QPC with fixed top bar: one scroll owner (.main), not html + .main. */
+  html.is-app-fullscreen:has(.madani-fullscreen-bar--top),
+  html.is-app-fullscreen:has(.madani-fullscreen-bar--top) body.memorisation-page:not(.tools-panel-open) {
+    overflow: hidden !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
+  html.is-app-fullscreen:has(.madani-fullscreen-bar--top) body.memorisation-page .app.is-fullscreen {
+    overflow: hidden !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
+  html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+    body.memorisation-page
+    .app.is-fullscreen
+    .main.madani-qpc-mode-active {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
+    body.memorisation-page
+    .app.is-fullscreen
+    .main.madani-qpc-mode-active
+    :is(
+      .content,
+      .workspace,
+      .workspace-main,
+      .madani-qpc-workspace,
+      .madani-qpc-stage,
+      .madani-qpc-viewport,
+      .qpc-madani-session-scroll,
+      .qpc-madani-session-scroll__page,
+      .qpc-madani-page,
+      .qpc-madani-page__sheet
+    ) {
+    overflow: visible !important;
+    min-height: 0 !important;
   }
 
   .app :is(.workspace-ai-recite-cta, .workspace-ask-mutqin-cta).is-animated,
@@ -8267,10 +8374,10 @@ html body .app .workspace-recite-dock__button:hover {
     max-width: 100% !important;
     margin-inline: 0 !important;
     padding:
-      max(0.45rem, calc(env(safe-area-inset-top, 0px) + 0.28rem))
-      max(0.04rem, env(safe-area-inset-right, 0px))
+      max(0.55rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))
+      var(--mq-mushaf-inline-end)
       max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
-      max(0.04rem, env(safe-area-inset-left, 0px))
+      var(--mq-mushaf-inline-start)
       !important;
     overflow: visible !important;
     align-items: stretch !important;
@@ -8434,5 +8541,26 @@ html body .app .workspace-recite-dock__button:hover {
 
   html body .app .main.mushaf-mode-active .workspace-recite-dock--mobile {
     display: none !important;
+  }
+}
+
+/* Hidden or empty player shells must not stay fixed hit targets.
+   Later mobile rules force the live dock visible; these only apply once
+   the bar, pill, and talqin strip are gone, or while it is leaving. */
+@media (max-width: 767.98px) {
+  html body .app .player-dock:not(:has(.playback-pill, .player-bar, .player-talqin-strip)) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  html body .app .player-dock.slide-up-leave-active,
+  html body .app .player-dock.slide-up-leave-active *,
+  html body .app .player-dock.slide-up-leave-to,
+  html body .app .player-dock.slide-up-leave-to *,
+  html body .app .player-dock:not(:has(.playback-pill, .player-bar, .player-talqin-strip)) * {
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 }

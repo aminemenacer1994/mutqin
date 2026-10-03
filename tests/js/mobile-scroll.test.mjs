@@ -95,6 +95,20 @@ for (const [name, browserType] of [['chromium', chromium], ['webkit', webkit]]) 
     })), readerSurfaces)
     assert.ok(surfaces.length >= 3, `${name}: reader did not render`)
     for (const surface of surfaces) assert.equal(surface.overflow, 'visible', `${name}: ${surface.name} must let the document scroll`)
+    const sheetGutter = await page.evaluate(() => {
+      const sheet = document.querySelector('.madani-page-sheet, .madani-page-sheet--unicode')
+      if (!sheet) return null
+      const style = getComputedStyle(sheet)
+      return {
+        padStart: parseFloat(style.paddingInlineStart) || parseFloat(style.paddingLeft),
+        padEnd: parseFloat(style.paddingInlineEnd) || parseFloat(style.paddingRight),
+        overflowX: style.overflowX,
+      }
+    })
+    assert.ok(sheetGutter, `${name}: mushaf sheet must render`)
+    assert.ok(sheetGutter.padStart >= 10 && sheetGutter.padEnd >= 10, `${name}: mushaf sheet needs horizontal inset (${sheetGutter.padStart}/${sheetGutter.padEnd}px)`)
+    assert.notEqual(sheetGutter.overflowX, 'hidden', `${name}: mushaf sheet must not clip glyphs with overflow-x hidden`)
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2), true, `${name}: mushaf must not widen the page horizontally`)
     assert.equal(await page.evaluate(() => getComputedStyle(document.body).overflowY), 'visible', `${name}: body must not create a second page scroll area`)
     assert.equal(await page.evaluate(() => document.getAnimations().some(animation => (
       animation.effect?.target?.closest('.workspace-ai-recite-cta, .workspace-ask-mutqin-cta')

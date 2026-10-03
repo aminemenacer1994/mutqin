@@ -1049,7 +1049,8 @@
       "closeRecordingsLibrary": "Cerrar recordings library",
       "searchRecordedAyahs": "« Search recorded ayahs»",
       "pauseReplay": "Pausar replay",
-      "replayRecitation": "« Replay recitation»"
+      "replayRecitation": "« Replay recitation»",
+      "closeTajweedColourGuide": "Fermer le guide des couleurs du tajwid"
     },
     "recordings": {
       "sessionRecordings": "sesión recordings",
@@ -3882,7 +3883,75 @@
       "expandText": "Agrandir le texte",
       "collapseText": "Réduire le texte"
     },
-    "countdownPlayNow": "Lire maintenant"
+    "countdownPlayNow": "Lire maintenant",
+    "tajweedColourGuide": {
+      "menu": "Guide des couleurs du tajwid",
+      "title": "Guide des couleurs du tajwid",
+      "subtitle": "Découvrez ce que chaque couleur représente à la lecture du Coran.",
+      "example": "Exemple",
+      "rules": {
+        "ghunnah": {
+          "name": "Ghunnah",
+          "description": "Un son nasal tenu pendant la durée appropriée."
+        },
+        "idghamGhunnah": {
+          "name": "Idghām avec ghunnah",
+          "description": "Fusionnez le nūn dans la lettre suivante avec un son nasal."
+        },
+        "iqlab": {
+          "name": "Iqlāb",
+          "description": "Changez le nūn en un léger son de mīm avant ب."
+        },
+        "ikhfa": {
+          "name": "Ikhfā’",
+          "description": "Masquez le nūn avec un léger son nasal avant la lettre suivante."
+        },
+        "idghamNoGhunnah": {
+          "name": "Idghām sans ghunnah",
+          "description": "Fusionnez le nūn dans ل ou ر sans tenue nasale."
+        },
+        "ikhfaShafawi": {
+          "name": "Ikhfā’ shafawī",
+          "description": "Masquez légèrement le mīm lorsqu’il est suivi de ب."
+        },
+        "qalqalah": {
+          "name": "Qalqalah",
+          "description": "Donnez un léger rebond en vous arrêtant sur ق ط ب ج د."
+        },
+        "maddNormal": {
+          "name": "Madd (naturel)",
+          "description": "Prolongez la voyelle d’environ deux temps."
+        },
+        "maddPermissible": {
+          "name": "Madd (permis)",
+          "description": "Une prolongation plus longue autorisée lorsque les lettres sont dans des mots séparés."
+        },
+        "maddObligatory": {
+          "name": "Madd (obligatoire)",
+          "description": "Une prolongation requise lorsqu’un hamza suit dans le même mot."
+        },
+        "maddNecessary": {
+          "name": "Madd (nécessaire)",
+          "description": "Une prolongation plus longue, souvent avant une shaddah."
+        },
+        "idghamShafawi": {
+          "name": "Idgham shafawi",
+          "description": "Fusionnez deux mīm avec un son nasal."
+        },
+        "idghamSimilar": {
+          "name": "Idghām de lettres proches",
+          "description": "Fusionnez deux lettres semblables en un seul son."
+        },
+        "hamzatWasl": {
+          "name": "Hamza de liaison",
+          "description": "Un hamza de liaison qui ne se prononce pas en enchaînant."
+        },
+        "silent": {
+          "name": "Lettre muette",
+          "description": "Une lettre écrite dans le mushaf mais non prononcée."
+        }
+      }
+    }
   },
   "toasts": {
     "saved": "Enregistré avec succès.",

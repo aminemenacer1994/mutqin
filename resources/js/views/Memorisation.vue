@@ -895,6 +895,15 @@
                       <span>{{ t('memorisation.reading.tajweed') }}</span>
                       <i v-if="tajweedEnabled" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
+                    <button
+                      type="button"
+                      class="top-card-menu-row"
+                      data-testid="tajweed-colour-guide-menu"
+                      @click.stop="openTajweedColourGuide"
+                    >
+                      <i class="bi bi-palette2" aria-hidden="true"></i>
+                      <span>{{ t('memorisation.tajweedColourGuide.menu') }}</span>
+                    </button>
                     <a
                       :href="isAdmin ? adminDashboardUrl : learnerDashboardUrl"
                       class="top-card-menu-link top-card-menu-row"
@@ -4643,7 +4652,7 @@
         </button>
 
         <div
-          v-else
+          v-else-if="playerBarVisible || talqinRecitationTurnActive"
           class="player-dock-card"
           :class="{ 'is-talqin-only': playerDockShowsTalqinOnly, 'is-unified': talqinRecitationTurnActive && playerBarVisible }"
         >
@@ -4674,7 +4683,7 @@
         >
           <div class="player-accent" aria-hidden="true"></div>
 
-          <div v-if="!playerCompact" class="player-main">
+          <div v-if="!playerCompact && !isMobileViewport()" class="player-main">
             <div class="player-info">
               <div class="player-chapter">{{ getChapterDisplayName(currentChapter) || t('memorisation.player.quranFallback') }}</div>
               <div class="player-verse">
@@ -5086,6 +5095,19 @@
       @practice="onMutashabihatComparePractice"
       @open-ayah="onMutashabihatCompareOpenAyah"
       @play-ayah="onMutashabihatComparePlayAyah"
+    />
+
+    <TajweedColourGuideModal
+      v-if="showTajweedColourGuide"
+      :open="true"
+      :theme="theme"
+      :quran-font-family="quranFontFamily"
+      :title="t('memorisation.tajweedColourGuide.title')"
+      :subtitle="t('memorisation.tajweedColourGuide.subtitle')"
+      :example-label="t('memorisation.tajweedColourGuide.example')"
+      :close-label="t('common.close')"
+      :close-aria-label="t('memorisation.a11y.closeTajweedColourGuide')"
+      @close="closeTajweedColourGuide"
     />
 
     <MutashabihatPracticeModal

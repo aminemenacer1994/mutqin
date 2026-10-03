@@ -22,6 +22,9 @@ export const SESSION_ENTRY_SCROLL_REASONS = Object.freeze(
 export const SESSION_SCROLL_EXCLUDED_SELECTORS = Object.freeze([
   '.mushaf-viewport-scroll',
   '.mushaf-viewport',
+  '.madani-qpc-viewport',
+  '.qpc-madani-session-scroll',
+  '.madani-qpc-workspace',
   '.amd-mushaf-shell',
   '.amd-mushaf-panel',
   '.modal-body',

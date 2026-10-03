@@ -1049,7 +1049,8 @@
       "closeRecordingsLibrary": "Close recordings library",
       "searchRecordedAyahs": "Search recorded ayahs",
       "pauseReplay": "Pause replay",
-      "replayRecitation": "Replay recitation"
+      "replayRecitation": "Replay recitation",
+      "closeTajweedColourGuide": "Close Tajweed colour guide"
     },
     "recordings": {
       "sessionRecordings": "Session recordings",
@@ -3880,6 +3881,74 @@
           "title": "Self assessment",
           "description": "After a session, note how confident you felt so the next step can stay useful.",
           "bestFor": "Students who prefer simple self-reflection."
+        }
+      }
+    },
+    "tajweedColourGuide": {
+      "menu": "Tajweed Colour Guide",
+      "title": "Tajweed Colour Guide",
+      "subtitle": "Learn what each colour represents while reading the Qur’an.",
+      "example": "Example",
+      "rules": {
+        "ghunnah": {
+          "name": "Ghunnah",
+          "description": "A nasal sound held for the appropriate duration."
+        },
+        "idghamGhunnah": {
+          "name": "Idgham with ghunnah",
+          "description": "Merge the noon into the next letter with a nasal sound."
+        },
+        "iqlab": {
+          "name": "Iqlab",
+          "description": "Change the noon into a light meem sound before ب."
+        },
+        "ikhfa": {
+          "name": "Ikhfa",
+          "description": "Hide the noon with a light nasal sound before the next letter."
+        },
+        "idghamNoGhunnah": {
+          "name": "Idgham without ghunnah",
+          "description": "Merge the noon into ل or ر without a nasal hold."
+        },
+        "ikhfaShafawi": {
+          "name": "Ikhfa shafawi",
+          "description": "Hide the meem lightly when it is followed by ب."
+        },
+        "qalqalah": {
+          "name": "Qalqalah",
+          "description": "Give a light bounce when stopping on ق ط ب ج د."
+        },
+        "maddNormal": {
+          "name": "Madd (natural)",
+          "description": "Stretch the vowel for about two counts."
+        },
+        "maddPermissible": {
+          "name": "Madd (permissible)",
+          "description": "A longer stretch that is allowed when the letters are in separate words."
+        },
+        "maddObligatory": {
+          "name": "Madd (obligatory)",
+          "description": "A required stretch when a hamzah follows in the same word."
+        },
+        "maddNecessary": {
+          "name": "Madd (necessary)",
+          "description": "A longer required stretch, often before a shaddah."
+        },
+        "idghamShafawi": {
+          "name": "Idgham shafawi",
+          "description": "Merge two meems with a nasal sound."
+        },
+        "idghamSimilar": {
+          "name": "Idgham of similar letters",
+          "description": "Merge two similar letters into one sound."
+        },
+        "hamzatWasl": {
+          "name": "Hamzat al-wasl",
+          "description": "A connecting hamzah that is not pronounced when joining."
+        },
+        "silent": {
+          "name": "Silent letter",
+          "description": "A letter written in the mushaf but not pronounced."
         }
       }
     }

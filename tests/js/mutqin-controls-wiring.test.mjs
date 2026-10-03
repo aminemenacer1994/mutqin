@@ -434,7 +434,7 @@ includesAll('top card dashboard visibility', [
   )
   assert.match(
     mobileGridCss,
-    /QPC mushaf: full width shell, inset sheet[\s\S]*?qpc-madani-page__sheet[\s\S]*?0\.72rem[\s\S]*?overflow:\s*visible\s*!important/,
+    /QPC mushaf: full width shell, inset sheet[\s\S]*?qpc-madani-page__sheet[\s\S]*?--mq-mushaf-inline-(?:start|end)[\s\S]*?overflow:\s*visible\s*!important/,
     'mobile-grid must inset QPC mushaf sheets and keep glyphs visible on phones'
   )
   assert.match(
@@ -946,13 +946,47 @@ includesAll('audio unlock flow', [
     /\.player-dock\.tools-open \> \*[\s\S]*?pointer-events:\s*none\s*!important/,
     'tools-open player dock children must not steal Start Session clicks'
   )
+  assert.match(
+    mobileGridCss,
+    /Native document scrolling on phones[\s\S]*overflow-y: visible !important[\s\S]*\.mushaf-viewport-scroll/,
+    'mobile mushaf reader surfaces must not become nested vertical scrollers'
+  )
+  assert.match(
+    mobileGridCss,
+    /madani-fullscreen-bar--top[\s\S]*\.main\.madani-qpc-mode-active[\s\S]*overflow-y: auto !important/,
+    'immersive QPC top bar must keep a single .main scroll owner'
+  )
+  assert.match(
+    mobileGridCss,
+    /--mq-mushaf-inline-start:\s*max\(0\.72rem[\s\S]*--mq-mushaf-inline-end/,
+    'mobile-grid must define responsive mushaf horizontal inset tokens'
+  )
+  assert.match(
+    mobileGridCss,
+    /main\.mushaf-mode-active \.madani-page-sheet[\s\S]*padding-inline:\s*var\(--mq-mushaf-inline-start\)/,
+    'unicode mushaf sheets must use mushaf inset tokens on phones'
+  )
 }
 
-includesAll('light theme default', [
-  /theme: DEFAULT_THEME/,
+includesAll('account colour mode survives workspace load', [
+  /theme: getSavedTheme\(\)/,
   /this\.theme = document\.documentElement\.getAttribute\('data-theme'\) \|\| this\.theme \|\| DEFAULT_THEME/,
-  /document\.documentElement\.setAttribute\('data-theme', this\.theme\)/
+  /document\.documentElement\.setAttribute\('data-theme', this\.theme\)/,
+  /Colour mode is users\.theme/,
+  /this\.syncGlobalTheme\(\)/,
 ])
+
+assert.doesNotMatch(
+  source,
+  /syncGlobalTheme\(DEFAULT_THEME\)/,
+  'workspace load must not reset colour mode to the app default'
+)
+
+assert.doesNotMatch(
+  source,
+  /anchorCount: this\.anchorCount,\s*theme: this\.theme/,
+  'workspace uiState must not store colour mode in local storage'
+)
 
 assert.doesNotMatch(
   source,

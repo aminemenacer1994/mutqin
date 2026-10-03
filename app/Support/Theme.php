@@ -8,9 +8,9 @@ namespace App\Support;
  */
 final class Theme
 {
-    public const DEFAULT = 'dark';
+    public const DEFAULT = 'sepia';
 
-    public const DEFAULT_PREFERENCE = 'dark-mode';
+    public const DEFAULT_PREFERENCE = 'sepia-mode';
 
     public const COOKIE = 'mutqin_theme';
 

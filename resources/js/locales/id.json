@@ -1047,7 +1047,8 @@
       "closeRecordingsLibrary": "Tutup recordings library",
       "searchRecordedAyahs": "« Search recorded ayahs»",
       "pauseReplay": "Jeda replay",
-      "replayRecitation": "« Replay recitation»"
+      "replayRecitation": "« Replay recitation»",
+      "closeTajweedColourGuide": "Tutup panduan warna tajwid"
     },
     "recordings": {
       "sessionRecordings": "sesi recordings",
@@ -3846,7 +3847,75 @@
       "expandText": "Expand text",
       "collapseText": "Collapse text"
     },
-    "countdownPlayNow": "Putar sekarang"
+    "countdownPlayNow": "Putar sekarang",
+    "tajweedColourGuide": {
+      "menu": "Panduan Warna Tajwid",
+      "title": "Panduan Warna Tajwid",
+      "subtitle": "Pelajari arti setiap warna saat membaca Al-Qur’an.",
+      "example": "Contoh",
+      "rules": {
+        "ghunnah": {
+          "name": "Ghunnah",
+          "description": "Suara sengau yang ditahan sesuai masanya."
+        },
+        "idghamGhunnah": {
+          "name": "Idgham dengan ghunnah",
+          "description": "Masukkan nun ke huruf berikutnya dengan dengung."
+        },
+        "iqlab": {
+          "name": "Iqlab",
+          "description": "Ubah nun menjadi mim ringan sebelum ب."
+        },
+        "ikhfa": {
+          "name": "Ikhfa",
+          "description": "Sembunyikan nun dengan dengung ringan sebelum huruf berikutnya."
+        },
+        "idghamNoGhunnah": {
+          "name": "Idgham tanpa ghunnah",
+          "description": "Masukkan nun ke ل atau ر tanpa menahan dengung."
+        },
+        "ikhfaShafawi": {
+          "name": "Ikhfa syafawi",
+          "description": "Sembunyikan mim secara ringan jika diikuti ب."
+        },
+        "qalqalah": {
+          "name": "Qalqalah",
+          "description": "Berikan pantulan ringan saat berhenti pada ق ط ب ج د."
+        },
+        "maddNormal": {
+          "name": "Madd (alami)",
+          "description": "Panjangkan harakat sekitar dua hitungan."
+        },
+        "maddPermissible": {
+          "name": "Madd (boleh)",
+          "description": "Panjangan lebih lama yang dibolehkan jika hurufnya di kata terpisah."
+        },
+        "maddObligatory": {
+          "name": "Madd (wajib)",
+          "description": "Panjangan yang wajib jika hamzah mengikuti dalam kata yang sama."
+        },
+        "maddNecessary": {
+          "name": "Madd (lazim)",
+          "description": "Panjangan lebih lama yang wajib, sering sebelum tasydid."
+        },
+        "idghamShafawi": {
+          "name": "Idgham syafawi",
+          "description": "Gabungkan dua mim dengan dengung."
+        },
+        "idghamSimilar": {
+          "name": "Idgham huruf serupa",
+          "description": "Gabungkan dua huruf yang serupa menjadi satu suara."
+        },
+        "hamzatWasl": {
+          "name": "Hamzah wasal",
+          "description": "Hamzah penyambung yang tidak dilafalkan saat bersambung."
+        },
+        "silent": {
+          "name": "Huruf tidak dilafalkan",
+          "description": "Huruf yang tertulis di mushaf tetapi tidak dibaca."
+        }
+      }
+    }
   },
   "toasts": {
     "saved": "Berhasil disimpan.",

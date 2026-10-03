@@ -1047,7 +1047,8 @@
       "closeRecordingsLibrary": "أغلق تسجيلات مكتبة",
       "searchRecordedAyahs": "Search recorded آيات",
       "pauseReplay": "إيقاف replay",
-      "replayRecitation": "Replay تلاوة"
+      "replayRecitation": "Replay تلاوة",
+      "closeTajweedColourGuide": "إغلاق دليل ألوان التجويد"
     },
     "recordings": {
       "sessionRecordings": "جلسة تسجيلات",
@@ -3846,7 +3847,75 @@
       "expandText": "Expand text",
       "collapseText": "Collapse text"
     },
-    "countdownPlayNow": "شغّل الآن"
+    "countdownPlayNow": "شغّل الآن",
+    "tajweedColourGuide": {
+      "menu": "دليل ألوان التجويد",
+      "title": "دليل ألوان التجويد",
+      "subtitle": "تعرّف على معنى كل لون أثناء قراءة القرآن.",
+      "example": "مثال",
+      "rules": {
+        "ghunnah": {
+          "name": "الغنة",
+          "description": "صوت أنفي يُمدّ بالمقدار المناسب."
+        },
+        "idghamGhunnah": {
+          "name": "إدغام بغنة",
+          "description": "أدخل النون في الحرف التالي مع غنة."
+        },
+        "iqlab": {
+          "name": "الإقلاب",
+          "description": "حوّل النون إلى ميم خفيفة قبل الباء."
+        },
+        "ikhfa": {
+          "name": "الإخفاء",
+          "description": "أخفِ النون بغنة خفيفة قبل الحرف التالي."
+        },
+        "idghamNoGhunnah": {
+          "name": "إدغام بغير غنة",
+          "description": "أدخل النون في اللام أو الراء من غير غنة."
+        },
+        "ikhfaShafawi": {
+          "name": "إخفاء شفوي",
+          "description": "أخفِ الميم بخفة إذا جاء بعدها باء."
+        },
+        "qalqalah": {
+          "name": "القلقلة",
+          "description": "أعطِ ارتدادًا خفيفًا عند الوقف على ق ط ب ج د."
+        },
+        "maddNormal": {
+          "name": "مد طبيعي",
+          "description": "مدّ الحركة مقدار حركتين تقريبًا."
+        },
+        "maddPermissible": {
+          "name": "مد جائز",
+          "description": "مدّ أطول يجوز إذا كان الحرفان في كلمتين."
+        },
+        "maddObligatory": {
+          "name": "مد واجب",
+          "description": "مدّ لازم إذا جاءت همزة بعد حرف المد في الكلمة نفسها."
+        },
+        "maddNecessary": {
+          "name": "مد لازم",
+          "description": "مدّ أطول لازم، غالبًا قبل حرف مشدّد."
+        },
+        "idghamShafawi": {
+          "name": "إدغام شفوي",
+          "description": "أدخل الميم في ميم بعدها مع غنة."
+        },
+        "idghamSimilar": {
+          "name": "إدغام المتجانسين",
+          "description": "أدخل حرفين متشابهين في صوت واحد."
+        },
+        "hamzatWasl": {
+          "name": "همزة الوصل",
+          "description": "همزة وصل لا تُنطق عند الدرج."
+        },
+        "silent": {
+          "name": "حرف غير منطوق",
+          "description": "حرف مكتوب في المصحف ولا يُنطق."
+        }
+      }
+    }
   },
   "toasts": {
     "saved": "تم الحفظ بنجاح.",

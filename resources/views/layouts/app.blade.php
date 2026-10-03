@@ -8120,6 +8120,7 @@
                         method: 'PATCH',
                         headers: themeCsrfHeaders(),
                         credentials: 'same-origin',
+                        keepalive: true,
                         body: JSON.stringify({ theme: themePreference }),
                     });
                 };
