@@ -20,6 +20,10 @@ export {
   scoreAyahPrefix,
   ASK_MUTQIN_MIN_WORDS,
   ASK_MUTQIN_UNIQUE_MIN_WORDS,
+  ASK_MUTQIN_MATCH_LIST_INITIAL,
+  filterViableAyahMatches,
+  isClearAyahMatchWinner,
+  buildAskMutqinAyahHighlightParts,
 } from './matchAyah.js'
 export {
   loadAskMutqinMatchingIndex,

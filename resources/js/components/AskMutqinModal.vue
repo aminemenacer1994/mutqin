@@ -17,6 +17,7 @@
           aria-modal="true"
           aria-labelledby="askMutqinTitle"
           tabindex="-1"
+          :style="modalSurfaceStyle"
         >
           <header class="ask-mutqin-header">
             <div class="ask-mutqin-header__copy">
@@ -43,11 +44,77 @@
           </header>
 
           <div class="ask-mutqin-body">
-            <p v-if="!match && state !== 'error'" class="ask-mutqin-intro">
+            <p
+              v-if="!match && state !== 'error' && !isMultipleSelectionView && !isNoMatchView"
+              class="ask-mutqin-intro"
+            >
               {{ t('memorisation.askMutqin.featureBrief') }}
             </p>
+
             <section
-              v-if="state !== 'error'"
+              v-if="isMultipleSelectionView"
+              class="ask-mutqin-multiple"
+              dir="ltr"
+              :aria-label="t('memorisation.askMutqin.multipleMatchesTitle')"
+            >
+              <p class="ask-mutqin-multiple__lead">
+                {{ t('memorisation.askMutqin.multipleMatchesLead') }}
+              </p>
+              <p v-if="matchCandidates.length" class="ask-mutqin-multiple__count">
+                {{ t('memorisation.askMutqin.matchCount', { count: matchCandidates.length }) }}
+              </p>
+              <ul class="ask-mutqin-multiple__list">
+                <li
+                  v-for="row in matchCandidateRows"
+                  :key="row.key"
+                  class="ask-mutqin-multiple__item"
+                >
+                  <button
+                    type="button"
+                    class="ask-mutqin-multiple__card"
+                    :class="{ 'is-best': row.isBest }"
+                    :aria-label="row.ariaLabel"
+                    @click="selectMatchCandidate(row.item)"
+                  >
+                    <div class="ask-mutqin-multiple__head">
+                      <span class="ask-mutqin-multiple__ref">{{ row.label }}</span>
+                      <span
+                        v-if="row.isBest"
+                        class="ask-mutqin-multiple__pill"
+                      >{{ t('memorisation.askMutqin.bestMatchLabel') }}</span>
+                    </div>
+                    <p
+                      class="ask-mutqin-multiple__arabic"
+                      dir="rtl"
+                      lang="ar"
+                      :style="arabicTextStyle"
+                    >{{ row.arabic }}</p>
+                  </button>
+                </li>
+              </ul>
+              <button
+                v-if="hiddenMatchCandidateCount > 0 && !showAllMatchCandidates"
+                type="button"
+                class="ask-mutqin-multiple__more"
+                @click="showAllMatchCandidates = true"
+              >
+                {{ t('memorisation.askMutqin.showAllMatches', { count: matchCandidates.length }) }}
+              </button>
+            </section>
+
+            <section
+              v-else-if="isNoMatchView"
+              class="ask-mutqin-no-match"
+              dir="ltr"
+              role="status"
+            >
+              <p class="ask-mutqin-no-match__lead">
+                {{ t('memorisation.askMutqin.noConfidentMatchLead') }}
+              </p>
+            </section>
+
+            <section
+              v-else-if="state !== 'error'"
               class="ask-mutqin-ayah"
               :class="{
                 'is-live': isListening && !match,
@@ -59,6 +126,45 @@
             >
               <div class="ask-mutqin-ayah__bar">
                 <span class="ask-mutqin-ayah__label">{{ ayahPanelLabel }}</span>
+                <div
+                  v-if="match && (showAyahAudioControls || canReturnToMatchList)"
+                  class="ask-mutqin-ayah__tools"
+                  dir="ltr"
+                >
+                  <button
+                    v-if="canReturnToMatchList"
+                    type="button"
+                    class="ask-mutqin-icon-btn"
+                    :aria-label="t('memorisation.askMutqin.backToMatches')"
+                    @click="backToMatchCandidates"
+                  >
+                    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    v-if="showAyahAudioControls"
+                    type="button"
+                    class="ask-mutqin-icon-btn"
+                    :disabled="ayahAudioLoading"
+                    :aria-label="ayahAudioPlaying ? t('memorisation.askMutqin.pauseAyahAudio') : t('memorisation.askMutqin.playAyahAudio')"
+                    @click="toggleMatchedAyahAudio"
+                  >
+                    <i
+                      class="bi"
+                      :class="ayahAudioPlaying ? 'bi-pause-fill' : 'bi-play-fill'"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+                  <button
+                    v-if="showAyahAudioControls"
+                    type="button"
+                    class="ask-mutqin-icon-btn"
+                    :disabled="ayahAudioLoading && !ayahAudioPlaying"
+                    :aria-label="t('memorisation.askMutqin.stopAyahAudio')"
+                    @click="stopMatchedAyahAudio"
+                  >
+                    <i class="bi bi-stop-fill" aria-hidden="true"></i>
+                  </button>
+                </div>
                 <span v-if="matchMeta" class="ask-mutqin-ayah__meta">{{ matchMeta }}</span>
               </div>
               <div ref="ayahStage" class="ask-mutqin-ayah__stage">
@@ -91,44 +197,6 @@
                   <span class="ask-mutqin-searching__dots" aria-hidden="true">
                     <i></i><i></i><i></i>
                   </span>
-                </div>
-                <div
-                  v-if="similarAyahRows.length"
-                  class="ask-mutqin-similar"
-                  dir="ltr"
-                  :aria-label="t('memorisation.mutashabihat.similarAyahs')"
-                >
-                  <div class="ask-mutqin-similar__head">
-                    <span class="ask-mutqin-similar__title">{{ t('memorisation.mutashabihat.similarAyahs') }}</span>
-                  </div>
-                  <ul class="ask-mutqin-similar__list">
-                    <li
-                      v-for="row in similarAyahRows"
-                      :key="`similar-${row.pairId}-${row.verseKey}`"
-                      class="ask-mutqin-similar__item"
-                    >
-                      <div class="ask-mutqin-similar__meta">
-                        <span class="ask-mutqin-similar__ref">{{ row.label }}</span>
-                        <span v-if="row.matchCount > 1" class="ask-mutqin-similar__count">
-                          {{ t('memorisation.mutashabihat.matchCount', { count: row.matchCount }) }}
-                        </span>
-                      </div>
-                      <p
-                        v-if="row.preview"
-                        class="ask-mutqin-similar__preview"
-                        dir="rtl"
-                        lang="ar"
-                        :style="arabicTextStyle"
-                      >
-                        {{ row.preview }}
-                      </p>
-                      <div class="ask-mutqin-similar__actions">
-                        <button type="button" class="ask-mutqin-similar__btn ask-mutqin-similar__btn--primary" @click="emitCompare(row)">
-                          {{ t('memorisation.mutashabihat.compare') }}
-                        </button>
-                      </div>
-                    </li>
-                  </ul>
                 </div>
               </div>
             </section>
@@ -236,13 +304,23 @@
               {{ t('common.close') }}
             </button>
             <button
-              v-else-if="state === 'error'"
+              v-else-if="state === 'error' || isNoMatchView"
               type="button"
               class="ask-mutqin-primary"
               @click="retryFromError"
             >
               {{ t('common.tryAgain') }}
             </button>
+            <div v-else-if="isMultipleSelectionView" class="ask-mutqin-actions">
+              <button
+                type="button"
+                class="ask-mutqin-tool"
+                @click="retryRecording"
+              >
+                <i class="bi bi-mic" aria-hidden="true"></i>
+                <span>{{ t('memorisation.askMutqin.reciteAgain') }}</span>
+              </button>
+            </div>
             <div v-else-if="showSessionTools" class="ask-mutqin-actions">
               <button
                 type="button"
@@ -254,6 +332,12 @@
               </button>
             </div>
           </footer>
+          <audio
+            ref="ayahAudioEl"
+            class="ask-mutqin-audio-el"
+            preload="none"
+            playsinline
+          ></audio>
         </div>
       </div>
     </div>
@@ -277,10 +361,11 @@ import {
   resolveAskMutqinRange,
   resolveAskMutqinReciter,
   ASK_MUTQIN_MIN_WORDS,
+  ASK_MUTQIN_MATCH_LIST_INITIAL,
 } from '../scripts/askMutqin/index.js'
-import { findPairsForVerseKey, otherVerseKeyInPair, resolveVerseKey } from '../scripts/mutashabihat/pairsIndex.js'
-import { fetchPairsForAyah } from '../scripts/mutashabihat/api.js'
 import { classifyMicrophoneAccessError, resolveMicrophoneHelp } from '../scripts/audio/recordingResilience.js'
+import { SessionAudioPlayer, SESSION_AUDIO_STATES } from '../scripts/audio/sessionAudioPlayer.js'
+import { orderAyahAudioCandidateUrls, resolveGlobalAyahNumber } from '../scripts/audio/sessionReciter.js'
 
 const EMPTY_COMMAND = () => ({
   intent: 'open',
@@ -314,7 +399,7 @@ export default {
     quranFontFamily: { type: String, default: '' },
     searchIndex: { type: Array, default: () => [] },
   },
-  emits: ['close', 'apply', 'mutashabihat-compare'],
+  emits: ['close', 'apply'],
   data() {
     return {
       state: ASK_MUTQIN_STATES.INTRO,
@@ -345,9 +430,16 @@ export default {
       aidLoading: false,
       aidError: '',
       aidRequestKey: '',
-      similarPairsLoadedKey: '',
-      similarPairsLoading: false,
-      similarPairsRevision: 0,
+      matchCandidates: [],
+      showAllMatchCandidates: false,
+      matchAttemptSeq: 0,
+      matchSourceTranscript: '',
+      audioQualityHint: '',
+      ayahAudioPlayer: null,
+      ayahAudioState: SESSION_AUDIO_STATES.IDLE,
+      ayahAudioLoading: false,
+      ayahAudioUrls: [],
+      ayahAudioUrlIndex: 0,
     }
   },
   computed: {
@@ -364,6 +456,41 @@ export default {
         ASK_MUTQIN_STATES.RECITING,
         ASK_MUTQIN_STATES.AMBIGUOUS,
       ].includes(this.state)
+    },
+    isMultipleSelectionView() {
+      return this.state === ASK_MUTQIN_STATES.MULTIPLE && !this.match
+    },
+    isNoMatchView() {
+      return this.state === ASK_MUTQIN_STATES.NO_MATCH
+    },
+    canReturnToMatchList() {
+      return !!this.match && this.matchCandidates.length > 1
+    },
+    hiddenMatchCandidateCount() {
+      const total = this.matchCandidates.length
+      if (total <= ASK_MUTQIN_MATCH_LIST_INITIAL) return 0
+      return total - ASK_MUTQIN_MATCH_LIST_INITIAL
+    },
+    matchCandidateRows() {
+      const list = Array.isArray(this.matchCandidates) ? this.matchCandidates : []
+      const visible = this.showAllMatchCandidates || list.length <= ASK_MUTQIN_MATCH_LIST_INITIAL
+        ? list
+        : list.slice(0, ASK_MUTQIN_MATCH_LIST_INITIAL)
+      return visible.map((item, index) => {
+        const key = item.key || `${item.surah}:${item.ayah}`
+        const arabic = String(item.arabic || '').trim()
+        return {
+          item,
+          key,
+          label: `${item.surahName} · ${item.surah}:${item.ayah}`,
+          arabic,
+          isBest: index === 0 && list.length > 1,
+          ariaLabel: this.t('memorisation.askMutqin.matchCardAria', {
+            surah: item.surahName,
+            ayah: item.ayah,
+          }),
+        }
+      })
     },
     recordingLabel() {
       return this.t('memorisation.askMutqin.recordingOn')
@@ -396,6 +523,12 @@ export default {
       if (this.match?.arabic) return this.match.arabic
       return this.streamingText
     },
+    showAyahAudioControls() {
+      return !!this.match?.arabic
+    },
+    ayahAudioPlaying() {
+      return this.ayahAudioState === SESSION_AUDIO_STATES.PLAYING
+    },
     isSearching() {
       return this.state === ASK_MUTQIN_STATES.MATCHING && !this.match && !this.voice
     },
@@ -415,6 +548,12 @@ export default {
         return this.t('memorisation.quranSearch.searching')
       }
       if (this.match) return this.t('memorisation.askMutqin.foundTitle')
+      if (this.state === ASK_MUTQIN_STATES.MULTIPLE) {
+        return this.t('memorisation.askMutqin.multipleMatchesTitle')
+      }
+      if (this.state === ASK_MUTQIN_STATES.NO_MATCH) {
+        return this.t('memorisation.askMutqin.noConfidentMatchTitle')
+      }
       if (this.state === ASK_MUTQIN_STATES.AMBIGUOUS) return this.t('memorisation.askMutqin.keepRecitingTitle')
       return this.t('memorisation.askMutqin.reciteTitle')
     },
@@ -434,6 +573,8 @@ export default {
         && this.state !== ASK_MUTQIN_STATES.ERROR
         && this.state !== ASK_MUTQIN_STATES.READY
         && this.state !== ASK_MUTQIN_STATES.OPENING
+        && this.state !== ASK_MUTQIN_STATES.MULTIPLE
+        && this.state !== ASK_MUTQIN_STATES.NO_MATCH
     },
     readySummary() {
       if (this.state !== ASK_MUTQIN_STATES.READY && this.state !== ASK_MUTQIN_STATES.OPENING) return null
@@ -459,55 +600,18 @@ export default {
       if (!this.match) return ''
       return String(this.commandText || '').trim()
     },
+    modalSurfaceStyle() {
+      const family = String(this.quranFontFamily || '').trim()
+      if (!family) return {}
+      return {
+        '--mushaf-quran-font': family,
+        '--quran-font': family,
+      }
+    },
     arabicTextStyle() {
       const family = String(this.quranFontFamily || '').trim()
         || '"KFGQPC Uthmanic Script HAFS", "UthmanicHafs", "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif'
       return { fontFamily: family }
-    },
-    matchVerseKey() {
-      return resolveVerseKey(this.match || {})
-    },
-    indexByVerseKey() {
-      const rows = Array.isArray(this.index) && this.index.length
-        ? this.index
-        : (Array.isArray(this.searchIndex) ? this.searchIndex : [])
-      const map = new Map()
-      for (const row of rows) {
-        const key = row.key || `${row.surah}:${row.ayah}`
-        if (key) map.set(String(key), row)
-      }
-      return map
-    },
-    similarAyahRows() {
-      // Bumped when the pair index merges API rows (non-reactive map).
-      void this.similarPairsRevision
-      const anchor = this.matchVerseKey
-      if (!anchor) return []
-      const pairs = findPairsForVerseKey(anchor)
-      if (!pairs.length) return []
-      const byOther = new Map()
-      for (const pair of pairs) {
-        const otherKey = otherVerseKeyInPair(pair, anchor)
-        const entry = this.indexByVerseKey.get(otherKey)
-        const previewSource = String(entry?.arabic || entry?.text || '').trim()
-        const previewTokens = previewSource.split(/\s+/).filter(Boolean)
-        const preview = previewTokens.slice(0, 6).join(' ') + (previewTokens.length > 6 ? ' …' : '')
-        const [s, a] = otherKey.split(':')
-        const label = `${entry?.surahName || this.match?.surahName || `Surah ${s}`} · ${s}:${a}`
-        if (!byOther.has(otherKey)) {
-          byOther.set(otherKey, {
-            pair,
-            pairId: pair.id,
-            verseKey: otherKey,
-            label,
-            preview,
-            matchCount: 1,
-          })
-        } else {
-          byOther.get(otherKey).matchCount += 1
-        }
-      }
-      return [...byOther.values()].slice(0, 4)
     },
   },
   watch: {
@@ -526,16 +630,17 @@ export default {
         }
       },
     },
-    match(next) {
+    match(next, prev) {
       if (next) {
-        this.$nextTick(() => this.resetAyahScroll())
+        this.$nextTick(() => {
+          this.resetAyahScroll()
+          this.prepareMatchedAyahAudioUrls()
+        })
         this.loadSelectedAid()
-        this.similarPairsRevision += 1
-        void this.ensureSimilarPairsForMatch()
       } else {
+        this.stopMatchedAyahAudio()
+        if (prev) this.ayahAudioUrls = []
         this.resetAidPanel()
-        this.similarPairsLoadedKey = ''
-        this.similarPairsRevision = 0
       }
     },
   },
@@ -549,24 +654,6 @@ export default {
     },
     reciterName(id) {
       return resolveAskMutqinReciter(id, this.reciters)?.name || ''
-    },
-    async ensureSimilarPairsForMatch() {
-      const anchor = this.matchVerseKey
-      if (!anchor || this.similarPairsLoadedKey === anchor) return
-      this.similarPairsLoading = true
-      try {
-        await fetchPairsForAyah(anchor)
-        this.similarPairsLoadedKey = anchor
-        this.similarPairsRevision += 1
-      } finally {
-        this.similarPairsLoading = false
-      }
-    },
-    emitCompare(row) {
-      this.$emit('mutashabihat-compare', {
-        pair: row.pair,
-        anchorVerseKey: this.matchVerseKey,
-      })
     },
     containsArabic(text) {
       return /[\u0600-\u06FF]/.test(String(text || ''))
@@ -631,6 +718,14 @@ export default {
       this.commandText = ''
       this.match = null
       this.candidates = []
+      this.matchCandidates = []
+      this.showAllMatchCandidates = false
+      this.matchAttemptSeq = 0
+      this.matchSourceTranscript = ''
+      this.audioQualityHint = ''
+      this.stopMatchedAyahAudio()
+      this.ayahAudioUrls = []
+      this.ayahAudioUrlIndex = 0
       this.command = EMPTY_COMMAND()
       this.validatedRange = null
       this.errorMessage = ''
@@ -666,6 +761,13 @@ export default {
       this.voice = createAskMutqinVoiceSession({
         onTranscript: (payload) => this.onTranscript(payload),
         onError: (error) => this.fail(error),
+        onAudioQuality: ({ gate }) => {
+          if (gate?.reliable) {
+            this.audioQualityHint = ''
+            return
+          }
+          this.audioQualityHint = this.t('memorisation.askMutqin.audioCaptureHint')
+        },
       })
       return Promise.resolve(this.voice)
     },
@@ -751,26 +853,54 @@ export default {
       // matching spinner. This keeps the UI from implying that recording is
       // still active while the local index is being searched.
       this.state = ASK_MUTQIN_STATES.MATCHING
+      const attemptId = ++this.matchAttemptSeq
       this.stopListeningAfterMatch()
       await this.$nextTick()
       // Keep the search state visible long enough for the user to understand
       // that the finished recording is being checked against the Qur'an index.
       await new Promise((resolve) => window.setTimeout(resolve, 360))
-      if (this.match || this.state !== ASK_MUTQIN_STATES.MATCHING) return
-      const matched = this.applyMatch(text)
+      if (this.match || this.state !== ASK_MUTQIN_STATES.MATCHING || attemptId !== this.matchAttemptSeq) return
+      const matched = this.applyMatch(text, attemptId)
       if (!matched) await this.resumeListeningAfterMatchFailure()
     },
-    applyMatch(transcript) {
+    applyMatch(transcript, attemptId = this.matchAttemptSeq) {
       if (!this.index.length || this.match || this.speechActive) return false
+      if (attemptId !== this.matchAttemptSeq) return false
       const text = String(transcript || '').trim()
       if (!text) return false
       const result = matchHeardAyahPrefix(this.index, text)
+      if (attemptId !== this.matchAttemptSeq) return false
       if (result.status === 'matched' && result.match) {
+        this.matchSourceTranscript = text
         this.match = result.match
         this.candidates = []
+        this.matchCandidates = []
+        this.showAllMatchCandidates = false
         this.pendingMatchText = ''
         this.clearSpeechIdle()
         this.state = ASK_MUTQIN_STATES.FOUND
+        this.stopListeningAfterMatch()
+        return true
+      }
+      if (result.status === 'multiple' && Array.isArray(result.candidates) && result.candidates.length) {
+        this.matchSourceTranscript = text
+        this.match = null
+        this.matchCandidates = result.candidates
+        this.showAllMatchCandidates = false
+        this.pendingMatchText = ''
+        this.clearSpeechIdle()
+        this.state = ASK_MUTQIN_STATES.MULTIPLE
+        this.stopListeningAfterMatch()
+        return true
+      }
+      if (result.status === 'no_match') {
+        this.matchSourceTranscript = text
+        this.match = null
+        this.matchCandidates = []
+        this.showAllMatchCandidates = false
+        this.pendingMatchText = ''
+        this.clearSpeechIdle()
+        this.state = ASK_MUTQIN_STATES.NO_MATCH
         this.stopListeningAfterMatch()
         return true
       }
@@ -782,6 +912,99 @@ export default {
         this.state = ASK_MUTQIN_STATES.RECITING
       }
       return false
+    },
+    selectMatchCandidate(candidate) {
+      if (!candidate) return
+      this.match = candidate
+      this.state = ASK_MUTQIN_STATES.FOUND
+      this.errorMessage = ''
+    },
+    backToMatchCandidates() {
+      if (!this.matchCandidates.length) return
+      this.stopMatchedAyahAudio()
+      this.match = null
+      this.state = ASK_MUTQIN_STATES.MULTIPLE
+      this.commandText = ''
+      this.command = EMPTY_COMMAND()
+      this.validatedRange = null
+      this.interpretKey = ''
+      this.interpreting = false
+      this.resetAidPanel()
+      this.resetAyahScroll()
+    },
+    ensureAyahAudioPlayer() {
+      const el = this.$refs.ayahAudioEl
+      if (!el) return null
+      if (!this.ayahAudioPlayer) {
+        this.ayahAudioPlayer = new SessionAudioPlayer({
+          onStateChange: ({ state }) => {
+            this.ayahAudioState = state
+            if (state === SESSION_AUDIO_STATES.PLAYING) this.ayahAudioLoading = false
+          },
+          onEnded: () => {
+            this.ayahAudioState = SESSION_AUDIO_STATES.ENDED
+            this.ayahAudioLoading = false
+          },
+          onError: () => {
+            this.ayahAudioLoading = false
+          },
+        })
+      }
+      this.ayahAudioPlayer.bind(el)
+      return this.ayahAudioPlayer
+    },
+    prepareMatchedAyahAudioUrls() {
+      if (!this.match) {
+        this.ayahAudioUrls = []
+        return
+      }
+      const global = resolveGlobalAyahNumber(this.match.surah, this.match.ayah)
+      this.ayahAudioUrls = orderAyahAudioCandidateUrls({
+        reciterId: this.currentReciterId || 'ar.alafasy',
+        globalAyahNumber: global,
+      })
+      this.ayahAudioUrlIndex = 0
+    },
+    async playMatchedAyahAudioFrom(startIndex = 0) {
+      const player = this.ensureAyahAudioPlayer()
+      if (!player || !this.ayahAudioUrls.length) return
+      this.ayahAudioLoading = true
+      for (let index = startIndex; index < this.ayahAudioUrls.length; index += 1) {
+        try {
+          const generation = player.claim()
+          await player.attachSource(this.ayahAudioUrls[index], { generation })
+          await player.play({ generation })
+          this.ayahAudioUrlIndex = index
+          this.ayahAudioLoading = false
+          return
+        } catch {
+          // try next CDN host / reciter fallback
+        }
+      }
+      this.ayahAudioLoading = false
+    },
+    async toggleMatchedAyahAudio() {
+      const player = this.ensureAyahAudioPlayer()
+      if (!player) return
+      if (this.ayahAudioPlaying) {
+        player.pause()
+        return
+      }
+      if (!this.ayahAudioUrls.length) this.prepareMatchedAyahAudioUrls()
+      if (player.hasUsableSource?.() && this.ayahAudioState === SESSION_AUDIO_STATES.PAUSED) {
+        try {
+          await player.play()
+          return
+        } catch {
+          // fall through to reload
+        }
+      }
+      await this.playMatchedAyahAudioFrom(0)
+    },
+    stopMatchedAyahAudio() {
+      this.ayahAudioPlayer?.stop?.({ bump: true })
+      this.ayahAudioLoading = false
+      this.ayahAudioState = SESSION_AUDIO_STATES.IDLE
     },
     stopListeningAfterMatch() {
       try { this.voice?.stop?.() } catch { /* ignore */ }
@@ -855,6 +1078,9 @@ export default {
       this.clearSpeechIdle()
       this.match = null
       this.candidates = []
+      this.matchCandidates = []
+      this.showAllMatchCandidates = false
+      this.matchAttemptSeq += 1
       this.heard = createHeardStream()
       this.recitationText = ''
       this.liveTranscript = ''
@@ -984,6 +1210,10 @@ export default {
         this.state = ASK_MUTQIN_STATES.FOUND
         return
       }
+      if (this.state === ASK_MUTQIN_STATES.NO_MATCH || this.state === ASK_MUTQIN_STATES.MULTIPLE) {
+        await this.retryRecording()
+        return
+      }
       this.resetSession()
       await this.startSession()
     },
@@ -1025,9 +1255,11 @@ export default {
         this.openTimer = null
       }
       this.clearSpeechIdle()
+      this.stopMatchedAyahAudio()
       try { this.voice?.stop?.() } catch { /* ignore */ }
       this.voice = null
       this.interpreting = false
+      this.audioQualityHint = ''
       if (!options.keepLock) this.syncBodyLock(false)
     },
   },

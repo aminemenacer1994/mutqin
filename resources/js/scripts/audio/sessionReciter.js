@@ -1,4 +1,18 @@
+import { SURAH_AYAH_COUNTS } from '../engine/hifz_session_engine.js'
+
 export const DEFAULT_SESSION_RECITER_ID = 'ar.alafasy'
+
+export function resolveGlobalAyahNumber(surah, ayah, counts = SURAH_AYAH_COUNTS) {
+  const chapter = Number(surah)
+  const number = Number(ayah)
+  const max = Number(counts[chapter - 1] || 0)
+  if (!Number.isFinite(chapter) || !Number.isFinite(number) || chapter < 1 || chapter > 114 || number < 1 || number > max) {
+    return null
+  }
+  let offset = 0
+  for (let i = 1; i < chapter; i += 1) offset += Number(counts[i - 1] || 0)
+  return offset + number
+}
 
 export function resolvePickedReciterId(eventValue, fallbackId = DEFAULT_SESSION_RECITER_ID) {
   const picked = String(eventValue || '').trim()

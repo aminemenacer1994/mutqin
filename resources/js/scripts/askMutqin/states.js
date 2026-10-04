@@ -9,6 +9,8 @@ export const ASK_MUTQIN_STATES = Object.freeze({
   READY: 'ready',
   OPENING: 'opening',
   AMBIGUOUS: 'ambiguous',
+  MULTIPLE: 'multiple_matches',
+  NO_MATCH: 'no_match',
   ERROR: 'error',
 })
 

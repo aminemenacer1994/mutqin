@@ -1,5 +1,10 @@
 import { normalizeArabicForRecitation } from '../engine/recitation_analysis.js'
-import { matchSequentialTokens, tokenizeForMatch, tokensMatch } from '../memorisationDetection/speechMatch.js'
+import {
+  matchSequentialTokens,
+  normalizeForMatch,
+  tokenizeForMatch,
+  tokensMatch,
+} from '../memorisationDetection/speechMatch.js'
 
 export const ASK_MUTQIN_MIN_WORDS = 3
 export const ASK_MUTQIN_UNIQUE_MIN_WORDS = 2
@@ -7,6 +12,31 @@ export const ASK_MUTQIN_STRONG_SCORE = 0.42
 export const ASK_MUTQIN_UNIQUE_SCORE = 0.68
 export const ASK_MUTQIN_AMBIGUOUS_GAP = 0.02
 export const ASK_MUTQIN_TOKEN_THRESHOLD = 0.58
+export const ASK_MUTQIN_MATCH_LIST_INITIAL = 5
+
+export function isClearAyahMatchWinner(top, runnerUp) {
+  if (!top) return false
+  if (!runnerUp) return true
+  if ((top.matched || 0) > (runnerUp.matched || 0)) return true
+  if (top.score - runnerUp.score >= ASK_MUTQIN_AMBIGUOUS_GAP) return true
+  if (top.score >= 0.55 && top.score - runnerUp.score >= 0.08) return true
+  const spanWins = (top.matched || 0) >= 2
+    && (top.matched || 0) > (runnerUp.matched || 0)
+    && top.score >= 0.5
+  return spanWins
+}
+
+export function filterViableAyahMatches(ranked = []) {
+  const top = ranked[0]
+  if (!top) return []
+  const minScore = Math.max(ASK_MUTQIN_STRONG_SCORE, top.score - 0.06)
+  return ranked.filter((item) => {
+    if (item.score < minScore || (item.matched || 0) < 2) return false
+    const matchedGap = (top.matched || 0) - (item.matched || 0)
+    const scoreGap = top.score - item.score
+    return matchedGap <= 1 && scoreGap <= 0.08
+  })
+}
 
 const BASMALA_NORMALIZED = normalizeArabicForRecitation('بسم الله الرحمن الرحيم')
 const BASMALA_WORDS = BASMALA_NORMALIZED.split(/\s+/).filter(Boolean)
@@ -132,7 +162,7 @@ function rankCandidates(index, heardWords, surahFilter) {
 
 /**
  * Progressive span match. A phrase may start at any word in the ayah.
- * @returns {{ status: 'insufficient'|'ambiguous'|'matched', match?: object, candidates?: object[] }}
+ * @returns {{ status: 'insufficient'|'ambiguous'|'multiple'|'no_match'|'matched', match?: object, candidates?: object[] }}
  */
 export function matchHeardAyahPrefix(index, transcript, { surah = null } = {}) {
   const rawHeard = tokenizeHeardArabic(transcript)
@@ -141,11 +171,15 @@ export function matchHeardAyahPrefix(index, transcript, { surah = null } = {}) {
 
   const ranked = rankCandidates(Array.isArray(index) ? index : [], heard, surah)
   if (!ranked.length) {
-    return heard.length >= 8 ? { status: 'ambiguous', candidates: [] } : { status: 'insufficient', candidates: [] }
+    return heard.length >= ASK_MUTQIN_MIN_WORDS
+      ? { status: 'no_match', candidates: [] }
+      : { status: 'insufficient', candidates: [] }
   }
 
   const top = ranked[0]
   const runnerUp = ranked[1]
+  const viable = filterViableAyahMatches(ranked)
+  const clearWinner = isClearAyahMatchWinner(top, runnerUp)
   const uniqueTop = !runnerUp || (top.score - runnerUp.score) >= ASK_MUTQIN_AMBIGUOUS_GAP
     || (top.matched || 0) > (runnerUp?.matched || 0)
   const uniqueExact = ranked.filter((item) => item.score >= ASK_MUTQIN_UNIQUE_SCORE).length === 1
@@ -154,28 +188,92 @@ export function matchHeardAyahPrefix(index, transcript, { surah = null } = {}) {
     && (top.matched || 0) > (runnerUp?.matched || 0)
     && top.score >= 0.5
 
-  // The low-level matcher can still recognize a uniquely distinctive pair;
-  // the voice modal applies the product-level three-word minimum before using it.
+  if (heard.length >= ASK_MUTQIN_MIN_WORDS && viable.length > 1 && !clearWinner) {
+    return { status: 'multiple', match: top, candidates: viable }
+  }
+
   const uniqueEarly = heard.length >= ASK_MUTQIN_UNIQUE_MIN_WORDS
     && uniqueExact
     && uniqueTop
     && top.score >= ASK_MUTQIN_UNIQUE_SCORE
 
-  // Three+ words: accept the best hit once it is strong enough.
   const threeWordHit = heard.length >= ASK_MUTQIN_MIN_WORDS && strongEnough && (
+    clearWinner || viable.length <= 1
+  ) && (
     uniqueTop
     || top.score >= 0.55
     || (top.score - (runnerUp?.score || 0)) >= 0.08
     || spanWins
   )
 
-  if (uniqueEarly || threeWordHit || spanWins) {
-    return { status: 'matched', match: top, candidates: ranked }
+  if (uniqueEarly || threeWordHit || (spanWins && clearWinner)) {
+    return { status: 'matched', match: top, candidates: viable.length ? viable : ranked }
   }
 
-  if (heard.length >= ASK_MUTQIN_MIN_WORDS && ranked.length > 1 && !uniqueTop) {
-    return { status: 'ambiguous', candidates: ranked }
+  if (heard.length >= ASK_MUTQIN_MIN_WORDS && !strongEnough) {
+    return { status: 'no_match', candidates: ranked }
+  }
+
+  if (heard.length >= ASK_MUTQIN_MIN_WORDS && ranked.length > 1) {
+    return { status: 'multiple', match: top, candidates: viable.length ? viable : ranked.slice(0, 6) }
   }
 
   return { status: 'insufficient', candidates: ranked }
+}
+
+function tokenizeDisplayAyahWords(text) {
+  const cleaned = String(text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (!cleaned) return []
+  return cleaned.split(/\s+/).filter(Boolean)
+}
+
+/**
+ * @param {string} arabic
+ * @param {string} transcript
+ * @returns {Array<{ text: string, highlight: boolean }>}
+ */
+export function buildAskMutqinAyahHighlightParts(arabic, transcript) {
+  const displayTokens = tokenizeDisplayAyahWords(arabic)
+  if (!displayTokens.length) {
+    const fallback = String(arabic || '').trim()
+    return fallback ? [{ text: fallback, highlight: false }] : []
+  }
+
+  const heard = stripLeadingBasmalaTokens(tokenizeHeardArabic(transcript))
+  if (!heard.length) {
+    return displayTokens.map((text) => ({ text, highlight: false }))
+  }
+
+  const expected = displayTokens.map((token) => normalizeForMatch(token))
+  const windowSize = Math.min(10, Math.max(4, heard.length + 3))
+  let bestIndexes = new Set()
+  let bestMatched = 0
+  let bestScore = 0
+
+  for (let start = 0; start < expected.length; start += 1) {
+    const slice = expected.slice(start)
+    const { matchedIndexes } = matchSequentialTokens({
+      expectedTokens: slice,
+      heardTokens: heard,
+      windowSize,
+      threshold: ASK_MUTQIN_TOKEN_THRESHOLD,
+    })
+    if (matchedIndexes.length < 1) continue
+    const absolute = matchedIndexes.map((index) => start + index)
+    const coverage = matchedIndexes.length / Math.max(1, heard.length)
+    const score = coverage + (matchedIndexes.length >= heard.length ? 0.08 : 0)
+    if (
+      matchedIndexes.length > bestMatched
+      || (matchedIndexes.length === bestMatched && score > bestScore)
+    ) {
+      bestMatched = matchedIndexes.length
+      bestScore = score
+      bestIndexes = new Set(absolute)
+    }
+  }
+
+  return displayTokens.map((text, index) => ({
+    text,
+    highlight: bestIndexes.has(index),
+  }))
 }

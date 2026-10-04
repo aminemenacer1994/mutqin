@@ -5091,7 +5091,6 @@
       :search-index="quranSearchIndex"
       @close="closeAskMutqin"
       @apply="applyAskMutqinCommand"
-      @mutashabihat-compare="onAskMutqinMutashabihatCompare"
     />
 
     <MutashabihatCompareModal

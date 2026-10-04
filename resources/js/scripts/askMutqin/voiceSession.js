@@ -5,6 +5,7 @@ import {
   createTranscriptionAudioBridge,
 } from '../memorisationRuntime.js'
 import { resolveAdaptiveSpeechmaticsDelays } from '../memorisationDetection/speechmaticsDelays.js'
+import { evaluateSpeechmaticsAudioGate } from '../audio/speechmaticsAudioGate.js'
 import { buildCsrfHeaders, ensureCsrfCookie, withCsrfRetry } from '../http/csrf.js'
 
 async function fetchTranscriptionAccessToken() {
@@ -28,6 +29,7 @@ async function fetchTranscriptionAccessToken() {
 export function createAskMutqinVoiceSession(options = {}) {
   const onTranscript = typeof options.onTranscript === 'function' ? options.onTranscript : () => {}
   const onError = typeof options.onError === 'function' ? options.onError : () => {}
+  const onAudioQuality = typeof options.onAudioQuality === 'function' ? options.onAudioQuality : () => {}
 
   let stream = null
   let bridge = null
@@ -44,11 +46,24 @@ export function createAskMutqinVoiceSession(options = {}) {
     pumpTimer = null
   }
 
+  let lastQualityEmitAt = 0
+
+  const emitAudioQuality = (force = false) => {
+    const metrics = bridge?.getQualityMetrics?.()
+    if (!metrics) return
+    const now = Date.now()
+    if (!force && now - lastQualityEmitAt < 450) return
+    lastQualityEmitAt = now
+    const gate = evaluateSpeechmaticsAudioGate(metrics)
+    onAudioQuality({ metrics, gate })
+  }
+
   const flushBridge = () => {
     const pending = bridge?.flush?.()
     if (pending?.byteLength && provider?.isOpen?.()) {
       provider.streamAudioChunk(pending)
     }
+    emitAudioQuality(false)
   }
 
   const disconnectProvider = () => {
@@ -80,14 +95,14 @@ export function createAskMutqinVoiceSession(options = {}) {
   const connectProvider = async (nextLanguage) => {
     disconnectProvider()
     language = nextLanguage || language || 'ar'
-    const delays = resolveAdaptiveSpeechmaticsDelays({ live: true })
-    // Ask Mutqin stays on these longer delays and does not push pace updates mid-session.
+    const delays = resolveAdaptiveSpeechmaticsDelays({ live: true, amdLive: true, paceFactor: 1 })
     provider = createSpeechmaticsRealtimeProvider({
       language,
       getAccessToken: getToken,
       getSampleRate: () => Number(bridge?.sampleRate || 16000),
-      maxDelaySeconds: Math.max(delays.maxDelaySeconds, 1.6),
-      endOfUtteranceSeconds: Math.max(delays.endOfUtteranceSeconds, 1.8),
+      amdLive: true,
+      maxDelaySeconds: delays.maxDelaySeconds,
+      endOfUtteranceSeconds: delays.endOfUtteranceSeconds,
       handshakeTimeoutMs: 4500,
     })
     provider.onTranscript(onTranscript)
@@ -122,6 +137,8 @@ export function createAskMutqinVoiceSession(options = {}) {
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true,
+            channelCount: 1,
+            sampleRate: { ideal: 48000 },
           },
         })
         bridge = createTranscriptionAudioBridge(stream)
@@ -133,6 +150,7 @@ export function createAskMutqinVoiceSession(options = {}) {
         await bridge.ensureRunning?.()
         await connectProvider(nextLanguage)
         startPump()
+        emitAudioQuality(true)
         active = true
       } catch (error) {
         stopPump()
@@ -156,6 +174,9 @@ export function createAskMutqinVoiceSession(options = {}) {
       } finally {
         switching = false
       }
+    },
+    getAudioQualityMetrics() {
+      return bridge?.getQualityMetrics?.() || null
     },
     stop() {
       active = false

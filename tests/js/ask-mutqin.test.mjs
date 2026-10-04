@@ -42,7 +42,11 @@ assert.doesNotMatch(modal, /bi-stars|ask-mutqin-brand/, 'sparkle brand mark is r
 assert.doesNotMatch(modal, /ask-mutqin-progress|wordProgress/, 'word progress bar is removed')
 assert.match(modal, /ask-mutqin-ayah/, 'Qur’anic Arabic panel is present')
 assert.match(modal, /streamingText|ask-mutqin-ayah__verse/, 'live recitation shows flowing Arabic text')
-assert.doesNotMatch(modal, /possibleMatches|ask-mutqin-candidates/, 'possible matches list is hidden')
+assert.match(modal, /ask-mutqin-multiple/, 'multiple ayah matches show a selectable list')
+assert.match(modal, /selectMatchCandidate/, 'user can pick one match from the list')
+assert.match(modal, /bestMatchLabel|ask-mutqin-multiple__pill/, 'top-ranked match shows a best-match pill')
+assert.match(modal, /bi-arrow-left|ask-mutqin-icon-btn/, 'back arrow returns to similar ayahs')
+assert.match(modal, /toggleMatchedAyahAudio|ask-mutqin-icon-btn/, 'found ayah includes play/pause/stop controls')
 assert.match(modal, /settleAfterRecitationPause/, 'results wait until the user pauses reciting')
 assert.match(modal, /ASK_MUTQIN_RECITATION_PAUSE_MS = 2000/, 'results wait through coughs, pauses, and stutters')
 assert.match(modal, /arabicPauseKey/, 'only new Arabic words restart the settle wait')
@@ -73,7 +77,7 @@ assert.doesNotMatch(modal, /askMutqin.clearScreen/, 'clear action is removed')
 assert.match(modalCss, /grid-column: 10 \/ span 3/, 'restart takes three columns from medium screens')
 assert.match(modal, /retryRecording|askMutqin.retryRecording/, 'retry recording action is available')
 assert.match(modal, /resetAyahScroll/, 'ayah stage resets to the start of the verse')
-assert.match(modalCss, /z-index: 12050/, 'Ask Mutqin overlays the navbar')
+assert.match(modalCss, /z-index: 13050/, 'Ask Mutqin overlays the navbar')
 assert.match(modalCss, /position: fixed !important/, 'Ask Mutqin overlay stays fixed')
 assert.match(modalCss, /ask-mutqin-ayah__stage/, 'ayah text sits in a padded stage')
 assert.match(modalCss, /overflow-y: auto/, 'ayah stage scrolls for long text')
@@ -204,6 +208,20 @@ assert.equal(laterSpan.status, 'matched', 'a phrase from later in a long ayah st
 assert.equal(laterSpan.match.surah, 2)
 assert.equal(laterSpan.match.ayah, 255)
 
+const sharedPhraseIndex = buildIndex([
+  {
+    number: 10,
+    englishName: 'Yunus',
+    ayahs: [
+      { numberInSurah: 1, text: 'الر تلك آيات الكتاب الحكيم' },
+      { numberInSurah: 2, text: 'الر تلك آيات الكتاب الحكيم ثان' },
+    ],
+  },
+])
+const shared = matchHeardAyahPrefix(sharedPhraseIndex, 'تلك آيات الكتاب')
+assert.equal(shared.status, 'multiple', 'shared phrases across ayahs return multiple candidates')
+assert.ok(shared.candidates.length >= 2)
+
 let stream = createHeardStream()
 for (const word of ['تبارك', 'الذي', 'بيده']) {
   stream = appendHeardPayload(stream, { type: 'final', transcript: word, words: [{ word }] })
@@ -231,6 +249,8 @@ stream = appendHeardPayload(createHeardStream(), { type: 'partial', transcript: 
 assert.equal(matchHeardAyahPrefix(index, heardStreamText(stream)).status, 'insufficient')
 
 assert.equal(ASK_MUTQIN_STATES.INTRO, 'intro')
+assert.equal(ASK_MUTQIN_STATES.MULTIPLE, 'multiple_matches')
+assert.equal(ASK_MUTQIN_STATES.NO_MATCH, 'no_match')
 assert.equal(ASK_MUTQIN_STATES.LISTENING_COMMAND, 'listening_command')
 
 console.log('ask-mutqin.test.mjs: ok')
