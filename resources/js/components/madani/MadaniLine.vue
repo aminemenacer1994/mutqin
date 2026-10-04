@@ -6,6 +6,7 @@
       {
         'qpc-madani-line--centered': isCentered,
         'qpc-madani-line--session-partial': sessionPartialLine,
+        'qpc-madani-line--session-slot': sessionScoped,
         'qpc-madani-line--indopak': isIndopakLayout,
       },
     ]"
@@ -15,13 +16,25 @@
     :data-surah="line.surah_number ?? line.surahNumber"
     :data-layout="layoutId"
   >
-    <MadaniSurahHeading
+    <div
       v-if="isSurahNameLine && isIndopakLayout"
-      :surah-number="line.surah_number ?? line.surahNumber"
-      :glyph="indopakHeaderText"
-      :font-family="indopakSurahFontFamily"
-      :ready="indopakSurahFontReady"
-    />
+      class="qpc-madani-surah-header qpc-madani-surah-header--indopak"
+    >
+      <MadaniSurahHeading
+        :surah-number="line.surah_number ?? line.surahNumber"
+        :glyph="indopakHeaderText"
+        :font-family="indopakSurahFontFamily"
+        :ready="indopakSurahFontReady"
+      />
+      <span
+        v-if="showBasmalaUnderSurah"
+        class="qpc-madani-basmallah qpc-madani-surah-header__basmala qpc-madani-basmallah--indopak"
+        dir="rtl"
+        lang="ar"
+        :style="basmalaStyle"
+        aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+      >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
+    </div>
 
     <div
       v-else-if="isSurahNameLine"
@@ -34,6 +47,15 @@
         :style="{ fontFamily: `'${surahFontFamily}', serif` }"
         aria-hidden="true"
       >{{ headerText }}</span>
+      <span
+        v-if="showBasmalaUnderSurah"
+        class="qpc-madani-basmallah qpc-madani-surah-header__basmala"
+        :class="{ 'qpc-madani-basmallah--indopak': isIndopakLayout }"
+        dir="rtl"
+        lang="ar"
+        :style="basmalaStyle"
+        aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+      >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
       <span class="visually-hidden">Surah {{ line.surah_number }}</span>
     </div>
 
@@ -43,7 +65,7 @@
         class="qpc-madani-basmallah-words"
       >
         <MadaniWord
-          v-for="word in line.words"
+          v-for="word in displayWords"
           :key="wordKey(word)"
           :word="word"
           :layout-id="layoutId"
@@ -79,7 +101,7 @@
 
     <template v-else-if="lineType === 'ayah'">
       <MadaniWord
-        v-for="word in line.words"
+        v-for="word in displayWords"
         :key="wordKey(word)"
         :word="word"
         :layout-id="layoutId"
@@ -106,6 +128,10 @@
 </template>
 
 <script>
+import {
+  ayahKeyFromWord,
+  isAyahInSessionSelection,
+} from '../../scripts/mushaf/qpcMadaniSelection'
 import { surahNameGlyphText } from '../../scripts/mushaf/madaniPageLayout'
 import { getSurahArabicBannerText } from '../../scripts/mushaf/surahArabicNameCache.js'
 import { SURAH_NAMES_FONT_FAMILY } from '../../scripts/mushaf/qcfFontLoader'
@@ -172,8 +198,24 @@ export default {
       type: Boolean,
       default: false,
     },
+    showBasmalaUnderSurah: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
+    displayWords() {
+      const words = Array.isArray(this.line?.words) ? this.line.words : []
+      if (!this.sessionScoped || !words.length) return words
+      const selection = this.selection || {}
+      const start = String(selection.sessionStartAyah || selection.rangeStartAyah || '').trim()
+      const end = String(selection.sessionEndAyah || selection.rangeEndAyah || start).trim()
+      if (!start || !end) return words
+      return words.filter((word) => {
+        const key = ayahKeyFromWord(word)
+        return key && isAyahInSessionSelection(key, selection)
+      })
+    },
     isIndopakLayout() {
       return isIndopakMushafLayout(this.layoutId)
     },
@@ -286,9 +328,20 @@ export default {
 }
 
 @media (min-width: 1080px) {
+  .qpc-madani-line--basmallah,
+  .qpc-madani-line--basmala,
+  .qpc-madani-line--surah_name,
+  .qpc-madani-line--ayah,
   .qpc-madani-line--empty {
-    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62));
-    pointer-events: none;
+    margin: 0;
+    padding: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .qpc-madani-basmallah {
+    font-size: calc(var(--qpc-word-size, 22px) * 0.96);
+    line-height: 1;
   }
 }
 
@@ -300,12 +353,22 @@ export default {
 
 .qpc-madani-surah-header {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: calc(var(--qpc-word-size, 22px) * 0.12);
   width: 100%;
   max-width: 100%;
   min-width: 0;
   text-align: center;
   color: var(--qpc-ink, #1b140d);
+}
+
+.qpc-madani-surah-header__basmala {
+  margin: 0;
+  padding: 0;
+  font-size: calc(var(--qpc-word-size, 22px) * 1.08);
+  line-height: 1.35;
 }
 
 .qpc-madani-surah-name {

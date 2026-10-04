@@ -18,6 +18,7 @@
       'qpc-madani-page--tajweed': tajweedEnabled,
       'qpc-madani-page--borderless': borderless,
       'qpc-madani-page--session-scoped': sessionScoped,
+      'qpc-madani-page--session-compact': sessionDesktopSpreadCompact,
       'qpc-madani-page--session-viewport-fill': sessionViewportFill,
       'qpc-madani-page--spread-viewport-fill': spreadViewportFill,
       'qpc-madani-page--indopak': isIndopakLayout,
@@ -31,11 +32,13 @@
         class="qpc-madani-page__sheet"
       >
         <MadaniLine
-          v-for="line in lines"
-          :key="`${line.line_type || line.type}-${line.line_number}-${line.surah_number || 0}`"
+          v-for="(line, lineIndex) in displayLines"
+          v-show="!isBasmalaLineUnderSurahHeader(lineIndex)"
+          :key="`${line.line_type || line.type}-${line.line_number}-${line.surah_number || 0}-${lineIndex}`"
           :line="line"
           :layout-id="layoutId"
           :session-scoped="sessionScoped"
+          :show-basmala-under-surah="showBasmalaUnderSurahHeader(lineIndex)"
           :font-family="fontFamily"
           :selected-location="selectedLocation"
           :selection="selection"
@@ -90,6 +93,12 @@ import {
   INDOPAK_PAGE_TYPOGRAPHY,
   mushafTwoPageMinWidth,
 } from '../../scripts/mushaf/indopakPageTypography'
+import {
+  DESKTOP_SPREAD_FOLIO_RESERVE_PX,
+  DESKTOP_SPREAD_LINE_SLOTS,
+  desktopSpreadSheetHeight,
+  desktopSpreadStableWordSize,
+} from '../../scripts/mushaf/mushafDesktopFit'
 import {
   buildMadaniSelection,
   parseAyahKey,
@@ -199,6 +208,7 @@ export default {
       fitTimer: null,
       lastFitWidth: 0,
       lastFitHeight: 0,
+      lastEmittedFitWordSize: 0,
       fitted: false,
       fitting: false,
       fontReady: false,
@@ -219,10 +229,13 @@ export default {
         const right = Math.trunc(Number(b?.line_number ?? b?.lineNumber) || 0)
         return left - right
       })
-      const showHeader = !this.sessionScoped || this.showSessionSurahHeader
+      if (!this.sessionScoped) return raw
+      const showHeader = this.showSessionSurahHeader
+      const desktopSessionSpread = this.sessionDesktopSpreadCompact
       return prepareQpcMadaniSessionLines(raw, this.sessionStartAyah, this.sessionEndAyah, {
         showSurahHeader: showHeader,
-        preservePrintedGrid: !!this.spreadViewportFill,
+        preservePrintedGrid: !!this.spreadViewportFill && !desktopSessionSpread,
+        includeSurahOpening: showHeader,
       })
     },
     isOpening() {
@@ -236,6 +249,14 @@ export default {
     },
     sessionScoped() {
       return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
+    },
+    sessionDesktopSpreadCompact() {
+      return this.sessionScoped && this.desktopSpreadLayout()
+    },
+    displayLines() {
+      const rows = this.lines
+      if (!this.sessionDesktopSpreadCompact) return rows
+      return rows.filter((line) => this.lineTypeOf(line) !== 'empty')
     },
     singleAyahSession() {
       if (!this.sessionScoped) return false
@@ -261,6 +282,7 @@ export default {
       this.fontReady = false
       this.fitted = false
       this.surahNamesReady = false
+      this.lastEmittedFitWordSize = 0
       this.readyAndFit()
     },
     fontScale() {
@@ -313,6 +335,45 @@ export default {
     clearIndopakPageTypographyVars(this.$el)
   },
   methods: {
+    lineTypeOf(line) {
+      return String(line?.line_type || line?.type || '')
+    },
+    desktopSpreadLayout() {
+      return !!(
+        this.spreadViewportFill
+        && typeof window !== 'undefined'
+        && window.innerWidth >= this.twoPageMinWidth()
+      )
+    },
+    spreadDesktopLayoutLocked() {
+      if (!this.sessionScoped || !this.desktopSpreadLayout()) return false
+      const root = this.$el
+      if (!(root instanceof HTMLElement)) return false
+      const spread = root.closest('.qpc-madani-spread--viewport-fill')
+      return spread instanceof HTMLElement
+        && spread.hasAttribute('data-desktop-session-spread-lock')
+    },
+    showBasmalaUnderSurahHeader(lineIndex) {
+      if (this.desktopSpreadLayout()) return false
+      const line = this.displayLines[lineIndex]
+      if (this.lineTypeOf(line) !== 'surah_name') return false
+      const next = this.displayLines[lineIndex + 1]
+      const nextType = this.lineTypeOf(next)
+      return nextType === 'basmallah' || nextType === 'basmala'
+    },
+    isBasmalaLineUnderSurahHeader(lineIndex) {
+      if (this.desktopSpreadLayout()) return false
+      if (lineIndex < 1) return false
+      const prev = this.displayLines[lineIndex - 1]
+      const cur = this.displayLines[lineIndex]
+      const prevType = this.lineTypeOf(prev)
+      const curType = this.lineTypeOf(cur)
+      return prevType === 'surah_name' && (curType === 'basmallah' || curType === 'basmala')
+    },
+    spreadLayoutLineSlots(sheet) {
+      if (!this.spreadViewportFill) return 15
+      return Math.max(15, sheet.querySelectorAll('.qpc-madani-line').length)
+    },
     applyLayoutTypography() {
       const root = this.$el
       if (!(root instanceof HTMLElement)) return
@@ -363,7 +424,9 @@ export default {
         const width = Math.round(entry?.contentRect?.width || this.sheetWidth())
         const height = Math.round(entry?.contentRect?.height || 0)
         const widthChanged = width >= 40 && Math.abs(width - this.lastFitWidth) >= 2
-        const heightChanged = (this.sessionViewportFill || this.spreadViewportFill)
+        const trackHeight = (this.sessionViewportFill || this.spreadViewportFill)
+          && !this.spreadDesktopLayoutLocked
+        const heightChanged = trackHeight
           && height >= 80
           && Math.abs(height - (this.lastFitHeight || 0)) >= 8
         if (!widthChanged && !heightChanged) return
@@ -531,7 +594,21 @@ export default {
         : 1
       const widthFit = (available / widest) * measureSize * safety
       let rawSize = Math.min(cap * requested, widthFit)
-      if (this.sessionViewportFill) {
+      if (desktopSpread && this.embedded) {
+        const lineSlots = this.sessionScoped
+          ? Math.max(1, targets.filter((line) => String(line.dataset.lineType || '') !== 'empty').length)
+          : DESKTOP_SPREAD_LINE_SLOTS
+        const heightFit = this.sessionScoped
+          ? null
+          : this.viewportBandHeightFit(root, sheet, lineSlots, measureSize)
+        rawSize = desktopSpreadStableWordSize({
+          measureSize,
+          safety,
+          cap,
+          fontScale: requested,
+          heightFit,
+        })
+      } else if (this.sessionViewportFill) {
         const heightFit = this.viewportBandHeightFit(root, sheet, targets.length, measureSize)
         if (Number.isFinite(heightFit) && heightFit > 0) {
           rawSize = Math.min(cap * requested, widthFit, heightFit)
@@ -556,36 +633,81 @@ export default {
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
       if (this.spreadViewportFill) {
-        this.$emit('fit-word-size', syncedSize)
-        this.applySpreadViewportLayout(root, sheet)
-        window.requestAnimationFrame(() => this.applySpreadViewportLayout(root, sheet))
+        if (syncedSize !== this.lastEmittedFitWordSize) {
+          this.lastEmittedFitWordSize = syncedSize
+          this.$emit('fit-word-size', syncedSize)
+        }
+        if (!this.spreadDesktopLayoutLocked) {
+          this.applySpreadViewportLayout(root, sheet)
+          window.requestAnimationFrame(() => this.applySpreadViewportLayout(root, sheet))
+        }
       }
     },
     applySpreadViewportLayout(root, sheet) {
       if (!this.spreadViewportFill) return
       if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) return
+      const desktopSpread = typeof window !== 'undefined' && window.innerWidth >= this.twoPageMinWidth()
+      const rowCount = desktopSpread
+        ? DESKTOP_SPREAD_LINE_SLOTS
+        : this.spreadLayoutLineSlots(sheet)
+      const ornament = root.querySelector('.qpc-madani-page__ornament')
+      const folio = root.querySelector('.qpc-madani-page__folio')
+
+      if (this.sessionScoped && desktopSpread) {
+        const slot = 'var(--qpc-spread-line-slot, calc(var(--qpc-word-size, 22px) * 2.15))'
+        if (ornament instanceof HTMLElement) {
+          ornament.style.minHeight = '0'
+          ornament.style.height = 'auto'
+          ornament.style.display = 'flex'
+          ornament.style.flexDirection = 'column'
+          ornament.style.justifyContent = 'flex-start'
+        }
+        sheet.style.flex = '0 1 auto'
+        sheet.style.display = 'grid'
+        sheet.style.gridTemplateRows = `repeat(${rowCount}, ${slot})`
+        sheet.style.alignContent = 'start'
+        sheet.style.justifyContent = 'stretch'
+        sheet.style.minHeight = '0'
+        sheet.style.height = 'auto'
+        sheet.querySelectorAll('.qpc-madani-line').forEach((line) => {
+          if (!(line instanceof HTMLElement)) return
+          line.style.flex = 'unset'
+          line.style.margin = '0'
+          line.style.padding = '0'
+          line.style.minHeight = '0'
+          line.style.maxHeight = 'none'
+          line.style.height = '100%'
+          line.style.overflow = 'hidden'
+          line.style.display = ''
+        })
+        return
+      }
+
       const spread = root.closest('.qpc-madani-spread--viewport-fill')
       let bandPx = this.sessionViewportTargetHeight()
       if (spread instanceof HTMLElement) {
         const fromSpread = Number.parseFloat(spread.style.getPropertyValue('--qpc-spread-band'))
         if (Number.isFinite(fromSpread) && fromSpread > 0) bandPx = fromSpread
       }
-      const ornament = root.querySelector('.qpc-madani-page__ornament')
-      const folio = root.querySelector('.qpc-madani-page__folio')
       if (ornament instanceof HTMLElement) {
         ornament.style.minHeight = `${bandPx}px`
         ornament.style.display = 'flex'
         ornament.style.flexDirection = 'column'
         ornament.style.justifyContent = 'stretch'
       }
-      const folioHeight = folio instanceof HTMLElement ? folio.offsetHeight : 0
-      const rowCount = Math.max(15, sheet.querySelectorAll('.qpc-madani-line').length)
+      const folioHeight = desktopSpread
+        ? DESKTOP_SPREAD_FOLIO_RESERVE_PX
+        : (folio instanceof HTMLElement ? folio.offsetHeight : 0)
+      const sheetStyles = getComputedStyle(sheet)
+      const sheetPaddingY = Number.parseFloat(sheetStyles.paddingTop) + Number.parseFloat(sheetStyles.paddingBottom)
       sheet.style.flex = '1 1 auto'
       sheet.style.display = 'grid'
       sheet.style.gridTemplateRows = `repeat(${rowCount}, minmax(0, 1fr))`
       sheet.style.alignContent = 'stretch'
       sheet.style.justifyContent = 'stretch'
-      sheet.style.minHeight = `${Math.max(160, bandPx - folioHeight)}px`
+      sheet.style.minHeight = desktopSpread
+        ? `${desktopSpreadSheetHeight({ targetHeight: bandPx, sheetPaddingY })}px`
+        : `${Math.max(160, bandPx - folioHeight)}px`
       sheet.querySelectorAll('.qpc-madani-line').forEach((line) => {
         if (!(line instanceof HTMLElement)) return
         line.style.minHeight = '0'
@@ -608,7 +730,8 @@ export default {
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
       if ((this.spreadViewportFill || this.embedded) && !mobile) {
         const desktopSpread = typeof window !== 'undefined' && window.innerWidth >= this.twoPageMinWidth()
-        inner = Math.max(0, inner - (desktopSpread ? 6 : 28))
+        const spreadInset = desktopSpread && this.sessionDesktopSpreadCompact ? 16 : (desktopSpread ? 48 : 28)
+        inner = Math.max(0, inner - spreadInset)
       }
       return inner
     },
@@ -625,7 +748,10 @@ export default {
       if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement) || lineSlots < 1) return null
       const targetHeight = this.sessionViewportTargetHeight()
       const folio = root.querySelector('.qpc-madani-page__folio')
-      const folioHeight = folio instanceof HTMLElement ? folio.offsetHeight : 0
+      const desktopSpread = typeof window !== 'undefined' && window.innerWidth >= this.twoPageMinWidth()
+      const folioHeight = desktopSpread
+        ? DESKTOP_SPREAD_FOLIO_RESERVE_PX
+        : (folio instanceof HTMLElement ? folio.offsetHeight : 0)
       const sheetStyles = getComputedStyle(sheet)
       const sheetPadding = Number.parseFloat(sheetStyles.paddingTop) + Number.parseFloat(sheetStyles.paddingBottom)
       const availableHeight = Math.max(0, targetHeight - folioHeight - sheetPadding)
@@ -788,9 +914,11 @@ export default {
   padding: 0;
 }
 
-.qpc-madani-page--embedded .qpc-madani-page__sheet {
-  flex: 1 1 auto;
-  padding: 1.45rem 1.5rem 0.55rem;
+@media (max-width: 1079.98px) {
+  .qpc-madani-page--embedded .qpc-madani-page__sheet {
+    flex: 1 1 auto;
+    padding: 1.45rem 1.5rem 0.55rem;
+  }
 }
 
 @media (min-width: 1080px) {
@@ -800,14 +928,69 @@ export default {
   }
 
   .qpc-madani-page--spread-viewport-fill .qpc-madani-page__ornament {
+    display: flex;
+    flex-direction: column;
     min-height: 100%;
   }
 
   .qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .qpc-madani-page--spread-viewport-fill .qpc-madani-page__folio {
+    flex: 0 0 auto;
+    margin-top: auto;
+  }
+
+  .qpc-madani-page--session-compact {
+    --qpc-line-min-height: 1.42;
+    --qpc-line-height: 1.26;
+    --qpc-line-gap: 0;
+  }
+
+  .qpc-madani-page--embedded .qpc-madani-page__ornament,
+  .qpc-madani-page--borderless .qpc-madani-page__ornament {
+    padding: 0;
+  }
+
+  .qpc-madani-page--session-scoped.qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet {
+    display: grid;
+    grid-template-rows: repeat(15, auto);
+    justify-content: stretch;
+    height: auto;
+    min-height: 0;
+    padding: 0 !important;
+  }
+
+  .qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet,
+  .qpc-madani-page--spread-viewport-fill:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet,
+  .qpc-madani-page--borderless.qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet,
+  .qpc-madani-page--indopak.qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet {
     display: grid;
     grid-template-rows: repeat(15, minmax(0, 1fr));
     justify-content: stretch;
     height: 100%;
+    padding: 0 !important;
+  }
+
+  .qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet,
+  .qpc-madani-page--indopak.qpc-madani-page--single .qpc-madani-page__sheet,
+  .qpc-madani-page--indopak.qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
+    padding: 0 !important;
+  }
+
+  .qpc-madani-page--embedded .qpc-madani-page__sheet {
+    flex: 1 1 auto;
+  }
+
+  .qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet,
+  .qpc-madani-page--indopak.qpc-madani-page--single .qpc-madani-page__sheet,
+  .qpc-madani-page--indopak.qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
+    display: flex;
+    flex-direction: column;
+    grid-template-rows: none;
+    height: auto;
   }
 
   .qpc-madani-page--spread-viewport-fill .qpc-madani-line {
@@ -890,12 +1073,14 @@ export default {
   background: transparent;
 }
 
-.qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
-  padding:
-    max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.2rem))
-    max(0.04rem, env(safe-area-inset-right, 0px))
-    max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
-    max(0.04rem, env(safe-area-inset-left, 0px));
+@media (max-width: 1079.98px) {
+  .qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
+    padding:
+      max(0.35rem, calc(env(safe-area-inset-top, 0px) + 0.2rem))
+      max(0.04rem, env(safe-area-inset-right, 0px))
+      max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
+      max(0.04rem, env(safe-area-inset-left, 0px));
+  }
 }
 
 @media (max-width: 767.98px) {
@@ -929,12 +1114,14 @@ export default {
   padding: 0;
 }
 
-.qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
-  padding:
-    max(clamp(0.55rem, 1.4vw, 0.95rem), calc(env(safe-area-inset-top, 0px) + 0.2rem))
-    max(clamp(0.45rem, 1.1vw, 0.85rem), env(safe-area-inset-right, 0px))
-    max(clamp(0.28rem, 0.8vw, 0.42rem), env(safe-area-inset-bottom, 0px))
-    max(clamp(0.45rem, 1.1vw, 0.85rem), env(safe-area-inset-left, 0px));
+@media (max-width: 1079.98px) {
+  .qpc-madani-page--borderless.qpc-madani-page--embedded .qpc-madani-page__sheet {
+    padding:
+      max(clamp(0.55rem, 1.4vw, 0.95rem), calc(env(safe-area-inset-top, 0px) + 0.2rem))
+      max(clamp(0.45rem, 1.1vw, 0.85rem), env(safe-area-inset-right, 0px))
+      max(clamp(0.28rem, 0.8vw, 0.42rem), env(safe-area-inset-bottom, 0px))
+      max(clamp(0.45rem, 1.1vw, 0.85rem), env(safe-area-inset-left, 0px));
+  }
 }
 
 /*

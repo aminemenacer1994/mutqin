@@ -1,5 +1,5 @@
 import { verseKeyFromQpcLocation } from './qpcMadaniVersePage.js'
-import { MADANI_LINES_PER_PAGE } from './madaniPageLayout.js'
+import { chapterHasBismillahPre, MADANI_LINES_PER_PAGE } from './madaniPageLayout.js'
 
 export { MADANI_LINES_PER_PAGE }
 
@@ -18,39 +18,118 @@ function lineTypeOf(line) {
   return String(line?.line_type || line?.type || '')
 }
 
-/**
- * Build a 15-row page: session lines packed from the top, empty slots below.
- * Restores a printed basmala under the surah title when session filtering dropped it.
- */
-export function padQpcMadaniLinesToPrintedGrid(source = [], prepared = []) {
+function surahShowsOpeningBasmala(surah) {
+  const chapter = Math.trunc(Number(surah) || 0)
+  return chapter > 0 && chapter !== 9 && chapterHasBismillahPre(chapter)
+}
+
+function resolvePrintedLineSlot(line, original = []) {
+  const type = lineTypeOf(line)
+  if (type === 'surah_name') {
+    const surah = Number(line.surah_number)
+    const printed = original.find((row) => (
+      lineTypeOf(row) === 'surah_name'
+      && (!surah || !row.surah_number || Number(row.surah_number) === surah)
+    ))
+    if (printed) return Math.trunc(Number(printed.line_number) || 1)
+    const slot = Math.trunc(Number(line?.line_number ?? line?.lineNumber) || 0)
+    return slot >= 1 ? slot : 1
+  }
+  let slot = Math.trunc(Number(line?.line_number ?? line?.lineNumber) || 0)
+  if (slot >= 1) return slot
+  if (type === 'basmallah' || type === 'basmala') {
+    const printed = original.find((row) => lineTypeOf(row) === 'basmallah' || lineTypeOf(row) === 'basmala')
+    if (printed) return Math.trunc(Number(printed.line_number) || 2)
+    const surahRow = original.find((row) => lineTypeOf(row) === 'surah_name')
+    return surahRow ? Math.trunc(Number(surahRow.line_number) || 1) + 1 : 2
+  }
+  return 0
+}
+
+/** Basmala under the surah title on the session’s opening header page (not mid-surah cards). */
+export function injectBasmalaAfterSessionSurahHeader(prepared = [], source = [], startKey = '', endKey = '') {
   const original = Array.isArray(source) ? source : []
-  const packed = []
-  for (const line of (Array.isArray(prepared) ? prepared : [])) {
-    if (lineTypeOf(line) === 'empty') continue
-    packed.push(line)
+  const out = []
+  for (let index = 0; index < prepared.length; index += 1) {
+    const line = prepared[index]
+    out.push(line)
+    if (lineTypeOf(line) !== 'surah_name') continue
+    const surah = Number(line.surah_number)
+    if (!surahShowsOpeningBasmala(surah)) continue
+    if (!sessionIncludesSurahOpening(startKey, endKey, surah)) continue
+    const next = prepared[index + 1]
+    if (next && (lineTypeOf(next) === 'basmala' || lineTypeOf(next) === 'basmallah')) continue
+    const printed = original.find((row) => (
+      (lineTypeOf(row) === 'basmallah' || lineTypeOf(row) === 'basmala')
+      && (!row.surah_number || Number(row.surah_number) === surah)
+    ))
+    const slot = resolvePrintedLineSlot(printed || { line_type: 'basmala', line_number: 0 }, original)
+    out.push({
+      ...(printed || {}),
+      line_type: printed?.line_type || 'basmala',
+      type: printed?.type || 'basmala',
+      surah_number: surah,
+      line_number: slot > 0 ? slot : 2,
+      words: printed?.words || [],
+    })
   }
+  return out
+}
 
-  const hasBasmala = packed.some((line) => {
-    const type = lineTypeOf(line)
-    return type === 'basmallah' || type === 'basmala'
-  })
-  const printedBasmala = original.find((line) => {
-    const type = lineTypeOf(line)
-    return type === 'basmallah' || type === 'basmala'
-  })
-  if (!hasBasmala && printedBasmala) {
-    const headerIndex = packed.findIndex((line) => lineTypeOf(line) === 'surah_name')
-    packed.splice(headerIndex >= 0 ? headerIndex + 1 : 0, 0, printedBasmala)
-  }
-
+/**
+ * Build a 15-row page on printed line numbers so spread leaves share row alignment.
+ */
+export function padQpcMadaniLinesToPrintedGrid(
+  source = [],
+  prepared = [],
+  startKey = '',
+  endKey = '',
+  { includeSurahOpening = false } = {},
+) {
+  void startKey
+  void endKey
+  const original = Array.isArray(source) ? source : []
+  const rows = (Array.isArray(prepared) ? prepared : []).filter((line) => lineTypeOf(line) !== 'empty')
   const target = Math.max(
     MADANI_LINES_PER_PAGE,
     ...original.map((line) => Math.trunc(Number(line?.line_number) || 0)),
   )
-  while (packed.length < target) {
-    packed.push(emptyPrintedLine(packed.length + 1))
+  const grid = Array.from({ length: target }, (_, index) => emptyPrintedLine(index + 1))
+
+  for (const line of rows) {
+    const slot = resolvePrintedLineSlot(line, original)
+    if (slot >= 1 && slot <= target) {
+      grid[slot - 1] = { ...line, line_number: slot }
+    }
   }
-  return packed.slice(0, target)
+
+  if (includeSurahOpening) {
+    const headerIndex = grid.findIndex((line) => lineTypeOf(line) === 'surah_name')
+    if (headerIndex >= 0) {
+      const surah = Number(grid[headerIndex].surah_number)
+      const hasBasmala = grid.some((line) => lineTypeOf(line) === 'basmallah' || lineTypeOf(line) === 'basmala')
+      if (
+        !hasBasmala
+        && surahShowsOpeningBasmala(surah)
+        && sessionIncludesSurahOpening(startKey, endKey, surah)
+      ) {
+        const printed = original.find((row) => lineTypeOf(row) === 'basmallah' || lineTypeOf(row) === 'basmala')
+        const slot = resolvePrintedLineSlot(printed || { line_type: 'basmala' }, original)
+        if (slot >= 1 && slot <= target) {
+          grid[slot - 1] = {
+            ...(printed || {}),
+            line_type: printed?.line_type || 'basmala',
+            type: printed?.type || 'basmala',
+            surah_number: surah,
+            line_number: slot,
+            words: printed?.words || [],
+          }
+        }
+      }
+    }
+  }
+
+  return grid
 }
 
 export function parseAyahKey(key) {
@@ -149,7 +228,30 @@ export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = 
       })
     }
   }
-  return kept
+  return stripBasmalaAfterLastSessionAyah(kept, start.key, end.key)
+}
+
+/** Drop printed basmala rows that sit below the session’s last ayah on this page. */
+export function stripBasmalaAfterLastSessionAyah(lines = [], startKey = '', endKey = '') {
+  const source = Array.isArray(lines) ? lines : []
+  let lastAyahSlot = 0
+  for (const line of source) {
+    if (lineTypeOf(line) !== 'ayah') continue
+    const inSession = (line.words || []).some((word) => {
+      const key = ayahKeyFromWord(word)
+      return key && isAyahInCanonicalRange(key, startKey, endKey)
+    })
+    if (!inSession) continue
+    const slot = Math.trunc(Number(line?.line_number ?? line?.lineNumber) || 0)
+    if (slot > lastAyahSlot) lastAyahSlot = slot
+  }
+  if (!lastAyahSlot) return source
+  return source.filter((line) => {
+    const type = lineTypeOf(line)
+    if (type !== 'basmallah' && type !== 'basmala') return true
+    const slot = Math.trunc(Number(line?.line_number ?? line?.lineNumber) || 0)
+    return slot <= lastAyahSlot
+  })
 }
 
 /** Merge a trailing fragment line (page break) into the following ayah row. */
@@ -256,6 +358,101 @@ function stripQpcSessionSurahNameLines(lines = []) {
   ))
 }
 
+function ensureQpcMadaniPrintedGrid(source = []) {
+  const original = Array.isArray(source) ? source : []
+  const target = Math.max(
+    MADANI_LINES_PER_PAGE,
+    ...original.map((line) => Math.trunc(Number(line?.line_number ?? line?.lineNumber) || 0)),
+  )
+  const grid = Array.from({ length: target }, (_, index) => emptyPrintedLine(index + 1))
+  for (const line of original) {
+    const slot = Math.trunc(Number(line?.line_number ?? line?.lineNumber) || 0)
+    if (slot >= 1 && slot <= target) {
+      grid[slot - 1] = { ...line, line_number: slot }
+    }
+  }
+  return grid
+}
+
+function sessionIncludesSurahOpening(startKey, endKey, surah) {
+  const chapter = Math.trunc(Number(surah) || 0)
+  if (!chapter) return false
+  return isAyahInCanonicalRange(`${chapter}:1`, startKey, endKey)
+}
+
+/**
+ * Render the full QUL page-by-page grid (15 lines) without repacking ayah rows.
+ * Session bounds are applied at word level in the reader (maskOutOfSession).
+ */
+export function prepareQpcMadaniPrintedPageLines(
+  source = [],
+  startKey = '',
+  endKey = '',
+  { showSurahHeader = false, trimSurahChrome = false } = {},
+) {
+  const original = Array.isArray(source) ? source : []
+  let grid = ensureQpcMadaniPrintedGrid(original)
+
+  const blankChromeAt = (slot) => {
+    if (slot >= 1 && slot <= grid.length) {
+      grid[slot - 1] = emptyPrintedLine(slot)
+    }
+  }
+
+  if (trimSurahChrome || !showSurahHeader) {
+    grid = grid.map((line) => {
+      const type = lineTypeOf(line)
+      if (type === 'surah_name' || type === 'basmallah' || type === 'basmala') {
+        return emptyPrintedLine(Math.trunc(Number(line.line_number) || 1))
+      }
+      return line
+    })
+  } else {
+    for (let index = 0; index < grid.length; index += 1) {
+      const line = grid[index]
+      const type = lineTypeOf(line)
+      if (type !== 'basmallah' && type !== 'basmala') continue
+      const surah = Number(line.surah_number)
+      const chapter = surah || parseAyahKey(startKey)?.surah
+      if (chapter && !sessionIncludesSurahOpening(startKey, endKey, chapter)) {
+        blankChromeAt(index + 1)
+      }
+    }
+  }
+
+  if (showSurahHeader) {
+    const filtered = filterQpcPageLinesToSession(original, startKey, endKey)
+    const withHeaders = injectQpcMadaniSessionSurahHeaders(original, filtered, startKey, endKey)
+    for (const line of withHeaders) {
+      if (lineTypeOf(line) !== 'surah_name') continue
+      const slot = resolvePrintedLineSlot(line, original)
+      if (slot >= 1 && slot <= grid.length) {
+        grid[slot - 1] = { ...line, line_number: slot }
+      }
+    }
+  }
+
+  return grid
+}
+
+export function pageHasSessionAyahWords(lines = [], startKey = '', endKey = '') {
+  const source = Array.isArray(lines) ? lines : []
+  for (const line of source) {
+    for (const word of line.words || []) {
+      const key = ayahKeyFromWord(word)
+      if (key && isAyahInCanonicalRange(key, startKey, endKey)) return true
+    }
+  }
+  return false
+}
+
+export function isAyahInSessionSelection(key, selection = {}) {
+  const start = String(selection.sessionStartAyah || selection.rangeStartAyah || '').trim()
+  const end = String(selection.sessionEndAyah || selection.rangeEndAyah || start).trim()
+  if (!start || !end) return true
+  return isAyahInCanonicalRange(key, start, end)
+}
+
 function isSingleAyahSessionRange(startKey = '', endKey = '') {
   const start = parseAyahKey(startKey)
   const end = parseAyahKey(endKey) || start
@@ -267,7 +464,7 @@ export function prepareQpcMadaniSessionLines(
   lines = [],
   startKey = '',
   endKey = '',
-  { showSurahHeader = true, preservePrintedGrid = false } = {},
+  { showSurahHeader = true, preservePrintedGrid = false, includeSurahOpening = false } = {},
 ) {
   const source = Array.isArray(lines) ? lines : []
   const filtered = filterQpcPageLinesToSession(source, startKey, endKey)
@@ -277,13 +474,26 @@ export function prepareQpcMadaniSessionLines(
   } else {
     prepared = stripQpcSessionSurahNameLines(filtered)
   }
-  if (!isSingleAyahSessionRange(startKey, endKey)) {
+  if (!preservePrintedGrid && !isSingleAyahSessionRange(startKey, endKey)) {
     prepared = compactQpcMadaniSessionAyahLines(prepared)
   }
-  if (preservePrintedGrid) {
-    return padQpcMadaniLinesToPrintedGrid(source, prepared)
+  if (includeSurahOpening) {
+    prepared = injectBasmalaAfterSessionSurahHeader(prepared, source, startKey, endKey)
   }
-  return prepared
+  if (preservePrintedGrid) {
+    return padQpcMadaniLinesToPrintedGrid(source, prepared, startKey, endKey, { includeSurahOpening })
+  }
+  return stripTrailingBasmalaRows(prepared)
+}
+
+function stripTrailingBasmalaRows(lines = []) {
+  const source = [...(Array.isArray(lines) ? lines : [])]
+  while (source.length) {
+    const type = lineTypeOf(source[source.length - 1])
+    if (type === 'basmallah' || type === 'basmala') source.pop()
+    else break
+  }
+  return source
 }
 
 export function pageHasQpcMadaniSessionLines(lines = [], startKey = '', endKey = '') {

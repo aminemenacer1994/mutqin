@@ -7,8 +7,10 @@ import {
   buildMadaniSelection,
   compareAyahKeys,
   filterQpcPageLinesToSession,
+  stripBasmalaAfterLastSessionAyah,
   padQpcMadaniLinesToPrintedGrid,
   prepareQpcMadaniSessionLines,
+  pageHasSessionAyahWords,
   isAyahInCanonicalRange,
   madaniWordVisualClass,
   resolveMadaniAyahVisualState,
@@ -97,6 +99,13 @@ assert.equal(sessionLines[1].line_type, 'basmallah')
 assert.equal(sessionLines[2].words.length, 1)
 assert.equal(sessionLines[2].words[0].location, '52:1:1')
 
+const trailingBasmala = stripBasmalaAfterLastSessionAyah([
+  { line_type: 'ayah', line_number: 10, words: [{ surah: '2', ayah: '30', location: '2:30:1' }] },
+  { line_type: 'basmallah', surah_number: 2, line_number: 15, words: [] },
+], '2:30', '2:30')
+assert.equal(trailingBasmala.length, 1)
+assert.equal(trailingBasmala[0].line_type, 'ayah')
+
 const singleAyahPartial = prepareQpcMadaniSessionLines([
   {
     line_type: 'ayah',
@@ -137,13 +146,42 @@ const nahlSource = nahlPage.page?.lines || nahlPage.lines || []
 const nahlSession = prepareQpcMadaniSessionLines(nahlSource, '16:1', '16:14')
 assert.ok(nahlSession.length < 15)
 assert.ok(!nahlSession.some((line) => (line.words || []).some((word) => String(word.surah) === '15')))
-const nahlGrid = prepareQpcMadaniSessionLines(nahlSource, '16:1', '16:14', { preservePrintedGrid: true })
+const nahlGrid = prepareQpcMadaniSessionLines(nahlSource, '16:1', '16:14', {
+  preservePrintedGrid: true,
+  includeSurahOpening: true,
+})
 assert.equal(nahlGrid.length, 15)
-assert.equal(String(nahlGrid[0].line_type), 'surah_name')
-assert.equal(String(nahlGrid[1].line_type), 'basmallah')
+const nahlSurahRow = nahlGrid.find((line) => String(line.line_type) === 'surah_name')
+const nahlBasmalaRow = nahlGrid.find((line) => ['basmallah', 'basmala'].includes(String(line.line_type)))
+assert.ok(nahlSurahRow)
+assert.ok(nahlBasmalaRow)
+assert.equal(Number(nahlBasmalaRow.line_number), Number(nahlSurahRow.line_number) + 1)
 assert.ok(nahlGrid.some((line) => (line.words || []).some((word) => word.location === '16:1:1')))
 assert.ok(!nahlGrid.some((line) => (line.words || []).some((word) => String(word.surah) === '15')))
-assert.equal(padQpcMadaniLinesToPrintedGrid(nahlSource, nahlSession).length, 15)
+assert.equal(padQpcMadaniLinesToPrintedGrid(nahlSource, nahlSession, '16:1', '16:14').length, 15)
+
+const hijrMidSource = [
+  { line_type: 'surah_name', surah_number: 15, line_number: 1, words: [] },
+  { line_type: 'basmallah', surah_number: 15, line_number: 2, words: [] },
+  { line_type: 'ayah', line_number: 8, words: [{ surah: '15', ayah: '91', location: '15:91:1' }] },
+]
+const hijrMidPrepared = prepareQpcMadaniSessionLines(hijrMidSource, '15:91', '15:94')
+assert.ok(!hijrMidPrepared.some((line) => ['basmallah', 'basmala'].includes(String(line.line_type))))
+const hijrMidGrid = padQpcMadaniLinesToPrintedGrid(hijrMidSource, hijrMidPrepared, '15:91', '15:94')
+assert.ok(!hijrMidGrid.some((line) => ['basmallah', 'basmala'].includes(String(line.line_type))))
+
+const hijrOpenSource = [
+  { line_type: 'surah_name', surah_number: 15, line_number: 1, words: [] },
+  { line_type: 'basmallah', surah_number: 15, line_number: 2, words: [] },
+  { line_type: 'ayah', line_number: 8, words: [{ surah: '15', ayah: '29', location: '15:29:1' }] },
+]
+const hijrOpenGrid = prepareQpcMadaniSessionLines(hijrOpenSource, '15:29', '15:31', {
+  preservePrintedGrid: true,
+  includeSurahOpening: true,
+})
+assert.equal(String(hijrOpenGrid[0].line_type), 'surah_name')
+assert.ok(!['basmallah', 'basmala'].includes(String(hijrOpenGrid[1].line_type)), 'mid-surah session must not show basmala')
+assert.equal(String(hijrOpenGrid[7].line_type), 'ayah', 'ayah stays on printed line 8 for spread alignment')
 
 const hadidPage = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/pages/537.json'), 'utf8'))
 const hadidSource = hadidPage.page?.lines || hadidPage.lines || []
@@ -154,10 +192,35 @@ assert.ok(hadidSession.some((line) => String(line.line_type) === 'surah_name'))
 assert.ok(hadidSession.some((line) => ['basmallah', 'basmala'].includes(String(line.line_type))))
 assert.ok(hadidSession.some((line) => (line.words || []).some((word) => word.location === '57:1:1')))
 assert.ok(hadidSession.every((line) => String(line.line_type) !== 'empty'))
-const hadidPageGrid = prepareQpcMadaniSessionLines(hadidSource, '57:1', '57:29', { preservePrintedGrid: true })
+const hadidPageGrid = prepareQpcMadaniSessionLines(hadidSource, '57:1', '57:29', {
+  preservePrintedGrid: true,
+  includeSurahOpening: true,
+})
 assert.equal(hadidPageGrid.length, 15)
 assert.ok(!hadidPageGrid.some((line) => (line.words || []).some((word) => String(word.surah) === '56')))
 assert.ok(hadidPageGrid.some((line) => (line.words || []).some((word) => word.location === '57:1:1')))
 assert.ok(hadidPageGrid.some((line) => String(line.line_type) === 'empty'))
+
+const hijr263 = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/pages/263.json'), 'utf8'))
+const hijr263Lines = hijr263.page?.lines || hijr263.lines || []
+const hijr263Session = prepareQpcMadaniSessionLines(hijr263Lines, '15:29', '15:94', {
+  preservePrintedGrid: true,
+  includeSurahOpening: false,
+})
+assert.equal(hijr263Session.length, 15)
+assert.ok(hijr263Session.some((line) => String(line.line_type) === 'surah_name'))
+assert.ok(!hijr263Session.some((line) => ['basmallah', 'basmala'].includes(String(line.line_type))))
+assert.ok(pageHasSessionAyahWords(hijr263Lines, '15:29', '15:94'))
+assert.ok(hijr263Session.some((line) => (line.words || []).some((word) => word.location === '15:29:1')))
+assert.ok(!hijr263Session.some((line) => (line.words || []).some((word) => String(word.ayah) === '16' && String(word.surah) === '15')))
+
+const hijr262 = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/pages/262.json'), 'utf8'))
+const hijr262Lines = hijr262.page?.lines || hijr262.lines || []
+const hijr262Mid = prepareQpcMadaniSessionLines(hijr262Lines, '15:91', '15:94', {
+  preservePrintedGrid: true,
+})
+assert.equal(hijr262Mid.length, 15)
+assert.ok(!hijr262Mid.some((line) => String(line.line_type) === 'surah_name'))
+assert.ok(!hijr262Mid.some((line) => ['basmallah', 'basmala'].includes(String(line.line_type))))
 
 console.log('qpc-madani-selection.test.mjs: ok')

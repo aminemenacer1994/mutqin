@@ -77,6 +77,11 @@ function markReported(error) {
   }
 }
 
+function isBenignBrowserErrorMessage(message) {
+  const text = String(message || '')
+  return text.includes('ResizeObserver loop completed with undelivered notifications')
+}
+
 function alreadyReported(error) {
   return !!(error && typeof error === 'object' && error.__mutqinReported)
 }
@@ -223,6 +228,7 @@ export function installErrorTracking(app) {
   if (app) attachVueErrorHandler(app)
 
   window.addEventListener('error', (event) => {
+    if (isBenignBrowserErrorMessage(event?.message)) return
     if (alreadyReported(event?.error)) return
     reportError(event?.error || event?.message, {
       kind: 'window.onerror',

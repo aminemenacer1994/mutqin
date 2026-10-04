@@ -27,7 +27,7 @@ export const DEFAULT_MUSHAF_LAYOUT_ID = MUSHAF_LAYOUT_MADANI_V2
 export const MUSHAF_LAYOUTS = Object.freeze({
   [MUSHAF_LAYOUT_MADANI_V2]: Object.freeze({
     id: MUSHAF_LAYOUT_MADANI_V2,
-    name: 'Madani',
+    name: 'KFGQPC V2 (1421H)',
     variant: 'V2',
     pageCount: 604,
     defaultLinesPerPage: 15,
@@ -43,7 +43,7 @@ export const MUSHAF_LAYOUTS = Object.freeze({
   }),
   [MUSHAF_LAYOUT_INDOPAK_15_QUDRATULLAH]: Object.freeze({
     id: MUSHAF_LAYOUT_INDOPAK_15_QUDRATULLAH,
-    name: 'IndoPak 15 Lines',
+    name: 'Indopak 15 lines (Qudratullah)',
     variant: 'Qudratullah',
     pageCount: 610,
     defaultLinesPerPage: 15,

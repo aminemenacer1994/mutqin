@@ -59,7 +59,7 @@ final class MushafLayoutRegistry
     {
         return new MushafLayout(
             id: self::MADANI_V2,
-            name: 'Madani',
+            name: 'KFGQPC V2 (1421H)',
             variant: 'V2',
             pageCount: 604,
             defaultLinesPerPage: 15,
@@ -82,7 +82,7 @@ final class MushafLayoutRegistry
     {
         return new MushafLayout(
             id: self::INDOPAK_15_QUDRATULLAH,
-            name: 'IndoPak 15 Lines',
+            name: 'Indopak 15 lines (Qudratullah)',
             variant: 'Qudratullah',
             pageCount: 610,
             defaultLinesPerPage: 15,

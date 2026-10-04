@@ -12,6 +12,7 @@
     :data-session-start="sessionStartAyah || null"
     :data-session-end="sessionEndAyah || null"
     :data-desktop-short-surah="desktopShortSurahLayout ? 'true' : null"
+    :data-session-spread-compact="sessionSpreadCompact ? 'true' : null"
     :data-last-selected="selectedLocation"
     tabindex="0"
     @keydown="onKeydown"
@@ -181,6 +182,8 @@ export default {
       spreadLeafWordSizes: {},
       spreadUnifiedWordSize: null,
       spreadBandTimer: null,
+      desktopSessionSpreadLockKey: '',
+      desktopSessionSpreadLockTimer: null,
       spreadLeavesByPage: {},
     }
   },
@@ -201,6 +204,9 @@ export default {
     },
     spreadViewportFillClass() {
       return this.spreadViewportFill ? 'qpc-madani-spread--viewport-fill' : ''
+    },
+    sessionSpreadCompact() {
+      return this.readerDesktopSpread && this.sessionBoundsActive
     },
     displayedPageNumber() {
       if (this.controlledPageNumber != null) {
@@ -281,7 +287,21 @@ export default {
           ...this.leafBundleFor(number),
         }))
       }
-      if (this.readerDesktopSpread) {
+      if (this.readerDesktopSpread && this.sessionBoundsActive) {
+        const withSession = leaves.filter((leaf) => {
+          if (!leaf.page?.lines?.length) return false
+          return pageHasQpcMadaniSessionLines(
+            leaf.page.lines,
+            this.sessionStartAyah,
+            this.sessionEndAyah,
+          )
+        })
+        if (withSession.length) {
+          return withSession.length === 2
+            ? withSession
+            : orderMadaniSpreadLeavesForOpening(withSession)
+        }
+      } else if (this.readerDesktopSpread) {
         return leaves
       }
       if (!this.sessionBoundsActive) {
@@ -306,7 +326,7 @@ export default {
     },
     spreadLayoutClass() {
       if (this.mode !== 'spread') return ''
-      if (this.readerDesktopSpread) return ''
+      if (this.readerDesktopSpread && this.visibleLeaves.length !== 1) return ''
       if (this.centerSingleSessionPage) {
         return 'qpc-madani-spread--single-leaf'
       }
@@ -371,6 +391,11 @@ export default {
     spreadViewportFill() {
       this.resetSpreadWordSizeSync()
       this.scheduleSpreadViewportBand()
+    },
+    spreadUnifiedWordSize() {
+      if (this.sessionBoundsActive && this.readerDesktopSpread) {
+        this.scheduleDesktopSessionSpreadLock()
+      }
     },
     sibling() {
       this.resetSpreadWordSizeSync()
@@ -440,6 +465,7 @@ export default {
     if (this.onPopState) window.removeEventListener('popstate', this.onPopState)
     if (this.preloadTimer) window.clearTimeout(this.preloadTimer)
     if (this.spreadBandTimer) window.clearTimeout(this.spreadBandTimer)
+    if (this.desktopSessionSpreadLockTimer) window.clearTimeout(this.desktopSessionSpreadLockTimer)
   },
   methods: {
     leafPageNumber(page) {
@@ -471,10 +497,22 @@ export default {
       if (this.spreadBandTimer) window.clearTimeout(this.spreadBandTimer)
       this.spreadBandTimer = window.setTimeout(() => this.syncSpreadViewportBand(), 40)
     },
+    scheduleDesktopSessionSpreadLock() {
+      if (this.desktopSessionSpreadLockTimer) window.clearTimeout(this.desktopSessionSpreadLockTimer)
+      this.desktopSessionSpreadLockTimer = window.setTimeout(() => {
+        this.desktopSessionSpreadLockTimer = null
+        const spread = this.$el?.querySelector?.('.qpc-madani-spread--viewport-fill')
+        if (spread instanceof HTMLElement) this.lockDesktopSessionSpread(spread)
+      }, 50)
+    },
     syncSpreadViewportBand() {
       if (!this.spreadViewportFill) return
       const spread = this.$el?.querySelector?.('.qpc-madani-spread--viewport-fill')
       if (!(spread instanceof HTMLElement)) return
+      if (this.sessionBoundsActive && this.readerDesktopSpread) {
+        this.lockDesktopSessionSpread(spread)
+        return
+      }
       const viewport = window.visualViewport?.height || window.innerHeight || 720
       const band = Math.round(Math.min(viewport * 0.74, viewport - 184))
       spread.style.setProperty('--qpc-spread-band', `${band}px`)
@@ -483,9 +521,126 @@ export default {
         if (ornament instanceof HTMLElement) ornament.style.minHeight = `${band}px`
       })
     },
+    lockDesktopSessionSpread(spread) {
+      if (!(spread instanceof HTMLElement)) return
+      const word = Number(this.spreadUnifiedWordSize) > 0 ? Number(this.spreadUnifiedWordSize) : 32
+      const slot = Math.max(32, Math.round(word * 2.22))
+      const pageRows = 15
+      const leaves = [...spread.querySelectorAll(':scope > .qpc-madani-spread__leaf')]
+      const lockKey = `${word}|${slot}|${pageRows}|${leaves.length}|${this.viewportWidth}`
+      if (lockKey === this.desktopSessionSpreadLockKey) return
+      this.desktopSessionSpreadLockKey = lockKey
+      spread.setAttribute('data-desktop-session-spread-lock', 'true')
+      const folioHeight = 38
+      const ornamentHeight = slot * pageRows + folioHeight
+      spread.style.setProperty('--qpc-session-page-height', `${ornamentHeight}px`)
+      const rtl = getComputedStyle(spread).direction === 'rtl'
+      spread.style.setProperty('--qpc-spread-line-slot', `${slot}px`)
+      spread.style.setProperty('align-items', 'flex-start', 'important')
+      spread.style.setProperty('min-height', '0', 'important')
+      leaves.forEach((leaf, index) => {
+        if (!(leaf instanceof HTMLElement)) return
+        const onRight = leaves.length < 2 || (rtl ? index === 0 : index === leaves.length - 1)
+        const sheet = leaf.querySelector('.qpc-madani-page__sheet')
+        const ornament = leaf.querySelector('.qpc-madani-page__ornament')
+        const folio = leaf.querySelector('.qpc-madani-page__folio')
+        leaf.style.setProperty('overflow', 'visible', 'important')
+        leaf.style.setProperty('align-self', 'flex-start', 'important')
+        if (ornament instanceof HTMLElement) {
+          ornament.style.setProperty('display', 'flex', 'important')
+          ornament.style.setProperty('flex-direction', 'column', 'important')
+          ornament.style.setProperty('height', `${ornamentHeight}px`, 'important')
+          ornament.style.setProperty('min-height', `${ornamentHeight}px`, 'important')
+          ornament.style.setProperty('max-height', `${ornamentHeight}px`, 'important')
+          ornament.style.setProperty('overflow', 'hidden', 'important')
+          ornament.style.setProperty('justify-content', 'flex-start', 'important')
+        }
+        if (sheet instanceof HTMLElement) {
+          const gutter = '0.35rem'
+          const outer = '0.1rem'
+          const padding = leaves.length < 2
+            ? '0 0.15rem'
+            : (onRight ? `0 ${outer} 0 ${gutter}` : `0 ${gutter} 0 ${outer}`)
+          sheet.style.setProperty('display', 'flex', 'important')
+          sheet.style.setProperty('flex-direction', 'column', 'important')
+          sheet.style.setProperty('flex', '1 1 auto', 'important')
+          sheet.style.setProperty('height', 'auto', 'important')
+          sheet.style.setProperty('min-height', '0', 'important')
+          sheet.style.setProperty('max-height', 'none', 'important')
+          sheet.style.setProperty('padding', padding, 'important')
+          sheet.style.setProperty('overflow', 'visible', 'important')
+          sheet.style.setProperty('justify-content', 'flex-start', 'important')
+          sheet.style.setProperty('box-sizing', 'border-box', 'important')
+        }
+        if (folio instanceof HTMLElement) {
+          folio.style.setProperty('flex', '0 0 auto', 'important')
+          folio.style.setProperty('height', `${folioHeight}px`, 'important')
+          folio.style.setProperty('min-height', `${folioHeight}px`, 'important')
+          folio.style.setProperty('max-height', `${folioHeight}px`, 'important')
+          folio.style.setProperty('margin', '0', 'important')
+          folio.style.setProperty('margin-top', 'auto', 'important')
+          folio.style.setProperty('padding', '0', 'important')
+          folio.style.setProperty('width', '100%', 'important')
+          folio.style.setProperty('box-sizing', 'border-box', 'important')
+        }
+        const folioBreak = folio instanceof HTMLElement
+          ? folio.querySelector('.qpc-madani-page__folio-break')
+          : null
+        if (folioBreak instanceof HTMLElement) {
+          folioBreak.style.setProperty('display', 'flex', 'important')
+          folioBreak.style.setProperty('flex-direction', 'column', 'important')
+          folioBreak.style.setProperty('justify-content', 'flex-end', 'important')
+          folioBreak.style.setProperty('height', '100%', 'important')
+          folioBreak.style.setProperty('box-sizing', 'border-box', 'important')
+          folioBreak.style.setProperty('margin', '0', 'important')
+          folioBreak.style.setProperty('padding', '0.2rem 0 0.42rem', 'important')
+          folioBreak.style.setProperty('border-bottom-width', '1px', 'important')
+          folioBreak.style.setProperty('border-bottom-style', 'solid', 'important')
+        }
+        leaf.querySelectorAll('.qpc-madani-line').forEach((line) => {
+          if (!(line instanceof HTMLElement)) return
+          const empty = String(line.dataset.lineType || '') === 'empty'
+          if (empty) {
+            line.style.setProperty('display', 'none', 'important')
+            return
+          }
+          const lineType = String(line.dataset.lineType || '')
+          const lineSlot = lineType === 'ayah'
+            ? Math.max(28, Math.round(slot * 0.9))
+            : (lineType === 'basmallah' || lineType === 'basmala'
+              ? Math.max(30, Math.round(slot * 0.95))
+              : slot)
+          line.style.setProperty('display', 'flex', 'important')
+          line.style.setProperty('visibility', 'visible', 'important')
+          line.style.setProperty('height', 'auto', 'important')
+          line.style.setProperty('min-height', `${lineSlot}px`, 'important')
+          line.style.setProperty('max-height', 'none', 'important')
+          line.style.setProperty('margin', '0', 'important')
+          line.style.setProperty('padding', '0', 'important')
+          line.style.setProperty('overflow', 'visible', 'important')
+          line.style.setProperty('align-items', 'center', 'important')
+          line.style.setProperty('justify-content', 'center', 'important')
+          line.style.setProperty('flex', '0 0 auto', 'important')
+        })
+        leaf.querySelectorAll('.qpc-madani-basmallah').forEach((node) => {
+          if (!(node instanceof HTMLElement)) return
+          node.style.setProperty('font-size', `${Math.round(word * 0.92)}px`, 'important')
+          node.style.setProperty('line-height', '1.15', 'important')
+          node.style.setProperty('display', 'block', 'important')
+          node.style.setProperty('max-height', 'none', 'important')
+          node.style.setProperty('overflow', 'visible', 'important')
+        })
+      })
+    },
     resetSpreadWordSizeSync() {
       this.spreadLeafWordSizes = {}
       this.spreadUnifiedWordSize = null
+      this.desktopSessionSpreadLockKey = ''
+      const spread = this.$el?.querySelector?.('.qpc-madani-spread--viewport-fill')
+      if (spread instanceof HTMLElement) {
+        spread.removeAttribute('data-desktop-session-spread-lock')
+        spread.style.removeProperty('--qpc-session-page-height')
+      }
     },
     onLeafFitWordSize(leafNumber, size) {
       if (!this.spreadViewportFill) return
@@ -507,7 +662,6 @@ export default {
       if (unified !== this.spreadUnifiedWordSize) {
         this.spreadUnifiedWordSize = unified
       }
-      this.scheduleSpreadViewportBand()
     },
     onWordSelect(location) {
       this.selectedLocation = String(location || '')
@@ -815,12 +969,14 @@ export default {
   }
 }
 
-.qpc-madani-spread--spread .qpc-madani-spread__leaf:first-child :deep(.qpc-madani-page__sheet) {
-  padding-inline: clamp(0.85rem, 1.8vw, 1.25rem) clamp(0.55rem, 1.1vw, 0.85rem);
-}
+@media (max-width: 1079.98px) {
+  .qpc-madani-spread--spread .qpc-madani-spread__leaf:first-child :deep(.qpc-madani-page__sheet) {
+    padding-inline: clamp(0.85rem, 1.8vw, 1.25rem) clamp(0.55rem, 1.1vw, 0.85rem);
+  }
 
-.qpc-madani-spread--spread .qpc-madani-spread__leaf:last-child :deep(.qpc-madani-page__sheet) {
-  padding-inline: clamp(0.55rem, 1.1vw, 0.85rem) clamp(0.85rem, 1.8vw, 1.25rem);
+  .qpc-madani-spread--spread .qpc-madani-spread__leaf:last-child :deep(.qpc-madani-page__sheet) {
+    padding-inline: clamp(0.55rem, 1.1vw, 0.85rem) clamp(0.85rem, 1.8vw, 1.25rem);
+  }
 }
 
 .qpc-madani-spread--spread.qpc-madani-spread--single-leaf {
@@ -838,8 +994,10 @@ export default {
   box-shadow: none !important;
 }
 
-.qpc-madani-spread--spread.qpc-madani-spread--single-leaf .qpc-madani-spread__leaf :deep(.qpc-madani-page__sheet) {
-  padding-inline: clamp(0.38rem, 0.9vw, 0.72rem);
+@media (max-width: 1079.98px) {
+  .qpc-madani-spread--spread.qpc-madani-spread--single-leaf .qpc-madani-spread__leaf :deep(.qpc-madani-page__sheet) {
+    padding-inline: clamp(0.38rem, 0.9vw, 0.72rem);
+  }
 }
 
 .qpc-madani-shell[data-spread-mode="spread"] {
@@ -974,6 +1132,15 @@ export default {
     min-height: 100%;
     align-self: stretch;
   }
+
+  .qpc-madani-shell[data-session-spread-compact="true"],
+  .qpc-madani-shell[data-session-spread-compact="true"] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill,
+  .qpc-madani-shell[data-session-spread-compact="true"] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill .qpc-madani-spread__leaf {
+    min-height: 0 !important;
+    height: auto !important;
+    align-items: flex-start !important;
+    align-self: flex-start !important;
+  }
 }
 
 /* IndoPak: two-page only at comfortable Nastaleeq width (≥1200). */
@@ -1016,12 +1183,21 @@ export default {
   box-shadow: none;
 }
 
-.qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf:first-child :deep(.qpc-madani-page__sheet) {
-  padding-inline: clamp(0.38rem, 0.9vw, 0.72rem) clamp(0.22rem, 0.55vw, 0.42rem);
+@media (max-width: 1079.98px) {
+  .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf:first-child :deep(.qpc-madani-page__sheet) {
+    padding-inline: clamp(0.38rem, 0.9vw, 0.72rem) clamp(0.22rem, 0.55vw, 0.42rem);
+  }
+
+  .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf:last-child :deep(.qpc-madani-page__sheet) {
+    padding-inline: clamp(0.22rem, 0.55vw, 0.42rem) clamp(0.38rem, 0.9vw, 0.72rem);
+  }
 }
 
-.qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf:last-child :deep(.qpc-madani-page__sheet) {
-  padding-inline: clamp(0.22rem, 0.55vw, 0.42rem) clamp(0.38rem, 0.9vw, 0.72rem);
+@media (min-width: 1080px) {
+  .qpc-madani-spread--spread .qpc-madani-spread__leaf :deep(.qpc-madani-page__sheet),
+  .qpc-madani-shell--reader[data-spread-mode="spread"] .qpc-madani-spread__leaf :deep(.qpc-madani-page__sheet) {
+    padding: 0 !important;
+  }
 }
 
 .qpc-madani-spread__placeholder {
