@@ -13,6 +13,7 @@ import {
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const dashboard = readFileSync(join(root, 'resources/js/views/Dashboard.vue'), 'utf8')
 const dashboardCss = readFileSync(join(root, 'resources/js/views/Dashboard.css'), 'utf8')
+const adminDashboardCss = readFileSync(join(root, 'resources/js/views/AdminDashboard.css'), 'utf8')
 const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
   + '\n'
   + readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
@@ -223,4 +224,21 @@ const perfect = buildDashboardAiReciteStatsView({
 assert.equal(perfect.focus.length, 0)
 assert.equal(perfect.holding, true)
 assert.equal(perfect.score.label, en.dashboard.analysis_accuracy_label)
+
+assert.match(
+  adminDashboardCss,
+  /@media \(max-width: 1023px\)[\s\S]*?\.admin-table-shell[\s\S]*?display:\s*none/,
+  'admin console hides wide tables on tablet and phone',
+)
+assert.match(
+  adminDashboardCss,
+  /@media \(max-width: 1023px\)[\s\S]*?\.admin-user-cards[\s\S]*?display:\s*grid/,
+  'admin console shows card lists on tablet and phone',
+)
+assert.match(
+  dashboardCss,
+  /@media \(max-width: 1023px\)[\s\S]*?\.dash-section__head-row[\s\S]*?flex-direction:\s*column/,
+  'progress dashboard stacks chart header controls on tablet and phone',
+)
+
 console.log('dashboard-ai-recite.test.mjs: ok')

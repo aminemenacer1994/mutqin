@@ -1,4 +1,9 @@
 /* Admin ops console — warm editorial surface system */
+#mainContent > .admin-console {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .admin-console {
   --dash-cream: #f3ebe1;
   --dash-sand: #e4d7c7;
@@ -757,7 +762,7 @@ html[data-theme="dark"] .admin-users__count {
   min-width: 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .admin-users__header {
     flex-direction: column;
     align-items: stretch;
@@ -961,7 +966,7 @@ html[data-theme="dark"] .admin-toolbar {
   letter-spacing: 0.01em;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .admin-toolbar {
     margin-top: 1rem;
     padding: 0.9rem;
@@ -987,41 +992,34 @@ html[data-theme="dark"] .admin-toolbar {
   }
 
   .admin-toolbar__controls {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
+    flex-wrap: wrap;
+    overflow: visible;
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    scrollbar-width: none;
-    padding-bottom: 2px;
     gap: 0.55rem;
-    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
-    mask-image: linear-gradient(to right, black 85%, transparent 100%);
-  }
-
-  [dir="rtl"] .admin-toolbar__controls {
-    -webkit-mask-image: linear-gradient(to left, black 85%, transparent 100%);
-    mask-image: linear-gradient(to left, black 85%, transparent 100%);
-  }
-
-  .admin-toolbar__controls::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
-  }
-
-  .admin-toolbar__controls > * {
-    flex-shrink: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 
   .admin-toolbar__select--sort,
   .admin-toolbar__select--progress,
   .admin-toolbar__select--active {
-    width: 9.25rem;
-    flex: 0 0 9.25rem;
+    flex: 1 1 calc(50% - 0.35rem);
+    min-width: min(9.25rem, 100%);
+    width: auto;
+    max-width: 100%;
+  }
+
+  .admin-toolbar__sort-dir {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-filter-badge {
+    flex: 1 1 100%;
+    justify-content: center;
   }
 }
 
@@ -1806,7 +1804,7 @@ html[data-theme="dark"] .admin-toolbar__select {
   white-space: normal;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .admin-user-cards {
     display: grid;
   }
@@ -2308,9 +2306,13 @@ html[data-theme="dark"] .admin-drawer-root {
     bottom: 0;
     right: 0;
     left: 0;
-    height: 100vh;
+    height: auto;
+    max-height: min(92dvh, 100%);
+    min-height: min(72dvh, 100%);
     border-inline-start: 0;
     border-top: 1px solid var(--border);
+    border-radius: 1.15rem 1.15rem 0 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     animation-name: admin-drawer-up;
   }
 
@@ -2321,7 +2323,15 @@ html[data-theme="dark"] .admin-drawer-root {
 
   .admin-drawer__head,
   .admin-drawer__body {
-    padding-inline: 1.25rem;
+    padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right));
+  }
+
+  .admin-drawer__head {
+    padding-top: max(0.85rem, env(safe-area-inset-top));
+  }
+
+  .admin-drawer__quick {
+    grid-template-columns: 1fr;
   }
 
   .admin-account-info__list {
@@ -4258,5 +4268,79 @@ html[data-theme="dark"] .admin-feedback-status[data-status="resolved"] {
   .admin-directory-tab {
     flex: 1 1 0;
     justify-content: center;
+    min-width: 0;
+    font-size: 0.78rem;
+    padding-inline: 0.65rem;
+  }
+}
+
+/* Tablet + phone: directory tabs scroll when labels overflow */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .admin-directory-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .admin-directory-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-directory-tab {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-console__top-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .admin-console__brand {
+    min-width: 0;
+  }
+
+  .admin-users__header {
+    max-width: 100%;
+  }
+
+  .admin-modal-root {
+    padding:
+      max(0.75rem, env(safe-area-inset-top))
+      max(0.65rem, env(safe-area-inset-right))
+      max(0.75rem, env(safe-area-inset-bottom))
+      max(0.65rem, env(safe-area-inset-left));
+  }
+
+  .admin-modal {
+    width: min(28rem, 100%);
+    max-height: min(88dvh, 100%);
+  }
+
+  .admin-modal--feedback,
+  .admin-modal--waiting-list {
+    width: 100%;
+    max-height: min(92dvh, 100%);
+  }
+
+  .admin-form__actions,
+  .admin-form__actions-end {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .admin-form__actions .admin-btn,
+  .admin-form__actions-end .admin-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .admin-toast {
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    max-width: min(28rem, calc(100vw - 1.5rem));
   }
 }

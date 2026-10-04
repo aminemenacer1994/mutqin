@@ -1,5 +1,10 @@
 /* Dashboard — structured layout on global Mutqin theme tokens */
 
+#mainContent > .user-dashboard {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .user-dashboard {
   --dash-bg: var(--bg);
   --dash-surface: var(--surface-strong);
@@ -3748,5 +3753,84 @@ a.dash-drawer__row--link:focus-visible,
 
   .dash-glance-stat {
     padding: 0.6rem 0.62rem !important;
+  }
+}
+
+/* Mobile + tablet: progress dashboard shell and panels */
+@media (max-width: 1023px) {
+  .user-dashboard__shell.container-fluid {
+    padding-inline:
+      max(var(--dash-gutter), env(safe-area-inset-left))
+      max(var(--dash-gutter), env(safe-area-inset-right));
+  }
+
+  .user-dashboard__content,
+  .user-dashboard__primary,
+  .user-dashboard__review-row,
+  .dash-section,
+  .dash-hero {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dash-section__head-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .dash-range-toggle {
+    display: flex;
+    width: 100%;
+    gap: 0.35rem;
+  }
+
+  .dash-range-toggle .dash-btn {
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .dash-murajaah-block__head--compact {
+    align-items: stretch;
+  }
+
+  .dash-murajaah-block__view-all {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 767px) {
+  .dash-hero__top {
+    align-items: center;
+  }
+
+  .dash-hero__greeting {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .dash-hero__greeting h1,
+  .dash-hero__summary {
+    overflow-wrap: anywhere;
+  }
+
+  .dash-chart__wrap {
+    height: clamp(140px, 32vw, 190px);
+    min-height: 140px;
+  }
+
+  .dash-ai-results__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .dash-analytics {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-ai-results__facts {
+    grid-template-columns: 1fr;
   }
 }
