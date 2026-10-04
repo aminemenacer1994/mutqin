@@ -59131,9 +59131,11 @@ never recolour tajweed text */
   color: #f7efdf !important;
 }
 
-/* Find-ayah search: featured control (important primary action) */
+/* Find-ayah search + full screen: featured controls */
 .top-card-icon-controls .top-card-search-trigger.top-card-icon-control.is-featured,
-html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured,
+.top-card-icon-controls .top-card-fullscreen-trigger.top-card-icon-control.is-featured,
+html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured {
   background:
     linear-gradient(
       165deg,
@@ -59151,7 +59153,11 @@ html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
 .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
 .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible,
 html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
-html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible {
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible,
+.top-card-icon-controls .top-card-fullscreen-trigger.is-featured:hover,
+.top-card-icon-controls .top-card-fullscreen-trigger.is-featured:focus-visible,
+html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured:hover,
+html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured:focus-visible {
   background:
     linear-gradient(
       165deg,
@@ -59177,7 +59183,10 @@ html body .app .top-card-icon-controls .top-card-search-trigger .top-card-search
 
 [data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.top-card-icon-control.is-featured,
 html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured,
-.app[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured {
+.app[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured,
+[data-theme="dark"] .top-card-icon-controls .top-card-fullscreen-trigger.top-card-icon-control.is-featured,
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured,
+.app[data-theme="dark"] .top-card-icon-controls .top-card-fullscreen-trigger.is-featured {
   background:
     linear-gradient(
       165deg,
@@ -59194,7 +59203,11 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigg
 [data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
 [data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible,
 html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
-html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible {
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible,
+[data-theme="dark"] .top-card-icon-controls .top-card-fullscreen-trigger.is-featured:hover,
+[data-theme="dark"] .top-card-icon-controls .top-card-fullscreen-trigger.is-featured:focus-visible,
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured:hover,
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured:focus-visible {
   background:
     linear-gradient(
       165deg,

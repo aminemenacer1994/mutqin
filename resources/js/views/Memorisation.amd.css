@@ -7287,8 +7287,9 @@ html body .amd-overlay .amd-modal .amd-header .amd-range--premium {
   }
 }
 
-/* Featured Find-ayah search + session-action hr (final cascade) */
-html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+/* Featured Find-ayah search + full screen + session-action hr (final cascade) */
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured,
+html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured {
   background:
     linear-gradient(
       165deg,
@@ -7309,14 +7310,17 @@ html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
   flex: 0 0 2.55rem !important;
 }
 
-html body .app .top-card-icon-controls:has(.top-card-search-trigger.is-featured) {
+html body .app .top-card-icon-controls:has(.top-card-search-trigger.is-featured),
+html body .app .top-card-icon-controls:has(.top-card-fullscreen-trigger.is-featured) {
   height: auto !important;
   min-height: var(--top-card-toolbar-icon, 2.25rem) !important;
   align-items: center !important;
 }
 
 html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:hover,
-html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible {
+html body .app .top-card-icon-controls .top-card-search-trigger.is-featured:focus-visible,
+html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured:hover,
+html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured:focus-visible {
   background:
     linear-gradient(
       165deg,
@@ -7338,7 +7342,9 @@ html body .app .top-card-icon-controls .top-card-search-trigger .top-card-search
 }
 
 html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured,
-.app[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured {
+.app[data-theme="dark"] .top-card-icon-controls .top-card-search-trigger.is-featured,
+html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured,
+.app[data-theme="dark"] .top-card-icon-controls .top-card-fullscreen-trigger.is-featured {
   background:
     linear-gradient(
       165deg,

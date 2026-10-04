@@ -918,6 +918,7 @@
                       <span>{{ t('memorisation.revisitOnboarding') }}</span>
                     </button>
                     <button
+                      v-if="isMobileViewport()"
                       type="button"
                       class="top-card-menu-row"
                       :class="{ active: isAppFullscreen }"

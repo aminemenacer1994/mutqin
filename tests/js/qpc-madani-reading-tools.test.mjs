@@ -84,6 +84,16 @@ assert.doesNotMatch(memorisationJs, /madaniQpcTajweedUnsupported/)
 assert.doesNotMatch(memorisationVue, /mushaf-translation-panel/)
 assert.doesNotMatch(memorisationVue, /readingViewMode === 'stacked' \|\| readingViewMode === 'madani_mushaf'/)
 assert.match(memorisationVue, /toggleFullScreen/)
+assert.match(
+  memorisationVue,
+  /v-if="!isPostSessionChoiceVisible && isMobileViewport\(\)"[\s\S]{0,180}workspace-mobile-fullscreen/,
+  'full screen control is mobile-only in the top toolbar',
+)
+assert.doesNotMatch(
+  memorisationVue,
+  /v-if="!isPostSessionChoiceVisible"[\s\S]{0,120}workspace-mobile-fullscreen/,
+  'full screen must not appear on desktop in the top toolbar',
+)
 assert.match(memorisationVue, /ref="topCardMenu"/)
 assert.match(memorisationJs, /syncTopCardMenuPosition/)
 assert.doesNotMatch(memorisationJs, /buildMadaniAmdHiddenIndexesByAyah[\s\S]{0,400}qpcMadaniTechniqueSnapshot/)

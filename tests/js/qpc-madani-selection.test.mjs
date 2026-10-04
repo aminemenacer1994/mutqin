@@ -97,6 +97,24 @@ assert.equal(sessionLines[1].line_type, 'basmallah')
 assert.equal(sessionLines[2].words.length, 1)
 assert.equal(sessionLines[2].words[0].location, '52:1:1')
 
+const singleAyahPartial = prepareQpcMadaniSessionLines([
+  {
+    line_type: 'ayah',
+    line_number: 8,
+    words: [
+      { surah: '16', ayah: '13', location: '16:13:99' },
+      { surah: '16', ayah: '14', location: '16:14:1' },
+    ],
+  },
+  { line_type: 'ayah', line_number: 9, words: [{ surah: '16', ayah: '14', location: '16:14:2' }] },
+], '16:14', '16:14')
+const singleAyahRows = singleAyahPartial.filter((line) => line.line_type === 'ayah')
+assert.equal(singleAyahRows.length, 2, 'single-ayah sessions must not merge continuation rows')
+assert.deepEqual(
+  singleAyahRows.flatMap((line) => (line.words || []).map((word) => word.location)),
+  ['16:14:1', '16:14:2'],
+)
+
 const midSurah = prepareQpcMadaniSessionLines([
   { line_type: 'ayah', line_number: 4, words: [{ surah: '85', ayah: '12', location: '85:12:1' }] },
   { line_type: 'ayah', line_number: 5, words: [{ surah: '85', ayah: '13', location: '85:13:1' }] },

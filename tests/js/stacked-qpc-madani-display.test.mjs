@@ -9,7 +9,7 @@ import {
 
 assert.equal(
   shouldUseStackedQpcMadaniGlyphs({ readingViewMode: 'stacked', mushafLayoutId: 'madani-v2' }),
-  true,
+  false,
 )
 assert.equal(
   shouldUseStackedQpcMadaniGlyphs({ readingViewMode: 'madani_mushaf', mushafLayoutId: 'madani-v2' }),

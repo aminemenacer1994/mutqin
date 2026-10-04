@@ -3411,10 +3411,8 @@ export default {
         && !this.isPostSessionChoiceVisible
     },
     showTopCardDashboardIcon() {
-      if (this.isMobileViewport?.()) {
-        return !!this.isPostSessionChoiceVisible
-      }
-      return !this.isPostSessionChoiceVisible
+      if (!this.isMobileViewport?.()) return false
+      return !!this.isPostSessionChoiceVisible
     },
     showMobileSessionDashboardResumeOnly() {
       if (!this.isMobileViewport?.()) return false
@@ -42651,6 +42649,18 @@ export default {
       let words = []
       if (verse.words && verse.words.length) {
         words = verse.words
+        if (
+          this.readingViewMode === 'stacked'
+          && !this.useStackedQpcMadaniGlyphs
+          && words.some((word) => isQcfPageGlyphText(word?.ar || word?.text))
+        ) {
+          words = tokenizeArabicText(verse.arabic_uthmani || verse.arabic || '').map((w, idx) => ({
+            ar: w,
+            en: verse.words?.[idx]?.en || '',
+            transliteration: verse.words?.[idx]?.transliteration || '',
+            audio: verse.words?.[idx]?.audio ?? null,
+          }))
+        }
       } else {
         const arabicWords = tokenizeArabicText(verse.arabic)
         words = arabicWords.map((w, idx) => ({

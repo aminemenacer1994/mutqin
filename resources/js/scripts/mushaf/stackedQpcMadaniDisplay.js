@@ -5,17 +5,17 @@ import {
   isQcfPageGlyphText,
   resolveQpcMadaniWordGlyph,
 } from './qpcMadaniReadingTools.js'
-import { isIndopakMushafLayout } from './indopakPageAdapter.js'
 import { resolveMushafPageForVerseKey } from './qpcMadaniVersePage.js'
 import { MUSHAF_LAYOUT_MADANI_V2 } from './mushafLayouts.js'
 import { mapWithConcurrency, selectPriorityPages } from './sessionPageLoad.js'
 
 /**
- * Stacked ayah cards use the same QCF Madani page fonts as madani_mushaf (not Unicode Uthmanic).
+ * Stacked cards use Unicode Uthmani — QCF page codes only render in per-page mushaf fonts.
  */
 export function shouldUseStackedQpcMadaniGlyphs({ readingViewMode, mushafLayoutId } = {}) {
-  if (readingViewMode !== 'stacked') return false
-  return !isIndopakMushafLayout(mushafLayoutId)
+  void readingViewMode
+  void mushafLayoutId
+  return false
 }
 
 export function verseWordsSupportQpcMadani(verse) {

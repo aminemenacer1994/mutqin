@@ -90,7 +90,11 @@ import {
   INDOPAK_PAGE_TYPOGRAPHY,
   mushafTwoPageMinWidth,
 } from '../../scripts/mushaf/indopakPageTypography'
-import { buildMadaniSelection, prepareQpcMadaniSessionLines } from '../../scripts/mushaf/qpcMadaniSelection'
+import {
+  buildMadaniSelection,
+  parseAyahKey,
+  prepareQpcMadaniSessionLines,
+} from '../../scripts/mushaf/qpcMadaniSelection'
 import MadaniLine from './MadaniLine.vue'
 
 const MADANI_MEASURE_SIZE = 40
@@ -232,6 +236,12 @@ export default {
     },
     sessionScoped() {
       return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
+    },
+    singleAyahSession() {
+      if (!this.sessionScoped) return false
+      const start = parseAyahKey(this.sessionStartAyah)?.key || ''
+      const end = parseAyahKey(this.sessionEndAyah)?.key || start
+      return !!(start && end && start === end)
     },
     sessionViewportFill() {
       return false
@@ -455,7 +465,12 @@ export default {
       }
       void sheet.offsetWidth
 
-      const widest = Math.max(1, ...targets.map(line => this.lineAdvanceWidth(line)))
+      let measureTargets = targets
+      if (this.singleAyahSession) {
+        const ayahLines = targets.filter((line) => String(line.dataset.lineType || '') === 'ayah')
+        if (ayahLines.length) measureTargets = ayahLines
+      }
+      const widest = Math.max(1, ...measureTargets.map(line => this.lineAdvanceWidth(line)))
       for (const [index, line] of targets.entries()) {
         line.style.width = previous[index].width
         line.style.maxWidth = ''

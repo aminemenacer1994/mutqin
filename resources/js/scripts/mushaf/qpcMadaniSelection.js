@@ -256,6 +256,13 @@ function stripQpcSessionSurahNameLines(lines = []) {
   ))
 }
 
+function isSingleAyahSessionRange(startKey = '', endKey = '') {
+  const start = parseAyahKey(startKey)
+  const end = parseAyahKey(endKey) || start
+  if (!start || !end) return false
+  return start.key === end.key
+}
+
 export function prepareQpcMadaniSessionLines(
   lines = [],
   startKey = '',
@@ -270,7 +277,9 @@ export function prepareQpcMadaniSessionLines(
   } else {
     prepared = stripQpcSessionSurahNameLines(filtered)
   }
-  prepared = compactQpcMadaniSessionAyahLines(prepared)
+  if (!isSingleAyahSessionRange(startKey, endKey)) {
+    prepared = compactQpcMadaniSessionAyahLines(prepared)
+  }
   if (preservePrintedGrid) {
     return padQpcMadaniLinesToPrintedGrid(source, prepared)
   }
@@ -278,9 +287,11 @@ export function prepareQpcMadaniSessionLines(
 }
 
 export function pageHasQpcMadaniSessionLines(lines = [], startKey = '', endKey = '') {
-  return compactQpcMadaniSessionAyahLines(
-    filterQpcPageLinesToSession(lines, startKey, endKey),
-  ).length > 0
+  const filtered = filterQpcPageLinesToSession(lines, startKey, endKey)
+  const prepared = isSingleAyahSessionRange(startKey, endKey)
+    ? filtered
+    : compactQpcMadaniSessionAyahLines(filtered)
+  return prepared.length > 0
 }
 
 export function buildMadaniSelection({
