@@ -175,6 +175,11 @@ export const adminApi = {
     return !!data?.restored
   },
 
+  async forceDeleteUser(id) {
+    const { data } = await http.delete(`/admin/users/${id}/force`)
+    return !!data?.deleted
+  },
+
   async deleteNote(id) {
     const { data } = await http.delete(`/admin/notes/${id}`)
     return !!data?.deleted

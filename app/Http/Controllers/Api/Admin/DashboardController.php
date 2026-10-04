@@ -61,7 +61,7 @@ class DashboardController extends Controller
         $actor = $this->admin($request);
 
         $validated = $request->validate([
-            'action' => ['required', 'string', Rule::in(['update_status', 'delete'])],
+            'action' => ['required', 'string', Rule::in(['update_status', 'delete', 'force_delete'])],
             'user_ids' => ['required', 'array', 'min:1', 'max:100'],
             'user_ids.*' => ['integer', 'distinct', 'exists:users,id'],
             'subscription_status' => [
@@ -144,6 +144,14 @@ class DashboardController extends Controller
         $dashboard->restoreUser($this->findUser($user));
 
         return response()->json(['restored' => true]);
+    }
+
+    public function userForceDestroy(Request $request, int $user, AdminDashboardService $dashboard): JsonResponse
+    {
+        $actor = $this->admin($request);
+        $dashboard->permanentlyDeleteUser($actor, $this->findUser($user));
+
+        return response()->json(['deleted' => true, 'permanent' => true]);
     }
 
     public function noteDestroy(Request $request, AyahNote $note, AdminDashboardService $dashboard): JsonResponse

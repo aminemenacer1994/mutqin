@@ -1135,9 +1135,9 @@ html[data-theme="dark"] .admin-toolbar__select {
 .admin-bulkbar-float__inner {
   pointer-events: auto;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.55rem 0.75rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
   width: 100%;
   max-width: min(var(--admin-shell-max, 1400px), 100%);
   padding: 0.8rem 0.95rem;
@@ -1149,6 +1149,22 @@ html[data-theme="dark"] .admin-toolbar__select {
   color: var(--dash-ink);
   font-size: 0.84rem;
   backdrop-filter: blur(10px);
+}
+
+.admin-bulkbar-float__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.admin-bulkbar-float__hint {
+  margin: 0;
+  width: 100%;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--dash-muted);
 }
 
 .admin-bulkbar-float__count {
@@ -1167,7 +1183,7 @@ html[data-theme="dark"] .admin-toolbar__select {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
-  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
 }
 
@@ -1193,13 +1209,18 @@ html[data-theme="dark"] .admin-toolbar__select {
   white-space: nowrap;
 }
 
+.admin-bulkbar-float__btn--primary-danger {
+  font-weight: 700;
+}
+
 .admin-bulkbar-float__close {
   appearance: none;
   display: inline-grid;
   place-items: center;
   width: 2rem;
   height: 2rem;
-  margin-inline-start: auto;
+  margin-inline-start: 0;
+  flex-shrink: 0;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -1234,26 +1255,55 @@ html[data-theme="dark"] .admin-toolbar__select {
 }
 
 @media (max-width: 720px) {
+  .admin-bulkbar-float {
+    padding-inline: 0.5rem;
+  }
+
   .admin-bulkbar-float__inner {
-    flex-wrap: nowrap;
-    align-items: flex-start;
-    gap: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    gap: 0.45rem;
+    max-height: min(52vh, 22rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .admin-bulkbar-float__actions {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 2px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    overflow: visible;
   }
 
-  .admin-bulkbar-float__actions::-webkit-scrollbar {
-    display: none;
+  .admin-bulkbar-float__sub {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    width: 100%;
   }
 
-  .admin-bulkbar-float__close {
-    margin-inline-start: 0;
+  .admin-bulkbar-float__select {
+    min-width: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .admin-bulkbar-float__btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 2.25rem;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+    padding-inline: 0.45rem;
+  }
+
+  .admin-bulkbar-float__btn--primary-danger {
+    grid-column: 1 / -1;
+  }
+
+  .admin-bulkbar-float__hint {
+    font-size: 0.72rem;
   }
 }
 

@@ -162,7 +162,8 @@ class AdminDashboardService
 
         if ($account === 'deleted') {
             $query->onlyTrashed();
-        } elseif ($account === 'active') {
+        } else {
+            // All + active directory views match KPI users_total (non-deleted rows only).
             $query->whereNull('deleted_at');
         }
 
@@ -390,6 +391,28 @@ class AdminDashboardService
             return compact('updated', 'deleted', 'skipped');
         }
 
+        if ($action === 'force_delete') {
+            foreach ($ids as $id) {
+                if ((int) $id === (int) $actor->id) {
+                    $skipped++;
+
+                    continue;
+                }
+                $user = User::query()->onlyTrashed()->find($id);
+                if (! $user) {
+                    $skipped++;
+
+                    continue;
+                }
+                app(LearningHistoryRetentionService::class)->permanentlyDeleteUserAccount($user, $actor);
+                $deleted++;
+            }
+
+            self::invalidateCaches();
+
+            return compact('updated', 'deleted', 'skipped');
+        }
+
         abort(422, __('admin.bulk_unsupported'));
     }
 
@@ -473,6 +496,16 @@ class AdminDashboardService
         }
 
         $user->restore();
+        self::invalidateCaches();
+    }
+
+    public function permanentlyDeleteUser(User $actor, User $user): void
+    {
+        if ((int) $actor->id === (int) $user->id) {
+            abort(422, __('admin.cannot_delete_self'));
+        }
+
+        app(LearningHistoryRetentionService::class)->permanentlyDeleteUserAccount($user, $actor);
         self::invalidateCaches();
     }
 

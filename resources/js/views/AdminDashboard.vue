@@ -991,16 +991,26 @@
                   </a>
                 </div>
                 <div class="admin-drawer__quick admin-drawer__quick--danger" role="group" :aria-label="t('admin.danger_zone')">
-                  <button
-                    v-if="isDeleted(detail.user || selectedListRow)"
-                    type="button"
-                    class="admin-quick-btn"
-                    :disabled="restoringUser"
-                    @click="confirmRestoreUser(detail.user || selectedListRow)"
-                  >
-                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                    <span>{{ t('admin.action_restore') }}</span>
-                  </button>
+                  <template v-if="isDeleted(detail.user || selectedListRow)">
+                    <button
+                      type="button"
+                      class="admin-quick-btn"
+                      :disabled="restoringUser"
+                      @click="confirmRestoreUser(detail.user || selectedListRow)"
+                    >
+                      <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                      <span>{{ t('admin.action_restore') }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="admin-quick-btn admin-quick-btn--danger"
+                      :disabled="deletingUser || isSelfSelected"
+                      @click="openForceDeleteModal"
+                    >
+                      <i class="bi bi-trash-fill" aria-hidden="true"></i>
+                      <span>{{ t('admin.permanent_delete_user') }}</span>
+                    </button>
+                  </template>
                   <template v-else>
                     <button
                       type="button"
@@ -1200,16 +1210,17 @@
     </div>
 
     <!-- Delete confirm modal -->
-    <div v-if="deleteOpen" class="admin-modal-root" role="dialog" aria-modal="true" :aria-label="t('admin.delete_user')">
+    <div v-if="deleteOpen" class="admin-modal-root" role="dialog" aria-modal="true" :aria-label="deleteModalTitle">
       <div class="admin-modal__backdrop" aria-hidden="true"></div>
       <div class="admin-modal admin-modal--delete">
         <header class="admin-modal__head">
-          <h2>{{ t('admin.delete_user') }}</h2>
+          <h2>{{ deleteModalTitle }}</h2>
           <button type="button" class="admin-icon-btn" :aria-label="t('admin.drawer_close')" @click="closeDeleteModal">
             <i class="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </header>
-        <p class="admin-muted">{{ t('admin.delete_user_prompt', { name: deleteTargetName || t('admin.unnamed') }) }}</p>
+        <p v-if="deleteMode === 'force'" class="admin-form__error">{{ t('admin.permanent_delete_user_warning') }}</p>
+        <p class="admin-muted">{{ deleteModalPrompt }}</p>
         <label>
           <span>{{ t('admin.delete_type_name', { name: deleteTargetName }) }}</span>
           <input v-model.trim="deleteConfirmName" type="text" autocomplete="off">
@@ -1223,7 +1234,7 @@
             :disabled="deletingUser || !deleteConfirmReady"
             @click="confirmDeleteUser"
           >
-            {{ deletingUser ? t('admin.saving') : t('admin.delete_user') }}
+            {{ deletingUser ? t('admin.saving') : deleteModalSubmitLabel }}
           </button>
         </div>
       </div>
@@ -1239,62 +1250,100 @@
         :aria-label="t('admin.bulk_selected', { n: selectedIds.length })"
       >
         <div class="admin-bulkbar-float__inner">
-          <span class="admin-bulkbar-float__count">
-            {{ t('admin.bulk_selected', { n: selectedIds.length }) }}
-          </span>
-          <div class="admin-bulkbar-float__actions">
+          <div class="admin-bulkbar-float__header">
+            <span class="admin-bulkbar-float__count">
+              {{ t('admin.bulk_selected', { n: selectedIds.length }) }}
+            </span>
             <button
               type="button"
-              class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
-              :disabled="bulkBusy"
-              @click="bulkSendEmail"
+              class="admin-bulkbar-float__close"
+              :aria-label="t('admin.bulk_dismiss')"
+              @click="selectedIds = []"
             >
-              {{ t('admin.bulk_message_selected') }}
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
-            <div class="admin-bulkbar-float__sub">
-              <select
-                v-model="bulkStatus"
-                class="admin-toolbar__select admin-bulkbar-float__select"
-                :aria-label="t('admin.bulk_change_subscription')"
+          </div>
+          <p
+            v-if="!learnersBulkDeletedView"
+            class="admin-bulkbar-float__hint"
+          >
+            {{ t('admin.bulk_permanent_delete_hint') }}
+          </p>
+          <div class="admin-bulkbar-float__actions">
+            <template v-if="learnersBulkDeletedView">
+              <button
+                type="button"
+                class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn admin-bulkbar-float__btn--primary-danger"
+                data-testid="admin-bulk-permanent-delete"
+                :disabled="bulkBusy"
+                @click="bulkPermanentDelete"
               >
-                <option v-for="status in subscriptionOptions" :key="status" :value="status">
-                  {{ subscriptionLabel(status) }}
-                </option>
-              </select>
+                {{ t('admin.bulk_permanent_delete') }}
+              </button>
               <button
                 type="button"
                 class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
                 :disabled="bulkBusy"
-                @click="runBulkStatus"
+                @click="exportSelectedCsv"
               >
-                {{ t('admin.bulk_change_subscription') }}
+                {{ t('admin.bulk_export_selected') }}
               </button>
-            </div>
-            <button
-              type="button"
-              class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn"
-              :disabled="bulkBusy"
-              @click="bulkDeactivate"
-            >
-              {{ t('admin.bulk_deactivate_short') }}
-            </button>
-            <button
-              type="button"
-              class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
-              :disabled="bulkBusy"
-              @click="exportSelectedCsv"
-            >
-              {{ t('admin.bulk_export_selected') }}
-            </button>
+            </template>
+            <template v-else>
+              <button
+                type="button"
+                class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
+                :disabled="bulkBusy"
+                @click="bulkSendEmail"
+              >
+                {{ t('admin.bulk_message_selected') }}
+              </button>
+              <div class="admin-bulkbar-float__sub">
+                <select
+                  v-model="bulkStatus"
+                  class="admin-toolbar__select admin-bulkbar-float__select"
+                  :aria-label="t('admin.bulk_change_subscription')"
+                >
+                  <option v-for="status in subscriptionOptions" :key="status" :value="status">
+                    {{ subscriptionLabel(status) }}
+                  </option>
+                </select>
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
+                  :disabled="bulkBusy"
+                  @click="runBulkStatus"
+                >
+                  {{ t('admin.bulk_change_subscription') }}
+                </button>
+              </div>
+              <button
+                type="button"
+                class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn"
+                :disabled="bulkBusy"
+                @click="bulkDeactivate"
+              >
+                {{ t('admin.bulk_deactivate_short') }}
+              </button>
+              <button
+                type="button"
+                class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn"
+                data-testid="admin-bulk-soft-delete"
+                :disabled="bulkBusy"
+                @click="bulkSoftDeleteUsers"
+              >
+                {{ t('admin.bulk_delete_short') }}
+              </button>
+              <button
+                type="button"
+                class="admin-btn admin-btn--sm admin-bulkbar-float__btn"
+                :disabled="bulkBusy"
+                @click="exportSelectedCsv"
+              >
+                {{ t('admin.bulk_export_selected') }}
+              </button>
+            </template>
           </div>
-          <button
-            type="button"
-            class="admin-bulkbar-float__close"
-            :aria-label="t('admin.bulk_dismiss')"
-            @click="selectedIds = []"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
         </div>
       </div>
       <div
@@ -1305,27 +1354,29 @@
         :aria-label="t('admin.bulk_selected', { n: selectedFeedbackIds.length })"
       >
         <div class="admin-bulkbar-float__inner">
-          <span class="admin-bulkbar-float__count">
-            {{ t('admin.bulk_selected', { n: selectedFeedbackIds.length }) }}
-          </span>
+          <div class="admin-bulkbar-float__header">
+            <span class="admin-bulkbar-float__count">
+              {{ t('admin.bulk_selected', { n: selectedFeedbackIds.length }) }}
+            </span>
+            <button
+              type="button"
+              class="admin-bulkbar-float__close"
+              :aria-label="t('admin.bulk_dismiss')"
+              @click="selectedFeedbackIds = []"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
           <div class="admin-bulkbar-float__actions">
             <button
               type="button"
-              class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn"
+              class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn admin-bulkbar-float__btn--primary-danger"
               :disabled="bulkBusy || !!feedbackDeletingId"
               @click="askBulkDeleteFeedback"
             >
               {{ t('admin.feedback.bulkDelete') }}
             </button>
           </div>
-          <button
-            type="button"
-            class="admin-bulkbar-float__close"
-            :aria-label="t('admin.bulk_dismiss')"
-            @click="selectedFeedbackIds = []"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
         </div>
       </div>
       <div
@@ -1336,27 +1387,29 @@
         :aria-label="t('admin.bulk_selected', { n: selectedWaitingIds.length })"
       >
         <div class="admin-bulkbar-float__inner">
-          <span class="admin-bulkbar-float__count">
-            {{ t('admin.bulk_selected', { n: selectedWaitingIds.length }) }}
-          </span>
+          <div class="admin-bulkbar-float__header">
+            <span class="admin-bulkbar-float__count">
+              {{ t('admin.bulk_selected', { n: selectedWaitingIds.length }) }}
+            </span>
+            <button
+              type="button"
+              class="admin-bulkbar-float__close"
+              :aria-label="t('admin.bulk_dismiss')"
+              @click="selectedWaitingIds = []"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </div>
           <div class="admin-bulkbar-float__actions">
             <button
               type="button"
-              class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn"
+              class="admin-btn admin-btn--danger admin-btn--sm admin-bulkbar-float__btn admin-bulkbar-float__btn--primary-danger"
               :disabled="bulkBusy || !!waitingDeletingId"
               @click="askBulkDeleteWaiting"
             >
               {{ t('admin.waiting_list.bulkDelete') }}
             </button>
           </div>
-          <button
-            type="button"
-            class="admin-bulkbar-float__close"
-            :aria-label="t('admin.bulk_dismiss')"
-            @click="selectedWaitingIds = []"
-          >
-            <i class="bi bi-x-lg" aria-hidden="true"></i>
-          </button>
         </div>
       </div>
     </Transition>
@@ -1600,7 +1653,17 @@
           {{ t('admin.action_restore') }}
         </button>
         <button
-          v-else
+          v-if="isDeleted(rowMenuRow)"
+          type="button"
+          role="menuitem"
+          class="is-danger"
+          :disabled="Number(rowMenuRow.id) === ownerId"
+          @click="openForceDeleteModalForRow(rowMenuRow)"
+        >
+          {{ t('admin.permanent_delete_user') }}
+        </button>
+        <button
+          v-if="!isDeleted(rowMenuRow)"
           type="button"
           role="menuitem"
           class="is-danger"
@@ -1751,6 +1814,7 @@ export default {
       createSaving: false,
       createError: '',
       deleteOpen: false,
+      deleteMode: 'soft',
       deleteConfirmName: '',
       confirmOpen: false,
       confirmKind: '',
@@ -1982,9 +2046,28 @@ export default {
     deleteTargetName() {
       return this.detail?.user?.name || this.selectedListRow?.name || ''
     },
+    deleteModalTitle() {
+      return this.deleteMode === 'force'
+        ? this.t('admin.permanent_delete_user')
+        : this.t('admin.delete_user')
+    },
+    deleteModalPrompt() {
+      const name = this.deleteTargetName || this.t('admin.unnamed')
+      return this.deleteMode === 'force'
+        ? this.t('admin.permanent_delete_user_prompt', { name })
+        : this.t('admin.delete_user_prompt', { name })
+    },
+    deleteModalSubmitLabel() {
+      return this.deleteMode === 'force'
+        ? this.t('admin.permanent_delete_user')
+        : this.t('admin.delete_user')
+    },
     deleteConfirmReady() {
       const target = this.deleteTargetName
       return target !== '' && this.deleteConfirmName === target
+    },
+    learnersBulkDeletedView() {
+      return this.filters.account === 'deleted'
     },
     pageNumbers() {
       const total = this.usersTotalPages
@@ -3025,7 +3108,7 @@ export default {
         })
         this.selectedIds = []
         await this.reloadUsers()
-        this.refreshSnapshotQuiet()
+        await this.refreshSnapshotQuiet()
         if (this.selectedUserId) {
           delete this.detailCache[this.selectedUserId]
           await this.loadDetail(this.selectedUserId)
@@ -3052,7 +3135,7 @@ export default {
         })
         this.selectedIds = []
         await this.reloadUsers()
-        this.refreshSnapshotQuiet()
+        await this.refreshSnapshotQuiet()
         if (this.selectedUserId) {
           delete this.detailCache[this.selectedUserId]
           await this.loadDetail(this.selectedUserId)
@@ -3066,7 +3149,7 @@ export default {
       if (this.syncInFlight) return
       this.syncInFlight = true
       try {
-        const payload = await adminApi.getDashboard(this.chartDays, { fresh: false })
+        const payload = await adminApi.getDashboard(this.chartDays, { fresh: true })
         const sanitized = this.sanitizePayload(payload)
         if (sanitized) this.data = sanitized
       } catch (error) {
@@ -3158,12 +3241,33 @@ export default {
     },
     openDeleteModal() {
       if (!this.selectedUserId || this.isSelfSelected) return
+      this.deleteMode = 'soft'
       this.deleteConfirmName = ''
       this.formError = ''
       this.deleteOpen = true
     },
+    openForceDeleteModal() {
+      if (!this.selectedUserId || this.isSelfSelected) return
+      this.deleteMode = 'force'
+      this.deleteConfirmName = ''
+      this.formError = ''
+      this.deleteOpen = true
+    },
+    openForceDeleteModalForRow(row) {
+      const id = Number(row?.id || 0)
+      if (!id || id === this.ownerId) return
+      this.rowMenuId = null
+      this.deleteMode = 'force'
+      this.deleteConfirmName = ''
+      this.formError = ''
+      if (this.selectedUserId !== id) {
+        this.selectUser(id)
+      }
+      this.deleteOpen = true
+    },
     closeDeleteModal() {
       this.deleteOpen = false
+      this.deleteMode = 'soft'
       this.deleteConfirmName = ''
       this.formError = ''
     },
@@ -3171,20 +3275,78 @@ export default {
       if (!this.selectedUserId || !this.deleteConfirmReady) return
       this.deletingUser = true
       this.formError = ''
+      const id = this.selectedUserId
+      const permanent = this.deleteMode === 'force'
       try {
-        await adminApi.deleteUser(this.selectedUserId)
-        delete this.detailCache[this.selectedUserId]
+        if (permanent) {
+          await adminApi.forceDeleteUser(id)
+        } else {
+          await adminApi.deleteUser(id)
+        }
+        delete this.detailCache[id]
         this.selectedUserId = null
         this.detail = null
         this.drawerOpen = false
         this.closeDeleteModal()
         await this.reloadUsers()
-        this.refreshSnapshotQuiet()
-        this.showToast(this.t('admin.toast_deleted'))
+        await this.refreshSnapshotQuiet()
+        this.showToast(permanent ? this.t('admin.toast_permanently_deleted') : this.t('admin.toast_deleted'))
       } catch (error) {
         this.formError = this.formErrorFrom(error)
       } finally {
         this.deletingUser = false
+      }
+    },
+    async bulkSoftDeleteUsers() {
+      if (!this.selectedIds.length) return
+      const ids = this.selectedIds.filter((id) => Number(id) !== this.ownerId)
+      if (!ids.length) {
+        this.showToast(this.t('admin.delete_self_blocked'))
+        return
+      }
+      if (!window.confirm(this.t('admin.bulk_delete_soft_confirm', { n: ids.length }))) return
+      this.bulkBusy = true
+      try {
+        await adminApi.bulkUsers({
+          action: 'delete',
+          user_ids: ids,
+        })
+        this.selectedIds = []
+        await this.reloadUsers()
+        await this.refreshSnapshotQuiet()
+        if (this.selectedUserId) {
+          delete this.detailCache[this.selectedUserId]
+          await this.loadDetail(this.selectedUserId)
+        }
+        this.showToast(this.t('admin.toast_deleted'))
+      } finally {
+        this.bulkBusy = false
+      }
+    },
+    async bulkPermanentDelete() {
+      if (!this.selectedIds.length) return
+      const ids = this.selectedIds.filter((id) => Number(id) !== this.ownerId)
+      if (!ids.length) {
+        this.showToast(this.t('admin.delete_self_blocked'))
+        return
+      }
+      if (!window.confirm(this.t('admin.bulk_permanent_delete_confirm', { n: ids.length }))) return
+      this.bulkBusy = true
+      try {
+        await adminApi.bulkUsers({
+          action: 'force_delete',
+          user_ids: ids,
+        })
+        this.selectedIds = []
+        await this.reloadUsers()
+        await this.refreshSnapshotQuiet()
+        if (this.selectedUserId) {
+          delete this.detailCache[this.selectedUserId]
+          await this.loadDetail(this.selectedUserId)
+        }
+        this.showToast(this.t('admin.toast_permanently_deleted'))
+      } finally {
+        this.bulkBusy = false
       }
     },
     async confirmRestoreUser(row) {
@@ -3196,6 +3358,7 @@ export default {
         await adminApi.restoreUser(id)
         delete this.detailCache[id]
         await this.reloadUsers()
+        await this.refreshSnapshotQuiet()
         if (this.selectedUserId === id) {
           await this.selectUser(id)
         }
@@ -3246,7 +3409,7 @@ export default {
             .slice(0, this.usersPerPage)
           this.selectUser(created.id)
         }
-        this.refreshSnapshotQuiet()
+        await this.refreshSnapshotQuiet()
         this.showToast(this.t('admin.toast_created', { password }))
       } catch (error) {
         this.createError = this.formErrorFrom(error)

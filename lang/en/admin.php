@@ -14,6 +14,9 @@ return [
         'export_csv' => 'Download CSV',
         'total' => '{0} No signups yet.|{1} :count signup.|[2,*] :count signups.',
         'deleted' => 'Waiting list signup removed.',
+        'delete' => 'Delete permanently',
+        'delete_confirm' => 'Remove this signup from the waiting list permanently?',
+        'deleted_flash' => 'Waiting list signup removed.',
     ],
     'contact_messages' => [
         'title' => 'Contact Messages',
@@ -25,7 +28,7 @@ return [
         'resolved' => 'Resolved',
         'resolve' => 'Resolve',
         'delete' => 'Delete',
-        'delete_confirm' => 'Delete this contact message?',
+        'delete_confirm' => 'Delete this contact message permanently?',
         'resolved_flash' => 'Message marked as resolved.',
         'deleted_flash' => 'Message deleted.',
     ],
@@ -85,4 +88,5 @@ return [
     ],
     'bulk_unsupported' => 'Unsupported bulk action.',
     'cannot_delete_self' => 'You cannot delete your own admin account.',
+    'cannot_permanent_delete_active' => 'Soft-delete this account first, then permanently delete it from Deleted accounts.',
 ];

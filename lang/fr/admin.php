@@ -85,4 +85,5 @@ return [
     ],
     'bulk_unsupported' => 'Action groupée non prise en charge.',
     'cannot_delete_self' => 'Vous ne pouvez pas supprimer votre propre compte admin.',
+    'cannot_permanent_delete_active' => 'Soft-delete this account first, then permanently delete it from Deleted accounts.',
 ];

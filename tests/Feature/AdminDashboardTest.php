@@ -453,6 +453,16 @@ class AdminDashboardTest extends TestCase
 
         $this->assertSoftDeleted('users', ['id' => $userId]);
 
+        $activeList = $this->actingAs($admin)
+            ->getJson('/api/admin/users')
+            ->assertOk();
+        $this->assertSame(
+            User::query()->count(),
+            (int) $activeList->json('total'),
+            'Default user directory total should match non-deleted user count'
+        );
+        $this->assertNull(collect($activeList->json('users'))->firstWhere('id', $userId));
+
         $deletedList = $this->actingAs($admin)
             ->getJson('/api/admin/users?account=deleted')
             ->assertOk();
@@ -476,6 +486,50 @@ class AdminDashboardTest extends TestCase
             'id' => $userId,
             'email' => 'new.learner@example.com',
         ]);
+    }
+
+    public function test_admin_can_permanently_delete_soft_deleted_user(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
+
+        $learner = User::factory()->create([
+            'email' => 'gone.forever@example.com',
+        ]);
+        $userId = (int) $learner->id;
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/users/{$userId}")
+            ->assertOk();
+
+        $this->assertSoftDeleted('users', ['id' => $userId]);
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/users/{$userId}/force")
+            ->assertOk()
+            ->assertJsonPath('permanent', true);
+
+        $this->assertDatabaseMissing('users', ['id' => $userId]);
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/users/{$admin->id}/force")
+            ->assertStatus(422);
+    }
+
+    public function test_admin_cannot_force_delete_active_user(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
+
+        $learner = User::factory()->create([
+            'email' => 'still.here@example.com',
+        ]);
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/admin/users/{$learner->id}/force")
+            ->assertStatus(422);
     }
 
     public function test_admin_dashboard_nav_replaces_user_dashboard_for_admins(): void

@@ -918,15 +918,16 @@
                       <span>{{ t('memorisation.revisitOnboarding') }}</span>
                     </button>
                     <button
-                      v-if="isMobileViewport()"
+                      v-if="!isMobileViewport() && !isPostSessionChoiceVisible"
                       type="button"
                       class="top-card-menu-row"
+                      data-testid="workspace-desktop-fullscreen-menu"
                       :class="{ active: isAppFullscreen }"
                       :aria-pressed="isAppFullscreen ? 'true' : 'false'"
                       @click="toggleFullScreen(); topCardMenuOpen = false"
                     >
                       <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.reading.fullScreen') }}</span>
+                      <span>{{ isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen') }}</span>
                       <i v-if="isAppFullscreen" class="bi bi-check-lg check-icon" aria-hidden="true"></i>
                     </button>
                   </div>

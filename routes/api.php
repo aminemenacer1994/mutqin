@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/admin/users/{user}', [AdminDashboardController::class, 'userUpdate'])->name('api.admin.users.update');
         Route::delete('/admin/users/{user}', [AdminDashboardController::class, 'userDestroy'])->name('api.admin.users.destroy');
         Route::post('/admin/users/{user}/restore', [AdminDashboardController::class, 'userRestore'])->name('api.admin.users.restore');
+        Route::delete('/admin/users/{user}/force', [AdminDashboardController::class, 'userForceDestroy'])->name('api.admin.users.force-destroy');
         Route::get('/admin/activity', [AdminDashboardController::class, 'activity'])->name('api.admin.activity');
         Route::get('/admin/sessions', [AdminDashboardController::class, 'sessions'])->name('api.admin.sessions');
         Route::get('/admin/ai-checks', [AdminDashboardController::class, 'aiChecks'])->name('api.admin.ai-checks');

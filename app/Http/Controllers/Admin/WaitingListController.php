@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\WaitingListEntry;
+use App\Services\AdminDashboardService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -52,5 +54,16 @@ class WaitingListController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
+    }
+
+    public function destroy(WaitingListEntry $entry): RedirectResponse
+    {
+        $entry->delete();
+
+        AdminDashboardService::invalidateCaches();
+
+        return redirect()
+            ->route('admin.waiting-list.index')
+            ->with('waiting_list_status', __('admin.waiting_list.deleted_flash'));
     }
 }

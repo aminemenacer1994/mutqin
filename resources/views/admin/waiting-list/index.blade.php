@@ -20,6 +20,10 @@
             </div>
         </div>
 
+        @if (session('waiting_list_status'))
+            <div class="billing-alert billing-alert-success">{{ session('waiting_list_status') }}</div>
+        @endif
+
         @if ($entries->isEmpty())
             <div class="profile-card">
                 <p class="mb-0">{{ __('admin.waiting_list.empty') }}</p>
@@ -33,6 +37,7 @@
                                 <th scope="col">{{ __('admin.waiting_list.name') }}</th>
                                 <th scope="col">{{ __('admin.waiting_list.email') }}</th>
                                 <th scope="col">{{ __('admin.waiting_list.joined') }}</th>
+                                <th scope="col">{{ __('admin.feedback.colActions') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -46,6 +51,13 @@
                                         <time datetime="{{ $entry->created_at?->toIso8601String() }}">
                                             {{ $entry->created_at?->format('j M Y, H:i') }}
                                         </time>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ route('admin.waiting-list.destroy', $entry) }}" onsubmit="return confirm(@json(__('admin.waiting_list.delete_confirm')));">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="billing-secondary-btn">{{ __('admin.waiting_list.delete') }}</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @endforeach

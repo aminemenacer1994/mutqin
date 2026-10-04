@@ -382,6 +382,49 @@ class LearningHistoryRetentionService
     }
 
     /**
+     * Irreversible admin purge: remove the user row and cascaded learning data.
+     * The account must already be soft-deleted (recoverable delete path first).
+     */
+    public function permanentlyDeleteUserAccount(User $user, ?User $actor = null): void
+    {
+        if (! $user->trashed()) {
+            abort(422, __('admin.cannot_permanent_delete_active'));
+        }
+
+        app(AiReciteAttemptAudioService::class)->deleteAllForUser($user);
+
+        $subjectUserId = (int) $user->id;
+
+        DB::transaction(function () use ($user, $actor, $subjectUserId): void {
+            MemorisationAssessment::withTrashed()
+                ->where('user_id', $user->id)
+                ->forceDelete();
+            MemorisationPracticePlan::withTrashed()
+                ->where('user_id', $user->id)
+                ->forceDelete();
+
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+
+            $user->releaseUniqueIdentifiers();
+
+            $this->audit($actor, $user, 'permanent_delete_user_account', 'user', $subjectUserId, [
+                'mode' => 'force_delete',
+            ]);
+
+            $user->forceDelete();
+        });
+
+        Log::info('Learning history account permanently deleted', [
+            'subject_user_id' => $subjectUserId,
+            'actor_user_id' => $actor?->id,
+        ]);
+    }
+
+    /**
      * Soft-delete stale completed assessments past the configured retention window.
      * Does not delete history merely because a session was paused.
      */

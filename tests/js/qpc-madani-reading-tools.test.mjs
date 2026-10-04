@@ -94,6 +94,11 @@ assert.doesNotMatch(
   /v-if="!isPostSessionChoiceVisible"[\s\S]{0,120}workspace-mobile-fullscreen/,
   'full screen must not appear on desktop in the top toolbar',
 )
+assert.match(
+  memorisationVue,
+  /v-if="!isMobileViewport\(\) && !isPostSessionChoiceVisible"[\s\S]{0,180}workspace-desktop-fullscreen-menu/,
+  'full screen is available in the desktop reading options menu',
+)
 assert.match(memorisationVue, /ref="topCardMenu"/)
 assert.match(memorisationJs, /syncTopCardMenuPosition/)
 assert.doesNotMatch(memorisationJs, /buildMadaniAmdHiddenIndexesByAyah[\s\S]{0,400}qpcMadaniTechniqueSnapshot/)

@@ -110,7 +110,7 @@ assert.match(
 assert.match(memorisationJs, /verseBelongsToMadaniPage/, 'cross-page ayah words stay on the correct sheet')
 assert.match(
   memorisationJs,
-  /cacheCoversSession = cached\.verses\.length >= expectedCount/,
+  /if \(cached\.verses\.length < expectedCount\) return null/,
   'incomplete verse caches are rejected so stacked shows the full session range'
 )
 
