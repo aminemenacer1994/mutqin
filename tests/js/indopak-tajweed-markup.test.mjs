@@ -77,6 +77,7 @@ assert.match(memorisationVue, /top-card-menu-row--mushaf-edition/)
 assert.match(memorisationVue, /showReadingLayoutEditions/)
 assert.match(memorisationVue, /isReadingLayoutEditionActive/)
 assert.match(memorisationVue, /top-card-menu-row--mode-selected/)
+assert.match(memorisationVue, /view.mushafEdition|top-card-menu-label--edition/, 'mushaf editions sit in their own labeled group')
 assert.doesNotMatch(
   memorisationVue,
   /readingViewMode === 'madani_mushaf'[\s\S]{0,220}class="bi bi-check-lg check-icon"[\s\S]{0,220}top-card-menu-row--mushaf-edition[\s\S]{0,220}mushafLayoutId === 'madani-v2'[\s\S]{0,120}class="bi bi-check-lg check-icon"/,

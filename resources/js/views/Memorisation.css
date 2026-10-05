@@ -66307,6 +66307,22 @@ html body .top-card-menu--portal .top-card-menu-label--layout {
   padding: 0.15rem 0.7rem 0.1rem;
 }
 
+html body .top-card-menu--portal .top-card-menu-label--edition {
+  margin: 0.35rem 0 0.12rem;
+  padding: 0.28rem 0.7rem 0.08rem;
+  border-top: 1px solid color-mix(in srgb, var(--line, rgba(120, 88, 48, 0.16)) 80%, transparent);
+  color: var(--muted, #6b5c4e);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+html[data-theme="dark"] body .top-card-menu--portal .top-card-menu-label--edition {
+  border-top-color: rgba(232, 214, 186, 0.14);
+  color: rgba(232, 214, 186, 0.62);
+}
+
 html body .top-card-menu--portal,
 html body .top-card-menu--portal button,
 html body .top-card-menu--portal button span,

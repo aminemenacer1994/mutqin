@@ -24,6 +24,8 @@ export {
   filterViableAyahMatches,
   isClearAyahMatchWinner,
   buildAskMutqinAyahHighlightParts,
+  sanitizeAskMutqinAyahDisplay,
+  resolvePlaybackWordIndex,
 } from './matchAyah.js'
 export {
   loadAskMutqinMatchingIndex,

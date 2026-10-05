@@ -221,10 +221,30 @@ export function matchHeardAyahPrefix(index, transcript, { surah = null } = {}) {
   return { status: 'insufficient', candidates: ranked }
 }
 
+const ASK_MUTQIN_DISPLAY_ORNAMENTS = /[\u06D6-\u06E0\u06E9\u06EC\u08E2\u06DD\u06DE\u25CF\u25CB\u25C9\u25D8\u25D9\u26AB\u2B24\u2B58\u29BF\u2022\u2024\u00B7\u30FB\u2219\u22C5\u00B0\u25E6\u2218\u23FA\uFD3E\uFD3F۞۝۩]/g
+const ASK_MUTQIN_ARABIC_LETTER = /[\u0621-\u064A\u0671-\u06D3\u06FA-\u06FF]/
+
+/**
+ * Strip ayah-end roundels, rubʿ al-ḥizb marks, waqf circles, and any other
+ * filled ornaments so search results never show black dots.
+ */
+export function sanitizeAskMutqinAyahDisplay(text) {
+  return String(text || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(ASK_MUTQIN_DISPLAY_ORNAMENTS, ' ')
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function isDisplayAyahWord(token) {
+  return ASK_MUTQIN_ARABIC_LETTER.test(String(token || ''))
+}
+
 function tokenizeDisplayAyahWords(text) {
-  const cleaned = String(text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-  if (!cleaned) return []
-  return cleaned.split(/\s+/).filter(Boolean)
+  return sanitizeAskMutqinAyahDisplay(text)
+    .split(/\s+/)
+    .filter(isDisplayAyahWord)
 }
 
 /**
@@ -235,7 +255,7 @@ function tokenizeDisplayAyahWords(text) {
 export function buildAskMutqinAyahHighlightParts(arabic, transcript) {
   const displayTokens = tokenizeDisplayAyahWords(arabic)
   if (!displayTokens.length) {
-    const fallback = String(arabic || '').trim()
+    const fallback = sanitizeAskMutqinAyahDisplay(arabic)
     return fallback ? [{ text: fallback, highlight: false }] : []
   }
 
@@ -276,4 +296,27 @@ export function buildAskMutqinAyahHighlightParts(arabic, transcript) {
     text,
     highlight: bestIndexes.has(index),
   }))
+}
+
+/**
+ * Map audio progress onto display words using length-weighted timing.
+ */
+export function resolvePlaybackWordIndex(parts, currentTime, duration) {
+  const words = Array.isArray(parts) ? parts : []
+  if (!words.length) return -1
+  const time = Number(currentTime)
+  const total = Number(duration)
+  if (!Number.isFinite(time) || time < 0) return -1
+  if (!Number.isFinite(total) || total <= 0) return 0
+  const weights = words.map((part) => (
+    Math.max(1, String(part?.text || '').replace(/[^\u0621-\u064A]/g, '').length)
+  ))
+  const mass = weights.reduce((sum, weight) => sum + weight, 0) || words.length
+  const progress = Math.min(1, Math.max(0, time / total)) * mass
+  let cursor = 0
+  for (let index = 0; index < weights.length; index += 1) {
+    cursor += weights[index]
+    if (progress < cursor) return index
+  }
+  return words.length - 1
 }

@@ -801,6 +801,7 @@
                       ></i>
                     </button>
                     <template v-if="showReadingLayoutEditions">
+                      <p class="top-card-menu-label top-card-menu-label--edition">{{ t('memorisation.view.mushafEdition') }}</p>
                       <button
                         type="button"
                         class="top-card-menu-row top-card-menu-row--mushaf-edition"

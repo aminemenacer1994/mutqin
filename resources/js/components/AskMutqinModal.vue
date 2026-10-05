@@ -88,7 +88,14 @@
                       dir="rtl"
                       lang="ar"
                       :style="arabicTextStyle"
-                    >{{ row.arabic }}</p>
+                    >
+                      <span
+                        v-for="(part, partIndex) in row.parts"
+                        :key="`${row.key}-w-${partIndex}`"
+                        class="ask-mutqin-word"
+                        :class="{ 'is-hit': part.highlight }"
+                      >{{ part.text }}</span>
+                    </p>
                   </button>
                 </li>
               </ul>
@@ -124,17 +131,18 @@
               lang="ar"
               :aria-label="ayahPanelLabel"
             >
-              <div class="ask-mutqin-ayah__bar">
-                <span class="ask-mutqin-ayah__label">{{ ayahPanelLabel }}</span>
+              <div class="ask-mutqin-ayah__bar" dir="ltr">
+                <span v-if="matchMeta" class="ask-mutqin-ayah__meta">{{ matchMeta }}</span>
                 <div
                   v-if="match && (showAyahAudioControls || canReturnToMatchList)"
                   class="ask-mutqin-ayah__tools"
-                  dir="ltr"
+                  role="group"
+                  :aria-label="t('memorisation.askMutqin.ayahAudioLabel')"
                 >
                   <button
                     v-if="canReturnToMatchList"
                     type="button"
-                    class="ask-mutqin-icon-btn"
+                    class="ask-mutqin-icon-btn ask-mutqin-icon-btn--back"
                     :aria-label="t('memorisation.askMutqin.backToMatches')"
                     @click="backToMatchCandidates"
                   >
@@ -165,7 +173,7 @@
                     <i class="bi bi-stop-fill" aria-hidden="true"></i>
                   </button>
                 </div>
-                <span v-if="matchMeta" class="ask-mutqin-ayah__meta">{{ matchMeta }}</span>
+                <span class="ask-mutqin-ayah__label">{{ ayahPanelLabel }}</span>
               </div>
               <div ref="ayahStage" class="ask-mutqin-ayah__stage">
                 <p
@@ -173,9 +181,19 @@
                   :class="{ 'is-frozen': !!match, 'is-searching': isSearching }"
                   :style="arabicTextStyle"
                 >
-                  <template v-if="panelArabic">
-                    <span class="ask-mutqin-ayah__verse">{{ panelArabic }}</span>
-                    <span v-if="ayahMark" class="ask-mutqin-ayah__mark">{{ ayahMark }}</span>
+                  <template v-if="panelHighlightParts.length">
+                    <span class="ask-mutqin-ayah__verse">
+                      <span
+                        v-for="(part, partIndex) in panelHighlightParts"
+                        :key="`verse-w-${partIndex}`"
+                        class="ask-mutqin-word"
+                        :class="{
+                          'is-hit': part.highlight && playbackWordIndex < 0,
+                          'is-playing': playbackWordIndex === partIndex,
+                          'is-played': playbackWordIndex > partIndex,
+                        }"
+                      >{{ part.text }}</span>
+                    </span>
                   </template>
                   <span
                     v-else
@@ -249,7 +267,10 @@
                   </p>
                   <div v-else-if="aidContent.text || aidContent.sections?.length" class="ask-mutqin-aid__sections">
                     <article class="ask-mutqin-aid__section is-selected">
-                      <p class="ask-mutqin-aid__lang" dir="ltr">{{ activeAidOption.label }}</p>
+                      <div class="ask-mutqin-aid__caption" dir="ltr">
+                        <p class="ask-mutqin-aid__lang">{{ activeAidOption.label }}</p>
+                        <p v-if="aidSourceLabel" class="ask-mutqin-aid__source">{{ aidSourceLabel }}</p>
+                      </div>
                       <div class="ask-mutqin-aid__body" :dir="aidContent.dir" lang="en">
                         <p
                           v-for="(paragraph, index) in activeAidParagraphs"
@@ -257,9 +278,9 @@
                           class="ask-mutqin-aid__text"
                         >{{ paragraph }}</p>
                       </div>
-                      <p v-if="aidContent.reference" class="ask-mutqin-aid__reference" dir="ltr">
+                      <p v-if="aidSourceLabel" class="ask-mutqin-aid__reference" dir="ltr">
                         <span>{{ t('memorisation.reading.sourceLabel') }}</span>
-                        {{ aidContent.reference }}
+                        {{ aidSourceLabel }}
                       </p>
                     </article>
                   </div>
@@ -358,11 +379,15 @@ import {
   loadAskMutqinMatchingIndex,
   loadAskMutqinAyahAid,
   matchHeardAyahPrefix,
+  buildAskMutqinAyahHighlightParts,
+  sanitizeAskMutqinAyahDisplay,
+  resolvePlaybackWordIndex,
   resolveAskMutqinRange,
   resolveAskMutqinReciter,
   ASK_MUTQIN_MIN_WORDS,
   ASK_MUTQIN_MATCH_LIST_INITIAL,
 } from '../scripts/askMutqin/index.js'
+import { getEditionReference } from '../scripts/quran/editions.js'
 import { classifyMicrophoneAccessError, resolveMicrophoneHelp } from '../scripts/audio/recordingResilience.js'
 import { SessionAudioPlayer, SESSION_AUDIO_STATES } from '../scripts/audio/sessionAudioPlayer.js'
 import { orderAyahAudioCandidateUrls, resolveGlobalAyahNumber } from '../scripts/audio/sessionReciter.js'
@@ -440,6 +465,8 @@ export default {
       ayahAudioLoading: false,
       ayahAudioUrls: [],
       ayahAudioUrlIndex: 0,
+      playbackWordIndex: -1,
+      playbackWordFrame: 0,
     }
   },
   computed: {
@@ -478,12 +505,13 @@ export default {
         : list.slice(0, ASK_MUTQIN_MATCH_LIST_INITIAL)
       return visible.map((item, index) => {
         const key = item.key || `${item.surah}:${item.ayah}`
-        const arabic = String(item.arabic || '').trim()
+        const arabic = sanitizeAskMutqinAyahDisplay(item.arabic || '')
         return {
           item,
           key,
           label: `${item.surahName} · ${item.surah}:${item.ayah}`,
           arabic,
+          parts: this.highlightAyahParts(arabic),
           isBest: index === 0 && list.length > 1,
           ariaLabel: this.t('memorisation.askMutqin.matchCardAria', {
             surah: item.surahName,
@@ -497,12 +525,23 @@ export default {
     },
     aidOptions() {
       return [
-        { kind: 'translation', label: this.t('memorisation.reading.translation') },
-        { kind: 'transliteration', label: this.t('memorisation.reading.transliteration') },
+        {
+          kind: 'translation',
+          label: this.t('memorisation.reading.translation'),
+          source: this.editionSourceFor('translation'),
+        },
+        {
+          kind: 'transliteration',
+          label: this.t('memorisation.reading.transliteration'),
+          source: this.editionSourceFor('transliteration'),
+        },
       ]
     },
     activeAidOption() {
       return this.aidOptions.find((option) => option.kind === this.aidKind) || this.aidOptions[0]
+    },
+    aidSourceLabel() {
+      return String(this.aidContent.reference || this.activeAidOption?.source || '').trim()
     },
     activeAidParagraphs() {
       if (this.aidContent.sections?.length) {
@@ -520,8 +559,16 @@ export default {
         .trim()
     },
     panelArabic() {
-      if (this.match?.arabic) return this.match.arabic
+      if (this.match?.arabic) return sanitizeAskMutqinAyahDisplay(this.match.arabic)
       return this.streamingText
+    },
+    panelHighlightParts() {
+      const arabic = this.panelArabic
+      if (!arabic) return []
+      if (!this.match) {
+        return this.highlightAyahParts(arabic).map((part) => ({ ...part, highlight: false }))
+      }
+      return this.highlightAyahParts(arabic)
     },
     showAyahAudioControls() {
       return !!this.match?.arabic
@@ -591,11 +638,6 @@ export default {
       ].filter(Boolean).join(' · ')
       return { range, settings }
     },
-    ayahMark() {
-      const ayah = Number(this.match?.ayah || 0)
-      if (!ayah || !this.match?.arabic) return ''
-      return this.toArabicIndic(ayah)
-    },
     commandDisplay() {
       if (!this.match) return ''
       return String(this.commandText || '').trim()
@@ -655,6 +697,12 @@ export default {
     reciterName(id) {
       return resolveAskMutqinReciter(id, this.reciters)?.name || ''
     },
+    editionSourceFor(kind) {
+      return String(getEditionReference(kind) || '').trim()
+    },
+    highlightAyahParts(arabic) {
+      return buildAskMutqinAyahHighlightParts(arabic, this.matchSourceTranscript)
+    },
     containsArabic(text) {
       return /[\u0600-\u06FF]/.test(String(text || ''))
     },
@@ -663,9 +711,6 @@ export default {
         .replace(/[^\u0600-\u06FF\s]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()
-    },
-    toArabicIndic(value) {
-      return String(value).replace(/\d/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)])
     },
     resetAyahScroll() {
       const stage = this.$refs.ayahStage
@@ -939,14 +984,26 @@ export default {
         this.ayahAudioPlayer = new SessionAudioPlayer({
           onStateChange: ({ state }) => {
             this.ayahAudioState = state
-            if (state === SESSION_AUDIO_STATES.PLAYING) this.ayahAudioLoading = false
+            if (state === SESSION_AUDIO_STATES.PLAYING) {
+              this.ayahAudioLoading = false
+              this.startPlaybackWordSync()
+              return
+            }
+            if (state === SESSION_AUDIO_STATES.PAUSED) {
+              this.stopPlaybackWordSync({ reset: false })
+              return
+            }
+            this.stopPlaybackWordSync({ reset: true })
           },
+          onTimeUpdate: () => this.syncPlaybackWordFromAudio(),
           onEnded: () => {
             this.ayahAudioState = SESSION_AUDIO_STATES.ENDED
             this.ayahAudioLoading = false
+            this.stopPlaybackWordSync({ reset: true })
           },
           onError: () => {
             this.ayahAudioLoading = false
+            this.stopPlaybackWordSync({ reset: true })
           },
         })
       }
@@ -1002,9 +1059,39 @@ export default {
       await this.playMatchedAyahAudioFrom(0)
     },
     stopMatchedAyahAudio() {
+      this.stopPlaybackWordSync({ reset: true })
       this.ayahAudioPlayer?.stop?.({ bump: true })
       this.ayahAudioLoading = false
       this.ayahAudioState = SESSION_AUDIO_STATES.IDLE
+    },
+    syncPlaybackWordFromAudio() {
+      const el = this.$refs.ayahAudioEl
+      if (!el || !this.match) {
+        this.playbackWordIndex = -1
+        return
+      }
+      this.playbackWordIndex = resolvePlaybackWordIndex(
+        this.panelHighlightParts,
+        el.currentTime,
+        el.duration,
+      )
+    },
+    startPlaybackWordSync() {
+      this.stopPlaybackWordSync({ reset: false })
+      this.syncPlaybackWordFromAudio()
+      const tick = () => {
+        if (!this.ayahAudioPlaying) return
+        this.syncPlaybackWordFromAudio()
+        this.playbackWordFrame = window.requestAnimationFrame(tick)
+      }
+      this.playbackWordFrame = window.requestAnimationFrame(tick)
+    },
+    stopPlaybackWordSync({ reset = true } = {}) {
+      if (this.playbackWordFrame) {
+        window.cancelAnimationFrame(this.playbackWordFrame)
+        this.playbackWordFrame = 0
+      }
+      if (reset) this.playbackWordIndex = -1
     },
     stopListeningAfterMatch() {
       try { this.voice?.stop?.() } catch { /* ignore */ }
@@ -1255,6 +1342,7 @@ export default {
         this.openTimer = null
       }
       this.clearSpeechIdle()
+      this.stopPlaybackWordSync({ reset: true })
       this.stopMatchedAyahAudio()
       try { this.voice?.stop?.() } catch { /* ignore */ }
       this.voice = null
