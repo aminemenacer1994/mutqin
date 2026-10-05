@@ -417,6 +417,9 @@
     "footer": {
       "product": "« Product»",
       "features": "« Features»",
+      "featurePages": "Tüm özellikler",
+      "guides": "Hifz rehberleri",
+      "tools": "Hifz araçları",
       "howItWorks": "How it works",
       "pricing": "« Pricing»",
       "waitlist": "Waiting list",

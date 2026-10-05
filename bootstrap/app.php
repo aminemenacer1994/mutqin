@@ -1,19 +1,22 @@
 <?php
 
 use App\Http\Controllers\WaitingListController;
+use App\Http\Middleware\ApplySeoRobotsHeader;
 use App\Http\Middleware\AssignRequestId;
-use App\Http\Middleware\ForwardMarketingWaitingListSignup;
 use App\Http\Middleware\EnforceMarketingHostPolicy;
-use App\Support\MutqinDomains;
-use App\Http\Middleware\NormalizeLocalDevelopmentHost;
 use App\Http\Middleware\EnsureSubscriptionTier;
+use App\Http\Middleware\ForwardMarketingWaitingListSignup;
 use App\Http\Middleware\LogMutqinApiRequest;
+use App\Http\Middleware\NormalizeLocalDevelopmentHost;
 use App\Http\Middleware\PreventStaleHtmlCache;
-use App\Http\Middleware\SetMutqinContentSecurityPolicy;
+use App\Http\Middleware\RedirectTrailingSlash;
+use App\Http\Middleware\RedirectWwwHost;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SetMutqinContentSecurityPolicy;
 use App\Models\User;
 use App\Support\AuthRedirect;
 use App\Support\ErrorReporting;
+use App\Support\MutqinDomains;
 use App\Support\Theme;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -21,9 +24,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -44,6 +47,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->name('api.waiting-list.store');
 
             Route::middleware('web')->group(function (): void {
+                require base_path('routes/web/seo.php');
+
                 if (MutqinDomains::hostRoutingEnabled()) {
                     Route::domain(MutqinDomains::marketingHost())
                         ->group(base_path('routes/web/marketing.php'));
@@ -73,6 +78,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'join-waiting-list',
         ]);
 
+        $middleware->prepend([
+            RedirectWwwHost::class,
+            RedirectTrailingSlash::class,
+        ]);
+
         $middleware->web(prepend: [
             AssignRequestId::class,
             EnforceMarketingHostPolicy::class,
@@ -82,6 +92,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             SetLocale::class,
             PreventStaleHtmlCache::class,
+            ApplySeoRobotsHeader::class,
             SetMutqinContentSecurityPolicy::class,
         ]);
 

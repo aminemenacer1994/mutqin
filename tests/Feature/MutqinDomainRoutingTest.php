@@ -39,6 +39,15 @@ class MutqinDomainRoutingTest extends TestCase
         return parent::createApplication();
     }
 
+    public static function tearDownAfterClass(): void
+    {
+        putenv('MUTQIN_DOMAIN_ROUTING_FORCE=false');
+        $_ENV['MUTQIN_DOMAIN_ROUTING_FORCE'] = 'false';
+        $_SERVER['MUTQIN_DOMAIN_ROUTING_FORCE'] = 'false';
+
+        parent::tearDownAfterClass();
+    }
+
     /**
      * Laravel's HTTP test helper rewrites URIs through APP_URL; domain routing needs a real Host.
      */
@@ -108,6 +117,27 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertOk();
     }
 
+    public function test_marketing_host_serves_robots_and_sitemap(): void
+    {
+        $this->onMarketingHost('/robots.txt')
+            ->assertOk()
+            ->assertSee('Sitemap:', false);
+
+        $this->onMarketingHost('/sitemap.xml')
+            ->assertOk()
+            ->assertSee('<urlset', false)
+            ->assertSee('https://mutqin.ai/', false)
+            ->assertSee('https://app.mutqin.ai/about', false)
+            ->assertSee('https://mutqin.ai/waiting-list', false);
+    }
+
+    public function test_www_marketing_host_redirects_to_apex(): void
+    {
+        $this->getOnHost('www.mutqin.ai', '/')
+            ->assertStatus(301)
+            ->assertRedirect('https://mutqin.ai/');
+    }
+
     public function test_app_host_homepage_shows_full_navigation(): void
     {
         $this->onAppHost('/')
@@ -119,5 +149,4 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertDontSee('class="mutqin-early-access-nav"', false)
             ->assertDontSee('id="earlyAccessNavbar"', false);
     }
-
 }

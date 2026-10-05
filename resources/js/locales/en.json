@@ -237,7 +237,7 @@
     "hero": {
       "badge": "Qur’an memorisation companion",
       "title": "A calmer, more structured way to memorise the Qur’an.",
-      "desc": "Listen, repeat, recite and review each ayah on a clear path. Start simply, then keep returning.",
+      "desc": "Mutqin is a Quran memorization app for Hifz. Listen, repeat, recite and review each ayah on a clear path. Optional AI recitation checks help when you practise from memory.",
       "promiseLabel": "Why Mutqin",
       "problem": "The struggle",
       "problemText": "Forgetting what to revise, losing weak ayahs, and stopping without a way back.",
@@ -417,6 +417,9 @@
     "footer": {
       "product": "Explore",
       "features": "Features",
+      "featurePages": "All features",
+      "guides": "Hifz guides",
+      "tools": "Hifz tools",
       "howItWorks": "See how Mutqin works",
       "pricing": "Pricing",
       "waitlist": "Waiting list",

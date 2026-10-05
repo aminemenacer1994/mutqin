@@ -11,5 +11,7 @@
             <div class="billing-alert billing-alert-error" role="alert">{{ session('billing_error') }}</div>
         </div>
     @endif
-    <pricing-page></pricing-page>
+    <pricing-page>
+        @include('partials.seo-ssr-pricing')
+    </pricing-page>
 @endsection

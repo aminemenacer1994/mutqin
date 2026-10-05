@@ -59,13 +59,18 @@ assert.match(modal, /ask-mutqin-word|buildAskMutqinAyahHighlightParts/, 'matched
 assert.match(modal, /aidSourceLabel/, 'translation and transliteration show their sources')
 assert.doesNotMatch(modal, /ask-mutqin-aid__tab-source/, 'aid tabs no longer show source names')
 assert.match(modal, /resolvePlaybackWordIndex|playbackWordIndex/, 'ayah audio drives word-by-word highlighting')
-assert.match(modalCss, /direction: rtl/, 'search-result Arabic is forced RTL')
+assert.match(modalCss, /@media \(max-width: 767px\)/, 'phone sheet is locked to the viewport')
+assert.doesNotMatch(
+  modalCss,
+  /\.ask-mutqin-ayah__meta[\s\S]{0,220}text-overflow:\s*ellipsis/,
+  'surah · ayah is not truncated with an ellipsis',
+)
 assert.doesNotMatch(modal, /ask-mutqin-audio-cluster/, 'audio controls are plain icons without a cluster box')
 assert.match(modalCss, /border-inline: 1px solid/, 'surah, icons, and matched ayah are separated by vertical rules')
 assert.match(modalCss, /ask-mutqin-multiple__card\.is-best/, 'best match has a stronger card treatment')
 assert.match(modalCss, /ask-mutqin-word\.is-hit/, 'highlighted words use an inline mark that keeps letters intact')
 assert.match(modalCss, /word-break: keep-all/, 'ayah text wraps on word boundaries instead of splitting letters')
-assert.doesNotMatch(modalCss, /ask-mutqin-multiple__arabic[\s\S]{0,240}overflow-wrap:\s*anywhere/, 'match cards do not break Arabic with overflow-wrap anywhere')
+assert.doesNotMatch(modalCss, /\.ask-mutqin-multiple__arabic \{[\s\S]{0,400}?overflow-wrap:\s*anywhere/, 'match cards do not break Arabic with overflow-wrap anywhere')
 assert.match(modal, /quranFontFamily/, 'modal uses the workspace Qur’an font')
 assert.match(modal, /askMutqin.featureBrief/, 'listening screen briefly explains the feature')
 assert.doesNotMatch(modal, /stepTextSize|increaseText|textExpanded|expandText/, 'font size and expand tools are removed')

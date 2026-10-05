@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <donation-page></donation-page>
+    <donation-page>
+        @include('partials.seo-ssr-donate')
+    </donation-page>
 @endsection

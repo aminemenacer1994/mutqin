@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 final class MutqinDomains
 {
     private const DEFAULT_APP_HOST = 'app.mutqin.ai';
+
     public static function marketingHost(): string
     {
         return strtolower(trim((string) config('mutqin.domains.marketing_host', 'mutqin.ai')));
@@ -134,6 +135,32 @@ final class MutqinDomains
         $path = '/'.ltrim($path, '/');
 
         return self::appOrigin().($path === '//' ? '/' : $path);
+    }
+
+    /**
+     * Absolute origin for the public marketing site (https://mutqin.ai).
+     */
+    public static function marketingOrigin(): string
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+        $scheme = parse_url($appUrl, PHP_URL_SCHEME);
+        if (! is_string($scheme) || $scheme === '') {
+            $scheme = 'https';
+        }
+
+        return $scheme.'://'.self::marketingHost();
+    }
+
+    public static function marketingUrl(string $path = '/'): string
+    {
+        $path = '/'.ltrim($path, '/');
+
+        return self::marketingOrigin().($path === '//' ? '/' : $path);
+    }
+
+    public static function hostsDifferForSeo(): bool
+    {
+        return self::hostRoutingEnabled();
     }
 
     /**

@@ -4,7 +4,7 @@
       <div class="hero__glow" aria-hidden="true"></div>
       <div class="hero__inner">
         <div class="hero__grid">
-          <div class="hero__copy" data-reveal="left">
+          <div class="hero__copy">
             <p class="hero__brand">
               <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
               Mutqin
@@ -31,7 +31,7 @@
             </div>
           </div>
 
-          <div class="hero__visual" data-reveal="right">
+          <div class="hero__visual">
             <div class="hero__fan">
               <figure
                 v-for="shot in heroShots"
@@ -49,6 +49,7 @@
                       width="444"
                       height="929"
                       :loading="shot.id === 'center' ? 'eager' : 'lazy'"
+                      :fetchpriority="shot.id === 'center' ? 'high' : 'low'"
                       decoding="async"
                     >
                   </div>
@@ -81,6 +82,7 @@
                     :alt="demoSteps[demoActiveIndex]?.label || ''"
                     width="446"
                     height="930"
+                    loading="lazy"
                     decoding="async"
                   >
                 </Transition>
@@ -333,10 +335,16 @@
             <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
             <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
+            <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
+            <a href="/features">{{ t('homepage.footer.featurePages') }}</a>
+            <a href="/guides">{{ t('homepage.footer.guides') }}</a>
+            <a href="/tools">{{ t('homepage.footer.tools') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
             <a href="#contact" @click.prevent="scrollToId('contact')">{{ t('homepage.footer.contact') }}</a>
+            <a href="/about">{{ t('homepage.footer.aboutUs') }}</a>
+            <a href="/our-mission">{{ t('homepage.footer.ourMission') }}</a>
             <a href="/privacy">{{ t('homepage.footer.privacy') }}</a>
             <a href="/waiting-list">{{ t('homepage.footer.waitlist') }}</a>
           </div>

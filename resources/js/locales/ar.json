@@ -417,6 +417,9 @@
     "footer": {
       "product": "المنتج",
       "features": "الميزات",
+      "featurePages": "كل الميزات",
+      "guides": "أدلة الحفظ",
+      "tools": "أدوات الحفظ",
       "howItWorks": "كيف يعمل",
       "pricing": "الأسعار",
       "waitlist": "قائمة الانتظار",

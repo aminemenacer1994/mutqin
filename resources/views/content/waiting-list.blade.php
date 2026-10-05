@@ -11,7 +11,9 @@
             $waitingListCount = 0;
         }
     @endphp
-    <waiting-list-page count="{{ $waitingListCount }}"></waiting-list-page>
+    <waiting-list-page count="{{ $waitingListCount }}">
+        @include('partials.seo-ssr-waiting-list')
+    </waiting-list-page>
     <script>
         window.mutqinWaitingListEndpoint = @json(\App\Support\MutqinDomains::waitingListStoreUrl(request()));
     </script>

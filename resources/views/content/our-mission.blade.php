@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <our-mission-page></our-mission-page>
+    <our-mission-page>
+        @include('partials.seo-ssr-mission')
+    </our-mission-page>
 @endsection

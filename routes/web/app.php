@@ -1,26 +1,27 @@
 <?php
 
-use App\Http\Controllers\AyahAudioController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FeedbackController as AdminFeedbackPageController;
 use App\Http\Controllers\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\AyahAudioController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\IndopakFontController;
-use App\Http\Controllers\MadaniPageController;
 use App\Http\Controllers\Internal\AlertTestController;
 use App\Http\Controllers\Internal\ErrorTestController;
 use App\Http\Controllers\Internal\HealthController as InternalHealthController;
+use App\Http\Controllers\MadaniPageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuranProxyController;
 use App\Http\Controllers\WaitingListController;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
 use App\Support\ErrorReporting;
+use App\Support\Seo\SeoLaunchPages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -121,7 +122,7 @@ Route::get('/audio/ayah/{reciter}/{ayah}.mp3', AyahAudioController::class)
     ->name('memorisation.ayah-audio');
 
 Route::view('/about', 'content.about-us')->name('about');
-Route::view('/about-us', 'content.about-us')->name('about-us');
+Route::redirect('/about-us', '/about', 301)->name('about-us');
 Route::view('/pricing', 'content.pricing')->name('pricing');
 Route::view('/privacy', 'content.privacy')->name('privacy');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
@@ -130,6 +131,10 @@ Route::view('/waiting-list', 'content.waiting-list')->name('waiting-list');
 Route::post('/waiting-list', [WaitingListController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('waiting-list.store');
+
+foreach (SeoLaunchPages::paths() as $seoPath) {
+    Route::view($seoPath, 'content.seo-launch')->name('seo.launch.'.str_replace('/', '.', trim($seoPath, '/')));
+}
 
 // Profile stays auth-only so unverified users can update email / sign out.
 Route::middleware(['auth'])->group(function () {
@@ -368,6 +373,4 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
     Route::get('/feedback', [AdminFeedbackPageController::class, 'index'])->name('feedback.index');
 });
 
-Route::get('/home', function () {
-    return redirect()->route('home');
-})->name('home.legacy');
+Route::permanentRedirect('/home', '/')->name('home.legacy');

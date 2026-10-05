@@ -417,6 +417,9 @@
     "footer": {
       "product": "Produit",
       "features": "Fonctionnalités",
+      "featurePages": "Toutes les fonctionnalités",
+      "guides": "Guides de Hifz",
+      "tools": "Outils Hifz",
       "howItWorks": "Comment ça marche",
       "pricing": "Tarifs",
       "waitlist": "Liste d’attente",

@@ -27,7 +27,12 @@ class EnforceMarketingHostPolicy
         }
 
         $path = '/'.ltrim($request->path(), '/');
-        if ($path === '/' || $path === '//' || strtolower($path) === self::WAITING_LIST) {
+        $allowed = $path === '/'
+            || $path === '//'
+            || strtolower($path) === self::WAITING_LIST
+            || strtolower($path) === '/robots.txt'
+            || strtolower($path) === '/sitemap.xml';
+        if ($allowed) {
             return $next($request);
         }
 

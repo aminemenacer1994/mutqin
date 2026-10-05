@@ -80,8 +80,8 @@
     </script>
     <meta name="apple-mobile-web-app-title" content="Mutqin">
     <meta name="application-name" content="Mutqin">
-    <meta name="description" content="Mutqin helps you memorise and revise the Qur’an. Listen, recite, review and return to each ayah with a calm Hifz practice path.">
-    <title>{{ __('ui.app_title') }}</title>
+    @include('partials.seo-head')
+    @stack('head')
     @include('partials.google-analytics')
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730c">
@@ -7677,11 +7677,17 @@
                     <img
                         src="/images/logo.png"
                         alt=""
+                        width="115"
+                        height="46"
+                        decoding="async"
                         class="app-navbar-logo app-navbar-logo--full app-navbar-logo--light"
                     >
                     <img
                         src="/images/dark_logo.png"
                         alt=""
+                        width="115"
+                        height="46"
+                        decoding="async"
                         class="app-navbar-logo app-navbar-logo--full app-navbar-logo--dark"
                     >
                 </a>
@@ -7691,17 +7697,26 @@
                 <img
                     src="/images/logo.png"
                     alt=""
+                    width="115"
+                    height="46"
+                    decoding="async"
                     class="app-navbar-logo app-navbar-logo--full app-navbar-logo--light"
                 >
                 <img
                     src="/images/dark_logo.png"
                     alt=""
+                    width="115"
+                    height="46"
+                    decoding="async"
                     class="app-navbar-logo app-navbar-logo--full app-navbar-logo--dark"
                 >
                 <img
                     id="appNavbarLogoMark"
                     src="/images/logo_main.png"
                     alt=""
+                    width="34"
+                    height="36"
+                    decoding="async"
                     class="app-navbar-logo app-navbar-logo--mark"
                 >
             </a>
