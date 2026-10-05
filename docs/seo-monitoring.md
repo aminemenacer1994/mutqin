@@ -27,6 +27,7 @@ Manual owner work in the Google account that should own the properties. Engineer
    - `https://mutqin.ai/`
    - `https://app.mutqin.ai/`
    Verify with the HTML tag **or** (better) Google Analytics / Google Tag if the same Google account owns GA4 **and** the tag fires on that host. Mutqin injects gtag from `resources/views/partials/google-analytics.blade.php` when `services.google_analytics` is enabled and the ID matches `G-…`.
+   For the HTML-tag method, set `SEO_GOOGLE_SITE_VERIFICATION` (and optionally `SEO_BING_SITE_VERIFICATION`) in Laravel Cloud — **do not invent tokens**. Empty env = no meta tag. Then run `php artisan mutqin:seo-verify` (and `--live` after deploy).
 4. After a Domain property exists, you can still keep URL-prefix properties for host-specific filters, or use hostname filters inside Performance.
 
 **Do not** add a second competing Domain property in another employee’s personal account without sharing. Use a shared Google group / company account.
@@ -123,15 +124,19 @@ GSC has **no** conversion metric.
 | Organic clicks to a URL | GSC Performance → Pages | Demand and CTR |
 | Sessions with `source = google` / `organic` | GA4 (when gtag is enabled) | Behaviour after the click |
 | Waiting-list rows | Admin waiting list / DB | **Total** signups, not organic unless attributed |
-| Public tool use | GA4 events `seo_tool_*` (`event_category: seo_tool`) | Engagement, not signup |
-| Register / login | Product analytics if instrumented | Separate from waiting list |
+| Public SEO page view | GA4 `seo_landing_view` / `seo_guide_view` | Demand by `page_path` / `landing_path` |
+| Public tool use | GA4 `seo_tool_start` / `seo_tool_complete` (+ legacy `seo_tool_*`) | Engagement |
+| CTA / waiting-list click | GA4 `seo_cta_click` / `seo_waiting_list_click` | Pre-conversion intent |
+| Waiting-list join | GA4 `generate_lead` | Signup intent |
+| Registration | GA4 `seo_registration_start` → `seo_registration_complete` / `sign_up` | Account signup |
+| Tool → signup | GA4 `seo_tool_signup` | Attribution via `sessionStorage` + UTM |
+| Organic (best effort) | Event param `organic_likely` / `traffic_source`; prefer GA4 session `google / organic` | SERP referrer often stripped |
 
-**Today:** waiting-list join is a Laravel POST (`/join-waiting-list`) and does **not** emit a dedicated `generate_lead` gtag event. Until that exists, **do not report “organic waiting-list conversion rate” as a precise GA4 funnel**. Proxies:
+Full event dictionary and how to answer “which page / guide / tool / CTA”: [seo-analytics.md](seo-analytics.md).
 
-- GSC clicks on `/waiting-list` and `/` vs admin waiting-list **count in the same calendar month** (correlation, not attribution).
-- GA4: landing page + session source/medium `google / organic` + waiting-list page `form_submit` **if** you add an event later.
+**Waiting-list join** emits `generate_lead` (and `seo_tool_signup` when a public tool was used first). Still cross-check admin waiting-list counts monthly; do not invent organic rates from GSC alone.
 
-**Tool → signup:** treat as `seo_tool_*` (or landing `/tools/…`) **then** a later waiting-list or register event **in the same session** only if GA4 actually records both. If it does not, KPI = “organic landings on `/tools/*`” + “waiting-list totals”, labelled as incomplete attribution.
+**Tool → signup KPI:** `seo_tool_signup` / sessions with `seo_tool_start` (28-day window). Label incomplete if ad blockers suppress gtag.
 
 Never use Search Console to invent a conversion rate.
 
@@ -244,7 +249,7 @@ Record **numbers from GSC/GA4/exports only**. Leave cells blank if the property 
 | Top 3 / top 10 rankings | GSC average position **and** enough impressions | Position-only with 5 impressions is not a “top 3 keyword” |
 | Indexed valuable pages | GSC Pages + sitemap | Count **indexable** catalog URLs that show Indexed — not `/login` |
 | Organic waiting-list / registrations | GA4 if attributed; else proxy (see above) | Label methodology |
-| Tool → signup | GA4 `seo_tool_*` then join/register | Incomplete until join is an event |
+| Tool → signup | GA4 `seo_tool_signup` / `seo_tool_*` sessions | Prefer event ratio; still incomplete under blockers |
 | Backlinks / referring domains | GSC Links + verified outreach log | Not purchased links |
 | Core Web Vitals | GSC CrUX | % URL groups Good / NI / Poor, mobile vs desktop |
 

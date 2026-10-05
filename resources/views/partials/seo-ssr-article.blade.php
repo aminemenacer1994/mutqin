@@ -7,6 +7,19 @@
     </nav>
     <h1>{{ $seoPage['h1'] }}</h1>
     <p>{!! \App\Support\Seo\SeoProse::toHtml($seoPage['lede'] ?? '') !!}</p>
+    @if (! empty($seoPage['author']) || ! empty($seoPage['published_at']))
+        <p>
+            @if (! empty($seoPage['author']))
+                {{ $seoPage['author'] }}
+            @endif
+            @if (! empty($seoPage['published_at']))
+                · Published {{ $seoPage['published_at'] }}
+            @endif
+            @if (! empty($seoPage['updated_at']) && ($seoPage['updated_at'] !== ($seoPage['published_at'] ?? null)))
+                · Updated {{ $seoPage['updated_at'] }}
+            @endif
+        </p>
+    @endif
     @foreach ($seoPage['sections'] as $section)
         <h2>{{ $section['h2'] }}</h2>
         @foreach ($section['paragraphs'] as $paragraph)
@@ -19,20 +32,10 @@
             @endforeach
         @endforeach
     @endforeach
-    <nav>
-        @foreach ($seoPage['links'] as $link)
-            <a href="{{ $link['href'] }}">{{ $link['label'] }}</a>
-        @endforeach
-        <a href="{{ $seoPage['cta_primary']['href'] }}">{{ $seoPage['cta_primary']['label'] }}</a>
-        <a href="{{ $seoPage['cta_secondary']['href'] }}">{{ $seoPage['cta_secondary']['label'] }}</a>
-    </nav>
-    @if (! empty($seoPage['tool']))
-        <h2>Interactive tool</h2>
-        <p>This page includes a free interactive tool you can use without creating an account. Open the page in a browser to run the calculator, test, or finder above the explanatory sections.</p>
-    @endif
     @if (! empty($seoPage['related_feature']['href']))
-        <h2>Continue in Mutqin</h2>
-        <p><a href="{{ $seoPage['related_feature']['href'] }}">{{ $seoPage['related_feature']['label'] }}</a></p>
+        <p>
+            <a href="{{ $seoPage['related_feature']['href'] }}">{{ $seoPage['related_feature']['label'] }}</a>
+        </p>
     @endif
     @if (! empty($seoPage['related_guides']))
         <h2>Related guides</h2>
@@ -58,27 +61,19 @@
             @endforeach
         </nav>
     @endif
-    @if (! empty($seoPage['faqs']))
-        <h2>FAQ</h2>
-        @foreach ($seoPage['faqs'] as $faq)
-            <h3>{{ $faq['q'] }}</h3>
-            <p>{!! \App\Support\Seo\SeoProse::toHtml($faq['a'] ?? '') !!}</p>
-        @endforeach
-    @endif
-    @if (! empty($seoPage['guide_index']['entries']))
-        <h2>Browse guides</h2>
-        @if (! empty($seoPage['guide_index']['categories']))
-            <nav aria-label="Guide categories">
-                <a href="{{ $seoPage['guide_index']['all_href'] }}">All</a>
-                @foreach ($seoPage['guide_index']['categories'] as $category)
-                    <a href="{{ $category['href'] }}">{{ $category['label'] }}</a>
-                @endforeach
-            </nav>
-        @endif
+    @if (! empty($seoPage['related_articles']))
+        <h2>Related guides</h2>
         <nav>
-            @foreach ($seoPage['guide_index']['entries'] as $entry)
-                <a href="{{ $entry['href'] }}">{{ $entry['title'] }}</a>
+            @foreach ($seoPage['related_articles'] as $related)
+                <a href="{{ $related['href'] }}">{{ $related['label'] }}</a>
             @endforeach
         </nav>
     @endif
+    <nav>
+        @foreach ($seoPage['links'] as $link)
+            <a href="{{ $link['href'] }}">{{ $link['label'] }}</a>
+        @endforeach
+        <a href="{{ $seoPage['cta_primary']['href'] }}">{{ $seoPage['cta_primary']['label'] }}</a>
+        <a href="{{ $seoPage['cta_secondary']['href'] }}">{{ $seoPage['cta_secondary']['label'] }}</a>
+    </nav>
 </article>

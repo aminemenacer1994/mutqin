@@ -1,5 +1,5 @@
 @php
-    $seoPage = \App\Support\Seo\SeoLaunchPages::forPath(request()->path());
+    $seoPage = $seoPage ?? \App\Support\Seo\SeoLaunchPages::forPath(request()->path());
     abort_unless($seoPage !== null, 404);
 @endphp
 

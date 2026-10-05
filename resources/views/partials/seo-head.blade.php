@@ -4,6 +4,12 @@
 <title>{{ $seo->title }}</title>
 <meta name="description" content="{{ $seo->description }}" data-mutqin-seo="1">
 <meta name="robots" content="{{ $seo->robots }}" data-mutqin-seo="1">
+@if ($googleVerification = trim((string) config('seo.google_site_verification', '')))
+<meta name="google-site-verification" content="{{ $googleVerification }}">
+@endif
+@if ($bingVerification = trim((string) config('seo.bing_site_verification', '')))
+<meta name="msvalidate.01" content="{{ $bingVerification }}">
+@endif
 <link rel="canonical" href="{{ $seo->canonical }}" data-mutqin-seo="1">
 @foreach ($seo->hreflang as $alternate)
     <link rel="alternate" hreflang="{{ $alternate['hreflang'] }}" href="{{ $alternate['href'] }}" data-mutqin-seo="1">

@@ -21,6 +21,8 @@ use App\Http\Controllers\WaitingListController;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
 use App\Support\ErrorReporting;
+use App\Http\Controllers\Seo\SeoArticleController;
+use App\Http\Controllers\Seo\SeoGuidesController;
 use App\Support\Seo\SeoLaunchPages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -132,9 +134,19 @@ Route::post('/waiting-list', [WaitingListController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('waiting-list.store');
 
+Route::get('/guides', [SeoGuidesController::class, 'index'])->name('seo.guides');
+
 foreach (SeoLaunchPages::paths() as $seoPath) {
+    if ($seoPath === '/guides') {
+        continue;
+    }
     Route::view($seoPath, 'content.seo-launch')->name('seo.launch.'.str_replace('/', '.', trim($seoPath, '/')));
 }
+
+// File-based articles: after specific launch /guides/* routes so they take precedence.
+Route::get('/guides/{slug}', [SeoArticleController::class, 'show'])
+    ->where('slug', '[a-z0-9\-]+')
+    ->name('seo.article');
 
 // Profile stays auth-only so unverified users can update email / sign out.
 Route::middleware(['auth'])->group(function () {

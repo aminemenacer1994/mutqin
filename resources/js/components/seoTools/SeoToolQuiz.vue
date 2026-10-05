@@ -132,7 +132,7 @@ export default {
         this.done = this.cards.length === 0
         this.revealed = false
         if (!this.cards.length) this.error = 'No ayahs loaded for that range. Try a shorter surah.'
-        trackSeoTool('seo_tool_quiz_start', { surah: this.surah, count: this.cards.length })
+        trackSeoTool('seo_tool_quiz_start', { tool: 'quiz', surah: this.surah, count: this.cards.length })
       } catch {
         this.error = 'Quran text could not load. Try again in a moment.'
       } finally {
@@ -147,7 +147,7 @@ export default {
       this.revealed = false
       if (this.index + 1 >= this.cards.length) {
         this.done = true
-        trackSeoTool('seo_tool_quiz_complete', { score: this.score, total: this.cards.length })
+        trackSeoTool('seo_tool_quiz_complete', { tool: 'quiz', score: this.score, total: this.cards.length })
         return
       }
       this.index += 1

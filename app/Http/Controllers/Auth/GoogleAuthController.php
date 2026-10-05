@@ -90,6 +90,7 @@ class GoogleAuthController extends Controller
         request()->session()->put('mutqin_login_event_id', (string) Str::uuid());
         if ($created) {
             request()->session()->put('mutqin_just_registered', true);
+            request()->session()->put('mutqin_register_method', 'google');
             // Existing-user Welcome Back must not win over first-run onboarding.
             request()->session()->forget('mutqin_just_logged_in');
         } else {

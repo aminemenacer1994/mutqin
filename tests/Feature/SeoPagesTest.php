@@ -80,6 +80,8 @@ class SeoPagesTest extends TestCase
             ->assertSee('A calmer, more structured way to memorise the Qur’an.', false)
             ->assertSee('href="/waiting-list"', false)
             ->assertSee('href="/tools"', false)
+            ->assertSee('href="/tools/quran-memorization-planner"', false)
+            ->assertSee('href="/guides/quran-memorization-techniques"', false)
             ->assertSee('<homepage', false)
             ->getContent();
 
@@ -223,24 +225,85 @@ class SeoPagesTest extends TestCase
         $this->get('/guides')
             ->assertOk()
             ->assertSee('Hifz guides for Quran memorization', false)
-            ->assertSee('href="/guides/quran-memorization-for-beginners"', false);
+            ->assertSee('href="/guides/quran-memorization-for-beginners"', false)
+            ->assertSee('Browse guides', false)
+            ->assertSee('href="/guides/practice-between-lessons"', false)
+            ->assertSee('category=practice', false);
 
         $guide = $this->get('/guides/quran-memorization-techniques')
             ->assertOk()
+            ->assertSee('How to Memorize the Quran | Hifz Techniques That Hold', false)
             ->assertSee('How to memorize the Quran: techniques that hold', false)
+            ->assertSee('gradually hide the text', false)
+            ->assertSee('href="/guides/similar-ayahs"', false)
+            ->assertSee('href="/tools/quran-memorization-planner"', false)
+            ->assertSee('href="/features/mushaf"', false)
+            ->assertSee('Related tools', false)
             ->assertSee('"@type":"Article"', false)
+            ->assertSee('datePublished', false)
             ->getContent();
 
         $this->assertStringContainsString('Article', $guide);
+        $this->assertStringContainsString('BreadcrumbList', $guide);
         $this->assertStringNotContainsString('aggregateRating', $guide);
+
+        $this->get('/guides/quran-memorization-for-beginners')
+            ->assertOk()
+            ->assertSee('Quran Memorization Plan for Beginners', false)
+            ->assertSee('first-week shape', false)
+            ->assertSee('href="/guides/hifz-plan"', false)
+            ->assertSee('href="/tools/quran-memorization-planner"', false)
+            ->assertSee('href="/guides/practice-between-lessons"', false);
 
         $this->get('/guides/hifz-revision')
             ->assertOk()
-            ->assertSee('stop forgetting', false);
+            ->assertSee('How to Revise the Quran and Retain Your Hifz', false)
+            ->assertSee('Three buckets', false)
+            ->assertSee('href="/features/quran-revision"', false)
+            ->assertSee('href="/tools/hifz-progress-calculator"', false);
+
+        $this->get('/guides/hifz-plan')
+            ->assertOk()
+            ->assertSee('How to make a Quran memorization plan you will keep', false)
+            ->assertSee('href="/tools/quran-memorization-planner"', false);
 
         $this->get('/guides/similar-ayahs')
             ->assertOk()
-            ->assertSee('how to memorize similar ayahs', false);
+            ->assertSee('Mutashabihat: How to Memorize Similar Quran Ayahs', false)
+            ->assertSee('how to memorize similar Quran ayahs', false)
+            ->assertSee('Compare first', false)
+            ->assertSee('href="/features/mutashabihat"', false)
+            ->assertSee('Related features', false);
+    }
+
+    public function test_file_based_seo_article_is_indexable_with_schema_and_related(): void
+    {
+        $html = $this->get('/guides/practice-between-lessons')
+            ->assertOk()
+            ->assertSee('How to Practise Hifz Between Lessons | Mutqin', false)
+            ->assertSee('content="index, follow"', false)
+            ->assertSee('How to practise Hifz between lessons', false)
+            ->assertSee('href="/features/hifz-plan"', false)
+            ->assertSee('href="/guides/quran-memorization-for-beginners"', false)
+            ->assertSee('Related guides', false)
+            ->assertSee('Related tools', false)
+            ->assertSee('<seo-launch-page', false)
+            ->assertHeader('X-Robots-Tag', 'index, follow')
+            ->getContent();
+
+        $this->assertStringContainsString('"@type":"Article"', $html);
+        $this->assertStringContainsString('datePublished', $html);
+        $this->assertStringContainsString('BreadcrumbList', $html);
+        $this->assertStringContainsString('Keep the sitting small enough to finish', $html);
+
+        $this->get('/guides?category=practice')
+            ->assertOk()
+            ->assertSee('href="/guides/practice-between-lessons"', false)
+            ->assertDontSee('Quran memorization plan for beginners', false);
+
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertSee(SeoCatalog::absoluteUrl('/guides/practice-between-lessons', 'app'), false);
     }
 
     public function test_public_tool_pages_are_indexable_with_unique_copy(): void
@@ -261,29 +324,53 @@ class SeoPagesTest extends TestCase
 
         $this->assertSame(1, substr_count($hub, '<title>'));
 
-        $this->get('/tools/quran-memorization-planner')
+        $planner = $this->get('/tools/quran-memorization-planner')
             ->assertOk()
             ->assertSee('Quran Memorization Planner | Daily Hifz Pace', false)
-            ->assertSee('Plan a realistic daily Hifz pace', false)
+            ->assertSee('Quran memorization planner: a realistic daily Hifz pace', false)
+            ->assertSee('How to use it', false)
+            ->assertSee('Do I need an account to use the Quran memorization planner?', false)
+            ->assertSee('Continue in Mutqin', false)
             ->assertSee('href="/features/hifz-plan"', false)
-            ->assertDontSee('Free Quran Memorization Tools | Mutqin', false);
+            ->assertSee('utm_campaign=planner', false)
+            ->assertDontSee('Free Quran Memorization Tools | Mutqin', false)
+            ->getContent();
+
+        $this->assertStringContainsString('WebApplication', $planner);
+        $this->assertStringContainsString('FAQPage', $planner);
+        $this->assertStringContainsString('BreadcrumbList', $planner);
+        $this->assertStringContainsString('Interactive tool', $planner);
 
         $this->get('/tools/hifz-progress-calculator')
             ->assertOk()
             ->assertSee('Hifz Progress Calculator | Pages, Juz, and Surahs', false)
-            ->assertSee('Calculate Hifz progress from pages, Juz, or surahs', false);
+            ->assertSee('Hifz progress calculator: pages, Juz, and surahs', false)
+            ->assertSee('How to use it', false)
+            ->assertSee('utm_campaign=progress', false)
+            ->assertSee('"@type":"FAQPage"', false);
 
         $this->get('/tools/quran-memorization-test')
             ->assertOk()
             ->assertSee('Quran Memorization Test | Check What You Remember', false)
-            ->assertSee('Test a short range from memory', false)
-            ->assertSee('href="/features/ai-recite"', false);
+            ->assertSee('Quran memorization test: check a short range from memory', false)
+            ->assertSee('href="/features/ai-recite"', false)
+            ->assertSee('utm_campaign=quiz', false)
+            ->assertSee('Does the Quran memorization test grade tajweed?', false);
 
         $this->get('/tools/find-an-ayah')
             ->assertOk()
             ->assertSee('Find an Ayah by Typing Arabic | Mutqin', false)
             ->assertSee('Find an ayah from Arabic you type', false)
             ->assertSee('href="/features/find-an-ayah"', false)
-            ->assertSee('without a microphone', false);
+            ->assertSee('without a microphone', false)
+            ->assertSee('utm_campaign=find-ayah', false)
+            ->assertSee('Is the Arabic I type sent to analytics?', false);
+
+        $this->get('/sitemap.xml')
+            ->assertOk()
+            ->assertSee(SeoCatalog::absoluteUrl('/tools/quran-memorization-planner', 'app'), false)
+            ->assertSee(SeoCatalog::absoluteUrl('/tools/hifz-progress-calculator', 'app'), false)
+            ->assertSee(SeoCatalog::absoluteUrl('/tools/quran-memorization-test', 'app'), false)
+            ->assertSee(SeoCatalog::absoluteUrl('/tools/find-an-ayah', 'app'), false);
     }
 }

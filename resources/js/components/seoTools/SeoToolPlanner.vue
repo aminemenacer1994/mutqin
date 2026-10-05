@@ -105,6 +105,7 @@ export default {
         daysPerWeek: this.daysPerWeek,
       })
       trackSeoTool('seo_tool_planner', {
+        tool: 'planner',
         target: this.target,
         daily: this.plan.dailyTarget,
         days: this.plan.calendarDays,

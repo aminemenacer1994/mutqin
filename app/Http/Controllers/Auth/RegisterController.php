@@ -118,6 +118,7 @@ class RegisterController extends Controller
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
         // Persist until /memorisation consumes it so a dashboard stopover does not drop the flag.
         $request->session()->put('mutqin_just_registered', true);
+        $request->session()->put('mutqin_register_method', 'email');
         // Existing-user Welcome Back must not win over first-run onboarding.
         $request->session()->forget('mutqin_just_logged_in');
 

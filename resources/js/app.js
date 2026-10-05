@@ -19,6 +19,7 @@ import FeedbackModal from './components/FeedbackModal.vue';
 import { bootPersistedQuranFont } from './scripts/quran/quranFonts';
 import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 import { useSeo } from './seo/useSeo';
+import { initSeoConversionTracking } from './scripts/seoTools/track.js';
 
 // Apply the user's Qur’anic font CSS vars before Vue mounts Memorisation.
 try {
@@ -259,6 +260,15 @@ async function bootstrapApp() {
     document.documentElement.dataset.mutqinAppMounted = '1';
     window.dispatchEvent(new CustomEvent('mutqin:app-mounted'));
     useSeo();
+    try {
+        initSeoConversionTracking({
+            path: typeof window !== 'undefined' ? window.location.pathname : '',
+            justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
+            registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
+        });
+    } catch {
+        /* analytics must never block boot */
+    }
 
     if (typeof window !== 'undefined' && window.mutqinMinimalPublicPage) {
         return;

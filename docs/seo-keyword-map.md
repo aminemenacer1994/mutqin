@@ -2,7 +2,7 @@
 
 Phase 2 planning only. **Do not mass-generate pages from this file.** Add a URL to `SeoCatalog` and the sitemap only when the page has real copy.
 
-Related: [Technical SEO](seo.md). Reserved empty prefix: `/quran-memorization/*`. Live prefixes: `/features/*`, `/guides/*`, `/tools/*` (catalogued URLs only).
+Related: [Technical SEO](seo.md), [SEO content system](seo-content.md). Reserved empty prefix: `/quran-memorization/*`. Live prefixes: `/features/*`, `/guides/*`, `/tools/*` (catalogued URLs + file-based articles under `/guides/{slug}`).
 
 ## Inventory of what already exists
 
@@ -237,61 +237,55 @@ Tone: practice between lessons, return, not ijāzah. Link to features; do not du
 
 Hub `/quran-memorization` only after two guides exist. Child URLs may live under `/guides/*` (clearer) with the hub linking out — **do not** publish the same article at both `/guides/…` and `/quran-memorization/…`.
 
-### `/guides/quran-memorization-for-beginners`
+### `/guides/quran-memorization-for-beginners` (**Live** cornerstone)
 
-- **Primary keyword:** Quran memorization for beginners  
+- **Primary keyword:** Quran memorization plan for beginners / Quran memorization for beginners  
 - **Secondary:** how to start hifz; start memorizing Quran; first ayahs to memorise  
 - **Intent:** Informational  
-- **Title:** Quran Memorization for Beginners \| Mutqin  
-- **Meta description:** How to start Hifz with short ranges, listening, reciting, and revision. A beginner path for Quran memorization that still assumes a real teacher.  
-- **H1:** Quran memorization for beginners  
-- **Recommended H2s:** Start smaller than you think; Listen, repeat, recite; When to add a memorization test; How Mutqin fits between lessons  
-- **Internal links:** `/`, `/guides/quran-memorization-techniques`, `/features/hifz-plan`, `/waiting-list`  
-- **CTA:** Join waiting list / try a short range  
-- **Content type:** Guide (Article schema when built)  
-- **Priority:** Launch  
+- **Title:** Quran Memorization Plan for Beginners \| How to Start Hifz  
+- **H1:** Quran memorization plan for beginners  
+- **Internal links:** techniques, hifz-plan, revision, planner tool, `/features/hifz-plan`  
+- **Content type:** Guide (Article schema)  
 
-### `/guides/quran-memorization-techniques`
+### `/guides/quran-memorization-techniques` (**Live** cornerstone)
 
-- **Primary keyword:** Quran memorization techniques  
-- **Secondary:** how to memorize Quran; talqin; listen and repeat; hiding the mushaf text  
+- **Primary keyword:** How to memorize the Quran (merged with techniques — do not split)  
+- **Secondary:** Quran memorization techniques; talqin; listen and repeat; hiding the mushaf text  
 - **Intent:** Informational  
-- **Title:** Quran Memorization Techniques \| Mutqin  
-- **Meta description:** Practical Hifz techniques: listen and repeat, short ranges, hiding text, joining ayahs, then testing recall. How Mutqin supports the same steps in one workspace.  
-- **H1:** Quran memorization techniques that hold  
-- **Recommended H2s:** Listen and repeat (talqin); Repeat a short range; Hide then recite; Similar ayahs; Revision is a technique  
-- **Internal links:** `/features/mutashabihat`, `/features/ai-recite`, `/features/mushaf`, `/guides/hifz-revision`  
-- **CTA:** Practise these steps in Mutqin  
-- **Content type:** Guide  
-- **Priority:** Launch  
+- **Title:** How to Memorize the Quran \| Hifz Techniques That Hold  
+- **H1:** How to memorize the Quran: techniques that hold  
+- **Internal links:** beginners, similar-ayahs, revision, mushaf, AI Recite, public test  
+- **Content type:** Guide (Article schema)  
 
-### `/guides/hifz-revision`
+### `/guides/hifz-revision` (**Live** cornerstone)
 
-- **Primary keyword:** How to revise Hifz (informational)  
-- **Secondary:** murajaah schedule; daily hifz revision  
+- **Primary keyword:** How to revise the Quran / retain Hifz  
+- **Secondary:** murajaah schedule; daily hifz revision; stop forgetting  
 - **Intent:** Informational  
-- **Title:** How to Revise Hifz (Murajaah) \| Mutqin  
-- **Meta description:** How Hifz revision works: recent lessons, older Juz, and weak ayahs. Use a simple murajaah rhythm; Mutqin can prompt the next return without replacing your teacher.  
-- **H1:** How to revise Hifz without dropping new lesson  
-- **Recommended H2s:** Why memorisation slips; A simple weekly rhythm; Weak ayahs; Using Mutqin for returns  
-- **Internal links:** `/features/quran-revision` (product), `/features/hifz-progress`  
-- **CTA:** Keep revision in Mutqin  
-- **Content type:** Guide  
-- **Priority:** Post-launch  
+- **Title:** How to Revise the Quran and Retain Your Hifz \| Mutqin  
+- **H1:** How to revise the Quran and retain your Hifz  
+- **Internal links:** `/features/quran-revision`, progress, plan, techniques, AI Recite  
+- **Content type:** Guide (Article schema)  
 
-### `/guides/hifz-plan`
+### `/guides/hifz-plan` (**Live** cornerstone)
 
 - **Primary keyword:** How to make a Hifz plan (informational)  
 - **Secondary:** daily hifz portion; realistic juz plan  
 - **Intent:** Informational  
 - **Title:** How to Make a Quran Memorization Plan \| Mutqin  
-- **Meta description:** Choose a portion size you can finish and revise. A practical Hifz plan for busy learners, with Mutqin as the workspace beside your teacher’s programme.  
-- **H1:** How to make a Hifz plan you will keep  
-- **Recommended H2s:** Portion size; New vs revision slots; When life interrupts; Mutqin’s planner  
-- **Internal links:** `/features/hifz-plan`, `/guides/quran-memorization-for-beginners`  
-- **CTA:** Use a Mutqin plan  
-- **Content type:** Guide  
-- **Priority:** Post-launch  
+- **H1:** How to make a Quran memorization plan you will keep  
+- **Internal links:** `/features/hifz-plan`, beginners, revision, techniques, public planner  
+- **Content type:** Guide (Article schema)  
+
+### `/guides/similar-ayahs` (**Live** cornerstone)
+
+- **Primary keyword:** Mutashabihat / how to memorize similar Quran ayahs  
+- **Secondary:** similar verses in Quran; confusing similar ayahs  
+- **Intent:** Informational  
+- **Title:** Mutashabihat: How to Memorize Similar Quran Ayahs \| Mutqin  
+- **H1:** Mutashabihat: how to memorize similar Quran ayahs  
+- **Internal links:** `/features/mutashabihat`, techniques, revision, AI Recite, mushaf  
+- **Content type:** Guide (Article schema)
 
 ### `/quran-memorization` (hub)
 

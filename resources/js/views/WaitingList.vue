@@ -150,6 +150,11 @@
 <script>
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {
+  captureSeoAttribution,
+  trackSeoLandingView,
+  trackWaitingListJoin,
+} from '../scripts/seoTools/track.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -433,6 +438,7 @@ export default {
         status.type = 'success';
         status.message = '';
         joined.value = true;
+        trackWaitingListJoin({ alreadyJoined: false });
         resetFormFields();
         await nextTick();
         const reduceMotion = typeof window !== 'undefined'
@@ -475,6 +481,8 @@ export default {
 
     onMounted(() => {
       document.body.classList.add('mutqin-early-access-nav');
+      captureSeoAttribution({ page_kind: 'waiting_list' });
+      trackSeoLandingView({ kind: 'waiting_list', pageId: 'waiting-list', path: '/waiting-list' });
     });
 
     onUnmounted(() => {

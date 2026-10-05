@@ -8012,6 +8012,9 @@
         window.mutqinInitialDirection = @json($appDirection);
         window.mutqinForceInitialLocale = @json($usesEarlyAccessNav || request()->query('lang') ? true : false);
         window.mutqinAuthCheck = @json(Auth::check());
+        {{-- Peek only: /memorisation still consumes mutqin_just_registered for onboarding. --}}
+        window.mutqinJustRegisteredFlash = @json((bool) session('mutqin_just_registered', false));
+        window.mutqinRegisterMethod = @json((string) session('mutqin_register_method', 'email'));
         window.mutqinRestrictMarketingHost = @json(\App\Support\MutqinDomains::restrictMarketingHost(request()));
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::hostRoutingEnabled() ? \App\Support\MutqinDomains::appOrigin() : '');
         window.mutqinUserId = @json(Auth::id());

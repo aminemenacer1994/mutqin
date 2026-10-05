@@ -98,6 +98,7 @@ export default {
         dailyAyahs: this.dailyAyahs,
       })
       trackSeoTool('seo_tool_progress', {
+        tool: 'progress',
         mode: this.mode,
         percent: this.summary.percent,
       })

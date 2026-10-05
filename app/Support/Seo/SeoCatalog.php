@@ -53,9 +53,14 @@ final class SeoCatalog
         $indexable = (bool) ($definition['indexable'] ?? false);
         $robots = $indexable ? 'index, follow' : 'noindex, follow';
         $ogType = $definition['og_type'] ?? 'website';
-        $ogImage = self::absoluteUrl(self::OG_IMAGE_PATH, 'marketing', $request);
+        $ogImagePath = (string) ($definition['og_image'] ?? self::OG_IMAGE_PATH);
+        if ($ogImagePath === '' || ! str_starts_with($ogImagePath, '/')) {
+            $ogImagePath = self::OG_IMAGE_PATH;
+        }
+        $ogImageHost = str_starts_with($ogImagePath, '/images/') ? 'marketing' : 'app';
+        $ogImage = self::absoluteUrl($ogImagePath, $ogImageHost, $request);
         $ogLocale = self::ogLocale();
-        $ogImageAlt = self::OG_IMAGE_ALT;
+        $ogImageAlt = (string) ($definition['og_image_alt'] ?? self::OG_IMAGE_ALT);
 
         $hreflang = self::hreflangFor($canonical);
 
@@ -67,6 +72,8 @@ final class SeoCatalog
             $ogImage,
             $definition['breadcrumbs'] ?? [],
             $request,
+            $definition['article_meta'] ?? [],
+            $definition['faqs'] ?? [],
         );
 
         return new SeoDocument(
@@ -105,6 +112,9 @@ final class SeoCatalog
         $entries = [];
 
         foreach (self::indexableDefinitions() as $definition) {
+            if (! ($definition['indexable'] ?? false)) {
+                continue;
+            }
             $path = $definition['canonical_path'];
             $host = $definition['canonical_host'] ?? 'app';
             $entries[] = [
@@ -251,7 +261,11 @@ final class SeoCatalog
      */
     private static function indexableDefinitions(): array
     {
-        return array_merge(self::coreIndexableDefinitions(), SeoLaunchPages::catalogDefinitions());
+        return array_merge(
+            self::coreIndexableDefinitions(),
+            SeoLaunchPages::catalogDefinitions(),
+            SeoArticles::catalogDefinitions(),
+        );
     }
 
     /**
@@ -410,6 +424,8 @@ final class SeoCatalog
     /**
      * @param  list<string>  $types
      * @param  list<array{name: string, path: string, host?: string}>  $breadcrumbs
+     * @param  array<string, mixed>  $articleMeta
+     * @param  list<array{q: string, a: string}>  $faqs
      * @return list<array<string, mixed>>
      */
     private static function jsonLdFor(
@@ -420,6 +436,8 @@ final class SeoCatalog
         string $ogImage,
         array $breadcrumbs,
         Request $request,
+        array $articleMeta = [],
+        array $faqs = [],
     ): array {
         $blocks = [];
         $marketingHome = self::absoluteUrl('/', 'marketing', $request);
@@ -476,15 +494,85 @@ final class SeoCatalog
                 ],
             ];
         }
-        if (in_array('article', $types, true)) {
+        if (in_array('webapp', $types, true)) {
             $blocks[] = [
-                '@type' => 'Article',
-                'headline' => $title,
+                '@type' => 'WebApplication',
+                'name' => $title,
+                'url' => $canonical,
+                'applicationCategory' => 'EducationalApplication',
+                'operatingSystem' => 'Web',
+                'browserRequirements' => 'Requires JavaScript',
                 'description' => $description,
-                'mainEntityOfPage' => $canonical,
-                'author' => ['@id' => $marketingHome.'#organization'],
+                'image' => $ogImage,
+                'offers' => [
+                    '@type' => 'Offer',
+                    'price' => '0',
+                    'priceCurrency' => (string) config('billing.currency', 'GBP'),
+                ],
+                'isPartOf' => ['@id' => $marketingHome.'#website'],
+            ];
+        }
+        if (in_array('faq', $types, true) && $faqs !== []) {
+            $entities = [];
+            foreach ($faqs as $faq) {
+                $question = trim((string) ($faq['q'] ?? ''));
+                $answer = trim((string) ($faq['a'] ?? ''));
+                if ($question === '' || $answer === '') {
+                    continue;
+                }
+                $entities[] = [
+                    '@type' => 'Question',
+                    'name' => $question,
+                    'acceptedAnswer' => [
+                        '@type' => 'Answer',
+                        'text' => $answer,
+                    ],
+                ];
+            }
+            if ($entities !== []) {
+                $blocks[] = [
+                    '@type' => 'FAQPage',
+                    'mainEntity' => $entities,
+                ];
+            }
+        }
+        if (in_array('article', $types, true)) {
+            $headline = (string) ($articleMeta['headline'] ?? $title);
+            $authorName = (string) ($articleMeta['author_name'] ?? 'Mutqin');
+            $articleImage = (string) ($articleMeta['image'] ?? $ogImage);
+            if ($articleImage !== '' && str_starts_with($articleImage, '/')) {
+                $articleImage = self::absoluteUrl(
+                    $articleImage,
+                    str_starts_with($articleImage, '/images/') ? 'marketing' : 'app',
+                    $request,
+                );
+            } else {
+                $articleImage = $ogImage;
+            }
+
+            $article = [
+                '@type' => 'Article',
+                'headline' => $headline,
+                'description' => $description,
+                'mainEntityOfPage' => [
+                    '@type' => 'WebPage',
+                    '@id' => $canonical,
+                ],
+                'image' => [$articleImage],
+                'author' => [
+                    '@type' => 'Organization',
+                    'name' => $authorName,
+                    '@id' => $marketingHome.'#organization',
+                ],
                 'publisher' => ['@id' => $marketingHome.'#organization'],
             ];
+            if (! empty($articleMeta['datePublished'])) {
+                $article['datePublished'] = (string) $articleMeta['datePublished'];
+            }
+            if (! empty($articleMeta['dateModified'])) {
+                $article['dateModified'] = (string) $articleMeta['dateModified'];
+            }
+            $blocks[] = $article;
         }
         if (count($breadcrumbs) > 1) {
             $blocks[] = [

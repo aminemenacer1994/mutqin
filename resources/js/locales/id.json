@@ -445,7 +445,10 @@
         "x": "X",
         "linkedin": "LinkedIn",
         "tiktok": "TikTok"
-      }
+      },
+      "howToMemorize": "How to memorize the Quran",
+      "howToRevise": "How to revise Hifz",
+      "memorizationPlanner": "Memorization planner"
     },
     "name": "Nama",
     "focused_quran_memorisation_tools_for_recitation_ch": "A calm companion for Quran practice, recall checks, and returning to your place.",

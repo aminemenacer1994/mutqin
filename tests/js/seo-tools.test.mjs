@@ -13,7 +13,19 @@ import {
   gradePublicQuizAnswer,
   versesFromEditionAyahs,
 } from '../../resources/js/scripts/seoTools/quiz.js'
-import { trackSeoTool } from '../../resources/js/scripts/seoTools/track.js'
+import {
+  captureSeoAttribution,
+  clearSeoTool,
+  getSeoAttribution,
+  peekSeoTool,
+  rememberSeoTool,
+  trackRegistrationComplete,
+  trackRegistrationStart,
+  trackSeoCtaClick,
+  trackSeoLandingView,
+  trackSeoTool,
+  trackWaitingListJoin,
+} from '../../resources/js/scripts/seoTools/track.js'
 
 assert.equal(ayahsInJuzRange(1, 30), QURAN_TOTALS.ayahs)
 assert.equal(juzAmmaAyahCount(), ayahsInJuzRange(30, 30))
@@ -71,16 +83,80 @@ if (flash) {
   assert.equal(gradePublicQuizAnswer(flash, 'missed'), false)
 }
 
+const store = new Map()
 const events = []
 globalThis.window = {
+  location: {
+    pathname: '/tools/quran-memorization-planner',
+    search: '?utm_source=seo_tool&utm_medium=cta&utm_campaign=planner',
+  },
   gtag(...args) {
     events.push(args)
   },
+  sessionStorage: {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => { store.set(key, String(value)) },
+    removeItem: (key) => { store.delete(key) },
+  },
 }
-trackSeoTool('seo_tool_planner', { daily: 3, transcript: 'بسم الله الرحمن' })
-assert.equal(events.length, 1)
-assert.equal(events[0][1], 'seo_tool_planner')
-assert.equal(events[0][2].daily, 3)
-assert.equal(events[0][2].transcript, undefined)
+globalThis.document = { referrer: 'https://www.google.com/search?q=hifz' }
+
+captureSeoAttribution()
+const attr = getSeoAttribution()
+assert.equal(attr.utm_source, 'seo_tool')
+assert.equal(attr.utm_campaign, 'planner')
+assert.equal(attr.tool, 'planner')
+assert.equal(attr.referrer_host, 'google.com')
+assert.equal(attr.organic_likely, false) // utm campaign wins over referrer host
+
+events.length = 0
+trackSeoLandingView({ kind: 'tool', pageId: 'tool-planner', path: '/tools/quran-memorization-planner', tool: 'planner' })
+assert.ok(events.some((e) => e[1] === 'seo_landing_view'))
+assert.ok(events.some((e) => e[1] === 'seo_tool_view'))
+
+events.length = 0
+trackSeoTool('seo_tool_planner', { tool: 'planner', daily: 3, transcript: 'بسم الله الرحمن', email: 'a@b.com' })
+assert.ok(events.some((e) => e[1] === 'seo_tool_planner'))
+assert.ok(events.some((e) => e[1] === 'seo_tool_start'))
+assert.ok(events.some((e) => e[1] === 'seo_tool_complete'))
+const plannerEvent = events.find((e) => e[1] === 'seo_tool_planner')
+assert.equal(plannerEvent[2].daily, 3)
+assert.equal(plannerEvent[2].tool, 'planner')
+assert.equal(plannerEvent[2].transcript, undefined)
+assert.equal(plannerEvent[2].email, undefined)
+assert.equal(plannerEvent[2].landing_path, '/tools/quran-memorization-planner')
+assert.equal(peekSeoTool(), 'planner')
+
+events.length = 0
+trackSeoCtaClick({ dest: 'primary', href: '/waiting-list?utm_source=seo_tool', ctaId: 'tool_primary', tool: 'planner' })
+assert.ok(events.some((e) => e[1] === 'seo_cta_click'))
+assert.ok(events.some((e) => e[1] === 'seo_waiting_list_click'))
+
+events.length = 0
+trackWaitingListJoin()
+assert.ok(events.some((e) => e[1] === 'generate_lead'))
+assert.ok(events.some((e) => e[1] === 'seo_tool_signup'))
+assert.equal(peekSeoTool(), null)
+
+rememberSeoTool('quiz')
+clearSeoTool()
+assert.equal(peekSeoTool(), null)
+
+events.length = 0
+window.location.pathname = '/register'
+window.location.search = ''
+trackRegistrationStart()
+assert.equal(events[0][1], 'seo_registration_start')
+trackRegistrationComplete({ method: 'email' })
+assert.ok(events.some((e) => e[1] === 'seo_registration_complete'))
+assert.ok(events.some((e) => e[1] === 'sign_up'))
+const before = events.length
+trackRegistrationComplete({ method: 'email' })
+assert.equal(events.length, before) // once per session
+
+events.length = 0
+trackSeoLandingView({ kind: 'guide', pageId: 'guide-techniques', path: '/guides/quran-memorization-techniques' })
+assert.ok(events.some((e) => e[1] === 'seo_guide_view'))
+assert.equal(getSeoAttribution().guide_path, '/guides/quran-memorization-techniques')
 
 console.log('seo-tools.test.mjs: ok')

@@ -20,11 +20,20 @@
             </div>
 
             <div class="hero__actions">
-              <a href="/waiting-list" class="btn btn--primary">
+              <a
+                href="/waiting-list"
+                class="btn btn--primary"
+                @click="onSeoCta('waiting_list', '/waiting-list', t('homepage.waitlist.cta'))"
+              >
                 <i class="bi bi-hourglass-split" aria-hidden="true"></i>
                 {{ t('homepage.waitlist.cta') }}
               </a>
-              <a v-if="showStartMemorisationCta" href="/memorisation" class="btn btn--secondary">
+              <a
+                v-if="showStartMemorisationCta"
+                href="/memorisation"
+                class="btn btn--secondary"
+                @click="onSeoCta('memorisation', '/memorisation', t('homepage.hero.startMemorisation'))"
+              >
                 <i class="bi bi-journal-text" aria-hidden="true"></i>
                 {{ t('homepage.hero.startMemorisation') }}
               </a>
@@ -338,7 +347,10 @@
             <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
             <a href="/features">{{ t('homepage.footer.featurePages') }}</a>
             <a href="/guides">{{ t('homepage.footer.guides') }}</a>
+            <a href="/guides/quran-memorization-techniques">{{ t('homepage.footer.howToMemorize') }}</a>
+            <a href="/guides/hifz-revision">{{ t('homepage.footer.howToRevise') }}</a>
             <a href="/tools">{{ t('homepage.footer.tools') }}</a>
+            <a href="/tools/quran-memorization-planner">{{ t('homepage.footer.memorizationPlanner') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
@@ -375,6 +387,7 @@
 import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
+import { trackSeoCtaClick, trackSeoLandingView } from '../scripts/seoTools/track.js';
 
 export default {
   name: 'Homepage',
@@ -679,7 +692,17 @@ export default {
       ];
     });
 
+    const onSeoCta = (dest, href, label) => {
+      trackSeoCtaClick({
+        dest,
+        href,
+        label,
+        ctaId: `home_${dest}`,
+      });
+    };
+
     onMounted(() => {
+      trackSeoLandingView({ kind: 'home', pageId: 'home', path: '/' });
       applyTheme();
       window.addEventListener('mutqin:theme-change', onThemeChange);
 
@@ -759,6 +782,7 @@ export default {
       contactStatus,
       contactSubmitting,
       submitContact,
+      onSeoCta,
     };
   },
 };

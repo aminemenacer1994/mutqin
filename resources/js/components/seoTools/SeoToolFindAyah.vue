@@ -73,7 +73,7 @@ export default {
       const words = tokenizeHeardArabic(this.query)
       if (words.length < ASK_MUTQIN_MIN_WORDS) {
         this.status = `Type at least ${ASK_MUTQIN_MIN_WORDS} Arabic words from the start of an ayah.`
-        trackSeoTool('seo_tool_find_ayah', { result: 'short' })
+        trackSeoTool('seo_tool_find_ayah', { tool: 'find-ayah', result: 'short' })
         return
       }
       try {
@@ -90,10 +90,10 @@ export default {
         } else {
           this.status = 'No ayah matched that wording. Try the first words of the verse, without translation.'
         }
-        trackSeoTool('seo_tool_find_ayah', { result: result.status })
+        trackSeoTool('seo_tool_find_ayah', { tool: 'find-ayah', result: result.status })
       } catch {
         this.status = 'Quran text could not load. Try again in a moment.'
-        trackSeoTool('seo_tool_find_ayah', { result: 'error' })
+        trackSeoTool('seo_tool_find_ayah', { tool: 'find-ayah', result: 'error' })
       }
     },
   },

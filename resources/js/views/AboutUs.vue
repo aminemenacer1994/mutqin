@@ -112,6 +112,18 @@ export default {
           label: this.t('aboutUs.explore.missionTitle'),
         },
         {
+          key: 'guides',
+          href: '/guides',
+          icon: 'bi bi-journal-text',
+          label: 'Hifz guides',
+        },
+        {
+          key: 'tools',
+          href: '/tools',
+          icon: 'bi bi-tools',
+          label: 'Free Hifz tools',
+        },
+        {
           key: 'support',
           href: '/donate',
           icon: 'bi bi-life-preserver',
