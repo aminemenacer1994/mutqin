@@ -72,8 +72,15 @@ class LoginController extends Controller
         $request->session()->put('mutqin_login_event_id', (string) Str::uuid());
         // Put (not flash): Welcome Back is consumed on first /memorisation visit.
         $request->session()->put('mutqin_just_logged_in', true);
-        // Never honour a prior /dashboard visit — login always opens practice.
-        $request->session()->forget('url.intended');
+
+        $intended = $request->session()->pull('url.intended');
+        $follow = $user instanceof User
+            ? EmailVerification::signedVerificationIntended(is_string($intended) ? $intended : null, $user)
+            : null;
+
+        if ($follow !== null) {
+            return redirect()->to($follow);
+        }
 
         return redirect()->to(AuthRedirect::to($user instanceof User ? $user : null));
     }

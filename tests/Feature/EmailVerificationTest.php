@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Notifications\VerifyEmail;
+use App\Support\PublicAppUrl;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -157,7 +158,8 @@ class EmailVerificationTest extends TestCase
                 'id' => $user->id,
                 'hash' => sha1($user->email),
             ]))
-            ->assertForbidden();
+            ->assertRedirect(route('verification.notice'))
+            ->assertSessionHas('error', __('ui.verify_link_invalid'));
 
         $this->assertNull($user->fresh()->email_verified_at);
     }
@@ -177,7 +179,8 @@ class EmailVerificationTest extends TestCase
 
         $this->actingAs($user)
             ->get($url)
-            ->assertForbidden();
+            ->assertRedirect(route('verification.notice'))
+            ->assertSessionHas('error', __('ui.verify_link_invalid'));
 
         $this->assertNull($user->fresh()->email_verified_at);
     }
@@ -316,6 +319,113 @@ class EmailVerificationTest extends TestCase
         $user = User::where('email', 'hidden.demo@mutqin.test')->firstOrFail();
         $this->assertNull($user->email_verified_at);
         Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    public function test_outlook_edge_guest_session_can_verify_then_sign_in(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'email' => 'outlook-edge@example.com',
+            'password' => bcrypt('secret12'),
+        ]);
+        $url = $this->verificationUrl($user);
+
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        $this->assertArrayHasKey('expires', $query);
+        $this->assertArrayHasKey('signature', $query);
+
+        $wrapped = 'https://nam10.safelinks.protection.outlook.com/?url='.rawurlencode($url).'&data=05&reserved=0';
+        parse_str((string) parse_url($wrapped, PHP_URL_QUERY), $safeQuery);
+        $unwrapped = (string) ($safeQuery['url'] ?? '');
+        $this->assertSame($url, $unwrapped);
+
+        $this->get($unwrapped)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('status', __('ui.verify_confirmed_login'));
+
+        $this->assertGuest();
+        $this->assertNotNull($user->fresh()->email_verified_at);
+
+        $this->get($unwrapped)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('status', __('ui.verify_already_confirmed_login'));
+
+        $this->post(route('login'), [
+            'email' => 'outlook-edge@example.com',
+            'password' => 'secret12',
+        ])->assertRedirect('/memorisation');
+
+        $this->assertAuthenticated();
+        $this->get(route('memorisation'))->assertOk();
+    }
+
+    public function test_login_follows_signed_verification_intended_from_another_browser(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'email' => 'edge-intended@example.com',
+            'password' => bcrypt('secret12'),
+        ]);
+        $url = $this->verificationUrl($user);
+
+        $this->withSession(['url.intended' => $url])
+            ->post(route('login'), [
+                'email' => 'edge-intended@example.com',
+                'password' => 'secret12',
+            ])
+            ->assertRedirect($url);
+
+        $this->get($url)->assertRedirect('/memorisation');
+        $this->assertNotNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_guest_expired_verification_link_is_explained(): void
+    {
+        $user = User::factory()->unverified()->create();
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->subMinutes(1),
+            [
+                'id' => $user->id,
+                'hash' => sha1($user->getEmailForVerification()),
+            ]
+        );
+
+        $this->get($url)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('error', __('ui.verify_link_invalid'));
+
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_signed_link_for_another_account_is_rejected(): void
+    {
+        $owner = User::factory()->unverified()->create();
+        $other = User::factory()->unverified()->create();
+        $url = $this->verificationUrl($owner);
+
+        $this->actingAs($other)
+            ->get($url)
+            ->assertForbidden();
+
+        $this->assertNull($owner->fresh()->email_verified_at);
+        $this->assertNull($other->fresh()->email_verified_at);
+    }
+
+    public function test_production_verification_urls_stay_on_https_app_host(): void
+    {
+        PublicAppUrl::apply('https://app.mutqin.ai', 'production');
+
+        try {
+            $user = User::factory()->unverified()->create();
+            $url = (new VerifyEmail)->toMail($user)->viewData['url'];
+
+            $this->assertStringStartsWith('https://app.mutqin.ai/email/verify/', $url);
+            parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+            $this->assertArrayHasKey('expires', $query);
+            $this->assertArrayHasKey('signature', $query);
+        } finally {
+            URL::forceRootUrl(null);
+            URL::forceScheme(null);
+        }
     }
 
     public function test_tampered_hash_does_not_verify_email(): void

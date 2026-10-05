@@ -42,7 +42,8 @@ import {
 import { formatAppDate, formatRelativeTime, unwrapLocale } from '../utils/i18nFormat'
 import diff from 'fast-diff'
 import { defineAsyncComponent, markRaw } from 'vue'
-import { wrapChunkImport } from '../utils/chunkLoadRecovery'
+import { BEFORE_CHUNK_RELOAD_EVENT, wrapChunkImport } from '../utils/chunkLoadRecovery'
+import PageLoadError from '../components/PageLoadError'
 import {
   getChapters,
   getChapterWordByWordMeanings,
@@ -363,6 +364,12 @@ import {
   buildRecitationProviderLogMetadata,
 } from '../scripts/audio/recordingResilience'
 import {
+  RECITATION_LIFECYCLE_PHASE,
+  reconcileRecitationAfterForeground,
+  resolveRecitationLifecyclePhase,
+  shouldInterruptRecitationOnBackground,
+} from '../scripts/audio/recitationLifecycleInterrupt.js'
+import {
   RECITATION_ATTEMPT_CLASS,
   classifyRecitationAttempt,
   attemptAffectsScoring,
@@ -506,6 +513,7 @@ import { VIEWPORT_CONFETTI_DURATION_MS } from '../utils/viewportConfetti'
 
 const lazyWorkspaceChunk = (importer, feature) => defineAsyncComponent({
   loader: () => wrapChunkImport(importer, { feature }),
+  errorComponent: PageLoadError,
   delay: 120,
   timeout: 120000,
 })
@@ -10998,6 +11006,7 @@ export default {
     window.addEventListener('offline', this.handleOffline)
     window.addEventListener('beforeunload', this.persistAllState)
     window.addEventListener('pagehide', this.persistAllState)
+    window.addEventListener(BEFORE_CHUNK_RELOAD_EVENT, this.persistAllState)
     // Safari / mobile: screen-lock and backgrounding rarely fire unload reliably.
     document.addEventListener('visibilitychange', this.handleVisibilityAutosave)
     window.addEventListener('freeze', this.handleVisibilityAutosave)
@@ -11096,6 +11105,7 @@ export default {
     this.scheduleWorkspaceViewportMetrics = null
     window.removeEventListener('beforeunload', this.persistAllState)
     window.removeEventListener('pagehide', this.persistAllState)
+    window.removeEventListener(BEFORE_CHUNK_RELOAD_EVENT, this.persistAllState)
     document.removeEventListener('visibilitychange', this.handleVisibilityAutosave)
     window.removeEventListener('freeze', this.handleVisibilityAutosave)
     window.removeEventListener('keydown', this.handleGlobalKeydown)
@@ -11969,7 +11979,10 @@ export default {
       if (this.amdOpen || this.askMutqinOpen) return
       this.cancelSessionAutosave({ bumpGeneration: true })
       void preloadAskMutqinModal().catch(() => {})
-      void import('../scripts/askMutqin/matchingIndex.js')
+      void wrapChunkImport(
+        () => import(/* webpackChunkName: "ask-mutqin-index" */ '../scripts/askMutqin/matchingIndex.js'),
+        { feature: 'ask-mutqin-index' },
+      )
         .then(({ loadAskMutqinMatchingIndex }) => loadAskMutqinMatchingIndex(this.quranSearchIndex))
         .catch(() => {})
       void this.ensureQuranSearchIndex?.().catch(() => {})
@@ -45866,7 +45879,166 @@ export default {
       const type = String(event?.type || '')
       const hidden = typeof document !== 'undefined' && document.visibilityState === 'hidden'
       if (type === 'freeze' || hidden) {
+        try {
+          this.interruptActiveRecitationForLifecycle?.({ reason: type || 'visibilitychange' })
+        } catch (_) { /* best-effort mic interrupt */ }
         this.flushSessionLifecycleForBackground({ reason: type || 'visibilitychange' })
+        return
+      }
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        try {
+          this.reconcileRecitationMediaAfterForeground?.()
+        } catch (_) { /* best-effort foreground reconcile */ }
+      }
+    },
+
+    buildRecitationLifecycleInterruptSnapshot() {
+      return {
+        preparing: !!this.recitationCheckPreparing,
+        recording: !!this.recitationCheckRecording,
+        processingStage: this.recitationProcessingStage,
+        submitInFlight: !!this.recitationSubmitInFlight,
+        checkerPreparing: !!this.aiMemorisationCheckerPreparing,
+        checkerRecording: !!this.aiMemorisationCheckerRecording,
+        capturingForReplay: !!this._recitationCapturingForReplay,
+      }
+    },
+
+    resolveRecitationAttemptInterruptedMessage() {
+      return this.safeErrorText(
+        this.t('memorisation.aiCheck.attemptInterrupted'),
+        'Your recitation was interrupted. Your session progress is saved — try again when you are ready.',
+      )
+    },
+
+    interruptActiveRecitationForLifecycle({ reason = 'background' } = {}) {
+      void reason
+      const snapshot = this.buildRecitationLifecycleInterruptSnapshot?.() || {}
+      if (!shouldInterruptRecitationOnBackground(snapshot)) return false
+
+      const phase = resolveRecitationLifecyclePhase(snapshot)
+      const interruptedMessage = this.resolveRecitationAttemptInterruptedMessage?.()
+      const invalidateAttempt = phase !== RECITATION_LIFECYCLE_PHASE.IDLE
+      if (invalidateAttempt) {
+        this.recitationAttemptId = ''
+      }
+
+      if (snapshot.checkerPreparing || snapshot.checkerRecording) {
+        this.aiMemorisationCheckerDiscardOnStop = true
+        try { this.stopAiMemorisationCheckerRecording?.() } catch (_) { /* ignore */ }
+        try { this.cleanupAiMemorisationCheckerMedia?.() } catch (_) { /* ignore */ }
+        this.aiMemorisationCheckerRecording = false
+        this.aiMemorisationCheckerPreparing = false
+        this.aiMemorisationCheckerError = interruptedMessage
+      }
+
+      const hadRecitationActivity = (
+        snapshot.preparing
+        || snapshot.recording
+        || phase === RECITATION_LIFECYCLE_PHASE.PROCESSING
+      )
+      if (!hadRecitationActivity) return true
+
+      const wasAmd = !!this.amdOpen
+      this.recitationCheckDiscardOnStop = true
+      try { this.stopRecitationCheckRecording?.() } catch (_) { /* ignore */ }
+      try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+      this.recitationCheckRecording = false
+      this.recitationCheckPreparing = false
+      this.recitationCheckAutoStopArmed = false
+      this.recitationSubmitInFlight = false
+      this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+      this.clearRecitationSlowProcessingNotice()
+
+      if (wasAmd) {
+        this.stopAmdRecognitionHeartbeat?.()
+        this.amdBusy = false
+        this.amdSttRecovering = false
+        this.amdSttStallNotice = false
+        if (
+          this.amdStage !== AMD_STAGES.COMPLETE
+          && this.amdStage !== AMD_STAGES.RESULTS
+        ) {
+          this.amdStage = AMD_STAGES.READY
+        }
+        this.amdError = interruptedMessage
+        try { this.patchAmdLiveWordStatuses([]) } catch (_) { /* ignore */ }
+      } else if (phase === RECITATION_LIFECYCLE_PHASE.PROCESSING || snapshot.recording) {
+        this.showBanner(interruptedMessage, 'info', 6500)
+      }
+
+      return true
+    },
+
+    reconcileRecitationMediaAfterForeground() {
+      const plan = reconcileRecitationAfterForeground({
+        recitation: {
+          preparing: !!this.recitationCheckPreparing,
+          recording: !!this.recitationCheckRecording,
+          stream: this.recitationCheckMediaStream || null,
+          recorder: this.recitationCheckMediaRecorder || null,
+        },
+        checker: {
+          preparing: !!this.aiMemorisationCheckerPreparing,
+          recording: !!this.aiMemorisationCheckerRecording,
+          stream: this.aiMemorisationCheckerMediaStream || null,
+          recorder: this.aiMemorisationCheckerMediaRecorder || null,
+        },
+      })
+
+      const interruptedMessage = this.resolveRecitationAttemptInterruptedMessage?.()
+
+      if (plan.stopOrphanRecitationStream && this.recitationCheckMediaStream) {
+        try {
+          this.recitationCheckMediaStream.getTracks?.().forEach((track) => track.stop())
+        } catch (_) { /* ignore */ }
+        this.recitationCheckMediaStream = null
+        this.recitationCheckMediaRecorder = null
+      }
+
+      if (plan.resetRecitationUi) {
+        this.recitationAttemptId = ''
+        this.recitationCheckDiscardOnStop = true
+        try { this.cleanupRecitationCheckMedia?.() } catch (_) { /* ignore */ }
+        this.recitationCheckRecording = false
+        this.recitationCheckPreparing = false
+        this.recitationCheckAutoStopArmed = false
+        this.recitationSubmitInFlight = false
+        this.setRecitationProcessingStage(RECITATION_PROCESSING_STAGE.IDLE)
+        this.clearRecitationSlowProcessingNotice()
+        if (this.amdOpen) {
+          this.amdBusy = false
+          this.amdSttRecovering = false
+          this.amdSttStallNotice = false
+          if (
+            this.amdStage !== AMD_STAGES.COMPLETE
+            && this.amdStage !== AMD_STAGES.RESULTS
+          ) {
+            this.amdStage = AMD_STAGES.READY
+          }
+          this.amdError = interruptedMessage
+          try { this.patchAmdLiveWordStatuses([]) } catch (_) { /* ignore */ }
+        }
+      }
+
+      if (plan.stopOrphanCheckerStream && this.aiMemorisationCheckerMediaStream) {
+        try {
+          this.aiMemorisationCheckerMediaStream.getTracks?.().forEach((track) => track.stop())
+        } catch (_) { /* ignore */ }
+        this.aiMemorisationCheckerMediaStream = null
+        this.aiMemorisationCheckerMediaRecorder = null
+      }
+
+      if (plan.resetCheckerUi) {
+        this.aiMemorisationCheckerDiscardOnStop = true
+        try { this.cleanupAiMemorisationCheckerMedia?.() } catch (_) { /* ignore */ }
+        this.aiMemorisationCheckerRecording = false
+        this.aiMemorisationCheckerPreparing = false
+        this.aiMemorisationCheckerError = interruptedMessage
+      }
+
+      if (plan.syncAmdSurface && this.amdOpen) {
+        this.syncAmdMushafSurface({ force: true })
       }
     },
 

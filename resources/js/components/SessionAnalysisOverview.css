@@ -905,7 +905,8 @@ body.session-analysis-modal-open {
 
 @media (max-width: 575.98px) {
   #sa-session-overview.session-analysis-modal-root .modal-dialog {
-    width: calc(100vw - 0.7rem);
+    width: min(100%, calc(100vw - 0.7rem));
+    max-width: 100%;
     margin: 0.35rem auto;
   }
 
@@ -1257,7 +1258,8 @@ body.session-analysis-modal-open {
 
 @media (max-width: 575.98px) {
   #sa-session-overview.session-analysis-modal-root .modal-dialog {
-    width: calc(100vw - 0.7rem) !important;
+    width: min(100%, calc(100vw - 0.7rem)) !important;
+    max-width: 100% !important;
     margin: 0.35rem auto !important;
   }
 

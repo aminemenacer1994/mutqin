@@ -75,6 +75,12 @@ function words(entries) {
   )
   assert.match(memorisationSource, /maybeApplyPostSessionAiAssessmentFromResult\(result\)/)
   assert.match(memorisationSource, /estimateSessionRecitationPaceFactor/)
+  assert.match(memorisationSource, /interruptActiveRecitationForLifecycle/)
+  assert.match(memorisationSource, /reconcileRecitationMediaAfterForeground/)
+  assert.match(
+    memorisationSource,
+    /visibilityState === 'visible'[\s\S]*reconcileRecitationMediaAfterForeground/,
+  )
 }
 
 // --- Normal recitation ---

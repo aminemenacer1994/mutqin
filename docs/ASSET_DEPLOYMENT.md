@@ -65,14 +65,25 @@ If the host rewrites `public/` in place:
 
 ## Client recovery (`ChunkLoadError`)
 
-`resources/js/utils/chunkLoadRecovery.js`:
+`resources/js/utils/chunkLoadRecovery.js` (do not add a second recovery system):
 
-1. Detects webpack / dynamic-import chunk failures.
-2. Retries briefly (covers Mix watch races).
-3. Clears Mutqin caches and performs **at most one** controlled reload per tab (`sessionStorage`).
-4. If still failing → recoverable error UI (Retry / Return Home). No infinite refresh.
+1. Detects Mix/webpack `ChunkLoadError`, CSS chunk failures, native dynamic-import
+   failures, and Mix `/js/<name>.<hash>.js` script/link load errors.
+2. **Does not** treat offline, webpack `timeout`, Speechmatics, or ordinary API
+   failures as a deploy. One failed fetch while `navigator.onLine === false`
+   shows the offline error card instead of reloading.
+3. Retries briefly (covers Mix watch races).
+4. Dispatches `mutqin:before-chunk-reload` so Memorisation can flush
+   `persistAllState()` (local/session snapshots). Does **not** clear
+   local/session storage or wait on network autosave. Mic/media streams are not
+   preserved across the reload.
+5. Clears Mutqin SW / `mutqin-*` Cache Storage only, then performs **at most one**
+   controlled `location.replace` per tab (`sessionStorage` guard, 10 minute TTL).
+6. If still failing → recoverable error UI (**Refresh** / Return Home). No infinite refresh.
 
-All lazy pages in `resources/js/app.js` use loading + error fallbacks.
+All lazy pages in `resources/js/app.js` and workspace modals in `Memorisation.js`
+use loading + error fallbacks. Locale packs and leftover dynamic imports go
+through the same helper; a capture-phase window handler covers JSONP script tags.
 
 ## Verification checklist
 

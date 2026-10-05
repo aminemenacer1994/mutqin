@@ -30,8 +30,50 @@ test('isChunkLoadError detects webpack and dynamic import failures', () => {
     recovery.isChunkLoadError({ message: 'Failed to fetch dynamically imported module: https://x/a.js' }),
     true
   )
+  assert.equal(
+    recovery.isChunkLoadError({
+      name: 'ChunkLoadError',
+      type: 'error',
+      request: 'https://app.mutqin.ai/js/dashboard.20283d40.js',
+      message: 'Loading chunk dashboard failed.\n(error: https://app.mutqin.ai/js/dashboard.20283d40.js)',
+    }),
+    true
+  )
   assert.equal(recovery.isChunkLoadError({ message: 'Network Error' }), false)
+  assert.equal(recovery.isChunkLoadError({ message: 'Failed to fetch' }), false)
+  assert.equal(recovery.isChunkLoadError({ message: 'Speechmatics connection failed' }), false)
   assert.equal(recovery.isChunkLoadError(null), false)
+})
+
+test('isLikelyStaleDeploymentError ignores offline, timeouts, and API noise', () => {
+  const mix404 = {
+    name: 'ChunkLoadError',
+    type: 'error',
+    request: 'https://app.mutqin.ai/js/memorisation.aaaaaaaa.js',
+    message: 'Loading chunk memorisation failed.\n(error: https://app.mutqin.ai/js/memorisation.aaaaaaaa.js)',
+  }
+  assert.equal(recovery.isLikelyStaleDeploymentError(mix404, { offline: false }), true)
+  assert.equal(recovery.isLikelyStaleDeploymentError(mix404, { offline: true }), false)
+  assert.equal(
+    recovery.isLikelyStaleDeploymentError({
+      name: 'ChunkLoadError',
+      type: 'timeout',
+      message: 'Loading chunk homepage failed.\n(timeout: https://app.mutqin.ai/js/homepage.bbbbbbbb.js)',
+    }, { offline: false }),
+    false
+  )
+  assert.equal(
+    recovery.isLikelyStaleDeploymentError({ message: 'Request failed with status code 500' }, { offline: false }),
+    false
+  )
+  assert.equal(
+    recovery.isStaleMixAssetUrl('https://app.mutqin.ai/js/homepage.20283d40.js'),
+    true
+  )
+  assert.equal(
+    recovery.isStaleMixAssetUrl('https://cdn.speechmatics.com/runtime.js'),
+    false
+  )
 })
 
 test('recoverFromStaleChunk reloads at most once then gives up', async () => {
@@ -72,6 +114,81 @@ test('recoverFromStaleChunk reloads at most once then gives up', async () => {
   assert.equal(second, 'give_up')
   await new Promise((resolve) => setTimeout(resolve, 0))
   assert.equal(reloads.length, 1, 'second failure must not reload again')
+})
+
+test('offline chunk failure does not auto-reload', async () => {
+  const store = memoryStore()
+  const reloads = []
+  const outcome = recovery.recoverFromStaleChunk(
+    {
+      name: 'ChunkLoadError',
+      message: 'Failed to fetch dynamically imported module: https://app.mutqin.ai/js/about.deadbeef.js',
+    },
+    {
+      store,
+      offline: true,
+      clearCaches: async () => {},
+      showNotice: () => {},
+      reload: (url) => { reloads.push(url) },
+    }
+  )
+  assert.equal(outcome, 'give_up')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(reloads.length, 0)
+  assert.equal(store.getItem(recovery.CHUNK_RELOAD_SESSION_KEY), null)
+})
+
+test('before-chunk-reload persist hook runs and session keys are left intact', async () => {
+  const store = memoryStore({
+    'mutqin.activeSession.v1': JSON.stringify({ config: { chapterId: 1 }, current_index: 3 }),
+  })
+  const persisted = []
+  const reloads = []
+
+  const outcome = recovery.recoverFromStaleChunk(
+    { name: 'ChunkLoadError', message: 'Loading chunk hifz-plan-modal failed' },
+    {
+      store,
+      persist: () => {
+        persisted.push(store.getItem('mutqin.activeSession.v1'))
+      },
+      locationHref: 'https://app.mutqin.ai/memorisation',
+      clearCaches: async () => {},
+      showNotice: () => {},
+      reload: (url) => { reloads.push(url) },
+    }
+  )
+  assert.equal(outcome, 'reloading')
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  assert.equal(persisted.length, 1)
+  assert.match(persisted[0], /chapterId/)
+  assert.match(store.getItem('mutqin.activeSession.v1'), /chapterId/)
+  assert.equal(reloads.length, 1)
+})
+
+test('wrapChunkImport does not retry-reload when offline', async () => {
+  let attempts = 0
+  const reloads = []
+  await assert.rejects(
+    () => recovery.wrapChunkImport(() => {
+      attempts += 1
+      return Promise.reject({ name: 'ChunkLoadError', message: 'Loading chunk 9 failed' })
+    }, {
+      maxRetries: 2,
+      retryDelayMs: 1,
+      offline: true,
+      recover: (error) => recovery.recoverFromStaleChunk(error, {
+        offline: true,
+        store: memoryStore(),
+        reload: (url) => { reloads.push(url) },
+        clearCaches: async () => {},
+        showNotice: () => {},
+      }),
+    }),
+    (err) => err?.name === 'ChunkLoadError'
+  )
+  assert.equal(attempts, 1)
+  assert.equal(reloads.length, 0)
 })
 
 test('wrapChunkImport retries then reloads once; second give-up throws', async () => {
@@ -159,4 +276,16 @@ test('stable lazy chunks are cache-busted beyond memorisation', () => {
     /memorisation\/i\.test\(url\)/,
     'chunk URL cache busting must cover homepage and other lazy pages too',
   )
+})
+
+test('existing recovery is wired for pages, bootstrap, locales, and workspace', () => {
+  const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
+  const i18n = readFileSync(join(root, 'resources/js/i18n.js'), 'utf8')
+  assert.match(appSource, /installChunkLoadRecovery/)
+  assert.match(appSource, /recoverFromStaleChunk\(error/)
+  assert.match(appSource, /errorComponent: PageLoadError/)
+  assert.match(memorisation, /BEFORE_CHUNK_RELOAD_EVENT/)
+  assert.match(memorisation, /errorComponent: PageLoadError/)
+  assert.match(memorisation, /webpackChunkName: "ask-mutqin-index"/)
+  assert.match(i18n, /wrapChunkImport\(loader/)
 })

@@ -71,8 +71,10 @@ class TransactionalMailTemplateTest extends TestCase
         $this->assertStringContainsString(__('mail.reset_steps_title'), $resetHtml);
         $this->assertStringContainsString(e($reset->viewData['url']), $resetHtml);
         $this->assertStringContainsString(e(__('mail.reset_security')), $resetHtml);
-        $this->assertSame(1, preg_match_all('/<a[^>]*href="'.preg_quote(e($reset->viewData['url']), '/').'"/', $resetHtml));
-        $this->assertSame(1, preg_match_all('/<a[^>]*href="'.preg_quote(e($verify->viewData['url']), '/').'"/', $verifyHtml));
+        $this->assertSame(2, preg_match_all('/<a[^>]*href="'.preg_quote(e($reset->viewData['url']), '/').'"/', $resetHtml));
+        $this->assertSame(2, preg_match_all('/<a[^>]*href="'.preg_quote(e($verify->viewData['url']), '/').'"/', $verifyHtml));
+        $this->assertStringContainsString('v:roundrect', $verifyHtml);
+        $this->assertStringContainsString('word-break:break-all', $verifyHtml);
 
         $this->assertStringContainsString($verify->viewData['url'], $verifyText);
         $this->assertStringContainsString($reset->viewData['url'], $resetText);

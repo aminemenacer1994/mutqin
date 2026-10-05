@@ -22,6 +22,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -126,6 +127,17 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(static function (Throwable $e, Request $request) {
+            if ($e instanceof InvalidSignatureException
+                && $request->routeIs('verification.verify')
+                && ! $request->expectsJson()
+            ) {
+                $redirect = $request->user()
+                    ? redirect()->route('verification.notice')
+                    : redirect()->route('login');
+
+                return $redirect->with('error', __('ui.verify_link_invalid'));
+            }
+
             if ($e instanceof ValidationException
                 || $e instanceof AuthenticationException
                 || $e instanceof AuthorizationException

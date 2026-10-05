@@ -17,6 +17,9 @@
             @endif
         </header>
 
+        @if (session('error'))
+            <div class="alert alert-danger auth-alert" role="alert">{{ session('error') }}</div>
+        @endif
         @if (session('resent'))
             <div class="alert alert-success auth-alert" role="alert">
                 {{ __('ui.verify_resent') }}

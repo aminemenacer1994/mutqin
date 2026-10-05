@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\AuthRedirect;
 use App\Support\EmailVerification;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -36,7 +37,7 @@ class VerificationController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth')->except('verify');
         $this->middleware('signed')->only('verify');
         $this->middleware('throttle:6,1')->only('verify', 'resend');
     }
@@ -68,15 +69,20 @@ class VerificationController extends Controller
      */
     public function verify(Request $request)
     {
-        if (! hash_equals((string) $request->route('id'), (string) $request->user()->getKey())) {
+        $user = User::query()->find($request->route('id'));
+        if (! $user instanceof User) {
             throw new AuthorizationException;
         }
 
-        $user = $request->user();
+        $actor = $request->user();
+        if ($actor instanceof User && ! hash_equals((string) $actor->getKey(), (string) $user->getKey())) {
+            throw new AuthorizationException;
+        }
+
         $hash = (string) $request->route('hash');
 
         if ($user->hasPendingEmailChange()) {
-            if (! hash_equals($hash, sha1($user->pending_email))) {
+            if (! hash_equals($hash, sha1((string) $user->pending_email))) {
                 throw new AuthorizationException;
             }
 
@@ -89,10 +95,9 @@ class VerificationController extends Controller
             $user->revaluateAdminEligibility();
 
             event(new Verified($user->fresh()));
+            $actor?->refresh();
 
-            return $request->wantsJson()
-                ? new JsonResponse([], 204)
-                : redirect()->route('profile.show')->with('profile_status', __('profile.email_confirmed'));
+            return $this->verificationResult($request, pendingMailbox: true);
         }
 
         if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
@@ -100,18 +105,45 @@ class VerificationController extends Controller
         }
 
         if ($user->hasVerifiedEmail()) {
-            return $request->wantsJson()
-                ? new JsonResponse([], 204)
-                : redirect($this->redirectPath());
+            return $this->verificationResult($request, alreadyVerified: true);
         }
 
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
+        $actor?->refresh();
 
-        return $request->wantsJson()
-            ? new JsonResponse([], 204)
-            : redirect($this->redirectPath())->with('verified', true);
+        return $this->verificationResult($request);
+    }
+
+    /**
+     * Signed links from Outlook often open in Edge with no session. Prove the
+     * mailbox without turning the link into a login token.
+     */
+    private function verificationResult(
+        Request $request,
+        bool $pendingMailbox = false,
+        bool $alreadyVerified = false,
+    ): JsonResponse|RedirectResponse {
+        if ($request->wantsJson()) {
+            return new JsonResponse([], 204);
+        }
+
+        if ($request->user()) {
+            if ($pendingMailbox) {
+                return redirect()->route('profile.show')->with('profile_status', __('profile.email_confirmed'));
+            }
+
+            $redirect = redirect($this->redirectPath());
+
+            return $alreadyVerified ? $redirect : $redirect->with('verified', true);
+        }
+
+        $status = $pendingMailbox
+            ? __('profile.email_confirmed')
+            : ($alreadyVerified ? __('ui.verify_already_confirmed_login') : __('ui.verify_confirmed_login'));
+
+        return redirect()->route('login')->with('status', $status);
     }
 
     /**

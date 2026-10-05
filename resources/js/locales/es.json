@@ -59,6 +59,7 @@
       "networkDesc": "No hemos podido conectar con Mutqin. Comprueba tu conexión e inténtalo de nuevo.",
       "backOnline": "Has vuelto a estar en línea.",
       "retry": "Reintentar",
+      "refresh": "Actualizar",
       "returnHome": "Volver al inicio",
       "authTitle": "Inicia sesión para continuar",
       "authDesc": "Inicia sesión para abrir tu espacio de memorización y sincronizar el progreso.",

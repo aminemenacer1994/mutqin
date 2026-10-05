@@ -59,6 +59,7 @@
       "networkDesc": "Impossible de joindre Mutqin. Vérifiez votre connexion, puis réessayez.",
       "backOnline": "Vous êtes de nouveau en ligne.",
       "retry": "Réessayer",
+      "refresh": "Actualiser",
       "returnHome": "Retour à l’accueil",
       "authTitle": "Connectez-vous pour continuer",
       "authDesc": "Connectez-vous pour ouvrir votre espace de mémorisation et synchroniser votre progression.",

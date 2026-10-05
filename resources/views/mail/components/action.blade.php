@@ -27,7 +27,9 @@
     <tr>
         <td style="padding:14px 16px;border-radius:12px;background-color:#f4f7f5;border:1px solid #d8e6dd;">
             <p style="margin:0 0 8px;font-size:13px;line-height:1.45;color:#4a6358;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">{{ $fallbackIntro }}</p>
-            <p class="email-fallback" style="margin:0;font-size:12px;line-height:1.55;color:#1f6b4f;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;word-break:break-all;">{{ $url }}</p>
+            <p class="email-fallback" style="margin:0;font-size:12px;line-height:1.55;color:#1f6b4f;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;word-break:break-all;">
+                <a href="{{ $url }}" target="_blank" rel="noopener noreferrer" style="color:#1f6b4f;text-decoration:underline;word-break:break-all;">{{ $url }}</a>
+            </p>
         </td>
     </tr>
 </table>

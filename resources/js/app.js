@@ -6,11 +6,13 @@ import { setupI18n, setLocale, resolveEnMessage } from './i18n';
 import { i18nMixin } from './mixins/i18nMixin';
 import { initPwa } from './pwa';
 import { clearSharedMutqinBrowserResidue } from './utils/mutqinStorageKeys';
-import { isBrowserOffline } from './utils/networkStatus';
 import {
     clearChunkReloadFlag,
+    installChunkLoadRecovery,
+    recoverFromStaleChunk,
     wrapChunkImport,
 } from './utils/chunkLoadRecovery';
+import PageLoadError from './components/PageLoadError';
 import { installErrorTracking, reportError } from './scripts/observability/errorTracking';
 import { openFeedbackModal } from './scripts/feedback/feedbackLauncher';
 import FeedbackModal from './components/FeedbackModal.vue';
@@ -50,6 +52,9 @@ bindLogoutStorageCleanup();
 if (typeof window !== 'undefined') {
     window.mutqinClearSharedBrowserResidue = clearSharedMutqinBrowserResidue;
     window.mutqinOpenFeedback = openFeedbackModal;
+    installChunkLoadRecovery({
+        noticeMessage: resolveEn('common.status.chunkUpdating'),
+    });
 }
 
 // Watch/dev Mix emits stable chunk names (homepage.js, memorisation.js, ...).
@@ -94,72 +99,6 @@ const PageBootFallback = {
             </div>
         </div>
     `,
-};
-
-const PageLoadError = {
-    props: { error: { type: Object, default: null } },
-    data() {
-        return {
-            offline: isBrowserOffline(),
-            onlineHandler: null,
-        };
-    },
-    computed: {
-        title() {
-            return this.offline
-                ? this.t('common.status.offlineTitle')
-                : this.t('common.status.chunkErrorTitle');
-        },
-        description() {
-            return this.offline
-                ? this.t('common.status.offlineDesc')
-                : this.t('common.status.chunkErrorDesc');
-        },
-        retryLabel() {
-            return this.t('common.status.retry');
-        },
-        returnHomeLabel() {
-            return this.t('common.status.returnHome');
-        },
-    },
-    mounted() {
-        this.onlineHandler = () => {
-            const wasOffline = this.offline;
-            this.offline = isBrowserOffline();
-            if (wasOffline && !this.offline) this.reload();
-        };
-        window.addEventListener('online', this.onlineHandler);
-        window.addEventListener('offline', this.onlineHandler);
-    },
-    beforeUnmount() {
-        if (this.onlineHandler) {
-            window.removeEventListener('online', this.onlineHandler);
-            window.removeEventListener('offline', this.onlineHandler);
-        }
-    },
-    template: `
-        <div class="memorisation-boot-fallback memorisation-boot-fallback-error" role="alert">
-            <div class="memorisation-boot-card">
-                <div class="memorisation-boot-card__icon" aria-hidden="true">
-                    <i class="bi" :class="offline ? 'bi-wifi-off' : 'bi-exclamation-triangle'"></i>
-                </div>
-                <div class="memorisation-boot-card__copy">
-                    <strong>{{ title }}</strong>
-                    <p>{{ description }}</p>
-                </div>
-                <div class="memorisation-boot-actions">
-                    <button type="button" class="memorisation-boot-btn memorisation-boot-btn--primary" @click="reload">{{ retryLabel }}</button>
-                    <a class="memorisation-boot-btn memorisation-boot-btn--secondary" href="/">{{ returnHomeLabel }}</a>
-                </div>
-            </div>
-        </div>
-    `,
-    methods: {
-        reload() {
-            clearChunkReloadFlag();
-            window.location.reload();
-        },
-    },
 };
 
 const MemorisationBootFallback = {
@@ -358,18 +297,28 @@ function showBootstrapFailure(error) {
                         <p>${description}</p>
                     </div>
                     <div class="memorisation-boot-actions">
-                        <button type="button" class="memorisation-boot-btn memorisation-boot-btn--primary" onclick="window.location.reload()">${retryLabel}</button>
+                        <button type="button" class="memorisation-boot-btn memorisation-boot-btn--primary" id="mutqin-boot-retry">${retryLabel}</button>
                         <a class="memorisation-boot-btn memorisation-boot-btn--secondary" href="/">${returnHomeLabel}</a>
                     </div>
                 </div>
             </div>
         </main>
     `;
+    mountTarget.querySelector('#mutqin-boot-retry')?.addEventListener('click', () => {
+        clearChunkReloadFlag();
+        window.location.reload();
+    });
     if (offline) {
         window.addEventListener('online', () => window.location.reload(), { once: true });
     }
 }
 
-bootstrapApp().catch(showBootstrapFailure);
+bootstrapApp().catch((error) => {
+    const outcome = recoverFromStaleChunk(error, {
+        noticeMessage: resolveEn('common.status.chunkUpdating'),
+    });
+    if (outcome === 'reloading') return;
+    showBootstrapFailure(error);
+});
 
 initPwa();

@@ -1,5 +1,6 @@
 import { createI18n } from 'vue-i18n'
 import enMessages from './locales/en.json'
+import { wrapChunkImport } from './utils/chunkLoadRecovery'
 
 export const SUPPORT_LOCALES = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur']
 /** Locales shown in the UI language switcher. */
@@ -87,12 +88,13 @@ async function importLocaleMessages(locale) {
   if (!loader) return enMessages
   if (pendingLocaleLoads.has(locale)) return pendingLocaleLoads.get(locale)
 
-  const pending = loader()
+  const pending = wrapChunkImport(loader, { feature: `locale-${locale}`, maxRetries: 1 })
     .then((mod) => {
       const pack = unwrapLocaleModule(mod)
       STATIC_MESSAGES[locale] = pack
       return pack
     })
+    .catch(() => enMessages)
     .finally(() => {
       pendingLocaleLoads.delete(locale)
     })

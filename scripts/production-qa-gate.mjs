@@ -131,6 +131,11 @@ const checks = [
     cmd: ['node', '--experimental-vm-modules', 'tests/js/chunk-load-recovery.test.mjs'],
   },
   {
+    id: 'js-chunk-staging',
+    label: 'Chunk / deploy staging simulation',
+    cmd: ['node', '--experimental-vm-modules', 'tests/js/chunk-load-recovery-staging.test.mjs'],
+  },
+  {
     id: 'js-empty',
     label: 'Empty / error / loading states',
     cmd: ['node', '--experimental-vm-modules', 'tests/js/app-status-empty-states.test.mjs'],

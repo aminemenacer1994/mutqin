@@ -435,4 +435,53 @@ class PasswordResetFlowTest extends TestCase
             'email' => $user->email,
         ]);
     }
+
+    public function test_reset_form_works_in_a_fresh_browser_session(): void
+    {
+        $user = User::factory()->create();
+        $token = Password::broker()->createToken($user);
+
+        $this->flushSession();
+
+        $this->get(route('password.reset', ['token' => $token, 'email' => $user->email]))
+            ->assertOk()
+            ->assertSee('Choose a new password')
+            ->assertDontSee(__('passwords.token'));
+
+        $this->post(route('password.update'), [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'new-secure-password',
+            'password_confirmation' => 'new-secure-password',
+        ])->assertRedirect('/memorisation');
+
+        $this->assertAuthenticatedAs($user->fresh());
+    }
+
+    public function test_reset_url_survives_outlook_safelinks_unwrap(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'reset-outlook@example.com',
+        ]);
+        $mail = (new ResetPassword('outlook-reset-token'))->toMail($user);
+        $url = $mail->viewData['url'];
+
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        $this->assertSame('reset-outlook@example.com', $query['email'] ?? null);
+
+        $wrapped = 'https://nam10.safelinks.protection.outlook.com/?url='.rawurlencode($url).'&data=05&reserved=0';
+        parse_str((string) parse_url($wrapped, PHP_URL_QUERY), $safeQuery);
+        $this->assertSame($url, $safeQuery['url'] ?? null);
+    }
+
+    public function test_malformed_reset_url_fails_safely(): void
+    {
+        $this->get('/password/reset/not-a-real-token?email=nobody@example.com')
+            ->assertOk()
+            ->assertSee(__('passwords.token'));
+
+        $this->get('/password/reset/'.rawurlencode('%%%broken%%%'))
+            ->assertOk()
+            ->assertSee(__('ui.new_password_title'));
+    }
 }

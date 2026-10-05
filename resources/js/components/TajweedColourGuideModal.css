@@ -328,8 +328,8 @@
 
 @media (max-width: 480px) {
   .tajweed-colour-guide__dialog {
-    width: calc(100vw - 0.9rem);
-    max-width: calc(100vw - 0.9rem);
+    width: min(100%, calc(100vw - 0.9rem));
+    max-width: min(100%, calc(100vw - 0.9rem));
   }
 
   .tajweed-colour-guide__card {
