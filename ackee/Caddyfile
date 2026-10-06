@@ -1,0 +1,4 @@
+{$ACKEE_PUBLIC_HOST:analytics.mutqin.ai} {
+	encode gzip
+	reverse_proxy ackee:3000
+}

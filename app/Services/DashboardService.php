@@ -12,6 +12,7 @@ use App\Models\MemorisationAssessment;
 use App\Models\MemorisationPracticePlan;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationSyncState;
+use App\Models\MemorisationWeakSpot;
 use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
@@ -19,6 +20,7 @@ use App\Models\UserSession;
 use App\Services\Learning\SessionAnalysisQueryService;
 use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Support\QuranMetadata;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -164,6 +166,7 @@ class DashboardService
                 'all_items' => [],
                 'total' => 0,
                 'has_more' => false,
+                'history_count' => 0,
                 'view_all_href' => null,
                 'empty_title' => 'Alhamdulillah — nothing needs special attention right now.',
                 'empty_message' => 'When you complete a memorisation check, Mutqin will gently highlight ayahs that need more care.',
@@ -1554,7 +1557,7 @@ class DashboardService
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<UserSession>  $query
+     * @param  Builder<UserSession>  $query
      * @param  Collection<int, UserSession>  $loaded
      * @return Collection<int, UserSession>
      */
@@ -1899,18 +1902,44 @@ class DashboardService
             ]);
         }
 
-        $sorted = $items->sortByDesc(fn ($item) => $item['detected_at'] ?? '')->values();
+        $items = $this->mergeWeakSpotHistory($user, $items);
+
+        $sorted = $items->sort(function (array $a, array $b) {
+            $rank = static function (array $item): int {
+                return match ((string) ($item['history_status'] ?? '')) {
+                    MemorisationWeakSpot::STATUS_ACTIVE => 3,
+                    MemorisationWeakSpot::STATUS_IMPROVING => 2,
+                    MemorisationWeakSpot::STATUS_RESOLVED => 1,
+                    default => 0,
+                };
+            };
+            $statusDelta = $rank($b) <=> $rank($a);
+            if ($statusDelta !== 0) {
+                return $statusDelta;
+            }
+            $attemptsDelta = ((int) ($b['history_attempts'] ?? 0)) <=> ((int) ($a['history_attempts'] ?? 0));
+            if ($attemptsDelta !== 0) {
+                return $attemptsDelta;
+            }
+
+            return strcmp((string) ($b['detected_at'] ?? ''), (string) ($a['detected_at'] ?? ''));
+        })->values();
         $total = $sorted->count();
         $allItems = $this->enrichWeaknessStrengthLabels(
             $user,
             $sorted->values()->all()
         );
         $previewCount = 2;
+        $historyCount = count(array_filter(
+            $allItems,
+            static fn (array $item): bool => (int) ($item['history_attempts'] ?? 0) > 0
+        ));
 
         return [
             'items' => array_slice($allItems, 0, $previewCount),
             'all_items' => $allItems,
             'total' => $total,
+            'history_count' => $historyCount,
             'has_more' => $total > $previewCount,
             'view_all_href' => null,
             'empty_title' => 'Alhamdulillah — nothing needs special attention right now.',
@@ -1918,6 +1947,122 @@ class DashboardService
             'empty_title_key' => 'weak_empty_title',
             'empty_message_key' => 'weak_empty_message',
         ];
+    }
+
+    /**
+     * Overlay persisted weak-spot history (attempt counts, trend, last slipped)
+     * onto the dashboard murājaʿah list, and add ayahs that only exist as spots.
+     *
+     * @param  Collection<string, array<string, mixed>>  $items
+     * @return Collection<string, array<string, mixed>>
+     */
+    private function mergeWeakSpotHistory(User $user, Collection $items): Collection
+    {
+        $spots = MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->where(function ($query) {
+                $query->whereIn('status', [
+                    MemorisationWeakSpot::STATUS_ACTIVE,
+                    MemorisationWeakSpot::STATUS_IMPROVING,
+                ])->orWhere(function ($resolved) {
+                    $resolved->where('status', MemorisationWeakSpot::STATUS_RESOLVED)
+                        ->where('last_identified_at', '>=', now()->subDays(21));
+                });
+            })
+            ->orderByDesc('last_identified_at')
+            ->limit(120)
+            ->get();
+
+        $byAyah = [];
+        foreach ($spots as $spot) {
+            $surah = (int) $spot->surah_number;
+            $ayah = (int) $spot->ayah_number;
+            if ($surah <= 0 || $ayah <= 0) {
+                continue;
+            }
+            $key = $surah.':'.$ayah;
+            $meta = is_array($spot->metadata) ? $spot->metadata : [];
+            $word = trim((string) ($meta['text'] ?? $meta['word'] ?? $meta['arabic'] ?? ''));
+            $rank = match ((string) $spot->status) {
+                MemorisationWeakSpot::STATUS_ACTIVE => 3,
+                MemorisationWeakSpot::STATUS_IMPROVING => 2,
+                default => 1,
+            };
+            if (! isset($byAyah[$key]) || $rank > (int) ($byAyah[$key]['rank'] ?? 0)) {
+                $byAyah[$key] = [
+                    'rank' => $rank,
+                    'surah' => $surah,
+                    'ayah' => $ayah,
+                    'status' => (string) $spot->status,
+                    'trend' => $spot->trend,
+                    'attempts' => (int) $spot->affected_attempt_count,
+                    'first' => $spot->first_identified_at,
+                    'last' => $spot->last_identified_at,
+                    'phrase' => $word !== '' ? $word : null,
+                ];
+
+                continue;
+            }
+            $byAyah[$key]['attempts'] = max((int) $byAyah[$key]['attempts'], (int) $spot->affected_attempt_count);
+            if ($word !== '' && empty($byAyah[$key]['phrase'])) {
+                $byAyah[$key]['phrase'] = $word;
+            }
+            if ($spot->last_identified_at && (
+                empty($byAyah[$key]['last'])
+                || $spot->last_identified_at->gt($byAyah[$key]['last'])
+            )) {
+                $byAyah[$key]['last'] = $spot->last_identified_at;
+            }
+            if ($spot->first_identified_at && (
+                empty($byAyah[$key]['first'])
+                || $spot->first_identified_at->lt($byAyah[$key]['first'])
+            )) {
+                $byAyah[$key]['first'] = $spot->first_identified_at;
+            }
+        }
+
+        foreach ($byAyah as $key => $hist) {
+            $history = [
+                'history_status' => $hist['status'],
+                'history_status_key' => 'weak_history_status_'.$hist['status'],
+                'history_attempts' => max(1, (int) $hist['attempts']),
+                'history_trend' => $hist['trend'],
+                'first_identified_at' => optional($hist['first'])->toIso8601String(),
+                'last_identified_at' => optional($hist['last'])->toIso8601String(),
+            ];
+            if ($items->has($key)) {
+                $row = $items->get($key);
+                $items->put($key, array_merge($row, $history, [
+                    'phrase' => $row['phrase'] ?: $hist['phrase'],
+                    'detected_at' => $row['detected_at']
+                        ?: optional($hist['last'])->toIso8601String(),
+                ]));
+
+                continue;
+            }
+            $items->put($key, array_merge([
+                'key' => $key,
+                'surah_number' => $hist['surah'],
+                'surah_name' => QuranMetadata::name($hist['surah']),
+                'ayah_number' => $hist['ayah'],
+                'phrase' => $hist['phrase'],
+                'explanation' => 'This ayah has slipped in earlier checks. A short return helps it settle.',
+                'explanation_key' => 'weak_explain_history',
+                'status_label' => $hist['status'] === MemorisationWeakSpot::STATUS_RESOLVED
+                    ? 'Settling'
+                    : 'Needs a gentle review',
+                'status_key' => $hist['status'] === MemorisationWeakSpot::STATUS_RESOLVED
+                    ? 'status_review'
+                    : 'status_strengthen',
+                'detected_at' => optional($hist['last'])->toIso8601String(),
+                'action_label' => 'Review this ayah',
+                'action_key' => 'action_review',
+                'href' => $this->murajaahReviewHref($hist['surah'], $hist['ayah']),
+                'source' => 'weak_spot',
+            ], $history));
+        }
+
+        return $items;
     }
 
     /**
@@ -2040,7 +2185,7 @@ class DashboardService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int|string, int|string>|null  $recommendationSurahs
+     * @param  Collection<int|string, int|string>|null  $recommendationSurahs
      * @return list<array{surah: int, ayah: int, phrase: ?string}>
      */
     private function weakAyahsFromAiReciteAttempt(AiReciteAttempt $attempt, $recommendationSurahs = null): array

@@ -98,12 +98,15 @@ import {
   desktopSpreadStableWordSize,
 } from '../../scripts/mushaf/mushafDesktopFit'
 import {
+  DESKTOP_MUSHAF_SPARSE_RATIO,
   MOBILE_MUSHAF_HAIRLINE_PX,
+  MOBILE_MUSHAF_SPARSE_RATIO,
   compactMobileMushafDisplayLines,
   isMobileMushafAyahSparse,
   mobileMushafAyahJustify,
   mobileMushafFitSafety,
   qcfSideBearingPx,
+  reorderMushafOpeningLines,
 } from '../../scripts/mushaf/mobileMushafLineFit'
 import {
   buildMadaniSelection,
@@ -267,10 +270,11 @@ export default {
     displayLines() {
       const rows = this.lines
       if (this.sessionDesktopSpreadCompact) {
-        return rows.filter((line) => this.lineTypeOf(line) !== 'empty')
+        return reorderMushafOpeningLines(rows.filter((line) => this.lineTypeOf(line) !== 'empty'))
       }
       if (this.isPhoneViewport()) return compactMobileMushafDisplayLines(rows)
-      return rows
+      if (this.isTabletViewport()) return compactMobileMushafDisplayLines(rows)
+      return reorderMushafOpeningLines(rows)
     },
     singleAyahSession() {
       if (!this.sessionScoped) return false
@@ -380,6 +384,11 @@ export default {
       const coarse = window.matchMedia?.('(hover: none) and (pointer: coarse)')?.matches
       return !!(coarse && Math.min(window.innerWidth, window.innerHeight) < 520)
     },
+    isTabletViewport() {
+      if (typeof window === 'undefined') return false
+      if (this.isPhoneViewport()) return false
+      return window.innerWidth < this.twoPageMinWidth()
+    },
     ayahLineOverflows(line, available, wordSize) {
       if (!(line instanceof HTMLElement)) return false
       const slack = qcfSideBearingPx(wordSize)
@@ -388,7 +397,9 @@ export default {
       return line.scrollWidth > line.clientWidth + 1
     },
     applyMobileAyahRowPacking(sheet, available) {
-      if (!this.isPhoneViewport() || !(sheet instanceof HTMLElement)) return
+      if (!(sheet instanceof HTMLElement)) return
+      const phone = this.isPhoneViewport()
+      const sparseRatio = phone ? MOBILE_MUSHAF_SPARSE_RATIO : DESKTOP_MUSHAF_SPARSE_RATIO
       const ayahLines = [...sheet.querySelectorAll('.qpc-madani-line')].filter((line) => {
         return String(line.dataset.lineType || '') === 'ayah'
       })
@@ -396,26 +407,31 @@ export default {
         if (!(line instanceof HTMLElement)) continue
         line.classList.remove('qpc-madani-line--sparse')
         line.style.setProperty('justify-content', 'flex-start', 'important')
+        line.style.setProperty('gap', '0', 'important')
         line.style.width = 'max-content'
         line.style.maxWidth = 'none'
         void line.offsetWidth
         const natural = this.lineAdvanceWidth(line)
         const wordCount = line.querySelectorAll('.qpc-madani-word').length
-        const sparse = isMobileMushafAyahSparse({
-          naturalWidth: natural,
-          availableWidth: available,
-          wordCount,
-        })
-        line.classList.toggle('qpc-madani-line--sparse', sparse)
+        // Pack against the real painted row width (not a reduced fit inset).
         line.style.width = '100%'
         line.style.maxWidth = '100%'
+        void line.offsetWidth
+        const rowWidth = Math.max(1, line.clientWidth || Number(available) || 0)
+        const sparse = isMobileMushafAyahSparse({
+          naturalWidth: natural,
+          availableWidth: rowWidth,
+          wordCount,
+          ratio: sparseRatio,
+        })
+        line.classList.toggle('qpc-madani-line--sparse', sparse)
         line.style.setProperty('justify-content', mobileMushafAyahJustify(sparse), 'important')
         line.style.setProperty('align-self', 'stretch', 'important')
         line.style.setProperty('margin-inline', '0', 'important')
       }
     },
     shrinkWordSizeToFit(root, sheet, size, lines) {
-      if (!this.isPhoneViewport() || !(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) {
+      if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) {
         return size
       }
       const ayahLines = (lines || []).filter((line) => String(line.dataset.lineType || '') === 'ayah')
@@ -692,13 +708,19 @@ export default {
         const heightFit = this.sessionScoped
           ? null
           : this.viewportBandHeightFit(root, sheet, lineSlots, measureSize)
-        rawSize = desktopSpreadStableWordSize({
+        const stable = desktopSpreadStableWordSize({
           measureSize,
           safety,
           cap,
           fontScale: requested,
           heightFit,
         })
+        // Fill the leaf edge-to-edge: widthFit drives size; height/stable only cap it.
+        rawSize = Math.min(cap * requested, widthFit)
+        if (Number.isFinite(heightFit) && heightFit > 0) {
+          rawSize = Math.min(rawSize, heightFit)
+        }
+        if (!(rawSize > 0)) rawSize = stable
       } else if (this.sessionViewportFill) {
         const heightFit = this.viewportBandHeightFit(root, sheet, targets.length, measureSize)
         if (Number.isFinite(heightFit) && heightFit > 0) {
@@ -740,7 +762,12 @@ export default {
         }
         if (!this.spreadDesktopLayoutLocked) {
           this.applySpreadViewportLayout(root, sheet)
-          window.requestAnimationFrame(() => this.applySpreadViewportLayout(root, sheet))
+          window.requestAnimationFrame(() => {
+            this.applySpreadViewportLayout(root, sheet)
+            this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
+          })
+        } else {
+          this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
         }
       }
     },
@@ -861,8 +888,10 @@ export default {
         inner = Math.max(0, inner - extra)
       }
       if ((this.spreadViewportFill || this.embedded) && !mobile) {
+        // Keep fit width aligned with the painted row so space-between does not
+        // invent large gaps between words.
         const desktopSpread = typeof window !== 'undefined' && window.innerWidth >= this.twoPageMinWidth()
-        const spreadInset = desktopSpread && this.sessionDesktopSpreadCompact ? 16 : (desktopSpread ? 48 : 28)
+        const spreadInset = desktopSpread && this.sessionDesktopSpreadCompact ? 8 : (desktopSpread ? 12 : 10)
         inner = Math.max(0, inner - spreadInset)
       }
       return inner

@@ -101,6 +101,7 @@ Copy `.env.example` to `.env` and configure:
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth login |
 | `GOOGLE_ANALYTICS_ID` | GA4 Measurement ID (default `G-W4K8J2T0SG`). Empty disables the tag. |
 | `GOOGLE_ANALYTICS_ENABLED` | Override GA on/off. Defaults to on only when `APP_ENV=production`. |
+| `ACKEE_*` | Self-hosted Ackee. Start with Docker Compose in [`ackee/`](ackee/README.md). |
 | `STRIPE_*` | Publishable/secret keys, webhook secret, price IDs |
 | `MUTQIN_ADMIN_EMAILS` | Reserved admin mailboxes (registration/profile deny-list). Admin privilege is `users.is_admin` — migration bootstraps matching emails once. |
 

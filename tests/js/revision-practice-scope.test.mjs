@@ -139,6 +139,32 @@ const saveReq = readFileSync(join(root, 'app/Http/Requests/Learning/SaveRecommen
   })
   assert.notEqual(strongWithWeak.reasonKey, 'strongContinue')
   assert.doesNotMatch(String(strongWithWeak.reason || ''), /this set is secure/i)
+  assert.equal(strongWithWeak.scope, PRACTICE_SCOPE.WEAK_AREAS)
+
+  const ikhlas = recommendPracticeScope({
+    sessionFrom: 1,
+    sessionTo: 4,
+    weakAyahs: [1, 3],
+    weakWords: [
+      { ayahNumber: 1, wordIndex: 0, text: 'قُل' },
+      { ayahNumber: 3, wordIndex: 0, text: 'لَمْ' },
+    ],
+    outcome: 'mixed',
+  })
+  assert.equal(ikhlas.scope, PRACTICE_SCOPE.WEAK_AREAS)
+  assert.equal(ikhlas.reasonKey, 'focusedCluster')
+  assert.notEqual(ikhlas.reasonKey, 'strongContinue')
+  assert.notEqual(ikhlas.reasonKey, 'noWeakAreas')
+  assert.doesNotMatch(String(ikhlas.reason || ''), /this set is secure/i)
+
+  const majority = recommendPracticeScope({
+    sessionFrom: 1,
+    sessionTo: 4,
+    weakAyahs: [1, 2, 4],
+    outcome: 'mixed',
+  })
+  assert.equal(majority.scope, PRACTICE_SCOPE.FULL_RANGE)
+  assert.equal(majority.reasonKey, 'spreadWeakness')
 }
 
 // Persistence payload carries scope + weak refs + attempt
@@ -240,7 +266,8 @@ const saveReq = readFileSync(join(root, 'app/Http/Requests/Learning/SaveRecommen
   assert.match(js, /practice-focus-word--emphasis/)
   assert.match(js, /fromRevisionComplete:\s*true/)
   assert.match(js, /doubleDownRevisionRepetitions/)
-  assert.match(js, /emphasize_weak_areas = true/)
+  assert.match(js, /collectWeakAyahTargets/)
+  assert.match(js, /reasonKey === 'strongContinue'/)
   assert.match(css, /practice-focus-word--emphasis/)
   assert.match(css, /post-session-simple__scope-card/)
   assert.match(learning, /practice_scope/)

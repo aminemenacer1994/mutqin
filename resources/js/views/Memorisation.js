@@ -194,6 +194,7 @@ import { isIndopakMushafLayout } from '../scripts/mushaf/indopakPageAdapter'
 import { setSurahArabicNameCache } from '../scripts/mushaf/surahArabicNameCache.js'
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
+import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import {
   RECOMMENDATION_TYPES,
@@ -235,6 +236,7 @@ import {
   applyPersonalPlanToRecommendation,
   resolveAyahWindow,
   resolveNextPracticeRangeAfterCompleted,
+  collectWeakAyahTargets,
 } from '../scripts/recommendations/nextSessionRecommendation'
 import {
   POST_SESSION_CTA_ACTIONS,
@@ -4949,8 +4951,17 @@ export default {
         const emphasis = String(this.postSessionPersonalPlan?.revisionEmphasis || '').trim()
         if (personal && personal !== emphasis) parts.push(this.stripAiDashes(personal))
         if (this.postSessionShowRevisionScopePicker) {
+          const reasonKey = String(this.postSessionRevisionScopeRecommendation?.reasonKey || '')
           const scopeReason = String(this.postSessionScopeRecommendReason || '').trim()
-          if (scopeReason && !parts.some((part) => part.includes(scopeReason.slice(0, 28)))) {
+          const skipSecureCopy = weakAyahs.length > 0
+            || isRepeat
+            || reasonKey === 'strongContinue'
+            || reasonKey === 'noWeakAreas'
+          if (
+            scopeReason
+            && !skipSecureCopy
+            && !parts.some((part) => part.includes(scopeReason.slice(0, 28)))
+          ) {
             parts.push(this.stripAiDashes(scopeReason))
           }
         }
@@ -5711,18 +5722,19 @@ export default {
       return fromLive
     },
     postSessionRevisionWeakAyahs() {
-      const fromDetails = Array.isArray(this.postSessionAiReviewDetails?.weakAyahs)
-        ? this.postSessionAiReviewDetails.weakAyahs
-        : []
-      const fromPlan = Array.isArray(this.aiReciteFinalPlan?.weakAyahs)
-        ? this.aiReciteFinalPlan.weakAyahs
-        : []
-      const fromWords = this.postSessionRevisionWeakWords
-        .map((w) => Number(w.ayahNumber))
-        .filter((n) => Number.isFinite(n) && n > 0)
-      return [...new Set([...fromDetails, ...fromPlan, ...fromWords].map(Number))]
-        .filter((n) => Number.isFinite(n) && n > 0)
-        .sort((a, b) => a - b)
+      const snap = this.postSessionSnapshot || {}
+      return collectWeakAyahTargets({
+        quizView: this.postSessionAdaptiveResultView,
+        aiDetails: {
+          ...(this.postSessionAiReviewDetails || {}),
+          weakWords: this.postSessionRevisionWeakWords,
+        },
+        recommendation: this.postSessionRecommendation,
+        planWeakAyahs: this.aiReciteFinalPlan?.weakAyahs,
+        surahId: Number(snap.chapterId || this.chapterId || 0) || null,
+        sessionFrom: Number(snap.rangeStart || this.rangeStart || 0) || null,
+        sessionTo: Number(snap.rangeEnd || this.rangeEnd || snap.rangeStart || 0) || null,
+      })
     },
     postSessionRevisionScopeRecommendation() {
       const snap = this.postSessionSnapshot || {}
@@ -12370,6 +12382,7 @@ export default {
       this.cancelSessionAutosave({ bumpGeneration: true })
       this.askMutqinOpen = false
       if (surah < 1 || ayahStart < 1) return
+      trackAckeeEvent(ACKEE_EVENTS.FIND_AYAH_RESULT_SELECTED)
       const settings = {}
       if (payload.reciterId) settings.reciter = payload.reciterId
       if (payload.speed != null) settings.playback_speed = payload.speed
@@ -18407,6 +18420,7 @@ export default {
         } catch { /* ignore */ }
         if (!this.hasCompletedOnboarding()) {
           this.markOnboardingCompleted()
+          trackAckeeEvent(ACKEE_EVENTS.ONBOARDING_COMPLETED)
         }
       }
     },
@@ -18934,6 +18948,7 @@ export default {
         talqinModeEnabled: !!this.talqinModeEnabled,
       }
       this.markOnboardingCompleted()
+      trackAckeeEvent(ACKEE_EVENTS.ONBOARDING_COMPLETED)
       this.deleteWorkspaceStateValue('onboardingPreferences')
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
@@ -27538,6 +27553,7 @@ export default {
         if (this.recitationCheckRecording) {
           this.amdStage = AMD_STAGES.LISTENING
           this.amdMicStatus = 'granted'
+          trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_STARTED)
           if (!this._amdRecordStartBeepConsumed) {
             this.playRecitationStartBeep?.()
             this._amdRecordStartBeepConsumed = true
@@ -27658,6 +27674,7 @@ export default {
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = AMD_STAGES.RESULTS
           this.amdBusy = false
+          trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_COMPLETED)
         }
         return null
       }
@@ -27740,6 +27757,7 @@ export default {
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
           this.amdBusy = false
+          trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_COMPLETED)
         }
         this._amdAssessmentSubmitInFlight = false
         this._amdAssessmentSubmitPromise = null
@@ -27828,6 +27846,7 @@ export default {
         this.amdImprovement = data.improvement || null
         if (!this._amdCompleting && !this.amdEndingSoon) {
           this.amdStage = this.amdPracticePlan ? AMD_STAGES.PLAN : AMD_STAGES.RESULTS
+          trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_COMPLETED)
         }
         this.amdError = ''
         this._amdSubmitStatus = 'ok'
@@ -40668,6 +40687,9 @@ export default {
       this.sessionStartedAt = 0
       this.sessionCompleted = endedEarly ? false : true
       this.sessionCompletedAt = this.sessionCompletedAt || new Date().toISOString()
+      if (!endedEarly) {
+        trackAckeeEvent(ACKEE_EVENTS.MEMORISATION_SESSION_COMPLETED)
+      }
 
       if (this.mutqinState?.sessionState) {
         this.mutqinState.sessionState.active = false
@@ -44743,6 +44765,7 @@ export default {
         'success',
         3000
       )
+      trackAckeeEvent(ACKEE_EVENTS.MEMORISATION_SESSION_STARTED)
     },
 
     getSessionElapsedSeconds(options = {}) {
@@ -45007,6 +45030,7 @@ export default {
         return
       }
       if (actionKey === 'open-pricing') {
+        trackAckeeEvent(ACKEE_EVENTS.UPGRADE_CLICKED)
         window.location.assign(this.auth?.pricing_url || '/pricing')
         return
       }

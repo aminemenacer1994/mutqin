@@ -556,11 +556,9 @@ export default {
           ornament.style.setProperty('justify-content', 'flex-start', 'important')
         }
         if (sheet instanceof HTMLElement) {
-          const gutter = '0.35rem'
-          const outer = '0.1rem'
           const padding = leaves.length < 2
-            ? '0 0.15rem'
-            : (onRight ? `0 ${outer} 0 ${gutter}` : `0 ${gutter} 0 ${outer}`)
+            ? '0 0.35rem'
+            : (onRight ? `0 0.2rem 0 0.45rem` : `0 0.45rem 0 0.2rem`)
           sheet.style.setProperty('display', 'flex', 'important')
           sheet.style.setProperty('flex-direction', 'column', 'important')
           sheet.style.setProperty('flex', '1 1 auto', 'important')
@@ -619,8 +617,31 @@ export default {
           line.style.setProperty('padding', '0', 'important')
           line.style.setProperty('overflow', 'visible', 'important')
           line.style.setProperty('align-items', 'center', 'important')
-          line.style.setProperty('justify-content', 'center', 'important')
+          line.style.setProperty('width', '100%', 'important')
+          line.style.setProperty('max-width', '100%', 'important')
+          line.style.setProperty('gap', '0', 'important')
           line.style.setProperty('flex', '0 0 auto', 'important')
+          if (lineType === 'ayah') {
+            line.style.setProperty('justify-content', 'flex-start', 'important')
+            line.style.width = 'max-content'
+            line.style.maxWidth = 'none'
+            void line.offsetWidth
+            const words = [...line.querySelectorAll('.qpc-madani-word')]
+            const natural = words.reduce((sum, node) => sum + (node.offsetWidth || 0), 0)
+            line.style.width = '100%'
+            line.style.maxWidth = '100%'
+            void line.offsetWidth
+            const rowWidth = Math.max(1, line.clientWidth)
+            const sparse = words.length <= 4 || (natural > 0 && natural < rowWidth * 0.9)
+            line.classList.toggle('qpc-madani-line--sparse', sparse)
+            line.style.setProperty(
+              'justify-content',
+              sparse ? 'center' : 'space-between',
+              'important',
+            )
+          } else {
+            line.style.setProperty('justify-content', 'center', 'important')
+          }
         })
         leaf.querySelectorAll('.qpc-madani-basmallah').forEach((node) => {
           if (!(node instanceof HTMLElement)) return
@@ -1002,17 +1023,17 @@ export default {
 
 .qpc-madani-shell[data-spread-mode="spread"] {
   display: grid;
-  grid-template-columns: 2.6rem minmax(0, 70rem) 2.6rem;
+  grid-template-columns: 2.35rem minmax(0, 1fr) 2.35rem;
   grid-template-rows: auto auto;
   justify-content: center;
   align-items: center;
-  column-gap: 0.55rem;
-  row-gap: 0.7rem;
+  column-gap: 0.35rem;
+  row-gap: 0.45rem;
   box-sizing: border-box;
   width: 100%;
-  max-width: 86rem;
+  max-width: min(100%, 96rem);
   margin: 0 auto;
-  padding: 1.55rem 1.4rem 2.4rem;
+  padding: 0.85rem 0.75rem 1.4rem;
 }
 
 .qpc-madani-shell[data-spread-mode="spread"] .qpc-madani-dev-nav {
@@ -1159,17 +1180,17 @@ export default {
 
 @media (min-width: 1080px) {
   .qpc-madani-shell--reader[data-spread-mode="spread"][data-desktop-short-surah="true"] .qpc-madani-spread--spread {
-    width: min(100%, 42rem);
-    max-width: min(100%, 42rem);
-    margin-inline: auto;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
   }
 }
 
 @media (min-width: 1200px) {
   .qpc-madani-shell[data-layout='indopak-15-qudratullah'].qpc-madani-shell--reader[data-spread-mode="spread"][data-desktop-short-surah="true"] .qpc-madani-spread--spread {
-    width: min(100%, 42rem);
-    max-width: min(100%, 42rem);
-    margin-inline: auto;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
   }
 }
 

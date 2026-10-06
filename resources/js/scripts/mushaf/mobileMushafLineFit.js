@@ -8,6 +8,8 @@
 
 export const MOBILE_MUSHAF_HAIRLINE_PX = 6
 export const MOBILE_MUSHAF_SPARSE_RATIO = 0.62
+/** Desktop/tablet: centre anything that is not nearly full (avoids huge word gaps). */
+export const DESKTOP_MUSHAF_SPARSE_RATIO = 0.9
 export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.88
 export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.9
 
@@ -39,7 +41,9 @@ export function isMobileMushafAyahSparse({
   const available = Number(availableWidth)
   const words = Math.trunc(Number(wordCount) || 0)
   if (!(natural > 0) || !(available > 0)) return false
-  if (words > 5) return natural < available * 0.5
+  // A handful of leftover words must never stretch edge-to-edge.
+  if (words > 0 && words <= 4) return true
+  if (words > 5) return natural < available * Math.max(0.5, ratio * 0.72)
   return natural < available * ratio
 }
 
@@ -54,11 +58,11 @@ export function qcfSideBearingPx(wordSize) {
 }
 
 /**
- * Surah name, then a single Bismillah, then ayahs.
- * Drop empty slots and any Bismillah that sits above the title.
+ * Surah name, then a single Bismillah. Drop any Bismillah that sits above the title.
+ * Empty printed slots are kept (desktop 15-line pages) unless the caller strips them.
  */
-export function compactMobileMushafDisplayLines(lines = []) {
-  const source = Array.isArray(lines) ? lines.filter((line) => lineTypeOf(line) !== 'empty') : []
+export function reorderMushafOpeningLines(lines = []) {
+  const source = Array.isArray(lines) ? [...lines] : []
   const ordered = []
   let index = 0
   while (index < source.length) {
@@ -89,4 +93,11 @@ export function compactMobileMushafDisplayLines(lines = []) {
     deduped.push(line)
   }
   return deduped
+}
+
+export function compactMobileMushafDisplayLines(lines = []) {
+  const withoutEmpty = Array.isArray(lines)
+    ? lines.filter((line) => lineTypeOf(line) !== 'empty')
+    : []
+  return reorderMushafOpeningLines(withoutEmpty)
 }

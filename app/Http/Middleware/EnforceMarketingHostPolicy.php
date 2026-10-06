@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * mutqin.ai is waiting-list only. Enforced from the request Host so it still
+ * mutqin.ai serves home, waiting list, and articles. Enforced from the request Host so it still
  * applies when APP_URL points at the marketing domain and Route::domain groups
  * are not registered.
  */
@@ -30,6 +30,8 @@ class EnforceMarketingHostPolicy
         $allowed = $path === '/'
             || $path === '//'
             || strtolower($path) === self::WAITING_LIST
+            || strtolower($path) === '/articles'
+            || str_starts_with(strtolower($path), '/articles/')
             || strtolower($path) === '/robots.txt'
             || strtolower($path) === '/sitemap.xml';
         if ($allowed) {

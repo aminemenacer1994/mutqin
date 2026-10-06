@@ -325,6 +325,7 @@ import {
   readStoredLastLocation,
 } from '../scripts/dashboardAiRecite/location'
 import { createDashboardAiReciteRecorder } from '../scripts/dashboardAiRecite/recordingSession'
+import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
 
 export default {
   name: 'DashboardAiReciteModal',
@@ -541,6 +542,7 @@ export default {
       try {
         await this.recorder.start()
         this.stage = 'recording'
+        trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_STARTED)
       } catch (error) {
         this.handleStartError(error)
       } finally {
@@ -714,6 +716,7 @@ export default {
         }
         this.stage = 'result'
         this.$emit('saved', data?.ai_attempt || null)
+        trackAckeeEvent(ACKEE_EVENTS.AI_RECITE_COMPLETED)
       } catch (error) {
         if (!this.isCurrentAnalysis(requestId)) return
         this.showError(this.t('dashboard.ai_recite.error_title'), this.assessmentFailureCopy(error))

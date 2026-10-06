@@ -30,6 +30,7 @@ final class SeoDocument
         public readonly array $hreflang,
         public readonly array $jsonLd,
         public readonly bool $indexable,
+        public readonly string $keywords = '',
     ) {}
 
     /**
@@ -59,6 +60,7 @@ final class SeoDocument
             'hreflang' => $this->hreflang,
             'jsonLd' => $this->jsonLd,
             'indexable' => $this->indexable,
+            'keywords' => $this->keywords,
         ];
     }
 }

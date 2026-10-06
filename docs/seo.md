@@ -8,14 +8,14 @@ This is the crawlable HTML strategy: **server-printed metadata + in-document cop
 
 | Host | Role | Indexable HTML |
 |------|------|----------------|
-| `https://mutqin.ai` | Marketing (home, waiting list, robots, sitemap) | Yes |
+| `https://mutqin.ai` | Marketing (home, waiting list, articles, robots, sitemap) | Yes |
 | `https://app.mutqin.ai` | Application (auth, workspace, remaining public pages) | Public marketing-style pages yes; product/auth no |
 
 `www.*` 301s to the apex host. Trailing slashes 301 to the slash-free path. `/about-us` 301s to `/about`. `/home` 301s to `/`.
 
 Canonical hosts:
 
-- Home and waiting list → `https://mutqin.ai…`
+- Home, waiting list, and articles → `https://mutqin.ai…`
 - About, pricing, privacy, mission, support → `https://app.mutqin.ai…`
 
 ## Central catalog
@@ -40,6 +40,7 @@ Do not generate thin pages for reserved prefixes.
 
 - `/` (home)
 - `/waiting-list`
+- `/articles` and `/articles/:slug`
 - `/about` (canonical; `/about-us` redirects)
 - `/pricing`
 - `/privacy`
@@ -64,7 +65,8 @@ Used only where it matches the page:
 
 - `Organization`, `WebSite`, `SoftwareApplication` on home (and software again on pricing)
 - `BreadcrumbList` when there is more than Home
-- `Article` on launched guides
+- `CollectionPage` + `ItemList` on `/articles`
+- `Article` on `/articles/:slug` and launched `/guides` articles
 - No `aggregateRating` / review spam
 
 Homepage title: **Quran Memorization App with AI | Mutqin**. Visible copy still uses the existing product voice; English hero description names Quran memorization, Hifz, and AI recitation.

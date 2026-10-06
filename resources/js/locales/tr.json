@@ -96,6 +96,7 @@
     "home": "Ana sayfa",
     "dashboard": "yeriniz hifz",
     "memorisation": "Memorisation",
+    "guides": "Yazılar",
     "profile": "Profil",
     "subscription": "Abonelik",
     "settings": "Ayarlar"
@@ -419,6 +420,7 @@
       "features": "« Features»",
       "featurePages": "Tüm özellikler",
       "guides": "Hifz rehberleri",
+      "articles": "Yazılar ve rehberler",
       "tools": "Hifz araçları",
       "howItWorks": "How it works",
       "pricing": "« Pricing»",
@@ -2725,7 +2727,7 @@
         "combinedFromQuiz": "From yeriniz quiz",
         "combinedFromSession": "From this oturum",
         "combinedRepeatWeakAyah": "ayah {ayah} still feels tricky. We kalıcı olarak practise Bu ayah again.",
-        "combinedRepeatWeakAyahs": "Some ayah still ihtiyaç duyar help. We kalıcı olarak practise Bu set again.",
+        "combinedRepeatWeakAyahs": "Ayetler {ayahs} hâlâ destek istiyor. Bu seti, o ayetlere ekstra dikkatle tekrar çalışacağız.",
         "combinedRepeatBoth": "yeriniz kontroller show a few hard spots. We kalıcı olarak practise Bu set again.",
         "combinedRepeatOne": "Some parts still ihtiyaç duyar help. We kalıcı olarak practise Bu ayah again.",
         "combinedRepeatDespiteStrong": "yeriniz kontrol looked good. We are still giving Bu ayah one more calm pass.",
@@ -5508,6 +5510,38 @@
     "homeLink": "Home",
     "aboutLink": "About",
     "contactLink": "Contact"
+  },
+  "articlesPage": {
+    "kicker": "Yazılar ve rehberler",
+    "title": "Kur'an ezberine dair kaynaklar ve bakışlar",
+    "subtitle": "Pratik rehberler, ezber teknikleri, tekrar stratejileri ve Kur'an ile ilişkinizi güçlendirmeye yardımcı içgörüler.",
+    "searchLabel": "Yazılarda ara",
+    "searchPlaceholder": "Yazılarda ara",
+    "searchClear": "Aramayı temizle",
+    "listLabel": "Yazılar",
+    "emptyTitle": "Yazı bulunamadı",
+    "emptyBody": "Farklı bir konu aramayı deneyin.",
+    "loadMore": "Daha fazla yükle",
+    "photoCredit": "Fotoğraf: {name} / Pexels",
+    "photosNote": "Yazı fotoğrafları Pexels’ten.",
+    "filtersLabel": "Yazı kategorileri",
+    "filterAll": "Tümü",
+    "filterSummary": "{total} içinden {shown} gösteriliyor"
+  },
+  "articleDetail": {
+    "home": "Ana sayfa",
+    "articles": "Yazılar",
+    "published": "{date} tarihinde yayımlandı",
+    "updated": "{date} tarihinde güncellendi",
+    "readingTime": "{minutes} dk okuma",
+    "shareLabel": "Bu yazıyı paylaş",
+    "shareWhatsapp": "WhatsApp",
+    "shareNative": "Paylaş",
+    "shared": "Paylaşıldı",
+    "copyLink": "Bağlantıyı kopyala",
+    "copied": "Kopyalandı",
+    "related": "İlgili yazılar",
+    "back": "Tüm yazılar"
   },
   "ui": {
     "contact_inbox": "Contact Inbox"

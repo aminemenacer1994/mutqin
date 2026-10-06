@@ -101,10 +101,14 @@ export function recommendPracticeScope(input = {}) {
 
   const ayahCoverage = weakAyahs.length / sessionSpan
   const wordCount = weakWords.length
-  const denseLocal = wordCount > 0 && wordCount <= 4 && weakAyahs.length <= 2
-  const sparseSpread = weakAyahs.length >= 3 || ayahCoverage >= 0.5
+  const denseLocal = weakAyahs.length > 0
+    && weakAyahs.length <= 2
+    && (wordCount === 0 || wordCount <= 4)
+  // Half of a 4-ayah set is still a local cluster. Treat as spread only when
+  // three or more ayahs slipped, or three-quarters of a longer window.
+  const sparseSpread = weakAyahs.length >= 3 || ayahCoverage >= 0.75
 
-  if (denseLocal && !sparseSpread) {
+  if (denseLocal && outcome !== 'weak') {
     return {
       scope: PRACTICE_SCOPE.WEAK_AREAS,
       reasonKey: 'focusedCluster',

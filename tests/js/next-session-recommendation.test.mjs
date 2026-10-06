@@ -15,6 +15,7 @@ import {
   recommendationWhyPoints,
   composeRecommendationWhy,
   buildEvidenceBackedWhy,
+  collectWeakAyahTargets,
   maturityFromSignals,
   latinSurahLabel,
   formatAyahList,
@@ -143,6 +144,50 @@ function t(key, params = {}) {
   assert.match(evidence.summary, /Joining neighbouring ayahs/)
   assert.match(evidence.summary, /matched 12 of 15/)
   assert.doesNotMatch(evidence.summary, /secure|next recommended set/i)
+
+  const fromHistory = collectWeakAyahTargets({
+    recommendation: {
+      ayah_range: { from: 1, to: 4, focus_ayahs: [1] },
+      previous_attempts: [{
+        weak_ayahs: [3],
+        wordStatuses: [
+          { ayahNumber: 3, wordIndex: 0, text: 'لَمْ', status: 'incorrect' },
+        ],
+      }],
+      personalisation: {
+        open_weak_spots: [
+          { surah_number: 112, ayah_number: 3, status: 'active' },
+          { surah_number: 2, ayah_number: 5, status: 'active' },
+          { surah_number: 112, ayah_number: 4, status: 'resolved' },
+        ],
+      },
+    },
+    planWeakAyahs: [1],
+    surahId: 112,
+    sessionFrom: 1,
+    sessionTo: 4,
+  })
+  assert.deepEqual(fromHistory, [1, 3])
+
+  const fromWordsOnly = collectWeakAyahTargets({
+    aiDetails: {
+      wordStatuses: [
+        { ayahNumber: 1, status: 'incorrect' },
+        { ayahNumber: 2, status: 'correct' },
+        { ayahNumber: 3, status: 'incorrect' },
+        { ayahNumber: 4, status: 'correct' },
+      ],
+    },
+  })
+  assert.deepEqual(fromWordsOnly, [1, 3])
+
+  const why = composeRecommendationWhy([
+    'Some verses still need help. We will practise this set again.',
+    'Pay extra attention to ayahs 1, 3. Those still need the most support.',
+    'This set is secure, continue with the recommended technique on the next set.',
+  ], { isRepeat: true, weakAyahs: fromWordsOnly })
+  assert.match(why, /ayahs 1, 3|Some verses still need help/i)
+  assert.doesNotMatch(why, /this set is secure/i)
 }
 
 {

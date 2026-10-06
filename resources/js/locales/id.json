@@ -96,6 +96,7 @@
     "home": "Beranda",
     "dashboard": "Anda hifz",
     "memorisation": "Hafalan",
+    "guides": "Artikel",
     "profile": "Profil",
     "subscription": "Langganan",
     "settings": "Pengaturan"
@@ -419,6 +420,7 @@
       "features": "Fitur",
       "featurePages": "Semua fitur",
       "guides": "Panduan Hifz",
+      "articles": "Artikel dan panduan",
       "tools": "Alat Hifz",
       "howItWorks": "How it works",
       "pricing": "Harga",
@@ -2725,7 +2727,7 @@
         "combinedFromQuiz": "dari Anda quiz",
         "combinedFromSession": "From this sesi",
         "combinedRepeatWeakAyah": "ayah {ayah} still feels tricky. We akan practise Ayah ayah again.",
-        "combinedRepeatWeakAyahs": "Some ayah still perlu help. We akan practise Ini set again.",
+        "combinedRepeatWeakAyahs": "Ayat {ayahs} masih perlu dukungan. Latih set ini lagi dengan perhatian lebih pada ayat tersebut.",
         "combinedRepeatBoth": "Anda pemeriksaan show a few hard spots. We akan practise Ini set again.",
         "combinedRepeatOne": "Some parts still perlu help. We akan practise Ayah ayah again.",
         "combinedRepeatDespiteStrong": "Anda periksa looked good. We are still giving Ayah ayah one more calm pass.",
@@ -5508,6 +5510,38 @@
     "homeLink": "Home",
     "aboutLink": "About",
     "contactLink": "Contact"
+  },
+  "articlesPage": {
+    "kicker": "Artikel & Panduan",
+    "title": "Sumber dan wawasan menghafal Al-Qur'an",
+    "subtitle": "Panduan praktis, teknik menghafal, strategi murajaah, dan wawasan untuk memperkuat hubungan Anda dengan Al-Qur'an.",
+    "searchLabel": "Cari artikel",
+    "searchPlaceholder": "Cari artikel",
+    "searchClear": "Hapus pencarian",
+    "listLabel": "Artikel",
+    "emptyTitle": "Artikel tidak ditemukan",
+    "emptyBody": "Coba cari topik yang berbeda.",
+    "loadMore": "Muat lebih banyak",
+    "photoCredit": "Foto: {name} / Pexels",
+    "photosNote": "Foto artikel dari Pexels.",
+    "filtersLabel": "Kategori artikel",
+    "filterAll": "Semua",
+    "filterSummary": "Menampilkan {shown} dari {total}"
+  },
+  "articleDetail": {
+    "home": "Beranda",
+    "articles": "Artikel",
+    "published": "Diterbitkan {date}",
+    "updated": "Diperbarui {date}",
+    "readingTime": "{minutes} mnt baca",
+    "shareLabel": "Bagikan artikel ini",
+    "shareWhatsapp": "WhatsApp",
+    "shareNative": "Bagikan",
+    "shared": "Dibagikan",
+    "copyLink": "Salin tautan",
+    "copied": "Disalin",
+    "related": "Artikel terkait",
+    "back": "Semua artikel"
   },
   "ui": {
     "contact_inbox": "Contact Inbox"

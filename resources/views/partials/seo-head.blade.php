@@ -3,6 +3,9 @@
 @endphp
 <title>{{ $seo->title }}</title>
 <meta name="description" content="{{ $seo->description }}" data-mutqin-seo="1">
+@if ($seo->keywords !== '')
+<meta name="keywords" content="{{ $seo->keywords }}" data-mutqin-seo="1">
+@endif
 <meta name="robots" content="{{ $seo->robots }}" data-mutqin-seo="1">
 @if ($googleVerification = trim((string) config('seo.google_site_verification', '')))
 <meta name="google-site-verification" content="{{ $googleVerification }}">

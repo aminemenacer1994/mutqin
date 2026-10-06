@@ -96,6 +96,7 @@
     "home": "Inicio",
     "dashboard": "Progreso",
     "memorisation": "Memorización",
+    "guides": "Artículos",
     "profile": "Perfil",
     "subscription": "Suscripción",
     "settings": "Ajustes"
@@ -419,6 +420,7 @@
       "features": "Funciones",
       "featurePages": "Todas las funciones",
       "guides": "Guías de Hifz",
+      "articles": "Artículos y guías",
       "tools": "Herramientas de Hifz",
       "howItWorks": "Cómo funciona",
       "pricing": "Precios",
@@ -2713,7 +2715,7 @@
         "combinedFromQuiz": "De tu cuestionario",
         "combinedFromSession": "De esta sesión",
         "combinedRepeatWeakAyah": "El verso {ayah} aún se siente difícil. Practicaremos de nuevo estos versos.",
-        "combinedRepeatWeakAyahs": "Algunos versos aún necesitan ayuda. Practicaremos de nuevo este conjunto.",
+        "combinedRepeatWeakAyahs": "Los versículos {ayahs} aún necesitan apoyo. Practicaremos de nuevo este conjunto, con más atención en esos versículos.",
         "combinedRepeatBoth": "Tus controles muestran algunos puntos difíciles. Practicaremos de nuevo este conjunto.",
         "combinedRepeatOne": "Algunas partes aún necesitan ayuda. Practicaremos de nuevo estos versos.",
         "combinedRepeatDespiteStrong": "El control se vio bien. Aun así damos a estos versos otro paso calmado.",
@@ -5529,6 +5531,38 @@
     "homeLink": "Home",
     "aboutLink": "About",
     "contactLink": "Contact"
+  },
+  "articlesPage": {
+    "kicker": "Artículos y guías",
+    "title": "Recursos e ideas para memorizar el Corán",
+    "subtitle": "Guías prácticas, técnicas de memorización, estrategias de revisión y consejos para fortalecer tu relación con el Corán.",
+    "searchLabel": "Buscar artículos",
+    "searchPlaceholder": "Buscar artículos",
+    "searchClear": "Borrar búsqueda",
+    "listLabel": "Artículos",
+    "emptyTitle": "No se encontraron artículos",
+    "emptyBody": "Prueba a buscar otro tema.",
+    "loadMore": "Cargar más",
+    "photoCredit": "Foto: {name} / Pexels",
+    "photosNote": "Fotos de artículos en Pexels.",
+    "filtersLabel": "Categorías de artículos",
+    "filterAll": "Todos",
+    "filterSummary": "Mostrando {shown} de {total}"
+  },
+  "articleDetail": {
+    "home": "Inicio",
+    "articles": "Artículos",
+    "published": "Publicado el {date}",
+    "updated": "Actualizado el {date}",
+    "readingTime": "{minutes} min de lectura",
+    "shareLabel": "Compartir este artículo",
+    "shareWhatsapp": "WhatsApp",
+    "shareNative": "Compartir",
+    "shared": "Compartido",
+    "copyLink": "Copiar enlace",
+    "copied": "Copiado",
+    "related": "Artículos relacionados",
+    "back": "Todos los artículos"
   },
   "ui": {
     "contact_inbox": "Bandeja de contacto"

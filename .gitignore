@@ -30,3 +30,5 @@ tmp-*.png
 tmp-*.json
 /.cursor/
 /scratch/
+/ackee/.env
+/ackee/data/

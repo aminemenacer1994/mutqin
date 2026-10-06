@@ -155,6 +155,7 @@ import {
   trackSeoLandingView,
   trackWaitingListJoin,
 } from '../scripts/seoTools/track.js';
+import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -439,6 +440,7 @@ export default {
         status.message = '';
         joined.value = true;
         trackWaitingListJoin({ alreadyJoined: false });
+        trackAckeeEvent(ACKEE_EVENTS.WAITING_LIST_SIGNUP_COMPLETED);
         resetFormFields();
         await nextTick();
         const reduceMotion = typeof window !== 'undefined'

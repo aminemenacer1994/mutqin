@@ -124,6 +124,10 @@ const publicRoutes = [
   {
     path: '/waiting-list',
     selectors: ['.waiting-list-page', '.waiting-list-shell', '.waiting-list-hero']
+  },
+  {
+    path: '/articles',
+    selectors: ['.articles-page', '.articles-hero', '.articles-grid', '.article-card', '.article-search', '.article-filters']
   }
 ]
 

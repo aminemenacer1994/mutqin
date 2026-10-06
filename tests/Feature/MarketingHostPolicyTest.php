@@ -56,6 +56,15 @@ class MarketingHostPolicyTest extends TestCase
         $this->getOnMarketingHost('/pricing')
             ->assertRedirect('https://app.mutqin.ai/pricing');
 
+        $this->getOnMarketingHost('/articles')
+            ->assertOk()
+            ->assertSee('<articles-page', false)
+            ->assertSee('Qur&#039;an Memorisation Articles &amp; Guides | Mutqin', false);
+
+        $this->getOnMarketingHost('/articles/how-to-memorise-the-quran-beginners-guide')
+            ->assertOk()
+            ->assertSee('<article-detail-page', false);
+
         $response = $this->getOnMarketingHost('/waiting-list');
         $response->assertOk()
             ->assertSee('waiting-list-page', false)

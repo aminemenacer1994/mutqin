@@ -1,0 +1,32 @@
+# Put a TLS reverse proxy in front of Ackee.
+# Requires DNS: analytics.mutqin.ai → this machine, ports 80 and 443 open.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+
+services:
+  ackee:
+    ports: !reset []
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      ACKEE_PUBLIC_HOST: ${ACKEE_PUBLIC_HOST:-analytics.mutqin.ai}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - ackee
+    networks:
+      - ackee
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -100,6 +100,21 @@ return [
         ),
     ],
 
+    'ackee' => [
+        // Privacy-first page views + named actions. IDs are public tracker tokens, not secrets.
+        // Off in local/testing unless ACKEE_ENABLED=true (JS still ignores localhost by default).
+        'enabled' => filter_var(
+            env('ACKEE_ENABLED', env('APP_ENV') === 'production'),
+            FILTER_VALIDATE_BOOL
+        ),
+        'server' => rtrim(trim((string) env('ACKEE_SERVER', 'https://analytics.mutqin.ai')), '/'),
+        'domain_id_website' => trim((string) env('ACKEE_DOMAIN_ID_WEBSITE', '')),
+        'domain_id_app' => trim((string) env('ACKEE_DOMAIN_ID_APP', '')),
+        // One Ackee Event whose action `key` is the Mutqin event name.
+        'event_id' => trim((string) env('ACKEE_EVENT_ID', '')),
+        'allow_localhost' => filter_var(env('ACKEE_ALLOW_LOCALHOST', false), FILTER_VALIDATE_BOOL),
+    ],
+
     'google' => [
         // Trim: Laravel Cloud / .env editors often leave trailing whitespace that
         // produces Google's "OAuth client was not found" (invalid_client).
@@ -117,6 +132,10 @@ return [
         'publishable_key' => env('STRIPE_PUBLISHABLE_KEY'),
         'secret_key' => env('STRIPE_SECRET_KEY'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'pexels' => [
+        'api_key' => trim((string) env('PEXELS_API_KEY', '')),
     ],
 
 ];

@@ -2,6 +2,7 @@
 
 namespace App\Support\Seo;
 
+use App\Support\Articles\PlaceholderArticles;
 use App\Support\MutqinDomains;
 use Illuminate\Http\Request;
 
@@ -54,11 +55,15 @@ final class SeoCatalog
         $robots = $indexable ? 'index, follow' : 'noindex, follow';
         $ogType = $definition['og_type'] ?? 'website';
         $ogImagePath = (string) ($definition['og_image'] ?? self::OG_IMAGE_PATH);
-        if ($ogImagePath === '' || ! str_starts_with($ogImagePath, '/')) {
-            $ogImagePath = self::OG_IMAGE_PATH;
+        if (str_starts_with($ogImagePath, 'https://')) {
+            $ogImage = $ogImagePath;
+        } else {
+            if ($ogImagePath === '' || ! str_starts_with($ogImagePath, '/')) {
+                $ogImagePath = self::OG_IMAGE_PATH;
+            }
+            $ogImageHost = str_starts_with($ogImagePath, '/images/') ? 'marketing' : 'app';
+            $ogImage = self::absoluteUrl($ogImagePath, $ogImageHost, $request);
         }
-        $ogImageHost = str_starts_with($ogImagePath, '/images/') ? 'marketing' : 'app';
-        $ogImage = self::absoluteUrl($ogImagePath, $ogImageHost, $request);
         $ogLocale = self::ogLocale();
         $ogImageAlt = (string) ($definition['og_image_alt'] ?? self::OG_IMAGE_ALT);
 
@@ -87,8 +92,8 @@ final class SeoCatalog
             ogDescription: $definition['og_description'] ?? $description,
             ogUrl: $canonical,
             ogImage: $ogImage,
-            ogImageWidth: self::OG_IMAGE_WIDTH,
-            ogImageHeight: self::OG_IMAGE_HEIGHT,
+            ogImageWidth: (int) ($definition['og_image_width'] ?? self::OG_IMAGE_WIDTH),
+            ogImageHeight: (int) ($definition['og_image_height'] ?? self::OG_IMAGE_HEIGHT),
             ogImageAlt: $ogImageAlt,
             ogLocale: $ogLocale,
             twitterCard: 'summary_large_image',
@@ -98,6 +103,7 @@ final class SeoCatalog
             hreflang: $hreflang,
             jsonLd: $jsonLd,
             indexable: $indexable,
+            keywords: (string) ($definition['keywords'] ?? ''),
         );
     }
 
@@ -144,6 +150,7 @@ final class SeoCatalog
             'Allow: /features',
             'Allow: /guides',
             'Allow: /tools',
+            'Allow: /articles',
             'Disallow: /login',
             'Disallow: /register',
             'Disallow: /password',
@@ -265,6 +272,7 @@ final class SeoCatalog
             self::coreIndexableDefinitions(),
             SeoLaunchPages::catalogDefinitions(),
             SeoArticles::catalogDefinitions(),
+            PlaceholderArticles::catalogDefinitions(),
         );
     }
 
@@ -368,6 +376,28 @@ final class SeoCatalog
                 'breadcrumbs' => [
                     ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
                     ['name' => 'Our mission', 'path' => '/our-mission', 'host' => 'app'],
+                ],
+            ],
+            [
+                'page' => 'articles',
+                'paths' => ['/articles'],
+                'canonical_path' => '/articles',
+                'canonical_host' => 'marketing',
+                'indexable' => true,
+                'priority' => '0.8',
+                'changefreq' => 'weekly',
+                'title' => 'Qur\'an Memorisation Articles & Guides | Mutqin',
+                'description' => 'Explore practical Qur\'an memorisation guides, Hifz techniques, revision strategies, Mutashabihat advice and resources from Mutqin.',
+                'keywords' => 'Quran memorisation, Hifz guides, Qur\'an revision, Mutashabihat, memorisation techniques, Mutqin articles',
+                'og_type' => 'website',
+                'og_image' => 'https://images.pexels.com/photos/30890556/pexels-photo-30890556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200',
+                'og_image_width' => 1200,
+                'og_image_height' => 627,
+                'og_image_alt' => 'A person reads the Quran inside a mosque',
+                'json_ld' => ['organization', 'website', 'collection'],
+                'breadcrumbs' => [
+                    ['name' => 'Home', 'path' => '/', 'host' => 'marketing'],
+                    ['name' => 'Articles', 'path' => '/articles', 'host' => 'marketing'],
                 ],
             ],
             [
@@ -573,6 +603,38 @@ final class SeoCatalog
                 $article['dateModified'] = (string) $articleMeta['dateModified'];
             }
             $blocks[] = $article;
+        }
+        if (in_array('collection', $types, true)) {
+            $entries = PlaceholderArticles::all();
+            $listItems = [];
+            foreach ($entries as $index => $entry) {
+                $listItems[] = [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'name' => (string) ($entry['title'] ?? ''),
+                    'url' => self::absoluteUrl('/articles/'.(string) ($entry['slug'] ?? $entry['id'] ?? ''), 'marketing', $request),
+                    'description' => (string) ($entry['excerpt'] ?? ''),
+                    'image' => (string) ($entry['image'] ?? $ogImage),
+                ];
+            }
+            $blocks[] = [
+                '@type' => 'CollectionPage',
+                '@id' => $canonical.'#collection',
+                'name' => $title,
+                'description' => $description,
+                'url' => $canonical,
+                'inLanguage' => 'en',
+                'isPartOf' => ['@id' => $marketingHome.'#website'],
+                'about' => [
+                    '@type' => 'Thing',
+                    'name' => 'Qur\'an memorisation and Hifz',
+                ],
+                'mainEntity' => [
+                    '@type' => 'ItemList',
+                    'numberOfItems' => count($listItems),
+                    'itemListElement' => $listItems,
+                ],
+            ];
         }
         if (count($breadcrumbs) > 1) {
             $blocks[] = [

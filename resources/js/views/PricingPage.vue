@@ -83,6 +83,7 @@
                 :href="plan.ctaHref"
                 class="btn"
                 :class="plan.ctaClass"
+                @click="onUpgradeClick"
               >
                 {{ plan.ctaLabel }}
               </a>
@@ -198,6 +199,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
+import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js';
 
 function readBillingDisplay() {
   const billing = window.mutqinBilling || {};
@@ -277,6 +279,7 @@ export default {
       window.addEventListener('mutqin:theme-change', handleThemeChange);
       observeReveals();
       startCheckoutIfRequested();
+      trackAckeeEvent(ACKEE_EVENTS.PRICING_VIEWED);
     });
 
     onUnmounted(() => {
@@ -292,7 +295,14 @@ export default {
       setGlobalTheme(currentTheme.value, { dispatchEvent: false, persist: false });
     }
 
+    function onUpgradeClick() {
+      trackAckeeEvent(ACKEE_EVENTS.UPGRADE_CLICKED);
+    }
+
     function onBillingSubmit(event) {
+      if (event?.target?.getAttribute('action') === '/checkout') {
+        trackAckeeEvent(ACKEE_EVENTS.UPGRADE_CLICKED);
+      }
       if (billingBusy.value) {
         event.preventDefault();
         return;
@@ -314,6 +324,7 @@ export default {
         const form = document.getElementById('pricing-checkout-form');
         if (!form || billingBusy.value) return;
         billingBusy.value = true;
+        trackAckeeEvent(ACKEE_EVENTS.UPGRADE_CLICKED);
         form.submit();
       }, 0);
     }
@@ -453,7 +464,8 @@ export default {
       highlights,
       faqItems,
       plans,
-      onBillingSubmit
+      onBillingSubmit,
+      onUpgradeClick
     };
   }
 };

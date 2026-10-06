@@ -11,7 +11,7 @@ import {
 } from '../techniques/techniqueDisplay.js'
 import { formatRepetitionCountLabel, formatAyahNumberSpans } from '../formatting/ayahLabels.js'
 import { estimatePracticeDuration, inferAudioDurationSeconds, normaliseWeakWordRecords } from '../session/sessionPracticeCoach.js'
-import { recitationWordAyahNumber } from '../engine/recitation_analysis.js'
+import { deriveWeakAyahsFromWordStatuses, recitationWordAyahNumber } from '../engine/recitation_analysis.js'
 import { RECITATION_THRESHOLDS } from '../engine/recitationThresholds.js'
 import {
   resolveRecommendedPlaybackSpeed,
@@ -809,6 +809,9 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
       aiDetails: snapshot.aiDetails || null,
       recommendation,
       completion: snapshot.completion || null,
+      surahId: Number(snapshot.chapterId || recommendation?.surah?.id || 0) || null,
+      sessionFrom,
+      sessionTo,
     })
     const focusAyahs = weakAyahs.filter((ayah) => (
       !sessionFrom || (ayah >= sessionFrom && ayah <= sessionTo)
@@ -1265,7 +1268,7 @@ export function estimatePracticeMinutes(input = {}) {
 }
 
 /**
- * Collect weak ayah numbers from quiz, AI, and session replay signals.
+ * Collect weak ayah numbers from this sitting, saved plans, and mistake history.
  */
 function ayahNumbersFromMixedList(list) {
   if (!Array.isArray(list)) return []
@@ -1274,11 +1277,56 @@ function ayahNumbersFromMixedList(list) {
     .filter((n) => Number.isFinite(n) && n > 0)
 }
 
+function wordStatusesFromSource(source) {
+  if (!source || typeof source !== 'object') return []
+  if (Array.isArray(source.wordStatuses)) return source.wordStatuses
+  if (Array.isArray(source.word_statuses)) return source.word_statuses
+  return []
+}
+
+function ayahsFromAttemptHistory(attempts) {
+  if (!Array.isArray(attempts)) return []
+  const out = []
+  for (const attempt of attempts) {
+    if (!attempt || typeof attempt !== 'object') continue
+    out.push(...ayahNumbersFromMixedList(attempt.weak_ayahs || attempt.weakAyahs || attempt.focus_ayahs))
+    out.push(...normaliseWeakWordRecords(attempt.weak_words || attempt.weakWords || []).map((word) => Number(word.ayahNumber)))
+    out.push(...deriveWeakAyahsFromWordStatuses(wordStatusesFromSource(attempt)))
+  }
+  return out
+}
+
+function ayahsFromOpenWeakSpots(spots, { surahId = null, sessionFrom = null, sessionTo = null } = {}) {
+  if (!Array.isArray(spots)) return []
+  const surah = Number(surahId) || 0
+  const from = Number(sessionFrom) || 0
+  const to = Number(sessionTo) || from
+  return spots
+    .map((spot) => {
+      if (spot == null || typeof spot !== 'object') return 0
+      const status = String(spot.status || '').toLowerCase()
+      if (status === 'resolved' || status === 'dormant') return 0
+      const spotSurah = Number(spot.surah_number ?? spot.surahId ?? spot.surah ?? 0)
+      if (surah > 0 && spotSurah > 0 && spotSurah !== surah) return 0
+      const ayah = Number(spot.ayah_number ?? spot.ayahNumber ?? spot.ayah ?? 0)
+      if (from > 0 && to >= from && (ayah < from || ayah > to)) return 0
+      return ayah
+    })
+    .filter((n) => Number.isFinite(n) && n > 0)
+}
+
 export function collectWeakAyahTargets({
   quizView = null,
   aiDetails = null,
   recommendation = null,
   completion = null,
+  planWeakAyahs = null,
+  extraWeakAyahs = null,
+  previousAttempts = null,
+  openWeakSpots = null,
+  surahId = null,
+  sessionFrom = null,
+  sessionTo = null,
 } = {}) {
   const fromQuiz = Array.isArray(quizView?.weakAyahs) ? quizView.weakAyahs : []
   const fromAi = Array.isArray(aiDetails?.weakAyahs)
@@ -1287,6 +1335,13 @@ export function collectWeakAyahTargets({
   const fromRecAi = Array.isArray(recommendation?.ai_assessment?.weak_ayahs)
     ? recommendation.ai_assessment.weak_ayahs
     : []
+  const fromFocus = [
+    ...ayahNumbersFromMixedList(recommendation?.ayah_range?.focus_ayahs),
+    ...ayahNumbersFromMixedList(recommendation?.settings?.focus_ayahs),
+    ...ayahNumbersFromMixedList(recommendation?.plan_detail?.focus_ayahs),
+    ...ayahNumbersFromMixedList(recommendation?.plan_detail?.weakAyahs || recommendation?.plan_detail?.weak_ayahs),
+  ]
+  const fromPlan = ayahNumbersFromMixedList(planWeakAyahs)
   const fromReplay = Array.isArray(completion?.replay_heavy_ayahs)
     ? completion.replay_heavy_ayahs
     : []
@@ -1304,8 +1359,36 @@ export function collectWeakAyahTargets({
     || recommendation?.ai_assessment?.weak_words
     || [],
   ).map((word) => Number(word.ayahNumber))
+  const fromWordHistory = [
+    ...deriveWeakAyahsFromWordStatuses(wordStatusesFromSource(aiDetails)),
+    ...deriveWeakAyahsFromWordStatuses(wordStatusesFromSource(recommendation?.ai_assessment)),
+    ...ayahsFromAttemptHistory(
+      previousAttempts
+      || recommendation?.previous_attempts
+      || recommendation?.related_attempts
+      || recommendation?.history,
+    ),
+    ...ayahsFromOpenWeakSpots(
+      openWeakSpots
+      || recommendation?.personalisation?.open_weak_spots
+      || recommendation?.open_weak_spots,
+      { surahId, sessionFrom, sessionTo },
+    ),
+    ...ayahNumbersFromMixedList(extraWeakAyahs),
+  ]
   return [...new Set(
-    [...fromQuiz, ...fromAi, ...fromRecAi, ...fromReplay, ...fromSkipped, ...fromSequence, ...fromWeakWords]
+    [
+      ...fromQuiz,
+      ...fromAi,
+      ...fromRecAi,
+      ...fromFocus,
+      ...fromPlan,
+      ...fromReplay,
+      ...fromSkipped,
+      ...fromSequence,
+      ...fromWeakWords,
+      ...fromWordHistory,
+    ]
       .map(Number)
       .filter((n) => Number.isFinite(n) && n > 0),
   )].sort((a, b) => a - b)
@@ -1376,6 +1459,10 @@ export function buildPersonalPracticePlan(input = {}) {
     aiDetails: input.aiDetails,
     recommendation,
     completion: input.completion,
+    planWeakAyahs: input.aiDetails?.weakAyahs,
+    surahId: Number(snapshot.chapterId || recommendation?.surah?.id || 0) || null,
+    sessionFrom: Number(snapshot.rangeStart || 0) || null,
+    sessionTo: Number(snapshot.rangeEnd || snapshot.rangeStart || 0) || null,
   })
 
   const sessionFrom = Number(snapshot.rangeStart || 0)
@@ -1849,6 +1936,10 @@ export function adaptRecommendationForAdaptiveAssessment(recommendation, policyR
     aiDetails: snapshot.aiDetails || null,
     recommendation,
     completion: snapshot.completion || null,
+    extraWeakAyahs: Array.isArray(policyRecommendation.weak_ayahs) ? policyRecommendation.weak_ayahs : [],
+    surahId: Number(snapshot.chapterId || recommendation?.surah?.id || 0) || null,
+    sessionFrom: snapFrom || null,
+    sessionTo: snapTo || null,
   })
   const focusedRange = buildFocusedPracticeRange({
     weakAyahs,

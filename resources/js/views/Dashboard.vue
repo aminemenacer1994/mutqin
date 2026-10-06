@@ -221,6 +221,11 @@
                       lang="ar"
                       dir="rtl"
                     >{{ item.phrase }}</span>
+                    <span
+                      v-if="weakHistoryLine(item)"
+                      class="dash-murajaah-row__history"
+                      data-testid="dash-weak-history"
+                    >{{ weakHistoryLine(item) }}</span>
                   </a>
                   <div class="dash-murajaah-row__aside">
                     <span
@@ -695,6 +700,11 @@
                       lang="ar"
                       dir="rtl"
                     >{{ item.phrase }}</p>
+                    <p
+                      v-if="weakHistoryLine(item)"
+                      class="dash-drawer__row-meta dash-drawer__murajaah-history"
+                      data-testid="dash-weak-history"
+                    >{{ weakHistoryLine(item) }}</p>
                     <p v-else-if="item.explanation_key" class="dash-drawer__row-meta dash-drawer__murajaah-note">
                       {{ t(`dashboard.${item.explanation_key}`) }}
                     </p>
@@ -788,6 +798,7 @@ import { activeSessionSnapshotKey } from '../utils/mutqinStorageKeys'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
+import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -1623,6 +1634,7 @@ export default {
     this.setupContinueObserver()
     this.loadAiReciteResults()
     this.scrollToAiReciteResults()
+    trackAckeeEvent(ACKEE_EVENTS.PROGRESS_DASHBOARD_VIEWED)
   },
   beforeUnmount() {
     try { this._dashboardAbort?.abort?.() } catch (_) { /* ignore */ }
@@ -1883,6 +1895,32 @@ export default {
       if (key === 'building') return this.t('dashboard.strength_building')
       if (key === 'strong') return this.t('dashboard.strength_strong')
       return item?.strength_label || ''
+    },
+    weakHistoryStatusLabel(item) {
+      const status = String(item?.history_status || '').toLowerCase()
+      if (status === 'improving') return this.t('dashboard.weak_history_status_improving')
+      if (status === 'resolved') return this.t('dashboard.weak_history_status_resolved')
+      if (status === 'active') return this.t('dashboard.weak_history_status_active')
+      return ''
+    },
+    weakHistoryLine(item) {
+      if (!item) return ''
+      const attempts = Number(item.history_attempts || 0)
+      const parts = []
+      if (attempts === 1) {
+        parts.push(this.t('dashboard.weak_history_attempts_one', { n: 1 }))
+      } else if (attempts > 1) {
+        parts.push(this.t('dashboard.weak_history_attempts', { n: attempts }))
+      }
+      const status = this.weakHistoryStatusLabel(item)
+      if (status && String(item.history_status || '') !== 'active') {
+        parts.push(status)
+      }
+      const when = this.formatActivityDate(item.last_identified_at || item.detected_at)
+      if (when && attempts > 0) {
+        parts.push(this.t('dashboard.weak_history_last', { when }))
+      }
+      return parts.filter(Boolean).join(' · ')
     },
     completionBar(label, value) {
       const display = progressBarDisplay(value)

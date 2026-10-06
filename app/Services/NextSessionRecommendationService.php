@@ -2035,6 +2035,19 @@ class NextSessionRecommendationService
         $to = (int) ($context['range_end'] ?? $current->ayah_end ?? 0);
         $surah = $context['surah'];
 
+        $historyAyahs = $this->historicalWeakAyahsInRange(
+            $user,
+            (int) ($surah['id'] ?? $current->surah_number ?? 0),
+            $from,
+            $to
+        );
+        if ($historyAyahs !== []) {
+            $adaptationContext['weak_ayahs'] = array_values(array_unique(array_merge(
+                array_map('intval', is_array($adaptationContext['weak_ayahs'] ?? null) ? $adaptationContext['weak_ayahs'] : []),
+                $historyAyahs
+            )));
+        }
+
         $focused = $this->resolveFocusedAyahRange(
             $adaptationContext,
             $from,
@@ -2127,10 +2140,12 @@ class NextSessionRecommendationService
         if (is_array($adaptationContext['plan_detail'] ?? null)) {
             $payload['plan_detail'] = $adaptationContext['plan_detail'];
         }
-        if (is_array($adaptationContext['focus_ayahs'] ?? null)) {
-            $payload['ayah_range']['focus_ayahs'] = array_values(array_map('intval', $adaptationContext['focus_ayahs']));
-        } elseif ($focused !== null && ! empty($focused['focus_ayahs'])) {
-            $payload['ayah_range']['focus_ayahs'] = $focused['focus_ayahs'];
+        if (is_array($adaptationContext['focus_ayahs'] ?? null) || ($focused !== null && ! empty($focused['focus_ayahs']))) {
+            $payload['ayah_range']['focus_ayahs'] = array_values(array_unique(array_merge(
+                array_map('intval', is_array($adaptationContext['focus_ayahs'] ?? null) ? $adaptationContext['focus_ayahs'] : []),
+                array_map('intval', is_array($focused['focus_ayahs'] ?? null) ? $focused['focus_ayahs'] : []),
+            )));
+            sort($payload['ayah_range']['focus_ayahs']);
         }
 
         $this->markSuperseded($current);
@@ -2345,6 +2360,11 @@ class NextSessionRecommendationService
                     : (is_array($context['focus_ayahs'] ?? null)
                         ? array_values(array_map('intval', $context['focus_ayahs']))
                         : []);
+                $history = is_array($context['weak_ayahs'] ?? null)
+                    ? array_values(array_map('intval', $context['weak_ayahs']))
+                    : [];
+                $focus = array_values(array_unique(array_merge($focus, $history)));
+                sort($focus);
 
                 return [
                     'from' => $from,
@@ -2733,6 +2753,34 @@ class NextSessionRecommendationService
         $assessment['weak_ayahs'] = $weakAyahs;
 
         return $assessment;
+    }
+
+    /**
+     * Active/improving weak spots already stored for this learner in the session window.
+     *
+     * @return list<int>
+     */
+    private function historicalWeakAyahsInRange(User $user, int $surah, int $from, int $to): array
+    {
+        if ($surah <= 0 || $from <= 0 || $to < $from) {
+            return [];
+        }
+
+        return MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->where('surah_number', $surah)
+            ->whereBetween('ayah_number', [$from, $to])
+            ->whereIn('status', [
+                MemorisationWeakSpot::STATUS_ACTIVE,
+                MemorisationWeakSpot::STATUS_IMPROVING,
+            ])
+            ->pluck('ayah_number')
+            ->map(static fn ($ayah): int => (int) $ayah)
+            ->filter(static fn (int $ayah): bool => $ayah > 0)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 
     /**

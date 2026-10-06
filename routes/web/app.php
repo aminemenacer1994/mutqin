@@ -17,6 +17,7 @@ use App\Http\Controllers\Internal\HealthController as InternalHealthController;
 use App\Http\Controllers\MadaniPageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuranProxyController;
+use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\WaitingListController;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
@@ -130,6 +131,10 @@ Route::view('/privacy', 'content.privacy')->name('privacy');
 Route::view('/our-mission', 'content.our-mission')->name('our-mission');
 Route::view('/donate', 'content.donate')->name('donate');
 Route::view('/waiting-list', 'content.waiting-list')->name('waiting-list');
+Route::view('/articles', 'content.articles')->name('articles');
+Route::get('/articles/{slug}', [ArticleController::class, 'show'])
+    ->where('slug', '[a-z0-9\-]+')
+    ->name('articles.show');
 Route::post('/waiting-list', [WaitingListController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('waiting-list.store');

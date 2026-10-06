@@ -10,6 +10,7 @@ use App\Models\LearningAnalytic;
 use App\Models\MemorisationAssessment;
 use App\Models\MemorisationProgress;
 use App\Models\MemorisationSyncState;
+use App\Models\MemorisationWeakSpot;
 use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserLastPosition;
@@ -921,6 +922,59 @@ class DashboardTest extends TestCase
         $this->assertCount(4, $response->json('data.weaknesses.all_items'));
         $this->assertTrue($response->json('data.weaknesses.has_more'));
         $this->assertNull($response->json('data.weaknesses.view_all_href'));
+    }
+
+    public function test_murajaah_includes_persisted_weak_ayah_history(): void
+    {
+        $user = User::factory()->create();
+
+        MemorisationWeakSpot::create([
+            'user_id' => $user->id,
+            'spot_type' => MemorisationWeakSpot::TYPE_WORD,
+            'surah_number' => 112,
+            'ayah_number' => 1,
+            'word_index' => 0,
+            'verse_key' => '112:1',
+            'spot_key' => '112:1:0-dash',
+            'severity' => 'high',
+            'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+            'affected_attempt_count' => 3,
+            'first_identified_at' => now()->subDays(6),
+            'last_identified_at' => now()->subDay(),
+            'metadata' => ['text' => 'قُل'],
+        ]);
+        MemorisationWeakSpot::create([
+            'user_id' => $user->id,
+            'spot_type' => MemorisationWeakSpot::TYPE_AYAH,
+            'surah_number' => 112,
+            'ayah_number' => 3,
+            'word_index' => null,
+            'verse_key' => '112:3',
+            'spot_key' => '112:3:ayah-dash',
+            'severity' => 'medium',
+            'status' => MemorisationWeakSpot::STATUS_IMPROVING,
+            'trend' => 'improving',
+            'affected_attempt_count' => 2,
+            'first_identified_at' => now()->subDays(8),
+            'last_identified_at' => now()->subDays(2),
+            'metadata' => ['text' => 'لَمْ'],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk();
+
+        $items = collect($response->json('data.weaknesses.all_items'));
+        $this->assertGreaterThanOrEqual(2, $response->json('data.weaknesses.history_count'));
+        $ayahOne = $items->firstWhere('ayah_number', 1);
+        $this->assertSame(112, (int) ($ayahOne['surah_number'] ?? 0));
+        $this->assertSame(3, (int) ($ayahOne['history_attempts'] ?? 0));
+        $this->assertSame('active', $ayahOne['history_status'] ?? null);
+        $this->assertSame('قُل', $ayahOne['phrase'] ?? null);
+        $ayahThree = $items->firstWhere('ayah_number', 3);
+        $this->assertSame('improving', $ayahThree['history_status'] ?? null);
+        $this->assertSame(2, (int) ($ayahThree['history_attempts'] ?? 0));
+        $this->assertSame('112:1', $response->json('data.weaknesses.items.0.key'));
     }
 
     public function test_murajaah_includes_weak_ayahs_from_ai_assessment_without_weak_words(): void

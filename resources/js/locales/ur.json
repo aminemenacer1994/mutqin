@@ -96,6 +96,7 @@
     "home": "ہوم",
     "dashboard": "حفظك",
     "memorisation": "حفظ",
+    "guides": "مضامین",
     "profile": "الملف الشخصي",
     "subscription": "الاشتراك",
     "settings": "الإعدادات"
@@ -419,6 +420,7 @@
       "features": "الميزات",
       "featurePages": "كل الميزات",
       "guides": "أدلة الحفظ",
+      "articles": "مضامین اور رہنمائی",
       "tools": "حفظ کے اوزار",
       "howItWorks": "How it works",
       "pricing": "الأسعار",
@@ -2725,7 +2727,7 @@
         "combinedFromQuiz": "من اختبار الذاكرة",
         "combinedFromSession": "من هذه الجلسة",
         "combinedRepeatWeakAyah": "أشارت فحوصاتك إلى الآية {ayah}. هذه الخطة تراجع نفس النطاق بمزيد من الدعم.",
-        "combinedRepeatWeakAyahs": "وجدت فحوصاتك بضع آيات تحتاج دعمًا. هذه الخطة تراجع نفس النطاق.",
+        "combinedRepeatWeakAyahs": "الآيات {ayahs} ما زالت تحتاج دعمًا. سنتمرن على هذه المجموعة مجددًا مع مزيد من العناية بتلك الآيات.",
         "combinedRepeatBoth": "التلاوة الذكية واختبار الذاكرة يقترحان مرورًا هادئًا آخر على هذا النطاق.",
         "combinedRepeatOne": "يشير فحصك إلى مراجعة قصيرة أخرى لهذا النطاق.",
         "combinedRepeatDespiteStrong": "بدت نتيجة فحصك جيدة. ما زلنا نمنح هذه الآيات مرورًا هادئًا إضافيًا.",
@@ -5508,6 +5510,38 @@
     "homeLink": "Home",
     "aboutLink": "About",
     "contactLink": "Contact"
+  },
+  "articlesPage": {
+    "kicker": "مضامین اور رہنمائی",
+    "title": "قرآن حفظ کے وسائل اور بصیرتیں",
+    "subtitle": "عملی رہنمائی، حفظ کی تکنیکیں، دورانیے کی حکمتِ عملی، اور قرآن سے تعلق مضبوط کرنے والی باتیں.",
+    "searchLabel": "مضامین تلاش کریں",
+    "searchPlaceholder": "مضامین تلاش کریں",
+    "searchClear": "تلاش صاف کریں",
+    "listLabel": "مضامین",
+    "emptyTitle": "کوئی مضمون نہیں ملا",
+    "emptyBody": "کوئی اور موضوع تلاش کر کے دیکھیں۔",
+    "loadMore": "مزید دکھائیں",
+    "photoCredit": "تصویر: {name} / Pexels",
+    "photosNote": "مضامین کی تصاویر Pexels سے ہیں۔",
+    "filtersLabel": "مضامین کے زمرے",
+    "filterAll": "سب",
+    "filterSummary": "{total} میں سے {shown}"
+  },
+  "articleDetail": {
+    "home": "ہوم",
+    "articles": "مضامین",
+    "published": "اشاعت {date}",
+    "updated": "تازہ کاری {date}",
+    "readingTime": "{minutes} منٹ مطالعہ",
+    "shareLabel": "یہ مضمون شیئر کریں",
+    "shareWhatsapp": "واٹس ایپ",
+    "shareNative": "شیئر",
+    "shared": "شیئر ہو گیا",
+    "copyLink": "لنک کاپی کریں",
+    "copied": "کاپی ہو گیا",
+    "related": "متعلقہ مضامین",
+    "back": "تمام مضامین"
   },
   "ui": {
     "contact_inbox": "Contact Inbox"

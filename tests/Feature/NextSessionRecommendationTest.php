@@ -1360,4 +1360,45 @@ class NextSessionRecommendationTest extends TestCase
         $this->assertContains(data_get($payload, 'personalisation.maturity.tier'), ['forming', 'rich']);
         $this->assertGreaterThan(0, (float) data_get($payload, 'personalisation.maturity.weights.history'));
     }
+
+    public function test_repeat_merges_in_range_mistake_history_into_focus_ayahs(): void
+    {
+        $user = User::factory()->pro()->create();
+        $this->seedCompletedSession($user, 112, 1, 4);
+        MemorisationWeakSpot::create([
+            'user_id' => $user->id,
+            'spot_type' => MemorisationWeakSpot::TYPE_WORD,
+            'surah_number' => 112,
+            'ayah_number' => 3,
+            'word_index' => 0,
+            'verse_key' => '112:3',
+            'spot_key' => '112:3:0-history',
+            'severity' => 'high',
+            'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+            'affected_attempt_count' => 2,
+            'last_identified_at' => now()->subDay(),
+            'metadata' => ['text' => 'لَمْ'],
+        ]);
+
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $repeated = $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'weak',
+                'summary' => 'Ayah 1 still slipped',
+                'color_counts' => ['green' => 13, 'red' => 2, 'black' => 0, 'amber' => 0],
+                'weak_ayahs' => [1],
+                'average_accuracy' => 72,
+                'missed_words' => 2,
+                'ayah_range' => ['from' => 1, 'to' => 4, 'count' => 4, 'focus_ayahs' => [1]],
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $repeated['type']);
+        $focus = array_map('intval', $repeated['ayah_range']['focus_ayahs'] ?? []);
+        $this->assertContains(1, $focus);
+        $this->assertContains(3, $focus);
+    }
 }

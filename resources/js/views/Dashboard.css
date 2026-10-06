@@ -1266,6 +1266,12 @@ html[data-theme="dark"] .user-dashboard,
   white-space: nowrap;
 }
 
+.dash-murajaah-row__history {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--dash-muted);
+}
+
 .dash-murajaah-row__aside {
   display: flex;
   flex-direction: column;
@@ -2424,6 +2430,10 @@ a.dash-drawer__row--link:focus-visible,
   overflow-wrap: anywhere;
   word-break: break-word;
   text-align: start;
+}
+
+.dash-drawer__murajaah-history {
+  margin: 0;
 }
 
 .dash-drawer__murajaah-top .dash-strength--compact {

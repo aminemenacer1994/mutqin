@@ -83,6 +83,7 @@
     @include('partials.seo-head')
     @stack('head')
     @include('partials.google-analytics')
+    @include('partials.ackee-config')
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=20260730c">
     <link id="appThemeFavicon" rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png?v=20260730c">
@@ -4092,7 +4093,12 @@
         .app-navbar .nav-link-memorisation:hover,
         .app-navbar .nav-link-memorisation:focus,
         .app-navbar .nav-link-memorisation:focus-visible,
-        .app-navbar .nav-link-memorisation.active {
+        .app-navbar .nav-link-memorisation.active,
+        .app-navbar .nav-link-guides,
+        .app-navbar .nav-link-guides:hover,
+        .app-navbar .nav-link-guides:focus,
+        .app-navbar .nav-link-guides:focus-visible,
+        .app-navbar .nav-link-guides.active {
             box-shadow: none !important;
         }
 
@@ -7773,6 +7779,13 @@
                             @endif
                             @endunless
                             @endauth
+                            @unless (app()->environment('production'))
+                            <a class="nav-link nav-link-guides {{ request()->is('articles') || request()->is('articles/*') || request()->routeIs('articles', 'articles.show', 'marketing.articles', 'marketing.articles.show') ? 'active' : '' }}" href="{{ url('/articles') }}">
+                                <i class="bi bi-journal-text nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="guides">{{ __('ui.guides') }}</strong><small class="d-lg-none">{{ __('ui.nav_guides_sub') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
+                            @endunless
                         </div>
                     </div>
 
@@ -10998,6 +11011,74 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v211">
+  /* Tablet + desktop only. Phones keep v209/v210. */
+  @media (min-width: 768px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse) {
+      justify-content: space-between !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse {
+      justify-content: center !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+      width: 100% !important;
+      max-width: 100% !important;
+      align-items: stretch !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v212">
+  /* Desktop + tablet only: force full rows flush, leftover rows centred, tighter leading. */
+  @media (min-width: 768px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+      --qpc-line-min-height: 1.28;
+      --qpc-line-height: 1.2;
+      --qpc-line-gap: 0;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse) {
+      justify-content: space-between !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      gap: 0 !important;
+      margin-block: 0 !important;
+      padding-block: 0 !important;
+      min-height: calc(var(--qpc-word-size, 22px) * 1.28) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse {
+      justify-content: center !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      gap: 0 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--surah_name {
+      margin-block-end: calc(var(--qpc-word-size, 22px) * 0.08) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
+      margin-block-end: calc(var(--qpc-word-size, 22px) * 0.18) !important;
+      padding-block: 0 !important;
+    }
+  }
+</style>
 <script>
   (function () {
     function stretchAyahLine(line) {
@@ -11017,22 +11098,20 @@ body.session-analysis-modal-open {
       line.style.setProperty('margin-inline', '0', 'important')
       line.style.setProperty('box-sizing', 'border-box', 'important')
       var mobile = (window.innerWidth || 0) < 768
-      var sparse = mobile && (
-        line.classList.contains('qpc-madani-line--sparse')
+      var sparse = line.classList.contains('qpc-madani-line--sparse')
         || line.classList.contains('madani-line--sparse')
-      )
-      if (mobile && !sparse) {
+      if (!sparse) {
         var words = line.querySelectorAll('.qpc-madani-word, .madani-word')
         var natural = 0
         for (var i = 0; i < words.length; i += 1) natural += words[i].offsetWidth || 0
         sparse = words.length <= 5 && natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * 0.62
-        line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
-        line.classList.toggle('madani-line--sparse', sparse && line.classList.contains('madani-line--ayah'))
-      }
-      if (!mobile) {
-        line.classList.remove('qpc-madani-line--sparse')
-        line.classList.remove('madani-line--sparse')
-        sparse = false
+        if (mobile) {
+          line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
+          line.classList.toggle('madani-line--sparse', sparse && line.classList.contains('madani-line--ayah'))
+        } else {
+          line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
+          line.classList.toggle('madani-line--sparse', sparse && line.classList.contains('madani-line--ayah'))
+        }
       }
       line.style.setProperty('justify-content', sparse ? 'center' : 'space-between', 'important')
     }

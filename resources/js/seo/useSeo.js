@@ -61,6 +61,7 @@ export function applyDocumentSeo(seo = {}) {
   if (seo.title) document.title = String(seo.title)
 
   upsertNamedMeta('name', 'description', seo.description)
+  if (seo.keywords) upsertNamedMeta('name', 'keywords', seo.keywords)
   upsertNamedMeta('name', 'robots', seo.robots)
 
   upsertNamedMeta('property', 'og:type', seo.ogType)

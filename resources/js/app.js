@@ -20,6 +20,7 @@ import { bootPersistedQuranFont } from './scripts/quran/quranFonts';
 import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 import { useSeo } from './seo/useSeo';
 import { initSeoConversionTracking } from './scripts/seoTools/track.js';
+import { initAckee, trackEvent as trackAckeeEvent, ACKEE_EVENTS } from './scripts/analytics/ackee.js';
 
 // Apply the user's Qur’anic font CSS vars before Vue mounts Memorisation.
 try {
@@ -187,6 +188,14 @@ const WaitingListPage = lazyPage(
     () => import(/* webpackChunkName: "waiting-list" */ './views/WaitingList.vue'),
     { feature: 'waiting-list' }
 );
+const ArticlesPage = lazyPage(
+    () => import(/* webpackChunkName: "articles" */ './views/Articles.vue'),
+    { feature: 'articles' }
+);
+const ArticleDetailPage = lazyPage(
+    () => import(/* webpackChunkName: "article-detail" */ './views/ArticleDetail.vue'),
+    { feature: 'article-detail' }
+);
 const UserDashboard = lazyPage(
     () => import(/* webpackChunkName: "user-dashboard-audio-1" */ './views/Dashboard.vue'),
     { feature: 'dashboard' }
@@ -248,6 +257,8 @@ async function bootstrapApp() {
     app.component('our-mission-page', OurMissionPage);
     app.component('donation-page', DonationPage);
     app.component('waiting-list-page', WaitingListPage);
+    app.component('articles-page', ArticlesPage);
+    app.component('article-detail-page', ArticleDetailPage);
     app.component('privacy-policy-page', lazyPage(
         () => import(/* webpackChunkName: "privacy" */ './views/PrivacyPolicy.vue'),
         { feature: 'privacy' }
@@ -261,11 +272,15 @@ async function bootstrapApp() {
     window.dispatchEvent(new CustomEvent('mutqin:app-mounted'));
     useSeo();
     try {
+        initAckee();
         initSeoConversionTracking({
             path: typeof window !== 'undefined' ? window.location.pathname : '',
             justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
             registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
         });
+        if (typeof window !== 'undefined' && window.mutqinJustRegisteredFlash) {
+            trackAckeeEvent(ACKEE_EVENTS.REGISTER_COMPLETED);
+        }
     } catch {
         /* analytics must never block boot */
     }
