@@ -173,7 +173,7 @@
                     <i class="bi bi-stop-fill" aria-hidden="true"></i>
                   </button>
                 </div>
-                <span class="ask-mutqin-ayah__label">{{ ayahPanelLabel }}</span>
+                <span v-if="!match && ayahPanelLabel" class="ask-mutqin-ayah__label">{{ ayahPanelLabel }}</span>
               </div>
               <div ref="ayahStage" class="ask-mutqin-ayah__stage">
                 <p
@@ -550,7 +550,7 @@ export default {
       return this.aidContent.text ? [this.aidContent.text] : []
     },
     ayahPanelLabel() {
-      if (this.match) return this.t('memorisation.askMutqin.matchedLabel')
+      if (this.match) return this.matchMeta || this.t('memorisation.askMutqin.ayahAudioLabel')
       return this.t('memorisation.askMutqin.heardLabel')
     },
     streamingText() {

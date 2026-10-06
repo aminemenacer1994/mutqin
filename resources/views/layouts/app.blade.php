@@ -10459,6 +10459,493 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v199">
+  /*
+   * Mushaf / QPC: stretch every ayah line edge-to-edge (including session-partial
+   * top fragments) so the page matches a printed mushaf flush layout.
+   */
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--session-partial,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    justify-content: space-between !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+  html body .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+    align-items: stretch !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--surah_name,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--surah_name {
+    justify-content: center !important;
+  }
+
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-page-sheet,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page-body,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--ayah,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--glyphs,
+  html body .app .main.mushaf-mode-active .madani-page-sheet,
+  html body .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+  html body .app .main.mushaf-mode-active .madani-line--ayah,
+  html body .app .main.mushaf-mode-active .madani-line--glyphs {
+    text-align: justify !important;
+    text-align-last: justify !important;
+  }
+
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--basmala,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-basmala,
+  html body .app .main.mushaf-mode-active .madani-line--basmala,
+  html body .app .main.mushaf-mode-active .madani-basmala {
+    text-align: center !important;
+    text-align-last: center !important;
+  }
+
+  @media (max-width: 767.98px) {
+    html body .app {
+      --mq-mushaf-inline-start: max(2px, var(--mq-safe-left, env(safe-area-inset-left, 0px)));
+      --mq-mushaf-inline-end: max(2px, var(--mq-safe-right, env(safe-area-inset-right, 0px)));
+    }
+
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+      padding-left: max(2px, env(safe-area-inset-left, 0px)) !important;
+      padding-right: max(2px, env(safe-area-inset-right, 0px)) !important;
+      padding-inline: max(2px, env(safe-area-inset-left, 0px)) max(2px, env(safe-area-inset-right, 0px)) !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v201">
+  /* Phones (portrait + landscape): keep each mushaf ayah row inside the screen. */
+  @media (max-width: 767.98px), (orientation: landscape) and (max-height: 520px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__ornament,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body .app .main.mushaf-mode-active .madani-page-sheet {
+      max-width: 100% !important;
+      overflow-x: clip !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial {
+      max-width: 100% !important;
+      min-width: 0 !important;
+      overflow-x: clip !important;
+      overflow-y: visible !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v202">
+  /* Player paints over the Recite mic. Recite stays behind, not lifted above the bar. */
+  html body .app .player-dock:not(.tools-open),
+  html body .player-dock:not(.tools-open) {
+    z-index: 14050 !important;
+  }
+
+  html body .app .workspace-recite-dock,
+  html body .app .workspace-recite-dock--mobile,
+  html body .workspace-recite-dock--mobile,
+  html body .workspace-float-rail,
+  html body .workspace-float-rail--desktop,
+  body > .workspace-float-rail {
+    z-index: 1040 !important;
+  }
+
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile,
+    html body .app .workspace-recite-dock--mobile,
+    body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-recite-dock--mobile {
+      z-index: 1040 !important;
+      bottom: calc(1.65rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-session-stack,
+  html body .app .main.madani-qpc-mode-active,
+  html body .app .main.mushaf-mode-active {
+    scroll-behavior: smooth;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page,
+  html body .app .main.mushaf-mode-active .mushaf-page--madani {
+    animation: mutqin-mushaf-page-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes mutqin-mushaf-page-in {
+    from {
+      opacity: 0.35;
+      transform: translate3d(0, 10px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+    html body .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+    html body .app .main.mushaf-mode-active .mushaf-session-stack,
+    html body .app .main.madani-qpc-mode-active,
+    html body .app .main.mushaf-mode-active {
+      scroll-behavior: auto;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page,
+    html body .app .main.mushaf-mode-active .mushaf-page--madani {
+      animation: none;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v200">
+  /* Hide "Matched ayah" even when a stale Ask Mutqin chunk still renders the label. */
+  html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__label,
+  html body .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__label {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v203">
+  /*
+   * Keep each mushaf/QPC ayah as one printed row. Wrapping + last-line justify
+   * piles words on top of each other (ayah markers jump lines).
+   */
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-word,
+  html body .app .qpc-madani-session-scroll .qpc-madani-word {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-line--ayah,
+  html body .app .main.mushaf-mode-active .madani-line--glyphs,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--ayah,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--glyphs {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    white-space: nowrap !important;
+    text-align: start !important;
+    text-align-last: auto !important;
+    overflow: visible !important;
+  }
+
+  @media (max-width: 767.98px) {
+    html body .app {
+      --mq-mushaf-inline-start: max(2px, var(--mq-safe-left, env(safe-area-inset-left, 0px)));
+      --mq-mushaf-inline-end: max(2px, var(--mq-safe-right, env(safe-area-inset-right, 0px)));
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v204">
+  /*
+   * Mushaf layout only: every session page (including the first) is a printed
+   * page — ayah rows stretch edge-to-edge. Page changes fade; no translate jitter.
+   */
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+  html body .app .qpc-madani-session-scroll .qpc-madani-page__sheet,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page:first-child .qpc-madani-page__sheet {
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline: max(2px, env(safe-area-inset-left, 0px)) max(2px, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page:first-child .qpc-madani-line--ayah {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-page-sheet,
+  html body .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-page-sheet,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-page-sheet--unicode {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline: max(2px, env(safe-area-inset-left, 0px)) max(2px, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  html body .app .main.mushaf-mode-active .madani-line--ayah,
+  html body .app .main.mushaf-mode-active .madani-line--glyphs,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--ayah,
+  html body.memorisation-page .app .main.mushaf-mode-active .madani-line--glyphs {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    white-space: nowrap !important;
+    text-align: start !important;
+    text-align-last: auto !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-session-stack,
+  html body .app .main.madani-qpc-mode-active,
+  html body .app .main.mushaf-mode-active {
+    scroll-behavior: auto;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page,
+  html body .app .main.mushaf-mode-active .mushaf-page--madani {
+    animation: mutqin-mushaf-page-in 180ms ease-out;
+  }
+
+  @keyframes mutqin-mushaf-page-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page,
+    html body .app .main.mushaf-mode-active .mushaf-page--madani {
+      animation: none;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v205">
+  /* Every mushaf page, not only the first, is flush to both screen edges. */
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-page__sheet,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-page,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-page__ornament,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet--unicode {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+    align-items: stretch !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-line--ayah,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-line--session-partial,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-line--ayah,
+  html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-line--glyphs {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    justify-content: space-between !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding-inline: 0 !important;
+    white-space: nowrap !important;
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v206">
+  /* Scrolling must not fade or slide mushaf pages. */
+  html body .qpc-madani-session-scroll__page,
+  html body .mushaf-page--madani,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-viewport-scroll,
+  html body .app .main.mushaf-mode-active .mushaf-session-stack {
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v207">
+  /*
+   * iOS treats overflow-x: clip as a scrollport and then stutters vertical
+   * scrolling. Mushaf text must not create a second scroller.
+   */
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__ornament,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
+  html body .app .main.mushaf-mode-active .madani-page-sheet,
+  html body .app .main.mushaf-mode-active .madani-line--ayah,
+  html body .app .main.mushaf-mode-active .madani-line--glyphs {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v208">
+  /*
+   * The session is a vertical stack of pages. Locking html/body/.app to
+   * 100dvh clips everything below the first screen. One scroller, full height.
+   */
+  @media (max-width: 767.98px) {
+    html:has(body.memorisation-page:not(.tools-panel-open) .qpc-madani-session-scroll) {
+      height: auto !important;
+      max-height: none !important;
+      min-height: 100% !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    html:has(body.memorisation-page:not(.tools-panel-open) .qpc-madani-session-scroll) body.memorisation-page,
+    html:has(body.memorisation-page:not(.tools-panel-open) .qpc-madani-session-scroll) body.memorisation-page .app,
+    html:has(body.memorisation-page:not(.tools-panel-open) .qpc-madani-session-scroll) body.memorisation-page .app .main.madani-qpc-mode-active,
+    html:has(body.memorisation-page:not(.tools-panel-open) .qpc-madani-session-scroll) body.memorisation-page .app .main.madani-qpc-mode-active :is(
+      .content,
+      .workspace,
+      .workspace-main,
+      .madani-qpc-workspace,
+      .madani-qpc-viewport,
+      .madani-qpc-stage,
+      .madani-qpc-stage__pages,
+      .qpc-madani-session-scroll,
+      .qpc-madani-session-scroll__page,
+      .qpc-madani-page,
+      .qpc-madani-page__ornament,
+      .qpc-madani-page__sheet
+    ) {
+      height: auto !important;
+      max-height: none !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+    }
+
+    html body.memorisation-page .qpc-madani-session-scroll__page,
+    html body.memorisation-page .qpc-madani-session-scroll__placeholder {
+      opacity: 1 !important;
+      animation: none !important;
+      content-visibility: visible !important;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    html.is-app-fullscreen:has(.madani-fullscreen-bar--top):has(body.memorisation-page:not(.tools-panel-open) .qpc-madani-session-scroll),
+    html.is-app-fullscreen:has(.madani-fullscreen-bar--top):has(body.memorisation-page:not(.tools-panel-open) .qpc-madani-session-scroll) body.memorisation-page,
+    html.is-app-fullscreen:has(.madani-fullscreen-bar--top):has(body.memorisation-page:not(.tools-panel-open) .qpc-madani-session-scroll) body.memorisation-page .app.is-fullscreen {
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      overflow: hidden !important;
+    }
+
+    html.is-app-fullscreen:has(.madani-fullscreen-bar--top) body.memorisation-page .app.is-fullscreen .main.madani-qpc-mode-active:has(.qpc-madani-session-scroll) {
+      box-sizing: border-box !important;
+      height: calc(100dvh - var(--madani-fs-top-clearance, 4.25rem)) !important;
+      max-height: calc(100dvh - var(--madani-fs-top-clearance, 4.25rem)) !important;
+      min-height: 0 !important;
+      margin-top: var(--madani-fs-top-clearance, 4.25rem) !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+</style>
+<script>
+  (function () {
+    function stretchAyahLine(line) {
+      if (!line || line.style.width === 'max-content') return
+      if (line.classList.contains('qpc-madani-line--surah_name')
+        || line.classList.contains('qpc-madani-line--basmala')
+        || line.classList.contains('qpc-madani-line--basmallah')
+        || line.classList.contains('madani-line--basmala')
+        || line.classList.contains('madani-line--surah_name')) return
+      line.style.setProperty('display', 'flex', 'important')
+      line.style.setProperty('flex-wrap', 'nowrap', 'important')
+      line.style.setProperty('white-space', 'nowrap', 'important')
+      line.style.setProperty('overflow', 'visible', 'important')
+      line.style.setProperty('width', '100%', 'important')
+      line.style.setProperty('max-width', '100%', 'important')
+      line.style.setProperty('align-self', 'stretch', 'important')
+      line.style.setProperty('margin-inline', '0', 'important')
+      line.style.setProperty('justify-content', 'space-between', 'important')
+      line.style.setProperty('box-sizing', 'border-box', 'important')
+    }
+
+    function containMushafRows() {
+      var root = document.querySelector('.main.madani-qpc-mode-active, .main.mushaf-mode-active')
+      if (!root) return
+      root.querySelectorAll('.qpc-madani-line--ayah').forEach(stretchAyahLine)
+    }
+
+    var lastWidth = 0
+    var queued = false
+    var timer = 0
+    function schedule() {
+      var width = window.innerWidth || 0
+      if (lastWidth && Math.abs(width - lastWidth) < 4) return
+      lastWidth = width
+      if (queued) return
+      queued = true
+      window.clearTimeout(timer)
+      timer = window.setTimeout(function () {
+        queued = false
+        containMushafRows()
+      }, 160)
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', schedule, { once: true })
+    } else {
+      schedule()
+    }
+    window.addEventListener('load', schedule)
+    window.addEventListener('resize', schedule)
+  })()
+</script>
 @endif
 </body>
 </html>

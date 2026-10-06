@@ -286,6 +286,10 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   border-bottom: 1px solid color-mix(in srgb, var(--ask-line) 80%, transparent);
 }
 
+.ask-mutqin-ayah.is-matched .ask-mutqin-ayah__label {
+  display: none !important;
+}
+
 .ask-mutqin-ayah__label {
   flex: 0 1 auto;
   min-width: 0;

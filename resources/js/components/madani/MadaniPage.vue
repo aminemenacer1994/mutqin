@@ -170,6 +170,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    sharedWordSize: {
+      type: Number,
+      default: 0,
+    },
     techniqueSnapshot: {
       type: Object,
       default: null,
@@ -209,6 +213,7 @@ export default {
       lastFitWidth: 0,
       lastFitHeight: 0,
       lastEmittedFitWordSize: 0,
+      lastSessionFitWordSize: 0,
       fitted: false,
       fitting: false,
       fontReady: false,
@@ -239,7 +244,7 @@ export default {
       })
     },
     isOpening() {
-      if (this.spreadViewportFill) return false
+      if (this.sessionScoped || this.spreadViewportFill) return false
       const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
       return raw.length > 0 && raw.length < 15
     },
@@ -296,6 +301,9 @@ export default {
     },
     spreadViewportFill() {
       this.scheduleFit()
+    },
+    sharedWordSize() {
+      this.applySharedWordSize()
     },
     spreadUnifiedWordSize() {
       this.scheduleFit()
@@ -374,6 +382,44 @@ export default {
       if (!this.spreadViewportFill) return 15
       return Math.max(15, sheet.querySelectorAll('.qpc-madani-line').length)
     },
+    isPhoneViewport() {
+      if (typeof window === 'undefined') return false
+      if (window.innerWidth < 768) return true
+      const coarse = window.matchMedia?.('(hover: none) and (pointer: coarse)')?.matches
+      return !!(coarse && Math.min(window.innerWidth, window.innerHeight) < 520)
+    },
+    shrinkWordSizeToFit(root, sheet, size, lines) {
+      if (!this.isPhoneViewport() || !(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) {
+        return size
+      }
+      const ayahLines = (lines || []).filter((line) => String(line.dataset.lineType || '') === 'ayah')
+      if (!ayahLines.length) return size
+      let lo = 8
+      let hi = Math.max(8, Math.round(size))
+      let best = lo
+      for (let step = 0; step < 8; step += 1) {
+        const mid = Math.round((lo + hi) / 2)
+        root.style.setProperty('--qpc-word-size', `${mid}px`)
+        void sheet.offsetWidth
+        const overflows = ayahLines.some((line) => line.scrollWidth > line.clientWidth + 1)
+        if (overflows) {
+          hi = mid - 1
+        } else {
+          best = mid
+          lo = mid + 1
+        }
+      }
+      root.style.setProperty('--qpc-word-size', `${best}px`)
+      return best
+    },
+    applySharedWordSize() {
+      if (this.isPhoneViewport()) return
+      const root = this.$el
+      if (!(root instanceof HTMLElement)) return
+      const shared = Number(this.sharedWordSize)
+      if (!Number.isFinite(shared) || shared <= 0) return
+      root.style.setProperty('--qpc-word-size', `${Math.round(shared)}px`)
+    },
     applyLayoutTypography() {
       const root = this.$el
       if (!(root instanceof HTMLElement)) return
@@ -434,15 +480,10 @@ export default {
         this.scheduleFit()
       })
       this.resizeObserver.observe(this.$el)
-      if (this.$el.parentElement) this.resizeObserver.observe(this.$el.parentElement)
       this.$nextTick(() => {
         const sheet = this.$refs.sheet
         if (sheet instanceof HTMLElement) this.resizeObserver.observe(sheet)
       })
-      if (typeof window !== 'undefined' && window.innerWidth < 768 && window.visualViewport) {
-        this.visualViewportHandler = () => this.scheduleFit()
-        window.visualViewport.addEventListener('resize', this.visualViewportHandler)
-      }
     },
     sheetWidth() {
       const sheet = this.$refs.sheet
@@ -500,6 +541,8 @@ export default {
         else this.fitted = true
         return
       }
+      const sheetWidth = Math.round(sheet.clientWidth)
+      if (this.fitted && Math.abs(sheetWidth - this.lastFitWidth) < 4) return
 
       const lines = [...sheet.querySelectorAll('.qpc-madani-line')]
       if (!lines.length) {
@@ -507,11 +550,11 @@ export default {
         return
       }
 
-      const measurable = lines.filter((line) => {
+      const measurable = lines.filter((line) => String(line.dataset.lineType || '') === 'ayah')
+      const targets = measurable.length ? measurable : lines.filter((line) => {
         const type = String(line.dataset.lineType || '')
         return type !== 'surah_name' && type !== 'empty'
       })
-      const targets = measurable.length ? measurable : lines
 
       this.fitting = true
       const measureSize = this.measureSize()
@@ -537,7 +580,15 @@ export default {
       for (const [index, line] of targets.entries()) {
         line.style.width = previous[index].width
         line.style.maxWidth = ''
-        line.style.justifyContent = previous[index].justify
+        const type = String(line.dataset.lineType || '')
+        line.style.justifyContent = type === 'ayah' ? '' : previous[index].justify
+        if (type === 'ayah') {
+          line.style.setProperty('justify-content', 'space-between', 'important')
+          line.style.setProperty('align-self', 'stretch', 'important')
+          line.style.setProperty('width', '100%', 'important')
+          line.style.setProperty('max-width', '100%', 'important')
+          line.style.setProperty('margin-inline', '0', 'important')
+        }
       }
 
       const available = this.contentWidth(sheet)
@@ -549,7 +600,7 @@ export default {
       }
 
       const narrow = available < 440
-      const mobile = typeof window !== 'undefined' && window.innerWidth < 768
+      const mobile = this.isPhoneViewport()
       const twoPageMin = this.twoPageMinWidth()
       const desktopSpread = typeof window !== 'undefined'
         && window.innerWidth >= twoPageMin
@@ -572,7 +623,10 @@ export default {
           ? (narrow ? 0.88 : 0.92)
           : (mobile ? 0.9 : (narrow ? 0.9 : 0.95))
         if (sessionSheet) {
-          safety = 0.985
+          safety = narrow ? 0.9 : 0.92
+        }
+        if (this.sessionScoped && !desktopSpread) {
+          safety = 0.94
         }
         if (this.spreadViewportFill && !desktopSpread && !mobile) {
           safety = Math.min(safety, narrow ? 0.74 : 0.78)
@@ -621,6 +675,10 @@ export default {
       }
       const syncedSize = Math.max(8, Math.round(rawSize))
       let size = syncedSize
+      const shared = Number(this.sharedWordSize)
+      if (!this.isPhoneViewport() && Number.isFinite(shared) && shared > 0) {
+        size = Math.min(size, Math.round(shared))
+      }
       if (
         this.spreadViewportFill
         && Number.isFinite(Number(this.spreadUnifiedWordSize))
@@ -629,9 +687,14 @@ export default {
         size = Math.min(syncedSize, Math.round(Number(this.spreadUnifiedWordSize)))
       }
       // Whole-pixel sizes avoid COLR / QCF glyph clipping in WebKit.
+      size = this.shrinkWordSizeToFit(root, sheet, size, targets)
       root.style.setProperty('--qpc-word-size', `${size}px`)
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
+      if (this.sessionScoped && syncedSize !== this.lastSessionFitWordSize) {
+        this.lastSessionFitWordSize = syncedSize
+        this.$emit('fit-word-size', syncedSize)
+      }
       if (this.spreadViewportFill) {
         if (syncedSize !== this.lastEmittedFitWordSize) {
           this.lastEmittedFitWordSize = syncedSize
@@ -789,7 +852,7 @@ export default {
 }
 
 .qpc-madani-page:not(.is-font-ready) {
-  opacity: 0.35;
+  opacity: 0.88;
 }
 
 .qpc-madani-page--embedded:not(.is-font-ready) {
@@ -798,7 +861,7 @@ export default {
 
 .qpc-madani-page.is-font-ready {
   opacity: 1;
-  transition: opacity 120ms ease;
+  transition: opacity 160ms ease-out;
 }
 
 .qpc-madani-page--embedded.is-font-ready {
@@ -1073,6 +1136,21 @@ export default {
   background: transparent;
 }
 
+.qpc-madani-page--session-scoped,
+.qpc-madani-page--borderless.qpc-madani-page--session-scoped {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+.qpc-madani-page--session-scoped .qpc-madani-page__sheet,
+.qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__sheet {
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 0;
+}
+
 @media (max-width: 1079.98px) {
   .qpc-madani-page--borderless.qpc-madani-page--single .qpc-madani-page__sheet {
     padding:
@@ -1096,6 +1174,11 @@ export default {
     width: 100%;
     max-width: 100%;
   }
+}
+
+.qpc-madani-page--session-scoped.qpc-madani-page--borderless .qpc-madani-page__sheet,
+.qpc-madani-page--session-scoped.qpc-madani-page--single .qpc-madani-page__sheet {
+  padding-inline: 0 !important;
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--opening .qpc-madani-page__sheet {

@@ -12,7 +12,7 @@ const memorisationJs = readFileSync(
 
 assert.match(
   mobileGridCss,
-  /--mq-mushaf-inline-start:\s*max\(0\.72rem, calc\(var\(--mq-safe-left\) \+ 0\.42rem\)\)/,
+  /--mq-mushaf-inline-start:\s*max\(2px, var\(--mq-safe-left\)\)/,
   'phones must define mushaf inline inset from safe-area tokens',
 )
 
@@ -24,8 +24,8 @@ assert.match(
 
 assert.match(
   mobileGridCss,
-  /QPC mushaf: full width shell, inset sheet[\s\S]*?qpc-madani-page__sheet[\s\S]*?--mq-mushaf-inline-(?:start|end)/,
-  'QPC mushaf sheets must use mushaf inset tokens',
+  /QPC mushaf: full width shell[\s\S]*?qpc-madani-page__sheet[\s\S]*?padding-inline:\s*0\s*!important/,
+  'QPC mushaf sheets are flush to both screen edges',
 )
 
 assert.doesNotMatch(
@@ -50,6 +50,31 @@ assert.match(
   memorisationJs,
   /fitMadaniPageToViewport\(\)[\s\S]*?--mq-mushaf-inline-start/,
   'mobile mushaf fit must apply CSS mushaf inset tokens',
+)
+
+const blade = readFileSync(
+  new URL('../../resources/views/layouts/app.blade.php', import.meta.url),
+  'utf8',
+)
+const sessionScroll = readFileSync(
+  new URL('../../resources/js/components/madani/MadaniSessionScroll.vue', import.meta.url),
+  'utf8',
+)
+
+assert.match(
+  blade,
+  /mutqin-memorisation-hotfix-v202[\s\S]*player-dock:not\(\.tools-open\)[\s\S]*z-index:\s*14050/,
+  'audio player must stack above the Recite button',
+)
+assert.match(
+  sessionScroll,
+  /animation:\s*none/,
+  'mushaf pages must not fade while the reader scrolls',
+)
+assert.match(
+  sessionScroll,
+  /scrollToFocusPage\(\{ smooth: true \}\)/,
+  'focus page changes still use programmatic smooth scrolling',
 )
 
 console.log('mobile-mushaf-gutter.test.mjs: all assertions passed')

@@ -1363,7 +1363,7 @@
       "listeningHint": "Say what to open, or use the buttons below.",
       "recordingOn": "Recording",
       "recordingListening": "Listening",
-      "matchedLabel": "Matched ayah",
+      "matchedLabel": "",
       "phaseFlowing": "Live",
       "phasePaused": "Paused",
       "phaseFrozen": "Locked",

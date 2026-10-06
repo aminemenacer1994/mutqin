@@ -139,7 +139,7 @@ const buruj = prepareQpcMadaniSessionLines(
   '85:22',
 )
 assert.ok(buruj.some((line) => String(line.line_type) === 'surah_name'))
-assert.equal(buruj.filter((line) => String(line.line_type) === 'ayah').length, 4)
+assert.equal(buruj.filter((line) => String(line.line_type) === 'ayah').length, 5)
 
 const nahlPage = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/pages/267.json'), 'utf8'))
 const nahlSource = nahlPage.page?.lines || nahlPage.lines || []
@@ -222,5 +222,13 @@ const hijr262Mid = prepareQpcMadaniSessionLines(hijr262Lines, '15:91', '15:94', 
 assert.equal(hijr262Mid.length, 15)
 assert.ok(!hijr262Mid.some((line) => String(line.line_type) === 'surah_name'))
 assert.ok(!hijr262Mid.some((line) => ['basmallah', 'basmala'].includes(String(line.line_type))))
+
+const kahf303 = JSON.parse(readFileSync(join(root, 'public/quran/madani-v2/pages/303.json'), 'utf8'))
+const kahf303Lines = kahf303.page?.lines || kahf303.lines || []
+const kahf303Session = prepareQpcMadaniSessionLines(kahf303Lines, '18:88', '18:110')
+const kahf303Ayah = kahf303Session.filter((line) => String(line.line_type) === 'ayah')
+assert.equal(kahf303Ayah[0].words.length, 7, 'session-start fragment stays its own row')
+assert.equal(kahf303Ayah[0].words[0].location, '18:88:1')
+assert.ok(kahf303Ayah.every((line) => (line.words || []).length <= 14), 'no ayah row may absorb the next printed line')
 
 console.log('qpc-madani-selection.test.mjs: ok')

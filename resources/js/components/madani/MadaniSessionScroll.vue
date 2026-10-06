@@ -30,6 +30,7 @@
         :progress-snapshot="progressSnapshot"
         :audio-index-map="audioIndexMap"
         :font-scale="fontScale"
+        :shared-word-size="sharedWordSize"
         :tajweed-enabled="tajweedEnabled"
         :code-v2-by-location="codeV2ByLocation"
         :tajweed-html-by-location="tajweedHtmlByLocation"
@@ -41,6 +42,7 @@
         @peek-touchstart="$emit('peek-touchstart', $event)"
         @peek-touchend="$emit('peek-touchend', $event)"
         @peek-touchcancel="$emit('peek-touchcancel')"
+        @fit-word-size="onPageFitWordSize(pageNumber, $event)"
       />
       <div
         v-else
@@ -74,9 +76,9 @@ import {
   selectPriorityPages,
 } from '../../scripts/mushaf/sessionPageLoad'
 
-/** Paint every page when the session is this short; window the rest. */
-const FULL_PAINT_PAGE_LIMIT = 4
-const FOCUS_RADIUS = 1
+/** Paint the whole session. Windowing hid later pages once inner scrollports were removed. */
+const FULL_PAINT_PAGE_LIMIT = 80
+const FOCUS_RADIUS = 2
 
 export default {
   name: 'MadaniSessionScroll',
@@ -117,6 +119,8 @@ export default {
       visiblePages: {},
       pageHeights: {},
       reservedPageHeight: 0,
+      fitSizesByPage: {},
+      sharedWordSize: 0,
       loadToken: 0,
       pageObserver: null,
       heightObserver: null,
@@ -169,7 +173,9 @@ export default {
     },
     focusPageNumber() {
       this.hydrateMountedLeaves()
-      this.$nextTick(() => this.scrollToFocusPage({ smooth: true }))
+      this.$nextTick(() => {
+        window.requestAnimationFrame(() => this.scrollToFocusPage({ smooth: true }))
+      })
     },
     mountAllow() {
       this.hydrateMountedLeaves()
@@ -200,12 +206,23 @@ export default {
   beforeUnmount() {
     this.loadToken += 1
     if (this._restLoadTimer) clearTimeout(this._restLoadTimer)
+    if (this._pruneVisibleTimer) clearTimeout(this._pruneVisibleTimer)
     this.pageObserver?.disconnect()
     this.pageObserver = null
     this.heightObserver?.disconnect()
     this.heightObserver = null
   },
   methods: {
+    onPageFitWordSize(pageNumber, size) {
+      const page = Number(pageNumber)
+      const fitted = Number(size)
+      if (!Number.isFinite(page) || !Number.isFinite(fitted) || fitted <= 0) return
+      const next = { ...this.fitSizesByPage, [page]: fitted }
+      this.fitSizesByPage = next
+      const sizes = Object.values(next).filter((value) => Number(value) > 0)
+      if (!sizes.length) return
+      this.sharedWordSize = Math.min(...sizes)
+    },
     setPageAnchor(pageNumber, el) {
       const key = Number(pageNumber)
       if (!Number.isFinite(key)) return
@@ -227,7 +244,8 @@ export default {
     },
     placeholderStyle(pageNumber) {
       const height = Number(this.pageHeights[pageNumber] || this.reservedPageHeight || 0)
-      return height > 80 ? { minHeight: `${height}px` } : null
+      if (height > 80) return { minHeight: `${height}px`, height: `${height}px` }
+      return { minHeight: '64dvh' }
     },
     onPageIntersect(entries) {
       if (!this.windowedSession) return
@@ -236,17 +254,30 @@ export default {
       for (const entry of entries) {
         const page = Number(entry.target?.getAttribute?.('data-madani-page'))
         if (!Number.isFinite(page) || page < 1) continue
-        if (entry.isIntersecting) {
-          if (!next[page]) {
-            next[page] = true
-            changed = true
-          }
-        } else if (next[page]) {
-          delete next[page]
+        if (entry.isIntersecting && !next[page]) {
+          next[page] = true
           changed = true
         }
       }
       if (changed) this.visiblePages = next
+      if (this._pruneVisibleTimer) clearTimeout(this._pruneVisibleTimer)
+      this._pruneVisibleTimer = setTimeout(() => this.pruneDistantPages(), 360)
+    },
+    pruneDistantPages() {
+      if (!this.windowedSession) return
+      const pages = this.resolvedPageNumbers
+      const focus = Number(this.focusPageNumber) || pages[0]
+      const center = Math.max(0, pages.indexOf(focus))
+      const keep = new Set(pages.slice(Math.max(0, center - FOCUS_RADIUS - 1), center + FOCUS_RADIUS + 2))
+      const next = {}
+      for (const page of keep) {
+        if (this.visiblePages[page] || Math.abs(pages.indexOf(page) - center) <= FOCUS_RADIUS) {
+          next[page] = true
+        }
+      }
+      const same = Object.keys(next).length === Object.keys(this.visiblePages).length
+        && Object.keys(next).every((key) => this.visiblePages[key])
+      if (!same) this.visiblePages = next
     },
     cachedLeaf(pageNumber) {
       return this.isIndopakLayout
@@ -360,10 +391,32 @@ export default {
       if (!Number.isFinite(page) || page < 1) return
       const anchor = this.pageAnchors[page]
       if (!(anchor instanceof HTMLElement)) return
-      anchor.scrollIntoView({
-        behavior: smooth ? 'smooth' : 'auto',
-        block: 'start',
+      const reduceMotion = typeof window !== 'undefined'
+        && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+      const scroller = this.pageScrollParent(anchor)
+      if (!scroller) return
+      const scrollerBox = scroller === document.documentElement || scroller === document.body
+        ? { top: 0, bottom: window.innerHeight }
+        : scroller.getBoundingClientRect()
+      const anchorBox = anchor.getBoundingClientRect()
+      if (anchorBox.top >= scrollerBox.top - 8 && anchorBox.top <= scrollerBox.top + 48) return
+      const nextTop = (scroller.scrollTop || 0) + (anchorBox.top - scrollerBox.top)
+      scroller.scrollTo({
+        top: Math.max(0, nextTop),
+        behavior: (!smooth || reduceMotion) ? 'auto' : 'smooth',
       })
+    },
+    pageScrollParent(node) {
+      let current = node?.parentElement
+      while (current && current !== document.body) {
+        const style = window.getComputedStyle(current)
+        const overflowY = style.overflowY
+        if ((overflowY === 'auto' || overflowY === 'scroll') && current.scrollHeight > current.clientHeight + 8) {
+          return current
+        }
+        current = current.parentElement
+      }
+      return document.scrollingElement || document.documentElement
     },
   },
 }
@@ -375,26 +428,26 @@ export default {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: visible;
   padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
   scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  scroll-behavior: auto;
 }
 
 .qpc-madani-session-scroll[data-layout='indopak-15-qudratullah'] {
   /* Mobile/tablet single-page: fit viewport width; vertical scroll only. */
   width: 100%;
   max-width: 100%;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: visible;
 }
 
 .qpc-madani-session-scroll__page {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: clip;
+  overflow-x: visible;
   overflow-y: visible;
+  animation: none;
 }
 
 .qpc-madani-session-scroll[data-layout='indopak-15-qudratullah'] .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
@@ -406,7 +459,7 @@ export default {
 }
 
 .qpc-madani-session-scroll__placeholder {
-  min-height: 85dvh;
+  min-height: 64dvh;
   width: 100%;
 }
 </style>

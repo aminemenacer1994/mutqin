@@ -254,35 +254,13 @@ export function stripBasmalaAfterLastSessionAyah(lines = [], startKey = '', endK
   })
 }
 
-/** Merge a trailing fragment line (page break) into the following ayah row. */
+/**
+ * Keep every printed ayah row intact.
+ * Merging a session-start fragment into the next row doubles the first line
+ * (Al-Kahf 18:88 is 7 words + 12) and is the only row that overflows.
+ */
 export function compactQpcMadaniSessionAyahLines(lines = []) {
-  const source = Array.isArray(lines) ? lines : []
-  const compacted = []
-  let index = 0
-  while (index < source.length) {
-    const current = source[index]
-    const type = String(current?.line_type || current?.type || '')
-    const next = source[index + 1]
-    const nextType = String(next?.line_type || next?.type || '')
-    if (
-      type === 'ayah'
-      && Number(current?.session_partial_line) === 1
-      && next
-      && nextType === 'ayah'
-    ) {
-      compacted.push({
-        ...next,
-        words: [...(current.words || []), ...(next.words || [])],
-        session_partial_line: 0,
-        line_number: current.line_number ?? next.line_number,
-      })
-      index += 2
-      continue
-    }
-    compacted.push(current)
-    index += 1
-  }
-  return compacted
+  return Array.isArray(lines) ? lines : []
 }
 
 function firstSessionAyahLineNumber(lines, surah, startKey, endKey) {

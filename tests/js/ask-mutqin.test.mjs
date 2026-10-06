@@ -55,6 +55,13 @@ assert.match(modal, /lastHeardForPause/, 'pause timer ignores unchanged partials
 assert.match(modal, /ask-mutqin-recording/, 'recording indicator is shown while listening')
 assert.doesNotMatch(modal, /transcriptPhase|ask-mutqin-results/, 'legacy phase/result chrome is removed')
 assert.match(modal, /matchMeta/, 'matched ayah shows surah · ayah in the panel bar')
+assert.doesNotMatch(modal, /matchedLabel/, 'matched ayah no longer shows the Matched ayah label')
+assert.match(
+  readFileSync(join(root, 'resources/views/layouts/app.blade.php'), 'utf8'),
+  /ask-mutqin-ayah\.is-matched \.ask-mutqin-ayah__label[\s\S]*?display:\s*none\s*!important/,
+  'blade hides the matched ayah label even on a stale chunk',
+)
+assert.match(modal, /!match && ayahPanelLabel/, 'Matched ayah label is hidden after a match')
 assert.match(modal, /ask-mutqin-word|buildAskMutqinAyahHighlightParts/, 'matched words are highlighted in place')
 assert.match(modal, /aidSourceLabel/, 'translation and transliteration show their sources')
 assert.doesNotMatch(modal, /ask-mutqin-aid__tab-source/, 'aid tabs no longer show source names')

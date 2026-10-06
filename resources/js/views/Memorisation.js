@@ -12538,11 +12538,11 @@ export default {
 
         sheet.style.setProperty('width', '100%', 'important')
         sheet.style.setProperty('max-width', '100%', 'important')
-        sheet.style.setProperty('overflow-wrap', 'anywhere', 'important')
-        sheet.style.setProperty('white-space', 'normal', 'important')
+        sheet.style.setProperty('overflow-wrap', 'normal', 'important')
+        sheet.style.setProperty('white-space', 'nowrap', 'important')
         sheet.style.setProperty('transform', 'none', 'important')
-        sheet.style.setProperty('text-align', 'center', 'important')
-        sheet.style.setProperty('text-align-last', 'center', 'important')
+        sheet.style.setProperty('text-align', 'start', 'important')
+        sheet.style.setProperty('text-align-last', 'auto', 'important')
         sheet.style.setProperty('text-justify', 'none', 'important')
         sheet.style.setProperty('word-spacing', '0', 'important')
 
@@ -12551,38 +12551,39 @@ export default {
         const appEl = viewport?.closest?.('.app')
         const appStyles = appEl ? getComputedStyle(appEl) : null
         const padStart = appStyles?.getPropertyValue('--mq-mushaf-inline-start')?.trim()
-          || 'max(0.72rem, calc(env(safe-area-inset-left, 0px) + 0.42rem))'
+          || 'max(2px, env(safe-area-inset-left, 0px))'
         const padEnd = appStyles?.getPropertyValue('--mq-mushaf-inline-end')?.trim()
-          || 'max(0.72rem, calc(env(safe-area-inset-right, 0px) + 0.42rem))'
+          || 'max(2px, env(safe-area-inset-right, 0px))'
         sheet.style.setProperty('padding-inline', `${padStart} ${padEnd}`, 'important')
 
         sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs').forEach((line) => {
           if (!line?.style) return
-          if (unicodeSheet) {
-            line.style.setProperty('display', 'block', 'important')
-            line.style.setProperty('width', '100%', 'important')
-            line.style.setProperty('max-width', '100%', 'important')
-            line.style.setProperty('text-align', 'center', 'important')
-            line.style.setProperty('text-align-last', 'center', 'important')
-            line.style.setProperty('white-space', 'normal', 'important')
-          } else {
-            line.style.setProperty('display', 'contents', 'important')
-          }
+          line.style.setProperty('display', 'flex', 'important')
+          line.style.setProperty('flex-flow', 'row nowrap', 'important')
+          line.style.setProperty('flex-wrap', 'nowrap', 'important')
+          line.style.setProperty('justify-content', 'space-between', 'important')
+          line.style.setProperty('align-items', 'center', 'important')
+          line.style.setProperty('width', '100%', 'important')
+          line.style.setProperty('max-width', '100%', 'important')
+          line.style.setProperty('white-space', 'nowrap', 'important')
+          line.style.setProperty('text-align', 'start', 'important')
+          line.style.setProperty('text-align-last', 'auto', 'important')
+          line.style.setProperty('overflow', 'visible', 'important')
         })
         sheet.querySelectorAll('.madani-word').forEach((word) => {
           if (!word?.style) return
-          word.style.setProperty('display', 'inline', 'important')
+          word.style.setProperty('display', 'inline-block', 'important')
+          word.style.setProperty('flex', '0 0 auto', 'important')
           word.style.setProperty(
             'margin-inline',
-            unicodeSheet ? '0.08em' : '0.14em 0',
+            unicodeSheet ? '0.08em' : '0',
             'important',
           )
           word.style.setProperty('padding-inline', '0', 'important')
           word.style.setProperty('word-spacing', '0', 'important')
-          word.style.setProperty('white-space', unicodeSheet ? 'nowrap' : 'normal', 'important')
-          word.style.setProperty('max-width', '100%', 'important')
+          word.style.setProperty('white-space', 'nowrap', 'important')
+          word.style.setProperty('max-width', 'none', 'important')
           word.style.removeProperty('width')
-          word.style.removeProperty('flex')
         })
       }
 
@@ -37722,7 +37723,7 @@ export default {
       const el = current || root?.querySelector?.(
         `.qpc-madani-word[data-verse-key="${CSS.escape?.(key) || key}"]`
       )
-      el?.scrollIntoView?.({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+      this.scrollMushafTargetIntoView(el)
     },
     buildQpcMadaniRecitationContext() {
       const targets = this.recitationCheckPendingTargets?.length
@@ -37772,14 +37773,39 @@ export default {
       const word = this.$refs.mushafViewport?.querySelector?.(
         `.madani-word[data-verse-key="${CSS.escape?.(activeKey) || activeKey}"]`
       )
-      if (word?.scrollIntoView) {
-        word.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+      if (word) {
+        this.scrollMushafTargetIntoView(word)
         return
       }
       const pageEl = this.$refs.mushafViewport?.querySelector?.(
         `.mushaf-page[data-mushaf-page-index="${this.safeMushafPageIndex}"]`
       )
-      pageEl?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
+      this.scrollMushafTargetIntoView(pageEl)
+    },
+    scrollMushafTargetIntoView(el) {
+      if (!(el instanceof HTMLElement)) return
+      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+      let scroller = el.parentElement
+      while (scroller && scroller !== document.body) {
+        const overflowY = window.getComputedStyle(scroller).overflowY
+        if ((overflowY === 'auto' || overflowY === 'scroll') && scroller.scrollHeight > scroller.clientHeight + 8) {
+          break
+        }
+        scroller = scroller.parentElement
+      }
+      const host = scroller && scroller !== document.body
+        ? scroller
+        : (document.scrollingElement || document.documentElement)
+      const elBox = el.getBoundingClientRect()
+      const hostBox = host === document.documentElement || host === document.body
+        ? { top: 0, bottom: window.innerHeight }
+        : host.getBoundingClientRect()
+      const pad = 16
+      if (elBox.top >= hostBox.top + pad && elBox.bottom <= hostBox.bottom - pad) return
+      let delta = 0
+      if (elBox.top < hostBox.top + pad) delta = elBox.top - hostBox.top - pad
+      else delta = elBox.bottom - hostBox.bottom + pad
+      host.scrollBy({ top: delta, behavior: reduceMotion ? 'auto' : 'smooth' })
     },
     goToMushafPage(index) {
       if (!this.mushafPages.length) {

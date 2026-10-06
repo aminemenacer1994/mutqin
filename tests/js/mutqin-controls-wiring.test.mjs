@@ -458,14 +458,34 @@ includesAll('top card dashboard visibility', [
     'blade v190 must center QPC ayah lines on every viewport'
   )
   assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v199[\s\S]*?qpc-madani-line--ayah[\s\S]*?justify-content:\s*space-between\s*!important/,
+    'blade v199 must stretch mushaf ayah lines edge-to-edge'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v203[\s\S]*?qpc-madani-line--ayah[\s\S]*?flex-wrap:\s*nowrap\s*!important/,
+    'blade v203 must keep QPC ayah lines on one row'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v204[\s\S]*?qpc-madani-session-scroll__page:first-child[\s\S]*?justify-content:\s*space-between\s*!important/,
+    'blade v204 must stretch the first mushaf page like following pages'
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v204[\s\S]*?mutqin-mushaf-page-in 180ms ease-out/,
+    'blade v204 must fade mushaf pages without a translating slide'
+  )
+  assert.match(
     mobileGridCss,
-    /main\.madani-qpc-mode-active \.qpc-madani-line--ayah[\s\S]*?justify-content:\s*center\s*!important/,
-    'mobile-grid must center QPC ayah lines on phones'
+    /main\.madani-qpc-mode-active \.qpc-madani-line--ayah[\s\S]*?justify-content:\s*space-between\s*!important/,
+    'mobile-grid must stretch QPC ayah lines edge-to-edge on phones'
   )
   assert.match(
     source,
-    /unicodeSheet[\s\S]*?setProperty\('display',\s*'block'/,
-    'mobile mushaf fit must keep unicode ayah lines as centered blocks'
+    /setProperty\('display',\s*'flex'/,
+    'mobile mushaf fit must keep ayah lines as nowrap flex rows'
   )
   assert.match(
     blade,
@@ -958,7 +978,7 @@ includesAll('audio unlock flow', [
   )
   assert.match(
     mobileGridCss,
-    /--mq-mushaf-inline-start:\s*max\(0\.72rem[\s\S]*--mq-mushaf-inline-end/,
+    /--mq-mushaf-inline-start:\s*max\(2px[\s\S]*--mq-mushaf-inline-end/,
     'mobile-grid must define responsive mushaf horizontal inset tokens'
   )
   assert.match(

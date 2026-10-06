@@ -22,8 +22,8 @@
     --mobile-page-gutter: var(--mq-mobile-gutter);
     --mobile-safe-top: var(--mq-safe-top);
     --mobile-safe-bottom: var(--mq-safe-bottom);
-    --mq-mushaf-inline-start: max(0.72rem, calc(var(--mq-safe-left) + 0.42rem));
-    --mq-mushaf-inline-end: max(0.72rem, calc(var(--mq-safe-right) + 0.42rem));
+    --mq-mushaf-inline-start: max(2px, var(--mq-safe-left));
+    --mq-mushaf-inline-end: max(2px, var(--mq-safe-right));
     inline-size: 100%;
     max-inline-size: 100%;
   }
@@ -5193,12 +5193,14 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
-    display: block !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
-    white-space: normal !important;
-    text-align: center !important;
-    text-align-last: center !important;
+    white-space: nowrap !important;
+    text-align: start !important;
+    text-align-last: auto !important;
     line-height: 1.9 !important;
   }
 
@@ -5557,27 +5559,29 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     gap: 0 !important;
     padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
     margin-inline: 0 !important;
-    text-align: center !important;
-    text-align-last: center !important;
+    text-align: start !important;
+    text-align-last: auto !important;
     direction: rtl !important;
     line-height: 2.05 !important;
   }
 
   .app .main.mushaf-mode-active .madani-line--ayah,
 .app .main.mushaf-mode-active .madani-line--glyphs {
-    display: block !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
-    white-space: normal !important;
-    text-align: center !important;
-    text-align-last: center !important;
+    white-space: nowrap !important;
+    text-align: start !important;
+    text-align-last: auto !important;
     line-height: 1.85 !important;
     overflow: visible !important;
   }
 
   .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
     display: block !important;
-    white-space: normal !important;
+    white-space: nowrap !important;
   }
 
   .app .main.mushaf-mode-active .madani-line--surah_name {
@@ -5669,8 +5673,8 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   /* Mini player always renderable + themed text */
-  .app .player-dock {
-    z-index: 13000 !important;
+  .app .player-dock:not(.tools-open) {
+    z-index: 14050 !important;
     display: flex !important;
     opacity: 1 !important;
     visibility: visible !important;
@@ -5781,8 +5785,8 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   .app .main.mushaf-mode-active .madani-page-sheet,
 .app .main.mushaf-mode-active .madani-page-sheet--unicode {
     display: block !important;
-    text-align: center !important;
-    text-align-last: center !important;
+    text-align: start !important;
+    text-align-last: auto !important;
     text-justify: none !important;
     line-height: 1.85 !important;
     padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
@@ -6895,15 +6899,15 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     display: none !important;
   }
 
-  /* Mushaf portrait: keep each ayah line centered (wins over legacy justify/contents fit). */
+  /* Mushaf portrait: keep each printed line on one row, then stretch it. */
   html body .app .main.mushaf-mode-active .madani-page-sheet,
   html body .app .main.mushaf-mode-active .madani-page-sheet--unicode {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
     direction: rtl !important;
-    text-align: center !important;
-    text-align-last: center !important;
+    text-align: start !important;
+    text-align-last: auto !important;
     line-height: 1.85 !important;
     padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
     overflow-x: visible !important;
@@ -6912,12 +6916,14 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   html body .app .main.mushaf-mode-active .madani-line--ayah,
   html body .app .main.mushaf-mode-active .madani-line--glyphs,
   html body .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah {
-    display: block !important;
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    justify-content: space-between !important;
     width: 100% !important;
     max-width: 100% !important;
-    white-space: normal !important;
-    text-align: center !important;
-    text-align-last: center !important;
+    white-space: nowrap !important;
+    text-align: start !important;
+    text-align-last: auto !important;
     overflow: visible !important;
   }
 
@@ -6925,7 +6931,8 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   html body .app .main.mushaf-mode-active .madani-word--glyph,
   html body .app .main.mushaf-mode-active .madani-word--unicode,
   html body .app .main.mushaf-mode-active .madani-word--fallback {
-    display: inline !important;
+    display: inline-block !important;
+    flex: 0 0 auto !important;
     white-space: nowrap !important;
     word-spacing: 0 !important;
     margin-inline: 0.08em !important;
@@ -8341,7 +8348,7 @@ html body .app .workspace-recite-dock__button:hover {
     transform: none !important;
   }
 
-  /* QPC mushaf: full width shell, inset sheet so glyphs/markers are not clipped. */
+  /* QPC mushaf: full width shell, lines flush to both screen edges. */
   .app .main.madani-qpc-mode-active,
   .main.madani-qpc-mode-active {
     padding-inline: 0 !important;
@@ -8373,13 +8380,12 @@ html body .app .workspace-recite-dock__button:hover {
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: 0 !important;
-    padding:
+    padding-block:
       max(0.55rem, calc(env(safe-area-inset-top, 0px) + 0.35rem))
-      var(--mq-mushaf-inline-end)
       max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))
-      var(--mq-mushaf-inline-start)
       !important;
-    overflow: visible !important;
+    padding-inline: 0 !important;
+    overflow-x: visible !important;
     align-items: stretch !important;
   }
 
@@ -8396,7 +8402,9 @@ html body .app .workspace-recite-dock__button:hover {
     max-width: 100% !important;
     box-sizing: border-box !important;
     padding-inline: 0 !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
     overflow: visible !important;
   }
 
@@ -8410,14 +8418,14 @@ html body .app .workspace-recite-dock__button:hover {
 
   html body .app .main.mushaf-mode-active .madani-page-sheet--unicode {
     margin-inline: auto !important;
-    text-align: center !important;
-    text-align-last: center !important;
+    text-align: start !important;
+    text-align-last: auto !important;
   }
 
   html body .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--ayah,
   html body .app .main.mushaf-mode-active .madani-page-sheet--unicode .madani-line--glyphs {
-    text-align: center !important;
-    text-align-last: center !important;
+    text-align: start !important;
+    text-align-last: auto !important;
   }
 
   html body .app .main.mushaf-mode-active .madani-word--unicode,

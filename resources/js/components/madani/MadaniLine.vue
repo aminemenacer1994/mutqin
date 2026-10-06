@@ -280,6 +280,7 @@ export default {
 .qpc-madani-line {
   display: flex;
   flex-flow: row nowrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
@@ -296,11 +297,15 @@ export default {
 }
 
 .qpc-madani-line--ayah {
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  justify-content: space-between;
   min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62));
   margin-block-end: calc(var(--qpc-word-size, 22px) * var(--qpc-line-gap, 0));
 }
 
-.qpc-madani-line--centered,
+.qpc-madani-line--centered:not(.qpc-madani-line--ayah),
 .qpc-madani-line--surah_name,
 .qpc-madani-line--basmallah,
 .qpc-madani-line--basmala {
@@ -324,7 +329,8 @@ export default {
 }
 
 .qpc-madani-line--session-partial {
-  justify-content: center !important;
+  /* Same edge-to-edge stretch as full ayah rows (session start mid-line). */
+  justify-content: space-between !important;
 }
 
 @media (min-width: 1080px) {

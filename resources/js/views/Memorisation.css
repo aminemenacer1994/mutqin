@@ -9934,7 +9934,7 @@ html {
   transform: translateX(-50%);
   width: min(calc(100vw - 20px), 1280px);
   max-width: 1280px;
-  z-index: 1040;
+  z-index: 14050;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -67131,7 +67131,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   .madani-qpc-viewport .qpc-madani-shell--reader[data-spread-mode="spread"]:not([data-desktop-short-surah="true"]) .qpc-madani-line--ayah {
-    justify-content: center !important;
+    justify-content: space-between !important;
+    align-self: stretch !important;
     width: 100%;
     max-width: 100%;
   }
@@ -67324,7 +67325,13 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 .madani-qpc-viewport .qpc-madani-line--ayah,
 .madani-qpc-viewport .qpc-madani-line--session-partial,
 .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
-  justify-content: center !important;
+  justify-content: space-between !important;
+  align-self: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
 }
 
 .madani-qpc-viewport .qpc-madani-word--tajweed-glyph {
@@ -67532,7 +67539,9 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
   .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
     min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62)) !important;
-    justify-content: center !important;
+    justify-content: space-between !important;
+    align-self: stretch !important;
+    width: 100% !important;
   }
 
   .app .main.mushaf-mode-active .mushaf-session-stack {
@@ -67559,13 +67568,14 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     padding: 0 !important;
     justify-content: center !important;
     align-items: center !important;
-    z-index: 215 !important;
+    z-index: 1040 !important;
     pointer-events: none !important;
     transform: none !important;
   }
 
   body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-recite-dock--mobile {
-    bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
+    bottom: calc(1.65rem + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1040 !important;
   }
 
   html body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile .workspace-recite-dock__button {
