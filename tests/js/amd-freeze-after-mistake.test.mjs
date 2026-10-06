@@ -24,6 +24,14 @@ function pickStickyLiveWordStatus(current = null, incoming = null) {
   if (String(incoming.status || '').toLowerCase() === 'correct') {
     return { ...current, ...incoming, status: 'correct' }
   }
+  if (
+    String(incoming.status || '').toLowerCase() === 'pending'
+    && (String(current.status || '').toLowerCase() === 'incorrect'
+      || String(current.status || '').toLowerCase() === 'omitted')
+    && !String(current.actual || '').trim()
+  ) {
+    return incoming
+  }
   if (severity(incoming.status) > severity(current.status)) {
     return { ...current, ...incoming }
   }
@@ -77,6 +85,22 @@ function applyLiveStatusUpdateContinue({
   assert.equal(next[1].status, 'incorrect')
   assert.equal(next[2].status, 'correct', 'later words keep updating after a mistake')
   assert.equal(next[3].status, 'correct')
+}
+
+{
+  const current = [
+    { text: 'a', status: 'correct' },
+    { text: 'b', status: 'incorrect', actual: '' },
+    { text: 'c', status: 'incorrect', actual: '' },
+  ]
+  const statuses = [
+    { status: 'correct' },
+    { status: 'pending' },
+    { status: 'pending' },
+  ]
+  const next = applyLiveStatusUpdateContinue({ current, statuses })
+  assert.equal(next[1].status, 'pending', 'false-red slots without a heard token must unwind')
+  assert.equal(next[2].status, 'pending')
 }
 
 // Wiring: stop-on-mistake freeze path removed; full-range continue is fixed.

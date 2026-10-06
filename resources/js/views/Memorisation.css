@@ -48025,6 +48025,16 @@ body > .viewport-confetti-canvas,
   box-shadow: none;
 }
 
+.post-session-simple__why-points {
+  margin: 0.4rem 0 0;
+  padding-inline-start: 1.15rem;
+  display: grid;
+  gap: 0.3rem;
+  color: color-mix(in srgb, var(--text) 74%, transparent);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
 .post-session-simple__why-label {
   margin: 0;
   font-size: 0.78rem;
@@ -62765,17 +62775,17 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
 
 @media (max-width: 767.98px) {
   .madani-qpc-viewport .qpc-madani-line {
-    padding-block: calc(var(--qpc-word-size, 22px) * 0.04);
+    padding-block: 0;
   }
 
   .madani-qpc-viewport .qpc-madani-line--ayah {
-    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62));
+    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.18));
   }
 
   .madani-qpc-viewport .qpc-madani-line--surah_name {
     min-height: 0;
-    padding: 0.12rem 0 0;
-    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.48);
+    padding: 0;
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.08);
   }
 
   .madani-qpc-viewport .qpc-madani-surah-name {
@@ -67322,10 +67332,22 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   contain: none;
 }
 
-.madani-qpc-viewport .qpc-madani-line--ayah,
-.madani-qpc-viewport .qpc-madani-line--session-partial,
-.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
+.madani-qpc-viewport .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+.madani-qpc-viewport .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+.madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse) {
   justify-content: space-between !important;
+  align-self: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+.madani-qpc-viewport .qpc-madani-line--sparse,
+.madani-qpc-viewport .qpc-madani-line--ayah.qpc-madani-line--sparse,
+.madani-qpc-viewport .qpc-madani-line--session-partial.qpc-madani-line--sparse {
+  justify-content: center !important;
   align-self: stretch !important;
   width: 100% !important;
   max-width: 100% !important;
@@ -67537,11 +67559,27 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     margin-block: 0 !important;
   }
 
-  .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah {
-    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.62)) !important;
+  .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse) {
+    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.18)) !important;
     justify-content: space-between !important;
     align-self: stretch !important;
     width: 100% !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse {
+    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.18)) !important;
+    justify-content: center !important;
+    align-self: stretch !important;
+    width: 100% !important;
+  }
+
+  .madani-qpc-viewport .qpc-madani-line--empty,
+  .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-line--empty {
+    display: none !important;
+    min-height: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .app .main.mushaf-mode-active .mushaf-session-stack {
@@ -67924,4 +67962,579 @@ html[data-theme="dark"] .mutashabihat-load-more {
 .mutashabihat-drift-actions {
   margin-top: 0.65rem;
 }
+
+/* Post-session completion: editorial UI chrome. Keep Arabic on Quran faces. */
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 *:not(i):not(.bi):not([lang="ar"]):not(.workspace-shell-surah-ar):not(.post-session-simple__quran-focus-text):not(.post-session-simple__quran-token-text):not(.post-session-simple__weak-spots-words) {
+  font-family: var(--font-ui, system-ui, sans-serif) !important;
+  letter-spacing: normal;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 i,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .bi {
+  font-family: "bootstrap-icons" !important;
+  letter-spacing: 0 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 {
+  --ps-ui-ink: #241c16;
+  --ps-ui-muted: #6d6156;
+  --ps-ui-subtle: #8a7b6c;
+  --ps-ui-paper: #f7f3ec;
+  --ps-ui-panel: #fffcf7;
+  --ps-ui-raised: #fffefb;
+  --ps-ui-line: rgba(48, 36, 24, 0.12);
+  --ps-ui-line-strong: rgba(48, 36, 24, 0.2);
+  --ps-ui-bronze: #8b5a32;
+  --ps-ui-bronze-ink: #fffaf3;
+  --ps-ui-green: #2a7a55;
+  --ps-ui-green-ink: #f6fff9;
+  --ps-ui-check: #2a7a55;
+  --ps-ui-radius: 14px;
+  --ps-ui-radius-sm: 12px;
+}
+
+html[data-theme="light"] body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="light"] {
+  --ps-ui-ink: #1c1917;
+  --ps-ui-muted: #5e574e;
+  --ps-ui-subtle: #7a7268;
+  --ps-ui-paper: #f4f1eb;
+  --ps-ui-panel: #ffffff;
+  --ps-ui-raised: #ffffff;
+  --ps-ui-line: rgba(28, 25, 23, 0.1);
+  --ps-ui-line-strong: rgba(28, 25, 23, 0.18);
+  --ps-ui-bronze: #7a4e2a;
+  --ps-ui-green: #1f6f4e;
+}
+
+html[data-theme="sepia"] body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="sepia"] {
+  --ps-ui-ink: #3a2716;
+  --ps-ui-muted: #74604c;
+  --ps-ui-subtle: #8c735c;
+  --ps-ui-paper: #f3e6d0;
+  --ps-ui-panel: #fbf3e4;
+  --ps-ui-raised: #fff8ec;
+  --ps-ui-line: rgba(90, 62, 34, 0.16);
+  --ps-ui-line-strong: rgba(90, 62, 34, 0.26);
+  --ps-ui-bronze: #9a6738;
+  --ps-ui-green: #2e6b4a;
+}
+
+html[data-theme="dark"] body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] {
+  --ps-ui-ink: #f4eadf;
+  --ps-ui-muted: rgba(244, 234, 223, 0.7);
+  --ps-ui-subtle: rgba(244, 234, 223, 0.54);
+  --ps-ui-paper: #161310;
+  --ps-ui-panel: #221c18;
+  --ps-ui-raised: #2a2420;
+  --ps-ui-line: rgba(247, 234, 219, 0.12);
+  --ps-ui-line-strong: rgba(247, 234, 219, 0.22);
+  --ps-ui-bronze: #e0b57a;
+  --ps-ui-bronze-ink: #1a120c;
+  --ps-ui-green: #3d9a68;
+  --ps-ui-green-ink: #f4fff8;
+  --ps-ui-check: #6fbf98;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+  width: min(32.5rem, calc(100vw - 1.25rem)) !important;
+  max-width: min(32.5rem, calc(100vw - 1.25rem)) !important;
+  max-height: min(88dvh, 46rem) !important;
+  border: 1px solid var(--ps-ui-line-strong) !important;
+  border-radius: 1.1rem !important;
+  background: var(--ps-ui-paper) !important;
+  color: var(--ps-ui-ink) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset,
+    0 18px 48px rgba(28, 20, 12, 0.16) !important;
+}
+
+html[data-theme="dark"] body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2[data-theme="dark"] .post-session-simple__dialog {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 22px 56px rgba(0, 0, 0, 0.48) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: flex-start !important;
+  gap: 0.85rem !important;
+  padding: 1.15rem 1.2rem 0.95rem !important;
+  border-bottom: 1px solid var(--ps-ui-line) !important;
+  background: transparent !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__close {
+  margin-inline-start: auto !important;
+  flex: 0 0 auto !important;
+  align-self: flex-start !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header-copy {
+  display: grid !important;
+  gap: 0.22rem !important;
+  min-width: 0 !important;
+  padding-top: 0.12rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__check {
+  width: 2.4rem !important;
+  height: 2.4rem !important;
+  min-width: 2.4rem !important;
+  min-height: 2.4rem !important;
+  border-radius: 999px !important;
+  border: 1.5px solid color-mix(in srgb, var(--ps-ui-check) 38%, transparent) !important;
+  background: color-mix(in srgb, var(--ps-ui-check) 12%, var(--ps-ui-panel)) !important;
+  color: var(--ps-ui-check) !important;
+  box-shadow: none !important;
+  font-size: 1.15rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
+  font-size: 1.28rem !important;
+  line-height: 1.2 !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--ps-ui-ink) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__subtitle {
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+  font-weight: 450 !important;
+  color: var(--ps-ui-muted) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__body {
+  gap: 0.9rem !important;
+  padding: 1rem 1.2rem 1.1rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-prompt,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__ai-review,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card {
+  padding: 1rem 1.05rem !important;
+  border: 1px solid var(--ps-ui-line) !important;
+  border-radius: var(--ps-ui-radius) !important;
+  background: var(--ps-ui-panel) !important;
+  box-shadow: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .ps-rec-card[data-plan] {
+  box-shadow: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--step,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__section-kicker--sub,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-eyebrow,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  margin: 0 !important;
+  color: var(--ps-ui-subtle) !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker-copy {
+  display: grid !important;
+  gap: 0.12rem !important;
+  min-width: 0 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__kicker-title,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-title,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-label,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__action-label {
+  color: var(--ps-ui-ink) !important;
+  font-size: 1.05rem !important;
+  line-height: 1.25 !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.015em !important;
+  text-transform: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-prompt-range,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-latin,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-arabic {
+  color: var(--ps-ui-ink) !important;
+  font-size: 1.02rem !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 [lang="ar"],
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .workspace-shell-surah-ar,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-words {
+  font-family: Amiri, "Noto Naskh Arabic", serif !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-body,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-summary,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-prompt-next,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-benefit,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-meta,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-lead {
+  max-width: 62ch !important;
+  color: var(--ps-ui-muted) !important;
+  font-size: 0.86rem !important;
+  line-height: 1.5 !important;
+  font-weight: 450 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-prompt--context {
+  gap: 0.45rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-prompt-meta {
+  gap: 0.35rem 0.7rem !important;
+  font-size: 0.8rem !important;
+  color: var(--ps-ui-muted) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__step-num,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-icon,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading .bi,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-step-num,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-eyebrow .bi,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 1.85rem !important;
+  width: 1.85rem !important;
+  height: 1.85rem !important;
+  min-width: 1.85rem !important;
+  min-height: 1.85rem !important;
+  border-radius: 0.55rem !important;
+  border: 1px solid var(--ps-ui-line) !important;
+  background: var(--ps-ui-raised) !important;
+  color: var(--ps-ui-bronze) !important;
+  font-size: 0.92rem !important;
+  box-shadow: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__panel-head[data-testid="post-session-personal-plan"] {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.85rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-summary {
+  padding: 0.85rem 0.9rem !important;
+  border: 1px solid var(--ps-ui-line) !important;
+  border-radius: var(--ps-ui-radius-sm) !important;
+  background: var(--ps-ui-raised) !important;
+  box-shadow: none !important;
+  max-width: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan {
+  justify-self: stretch !important;
+  width: 100% !important;
+  min-height: 2.5rem !important;
+  padding: 0.55rem 0.85rem !important;
+  border: 1px solid var(--ps-ui-line-strong) !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--ps-ui-ink) !important;
+  font-size: 0.84rem !important;
+  font-weight: 600 !important;
+  gap: 0.45rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__adjust-plan .bi {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  font-size: 0.95rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.5rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.2rem 0.7rem !important;
+  min-height: 3.35rem !important;
+  padding: 0.7rem 0.85rem !important;
+  border: 1px solid var(--ps-ui-line) !important;
+  border-radius: var(--ps-ui-radius-sm) !important;
+  background: var(--ps-ui-raised) !important;
+  box-shadow: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dt {
+  display: contents !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dt > span:last-child {
+  align-self: end !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--ps-ui-subtle) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dd {
+  grid-column: 2 !important;
+  margin: 0 !important;
+  font-size: 0.95rem !important;
+  font-weight: 650 !important;
+  line-height: 1.25 !important;
+  color: var(--ps-ui-ink) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow {
+  padding: 0.95rem 1rem !important;
+  border: 1px solid var(--ps-ui-line) !important;
+  border-radius: var(--ps-ui-radius-sm) !important;
+  background: var(--ps-ui-raised) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-heading {
+  gap: 0.55rem !important;
+  margin: 0 0 0.45rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-colours {
+  gap: 0.55rem 0.85rem !important;
+  margin-top: 0.7rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-colours li {
+  padding: 0 !important;
+  background: transparent !important;
+  font-size: 0.8rem !important;
+  font-weight: 650 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__plan-emphasis {
+  margin-top: 0.65rem !important;
+  color: var(--ps-ui-ink) !important;
+  font-size: 0.84rem !important;
+  line-height: 1.45 !important;
+  font-weight: 550 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.65rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card {
+  display: grid !important;
+  gap: 0.4rem !important;
+  padding: 0.95rem 1rem !important;
+  border: 1px solid var(--ps-ui-line) !important;
+  border-radius: var(--ps-ui-radius-sm) !important;
+  background: var(--ps-ui-raised) !important;
+  box-shadow: none !important;
+  text-align: start !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card[data-scope="weak_areas"],
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card[data-scope="full_range"] {
+  box-shadow: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.7rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card-copy {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 0.4rem 0.55rem !important;
+  min-width: 0 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-recommended {
+  min-height: 1.25rem !important;
+  padding: 0.08rem 0.45rem !important;
+  border: 1px solid color-mix(in srgb, var(--ps-ui-green) 32%, transparent) !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--ps-ui-green) 10%, transparent) !important;
+  color: var(--ps-ui-green) !important;
+  font-size: 0.62rem !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.06em !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card.is-selected {
+  border-color: color-mix(in srgb, var(--ps-ui-green) 42%, var(--ps-ui-line)) !important;
+  background: color-mix(in srgb, var(--ps-ui-green) 8%, var(--ps-ui-panel)) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card.is-selected .post-session-simple__scope-card-icon {
+  border-color: color-mix(in srgb, var(--ps-ui-green) 30%, transparent) !important;
+  background: color-mix(in srgb, var(--ps-ui-green) 12%, transparent) !important;
+  color: var(--ps-ui-green) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__footer {
+  padding: 0.9rem 1.1rem calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+  border-top: 1px solid var(--ps-ui-line) !important;
+  background: color-mix(in srgb, var(--ps-ui-paper) 88%, var(--ps-ui-panel)) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.55rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  width: 100% !important;
+  min-height: 2.85rem !important;
+  padding: 0.7rem 0.95rem !important;
+  border-radius: 0.85rem !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.01em !important;
+  box-shadow: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn > i {
+  flex: 0 0 auto;
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.92;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn span {
+  display: inline !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+  text-align: center !important;
+  overflow: visible !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--reinforce {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ps-ui-bronze) 92%, #fff), var(--ps-ui-bronze)) !important;
+  border-color: color-mix(in srgb, var(--ps-ui-bronze) 80%, #000) !important;
+  color: var(--ps-ui-bronze-ink) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--success,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ai {
+  background: var(--ps-ui-green) !important;
+  border-color: color-mix(in srgb, var(--ps-ui-green) 78%, #000) !important;
+  color: var(--ps-ui-green-ink) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--secondary,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
+  background: var(--ps-ui-raised) !important;
+  border-color: var(--ps-ui-line-strong) !important;
+  color: var(--ps-ui-ink) !important;
+  font-weight: 550 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-tools {
+  gap: 0.45rem 0.75rem !important;
+  margin-top: 0.75rem !important;
+  padding-top: 0.75rem !important;
+  border-top: 1px solid var(--ps-ui-line) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip {
+  min-height: 1.7rem !important;
+  padding: 0.18rem 0.5rem !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--ps-ui-line) !important;
+  background: var(--ps-ui-raised) !important;
+  font-size: 0.78rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__support-block {
+  margin-top: 0.85rem !important;
+  padding-top: 0.85rem !important;
+  border-top: 1px solid var(--ps-ui-line) !important;
+}
+
+@media (min-width: 760px) {
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-cards {
+    grid-template-columns: 1fr !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+html body .post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+html body .post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+  width: min(52rem, calc(100vw - 1.25rem)) !important;
+  max-width: min(52rem, calc(100vw - 1.25rem)) !important;
+  max-height: min(94dvh, 60rem) !important;
+}
+
+html body .post-session-simple.workspace-recite-result.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__close {
+  position: absolute !important;
+  top: 1rem !important;
+  inset-inline-end: 1rem !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 759px) {
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header {
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    padding: 1rem 1rem 0.85rem !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__body,
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__footer {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
+    font-size: 1.2rem !important;
+  }
+}
+
 

@@ -1079,12 +1079,19 @@ export default {
         return null
       }
       const action = this.journeyMemorisationAction
+      const why = String(
+        this.journeyContinue?.why_summary
+        || this.data?.continue?.why_summary
+        || this.data?.recommended_next?.why_summary
+        || '',
+      ).trim()
       return {
         kind: 'journey',
         href: action.href,
         label: action.label,
         title: action.title,
-        range: this.continueRangeLabel(this.journeyContinue || this.data?.progress),
+        hint: why || null,
+        range: why ? null : this.continueRangeLabel(this.journeyContinue || this.data?.progress),
         cta: action.cta,
         icon: 'bi bi-book-half',
       }

@@ -54,6 +54,7 @@ class NextSessionRecommendationService
         private readonly SessionLifecycleService $lifecycle,
         private readonly MainMemorisationPositionService $mainPosition,
         private readonly RecitationMasteryService $recitationMastery,
+        private readonly PersonalizedRecommendationEngine $personalisation,
     ) {}
 
     /**
@@ -76,9 +77,12 @@ class NextSessionRecommendationService
         }
 
         $context = $this->buildContext($user, $session);
+        $context['learner'] = $this->personalisation->snapshot($user, $context);
 
         $payload = $this->resolveRecommendation($user, $context);
+        $payload = $this->maybePromoteOverdueRevision($user, $context, $payload);
         $payload = $this->attachSettings($payload, $context);
+        $payload = $this->personalisation->explain($payload, $context);
         $payload['technique'] = $this->techniquePayload($payload);
 
         // Always return the computed plan even if persistence fails (e.g. schema
@@ -1109,6 +1113,51 @@ class NextSessionRecommendationService
     }
 
     /**
+     * When the tree would continue, a high-priority overdue weak cluster can
+     * outrank new material — only for learners whose plan or evidence asks for it.
+     *
+     * @param  array<string, mixed>  $context
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function maybePromoteOverdueRevision(User $user, array $context, array $payload): array
+    {
+        $type = RecommendationType::tryFrom((string) ($payload['type'] ?? ''));
+        if ($type !== RecommendationType::Continue && $type !== RecommendationType::ContinueNextRange) {
+            return $payload;
+        }
+
+        $candidate = $this->personalisation->bestOverdueCandidate($user, $context);
+        if (! is_array($candidate) || empty($candidate['surah'])) {
+            return $payload;
+        }
+
+        $promoted = $this->buildPayload(
+            type: RecommendationType::Revision,
+            surah: $candidate['surah'],
+            from: (int) $candidate['from'],
+            to: (int) $candidate['to'],
+            reasonCode: $candidate['reason_code'] instanceof RecommendationReasonCode
+                ? $candidate['reason_code']
+                : RecommendationReasonCode::ReviewOverdue,
+            requiresConfirmation: true,
+            isEndOfSurah: false,
+            nextSurah: null,
+            memorisationMode: $context['memorisation_mode'] ?? null,
+            rangeKind: 'revision',
+        );
+        $promoted['decision'] = PersonalizedRecommendationEngine::DECISION_SUGGESTED;
+        $promoted['ranking'] = [
+            'chosen_score' => (int) ($candidate['score'] ?? 0),
+            'chosen_because' => 'overdue_weak_spots',
+            'deferred_type' => $payload['type'] ?? null,
+            'deferred_range' => $payload['ayah_range'] ?? null,
+        ];
+
+        return $promoted;
+    }
+
+    /**
      * @param  array<string, mixed>  $context
      * @return array<string, mixed>
      */
@@ -1124,6 +1173,14 @@ class NextSessionRecommendationService
 
         if ($nextFrom > $ayahCount) {
             return $this->endOfSurahPayload($context);
+        }
+
+        $remaining = $ayahCount - $nextFrom + 1;
+        $style = (string) (($context['learner']['learning_style'] ?? 'balanced'));
+        if ($style === 'light' && $remaining > self::MAX_SESSION_SIZE) {
+            $preferredSize = min($preferredSize, 2);
+        } elseif ($style === 'intensive') {
+            $preferredSize = self::MAX_SESSION_SIZE;
         }
 
         $balanced = AyahWorkload::selectBalancedRange(
@@ -1561,6 +1618,7 @@ class NextSessionRecommendationService
 
         $rangeCount = (int) ($payload['ayah_range']['count']
             ?? (($context['range_end'] ?? 1) - ($context['range_start'] ?? 1) + 1));
+        $learner = is_array($context['learner'] ?? null) ? $context['learner'] : [];
         $adaptationContext = array_merge($performance, [
             'attempt_number' => (int) ($context['attempt_number'] ?? 1),
             'range_ayah_count' => max(1, $rangeCount),
@@ -1568,6 +1626,11 @@ class NextSessionRecommendationService
             'mode' => $type?->isRepeat() || $type === RecommendationType::Resume ? 'revision' : 'progression',
             'confidence' => $performance['confidence']
                 ?? ($type?->isRepeat() || $type === RecommendationType::Resume ? 'needs_practice' : 'confident'),
+            'preferred_technique' => $learner['preferred_technique'] ?? null,
+            'avoid_techniques' => $learner['avoid_techniques'] ?? [],
+            'technique_scores' => $learner['technique_scores'] ?? [],
+            'learning_style' => $learner['learning_style'] ?? 'balanced',
+            'maturity' => $learner['maturity'] ?? null,
         ]);
 
         $settings = $this->adaptation->resolve($base + ['technique' => $defaultTechnique], $adaptationContext);

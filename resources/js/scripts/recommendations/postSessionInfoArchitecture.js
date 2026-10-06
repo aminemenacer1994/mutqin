@@ -368,6 +368,32 @@ export function buildPostSessionInfoArchitecture(input = {}) {
       complementaryTitle: input.complementaryTitle,
     })
 
+  const weakNumbers = [
+    ...(Array.isArray(input.weakAyahNumbers) ? input.weakAyahNumbers : []),
+    ...weakRows.map((row) => row.ayah),
+    primaryWeakAyah,
+  ].map(Number).filter((n) => n > 0)
+  const uniqueWeak = [...new Set(weakNumbers)].sort((a, b) => a - b)
+  const weakAyahList = uniqueWeak.length === 1
+    ? `Ayah ${uniqueWeak[0]}`
+    : uniqueWeak.length === 2
+      ? `Ayahs ${uniqueWeak[0]} and ${uniqueWeak[1]}`
+      : uniqueWeak.length > 2
+        ? `Ayahs ${uniqueWeak.slice(0, -1).join(', ')}, and ${uniqueWeak[uniqueWeak.length - 1]}`
+        : ''
+  const revisionLead = uniqueWeak.length
+    ? translate(
+      t,
+      'whatNextRevisionLeadNamed',
+      `Practise this range again, with extra attention on ${weakAyahList}. Those ayahs still need support before you add new material.`,
+      { ayahs: uniqueWeak.join(', ') },
+    )
+    : translate(
+      t,
+      'whatNextRevisionLead',
+      'Practise this range again with the recommended technique. The weak ayahs are shown below so you know what needs extra attention.',
+    )
+
   return {
     mainFocus: {
       title: translate(t, 'mainFocus', 'Main focus'),
@@ -412,11 +438,7 @@ export function buildPostSessionInfoArchitecture(input = {}) {
       metaRows,
       why: String(input.planWhy || '').trim(),
       lead: input.isRevision
-        ? translate(
-          t,
-          'whatNextRevisionLead',
-          'Practise this range again with the recommended technique. The weak ayahs are shown below so you know what needs extra attention.',
-        )
+        ? revisionLead
         : translate(
           t,
           'whatNextLead',

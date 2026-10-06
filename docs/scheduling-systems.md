@@ -2,6 +2,22 @@
 
 Mutqin uses several complementary scheduling mechanisms. They are intentionally separate today; unification is planned incrementally.
 
+## Personalisation
+
+`PersonalizedRecommendationEngine` builds a learner snapshot and attaches evidence-backed `why` / `why_summary` / `why_points` to every next-session recommendation.
+
+Intelligence **compounds** as data arrives. Session evidence always wins; history is unlocked in tiers:
+
+| Tier | Typical data | What changes |
+|------|----------------|--------------|
+| **sparse** | 0–2 sessions, little AI Recite | Follow this sitting only. Do not lock a favourite technique or pull overdue murājaʿah from a single strong pass (unless the Hifz plan is `revisionPriority` / `weakAyahFocus`). |
+| **forming** | ~3+ sessions, or 2+ AI Recites / weak spots | Blend this session with recency-weighted technique memory and high-severity overdue spots. |
+| **rich** | ~9+ sessions plus AI history or chronic weak spots | Rank overdue clusters by attempt count, prefer/avoid techniques from accepts and dismissals, and mention AI Recite trend in the why. |
+
+Signals counted: completed sessions, AI Recite assessments, technique accept/dismiss, open weak spots, ayahs with progress. Weights live on `payload.personalisation.maturity`.
+
+Overdue murājaʿah can outrank “continue” when `focusMode` is `revisionPriority` or `weakAyahFocus`, or when the learner is at least **forming**, the just-finished range was strong, and high-severity spots sit outside that range.
+
 ## Authoritative systems
 
 | System | Location | When it applies |

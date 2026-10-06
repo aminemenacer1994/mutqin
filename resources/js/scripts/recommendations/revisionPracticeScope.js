@@ -92,8 +92,10 @@ export function recommendPracticeScope(input = {}) {
   if (!weakWords.length && !weakAyahs.length) {
     return {
       scope: PRACTICE_SCOPE.FULL_RANGE,
-      reasonKey: 'noWeakAreas',
-      reason: 'No clear weak ayahs were identified, so the full set is recommended.',
+      reasonKey: outcome === 'strong' ? 'strongContinue' : 'noWeakAreas',
+      reason: outcome === 'strong'
+        ? 'This set is secure — continue with the recommended technique on the next set.'
+        : 'No clear weak ayahs were identified, so the full set is recommended.',
     }
   }
 
@@ -102,15 +104,6 @@ export function recommendPracticeScope(input = {}) {
   const denseLocal = wordCount > 0 && wordCount <= 4 && weakAyahs.length <= 2
   const sparseSpread = weakAyahs.length >= 3 || ayahCoverage >= 0.5
 
-  // Successful checks progress with technique-led continue/reinforce flows —
-  // do not default to the stale "practise weak ayahs only" scope.
-  if (outcome === 'strong') {
-    return {
-      scope: PRACTICE_SCOPE.FULL_RANGE,
-      reasonKey: 'strongContinue',
-      reason: 'This set is secure — continue with the recommended technique on the next set.',
-    }
-  }
   if (denseLocal && !sparseSpread) {
     return {
       scope: PRACTICE_SCOPE.WEAK_AREAS,

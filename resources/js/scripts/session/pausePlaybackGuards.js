@@ -1,12 +1,13 @@
 /**
  * Session automation (Talqin turns, follow windows, auto-advance) must halt while
- * the session is paused or already completed.
+ * the session is paused, completed, or the tools offcanvas is still open.
  */
 export function isSessionAutomationHalted({
   sessionPaused = false,
   sessionCompleted = false,
+  toolsOpen = false,
 } = {}) {
-  return !!sessionPaused || !!sessionCompleted
+  return !!sessionPaused || !!sessionCompleted || !!toolsOpen
 }
 
 /**
@@ -16,8 +17,9 @@ export function isSessionAutomationHalted({
 export function shouldRunDeferredTalqinAdvance({
   sessionPaused = false,
   sessionCompleted = false,
+  toolsOpen = false,
   talqinModeActive = false,
 } = {}) {
-  if (isSessionAutomationHalted({ sessionPaused, sessionCompleted })) return false
+  if (isSessionAutomationHalted({ sessionPaused, sessionCompleted, toolsOpen })) return false
   return !!talqinModeActive
 }

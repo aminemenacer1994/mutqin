@@ -340,6 +340,7 @@
                   :disabled="actionsBusy"
                   @click="requestClose"
                 >
+                  <i class="bi bi-book" aria-hidden="true"></i>
                   <span>{{ closeLabel }}</span>
                 </button>
                 <button
@@ -349,6 +350,7 @@
                   data-testid="workspace-recite-try-again"
                   @click="$emit('try-again')"
                 >
+                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
                   <span>{{ tryAgainLabel }}</span>
                 </button>
               </div>

@@ -11,6 +11,13 @@ import {
   isActionableRecommendation,
   isRepeatRecommendation,
   localizeRecommendationReason,
+  recommendationWhySummary,
+  recommendationWhyPoints,
+  composeRecommendationWhy,
+  buildEvidenceBackedWhy,
+  maturityFromSignals,
+  latinSurahLabel,
+  formatAyahList,
   recommendationModeLabelKey,
   recommendationPrimaryActionKey,
   buildCombinedCheckInsight,
@@ -50,10 +57,10 @@ function t(key, params = {}) {
     return 'Nice work. Next verses while this still feels fresh.'
   }
   if (key.includes('combinedRepeatWeakAyah') && !key.includes('Ayahs')) {
-    return `Verse ${params.ayah} still feels tricky. We will practise these verses again.`
+    return `Ayah ${params.ayah} still needs support. We will practise this set again with extra attention on that ayah.`
   }
   if (key.includes('combinedRepeatWeakAyahs')) {
-    return 'Some verses still need help. We will practise this set again.'
+    return `Ayahs ${params.ayahs || '1 and 3'} still need support. We will practise this set again with extra attention on those ayahs.`
   }
   if (key.includes('confidenceNeedsPractice')) {
     return 'You asked for more practice, so we will go over these verses again more slowly.'
@@ -91,6 +98,81 @@ function t(key, params = {}) {
   assert.equal(recommendationModeLabelKey(continueRec), 'modeNewLearning')
   assert.equal(formatAyahRangeLabel(continueRec.ayah_range, t), 'Ayahs 15–17')
   assert.match(localizeRecommendationReason(continueRec, t), /fresh/)
+}
+
+{
+  const explained = {
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    reason_code: 'continue_while_fresh',
+    why_summary: 'You completed Ayahs 1–4 of Al-Baqarah without an explicit weak-ayah trap. Talqin was chosen so you hear each phrase clearly.',
+    why_points: [
+      'You completed Ayahs 1–4 of Al-Baqarah without an explicit weak-ayah trap.',
+      'Talqin was chosen so you hear each phrase clearly.',
+    ],
+    why: { decision: 'planned', summary: 'You completed Ayahs 1–4 of Al-Baqarah without an explicit weak-ayah trap. Talqin was chosen so you hear each phrase clearly.' },
+  }
+  assert.match(localizeRecommendationReason(explained, t), /weak-ayah trap/)
+  assert.match(recommendationWhySummary(explained), /Talqin/)
+  assert.equal(recommendationWhyPoints(explained).length >= 2, true)
+}
+
+{
+  assert.equal(latinSurahLabel({ name: 'الإخلاص', name_simple: 'Al-Ikhlas' }), 'Al-Ikhlas')
+  assert.equal(latinSurahLabel('الإخلاص'), '')
+  assert.equal(formatAyahList([3, 1, 1]), '1 and 3')
+  const mixed = composeRecommendationWhy([
+    'Ayahs 1 and 3 still need support. We will practise this set again with extra attention on those ayahs.',
+    'This set is secure, continue with the recommended technique on the next set.',
+  ], { isRepeat: true, weakAyahs: [1, 3] })
+  assert.match(mixed, /Ayahs 1 and 3/)
+  assert.doesNotMatch(mixed, /this set is secure/i)
+
+  const evidence = buildEvidenceBackedWhy({
+    isRepeat: true,
+    weakAyahs: [1, 3],
+    weakWords: [{ text: 'ٱللَّهِ', ayahNumber: 1 }],
+    techniqueId: 'chaining',
+    matched: 12,
+    total: 15,
+    incorrect: 2,
+    surahName: 'Al-Ikhlas',
+    rangeFrom: 1,
+    rangeTo: 4,
+  })
+  assert.match(evidence.summary, /Ayahs 1 and 3 still slipped/)
+  assert.match(evidence.summary, /Joining neighbouring ayahs/)
+  assert.match(evidence.summary, /matched 12 of 15/)
+  assert.doesNotMatch(evidence.summary, /secure|next recommended set/i)
+}
+
+{
+  const sparse = maturityFromSignals({ completed_sessions: 1, progress_ayahs: 4 })
+  assert.equal(sparse.tier, 'sparse')
+  assert.equal(sparse.weights.technique_memory, 0)
+  const forming = maturityFromSignals({ completed_sessions: 3, ai_assessments: 2 })
+  assert.equal(forming.tier, 'forming')
+  assert.ok(forming.weights.history > 0)
+  const rich = maturityFromSignals({
+    completed_sessions: 12,
+    ai_assessments: 8,
+    technique_decisions: 8,
+    open_weak_spots: 4,
+    progress_ayahs: 40,
+  })
+  assert.equal(rich.tier, 'rich')
+  assert.ok(rich.confidence > forming.confidence)
+}
+
+{
+  const continueRec = {
+    type: RECOMMENDATION_TYPES.CONTINUE,
+    session_mode: 'new_learning',
+    range_kind: 'new',
+    surah: { id: 2, name: 'Al-Baqarah' },
+    ayah_range: { from: 15, to: 17, count: 3 },
+    reason_code: 'continue_while_fresh',
+    settings: { technique: 'talqin', reciter: 'ar.alafasy', playback_speed: 1, repetitions: 3 },
+  }
   assert.match(
     formatRecommendationSettingsSummary(continueRec.settings, t, { reciterName: 'Alafasy' }),
     /Listen and repeat \(Talqin\) · Alafasy · 1× · 3 repetitions/
@@ -344,7 +426,8 @@ function t(key, params = {}) {
   assert.match(js, /resolvePostSessionFocusPhrase/)
   assert.match(js, /resolvePostSessionReturnCopy/)
   assert.match(js, /postSessionPlanEncouragement/)
-  assert.match(js, /coach\.subtitles\.reviseFirst|Revise the weak spots first/)
+  assert.match(js, /coach\.subtitles\.reviseFirstNamed|Revise ayahs/)
+  assert.match(js, /postSessionAwaitingCheckLead/)
   assert.match(js, /evidenceReturnTomorrow/)
   assert.doesNotMatch(
     String(js.match(/resolvePostSessionReturnCopy[\s\S]*?onPostSessionFocusPhraseActivate/)?.[0] || ''),
@@ -385,7 +468,7 @@ function t(key, params = {}) {
   assert.doesNotMatch(completionModal, /post-session-simple__stats/, 'session stats removed from completion modal')
   assert.match(vue, /postSessionShowRecommendationPlan/, 'recommendation plan gated until after AI test')
   assert.match(completionModal, /openPostSessionAdjustPlan/, 'adjust plan restored on completion modal')
-  assert.match(vue, /aiFirstBody/, 'aiFirstBody localization key present')
+  assert.match(vue, /postSessionAwaitingCheckLead/, 'awaiting-check copy names the finished range')
   assert.match(js, /correctSimilarity\s*=\s*RECITATION_LIVE_CORRECT_SIMILARITY/)
   assert.match(js, /partialSimilarity\s*=\s*RECITATION_LIVE_PARTIAL_SIMILARITY/)
   assert.match(js, /partialAdvances\s*=\s*true/)
@@ -719,7 +802,9 @@ function t(key, params = {}) {
   assert.match(plan.time.label, /About \d+ minutes/)
   assert.ok(plan.estimated_minutes >= 4)
   assert.ok(plan.extraAyahPasses >= 1)
-  assert.doesNotMatch(plan.personalWhy || '', /Repeat ayah|lock in the weak words|strengthen the words/i)
+  assert.match(plan.personalWhy || '', /Ayah 5 still slipped/)
+  assert.match(plan.personalWhy || '', /Joining neighbouring ayahs/)
+  assert.doesNotMatch(plan.personalWhy || '', /lock in the weak words|strengthen the words/i)
   assert.match(plan.revisionEmphasis || '', /5|weak/i)
 
   const continueInsight = buildCombinedCheckInsight({

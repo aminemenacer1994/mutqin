@@ -453,6 +453,9 @@ class QuranAlignmentServiceTest extends TestCase
         $this->assertNotEmpty($plan['techniques']);
         $this->assertArrayHasKey('title', $plan);
         $this->assertArrayHasKey('explanation', $plan);
+        $this->assertArrayHasKey('why_points', $plan);
+        $this->assertNotEmpty($plan['why_points']);
+        $this->assertStringContainsString((string) $aligned['accuracy'], (string) $plan['explanation']);
         $this->assertGreaterThanOrEqual(1, (int) ($plan['repetitions']['target'] ?? 0));
     }
 

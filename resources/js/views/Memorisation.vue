@@ -4345,7 +4345,7 @@
                       class="post-session-simple__why-heading"
                     >
                       <i class="bi bi-patch-question" aria-hidden="true"></i>
-                      {{ t('memorisation.postSession.recommendation.whyRecommended') || 'Why this was recommended' }}
+                      {{ postSessionDecisionLabel || t('memorisation.postSession.recommendation.whyRecommended') || 'Why this was recommended' }}
                     </p>
                     <p
                       v-if="postSessionPlanWhyText"
@@ -4353,6 +4353,16 @@
                     >
                       {{ postSessionPlanWhyText }}
                     </p>
+                    <ul
+                      v-if="postSessionPlanWhyPoints.length"
+                      class="post-session-simple__why-points"
+                      data-testid="post-session-why-points"
+                    >
+                      <li
+                        v-for="(point, idx) in postSessionPlanWhyPoints"
+                        :key="`why-point-${idx}`"
+                      >{{ point }}</li>
+                    </ul>
                     <ul
                       v-if="postSessionAiColourSegments.length"
                       class="post-session-simple__plan-colours"
@@ -4446,11 +4456,16 @@
                         @click="selectPostSessionPracticeScope(option.id)"
                       >
                         <span class="post-session-simple__scope-card-top">
-                          <span class="post-session-simple__scope-card-label">{{ option.label }}</span>
-                          <span
-                            v-if="option.recommended"
-                            class="post-session-simple__scope-recommended"
-                          >{{ t('memorisation.postSession.recommendation.recommendedTag') || 'Recommended' }}</span>
+                          <span class="post-session-simple__scope-card-icon" aria-hidden="true">
+                            <i :class="option.id === 'weak_areas' ? 'bi bi-bullseye' : 'bi bi-layers'"></i>
+                          </span>
+                          <span class="post-session-simple__scope-card-copy">
+                            <span class="post-session-simple__scope-card-label">{{ option.label }}</span>
+                            <span
+                              v-if="option.recommended"
+                              class="post-session-simple__scope-recommended"
+                            >{{ t('memorisation.postSession.recommendation.recommendedTag') || 'Recommended' }}</span>
+                          </span>
                         </span>
                         <span
                           v-if="option.benefit || option.description"
@@ -4533,18 +4548,7 @@
                   </li>
                 </ul>
                 <p class="post-session-simple__plan-prompt-next">
-                  {{ postSessionIsRepeatRecommendation
-                    ? translateOrFallback(
-                      'memorisation.postSession.coach.subtitles.retestAfterPractice',
-                      translateOrFallback(
-                        'memorisation.postSession.recommendation.aiFirstBody',
-                        'Check your memorisation again to unlock the next session.'
-                      )
-                    )
-                    : translateOrFallback(
-                      'memorisation.postSession.recommendation.aiFirstBodyShort',
-                      'Check your memorisation next to unlock a tailored practice plan.'
-                    ) }}
+                  {{ postSessionAwaitingCheckLead }}
                 </p>
               </section>
             </template>
@@ -4586,6 +4590,7 @@
                   @keydown.enter.stop.prevent="onPostSessionCtaAction(btn.action)"
                   @keydown.space.stop.prevent="onPostSessionCtaAction(btn.action)"
                 >
+                  <i v-if="btn.icon" :class="btn.icon" aria-hidden="true"></i>
                   <span>{{ btn.label }}</span>
                 </button>
               </template>

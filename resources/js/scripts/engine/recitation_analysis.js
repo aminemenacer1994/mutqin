@@ -407,6 +407,94 @@ function findLiveTwoWordRecovery({
   return null
 }
 
+function heardPairMatchesTargetPair(
+  targetWords,
+  targetStart,
+  firstHeard,
+  secondHeard,
+  allowArticleMatch,
+  floor,
+) {
+  const first = firstHeard || {}
+  const second = secondHeard || {}
+  return !!targetWords[targetStart]
+    && !!targetWords[targetStart + 1]
+    && !!first.word
+    && !!second.word
+    && !isLowConfidenceRecognitionWord(first)
+    && !isLowConfidenceRecognitionWord(second)
+    && getRecitationWordSimilarity(targetWords[targetStart], first.word, { allowArticleMatch }) >= floor
+    && getRecitationWordSimilarity(targetWords[targetStart + 1], second.word, { allowArticleMatch }) >= floor
+}
+
+function pushLiveRestartHeardPair(extraWords, heardWords, heardIndex, restartStartIndex = 0) {
+  for (let index = heardIndex; index <= heardIndex + 1; index += 1) {
+    const heard = heardWords[index] || {}
+    extraWords.push({
+      word: heard.word || '',
+      display: heard.display || heard.rawWord || heard.word || '',
+      rawWord: heardRawWord(heard),
+      displayWord: '',
+      heardIndex: index,
+      confidence: Number(heard.confidence ?? 1),
+      start: finiteOrNull(heard.start ?? heard.startTime),
+      end: finiteOrNull(heard.end ?? heard.endTime),
+      startTime: finiteOrNull(heard.start ?? heard.startTime),
+      endTime: finiteOrNull(heard.end ?? heard.endTime),
+      type: 'RESTART',
+      classificationType: 'RESTART',
+      legacyType: 'extra',
+      highlight: 'amber',
+      visualStatus: 'amber',
+      expectedIndex: restartStartIndex,
+      recognisedIndex: index,
+      restartStartIndex,
+      restartEndIndex: restartStartIndex + 1,
+      recognisedStartIndex: heardIndex,
+      recognisedEndIndex: heardIndex + 1,
+    })
+  }
+}
+
+/**
+ * Learner went back to the opening pair. Keep already-green words and hold
+ * the unread tail pending — do not run DP or paint the rest of the range red.
+ */
+function tryLiveOpeningRestart({
+  targetWords = [],
+  heardWords = [],
+  heardIndex = 0,
+  cursor = 0,
+  extraWords = [],
+  allowArticleMatch = true,
+  correctSimilarity = RECITATION_CORRECT_SIMILARITY,
+} = {}) {
+  if (cursor < 2 || targetWords.length < 2 || heardIndex + 1 >= heardWords.length) return false
+  if (!heardPairMatchesTargetPair(
+    targetWords,
+    0,
+    heardWords[heardIndex],
+    heardWords[heardIndex + 1],
+    allowArticleMatch,
+    correctSimilarity,
+  )) return false
+  if (
+    cursor + 1 < targetWords.length
+    && heardPairMatchesTargetPair(
+      targetWords,
+      cursor,
+      heardWords[heardIndex],
+      heardWords[heardIndex + 1],
+      allowArticleMatch,
+      correctSimilarity,
+    )
+  ) {
+    return false
+  }
+  pushLiveRestartHeardPair(extraWords, heardWords, heardIndex, 0)
+  return true
+}
+
 function pushLiveHeldExtra(extraWords, heardWord, heardIndex) {
   extraWords.push({
     word: heardWord.word || '',
@@ -465,29 +553,8 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
   ).heardWords
   const isLiveLifecycle = ['live', 'recording', 'paused'].includes(String(options.lifecycle || '').toLowerCase())
 
-  // The cursor preview is intentionally lightweight for ordinary speech, but
-  // it must yield to the same anchor-gated DP once a real backward move is
-  // visible. Otherwise a restart is mistaken for a long omission/red cascade
-  // while the recording is still live.
-  if (
-    isLiveLifecycle
-    && heardWords.length >= 6
-    && targetWords.length >= 3
-    && findLiveOpeningRestartHint(targetWords, heardWords)
-    && findLiveRestartEvidence(targetWords, heardWords)
-  ) {
-    const restartAlignment = buildQuranAlignment(targetText, heardWords, {
-      ...options,
-      lifecycle: 'live',
-      targetAyahs,
-    })
-    if (restartAlignment.events?.some(event => event.type === 'RESTART')) {
-      return {
-        ...restartAlignment,
-        firstBlockingIndex: restartAlignment.progression?.currentIndex ?? -1,
-      }
-    }
-  }
+  // Live colouring must stay sequential. Full DP on every Speechmatics tick
+  // froze the tab and then remapped the unread tail as red.
   const statuses = displayWords.map((text, index) => ({
     text,
     targetWord: targetWords[index] || '',
@@ -574,6 +641,21 @@ export function buildRealtimePreviewAlignment(targetText = '', recognitionWords 
       continue
     }
     if (shouldSkipLearnerStutterRepeat(heardWords, heardIndex, targetWords, cursor)) {
+      continue
+    }
+    if (
+      isLiveLifecycle
+      && tryLiveOpeningRestart({
+        targetWords,
+        heardWords,
+        heardIndex,
+        cursor,
+        extraWords,
+        allowArticleMatch,
+        correctSimilarity,
+      })
+    ) {
+      heardIndex += 1
       continue
     }
     if (cursor >= targetWords.length) {

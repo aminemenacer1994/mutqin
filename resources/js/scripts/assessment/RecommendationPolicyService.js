@@ -136,6 +136,23 @@ export const REASON_INTERVENTIONS = Object.freeze({
   },
 })
 
+const POLICY_WHY_TEXT = Object.freeze({
+  [ASSESSMENT_REASON_CODES.SESSION_INCOMPLETE]: 'You paused mid-range, so the check recommends resuming the leftover ayahs instead of opening a new set.',
+  [ASSESSMENT_REASON_CODES.LOW_RECALL]: 'Phrase recall was weak on the check, so listen-and-repeat rebuilds the line before you add new ayahs.',
+  [ASSESSMENT_REASON_CODES.SEQUENCE_ERRORS]: 'Ayah order was uncertain, so chaining is used to lock neighbouring ayahs together.',
+  [ASSESSMENT_REASON_CODES.HIGH_HINT_DEPENDENCY]: 'You used memory prompts often, so the next pass hides more of the Mushaf.',
+  [ASSESSMENT_REASON_CODES.VISUAL_DEPENDENCY]: 'Recall leaned on visible text, so blur/hiding is the next step.',
+  [ASSESSMENT_REASON_CODES.AUDIO_DEPENDENCY]: 'You relied on replay, so the plan leans on quieter recall with lighter audio.',
+  [ASSESSMENT_REASON_CODES.SPOKEN_HESITATION]: 'Spoken recall hesitated, so the plan uses shorter phrases and slower playback.',
+  [ASSESSMENT_REASON_CODES.OMISSION_ERRORS]: 'Words were missed, so the same ayahs are repeated with listen-and-repeat.',
+  [ASSESSMENT_REASON_CODES.SIMILAR_AYAH_CONFUSION]: 'Similar ayahs were mixed, so comparison plus anchors is recommended.',
+  [ASSESSMENT_REASON_CODES.LOW_DELAYED_RETENTION]: 'Earlier material faded, so murājaʿah is scheduled sooner.',
+  [ASSESSMENT_REASON_CODES.HIGH_PERFORMANCE]: 'The check looked strong, so the plan continues while the ayahs are still fresh.',
+  [ASSESSMENT_REASON_CODES.LOW_CONFIDENCE]: 'You asked for reassurance, so the next pass is a short confidence-building review.',
+  [ASSESSMENT_REASON_CODES.OVERCONFIDENCE]: 'Confidence was high, but the check found a gap, so that gap is reinforced first.',
+  [ASSESSMENT_REASON_CODES.REVIEW_OVERDUE]: 'Some ayahs are due for murājaʿah, so they outrank new material.',
+})
+
 /** Conflict priority (first match wins among conflict pairs). */
 const CONFLICT_PRIORITY = Object.freeze([
   ASSESSMENT_REASON_CODES.SESSION_INCOMPLETE,
@@ -311,6 +328,13 @@ export function buildPolicyRecommendation(input = {}) {
       ? (base.type && !['revision', 'repeat_current_range'].includes(base.type) ? base.type : 'continue')
       : 'repeat_current_range'
 
+  const whyPoints = codes
+    .map((code) => POLICY_WHY_TEXT[code] || POLICY_WHY_TEXT[String(code).toUpperCase()] || '')
+    .filter(Boolean)
+  const userReason = whyPoints[0]
+    || POLICY_WHY_TEXT[primary]
+    || null
+
   return {
     ...base,
     type,
@@ -318,7 +342,18 @@ export function buildPolicyRecommendation(input = {}) {
     range_kind: isAdvance ? (base.range_kind || 'new') : 'repeated',
     reason_code: primary.toLowerCase(),
     evidence_codes: codes,
-    user_reason: null,
+    user_reason: userReason,
+    why_summary: userReason,
+    why_points: whyPoints,
+    decision: isResume ? 'picked' : (isAdvance ? 'planned' : 'recommended'),
+    why: {
+      summary: userReason,
+      decision: isResume ? 'picked' : (isAdvance ? 'planned' : 'recommended'),
+      picked_because: whyPoints.map((text, index) => ({
+        code: String(codes[index] || primary).toLowerCase(),
+        text,
+      })),
+    },
     settings: {
       ...(base.settings || {}),
       ...settings,

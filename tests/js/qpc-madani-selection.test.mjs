@@ -231,4 +231,32 @@ assert.equal(kahf303Ayah[0].words.length, 7, 'session-start fragment stays its o
 assert.equal(kahf303Ayah[0].words[0].location, '18:88:1')
 assert.ok(kahf303Ayah.every((line) => (line.words || []).length <= 14), 'no ayah row may absorb the next printed line')
 
+const maryamOpeningWithoutPrintedTitle = prepareQpcMadaniSessionLines([
+  { line_type: 'ayah', line_number: 1, words: [{ surah: '18', ayah: '110', location: '18:110:1' }] },
+  { line_type: 'ayah', line_number: 2, words: [{ surah: '18', ayah: '110', location: '18:110:14' }] },
+  { line_type: 'basmallah', line_number: 4, words: [] },
+  { line_type: 'ayah', line_number: 5, words: [{ surah: '19', ayah: '1', location: '19:1:1' }] },
+], '19:1', '19:10', { showSurahHeader: true, includeSurahOpening: true })
+const maryamChrome = maryamOpeningWithoutPrintedTitle.map((line) => String(line.line_type || line.type))
+assert.equal(maryamChrome[0], 'surah_name', 'سورة مريم must lead — never Bismillah above the title')
+assert.ok(['basmallah', 'basmala'].includes(maryamChrome[1]), 'one Bismillah stays under the title')
+assert.equal(
+  maryamChrome.filter((type) => type === 'basmallah' || type === 'basmala').length,
+  1,
+  'must not duplicate Bismillah above and below the surah name',
+)
+assert.equal(Number(maryamOpeningWithoutPrintedTitle[0].surah_number), 19)
+
+const maryamIndopakAliasHeader = prepareQpcMadaniSessionLines([
+  { type: 'surah_name', surahNumber: 19, lineNumber: 3, words: [] },
+  { type: 'basmallah', lineNumber: 4, words: [] },
+  { type: 'ayah', lineNumber: 5, words: [{ location: '19:1:1', verseKey: '19:1' }] },
+], '19:1', '19:10', { showSurahHeader: true, includeSurahOpening: true })
+assert.equal(String(maryamIndopakAliasHeader[0].line_type || maryamIndopakAliasHeader[0].type), 'surah_name')
+assert.ok(['basmallah', 'basmala'].includes(String(maryamIndopakAliasHeader[1].line_type || maryamIndopakAliasHeader[1].type)))
+assert.equal(
+  maryamIndopakAliasHeader.filter((line) => ['basmallah', 'basmala'].includes(String(line.line_type || line.type))).length,
+  1,
+)
+
 console.log('qpc-madani-selection.test.mjs: ok')

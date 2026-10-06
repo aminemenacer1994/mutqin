@@ -26,14 +26,6 @@
         :font-family="indopakSurahFontFamily"
         :ready="indopakSurahFontReady"
       />
-      <span
-        v-if="showBasmalaUnderSurah"
-        class="qpc-madani-basmallah qpc-madani-surah-header__basmala qpc-madani-basmallah--indopak"
-        dir="rtl"
-        lang="ar"
-        :style="basmalaStyle"
-        aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
-      >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
     </div>
 
     <div
@@ -47,15 +39,6 @@
         :style="{ fontFamily: `'${surahFontFamily}', serif` }"
         aria-hidden="true"
       >{{ headerText }}</span>
-      <span
-        v-if="showBasmalaUnderSurah"
-        class="qpc-madani-basmallah qpc-madani-surah-header__basmala"
-        :class="{ 'qpc-madani-basmallah--indopak': isIndopakLayout }"
-        dir="rtl"
-        lang="ar"
-        :style="basmalaStyle"
-        aria-label="بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
-      >بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</span>
       <span class="visually-hidden">Surah {{ line.surah_number }}</span>
     </div>
 
@@ -198,10 +181,6 @@ export default {
       type: Boolean,
       default: false,
     },
-    showBasmalaUnderSurah: {
-      type: Boolean,
-      default: false,
-    },
   },
   computed: {
     displayWords() {
@@ -328,9 +307,58 @@ export default {
   padding-block-end: calc(var(--qpc-word-size, 22px) * 0.05);
 }
 
-.qpc-madani-line--session-partial {
+.qpc-madani-line--session-partial:not(.qpc-madani-line--sparse) {
   /* Same edge-to-edge stretch as full ayah rows (session start mid-line). */
   justify-content: space-between !important;
+}
+
+.qpc-madani-line--sparse {
+  justify-content: center !important;
+}
+
+@media (max-width: 767.98px) {
+  .qpc-madani-line {
+    padding-block: 0;
+    line-height: var(--qpc-line-height, 1.16);
+  }
+
+  .qpc-madani-line--ayah {
+    min-height: calc(var(--qpc-word-size, 22px) * var(--qpc-line-min-height, 1.18));
+    margin-block-end: 0;
+  }
+
+  .qpc-madani-line--empty {
+    display: none;
+    min-height: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .qpc-madani-line--surah_name {
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.06);
+    padding: 0;
+  }
+
+  .qpc-madani-line--basmallah,
+  .qpc-madani-line--basmala {
+    min-height: 0;
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.22);
+    padding-block-end: 0;
+  }
+
+  .qpc-madani-surah-name {
+    max-width: 100%;
+    font-size: min(
+      calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.45)),
+      42vw
+    );
+  }
+
+  .qpc-madani-basmallah,
+  .qpc-madani-basmallah-words {
+    max-width: 100%;
+  }
 }
 
 @media (min-width: 1080px) {
@@ -368,13 +396,6 @@ export default {
   min-width: 0;
   text-align: center;
   color: var(--qpc-ink, #1b140d);
-}
-
-.qpc-madani-surah-header__basmala {
-  margin: 0;
-  padding: 0;
-  font-size: calc(var(--qpc-word-size, 22px) * 1.08);
-  line-height: 1.35;
 }
 
 .qpc-madani-surah-name {

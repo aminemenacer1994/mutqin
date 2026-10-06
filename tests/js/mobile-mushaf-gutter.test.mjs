@@ -12,8 +12,8 @@ const memorisationJs = readFileSync(
 
 assert.match(
   mobileGridCss,
-  /--mq-mushaf-inline-start:\s*max\(2px, var\(--mq-safe-left\)\)/,
-  'phones must define mushaf inline inset from safe-area tokens',
+  /--mq-mushaf-inline-start:\s*max\(6px, var\(--mq-safe-left\)\)/,
+  'phones must define a hairline mushaf inset from safe-area tokens',
 )
 
 assert.match(
@@ -24,8 +24,8 @@ assert.match(
 
 assert.match(
   mobileGridCss,
-  /QPC mushaf: full width shell[\s\S]*?qpc-madani-page__sheet[\s\S]*?padding-inline:\s*0\s*!important/,
-  'QPC mushaf sheets are flush to both screen edges',
+  /QPC mushaf: full width shell[\s\S]*?qpc-madani-page__sheet[\s\S]*?padding-inline:[\s\S]*?--mq-mushaf-inline-start/,
+  'QPC mushaf sheets use a hairline gutter, not extra page padding',
 )
 
 assert.doesNotMatch(

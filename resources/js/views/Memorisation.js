@@ -220,6 +220,14 @@ import {
   buildFocusedPracticeRange,
   surahAyahCount,
   localizeRecommendationReason,
+  recommendationWhySummary,
+  recommendationWhyPoints,
+  recommendationDecisionKey,
+  composeRecommendationWhy,
+  composeRecommendationWhySentences,
+  buildEvidenceBackedWhy,
+  latinSurahLabel,
+  formatAyahList,
   recommendationModeLabelKey,
   recommendationPrimaryActionKey,
   buildCombinedCheckInsight,
@@ -716,6 +724,7 @@ import {
   createRealtimeTranscriptionMeta,
   createTranscriptionAudioBridge,
   createSpeechmaticsRealtimeProvider,
+  SPEECHMATICS_MAX_DRAIN_BUFFERS,
 } from '../scripts/memorisationRuntime'
 
 function activeSessionSnapshotStorageKey(userId = null) {
@@ -4259,6 +4268,23 @@ export default {
       }
       return this.resolveRecommendationSurahName(rec.surah)
     },
+    postSessionCtaSurahName() {
+      const rec = this.postSessionRecommendation
+      const id = Number(
+        (rec?.type === RECOMMENDATION_TYPES.NEXT_SURAH
+          ? (rec.next_surah?.id || rec.surah?.id)
+          : rec?.surah?.id)
+        || rec?.surah_number
+        || this.postSessionSnapshot?.chapterId
+        || this.chapterId
+        || 0,
+      )
+      return this.getChapterLatinName(id)
+        || latinSurahLabel(rec?.type === RECOMMENDATION_TYPES.NEXT_SURAH ? (rec?.next_surah || rec?.surah) : rec?.surah)
+        || latinSurahLabel(this.currentChapter)
+        || String(this.postSessionSnapshot?.chapterName || '').trim()
+        || ''
+    },
     postSessionRecommendationMeta() {
       const rec = this.postSessionRecommendation
       if (!rec?.ayah_range) {
@@ -4361,6 +4387,7 @@ export default {
       const nextSurahReason = () => this.t('memorisation.postSession.recommendation.reasons.simpleNextSurah', {
         surah: this.resolveRecommendationSurahName(rec.next_surah || rec.surah),
       })
+      const specificWhy = recommendationWhySummary(rec)
 
       // After AI test: keep one static why from the curated AI plan (no confidence reshuffle).
       if (this.postSessionShowRecommendationPlan) {
@@ -4369,7 +4396,7 @@ export default {
           || this.aiReciteFinalPlan?.feedback
           || this.amdPracticePlan?.why
           || this.postSessionAiFeedback
-          || rec.user_reason
+          || specificWhy
           || rec.balance_message
           || rec.reason
           || ''
@@ -4384,6 +4411,10 @@ export default {
           return this.stripAiDashes(nextSurahReason())
         }
         return this.stripAiDashes(this.t('memorisation.postSession.recommendation.reasons.aiReciteStrong'))
+      }
+
+      if (specificWhy) {
+        return this.stripAiDashes(specificWhy)
       }
 
       const localized = this.postSessionRecommendationReasonText
@@ -4867,24 +4898,122 @@ export default {
       if (focus && focus !== understanding) return focus
       return ''
     },
+    postSessionEvidenceWhy() {
+      const rec = this.postSessionRecommendation || {}
+      const counts = this.postSessionAiReviewDetails?.colorCounts || {}
+      const green = Number(counts.green || 0)
+      const red = Number(counts.red || 0)
+      const black = Number(counts.black || 0)
+      const amber = Number(counts.amber || 0)
+      const gray = Number(counts.gray || 0)
+      const total = green + red + black + amber + gray
+      const finished = this.postSessionJustFinishedSummary || {}
+      const range = rec.ayah_range || {}
+      const next = rec.next_range || rec.next_ayah_range || {}
+      const snap = this.postSessionSnapshot || {}
+      return buildEvidenceBackedWhy({
+        isRepeat: this.postSessionIsRepeatRecommendation,
+        weakAyahs: this.postSessionRevisionWeakAyahs,
+        weakWords: this.postSessionRevisionWeakWords,
+        techniqueId: this.postSessionPersonalPlan?.practiceApproach?.id
+          || rec.settings?.technique
+          || rec.technique?.id
+          || '',
+        matched: green,
+        total,
+        incorrect: red + black,
+        surah: rec.surah,
+        surahName: this.postSessionCtaSurahName || finished.surahLatin || '',
+        rangeFrom: Number(range.from || snap.rangeStart || 0),
+        rangeTo: Number(range.to || snap.rangeEnd || 0),
+        nextFrom: Number(next.from || 0),
+        nextTo: Number(next.to || 0),
+      })
+    },
     postSessionPlanWhyText() {
+      const rec = this.postSessionRecommendation
+      const isRepeat = this.postSessionIsRepeatRecommendation
+      const weakAyahs = this.postSessionRevisionWeakAyahs
+      const evidence = String(this.postSessionEvidenceWhy?.summary || '').trim()
       const parts = []
-      const personal = String(
-        this.postSessionPersonalPlan?.personalWhy
-        || this.postSessionWhyDisclosureText
-        || this.postSessionSimpleReason
-        || this.aiReciteFinalPlan?.why
-        || '',
-      ).trim()
-      const emphasis = String(this.postSessionPersonalPlan?.revisionEmphasis || '').trim()
-      if (personal && personal !== emphasis) parts.push(this.stripAiDashes(personal))
-      if (this.postSessionShowRevisionScopePicker) {
-        const scopeReason = String(this.postSessionScopeRecommendReason || '').trim()
-        if (scopeReason && !parts.some((part) => part.includes(scopeReason.slice(0, 28)))) {
-          parts.push(this.stripAiDashes(scopeReason))
+      if (evidence) parts.push(this.stripAiDashes(evidence))
+      else {
+        const personal = String(
+          this.postSessionPersonalPlan?.personalWhy
+          || recommendationWhySummary(rec)
+          || this.postSessionWhyDisclosureText
+          || this.postSessionSimpleReason
+          || this.aiReciteFinalPlan?.why
+          || '',
+        ).trim()
+        const emphasis = String(this.postSessionPersonalPlan?.revisionEmphasis || '').trim()
+        if (personal && personal !== emphasis) parts.push(this.stripAiDashes(personal))
+        if (this.postSessionShowRevisionScopePicker) {
+          const scopeReason = String(this.postSessionScopeRecommendReason || '').trim()
+          if (scopeReason && !parts.some((part) => part.includes(scopeReason.slice(0, 28)))) {
+            parts.push(this.stripAiDashes(scopeReason))
+          }
         }
       }
-      return parts.filter(Boolean).join(' ')
+      return composeRecommendationWhy(parts, { isRepeat, weakAyahs })
+    },
+    postSessionPlanWhyPoints() {
+      const isRepeat = this.postSessionIsRepeatRecommendation
+      const weakAyahs = this.postSessionRevisionWeakAyahs
+      const summary = String(this.postSessionPlanWhyText || '').trim()
+      const candidates = composeRecommendationWhySentences([
+        ...(this.postSessionEvidenceWhy?.points || []),
+        ...recommendationWhyPoints(this.postSessionRecommendation),
+      ], { isRepeat, weakAyahs })
+      return candidates.filter((line) => {
+        if (!line) return false
+        if (summary.includes(line.slice(0, Math.min(32, line.length)))) return false
+        return true
+      }).slice(0, 4)
+    },
+    postSessionAwaitingCheckLead() {
+      const ayahs = formatAyahList(this.postSessionRevisionWeakAyahs)
+      if (this.postSessionIsRepeatRecommendation) {
+        if (ayahs) {
+          return this.translateOrFallback(
+            'memorisation.postSession.coach.subtitles.retestNamed',
+            `Recite ayahs ${ayahs} from memory so Mutqin can confirm they have settled.`,
+            { ayahs },
+          )
+        }
+        return this.translateOrFallback(
+          'memorisation.postSession.coach.subtitles.retestAfterPractice',
+          this.translateOrFallback(
+            'memorisation.postSession.recommendation.aiFirstBody',
+            'Check your memorisation again to unlock the next session.',
+          ),
+        )
+      }
+      const finished = this.postSessionJustFinishedSummary || {}
+      const surah = finished.surahLatin || finished.surah || this.postSessionCtaSurahName || ''
+      const range = finished.range || ''
+      if (surah && range) {
+        return this.translateOrFallback(
+          'memorisation.postSession.recommendation.aiFirstBodyNamed',
+          `Recite ${surah} ${range} from memory so Mutqin can name any slipped words and build the next plan from that.`,
+          { surah, range },
+        )
+      }
+      return this.translateOrFallback(
+        'memorisation.postSession.recommendation.aiFirstBodyShort',
+        'Recite this range from memory so Mutqin can name what still slipped.',
+      )
+    },
+    postSessionDecisionLabel() {
+      const key = recommendationDecisionKey(this.postSessionRecommendation)
+      if (!key) return ''
+      return this.t(`memorisation.postSession.recommendation.decision.${key}`)
+        || ({
+          picked: 'Picked for you',
+          suggested: 'Suggested for you',
+          planned: 'Planned next',
+          recommended: 'Recommended',
+        }[key] || '')
     },
     postSessionPlanRevisionEmphasis() {
       const fromPlan = String(this.postSessionPersonalPlan?.revisionEmphasis || '').trim()
@@ -6191,6 +6320,9 @@ export default {
         showMicrophoneCheck: this.postSessionAiReviewDetails?.showMicrophoneCheck === true
           || String(this.postSessionAiReviewDetails?.insufficientReason || '') === 'mic_permission',
         weakAyahNumber: Number(primaryWeakAyah || focus?.ayahNumber || 0) || null,
+        weakAyahs: Array.isArray(this.postSessionRevisionWeakAyahs)
+          ? this.postSessionRevisionWeakAyahs
+          : [],
         nextRangeStart: nextFrom || Number(snap.rangeEnd || 0) + 1 || null,
         nextRangeEnd: nextTo || null,
         practiceRangeStart: practiceFrom > 0 ? practiceFrom : null,
@@ -6203,8 +6335,7 @@ export default {
         const single = start === end
         const surah = String(
           params.surah
-          || this.postSessionRecommendationDisplaySurahName
-          || this.postSessionSnapshot?.chapterName
+          || this.postSessionCtaSurahName
           || this.currentChapter?.name_simple
           || ''
         ).trim()
@@ -6273,8 +6404,7 @@ export default {
           const single = Number(params.start) === Number(params.end)
           const surah = String(
             params.surah
-            || this.postSessionRecommendationDisplaySurahName
-            || this.postSessionSnapshot?.chapterName
+            || this.postSessionCtaSurahName
             || this.currentChapter?.name_simple
             || ''
           ).trim()
@@ -6295,6 +6425,22 @@ export default {
           }
         } else if (btn.labelKey === 'reviewOnceMore' && Number(params.start) > 0) {
           label = formatPracticeRangeLabel(params, { again: true })
+        } else if (btn.labelKey === 'reviewAyahOnce' || btn.labelKey === 'reviewWeakAyahs') {
+          const ayahs = [
+            ...(Array.isArray(this.postSessionRevisionWeakAyahs) ? this.postSessionRevisionWeakAyahs : []),
+            Number(params.ayah || 0),
+          ].map(Number).filter((n) => n > 0)
+          const unique = [...new Set(ayahs)]
+          const list = formatAyahList(unique)
+          if (unique.length > 1) {
+            label = this.t('memorisation.postSession.actions.reviewWeakAyahs', { ayahs: list })
+            if (!label || label.includes('reviewWeakAyahs')) label = `Repeat ayahs ${list}`
+          } else if (unique.length === 1) {
+            label = this.t('memorisation.postSession.actions.reviewAyahOnce', { ayah: unique[0] })
+            if (!label || label.includes('reviewAyahOnce')) label = `Repeat ayah ${unique[0]}`
+          } else {
+            label = this.t('memorisation.postSession.actions.reviewAyahOnce') || 'Repeat weak ayahs'
+          }
         } else if (rangeLabelKeys.has(btn.labelKey) && Number(params.start) > 0) {
           label = formatPracticeRangeLabel(params)
         } else {
@@ -6306,8 +6452,7 @@ export default {
           if (btn.labelKey === 'continueToAyahs' && params.start && params.end) {
             const surah = String(
               params.surah
-              || this.postSessionRecommendationDisplaySurahName
-              || this.postSessionSnapshot?.chapterName
+              || this.postSessionCtaSurahName
               || this.currentChapter?.name_simple
               || ''
             ).trim()
@@ -6317,10 +6462,18 @@ export default {
               ? `Move to ${surah} ${range}`
               : (formatContinueToAyahLabel(params.start, params.end, this.t.bind(this))
                 || (single ? `Move to Ayah ${params.start}` : `Move to Ayahs ${params.start}–${params.end}`))
-          } else if (btn.labelKey === 'reviewAyahOnce') {
-            label = Number(params.ayah) > 0
-              ? `Repeat Weak Ayah (${params.ayah})`
-              : 'Repeat Weak Ayah'
+          } else if (btn.labelKey === 'reviewAyahOnce' || btn.labelKey === 'reviewWeakAyahs') {
+            const ayahs = [
+              ...(Array.isArray(this.postSessionRevisionWeakAyahs) ? this.postSessionRevisionWeakAyahs : []),
+              Number(params.ayah || 0),
+            ].map(Number).filter((n) => n > 0)
+            const unique = [...new Set(ayahs)]
+            const list = formatAyahList(unique)
+            label = unique.length > 1
+              ? `Repeat ayahs ${list}`
+              : unique.length === 1
+                ? `Repeat ayah ${unique[0]}`
+                : 'Repeat weak ayahs'
           } else {
             label = actionFallbacks[btn.labelKey] || this.postSessionConfirmationPrimaryLabel || btn.labelKey
           }
@@ -6328,6 +6481,7 @@ export default {
         return {
           ...btn,
           label: this.stripAiDashes(label),
+          icon: this.postSessionCtaIconClass(btn),
         }
       })
     },
@@ -6731,8 +6885,18 @@ export default {
           state === POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED
           || state === POST_SESSION_CTA_STATES.NEEDS_PRACTICE
         ) {
-          return this.t('memorisation.postSession.coach.subtitles.reviseFirst')
-            || 'Revise the weak spots first, then continue.'
+          const ayahs = formatAyahList(this.postSessionRevisionWeakAyahs)
+          if (ayahs) {
+            return this.translateOrFallback(
+              'memorisation.postSession.coach.subtitles.reviseFirstNamed',
+              `Revise ayahs ${ayahs} first, then continue.`,
+              { ayahs },
+            )
+          }
+          return this.translateOrFallback(
+            'memorisation.postSession.coach.subtitles.reviseFirst',
+            'Revise the weak spots first, then continue.',
+          )
         }
         if (state === POST_SESSION_CTA_STATES.REVISION_COMPLETED) {
           return this.t('memorisation.postSession.coach.subtitles.retestAfterPractice')
@@ -11891,6 +12055,42 @@ export default {
   },
 
   methods: {
+    postSessionCtaIconClass(btn = {}) {
+      const action = String(btn.action || '')
+      const key = String(btn.labelKey || '')
+      if (action === 'review_weak_ayah' || key === 'reviewAyahOnce' || key === 'reviewWeakAyahs') {
+        return 'bi bi-arrow-repeat'
+      }
+      if (action === 'revise_focus_phrase' || key === 'reviseFocusPhrase' || key === 'startFocusedReview' || key === 'reviseThisRange' || key === 'startRevision') {
+        return 'bi bi-journal-text'
+      }
+      if (action === 'return_to_workspace' || key === 'returnToWorkspace') return 'bi bi-book'
+      if (
+        action === 'check_memorisation'
+        || action === 'check_again'
+        || action === 'try_recording_again'
+        || action === 'check_microphone'
+        || key === 'testWithAi'
+        || key === 'checkNow'
+        || key === 'retest'
+        || key === 'tryRecordingAgain'
+        || key === 'checkMicrophone'
+      ) {
+        return 'bi bi-mic'
+      }
+      if (action === 'continue_next_range' || key === 'continueToAyahs' || key === 'continueToNextRange' || key === 'continueToNextSurah') {
+        return 'bi bi-arrow-right'
+      }
+      if (action === 'confirm_start' || key === 'startSession') return 'bi bi-play-fill'
+      if (action === 'continue_practising' || action === 'review_once_more' || key === 'repeatThisSession' || key === 'reviewOnceMore' || key === 'keepPractising') {
+        return 'bi bi-arrow-repeat'
+      }
+      if (action === 'other_range' || key === 'chooseAnotherRange') return 'bi bi-sliders'
+      if (action === 'close' || key === 'close' || key === 'skipForNow') return 'bi bi-x-lg'
+      if (btn.variant === 'ai' || btn.variant === 'success') return 'bi bi-check2-circle'
+      if (btn.variant === 'primary' || btn.variant === 'reinforce') return 'bi bi-play-fill'
+      return 'bi bi-chevron-right'
+    },
     openFeedbackModal(options = {}) {
       const mushafLayout = String(this.readingViewMode || this.sessionConfig?.readingViewMode || '').trim()
       openFeedbackModal({
@@ -12551,9 +12751,9 @@ export default {
         const appEl = viewport?.closest?.('.app')
         const appStyles = appEl ? getComputedStyle(appEl) : null
         const padStart = appStyles?.getPropertyValue('--mq-mushaf-inline-start')?.trim()
-          || 'max(2px, env(safe-area-inset-left, 0px))'
+          || 'max(6px, env(safe-area-inset-left, 0px))'
         const padEnd = appStyles?.getPropertyValue('--mq-mushaf-inline-end')?.trim()
-          || 'max(2px, env(safe-area-inset-right, 0px))'
+          || 'max(6px, env(safe-area-inset-right, 0px))'
         sheet.style.setProperty('padding-inline', `${padStart} ${padEnd}`, 'important')
 
         sheet.querySelectorAll('.madani-line--ayah, .madani-line--glyphs').forEach((line) => {
@@ -12561,7 +12761,6 @@ export default {
           line.style.setProperty('display', 'flex', 'important')
           line.style.setProperty('flex-flow', 'row nowrap', 'important')
           line.style.setProperty('flex-wrap', 'nowrap', 'important')
-          line.style.setProperty('justify-content', 'space-between', 'important')
           line.style.setProperty('align-items', 'center', 'important')
           line.style.setProperty('width', '100%', 'important')
           line.style.setProperty('max-width', '100%', 'important')
@@ -12569,6 +12768,15 @@ export default {
           line.style.setProperty('text-align', 'start', 'important')
           line.style.setProperty('text-align-last', 'auto', 'important')
           line.style.setProperty('overflow', 'visible', 'important')
+          const words = [...line.querySelectorAll('.madani-word')]
+          const natural = words.reduce((sum, word) => sum + (word.offsetWidth || 0), 0)
+          const sparse = natural > 0 && natural < line.clientWidth * 0.86
+          line.classList.toggle('madani-line--sparse', sparse)
+          line.style.setProperty(
+            'justify-content',
+            sparse ? 'center' : 'space-between',
+            'important',
+          )
         })
         sheet.querySelectorAll('.madani-word').forEach((word) => {
           if (!word?.style) return
@@ -14769,6 +14977,7 @@ export default {
       if (isSessionAutomationHalted({
         sessionPaused: this.sessionPaused,
         sessionCompleted: this.sessionCompleted,
+        toolsOpen: this.showTools,
       })) {
         return
       }
@@ -14784,6 +14993,7 @@ export default {
         if (isSessionAutomationHalted({
           sessionPaused: this.sessionPaused,
           sessionCompleted: this.sessionCompleted,
+          toolsOpen: this.showTools,
         })) {
           this.clearRecitationWindowTimer()
           return
@@ -15927,6 +16137,7 @@ export default {
       if (isSessionAutomationHalted({
         sessionPaused: this.sessionPaused,
         sessionCompleted: this.sessionCompleted,
+        toolsOpen: this.showTools,
       })) {
         return
       }
@@ -15940,6 +16151,7 @@ export default {
           if (!shouldRunDeferredTalqinAdvance({
             sessionPaused: this.sessionPaused,
             sessionCompleted: this.sessionCompleted,
+            toolsOpen: this.showTools,
             talqinModeActive: this.talqinModeActive,
           })) {
             return
@@ -15953,6 +16165,7 @@ export default {
       if (isSessionAutomationHalted({
         sessionPaused: this.sessionPaused,
         sessionCompleted: this.sessionCompleted,
+        toolsOpen: this.showTools,
       })) {
         return
       }
@@ -15965,6 +16178,7 @@ export default {
         if (isSessionAutomationHalted({
           sessionPaused: this.sessionPaused,
           sessionCompleted: this.sessionCompleted,
+          toolsOpen: this.showTools,
         })) {
           return
         }
@@ -28771,35 +28985,33 @@ export default {
         targetText
       )
       if (kind === 'recitation') this.recitationSpeakerDecision = committedSelection
-      // AMD live: never drop the word stream when diarization flips unreliable —
-      // an empty heard list freezes colouring while Recording keeps running.
+      const previousKey = kind === 'memorisation'
+        ? '_memorisationLiveAlignmentCommittedWords'
+        : '_recitationLiveAlignmentCommittedWords'
+      const previousDisplayKey = kind === 'memorisation'
+        ? '_memorisationLiveAlignmentDisplayWords'
+        : '_recitationLiveAlignmentDisplayWords'
+      const previousCommitted = Array.isArray(this[previousKey]) ? this[previousKey] : []
+      const previousDisplay = Array.isArray(this[previousDisplayKey]) ? this[previousDisplayKey] : previousCommitted
+      const nextCommitted = resolveLiveAlignmentWords({
+        selection: committedSelection,
+        rawWords: committedWords,
+        previousWords: previousCommitted,
+      })
+      const nextDisplay = resolveLiveAlignmentWords({
+        selection: displaySelection,
+        rawWords: Array.isArray(displayWords) && displayWords.length ? displayWords : committedWords,
+        previousWords: previousDisplay,
+      })
+      this[previousKey] = nextCommitted
+      this[previousDisplayKey] = nextDisplay
       if (this.amdOpen && kind === 'recitation') {
-        const previousCommitted = Array.isArray(this._amdLiveAlignmentCommittedWords)
-          ? this._amdLiveAlignmentCommittedWords
-          : []
-        const previousDisplay = Array.isArray(this._amdLiveAlignmentDisplayWords)
-          ? this._amdLiveAlignmentDisplayWords
-          : previousCommitted
-        const nextCommitted = resolveLiveAlignmentWords({
-          selection: committedSelection,
-          rawWords: committedWords,
-          previousWords: previousCommitted,
-        })
-        const nextDisplay = resolveLiveAlignmentWords({
-          selection: displaySelection,
-          rawWords: Array.isArray(displayWords) && displayWords.length ? displayWords : committedWords,
-          previousWords: previousDisplay,
-        })
         this._amdLiveAlignmentCommittedWords = nextCommitted
         this._amdLiveAlignmentDisplayWords = nextDisplay
-        return {
-          committedWords: nextCommitted,
-          displayWords: nextDisplay,
-        }
       }
       return {
-        committedWords: committedSelection.reliable ? committedSelection.words : [],
-        displayWords: displaySelection.reliable ? displaySelection.words : []
+        committedWords: nextCommitted,
+        displayWords: nextDisplay,
       }
     },
     liveWordStatusSeverity(status = '') {
@@ -28822,6 +29034,16 @@ export default {
       if (!incoming) return current
       if (!this.isStickyLiveIssueStatus(current.status)) return incoming
       const incomingStatus = String(incoming.status || '').toLowerCase()
+      const currentStatus = String(current.status || '').toLowerCase()
+      // A false-red cascade has no heard token. Later pending must unwind it or
+      // the rest of the ayah stays red even after Speechmatics recovers.
+      if (
+        incomingStatus === 'pending'
+        && (currentStatus === 'incorrect' || currentStatus === 'omitted')
+        && !String(current.actual || '').trim()
+      ) {
+        return incoming
+      }
       // Allow a later committed correct match to recover (self-correction / ASR revision).
       if (incomingStatus === 'correct') {
         return { ...current, ...incoming, status: 'correct' }
@@ -29255,7 +29477,6 @@ export default {
           + (text.length * 31)
           + (text.charCodeAt(0) || 0) * 17
           + (text.charCodeAt(text.length - 1) || 0)
-          + ((Number(word.confidence) * 100) | 0)
           + (word.final ? 7 : 0)
           + String(word.speaker || '').length
         ) | 0
@@ -30440,9 +30661,16 @@ export default {
       }
       const provider = this.getTranscriptionProvider(kind)
       if (!provider?.isOpen?.()) return false
-      const pendingAudio = this.flushTranscriptionAudioBridge(kind)
+      const drain = typeof bridge?.drain === 'function'
+        ? bridge.drain(SPEECHMATICS_MAX_DRAIN_BUFFERS)
+        : { buffer: this.flushTranscriptionAudioBridge(kind), restore: () => {} }
+      const pendingAudio = drain?.buffer
       if (!pendingAudio?.byteLength) return false
-      provider.streamAudioChunk(pendingAudio)
+      const sent = provider.streamAudioChunk(pendingAudio)
+      if (!sent) {
+        try { drain.restore?.() } catch { /* keep audio for the next pump */ }
+        return false
+      }
       return true
     },
     startTranscriptionAudioPump(kind = 'recitation') {
@@ -30593,9 +30821,10 @@ export default {
           return
         }
         if (decision.action === 'reconnect_or_failover') {
-          // Ayah-boundary pauses gap partials — never kill Speechmatics mid-AMD.
+          this.amdSttStallNotice = true
           this._amdLastRecognitionAt = Date.now()
           this._amdSttSpeechConfirmTicks = 0
+          void this.recoverAmdStalledTranscription({ reason: 'stall' })
         }
       }, 1800)
     },
@@ -30610,17 +30839,18 @@ export default {
       if (!this.amdOpen) return
       this._amdLastRecognitionAt = Date.now()
       this._amdSttSpeechConfirmTicks = 0
+      this._amdSttSoftRecoveries = 0
       if (!this.amdSttRecovering) this.amdSttStallNotice = false
     },
     /**
-     * Reconnect Speechmatics (keep the audio bridge) when live colouring stalls.
-     * Falls back to browser STT if reconnect fails.
+     * Unstick live colouring without reminting Speechmatics (quota + freeze).
+     * Resume the PCM bridge, flush held audio, ask for a final, then fall back
+     * to browser STT if the socket is actually gone.
      */
     async recoverAmdStalledTranscription({ reason = 'stall' } = {}) {
       if (!this.amdOpen || !this.recitationCheckRecording) return false
       if (this.amdSttRecovering || this.amdEndingSoon || this._amdCompleting) return false
       const lastRecoveryAt = Number(this._amdLastSttRecoveryAt || 0)
-      // Cooldown prevents reconnect loops when the provider keeps erroring.
       if (lastRecoveryAt && Date.now() - lastRecoveryAt < 15000) return false
       this.amdSttRecovering = true
       this.amdSttStallNotice = true
@@ -30628,27 +30858,15 @@ export default {
       this._amdSttSpeechConfirmTicks = 0
       try {
         console.warn('AMD STT stall recovery:', reason)
-        this.stopSpeechRecognitionWatchdog('recitation')
-        this.stopTranscriptionAudioPump('recitation')
-        // Close the provider only — keep the PCM bridge so reconnect stays hot.
-        // Wait for Speechmatics to release the RT slot before reminting (free quota=2).
-        this.setTranscriptionClosing('recitation', true)
-        await this.stopTranscriptionRecognition('recitation', { waitMs: 1000 })
-        this.setTranscriptionClosing('recitation', false)
-
+        const provider = this.getTranscriptionProvider('recitation')
         const bridge = this.getTranscriptionAudioBridge('recitation')
         if (bridge?.getState?.() === 'suspended') {
           void bridge.ensureRunning?.()
         }
-        const ready = bridge?.sampleRate
-          ? await this.startTranscriptionRecognition('recitation', { preserveTranscriptionMeta: true })
-          : false
-        if (!this.recitationCheckRecording || !this.amdOpen) return false
-        if (ready) {
-          this.startSpeechRecognitionWatchdog('recitation')
-          this.startTranscriptionAudioPump('recitation')
-          this.startTranscriptionBridgeHealthWatch('recitation')
-          this.noteAmdRecognitionActivity()
+        this.pumpTranscriptionAudio('recitation')
+        this._amdSttSoftRecoveries = Number(this._amdSttSoftRecoveries || 0) + 1
+        if (provider?.isOpen?.() && this._amdSttSoftRecoveries < 2) {
+          try { provider.forceEndOfUtterance?.() } catch { /* ignore */ }
           return true
         }
         this.failoverTranscriptionToBrowserStt('recitation')
@@ -43133,6 +43351,7 @@ export default {
         if (isSessionAutomationHalted({
           sessionPaused: this.sessionPaused,
           sessionCompleted: this.sessionCompleted,
+          toolsOpen: this.showTools,
         })) {
           this.isPlaying = false
           this.stopWordHighlighting()
@@ -43165,6 +43384,7 @@ export default {
               if (isSessionAutomationHalted({
                 sessionPaused: this.sessionPaused,
                 sessionCompleted: this.sessionCompleted,
+                toolsOpen: this.showTools,
               })) {
                 return
               }
@@ -43182,6 +43402,7 @@ export default {
               if (isSessionAutomationHalted({
                 sessionPaused: this.sessionPaused,
                 sessionCompleted: this.sessionCompleted,
+                toolsOpen: this.showTools,
               })) {
                 return
               }
@@ -43200,6 +43421,7 @@ export default {
                 if (isSessionAutomationHalted({
                   sessionPaused: this.sessionPaused,
                   sessionCompleted: this.sessionCompleted,
+                  toolsOpen: this.showTools,
                 })) {
                   this.advanceLocked = false
                   return
@@ -43217,6 +43439,7 @@ export default {
               if (isSessionAutomationHalted({
                 sessionPaused: this.sessionPaused,
                 sessionCompleted: this.sessionCompleted,
+                toolsOpen: this.showTools,
               })) {
                 this.advanceLocked = false
                 return
@@ -43395,6 +43618,8 @@ export default {
 
     async playVerse(verse, options = {}) {
       if (this.showCountdownOverlay && !options.allowDuringCountdown) return
+      // Do not auto-start reciter audio while the set is still being edited in the offcanvas.
+      if (this.showTools && !options.allowWhileToolsOpen) return
       if (this.playRequestLocked && !options.force) return
       this.ensureSessionAudioPlayer()
       this.playRequestLocked = true
@@ -43695,6 +43920,7 @@ export default {
       if (isSessionAutomationHalted({
         sessionPaused: this.sessionPaused,
         sessionCompleted: this.sessionCompleted,
+        toolsOpen: this.showTools,
       })) {
         return
       }
@@ -47070,10 +47296,11 @@ export default {
       }
       const store = this.getModeStore(this.currentMode)
       const hasLoadedVerses = Array.isArray(store?.verses) && store.verses.length > 0
-      if (hasLoadedVerses || autoPlay) {
-        this.applyReciterChangeInPlace(this.currentMode, { autoPlay: true })
+      const shouldAutoPlay = !!autoPlay && !this.showTools
+      if (hasLoadedVerses || shouldAutoPlay) {
+        this.applyReciterChangeInPlace(this.currentMode, { autoPlay: shouldAutoPlay })
       } else {
-        this._mobileReciterAutoplayPending = true
+        this._mobileReciterAutoplayPending = shouldAutoPlay
         void this.applyWorkspaceControls({ reason: 'reciter' })
       }
       this.scheduleMobileReciterSelectDomSync()
@@ -47116,7 +47343,7 @@ export default {
     async onSessionReciterChange(event) {
       if (!this.guardReciterSelectChange(event)) return
       this.commitSessionReciter(event?.target?.value || this.reciterId, {
-        autoPlay: this.isMobileViewport(),
+        autoPlay: this.isMobileViewport() && !this.showTools,
       })
     },
 

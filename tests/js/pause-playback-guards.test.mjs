@@ -8,6 +8,7 @@ import {
   assert.equal(isSessionAutomationHalted({}), false)
   assert.equal(isSessionAutomationHalted({ sessionPaused: true }), true)
   assert.equal(isSessionAutomationHalted({ sessionCompleted: true }), true)
+  assert.equal(isSessionAutomationHalted({ toolsOpen: true }), true)
   assert.equal(isSessionAutomationHalted({ sessionPaused: true, sessionCompleted: true }), true)
 }
 

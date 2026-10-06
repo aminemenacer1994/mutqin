@@ -97,7 +97,7 @@ const en = readFileSync(new URL('../../resources/js/locales/en.json', import.met
   assert.match(vue, /@keydown\.space\.stop\.prevent="onPostSessionCtaAction\(btn\.action\)"/)
   assert.match(en, /"reviseFocusPhrase": "Practise Ayahs \{start\}–\{end\}"/)
   assert.match(en, /"continueToNextRange": "Continue"/)
-  assert.match(en, /"reviewAyahOnce": "Repeat Weak Ayah"/)
+  assert.match(en, /"reviewAyahOnce": "Repeat ayah \{ayah\}"/)
   assert.match(en, /"startFocusedReview": "Practise Ayahs \{start\}–\{end\}"/)
   assert.match(en, /"checkNow": "Check now"/)
   assert.match(en, /"continueWithoutTesting": "Continue without testing"/)

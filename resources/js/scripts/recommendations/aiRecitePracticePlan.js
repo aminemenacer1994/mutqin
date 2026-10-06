@@ -874,17 +874,22 @@ export function buildFriendlyReciteFeedback(accuracy, t = null) {
 function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, repeatPlan = null, t }) {
   const primary = techniques?.[0] || null
   const methodTitle = primary?.title || 'a calm method'
+  const accuracy = Number.isFinite(Number(averageAccuracy)) ? Math.round(Number(averageAccuracy)) : null
   if (weakWords?.length) {
     const first = weakWords[0] || {}
     const word = String(first.text || '').trim()
     const ayah = Number(first.ayahNumber || first.ayah || first.ayah_number || 0)
     const count = weakWords.length
+    const quoted = weakWords
+      .map((item) => String(item?.text || '').trim())
+      .filter(Boolean)
+      .slice(0, 3)
     const msg = t?.('memorisation.aiRecitePlan.whyEvidence', {
       count,
       word: word || '',
       ayah: ayah || '',
       method: methodTitle,
-      accuracy: averageAccuracy ?? '',
+      accuracy: accuracy ?? '',
     })
     if (msg && !String(msg).includes('whyEvidence')) {
       const base = String(msg).replace(/\s{2,}/g, ' ').trim()
@@ -898,20 +903,24 @@ function buildWhyThisPlan({ band, averageAccuracy, weakWords, techniques, repeat
           || `We will repeat the weak ayahs ${repeatCount} times each.`)
       return `${base} ${repeatNote}`.trim()
     }
-    if (count === 1 && ayah) {
-      return `One phrase in Ayah ${ayah} needs a little reinforcement.`
+    const quoteBit = quoted.length ? ` «${quoted.join('», «')}»` : ' phrase'
+    const ayahBit = ayah ? ` in Ayah ${ayah}` : ''
+    const scoreBit = accuracy != null ? ` This recite matched ${accuracy}% of the range.` : ''
+    if (count === 1) {
+      return `The${quoteBit}${ayahBit} still slipped, so this plan uses ${methodTitle} on that ayah rather than moving on.${scoreBit}`.trim()
     }
-    if (count === 1 && word) {
-      return 'One phrase needs a little reinforcement.'
-    }
-    return 'A few phrases still need attention.'
+    return `${count} marked phrases${quoteBit}${ayahBit} still slipped, so this plan uses ${methodTitle} rather than moving on.${scoreBit}`.trim()
   }
   if (band === ACCURACY_BAND.STRONG) {
     return t?.('memorisation.aiRecitePlan.whyStrong')
-      || 'Your recall is strong. A light review at a steady pace will keep it firm.'
+      || (accuracy != null
+        ? `Recall was strong (${accuracy}%). A light ${methodTitle} pass keeps the range firm without extra load.`
+        : 'Your recall is strong. A light review at a steady pace will keep it firm.')
   }
   return t?.('memorisation.aiRecitePlan.whyDefault')
-    || 'This plan follows your AI test so practice stays personal and peaceful.'
+    || (accuracy != null
+      ? `This assessment scored ${accuracy}%. ${methodTitle} is the next step so practice stays personal.`
+      : 'This plan follows your AI test so practice stays personal and peaceful.')
 }
 
 function formatPlanRangeLabel(surahName, from, to, t) {

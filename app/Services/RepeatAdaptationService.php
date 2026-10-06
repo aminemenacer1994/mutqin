@@ -67,6 +67,12 @@ class RepeatAdaptationService
             : null;
         $reciter = isset($baseSettings['reciter']) ? (string) $baseSettings['reciter'] : null;
         $baseTechnique = $this->normaliseTechnique($baseSettings['technique'] ?? null) ?: 'talqin';
+        $style = strtolower((string) ($context['learning_style'] ?? ''));
+        if ($style === 'light') {
+            $repetitions = max(self::MIN_REPETITIONS, min(3, $repetitions));
+        } elseif ($style === 'intensive' && ! $needsSupport) {
+            $repetitions = min(self::MAX_REPETITIONS, $repetitions + 1);
+        }
 
         $evidence = $this->collectEvidence([
             'confidence' => $confidence,
@@ -85,7 +91,7 @@ class RepeatAdaptationService
         ]);
 
         if ($needsSupport) {
-            return $this->resolveRevision(
+            $resolved = $this->resolveRevision(
                 $baseSettings,
                 $baseTechnique,
                 $speed,
@@ -100,22 +106,68 @@ class RepeatAdaptationService
                 $aiResult,
                 $rangeNarrowed,
             );
+        } else {
+            $resolved = $this->resolveProgression(
+                $baseSettings,
+                $baseTechnique,
+                $speed,
+                $repetitions,
+                $ayatPerStep,
+                $reciter,
+                $rangeCount,
+                $rangeWorkload,
+                $evidence,
+                $aiResult,
+                $hintsUsed,
+                $confidence,
+            );
         }
 
-        return $this->resolveProgression(
-            $baseSettings,
-            $baseTechnique,
-            $speed,
-            $repetitions,
-            $ayatPerStep,
-            $reciter,
-            $rangeCount,
-            $rangeWorkload,
-            $evidence,
-            $aiResult,
-            $hintsUsed,
-            $confidence,
+        return $this->applyTechniqueMemory(
+            $resolved,
+            $this->normaliseTechnique($context['preferred_technique'] ?? null),
+            array_map('strval', is_array($context['avoid_techniques'] ?? null) ? $context['avoid_techniques'] : []),
+            is_array($context['technique_scores'] ?? null) ? $context['technique_scores'] : [],
+            (float) data_get($context, 'maturity.weights.technique_memory', 0),
         );
+    }
+
+    /**
+     * With enough learner history, replace a dismissed method with one the
+     * person has actually accepted. Sparse profiles skip this.
+     *
+     * @param  array<string, mixed>  $resolved
+     * @param  list<string>  $avoid
+     * @param  array<string, float|int>  $scores
+     * @return array<string, mixed>
+     */
+    private function applyTechniqueMemory(
+        array $resolved,
+        ?string $preferred,
+        array $avoid,
+        array $scores,
+        float $memory,
+    ): array {
+        if ($memory < 0.3 || $preferred === null || $preferred === '') {
+            return $resolved;
+        }
+        $current = $this->normaliseTechnique($resolved['technique'] ?? null);
+        if ($current === null || $current === $preferred) {
+            return $resolved;
+        }
+        $dismissed = in_array($current, $avoid, true)
+            || ((float) ($scores[$current] ?? 0) <= -1 && (float) ($scores[$preferred] ?? 0) > 0);
+        if (! $dismissed) {
+            return $resolved;
+        }
+        $resolved['technique'] = $preferred;
+        $adaptations = is_array($resolved['adaptations'] ?? null) ? $resolved['adaptations'] : [];
+        if (! in_array('prefer_known_technique', $adaptations, true)) {
+            $adaptations[] = 'prefer_known_technique';
+        }
+        $resolved['adaptations'] = $adaptations;
+
+        return $resolved;
     }
 
     /**

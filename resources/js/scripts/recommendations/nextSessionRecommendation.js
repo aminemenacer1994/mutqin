@@ -330,6 +330,13 @@ export function recommendationModeLabelKey(recommendation) {
 
 export function localizeRecommendationReason(recommendation, t, prefix = 'memorisation.postSession.recommendation') {
   if (!recommendation) return ''
+  const specific = String(
+    recommendation.why_summary
+    || recommendation.why?.summary
+    || '',
+  ).trim()
+  if (specific) return specific
+
   const code = String(recommendation.reason_code || '')
   const keySuffix = REASON_I18N_KEYS[code]
   const range = recommendation.ayah_range || {}
@@ -351,6 +358,248 @@ export function localizeRecommendationReason(recommendation, t, prefix = 'memori
   }
 
   return String(recommendation.reason || '').trim()
+}
+
+export function recommendationWhySummary(recommendation) {
+  if (!recommendation || typeof recommendation !== 'object') return ''
+  return String(
+    recommendation.why_summary
+    || recommendation.why?.summary
+    || recommendation.user_reason
+    || '',
+  ).trim()
+}
+
+export function recommendationWhyPoints(recommendation) {
+  if (!recommendation || typeof recommendation !== 'object') return []
+  const direct = Array.isArray(recommendation.why_points) ? recommendation.why_points : []
+  const picked = Array.isArray(recommendation.why?.picked_because)
+    ? recommendation.why.picked_because.map((row) => row?.text || row)
+    : []
+  const settings = Array.isArray(recommendation.why?.settings_because)
+    ? recommendation.why.settings_because.map((row) => row?.text || row)
+    : []
+  const notChosen = Array.isArray(recommendation.why?.not_chosen)
+    ? recommendation.why.not_chosen.map((row) => row?.text || row)
+    : []
+  const seen = new Set()
+  return [...direct, ...picked, ...settings, ...notChosen]
+    .map((line) => String(line || '').trim())
+    .filter((line) => {
+      if (!line || seen.has(line)) return false
+      seen.add(line)
+      return true
+    })
+}
+
+export function recommendationDecisionKey(recommendation) {
+  const value = String(recommendation?.decision || recommendation?.why?.decision || '').toLowerCase()
+  if (['picked', 'suggested', 'planned', 'recommended'].includes(value)) return value
+  return ''
+}
+
+const ARABIC_SCRIPT = /[\u0600-\u06FF]/
+const CONTINUE_NEXT_CLAUSE = /this set is secure[^.]*\.?/gi
+const CONTINUE_NEXT_SENSE = /this set is secure|continue to the next recommended set|continue with the recommended technique on the next set/i
+
+/**
+ * Latin surah label for buttons and inline CTAs. Never mix Arabic script into
+ * English "Practise … Ayahs" labels.
+ */
+export function latinSurahLabel(surah) {
+  if (surah == null || surah === '') return ''
+  if (typeof surah === 'string') {
+    const value = surah.trim()
+    return value && !ARABIC_SCRIPT.test(value) ? value : ''
+  }
+  const candidates = [
+    surah.name_simple,
+    surah.translated_name,
+    surah.name_complex,
+    surah.name,
+    surah.englishName,
+  ]
+  for (const candidate of candidates) {
+    const value = String(candidate || '').trim()
+    if (value && !ARABIC_SCRIPT.test(value)) return value
+  }
+  return ''
+}
+
+export function formatAyahList(ayahs = []) {
+  const nums = [...new Set((Array.isArray(ayahs) ? ayahs : []).map(Number).filter((n) => n > 0))]
+    .sort((a, b) => a - b)
+  if (!nums.length) return ''
+  if (nums.length === 1) return String(nums[0])
+  if (nums.length === 2) return `${nums[0]} and ${nums[1]}`
+  return `${nums.slice(0, -1).join(', ')}, and ${nums[nums.length - 1]}`
+}
+
+function splitWhySentences(text) {
+  return String(text || '')
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+}
+
+/**
+ * Join why fragments without mixing "repeat this set" and "this set is secure".
+ */
+export function composeRecommendationWhySentences(parts, options = {}) {
+  const isRepeat = !!options.isRepeat
+  const weakAyahs = Array.isArray(options.weakAyahs) ? options.weakAyahs : []
+  const hasWeak = isRepeat || weakAyahs.length > 0
+  const seen = new Set()
+  const cleaned = []
+  for (const raw of parts || []) {
+    for (const sentence of splitWhySentences(raw)) {
+      let text = sentence
+      if (hasWeak) {
+        text = text.replace(CONTINUE_NEXT_CLAUSE, '').replace(/\s{2,}/g, ' ').trim()
+        if (!text || CONTINUE_NEXT_SENSE.test(text)) continue
+      }
+      const key = text.slice(0, 48).toLowerCase()
+      if (seen.has(key) || cleaned.some((line) => line.includes(text.slice(0, 24)) || text.includes(line.slice(0, 24)))) {
+        continue
+      }
+      seen.add(key)
+      cleaned.push(text)
+    }
+  }
+  return cleaned
+}
+
+export function composeRecommendationWhy(parts, options = {}) {
+  return composeRecommendationWhySentences(parts, options).join(' ').replace(/\s{2,}/g, ' ').trim()
+}
+
+/**
+ * Client mirror of PersonalizedRecommendationEngine::maturityFromSignals.
+ * Session evidence stays at weight 1; history unlocks as signals accumulate.
+ */
+export function maturityFromSignals(signals = {}) {
+  const sessions = Math.max(0, Number(signals.completed_sessions || 0))
+  const ai = Math.max(0, Number(signals.ai_assessments || 0))
+  const decisions = Math.max(0, Number(signals.technique_decisions || 0))
+  const spots = Math.max(0, Number(signals.open_weak_spots || 0))
+  const progress = Math.max(0, Number(signals.progress_ayahs || 0))
+  const confidence = Math.min(1, Number((
+    Math.min(sessions, 12) / 12 * 0.35
+    + Math.min(ai, 8) / 8 * 0.25
+    + Math.min(decisions, 10) / 10 * 0.20
+    + Math.min(spots, 8) / 8 * 0.10
+    + Math.min(progress, 40) / 40 * 0.10
+  ).toFixed(2)))
+  let tier = 'sparse'
+  if (confidence >= 0.45 || (sessions >= 9 && (ai >= 3 || spots >= 3 || decisions >= 6))) {
+    tier = 'rich'
+  } else if (confidence >= 0.18 || sessions >= 3 || ai >= 2 || spots >= 2 || decisions >= 3) {
+    tier = 'forming'
+  }
+  const weights = tier === 'rich'
+    ? { session_evidence: 1, history: 0.75, weak_spots: 0.85, technique_memory: 0.7, mastery_trend: 0.6 }
+    : tier === 'forming'
+      ? { session_evidence: 1, history: 0.4, weak_spots: 0.55, technique_memory: 0.35, mastery_trend: 0.25 }
+      : { session_evidence: 1, history: 0, weak_spots: spots > 0 ? 0.15 : 0, technique_memory: 0, mastery_trend: 0 }
+  return {
+    tier,
+    confidence,
+    signals: {
+      completed_sessions: sessions,
+      ai_assessments: ai,
+      technique_decisions: decisions,
+      open_weak_spots: spots,
+      progress_ayahs: progress,
+      accepted_recommendations: Math.max(0, Number(signals.accepted_recommendations || 0)),
+      dismissed_recommendations: Math.max(0, Number(signals.dismissed_recommendations || 0)),
+    },
+    weights,
+  }
+}
+
+export function techniqueWhyLine(techniqueId, options = {}) {
+  const id = String(techniqueId || '').toLowerCase()
+  const ayahsLabel = String(options.ayahsLabel || '').trim()
+  const named = ayahsLabel
+    ? (/and|,/.test(ayahsLabel) ? `ayahs ${ayahsLabel}` : `ayah ${ayahsLabel}`)
+    : 'the slipped ayahs'
+  switch (id) {
+    case 'chaining':
+      return `Joining neighbouring ayahs keeps ${named} in order so the passage does not drift apart.`
+    case 'talqin':
+      return 'Listen-and-repeat rebuilds the slipped phrases before independent recall.'
+    case 'focus':
+      return ayahsLabel
+        ? `Focus works one ayah at a time so ayahs ${ayahsLabel} each get a full pass.`
+        : 'Focus works one ayah at a time so attention stays on the slips.'
+    case 'blur':
+      return 'Hiding more of the Mushaf stops the eyes from carrying the recall.'
+    case 'anchor':
+      return 'Memory hooks pin the words that slipped so they are easier to find again.'
+    default:
+      return ''
+  }
+}
+
+/**
+ * One coherent why paragraph from session evidence — ayahs, slips, technique.
+ *
+ * @returns {{ summary: string, points: string[] }}
+ */
+export function buildEvidenceBackedWhy(input = {}) {
+  const isRepeat = !!input.isRepeat
+  const weakAyahs = Array.isArray(input.weakAyahs) ? input.weakAyahs : []
+  const ayahsLabel = formatAyahList(weakAyahs)
+  const words = Array.isArray(input.weakWords) ? input.weakWords : []
+  const word = String(words[0]?.text || words[0]?.word || words[0]?.arabic || '').trim()
+  const techniqueId = String(input.techniqueId || '').toLowerCase()
+  const matched = Number(input.matched)
+  const total = Number(input.total)
+  const incorrect = Number(input.incorrect)
+  const surahName = latinSurahLabel(input.surah) || String(input.surahName || '').trim()
+  const from = Number(input.rangeFrom || 0)
+  const to = Number(input.rangeTo || from)
+  const nextFrom = Number(input.nextFrom || 0)
+  const nextTo = Number(input.nextTo || nextFrom)
+  const points = []
+
+  const scoreBit = Number.isFinite(matched) && Number.isFinite(total) && total > 0
+    ? `The check matched ${matched} of ${total} words${Number.isFinite(incorrect) && incorrect > 0 ? `, with ${incorrect} still wrong` : ''}.`
+    : ''
+
+  if (isRepeat || ayahsLabel) {
+    if (weakAyahs.length === 1) {
+      points.push(word
+        ? `Ayah ${ayahsLabel} still slipped on «${word}».`
+        : `Ayah ${ayahsLabel} still slipped.`)
+      points.push('Repeat that ayah before adding new material.')
+    } else if (weakAyahs.length > 1) {
+      points.push(word
+        ? `Ayahs ${ayahsLabel} still slipped, including «${word}».`
+        : `Ayahs ${ayahsLabel} still slipped.`)
+      points.push('Repeat this set with extra attention on those ayahs before adding new material.')
+    } else {
+      points.push('This set still needs another supported pass before new ayahs.')
+    }
+    const tech = techniqueWhyLine(techniqueId, { ayahsLabel })
+    if (tech) points.push(tech)
+    if (scoreBit) points.push(scoreBit)
+  } else {
+    const dest = nextFrom > 0
+      ? (nextFrom === nextTo ? `Ayah ${nextFrom}` : `Ayahs ${nextFrom}–${nextTo}`)
+      : ''
+    const origin = from > 0
+      ? (from === to ? `Ayah ${from}` : `Ayahs ${from}–${to}`)
+      : 'this range'
+    const where = [surahName, dest].filter(Boolean).join(' · ')
+    points.push(`${origin} is ready to leave. Continue${where ? ` to ${where}` : ''} while recall is still warm.`)
+    const tech = techniqueWhyLine(techniqueId, {})
+    if (tech) points.push(tech)
+  }
+
+  const summary = composeRecommendationWhy(points, { isRepeat: isRepeat || weakAyahs.length > 0, weakAyahs })
+  return { summary, points: composeRecommendationWhySentences(points, { isRepeat: isRepeat || weakAyahs.length > 0, weakAyahs }) }
 }
 
 export function formatRecommendationSettingsSummary(settings, t, options = {}) {
@@ -1190,7 +1439,9 @@ export function buildPersonalPracticePlan(input = {}) {
     t,
   })
 
-  const personalWhy = insight.summary
+  const serverWhy = recommendationWhySummary(recommendation)
+  const personalWhy = serverWhy
+    || insight.summary
     || translate('evidenceFromSessionAndConfidence', 'Based on your session and confidence.')
 
   const techniques = []
@@ -1290,11 +1541,37 @@ export function buildPersonalPracticePlan(input = {}) {
     )
   }
 
-  const whyParts = [personalWhy].filter(Boolean)
-  if (isRepeat && focusLabel && !String(personalWhy || '').includes(String(focusAyahs[0] || ''))) {
-    whyParts.push(focusLabel)
-  }
-  const combinedWhy = whyParts.filter(Boolean).join(' ')
+  const colourCounts = input.aiDetails?.colorCounts
+    || recommendation?.ai_assessment?.color_counts
+    || {}
+  const matchedWords = Number(colourCounts.green || 0)
+  const incorrectWords = Number(colourCounts.red || 0) + Number(colourCounts.black || 0)
+  const totalWords = matchedWords
+    + incorrectWords
+    + Number(colourCounts.amber || 0)
+    + Number(colourCounts.gray || 0)
+  const evidenceWhy = buildEvidenceBackedWhy({
+    isRepeat,
+    weakAyahs: focusAyahs,
+    weakWords: input.aiDetails?.weakWords
+      || recommendation?.settings?.practice_weak_words
+      || recommendation?.ai_assessment?.weak_words
+      || [],
+    techniqueId: primaryId,
+    matched: matchedWords,
+    total: totalWords,
+    incorrect: incorrectWords,
+    surah: recommendation.surah,
+    surahName,
+    rangeFrom,
+    rangeTo,
+    nextFrom: Number(recommendation.next_range?.from || recommendation.next_ayah_range?.from || 0),
+    nextTo: Number(recommendation.next_range?.to || recommendation.next_ayah_range?.to || 0),
+  })
+  const combinedWhy = composeRecommendationWhy(
+    [evidenceWhy.summary, personalWhy],
+    { isRepeat, weakAyahs: focusAyahs },
+  )
 
   const extraAyahPasses = extraAyahPassesFromRepeatPlan(repeatPlan, settings.repetitions)
   const minutes = estimatePracticeMinutes({
@@ -1747,19 +2024,27 @@ export function buildCombinedCheckInsight({
     if (sessionWeak.length === 1) {
       summary = translate(
         'combinedRepeatWeakAyah',
-        `Verse {ayah} still feels tricky. We will practise these verses again.`,
+        `Ayah {ayah} still needs support. We will practise this set again with extra attention on that ayah.`,
         { ayah: sessionWeak[0] },
       )
     } else if (sessionWeak.length > 1 || checksNeedSupport) {
-      summary = translate(
-        'combinedRepeatWeakAyahs',
-        'Some verses still need help. We will practise this set again.',
-        { count: Math.max(sessionWeak.length, 2) },
-      )
+      const ayahs = sessionWeak.length
+        ? formatAyahList(sessionWeak)
+        : ''
+      summary = ayahs
+        ? translate(
+          'combinedRepeatWeakAyahs',
+          `Ayahs {ayahs} still need support. We will practise this set again with extra attention on those ayahs.`,
+          { ayahs, count: sessionWeak.length },
+        )
+        : translate(
+          'combinedRepeatFallback',
+          'We will practise these ayahs again with a little more help.',
+        )
     } else if (confidence === 'needs_practice') {
       summary = translate(
         'reasons.confidenceNeedsPractice',
-        'You asked for more practice, so we will go over these verses again more slowly.',
+        'You asked for more practice, so we will go over these ayahs again more slowly.',
       )
     } else if (checksLookStrong) {
       summary = translate(
@@ -1769,7 +2054,7 @@ export function buildCombinedCheckInsight({
     } else {
       summary = translate(
         'combinedRepeatFallback',
-        'We will practise these verses again with a little more help.',
+        'We will practise these ayahs again with a little more help.',
       )
     }
   } else if (checksNeedSupport) {
@@ -1780,27 +2065,27 @@ export function buildCombinedCheckInsight({
   } else if (confidence === 'confident') {
     summary = translate(
       'reasons.confidenceConfident',
-      'You feel ready — we will move on while these verses are still fresh.',
+        'You feel ready — we will move on while these ayahs are still fresh.',
     )
   } else if (both && checksLookStrong) {
     summary = translate(
       'combinedContinueBoth',
-      'Your checks look ready. Next verses while this still feels fresh.',
+      'Your checks look ready. Next ayahs while this still feels fresh.',
     )
   } else if ((hasAi || hasQuiz) && checksLookStrong) {
     summary = translate(
       'combinedContinueOne',
-      'Nice work. Next verses while this still feels fresh.',
+      'Nice work. Next ayahs while this still feels fresh.',
     )
   } else if (hasAi || hasQuiz) {
     summary = translate(
       'combinedContinueFallback',
-      'Next verses while this still feels fresh.',
+      'Next ayahs while this still feels fresh.',
     )
   } else {
     summary = translate(
       'combinedContinueFallback',
-      'Next verses while this still feels fresh.',
+      'Next ayahs while this still feels fresh.',
     )
   }
 

@@ -126,6 +126,19 @@ const saveReq = readFileSync(join(root, 'app/Http/Requests/Learning/SaveRecommen
     outcome: 'weak',
   })
   assert.equal(spread.scope, PRACTICE_SCOPE.FULL_RANGE)
+
+  const strongWithWeak = recommendPracticeScope({
+    sessionFrom: 1,
+    sessionTo: 4,
+    weakAyahs: [1, 3],
+    weakWords: [
+      { ayahNumber: 1, wordIndex: 0, text: 'a' },
+      { ayahNumber: 3, wordIndex: 0, text: 'b' },
+    ],
+    outcome: 'strong',
+  })
+  assert.notEqual(strongWithWeak.reasonKey, 'strongContinue')
+  assert.doesNotMatch(String(strongWithWeak.reason || ''), /this set is secure/i)
 }
 
 // Persistence payload carries scope + weak refs + attempt

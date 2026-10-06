@@ -479,8 +479,13 @@ includesAll('top card dashboard visibility', [
   )
   assert.match(
     mobileGridCss,
-    /main\.madani-qpc-mode-active \.qpc-madani-line--ayah[\s\S]*?justify-content:\s*space-between\s*!important/,
-    'mobile-grid must stretch QPC ayah lines edge-to-edge on phones'
+    /main\.madani-qpc-mode-active \.qpc-madani-line--ayah:not\(\.qpc-madani-line--sparse\)[\s\S]*?justify-content:\s*space-between\s*!important/,
+    'mobile-grid must stretch full QPC ayah lines edge-to-edge on phones'
+  )
+  assert.match(
+    mobileGridCss,
+    /qpc-madani-line--sparse[\s\S]*?justify-content:\s*center\s*!important/,
+    'mobile-grid must centre leftover QPC ayah rows'
   )
   assert.match(
     source,
@@ -618,6 +623,7 @@ includesAll('pause session halts Talqin automation', [
   /pausePlaybackGuards/,
   /shouldRunDeferredTalqinAdvance/,
   /isSessionAutomationHalted/,
+  /toolsOpen: this\.showTools/,
   /talqinPauseSettleTimer/,
   /clearPlaybackAdvanceTimer/,
   /if \(this\.sessionPaused\) return false/,
@@ -1172,7 +1178,11 @@ includesAll('mobile reciter change', [
   /autoplayAfterMobileReciterChange/,
   /options\.autoPlay/,
   /curatedReciterCatalog/,
-  /applyReciterChangeInPlace\(this\.currentMode, \{ autoPlay: true \}\)/,
+  /applyReciterChangeInPlace\(this\.currentMode, \{ autoPlay: shouldAutoPlay \}\)/,
+  /const shouldAutoPlay = !!autoPlay && !this\.showTools/,
+  /autoPlay: this\.isMobileViewport\(\) && !this\.showTools/,
+  /if \(this\.showTools && !options\.allowWhileToolsOpen\) return/,
+  /toolsOpen: this\.showTools/,
   /_mobileReciterAutoplayPending/,
   /commitSessionReciter\(/,
   /shouldApplyReciterSelectChange/,

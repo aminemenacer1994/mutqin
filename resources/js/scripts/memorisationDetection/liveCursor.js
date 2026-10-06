@@ -337,6 +337,14 @@ export function mergeLiveRecitationStatuses(committedStatuses = [], displayStatu
     if (incomingStatus === 'correct') {
       return { ...current, ...incoming, status: 'correct' }
     }
+    if (
+      incomingStatus === 'pending'
+      && (String(current.status || '').toLowerCase() === 'incorrect'
+        || String(current.status || '').toLowerCase() === 'omitted')
+      && !String(current.actual || '').trim()
+    ) {
+      return incoming
+    }
     if (liveWordStatusSeverity(incoming.status) > liveWordStatusSeverity(current.status)) {
       return { ...current, ...incoming }
     }

@@ -629,6 +629,12 @@ class DashboardService
                 'from' => $from,
                 'to' => $to,
             ]),
+            'why_summary' => $this->recommendationWhySummary($recommendation),
+            'why_points' => $this->recommendationWhyPoints($recommendation),
+            'decision' => is_array($recommendation->payload)
+                ? ($recommendation->payload['decision'] ?? null)
+                : null,
+            'maturity_tier' => data_get($recommendation->payload, 'personalisation.maturity.tier'),
         ];
     }
 
@@ -660,6 +666,41 @@ class DashboardService
         $formatted = rtrim(rtrim(number_format($speed, 2, '.', ''), '0'), '.');
 
         return $formatted.'x';
+    }
+
+    private function recommendationWhySummary(?SessionRecommendation $recommendation): ?string
+    {
+        if (! $recommendation) {
+            return null;
+        }
+        $payload = is_array($recommendation->payload) ? $recommendation->payload : [];
+        $summary = trim((string) ($payload['why_summary'] ?? data_get($payload, 'why.summary') ?? ''));
+        if ($summary !== '') {
+            return $summary;
+        }
+        $userReason = trim((string) ($payload['user_reason'] ?? $payload['reason'] ?? ''));
+
+        return $userReason !== '' ? $userReason : null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function recommendationWhyPoints(?SessionRecommendation $recommendation): array
+    {
+        if (! $recommendation) {
+            return [];
+        }
+        $payload = is_array($recommendation->payload) ? $recommendation->payload : [];
+        $points = $payload['why_points'] ?? [];
+        if (! is_array($points)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            static fn ($line) => trim((string) $line),
+            $points
+        )));
     }
 
     /**
@@ -788,7 +829,14 @@ class DashboardService
                 'last_activity_at' => optional($openRecommendation->created_at)->toIso8601String(),
                 'recommended_technique' => $openRecommendation->recommended_technique
                     ?: $this->techniqueLabel($openRecommendation->session_mode, []),
-                'message' => 'Your next suggested practice is ready.',
+                'message' => $this->recommendationWhySummary($openRecommendation)
+                    ?: 'Your next suggested practice is ready.',
+                'why_summary' => $this->recommendationWhySummary($openRecommendation),
+                'why_points' => $this->recommendationWhyPoints($openRecommendation),
+                'decision' => is_array($openRecommendation->payload)
+                    ? ($openRecommendation->payload['decision'] ?? null)
+                    : null,
+                'maturity_tier' => data_get($openRecommendation->payload, 'personalisation.maturity.tier'),
             ];
         }
 
@@ -991,6 +1039,10 @@ class DashboardService
             'href' => $continue['href'] ?? $journey['start_beginning_href'],
             'action_type' => $continue['action_type'] ?? 'continue_range',
             'cta_key' => 'cta_continue_memorisation',
+            'why_summary' => $continue['why_summary'] ?? null,
+            'why_points' => $continue['why_points'] ?? [],
+            'decision' => $continue['decision'] ?? null,
+            'maturity_tier' => $continue['maturity_tier'] ?? null,
         ];
         $journey['review'] = $this->buildJourneyReview($main, $retention, $weaknesses);
 
@@ -1551,8 +1603,8 @@ class DashboardService
                     'ayah_number' => $ayah,
                     'phrase' => $phrase,
                     'explanation' => $phrase
-                        ? 'This phrase needs a little more care. Review it gently and ask Allah for ease.'
-                        : 'This ayah needs a little more care. A calm review can help it settle.',
+                        ? 'AI Recite marked «'.$phrase.'» on this ayah. Review that phrase first so the rest of the line can settle.'
+                        : 'This ayah still has an open weak mark. A short focused review here is more useful than adding new material.',
                     'explanation_key' => $phrase ? 'weak_explain_phrase' : 'weak_explain_ayah',
                     'status_label' => 'Needs a gentle review',
                     'status_key' => 'status_strengthen',

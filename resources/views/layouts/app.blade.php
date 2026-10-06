@@ -10895,6 +10895,109 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v209">
+  /*
+   * Mobile mushaf: hairline gutter, full rows justify, leftover rows pack RTL.
+   * One word-size per page is applied in MadaniPage; this layer only wins the cascade.
+   */
+  @media (max-width: 767.98px) {
+    html body .app {
+      --mq-mushaf-inline-start: max(6px, var(--mq-safe-left, env(safe-area-inset-left, 0px)));
+      --mq-mushaf-inline-end: max(6px, var(--mq-safe-right, env(safe-area-inset-right, 0px)));
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-page__sheet,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-page__sheet,
+    html body .app .main.mushaf-mode-active .madani-page-sheet,
+    html body .app .main.mushaf-mode-active .madani-page-sheet--unicode,
+    html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-page-sheet {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-inline: 0 !important;
+      padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body .app .main.mushaf-mode-active .madani-line--ayah:not(.madani-line--sparse),
+    html body .app .main.mushaf-mode-active .madani-line--glyphs:not(.madani-line--sparse),
+    html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-line--ayah:not(.madani-line--sparse) {
+      justify-content: space-between !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--sparse,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--sparse,
+    html body .app .main.mushaf-mode-active .madani-line--sparse,
+    html body.memorisation-page .app .main.mushaf-mode-active .mushaf-page--madani .madani-line--sparse {
+      justify-content: center !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    html body .app .workspace-reading-surface--stacked .verse-card {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
+    }
+
+    html body .app .workspace-reading-surface--stacked .verse-arabic {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v210">
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--empty,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-line--empty {
+      display: none !important;
+      min-height: 0 !important;
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page .qpc-madani-page__sheet {
+      display: flex !important;
+      flex-direction: column !important;
+      grid-template-rows: none !important;
+      min-height: 0 !important;
+      height: auto !important;
+      justify-content: flex-start !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-break {
+      min-height: 0 !important;
+      margin: 0.1rem 0 !important;
+      padding: 0.08rem 0 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah {
+      min-height: calc(var(--qpc-word-size, 22px) * 1.18) !important;
+      margin-block: 0 !important;
+      padding-block: 0 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
+      margin-top: 0.15rem !important;
+    }
+  }
+</style>
 <script>
   (function () {
     function stretchAyahLine(line) {
@@ -10912,14 +11015,32 @@ body.session-analysis-modal-open {
       line.style.setProperty('max-width', '100%', 'important')
       line.style.setProperty('align-self', 'stretch', 'important')
       line.style.setProperty('margin-inline', '0', 'important')
-      line.style.setProperty('justify-content', 'space-between', 'important')
       line.style.setProperty('box-sizing', 'border-box', 'important')
+      var mobile = (window.innerWidth || 0) < 768
+      var sparse = mobile && (
+        line.classList.contains('qpc-madani-line--sparse')
+        || line.classList.contains('madani-line--sparse')
+      )
+      if (mobile && !sparse) {
+        var words = line.querySelectorAll('.qpc-madani-word, .madani-word')
+        var natural = 0
+        for (var i = 0; i < words.length; i += 1) natural += words[i].offsetWidth || 0
+        sparse = words.length <= 5 && natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * 0.62
+        line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
+        line.classList.toggle('madani-line--sparse', sparse && line.classList.contains('madani-line--ayah'))
+      }
+      if (!mobile) {
+        line.classList.remove('qpc-madani-line--sparse')
+        line.classList.remove('madani-line--sparse')
+        sparse = false
+      }
+      line.style.setProperty('justify-content', sparse ? 'center' : 'space-between', 'important')
     }
 
     function containMushafRows() {
       var root = document.querySelector('.main.madani-qpc-mode-active, .main.mushaf-mode-active')
       if (!root) return
-      root.querySelectorAll('.qpc-madani-line--ayah').forEach(stretchAyahLine)
+      root.querySelectorAll('.qpc-madani-line--ayah, .madani-line--ayah, .madani-line--glyphs').forEach(stretchAyahLine)
     }
 
     var lastWidth = 0

@@ -103,7 +103,8 @@ function t(key, params = {}) {
   assert.match(completionModal, /postSessionUnderstandingText/)
   assert.match(completionModal, /data-testid="post-session-weak-spots"/)
   assert.match(completionModal, /postSessionInfoArchitecture\.weakAreas/)
-  assert.match(completionModal, /data-testid="post-session-personal-plan"/)
+  assert.match(completionModal, /data-testid="post-session-plan-why"/)
+  assert.match(completionModal, /data-testid="post-session-why-points"/)
   assert.match(completionModal, /data-testid="post-session-scope-picker"/)
   assert.match(completionModal, /data-testid="post-session-practice-method"/)
   assert.match(completionModal, /postSessionInfoArchitecture\.whatToPractiseNext|postSessionSimpleActionLabel|recommendedPlan|Recommended plan/i)
@@ -246,7 +247,7 @@ function t(key, params = {}) {
   assert.match(en, /"repeatThisSession":\s*"Repeat Ayahs \{start\}–\{end\}"/)
   assert.match(en, /"returnToWorkspace":\s*"Back to mushaf"/)
   assert.match(en, /"retest":\s*"Check again"/)
-  assert.match(en, /"reviewAyahOnce":\s*"Repeat Weak Ayah"/)
+  assert.match(en, /"reviewAyahOnce":\s*"Repeat ayah \{ayah\}"/)
   assert.match(en, /"startSession":\s*"Continue"/)
   assert.match(en, /"startRevision":\s*"Practise Ayahs \{start\}–\{end\}"/)
   assert.match(

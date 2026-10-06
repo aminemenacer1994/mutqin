@@ -98,9 +98,13 @@ export function createDashboardAiReciteRecorder(options = {}) {
   }
 
   const flushBridge = () => {
-    const pending = bridge?.flush?.()
-    if (pending?.byteLength && provider?.isOpen?.()) {
-      provider.streamAudioChunk(pending)
+    if (!provider?.isOpen?.()) return
+    const drain = typeof bridge?.drain === 'function'
+      ? bridge.drain(6)
+      : { buffer: bridge?.flush?.() || null, restore: () => {} }
+    if (!drain?.buffer?.byteLength) return
+    if (!provider.streamAudioChunk(drain.buffer)) {
+      try { drain.restore?.() } catch { /* keep audio for the next pump */ }
     }
   }
 

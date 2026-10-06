@@ -41,7 +41,7 @@ export function buildSpeechmaticsRecognitionUpdate({
     message: 'SetRecognitionConfig',
     transcription_config: {
       max_delay: clampSpeechmaticsMaxDelaySeconds(maxDelaySeconds, SPEECHMATICS_MAX_DELAY_SECONDS),
-      max_delay_mode: 'flexible',
+      max_delay_mode: 'fixed',
       conversation_config: {
         end_of_utterance_silence_trigger: clampSpeechmaticsEndOfUtteranceSeconds(
           endOfUtteranceSeconds,

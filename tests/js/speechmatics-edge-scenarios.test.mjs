@@ -108,6 +108,26 @@ const genuineSkip = buildRealtimePreviewAlignment(
 assert.equal(genuineSkip.wordStatuses[4].status, 'pending')
 assert.equal(genuineSkip.wordStatuses[6].status, 'correct')
 
+const liveRestartPreview = buildRealtimePreviewAlignment(
+  'الحمد لله رب العالمين الرحمن الرحيم',
+  words(['الحمد', 'لله', 'رب', 'العالمين', 'الحمد', 'لله']),
+  {
+    lifecycle: 'live',
+    strictProgression: true,
+    lookahead: 0,
+    exactSkipLookahead: 3,
+    partialAdvances: true,
+    advanceOnIncorrect: true,
+  },
+)
+assert.deepEqual(
+  Array.from(liveRestartPreview.wordStatuses.slice(0, 4), word => word.status),
+  ['correct', 'correct', 'correct', 'correct'],
+)
+assert.equal(liveRestartPreview.wordStatuses.slice(4).every(word => word.status === 'pending'), true)
+assert.equal(liveRestartPreview.wordStatuses.some(word => word.visualStatus === 'red'), false)
+assert.ok(extras(liveRestartPreview).includes('RESTART'))
+
 const startsAtSecond = align(words(['لله', 'رب', 'العالمين']))
 assert.deepEqual(types(startsAtSecond), ['DELETION', 'MATCH', 'MATCH', 'MATCH'])
 assert.deepEqual(Array.from(startsAtSecond.wordStatuses, word => word.recognisedIndex), [null, 0, 1, 2])
@@ -729,7 +749,7 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
   assert.equal(fastDelays.tier, 'fast')
   assert.equal(fastUpdate.message, 'SetRecognitionConfig')
   assert.equal(fastUpdate.transcription_config.max_delay, 0.7)
-  assert.equal(fastUpdate.transcription_config.max_delay_mode, 'flexible')
+  assert.equal(fastUpdate.transcription_config.max_delay_mode, 'fixed')
   assert.ok(fastUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger >= 0.45)
   assert.ok(fastUpdate.transcription_config.conversation_config.end_of_utterance_silence_trigger <= 0.6)
   assert.ok(
@@ -775,8 +795,17 @@ async function alignSpeechmaticsPath(target, tokens, options = {}) {
   assert.match(memorisation, /syncSpeechmaticsPaceDelays/)
   assert.match(memorisation, /updateRecognitionDelays/)
   assert.match(runtime, /SetRecognitionConfig/)
+  assert.match(runtime, /ForceEndOfUtterance/)
+  assert.match(runtime, /SPEECHMATICS_SOCKET_BACKPRESSURE_BYTES/)
+  assert.match(runtime, /drain\(/)
+  assert.match(session, /bridge\.drain/)
+  assert.match(memorisation, /recoverAmdStalledTranscription\(\{ reason: 'stall' \}\)/)
+  assert.match(memorisation, /forceEndOfUtterance/)
+  assert.doesNotMatch(memorisation, /Wait for Speechmatics to release the RT slot before reminting/)
+  assert.match(memorisation, /resolveLiveAlignmentWords/)
+  assert.doesNotMatch(memorisation, /committedSelection\.reliable \? committedSelection\.words : \[\]/)
   assert.doesNotMatch(ask, /updateRecognitionDelays/)
-  assert.match(ask, /Math\.max\(delays\.endOfUtteranceSeconds, 1\.8\)/)
+  assert.match(ask, /endOfUtteranceSeconds: delays\.endOfUtteranceSeconds/)
   assert.match(dashboard, /evaluateSpeechmaticsAudioGate/)
   assert.match(dashboard, /createMemorisationAssessment/)
   assert.match(dashboard, /analysisRequestId/)

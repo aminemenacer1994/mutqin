@@ -18,6 +18,19 @@ function lineTypeOf(line) {
   return String(line?.line_type || line?.type || '')
 }
 
+function isBasmalaLineType(type) {
+  return type === 'basmala' || type === 'basmallah'
+}
+
+function lineSurahNumber(line) {
+  const n = Number(line?.surah_number ?? line?.surahNumber)
+  return Number.isFinite(n) && n > 0 ? Math.trunc(n) : 0
+}
+
+function lineNumberOf(line) {
+  return Number(line?.line_number ?? line?.lineNumber)
+}
+
 function surahShowsOpeningBasmala(surah) {
   const chapter = Math.trunc(Number(surah) || 0)
   return chapter > 0 && chapter !== 9 && chapterHasBismillahPre(chapter)
@@ -46,6 +59,57 @@ function resolvePrintedLineSlot(line, original = []) {
   return 0
 }
 
+function preparedHasOpeningBasmala(lines = [], surah = 0) {
+  const chapter = Math.trunc(Number(surah) || 0)
+  return (Array.isArray(lines) ? lines : []).some((row) => {
+    if (!isBasmalaLineType(lineTypeOf(row))) return false
+    const rowSurah = lineSurahNumber(row)
+    return !rowSurah || rowSurah === chapter
+  })
+}
+
+/**
+ * Title first, then a single Bismillah. Never leave Bismillah sitting above
+ * the surah name (injected headers used to land between a printed basmala and ayah 1).
+ */
+export function normalizeSessionSurahOpeningLines(lines = []) {
+  const source = Array.isArray(lines) ? [...lines] : []
+  const ordered = []
+  let index = 0
+  while (index < source.length) {
+    const line = source[index]
+    const next = source[index + 1]
+    if (isBasmalaLineType(lineTypeOf(line)) && lineTypeOf(next) === 'surah_name') {
+      ordered.push(next)
+      const afterTitle = source[index + 2]
+      if (isBasmalaLineType(lineTypeOf(afterTitle))) {
+        ordered.push(line)
+        index += 3
+        continue
+      }
+      ordered.push(line)
+      index += 2
+      continue
+    }
+    ordered.push(line)
+    index += 1
+  }
+
+  const deduped = []
+  for (const line of ordered) {
+    const prev = deduped[deduped.length - 1]
+    if (
+      isBasmalaLineType(lineTypeOf(line))
+      && prev
+      && isBasmalaLineType(lineTypeOf(prev))
+    ) {
+      continue
+    }
+    deduped.push(line)
+  }
+  return deduped
+}
+
 /** Basmala under the surah title on the session’s opening header page (not mid-surah cards). */
 export function injectBasmalaAfterSessionSurahHeader(prepared = [], source = [], startKey = '', endKey = '') {
   const original = Array.isArray(source) ? source : []
@@ -54,14 +118,15 @@ export function injectBasmalaAfterSessionSurahHeader(prepared = [], source = [],
     const line = prepared[index]
     out.push(line)
     if (lineTypeOf(line) !== 'surah_name') continue
-    const surah = Number(line.surah_number)
+    const surah = lineSurahNumber(line)
     if (!surahShowsOpeningBasmala(surah)) continue
     if (!sessionIncludesSurahOpening(startKey, endKey, surah)) continue
     const next = prepared[index + 1]
-    if (next && (lineTypeOf(next) === 'basmala' || lineTypeOf(next) === 'basmallah')) continue
+    if (isBasmalaLineType(lineTypeOf(next))) continue
+    if (preparedHasOpeningBasmala(prepared, surah)) continue
     const printed = original.find((row) => (
-      (lineTypeOf(row) === 'basmallah' || lineTypeOf(row) === 'basmala')
-      && (!row.surah_number || Number(row.surah_number) === surah)
+      isBasmalaLineType(lineTypeOf(row))
+      && (!lineSurahNumber(row) || lineSurahNumber(row) === surah)
     ))
     const slot = resolvePrintedLineSlot(printed || { line_type: 'basmala', line_number: 0 }, original)
     out.push({
@@ -202,11 +267,11 @@ export function filterQpcPageLinesToSession(lines = [], startKey = '', endKey = 
   for (const line of source) {
     const type = String(line?.line_type || line?.type || '')
     if (type === 'surah_name') {
-      if (sessionSurahs.has(Number(line.surah_number))) kept.push(line)
+      if (sessionSurahs.has(lineSurahNumber(line))) kept.push(line)
       continue
     }
-    if (type === 'basmallah' || type === 'basmala') {
-      const lineSurah = Number(line.surah_number)
+    if (isBasmalaLineType(type)) {
+      const lineSurah = lineSurahNumber(line)
       const showBasmala = [...sessionSurahs].some((surah) => (
         (!lineSurah || lineSurah === surah)
         && isAyahInCanonicalRange(`${surah}:1`, start.key, end.key)
@@ -304,8 +369,8 @@ export function injectQpcMadaniSessionSurahHeaders(lines = [], filtered = [], st
 
   const headerSurahs = new Set()
   for (const line of kept) {
-    if (String(line?.line_type || line?.type || '') === 'surah_name') {
-      headerSurahs.add(Number(line.surah_number))
+    if (lineTypeOf(line) === 'surah_name') {
+      headerSurahs.add(lineSurahNumber(line))
     }
   }
 
@@ -314,11 +379,26 @@ export function injectQpcMadaniSessionSurahHeaders(lines = [], filtered = [], st
     if (headerSurahs.has(surah)) continue
     const anchor = firstSessionAyahLineNumber(source, surah, start.key, end.key)
       ?? firstSessionAyahLineNumber(kept, surah, start.key, end.key)
+    const openingBasmala = kept.find((line) => {
+      if (!isBasmalaLineType(lineTypeOf(line))) return false
+      const rowSurah = lineSurahNumber(line)
+      return !rowSurah || rowSurah === surah
+    })
+    const ayahLine = anchor != null ? Number(anchor) : NaN
+    const basmalaLine = openingBasmala ? lineNumberOf(openingBasmala) : NaN
+    let headerLine = 0
+    if (Number.isFinite(basmalaLine) && Number.isFinite(ayahLine)) {
+      headerLine = Math.min(basmalaLine, ayahLine) - 0.01
+    } else if (Number.isFinite(basmalaLine)) {
+      headerLine = basmalaLine - 0.01
+    } else if (Number.isFinite(ayahLine)) {
+      headerLine = ayahLine - 0.01
+    }
     injected.push({
       line_type: 'surah_name',
       type: 'surah_name',
       surah_number: surah,
-      line_number: anchor != null ? anchor - 0.01 : 0,
+      line_number: headerLine,
       is_centered: 1,
       words: [],
     })
@@ -458,6 +538,7 @@ export function prepareQpcMadaniSessionLines(
   if (includeSurahOpening) {
     prepared = injectBasmalaAfterSessionSurahHeader(prepared, source, startKey, endKey)
   }
+  prepared = normalizeSessionSurahOpeningLines(prepared)
   if (preservePrintedGrid) {
     return padQpcMadaniLinesToPrintedGrid(source, prepared, startKey, endKey, { includeSurahOpening })
   }

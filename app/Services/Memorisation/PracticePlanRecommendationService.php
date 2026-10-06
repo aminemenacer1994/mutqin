@@ -74,7 +74,8 @@ class PracticePlanRecommendationService
         $chunks = $this->buildChunks($practiceRange, $weakAyahs, $primary['id']);
 
         $title = $this->title($band, $primary['id'], $weakAyahs);
-        $why = $this->why($accuracy, $band, $weakWords, $weakPhrases, $primary, $pattern);
+        $explained = $this->explainWhy($accuracy, $band, $weakWords, $weakPhrases, $primary, $pattern);
+        $why = $explained['summary'];
         $difficulty = match ($band) {
             self::BAND_GENTLE => 'gentle',
             self::BAND_STRONG => 'light',
@@ -132,6 +133,9 @@ class PracticePlanRecommendationService
         return [
             'title' => $title,
             'explanation' => $why,
+            'why' => $why,
+            'why_points' => $explained['points'],
+            'why_summary' => $why,
             'band' => $band,
             'difficulty' => $difficulty,
             'surah_number' => (int) $range['surah_number'],
@@ -547,6 +551,86 @@ class PracticePlanRecommendationService
      * @param  list<array<string,mixed>>  $weakPhrases
      * @param  array<string,mixed>  $primary
      */
+    /**
+     * @param  list<array<string,mixed>>  $weakWords
+     * @param  list<array<string,mixed>>  $weakPhrases
+     * @param  array<string,mixed>  $primary
+     * @return array{summary: string, points: list<string>}
+     */
+    public function explainWhy(
+        int $accuracy,
+        string $band,
+        array $weakWords,
+        array $weakPhrases,
+        array $primary,
+        string $pattern
+    ): array {
+        $method = (string) ($primary['title'] ?? 'focused practice');
+        $points = [];
+        $wordTexts = [];
+        $ayahs = [];
+        foreach ($weakWords as $word) {
+            $text = trim((string) ($word['text'] ?? $word['word'] ?? $word['arabic'] ?? ''));
+            if ($text !== '') {
+                $wordTexts[] = $text;
+            }
+            $ayah = (int) ($word['ayahNumber'] ?? $word['ayah_number'] ?? 0);
+            if ($ayah > 0) {
+                $ayahs[] = $ayah;
+            }
+        }
+        foreach ($weakPhrases as $phrase) {
+            $ayah = (int) ($phrase['ayah_number'] ?? $phrase['ayahNumber'] ?? 0);
+            if ($ayah > 0) {
+                $ayahs[] = $ayah;
+            }
+            $text = trim((string) ($phrase['text'] ?? $phrase['phrase'] ?? ''));
+            if ($text !== '') {
+                $wordTexts[] = $text;
+            }
+        }
+        $ayahs = array_values(array_unique($ayahs));
+        $quoted = array_slice(array_values(array_unique($wordTexts)), 0, 3);
+        $quoteBit = $quoted !== []
+            ? ' «'.implode('», «', $quoted).'»'
+            : '';
+        $ayahBit = $ayahs === []
+            ? ''
+            : (count($ayahs) === 1
+                ? ' in Ayah '.$ayahs[0]
+                : ' in Ayahs '.implode(', ', array_slice($ayahs, 0, 3)));
+
+        if ($quoted !== [] || $ayahs !== []) {
+            $count = max(count($weakWords), count($ayahs), 1);
+            $points[] = "AI Recite matched {$accuracy}% of this range.";
+            $points[] = $count === 1
+                ? "The phrase{$quoteBit}{$ayahBit} still slipped, so this plan uses {$method} on that ayah rather than moving on."
+                : "{$count} marked phrases{$quoteBit}{$ayahBit} still slipped, so this plan uses {$method} on those ayahs rather than moving on.";
+        } elseif ($pattern === 'scattered') {
+            $points[] = "Mistakes were spread across the range ({$accuracy}%). {$method} rebuilds the set ayah by ayah so gaps do not hide.";
+        } elseif ($band === self::BAND_STRONG) {
+            $points[] = "Recall was strong ({$accuracy}%). A light {$method} pass keeps the range firm without extra load.";
+        } else {
+            $patternBit = match ($pattern) {
+                'clustered' => 'the slips sat in one cluster',
+                'start' => 'the opening of the range was weaker',
+                'end' => 'the end of the range was weaker',
+                default => 'the error pattern was mixed',
+            };
+            $points[] = "This assessment scored {$accuracy}%. {$method} is next because {$patternBit}.";
+        }
+
+        return [
+            'summary' => implode(' ', $points),
+            'points' => $points,
+        ];
+    }
+
+    /**
+     * @param  list<array<string,mixed>>  $weakWords
+     * @param  list<array<string,mixed>>  $weakPhrases
+     * @param  array<string,mixed>  $primary
+     */
     private function why(
         int $accuracy,
         string $band,
@@ -555,37 +639,7 @@ class PracticePlanRecommendationService
         array $primary,
         string $pattern
     ): string {
-        $method = (string) ($primary['title'] ?? 'focused practice');
-
-        if ($weakPhrases !== []) {
-            $ayah = (int) ($weakPhrases[0]['ayah_number'] ?? 0);
-
-            return $ayah > 0
-                ? "One phrase in Ayah {$ayah} needs a little reinforcement."
-                : 'One phrase needs a little reinforcement.';
-        }
-        if (count($weakWords) === 1) {
-            $ayah = (int) ($weakWords[0]['ayahNumber'] ?? $weakWords[0]['ayah_number'] ?? 0);
-
-            return $ayah > 0
-                ? "One phrase in Ayah {$ayah} needs a little reinforcement."
-                : 'One phrase needs a little reinforcement.';
-        }
-        if (count($weakWords) >= 2 && count($weakWords) <= 4) {
-            $ayah = (int) ($weakWords[0]['ayahNumber'] ?? $weakWords[0]['ayah_number'] ?? 0);
-
-            return $ayah > 0
-                ? "One phrase in Ayah {$ayah} needs a little reinforcement."
-                : 'One phrase needs a little reinforcement.';
-        }
-        if ($pattern === 'scattered') {
-            return 'A few phrases still need attention.';
-        }
-        if ($band === self::BAND_STRONG) {
-            return 'Recall was strong on this range. Keep a light review at a steady pace.';
-        }
-
-        return "Based on this assessment ({$accuracy}%), {$method} is the next step. May Allah strengthen what you have memorised.";
+        return $this->explainWhy($accuracy, $band, $weakWords, $weakPhrases, $primary, $pattern)['summary'];
     }
 
     private function friendlySummary(int $accuracy): string

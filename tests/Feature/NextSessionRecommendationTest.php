@@ -4,7 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\RecommendationReasonCode;
 use App\Enums\RecommendationType;
+use App\Models\HifzPlan;
+use App\Models\MemorisationAssessment;
 use App\Models\MemorisationProgress;
+use App\Models\MemorisationWeakSpot;
 use App\Models\SessionRecommendation;
 use App\Models\User;
 use App\Models\UserSession;
@@ -1193,5 +1196,168 @@ class NextSessionRecommendationTest extends TestCase
         $this->assertIsArray($payload['plan_detail']['surah_recap'] ?? null);
         $this->assertNotEmpty($payload['plan_detail']['surah_recap']['bullets'] ?? []);
         $this->assertNotEmpty($payload['plan_detail']['surah_recap']['next_label'] ?? '');
+    }
+
+    public function test_recommendation_includes_specific_why_explanation(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 1, 4);
+
+        $payload = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::Continue->value, $payload['type']);
+        $this->assertNotEmpty($payload['why_summary'] ?? '');
+        $this->assertIsArray($payload['why_points'] ?? null);
+        $this->assertNotEmpty($payload['why_points']);
+        $this->assertSame('planned', $payload['decision'] ?? null);
+        $this->assertStringContainsString('Ayahs 1–4', (string) $payload['why_summary']);
+        $this->assertSame('sparse', data_get($payload, 'personalisation.maturity.tier'));
+        $this->assertIsArray($payload['why']['picked_because'] ?? null);
+        $this->assertNotEmpty($payload['why']['not_chosen'] ?? []);
+    }
+
+    public function test_overdue_weak_spots_outrank_continue_when_plan_prefers_weak_ayahs(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 1, 4);
+        HifzPlan::create([
+            'user_id' => $user->id,
+            'status' => 'active',
+            'config' => [
+                'learningStyle' => 'balanced',
+                'focusMode' => 'weakAyahFocus',
+            ],
+        ]);
+        MemorisationWeakSpot::create([
+            'user_id' => $user->id,
+            'spot_type' => MemorisationWeakSpot::TYPE_WORD,
+            'surah_number' => 1,
+            'ayah_number' => 5,
+            'word_index' => 2,
+            'verse_key' => '1:5',
+            'spot_key' => '1:5:2',
+            'severity' => 'high',
+            'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+            'affected_attempt_count' => 3,
+            'last_identified_at' => now()->subDays(4),
+            'metadata' => ['text' => 'الصراط'],
+        ]);
+
+        $payload = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::Revision->value, $payload['type']);
+        $this->assertSame(1, $payload['surah']['id']);
+        $this->assertSame(5, $payload['ayah_range']['from']);
+        $this->assertSame(RecommendationReasonCode::ReviewOverdue->value, $payload['reason_code']);
+        $this->assertStringContainsString('weak', strtolower((string) ($payload['why_summary'] ?? '')));
+    }
+
+    public function test_sparse_history_does_not_promote_overdue_without_plan_focus(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCompletedSession($user, 2, 1, 4);
+        MemorisationWeakSpot::create([
+            'user_id' => $user->id,
+            'spot_type' => MemorisationWeakSpot::TYPE_WORD,
+            'surah_number' => 1,
+            'ayah_number' => 5,
+            'word_index' => 2,
+            'verse_key' => '1:5',
+            'spot_key' => '1:5:2-sparse',
+            'severity' => 'high',
+            'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+            'affected_attempt_count' => 3,
+            'last_identified_at' => now()->subDays(4),
+            'metadata' => ['text' => 'الصراط'],
+        ]);
+
+        $payload = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::Continue->value, $payload['type']);
+        $this->assertSame('sparse', data_get($payload, 'personalisation.maturity.tier'));
+        $this->assertSame(0, (int) data_get($payload, 'personalisation.maturity.weights.history'));
+    }
+
+    public function test_forming_history_can_promote_high_severity_overdue_after_a_strong_range(): void
+    {
+        $user = User::factory()->create();
+        foreach ([[112, 1, 4], [113, 1, 5], [114, 1, 6]] as [$surah, $from, $to]) {
+            UserSession::create([
+                'user_id' => $user->id,
+                'surah_number' => $surah,
+                'ayah_number' => $to,
+                'current_step' => max(0, $to - $from),
+                'memorisation_mode' => 'advanced',
+                'status' => 'completed',
+                'repetitions_completed' => 3,
+                'session_duration_seconds' => 400,
+                'last_activity_at' => now()->subDays(2),
+                'ended_at' => now()->subDays(2),
+                'metadata' => [
+                    'active' => false,
+                    'completed' => true,
+                    'mode' => 'advanced',
+                    'config' => [
+                        'chapterId' => $surah,
+                        'rangeStart' => $from,
+                        'rangeEnd' => $to,
+                    ],
+                ],
+            ]);
+        }
+        $this->seedCompletedSession($user, 2, 1, 4);
+
+        MemorisationAssessment::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'start_ayah' => 1,
+            'end_ayah' => 3,
+            'status' => MemorisationAssessment::STATUS_COMPLETED,
+            'overall_accuracy' => 88,
+            'match_result' => 'strong',
+        ]);
+        MemorisationAssessment::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'start_ayah' => 4,
+            'end_ayah' => 6,
+            'status' => MemorisationAssessment::STATUS_COMPLETED,
+            'overall_accuracy' => 91,
+            'match_result' => 'strong',
+        ]);
+
+        MemorisationWeakSpot::create([
+            'user_id' => $user->id,
+            'spot_type' => MemorisationWeakSpot::TYPE_WORD,
+            'surah_number' => 1,
+            'ayah_number' => 5,
+            'word_index' => 2,
+            'verse_key' => '1:5',
+            'spot_key' => '1:5:2-forming',
+            'severity' => 'high',
+            'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+            'affected_attempt_count' => 3,
+            'last_identified_at' => now()->subDays(4),
+            'metadata' => ['text' => 'الصراط'],
+        ]);
+
+        $payload = $this->actingAs($user)
+            ->getJson('/api/recommendations/next')
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::Revision->value, $payload['type']);
+        $this->assertSame(1, $payload['surah']['id']);
+        $this->assertContains(data_get($payload, 'personalisation.maturity.tier'), ['forming', 'rich']);
+        $this->assertGreaterThan(0, (float) data_get($payload, 'personalisation.maturity.weights.history'));
     }
 }

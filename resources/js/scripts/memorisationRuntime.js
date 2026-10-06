@@ -61,6 +61,12 @@ export const RECITATION_TRANSCRIPTION_SETTLE_TIMEOUT_MS = 2200
 export const RECITATION_TRANSCRIPTION_SETTLE_QUIET_MS = 400
 export const SPEECHMATICS_PARTIAL_CONFIDENCE = 0.68
 export const SPEECHMATICS_AUDIO_BUFFER_SIZE = 1024
+/** ~1s of 16-bit PCM at 48kHz / 1024-sample frames. Drop older frames instead of dumping. */
+const SPEECHMATICS_MAX_PENDING_AUDIO_BUFFERS = 48
+/** Never send more than ~125ms of audio per pump tick after a main-thread stall. */
+export const SPEECHMATICS_MAX_DRAIN_BUFFERS = 6
+/** Back off when the browser WS buffer is this full (Speechmatics closes faster-than-realtime dumps). */
+export const SPEECHMATICS_SOCKET_BACKPRESSURE_BYTES = 256 * 1024
 export {
   SPEECHMATICS_MAX_DELAY_SECONDS,
   SPEECHMATICS_AMD_MAX_DELAY_SECONDS,
@@ -566,7 +572,11 @@ export function createTranscriptionAudioBridge(stream = null) {
     const frameRms = Math.sqrt(frameSquares / samples.length)
     frameLevels.push(frameRms)
     if (frameRms >= 0.012) activeFrames += 1
+    if (frameLevels.length > 2400) frameLevels.splice(0, frameLevels.length - 1200)
     pendingBuffers.push(float32ToPcm16Buffer(samples))
+    if (pendingBuffers.length > SPEECHMATICS_MAX_PENDING_AUDIO_BUFFERS) {
+      pendingBuffers.splice(0, pendingBuffers.length - SPEECHMATICS_MAX_PENDING_AUDIO_BUFFERS)
+    }
   }
 
   source.connect(processor)
@@ -639,6 +649,20 @@ export function createTranscriptionAudioBridge(stream = null) {
       return recent.some((rms) => Number(rms) >= floor)
     },
     ensureRunning,
+    pendingBufferCount() {
+      return pendingBuffers.length
+    },
+    drain(maxBuffers = SPEECHMATICS_MAX_DRAIN_BUFFERS) {
+      const take = Math.max(1, Math.min(pendingBuffers.length, Number(maxBuffers) || SPEECHMATICS_MAX_DRAIN_BUFFERS))
+      if (!pendingBuffers.length) return { buffer: null, restore: () => {} }
+      const taken = pendingBuffers.splice(0, take)
+      return {
+        buffer: mergeArrayBuffers(taken),
+        restore: () => {
+          pendingBuffers.unshift(...taken)
+        },
+      }
+    },
     flush() {
       const merged = mergeArrayBuffers(pendingBuffers)
       pendingBuffers.length = 0
@@ -828,7 +852,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
                   amdLive: options.amdLive,
                 }),
                 max_delay: appliedMaxDelay,
-                max_delay_mode: 'flexible',
+                max_delay_mode: 'fixed',
                 conversation_config: delayUpdate.transcription_config.conversation_config,
               }
             }))
@@ -930,6 +954,7 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
     },
     streamAudioChunk(chunk) {
       if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      if (Number(socket.bufferedAmount || 0) > SPEECHMATICS_SOCKET_BACKPRESSURE_BYTES) return false
       const buffer = chunk instanceof ArrayBuffer ? chunk : mergeArrayBuffers([chunk])
       if (!buffer?.byteLength) return false
       try {
@@ -943,6 +968,18 @@ export function createSpeechmaticsRealtimeProvider(options = {}) {
         }))
         return false
       }
+    },
+    forceEndOfUtterance() {
+      if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
+      try {
+        socket.send(JSON.stringify({ message: 'ForceEndOfUtterance' }))
+        return true
+      } catch {
+        return false
+      }
+    },
+    getBufferedAmount() {
+      return Number(socket?.bufferedAmount || 0)
     },
     endStream() {
       if (!socket || socket.readyState !== WebSocket.OPEN || endOfStreamSent) return false
