@@ -15,7 +15,6 @@
           <a href="/#features">{{ t('homepage.footer.features') }}</a>
           <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
           <a href="/articles">{{ t('homepage.footer.articles') }}</a>
-          <a href="/guides">{{ t('homepage.footer.guides') }}</a>
         </div>
         <div class="footer__links">
           <h3>{{ t('homepage.footer.company') }}</h3>

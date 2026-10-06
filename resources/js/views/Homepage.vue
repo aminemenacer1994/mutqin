@@ -347,11 +347,6 @@
             <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
             <a href="/features">{{ t('homepage.footer.featurePages') }}</a>
             <a href="/articles">{{ t('homepage.footer.articles') }}</a>
-            <a href="/guides">{{ t('homepage.footer.guides') }}</a>
-            <a href="/guides/quran-memorization-techniques">{{ t('homepage.footer.howToMemorize') }}</a>
-            <a href="/guides/hifz-revision">{{ t('homepage.footer.howToRevise') }}</a>
-            <a href="/tools">{{ t('homepage.footer.tools') }}</a>
-            <a href="/tools/quran-memorization-planner">{{ t('homepage.footer.memorizationPlanner') }}</a>
           </div>
           <div class="footer__links">
             <h4>{{ t('homepage.footer.company') }}</h4>
