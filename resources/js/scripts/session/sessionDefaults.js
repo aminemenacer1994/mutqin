@@ -1,8 +1,16 @@
 /** Default ayah/step repetitions for genuinely new sessions (bar, selector, payload). */
 export const DEFAULT_SESSION_REPETITIONS = 1
 
-/** Tajweed colouring is on by default (saved per account / device). */
-export const DEFAULT_TAJWEED_ENABLED = true
+/** Tajweed colouring starts off. Saved per account / device after the user toggles it. */
+export const DEFAULT_TAJWEED_ENABLED = false
+/** Bump when the default changes so previously auto-saved "on" does not stick. */
+export const TAJWEED_DEFAULT_REVISION = 2
+
+export function resolveStoredTajweedEnabled(saved, revision = 0) {
+  if (Number(revision) < TAJWEED_DEFAULT_REVISION) return DEFAULT_TAJWEED_ENABLED
+  if (typeof saved === 'boolean') return saved
+  return DEFAULT_TAJWEED_ENABLED
+}
 
 /** Mobile session overview (Pause/Resume, pills) starts expanded on each page load. */
 export const DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED = true

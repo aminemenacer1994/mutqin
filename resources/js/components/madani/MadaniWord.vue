@@ -52,6 +52,7 @@ import {
 import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
 import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
 import { paintUnicodeTextWithTajweedToken } from '../../scripts/mushaf/indopakTajweedMarkup'
+import { stripMushafHtmlBreaks } from '../../scripts/mushaf/mobileMushafLineFit'
 
 export default {
   name: 'MadaniWord',
@@ -142,7 +143,7 @@ export default {
         ? String(this.tajweedHtmlByLocation?.[location] || '').trim()
         : ''
       if (!token) return ''
-      return paintUnicodeTextWithTajweedToken(this.displayText, token)
+      return stripMushafHtmlBreaks(paintUnicodeTextWithTajweedToken(this.displayText, token))
     },
     displayFontFamily() {
       if (this.glyphPresentation.useTajweedFont && this.glyphPresentation.fontFamily) {
@@ -371,8 +372,9 @@ export default {
   font-synthesis: none;
   text-rendering: geometricPrecision;
   -webkit-font-smoothing: antialiased;
-  line-height: 1.4;
-  padding-block: 0.04em;
+  /* Match plain QCF metrics so mobile fit is identical with tajweed on/off. */
+  line-height: var(--qpc-line-height, 1.32);
+  padding-block: 0.03em;
 }
 
 .qpc-madani-word__tajweed {

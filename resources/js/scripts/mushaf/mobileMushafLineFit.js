@@ -1,17 +1,38 @@
 /**
- * Phone-only mushaf geometry.
+ * Phone mushaf geometry — same rules with tajweed ON or OFF.
  *
  * Full ayah rows justify edge-to-edge. Leftover rows (a few words) are centred.
  * Empty printed slots are dropped so pages do not leave a blank band.
- * One word-size per page; shrink until no row overflows.
+ * One word-size per page; shrink until no row overflows the viewport.
+ * Tajweed COLR and plain QCF both use the same caps, hairline, and sparse pack.
  */
 
-export const MOBILE_MUSHAF_HAIRLINE_PX = 6
-export const MOBILE_MUSHAF_SPARSE_RATIO = 0.62
+export const MOBILE_MUSHAF_HAIRLINE_PX = 16
+export const MOBILE_MUSHAF_SPARSE_RATIO = 0.92
 /** Desktop/tablet: centre anything that is not nearly full (avoids huge word gaps). */
 export const DESKTOP_MUSHAF_SPARSE_RATIO = 0.9
-export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.88
-export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.9
+/** Extra headroom — QCF ink paints past the measured advance on phones. */
+export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.7
+export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.78
+/** Hard ceiling so short surahs (Kawthar) cannot blow up past a normal page. */
+export const MOBILE_MUSHAF_WORD_SIZE_CAP = 20
+
+/**
+ * One phone word size for every page — dense or short, tajweed on or off.
+ * Sized from the viewport, never from the shortest line (that is what blew up Kawthar).
+ */
+export function mobileMushafWordSizePx(viewportWidth = 390) {
+  const view = Number(viewportWidth)
+  const inner = Math.max(240, (view > 0 ? view : 390) - MOBILE_MUSHAF_HAIRLINE_PX * 2)
+  const fitted = Math.floor(inner / 20)
+  return Math.max(15, Math.min(MOBILE_MUSHAF_WORD_SIZE_CAP, fitted))
+}
+
+export function mobileViewportInnerWidth(padLeft = 0, padRight = 0) {
+  if (typeof window === 'undefined') return 0
+  const viewW = window.visualViewport?.width || window.innerWidth || 0
+  return Math.max(0, viewW - (Number(padLeft) || 0) - (Number(padRight) || 0))
+}
 
 function lineTypeOf(line) {
   return String(line?.line_type || line?.type || '').trim()
@@ -41,9 +62,9 @@ export function isMobileMushafAyahSparse({
   const available = Number(availableWidth)
   const words = Math.trunc(Number(wordCount) || 0)
   if (!(natural > 0) || !(available > 0)) return false
-  // A handful of leftover words must never stretch edge-to-edge.
-  if (words > 0 && words <= 4) return true
-  if (words > 5) return natural < available * Math.max(0.5, ratio * 0.72)
+  // Leftover rows (a few words, or clearly not full) stay centred.
+  // Stretching them is what blew gaps open on Al-Falaq / Al-Kawthar.
+  if (words > 0 && words <= 6) return true
   return natural < available * ratio
 }
 
@@ -53,8 +74,16 @@ export function mobileMushafAyahJustify(sparse) {
 
 export function qcfSideBearingPx(wordSize) {
   const size = Number(wordSize)
-  if (!(size > 0)) return 4
-  return Math.max(4, Math.round(size * 0.08))
+  if (!(size > 0)) return 16
+  // Diacritics and verse ornaments paint past the advance on both edges.
+  return Math.max(16, Math.round(size * 0.32))
+}
+
+/** Strip hard breaks from painted tajweed/word HTML (never use layout BRs). */
+export function stripMushafHtmlBreaks(html = '') {
+  return String(html || '')
+    .replace(/<br\s*\/?>/gi, '')
+    .replace(/[\u2028\u2029]/g, '')
 }
 
 /**

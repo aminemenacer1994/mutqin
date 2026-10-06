@@ -7,6 +7,7 @@ import {
   buildFirstOnboardingSessionConfig,
   freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
+  resolveStoredTajweedEnabled,
 } from '../../resources/js/scripts/session/sessionDefaults.js'
 import {
   buildActivePracticeSetup,
@@ -19,7 +20,10 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 assert.equal(DEFAULT_SESSION_REPETITIONS, 1, 'new sessions default to 1x')
-assert.equal(DEFAULT_TAJWEED_ENABLED, true, 'tajweed is on by default')
+assert.equal(DEFAULT_TAJWEED_ENABLED, false, 'tajweed is off by default')
+assert.equal(resolveStoredTajweedEnabled(true, 0), false, 'old saved tajweed-on does not override the new default')
+assert.equal(resolveStoredTajweedEnabled(true, 2), true, 'an explicit toggle after the revision stays on')
+assert.equal(resolveStoredTajweedEnabled(false, 2), false)
 assert.equal(DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED, true, 'mobile session dashboard is expanded by default')
 
 // Fresh workspace / reset config
@@ -27,7 +31,7 @@ assert.equal(DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED, true, 'mobile session da
   const defaults = buildDefaultWorkspaceSessionConfig()
   assert.equal(defaults.repetitionsPerStep, 1)
   assert.equal(defaults.selectedLoopCount, 1)
-  assert.equal(defaults.tajweedEnabled, true)
+  assert.equal(defaults.tajweedEnabled, false)
 }
 
 // First onboarding session uses a short Fatihah window

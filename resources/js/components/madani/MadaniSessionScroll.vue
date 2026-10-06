@@ -181,6 +181,12 @@ export default {
       this.hydrateMountedLeaves()
     },
     tajweedEnabled() {
+      // Glyph metrics change between plain QCF and tajweed COLR — drop cached sizes
+      // so every page re-fits the same mobile rules in both modes.
+      this.fitSizesByPage = {}
+      this.sharedWordSize = 0
+      this.pageHeights = {}
+      this.reservedPageHeight = 0
       const painted = this.resolvedPageNumbers.filter((page) => this.shouldPaintPage(page))
       this.prefetchFonts(painted)
     },
@@ -244,8 +250,19 @@ export default {
     },
     placeholderStyle(pageNumber) {
       const height = Number(this.pageHeights[pageNumber] || this.reservedPageHeight || 0)
-      if (height > 80) return { minHeight: `${height}px`, height: `${height}px` }
-      return { minHeight: '64dvh' }
+      if (height > 80) {
+        const phone = typeof window !== 'undefined' && window.innerWidth < 768
+        const viewH = typeof window !== 'undefined'
+          ? (window.visualViewport?.height || window.innerHeight || 0)
+          : 0
+        // Never reserve more than ~70% of the phone viewport for an unloaded leaf.
+        const capped = phone && viewH > 0
+          ? Math.min(height, Math.round(viewH * 0.7))
+          : height
+        return { minHeight: `${capped}px`, height: `${capped}px` }
+      }
+      // Compact reserve while the leaf loads — large dvh bands looked like broken padding.
+      return { minHeight: '160px' }
     },
     onPageIntersect(entries) {
       if (!this.windowedSession) return
@@ -455,11 +472,11 @@ export default {
 }
 
 .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
-  margin-top: 0.35rem;
+  margin-top: 0.12rem;
 }
 
 .qpc-madani-session-scroll__placeholder {
-  min-height: 64dvh;
+  min-height: 160px;
   width: 100%;
 }
 </style>

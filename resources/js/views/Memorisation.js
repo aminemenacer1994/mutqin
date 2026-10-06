@@ -587,10 +587,12 @@ import {
   DEFAULT_SESSION_REPETITIONS,
   DEFAULT_TAJWEED_ENABLED,
   FIRST_ONBOARDING_RANGE_END,
+  TAJWEED_DEFAULT_REVISION,
   buildDefaultWorkspaceSessionConfig,
   buildFirstOnboardingSessionConfig,
   freshSessionRepetitionDefaults,
   resolveSessionRepetitions,
+  resolveStoredTajweedEnabled,
 } from '../scripts/session/sessionDefaults'
 import { readStoredAutoFollowEnabled } from '../scripts/memorisationDetection/liveAutoFollow'
 import {
@@ -39048,7 +39050,10 @@ export default {
         ? config.chainingMethod
         : this.chainingMethod
       this.chainingRepetitions = Math.max(1, Math.min(5, Number(config.chainingRepetitions || this.chainingRepetitions || 1)))
-      this.tajweedEnabled = config.tajweedEnabled ?? DEFAULT_TAJWEED_ENABLED
+      this.tajweedEnabled = resolveStoredTajweedEnabled(
+        config.tajweedEnabled,
+        this._tajweedDefaultRevision,
+      )
       this.quranFont = QURAN_FONT_DEFAULT
       applyQuranFontCssVariable(this.quranFont)
       this.fontScale = Number(config.fontScale || 1)
@@ -41473,9 +41478,10 @@ export default {
             return raw ? JSON.parse(raw) : null
           })()
         if (!saved) return
+        let uiState = null
         let uiChaining = null
         try {
-          const uiState = this.learningBackendEnabled()
+          uiState = this.learningBackendEnabled()
             ? this.readWorkspaceStateValue('uiState', null)
             : JSON.parse(localStorage.getItem('mutqin.uiState') || 'null')
           if (uiState && ['linking', 'cumulative'].includes(uiState.chainingMethod)) {
@@ -41504,7 +41510,10 @@ export default {
             ? this.centralSession.activeTab
             : 'tools'
         }
-        this.tajweedEnabled = this.centralSession.tajweedEnabled ?? DEFAULT_TAJWEED_ENABLED
+        this.tajweedEnabled = resolveStoredTajweedEnabled(
+          this.centralSession.tajweedEnabled,
+          uiState?.tajweedDefaultRevision,
+        )
         this.focusModeEnabled = !!this.centralSession.focusModeEnabled
         this.blurModeEnabled = !!this.centralSession.blurModeEnabled
         this.blurIntensity = Math.max(4, Math.min(18, Number(this.centralSession.blurIntensity || 10)))
@@ -45876,7 +45885,7 @@ export default {
           this.anchorModeEnabled = state.anchorModeEnabled ?? false
           this.anchorCount = state.anchorCount ?? 2
           this.settingsDraft = {
-            tajweedEnabled: state.tajweedEnabled ?? this.tajweedEnabled ?? DEFAULT_TAJWEED_ENABLED,
+            tajweedEnabled: resolveStoredTajweedEnabled(state.tajweedEnabled, state.tajweedDefaultRevision),
             showTranslation: state.showTranslation ?? this.showTranslation,
             showTransliteration: state.showTransliteration ?? this.showTransliteration,
             showWordByWord: state.showWordByWord ?? this.showWordByWord,
@@ -45897,7 +45906,11 @@ export default {
             this.savedActiveSection = 'saved_in_progress'
           }
           this.syncSavedSectionOpenState()
-          this.tajweedEnabled = state.tajweedEnabled ?? DEFAULT_TAJWEED_ENABLED
+          this._tajweedDefaultRevision = Number(state.tajweedDefaultRevision || 0)
+          this.tajweedEnabled = resolveStoredTajweedEnabled(
+            state.tajweedEnabled,
+            state.tajweedDefaultRevision,
+          )
           this.mainCardCollapsed = !!state.mainCardCollapsed
           this.feedbackCollapsed = !!state.feedbackCollapsed
           this.playerCompact = !!state.playerCompact
@@ -45950,6 +45963,7 @@ export default {
 
       if (this.isBootstrapping) return
       if (this.workspaceTourActive && this.workspaceTourConfigSnapshot) return
+      this._tajweedDefaultRevision = TAJWEED_DEFAULT_REVISION
       try {
         const nextUiState = {
           anchorModeEnabled: this.anchorModeEnabled,
@@ -46008,6 +46022,7 @@ export default {
           sectionOpen: this.sectionOpen,
           savedActiveSection: this.savedActiveSection,
           tajweedEnabled: this.tajweedEnabled,
+          tajweedDefaultRevision: TAJWEED_DEFAULT_REVISION,
           mainCardCollapsed: this.mainCardCollapsed,
           feedbackCollapsed: this.feedbackCollapsed,
           playerCompact: this.playerCompact,

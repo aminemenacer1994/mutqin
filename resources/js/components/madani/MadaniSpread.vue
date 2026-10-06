@@ -405,6 +405,8 @@ export default {
       this.ensureCurrentLeaf()
     },
     tajweedEnabled() {
+      // Plain and tajweed glyphs have different advances — resync leaf word sizes.
+      this.resetSpreadWordSizeSync()
       this.schedulePreload()
     },
     sessionPageNumbers: {

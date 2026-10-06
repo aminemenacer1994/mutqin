@@ -22,8 +22,8 @@
     --mobile-page-gutter: var(--mq-mobile-gutter);
     --mobile-safe-top: var(--mq-safe-top);
     --mobile-safe-bottom: var(--mq-safe-bottom);
-    --mq-mushaf-inline-start: max(6px, var(--mq-safe-left));
-    --mq-mushaf-inline-end: max(6px, var(--mq-safe-right));
+    --mq-mushaf-inline-start: max(16px, var(--mq-safe-left));
+    --mq-mushaf-inline-end: max(16px, var(--mq-safe-right));
     inline-size: 100%;
     max-inline-size: 100%;
   }
@@ -58,7 +58,9 @@
   .main.madani-qpc-mode-active .madani-qpc-viewport,
   .main.madani-qpc-mode-active .madani-qpc-stage,
   .main.madani-qpc-mode-active .madani-qpc-stage__pages {
-    overflow-x: visible !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: clip !important;
     overflow-y: visible !important;
   }
 
@@ -8467,6 +8469,49 @@ html body .app .workspace-recite-dock__button:hover {
   html body .app .main.madani-qpc-mode-active .qpc-madani-word.is-range-end {
     overflow: visible !important;
     flex-shrink: 0 !important;
+  }
+
+  /*
+   * Final mobile mushaf contract. Beats the overflow:visible block above.
+   * One modest size, 16px inset, clip anything that still paints past the sheet.
+   */
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet,
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-spread .qpc-madani-page__sheet,
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-page__sheet {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: clip !important;
+    padding-inline:
+      max(16px, env(safe-area-inset-left, 0px))
+      max(16px, env(safe-area-inset-right, 0px)) !important;
+    padding-block: 0.08rem 0.16rem !important;
+  }
+
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--ayah,
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--surah_name,
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--basmala,
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--basmallah {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: clip !important;
+  }
+
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-word {
+    font-size: min(var(--qpc-word-size, 18px), 20px) !important;
+    flex: 0 0 auto !important;
+  }
+
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-surah-name {
+    font-size: min(calc(var(--qpc-word-size, 18px) * 1.15), 28px) !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-basmallah {
+    font-size: min(var(--qpc-word-size, 18px), 22px) !important;
+    max-width: 100% !important;
   }
 }
 

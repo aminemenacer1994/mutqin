@@ -429,6 +429,28 @@ export default {
   font-family: IndopakNastaleeq, "Noto Nastaliq Urdu", "Amiri Quran", "Noto Naskh Arabic", serif !important;
 }
 
+@media (max-width: 767.98px) {
+  .qpc-madani-surah-name {
+    font-size: min(calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 1.15)), 30px) !important;
+    max-width: 100%;
+    overflow: hidden;
+    line-height: 1.2;
+  }
+
+  .qpc-madani-basmallah {
+    font-size: min(calc(var(--qpc-word-size, 22px) * 1), 24px) !important;
+    max-width: 100%;
+  }
+
+  .qpc-madani-line--surah_name,
+  .qpc-madani-line--basmallah,
+  .qpc-madani-line--basmala {
+    max-width: 100%;
+    overflow: hidden;
+    justify-content: center;
+  }
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

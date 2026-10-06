@@ -10915,8 +10915,8 @@ body.session-analysis-modal-open {
    */
   @media (max-width: 767.98px) {
     html body .app {
-      --mq-mushaf-inline-start: max(6px, var(--mq-safe-left, env(safe-area-inset-left, 0px)));
-      --mq-mushaf-inline-end: max(6px, var(--mq-safe-right, env(safe-area-inset-right, 0px)));
+      --mq-mushaf-inline-start: max(16px, var(--mq-safe-left, env(safe-area-inset-left, 0px)));
+      --mq-mushaf-inline-end: max(16px, var(--mq-safe-right, env(safe-area-inset-right, 0px)));
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
@@ -11079,6 +11079,199 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v213">
+  /* Mobile: compact folio gaps, no tall placeholder bands, hairline side pad. */
+  @media (max-width: 767.98px) {
+    html body .app .qpc-madani-session-scroll__placeholder {
+      min-height: 160px !important;
+    }
+
+    html body .app .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
+      margin-top: 0.08rem !important;
+    }
+
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+      min-height: 0 !important;
+      margin: 0.02rem 0 !important;
+      padding: 0.06rem 0 0.1rem !important;
+    }
+
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+      margin-bottom: 0.04rem !important;
+    }
+
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
+      font-size: 0.95rem !important;
+    }
+
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
+      padding-inline:
+        max(14px, env(safe-area-inset-left, 0px))
+        max(14px, env(safe-area-inset-right, 0px)) !important;
+      padding-block: 0.08rem 0.16rem !important;
+    }
+
+    html body .app .qpc-madani-line--empty,
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--empty {
+      display: none !important;
+      min-height: 0 !important;
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v214">
+  /* Desktop/tablet: stop oversized mushaf ink from blowing past the viewport. */
+  @media (min-width: 768px) {
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__ornament,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-spread,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-spread__leaf {
+      max-width: 100% !important;
+      overflow-x: clip !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah {
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v215">
+  /* Mobile containment: clip overflow, constrain flex min-width, keep ink inside. */
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active,
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__ornament,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+      max-width: 100% !important;
+      min-width: 0 !important;
+      overflow-x: clip !important;
+      box-sizing: border-box !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah {
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll {
+      padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem)) !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v216">
+  /*
+   * Mobile nuclear containment: full-bleed sheet, no letterbox, no ink past edges,
+   * consistent word ceiling, room for the recite FAB.
+   */
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__ornament,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-spread,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-spread__leaf {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      margin-inline: 0 !important;
+      overflow-x: clip !important;
+      box-sizing: border-box !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page {
+      padding: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+      padding-inline:
+        max(14px, env(safe-area-inset-left, 0px))
+        max(14px, env(safe-area-inset-right, 0px)) !important;
+      padding-block: 0.08rem 0.16rem !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah {
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse {
+      justify-content: center !important;
+    }
+
+    html body .app .qpc-madani-session-scroll__placeholder {
+      min-height: 160px !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll,
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport {
+      padding-bottom: max(6rem, calc(env(safe-area-inset-bottom, 0px) + 5rem)) !important;
+    }
+
+    html body .app .workspace-recite-dock {
+      top: auto !important;
+      bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)) !important;
+      position: fixed !important;
+      inset-inline: 0 !important;
+      justify-content: center !important;
+      pointer-events: none !important;
+      z-index: 40 !important;
+    }
+
+    html body .app .workspace-recite-dock__button {
+      pointer-events: auto !important;
+      width: 56px !important;
+      min-width: 56px !important;
+      max-width: 56px !important;
+      height: 56px !important;
+      min-height: 56px !important;
+      max-height: 56px !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v217">
+  /* Mobile: same contained size for dense pages and short surahs, titles included. */
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page {
+      --qpc-surah-title-scale: 1.15;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-word {
+      font-size: min(var(--qpc-word-size, 22px), 22px) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
+      font-size: min(calc(var(--qpc-word-size, 22px) * 1.15), 30px) !important;
+      max-width: 100% !important;
+      overflow: hidden !important;
+      line-height: 1.2 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-basmallah {
+      font-size: min(var(--qpc-word-size, 22px), 24px) !important;
+      max-width: 100% !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet {
+      padding-inline:
+        max(16px, env(safe-area-inset-left, 0px))
+        max(16px, env(safe-area-inset-right, 0px)) !important;
+    }
+  }
+</style>
 <script>
   (function () {
     function stretchAyahLine(line) {
@@ -11091,27 +11284,27 @@ body.session-analysis-modal-open {
       line.style.setProperty('display', 'flex', 'important')
       line.style.setProperty('flex-wrap', 'nowrap', 'important')
       line.style.setProperty('white-space', 'nowrap', 'important')
-      line.style.setProperty('overflow', 'visible', 'important')
+      var mobile = (window.innerWidth || 0) < 768
+      if (!mobile) {
+        line.style.setProperty('overflow', 'visible', 'important')
+      }
       line.style.setProperty('width', '100%', 'important')
       line.style.setProperty('max-width', '100%', 'important')
       line.style.setProperty('align-self', 'stretch', 'important')
       line.style.setProperty('margin-inline', '0', 'important')
       line.style.setProperty('box-sizing', 'border-box', 'important')
-      var mobile = (window.innerWidth || 0) < 768
       var sparse = line.classList.contains('qpc-madani-line--sparse')
         || line.classList.contains('madani-line--sparse')
       if (!sparse) {
         var words = line.querySelectorAll('.qpc-madani-word, .madani-word')
         var natural = 0
         for (var i = 0; i < words.length; i += 1) natural += words[i].offsetWidth || 0
-        sparse = words.length <= 5 && natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * 0.62
-        if (mobile) {
-          line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
-          line.classList.toggle('madani-line--sparse', sparse && line.classList.contains('madani-line--ayah'))
-        } else {
-          line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
-          line.classList.toggle('madani-line--sparse', sparse && line.classList.contains('madani-line--ayah'))
-        }
+        // Match mobileMushafLineFit sparse ratio — leftover rows must not stretch.
+        var ratio = mobile ? 0.92 : 0.9
+        sparse = (words.length > 0 && words.length <= 6)
+          || (natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * ratio)
+        line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
+        line.classList.toggle('madani-line--sparse', sparse && (line.classList.contains('madani-line--ayah') || line.classList.contains('madani-line--glyphs')))
       }
       line.style.setProperty('justify-content', sparse ? 'center' : 'space-between', 'important')
     }

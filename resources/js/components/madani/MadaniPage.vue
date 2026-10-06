@@ -101,10 +101,13 @@ import {
   DESKTOP_MUSHAF_SPARSE_RATIO,
   MOBILE_MUSHAF_HAIRLINE_PX,
   MOBILE_MUSHAF_SPARSE_RATIO,
+  MOBILE_MUSHAF_WORD_SIZE_CAP,
   compactMobileMushafDisplayLines,
   isMobileMushafAyahSparse,
   mobileMushafAyahJustify,
   mobileMushafFitSafety,
+  mobileMushafWordSizePx,
+  mobileViewportInnerWidth,
   qcfSideBearingPx,
   reorderMushafOpeningLines,
 } from '../../scripts/mushaf/mobileMushafLineFit'
@@ -330,12 +333,17 @@ export default {
     tajweedEnabled() {
       this.fontReady = false
       this.fitted = false
+      this.lastFitWidth = 0
+      this.lastSessionFitWordSize = 0
+      this.lastEmittedFitWordSize = 0
       this.readyAndFit()
     },
     codeV2ByLocation: {
       deep: true,
       handler() {
-        if (!this.tajweedEnabled) return
+        // Tajweed code map can arrive after first paint — re-fit in both modes once
+        // glyphs (or their plain fallbacks) settle.
+        this.fitted = false
         this.scheduleFit()
       },
     },
@@ -393,8 +401,28 @@ export default {
       if (!(line instanceof HTMLElement)) return false
       const slack = qcfSideBearingPx(wordSize)
       const natural = this.lineAdvanceWidth(line)
-      if (natural > Math.max(0, available - slack) + 1) return true
-      return line.scrollWidth > line.clientWidth + 1
+      const phone = this.isPhoneViewport()
+      const viewW = typeof window !== 'undefined'
+        ? mobileViewportInnerWidth(0, 0)
+        : 0
+      const inset = phone ? MOBILE_MUSHAF_HAIRLINE_PX : 12
+      // Always clamp to the real viewport — a content-expanded sheet hides overflow.
+      const fitWidth = Math.min(
+        Math.max(0, Number(available) || 0),
+        viewW > 0 ? Math.max(0, viewW - inset * 2) : Number.POSITIVE_INFINITY,
+      )
+      if (fitWidth > 0 && natural > Math.max(0, fitWidth - slack) + 1) return true
+      if (line.scrollWidth > line.clientWidth + 1) return true
+      if (typeof window === 'undefined') return false
+      const viewLeft = inset
+      const viewRight = (window.visualViewport?.width || window.innerWidth || 0) - inset
+      const words = line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-basmallah')
+      for (const word of words) {
+        const box = word.getBoundingClientRect()
+        if (box.width < 1) continue
+        if (box.right > viewRight + 0.5 || box.left < viewLeft - 0.5) return true
+      }
+      return false
     },
     applyMobileAyahRowPacking(sheet, available) {
       if (!(sheet instanceof HTMLElement)) return
@@ -437,10 +465,22 @@ export default {
       const ayahLines = (lines || []).filter((line) => String(line.dataset.lineType || '') === 'ayah')
       if (!ayahLines.length) return size
       const available = this.contentWidth(sheet)
+      const previous = ayahLines.map((line) => ({
+        width: line.style.width,
+        maxWidth: line.style.maxWidth,
+        justify: line.style.getPropertyValue('justify-content'),
+      }))
+      // Measure natural ink width — justified 100% rows hide overflow from scrollWidth.
+      for (const line of ayahLines) {
+        line.style.width = 'max-content'
+        line.style.maxWidth = 'none'
+        line.style.setProperty('justify-content', 'flex-start', 'important')
+      }
+      void sheet.offsetWidth
       let lo = 8
       let hi = Math.max(8, Math.round(size))
       let best = lo
-      for (let step = 0; step < 12; step += 1) {
+      for (let step = 0; step < 14; step += 1) {
         const mid = Math.round((lo + hi) / 2)
         root.style.setProperty('--qpc-word-size', `${mid}px`)
         void sheet.offsetWidth
@@ -459,15 +499,32 @@ export default {
         root.style.setProperty('--qpc-word-size', `${best}px`)
         void sheet.offsetWidth
       }
+      for (const [index, line] of ayahLines.entries()) {
+        line.style.width = previous[index].width
+        line.style.maxWidth = previous[index].maxWidth
+        if (previous[index].justify) {
+          line.style.setProperty('justify-content', previous[index].justify, 'important')
+        } else {
+          line.style.removeProperty('justify-content')
+        }
+      }
       return best
     },
     applySharedWordSize() {
-      if (this.isPhoneViewport()) return
       const root = this.$el
       if (!(root instanceof HTMLElement)) return
       const shared = Number(this.sharedWordSize)
       if (!Number.isFinite(shared) || shared <= 0) return
-      root.style.setProperty('--qpc-word-size', `${Math.round(shared)}px`)
+      const current = Number.parseFloat(root.style.getPropertyValue('--qpc-word-size')) || 0
+      let next = Math.round(shared)
+      if (this.isPhoneViewport()) next = Math.min(next, MOBILE_MUSHAF_WORD_SIZE_CAP)
+      if (current > 0 && next >= current) return
+      root.style.setProperty('--qpc-word-size', `${next}px`)
+      const sheet = this.$refs.sheet
+      if (sheet instanceof HTMLElement) {
+        void sheet.offsetWidth
+        this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
+      }
     },
     applyLayoutTypography() {
       const root = this.$el
@@ -552,6 +609,7 @@ export default {
       } catch (error) {
         console.warn('[MadaniPage] page font load failed', this.pageNumber, error)
       }
+      // Always load the plain page font path; tajweed COLR is an extra face on top.
       if (!this.isIndopakLayout && this.tajweedEnabled) {
         try {
           await loadQcfPageFont(this.pageNumber, { tajweed: true })
@@ -574,8 +632,18 @@ export default {
         }
       }
       await this.$nextTick()
+      this.fitted = false
       this.fitLines()
-      window.requestAnimationFrame(() => this.fitLines())
+      // Plain ↔ tajweed swaps glyph faces; measure again after paint so both modes
+      // get the same viewport-clamped mobile fit.
+      window.requestAnimationFrame(() => {
+        this.fitted = false
+        this.fitLines()
+        window.requestAnimationFrame(() => {
+          this.fitted = false
+          this.fitLines()
+        })
+      })
     },
     fitLines(retry = 0) {
       if (this.fitting) return
@@ -686,21 +754,35 @@ export default {
         if (mobile) {
           safety = Math.min(safety, mobileMushafFitSafety({ indopak: false }))
         }
+        // Phone caps stay modest — high caps + failed width measure = edge overflow.
         cap = this.embedded
-          ? (narrow ? 36 : 42)
-          : (mobile ? (narrow ? 56 : 66) : (narrow ? 44 : 50))
+          ? (narrow ? 28 : 30)
+          : (mobile ? (narrow ? 28 : 30) : (narrow ? 40 : 46))
         if (sessionSheet) {
-          cap = narrow ? 62 : 72
+          cap = narrow ? 28 : 30
         }
         if (desktopSpread && this.embedded) {
-          cap = narrow ? 52 : 68
+          cap = narrow ? 44 : 52
+        }
+        if (mobile) {
+          cap = Math.min(cap, MOBILE_MUSHAF_WORD_SIZE_CAP)
         }
       }
       const requested = Number.isFinite(Number(this.fontScale)) && Number(this.fontScale) > 0
         ? Number(this.fontScale)
         : 1
+      // Font-scale must not inflate past the hard cap on phones.
+      const scale = mobile ? Math.min(requested, 1.05) : requested
       const widthFit = (available / widest) * measureSize * safety
-      let rawSize = Math.min(cap * requested, widthFit)
+      // Never let a short surah explode — size as if the row were a full mushaf line.
+      const densityCap = Math.max(10, Math.floor(available / 18))
+      let rawSize = Math.min(cap * scale, widthFit, densityCap)
+      if (mobile) rawSize = Math.min(rawSize, MOBILE_MUSHAF_WORD_SIZE_CAP)
+      if (mobile && !desktopSpread) {
+        const viewW = window.visualViewport?.width || window.innerWidth || available
+        // Same starting size on every phone page. Shrink-to-fit may only go down.
+        rawSize = Math.min(rawSize, mobileMushafWordSizePx(viewW))
+      }
       if (desktopSpread && this.embedded) {
         const lineSlots = this.sessionScoped
           ? Math.max(1, targets.filter((line) => String(line.dataset.lineType || '') !== 'empty').length)
@@ -712,11 +794,11 @@ export default {
           measureSize,
           safety,
           cap,
-          fontScale: requested,
+          fontScale: scale,
           heightFit,
         })
         // Fill the leaf edge-to-edge: widthFit drives size; height/stable only cap it.
-        rawSize = Math.min(cap * requested, widthFit)
+        rawSize = Math.min(cap * scale, widthFit, densityCap)
         if (Number.isFinite(heightFit) && heightFit > 0) {
           rawSize = Math.min(rawSize, heightFit)
         }
@@ -724,41 +806,65 @@ export default {
       } else if (this.sessionViewportFill) {
         const heightFit = this.viewportBandHeightFit(root, sheet, targets.length, measureSize)
         if (Number.isFinite(heightFit) && heightFit > 0) {
-          rawSize = Math.min(cap * requested, widthFit, heightFit)
+          rawSize = Math.min(cap * scale, widthFit, heightFit, densityCap)
         }
       } else if (this.spreadViewportFill) {
         const heightFit = this.viewportBandHeightFit(root, sheet, 15, measureSize)
         if (Number.isFinite(heightFit) && heightFit > 0) {
-          rawSize = Math.min(cap * requested, widthFit, heightFit)
+          rawSize = Math.min(cap * scale, widthFit, heightFit, densityCap)
         }
       }
       const syncedSize = Math.max(8, Math.round(rawSize))
-      let size = syncedSize
-      const shared = Number(this.sharedWordSize)
-      if (!this.isPhoneViewport() && Number.isFinite(shared) && shared > 0) {
-        size = Math.min(size, Math.round(shared))
-      }
+      let probe = syncedSize
       if (
         this.spreadViewportFill
         && Number.isFinite(Number(this.spreadUnifiedWordSize))
         && Number(this.spreadUnifiedWordSize) > 0
       ) {
-        size = Math.min(syncedSize, Math.round(Number(this.spreadUnifiedWordSize)))
+        probe = Math.min(syncedSize, Math.round(Number(this.spreadUnifiedWordSize)))
       }
       // Whole-pixel sizes avoid COLR / QCF glyph clipping in WebKit.
-      size = this.shrinkWordSizeToFit(root, sheet, size, targets)
+      let pageNatural = this.shrinkWordSizeToFit(root, sheet, probe, targets)
+      if (mobile) pageNatural = Math.min(pageNatural, MOBILE_MUSHAF_WORD_SIZE_CAP)
+      root.style.setProperty('--qpc-word-size', `${pageNatural}px`)
+      if (mobile) {
+        root.style.setProperty('width', '100%', 'important')
+        root.style.setProperty('max-width', '100%', 'important')
+        root.style.setProperty('margin-inline', '0', 'important')
+        sheet.style.setProperty('width', '100%', 'important')
+        sheet.style.setProperty('max-width', '100%', 'important')
+        sheet.style.setProperty('overflow-x', 'clip', 'important')
+      }
+      this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
+      // Packing can reintroduce ink bleed — shrink once more against painted rows.
+      pageNatural = this.shrinkWordSizeToFit(root, sheet, pageNatural, targets)
+      if (mobile) pageNatural = Math.min(pageNatural, MOBILE_MUSHAF_WORD_SIZE_CAP)
+      let size = pageNatural
+      const shared = Number(this.sharedWordSize)
+      // Unify every session page (phone included) so adjacent pages match.
+      if (Number.isFinite(shared) && shared > 0) {
+        size = Math.min(size, Math.round(shared))
+      }
+      if (mobile) size = Math.min(size, MOBILE_MUSHAF_WORD_SIZE_CAP)
       root.style.setProperty('--qpc-word-size', `${size}px`)
       this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
+      // Final viewport pass — refuse to keep a size that still paints past the screen.
+      if (mobile) {
+        size = this.shrinkWordSizeToFit(root, sheet, size, targets)
+        size = Math.min(size, MOBILE_MUSHAF_WORD_SIZE_CAP)
+        root.style.setProperty('--qpc-word-size', `${size}px`)
+        this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
+      }
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
-      if (this.sessionScoped && syncedSize !== this.lastSessionFitWordSize) {
-        this.lastSessionFitWordSize = syncedSize
-        this.$emit('fit-word-size', syncedSize)
+      if (this.sessionScoped && pageNatural !== this.lastSessionFitWordSize) {
+        this.lastSessionFitWordSize = pageNatural
+        this.$emit('fit-word-size', pageNatural)
       }
       if (this.spreadViewportFill) {
-        if (syncedSize !== this.lastEmittedFitWordSize) {
-          this.lastEmittedFitWordSize = syncedSize
-          this.$emit('fit-word-size', syncedSize)
+        if (pageNatural !== this.lastEmittedFitWordSize) {
+          this.lastEmittedFitWordSize = pageNatural
+          this.$emit('fit-word-size', pageNatural)
         }
         if (!this.spreadDesktopLayoutLocked) {
           this.applySpreadViewportLayout(root, sheet)
@@ -880,8 +986,21 @@ export default {
       const styles = getComputedStyle(sheet)
       const padLeft = Number.parseFloat(styles.paddingLeft) || 0
       const padRight = Number.parseFloat(styles.paddingRight) || 0
-      let inner = Math.max(0, sheet.clientWidth - padLeft - padRight)
+      const painted = Math.round(sheet.getBoundingClientRect?.().width || 0)
+      const clientW = Math.max(0, sheet.clientWidth || 0)
+      // Prefer the smaller reported width — content-expanded sheets must not win.
+      const layoutW = clientW > 0 && painted > 0
+        ? Math.min(clientW, painted)
+        : Math.max(clientW, painted)
+      let inner = Math.max(0, layoutW - padLeft - padRight)
       const mobile = typeof window !== 'undefined' && window.innerWidth < 768
+      if (typeof window !== 'undefined') {
+        const viewportInner = mobileViewportInnerWidth(padLeft, padRight)
+        if (viewportInner > 0) {
+          const gutter = mobile ? MOBILE_MUSHAF_HAIRLINE_PX * 2 : 24
+          inner = Math.min(inner, Math.max(0, viewportInner - (mobile ? 0 : gutter)))
+        }
+      }
       if (mobile) {
         const extra = Math.max(0, MOBILE_MUSHAF_HAIRLINE_PX - padLeft)
           + Math.max(0, MOBILE_MUSHAF_HAIRLINE_PX - padRight)
@@ -1267,6 +1386,7 @@ export default {
     --qpc-line-min-height: 1.18;
     --qpc-line-height: 1.16;
     --qpc-line-gap: 0;
+    --qpc-surah-title-scale: 1.15;
     width: 100%;
     max-width: 100%;
     padding: 0;
@@ -1316,8 +1436,13 @@ export default {
   .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio,
   .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
     min-height: 0;
-    margin: 0.12rem 0 0.08rem;
-    padding: 0.08rem 0;
+    margin: 0.04rem 0 0.02rem;
+    padding: 0.04rem 0;
+  }
+
+  .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+    padding: 0.16rem 0 0.28rem;
+    margin-bottom: 0.08rem;
   }
 }
 
@@ -1331,8 +1456,8 @@ export default {
   .qpc-madani-page--session-scoped.qpc-madani-page--single .qpc-madani-page__sheet,
   .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
     padding-inline:
-      max(6px, env(safe-area-inset-left, 0px))
-      max(6px, env(safe-area-inset-right, 0px)) !important;
+      max(14px, env(safe-area-inset-left, 0px))
+      max(14px, env(safe-area-inset-right, 0px)) !important;
   }
 }
 
