@@ -155,6 +155,7 @@ import {
   buildIndopakTajweedTokenByLocation,
   paintUnicodeTextWithTajweedToken,
 } from '../scripts/mushaf/indopakTajweedMarkup'
+import { stripMushafHtmlBreaks } from '../scripts/mushaf/mobileMushafLineFit'
 import {
   buildQpcMadaniProgressSnapshot,
   preserveDashboardMadaniContext,
@@ -1300,6 +1301,8 @@ export default {
       sessionExitAutoSave: false,
       sessionExitSnapshot: null,
       sessionExitPreviewSnapshot: null,
+      /** Muraja'ah / progress review: keep tools offcanvas closed on entry. */
+      _suppressEmptyWorkspaceTools: false,
       confirmModal: {
         title: '',
         subject: '',
@@ -11081,6 +11084,13 @@ export default {
         && this.isRegistrationSession()
         && hasPreRegistrationGuestResumeEvidence(this._preRegistrationGuestSnapshot)
       )
+      // Muraja'ah / progress review deep-links own the landing — never park them
+      // behind Welcome Back (that was auto-opening the tools offcanvas).
+      const isMurajaahReviewEntry = !!(
+        dashboardEntryIntent?.review
+        && Number(dashboardEntryIntent?.surah || 0) > 0
+        && Number(dashboardEntryIntent?.from || 0) > 0
+      )
       const preferWelcomeBackOnLogin = !!(
         this.isLoggedIn
         && !needsFirstTimeOnboarding
@@ -11088,6 +11098,7 @@ export default {
         && this.isExistingUserLogin
         && !this.shouldSuppressWelcomeBackModal()
         && !this.shouldAutoStartWorkspaceTour()
+        && !isMurajaahReviewEntry
       )
 
       if (preferRegistrationResume) {
@@ -11121,8 +11132,12 @@ export default {
       if (
         dashboardEntryIntent
         && !needsFirstTimeOnboarding
-        && !preferWelcomeBackOnLogin
+        && (!preferWelcomeBackOnLogin || isMurajaahReviewEntry)
       ) {
+        if (isMurajaahReviewEntry) {
+          this._suppressEmptyWorkspaceTools = true
+          this.showTools = false
+        }
         await this.consumeDashboardEntryIntent(dashboardEntryIntent)
       } else if (dashboardEntryIntent && preferWelcomeBackOnLogin) {
         // Drop stashed/URL resume intent so it cannot steal the gate later.
@@ -13182,6 +13197,9 @@ export default {
         }
 
         if (entry.review && entry.surah > 0 && entry.from > 0) {
+          // Muraja'ah revision: load the range on the mushaf — never open tools offcanvas.
+          this._suppressEmptyWorkspaceTools = true
+          this.showTools = false
           const rangeEnd = Math.max(entry.from, entry.to || entry.from)
           await this.startSessionFromRecommendationPayload({
             chapterId: entry.surah,
@@ -13190,6 +13208,7 @@ export default {
             sessionMode: 'revision',
             autoStart: true,
           })
+          this.showTools = false
           this.finishDashboardMadaniEntry(entry)
           this.markDashboardEntryIntentConsumed()
           return true
@@ -13288,6 +13307,18 @@ export default {
         }
       } catch (error) {
         console.error('Dashboard entry intent failed', error)
+        // Review deep-links must stay on the mushaf — banner only, no tools panel.
+        if (entry?.review) {
+          this._suppressEmptyWorkspaceTools = true
+          this.showTools = false
+          this.showBanner?.(
+            this.t('toasts.sessionStartFailed') || 'Could not open that revision. Try again.',
+            'warning',
+            3600,
+          )
+          this.markDashboardEntryIntentConsumed()
+          return false
+        }
         this.openToolsPanel({ tab: 'tools' })
         return false
       }
@@ -16504,7 +16535,10 @@ export default {
       }
       if (!this.canStartSession) {
         this.clearToolsStartInFlight()
-        this.showTools = true
+        // Muraja'ah / progress review must not pop the tools offcanvas.
+        if (!this._suppressEmptyWorkspaceTools) {
+          this.showTools = true
+        }
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
         return false
       }
@@ -22726,13 +22760,22 @@ export default {
           this.postSessionRecommendationStarting = false
           this.postSessionOffcanvasOpen = false
           this.showTools = false
+          if (sessionMode === 'revision') {
+            this._suppressEmptyWorkspaceTools = true
+          }
           this.postSessionViewState = 'idle'
           this.closePostSessionChoice()
           const started = this.startSessionWithCountdown({ skipPrime: true })
+          this.showTools = false
           if (started === false) {
             this.postSessionRecommendationStartError = this.t('memorisation.postSession.recommendation.startError')
               || 'Could not start that session. Try again when ready.'
             this.showBanner?.(this.postSessionRecommendationStartError, 'warning', 3600)
+            // Revision deep-links stay on the mushaf even when auto-start cannot run yet.
+            if (sessionMode === 'revision') {
+              this._suppressEmptyWorkspaceTools = true
+              this.showTools = false
+            }
           }
         }
         this.schedulePracticeFocusWordDomSync([300, 800, 1600, 2800])
@@ -35500,6 +35543,7 @@ export default {
     },
     ensureEmptyWorkspaceEntrySurface() {
       if (!this.appReady || !this.isDataReady || this.hasVerses || this.showTools) return
+      if (this._suppressEmptyWorkspaceTools) return
       if (
         this.isOnboardingExperienceActive
         || this.workspaceTourActive
@@ -35528,10 +35572,9 @@ export default {
         this.startSessionWithCountdown()
         return
       }
-      if (this.headerSessionActionDisabled) {
-        this.resetStuckSessionLifecycleControls()
-        if (this.headerSessionActionDisabled) return
-      }
+      // Always clear stuck locks before routing Start / Resume / Pause / End.
+      this.resetStuckSessionLifecycleControls()
+      if (this.headerSessionActionDisabled) return
       this.startingFreshSessionSelection = false
       const action = this.primarySessionAction
 
@@ -35707,7 +35750,13 @@ export default {
 
     async resumeSessionFromPrimaryAction(options = {}) {
       const prepareOnly = !!options.prepareOnly
+      if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE || this.sessionActionLock.isLocked()) {
+        this.resetStuckSessionLifecycleControls()
+      }
       if (this.sessionLifecycleMutation !== SESSION_MUTATION.IDLE) return false
+      if (this.sessionActionLock.isLocked()) {
+        this.sessionActionLock.reset()
+      }
       // Prefer unfinished backend / continue payload over a stale local completed flag.
       if (
         (this.sessionCompleted || this.isSessionCompleted)
@@ -40734,20 +40783,15 @@ export default {
       this.showPostSessionChoice = false
       this.postSessionChoiceAction = null
       this.postSessionChoiceOffcanvasOpen = false
-      // Stuck pause/end locks previously made "End session" a silent no-op.
-      if (
-        this.sessionLifecycleMutation === SESSION_MUTATION.ENDING
-        || this.sessionExitEndingBusy
-        || this.sessionActionLock.isLocked()
-        || this.sessionActionLock.isLocked('end')
-      ) {
-        this.resetStuckSessionLifecycleControls()
-      }
-      if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING || this.sessionExitEndingBusy) {
-        return Promise.resolve(null)
-      }
-      if (this.sessionActionLock.isLocked() || this.sessionActionLock.isLocked('end')) {
-        return Promise.resolve(null)
+      // Always clear stuck pause/end locks — never leave End session as a silent no-op.
+      this.resetStuckSessionLifecycleControls()
+      this.sessionExitEndingBusy = false
+      this.sessionActionLock?.reset?.()
+      if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING) {
+        this.transitionSessionLifecycle(
+          this.sessionPaused ? SESSION_STATUS.PAUSED : SESSION_STATUS.ACTIVE,
+          SESSION_MUTATION.IDLE,
+        )
       }
 
       const endedSnapshot = {
@@ -40766,6 +40810,8 @@ export default {
       const wasSample = !!this.onboardingSampleSessionActive
       const backendSessionId = this.backendSessionSnapshot?.id
         || this.mutqinState?.sessionState?.backendSessionId
+        || this.continueSessionPayload?.backendSessionId
+        || this.continueSessionPayload?.config?.backendSessionId
         || this.postSessionCompletedSessionId
         || null
       const previousStreak = Number(this.analytics?.currentStreak || 0)
@@ -40852,30 +40898,18 @@ export default {
                 }
               }
             } catch (error) {
-              console.warn('Failed to end session on backend', error)
-              persistenceSucceeded = false
-              this.sessionLifecycleError = 'end_failed'
-              this.sessionExitEndingBusy = false
-              const gate = resolveCompletionGate({
-                persistenceSucceeded: false,
-                priorStatus,
-              })
-              this.transitionSessionLifecycle(
-                this.isSessionLive || this.sessionPaused ? gate.status : SESSION_STATUS.READY,
-                SESSION_MUTATION.IDLE
-              )
-              this.showBanner(this.t('toasts.sessionEndFailed'), 'danger', 4200)
-              return null
+              console.warn('Failed to end session on backend; completing locally', error)
+              // Auth expiry / network must not trap the learner on "Unable to end session".
+              // Match Start's local-continue behaviour so End always clears the sitting.
+              this.noteLearningBackendFailure(error, 'end')
+              persistenceSucceeded = true
+              this.sessionLifecycleError = 'end_synced_locally'
             }
           }
 
-          const gate = resolveCompletionGate({ persistenceSucceeded })
-          if (!gate.openCompletionScreen && gate.keepRecoverable) {
-            this.sessionExitEndingBusy = false
-            this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
-            this.showBanner(this.t('toasts.sessionEndFailed'), 'danger', 4200)
-            return null
-          }
+          // End from the modal always clears the sitting locally. Backend sync
+          // failures above soft-complete instead of trapping "Unable to end session".
+          const gate = resolveCompletionGate({ persistenceSucceeded: true })
 
           this.sessionCompleted = rangeComplete
           this.sessionEndedEarly = !rangeComplete
@@ -42739,8 +42773,10 @@ export default {
       // Drop inline handlers/styles.
       cleaned = cleaned.replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '')
       cleaned = cleaned.replace(/\sstyle\s*=\s*(['"]).*?\1/gi, '')
-      // Allow only the tags we intentionally render.
-      cleaned = cleaned.replace(/<(?!\/?(?:span|word|br)\b)[^>]*>/gi, '')
+      // Mushaf layout never uses hard breaks under ayah / page numbers.
+      cleaned = stripMushafHtmlBreaks(cleaned)
+      // Allow only the tags we intentionally render (no <br>).
+      cleaned = cleaned.replace(/<(?!\/?(?:span|word)\b)[^>]*>/gi, '')
       return cleaned
     },
 

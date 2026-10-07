@@ -583,20 +583,7 @@ export default {
           folio.style.setProperty('width', '100%', 'important')
           folio.style.setProperty('box-sizing', 'border-box', 'important')
         }
-        const folioBreak = folio instanceof HTMLElement
-          ? folio.querySelector('.qpc-madani-page__folio-break')
-          : null
-        if (folioBreak instanceof HTMLElement) {
-          folioBreak.style.setProperty('display', 'flex', 'important')
-          folioBreak.style.setProperty('flex-direction', 'column', 'important')
-          folioBreak.style.setProperty('justify-content', 'flex-end', 'important')
-          folioBreak.style.setProperty('height', '100%', 'important')
-          folioBreak.style.setProperty('box-sizing', 'border-box', 'important')
-          folioBreak.style.setProperty('margin', '0', 'important')
-          folioBreak.style.setProperty('padding', '0.2rem 0 0.42rem', 'important')
-          folioBreak.style.setProperty('border-bottom-width', '1px', 'important')
-          folioBreak.style.setProperty('border-bottom-style', 'solid', 'important')
-        }
+        // Folio is a plain page number — no break/border under the digit.
         leaf.querySelectorAll('.qpc-madani-line').forEach((line) => {
           if (!(line instanceof HTMLElement)) return
           const empty = String(line.dataset.lineType || '') === 'empty'

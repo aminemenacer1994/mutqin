@@ -112,7 +112,8 @@ const apiSource = readFileSync(new URL('../../resources/js/scripts/api/learning.
   assert.equal(failed.keepRecoverable, true)
   assert.equal(failed.openCompletionScreen, false)
   assert.match(source, /persistenceSucceeded\s*=\s*!this\.learningBackendEnabled/)
-  assert.match(source, /persistenceSucceeded\s*=\s*false/)
+  assert.match(source, /persistenceSucceeded\s*=\s*true/)
+  assert.match(source, /completing locally/)
   assert.match(source, /toasts\.sessionEndFailed/)
 }
 

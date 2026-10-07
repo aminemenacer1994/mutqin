@@ -134,9 +134,11 @@ export default {
       })
     },
     displayText() {
-      return this.glyphPresentation.text
+      // Permanently strip hard breaks from word / ayah-number glyphs.
+      return stripMushafHtmlBreaks(this.glyphPresentation.text)
     },
     indopakTajweedHtml() {
+      // Ayah-end ornaments use plain displayText (no tajweed HTML / no <br>).
       if (!this.isIndopakLayout || !this.tajweedEnabled || this.word?.isEnd) return ''
       const location = String(this.word?.location || '').trim()
       const token = location

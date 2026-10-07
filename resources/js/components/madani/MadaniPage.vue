@@ -59,19 +59,9 @@
       </div>
       <div
         class="qpc-madani-page__folio"
-        :class="{ 'qpc-madani-page__folio--session-break': sessionScoped }"
         aria-hidden="true"
       >
-        <div
-          v-if="sessionScoped"
-          class="qpc-madani-page__folio-break"
-        >
-          <span class="qpc-madani-page__folio-number">{{ folioLabel }}</span>
-        </div>
-        <span
-          v-else
-          class="qpc-madani-page__folio-number"
-        >{{ folioLabel }}</span>
+        <span class="qpc-madani-page__folio-number">{{ folioLabel }}</span>
       </div>
     </div>
   </article>
@@ -1122,51 +1112,20 @@ export default {
   line-height: 1;
 }
 
-.qpc-madani-page__folio--session-break {
-  display: block;
-  width: 100%;
-  padding: 0;
-}
-
-.qpc-madani-page__folio-break {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: auto;
-  max-width: 100%;
-  margin-inline: clamp(0.75rem, 4.5vw, 1.85rem);
-  padding: 0.45rem 0 0.62rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--qpc-rule, #8d6a35) 42%, transparent);
-}
-
 .qpc-madani-page__folio-number {
   display: block;
   line-height: 1;
 }
 
-.qpc-madani-page__folio--session-break .qpc-madani-page__folio-number {
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
 .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio {
   min-height: 0;
-  padding: 0;
-}
-
-.qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
-  padding: 0.48rem 0 0.72rem;
-  margin-inline: clamp(0.85rem, 5vw, 2.25rem);
-  margin-bottom: 0.4rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--mushaf-reading-ink, #8a7048) 36%, transparent);
+  padding: 0.2rem 0 0.35rem;
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
-  font-size: 1.75rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
   -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
 }
@@ -1383,9 +1342,9 @@ export default {
   .qpc-madani-page--borderless.qpc-madani-page--single,
   .qpc-madani-page--session-scoped,
   .qpc-madani-page--opening {
-    --qpc-line-min-height: 1.18;
-    --qpc-line-height: 1.16;
-    --qpc-line-gap: 0;
+    --qpc-line-min-height: 1.4;
+    --qpc-line-height: 1.3;
+    --qpc-line-gap: 0.14;
     --qpc-surah-title-scale: 1.15;
     width: 100%;
     max-width: 100%;
@@ -1433,16 +1392,11 @@ export default {
 
   .qpc-madani-page__folio,
   .qpc-madani-page--embedded .qpc-madani-page__folio,
-  .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio,
-  .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+  .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio {
     min-height: 0;
     margin: 0.04rem 0 0.02rem;
-    padding: 0.04rem 0;
-  }
-
-  .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
-    padding: 0.16rem 0 0.28rem;
-    margin-bottom: 0.08rem;
+    padding: 0.08rem 0;
+    border: 0;
   }
 }
 
