@@ -15,6 +15,7 @@
       'qpc-madani-page--opening': isOpening,
       'is-font-ready': fontReady,
       'is-fitted': fitted,
+      'is-page-revealed': pageRevealed,
       'qpc-madani-page--tajweed': tajweedEnabled,
       'qpc-madani-page--borderless': borderless,
       'qpc-madani-page--session-scoped': sessionScoped,
@@ -69,7 +70,10 @@
 
 <script>
 import { loadSurahNamesFont, loadQcfPageFont } from '../../scripts/mushaf/qcfFontLoader'
-import { ensureQpcMadaniPageFont } from '../../scripts/mushaf/qpcMadaniFontLoader'
+import {
+  ensureQpcMadaniPageFont,
+  warmQpcMadaniPageFont,
+} from '../../scripts/mushaf/qpcMadaniFontLoader'
 import { ensureIndopakNastaleeqFontForLayout } from '../../scripts/mushaf/indopakNastaleeqFont'
 import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
 import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
@@ -288,6 +292,10 @@ export default {
         sessionStartAyah: this.sessionStartAyah,
         sessionEndAyah: this.sessionEndAyah,
       })
+    },
+    /** Ink stays hidden until the correct face is loaded and lines are measured. */
+    pageRevealed() {
+      return !!(this.fontReady && this.fitted)
     },
   },
   watch: {
@@ -601,7 +609,13 @@ export default {
         if (this.isIndopakLayout) {
           await ensureIndopakNastaleeqFontForLayout(this.layoutId)
         } else if (this.fontFamily && this.fontUrl) {
-          await ensureQpcMadaniPageFont(this.pageNumber, this.fontFamily, this.fontUrl)
+          // Warm known path in parallel with the leaf face — does not change fit math.
+          await Promise.all([
+            warmQpcMadaniPageFont(this.pageNumber).catch(() => null),
+            ensureQpcMadaniPageFont(this.pageNumber, this.fontFamily, this.fontUrl),
+          ])
+        } else if (!this.isIndopakLayout) {
+          await warmQpcMadaniPageFont(this.pageNumber).catch(() => null)
         }
       } catch (error) {
         console.warn('[MadaniPage] page font load failed', this.pageNumber, error)
@@ -1066,21 +1080,33 @@ export default {
   box-shadow: 0 10px 28px rgba(62, 41, 18, 0.1);
 }
 
-.qpc-madani-page:not(.is-font-ready) {
-  opacity: 0.88;
+/*
+ * QCF Presentation Forms look like garbage in fallback Arabic faces.
+ * Keep ink invisible until the page woff2 is loaded AND lines are fitted,
+ * then fade in — no encoding/wrong-font flash on mobile or desktop.
+ */
+.qpc-madani-page:not(.is-page-revealed) .qpc-madani-page__sheet {
+  visibility: hidden;
+  opacity: 0;
 }
 
-.qpc-madani-page--embedded:not(.is-font-ready) {
+.qpc-madani-page:not(.is-page-revealed) .qpc-madani-page__folio {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.qpc-madani-page.is-page-revealed .qpc-madani-page__sheet,
+.qpc-madani-page.is-page-revealed .qpc-madani-page__folio {
+  visibility: visible;
   opacity: 1;
+  transition: opacity 180ms ease-out;
 }
 
-.qpc-madani-page.is-font-ready {
-  opacity: 1;
-  transition: opacity 160ms ease-out;
-}
-
-.qpc-madani-page--embedded.is-font-ready {
-  transition: none;
+@media (prefers-reduced-motion: reduce) {
+  .qpc-madani-page.is-page-revealed .qpc-madani-page__sheet,
+  .qpc-madani-page.is-page-revealed .qpc-madani-page__folio {
+    transition: none;
+  }
 }
 
 .qpc-madani-page__ornament {
@@ -1361,7 +1387,7 @@ export default {
     --qpc-line-min-height: 1.4;
     --qpc-line-height: 1.3;
     --qpc-line-gap: 0.14;
-    --qpc-surah-title-scale: 1.7;
+    --qpc-surah-title-scale: 2.2;
     width: 100%;
     max-width: 100%;
     padding: 0;

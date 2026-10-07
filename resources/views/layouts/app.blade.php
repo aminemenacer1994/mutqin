@@ -11483,6 +11483,34 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v222">
+  /* Larger surah title + clearance under Bismillah before first ayah row. */
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page {
+      --qpc-surah-title-scale: 2.2;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name,
+    html body .app .qpc-madani-session-scroll .qpc-madani-surah-name {
+      font-size: min(max(40px, calc(var(--qpc-word-size, 24px) * 2.2)), 56px) !important;
+      line-height: 1.1 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah,
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--basmala,
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--basmallah {
+      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.72) !important;
+      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.55) !important;
+    }
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.55);
+    padding-block-end: calc(var(--qpc-word-size, 22px) * 0.42);
+  }
+</style>
 <script>
   (function () {
     function stretchAyahLine(line) {

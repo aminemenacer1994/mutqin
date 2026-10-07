@@ -59488,6 +59488,26 @@ html:not([data-quran-font-ready="1"]) .main .verse-arabic.verse-arabic-primary:n
   visibility: hidden;
 }
 
+/*
+ * QPC Madani page sheets: never paint Presentation-Form glyphs with a fallback face.
+ * MadaniPage toggles .is-page-revealed after FontFace + fit.
+ */
+html body .app .main .qpc-madani-page:not(.is-page-revealed) .qpc-madani-page__sheet,
+html body .app .main .qpc-madani-page:not(.is-page-revealed) .qpc-madani-page__folio,
+html body.memorisation-page .app .qpc-madani-page:not(.is-page-revealed) .qpc-madani-page__sheet,
+html body.memorisation-page .app .qpc-madani-page:not(.is-page-revealed) .qpc-madani-page__folio {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+html body .app .main .qpc-madani-page.is-page-revealed .qpc-madani-page__sheet,
+html body .app .main .qpc-madani-page.is-page-revealed .qpc-madani-page__folio,
+html body.memorisation-page .app .qpc-madani-page.is-page-revealed .qpc-madani-page__sheet,
+html body.memorisation-page .app .qpc-madani-page.is-page-revealed .qpc-madani-page__folio {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 .verse-arabic .wbw-word,
 .verse-arabic word,
 .verse-arabic .tajweed-mark,

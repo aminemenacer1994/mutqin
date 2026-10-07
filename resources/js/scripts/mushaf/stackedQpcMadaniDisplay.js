@@ -1,5 +1,5 @@
 import { getCachedMadaniPageLeaf, loadMadaniPageLeaf } from './qpcMadaniPageData.js'
-import { ensureQpcMadaniPageFont } from './qpcMadaniFontLoader.js'
+import { ensureQpcMadaniPageFont, warmQpcMadaniPageFont } from './qpcMadaniFontLoader.js'
 import { loadQcfPageFont, qcfFontFamily } from './qcfFontLoader.js'
 import {
   isQcfPageGlyphText,
@@ -146,7 +146,9 @@ export async function ensureStackedQpcMadaniPageFonts(pages = [], { tajweed = fa
   )]
   await Promise.all(unique.map(async (page) => {
     try {
-      const leaf = await loadMadaniPageLeaf(page)
+      // Warm from the known Madani V2 path — do not wait on page JSON for the face.
+      await warmQpcMadaniPageFont(page)
+      const leaf = getCachedMadaniPageLeaf(page) || await loadMadaniPageLeaf(page).catch(() => null)
       if (leaf?.fontFamily && leaf?.fontUrl) {
         await ensureQpcMadaniPageFont(page, leaf.fontFamily, leaf.fontUrl)
       }

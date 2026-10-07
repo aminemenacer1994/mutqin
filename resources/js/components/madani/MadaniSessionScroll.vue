@@ -65,8 +65,12 @@ import {
   getCachedMushafPageLeaf,
   loadMushafPageLeaf,
 } from '../../scripts/mushaf/mushafPageData'
-import { prefetchQpcMadaniPageFonts } from '../../scripts/mushaf/qpcMadaniFontLoader'
-import { prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
+import {
+  ensureQpcMadaniPageFont,
+  prefetchQpcMadaniPageFonts,
+  warmQpcMadaniPageFont,
+} from '../../scripts/mushaf/qpcMadaniFontLoader'
+import { loadQcfPageFont, prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
 import { ensureIndopakNastaleeqFontForLayout } from '../../scripts/mushaf/indopakNastaleeqFont'
 import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
 import { MUSHAF_LAYOUT_MADANI_V2 } from '../../scripts/mushaf/mushafLayouts'
@@ -356,10 +360,11 @@ export default {
       const immediate = this.windowedSession
         ? selectPriorityPages(pages, focus, FOCUS_RADIUS)
         : pages
+      // Start page faces before JSON returns so ink is ready when leaves mount.
+      this.prefetchFonts(immediate)
       await this.loadPageBatch(immediate, token, 3)
       if (token !== this.loadToken) return
       this.hydrateMountedLeaves()
-      this.prefetchFonts(immediate)
       this.$nextTick(() => {
         this.scrollToFocusPage({ smooth: false })
         this.rememberMountedPageHeights()
@@ -372,25 +377,51 @@ export default {
       this._restLoadTimer = setTimeout(() => {
         this._restLoadTimer = null
         if (token !== this.loadToken) return
+        this.prefetchFonts(rest.slice(0, 6))
         void this.loadPageBatch(rest, token, 2)
       }, 200)
+    },
+    async ensurePageFont(pageNumber, leaf = null) {
+      if (this.isIndopakLayout) {
+        await ensureIndopakNastaleeqFontForLayout(this.layoutId)
+        return
+      }
+      const page = Number(pageNumber)
+      const warm = warmQpcMadaniPageFont(page).catch(() => null)
+      const exact = leaf?.fontFamily && leaf?.fontUrl
+        ? ensureQpcMadaniPageFont(page, leaf.fontFamily, leaf.fontUrl).catch(() => null)
+        : null
+      await Promise.all([warm, exact].filter(Boolean))
+      if (this.tajweedEnabled) {
+        await loadQcfPageFont(page, { tajweed: true }).catch(() => null)
+      }
     },
     async loadPageBatch(pages, token, concurrency) {
       await mapWithConcurrency(pages, concurrency, async (pageNumber) => {
         if (token !== this.loadToken) return null
         const cached = this.cachedLeaf(pageNumber)
         if (cached?.page) {
+          await this.ensurePageFont(pageNumber, cached)
+          if (token !== this.loadToken) return null
           this.noteLeaf(pageNumber, cached)
           return cached
         }
+        // Font + JSON in parallel — face no longer waits on page envelope.
+        const fontPromise = this.ensurePageFont(pageNumber)
         try {
           const leaf = this.isIndopakLayout
             ? await loadMushafPageLeaf(pageNumber, this.layoutId)
             : await loadMadaniPageLeaf(pageNumber)
           if (token !== this.loadToken) return null
+          await fontPromise
+          if (token !== this.loadToken) return null
+          if (leaf?.fontFamily && leaf?.fontUrl && !this.isIndopakLayout) {
+            await ensureQpcMadaniPageFont(pageNumber, leaf.fontFamily, leaf.fontUrl).catch(() => null)
+          }
           if (leaf?.page) this.noteLeaf(pageNumber, leaf)
           return leaf
         } catch {
+          await fontPromise.catch(() => null)
           return null
         }
       }, () => token === this.loadToken)

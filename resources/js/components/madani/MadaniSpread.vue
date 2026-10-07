@@ -128,8 +128,12 @@ import {
   loadMushafPageLeaf,
   prefetchMushafPageData,
 } from '../../scripts/mushaf/mushafPageData'
-import { prefetchQpcMadaniPageFonts } from '../../scripts/mushaf/qpcMadaniFontLoader'
-import { prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
+import {
+  ensureQpcMadaniPageFont,
+  prefetchQpcMadaniPageFonts,
+  warmQpcMadaniPageFont,
+} from '../../scripts/mushaf/qpcMadaniFontLoader'
+import { loadQcfPageFont, prefetchQcfPageFonts } from '../../scripts/mushaf/qcfFontLoader'
 import { ensureIndopakNastaleeqFontForLayout } from '../../scripts/mushaf/indopakNastaleeqFont'
 import { isIndopakMushafLayout } from '../../scripts/mushaf/indopakPageAdapter'
 import {
@@ -739,11 +743,32 @@ export default {
         }
       }, 120)
     },
+    async ensureLeafFont(page, leaf = null) {
+      if (this.isIndopakLayout) {
+        await ensureIndopakNastaleeqFontForLayout(this.layoutId)
+        return
+      }
+      const warm = warmQpcMadaniPageFont(page).catch(() => null)
+      const exact = leaf?.fontFamily && leaf?.fontUrl
+        ? ensureQpcMadaniPageFont(page, leaf.fontFamily, leaf.fontUrl).catch(() => null)
+        : null
+      await Promise.all([warm, exact].filter(Boolean))
+      if (this.tajweedEnabled) {
+        await loadQcfPageFont(page, { tajweed: true }).catch(() => null)
+      }
+    },
     async loadLeaf(page) {
       if (this.isIndopakLayout) {
         return loadMushafPageLeaf(page, this.layoutId)
       }
-      return loadMadaniPageLeaf(page)
+      // Start the page face while the JSON envelope is in flight.
+      const fontPromise = warmQpcMadaniPageFont(page).catch(() => null)
+      const leaf = await loadMadaniPageLeaf(page)
+      await fontPromise
+      if (leaf?.fontFamily && leaf?.fontUrl) {
+        await ensureQpcMadaniPageFont(page, leaf.fontFamily, leaf.fontUrl).catch(() => null)
+      }
+      return leaf
     },
     getCachedLeaf(page) {
       if (this.isIndopakLayout) {
@@ -767,6 +792,7 @@ export default {
       const page = this.displayedPageNumber
       const cached = this.getCachedLeaf(page)
       if (cached?.page) {
+        await this.ensureLeafFont(page, cached)
         this.fetchedLeaf = cached
         this.sibling = null
         this.schedulePreload()
@@ -790,15 +816,21 @@ export default {
           layoutId: this.layoutId,
         }
         this.cacheLeaf(page, leaf)
+        await this.ensureLeafFont(page, leaf)
         this.fetchedLeaf = leaf
         this.sibling = null
         this.schedulePreload()
         return
       }
 
+      if (!this.isIndopakLayout) {
+        void warmQpcMadaniPageFont(page).catch(() => {})
+      }
       const token = ++this.fetchToken
       try {
         const leaf = await this.loadLeaf(page)
+        if (token !== this.fetchToken) return
+        await this.ensureLeafFont(page, leaf)
         if (token !== this.fetchToken) return
         this.fetchedLeaf = leaf
       } catch {
@@ -826,9 +858,17 @@ export default {
         this.sibling = null
       }
 
+      // Warm both spread faces up front (desktop two-page open).
+      if (!this.isIndopakLayout) {
+        prefetchQpcMadaniPageFonts(pages)
+      }
+
       const loadPage = async (pageNum) => {
         const cached = this.getCachedLeaf(pageNum)
-        if (cached?.page) return { pageNum, leaf: cached }
+        if (cached?.page) {
+          await this.ensureLeafFont(pageNum, cached)
+          return { pageNum, leaf: cached }
+        }
         if (
           this.page
           && this.leafPageNumber(this.page) === pageNum
@@ -842,12 +882,14 @@ export default {
             layoutId: this.layoutId,
           }
           this.cacheLeaf(pageNum, leaf)
+          await this.ensureLeafFont(pageNum, leaf)
           return { pageNum, leaf }
         }
         try {
           const leaf = await this.loadLeaf(pageNum)
           if (leaf?.page) {
             this.cacheLeaf(pageNum, leaf)
+            await this.ensureLeafFont(pageNum, leaf)
             return { pageNum, leaf }
           }
         } catch {
