@@ -1387,7 +1387,7 @@ export default {
     --qpc-line-min-height: 1.4;
     --qpc-line-height: 1.3;
     --qpc-line-gap: 0.14;
-    --qpc-surah-title-scale: 2.2;
+    --qpc-surah-title-scale: 3.5;
     width: 100%;
     max-width: 100%;
     padding: 0;

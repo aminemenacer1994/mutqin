@@ -34,6 +34,7 @@
       :data-surah="line.surah_number"
     >
       <span
+        ref="surahNameEl"
         class="qpc-madani-surah-name"
         :class="{ 'is-surah-font-ready': surahNamesReady }"
         :style="{ fontFamily: `'${surahFontFamily}', serif` }"
@@ -247,9 +248,32 @@ export default {
       return { fontFamily: INDOPAK_NASTALEEQ_FONT_STACK }
     },
   },
+  mounted() {
+    this.applySurahNameSize()
+  },
+  updated() {
+    this.applySurahNameSize()
+  },
   methods: {
     wordKey(word) {
       return word?.location || word?.id || word?.wordIndex || JSON.stringify(word)
+    },
+    /**
+     * Force surah banner size on the node itself (inline !important).
+     * Stylesheet wars (mobile-grid / blade hotfixes) cannot shrink this.
+     */
+    applySurahNameSize() {
+      if (!this.isSurahNameLine || this.isIndopakLayout) return
+      const el = this.$refs.surahNameEl
+      if (!(el instanceof HTMLElement)) return
+      const mobile = typeof window !== 'undefined' && window.innerWidth < 768
+      // Slightly above ayah ink; was 96px — nudged down for balance.
+      const size = mobile ? '84px' : 'calc(var(--qpc-word-size, 22px) * 2.9)'
+      el.style.setProperty('font-size', size, 'important')
+      el.style.setProperty('line-height', '1.05', 'important')
+      el.style.setProperty('overflow', 'visible', 'important')
+      el.style.setProperty('max-width', '100%', 'important')
+      el.style.setProperty('transform', 'none', 'important')
     },
   },
 }
@@ -350,9 +374,10 @@ export default {
   .qpc-madani-surah-name {
     max-width: 100%;
     font-size: min(
-      calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.2)),
-      56px
+      calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 3.5)),
+      84px
     );
+    overflow: visible;
   }
 
   .qpc-madani-basmallah,
@@ -431,10 +456,10 @@ export default {
 
 @media (max-width: 767.98px) {
   .qpc-madani-surah-name {
-    font-size: min(calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.2)), 56px) !important;
+    font-size: min(calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 3.5)), 84px) !important;
     max-width: 100%;
-    overflow: hidden;
-    line-height: 1.12;
+    overflow: visible !important;
+    line-height: 1.05;
   }
 
   .qpc-madani-basmallah {

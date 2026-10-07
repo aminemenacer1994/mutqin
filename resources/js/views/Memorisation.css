@@ -62809,7 +62809,7 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   }
 
   .madani-qpc-viewport .qpc-madani-surah-name {
-    font-size: calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.25));
+    font-size: calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.75));
     max-width: 100%;
     overflow: visible;
     text-overflow: unset;

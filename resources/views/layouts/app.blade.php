@@ -11269,7 +11269,7 @@ body.session-analysis-modal-open {
   /* Mobile: same contained size for dense pages and short surahs, titles included. */
   @media (max-width: 767.98px) {
     html body .app .main.madani-qpc-mode-active .qpc-madani-page {
-      --qpc-surah-title-scale: 1.7;
+      --qpc-surah-title-scale: 3.5;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-word {
@@ -11277,10 +11277,10 @@ body.session-analysis-modal-open {
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
-      font-size: min(calc(var(--qpc-word-size, 24px) * 1.7), 42px) !important;
+      font-size: min(max(64px, calc(var(--qpc-word-size, 24px) * 3.5)), 84px) !important;
       max-width: 100% !important;
       overflow: hidden !important;
-      line-height: 1.15 !important;
+      line-height: 1.08 !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-basmallah {
@@ -11361,17 +11361,17 @@ body.session-analysis-modal-open {
 
   @media (max-width: 767.98px) {
     html body .app .main.madani-qpc-mode-active .qpc-madani-page {
-      --qpc-surah-title-scale: 1.7;
+      --qpc-surah-title-scale: 3.5;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
-      font-size: min(calc(var(--qpc-word-size, 24px) * 1.7), 42px) !important;
+      font-size: min(max(64px, calc(var(--qpc-word-size, 24px) * 3.5)), 84px) !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
-      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.48) !important;
-      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.22) !important;
+      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.72) !important;
+      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.55) !important;
     }
   }
 </style>
@@ -11383,7 +11383,7 @@ body.session-analysis-modal-open {
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
-      font-size: min(calc(var(--qpc-word-size, 24px) * 1.7), 42px) !important;
+      font-size: min(max(64px, calc(var(--qpc-word-size, 24px) * 3.5)), 84px) !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
@@ -11431,8 +11431,8 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
-      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.48) !important;
-      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.22) !important;
+      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.72) !important;
+      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.55) !important;
     }
   }
 </style>
@@ -11441,7 +11441,7 @@ body.session-analysis-modal-open {
   @media (max-width: 767.98px) {
     html body .app .main.madani-qpc-mode-active .qpc-madani-page {
       --qpc-word-size: max(22px, var(--qpc-word-size, 24px));
-      --qpc-surah-title-scale: 1.75;
+      --qpc-surah-title-scale: 3.5;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-word,
@@ -11450,14 +11450,14 @@ body.session-analysis-modal-open {
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
-      font-size: min(max(34px, calc(var(--qpc-word-size, 24px) * 1.75)), 44px) !important;
-      line-height: 1.12 !important;
+      font-size: min(max(64px, calc(var(--qpc-word-size, 24px) * 3.5)), 84px) !important;
+      line-height: 1.08 !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
-      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.5) !important;
-      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.24) !important;
+      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.72) !important;
+      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.55) !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
@@ -11484,22 +11484,26 @@ body.session-analysis-modal-open {
   }
 </style>
 <style id="mutqin-memorisation-hotfix-v222">
-  /* Larger surah title + clearance under Bismillah before first ayah row. */
+  /* Larger surah title + clearance under Bismillah before first ayah row.
+     Specificity must beat Memorisation.mobile-grid.css (1.7/42px cap). */
   @media (max-width: 767.98px) {
-    html body .app .main.madani-qpc-mode-active .qpc-madani-page {
-      --qpc-surah-title-scale: 2.2;
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page,
+    html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page {
+      --qpc-surah-title-scale: 3.5;
     }
 
-    html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name,
-    html body .app .qpc-madani-session-scroll .qpc-madani-surah-name {
-      font-size: min(max(40px, calc(var(--qpc-word-size, 24px) * 2.2)), 56px) !important;
-      line-height: 1.1 !important;
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-surah-name,
+    html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-surah-name,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-surah-name,
+    html.is-app-fullscreen body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
+      font-size: min(max(64px, calc(var(--qpc-word-size, 24px) * 3.5)), 84px) !important;
+      line-height: 1.08 !important;
     }
 
-    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
-    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah,
-    html body .app .qpc-madani-session-scroll .qpc-madani-line--basmala,
-    html body .app .qpc-madani-session-scroll .qpc-madani-line--basmallah {
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--basmala,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--basmallah {
       margin-block-end: calc(var(--qpc-word-size, 24px) * 0.72) !important;
       padding-block-end: calc(var(--qpc-word-size, 24px) * 0.55) !important;
     }
@@ -11576,6 +11580,41 @@ body.session-analysis-modal-open {
     }
     window.addEventListener('load', schedule)
     window.addEventListener('resize', schedule)
+
+    // Surah title size: inject last so it beats Memorisation.mobile-grid.css (1.7/42px).
+    function ensureSurahTitleSize() {
+      var id = 'mutqin-surah-title-size-v3'
+      var existing = document.getElementById(id)
+      var css = [
+        '@media (max-width: 767.98px) {',
+        'html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-surah-name,',
+        'html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-surah-name,',
+        'html.is-app-fullscreen body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-surah-name {',
+        'font-size: 84px !important;',
+        'line-height: 1.05 !important;',
+        'overflow: visible !important;',
+        '}',
+        'html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,',
+        'html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {',
+        'margin-block-end: calc(var(--qpc-word-size, 24px) * 0.72) !important;',
+        'padding-block-end: calc(var(--qpc-word-size, 24px) * 0.55) !important;',
+        '}',
+        '}'
+      ].join('')
+      if (existing) {
+        existing.textContent = css
+        document.head.appendChild(existing)
+        return
+      }
+      var style = document.createElement('style')
+      style.id = id
+      style.textContent = css
+      document.head.appendChild(style)
+    }
+    ensureSurahTitleSize()
+    window.addEventListener('load', ensureSurahTitleSize)
+    setTimeout(ensureSurahTitleSize, 50)
+    setTimeout(ensureSurahTitleSize, 400)
   })()
 </script>
 @endif

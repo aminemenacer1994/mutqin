@@ -8504,9 +8504,10 @@ html body .app .workspace-recite-dock__button:hover {
   }
 
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-surah-name {
-    font-size: min(calc(var(--qpc-word-size, 24px) * 1.7), 42px) !important;
+    font-size: min(max(64px, calc(var(--qpc-word-size, 24px) * 3.5)), 84px) !important;
     max-width: 100% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+    line-height: 1.05 !important;
   }
 
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-basmallah {
