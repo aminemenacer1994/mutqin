@@ -10995,9 +10995,9 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-break {
-      min-height: 0 !important;
-      margin: 0.1rem 0 !important;
-      padding: 0.08rem 0 !important;
+      min-height: 1.55rem !important;
+      margin: 0.4rem 0 0.55rem !important;
+      padding: 0.65rem 0 0.8rem !important;
       border: 0 !important;
       border-bottom: 0 !important;
     }
@@ -11007,26 +11007,27 @@ body.session-analysis-modal-open {
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah {
-      min-height: calc(var(--qpc-word-size, 22px) * 1.4) !important;
-      margin-block-end: calc(var(--qpc-word-size, 22px) * 0.14) !important;
+      min-height: calc(var(--qpc-word-size, 24px) * 1.4) !important;
+      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.14) !important;
       padding-block: 0 !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
-      margin-block-end: calc(var(--qpc-word-size, 22px) * 0.42) !important;
-      padding-block-end: calc(var(--qpc-word-size, 22px) * 0.06) !important;
+      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.48) !important;
+      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.22) !important;
     }
 
     /* Permanently hide any residual <br> under ayah / page numbers. */
     html body .app .main.madani-qpc-mode-active .qpc-madani-word br,
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio br,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number br,
     html body .app .main.madani-qpc-mode-active .verse-ayah-end-number br {
       display: none !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
-      margin-top: 0.15rem !important;
+      margin-top: 0.55rem !important;
     }
   }
 </style>
@@ -11111,9 +11112,9 @@ body.session-analysis-modal-open {
 
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio,
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
-      min-height: 0 !important;
-      margin: 0.02rem 0 !important;
-      padding: 0.06rem 0 0.1rem !important;
+      min-height: 1.55rem !important;
+      margin: 0.4rem 0 0.55rem !important;
+      padding: 0.65rem 0 0.8rem !important;
       border: 0 !important;
       border-bottom: 0 !important;
     }
@@ -11124,7 +11125,7 @@ body.session-analysis-modal-open {
     }
 
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
-      font-size: 0.95rem !important;
+      font-size: 1.05rem !important;
     }
 
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
@@ -11268,22 +11269,22 @@ body.session-analysis-modal-open {
   /* Mobile: same contained size for dense pages and short surahs, titles included. */
   @media (max-width: 767.98px) {
     html body .app .main.madani-qpc-mode-active .qpc-madani-page {
-      --qpc-surah-title-scale: 1.15;
+      --qpc-surah-title-scale: 1.7;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-word {
-      font-size: min(var(--qpc-word-size, 22px), 22px) !important;
+      font-size: var(--qpc-word-size, 24px) !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
-      font-size: min(calc(var(--qpc-word-size, 22px) * 1.15), 30px) !important;
+      font-size: min(calc(var(--qpc-word-size, 24px) * 1.7), 42px) !important;
       max-width: 100% !important;
       overflow: hidden !important;
-      line-height: 1.2 !important;
+      line-height: 1.15 !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-basmallah {
-      font-size: min(var(--qpc-word-size, 22px), 24px) !important;
+      font-size: min(calc(var(--qpc-word-size, 24px) * 1.05), 28px) !important;
       max-width: 100% !important;
     }
 
@@ -11311,8 +11312,8 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
-      margin-block-end: calc(var(--qpc-word-size, 22px) * 0.42) !important;
-      padding-block-end: calc(var(--qpc-word-size, 22px) * 0.06) !important;
+      margin-block-end: calc(var(--qpc-word-size, 22px) * 0.48) !important;
+      padding-block-end: calc(var(--qpc-word-size, 22px) * 0.22) !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-break,
@@ -11327,6 +11328,103 @@ body.session-analysis-modal-open {
     html body .app .main.madani-qpc-mode-active .qpc-madani-word br,
     html body .app .main.madani-qpc-mode-active .verse-ayah-end-number br {
       display: none !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v219">
+  /* Always: no break/border under page numbers; surah title > ayat; Bismillah clearance. */
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-break,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number,
+  html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio,
+  html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-break,
+  html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
+    border: 0 !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+    text-decoration: none !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-break,
+  html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+    display: contents !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-word br,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio br,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number br,
+  html body .app .main.madani-qpc-mode-active .verse-ayah-end-number br {
+    display: none !important;
+  }
+
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page {
+      --qpc-surah-title-scale: 1.7;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
+      font-size: min(calc(var(--qpc-word-size, 24px) * 1.7), 42px) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
+      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.48) !important;
+      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.22) !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v220">
+  /* Mobile readability: larger ayah ink + folio clearance (no border under the number). */
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-word {
+      font-size: var(--qpc-word-size, 24px) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-surah-name {
+      font-size: min(calc(var(--qpc-word-size, 24px) * 1.7), 42px) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio {
+      min-height: 1.55rem !important;
+      margin: 0.45rem 0 0.6rem !important;
+      padding: 0.7rem 0 0.9rem !important;
+      border: 0 !important;
+      border-bottom: 0 !important;
+      box-shadow: none !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-break,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
+      display: contents !important;
+      border: 0 !important;
+      border-bottom: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll {
+      scroll-padding-top: 3.25rem;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page:first-child .qpc-madani-page__sheet {
+      padding-top: 0.55rem !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
+      margin-top: 0.6rem !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page .qpc-madani-page__sheet {
+      padding-top: 0.45rem !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
+      margin-block-end: calc(var(--qpc-word-size, 24px) * 0.48) !important;
+      padding-block-end: calc(var(--qpc-word-size, 24px) * 0.22) !important;
     }
   }
 </style>

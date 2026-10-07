@@ -303,8 +303,8 @@ export default {
 .qpc-madani-line--basmallah,
 .qpc-madani-line--basmala {
   min-height: 1.6em;
-  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.32);
-  padding-block-end: calc(var(--qpc-word-size, 22px) * 0.05);
+  margin-block-end: calc(var(--qpc-word-size, 22px) * 0.36);
+  padding-block-end: calc(var(--qpc-word-size, 22px) * 0.18);
 }
 
 .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse) {
@@ -343,14 +343,14 @@ export default {
   .qpc-madani-line--basmallah,
   .qpc-madani-line--basmala {
     min-height: 0;
-    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.42);
-    padding-block-end: calc(var(--qpc-word-size, 22px) * 0.06);
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.48);
+    padding-block-end: calc(var(--qpc-word-size, 22px) * 0.22);
   }
 
   .qpc-madani-surah-name {
     max-width: 100%;
     font-size: min(
-      calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.45)),
+      calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 1.7)),
       42vw
     );
   }
@@ -431,10 +431,10 @@ export default {
 
 @media (max-width: 767.98px) {
   .qpc-madani-surah-name {
-    font-size: min(calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 1.15)), 30px) !important;
+    font-size: min(calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 1.7)), 42px) !important;
     max-width: 100%;
     overflow: hidden;
-    line-height: 1.2;
+    line-height: 1.15;
   }
 
   .qpc-madani-basmallah {

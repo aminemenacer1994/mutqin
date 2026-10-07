@@ -922,9 +922,11 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
   .qpc-madani-session-scroll
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio {
-  min-height: 0;
-  margin-top: 0.14rem;
-  padding: 0;
+  min-height: 1.55rem;
+  margin: 0.45rem 0 0.6rem;
+  padding: 0.7rem 0 0.9rem;
+  border: 0;
+  border-bottom: 0;
   font-family: "Amiri Quran", "Amiri", serif;
   line-height: 1;
   color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 96%, #fff);
@@ -938,9 +940,11 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
   .madani-qpc-viewport
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio-break {
-  padding: 0.5rem 0 0.82rem;
-  margin-bottom: 0.46rem;
-  border-bottom-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 30%, transparent);
+  display: contents;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-bottom: 0;
 }
 
 html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
@@ -971,9 +975,11 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .qpc-madani-session-scroll
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio {
-  min-height: 0;
-  margin-top: 0.14rem;
-  padding: 0;
+  min-height: 1.55rem;
+  margin: 0.45rem 0 0.6rem;
+  padding: 0.7rem 0 0.9rem;
+  border: 0;
+  border-bottom: 0;
   font-family: "Amiri Quran", "Amiri", serif;
   line-height: 1;
   color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 96%, #fff);
@@ -987,14 +993,12 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .madani-qpc-viewport
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio-break {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 0.52rem 0 0.85rem;
-  margin-bottom: 0.48rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 34%, transparent);
+  display: contents;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-bottom: 0;
+  box-shadow: none;
 }
 
 html.is-app-fullscreen:has(.madani-fullscreen-bar)

@@ -765,7 +765,8 @@ export default {
       const scale = mobile ? Math.min(requested, 1.05) : requested
       const widthFit = (available / widest) * measureSize * safety
       // Never let a short surah explode — size as if the row were a full mushaf line.
-      const densityCap = Math.max(10, Math.floor(available / 18))
+      // Phones use a looser density so ayah ink stays readable (~24–28px).
+      const densityCap = Math.max(10, Math.floor(available / (mobile ? 14 : 18)))
       let rawSize = Math.min(cap * scale, widthFit, densityCap)
       if (mobile) rawSize = Math.min(rawSize, MOBILE_MUSHAF_WORD_SIZE_CAP)
       if (mobile && !desktopSpread) {
@@ -1106,6 +1107,9 @@ export default {
   justify-content: center;
   min-height: 1.7rem;
   padding: 0.28rem 0 0.08rem;
+  border: 0;
+  border-bottom: 0;
+  box-shadow: none;
   color: var(--qpc-rule);
   font-family: "Amiri Quran", "Amiri", serif;
   font-size: 0.98rem;
@@ -1113,13 +1117,17 @@ export default {
 }
 
 .qpc-madani-page__folio-number {
-  display: block;
+  display: inline-block;
   line-height: 1;
+  border: 0;
+  border-bottom: 0;
+  box-shadow: none;
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio {
-  min-height: 0;
-  padding: 0.2rem 0 0.35rem;
+  min-height: 1.6rem;
+  margin: 0.35rem 0 0.45rem;
+  padding: 0.55rem 0 0.7rem;
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
@@ -1249,10 +1257,11 @@ export default {
 
 .qpc-madani-page--embedded .qpc-madani-page__folio {
   min-height: 1.55rem;
-  padding: 0.2rem 0 0.45rem;
+  margin: 0.35rem 0 0.5rem;
+  padding: 0.55rem 0 0.75rem;
   color: #8a7048;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.95rem;
   letter-spacing: 0.06em;
 }
 
@@ -1345,7 +1354,7 @@ export default {
     --qpc-line-min-height: 1.4;
     --qpc-line-height: 1.3;
     --qpc-line-gap: 0.14;
-    --qpc-surah-title-scale: 1.15;
+    --qpc-surah-title-scale: 1.7;
     width: 100%;
     max-width: 100%;
     padding: 0;
@@ -1393,10 +1402,18 @@ export default {
   .qpc-madani-page__folio,
   .qpc-madani-page--embedded .qpc-madani-page__folio,
   .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio {
-    min-height: 0;
-    margin: 0.04rem 0 0.02rem;
-    padding: 0.08rem 0;
+    min-height: 1.55rem;
+    margin: 0.4rem 0 0.55rem;
+    padding: 0.65rem 0 0.8rem;
     border: 0;
+    border-bottom: 0;
+    box-shadow: none;
+  }
+
+  .qpc-madani-page__folio-number {
+    border: 0;
+    border-bottom: 0;
+    box-shadow: none;
   }
 }
 

@@ -12,20 +12,21 @@ export const MOBILE_MUSHAF_SPARSE_RATIO = 0.92
 /** Desktop/tablet: centre anything that is not nearly full (avoids huge word gaps). */
 export const DESKTOP_MUSHAF_SPARSE_RATIO = 0.9
 /** Extra headroom — QCF ink paints past the measured advance on phones. */
-export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.7
-export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.78
+export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.82
+export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.86
 /** Hard ceiling so short surahs (Kawthar) cannot blow up past a normal page. */
-export const MOBILE_MUSHAF_WORD_SIZE_CAP = 20
+export const MOBILE_MUSHAF_WORD_SIZE_CAP = 28
 
 /**
  * One phone word size for every page — dense or short, tajweed on or off.
  * Sized from the viewport, never from the shortest line (that is what blew up Kawthar).
+ * Target ~24–28px on common phones so diacritics stay readable.
  */
 export function mobileMushafWordSizePx(viewportWidth = 390) {
   const view = Number(viewportWidth)
   const inner = Math.max(240, (view > 0 ? view : 390) - MOBILE_MUSHAF_HAIRLINE_PX * 2)
-  const fitted = Math.floor(inner / 20)
-  return Math.max(15, Math.min(MOBILE_MUSHAF_WORD_SIZE_CAP, fitted))
+  const fitted = Math.floor(inner / 14)
+  return Math.max(18, Math.min(MOBILE_MUSHAF_WORD_SIZE_CAP, fitted))
 }
 
 export function mobileViewportInnerWidth(padLeft = 0, padRight = 0) {
@@ -83,7 +84,7 @@ export function qcfSideBearingPx(wordSize) {
 export function stripMushafHtmlBreaks(html = '') {
   return String(html || '')
     .replace(/<br\s*\/?>/gi, '')
-    .replace(/[\u2028\u2029]/g, '')
+    .replace(/[\u2028\u2029\r\n]/g, '')
 }
 
 /**

@@ -8499,18 +8499,18 @@ html body .app .workspace-recite-dock__button:hover {
   }
 
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-word {
-    font-size: min(var(--qpc-word-size, 18px), 20px) !important;
+    font-size: var(--qpc-word-size, 24px) !important;
     flex: 0 0 auto !important;
   }
 
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-surah-name {
-    font-size: min(calc(var(--qpc-word-size, 18px) * 1.15), 28px) !important;
+    font-size: min(calc(var(--qpc-word-size, 24px) * 1.7), 42px) !important;
     max-width: 100% !important;
     overflow: hidden !important;
   }
 
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-basmallah {
-    font-size: min(var(--qpc-word-size, 18px), 22px) !important;
+    font-size: min(calc(var(--qpc-word-size, 24px) * 1.05), 28px) !important;
     max-width: 100% !important;
   }
 }
