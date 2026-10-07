@@ -54959,7 +54959,7 @@ compact readable type (never clip) —— */
 @media (max-width: 767.98px) {
   .app .main.mushaf-mode-active,
 .main.mushaf-mode-active {
-    padding-inline: clamp(16px, 4.8vw, 22px) !important;
+    padding-inline: max(2px, env(safe-area-inset-left, 0px)) max(2px, env(safe-area-inset-right, 0px)) !important;
     max-width: 100% !important;
   }
 
@@ -62836,12 +62836,12 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
     align-items: stretch !important;
     width: 100% !important;
     max-width: 100% !important;
-    /* No safe-area block padding on every leaf — that created huge per-page gaps. */
+    /* Edge-to-edge: hairline + safe-area only (no 0.875rem side gutters). */
     padding:
       0.08rem
-      max(0.875rem, env(safe-area-inset-right, 0px))
+      max(2px, env(safe-area-inset-right, 0px))
       0.2rem
-      max(0.875rem, env(safe-area-inset-left, 0px))
+      max(2px, env(safe-area-inset-left, 0px))
       !important;
   }
 

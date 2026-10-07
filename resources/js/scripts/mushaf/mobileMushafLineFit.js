@@ -7,7 +7,8 @@
  * Tajweed COLR and plain QCF both use the same caps, hairline, and sparse pack.
  */
 
-export const MOBILE_MUSHAF_HAIRLINE_PX = 12
+/** Near-zero side bezel — mushaf ink runs edge-to-edge on phones. */
+export const MOBILE_MUSHAF_HAIRLINE_PX = 2
 export const MOBILE_MUSHAF_SPARSE_RATIO = 0.92
 /** Desktop/tablet: centre anything that is not nearly full (avoids huge word gaps). */
 export const DESKTOP_MUSHAF_SPARSE_RATIO = 0.9

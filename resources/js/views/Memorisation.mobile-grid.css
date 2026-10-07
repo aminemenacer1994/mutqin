@@ -22,8 +22,8 @@
     --mobile-page-gutter: var(--mq-mobile-gutter);
     --mobile-safe-top: var(--mq-safe-top);
     --mobile-safe-bottom: var(--mq-safe-bottom);
-    --mq-mushaf-inline-start: max(16px, var(--mq-safe-left));
-    --mq-mushaf-inline-end: max(16px, var(--mq-safe-right));
+    --mq-mushaf-inline-start: max(2px, var(--mq-safe-left));
+    --mq-mushaf-inline-end: max(2px, var(--mq-safe-right));
     inline-size: 100%;
     max-inline-size: 100%;
   }
@@ -8350,9 +8350,11 @@ html body .app .workspace-recite-dock__button:hover {
     transform: none !important;
   }
 
-  /* QPC mushaf: full width shell, lines flush to both screen edges. */
+  /* QPC + classic mushaf: kill the shared .main 16px gutter; sheets use hairline only. */
   .app .main.madani-qpc-mode-active,
-  .main.madani-qpc-mode-active {
+  .main.madani-qpc-mode-active,
+  .app .main.mushaf-mode-active,
+  .main.mushaf-mode-active {
     padding-inline: 0 !important;
   }
 
@@ -8473,7 +8475,7 @@ html body .app .workspace-recite-dock__button:hover {
 
   /*
    * Final mobile mushaf contract. Beats the overflow:visible block above.
-   * One modest size, 16px inset, clip anything that still paints past the sheet.
+   * Edge-to-edge: hairline + safe-area only; full rows justify across the sheet.
    */
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet,
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-spread .qpc-madani-page__sheet,
@@ -8483,9 +8485,14 @@ html body .app .workspace-recite-dock__button:hover {
     max-width: 100% !important;
     overflow-x: clip !important;
     padding-inline:
-      max(16px, env(safe-area-inset-left, 0px))
-      max(16px, env(safe-area-inset-right, 0px)) !important;
+      max(2px, env(safe-area-inset-left, 0px))
+      max(2px, env(safe-area-inset-right, 0px)) !important;
     padding-block: 0.08rem 0.16rem !important;
+  }
+
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse) {
+    justify-content: space-between !important;
   }
 
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--ayah,

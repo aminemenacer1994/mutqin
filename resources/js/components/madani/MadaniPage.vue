@@ -1411,8 +1411,8 @@ export default {
     grid-template-rows: none;
     padding-block: 0.08rem 0.12rem;
     padding-inline:
-      max(6px, env(safe-area-inset-left, 0px))
-      max(6px, env(safe-area-inset-right, 0px));
+      max(2px, env(safe-area-inset-left, 0px))
+      max(2px, env(safe-area-inset-right, 0px));
   }
 
   .qpc-madani-page__sheet {
@@ -1462,8 +1462,8 @@ export default {
   .qpc-madani-page--session-scoped.qpc-madani-page--single .qpc-madani-page__sheet,
   .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
     padding-inline:
-      max(14px, env(safe-area-inset-left, 0px))
-      max(14px, env(safe-area-inset-right, 0px)) !important;
+      max(2px, env(safe-area-inset-left, 0px))
+      max(2px, env(safe-area-inset-right, 0px)) !important;
   }
 }
 
