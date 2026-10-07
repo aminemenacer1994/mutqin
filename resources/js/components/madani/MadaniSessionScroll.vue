@@ -75,6 +75,7 @@ import {
   orderPagesAroundFocus,
   selectPriorityPages,
 } from '../../scripts/mushaf/sessionPageLoad'
+import { MOBILE_MUSHAF_WORD_SIZE_FLOOR } from '../../scripts/mushaf/mobileMushafLineFit'
 
 /** Paint the whole session. Windowing hid later pages once inner scrollports were removed. */
 const FULL_PAINT_PAGE_LIMIT = 80
@@ -227,7 +228,10 @@ export default {
       this.fitSizesByPage = next
       const sizes = Object.values(next).filter((value) => Number(value) > 0)
       if (!sizes.length) return
-      this.sharedWordSize = Math.min(...sizes)
+      // Unify to the smallest page, but never below the mobile readable floor.
+      const minSize = Math.min(...sizes)
+      const phone = typeof window !== 'undefined' && window.innerWidth < 768
+      this.sharedWordSize = phone ? Math.max(MOBILE_MUSHAF_WORD_SIZE_FLOOR, minSize) : minSize
     },
     setPageAnchor(pageNumber, el) {
       const key = Number(pageNumber)
@@ -446,8 +450,8 @@ export default {
   max-width: 100%;
   min-width: 0;
   overflow: visible;
-  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
-  scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
   scroll-behavior: auto;
 }
 

@@ -922,9 +922,9 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
   .qpc-madani-session-scroll
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio {
-  min-height: 1.55rem;
-  margin: 0.45rem 0 0.6rem;
-  padding: 0.7rem 0 0.9rem;
+  min-height: 1.15rem;
+  margin: 0.22rem 0 0.3rem;
+  padding: 0.3rem 0 0.4rem;
   border: 0;
   border-bottom: 0;
   font-family: "Amiri Quran", "Amiri", serif;
@@ -953,9 +953,9 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
   .madani-qpc-viewport
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio-number {
-  font-size: 1.68rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
@@ -975,9 +975,9 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .qpc-madani-session-scroll
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio {
-  min-height: 1.55rem;
-  margin: 0.45rem 0 0.6rem;
-  padding: 0.7rem 0 0.9rem;
+  min-height: 1.15rem;
+  margin: 0.22rem 0 0.3rem;
+  padding: 0.3rem 0 0.4rem;
   border: 0;
   border-bottom: 0;
   font-family: "Amiri Quran", "Amiri", serif;
@@ -1007,9 +1007,9 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .madani-qpc-viewport
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio-number {
-  font-size: 1.82rem !important;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.9rem !important;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   line-height: 1;
 }
 

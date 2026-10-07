@@ -7,26 +7,41 @@
  * Tajweed COLR and plain QCF both use the same caps, hairline, and sparse pack.
  */
 
-export const MOBILE_MUSHAF_HAIRLINE_PX = 16
+export const MOBILE_MUSHAF_HAIRLINE_PX = 12
 export const MOBILE_MUSHAF_SPARSE_RATIO = 0.92
 /** Desktop/tablet: centre anything that is not nearly full (avoids huge word gaps). */
 export const DESKTOP_MUSHAF_SPARSE_RATIO = 0.9
 /** Extra headroom — QCF ink paints past the measured advance on phones. */
-export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.82
-export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.86
+export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.88
+export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.9
+/** Never shrink phone ink below this — unreadably small mushaf pages. */
+export const MOBILE_MUSHAF_WORD_SIZE_FLOOR = 22
 /** Hard ceiling so short surahs (Kawthar) cannot blow up past a normal page. */
-export const MOBILE_MUSHAF_WORD_SIZE_CAP = 28
+export const MOBILE_MUSHAF_WORD_SIZE_CAP = 30
 
 /**
  * One phone word size for every page — dense or short, tajweed on or off.
  * Sized from the viewport, never from the shortest line (that is what blew up Kawthar).
- * Target ~24–28px on common phones so diacritics stay readable.
+ * This is the STARTING size; shrink-to-fit may only go down to the floor.
  */
 export function mobileMushafWordSizePx(viewportWidth = 390) {
   const view = Number(viewportWidth)
   const inner = Math.max(240, (view > 0 ? view : 390) - MOBILE_MUSHAF_HAIRLINE_PX * 2)
-  const fitted = Math.floor(inner / 14)
-  return Math.max(18, Math.min(MOBILE_MUSHAF_WORD_SIZE_CAP, fitted))
+  const fitted = Math.floor(inner / 13)
+  return Math.max(
+    MOBILE_MUSHAF_WORD_SIZE_FLOOR,
+    Math.min(MOBILE_MUSHAF_WORD_SIZE_CAP, fitted),
+  )
+}
+
+/** Clamp a fitted phone size into the readable band. */
+export function clampMobileMushafWordSize(size) {
+  const n = Math.round(Number(size) || 0)
+  if (!(n > 0)) return MOBILE_MUSHAF_WORD_SIZE_FLOOR
+  return Math.max(
+    MOBILE_MUSHAF_WORD_SIZE_FLOOR,
+    Math.min(MOBILE_MUSHAF_WORD_SIZE_CAP, n),
+  )
 }
 
 export function mobileViewportInnerWidth(padLeft = 0, padRight = 0) {

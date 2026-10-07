@@ -62829,9 +62829,9 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 1.55rem;
-    margin: 0.45rem 0 0.6rem;
-    padding: 0.7rem 0 0.9rem;
+    min-height: 1.15rem;
+    margin: 0.22rem 0 0.3rem;
+    padding: 0.3rem 0 0.4rem;
     border: 0;
     border-bottom: 0;
   }
@@ -62845,8 +62845,8 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
   }
 
   .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
-    font-size: 0.95rem !important;
-    font-weight: 700;
+    font-size: 0.9rem !important;
+    font-weight: 600;
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
@@ -66558,9 +66558,9 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 @media (max-width: 767.98px) {
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__folio {
-    min-height: 1.55rem;
-    margin: 0.45rem 0 0.6rem;
-    padding: 0.7rem 0 0.9rem;
+    min-height: 1.15rem;
+    margin: 0.22rem 0 0.3rem;
+    padding: 0.3rem 0 0.4rem;
     border: 0;
     border-bottom: 0;
     color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
@@ -66576,9 +66576,9 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
-    font-size: 1.82rem !important;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-size: 0.9rem !important;
+    font-weight: 600;
+    letter-spacing: 0.04em;
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
