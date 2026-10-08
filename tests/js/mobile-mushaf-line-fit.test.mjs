@@ -40,7 +40,10 @@ assert.equal(isMobileMushafAyahSparse({ naturalWidth: 120, availableWidth: 360, 
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 340, availableWidth: 360, wordCount: 9 }), false)
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 300, availableWidth: 360, wordCount: 6 }), true)
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 200, availableWidth: 360, wordCount: 8, ratio: 0.9 }), true)
-assert.equal(isMobileMushafAyahSparse({ naturalWidth: 200, availableWidth: 360, wordCount: 8, phone: true }), false)
+// Phone leftover rows must centre (ratio + word-cap); dense near-full rows still stretch.
+assert.equal(isMobileMushafAyahSparse({ naturalWidth: 200, availableWidth: 360, wordCount: 8, phone: true }), true)
+assert.equal(isMobileMushafAyahSparse({ naturalWidth: 340, availableWidth: 360, wordCount: 10, phone: true }), false)
+assert.equal(isMobileMushafAyahSparse({ naturalWidth: 200, availableWidth: 360, wordCount: 7, phone: true }), true)
 assert.equal(isMobileMushafAyahSparse({ naturalWidth: 0, availableWidth: 360 }), false)
 assert.equal(mobileMushafAyahJustify(true), 'center')
 assert.equal(mobileMushafAyahJustify(false), 'space-between')

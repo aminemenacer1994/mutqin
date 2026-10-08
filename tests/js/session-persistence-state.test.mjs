@@ -332,10 +332,22 @@ const t = (key) => key
     centralStatus: 'completed',
   }), true)
 
-  // Stale completed flag while still live must soft-exit.
+  // Stale completed flag while still live must soft-exit (unless queue exhausted).
   assert.equal(resolveExitRangeComplete({
     sessionCompleted: true,
     mutqinSessionActive: true,
+  }), false)
+
+  // Last ayah finished playing — End Session is a real completion even while live.
+  assert.equal(resolveExitRangeComplete({
+    mutqinSessionActive: true,
+    queuePlaybackExhausted: true,
+  }), true)
+
+  // Paused still soft-exits even after queue exhaustion (save for later).
+  assert.equal(resolveExitRangeComplete({
+    sessionPaused: true,
+    queuePlaybackExhausted: true,
   }), false)
 
   // End on a live sitting (including 1-ayah "100%") is terminal, not Resume.
@@ -345,6 +357,16 @@ const t = (key) => key
   assert.equal(early.endEarly, true)
   assert.equal(early.saveForLater, false)
   assert.equal(early.completeSession, false)
+
+  // End after last-ayah audio finished opens the success completion path.
+  const finished = resolveEndSessionConfirmDecision(END_SESSION_CONFIRM_ACTION.END_SESSION, {
+    rangeComplete: resolveExitRangeComplete({
+      mutqinSessionActive: true,
+      queuePlaybackExhausted: true,
+    }),
+  })
+  assert.equal(finished.completeSession, true)
+  assert.equal(finished.endEarly, false)
 }
 
 console.log('session-persistence-state.test.mjs: all assertions passed')

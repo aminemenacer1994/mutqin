@@ -25,9 +25,8 @@ class LogMutqinApiRequest
             return $response;
         }
 
-        // State polls are high-frequency; skip the structured log while still
-        // returning a request id for client correlation.
-        if (! ($request->isMethod('GET') && $request->is('api/state'))) {
+        // High-frequency GETs: skip structured logs; still return X-Request-Id.
+        if (! $this->shouldSkipStructuredLog($request)) {
             MutqinLog::info('api.request.completed', array_merge(
                 MutqinLog::requestContext($request),
                 [
@@ -40,5 +39,18 @@ class LogMutqinApiRequest
         $response->headers->set('X-Request-Id', $requestId);
 
         return $response;
+    }
+
+    private function shouldSkipStructuredLog(Request $request): bool
+    {
+        if (! $request->isMethod('GET')) {
+            return false;
+        }
+
+        return $request->is(
+            'api/state',
+            'api/session/current',
+            'api/continue',
+        );
     }
 }

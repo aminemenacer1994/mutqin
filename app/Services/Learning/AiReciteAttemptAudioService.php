@@ -109,17 +109,17 @@ class AiReciteAttemptAudioService
         ];
     }
 
+    /**
+     * Metadata-only check for list/dashboard payloads.
+     * Avoids per-row Storage::exists() round-trips; stream/detail still verify the file.
+     */
     public function hasPlayableAudio(?AiReciteAttempt $attempt): bool
     {
         if (! $attempt?->audio_path) {
             return false;
         }
 
-        if ($this->isExpired($attempt)) {
-            return false;
-        }
-
-        return $this->hasFile($attempt);
+        return ! $this->isExpired($attempt);
     }
 
     public function stream(User $user, AiReciteAttempt $attempt): ?Response

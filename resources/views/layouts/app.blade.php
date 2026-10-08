@@ -435,9 +435,7 @@
         html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-spread__leaf {
           overflow: visible !important;
         }
-        html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-word {
-          font-size: calc(var(--qpc-word-size, 22px) * 0.86) !important;
-        }
+        /* Do not shrink --qpc-word-size here: that invents gaps under space-between. */
       }
     </style>
     <style id="mutqin-memorisation-hotfix-v118">
@@ -1089,7 +1087,9 @@
         }
         html body .app .workspace-shell-head-toolbar .top-card-action-trigger.session-primary-action,
         html body .app .workspace-shell-head-toolbar .top-card-action-trigger.action-btn-exit {
-          min-height: 44px !important;
+          min-height: 30px !important;
+          height: 30px !important;
+          max-height: 30px !important;
         }
         /* Post-session mobile: full-width 50/50 CTAs (avoid display:contents shrink-wrap). */
         html body .app .workspace-shell--post-session-choice .workspace-shell-actions,
@@ -1225,9 +1225,9 @@
         }
         .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
           display: grid !important;
-          grid-template-columns: minmax(0, 1fr) !important;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
           flex: 1 1 auto !important;
-          gap: 0.35rem !important;
+          gap: 0.3rem !important;
           width: 100% !important;
           min-width: 0 !important;
           grid-column: auto !important;
@@ -1240,8 +1240,8 @@
           min-width: 0 !important;
         }
         .app .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
-          grid-column: 1 !important;
-          grid-row: 2 !important;
+          grid-column: 2 !important;
+          grid-row: 1 !important;
           width: 100% !important;
           min-width: 0 !important;
         }
@@ -1336,14 +1336,15 @@
         .app .top-card-menu .top-card-menu-toggle--layout {
           display: flex !important;
         }
-        .app .workspace-shell-actions .top-card-action-trigger.session-primary-action,
-        .app .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
-          min-height: 32px !important;
-          height: 32px !important;
-          padding: 0 0.5rem !important;
-          font-size: 0.7rem !important;
+        html body .app .workspace-shell-actions .top-card-action-trigger.session-primary-action,
+        html body .app .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
+          min-height: 30px !important;
+          height: 30px !important;
+          max-height: 30px !important;
+          padding: 0 0.45rem !important;
+          font-size: 0.68rem !important;
           font-weight: 400 !important;
-          border-radius: 9px !important;
+          border-radius: 8px !important;
           box-shadow: none !important;
           width: 100% !important;
           min-width: 0 !important;
@@ -3891,6 +3892,13 @@
             align-items: center;
             gap: 2px;
             margin-inline-start: 2px;
+        }
+
+        /* Keep Login/Register out of the top bar below lg; they live in the hamburger drawer. */
+        @media (max-width: 991.98px) {
+            .navbar-quick-actions .app-auth-links--bar {
+                display: none !important;
+            }
         }
 
         .app-auth-links--bar .app-auth-link {
@@ -7153,7 +7161,7 @@
             }
 
             .nav-links-desktop,
-            .app-auth-links {
+            .app-auth-links--drawer {
                 display: grid !important;
                 grid-template-columns: minmax(0, 1fr);
                 gap: 8px !important;
@@ -10543,21 +10551,28 @@ body.session-analysis-modal-open {
 </style>
 <style id="mutqin-memorisation-hotfix-v199">
   /*
-   * Mushaf / QPC: stretch every ayah line edge-to-edge (including session-partial
-   * top fragments) so the page matches a printed mushaf flush layout.
+   * Mushaf / QPC: stretch full ayah rows edge-to-edge; leftover sparse rows centre
+   * so desktop does not spray a few words across the viewport.
    */
-  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
-  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
-  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
-  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--session-partial,
-  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
-  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
-  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
-  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial {
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse) {
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: 0 !important;
     justify-content: space-between !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--sparse,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--sparse,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--sparse,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--sparse {
+    justify-content: center !important;
   }
 
   html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
@@ -10717,12 +10732,12 @@ body.session-analysis-modal-open {
    * Keep each mushaf/QPC ayah as one printed row. Wrapping + last-line justify
    * piles words on top of each other (ayah markers jump lines).
    */
-  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
-  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
-  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
-  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial,
-  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
-  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah {
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse) {
     display: flex !important;
     flex-flow: row nowrap !important;
     flex-wrap: nowrap !important;
@@ -10731,6 +10746,23 @@ body.session-analysis-modal-open {
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: 0 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial.qpc-madani-line--sparse,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial.qpc-madani-line--sparse,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
     white-space: nowrap !important;
     overflow: visible !important;
   }
@@ -10778,14 +10810,14 @@ body.session-analysis-modal-open {
     padding-inline: max(2px, env(safe-area-inset-left, 0px)) max(2px, env(safe-area-inset-right, 0px)) !important;
   }
 
-  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
-  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
-  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
-  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial,
-  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah,
-  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial,
-  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah,
-  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page:first-child .qpc-madani-line--ayah {
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page:first-child .qpc-madani-line--ayah:not(.qpc-madani-line--sparse) {
     display: flex !important;
     flex-flow: row nowrap !important;
     flex-wrap: nowrap !important;
@@ -10794,6 +10826,24 @@ body.session-analysis-modal-open {
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: 0 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial.qpc-madani-line--sparse,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--session-partial.qpc-madani-line--sparse,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page:first-child .qpc-madani-line--ayah.qpc-madani-line--sparse {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
     white-space: nowrap !important;
     overflow: visible !important;
   }
@@ -11126,9 +11176,20 @@ body.session-analysis-modal-open {
   }
 </style>
 <style id="mutqin-memorisation-hotfix-v212">
-  /* Desktop + tablet only: force full rows flush, leftover rows centred, tighter leading. */
+  /* Desktop + tablet: keep page at printed width; leftover rows centred; tighter leading. */
   @media (min-width: 768px) {
     html body .app .main.madani-qpc-mode-active .qpc-madani-page,
+    html body .app .qpc-madani-session-scroll .qpc-madani-page,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page--single {
+      --qpc-line-min-height: 1.28;
+      --qpc-line-height: 1.2;
+      --qpc-line-gap: 0;
+      width: min(100%, 40rem) !important;
+      max-width: min(100%, 40rem) !important;
+      margin-inline: auto !important;
+    }
+
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
     html body .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
       --qpc-line-min-height: 1.28;
@@ -11664,12 +11725,15 @@ body.session-analysis-modal-open {
         var words = line.querySelectorAll('.qpc-madani-word, .madani-word')
         var natural = 0
         for (var i = 0; i < words.length; i += 1) natural += words[i].offsetWidth || 0
-        // Phones: only leftover rows (≤6 words) centre — ratio-centering left side gutters on tajweed.
+        // Phone + desktop: centre short rows (≤8 words) or under-filled rows.
+        // Phone ratio is looser (0.86) so dense tajweed rows still stretch.
         if (mobile) {
-          sparse = words.length > 0 && words.length <= 6
+          var phoneRatio = 0.86
+          sparse = (words.length > 0 && words.length <= 8)
+            || (natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * phoneRatio)
         } else {
-          var ratio = 0.9
-          sparse = (words.length > 0 && words.length <= 6)
+          var ratio = 0.96
+          sparse = (words.length > 0 && words.length <= 8)
             || (natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * ratio)
         }
         line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))

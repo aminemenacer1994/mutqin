@@ -57,7 +57,16 @@ function sliceMethod(source, name) {
   assert.equal(first.repetitionsPerStep, 2)
   assert.equal(first.reciterId, 'ar.alafasy')
   assert.equal(buildDefaultWorkspaceSessionConfig().rangeEnd, 7)
-  assert.match(memorisationJs, /applyFirstOnboardingSessionConfig\(\{ openSetup: false, silent: true \}\)/)
+  // Skip/finish tour lands on full Al-Fatihah (1–7), not the tour preview 1–5.
+  const skip = sliceMethod(memorisationJs, 'skipOnboardingToFirstSession')
+  assert.match(skip, /fullFatihah:\s*true/)
+  const intoFirst = sliceMethod(memorisationJs, 'completeOnboardingIntoFirstSession')
+  assert.match(intoFirst, /fullFatihah/)
+  assert.match(intoFirst, /buildDefaultWorkspaceSessionConfig\(/)
+  assert.match(intoFirst, /applyFirstOnboardingSessionConfig\(\{ openSetup: false, silent: true, prefs \}\)/)
+  const commit = sliceMethod(memorisationJs, 'commitWorkspaceTourFocusedReview')
+  assert.match(commit, /buildDefaultWorkspaceSessionConfig/)
+  assert.doesNotMatch(commit, /buildWorkspaceTourPracticeConfig/)
 }
 
 {

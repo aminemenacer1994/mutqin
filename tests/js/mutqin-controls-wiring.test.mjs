@@ -630,6 +630,13 @@ includesAll('pause session halts Talqin automation', [
   /applyLocalPausedSessionState\(\)\s*\n\s*this\.softPausePlayback\(\)/,
 ])
 
+includesAll('queue end completion ignores open Controls', [
+  /toolsOpen: atQueueEnd \? false : this\.showTools/,
+  /toolsOpen: endOfQueue \? false : this\.showTools/,
+  /queuePlaybackExhausted = true/,
+  /this\.handleSessionComplete\(\)/,
+])
+
 assert.doesNotMatch(
   source,
   /this\.talqinRecitationTurnActive = false/,
@@ -822,7 +829,7 @@ includesAll('planner ui gated by premium tier rest', [
   /workspace-shell-overview-toggle__chevron/,
   /resetPageScrollAfterReload/,
   /applyMemorisationPageLoadDefaults/,
-  /DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED[\s\S]*?mainCardCollapsed = false/,
+  /DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED[\s\S]*?mainCardCollapsed = !DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED/,
   /coldPageLoadScrollGuard/,
   /if \(this\.coldPageLoadScrollGuard\) return true/,
   /class="top-card-icon-controls"/,

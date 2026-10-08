@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -15,6 +16,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class AyahAudioController extends Controller
 {
+    private const PROXY_CACHE_TTL_SECONDS = 86400;
+
     public function __invoke(Request $request, string $reciter, int $ayah): Response|BinaryFileResponse
     {
         if (! preg_match('/^[a-z0-9._-]+$/i', $reciter)) {
@@ -32,6 +35,12 @@ class AyahAudioController extends Controller
                 'Cache-Control' => 'public, max-age=31536000, immutable',
                 'X-Content-Type-Options' => 'nosniff',
             ]);
+        }
+
+        $cacheKey = "ayah-audio:v1:{$reciter}:{$ayah}";
+        $cached = Cache::get($cacheKey);
+        if (is_array($cached) && is_string($cached['body'] ?? null) && $cached['body'] !== '') {
+            return $this->audioResponse($cached['body'], $ayah);
         }
 
         $candidates = array_values(array_unique([
@@ -52,19 +61,31 @@ class AyahAudioController extends Controller
             $response = Http::timeout(20)->get($url);
             if ($response->successful()) {
                 $body = $response->body();
+                if (is_string($body) && $body !== '') {
+                    try {
+                        Cache::put($cacheKey, ['body' => $body], self::PROXY_CACHE_TTL_SECONDS);
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
 
-                return response($body, 200, [
-                    'Content-Type' => 'audio/mpeg',
-                    'Content-Length' => (string) strlen($body),
-                    'Content-Disposition' => 'inline; filename="'.$ayah.'.mp3"',
-                    'Cache-Control' => 'public, max-age=86400',
-                    'X-Content-Type-Options' => 'nosniff',
-                ]);
+                return $this->audioResponse($body, $ayah);
             }
 
             $lastStatus = $response->status() ?: 502;
         }
 
         abort($lastStatus, 'Failed to fetch audio');
+    }
+
+    private function audioResponse(string $body, int $ayah): Response
+    {
+        return response($body, 200, [
+            'Content-Type' => 'audio/mpeg',
+            'Content-Length' => (string) strlen($body),
+            'Content-Disposition' => 'inline; filename="'.$ayah.'.mp3"',
+            'Cache-Control' => 'public, max-age=86400',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

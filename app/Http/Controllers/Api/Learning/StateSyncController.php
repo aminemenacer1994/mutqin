@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api\Learning;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Learning\SyncStateRequest;
+use App\Jobs\DeriveLearningStateJob;
 use App\Models\MemorisationSyncState;
-use App\Services\DashboardService;
-use App\Services\LearningStateDeriver;
 use App\Services\Memorisation\LearningHistoryRetentionService;
 use App\Support\AudioPrivacy;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -68,7 +67,6 @@ class StateSyncController extends Controller
 
     public function store(
         SyncStateRequest $request,
-        LearningStateDeriver $deriver,
         LearningHistoryRetentionService $retention
     ): JsonResponse {
         $user = $request->user();
@@ -156,13 +154,12 @@ class StateSyncController extends Controller
                 ->update($syncPayload);
         }
 
-        try {
-            $deriver->derive($user, $validated['state'], $validated['continue'] ?? null);
-        } catch (\Throwable $e) {
-            report($e);
-        }
-
-        DashboardService::forgetForUser($user);
+        // Blob is durable; project normalised tables + bust dashboard off-thread.
+        DeriveLearningStateJob::dispatch(
+            $user->id,
+            $payloadHash,
+            $validated['continue'] ?? null,
+        );
 
         return response()->json([
             'saved' => true,

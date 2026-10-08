@@ -66,13 +66,16 @@ class NextSessionRecommendationService
 
         // Fast path: reuse an open recommendation for this session without
         // re-running context/scoring or writing on every GET.
+        $existingByKey = null;
+        $checkedIdempotency = false;
         if ($session) {
-            $existing = SessionRecommendation::query()
+            $existingByKey = SessionRecommendation::query()
                 ->where('user_id', $user->id)
                 ->where('idempotency_key', 'complete-'.$session->id)
                 ->first();
-            if ($existing && $this->isReusableOpenRecommendation($existing)) {
-                return $this->payloadFromRecord($existing);
+            $checkedIdempotency = true;
+            if ($existingByKey && $this->isReusableOpenRecommendation($existingByKey)) {
+                return $this->payloadFromRecord($existingByKey);
             }
         }
 
@@ -89,7 +92,13 @@ class NextSessionRecommendationService
         // drift). The client can still present an actionable next step.
         $record = null;
         try {
-            $record = $this->persistRecommendation($user, $session, $payload);
+            $record = $this->persistRecommendation(
+                $user,
+                $session,
+                $payload,
+                $checkedIdempotency ? $existingByKey : null,
+                $checkedIdempotency,
+            );
         } catch (\Throwable) {
             $record = null;
         }
@@ -850,7 +859,7 @@ class NextSessionRecommendationService
             return null;
         }
 
-        if ($this->recentRevisionAcceptCount($user, (int) $context['surah']['id']) >= self::REVISION_ESCAPE_AFTER_ACCEPTS) {
+        if ($this->recentRevisionAcceptCount($user, (int) $context['surah']['id'], $context) >= self::REVISION_ESCAPE_AFTER_ACCEPTS) {
             return null;
         }
 
@@ -1785,8 +1794,13 @@ class NextSessionRecommendationService
     /**
      * @param  array<string, mixed>  $payload
      */
-    private function persistRecommendation(User $user, ?UserSession $session, array $payload): ?SessionRecommendation
-    {
+    private function persistRecommendation(
+        User $user,
+        ?UserSession $session,
+        array $payload,
+        ?SessionRecommendation $knownByKey = null,
+        bool $checkedIdempotency = false,
+    ): ?SessionRecommendation {
         $type = (string) ($payload['type'] ?? RecommendationType::NoRecommendation->value);
         if (in_array($type, [RecommendationType::NoRecommendation->value], true)) {
             return null;
@@ -1801,10 +1815,12 @@ class NextSessionRecommendationService
             : null;
 
         if ($idempotencyKey) {
-            $byKey = SessionRecommendation::query()
-                ->where('user_id', $user->id)
-                ->where('idempotency_key', $idempotencyKey)
-                ->first();
+            $byKey = $checkedIdempotency
+                ? $knownByKey
+                : SessionRecommendation::query()
+                    ->where('user_id', $user->id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->first();
             if ($byKey && $this->isReusableOpenRecommendation($byKey)) {
                 $record = $this->refreshOpenRecommendation($byKey, $payload, $session, $settings);
                 if ($record) {
@@ -2707,8 +2723,16 @@ class NextSessionRecommendationService
         return $keys;
     }
 
-    private function recentRevisionAcceptCount(User $user, int $surahId): int
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function recentRevisionAcceptCount(User $user, int $surahId, array $context = []): int
     {
+        $fromSnapshot = $context['learner']['recent_revision_accepts'] ?? null;
+        if (is_array($fromSnapshot)) {
+            return (int) ($fromSnapshot[$surahId] ?? $fromSnapshot[(string) $surahId] ?? 0);
+        }
+
         return SessionRecommendation::query()
             ->where('user_id', $user->id)
             ->where('surah_number', $surahId)

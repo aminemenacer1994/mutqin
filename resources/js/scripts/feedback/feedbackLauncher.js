@@ -4,6 +4,16 @@ export const FEEDBACK_OPEN_EVENT = 'mutqin:open-feedback';
 let modalHandler = null;
 /** @type {object[]} */
 const pendingOpens = [];
+/** @type {(() => void | Promise<void>) | null} */
+let ensureMounted = null;
+
+/**
+ * Optional hook so the app shell can lazy-mount FeedbackModal on first open.
+ * @param {(() => void | Promise<void>) | null} fn
+ */
+export function setFeedbackModalEnsureMounted(fn) {
+  ensureMounted = typeof fn === 'function' ? fn : null;
+}
 
 /**
  * @param {(options: object) => void} handler
@@ -23,12 +33,20 @@ export function unregisterFeedbackModalHandler() {
  * @param {object} [options]
  */
 export function openFeedbackModal(options = {}) {
-  if (modalHandler) {
-    modalHandler(options);
+  const deliver = () => {
+    if (modalHandler) {
+      modalHandler(options);
+      return;
+    }
+    pendingOpens.push(options);
+  };
+
+  if (ensureMounted) {
+    Promise.resolve(ensureMounted()).then(deliver).catch(deliver);
     return;
   }
 
-  pendingOpens.push(options);
+  deliver();
 }
 
 /**

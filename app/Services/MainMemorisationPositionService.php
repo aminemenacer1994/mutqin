@@ -35,7 +35,7 @@ class MainMemorisationPositionService
 
         $inferred = $this->infer($user, $row);
         if ($inferred && $persistInferred) {
-            $this->save($user, $inferred);
+            $this->save($user, $inferred, $row, true);
         }
 
         return $inferred;
@@ -45,14 +45,20 @@ class MainMemorisationPositionService
      * @param  array<string, mixed>  $position
      * @return array{surah_number: int, surah_name: string|null, ayah_start: int, ayah_end: int, source: string|null}|null
      */
-    public function save(User $user, array $position): ?array
-    {
+    public function save(
+        User $user,
+        array $position,
+        ?UserLastPosition $row = null,
+        bool $rowResolved = false,
+    ): ?array {
         $normalized = $this->normalize($position);
         if (! $normalized) {
             return null;
         }
 
-        $row = UserLastPosition::query()->where('user_id', $user->id)->first();
+        if (! $rowResolved) {
+            $row = UserLastPosition::query()->where('user_id', $user->id)->first();
+        }
         $metadata = is_array($row?->metadata) ? $row->metadata : [];
         $metadata[self::METADATA_KEY] = $normalized;
 
@@ -62,7 +68,7 @@ class MainMemorisationPositionService
             'last_step' => $row?->last_step ?? 0,
             'metadata' => $metadata,
             'last_opened_at' => $row?->last_opened_at ?? now(),
-        ]);
+        ], $row, true);
 
         return $normalized;
     }
@@ -95,19 +101,31 @@ class MainMemorisationPositionService
     /**
      * @param  array<string, mixed>  $attributes
      */
-    public function writeLastPosition(User $user, array $attributes): UserLastPosition
-    {
-        $existing = UserLastPosition::query()->where('user_id', $user->id)->first();
+    public function writeLastPosition(
+        User $user,
+        array $attributes,
+        ?UserLastPosition $existing = null,
+        bool $existingResolved = false,
+    ): UserLastPosition {
+        if (! $existingResolved) {
+            $existing = UserLastPosition::query()->where('user_id', $user->id)->first();
+        }
         $incomingMeta = array_key_exists('metadata', $attributes)
             ? (is_array($attributes['metadata']) ? $attributes['metadata'] : null)
             : null;
         $attributes['metadata'] = $this->mergePreservingMain($incomingMeta, $existing?->metadata);
 
+        if ($existing) {
+            $existing->fill($attributes)->save();
+
+            return $existing;
+        }
+
         try {
-            return UserLastPosition::updateOrCreate(
+            return UserLastPosition::query()->create(array_merge(
                 ['user_id' => $user->id],
                 $attributes
-            );
+            ));
         } catch (UniqueConstraintViolationException $e) {
             $row = UserLastPosition::query()->where('user_id', $user->id)->first();
             if ($row) {
@@ -204,7 +222,9 @@ class MainMemorisationPositionService
             return;
         }
 
-        $current = $this->get($user);
+        // Single load: avoid get()+save() each re-querying user_last_positions.
+        $row = UserLastPosition::query()->where('user_id', $user->id)->first();
+        $current = $this->fromMetadata($row) ?? $this->infer($user, $row);
         if ($current && $sourceSession) {
             $meta = is_array($sourceSession->metadata) ? $sourceSession->metadata : [];
             $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
@@ -221,7 +241,7 @@ class MainMemorisationPositionService
             'ayah_start' => (int) $recommendation->ayah_start,
             'ayah_end' => (int) $recommendation->ayah_end,
             'source' => 'recommendation',
-        ]);
+        ], $row, true);
     }
 
     /**

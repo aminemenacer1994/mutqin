@@ -24,7 +24,7 @@ assert.equal(DEFAULT_TAJWEED_ENABLED, false, 'tajweed is off by default')
 assert.equal(resolveStoredTajweedEnabled(true, 0), false, 'old saved tajweed-on does not override the new default')
 assert.equal(resolveStoredTajweedEnabled(true, 2), true, 'an explicit toggle after the revision stays on')
 assert.equal(resolveStoredTajweedEnabled(false, 2), false)
-assert.equal(DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED, true, 'mobile session dashboard is expanded by default')
+assert.equal(DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED, false, 'mobile session dashboard is minimised by default')
 
 // Fresh workspace / reset config
 {

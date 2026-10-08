@@ -20,7 +20,7 @@ Targeted optimisations for Mutqin session start, AI recitation, recommendations,
 | Session lifecycle | `currentUnfinished` / legacy lock path query unfinished statuses first and cap legacy scans |
 | Recommendations | Background (non-blocking) learning sync; abort stale `/recommendations/next` when modal state resets; keep end-response plan when already ready |
 | Session start | Backend `startSession` no longer awaited before local countdown/playback |
-| Dashboard | Skip mount quiet refetch when `initialData` present; 45s quiet TTL; abort superseded fetches; remount chart only when series fingerprint changes |
+| Dashboard | Skip mount quiet refetch when `initialData` present; 90s quiet TTL; abort superseded fetches; remount chart only when series fingerprint changes |
 | Persistence | Debounce deep-state save (400ms); skip learning sync while STARTING or AMD recording |
 | Toolbar | Lazy-mount tools panel on first open (`v-if` + keep warm) |
 | AMD / audio | O(1) ayah-bound map; VAD ~15 Hz; audio UI sync ~4 Hz; follow scroll only when confirmed cursor moves; skip tajweed child scans when no marks |

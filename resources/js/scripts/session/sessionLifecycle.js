@@ -467,9 +467,10 @@ export function resolveSessionExitTransition({
  * A 1-ayah range is always "100% through the range" by position the moment it
  * starts — that used to terminal-end soft exits and wipe Resume.
  *
- * Complete only when the sitting has already been marked completed (queue
- * finished / handleSessionComplete), and the learner is not still in a live
- * or paused practice sitting.
+ * Complete when:
+ * - the queue's last ayah has finished playing (`queuePlaybackExhausted`), or
+ * - the sitting has already been marked completed (handleSessionComplete),
+ *   and the learner is not still in a paused practice sitting.
  */
 export function resolveExitRangeComplete(input = {}) {
   const {
@@ -478,12 +479,21 @@ export function resolveExitRangeComplete(input = {}) {
     sessionPaused = false,
     mutqinSessionActive = false,
     engineCompleted = false,
+    queuePlaybackExhausted = false,
     centralStatus = null,
   } = input
 
   if (sessionEndedEarly) return false
-  // Live or paused practice is always soft-exit territory.
-  if (mutqinSessionActive || sessionPaused) return false
+  // Paused = soft-exit / save-for-later territory.
+  if (sessionPaused) return false
+
+  // Last queue entry finished playing — End Session is a real completion even
+  // while the sitting is still technically live (e.g. Controls open blocked
+  // auto handleSessionComplete).
+  if (queuePlaybackExhausted) return true
+
+  // Live practice without queue exhaustion is soft-exit territory.
+  if (mutqinSessionActive) return false
 
   const status = String(centralStatus || '').toLowerCase()
   if (
@@ -840,7 +850,7 @@ export function resolveSessionActionPresentation(action, t = (key) => key, optio
     ariaBusy: loading,
     icon: entry.icon,
     showEndCompanion,
-    stableWidthCh: Number(options.stableWidthCh || 16),
+    stableWidthCh: Number(options.stableWidthCh || 12),
   }
 }
 

@@ -375,6 +375,8 @@ function sliceMethod(source, name) {
   assert.match(sliceMethod(memorisationJs, 'buildWorkspaceTourPracticeConfig'), /ar\.alafasy/)
   assert.match(sliceMethod(memorisationJs, 'teardownWorkspaceTourPreview'), /commitWorkspaceTourFocusedReview/)
   const commit = sliceMethod(memorisationJs, 'commitWorkspaceTourFocusedReview')
+  assert.match(commit, /buildDefaultWorkspaceSessionConfig/)
+  assert.doesNotMatch(commit, /buildWorkspaceTourPracticeConfig/)
   assert.match(commit, /rangeEnd/)
   assert.match(commit, /reciterId/)
   assert.match(commit, /workspaceTourFreshStartPending = true/)

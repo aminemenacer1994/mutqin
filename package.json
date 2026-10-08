@@ -15,6 +15,7 @@
         "test:quran-integrity": "node --experimental-vm-modules tests/js/quran-content-integrity.test.mjs",
         "perf:bundles": "node scripts/perf/analyze-bundles.mjs",
         "perf:bundles:json": "node scripts/perf/analyze-bundles.mjs --json",
+        "perf:prune-js": "node scripts/perf/prune-stale-public-js.mjs",
         "perf:smoke": "node scripts/perf/autocannon-smoke.mjs",
         "audit:i18n": "node scripts/i18n-full-audit.mjs",
         "audit:i18n:fr-es": "node tests/js/i18n-fr-es.test.mjs",

@@ -1,18 +1,23 @@
 /**
- * Mobile-only PWA bootstrap.
- * Desktop / tablet viewports (≥768px) skip registration and clear any prior SW.
+ * PWA bootstrap.
  *
- * Chromium phones: native beforeinstallprompt banner.
- * Login + register: iPhone Home Screen install guide (Safari has no install prompt API).
- * Android keeps the native banner path and does not see the iPhone instructions.
+ * Phone viewports + Apple devices (iPhone / iPad / Mac): register the service
+ * worker so install works across browsers. Non-Apple desktop stays SW-free.
+ *
+ * Chromium (Android + Mac): native beforeinstallprompt banner when available.
+ * Auth pages: Apple install guide with Safari / Chrome / Edge / Firefox steps
+ * (iOS never fires beforeinstallprompt for third-party browsers either).
  *
  * Auth pages live inside Vue's `#app` mount. Listeners must use event delegation
  * because Vue re-renders the login/register DOM after async i18n bootstrap.
  */
 
+import { getBrowserInfo } from './scripts/browser/getBrowserInfo';
+
 const MOBILE_MQ = '(max-width: 767.98px)';
 const INSTALL_DISMISS_KEY = 'mutqin.pwa.install.dismissed';
 const IOS_INSTALL_DISMISS_KEY = 'mutqin.pwa.ios-install.dismissed';
+const APPLE_INSTALL_BROWSERS = ['safari', 'chrome', 'edge', 'firefox'];
 
 function uiLabel(key) {
     const locale = window.mutqinInitialLocale
@@ -34,14 +39,37 @@ function isStandaloneDisplay() {
 }
 
 function isIosDevice() {
-    const ua = window.navigator.userAgent || '';
-    if (/iPhone|iPod|iPad/i.test(ua)) return true;
-    // iPadOS 13+ may report as Macintosh with touch.
-    return window.navigator.platform === 'MacIntel' && (window.navigator.maxTouchPoints || 0) > 1;
+    return getBrowserInfo().isIOS;
 }
 
 function isAndroidDevice() {
     return /Android/i.test(window.navigator.userAgent || '');
+}
+
+function isAppleMacDesktop() {
+    if (isIosDevice()) return false;
+    const ua = window.navigator.userAgent || '';
+    return /Macintosh|Mac OS X/i.test(ua);
+}
+
+function isAppleDevice() {
+    return isIosDevice() || isAppleMacDesktop();
+}
+
+function appleInstallPlatform() {
+    return isAppleMacDesktop() ? 'mac' : 'touch';
+}
+
+function detectAppleInstallBrowser() {
+    const { browser } = getBrowserInfo();
+    if (APPLE_INSTALL_BROWSERS.includes(browser)) return browser;
+    return 'safari';
+}
+
+function shouldRegisterServiceWorker() {
+    // Phones + any Apple device (incl. iPad landscape / Mac) so Chrome/Edge
+    // can install. Non-Apple desktop stays free of SW shells.
+    return isMobileViewport() || isAppleDevice();
 }
 
 function isAuthInstallPage() {
@@ -101,9 +129,11 @@ function registerServiceWorker() {
 }
 
 function shouldShowInstallBanner() {
-    if (!isMobileViewport() || isStandaloneDisplay()) return false;
-    // iOS never fires beforeinstallprompt; keep Chromium path untouched otherwise.
+    if (isStandaloneDisplay()) return false;
+    // iOS WebKit browsers never fire a useful beforeinstallprompt — guide covers them.
     if (isIosDevice()) return false;
+    // Phone Chromium + Mac Chrome/Edge can use the native install UI.
+    if (!isMobileViewport() && !isAppleMacDesktop()) return false;
     try {
         if (sessionStorage.getItem(INSTALL_DISMISS_KEY) === '1') return false;
     } catch (_) {
@@ -208,13 +238,11 @@ function shouldShowIosInstallGuide() {
 
     if (wasIosInstallDismissed()) return false;
 
-    // Android uses the native beforeinstallprompt banner — don't show iPhone steps.
+    // Android uses the native beforeinstallprompt banner — don't show Apple steps.
     if (isAndroidDevice()) return false;
 
-    // iPhone/iPad: primary audience.
-    // Desktop (Mac/Windows): also show on auth so the iPhone guide is reachable while testing
-    // and for users installing Mutqin on their phone from these pages.
-    return true;
+    // iPhone / iPad / Mac only (use ?ios_install=1 to preview elsewhere).
+    return isAppleDevice();
 }
 
 function getIosModal() {
@@ -243,6 +271,43 @@ function setIosModalOpen(modal, open) {
     document.documentElement.classList.toggle('mutqin-ios-pwa-open', open);
 }
 
+function syncAppleInstallPlatform(modal = getIosModal()) {
+    if (!modal) return;
+    const platform = appleInstallPlatform();
+    modal.setAttribute('data-ios-pwa-platform', platform);
+    modal.querySelectorAll('[data-ios-pwa-steps]').forEach((list) => {
+        const match = list.getAttribute('data-ios-pwa-steps') === platform;
+        list.hidden = !match;
+    });
+}
+
+function selectAppleInstallBrowser(browserId, { focusTab = false } = {}) {
+    const modal = getIosModal();
+    if (!modal) return;
+    const next = APPLE_INSTALL_BROWSERS.includes(browserId) ? browserId : 'safari';
+
+    modal.querySelectorAll('[data-ios-pwa-browser]').forEach((tab) => {
+        const active = tab.getAttribute('data-ios-pwa-browser') === next;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        tab.tabIndex = active ? 0 : -1;
+        if (active && focusTab) tab.focus();
+    });
+
+    modal.querySelectorAll('[data-ios-pwa-panel]').forEach((panel) => {
+        const active = panel.getAttribute('data-ios-pwa-panel') === next;
+        panel.classList.toggle('is-active', active);
+        panel.hidden = !active;
+    });
+}
+
+function applyAppleInstallGuideContext() {
+    const modal = ensureIosModalOnBody();
+    if (!modal) return;
+    syncAppleInstallPlatform(modal);
+    selectAppleInstallBrowser(detectAppleInstallBrowser());
+}
+
 function hideIosInstallGuide() {
     const root = getIosRoot();
     if (root) root.hidden = true;
@@ -262,6 +327,7 @@ function openIosInstallModal() {
     if (!shouldShowIosInstallGuide()) return;
     const modal = ensureIosModalOnBody();
     if (!modal) return;
+    applyAppleInstallGuideContext();
     setIosModalOpen(modal, true);
 }
 
@@ -287,6 +353,15 @@ function bindIosInstallGuideEvents() {
     document.addEventListener('click', (event) => {
         const target = event.target;
         if (!(target instanceof Element)) return;
+
+        const browserTab = target.closest('[data-ios-pwa-browser]');
+        if (browserTab) {
+            event.preventDefault();
+            selectAppleInstallBrowser(browserTab.getAttribute('data-ios-pwa-browser') || 'safari', {
+                focusTab: true,
+            });
+            return;
+        }
 
         if (target.closest('[data-ios-pwa-open]')) {
             event.preventDefault();
@@ -330,7 +405,7 @@ function setupIosInstallGuide() {
     }
 
     // Move the overlay outside Vue's #app before/after mount so it is not destroyed.
-    ensureIosModalOnBody();
+    applyAppleInstallGuideContext();
     revealIosInstallTrigger();
 }
 
@@ -347,9 +422,7 @@ export function initPwa() {
 
     syncDisplayModeClass();
 
-    // Desktop: keep Mutqin free of SW shells. Mobile: register once and update
-    // on each boot (HTML is network-only in sw.js so deploys stay fresh).
-    if (isMobileViewport()) {
+    if (shouldRegisterServiceWorker()) {
         registerServiceWorker();
     } else {
         unregisterServiceWorkers().catch(() => {});
@@ -373,11 +446,13 @@ export function initPwa() {
     const media = window.matchMedia(MOBILE_MQ);
     const onViewportChange = () => {
         syncDisplayModeClass();
-        if (isMobileViewport()) {
+        if (shouldRegisterServiceWorker()) {
             registerServiceWorker();
         } else {
             unregisterServiceWorkers().catch(() => {});
-            document.getElementById('mutqin-pwa-install')?.remove();
+            if (!isAppleMacDesktop()) {
+                document.getElementById('mutqin-pwa-install')?.remove();
+            }
         }
 
         if (shouldShowIosInstallGuide()) {

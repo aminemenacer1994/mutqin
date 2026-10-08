@@ -448,7 +448,8 @@ export default {
       const phone = this.isPhoneViewport()
       const sparseRatio = phone ? MOBILE_MUSHAF_SPARSE_RATIO : DESKTOP_MUSHAF_SPARSE_RATIO
       const ayahLines = [...sheet.querySelectorAll('.qpc-madani-line')].filter((line) => {
-        return String(line.dataset.lineType || '') === 'ayah'
+        const type = String(line.dataset.lineType || '')
+        return type === 'ayah' || line.classList.contains('qpc-madani-line--session-partial')
       })
       for (const line of ayahLines) {
         if (!(line instanceof HTMLElement)) continue
@@ -475,13 +476,11 @@ export default {
         line.classList.toggle('qpc-madani-line--sparse', sparse)
         line.style.setProperty('justify-content', mobileMushafAyahJustify(sparse), 'important')
         line.style.setProperty('align-self', 'stretch', 'important')
+        line.style.setProperty('width', '100%', 'important')
+        line.style.setProperty('max-width', '100%', 'important')
+        line.style.setProperty('margin-inline', '0', 'important')
         if (phone && !sparse) {
-          line.style.setProperty('width', '100%', 'important')
-          line.style.setProperty('max-width', '100%', 'important')
-          line.style.setProperty('margin-inline', '0', 'important')
           line.style.setProperty('overflow-x', 'visible', 'important')
-        } else {
-          line.style.setProperty('margin-inline', '0', 'important')
         }
       }
     },
@@ -735,7 +734,8 @@ export default {
         const type = String(line.dataset.lineType || '')
         line.style.justifyContent = type === 'ayah' ? '' : previous[index].justify
         if (type === 'ayah') {
-          line.style.setProperty('justify-content', 'space-between', 'important')
+          // Packing decides space-between vs center (sparse). Do not lock
+          // space-between here — that sprays short desktop rows full-bleed.
           line.style.setProperty('align-self', 'stretch', 'important')
           line.style.setProperty('width', '100%', 'important')
           line.style.setProperty('max-width', '100%', 'important')

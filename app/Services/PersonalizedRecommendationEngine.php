@@ -70,9 +70,29 @@ class PersonalizedRecommendationEngine
                 'ayah_start',
                 'ayah_end',
                 'created_at',
+                'accepted_at',
             ]);
 
         $techniqueScores = $this->scoreTechniques($history);
+        $revisionAcceptCutoff = now()->subDays(2);
+        $recentRevisionAccepts = [];
+        foreach ($history as $row) {
+            if (! $row->accepted) {
+                continue;
+            }
+            $type = (string) $row->recommendation_type;
+            if (! in_array($type, [
+                RecommendationType::Revision->value,
+                RecommendationType::RepeatCurrentRange->value,
+            ], true)) {
+                continue;
+            }
+            if (! $row->accepted_at || $row->accepted_at->lt($revisionAcceptCutoff)) {
+                continue;
+            }
+            $surahKey = (int) $row->surah_number;
+            $recentRevisionAccepts[$surahKey] = (int) ($recentRevisionAccepts[$surahKey] ?? 0) + 1;
+        }
 
         $weakSpots = MemorisationWeakSpot::query()
             ->where('user_id', $user->id)
@@ -102,12 +122,22 @@ class PersonalizedRecommendationEngine
         $recentAssessment = $assessments->first();
         $aiTrend = $this->aiTrend($assessments);
 
-        $progressQuery = MemorisationProgress::query()->where('user_id', $user->id);
-        $avgMastery = (float) ($progressQuery->clone()->avg('mastery_level') ?? 0);
-        $reviewingCount = (int) $progressQuery->clone()->where('status', 'reviewing')->count();
-        $learningCount = (int) $progressQuery->clone()->where('status', 'learning')->count();
-        $memorisedCount = (int) $progressQuery->clone()->where('status', 'memorised')->count();
-        $progressAyahs = (int) $progressQuery->clone()->count();
+        // One aggregate pass instead of five separate progress scans.
+        $progressStats = MemorisationProgress::query()
+            ->where('user_id', $user->id)
+            ->selectRaw("
+                COUNT(*) as progress_ayahs,
+                COALESCE(AVG(mastery_level), 0) as avg_mastery,
+                SUM(CASE WHEN status = 'reviewing' THEN 1 ELSE 0 END) as reviewing_count,
+                SUM(CASE WHEN status = 'learning' THEN 1 ELSE 0 END) as learning_count,
+                SUM(CASE WHEN status = 'memorised' THEN 1 ELSE 0 END) as memorised_count
+            ")
+            ->first();
+        $avgMastery = (float) ($progressStats->avg_mastery ?? 0);
+        $reviewingCount = (int) ($progressStats->reviewing_count ?? 0);
+        $learningCount = (int) ($progressStats->learning_count ?? 0);
+        $memorisedCount = (int) ($progressStats->memorised_count ?? 0);
+        $progressAyahs = (int) ($progressStats->progress_ayahs ?? 0);
         $completedSessions = (int) UserSession::query()
             ->where('user_id', $user->id)
             ->where('status', UserSessionStatus::Completed)
@@ -205,6 +235,7 @@ class PersonalizedRecommendationEngine
             'accepted_recommendation_count' => $signals['accepted_recommendations'],
             'dismissed_recommendation_count' => $signals['dismissed_recommendations'],
             'completed_session_count' => $completedSessions,
+            'recent_revision_accepts' => $recentRevisionAccepts,
         ];
     }
 

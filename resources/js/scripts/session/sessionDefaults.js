@@ -12,8 +12,8 @@ export function resolveStoredTajweedEnabled(saved, revision = 0) {
   return DEFAULT_TAJWEED_ENABLED
 }
 
-/** Mobile session overview (Pause/Resume, pills) starts expanded on each page load. */
-export const DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED = true
+/** Mobile session overview (Pause/Resume, pills) starts minimised on each page load. */
+export const DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED = false
 
 /** Matches memorisationRuntime.DEFAULT_ALQURAN_RECITER without importing that module graph. */
 const DEFAULT_RECITER_ID = 'ar.alafasy'

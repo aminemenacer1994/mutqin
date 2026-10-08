@@ -56,7 +56,9 @@ If the host rewrites `public/` in place:
 
 ## Service worker / PWA
 
-- Mobile-only registration (`resources/js/pwa.js`).
+- Registration on phone viewports and Apple devices (iPhone / iPad / Mac) so
+  Safari, Chrome, Edge, and Firefox can install (`resources/js/pwa.js`).
+  Non-Apple desktop stays free of service-worker shells.
 - `public/sw.js` **never caches HTML documents** (network-only).
 - Entry bundles + `mix-manifest.json` are network-only.
 - Contenthashed chunks may be cache-first (immutable).

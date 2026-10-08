@@ -14,13 +14,14 @@ import {
 } from './utils/chunkLoadRecovery';
 import PageLoadError from './components/PageLoadError';
 import { installErrorTracking, reportError } from './scripts/observability/errorTracking';
-import { openFeedbackModal } from './scripts/feedback/feedbackLauncher';
-import FeedbackModal from './components/FeedbackModal.vue';
+import {
+    openFeedbackModal,
+    setFeedbackModalEnsureMounted,
+} from './scripts/feedback/feedbackLauncher';
 import { bootPersistedQuranFont } from './scripts/quran/quranFonts';
 import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 import { useSeo } from './seo/useSeo';
 import { initSeoConversionTracking } from './scripts/seoTools/track.js';
-import { initAckee, trackEvent as trackAckeeEvent, ACKEE_EVENTS } from './scripts/analytics/ackee.js';
 
 // Apply the user's Qur’anic font CSS vars before Vue mounts Memorisation.
 try {
@@ -271,38 +272,92 @@ async function bootstrapApp() {
     document.documentElement.dataset.mutqinAppMounted = '1';
     window.dispatchEvent(new CustomEvent('mutqin:app-mounted'));
     useSeo();
-    try {
-        initAckee();
-        initSeoConversionTracking({
-            path: typeof window !== 'undefined' ? window.location.pathname : '',
-            justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
-            registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
-        });
-        if (typeof window !== 'undefined' && window.mutqinJustRegisteredFlash) {
-            trackAckeeEvent(ACKEE_EVENTS.REGISTER_COMPLETED);
-        }
-    } catch {
-        /* analytics must never block boot */
-    }
+    scheduleDeferredShellWork();
 
     if (typeof window !== 'undefined' && window.mutqinMinimalPublicPage) {
         return;
     }
 
-    const feedbackRoot = document.createElement('div');
-    feedbackRoot.id = 'mutqinFeedbackRoot';
-    document.body.appendChild(feedbackRoot);
-    const feedbackApp = createApp(FeedbackModal);
-    feedbackApp.use(i18n);
-    feedbackApp.mixin(i18nMixin);
-    feedbackApp.mount(feedbackRoot);
+    scheduleFeedbackModalMount(i18n);
+}
 
-    if (window.mutqinFeedbackPendingOpen) {
-        const pending = window.mutqinFeedbackPendingOpen;
-        window.mutqinFeedbackPendingOpen = false;
-        openFeedbackModal(typeof pending === 'object' ? pending : {});
+function runWhenIdle(task, timeoutMs = 2000) {
+    if (typeof window === 'undefined') {
+        task();
+        return;
     }
-    window.dispatchEvent(new CustomEvent('mutqin:feedback-ready'));
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(() => { task(); }, { timeout: timeoutMs });
+        return;
+    }
+    window.setTimeout(task, 1);
+}
+
+function scheduleDeferredShellWork() {
+    runWhenIdle(async () => {
+        try {
+            const { initAckee, trackEvent: trackAckeeEvent, ACKEE_EVENTS } = await import(
+                /* webpackChunkName: "ackee-analytics" */ './scripts/analytics/ackee.js'
+            );
+            initAckee();
+            initSeoConversionTracking({
+                path: typeof window !== 'undefined' ? window.location.pathname : '',
+                justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
+                registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
+            });
+            if (typeof window !== 'undefined' && window.mutqinJustRegisteredFlash) {
+                trackAckeeEvent(ACKEE_EVENTS.REGISTER_COMPLETED);
+            }
+        } catch {
+            /* analytics must never block boot */
+        }
+    });
+}
+
+let feedbackMountPromise = null;
+
+function scheduleFeedbackModalMount(i18n) {
+    const mount = () => {
+        if (feedbackMountPromise) return feedbackMountPromise;
+        feedbackMountPromise = (async () => {
+            try {
+                const { default: FeedbackModal } = await import(
+                    /* webpackChunkName: "feedback-modal" */ './components/FeedbackModal.vue'
+                );
+                if (typeof document === 'undefined') return;
+                if (document.getElementById('mutqinFeedbackRoot')) return;
+
+                const feedbackRoot = document.createElement('div');
+                feedbackRoot.id = 'mutqinFeedbackRoot';
+                document.body.appendChild(feedbackRoot);
+                const feedbackApp = createApp(FeedbackModal);
+                feedbackApp.use(i18n);
+                feedbackApp.mixin(i18nMixin);
+                feedbackApp.mount(feedbackRoot);
+
+                if (window.mutqinFeedbackPendingOpen) {
+                    const pending = window.mutqinFeedbackPendingOpen;
+                    window.mutqinFeedbackPendingOpen = false;
+                    openFeedbackModal(typeof pending === 'object' ? pending : {});
+                }
+                window.dispatchEvent(new CustomEvent('mutqin:feedback-ready'));
+            } catch (error) {
+                feedbackMountPromise = null;
+                reportError(error, { kind: 'bootstrap', feature: 'feedback-modal' });
+            }
+        })();
+        return feedbackMountPromise;
+    };
+
+    setFeedbackModalEnsureMounted(mount);
+
+    // Eager when the user already asked to open feedback; otherwise idle-mount.
+    if (typeof window !== 'undefined' && window.mutqinFeedbackPendingOpen) {
+        mount();
+        return;
+    }
+
+    runWhenIdle(() => { mount(); }, 4000);
 }
 
 function showBootstrapFailure(error) {

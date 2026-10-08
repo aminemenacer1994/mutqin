@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\DB;
  */
 class DashboardService
 {
-    private const BUILD_CACHE_TTL_SECONDS = 45;
+    private const BUILD_CACHE_TTL_SECONDS = 90;
 
     public function __construct(
         private readonly SessionLifecycleService $lifecycle,

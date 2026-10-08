@@ -8486,11 +8486,11 @@ html {
 }
 
 .workspace-shell-actions-minimal .session-idle-action {
-  min-height: 40px;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.84rem;
+  min-height: 32px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
   font-weight: 650;
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .workspace-shell-actions-minimal .session-idle-action:disabled {
@@ -8760,11 +8760,11 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.3rem;
   width: 100%;
-  min-height: 2.4rem;
-  padding: 0.48rem 1rem;
-  font-size: 0.875rem;
+  min-height: 2rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.78rem;
   font-weight: 650;
   border-radius: 999px;
   white-space: nowrap;
@@ -9039,15 +9039,15 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.3rem;
   width: auto;
-  min-height: 2.35rem;
+  min-height: 2rem;
   min-width: 0;
   max-width: 100%;
-  padding: 0.45rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.78rem;
   font-weight: 650;
-  line-height: 1.2;
+  line-height: 1.15;
   border-radius: 999px;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
@@ -9091,7 +9091,7 @@ html {
 }
 
 .workspace-shell-idle-actions__start .session-idle-action i {
-  font-size: 0.9375rem;
+  font-size: 0.8rem;
 }
 
 .workspace-shell-idle-quickstart {
@@ -30630,7 +30630,7 @@ and review
 .workspace-shell-actions .top-card-session-actions:not(.post-session-choice-pair) .action-btn-exit {
   min-width: max-content !important;
   width: auto !important;
-  padding-inline: 0.9rem !important;
+  padding-inline: 0.65rem !important;
 }
 
 /* Post-session pair: content-sized on desktop; mobile media query forces equal columns. */
@@ -36467,14 +36467,14 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
   text-align: center;
   min-width: auto !important;
   width: auto !important;
-  min-height: 38px !important;
-  height: 38px !important;
-  max-height: 38px !important;
-  padding: 0 0.82rem !important;
-  font-size: 0.8rem !important;
+  min-height: 32px !important;
+  height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 0.65rem !important;
+  font-size: 0.72rem !important;
   font-weight: 400;
-  border-radius: 11px;
-  gap: 0.4rem !important;
+  border-radius: 9px;
+  gap: 0.3rem !important;
   line-height: 1 !important;
 }
 
@@ -37918,7 +37918,7 @@ html[dir="rtl"] .mushaf-frame-toolbar-collapsed .mushaf-toolbar-menu {
 
 /* Keep paired header actions the same height/width track. */
 .top-card-session-actions.has-paired-actions > .top-card-action-trigger {
-  min-height: 2.65rem;
+  min-height: 2rem;
   box-sizing: border-box;
 }
 

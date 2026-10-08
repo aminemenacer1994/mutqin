@@ -72,7 +72,7 @@ These limits are enforced in CI via `tests/Feature/PerformanceBaselineTest.php` 
 | Endpoint | Max queries |
 |----------|-------------|
 | `GET /api/dashboard` (cold) | 52 |
-| `GET /api/dashboard` (warm, 45s cache) | 3 |
+| `GET /api/dashboard` (warm, 90s cache) | 3 |
 | `GET /api/state` (recent pull, no write) | 2 |
 | `GET /api/session/current` | 4 |
 | `GET /api/sessions/history` | 3 |
@@ -118,9 +118,15 @@ These limits are enforced in CI via `tests/Feature/PerformanceBaselineTest.php` 
 | Dashboard snapshot counts | 8 separate `COUNT(*)` queries | 4 aggregated queries | `DashboardService::buildSnapshot` |
 | Progress list unbounded | Full table scan per user | Default `limit=500`, max 2000 + `meta.total` | `ProgressController` |
 | State read polling | Write on every GET | Write at most every 5 min | `StateSyncController::show` |
-| Dashboard API | Refetch on every mount/focus | 45s private cache + skip mount refetch when SSR data present | `DashboardService`, Dashboard.vue |
+| Dashboard API | Refetch on every mount/focus | 90s private cache + skip mount refetch when SSR data present | `DashboardService`, Dashboard.vue |
 | Unfinished session lookup | Full history scan | Status-filtered, capped 25 + legacy 10 | `SessionLifecycleService` |
 | Quran proxy | Upstream every request | 1h cache + 3 retries | `QuranProxyController` |
+| AI Recite history `has_audio` | Per-row `Storage::exists()` | Metadata (`audio_path` + expiry) only | `AiReciteAttemptAudioService` |
+| `POST /api/state` derive | Sync on request thread | `DeriveLearningStateJob` (skips stale hashes) | `StateSyncController` |
+| Ayah CDN proxy | Upstream every miss | 24h server `Cache` of body | `AyahAudioController` |
+| App shell Ackee / Feedback | Sync import + mount | Idle/dynamic chunks | `resources/js/app.js` |
+| High-frequency API logs | Log every GET | Skip `state` / `session/current` / `continue` | `LogMutqinApiRequest` |
+| Recommendations next (cold) | ~25 queries | ~15 (aggregated progress + reuse lookups) | `PersonalizedRecommendationEngine`, `NextSessionRecommendationService` |
 
 Re-run `php artisan mutqin:perf-benchmark --seed --json` after changes and commit updated `scripts/perf/results/baseline.json` when thresholds shift intentionally.
 
@@ -142,8 +148,9 @@ See `scripts/perf/results/baseline.json`. Representative cold-path numbers:
 
 | Data | Cached? | Scope |
 |------|---------|-------|
-| Dashboard aggregates | Yes, 45s | Per user (`dashboard:v1:{userId}:{days}`) |
+| Dashboard aggregates | Yes, 90s | Per user (`dashboard:v1:{userId}:{days}`) |
 | Quran proxy responses | Yes, 1h | Global (public text, safe) |
+| Ayah audio CDN proxy | Yes, 24h | Global (`ayah-audio:v1:{reciter}:{ayah}`) |
 | User state / sessions | **No** global cache | Private per user only |
 | AI recite results | **No** | Accuracy must be fresh |
 | Recommendations | **No** long TTL | Stale plans avoided |
@@ -179,10 +186,12 @@ PERF_SEED_USERS=100 PERF_SEED_AYAHS=200 PERF_SEED_SESSIONS=40 \
 | `database/seeders/PerformanceLoadSeeder.php` | Realistic test data |
 | `tests/Feature/PerformanceBaselineTest.php` | CI query/payload guardrails |
 | `scripts/perf/analyze-bundles.mjs` | Chunk size report |
+| `scripts/perf/prune-stale-public-js.mjs` | Drop orphan hashed chunks after build |
 | `scripts/perf/k6/main.js` | Authenticated learner scenario |
 | `scripts/perf/k6/staged.js` | 50/100/500 VU ramp |
 | `scripts/perf/autocannon-smoke.mjs` | Lightweight HTTP smoke |
 | `docs/performance-session-recitation.md` | Session/AMD-specific notes |
+| `app/Jobs/DeriveLearningStateJob.php` | Async learning-table projection after sync |
 
 ---
 
@@ -192,5 +201,8 @@ PERF_SEED_USERS=100 PERF_SEED_AYAHS=200 PERF_SEED_SESSIONS=40 \
 composer test:perf          # PHPUnit performance baselines
 php artisan mutqin:perf-benchmark --seed
 npm run perf:bundles
+npm run perf:prune-js       # after build; removes orphan hashed public/js chunks
 npm run perf:smoke
 ```
+
+**Production note:** `POST /api/state` now queues `DeriveLearningStateJob`. Keep a queue worker running (`php artisan queue:work` / Cloud worker). PHPUnit uses `QUEUE_CONNECTION=sync` so projections still run in-process during tests. Prefer Redis for `CACHE_STORE` / `QUEUE_CONNECTION` / `SESSION_DRIVER` under load (see `.env.example`).

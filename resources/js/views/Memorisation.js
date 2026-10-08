@@ -737,6 +737,7 @@ function activeSessionSnapshotStorageKey(userId = null) {
   return `${ACTIVE_SESSION_SNAPSHOT_KEY}.${id}`
 }
 
+
 function waitForMediaRecorderChunks(getChunks, timeoutMs = 200) {
   const existing = typeof getChunks === 'function' ? getChunks() : []
   if (Array.isArray(existing) && existing.length) {
@@ -1126,7 +1127,7 @@ export default {
       audioBuffering: false,
       audioStallRecoveryTimer: null,
       ignoreMainAudioPauseEvent: false,
-      mainCardCollapsed: false,
+      mainCardCollapsed: true,
       coldPageLoadScrollGuard: true,
       feedbackCollapsed: true,
 
@@ -1819,6 +1820,8 @@ export default {
       isAudioLoading: false,
       sessionCompleted: false,
       sessionEndedEarly: false,
+      /** True once the last queue ayah's audio has ended (tools must not block completion). */
+      queuePlaybackExhausted: false,
       sessionCompletedAt: null,
       hybridPendingKey: null,
       quizSkill: 'recite_text',
@@ -2523,6 +2526,8 @@ export default {
       // A 0% "This session" rail without ayahs is an orphaned progress shell,
       // not useful progress. Plans and loaded sessions may still show it.
       if (!this.hasVerses && !this.hifzPlanExists && !this.isPostSessionChoiceVisible) return false
+      // Hide from the start for everyone; only surface once there is real progress.
+      if (this.sessionProgressMeter <= 0) return false
       return true
     },
     shouldShowOffcanvasTabs() {
@@ -3479,6 +3484,7 @@ export default {
         sessionPaused: !!this.sessionPaused,
         mutqinSessionActive: !!this.isSessionLive || !!this.mutqinState?.sessionState?.active,
         engineCompleted: !!this.mutqinState?.sessionState?.completed,
+        queuePlaybackExhausted: !!this.queuePlaybackExhausted,
         centralStatus: this.centralSession?.sessionStatus || null,
       })
     },
@@ -11110,7 +11116,8 @@ export default {
       if (shouldAutoRestorePersistedSession) {
         this.isDataReady = true
       } else if (shouldAutoOpenOnboarding) {
-        this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true })
+        // Seed full Al-Fatihah for new accounts; the tour may preview 1–5 temporarily.
+        this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
         this.markOnboardingAutoPresented()
         this.isDataReady = true
       } else if (this.currentMode === 'advanced' && this.advanced.chapterId) {
@@ -16541,6 +16548,7 @@ export default {
         this.exitOnboardingSampleMode({ discard: true, markCompleted: true })
       }
       this.workspaceTourFreshStartPending = false
+      this.queuePlaybackExhausted = false
 
       this.showPlannerCompletionModal = false
       this.showPlannerCompletionConfetti = false
@@ -18718,14 +18726,19 @@ export default {
         this.centralSession.sessionStatus = 'idle'
         this.centralSession.sessionStartedAt = null
       }
-      const preview = this.buildWorkspaceTourPracticeConfig()
-      this.chapterId = preview.chapterId
-      this.rangeStart = preview.rangeStart
-      this.rangeEnd = preview.rangeEnd
-      this.reciterId = preview.reciterId
-      this.repetitionsPerStep = preview.repetitionsPerStep
-      this.selectedLoopCount = preview.selectedLoopCount
-      if (preview.readingViewMode) this.readingViewMode = this.clampReadingViewMode(preview.readingViewMode)
+      // After Skip/Finish: full Al-Fatihah (1–7). Tour preview may still use 1–5.
+      const next = this.buildDefaultWorkspaceSessionConfig({
+        readingViewMode: isReadingViewMode(this.readingViewMode)
+          ? this.readingViewMode
+          : 'madani_mushaf',
+      })
+      this.chapterId = next.chapterId
+      this.rangeStart = next.rangeStart
+      this.rangeEnd = next.rangeEnd
+      this.reciterId = next.reciterId
+      this.repetitionsPerStep = next.repetitionsPerStep
+      this.selectedLoopCount = next.selectedLoopCount
+      if (next.readingViewMode) this.readingViewMode = this.clampReadingViewMode(next.readingViewMode)
       this.persistUiState()
       this.persistCentralSessionState()
       try {
@@ -18903,9 +18916,9 @@ export default {
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
     },
-    /** First-time Skip: complete onboarding and start the first practice session. */
+    /** First-time Skip: complete onboarding and start full Al-Fatihah (1–7). */
     async skipOnboardingToFirstSession() {
-      await this.completeOnboardingIntoFirstSession()
+      await this.completeOnboardingIntoFirstSession({ fullFatihah: true })
     },
     /** UI dismiss (X / overlay): close tour, unlock Start, persist resume point. */
     dismissOnboardingTour() {
@@ -18958,7 +18971,8 @@ export default {
         })
       }
     },
-    async completeOnboardingIntoFirstSession() {
+    async completeOnboardingIntoFirstSession(options = {}) {
+      const { fullFatihah = false } = options
       this.primeAudioPlaybackUnlock()
       this.persistOnboardingProgress()
       const prefs = this.readOnboardingPreferences() || {
@@ -18971,7 +18985,23 @@ export default {
       this.deleteWorkspaceStateValue('onboardingPreferences')
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
-      this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true, prefs })
+      if (fullFatihah) {
+        // Skip onboarding → full Al-Fatihah. Tour completion keeps 1–5.
+        const focus = !!prefs.focusModeEnabled
+        const blur = !!prefs.blurModeEnabled && !focus
+        const talqin = !!prefs.talqinModeEnabled
+        this.applyDefaultWorkspaceSessionConfig({
+          openSetup: false,
+          silent: true,
+          config: this.buildDefaultWorkspaceSessionConfig({
+            focusModeEnabled: focus,
+            blurModeEnabled: blur,
+            talqinModeEnabled: talqin,
+          }),
+        })
+      } else {
+        this.applyFirstOnboardingSessionConfig({ openSetup: false, silent: true, prefs })
+      }
       this.isDataReady = true
       if (this.chapterId) {
         await this.loadChapter(this.currentMode)
@@ -39449,8 +39479,8 @@ export default {
         this.settingsDraft.tajweedEnabled = !!this.tajweedEnabled
         this.settingsDraft.wordByWordAudioEnabled = true
       }
-      if (DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED && this.isMobileViewport?.()) {
-        this.mainCardCollapsed = false
+      if (this.isMobileViewport?.()) {
+        this.mainCardCollapsed = !DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED
       }
     },
 
@@ -40553,12 +40583,14 @@ export default {
       const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
       // Never treat "on last ayah" / 100% position as range complete — that made
       // 1-ayah sittings always terminal-end and wiped Resume on "Finish for now?".
+      // queuePlaybackExhausted is set only after the last ayah's audio ends.
       const completedAll = resolveExitRangeComplete({
         sessionCompleted: !!this.sessionCompleted,
         sessionEndedEarly: !!this.sessionEndedEarly,
         sessionPaused: !!this.sessionPaused,
         mutqinSessionActive: !!this.isSessionLive || !!this.mutqinState?.sessionState?.active,
         engineCompleted: !!this.mutqinState?.sessionState?.completed,
+        queuePlaybackExhausted: !!this.queuePlaybackExhausted,
         centralStatus: this.centralSession?.sessionStatus || null,
       })
       const durationLabel = this.formatTime(durationSeconds)
@@ -43423,12 +43455,20 @@ export default {
       }
 
       this.audioEnded = () => {
-        if (this.advanceLocked) return
-        if (isSessionAutomationHalted({
+        const atQueueEnd = !this.canNext
+        // Last ayah finished — mark exhaustion before any halt return so End
+        // Session can still open the success modal if Controls blocked auto-complete.
+        if (atQueueEnd && !this.sessionCompleted && !this.sessionEndedEarly) {
+          this.queuePlaybackExhausted = true
+        }
+        // Tools may pause mid-range advance, but must not block finishing the range.
+        const halted = isSessionAutomationHalted({
           sessionPaused: this.sessionPaused,
           sessionCompleted: this.sessionCompleted,
-          toolsOpen: this.showTools,
-        })) {
+          toolsOpen: atQueueEnd ? false : this.showTools,
+        })
+        if (this.advanceLocked) return
+        if (halted) {
           this.isPlaying = false
           this.stopWordHighlighting()
           return
@@ -43457,10 +43497,11 @@ export default {
           if (this.talqinModeActive && this.playMode !== 'manual') {
             this.advanceLocked = false
             this.beginTalqinRecitationTurn(() => {
+              const endOfQueue = !this.canNext
               if (isSessionAutomationHalted({
                 sessionPaused: this.sessionPaused,
                 sessionCompleted: this.sessionCompleted,
-                toolsOpen: this.showTools,
+                toolsOpen: endOfQueue ? false : this.showTools,
               })) {
                 return
               }
@@ -43475,10 +43516,11 @@ export default {
           if (this.playMode === 'follow') {
             this.advanceLocked = false
             this.startRecitationWindow(() => {
+              const endOfQueue = !this.canNext
               if (isSessionAutomationHalted({
                 sessionPaused: this.sessionPaused,
                 sessionCompleted: this.sessionCompleted,
-                toolsOpen: this.showTools,
+                toolsOpen: endOfQueue ? false : this.showTools,
               })) {
                 return
               }
@@ -43512,10 +43554,11 @@ export default {
             }
             this.playbackAdvanceTimer = window.setTimeout(() => {
               this.playbackAdvanceTimer = null
+              const endOfQueue = !this.canNext
               if (isSessionAutomationHalted({
                 sessionPaused: this.sessionPaused,
                 sessionCompleted: this.sessionCompleted,
-                toolsOpen: this.showTools,
+                toolsOpen: endOfQueue ? false : this.showTools,
               })) {
                 this.advanceLocked = false
                 return
@@ -43993,11 +44036,17 @@ export default {
 
     next() {
       if (this.advanceLocked) return
-      if (isSessionAutomationHalted({
-        sessionPaused: this.sessionPaused,
-        sessionCompleted: this.sessionCompleted,
-        toolsOpen: this.showTools,
-      })) {
+      // Mid-range advance still respects tools/pause. Terminal completion must not
+      // be blocked by an open Controls panel after the last ayah finishes.
+      if (this.canNext) {
+        if (isSessionAutomationHalted({
+          sessionPaused: this.sessionPaused,
+          sessionCompleted: this.sessionCompleted,
+          toolsOpen: this.showTools,
+        })) {
+          return
+        }
+      } else if (this.sessionPaused || this.sessionCompleted) {
         return
       }
       this.clearRecitationWindowTimer()
@@ -44034,6 +44083,7 @@ export default {
       }
 
       this.advanceLocked = false
+      this.queuePlaybackExhausted = true
       this.handleSessionComplete()
     },
 
@@ -45368,6 +45418,8 @@ export default {
       if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING || this.sessionExitEndingBusy) return
       if (this.sessionActionLock.isLocked() || this.sessionActionLock.isLocked('end')) return
       this.cancelSessionAutosave({ bumpGeneration: true })
+      // Completing the queue is authoritative for the success modal snapshot.
+      this.queuePlaybackExhausted = true
 
       const previousStreak = Number(this.analytics?.currentStreak || 0)
       const endedSnapshot = this.buildSessionEndedSnapshot({ force: true })

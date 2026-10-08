@@ -647,12 +647,12 @@
     justify-content: center !important;
   }
 
-  /* Paired Pause / Resume / End CTAs each take the full row */
+  /* Paired Resume / End CTAs share one compact row */
   .workspace-shell-actions .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
     width: 100% !important;
-    gap: 0.4rem !important;
+    gap: 0.3rem !important;
   }
 
   .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action {
@@ -661,8 +661,8 @@
   }
 
   .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
-    grid-column: 1 !important;
-    grid-row: 2 !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
   }
 
   .top-card-session-actions:not(.has-paired-actions):not(.post-session-choice-pair) > .session-primary-action {
@@ -674,12 +674,14 @@
 .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
     inline-size: 100% !important;
     min-inline-size: 0 !important;
-    min-block-size: 44px !important;
-    block-size: auto !important;
-    padding: 9px clamp(6px, 2.4vw, 12px) !important;
+    min-block-size: 30px !important;
+    block-size: 30px !important;
+    max-block-size: 30px !important;
+    padding: 0 clamp(6px, 2vw, 10px) !important;
     justify-content: center !important;
     white-space: nowrap !important;
-    line-height: 1.2;
+    line-height: 1.1;
+    font-size: 0.7rem !important;
     overflow: hidden !important;
   }
 
@@ -3365,8 +3367,8 @@
   }
 
   .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit {
-    grid-column: 1 !important;
-    grid-row: 2 !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
   }
 
   .top-card-session-actions:not(.has-paired-actions) > .session-primary-action,
@@ -3384,16 +3386,17 @@
     flex: 1 1 0 !important;
     inline-size: auto !important;
     min-inline-size: 0 !important;
-    min-block-size: 44px !important;
-    block-size: 44px !important;
-    padding: 0 0.65rem !important;
-    font-size: 0.8125rem !important;
+    min-block-size: 30px !important;
+    block-size: 30px !important;
+    max-block-size: 30px !important;
+    padding: 0 0.55rem !important;
+    font-size: 0.7rem !important;
     font-weight: 500 !important;
     white-space: nowrap !important;
     overflow: hidden;
     text-overflow: ellipsis;
-    border-radius: 9px !important;
-    gap: 0.25rem !important;
+    border-radius: 8px !important;
+    gap: 0.2rem !important;
     box-shadow: none !important;
   }
 
@@ -4004,8 +4007,16 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .app .workspace-shell .workspace-shell-actions .top-card-action-trigger.session-primary-action,
-.app .workspace-shell .workspace-shell-actions .top-card-action-trigger.action-btn-exit,
-.app .workspace-shell .workspace-shell-actions .workspace-ai-recite-cta.top-card-action-trigger,
+.app .workspace-shell .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
+    block-size: 30px !important;
+    min-block-size: 30px !important;
+    max-block-size: 30px !important;
+    min-height: 30px !important;
+    height: 30px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .app .workspace-shell .workspace-shell-actions .workspace-ai-recite-cta.top-card-action-trigger,
 .app .tools-footer :where(.tools-btn, .session-primary-action, .btn),
 .app .mutqin-modal-footer .mutqin-modal-btn {
     block-size: 44px !important;
@@ -4515,9 +4526,9 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .workspace-shell-head-toolbar .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
     flex-wrap: nowrap !important;
-    gap: 0.4rem !important;
+    gap: 0.3rem !important;
     width: 100% !important;
     min-width: 0 !important;
     margin-top: 0;
@@ -4528,7 +4539,9 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 44px !important;
+    min-height: 30px !important;
+    height: 30px !important;
+    max-height: 30px !important;
     white-space: nowrap !important;
   }
 
@@ -8475,7 +8488,7 @@ html body .app .workspace-recite-dock__button:hover {
 
   /*
    * Final mobile mushaf contract (plain + tajweed).
-   * Full width sheet; dense ayah rows stretch edge-to-edge (never centre-by-ratio).
+   * Full width sheet; dense ayah rows stretch edge-to-edge; leftover/sparse rows centre.
    */
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet,
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-spread .qpc-madani-page__sheet,
@@ -8495,6 +8508,15 @@ html body .app .workspace-recite-dock__button:hover {
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
   html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page--tajweed .qpc-madani-line--ayah:not(.qpc-madani-line--sparse) {
     justify-content: space-between !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page .qpc-madani-line--session-partial.qpc-madani-line--sparse,
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-page--tajweed .qpc-madani-line--ayah.qpc-madani-line--sparse,
+  html body.memorisation-page:not(.tools-panel-open) .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse {
+    justify-content: center !important;
     width: 100% !important;
     max-width: 100% !important;
   }
