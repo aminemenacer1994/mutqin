@@ -7310,6 +7310,32 @@ html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured 
   flex: 0 0 2.55rem !important;
 }
 
+/* Mobile: keep featured hits aligned with the compact toolbar icon size */
+@media (max-width: 767.98px) {
+  html body .app .top-card-icon-controls .top-card-search-trigger.is-featured,
+  html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured {
+    width: var(--top-card-toolbar-icon, 32px) !important;
+    height: var(--top-card-toolbar-icon, 32px) !important;
+    min-width: var(--top-card-toolbar-icon, 32px) !important;
+    min-height: var(--top-card-toolbar-icon, 32px) !important;
+    max-width: var(--top-card-toolbar-icon, 32px) !important;
+    max-height: var(--top-card-toolbar-icon, 32px) !important;
+    flex: 0 0 var(--top-card-toolbar-icon, 32px) !important;
+  }
+
+  html body .app .top-card-icon-controls .top-card-search-trigger .top-card-search-glyph {
+    width: 0.85rem !important;
+    height: 0.85rem !important;
+  }
+
+  html body .app .top-card-icon-controls .top-card-fullscreen-trigger i,
+  html body .app .top-card-icon-controls .top-card-controls-trigger i,
+  html body .app .top-card-icon-controls .top-card-ellipsis i,
+  html body .app .top-card-icon-controls .top-card-icon-control i {
+    font-size: 0.78rem !important;
+  }
+}
+
 html body .app .top-card-icon-controls:has(.top-card-search-trigger.is-featured),
 html body .app .top-card-icon-controls:has(.top-card-fullscreen-trigger.is-featured) {
   height: auto !important;
@@ -7994,4 +8020,62 @@ html body .amd-overlay[data-theme="dark"] .amd-mushaf-ayah--premium .amd-word-cu
     --top-card-utility-cluster-gap: 0.65rem;
     gap: var(--top-card-utility-cluster-gap) !important;
   }
+}
+
+/*
+ * Final cascade: Start / Resume / Pause / End share one chip geometry.
+ * Resume inherits .btn-primary pill tokens; End used .action-btn radius/height —
+ * force identical height, radius, padding, and equal paired tracks.
+ */
+html body .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  gap: 0.45rem !important;
+}
+
+html body .app .workspace-shell .top-card-session-cluster :is(
+  .session-primary-action,
+  .action-btn-exit
+),
+html body .app .workspace-shell .top-card-session-actions :is(
+  .session-primary-action,
+  .action-btn-exit
+),
+html body .app .workspace-shell .top-card-action-trigger.session-primary-action,
+html body .app .workspace-shell .top-card-action-trigger.action-btn-exit,
+html body .app .workspace-shell .top-card-session-cluster .session-primary-action[style] {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: var(--primary-action-min-height, 2.45rem) !important;
+  min-height: var(--primary-action-min-height, 2.45rem) !important;
+  max-height: var(--primary-action-min-height, 2.45rem) !important;
+  block-size: var(--primary-action-min-height, 2.45rem) !important;
+  min-block-size: var(--primary-action-min-height, 2.45rem) !important;
+  max-block-size: var(--primary-action-min-height, 2.45rem) !important;
+  padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
+  gap: var(--primary-action-gap, 0.35rem) !important;
+  border-radius: var(--primary-action-radius, 999px) !important;
+  font-size: var(--primary-action-font-size, 0.8rem) !important;
+  font-weight: var(--primary-action-font-weight, 600) !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+html body .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action,
+html body .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .session-primary-action[style],
+html body .app .workspace-shell .top-card-session-actions.has-paired-actions:not(.post-session-choice-pair) > .action-btn-exit,
+html body .app .workspace-shell .top-card-session-cluster.has-paired-actions :is(
+  .session-primary-action,
+  .action-btn-exit
+),
+html body .app .workspace-shell .top-card-session-cluster.has-paired-actions .session-primary-action[style] {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  flex: 1 1 0 !important;
+  align-self: stretch !important;
+  justify-self: stretch !important;
 }

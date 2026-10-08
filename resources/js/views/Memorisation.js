@@ -2528,6 +2528,8 @@ export default {
       if (!this.hasVerses && !this.hifzPlanExists && !this.isPostSessionChoiceVisible) return false
       // Hide from the start for everyone; only surface once there is real progress.
       if (this.sessionProgressMeter <= 0) return false
+      // Keep the workspace clear until audio is actually playing.
+      if (!this.isPlaying) return false
       return true
     },
     shouldShowOffcanvasTabs() {
@@ -11016,7 +11018,22 @@ export default {
         this.migrateLocalStorage()
       }
       this.loadRecommendedSessionTemplates()
+      // Muraja'ah / progress review deep-links must never restore a previously
+      // open tools offcanvas from uiState — suppress before hydrate.
+      const earlyDashboardEntryIntent = this.readDashboardEntryIntent()
+      const earlyMurajaahReviewEntry = !!(
+        earlyDashboardEntryIntent?.review
+        && Number(earlyDashboardEntryIntent?.surah || 0) > 0
+        && Number(earlyDashboardEntryIntent?.from || 0) > 0
+      )
+      if (earlyMurajaahReviewEntry) {
+        this._suppressEmptyWorkspaceTools = true
+        this.showTools = false
+      }
       this.loadUiState()
+      if (this._suppressEmptyWorkspaceTools) {
+        this.showTools = false
+      }
       this.applyMemorisationPageLoadDefaults()
       this.loadVerseFontSizes()
       this.applyMobileLayoutFontDefault(this.readingViewMode)
@@ -11116,7 +11133,7 @@ export default {
       if (shouldAutoRestorePersistedSession) {
         this.isDataReady = true
       } else if (shouldAutoOpenOnboarding) {
-        // Seed full Al-Fatihah for new accounts; the tour may preview 1–5 temporarily.
+        // Seed Al-Fatihah 1–5 for new accounts (same window as onboarding practice).
         this.applyDefaultWorkspaceSessionConfig({ openSetup: false, silent: true })
         this.markOnboardingAutoPresented()
         this.isDataReady = true
@@ -16224,7 +16241,7 @@ export default {
 
     startSessionAfterUserGesture() {
       if (!this.canStartSession) {
-        this.showTools = true
+        this.openToolsForSetupFailure()
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
         return
       }
@@ -16526,9 +16543,7 @@ export default {
       if (!this.canStartSession) {
         this.clearToolsStartInFlight()
         // Muraja'ah / progress review must not pop the tools offcanvas.
-        if (!this._suppressEmptyWorkspaceTools) {
-          this.showTools = true
-        }
+        this.openToolsForSetupFailure()
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600)
         return false
       }
@@ -16645,7 +16660,7 @@ export default {
           return
         }
         if (lockResult?.ok && lockResult.result === false) {
-          this.showTools = true
+          this.openToolsForSetupFailure()
           this.showBanner(this.t('toasts.failedToStartSession'), 'error', 4200)
         }
       })
@@ -16654,7 +16669,7 @@ export default {
     async startSessionAndClose(options = {}) {
       if (this.toolsStartBusy) return
       if (!this.canStartSession) {
-        this.showTools = true
+        this.openToolsForSetupFailure()
         this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
         return
       }
@@ -16699,7 +16714,7 @@ export default {
         }
 
         if (!this.canStartSession) {
-          this.showTools = true
+          this.openToolsForSetupFailure()
           this.showBanner(this.t('toasts.pleaseSelectAValidSurahAnd'), 'info', 3600)
           this.clearToolsStartInFlight()
           return
@@ -16712,12 +16727,12 @@ export default {
         this.primeSessionAudioForCountdown()
         const started = this.startSessionWithCountdown({ skipPrime: true })
         if (!started) {
-          this.showTools = true
+          this.openToolsForSetupFailure()
           this.clearToolsStartInFlight()
         }
       } catch (error) {
         console.error(error)
-        this.showTools = true
+        this.openToolsForSetupFailure()
         this.showBanner(this.t('toasts.failedToStartSession'), 'error', 4200)
         this.clearToolsStartInFlight()
       }
@@ -16825,7 +16840,7 @@ export default {
         if (!bar) return
         const apply = () => {
           const rect = bar.getBoundingClientRect()
-          const gap = 10
+          const gap = 6
           root.style.setProperty('--madani-fs-top-clearance', `${Math.ceil(rect.bottom + gap)}px`)
         }
         apply()
@@ -17502,7 +17517,7 @@ export default {
           chapterId: 1,
           chapterName: 'Al-Fatihah',
           rangeStart: 1,
-          rangeEnd: 7,
+          rangeEnd: FIRST_ONBOARDING_RANGE_END,
           reciterId: DEFAULT_ALQURAN_RECITER,
           speed: 1,
           playMode: 'auto',
@@ -18726,7 +18741,7 @@ export default {
         this.centralSession.sessionStatus = 'idle'
         this.centralSession.sessionStartedAt = null
       }
-      // After Skip/Finish: full Al-Fatihah (1–7). Tour preview may still use 1–5.
+      // After Skip/Finish: Al-Fatihah 1–5 (default practice window).
       const next = this.buildDefaultWorkspaceSessionConfig({
         readingViewMode: isReadingViewMode(this.readingViewMode)
           ? this.readingViewMode
@@ -18916,9 +18931,9 @@ export default {
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
     },
-    /** First-time Skip: complete onboarding and start full Al-Fatihah (1–7). */
+    /** First-time Skip: complete onboarding and start Al-Fatihah 1–5. */
     async skipOnboardingToFirstSession() {
-      await this.completeOnboardingIntoFirstSession({ fullFatihah: true })
+      await this.completeOnboardingIntoFirstSession({ fullFatihah: false })
     },
     /** UI dismiss (X / overlay): close tour, unlock Start, persist resume point. */
     dismissOnboardingTour() {
@@ -18986,7 +19001,7 @@ export default {
       this.resetOnboardingModalState()
       this.restoreOnboardingDemo()
       if (fullFatihah) {
-        // Skip onboarding → full Al-Fatihah. Tour completion keeps 1–5.
+        // Legacy full-surah path (1–7). Default Skip/Finish stays on 1–5 below.
         const focus = !!prefs.focusModeEnabled
         const blur = !!prefs.blurModeEnabled && !focus
         const talqin = !!prefs.talqinModeEnabled
@@ -18994,6 +19009,7 @@ export default {
           openSetup: false,
           silent: true,
           config: this.buildDefaultWorkspaceSessionConfig({
+            rangeEnd: 7,
             focusModeEnabled: focus,
             blurModeEnabled: blur,
             talqinModeEnabled: talqin,
@@ -35557,8 +35573,18 @@ export default {
     },
 
     openAdvancedControls() {
-      // Keep power features accessible, but behind a tertiary surface.
+      // Explicit user open — clear muraja'ah auto-suppress so Controls still works.
+      this._suppressEmptyWorkspaceTools = false
       this.openToolsPanel()
+    },
+    openToolsForSetupFailure() {
+      // Muraja'ah / progress review deep-links stay on the mushaf.
+      if (this._suppressEmptyWorkspaceTools) {
+        this.showTools = false
+        return false
+      }
+      this.showTools = true
+      return true
     },
     ensureEmptyWorkspaceEntrySurface() {
       if (!this.appReady || !this.isDataReady || this.hasVerses || this.showTools) return
@@ -35583,7 +35609,8 @@ export default {
       } catch (error) {
         console.error('Failed to snapshot session before dashboard:', error)
       }
-      window.location.assign(this.isAdmin ? this.adminDashboardUrl : this.learnerDashboardUrl)
+      // Admins use the same Progress page as learners; admin console stays in nav.
+      window.location.assign(this.learnerDashboardUrl)
     },
     handleHeaderSessionAction() {
       if (this.workspaceTourFreshStartPending) {
@@ -36496,7 +36523,7 @@ export default {
       await this.startSessionFromRecommendationPayload({
         chapterId: 1,
         rangeStart: 1,
-        rangeEnd: 7,
+        rangeEnd: FIRST_ONBOARDING_RANGE_END,
         sessionMode: 'new_learning',
         autoStart: true,
       })
@@ -44736,7 +44763,7 @@ export default {
       const mode = config.mode || this.currentMode
 
       if (!config.chapterId || config.chapterId === 0) {
-        this.showTools = true
+        this.openToolsForSetupFailure()
         this.showBanner(this.t('toasts.pleaseSelectASurahFirst'), 'info', 3600)
         return
       }
@@ -45616,7 +45643,7 @@ export default {
         return
       }
       if (!this.canStartSession) {
-        this.showTools = true
+        this.openToolsForSetupFailure()
         this.showBanner(this.t('toasts.chooseAValidSurahAndAyah'), 'info', 3600, { key: 'open-setup', label: this.t('toasts.openSetup') })
         return
       }
@@ -45885,7 +45912,10 @@ export default {
           this.tab = state.tab === 'settings' || !['tools', 'techniques', 'saved', 'stats'].includes(state.tab)
             ? 'tools'
             : state.tab
-          this.showTools = keepWorkspaceVisible ? false : !!state.showTools
+          // Muraja'ah review deep-links must not reopen a previously saved tools panel.
+          this.showTools = this._suppressEmptyWorkspaceTools
+            ? false
+            : (keepWorkspaceVisible ? false : !!state.showTools)
           this.currentMode = state.currentMode || 'beginner'
           this.flowStep = ['learn', 'practice', 'recall'].includes(state.flowStep)
             ? state.flowStep
@@ -47304,7 +47334,7 @@ export default {
     performResetControls() {
       // Reset all session settings
       this.rangeStart = 1
-      this.rangeEnd = 7
+      this.rangeEnd = FIRST_ONBOARDING_RANGE_END
       this.speed = 1
       this.delay = 2
       this.recitationWindowSeconds = 8

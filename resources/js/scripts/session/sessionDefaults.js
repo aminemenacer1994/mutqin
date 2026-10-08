@@ -18,8 +18,9 @@ export const DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED = false
 /** Matches memorisationRuntime.DEFAULT_ALQURAN_RECITER without importing that module graph. */
 const DEFAULT_RECITER_ID = 'ar.alafasy'
 
-/** First-session / onboarding window: Al-Fatiha 1–5 (not the full 7-ayah surah). */
+/** Default / onboarding Al-Fatiha window: ayahs 1–5 (not the full 7-ayah surah). */
 export const FIRST_ONBOARDING_RANGE_END = 5
+export const DEFAULT_WORKSPACE_RANGE_END = FIRST_ONBOARDING_RANGE_END
 
 /**
  * First positive finite candidate, else {@link DEFAULT_SESSION_REPETITIONS}.
@@ -55,7 +56,7 @@ export function buildDefaultWorkspaceSessionConfig(overrides = {}) {
   return {
     chapterId: 1,
     rangeStart: 1,
-    rangeEnd: 7,
+    rangeEnd: DEFAULT_WORKSPACE_RANGE_END,
     reciterId: DEFAULT_RECITER_ID,
     speed: 1,
     repetitionsPerStep: DEFAULT_SESSION_REPETITIONS,

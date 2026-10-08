@@ -1087,9 +1087,11 @@
         }
         html body .app .workspace-shell-head-toolbar .top-card-action-trigger.session-primary-action,
         html body .app .workspace-shell-head-toolbar .top-card-action-trigger.action-btn-exit {
-          min-height: 30px !important;
-          height: 30px !important;
-          max-height: 30px !important;
+          min-height: var(--primary-action-min-height, 2.45rem) !important;
+          height: var(--primary-action-min-height, 2.45rem) !important;
+          max-height: var(--primary-action-min-height, 2.45rem) !important;
+          border-radius: var(--primary-action-radius, 999px) !important;
+          box-sizing: border-box !important;
         }
         /* Post-session mobile: full-width 50/50 CTAs (avoid display:contents shrink-wrap). */
         html body .app .workspace-shell--post-session-choice .workspace-shell-actions,
@@ -1338,17 +1340,19 @@
         }
         html body .app .workspace-shell-actions .top-card-action-trigger.session-primary-action,
         html body .app .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
-          min-height: 30px !important;
-          height: 30px !important;
-          max-height: 30px !important;
-          padding: 0 0.45rem !important;
-          font-size: 0.68rem !important;
-          font-weight: 400 !important;
-          border-radius: 8px !important;
+          min-height: var(--primary-action-min-height, 2.45rem) !important;
+          height: var(--primary-action-min-height, 2.45rem) !important;
+          max-height: var(--primary-action-min-height, 2.45rem) !important;
+          padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
+          font-size: var(--primary-action-font-size, 0.8rem) !important;
+          font-weight: var(--primary-action-font-weight, 520) !important;
+          border-radius: var(--primary-action-radius, 999px) !important;
           box-shadow: none !important;
+          box-sizing: border-box !important;
           width: 100% !important;
           min-width: 0 !important;
           max-width: 100% !important;
+          line-height: 1 !important;
         }
         .app .workspace-shell-actions .post-session-choice-pair .top-card-action-trigger {
           min-height: 32px !important;
@@ -3951,7 +3955,7 @@
             color-scheme: inherit;
             box-shadow: none;
             font: inherit;
-            line-height: 1;
+            line-height: 0;
         }
 
         .app-navbar .navbar-toggler:hover,
@@ -3975,7 +3979,14 @@
         }
 
         .navbar-toggler i {
-            font-size: 20px;
+            display: block;
+            width: 1.35rem;
+            height: 1.35rem;
+            font-size: 1.35rem;
+            line-height: 1.35rem;
+            text-align: center;
+            -webkit-text-stroke: 0.6px currentColor;
+            paint-order: stroke fill;
         }
 
         /* Custom toggler resets override Bootstrap’s expand-lg hide — keep mobile-only. */
@@ -4162,6 +4173,7 @@
             flex: 0 0 auto;
         }
 
+        .app-theme-toggle.btn,
         .app-theme-toggle {
             width: var(--nav-icon);
             height: var(--nav-icon);
@@ -4169,7 +4181,7 @@
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--text);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -4177,6 +4189,20 @@
             min-width: var(--tap);
             min-height: var(--tap);
             padding: 0;
+            line-height: 0;
+            font-size: inherit;
+        }
+
+        .app-theme-toggle .app-theme-toggle-icon,
+        .app-theme-toggle > .bi {
+            display: block;
+            width: 1.2rem;
+            height: 1.2rem;
+            font-size: 1.2rem;
+            line-height: 1.2rem;
+            text-align: center;
+            -webkit-text-stroke: 0.6px currentColor;
+            paint-order: stroke fill;
         }
 
         .app-theme-toggle:hover,
@@ -4318,10 +4344,22 @@
         }
 
         .app-lang-chevron {
-            font-size: 0.65rem;
+            display: block;
+            font-size: 0.72rem;
             line-height: 1;
-            opacity: 0.72;
+            opacity: 0.8;
             flex-shrink: 0;
+            -webkit-text-stroke: 0.35px currentColor;
+            paint-order: stroke fill;
+        }
+
+        .app-user-toggle > .bi-chevron-down {
+            display: block;
+            font-size: 0.72rem;
+            line-height: 1;
+            opacity: 0.8;
+            -webkit-text-stroke: 0.35px currentColor;
+            paint-order: stroke fill;
         }
 
         .app-lang-toggle:hover,
@@ -7825,9 +7863,9 @@
                             @auth
                             @unless ($authAwaitingVerification)
                             @if (Auth::user()->isAdmin())
-                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-dashboard">
-                                <i class="bi bi-speedometer2 nav-link-icon" aria-hidden="true"></i>
-                                <span class="nav-link-copy"><strong data-i18n="dashboard">{{ __('ui.dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_admin_dashboard_sub') }}</small></span>
+                            <a class="nav-link nav-link-dashboard {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}" data-tour="nav-admin-dashboard">
+                                <i class="bi bi-shield-check nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong>{{ __('ui.admin_dashboard') }}</strong><small class="d-lg-none">{{ __('ui.nav_admin_dashboard_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
                             @else
@@ -7969,16 +8007,29 @@
                             <i class="bi bi-chevron-down" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu" id="dropdownMenu" role="menu">
+                            @if (Auth::user()->isAdmin())
                             <li>
                                 <a
                                     class="dropdown-item"
-                                    href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('dashboard') }}"
+                                    href="{{ route('admin.dashboard') }}"
+                                    role="menuitem"
+                                >
+                                    <i class="bi bi-shield-check" aria-hidden="true"></i>
+                                    <span>{{ __('ui.admin_dashboard') }}</span>
+                                </a>
+                            </li>
+                            @else
+                            <li>
+                                <a
+                                    class="dropdown-item"
+                                    href="{{ route('dashboard') }}"
                                     role="menuitem"
                                 >
                                     <i class="bi bi-speedometer2" aria-hidden="true"></i>
                                     <span data-i18n="dashboard">{{ __('ui.dashboard') }}</span>
                                 </a>
                             </li>
+                            @endif
                             <li>
                                 <a class="dropdown-item" href="{{ route('profile.show') }}" role="menuitem">
                                     <i class="bi bi-person" aria-hidden="true"></i> <span>{{ __('ui.profile') }}</span>
@@ -10571,7 +10622,13 @@ body.session-analysis-modal-open {
   html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--sparse,
   html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--sparse,
   html body .app .main.madani-qpc-mode-active .qpc-madani-line--sparse,
-  html body .app .qpc-madani-session-scroll .qpc-madani-line--sparse {
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--sparse,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--centered,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--centered,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--centered,
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--centered,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah[data-centered="1"],
+  html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah[data-centered="1"] {
     justify-content: center !important;
   }
 
@@ -11114,9 +11171,9 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-break {
-      min-height: 1.15rem !important;
-      margin: 0.22rem 0 0.3rem !important;
-      padding: 0.3rem 0 0.4rem !important;
+      min-height: 0 !important;
+      margin: 0.45rem 0 0 !important;
+      padding: 0.2rem 0 1.45rem !important;
       border: 0 !important;
       border-bottom: 0 !important;
     }
@@ -11242,9 +11299,9 @@ body.session-analysis-modal-open {
 
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio,
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {
-      min-height: 1.15rem !important;
-      margin: 0.22rem 0 0.3rem !important;
-      padding: 0.3rem 0 0.4rem !important;
+      min-height: 0 !important;
+      margin: 0.45rem 0 0 !important;
+      padding: 0.2rem 0 1.45rem !important;
       border: 0 !important;
       border-bottom: 0 !important;
     }
@@ -11255,14 +11312,14 @@ body.session-analysis-modal-open {
     }
 
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
-      font-size: 0.9rem !important;
+      font-size: max(1.15rem, calc(var(--qpc-word-size, 24px) * 0.92)) !important;
     }
 
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
       padding-inline:
         max(14px, env(safe-area-inset-left, 0px))
         max(14px, env(safe-area-inset-right, 0px)) !important;
-      padding-block: 0.08rem 0.16rem !important;
+      padding-block: 0.08rem 0.04rem !important;
     }
 
     html body .app .qpc-madani-line--empty,
@@ -11518,9 +11575,9 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio {
-      min-height: 1.15rem !important;
-      margin: 0.22rem 0 0.3rem !important;
-      padding: 0.3rem 0 0.4rem !important;
+      min-height: 0 !important;
+      margin: 0.45rem 0 0 !important;
+      padding: 0.2rem 0 1.45rem !important;
       border: 0 !important;
       border-bottom: 0 !important;
       box-shadow: none !important;
@@ -11528,7 +11585,7 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number,
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
-      font-size: 0.9rem !important;
+      font-size: max(1.15rem, calc(var(--qpc-word-size, 24px) * 0.92)) !important;
       font-weight: 600 !important;
     }
 
@@ -11556,7 +11613,7 @@ body.session-analysis-modal-open {
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page .qpc-madani-page__sheet {
-      padding-top: 0.3rem !important;
+      padding-top: 0.85rem !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
@@ -11592,16 +11649,18 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
     html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio {
-      min-height: 1.1rem !important;
-      margin: 0.2rem 0 0.28rem !important;
-      padding: 0.28rem 0 0.36rem !important;
+      min-height: 0 !important;
+      margin: 0.35rem 0 0 !important;
+      padding: 0.15rem 0 1.55rem !important;
       border: 0 !important;
       border-bottom: 0 !important;
       box-shadow: none !important;
+      font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number {
-      font-size: 0.88rem !important;
+      font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif !important;
+      font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;
       font-weight: 600 !important;
     }
 
@@ -11643,6 +11702,55 @@ body.session-analysis-modal-open {
   html body .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
     margin-block-end: calc(var(--qpc-word-size, 22px) * 0.55);
     padding-block-end: calc(var(--qpc-word-size, 22px) * 0.42);
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v224">
+  /*
+   * Desktop Al-Fatihah / centered ayah rows: later sparse-only hotfixes (v211/v212)
+   * were winning over v199 and spraying short centered lines edge-to-edge.
+   * Also pack short opening pages to content height instead of a 15-row stretch.
+   */
+  @media (min-width: 768px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--centered,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah[data-centered="1"],
+    html body .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--centered,
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah[data-centered="1"],
+    html body .app .qpc-madani-session-scroll .qpc-madani-line--ayah.qpc-madani-line--sparse,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--centered,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah[data-centered="1"],
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah.qpc-madani-line--sparse {
+      justify-content: center !important;
+      gap: 0 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page--opening .qpc-madani-page__ornament,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page--session-compact .qpc-madani-page__ornament,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-spread[data-desktop-short-page="true"] .qpc-madani-page__ornament {
+      min-height: 0 !important;
+      height: auto !important;
+      justify-content: flex-start !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page--opening .qpc-madani-page__sheet,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page--session-compact .qpc-madani-page__sheet,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-spread[data-desktop-short-page="true"] .qpc-madani-page__sheet {
+      display: flex !important;
+      flex-direction: column !important;
+      grid-template-rows: none !important;
+      justify-content: flex-start !important;
+      align-content: start !important;
+      height: auto !important;
+      min-height: 0 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page--opening .qpc-madani-line--ayah,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page--session-compact .qpc-madani-line--ayah,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-spread[data-desktop-short-page="true"] .qpc-madani-line--ayah {
+      flex: 0 0 auto !important;
+      height: auto !important;
+      min-height: calc(var(--qpc-word-size, 22px) * 1.42) !important;
+    }
   }
 </style>
 <style id="mutqin-memorisation-hotfix-v223">
@@ -11698,6 +11806,95 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-memorisation-hotfix-v225">
+  /* Kept for test/compat; refined folio chrome lives in v226. */
+</style>
+<style id="mutqin-memorisation-hotfix-v226">
+  /*
+   * Clean mushaf folio: Noto Naskh numerals, centered flanks, no second rule.
+   * Grouped with the page above (tight top / roomy bottom).
+   */
+  @media (max-width: 767.98px) {
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
+    html.is-app-fullscreen body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__folio {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      min-height: 0 !important;
+      height: auto !important;
+      margin: 0.35rem 0 0 !important;
+      padding: 0.15rem 0 1.55rem !important;
+      border: 0 !important;
+      border-bottom: 0 !important;
+      box-shadow: none !important;
+      font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif !important;
+      font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;
+      line-height: 1 !important;
+      color: var(--qpc-folio, #8a7048) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio::after,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio::after,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__folio::after {
+      content: none !important;
+      display: none !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number,
+    html.is-app-fullscreen body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number {
+      display: inline-flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 0.65rem !important;
+      font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif !important;
+      font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.12em !important;
+      line-height: 1 !important;
+      direction: ltr !important;
+      unicode-bidi: isolate !important;
+      opacity: 0.82 !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::before,
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::after,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number::before,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number::after,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::before,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::after {
+      content: "" !important;
+      display: block !important;
+      width: 1.55rem !important;
+      height: 1.5px !important;
+      flex: 0 0 auto !important;
+      align-self: center !important;
+      margin: 0 !important;
+      border-radius: 1px !important;
+      background: currentColor !important;
+      opacity: 0.42 !important;
+      transform: translateY(0.02em) !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body .app .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
+      padding-bottom: 0.02rem !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page {
+      margin-top: 0.35rem !important;
+    }
+
+    html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page .qpc-madani-page__sheet {
+      padding-top: 0.85rem !important;
+    }
+  }
+</style>
 <script>
   (function () {
     function stretchAyahLine(line) {
@@ -11721,6 +11918,8 @@ body.session-analysis-modal-open {
       line.style.setProperty('box-sizing', 'border-box', 'important')
       var sparse = line.classList.contains('qpc-madani-line--sparse')
         || line.classList.contains('madani-line--sparse')
+        || line.getAttribute('data-centered') === '1'
+        || line.classList.contains('qpc-madani-line--centered')
       if (!sparse) {
         var words = line.querySelectorAll('.qpc-madani-word, .madani-word')
         var natural = 0
@@ -11738,6 +11937,8 @@ body.session-analysis-modal-open {
         }
         line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
         line.classList.toggle('madani-line--sparse', sparse && (line.classList.contains('madani-line--ayah') || line.classList.contains('madani-line--glyphs')))
+      } else if (line.classList.contains('qpc-madani-line--ayah')) {
+        line.classList.add('qpc-madani-line--sparse')
       }
       line.style.setProperty('justify-content', sparse ? 'center' : 'space-between', 'important')
       if (mobile && !sparse) {
@@ -11810,6 +12011,146 @@ body.session-analysis-modal-open {
     window.addEventListener('load', ensureSurahTitleSize)
     setTimeout(ensureSurahTitleSize, 50)
     setTimeout(ensureSurahTitleSize, 400)
+
+    // Clean folio: Noto Naskh numerals + centered flanks (no second rule).
+    function styleMadaniFolio(folio) {
+      if (!folio || folio.nodeType !== 1) return
+      if (window.innerWidth >= 768) return
+      var page = folio.closest('.qpc-madani-page')
+      var wordPx = 24
+      if (page) {
+        var raw = window.getComputedStyle(page).getPropertyValue('--qpc-word-size')
+          || page.style.getPropertyValue('--qpc-word-size')
+        var parsed = parseFloat(raw)
+        if (parsed > 0) wordPx = parsed
+      }
+      var folioPx = Math.max(22, Math.round(wordPx * 1.05))
+      folio.style.setProperty('display', 'flex', 'important')
+      folio.style.setProperty('flex-direction', 'column', 'important')
+      folio.style.setProperty('align-items', 'center', 'important')
+      folio.style.setProperty('justify-content', 'flex-start', 'important')
+      folio.style.setProperty('flex', '0 0 auto', 'important')
+      folio.style.setProperty('margin-top', '0.35rem', 'important')
+      folio.style.setProperty('margin-bottom', '0', 'important')
+      folio.style.setProperty('padding', '0.15rem 0 1.55rem', 'important')
+      folio.style.setProperty('min-height', '0', 'important')
+      folio.style.setProperty('height', 'auto', 'important')
+      folio.style.setProperty('max-height', 'none', 'important')
+      folio.style.setProperty('font-family', '"Noto Naskh Arabic", "Scheherazade New", "Amiri", serif', 'important')
+      folio.style.setProperty('font-size', folioPx + 'px', 'important')
+      folio.style.setProperty('line-height', '1', 'important')
+      folio.style.setProperty('border', '0', 'important')
+      folio.style.setProperty('border-bottom', '0', 'important')
+      folio.style.setProperty('box-shadow', 'none', 'important')
+      var number = folio.querySelector('.qpc-madani-page__folio-number')
+      if (number) {
+        number.style.setProperty('display', 'inline-flex', 'important')
+        number.style.setProperty('flex-direction', 'row', 'important')
+        number.style.setProperty('align-items', 'center', 'important')
+        number.style.setProperty('justify-content', 'center', 'important')
+        number.style.setProperty('gap', '0.65rem', 'important')
+        number.style.setProperty('font-family', '"Noto Naskh Arabic", "Scheherazade New", "Amiri", serif', 'important')
+        number.style.setProperty('font-size', folioPx + 'px', 'important')
+        number.style.setProperty('font-weight', '600', 'important')
+        number.style.setProperty('line-height', '1', 'important')
+        number.style.setProperty('letter-spacing', '0.12em', 'important')
+        number.style.setProperty('direction', 'ltr', 'important')
+        number.style.setProperty('unicode-bidi', 'isolate', 'important')
+        number.style.setProperty('opacity', '0.82', 'important')
+      }
+      var sheet = page && page.querySelector('.qpc-madani-page__sheet')
+      if (sheet) sheet.style.setProperty('padding-bottom', '0.02rem', 'important')
+    }
+
+    function ensureMadaniFolioChrome() {
+      var stale = document.getElementById('mutqin-madani-folio-size-v1')
+      if (stale) stale.remove()
+      var stale2 = document.getElementById('mutqin-madani-folio-size-v2')
+      if (stale2) stale2.remove()
+      var id = 'mutqin-madani-folio-size-v3'
+      var existing = document.getElementById(id)
+      var css = [
+        '@media (max-width: 767.98px) {',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,',
+        'html body.memorisation-page .app .qpc-madani-page__folio {',
+        'display:flex !important;flex-direction:column !important;align-items:center !important;',
+        'margin:0.35rem 0 0 !important;padding:0.15rem 0 1.55rem !important;height:auto !important;',
+        'font-family:"Noto Naskh Arabic","Scheherazade New","Amiri",serif !important;',
+        'font-size:max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;',
+        'line-height:1 !important;border:0 !important;box-shadow:none !important;',
+        'color:var(--qpc-folio, #8a7048) !important;',
+        '}',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio::after,',
+        'html body.memorisation-page .app .qpc-madani-page__folio::after {',
+        'content:none !important;display:none !important;',
+        '}',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number,',
+        'html body.memorisation-page .app .qpc-madani-page__folio-number {',
+        'display:inline-flex !important;flex-direction:row !important;align-items:center !important;justify-content:center !important;gap:0.65rem !important;',
+        'font-family:"Noto Naskh Arabic","Scheherazade New","Amiri",serif !important;',
+        'font-size:max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;',
+        'font-weight:600 !important;letter-spacing:0.12em !important;line-height:1 !important;',
+        'direction:ltr !important;unicode-bidi:isolate !important;opacity:0.82 !important;',
+        '}',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::before,',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::after,',
+        'html body.memorisation-page .app .qpc-madani-page__folio-number::before,',
+        'html body.memorisation-page .app .qpc-madani-page__folio-number::after {',
+        'content:"" !important;display:block !important;width:1.55rem !important;height:1.5px !important;',
+        'flex:0 0 auto !important;align-self:center !important;margin:0 !important;border-radius:1px !important;',
+        'background:currentColor !important;opacity:0.42 !important;transform:translateY(0.02em) !important;',
+        '}',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page .qpc-madani-page__sheet {',
+        'padding-top:0.85rem !important;',
+        '}',
+        '}'
+      ].join('')
+      if (existing) {
+        existing.textContent = css
+        document.head.appendChild(existing)
+      } else {
+        var style = document.createElement('style')
+        style.id = id
+        style.textContent = css
+        document.head.appendChild(style)
+      }
+      document.querySelectorAll('.qpc-madani-page__folio').forEach(styleMadaniFolio)
+    }
+
+    var folioChromeTimer = 0
+    function scheduleMadaniFolioChrome() {
+      window.clearTimeout(folioChromeTimer)
+      folioChromeTimer = window.setTimeout(ensureMadaniFolioChrome, 80)
+    }
+    ensureMadaniFolioChrome()
+    window.addEventListener('load', ensureMadaniFolioChrome)
+    window.addEventListener('resize', scheduleMadaniFolioChrome)
+    setTimeout(ensureMadaniFolioChrome, 50)
+    setTimeout(ensureMadaniFolioChrome, 400)
+    setTimeout(ensureMadaniFolioChrome, 1200)
+    if (typeof MutationObserver !== 'undefined') {
+      var folioObserver = new MutationObserver(function (records) {
+        for (var i = 0; i < records.length; i += 1) {
+          var nodes = records[i].addedNodes
+          for (var j = 0; j < nodes.length; j += 1) {
+            var node = nodes[j]
+            if (!node || node.nodeType !== 1) continue
+            if (
+              (node.classList && (
+                node.classList.contains('qpc-madani-page__folio')
+                || node.classList.contains('qpc-madani-page')
+                || node.classList.contains('qpc-madani-session-scroll__page')
+              ))
+              || (node.querySelector && node.querySelector('.qpc-madani-page__folio'))
+            ) {
+              scheduleMadaniFolioChrome()
+              return
+            }
+          }
+        }
+      })
+      folioObserver.observe(document.documentElement, { childList: true, subtree: true })
+    }
   })()
 </script>
 @endif

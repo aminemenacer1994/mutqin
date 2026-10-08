@@ -70,18 +70,23 @@ final class TransactionalMail
     }
 
     /**
-     * Inline logo source for HTML mail. Prefer CID embed (Outlook/Gmail-safe).
+     * Inline logo source for HTML mail.
+     *
+     * Prefer a small CID embed (Outlook/Gmail-safe, no remote fetch). Avoid
+     * base64 data-URIs — they inflate the MIME part and hurt spam scores.
      */
     public static function logoSrc(mixed $message = null): string
     {
         $path = self::logoPath();
+        $maxEmbedBytes = 20_480;
 
-        if (is_object($message) && method_exists($message, 'embed') && is_file($path)) {
+        if (is_object($message)
+            && method_exists($message, 'embed')
+            && is_file($path)
+            && (int) filesize($path) > 0
+            && (int) filesize($path) <= $maxEmbedBytes
+        ) {
             return (string) $message->embed($path);
-        }
-
-        if (is_file($path)) {
-            return self::dataUriFor($path);
         }
 
         return self::logoUrl();
@@ -96,16 +101,28 @@ final class TransactionalMail
             : public_path('images/logo_main.png');
     }
 
-    private static function dataUriFor(string $path): string
+    /**
+     * Replyable address for transactional mail (improves inbox placement).
+     *
+     * @return array{0: string, 1: string|null}|null
+     */
+    public static function replyTo(): ?array
     {
-        $contents = file_get_contents($path);
-        if ($contents === false) {
-            return self::logoUrl();
+        $configured = trim((string) config('mail.reply_to.address', ''));
+        $from = strtolower(trim((string) config('mail.from.address', '')));
+
+        $address = $configured;
+        if ($address === '' && (str_starts_with($from, 'noreply@') || str_starts_with($from, 'no-reply@'))) {
+            $address = 'hello@mutqin.ai';
         }
 
-        $mime = mime_content_type($path) ?: 'image/png';
+        if ($address === '' || ! filter_var($address, FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
 
-        return 'data:'.$mime.';base64,'.base64_encode($contents);
+        $name = trim((string) config('mail.reply_to.name', config('mail.from.name', 'Mutqin')));
+
+        return [$address, $name !== '' ? $name : null];
     }
 
     /**
@@ -176,12 +193,19 @@ final class TransactionalMail
         App::setLocale($locale);
 
         try {
-            return (new MailMessage)
+            $message = (new MailMessage)
                 ->subject(__($subjectKey))
                 ->view([
                     'html' => $htmlView,
                     'text' => $textView,
                 ], $data);
+
+            $replyTo = self::replyTo();
+            if ($replyTo !== null) {
+                $message->replyTo($replyTo[0], $replyTo[1]);
+            }
+
+            return $message;
         } finally {
             App::setLocale($previous);
         }

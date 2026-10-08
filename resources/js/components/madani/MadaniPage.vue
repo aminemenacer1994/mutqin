@@ -252,9 +252,12 @@ export default {
       })
     },
     isOpening() {
-      if (this.sessionScoped || this.spreadViewportFill) return false
+      // Short printed pages (Al-Fatihah) — including desktop spreads. Session pages
+      // keep their own compact lock path and must not inherit opening centering.
+      if (this.sessionScoped) return false
       const raw = Array.isArray(this.page?.lines) ? this.page.lines : []
-      return raw.length > 0 && raw.length < 15
+      const count = raw.filter((line) => this.lineTypeOf(line) !== 'empty').length
+      return count > 0 && count < 15
     },
     folioLabel() {
       if (this.embedded) return String(this.pageNumber)
@@ -442,6 +445,61 @@ export default {
       sheet.style.setProperty('padding-inline', '0', 'important')
       sheet.style.setProperty('padding-left', 'env(safe-area-inset-left, 0px)', 'important')
       sheet.style.setProperty('padding-right', 'env(safe-area-inset-right, 0px)', 'important')
+      sheet.style.setProperty('padding-bottom', '0.02rem', 'important')
+      this.applySessionFolioChrome(root)
+    },
+    /**
+     * Mobile/session folio: clean flanked numeral, tucked under the page above.
+     */
+    applySessionFolioChrome(root) {
+      if (!(root instanceof HTMLElement)) return
+      if (this.desktopSpreadLayout()) return
+      const folio = root.querySelector('.qpc-madani-page__folio')
+      if (!(folio instanceof HTMLElement)) return
+      const wordPx = Number.parseFloat(root.style.getPropertyValue('--qpc-word-size')) || 24
+      const folioPx = Math.max(22, Math.round(wordPx * 1.05))
+      folio.style.setProperty('display', 'flex', 'important')
+      folio.style.setProperty('flex-direction', 'column', 'important')
+      folio.style.setProperty('align-items', 'center', 'important')
+      folio.style.setProperty('justify-content', 'flex-start', 'important')
+      folio.style.setProperty('flex', '0 0 auto', 'important')
+      folio.style.setProperty('gap', '0', 'important')
+      folio.style.setProperty('margin-top', '0.35rem', 'important')
+      folio.style.setProperty('margin-bottom', '0', 'important')
+      folio.style.setProperty('padding', '0.15rem 0 1.55rem', 'important')
+      folio.style.setProperty('min-height', '0', 'important')
+      folio.style.setProperty('height', 'auto', 'important')
+      folio.style.setProperty('max-height', 'none', 'important')
+      folio.style.setProperty('font-size', `${folioPx}px`, 'important')
+      folio.style.setProperty('line-height', '1', 'important')
+      folio.style.setProperty('border', '0', 'important')
+      folio.style.setProperty('border-bottom', '0', 'important')
+      folio.style.setProperty('box-shadow', 'none', 'important')
+      folio.style.setProperty('opacity', '1', 'important')
+      // Kill any spread layout that parks the folio mid-gap.
+      folio.style.setProperty('margin-top', '0.35rem', 'important')
+      const number = folio.querySelector('.qpc-madani-page__folio-number')
+      if (number instanceof HTMLElement) {
+        number.style.setProperty('display', 'inline-flex', 'important')
+        number.style.setProperty('flex-direction', 'row', 'important')
+        number.style.setProperty('align-items', 'center', 'important')
+        number.style.setProperty('justify-content', 'center', 'important')
+        number.style.setProperty('gap', '0.65rem', 'important')
+        number.style.setProperty(
+          'font-family',
+          '"Noto Naskh Arabic", "Scheherazade New", "Amiri", serif',
+          'important',
+        )
+        number.style.setProperty('font-size', `${folioPx}px`, 'important')
+        number.style.setProperty('font-weight', '600', 'important')
+        number.style.setProperty('line-height', '1', 'important')
+        number.style.setProperty('letter-spacing', '0.12em', 'important')
+        number.style.setProperty('direction', 'ltr', 'important')
+        number.style.setProperty('unicode-bidi', 'isolate', 'important')
+        number.style.setProperty('border', '0', 'important')
+        number.style.setProperty('border-bottom', '0', 'important')
+        number.style.setProperty('opacity', '0.82', 'important')
+      }
     },
     applyMobileAyahRowPacking(sheet, available) {
       if (!(sheet instanceof HTMLElement)) return
@@ -466,7 +524,10 @@ export default {
         line.style.maxWidth = '100%'
         void line.offsetWidth
         const rowWidth = Math.max(1, line.clientWidth || Number(available) || 0)
-        const sparse = isMobileMushafAyahSparse({
+        // Printed opening pages (Al-Fatihah) mark every ayah line centered.
+        const printedCentered = Number(line.dataset.centered) === 1
+          || line.classList.contains('qpc-madani-line--centered')
+        const sparse = printedCentered || isMobileMushafAyahSparse({
           naturalWidth: natural,
           availableWidth: rowWidth,
           wordCount,
@@ -553,6 +614,7 @@ export default {
         void sheet.offsetWidth
         this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
       }
+      if (this.isPhoneViewport() || this.sessionScoped) this.applySessionFolioChrome(root)
     },
     applyLayoutTypography() {
       const root = this.$el
@@ -888,6 +950,7 @@ export default {
       }
       root.style.setProperty('--qpc-word-size', `${size}px`)
       if (mobile) this.applyMobileEdgeToEdgeChrome(root, sheet)
+      else if (this.sessionScoped) this.applySessionFolioChrome(root)
       this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
@@ -903,7 +966,10 @@ export default {
         if (!this.spreadDesktopLayoutLocked) {
           this.applySpreadViewportLayout(root, sheet)
           window.requestAnimationFrame(() => {
-            this.applySpreadViewportLayout(root, sheet)
+            // Session lock may win between frames — never undo it with the 15-row stretch grid.
+            if (!this.spreadDesktopLayoutLocked) {
+              this.applySpreadViewportLayout(root, sheet)
+            }
             this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
           })
         } else {
@@ -914,13 +980,18 @@ export default {
     applySpreadViewportLayout(root, sheet) {
       if (!this.spreadViewportFill) return
       if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) return
+      if (this.spreadDesktopLayoutLocked) return
       const desktopSpread = typeof window !== 'undefined' && window.innerWidth >= this.twoPageMinWidth()
+      const contentLines = [...sheet.querySelectorAll('.qpc-madani-line')].filter((line) => (
+        String(line.dataset.lineType || '') !== 'empty'
+      ))
+      const shortPage = contentLines.length > 0 && contentLines.length < DESKTOP_SPREAD_LINE_SLOTS
       const rowCount = desktopSpread
         ? DESKTOP_SPREAD_LINE_SLOTS
         : this.spreadLayoutLineSlots(sheet)
       const ornament = root.querySelector('.qpc-madani-page__ornament')
       const folio = root.querySelector('.qpc-madani-page__folio')
-      if (this.isPhoneViewport()) {
+      if (this.isPhoneViewport() || (desktopSpread && shortPage)) {
         if (ornament instanceof HTMLElement) {
           ornament.style.minHeight = '0'
           ornament.style.height = 'auto'
@@ -931,7 +1002,7 @@ export default {
         sheet.style.flexDirection = 'column'
         sheet.style.gridTemplateRows = 'none'
         sheet.style.alignContent = 'start'
-        sheet.style.justifyContent = 'stretch'
+        sheet.style.justifyContent = 'flex-start'
         sheet.style.minHeight = '0'
         sheet.style.height = 'auto'
         sheet.querySelectorAll('.qpc-madani-line').forEach((line) => {
@@ -1152,45 +1223,91 @@ export default {
 }
 
 .qpc-madani-page--opening .qpc-madani-page__sheet {
+  justify-content: flex-start;
+  padding-block: 0.85rem 0.55rem;
+}
+
+.qpc-madani-page--opening:not(.qpc-madani-page--spread-viewport-fill):not(.qpc-madani-page--embedded) .qpc-madani-page__sheet {
   justify-content: center;
   padding-block: 2.4rem 1.4rem;
 }
 
 .qpc-madani-page__folio {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 1.7rem;
-  padding: 0.28rem 0 0.08rem;
+  justify-content: flex-start;
+  gap: 0;
+  min-height: 0;
+  margin: 0.35rem 0 0;
+  padding: 0.15rem 0 1.55rem;
   border: 0;
   border-bottom: 0;
   box-shadow: none;
-  color: var(--qpc-rule);
-  font-family: "Amiri Quran", "Amiri", serif;
-  font-size: 0.98rem;
+  color: var(--qpc-folio, var(--qpc-rule, #8a7048));
+  font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+  font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   line-height: 1;
+  position: relative;
+}
+
+/* No second rule under the number — flanks alone keep the footer clean. */
+.qpc-madani-page__folio::after {
+  content: none;
+  display: none;
 }
 
 .qpc-madani-page__folio-number {
-  display: inline-block;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
   line-height: 1;
   border: 0;
   border-bottom: 0;
   box-shadow: none;
+  font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+  font-size: inherit;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  direction: ltr;
+  unicode-bidi: isolate;
+  opacity: 0.82;
+}
+
+/* Flanking rules — optically centered on the digit cap-height. */
+.qpc-madani-page__folio-number::before,
+.qpc-madani-page__folio-number::after {
+  content: "";
+  display: block;
+  width: 1.55rem;
+  height: 1.5px;
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.42;
+  transform: translateY(0.02em);
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio {
-  min-height: 1.15rem;
-  margin: 0.2rem 0 0.28rem;
-  padding: 0.28rem 0 0.36rem;
+  min-height: 0;
+  margin: 0.35rem 0 0;
+  padding: 0.15rem 0 1.55rem;
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
-  font-size: 0.92rem;
+  font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+  font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   font-weight: 600;
-  letter-spacing: 0.04em;
-  color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
-  -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 94%, #fff);
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 78%, transparent);
+  -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 78%, transparent);
+  opacity: 1;
 }
 
 .qpc-madani-page--embedded {
@@ -1235,8 +1352,28 @@ export default {
     min-height: 100%;
   }
 
+  /* Al-Fatihah / short pages: pack to content — never stretch 8 rows across 74vh. */
+  .qpc-madani-page--spread-viewport-fill.qpc-madani-page--opening .qpc-madani-page__ornament,
+  .qpc-madani-page--spread-viewport-fill.qpc-madani-page--session-compact .qpc-madani-page__ornament {
+    min-height: 0;
+    height: auto;
+    justify-content: flex-start;
+  }
+
   .qpc-madani-page--spread-viewport-fill .qpc-madani-page__sheet {
     flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .qpc-madani-page--spread-viewport-fill.qpc-madani-page--opening .qpc-madani-page__sheet,
+  .qpc-madani-page--spread-viewport-fill.qpc-madani-page--session-compact .qpc-madani-page__sheet {
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+    grid-template-rows: none;
+    justify-content: flex-start;
+    align-content: start;
+    height: auto;
     min-height: 0;
   }
 
@@ -1265,10 +1402,10 @@ export default {
     padding: 0 !important;
   }
 
-  .qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet,
-  .qpc-madani-page--spread-viewport-fill:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet,
-  .qpc-madani-page--borderless.qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet,
-  .qpc-madani-page--indopak.qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped) .qpc-madani-page__sheet {
+  .qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped):not(.qpc-madani-page--opening) .qpc-madani-page__sheet,
+  .qpc-madani-page--spread-viewport-fill:not(.qpc-madani-page--session-scoped):not(.qpc-madani-page--opening) .qpc-madani-page__sheet,
+  .qpc-madani-page--borderless.qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped):not(.qpc-madani-page--opening) .qpc-madani-page__sheet,
+  .qpc-madani-page--indopak.qpc-madani-page--embedded:not(.qpc-madani-page--session-scoped):not(.qpc-madani-page--opening) .qpc-madani-page__sheet {
     display: grid;
     grid-template-rows: repeat(15, minmax(0, 1fr));
     justify-content: stretch;
@@ -1311,13 +1448,13 @@ export default {
 }
 
 .qpc-madani-page--embedded .qpc-madani-page__folio {
-  min-height: 1.15rem;
-  margin: 0.22rem 0 0.3rem;
-  padding: 0.3rem 0 0.4rem;
+  min-height: 0;
+  margin: 0.35rem 0 0;
+  padding: 0.15rem 0 1.55rem;
   color: #8a7048;
-  font-family: inherit;
-  font-size: 0.9rem;
-  letter-spacing: 0.04em;
+  font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+  font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
+  letter-spacing: 0.12em;
 }
 
 .qpc-madani-page--single {
@@ -1352,9 +1489,11 @@ export default {
 }
 
 .qpc-madani-page--single .qpc-madani-page__folio {
-  min-height: 1.35rem;
-  padding: 0.18rem 0 0.04rem;
-  font-size: 0.88rem;
+  min-height: 0;
+  margin: 0.35rem 0 0;
+  padding: 0.15rem 0 1.55rem;
+  font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+  font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
 }
 
 .qpc-madani-page--borderless,
@@ -1457,16 +1596,19 @@ export default {
   .qpc-madani-page__folio,
   .qpc-madani-page--embedded .qpc-madani-page__folio,
   .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio {
-    min-height: 1.15rem;
-    margin: 0.22rem 0 0.3rem;
-    padding: 0.3rem 0 0.4rem;
+    min-height: 0;
+    margin: 0.35rem 0 0;
+    padding: 0.15rem 0 1.55rem;
     border: 0;
     border-bottom: 0;
     box-shadow: none;
+    font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+    font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   }
 
   .qpc-madani-page__folio-number {
-    font-size: 0.9rem;
+    font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+    font-size: inherit;
     font-weight: 600;
     border: 0;
     border-bottom: 0;

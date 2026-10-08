@@ -50,9 +50,7 @@
 <body id="body" class="email-bg" style="margin:0;padding:0;background-color:#eef3ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#123527;width:100%;">
     <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">
         @yield('preheader')
-    </div>
-    <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">
-        &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
+        &#847;&zwnj;&nbsp;
     </div>
     <table role="presentation" class="email-bg" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eef3ef;width:100%;border-collapse:collapse;">
         <tr>
@@ -69,7 +67,7 @@
                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
                                             <tr>
                                                 <td valign="middle" width="44" style="padding:0 12px 0 0;width:44px;line-height:0;font-size:0;">
-                                                    <img src="{{ \App\Support\TransactionalMail::logoSrc($message ?? null) }}" width="40" height="42" alt="" style="display:block;border:0;outline:none;text-decoration:none;width:40px;height:42px;max-width:40px;">
+                                                    <img src="{{ \App\Support\TransactionalMail::logoSrc($message ?? null) }}" width="40" height="42" alt="{{ __('mail.logo_alt') }}" style="display:block;border:0;outline:none;text-decoration:none;width:40px;height:42px;max-width:40px;">
                                                 </td>
                                                 <td valign="middle" style="padding:0;">
                                                     <p class="email-wordmark" style="margin:0;font-size:20px;line-height:1.15;font-weight:700;letter-spacing:-0.02em;color:#123527;font-family:Georgia,'Times New Roman',serif;">{{ \App\Support\TransactionalMail::brandName() }}</p>

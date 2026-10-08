@@ -308,7 +308,13 @@ export default {
   margin-block-end: calc(var(--qpc-word-size, 22px) * var(--qpc-line-gap, 0));
 }
 
-.qpc-madani-line--centered:not(.qpc-madani-line--ayah),
+/* Opening-page / printed centered ayah rows (e.g. Al-Fatihah) must not stretch. */
+.qpc-madani-line--ayah.qpc-madani-line--centered,
+.qpc-madani-line--ayah.qpc-madani-line--centered.qpc-madani-line--sparse {
+  justify-content: center !important;
+}
+
+.qpc-madani-line--centered,
 .qpc-madani-line--surah_name,
 .qpc-madani-line--basmallah,
 .qpc-madani-line--basmala {

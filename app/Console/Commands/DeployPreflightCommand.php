@@ -105,6 +105,35 @@ class DeployPreflightCommand extends Command
             $failed = true;
         }
 
+        $mailer = strtolower(trim((string) config('mail.default', 'log')));
+        $resendKey = trim((string) config('services.resend.key', ''));
+        $fromAddress = strtolower(trim((string) config('mail.from.address', '')));
+        $fromIsPlaceholder = $fromAddress === ''
+            || str_ends_with($fromAddress, '@example.com')
+            || $fromAddress === 'hello@example.com';
+        $mailTransportOk = ! $protected || (
+            in_array($mailer, ['resend', 'smtp'], true)
+            && ! $fromIsPlaceholder
+            && ($mailer !== 'resend' || $resendKey !== '')
+        );
+        $checks[] = $this->check(
+            'transactional_mail',
+            $mailTransportOk,
+            $mailer === ''
+                ? 'MAIL_MAILER is empty.'
+                : ('MAIL_MAILER='.$mailer
+                    .($mailer === 'resend'
+                        ? ($resendKey !== '' ? ' (RESEND key set).' : ' (RESEND_KEY / RESEND_API_KEY missing).')
+                        : '.')
+                    .' From: '.($fromAddress !== '' ? $fromAddress : '(empty)')),
+            $mailTransportOk
+                ? null
+                : 'Refusing deploy: password reset and verification need MAIL_MAILER=resend, RESEND_KEY (or RESEND_API_KEY), and MAIL_FROM_ADDRESS=hello@mutqin.ai. See docs/email-verification-resend.md.'
+        );
+        if (! $mailTransportOk) {
+            $failed = true;
+        }
+
         $appHost = parse_url((string) config('app.url'), PHP_URL_HOST) ?: '';
         $googleRedirect = trim((string) config('services.google.redirect'));
         $googleClient = trim((string) config('services.google.client_id'));

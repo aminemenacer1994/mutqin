@@ -674,14 +674,16 @@
 .workspace-shell-actions .top-card-action-trigger.action-btn-exit {
     inline-size: 100% !important;
     min-inline-size: 0 !important;
-    min-block-size: 30px !important;
-    block-size: 30px !important;
-    max-block-size: 30px !important;
-    padding: 0 clamp(6px, 2vw, 10px) !important;
+    min-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    block-size: var(--primary-action-min-height, 2.45rem) !important;
+    max-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
     justify-content: center !important;
     white-space: nowrap !important;
-    line-height: 1.1;
-    font-size: 0.7rem !important;
+    line-height: 1 !important;
+    font-size: var(--primary-action-font-size, 0.8rem) !important;
+    border-radius: var(--primary-action-radius, 999px) !important;
+    box-sizing: border-box !important;
     overflow: hidden !important;
   }
 
@@ -1991,9 +1993,10 @@
 
   .session-exit-modal-wrap {
     display: flex !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: center !important;
-    align-content: center !important;
+    align-content: flex-start !important;
+    padding-top: max(0.55rem, var(--mq-safe-top)) !important;
   }
 
   .session-exit-modal-wrap .modal-dialog.session-exit-dialog,
@@ -2038,9 +2041,16 @@
     inline-size: 100% !important;
     min-block-size: 0 !important;
     block-size: auto !important;
+    height: auto !important;
     max-block-size: min(calc(100dvh - 2rem), 640px) !important;
     border-radius: var(--mq-radius-card, 18px) !important;
     overflow: hidden !important;
+  }
+
+  .mutqin-modal-surface.session-exit-modal .session-exit-fluid,
+  .mutqin-modal-surface.session-exit-modal .session-exit-body {
+    flex: 0 1 auto !important;
+    min-block-size: 0 !important;
   }
 
   .mutqin-modal-surface.ayah-notes-modal {
@@ -2314,10 +2324,12 @@
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 0.65rem !important;
+    flex: 0 1 auto !important;
+    gap: 0.5rem !important;
     width: 100% !important;
     max-width: none !important;
-    padding: 0.9rem 1.05rem 0.95rem !important;
+    min-block-size: 0 !important;
+    padding: 0.45rem 0.95rem 0.65rem !important;
     text-align: start !important;
   }
 
@@ -3386,18 +3398,20 @@
     flex: 1 1 0 !important;
     inline-size: auto !important;
     min-inline-size: 0 !important;
-    min-block-size: 30px !important;
-    block-size: 30px !important;
-    max-block-size: 30px !important;
-    padding: 0 0.55rem !important;
-    font-size: 0.7rem !important;
-    font-weight: 500 !important;
+    min-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    block-size: var(--primary-action-min-height, 2.45rem) !important;
+    max-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
+    font-size: var(--primary-action-font-size, 0.8rem) !important;
+    font-weight: var(--primary-action-font-weight, 520) !important;
     white-space: nowrap !important;
     overflow: hidden;
     text-overflow: ellipsis;
-    border-radius: 8px !important;
-    gap: 0.2rem !important;
+    border-radius: var(--primary-action-radius, 999px) !important;
+    gap: var(--primary-action-gap, 0.35rem) !important;
     box-shadow: none !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
   }
 
   .workspace-shell-actions .top-card-session-actions.post-session-choice-pair,
@@ -4559,9 +4573,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .workspace-shell-head-utility-row > .top-card-icon-controls,
   .top-card-icon-controls {
-    --top-card-toolbar-gap: 0.5rem;
-    --mq-top-icon: var(--mq-control-size);
-    --top-card-toolbar-icon: var(--mq-control-size);
+    --top-card-toolbar-gap: 0.4rem;
+    /* Compact toolbar hits — smaller than the global 44px control size */
+    --mq-top-icon: 32px;
+    --top-card-toolbar-icon: 32px;
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: center !important;
@@ -4641,7 +4656,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     box-sizing: border-box !important;
     gap: 0 !important;
     line-height: 1 !important;
-    font-size: 0.95rem !important;
+    font-size: 0.78rem !important;
     pointer-events: auto !important;
     cursor: pointer !important;
     display: inline-flex !important;
@@ -4670,8 +4685,9 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 .top-card-icon-controls .font-dropdown-trigger i,
 .top-card-icon-controls .top-card-controls-trigger i,
 .top-card-icon-controls .top-card-dashboard-trigger i,
-.top-card-icon-controls .top-card-ellipsis i {
-    font-size: 0.95rem !important;
+.top-card-icon-controls .top-card-ellipsis i,
+.top-card-icon-controls .top-card-fullscreen-trigger i {
+    font-size: 0.78rem !important;
     line-height: 1 !important;
     width: 1em !important;
     height: 1em !important;
@@ -7184,22 +7200,22 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 0.32rem !important;
+    gap: var(--primary-action-gap, 0.35rem) !important;
     flex: 0 0 auto !important;
     align-self: center !important;
     width: auto !important;
     min-width: max-content !important;
     max-width: none !important;
-    height: 34px !important;
-    min-height: 34px !important;
-    max-height: 34px !important;
-    block-size: 34px !important;
-    min-block-size: 34px !important;
-    max-block-size: 34px !important;
-    padding: 0 0.72rem !important;
-    border-radius: 999px !important;
-    font-size: 0.78rem !important;
-    font-weight: 600 !important;
+    height: var(--primary-action-min-height, 2.45rem) !important;
+    min-height: var(--primary-action-min-height, 2.45rem) !important;
+    max-height: var(--primary-action-min-height, 2.45rem) !important;
+    block-size: var(--primary-action-min-height, 2.45rem) !important;
+    min-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    max-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
+    border-radius: var(--primary-action-radius, 999px) !important;
+    font-size: var(--primary-action-font-size, 0.8rem) !important;
+    font-weight: var(--primary-action-font-weight, 520) !important;
     line-height: 1 !important;
     white-space: nowrap !important;
     text-overflow: clip !important;
@@ -7366,15 +7382,17 @@ html[data-theme="dark"] .app .tools-body .setup-field-row.field-individual-ayah-
     min-width: 0 !important;
     max-width: none !important;
     flex: unset !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
-    block-size: 40px !important;
-    min-block-size: 40px !important;
-    max-block-size: 40px !important;
-    padding: 0 0.75rem !important;
-    gap: 0.35rem !important;
-    border-radius: 12px !important;
+    height: var(--primary-action-min-height, 2.45rem) !important;
+    min-height: var(--primary-action-min-height, 2.45rem) !important;
+    max-height: var(--primary-action-min-height, 2.45rem) !important;
+    block-size: var(--primary-action-min-height, 2.45rem) !important;
+    min-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    max-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
+    gap: var(--primary-action-gap, 0.35rem) !important;
+    border-radius: var(--primary-action-radius, 999px) !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
   }
 
   html body .app .workspace-shell .top-card-session-cluster :is(
@@ -7853,17 +7871,20 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     width: 100% !important;
     min-width: 0 !important;
     max-width: none !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
-    block-size: 40px !important;
-    min-block-size: 40px !important;
-    max-block-size: 40px !important;
-    padding: 0 0.8rem !important;
-    gap: 0.35rem !important;
+    height: var(--primary-action-min-height, 2.45rem) !important;
+    min-height: var(--primary-action-min-height, 2.45rem) !important;
+    max-height: var(--primary-action-min-height, 2.45rem) !important;
+    block-size: var(--primary-action-min-height, 2.45rem) !important;
+    min-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    max-block-size: var(--primary-action-min-height, 2.45rem) !important;
+    padding: 0 var(--primary-action-padding-x, 0.85rem) !important;
+    gap: var(--primary-action-gap, 0.35rem) !important;
+    border-radius: var(--primary-action-radius, 999px) !important;
     overflow: visible !important;
     white-space: nowrap !important;
     text-overflow: clip !important;
+    box-sizing: border-box !important;
+    line-height: 1 !important;
   }
 
   html body .app .workspace-shell .top-card-session-cluster :is(
@@ -8397,7 +8418,7 @@ html body .app .workspace-recite-dock__button:hover {
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: 0 !important;
-    padding-block: 0.12rem 0.2rem !important;
+    padding-block: 0.12rem 0.04rem !important;
     padding-inline:
       var(--mq-mushaf-inline-start)
       var(--mq-mushaf-inline-end)

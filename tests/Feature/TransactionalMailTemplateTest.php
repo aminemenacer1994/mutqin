@@ -50,12 +50,18 @@ class TransactionalMailTemplateTest extends TestCase
             $this->assertStringContainsString('v:roundrect', $html);
             $this->assertStringContainsString('prefers-color-scheme', $html);
             $this->assertTrue(
-                str_contains($html, 'cid:') || str_contains($html, 'data:image/png;base64,'),
-                'Expected inline embedded logo in transactional mail HTML.'
+                str_contains($html, 'cid:')
+                || str_contains($html, 'logo_email.png')
+                || str_contains($html, 'logo_main.png')
+                // MailMessage::render() inlines CID parts as data-URIs; live Resend MIME keeps cid:.
+                || str_contains($html, 'data:image/png;base64,'),
+                'Expected logo mark in transactional mail HTML.'
             );
+            $this->assertStringNotContainsString('&#847;&zwnj;&nbsp;&#847;&zwnj;', $html);
             $this->assertStringContainsString('#1f6b4f', $html);
             $this->assertStringContainsString(e(__('mail.tagline')), $html);
             $this->assertStringContainsString(TransactionalMail::brandName(), $html);
+            $this->assertStringContainsString(e(__('mail.logo_alt')), $html);
         }
 
         $this->assertStringContainsString(__('mail.verify_preheader', ['minutes' => $verify->viewData['expireMinutes']]), $verifyHtml);
@@ -163,5 +169,32 @@ class TransactionalMailTemplateTest extends TestCase
 
         config(['mail.brand.logo_url' => 'https://app.mutqin.ai/images/logo_email.png']);
         $this->assertSame('https://app.mutqin.ai/images/logo_email.png', TransactionalMail::logoUrl());
+    }
+
+    public function test_noreply_from_gets_reply_to_hello_mutqin(): void
+    {
+        config([
+            'mail.from.address' => 'noreply@mutqin.ai',
+            'mail.from.name' => 'Mutqin',
+            'mail.reply_to.address' => null,
+            'mail.reply_to.name' => 'Mutqin',
+        ]);
+
+        $this->assertSame(['hello@mutqin.ai', 'Mutqin'], TransactionalMail::replyTo());
+
+        $user = User::factory()->create(['email' => 'reply-to-check@example.com']);
+        $mail = (new ResetPassword('reply-to-token'))->toMail($user);
+        $this->assertSame([['hello@mutqin.ai', 'Mutqin']], $mail->replyTo);
+    }
+
+    public function test_explicit_reply_to_overrides_noreply_default(): void
+    {
+        config([
+            'mail.from.address' => 'noreply@mutqin.ai',
+            'mail.reply_to.address' => 'support@mutqin.ai',
+            'mail.reply_to.name' => 'Mutqin Support',
+        ]);
+
+        $this->assertSame(['support@mutqin.ai', 'Mutqin Support'], TransactionalMail::replyTo());
     }
 }

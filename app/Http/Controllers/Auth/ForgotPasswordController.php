@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Throwable;
 
 class ForgotPasswordController extends Controller
 {
@@ -34,6 +35,9 @@ class ForgotPasswordController extends Controller
     /**
      * Always return a generic success response. Reset mail is only created for
      * local password accounts; unknown and OAuth-only emails are silent no-ops.
+     *
+     * Mail transport failures are reported but never surfaced — a 500 would
+     * reveal that the address belongs to a password account.
      */
     public function sendResetLinkEmail(Request $request): RedirectResponse|JsonResponse
     {
@@ -45,8 +49,12 @@ class ForgotPasswordController extends Controller
         // Password reset is for local password accounts only. Google-only users
         // set a password from Profile while signed in with Google.
         if ($user instanceof User && $user->hasSetPassword()) {
-            // Broker sends to the account's stored email and enforces token throttle.
-            $this->broker()->sendResetLink($this->credentials($request));
+            try {
+                // Broker sends to the account's stored email and enforces token throttle.
+                $this->broker()->sendResetLink($this->credentials($request));
+            } catch (Throwable $e) {
+                report($e);
+            }
         }
 
         return $this->sendResetLinkResponse($request, Password::RESET_LINK_SENT);

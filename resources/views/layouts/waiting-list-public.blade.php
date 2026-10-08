@@ -169,7 +169,14 @@
       }
 
       .waiting-list-public-nav.app-navbar .navbar-toggler i {
-        font-size: 20px;
+        display: block;
+        width: 1.35rem;
+        height: 1.35rem;
+        font-size: 1.35rem;
+        line-height: 1.35rem;
+        text-align: center;
+        -webkit-text-stroke: 0.6px currentColor;
+        paint-order: stroke fill;
       }
 
       @media (min-width: 992px) {

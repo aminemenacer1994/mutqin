@@ -117,6 +117,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Reply-To (inbox placement)
+    |--------------------------------------------------------------------------
+    |
+    | Mailbox providers trust replyable senders more than noreply@. Prefer
+    | MAIL_FROM_ADDRESS=hello@mutqin.ai and leave reply-to empty, or set a
+    | monitored address here when From must stay noreply@.
+    |
+    */
+
+    'reply_to' => [
+        'address' => env('MAIL_REPLY_TO_ADDRESS'),
+        'name' => env('MAIL_REPLY_TO_NAME', env('MAIL_FROM_NAME', 'Mutqin')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Transactional brand assets
     |--------------------------------------------------------------------------
     |

@@ -193,6 +193,9 @@ class DatabaseDeploySafetyTest extends TestCase
             'services.stripe.secret_key' => 'sk_test',
             'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
             'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
+            'mail.default' => 'resend',
+            'services.resend.key' => 're_test',
+            'mail.from.address' => 'noreply@mutqin.ai',
         ]);
 
         $this->artisan('mutqin:deploy-preflight')
@@ -210,9 +213,52 @@ class DatabaseDeploySafetyTest extends TestCase
             'services.stripe.secret_key' => '',
             'billing.plans.pro_monthly.price_id' => null,
             'billing.plans.pro_yearly.price_id' => null,
+            'mail.default' => 'resend',
+            'services.resend.key' => 're_test',
+            'mail.from.address' => 'noreply@mutqin.ai',
         ]);
 
         $this->artisan('mutqin:deploy-preflight')
+            ->assertFailed();
+    }
+
+    public function test_deploy_preflight_fails_when_mail_transport_is_log_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config([
+            'app.debug' => false,
+            'app.show_demo_accounts' => false,
+            'services.google.client_id' => '',
+            'services.stripe.secret_key' => 'sk_test',
+            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+            'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
+            'mail.default' => 'log',
+            'services.resend.key' => 're_test',
+            'mail.from.address' => 'noreply@mutqin.ai',
+        ]);
+
+        $this->artisan('mutqin:deploy-preflight')
+            ->expectsOutputToContain('MAIL_MAILER=log')
+            ->assertFailed();
+    }
+
+    public function test_deploy_preflight_fails_when_resend_key_missing_in_production(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config([
+            'app.debug' => false,
+            'app.show_demo_accounts' => false,
+            'services.google.client_id' => '',
+            'services.stripe.secret_key' => 'sk_test',
+            'billing.plans.pro_monthly.price_id' => 'price_pro_monthly',
+            'billing.plans.pro_yearly.price_id' => 'price_pro_yearly',
+            'mail.default' => 'resend',
+            'services.resend.key' => '',
+            'mail.from.address' => 'noreply@mutqin.ai',
+        ]);
+
+        $this->artisan('mutqin:deploy-preflight')
+            ->expectsOutputToContain('RESEND_KEY / RESEND_API_KEY missing')
             ->assertFailed();
     }
 }

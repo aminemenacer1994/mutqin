@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use RuntimeException;
 use Tests\TestCase;
 
 class PasswordResetFlowTest extends TestCase
@@ -29,6 +30,29 @@ class PasswordResetFlowTest extends TestCase
         $response->assertSessionMissing('errors');
 
         Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_forgot_password_keeps_generic_status_when_mail_transport_fails(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'reset-mail-fail@example.com',
+        ]);
+
+        ResetPassword::toMailUsing(static function () {
+            throw new RuntimeException('resend unavailable');
+        });
+
+        try {
+            $response = $this->from(route('password.request'))->post(route('password.email'), [
+                'email' => $user->email,
+            ]);
+
+            $response->assertRedirect(route('password.request'));
+            $response->assertSessionHas('status', __('passwords.sent'));
+            $response->assertSessionMissing('errors');
+        } finally {
+            ResetPassword::toMailUsing(null);
+        }
     }
 
     public function test_reset_email_uses_mutqin_branded_content(): void
@@ -59,7 +83,12 @@ class PasswordResetFlowTest extends TestCase
         $this->assertStringContainsString((string) $expireMinutes, $html);
         $this->assertStringContainsString(e(__('mail.reset_security')), $html);
         $this->assertStringContainsString(e($mail->viewData['url']), $html);
-        $this->assertTrue(str_contains($html, 'cid:') || str_contains($html, 'data:image/png;base64,'));
+        $this->assertTrue(
+            str_contains($html, 'cid:')
+            || str_contains($html, 'logo_email.png')
+            || str_contains($html, 'logo_main.png')
+            || str_contains($html, 'data:image/png;base64,')
+        );
     }
 
     public function test_forgot_password_returns_generic_status_for_unknown_email(): void

@@ -532,7 +532,7 @@ class AdminDashboardTest extends TestCase
             ->assertStatus(422);
     }
 
-    public function test_admin_dashboard_nav_replaces_user_dashboard_for_admins(): void
+    public function test_admin_nav_shows_admin_dashboard_without_progress_link(): void
     {
         $admin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
@@ -617,14 +617,17 @@ class AdminDashboardTest extends TestCase
             ->assertRedirect(route('memorisation'));
     }
 
-    public function test_admin_visiting_customer_dashboard_is_sent_to_admin_dashboard(): void
+    public function test_admin_can_view_learner_progress_dashboard(): void
     {
         $admin = User::factory()->admin()->create([
             'email' => 'admin@example.com',
+            'name' => 'Super Admin',
         ]);
 
         $this->actingAs($admin)
             ->get(route('dashboard'))
-            ->assertRedirect(route('admin.dashboard'));
+            ->assertOk()
+            ->assertSee('user-dashboard', false)
+            ->assertSee('Assalamu alaikum, Super', false);
     }
 }

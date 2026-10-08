@@ -597,7 +597,9 @@
                   :aria-disabled="headerSessionActionDisabled ? 'true' : 'false'"
                   :aria-busy="headerSessionActionBusy ? 'true' : 'false'"
                   :class="{ 'is-disabled': headerSessionActionDisabled, 'is-loading': headerSessionActionBusy }"
-                  :style="{ minWidth: primarySessionActionPresentation.stableWidthCh + 'ch' }"
+                  :style="showHeaderEndSessionAction
+                    ? null
+                    : { minWidth: primarySessionActionPresentation.stableWidthCh + 'ch' }"
                   @click="handleHeaderSessionAction"
                   @keydown.enter.prevent="handleHeaderSessionAction"
                   @keydown.space.prevent="handleHeaderSessionAction"
@@ -866,13 +868,23 @@
                       <span>{{ t('memorisation.tajweedColourGuide.menu') }}</span>
                     </button>
                     <a
-                      :href="isAdmin ? adminDashboardUrl : learnerDashboardUrl"
+                      :href="learnerDashboardUrl"
                       class="top-card-menu-link top-card-menu-row"
                       data-tour="dashboard"
-                      @click.stop="topCardMenuOpen = false; isAdmin ? null : openDashboardView()"
+                      @click.stop="topCardMenuOpen = false; openDashboardView()"
                     >
                       <i class="bi bi-grid-1x2" aria-hidden="true"></i>
                       <span>{{ t('common.dashboard') }}</span>
+                    </a>
+                    <a
+                      v-if="isAdmin"
+                      :href="adminDashboardUrl"
+                      class="top-card-menu-link top-card-menu-row"
+                      data-tour="admin-dashboard"
+                      @click.stop="topCardMenuOpen = false"
+                    >
+                      <i class="bi bi-shield-check" aria-hidden="true"></i>
+                      <span>{{ t('common.adminDashboard') || 'Admin Dashboard' }}</span>
                     </a>
                     <button type="button" class="top-card-menu-row" @click="openOnboardingFromTopMenu">
                       <i class="bi bi-compass" aria-hidden="true"></i>
@@ -2934,25 +2946,24 @@
         aria-labelledby="sessionExitTitle"
         aria-describedby="sessionExitDescription"
       >
-        <div class="modal-dialog modal-dialog-centered mutqin-modal-dialog session-exit-dialog">
+        <div class="modal-dialog mutqin-modal-dialog session-exit-dialog">
           <div class="modal-content mutqin-modal-surface session-exit-modal confirm-modal">
-            <button
-              class="modal-close-btn"
-              type="button"
-              :disabled="sessionExitEndingBusy"
-              :aria-label="t('memorisation.confirmModals.closeDialog')"
-              @click="keepPractisingFromExitModal"
-            >
-              <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
-
             <div class="container-fluid session-exit-fluid px-0 w-100">
-              <div class="modal-header w-100">
-                <div class="modal-header-text w-100">
-                  <h2 id="sessionExitTitle" class="session-exit-title w-100">
+              <div class="modal-header session-exit-header w-100">
+                <div class="modal-header-text">
+                  <h2 id="sessionExitTitle" class="session-exit-title">
                     {{ sessionExitModalTitle }}
                   </h2>
                 </div>
+                <button
+                  class="modal-close-btn session-exit-close"
+                  type="button"
+                  :disabled="sessionExitEndingBusy"
+                  :aria-label="t('memorisation.confirmModals.closeDialog')"
+                  @click="keepPractisingFromExitModal"
+                >
+                  <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
               </div>
 
               <div class="modal-body session-exit-body w-100">
@@ -4791,55 +4802,37 @@
         role="toolbar"
         :aria-label="t('memorisation.a11y.sessionMetadata')"
       >
-        <div class="madani-fullscreen-bar__shell madani-fullscreen-bar__shell--session-top">
+        <div
+          class="madani-fullscreen-bar__inner madani-fullscreen-bar__inner--session"
+          :class="{ 'madani-fullscreen-bar__inner--session-only-exit': !hasVerses || !madaniFullscreenTopBarPills.length }"
+        >
           <div
-            v-if="hasVerses"
-            class="madani-fullscreen-bar__inner madani-fullscreen-bar__inner--session"
-            :aria-label="t('memorisation.a11y.sessionMetadata')"
+            v-if="hasVerses && madaniFullscreenTopBarPills.length"
+            class="madani-fullscreen-bar__pills"
+            role="list"
           >
-            <div
-              v-if="madaniFullscreenTopBarPills.length"
-              class="madani-fullscreen-bar__pills"
-              role="list"
-            >
-              <span
-                v-for="item in madaniFullscreenTopBarPills"
-                :key="item.key"
-                class="madani-fullscreen-bar__pill"
-                :class="{ 'madani-fullscreen-bar__pill--surah': item.key === 'surah' }"
-                role="listitem"
-                dir="auto"
-                :data-pill="item.key"
-                :title="`${item.label}: ${item.value}`"
-                :aria-label="`${item.label}: ${item.value}`"
-              >{{ item.value }}</span>
-            </div>
-            <button
-              type="button"
-              class="madani-fullscreen-bar__icon madani-fullscreen-bar__exit"
-              data-testid="madani-fullscreen-exit"
-              :title="t('memorisation.reading.exitFullScreen')"
-              :aria-label="t('memorisation.reading.exitFullScreen')"
-              @click.stop="toggleFullScreen"
-            >
-              <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
+            <span
+              v-for="item in madaniFullscreenTopBarPills"
+              :key="item.key"
+              class="madani-fullscreen-bar__pill"
+              :class="{ 'madani-fullscreen-bar__pill--surah': item.key === 'surah' }"
+              role="listitem"
+              dir="auto"
+              :data-pill="item.key"
+              :title="`${item.label}: ${item.value}`"
+              :aria-label="`${item.label}: ${item.value}`"
+            >{{ item.value }}</span>
           </div>
-          <div
-            v-else
-            class="madani-fullscreen-bar__inner madani-fullscreen-bar__inner--session madani-fullscreen-bar__inner--session-only-exit"
+          <button
+            type="button"
+            class="madani-fullscreen-bar__icon madani-fullscreen-bar__exit"
+            data-testid="madani-fullscreen-exit"
+            :title="t('memorisation.reading.exitFullScreen')"
+            :aria-label="t('memorisation.reading.exitFullScreen')"
+            @click.stop="toggleFullScreen"
           >
-            <button
-              type="button"
-              class="madani-fullscreen-bar__icon madani-fullscreen-bar__exit"
-              data-testid="madani-fullscreen-exit"
-              :title="t('memorisation.reading.exitFullScreen')"
-              :aria-label="t('memorisation.reading.exitFullScreen')"
-              @click.stop="toggleFullScreen"
-            >
-              <i class="bi bi-x-lg" aria-hidden="true"></i>
-            </button>
-          </div>
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
     </Teleport>

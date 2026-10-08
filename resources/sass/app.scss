@@ -434,7 +434,24 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   border-color: var(--border);
   color: var(--text);
   background: var(--surface-strong);
-  border-radius: 999px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  padding: 0;
+}
+
+.app-theme-toggle .app-theme-toggle-icon,
+.app-theme-toggle > .bi {
+  display: block;
+  width: 1.2rem;
+  height: 1.2rem;
+  font-size: 1.2rem;
+  line-height: 1.2rem;
+  text-align: center;
+  -webkit-text-stroke: 0.6px currentColor;
+  paint-order: stroke fill;
 }
 
 .app-user-toggle {

@@ -402,7 +402,7 @@ export function createBeginnerState() {
   return {
     chapterId: 0,
     rangeStart: 1,
-    rangeEnd: 7,
+    rangeEnd: 5,
     reciterId: DEFAULT_ALQURAN_RECITER,
     speed: 1,
     delay: 2,
@@ -423,7 +423,7 @@ export function createAdvancedState() {
   return {
     chapterId: 0,
     rangeStart: 1,
-    rangeEnd: 7,
+    rangeEnd: 5,
     reciterId: DEFAULT_ALQURAN_RECITER,
     speed: 1,
     delay: 2,

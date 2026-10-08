@@ -41,6 +41,7 @@
     "endingSession": "Ending…",
     "startingSession": "Starting…",
     "dashboard": "Progress",
+    "adminDashboard": "Admin Dashboard",
     "retry": "Try again",
     "tryAgain": "Try again",
     "status": {

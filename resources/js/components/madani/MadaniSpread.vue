@@ -530,16 +530,27 @@ export default {
     lockDesktopSessionSpread(spread) {
       if (!(spread instanceof HTMLElement)) return
       const word = Number(this.spreadUnifiedWordSize) > 0 ? Number(this.spreadUnifiedWordSize) : 32
-      const slot = Math.max(32, Math.round(word * 2.22))
-      const pageRows = 15
+      const slot = Math.max(28, Math.round(word * 1.72))
       const leaves = [...spread.querySelectorAll(':scope > .qpc-madani-spread__leaf')]
-      const lockKey = `${word}|${slot}|${pageRows}|${leaves.length}|${this.viewportWidth}`
+      const contentCounts = leaves.map((leaf) => (
+        [...leaf.querySelectorAll('.qpc-madani-line')].filter((line) => (
+          String(line.dataset.lineType || '') !== 'empty'
+        )).length
+      ))
+      const contentRows = Math.max(1, ...contentCounts, 1)
+      const shortPage = contentRows < 15
+      const pageRows = shortPage ? contentRows : 15
+      const lockKey = `${word}|${slot}|${pageRows}|${leaves.length}|${this.viewportWidth}|${shortPage ? 1 : 0}`
       if (lockKey === this.desktopSessionSpreadLockKey) return
       this.desktopSessionSpreadLockKey = lockKey
       spread.setAttribute('data-desktop-session-spread-lock', 'true')
-      const folioHeight = 38
-      const ornamentHeight = slot * pageRows + folioHeight
-      spread.style.setProperty('--qpc-session-page-height', `${ornamentHeight}px`)
+      if (shortPage) spread.setAttribute('data-desktop-short-page', 'true')
+      else spread.removeAttribute('data-desktop-short-page')
+      const folioHeight = 44
+      const ornamentHeight = shortPage
+        ? null
+        : (slot * pageRows + folioHeight)
+      spread.style.setProperty('--qpc-session-page-height', ornamentHeight ? `${ornamentHeight}px` : 'auto')
       const rtl = getComputedStyle(spread).direction === 'rtl'
       spread.style.setProperty('--qpc-spread-line-slot', `${slot}px`)
       spread.style.setProperty('align-items', 'flex-start', 'important')
@@ -555,10 +566,16 @@ export default {
         if (ornament instanceof HTMLElement) {
           ornament.style.setProperty('display', 'flex', 'important')
           ornament.style.setProperty('flex-direction', 'column', 'important')
-          ornament.style.setProperty('height', `${ornamentHeight}px`, 'important')
-          ornament.style.setProperty('min-height', `${ornamentHeight}px`, 'important')
-          ornament.style.setProperty('max-height', `${ornamentHeight}px`, 'important')
-          ornament.style.setProperty('overflow', 'hidden', 'important')
+          if (ornamentHeight) {
+            ornament.style.setProperty('height', `${ornamentHeight}px`, 'important')
+            ornament.style.setProperty('min-height', `${ornamentHeight}px`, 'important')
+            ornament.style.setProperty('max-height', `${ornamentHeight}px`, 'important')
+          } else {
+            ornament.style.setProperty('height', 'auto', 'important')
+            ornament.style.setProperty('min-height', '0', 'important')
+            ornament.style.setProperty('max-height', 'none', 'important')
+          }
+          ornament.style.setProperty('overflow', shortPage ? 'visible' : 'hidden', 'important')
           ornament.style.setProperty('justify-content', 'flex-start', 'important')
         }
         if (sheet instanceof HTMLElement) {
@@ -567,7 +584,7 @@ export default {
             : (onRight ? `0 0.2rem 0 0.45rem` : `0 0.45rem 0 0.2rem`)
           sheet.style.setProperty('display', 'flex', 'important')
           sheet.style.setProperty('flex-direction', 'column', 'important')
-          sheet.style.setProperty('flex', '1 1 auto', 'important')
+          sheet.style.setProperty('flex', '0 1 auto', 'important')
           sheet.style.setProperty('height', 'auto', 'important')
           sheet.style.setProperty('min-height', '0', 'important')
           sheet.style.setProperty('max-height', 'none', 'important')
@@ -582,7 +599,7 @@ export default {
           folio.style.setProperty('min-height', `${folioHeight}px`, 'important')
           folio.style.setProperty('max-height', `${folioHeight}px`, 'important')
           folio.style.setProperty('margin', '0', 'important')
-          folio.style.setProperty('margin-top', 'auto', 'important')
+          folio.style.setProperty('margin-top', shortPage ? '0.35rem' : 'auto', 'important')
           folio.style.setProperty('padding', '0', 'important')
           folio.style.setProperty('width', '100%', 'important')
           folio.style.setProperty('box-sizing', 'border-box', 'important')
@@ -597,10 +614,10 @@ export default {
           }
           const lineType = String(line.dataset.lineType || '')
           const lineSlot = lineType === 'ayah'
-            ? Math.max(28, Math.round(slot * 0.9))
+            ? Math.max(26, Math.round(word * (shortPage ? 1.45 : 1.55)))
             : (lineType === 'basmallah' || lineType === 'basmala'
-              ? Math.max(30, Math.round(slot * 0.95))
-              : slot)
+              ? Math.max(28, Math.round(word * 1.5))
+              : Math.max(28, Math.round(word * 1.65)))
           line.style.setProperty('display', 'flex', 'important')
           line.style.setProperty('visibility', 'visible', 'important')
           line.style.setProperty('height', 'auto', 'important')
@@ -625,7 +642,11 @@ export default {
             line.style.maxWidth = '100%'
             void line.offsetWidth
             const rowWidth = Math.max(1, line.clientWidth)
-            const sparse = words.length <= 4 || (natural > 0 && natural < rowWidth * 0.9)
+            const printedCentered = Number(line.dataset.centered) === 1
+              || line.classList.contains('qpc-madani-line--centered')
+            const sparse = printedCentered
+              || words.length <= 8
+              || (natural > 0 && natural < rowWidth * 0.9)
             line.classList.toggle('qpc-madani-line--sparse', sparse)
             line.style.setProperty(
               'justify-content',
@@ -653,6 +674,7 @@ export default {
       const spread = this.$el?.querySelector?.('.qpc-madani-spread--viewport-fill')
       if (spread instanceof HTMLElement) {
         spread.removeAttribute('data-desktop-session-spread-lock')
+        spread.removeAttribute('data-desktop-short-page')
         spread.style.removeProperty('--qpc-session-page-height')
       }
     },
@@ -1187,7 +1209,11 @@ export default {
 
   .qpc-madani-shell[data-session-spread-compact="true"],
   .qpc-madani-shell[data-session-spread-compact="true"] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill,
-  .qpc-madani-shell[data-session-spread-compact="true"] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill .qpc-madani-spread__leaf {
+  .qpc-madani-shell[data-session-spread-compact="true"] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill .qpc-madani-spread__leaf,
+  .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill[data-desktop-short-page="true"],
+  .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill[data-desktop-short-page="true"] .qpc-madani-spread__leaf,
+  .qpc-madani-shell[data-desktop-short-surah="true"] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill,
+  .qpc-madani-shell[data-desktop-short-surah="true"] .qpc-madani-spread--spread.qpc-madani-spread--viewport-fill .qpc-madani-spread__leaf {
     min-height: 0 !important;
     height: auto !important;
     align-items: flex-start !important;

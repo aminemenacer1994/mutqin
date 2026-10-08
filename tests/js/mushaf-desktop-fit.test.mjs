@@ -10,7 +10,7 @@ import {
 } from '../../resources/js/scripts/mushaf/mushafDesktopFit.js'
 
 assert.equal(DESKTOP_SPREAD_LINE_SLOTS, 15)
-assert.equal(DESKTOP_SPREAD_FOLIO_RESERVE_PX, 36)
+assert.equal(DESKTOP_SPREAD_FOLIO_RESERVE_PX, 44)
 
 const shortPage = desktopSpreadStableWordSize({
   measureSize: 40,
@@ -42,7 +42,7 @@ assert.equal(
   desktopSpreadSheetHeight({ targetHeight: 666, sheetPaddingY: 40 }),
   desktopSpreadSheetHeight({ targetHeight: 666, sheetPaddingY: 40 }),
 )
-assert.equal(desktopSpreadSheetHeight({ targetHeight: 666, sheetPaddingY: 40 }), 590)
+assert.equal(desktopSpreadSheetHeight({ targetHeight: 666, sheetPaddingY: 40 }), 582)
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const pageVue = readFileSync(join(root, 'resources/js/components/madani/MadaniPage.vue'), 'utf8')

@@ -5,7 +5,7 @@
  */
 
 export const DESKTOP_SPREAD_LINE_SLOTS = 15
-export const DESKTOP_SPREAD_FOLIO_RESERVE_PX = 36
+export const DESKTOP_SPREAD_FOLIO_RESERVE_PX = 44
 
 /**
  * Word size that is identical for every page at the same viewport + zoom.

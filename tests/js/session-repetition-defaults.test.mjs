@@ -32,6 +32,8 @@ assert.equal(DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED, false, 'mobile session d
   assert.equal(defaults.repetitionsPerStep, 1)
   assert.equal(defaults.selectedLoopCount, 1)
   assert.equal(defaults.tajweedEnabled, false)
+  assert.equal(defaults.rangeStart, 1)
+  assert.equal(defaults.rangeEnd, 5)
 }
 
 // First onboarding session uses a short Fatihah window

@@ -79,12 +79,12 @@ export function isMobileMushafAyahSparse({
   const natural = Number(naturalWidth)
   const available = Number(availableWidth)
   const words = Math.trunc(Number(wordCount) || 0)
-  if (!(natural > 0) || !(available > 0)) return false
-  // Leftover rows (a few words) stay centred on every viewport.
+  // Short leftover rows centre even when glyph measure is still 0 (Fatihah L7–L8).
   if (words > 0 && words <= 8) return true
+  if (!(natural > 0) || !(available > 0)) return false
   // Phone + desktop: centre rows that do not nearly fill the painted width.
   // Phone uses a slightly looser threshold so tajweed under-measure (~90%)
-  // still stretches, while clearly short rows (Fatihah tails) centre.
+  // still stretches, while clearly short rows centre.
   const effectiveRatio = phone ? Math.min(Number(ratio) || MOBILE_MUSHAF_SPARSE_RATIO, 0.86) : ratio
   return natural < available * effectiveRatio
 }

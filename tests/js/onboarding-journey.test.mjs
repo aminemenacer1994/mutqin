@@ -56,10 +56,10 @@ function sliceMethod(source, name) {
   assert.equal(first.rangeEnd, 5)
   assert.equal(first.repetitionsPerStep, 2)
   assert.equal(first.reciterId, 'ar.alafasy')
-  assert.equal(buildDefaultWorkspaceSessionConfig().rangeEnd, 7)
-  // Skip/finish tour lands on full Al-Fatihah (1–7), not the tour preview 1–5.
+  assert.equal(buildDefaultWorkspaceSessionConfig().rangeEnd, 5)
+  // Skip/finish tour lands on Al-Fatihah 1–5 (same window as tour practice).
   const skip = sliceMethod(memorisationJs, 'skipOnboardingToFirstSession')
-  assert.match(skip, /fullFatihah:\s*true/)
+  assert.match(skip, /fullFatihah:\s*false/)
   const intoFirst = sliceMethod(memorisationJs, 'completeOnboardingIntoFirstSession')
   assert.match(intoFirst, /fullFatihah/)
   assert.match(intoFirst, /buildDefaultWorkspaceSessionConfig\(/)
