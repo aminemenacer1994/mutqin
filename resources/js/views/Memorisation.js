@@ -11211,7 +11211,7 @@ export default {
     document.addEventListener('webkitfullscreenchange', this.handleNativeFullscreenChange)
     this.updateBackToTopVisibility()
     let readerViewportWidth = window.innerWidth
-    this.    handlePracticeTurnCalloutResize = () => {
+    this.handlePracticeTurnCalloutResize = () => {
       if (this.practiceTurnCalloutVisible) this.schedulePracticeTurnCalloutSync()
       // Mobile browser chrome changes height while scrolling. The reader wraps
       // to its width, so only refit when that width actually changes.
@@ -11224,26 +11224,14 @@ export default {
       this.updateBackToTopVisibility()
     }
     window.addEventListener('resize', this.handlePracticeTurnCalloutResize, { passive: true })
-    document.addEventListener('click', this.handleClickOutside)
+    // Capture + pointerdown so Teleported menus and @click.stop cannot block outside-close.
+    document.addEventListener('pointerdown', this.handleClickOutside, true)
     this.queueStatsVisualTick()
     if (this.showTools) {
       this.$nextTick(() => {
         this.focusToolsPanel()
       })
     }
-    // Close Mushaf toolbar dropdowns from one removable document listener.
-    this.handleMushafToolbarDocumentClick = (e) => {
-      if (this.fontOpen && !e.target.closest('.font-dropdown-region')) {
-        this.fontOpen = false
-      }
-      if (this.bgOpen && !e.target.closest('.bg-dropdown-region')) {
-        this.bgOpen = false
-      }
-      if (this.borderOpen && !e.target.closest('.border-dropdown-region')) {
-        this.borderOpen = false
-      }
-    }
-    document.addEventListener('click', this.handleMushafToolbarDocumentClick)
     void this.leaveNativeFullscreen()
     this.syncAppFullscreenClass()
   },
@@ -11375,7 +11363,7 @@ export default {
     this.persistAllState()
     this.persistMutqinStateLocally()
     if (this.unwatchMutqinState) this.unwatchMutqinState()
-    document.removeEventListener('click', this.handleClickOutside)
+    document.removeEventListener('pointerdown', this.handleClickOutside, true)
     if (this.handleNativeFullscreenChange) {
       document.removeEventListener('fullscreenchange', this.handleNativeFullscreenChange)
       document.removeEventListener('webkitfullscreenchange', this.handleNativeFullscreenChange)
@@ -13710,6 +13698,20 @@ export default {
         this.backendSessionSnapshot = null
         this.hasContinueSession = false
         this.continueSessionPayload = null
+        // New accounts always start sepia + tajweed off (no shared-device residue).
+        this.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+        this._tajweedDefaultRevision = TAJWEED_DEFAULT_REVISION
+        this.readingViewMode = this.clampReadingViewMode('madani_mushaf')
+        if (this.settingsDraft && typeof this.settingsDraft === 'object') {
+          this.settingsDraft.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+        }
+        this.theme = setGlobalTheme(DEFAULT_THEME, { persist: true, dispatchEvent: true })
+        this.writeWorkspaceStateValue('uiState', {
+          tajweedEnabled: DEFAULT_TAJWEED_ENABLED,
+          tajweedDefaultRevision: TAJWEED_DEFAULT_REVISION,
+          readingViewMode: 'madani_mushaf',
+          prefsAppliedAt: Date.now(),
+        })
         this.persistMutqinStateLocally()
       } catch { /* ignore */ }
     },
@@ -13986,14 +13988,6 @@ export default {
       this.showBanner(this.t('toasts.sessionLoadedSuccessfully'), 'success', 2000);
     },
     
-    // Close dropdown when clicking outside
-    handleClickOutside(event) {
-      const dropdown = event.target.closest('.custom-dropdown');
-      if (!dropdown && this.dropdownOpen) {
-        this.dropdownOpen = false;
-      }
-    },
-  
     getSelectedSessionLabel() {
       if (!this.selectedSessionId) return '';
       const session = this.savedSessions.find(s => s.id === this.selectedSessionId);
@@ -14015,17 +14009,6 @@ export default {
       if (dropdown) dropdown.click();
     },
 
-    getSelectedSessionLabel() {
-      const session = this.savedSessions.find(s => s.id === this.selectedSessionId);
-      return session ? this.getSessionPrimaryLabel(session) : '';
-    },
-
-	    async loadSelectedSession() {
-	      if (!this.selectedSessionId) return;
-	      await this.loadSavedSession(this.selectedSessionId);
-	      // Show success feedback
-	      this.showBanner(this.t('toasts.sessionLoadedSuccessfully'), 'success', 2000);
-	    },
 	    // Modify your existing recitation check to respect hidden reveal mode
 	    checkRecitationWithHiddenReveal(recitedWords, targetVerse) {
       if (!this.hiddenRevealModeEnabled) {
@@ -31187,36 +31170,40 @@ export default {
         serverSnapshot: this.aiAudioConsentSnapshot || (typeof window !== 'undefined' ? window.mutqinAiAudioConsent : null),
       })
     },
-    /** Soft gate for AI mic: only an explicit decline blocks (registration modal is separate). */
+    /**
+     * Gate AI mic use. Explicit decline blocks; missing consent opens the modal
+     * only when the learner starts AI Recite — never on registration.
+     */
     ensureAiAudioConsent() {
       if (isAiAudioConsentDeclined(this.resolveCurrentAiAudioConsent())) {
-        return false
+        return Promise.resolve(false)
       }
-      return true
-    },
-    /**
-     * One-time modal after first registration only — never before AI Recite starts.
-     */
-    maybeShowRegistrationAiAudioConsent() {
-      if (this.showAiAudioConsentModal) return
-      if (this.shouldDeferRegistrationFirstRunPrompts()) return
-      if (!this.isRegistrationSession()) return
       if (!shouldPromptAiAudioConsent({
         userId: this.aiAudioConsentUserId(),
         serverSnapshot: this.aiAudioConsentSnapshot || (typeof window !== 'undefined' ? window.mutqinAiAudioConsent : null),
       })) {
-        return
+        return Promise.resolve(true)
       }
-      // Consent must sit above the workspace tour (z-index 32000) and pause it.
-      if (this.workspaceTourActive) {
-        this.workspaceTourActive = false
-      }
-      if (this._workspaceTourStartTimer) {
-        window.clearTimeout(this._workspaceTourStartTimer)
-        this._workspaceTourStartTimer = null
-      }
+      if (this._aiAudioConsentWaiter) return this._aiAudioConsentWaiter
       this.showAiAudioConsentModal = true
       this.syncBodyScrollLock(true)
+      this._aiAudioConsentWaiter = new Promise((resolve) => {
+        this._aiAudioConsentResolve = resolve
+      })
+      return this._aiAudioConsentWaiter
+    },
+    resolvePendingAiAudioConsent(accepted) {
+      const resolve = this._aiAudioConsentResolve
+      this._aiAudioConsentResolve = null
+      this._aiAudioConsentWaiter = null
+      if (typeof resolve === 'function') resolve(!!accepted)
+    },
+    /**
+     * Registration must not open the AI consent / recitation modal.
+     * Consent is requested from ensureAiAudioConsent when AI Recite starts.
+     */
+    maybeShowRegistrationAiAudioConsent() {
+      return
     },
     async persistAiAudioConsent(accepted) {
       const policyVersion = readAudioPrivacyConfig().policy_version
@@ -31255,6 +31242,7 @@ export default {
       this.showAiAudioConsentModal = false
       this.syncBodyScrollLock(false)
       void this.persistAiAudioConsent(true).finally(() => {
+        this.resolvePendingAiAudioConsent(true)
         this.scheduleWorkspaceTourStart()
       })
     },
@@ -31262,6 +31250,7 @@ export default {
       this.showAiAudioConsentModal = false
       this.syncBodyScrollLock(false)
       void this.persistAiAudioConsent(false).finally(() => {
+        this.resolvePendingAiAudioConsent(false)
         this.scheduleWorkspaceTourStart()
       })
     },
@@ -39449,14 +39438,15 @@ export default {
     },
 
     applyMemorisationPageLoadDefaults() {
-      this.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+      // Mushaf + tajweed-off are defaults for new users (sessionDefaults / data()).
+      // Never force-reset them here — that wiped per-user tajweed after reload.
       this.wordByWordAudioEnabled = true
       this.ensureWordAudioHighlighting?.()
-      this.readingViewMode = this.clampReadingViewMode('madani_mushaf')
+      this.readingViewMode = this.clampReadingViewMode(this.readingViewMode || 'madani_mushaf')
       this.syncGlobalTheme()
       this.applyLayoutFontSize(this.readingViewMode)
       if (this.settingsDraft && typeof this.settingsDraft === 'object') {
-        this.settingsDraft.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+        this.settingsDraft.tajweedEnabled = !!this.tajweedEnabled
         this.settingsDraft.wordByWordAudioEnabled = true
       }
       if (DEFAULT_MOBILE_SESSION_DASHBOARD_EXPANDED && this.isMobileViewport?.()) {
@@ -41544,8 +41534,11 @@ export default {
             ? this.centralSession.activeTab
             : 'tools'
         }
+        // Prefer scoped uiState (per-user) over central session for the toggle.
         this.tajweedEnabled = resolveStoredTajweedEnabled(
-          this.centralSession.tajweedEnabled,
+          typeof uiState?.tajweedEnabled === 'boolean'
+            ? uiState.tajweedEnabled
+            : this.centralSession.tajweedEnabled,
           uiState?.tajweedDefaultRevision,
         )
         this.focusModeEnabled = !!this.centralSession.focusModeEnabled
@@ -41999,20 +41992,36 @@ export default {
       const font = this.quranFontOptions.find(f => f.value === fontValue)
       return font ? font.icon : 'bi-text-paragraph'
     },
-    // Close dropdown when clicking outside
+    // Close menus when interacting outside (capture so Teleport + @click.stop cannot block it).
     handleClickOutside(event) {
-      if (this.fontDropdownOpen && !event.target.closest('.font-dropdown')) {
+      const target = event?.target
+      if (!target || typeof target.closest !== 'function') return
+
+      if (this.dropdownOpen && !target.closest('.custom-dropdown')) {
+        this.dropdownOpen = false
+      }
+      if (this.fontDropdownOpen && !target.closest('.font-dropdown') && !target.closest('.font-dropdown-region')) {
         this.fontDropdownOpen = false
       }
       if (
         this.topCardMenuOpen
-        && !event.target.closest('.top-card-menu-wrap')
-        && !event.target.closest('.top-card-menu')
+        && !target.closest('.top-card-menu-wrap')
+        && !target.closest('.top-card-menu')
       ) {
         this.topCardMenuOpen = false
+        this.$nextTick(() => this.syncTopCardMenuPosition())
       }
-      if (this.openVerseActionKey && !event.target.closest('.verse-menu-wrap')) {
+      if (this.openVerseActionKey && !target.closest('.verse-menu-wrap')) {
         this.openVerseActionKey = ''
+      }
+      if (this.fontOpen && !target.closest('.font-dropdown-region')) {
+        this.fontOpen = false
+      }
+      if (this.bgOpen && !target.closest('.bg-dropdown-region')) {
+        this.bgOpen = false
+      }
+      if (this.borderOpen && !target.closest('.border-dropdown-region')) {
+        this.borderOpen = false
       }
     },
 

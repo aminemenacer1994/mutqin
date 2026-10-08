@@ -76,7 +76,7 @@ return [
     'theme_light' => 'Clair',
     'theme_sepia' => 'Sépia',
     'theme_dark' => 'Sombre',
-    'theme_default_note' => 'Le mode clair est utilisé par défaut si vous n’avez pas encore choisi.',
+    'theme_default_note' => 'Le mode sépia est utilisé par défaut si vous n’avez pas encore choisi.',
     'preference_saved' => 'Préférence enregistrée',
     'preference_error' => 'Impossible d’enregistrer cette préférence. Réessayez.',
     'account_security' => 'Compte et sécurité',

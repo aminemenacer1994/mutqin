@@ -76,7 +76,7 @@ return [
     'theme_light' => 'Light',
     'theme_sepia' => 'Sepia',
     'theme_dark' => 'Dark',
-    'theme_default_note' => 'Light is the default if you have not chosen a mode yet.',
+    'theme_default_note' => 'Sepia is the default if you have not chosen a mode yet.',
     'preference_saved' => 'Preference saved',
     'preference_error' => 'Could not save that preference. Try again.',
     'account_security' => 'Account & security',

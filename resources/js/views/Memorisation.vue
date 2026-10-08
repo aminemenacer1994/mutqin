@@ -1,6 +1,7 @@
 <template>
   <!-- mutqin-ui-build: v186 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
+    'dark-mode': theme === 'dark',
     'is-rtl': isRtlLocale,
     'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
     'workspace-tour-dashboard-active': workspaceTourActive && workspaceTourStep?.key === 'dashboard',
@@ -454,47 +455,6 @@
       <div class="content">
         <!-- Verses Grid -->
         <div class="workspace">
-        <div
-          v-if="showSessionProgressRail"
-          class="session-progress-rail"
-          role="progressbar"
-          :aria-valuenow="sessionProgressMeter"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          :aria-label="workspaceProgressSummary.title || t('memorisation.workspaceProgress.sessionProgress')"
-          :aria-valuetext="sessionProgressAriaText"
-        >
-          <div class="session-progress-rail__inner" aria-hidden="true">
-            <div class="session-progress-rail__row">
-              <div class="session-progress-rail__copy">
-                <span class="session-progress-rail__title">{{ sessionProgressTitle }}</span>
-                <span
-                  v-if="sessionProgressMeta || sessionProgressStateHint"
-                  class="session-progress-rail__sep"
-                  aria-hidden="true"
-                >·</span>
-                <span v-if="sessionProgressMeta" class="session-progress-rail__meta">{{ sessionProgressMeta }}</span>
-                <span
-                  v-if="sessionProgressMeta && sessionProgressStateHint"
-                  class="session-progress-rail__sep"
-                  aria-hidden="true"
-                >·</span>
-                <span
-                  v-if="sessionProgressStateHint"
-                  class="session-progress-rail__hint"
-                >{{ sessionProgressStateHint }}</span>
-              </div>
-              <span class="session-progress-rail__value">{{ sessionProgressLabel }}</span>
-            </div>
-            <div class="session-progress-rail__track">
-              <div
-                class="session-progress-rail__fill"
-                :class="{ 'is-complete': sessionProgressMeter >= 100 }"
-                :style="{ width: sessionProgressMeter + '%' }"
-              ></div>
-            </div>
-          </div>
-        </div>
         <section
           v-show="(hasVerses || showSessionOverviewIdleActions || isPostSessionChoiceVisible) && !isWelcomeBackWorkspaceHidden && !isOnboardingExperienceActive"
           class="workspace-shell"
@@ -749,7 +709,7 @@
                 <i class="bi bi-bar-chart-line" aria-hidden="true"></i>
               </div>
             </div>
-            <div ref="topCardMenuWrap" class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }" @click.stop>
+            <div ref="topCardMenuWrap" class="top-card-menu-wrap" :class="{ 'is-menu-open': topCardMenuOpen }">
               <div
                 ref="topCardMenuTrigger"
                 class="top-card-ellipsis top-card-action-trigger top-card-icon-control"
@@ -1257,6 +1217,47 @@
 
 
 </section>
+        <div
+          v-if="showSessionProgressRail"
+          class="session-progress-rail"
+          role="progressbar"
+          :aria-valuenow="sessionProgressMeter"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-label="workspaceProgressSummary.title || t('memorisation.workspaceProgress.sessionProgress')"
+          :aria-valuetext="sessionProgressAriaText"
+        >
+          <div class="session-progress-rail__inner" aria-hidden="true">
+            <div class="session-progress-rail__row">
+              <div class="session-progress-rail__copy">
+                <span class="session-progress-rail__title">{{ sessionProgressTitle }}</span>
+                <span
+                  v-if="sessionProgressMeta || sessionProgressStateHint"
+                  class="session-progress-rail__sep"
+                  aria-hidden="true"
+                >·</span>
+                <span v-if="sessionProgressMeta" class="session-progress-rail__meta">{{ sessionProgressMeta }}</span>
+                <span
+                  v-if="sessionProgressMeta && sessionProgressStateHint"
+                  class="session-progress-rail__sep"
+                  aria-hidden="true"
+                >·</span>
+                <span
+                  v-if="sessionProgressStateHint"
+                  class="session-progress-rail__hint"
+                >{{ sessionProgressStateHint }}</span>
+              </div>
+              <span class="session-progress-rail__value">{{ sessionProgressLabel }}</span>
+            </div>
+            <div class="session-progress-rail__track">
+              <div
+                class="session-progress-rail__fill"
+                :class="{ 'is-complete': sessionProgressMeter >= 100 }"
+                :style="{ width: sessionProgressMeter + '%' }"
+              ></div>
+            </div>
+          </div>
+        </div>
 
           <div v-if="showWorkspaceRefreshSpinner && !hasVerses" class="loading-spinner" :class="{ 'is-reciter-refresh': workspaceRefreshReason === 'reciter' }">
             <i class="bi bi-hourglass-split"></i>

@@ -25,6 +25,15 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
+     * Default attribute values for brand-new accounts.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'theme' => 'sepia-mode',
+    ];
+
+    /**
      * Free unique login/billing keys so a soft-deleted mailbox can register again.
      */
     public function releaseUniqueIdentifiers(): void

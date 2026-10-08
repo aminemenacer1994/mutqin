@@ -249,6 +249,13 @@ async function persistThemeToServer(themePreference) {
   }
 }
 
+function syncLegacyDarkModeClass(normalizedTheme) {
+  if (typeof document === 'undefined') return;
+  const isDark = normalizeThemeToken(normalizedTheme) === 'dark';
+  document.documentElement.classList.toggle('dark-mode', isDark);
+  if (document.body) document.body.classList.toggle('dark-mode', isDark);
+}
+
 export function setGlobalTheme(theme, options = {}) {
   const { dispatchEvent = true, persist = true } = options;
   const normalizedTheme = normalizeThemeToken(theme);
@@ -257,6 +264,7 @@ export function setGlobalTheme(theme, options = {}) {
 
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('data-theme', normalizedTheme);
+    syncLegacyDarkModeClass(normalizedTheme);
     document.cookie = `${THEME_COOKIE_KEY}=${themePreference};path=/;max-age=31536000;samesite=lax`;
     if (persist) {
       document.cookie = `${THEME_CHOSEN_COOKIE_KEY}=1;path=/;max-age=31536000;samesite=lax`;

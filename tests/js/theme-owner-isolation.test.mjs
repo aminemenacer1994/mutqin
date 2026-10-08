@@ -30,13 +30,28 @@ globalThis.localStorage = {
   get length() { return store.size },
 }
 
+function makeClassList() {
+  const set = new Set()
+  return {
+    toggle(name, force) {
+      if (force) set.add(name)
+      else set.delete(name)
+    },
+    contains(name) { return set.has(name) },
+    add(name) { set.add(name) },
+    remove(name) { set.delete(name) },
+  }
+}
+
 globalThis.document = {
   documentElement: {
     attrs: { 'data-theme': '' },
     style: {},
+    classList: makeClassList(),
     getAttribute(name) { return this.attrs[name] || null },
     setAttribute(name, value) { this.attrs[name] = String(value) },
   },
+  body: { classList: makeClassList() },
   cookie: '',
   querySelector() { return null },
   querySelectorAll() { return [] },
@@ -84,6 +99,8 @@ setGlobalTheme('dark', { dispatchEvent: false, persist: false })
 assert.equal(store.has('mutqin-theme.guest'), false, 'guest must not write localStorage')
 assert.equal(store.has('mutqin-theme'), false, 'guest must not write shared theme keys')
 assert.match(cookieBag.value, /mutqin_theme=dark-mode/)
+assert.equal(document.documentElement.classList.contains('dark-mode'), true, 'dark theme syncs legacy dark-mode class')
+assert.equal(document.body.classList.contains('dark-mode'), true)
 
 // Leftover device cache is wiped so it cannot overlap the next account.
 store.set('mutqin-theme', 'dark')
@@ -140,7 +157,7 @@ assert.equal(store.has('mutqin-theme-preference'), false)
 assert.equal(DEFAULT_THEME, 'sepia')
 assert.deepEqual(THEME_MODE_IDS, ['light', 'sepia', 'dark'])
 assert.equal(getThemeMode('sepia-mode').id, 'sepia')
-assert.equal(getThemeMode('night').id, 'dark')
+assert.equal(getThemeMode('night').id, DEFAULT_THEME, 'unknown tokens fall back to the app default')
 assert.equal(THEME_MODES.length, 3)
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
@@ -148,6 +165,7 @@ const blade = readFileSync(join(root, 'resources/views/layouts/app.blade.php'), 
 assert.match(blade, /clearThemeDeviceCache/)
 assert.match(blade, /X-XSRF-TOKEN/)
 assert.match(blade, /window\.mutqinInitialTheme/)
+assert.match(blade, /classList\.toggle\('dark-mode',\s*normalizedTheme === 'dark'\)/)
 assert.doesNotMatch(blade, /safeSet\(ownerThemeKey/)
 
 const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')

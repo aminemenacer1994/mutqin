@@ -76,7 +76,7 @@ return [
     'theme_light' => 'فاتح',
     'theme_sepia' => 'سيبيا',
     'theme_dark' => 'داكن',
-    'theme_default_note' => 'الفاتح هو الافتراضي إن لم تختر نمطاً بعد.',
+    'theme_default_note' => 'السيبيا هو الافتراضي إن لم تختر نمطاً بعد.',
     'preference_saved' => 'تم حفظ التفضيل',
     'preference_error' => 'تعذّر حفظ هذا التفضيل. حاول مرة أخرى.',
     'account_security' => 'الحساب والأمان',

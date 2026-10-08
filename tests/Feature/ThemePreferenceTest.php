@@ -52,7 +52,7 @@ class ThemePreferenceTest extends TestCase
 
     public function test_registration_persists_sepia_theme_as_default(): void
     {
-        $this->post(route('register'), [
+        $response = $this->post(route('register'), [
             'name' => 'New Learner',
             'email' => 'new-learner@example.com',
             'password' => 'secret12',
@@ -61,6 +61,12 @@ class ThemePreferenceTest extends TestCase
 
         $user = User::where('email', 'new-learner@example.com')->firstOrFail();
         $this->assertSame('sepia-mode', $user->theme);
+        $this->assertSame('sepia-mode', session('mutqin_theme'));
+        $response->assertCookie('mutqin_theme', 'sepia-mode', false);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('data-theme="sepia"', false);
 
         $this->get(route('memorisation'))
             ->assertOk()

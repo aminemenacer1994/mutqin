@@ -67,6 +67,7 @@
         var theme = document.documentElement.getAttribute('data-theme') || defaultTheme;
         theme = normalize(theme);
         document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.classList.toggle('dark-mode', theme === 'dark');
         var chrome = byId[theme] || byId[defaultTheme];
         var meta = document.querySelector('meta[name="theme-color"]');
         if (meta && chrome) {
@@ -3876,6 +3877,46 @@
             gap: 4px !important;
         }
 
+        /* Lang + theme stay immediately before login/register (physical left in LTR). */
+        .navbar-inline-tools {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex: 0 0 auto;
+            direction: ltr;
+        }
+
+        .app-auth-links--bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            margin-inline-start: 2px;
+        }
+
+        .app-auth-links--bar .app-auth-link {
+            padding: 8px 12px;
+            white-space: nowrap;
+            font-weight: 600;
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+            border-radius: 10px;
+        }
+
+        .app-auth-links--bar .app-auth-link:hover,
+        .app-auth-links--bar .app-auth-link:focus-visible {
+            color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 10%, transparent);
+        }
+
+        .app-auth-links--bar .app-auth-link:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        .app-auth-links--bar .app-auth-link::after {
+            display: none;
+        }
+
         /* Reset UA/Bootstrap chrome. A filled + isolated rounded <button> paints
            black wedges at the corners in Safari (compositor clears to black). */
         .app-navbar .navbar-toggler {
@@ -4669,6 +4710,7 @@
                 justify-content: center;
             }
 
+            .navbar-inline-tools > .global-lang-switcher,
             .navbar-quick-actions > .global-lang-switcher {
                 flex: 0 0 auto;
                 width: var(--tap);
@@ -4685,6 +4727,7 @@
             }
 
             @media (min-width: 400px) and (max-width: 767.98px) {
+                .navbar-inline-tools > .global-lang-switcher,
                 .navbar-quick-actions > .global-lang-switcher {
                     width: auto !important;
                     min-width: var(--tap);
@@ -6948,6 +6991,7 @@
                 box-sizing: border-box;
             }
 
+            .navbar-inline-tools > .global-theme-switcher,
             .navbar-quick-actions > .global-theme-switcher {
                 flex: 0 0 auto;
                 width: var(--tap);
@@ -6956,6 +7000,7 @@
                 overflow: visible;
             }
 
+            .navbar-inline-tools > .global-lang-switcher,
             .navbar-quick-actions > .global-lang-switcher {
                 flex: 0 0 auto;
                 width: var(--tap) !important;
@@ -6965,6 +7010,7 @@
 
             /* Large phones (Pixel 9 Pro, Pixel 7, Galaxy S24): show language label again. */
             @media (min-width: 400px) and (max-width: 767.98px) {
+                .navbar-inline-tools > .global-lang-switcher,
                 .navbar-quick-actions > .global-lang-switcher {
                     width: auto !important;
                     min-width: var(--tap);
@@ -7796,9 +7842,10 @@
                     </div>
 
                     @guest
-                        <div class="app-auth-links d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 gap-lg-0">
-                            <a class="nav-link" href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right nav-link-icon d-lg-none" aria-hidden="true"></i><span data-i18n="login">{{ __('ui.login') }}</span></a>
-                            <a class="nav-link" href="{{ route('register') }}"><i class="bi bi-person-plus nav-link-icon d-lg-none" aria-hidden="true"></i><span data-i18n="register">{{ __('ui.register') }}</span></a>
+                        {{-- Mobile menu only; desktop auth links sit in navbar-quick-actions after lang/theme. --}}
+                        <div class="app-auth-links app-auth-links--drawer d-flex d-lg-none flex-column align-items-stretch gap-2">
+                            <a class="nav-link" href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right nav-link-icon" aria-hidden="true"></i><span data-i18n="login">{{ __('ui.login') }}</span></a>
+                            <a class="nav-link" href="{{ route('register') }}"><i class="bi bi-person-plus nav-link-icon" aria-hidden="true"></i><span data-i18n="register">{{ __('ui.register') }}</span></a>
                         </div>
                     @endguest
                     @auth
@@ -7831,6 +7878,7 @@
             </div>
 
             <div class="d-flex align-items-center gap-2 navbar-quick-actions">
+                <div class="navbar-inline-tools">
                 <div class="global-lang-switcher dropdown" aria-label="{{ __('ui.language_switcher') }}">
                     <button class="btn app-lang-toggle lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ $activeLocaleOption['label'] }}">
                         <span class="app-lang-flag" aria-hidden="true">{{ $activeLocaleOption['flag'] }}</span>
@@ -7894,6 +7942,14 @@
                         @endforeach
                     </ul>
                 </div>
+
+                @guest
+                    <div class="app-auth-links app-auth-links--bar d-none d-lg-flex align-items-center gap-1">
+                        <a class="nav-link app-auth-link" href="{{ route('login') }}"><span data-i18n="login">{{ __('ui.login') }}</span></a>
+                        <a class="nav-link app-auth-link" href="{{ route('register') }}"><span data-i18n="register">{{ __('ui.register') }}</span></a>
+                    </div>
+                @endguest
+                </div>{{-- /.navbar-inline-tools: lang + theme sit left of login/register --}}
 
                 @auth
                     @unless ($authAwaitingVerification)
@@ -8203,6 +8259,8 @@
                 const ownerId = themeOwnerId();
 
                 document.documentElement.setAttribute('data-theme', normalizedTheme);
+                document.documentElement.classList.toggle('dark-mode', normalizedTheme === 'dark');
+                if (document.body) document.body.classList.toggle('dark-mode', normalizedTheme === 'dark');
                 document.documentElement.style.colorScheme = mode.colorScheme || 'light';
                 clearThemeDeviceCache();
                 document.cookie = `mutqin_theme=${themePreference};path=/;max-age=31536000;samesite=lax`;

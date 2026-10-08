@@ -187,7 +187,21 @@ function sliceMethod(source, name) {
   assert.match(memorisationJs, /finalizeRegistrationOnboardingForReturningLogin\(\)/)
   assert.match(memorisationJs, /markRegistrationSession\(\)/)
   assert.match(memorisationJs, /getRegistrationSessionStorageKey\(\)/)
-  assert.match(sliceMethod(memorisationJs, 'maybeShowRegistrationAiAudioConsent'), /isRegistrationSession\(\)/)
+  assert.match(
+    sliceMethod(memorisationJs, 'maybeShowRegistrationAiAudioConsent'),
+    /return\s*$/m,
+    'registration must not open the AI consent modal',
+  )
+  assert.doesNotMatch(
+    sliceMethod(memorisationJs, 'maybeShowRegistrationAiAudioConsent'),
+    /showAiAudioConsentModal\s*=\s*true/,
+    'registration path must not set showAiAudioConsentModal',
+  )
+  assert.match(
+    sliceMethod(memorisationJs, 'ensureAiAudioConsent'),
+    /shouldPromptAiAudioConsent/,
+    'AI Recite start prompts consent when still needed',
+  )
 
   const run = (name, ctx) => {
     const fn = new Function(`return function ${sliceMethod(memorisationJs, name)}`)()

@@ -31,6 +31,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'password_set_at' => now(),
             'remember_token' => Str::random(10),
+            'theme' => 'sepia-mode',
         ];
     }
 

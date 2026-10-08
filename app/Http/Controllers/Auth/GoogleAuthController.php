@@ -93,10 +93,20 @@ class GoogleAuthController extends Controller
             request()->session()->put('mutqin_register_method', 'google');
             // Existing-user Welcome Back must not win over first-run onboarding.
             request()->session()->forget('mutqin_just_logged_in');
+            // New Google accounts always start on sepia across every page.
+            $theme = Theme::DEFAULT_PREFERENCE;
+            if ($user instanceof User) {
+                $user->forceFill(['theme' => $theme])->save();
+            }
+            request()->session()->put('mutqin_theme', $theme);
+            cookie()->queue(cookie(Theme::COOKIE, $theme, 60 * 24 * 365, null, null, false, false, false, 'lax'));
         } else {
             // Put (not flash): survive any hop before /memorisation consumes it.
             request()->session()->put('mutqin_just_logged_in', true);
             request()->session()->forget('mutqin_just_registered');
+            $theme = Theme::normalizePreference($user->theme ?: Theme::DEFAULT_PREFERENCE);
+            request()->session()->put('mutqin_theme', $theme);
+            cookie()->queue(cookie(Theme::COOKIE, $theme, 60 * 24 * 365, null, null, false, false, false, 'lax'));
         }
 
         if ($linkingFromProfile && ! $created) {

@@ -122,6 +122,14 @@ class RegisterController extends Controller
         // Existing-user Welcome Back must not win over first-run onboarding.
         $request->session()->forget('mutqin_just_logged_in');
 
+        // Force sepia on every surface for brand-new accounts (session + cookie).
+        $theme = Theme::DEFAULT_PREFERENCE;
+        if ($user instanceof \App\Models\User && $user->theme !== $theme) {
+            $user->forceFill(['theme' => $theme])->save();
+        }
+        $request->session()->put('mutqin_theme', $theme);
+        cookie()->queue(cookie(Theme::COOKIE, $theme, 60 * 24 * 365, null, null, false, false, false, 'lax'));
+
         return redirect()->to(AuthRedirect::to($user, justRegistered: true));
     }
 }
