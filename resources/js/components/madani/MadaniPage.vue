@@ -225,6 +225,7 @@ export default {
       fitted: false,
       fitting: false,
       fontReady: false,
+      hasRevealed: false,
       surahNamesReady: false,
     }
   },
@@ -296,15 +297,16 @@ export default {
         sessionEndAyah: this.sessionEndAyah,
       })
     },
-    /** Ink stays hidden until the correct face is loaded and lines are measured. */
+    /** Stay visible after the first good paint so remasure / tajweed swaps do not flicker. */
     pageRevealed() {
-      return !!(this.fontReady && this.fitted)
+      return !!(this.hasRevealed || (this.fontReady && this.fitted))
     },
   },
   watch: {
     pageNumber() {
       this.fontReady = false
       this.fitted = false
+      this.hasRevealed = false
       this.surahNamesReady = false
       this.lastEmittedFitWordSize = 0
       this.readyAndFit()
@@ -316,6 +318,7 @@ export default {
       this.applyLayoutTypography()
       this.fontReady = false
       this.fitted = false
+      this.hasRevealed = false
       this.readyAndFit()
     },
     spreadViewportFill() {
@@ -334,8 +337,7 @@ export default {
       this.scheduleFit()
     },
     tajweedEnabled() {
-      this.fontReady = false
-      this.fitted = false
+      // Keep the current paint on screen while the other face loads.
       this.lastFitWidth = 0
       this.lastSessionFitWordSize = 0
       this.lastEmittedFitWordSize = 0
@@ -344,9 +346,7 @@ export default {
     codeV2ByLocation: {
       deep: true,
       handler() {
-        // Tajweed code map can arrive after first paint — re-fit in both modes once
-        // glyphs (or their plain fallbacks) settle.
-        this.fitted = false
+        // Tajweed code map can arrive after first paint — remasure without hiding.
         this.scheduleFit()
       },
     },
@@ -695,7 +695,7 @@ export default {
     },
     scheduleFit() {
       if (this.fitTimer) window.clearTimeout(this.fitTimer)
-      this.fitTimer = window.setTimeout(() => this.fitLines(), 50)
+      this.fitTimer = window.setTimeout(() => this.fitLines(), 120)
     },
     async readyAndFit() {
       try {
@@ -736,17 +736,10 @@ export default {
         }
       }
       await this.$nextTick()
-      this.fitted = false
       this.fitLines()
-      // Plain ↔ tajweed swaps glyph faces; measure again after paint so both modes
-      // get the same viewport-clamped mobile fit.
+      // Remasure after paint without hiding — a second hide/show is the flicker.
       window.requestAnimationFrame(() => {
-        this.fitted = false
         this.fitLines()
-        window.requestAnimationFrame(() => {
-          this.fitted = false
-          this.fitLines()
-        })
       })
     },
     fitLines(retry = 0) {
@@ -962,6 +955,7 @@ export default {
       this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
+      this.hasRevealed = true
       if (this.sessionScoped && pageNatural !== this.lastSessionFitWordSize) {
         this.lastSessionFitWordSize = pageNatural
         this.$emit('fit-word-size', pageNatural)
@@ -1175,10 +1169,9 @@ export default {
   margin: 1rem auto 2rem;
   padding: 0.55rem;
   overflow: visible;
-  background:
-    linear-gradient(180deg, #f7edd6 0%, #f3e6c8 48%, #efe0bc 100%);
+  background: var(--mushaf-reading-surface, var(--zone-chrome, #f0e9de));
   color: var(--qpc-ink);
-  box-shadow: 0 10px 28px rgba(62, 41, 18, 0.1);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--text, #1b140d) 12%, transparent);
 }
 
 /*
@@ -1214,7 +1207,7 @@ export default {
   box-sizing: border-box;
   padding: 0.28rem;
   border: 2px solid var(--qpc-rule);
-  background: #fffdf8;
+  background: var(--zone-elevated, var(--mushaf-reading-surface, #fffdf8));
   overflow: visible;
 }
 

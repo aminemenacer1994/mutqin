@@ -382,8 +382,8 @@
     font-weight: 500 !important;
     letter-spacing: 0.015em !important;
     color: color-mix(in srgb, var(--text) 78%, var(--accent) 22%) !important;
-    white-space: nowrap !important;
-    overflow: visible !important;
+    white-space: normal !important;
+    overflow: hidden !important;
     overflow-wrap: normal !important;
   }
 
@@ -4493,7 +4493,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     margin: 0 !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    white-space: normal !important;
   }
 
   /* Progress pills = row 2; session actions = real row-3 box (avoid display:contents overlap) */
@@ -7588,15 +7588,16 @@ html body.memorisation-page .tools.show {
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1 {
     display: flex !important;
-    flex-flow: row nowrap !important;
+    flex-flow: row wrap !important;
     align-items: baseline !important;
     justify-content: flex-start !important;
-    column-gap: 1.85rem !important;
-    gap: 1.85rem !important;
+    column-gap: 0.45rem !important;
+    row-gap: 0.05rem !important;
+    gap: 0.05rem 0.45rem !important;
     width: fit-content !important;
     max-width: 100% !important;
-    overflow: visible !important;
-    white-space: nowrap !important;
+    overflow: hidden !important;
+    white-space: normal !important;
     text-overflow: clip !important;
   }
 
@@ -7854,15 +7855,16 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title {
     display: flex !important;
-    flex-flow: row nowrap !important;
+    flex-flow: row wrap !important;
     align-items: baseline !important;
     justify-content: flex-start !important;
     column-gap: 0.45rem !important;
-    gap: 0.45rem !important;
+    row-gap: 0.05rem !important;
+    gap: 0.05rem 0.45rem !important;
     width: fit-content !important;
     max-width: 100% !important;
-    overflow: visible !important;
-    white-space: nowrap !important;
+    overflow: hidden !important;
+    white-space: normal !important;
     font-size: clamp(0.82rem, 0.72rem + 1.8vw, 1.05rem) !important;
   }
 
@@ -7870,12 +7872,15 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
     display: inline-block !important;
-    flex: 0 0 auto !important;
+    position: static !important;
+    flex: 0 1 auto !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     isolation: isolate;
+    unicode-bidi: isolate;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
@@ -8096,19 +8101,23 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     flex: 1 1 auto !important;
     min-width: 0 !important;
     display: inline-flex !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     align-items: baseline !important;
-    gap: 0.45rem 0.55rem !important;
+    gap: 0.1rem 0.45rem !important;
     overflow: hidden !important;
   }
 
   html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-en,
-  html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar {
-    flex: 0 0 auto !important;
+  html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
+  html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-sep {
+    flex: 0 1 auto !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    position: static !important;
+    unicode-bidi: isolate;
   }
 
   html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-en {

@@ -1162,15 +1162,15 @@
   color-scheme: light;
   --bg: #f6f3ee;
   --theme-color: #8b5e3c;
-  --surface: rgba(255, 250, 243, 0.88);
+  --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: rgba(255, 255, 255, 0.92);
   --border: rgba(78, 58, 38, 0.22);
   --border-strong: rgba(78, 58, 38, 0.36);
   --text: #1f1a17;
-  --text-muted: #5a5048;
+  --text-muted: #4f4640;
   --text-disabled: #6e645c;
-  --accent: #9a6738;
-  --accent-strong: #6e4726;
+  --accent: #8b5e3c;
+  --accent-strong: #a86a3f;
   --accent-soft: #d8c1a8;
   --accent-light: rgba(154, 103, 56, 0.10);
   --accent-wash: rgba(228, 211, 194, 0.42);
@@ -1249,19 +1249,19 @@
   --font-surah-latin: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, "Noto Serif", ui-serif, Georgia, serif;
 }
 
-[data-theme="dark"] {
+html[data-theme="dark"] {
   color-scheme: dark;
   --bg: #14110f;
   --theme-color: #14110f;
-  --surface: rgba(31, 27, 24, 0.92);
-  --surface-strong: rgba(43, 37, 32, 0.96);
-  --border: rgba(255, 236, 216, 0.26);
-  --border-strong: rgba(255, 236, 216, 0.4);
-  --text: #f7ebdf;
-  --text-muted: #d9cbbd;
-  --text-disabled: #a89888;
+  --surface: #121212;
+  --surface-strong: #121212;
+  --border: rgba(255, 255, 255, 0.22);
+  --border-strong: rgba(255, 255, 255, 0.34);
+  --text: rgba(255, 255, 255, 0.94);
+  --text-muted: rgba(255, 255, 255, 0.82);
+  --text-disabled: rgba(255, 255, 255, 0.58);
   --accent: #d4a574;
-  --accent-strong: #efc18d;
+  --accent-strong: #e8bf8f;
   --accent-soft: #5f4530;
   --accent-light: rgba(212, 165, 116, 0.16);
   --accent-wash: rgba(212, 165, 116, 0.1);
@@ -1320,20 +1320,20 @@
   --shadow-xxl: 0 40px 110px rgba(0, 0, 0, 0.52), 0 16px 48px rgba(0, 0, 0, 0.32);
 }
 
-[data-theme="sepia"] {
+html[data-theme="sepia"] {
   color-scheme: light;
   /* Align canvas with app.scss / THEME_CHROME sepia */
   --bg: #f1e7d8;
   --theme-color: #8b5e3c;
-  --surface: #faf1e3;
-  --surface-strong: #fff8ed;
+  --surface: #fffaf3;
+  --surface-strong: #fff8eb;
   --border: rgba(78, 58, 38, 0.26);
   --border-strong: rgba(78, 58, 38, 0.4);
   --text: #352516;
   --text-muted: #5c4a3a;
   --text-disabled: #6f5a48;
-  --accent: #b8824e;
-  --accent-strong: #8f6033;
+  --accent: #8b5e3c;
+  --accent-strong: #a86a3f;
   --accent-soft: #dcc3a6;
   --accent-light: rgba(184, 130, 78, 0.12);
   --accent-wash: rgba(221, 194, 162, 0.35);
@@ -30256,7 +30256,7 @@ ayah cards and the mushaf scale from phone to desktop without any
 .workspace-shell-copy h1 {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .workspace-shell-actions {
@@ -60410,9 +60410,9 @@ html body.memorisation-page .app .qpc-madani-page.is-page-revealed .qpc-madani-p
   direction: ltr;
   unicode-bidi: isolate;
   display: inline-flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.35em 0.55em;
+  gap: 0.2em 0.55em;
   max-width: 100%;
   min-width: 0;
   text-align: left;
@@ -60422,29 +60422,32 @@ html body.memorisation-page .app .qpc-madani-page.is-page-revealed .qpc-madani-p
 .workspace-shell .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title,
 html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
   display: flex !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   justify-content: flex-start !important;
   align-items: baseline !important;
-  column-gap: 0.65rem !important;
-  row-gap: 0 !important;
-  gap: 0.65rem !important;
+  column-gap: 0.55rem !important;
+  row-gap: 0.1rem !important;
+  gap: 0.1rem 0.55rem !important;
   width: auto !important;
-  max-width: none !important;
+  max-width: 100% !important;
   min-width: 0 !important;
-  overflow: visible !important;
+  overflow: hidden !important;
   text-overflow: clip !important;
 }
 
 .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
-.workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+.workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
+.workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
   display: inline-block !important;
-  flex: 0 0 auto !important;
+  position: static !important;
+  flex: 0 1 auto !important;
   min-width: 0 !important;
-  max-width: none !important;
+  max-width: 100% !important;
   white-space: nowrap !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   isolation: isolate;
+  unicode-bidi: isolate;
 }
 
 .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
@@ -60460,9 +60463,9 @@ html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
 html body .app .workspace-shell-main-title {
   position: relative !important;
   display: inline-flex !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   align-items: baseline !important;
-  gap: 0.35em 0.55em !important;
+  gap: 0.2em 0.55em !important;
   width: fit-content !important;
   max-width: 100% !important;
   min-width: 0 !important;
@@ -60476,12 +60479,11 @@ html body .app .workspace-shell-main-title {
   letter-spacing: 0.01em !important;
   line-height: 1.35 !important;
   unicode-bidi: isolate;
-  text-wrap: nowrap;
+  text-wrap: wrap;
   overflow-wrap: normal;
-  white-space: nowrap;
-  overflow: visible;
+  white-space: normal;
+  overflow: hidden;
   text-overflow: clip;
-  animation: workspaceSurahReveal 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .workspace-shell-surah-ar {

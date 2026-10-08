@@ -12878,9 +12878,12 @@ export default {
     },
 
     syncGlobalTheme(theme = this.theme) {
-      // Re-apply the account colour mode already on the page. Do not write it
-      // again — users.theme is updated only when the learner picks a mode.
-      this.theme = setGlobalTheme(theme, { persist: false })
+      // Follow the live html[data-theme] (SSR account or guest cookie) so this
+      // page cannot drift from Dashboard / Homepage / Settings.
+      const live = typeof document !== 'undefined'
+        ? (document.documentElement.getAttribute('data-theme') || theme)
+        : theme
+      this.theme = setGlobalTheme(live, { persist: false })
     },
 
     translateOrFallback(key, fallback, params = {}) {
@@ -39495,15 +39498,21 @@ export default {
     },
 
     applyMemorisationPageLoadDefaults() {
-      // Mushaf + tajweed-off are defaults for new users (sessionDefaults / data()).
-      // Never force-reset them here — that wiped per-user tajweed after reload.
+      // Product defaults on every visit: mushaf layout + tajweed off.
+      this._tajweedDefaultRevision = TAJWEED_DEFAULT_REVISION
+      if (this.tajweedEnabled !== DEFAULT_TAJWEED_ENABLED) {
+        this.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
+      }
+      const mushafMode = this.clampReadingViewMode('madani_mushaf')
+      if (this.readingViewMode !== mushafMode) {
+        this.readingViewMode = mushafMode
+      }
       this.wordByWordAudioEnabled = true
       this.ensureWordAudioHighlighting?.()
-      this.readingViewMode = this.clampReadingViewMode(this.readingViewMode || 'madani_mushaf')
       this.syncGlobalTheme()
       this.applyLayoutFontSize(this.readingViewMode)
       if (this.settingsDraft && typeof this.settingsDraft === 'object') {
-        this.settingsDraft.tajweedEnabled = !!this.tajweedEnabled
+        this.settingsDraft.tajweedEnabled = DEFAULT_TAJWEED_ENABLED
         this.settingsDraft.wordByWordAudioEnabled = true
       }
       if (this.isMobileViewport?.()) {
@@ -45466,7 +45475,8 @@ export default {
         } catch (_) { /* local bookmark is best-effort */ }
         this.recomputeAnalytics()
         this.finishSessionCleanup()
-        this.showBanner(this.t('memorisation.session_finished'), 'success', 2800)
+        this.postSessionActionsUnlocked = true
+        this.openPostSessionModal(endedSnapshot, { previousStreak })
         return
       }
 

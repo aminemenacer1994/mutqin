@@ -23,13 +23,23 @@ assert.equal(resolveStoredTajweedEnabled(true, 0), false, 'pre-revision saves ad
 
 assert.match(
   memorisationJs,
-  /Never force-reset them here/,
-  'page-load defaults must not wipe per-user tajweed',
+  /applyMemorisationPageLoadDefaults\(\) \{\s*\/\/ Product defaults on every visit: mushaf layout \+ tajweed off\./,
+  'page load defaults document mushaf + tajweed-off',
 )
-assert.doesNotMatch(
+assert.match(
   memorisationJs,
-  /applyMemorisationPageLoadDefaults\(\) \{\s*this\.tajweedEnabled = DEFAULT_TAJWEED_ENABLED/,
-  'must not assign DEFAULT_TAJWEED_ENABLED on every page load',
+  /if \(this\.tajweedEnabled !== DEFAULT_TAJWEED_ENABLED\) \{\s*this\.tajweedEnabled = DEFAULT_TAJWEED_ENABLED/,
+  'page load must force tajweed off',
+)
+assert.match(
+  memorisationJs,
+  /clampReadingViewMode\('madani_mushaf'\)/,
+  'page load must force mushaf layout',
+)
+assert.match(
+  memorisationJs,
+  /if \(!this\.isLoggedIn\) \{[\s\S]*?this\.openPostSessionModal\(endedSnapshot, \{ previousStreak \}\)/,
+  'guest completion must open the success modal',
 )
 assert.match(
   memorisationJs,
@@ -53,6 +63,16 @@ assert.doesNotMatch(
   'progress rail must not sit above the top dashboard',
 )
 assert.match(memorisationVue, /'dark-mode': theme === 'dark'/)
+assert.match(
+  memorisationVue,
+  /workspace-shell-surah-sep/,
+  'top dashboard must separate Latin and Arabic surah names',
+)
+assert.match(
+  memorisationJs,
+  /document\.documentElement\.getAttribute\('data-theme'\) \|\| theme/,
+  'workspace theme must follow the live html colour mode',
+)
 assert.match(
   memorisationJs,
   /resetIsolatedSignupWorkspace\(\)[\s\S]*?tajweedEnabled = DEFAULT_TAJWEED_ENABLED[\s\S]*?setGlobalTheme\(DEFAULT_THEME/,

@@ -487,6 +487,11 @@
               <span class="workspace-shell-overview-toggle__text" :aria-hidden="true">
                 <template v-if="topCardSurahArabic || topCardSurahLatin">
                   <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en" dir="ltr">{{ topCardSurahLatin }}</span>
+                  <span
+                    v-if="topCardSurahLatin && topCardSurahArabic && topCardSurahLatin !== topCardSurahArabic"
+                    class="workspace-shell-surah-sep"
+                    aria-hidden="true"
+                  >·</span>
                   <span v-if="topCardSurahArabic" class="workspace-shell-surah-ar" dir="rtl" lang="ar">{{ topCardSurahArabic }}</span>
                 </template>
                 <template v-else>{{ topCardSessionLabel }}</template>
@@ -517,6 +522,11 @@
             >
               <template v-if="topCardSurahArabic || topCardSurahLatin">
                 <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en" dir="ltr">{{ topCardSurahLatin }}</span>
+                <span
+                  v-if="topCardSurahLatin && topCardSurahArabic && topCardSurahLatin !== topCardSurahArabic"
+                  class="workspace-shell-surah-sep"
+                  aria-hidden="true"
+                >·</span>
                 <span v-if="topCardSurahArabic" class="workspace-shell-surah-ar" dir="rtl" lang="ar">{{ topCardSurahArabic }}</span>
               </template>
               <template v-else>{{ topCardSessionLabel }}</template>

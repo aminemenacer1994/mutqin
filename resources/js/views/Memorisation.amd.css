@@ -6087,21 +6087,22 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title,
   html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
     display: flex !important;
-    flex-flow: row nowrap !important;
-    flex-wrap: nowrap !important;
+    flex-flow: row wrap !important;
+    flex-wrap: wrap !important;
     align-items: baseline !important;
     justify-content: flex-start !important;
-    column-gap: 0.55rem !important;
-    gap: 0.55rem !important;
+    column-gap: 0.45rem !important;
+    row-gap: 0.05rem !important;
+    gap: 0.05rem 0.45rem !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     padding-inline: 0 !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
-    text-wrap: nowrap !important;
-    white-space: nowrap !important;
+    text-wrap: wrap !important;
+    white-space: normal !important;
     text-overflow: clip !important;
     font-size: clamp(0.82rem, 0.72rem + 1.8vw, 1.05rem) !important;
     line-height: 1.2 !important;
@@ -6112,15 +6113,18 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
     display: inline-block !important;
+    position: static !important;
     flex: 0 1 auto !important;
     width: auto !important;
     min-width: 0 !important;
+    max-width: 100% !important;
     white-space: nowrap !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
     isolation: isolate;
+    unicode-bidi: isolate;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
@@ -6134,7 +6138,9 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
-    display: none !important;
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+    opacity: 0.45;
   }
 
   html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
@@ -8088,11 +8094,11 @@ html body .app .workspace-shell .top-card-session-cluster.has-paired-actions .se
 
   html body .app .workspace-shell-overview-toggle.workspace-shell-main-title,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title {
-    align-items: center !important;
+    align-items: baseline !important;
     min-height: 34px !important;
-    height: 34px !important;
+    height: auto !important;
     padding-bottom: 0 !important;
-    line-height: 1 !important;
+    line-height: 1.2 !important;
     font-size: 1.08rem !important;
   }
 
