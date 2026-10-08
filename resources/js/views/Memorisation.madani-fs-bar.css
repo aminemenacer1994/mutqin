@@ -915,11 +915,11 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
   padding: 0.2rem 0 1.45rem;
   border: 0;
   border-bottom: 0;
-  font-family: "Amiri Quran", "Amiri", serif;
-  font-size: max(1.15rem, calc(var(--qpc-word-size, 24px) * 0.92));
+  font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+  font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   line-height: 1;
-  color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 72%, transparent);
-  -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 72%, transparent);
+  color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
+  -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
   opacity: 1;
 }
 
@@ -942,9 +942,11 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
   .madani-qpc-viewport
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio-number {
-  font-size: max(1.15rem, calc(var(--qpc-word-size, 24px) * 0.92));
+  font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
+  color: inherit;
+  -webkit-text-fill-color: inherit;
 }
 
 html.is-app-fullscreen:has(.madani-fullscreen-bar--top)
@@ -969,11 +971,11 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   padding: 0.2rem 0 1.45rem;
   border: 0;
   border-bottom: 0;
-  font-family: "Amiri Quran", "Amiri", serif;
-  font-size: max(1.15rem, calc(var(--qpc-word-size, 24px) * 0.92));
+  font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+  font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   line-height: 1;
-  color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 72%, transparent);
-  -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 72%, transparent);
+  color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
+  -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
   opacity: 1;
 }
 
@@ -997,10 +999,12 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .madani-qpc-viewport
   .qpc-madani-page--session-scoped
   .qpc-madani-page__folio-number {
-  font-size: max(1.15rem, calc(var(--qpc-word-size, 24px) * 0.92)) !important;
+  font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   line-height: 1;
+  color: inherit;
+  -webkit-text-fill-color: inherit;
 }
 
 html.is-app-fullscreen:has(.madani-fullscreen-bar--top)

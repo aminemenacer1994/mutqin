@@ -1185,12 +1185,13 @@
         }
         /* Mobile: sliders + ellipsis top-right; mushaf layout lives in the ellipsis menu. */
         .app .top-card-icon-controls {
-          --mq-top-icon: 36px;
+          --mq-top-icon: 34px;
+          --top-card-toolbar-icon: 34px;
           display: flex !important;
           flex-flow: row nowrap !important;
           align-items: center !important;
           justify-content: flex-end !important;
-          gap: 6px !important;
+          gap: 4px !important;
           width: auto !important;
           min-width: 0 !important;
           max-width: none !important;
@@ -1208,9 +1209,9 @@
           display: inline-flex !important;
           align-items: center !important;
           justify-content: center !important;
-          width: var(--mq-top-icon, 36px) !important;
-          min-width: var(--mq-top-icon, 36px) !important;
-          height: var(--mq-top-icon, 36px) !important;
+          width: var(--mq-top-icon, 34px) !important;
+          min-width: var(--mq-top-icon, 34px) !important;
+          height: var(--mq-top-icon, 34px) !important;
           overflow: visible !important;
           pointer-events: auto !important;
         }
@@ -1260,13 +1261,13 @@
         .app .top-card-icon-controls .top-card-menu-wrap {
           position: relative !important;
           display: inline-flex !important;
-          width: 36px !important;
-          height: 36px !important;
-          min-width: 36px !important;
-          min-height: 36px !important;
-          max-width: 36px !important;
-          max-height: 36px !important;
-          flex: 0 0 36px !important;
+          width: var(--mq-top-icon, 34px) !important;
+          height: var(--mq-top-icon, 34px) !important;
+          min-width: var(--mq-top-icon, 34px) !important;
+          min-height: var(--mq-top-icon, 34px) !important;
+          max-width: var(--mq-top-icon, 34px) !important;
+          max-height: var(--mq-top-icon, 34px) !important;
+          flex: 0 0 var(--mq-top-icon, 34px) !important;
           margin: 0 !important;
           padding: 0 !important;
           overflow: visible !important;
@@ -1297,18 +1298,22 @@
           order: 3 !important;
         }
         .app .top-card-icon-controls .top-card-controls-trigger,
+        .app .top-card-icon-controls .top-card-fullscreen-trigger,
+        .app .top-card-icon-controls .top-card-search-trigger,
+        .app .top-card-icon-controls .top-card-icon-control,
         .app .top-card-icon-controls .view-mode-btn,
         .app .top-card-icon-controls .workspace-layout-btn,
         .app .top-card-icon-controls .top-card-ellipsis,
         .app .workspace-shell-actions .top-card-icon-controls .top-card-ellipsis {
           position: relative !important;
           inset: auto !important;
-          width: 36px !important;
-          height: 36px !important;
-          min-width: 36px !important;
-          min-height: 36px !important;
-          max-width: 36px !important;
-          max-height: 36px !important;
+          width: var(--mq-top-icon, 34px) !important;
+          height: var(--mq-top-icon, 34px) !important;
+          min-width: var(--mq-top-icon, 34px) !important;
+          min-height: var(--mq-top-icon, 34px) !important;
+          max-width: var(--mq-top-icon, 34px) !important;
+          max-height: var(--mq-top-icon, 34px) !important;
+          flex: 0 0 var(--mq-top-icon, 34px) !important;
           padding: 0 !important;
           margin: 0 !important;
           border-radius: 999px !important;
@@ -1319,6 +1324,31 @@
           transform: none !important;
           grid-column: auto !important;
           grid-row: auto !important;
+          font-size: 0.92rem !important;
+        }
+        html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured,
+        html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+          width: var(--mq-top-icon, 34px) !important;
+          height: var(--mq-top-icon, 34px) !important;
+          min-width: var(--mq-top-icon, 34px) !important;
+          min-height: var(--mq-top-icon, 34px) !important;
+          max-width: var(--mq-top-icon, 34px) !important;
+          max-height: var(--mq-top-icon, 34px) !important;
+          flex: 0 0 var(--mq-top-icon, 34px) !important;
+        }
+        .app .top-card-icon-controls .top-card-icon-control i,
+        .app .top-card-icon-controls .top-card-controls-trigger i,
+        .app .top-card-icon-controls .top-card-fullscreen-trigger i,
+        .app .top-card-icon-controls .top-card-ellipsis i,
+        .app .top-card-icon-controls .view-mode-btn i {
+          font-size: 0.92rem !important;
+          line-height: 1 !important;
+          width: 1em !important;
+          height: 1em !important;
+        }
+        .app .top-card-icon-controls .top-card-search-trigger .top-card-search-glyph {
+          width: 1rem !important;
+          height: 1rem !important;
         }
         /* Mobile: mushaf/stacked lives in the ellipsis menu — hide the outside icon. */
         html body .app .top-card-icon-controls .top-card-layout-icons,
@@ -11833,7 +11863,8 @@ body.session-analysis-modal-open {
       font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif !important;
       font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;
       line-height: 1 !important;
-      color: var(--qpc-folio, #8a7048) !important;
+      color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d)) !important;
+      -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d)) !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio::after,
@@ -11859,7 +11890,9 @@ body.session-analysis-modal-open {
       line-height: 1 !important;
       direction: ltr !important;
       unicode-bidi: isolate !important;
-      opacity: 0.82 !important;
+      color: inherit !important;
+      -webkit-text-fill-color: inherit !important;
+      opacity: 1 !important;
     }
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::before,
@@ -11877,7 +11910,7 @@ body.session-analysis-modal-open {
       margin: 0 !important;
       border-radius: 1px !important;
       background: currentColor !important;
-      opacity: 0.42 !important;
+      opacity: 0.7 !important;
       transform: translateY(0.02em) !important;
     }
 
@@ -11892,6 +11925,189 @@ body.session-analysis-modal-open {
 
     html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page .qpc-madani-page__sheet {
       padding-top: 0.85rem !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v229">
+  /* Folio ink follows theme (light / sepia / dark) on desktop + mobile. */
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number,
+  html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio,
+  html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number,
+  html body.memorisation-page .app .qpc-madani-page__folio,
+  html body.memorisation-page .app .qpc-madani-page__folio-number {
+    color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d)) !important;
+    -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d)) !important;
+    opacity: 1 !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::before,
+  html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::after,
+  html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number::before,
+  html body .app .qpc-madani-page--session-scoped .qpc-madani-page__folio-number::after,
+  html body.memorisation-page .app .qpc-madani-page__folio-number::before,
+  html body.memorisation-page .app .qpc-madani-page__folio-number::after {
+    background: currentColor !important;
+    opacity: 0.7 !important;
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v227">
+  /* Mobile header: one optical row — clearer title + matched, crisp icons. */
+  @media (max-width: 767.98px) {
+    html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+      align-items: center !important;
+      column-gap: 0.45rem !important;
+    }
+
+    html body .app .workspace-shell-head-toolbar > .workspace-shell-copy,
+    html body .app .workspace-shell-head-utility-row > .top-card-icon-controls,
+    html body .app .top-card-icon-controls {
+      align-self: center !important;
+    }
+
+    html body .app .workspace-shell-overview-toggle.workspace-shell-main-title,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title {
+      display: flex !important;
+      flex-flow: row nowrap !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 0.4rem !important;
+      min-height: 34px !important;
+      height: 34px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      padding-bottom: 0 !important;
+      line-height: 1 !important;
+      font-size: 1.08rem !important;
+      letter-spacing: 0.01em !important;
+      color: color-mix(in srgb, var(--text, #1f1a17) 88%, var(--accent, #8b5e3c) 12%) !important;
+      -webkit-font-smoothing: antialiased !important;
+      text-rendering: optimizeLegibility !important;
+    }
+
+    html body .app .workspace-shell-overview-toggle.workspace-shell-main-title::after,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title::after {
+      inset-inline: 0 !important;
+      bottom: 1px !important;
+      height: 1px !important;
+      opacity: 0.85 !important;
+    }
+
+    html body .app .workspace-shell-overview-toggle__text {
+      display: inline-flex !important;
+      flex: 0 1 auto !important;
+      flex-wrap: nowrap !important;
+      align-items: center !important;
+      gap: 0.45rem !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      line-height: 1 !important;
+    }
+
+    html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-en,
+    html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+      display: inline-flex !important;
+      align-items: center !important;
+      padding: 0 !important;
+      line-height: 1 !important;
+      white-space: nowrap !important;
+    }
+
+    html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+      font-size: 1.1em !important;
+      transform: translateY(0.02em) !important;
+    }
+
+    html body .app .workspace-shell-overview-toggle__chevron {
+      flex: 0 0 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      margin: 0 !important;
+      opacity: 0.78 !important;
+      color: color-mix(in srgb, var(--text) 55%, var(--accent) 45%) !important;
+    }
+
+    html body .app .top-card-icon-controls {
+      --mq-top-icon: 34px;
+      --top-card-toolbar-icon: 34px;
+      --top-card-toolbar-gap: 0.35rem;
+      display: inline-flex !important;
+      flex-flow: row nowrap !important;
+      align-items: center !important;
+      gap: 0.35rem !important;
+      height: 34px !important;
+      min-height: 34px !important;
+    }
+
+    html body .app .top-card-icon-controls .top-card-controls-wrap,
+    html body .app .top-card-icon-controls .top-card-menu-wrap,
+    html body .app .top-card-icon-controls :is(
+      .top-card-icon-control,
+      .top-card-controls-trigger,
+      .top-card-fullscreen-trigger,
+      .top-card-search-trigger,
+      .top-card-ellipsis
+    ),
+    html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured,
+    html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+      width: 34px !important;
+      height: 34px !important;
+      min-width: 34px !important;
+      min-height: 34px !important;
+      max-width: 34px !important;
+      max-height: 34px !important;
+      flex: 0 0 34px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 999px !important;
+      border: 1px solid color-mix(in srgb, #8a5a32 34%, transparent) !important;
+      background: #fff !important;
+      color: #6f4520 !important;
+      box-shadow: none !important;
+      transform: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      -webkit-font-smoothing: antialiased !important;
+    }
+
+    html body .app .top-card-icon-controls :is(
+      .top-card-icon-control,
+      .top-card-controls-trigger,
+      .top-card-fullscreen-trigger,
+      .top-card-ellipsis
+    ) i {
+      font-size: 0.92rem !important;
+      line-height: 1 !important;
+      width: 1em !important;
+      height: 1em !important;
+      margin: 0 !important;
+      color: inherit !important;
+      -webkit-font-smoothing: antialiased !important;
+    }
+
+    html body .app .top-card-icon-controls .top-card-search-trigger .top-card-search-glyph {
+      width: 1rem !important;
+      height: 1rem !important;
+    }
+
+    html[data-theme="dark"] body .app .top-card-icon-controls :is(
+      .top-card-icon-control,
+      .top-card-controls-trigger,
+      .top-card-fullscreen-trigger,
+      .top-card-search-trigger,
+      .top-card-ellipsis
+    ),
+    html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured,
+    html[data-theme="dark"] body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+      background: #1c1916 !important;
+      border-color: rgba(245, 242, 234, 0.18) !important;
+      color: #f7efdf !important;
+      box-shadow: none !important;
     }
   }
 </style>
@@ -12015,8 +12231,29 @@ body.session-analysis-modal-open {
     // Clean folio: Noto Naskh numerals + centered flanks (no second rule).
     function styleMadaniFolio(folio) {
       if (!folio || folio.nodeType !== 1) return
-      if (window.innerWidth >= 768) return
       var page = folio.closest('.qpc-madani-page')
+      var ink = ''
+      if (page) {
+        ink = (window.getComputedStyle(page).getPropertyValue('--mushaf-reading-ink')
+          || page.style.getPropertyValue('--mushaf-reading-ink')
+          || window.getComputedStyle(page).getPropertyValue('--qpc-ink')
+          || '').trim()
+      }
+      if (!ink) {
+        ink = (window.getComputedStyle(document.documentElement).getPropertyValue('--mushaf-reading-ink') || '').trim()
+      }
+      if (!ink) ink = '#1b140d'
+      // Theme ink on desktop + mobile (light / sepia / dark).
+      folio.style.setProperty('color', ink, 'important')
+      folio.style.setProperty('-webkit-text-fill-color', ink, 'important')
+      folio.style.setProperty('opacity', '1', 'important')
+      var number = folio.querySelector('.qpc-madani-page__folio-number')
+      if (number) {
+        number.style.setProperty('color', ink, 'important')
+        number.style.setProperty('-webkit-text-fill-color', ink, 'important')
+        number.style.setProperty('opacity', '1', 'important')
+      }
+      if (window.innerWidth >= 768) return
       var wordPx = 24
       if (page) {
         var raw = window.getComputedStyle(page).getPropertyValue('--qpc-word-size')
@@ -12042,7 +12279,6 @@ body.session-analysis-modal-open {
       folio.style.setProperty('border', '0', 'important')
       folio.style.setProperty('border-bottom', '0', 'important')
       folio.style.setProperty('box-shadow', 'none', 'important')
-      var number = folio.querySelector('.qpc-madani-page__folio-number')
       if (number) {
         number.style.setProperty('display', 'inline-flex', 'important')
         number.style.setProperty('flex-direction', 'row', 'important')
@@ -12056,7 +12292,6 @@ body.session-analysis-modal-open {
         number.style.setProperty('letter-spacing', '0.12em', 'important')
         number.style.setProperty('direction', 'ltr', 'important')
         number.style.setProperty('unicode-bidi', 'isolate', 'important')
-        number.style.setProperty('opacity', '0.82', 'important')
       }
       var sheet = page && page.querySelector('.qpc-madani-page__sheet')
       if (sheet) sheet.style.setProperty('padding-bottom', '0.02rem', 'important')
@@ -12067,7 +12302,15 @@ body.session-analysis-modal-open {
       if (stale) stale.remove()
       var stale2 = document.getElementById('mutqin-madani-folio-size-v2')
       if (stale2) stale2.remove()
-      var id = 'mutqin-madani-folio-size-v3'
+      var stale3 = document.getElementById('mutqin-madani-folio-size-v3')
+      if (stale3) stale3.remove()
+      var stale4 = document.getElementById('mutqin-madani-folio-size-v4')
+      if (stale4) stale4.remove()
+      var stale5 = document.getElementById('mutqin-madani-folio-size-v5')
+      if (stale5) stale5.remove()
+      var stale6 = document.getElementById('mutqin-madani-folio-size-v6')
+      if (stale6) stale6.remove()
+      var id = 'mutqin-madani-folio-size-v7'
       var existing = document.getElementById(id)
       var css = [
         '@media (max-width: 767.98px) {',
@@ -12078,7 +12321,8 @@ body.session-analysis-modal-open {
         'font-family:"Noto Naskh Arabic","Scheherazade New","Amiri",serif !important;',
         'font-size:max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;',
         'line-height:1 !important;border:0 !important;box-shadow:none !important;',
-        'color:var(--qpc-folio, #8a7048) !important;',
+        'color:var(--mushaf-reading-ink, var(--qpc-ink, #1b140d)) !important;',
+        '-webkit-text-fill-color:var(--mushaf-reading-ink, var(--qpc-ink, #1b140d)) !important;',
         '}',
         'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio::after,',
         'html body.memorisation-page .app .qpc-madani-page__folio::after {',
@@ -12090,7 +12334,7 @@ body.session-analysis-modal-open {
         'font-family:"Noto Naskh Arabic","Scheherazade New","Amiri",serif !important;',
         'font-size:max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05)) !important;',
         'font-weight:600 !important;letter-spacing:0.12em !important;line-height:1 !important;',
-        'direction:ltr !important;unicode-bidi:isolate !important;opacity:0.82 !important;',
+        'direction:ltr !important;unicode-bidi:isolate !important;color:inherit !important;-webkit-text-fill-color:inherit !important;opacity:1 !important;',
         '}',
         'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::before,',
         'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::after,',
@@ -12098,11 +12342,24 @@ body.session-analysis-modal-open {
         'html body.memorisation-page .app .qpc-madani-page__folio-number::after {',
         'content:"" !important;display:block !important;width:1.55rem !important;height:1.5px !important;',
         'flex:0 0 auto !important;align-self:center !important;margin:0 !important;border-radius:1px !important;',
-        'background:currentColor !important;opacity:0.42 !important;transform:translateY(0.02em) !important;',
+        'background:currentColor !important;opacity:0.7 !important;transform:translateY(0.02em) !important;',
         '}',
         'html body .app .main.madani-qpc-mode-active .qpc-madani-session-scroll__page + .qpc-madani-session-scroll__page .qpc-madani-page__sheet {',
         'padding-top:0.85rem !important;',
         '}',
+        '}',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio,',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number,',
+        'html body.memorisation-page .app .qpc-madani-page__folio,',
+        'html body.memorisation-page .app .qpc-madani-page__folio-number {',
+        'color:var(--mushaf-reading-ink, var(--qpc-ink, #1b140d)) !important;',
+        '-webkit-text-fill-color:var(--mushaf-reading-ink, var(--qpc-ink, #1b140d)) !important;opacity:1 !important;',
+        '}',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::before,',
+        'html body .app .main.madani-qpc-mode-active .qpc-madani-page__folio-number::after,',
+        'html body.memorisation-page .app .qpc-madani-page__folio-number::before,',
+        'html body.memorisation-page .app .qpc-madani-page__folio-number::after {',
+        'background:currentColor !important;opacity:0.7 !important;',
         '}'
       ].join('')
       if (existing) {
@@ -12125,6 +12382,12 @@ body.session-analysis-modal-open {
     ensureMadaniFolioChrome()
     window.addEventListener('load', ensureMadaniFolioChrome)
     window.addEventListener('resize', scheduleMadaniFolioChrome)
+    if (typeof MutationObserver !== 'undefined') {
+      var themeFolioObserver = new MutationObserver(scheduleMadaniFolioChrome)
+      themeFolioObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+      var appEl = document.querySelector('.app')
+      if (appEl) themeFolioObserver.observe(appEl, { attributes: true, attributeFilter: ['data-theme'] })
+    }
     setTimeout(ensureMadaniFolioChrome, 50)
     setTimeout(ensureMadaniFolioChrome, 400)
     setTimeout(ensureMadaniFolioChrome, 1200)

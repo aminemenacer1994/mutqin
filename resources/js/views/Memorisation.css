@@ -66581,7 +66581,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   min-width: 0;
   padding: 0;
   --qpc-ink: var(--mushaf-reading-ink, #1b140d);
-  --qpc-folio: color-mix(in srgb, var(--mushaf-reading-ink, #8a7048) 58%, var(--text-muted, #8a7048));
+  --qpc-folio: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
   color: var(--mushaf-reading-ink, inherit);
 }
 
@@ -66591,7 +66591,21 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 }
 
 .madani-qpc-viewport .qpc-madani-page--borderless .qpc-madani-page__folio {
-  color: var(--qpc-folio);
+  color: var(--mushaf-reading-ink, var(--qpc-folio, var(--qpc-ink, #1b140d)));
+  -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-folio, var(--qpc-ink, #1b140d)));
+}
+
+.madani-qpc-viewport .qpc-madani-page__folio,
+.madani-qpc-viewport .qpc-madani-page__folio-number {
+  color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
+  -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
+  opacity: 1;
+}
+
+.madani-qpc-viewport .qpc-madani-page__folio-number::before,
+.madani-qpc-viewport .qpc-madani-page__folio-number::after {
+  background: currentColor;
+  opacity: 0.7;
 }
 
 .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__folio {
@@ -66604,13 +66618,15 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 @media (max-width: 767.98px) {
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__folio {
     min-height: 0;
-    margin: 0.45rem 0 0;
-    padding: 0.2rem 0 1.45rem;
+    margin: 0.35rem 0 0;
+    padding: 0.15rem 0 1.55rem;
     border: 0;
     border-bottom: 0;
-    font-size: max(1.15rem, calc(var(--qpc-word-size, 24px) * 0.92));
-    color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 72%, transparent);
-    -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 72%, transparent);
+    font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
+    font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
+    color: var(--mushaf-reading-ink, #f7ebdf);
+    -webkit-text-fill-color: var(--mushaf-reading-ink, #f7ebdf);
+    opacity: 1;
   }
 
   html.is-app-fullscreen .app.is-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page--session-scoped .qpc-madani-page__folio-break {

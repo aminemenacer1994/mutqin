@@ -4573,10 +4573,10 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .workspace-shell-head-utility-row > .top-card-icon-controls,
   .top-card-icon-controls {
-    --top-card-toolbar-gap: 0.4rem;
+    --top-card-toolbar-gap: 0.35rem;
     /* Compact toolbar hits — smaller than the global 44px control size */
-    --mq-top-icon: 32px;
-    --top-card-toolbar-icon: 32px;
+    --mq-top-icon: 34px;
+    --top-card-toolbar-icon: 34px;
     display: flex !important;
     flex-flow: row nowrap !important;
     align-items: center !important;
@@ -4656,7 +4656,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     box-sizing: border-box !important;
     gap: 0 !important;
     line-height: 1 !important;
-    font-size: 0.78rem !important;
+    font-size: 0.92rem !important;
     pointer-events: auto !important;
     cursor: pointer !important;
     display: inline-flex !important;
@@ -4687,7 +4687,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 .top-card-icon-controls .top-card-dashboard-trigger i,
 .top-card-icon-controls .top-card-ellipsis i,
 .top-card-icon-controls .top-card-fullscreen-trigger i {
-    font-size: 0.78rem !important;
+    font-size: 0.92rem !important;
     line-height: 1 !important;
     width: 1em !important;
     height: 1em !important;
@@ -7653,7 +7653,8 @@ html body.memorisation-page .tools.show {
   }
 }
 
-/* Matched circular header icons — one ring, same size, no filled disc. */
+/* Matched circular header icons — desktop size. Mobile override follows. */
+@media (min-width: 768px) {
 html body .app .top-card-icon-controls {
   --mq-top-icon: 40px;
   --top-card-toolbar-icon: 40px;
@@ -7776,6 +7777,72 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
   background: #27272a !important;
   border-color: rgba(245, 242, 234, 0.22) !important;
   color: #f4f4f5 !important;
+}
+} /* end desktop matched circular header icons */
+
+/* Mobile: compact circular header icons (beats earlier cascade + blade). */
+@media (max-width: 767.98px) {
+  html body .app .top-card-icon-controls {
+    --mq-top-icon: 34px;
+    --top-card-toolbar-icon: 34px;
+    --top-card-toolbar-gap: 0.35rem;
+    gap: 0.35rem !important;
+    align-items: center !important;
+    height: 34px !important;
+  }
+
+  html body .app .top-card-icon-controls .top-card-layout-icons,
+  html body .app .top-card-icon-controls .workspace-layout-toggle,
+  html body .app .top-card-icon-controls .top-card-controls-wrap,
+  html body .app .top-card-icon-controls .top-card-menu-wrap {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
+  }
+
+  html body .app .top-card-icon-controls :is(
+    .top-card-icon-control,
+    .top-card-controls-trigger,
+    .top-card-fullscreen-trigger,
+    .top-card-search-trigger,
+    .top-card-ellipsis,
+    .view-mode-btn,
+    .workspace-layout-btn
+  ),
+  html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured,
+  html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
+    font-size: 0.92rem !important;
+  }
+
+  html body .app .top-card-icon-controls :is(
+    .top-card-icon-control,
+    .top-card-controls-trigger,
+    .top-card-fullscreen-trigger,
+    .top-card-ellipsis,
+    .view-mode-btn,
+    .workspace-layout-btn
+  ) i {
+    font-size: 0.92rem !important;
+    line-height: 1 !important;
+    width: 1em !important;
+    height: 1em !important;
+  }
+
+  html body .app .top-card-icon-controls .top-card-search-trigger .top-card-search-glyph {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
 }
 
 /* Mobile only: bilingual title on one row, labeled session buttons, aligned AI icons. */

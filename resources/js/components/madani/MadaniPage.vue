@@ -476,6 +476,12 @@ export default {
       folio.style.setProperty('border-bottom', '0', 'important')
       folio.style.setProperty('box-shadow', 'none', 'important')
       folio.style.setProperty('opacity', '1', 'important')
+      // Theme-aware ink (light / sepia / dark) — same token as ayah text.
+      const ink = getComputedStyle(root).getPropertyValue('--mushaf-reading-ink').trim()
+        || getComputedStyle(root).getPropertyValue('--qpc-ink').trim()
+        || '#1b140d'
+      folio.style.setProperty('color', ink, 'important')
+      folio.style.setProperty('-webkit-text-fill-color', ink, 'important')
       // Kill any spread layout that parks the folio mid-gap.
       folio.style.setProperty('margin-top', '0.35rem', 'important')
       const number = folio.querySelector('.qpc-madani-page__folio-number')
@@ -498,7 +504,9 @@ export default {
         number.style.setProperty('unicode-bidi', 'isolate', 'important')
         number.style.setProperty('border', '0', 'important')
         number.style.setProperty('border-bottom', '0', 'important')
-        number.style.setProperty('opacity', '0.82', 'important')
+        number.style.setProperty('color', ink, 'important')
+        number.style.setProperty('-webkit-text-fill-color', ink, 'important')
+        number.style.setProperty('opacity', '1', 'important')
       }
     },
     applyMobileAyahRowPacking(sheet, available) {
@@ -1244,11 +1252,13 @@ export default {
   border: 0;
   border-bottom: 0;
   box-shadow: none;
-  color: var(--qpc-folio, var(--qpc-rule, #8a7048));
+  color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
+  -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
   font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
   font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   line-height: 1;
   position: relative;
+  opacity: 1;
 }
 
 /* No second rule under the number — flanks alone keep the footer clean. */
@@ -1273,7 +1283,9 @@ export default {
   letter-spacing: 0.12em;
   direction: ltr;
   unicode-bidi: isolate;
-  opacity: 0.82;
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+  opacity: 1;
 }
 
 /* Flanking rules — optically centered on the digit cap-height. */
@@ -1290,7 +1302,7 @@ export default {
   border: 0;
   border-radius: 1px;
   background: currentColor;
-  opacity: 0.42;
+  opacity: 0.7;
   transform: translateY(0.02em);
 }
 
@@ -1298,6 +1310,8 @@ export default {
   min-height: 0;
   margin: 0.35rem 0 0;
   padding: 0.15rem 0 1.55rem;
+  color: var(--mushaf-reading-ink, #1b140d);
+  -webkit-text-fill-color: var(--mushaf-reading-ink, #1b140d);
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--session-scoped .qpc-madani-page__folio-number {
@@ -1305,8 +1319,8 @@ export default {
   font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 78%, transparent);
-  -webkit-text-fill-color: color-mix(in srgb, var(--mushaf-reading-ink, #f7ebdf) 78%, transparent);
+  color: inherit;
+  -webkit-text-fill-color: inherit;
   opacity: 1;
 }
 
@@ -1451,7 +1465,8 @@ export default {
   min-height: 0;
   margin: 0.35rem 0 0;
   padding: 0.15rem 0 1.55rem;
-  color: #8a7048;
+  color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
+  -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
   font-family: "Noto Naskh Arabic", "Scheherazade New", "Amiri", serif;
   font-size: max(1.25rem, calc(var(--qpc-word-size, 24px) * 1.05));
   letter-spacing: 0.12em;
@@ -1644,7 +1659,8 @@ export default {
 }
 
 .qpc-madani-page--borderless .qpc-madani-page__folio {
-  color: #8a7048;
+  color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
+  -webkit-text-fill-color: var(--mushaf-reading-ink, var(--qpc-ink, #1b140d));
 }
 
 .qpc-madani-page--borderless.qpc-madani-page--embedded {

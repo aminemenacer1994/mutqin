@@ -7314,25 +7314,25 @@ html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured 
 @media (max-width: 767.98px) {
   html body .app .top-card-icon-controls .top-card-search-trigger.is-featured,
   html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured {
-    width: var(--top-card-toolbar-icon, 32px) !important;
-    height: var(--top-card-toolbar-icon, 32px) !important;
-    min-width: var(--top-card-toolbar-icon, 32px) !important;
-    min-height: var(--top-card-toolbar-icon, 32px) !important;
-    max-width: var(--top-card-toolbar-icon, 32px) !important;
-    max-height: var(--top-card-toolbar-icon, 32px) !important;
-    flex: 0 0 var(--top-card-toolbar-icon, 32px) !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
   }
 
   html body .app .top-card-icon-controls .top-card-search-trigger .top-card-search-glyph {
-    width: 0.85rem !important;
-    height: 0.85rem !important;
+    width: 1rem !important;
+    height: 1rem !important;
   }
 
   html body .app .top-card-icon-controls .top-card-fullscreen-trigger i,
   html body .app .top-card-icon-controls .top-card-controls-trigger i,
   html body .app .top-card-icon-controls .top-card-ellipsis i,
   html body .app .top-card-icon-controls .top-card-icon-control i {
-    font-size: 0.78rem !important;
+    font-size: 0.92rem !important;
   }
 }
 
@@ -8078,4 +8078,70 @@ html body .app .workspace-shell .top-card-session-cluster.has-paired-actions .se
   flex: 1 1 0 !important;
   align-self: stretch !important;
   justify-self: stretch !important;
+}
+
+/* Mobile header polish: aligned title row + matched crisp icon set */
+@media (max-width: 767.98px) {
+  html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    align-items: center !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle.workspace-shell-main-title,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title {
+    align-items: center !important;
+    min-height: 34px !important;
+    height: 34px !important;
+    padding-bottom: 0 !important;
+    line-height: 1 !important;
+    font-size: 1.08rem !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__text {
+    align-items: center !important;
+    gap: 0.45rem !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__chevron {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  html body .app .top-card-icon-controls {
+    --mq-top-icon: 34px;
+    --top-card-toolbar-icon: 34px;
+    height: 34px !important;
+    gap: 0.35rem !important;
+    align-items: center !important;
+  }
+
+  html body .app .top-card-icon-controls :is(
+    .top-card-icon-control,
+    .top-card-controls-trigger,
+    .top-card-fullscreen-trigger,
+    .top-card-search-trigger,
+    .top-card-ellipsis
+  ),
+  html body .app .top-card-icon-controls .top-card-fullscreen-trigger.is-featured,
+  html body .app .top-card-icon-controls .top-card-search-trigger.is-featured {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    max-width: 34px !important;
+    max-height: 34px !important;
+    flex: 0 0 34px !important;
+    background: #fff !important;
+    border: 1px solid color-mix(in srgb, #8a5a32 34%, transparent) !important;
+    color: #6f4520 !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .top-card-icon-controls :is(
+    .top-card-icon-control,
+    .top-card-controls-trigger,
+    .top-card-fullscreen-trigger,
+    .top-card-ellipsis
+  ) i {
+    font-size: 0.92rem !important;
+  }
 }
