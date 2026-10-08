@@ -7,14 +7,14 @@
  * Tajweed COLR and plain QCF both use the same caps, hairline, and sparse pack.
  */
 
-/** Near-zero side bezel — mushaf ink runs edge-to-edge on phones. */
-export const MOBILE_MUSHAF_HAIRLINE_PX = 2
+/** Side bezel on phones — safe-area only; padding is applied separately. */
+export const MOBILE_MUSHAF_HAIRLINE_PX = 0
 export const MOBILE_MUSHAF_SPARSE_RATIO = 0.92
 /** Desktop/tablet: centre anything that is not nearly full (avoids huge word gaps). */
 export const DESKTOP_MUSHAF_SPARSE_RATIO = 0.9
-/** Extra headroom — QCF ink paints past the measured advance on phones. */
-export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.88
-export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.9
+/** Phone fit headroom — keep high so tajweed/plain rows fill the viewport width. */
+export const MOBILE_MUSHAF_QCF_FIT_SAFETY = 0.96
+export const MOBILE_MUSHAF_INDOPAK_FIT_SAFETY = 0.94
 /** Never shrink phone ink below this — unreadably small mushaf pages. */
 export const MOBILE_MUSHAF_WORD_SIZE_FLOOR = 22
 /** Hard ceiling so short surahs (Kawthar) cannot blow up past a normal page. */
@@ -74,14 +74,17 @@ export function isMobileMushafAyahSparse({
   availableWidth,
   wordCount = 0,
   ratio = MOBILE_MUSHAF_SPARSE_RATIO,
+  phone = false,
 } = {}) {
   const natural = Number(naturalWidth)
   const available = Number(availableWidth)
   const words = Math.trunc(Number(wordCount) || 0)
   if (!(natural > 0) || !(available > 0)) return false
-  // Leftover rows (a few words, or clearly not full) stay centred.
-  // Stretching them is what blew gaps open on Al-Falaq / Al-Kawthar.
+  // Leftover rows (a few words) stay centred.
   if (words > 0 && words <= 6) return true
+  // Phones: never centre dense rows by width ratio — that left ~25% side gutters
+  // on tajweed (lines measured short, then justify:center). Stretch edge-to-edge.
+  if (phone) return false
   return natural < available * ratio
 }
 

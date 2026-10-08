@@ -11527,13 +11527,13 @@ body.session-analysis-modal-open {
   }
 </style>
 <style id="mutqin-memorisation-hotfix-v223">
-  /* Mobile + fullscreen: true edge-to-edge mushaf (hairline + safe-area only). */
+  /* Mobile + fullscreen: edge-to-edge mushaf (plain + tajweed). */
   @media (max-width: 767.98px) {
     html body .app,
     html.is-app-fullscreen body .app,
     html.is-app-fullscreen.has-madani-fullscreen-bar body .app {
-      --mq-mushaf-inline-start: max(2px, var(--mq-safe-left, env(safe-area-inset-left, 0px)));
-      --mq-mushaf-inline-end: max(2px, var(--mq-safe-right, env(safe-area-inset-right, 0px)));
+      --mq-mushaf-inline-start: max(0px, var(--mq-safe-left, env(safe-area-inset-left, 0px)));
+      --mq-mushaf-inline-end: max(0px, var(--mq-safe-right, env(safe-area-inset-right, 0px)));
     }
 
     html body.memorisation-page .app .main.madani-qpc-mode-active,
@@ -11546,6 +11546,7 @@ body.session-analysis-modal-open {
     }
 
     html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page--tajweed .qpc-madani-page__sheet,
     html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet,
     html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet,
     html.is-app-fullscreen body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
@@ -11554,12 +11555,14 @@ body.session-analysis-modal-open {
       width: 100% !important;
       max-width: 100% !important;
       margin-inline: 0 !important;
-      padding-inline: var(--mq-mushaf-inline-start) var(--mq-mushaf-inline-end) !important;
+      overflow-x: visible !important;
+      padding-inline: 0 !important;
       padding-left: var(--mq-mushaf-inline-start) !important;
       padding-right: var(--mq-mushaf-inline-end) !important;
     }
 
     html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page--tajweed .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
     html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
     html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--session-partial:not(.qpc-madani-line--sparse),
     html.is-app-fullscreen body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah:not(.qpc-madani-line--sparse),
@@ -11567,6 +11570,7 @@ body.session-analysis-modal-open {
       width: 100% !important;
       max-width: 100% !important;
       justify-content: space-between !important;
+      overflow-x: visible !important;
     }
 
     html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--sparse,
@@ -11602,14 +11606,23 @@ body.session-analysis-modal-open {
         var words = line.querySelectorAll('.qpc-madani-word, .madani-word')
         var natural = 0
         for (var i = 0; i < words.length; i += 1) natural += words[i].offsetWidth || 0
-        // Match mobileMushafLineFit sparse ratio — leftover rows must not stretch.
-        var ratio = mobile ? 0.92 : 0.9
-        sparse = (words.length > 0 && words.length <= 6)
-          || (natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * ratio)
+        // Phones: only leftover rows (≤6 words) centre — ratio-centering left side gutters on tajweed.
+        if (mobile) {
+          sparse = words.length > 0 && words.length <= 6
+        } else {
+          var ratio = 0.9
+          sparse = (words.length > 0 && words.length <= 6)
+            || (natural > 0 && line.clientWidth > 0 && natural < line.clientWidth * ratio)
+        }
         line.classList.toggle('qpc-madani-line--sparse', sparse && line.classList.contains('qpc-madani-line--ayah'))
         line.classList.toggle('madani-line--sparse', sparse && (line.classList.contains('madani-line--ayah') || line.classList.contains('madani-line--glyphs')))
       }
       line.style.setProperty('justify-content', sparse ? 'center' : 'space-between', 'important')
+      if (mobile && !sparse) {
+        line.style.setProperty('width', '100%', 'important')
+        line.style.setProperty('max-width', '100%', 'important')
+        line.style.setProperty('margin-inline', '0', 'important')
+      }
     }
 
     function containMushafRows() {

@@ -12,8 +12,8 @@ const memorisationJs = readFileSync(
 
 assert.match(
   mobileGridCss,
-  /--mq-mushaf-inline-start:\s*max\(2px, var\(--mq-safe-left\)\)/,
-  'phones must define a hairline mushaf inset from safe-area tokens',
+  /--mq-mushaf-inline-start:\s*max\(0px, var\(--mq-safe-left\)\)/,
+  'phones must define a zero mushaf inset from safe-area tokens',
 )
 
 assert.match(

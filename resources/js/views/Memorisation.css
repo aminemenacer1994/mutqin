@@ -62836,12 +62836,12 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
     align-items: stretch !important;
     width: 100% !important;
     max-width: 100% !important;
-    /* Edge-to-edge: hairline + safe-area only (no 0.875rem side gutters). */
+    /* Edge-to-edge: safe-area only (no side gutters on plain or tajweed). */
     padding:
       0.08rem
-      max(2px, env(safe-area-inset-right, 0px))
+      env(safe-area-inset-right, 0px)
       0.2rem
-      max(2px, env(safe-area-inset-left, 0px))
+      env(safe-area-inset-left, 0px)
       !important;
   }
 

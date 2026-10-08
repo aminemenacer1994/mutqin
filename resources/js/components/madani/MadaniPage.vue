@@ -400,15 +400,15 @@ export default {
     ayahLineOverflows(line, available, wordSize) {
       if (!(line instanceof HTMLElement)) return false
       const phone = this.isPhoneViewport()
-      // Phones: lighter slack so readable sizes are not crushed by ink bearing.
+      // Phones: tiny slack — large bearing slack was shrink-wrapping tajweed off the edges.
       const slack = phone
-        ? Math.max(8, Math.round(qcfSideBearingPx(wordSize) * 0.55))
+        ? Math.max(2, Math.round(qcfSideBearingPx(wordSize) * 0.12))
         : qcfSideBearingPx(wordSize)
       const natural = this.lineAdvanceWidth(line)
       const viewW = typeof window !== 'undefined'
         ? mobileViewportInnerWidth(0, 0)
         : 0
-      const inset = phone ? MOBILE_MUSHAF_HAIRLINE_PX : 12
+      const inset = phone ? 0 : 12
       // Always clamp to the real viewport — a content-expanded sheet hides overflow.
       const fitWidth = Math.min(
         Math.max(0, Number(available) || 0),
@@ -417,6 +417,8 @@ export default {
       if (fitWidth > 0 && natural > Math.max(0, fitWidth - slack) + 1) return true
       if (line.scrollWidth > line.clientWidth + 2) return true
       if (typeof window === 'undefined') return false
+      // Phone: skip bbox checks (COLR/tajweed ink paints past advance and was over-shrunk).
+      if (phone) return false
       const viewLeft = inset
       const viewRight = (window.visualViewport?.width || window.innerWidth || 0) - inset
       const words = line.querySelectorAll('.qpc-madani-word, .qpc-madani-surah-name, .qpc-madani-basmallah')
@@ -426,6 +428,20 @@ export default {
         if (box.right > viewRight + 1.5 || box.left < viewLeft - 1.5) return true
       }
       return false
+    },
+    applyMobileEdgeToEdgeChrome(root, sheet) {
+      if (!(root instanceof HTMLElement) || !(sheet instanceof HTMLElement)) return
+      root.style.setProperty('width', '100%', 'important')
+      root.style.setProperty('max-width', '100%', 'important')
+      root.style.setProperty('margin-inline', '0', 'important')
+      root.style.setProperty('padding-inline', '0', 'important')
+      sheet.style.setProperty('width', '100%', 'important')
+      sheet.style.setProperty('max-width', '100%', 'important')
+      sheet.style.setProperty('margin-inline', '0', 'important')
+      sheet.style.setProperty('overflow-x', 'visible', 'important')
+      sheet.style.setProperty('padding-inline', '0', 'important')
+      sheet.style.setProperty('padding-left', 'env(safe-area-inset-left, 0px)', 'important')
+      sheet.style.setProperty('padding-right', 'env(safe-area-inset-right, 0px)', 'important')
     },
     applyMobileAyahRowPacking(sheet, available) {
       if (!(sheet instanceof HTMLElement)) return
@@ -454,11 +470,19 @@ export default {
           availableWidth: rowWidth,
           wordCount,
           ratio: sparseRatio,
+          phone,
         })
         line.classList.toggle('qpc-madani-line--sparse', sparse)
         line.style.setProperty('justify-content', mobileMushafAyahJustify(sparse), 'important')
         line.style.setProperty('align-self', 'stretch', 'important')
-        line.style.setProperty('margin-inline', '0', 'important')
+        if (phone && !sparse) {
+          line.style.setProperty('width', '100%', 'important')
+          line.style.setProperty('max-width', '100%', 'important')
+          line.style.setProperty('margin-inline', '0', 'important')
+          line.style.setProperty('overflow-x', 'visible', 'important')
+        } else {
+          line.style.setProperty('margin-inline', '0', 'important')
+        }
       }
     },
     shrinkWordSizeToFit(root, sheet, size, lines) {
@@ -846,14 +870,7 @@ export default {
       let pageNatural = this.shrinkWordSizeToFit(root, sheet, probe, targets)
       if (mobile) pageNatural = clampMobileMushafWordSize(pageNatural)
       root.style.setProperty('--qpc-word-size', `${pageNatural}px`)
-      if (mobile) {
-        root.style.setProperty('width', '100%', 'important')
-        root.style.setProperty('max-width', '100%', 'important')
-        root.style.setProperty('margin-inline', '0', 'important')
-        sheet.style.setProperty('width', '100%', 'important')
-        sheet.style.setProperty('max-width', '100%', 'important')
-        sheet.style.setProperty('overflow-x', 'clip', 'important')
-      }
+      if (mobile) this.applyMobileEdgeToEdgeChrome(root, sheet)
       this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
       // One more shrink after packing — phones stay within the readable floor/cap.
       pageNatural = this.shrinkWordSizeToFit(root, sheet, pageNatural, targets)
@@ -865,7 +882,12 @@ export default {
         size = Math.min(size, Math.round(shared))
       }
       if (mobile) size = clampMobileMushafWordSize(size)
+      // Tajweed COLR measures tighter — bump so rows fill like plain.
+      if (mobile && this.tajweedEnabled) {
+        size = clampMobileMushafWordSize(size + 2)
+      }
       root.style.setProperty('--qpc-word-size', `${size}px`)
+      if (mobile) this.applyMobileEdgeToEdgeChrome(root, sheet)
       this.applyMobileAyahRowPacking(sheet, this.contentWidth(sheet))
       this.lastFitWidth = Math.round(sheet.clientWidth)
       this.fitted = true
@@ -1411,8 +1433,8 @@ export default {
     grid-template-rows: none;
     padding-block: 0.08rem 0.12rem;
     padding-inline:
-      max(2px, env(safe-area-inset-left, 0px))
-      max(2px, env(safe-area-inset-right, 0px));
+      env(safe-area-inset-left, 0px)
+      env(safe-area-inset-right, 0px);
   }
 
   .qpc-madani-page__sheet {
@@ -1460,10 +1482,11 @@ export default {
 @media (max-width: 767.98px) {
   .qpc-madani-page--session-scoped.qpc-madani-page--borderless .qpc-madani-page__sheet,
   .qpc-madani-page--session-scoped.qpc-madani-page--single .qpc-madani-page__sheet,
-  .qpc-madani-page--session-scoped .qpc-madani-page__sheet {
+  .qpc-madani-page--session-scoped .qpc-madani-page__sheet,
+  .qpc-madani-page--tajweed.qpc-madani-page--session-scoped .qpc-madani-page__sheet {
     padding-inline:
-      max(2px, env(safe-area-inset-left, 0px))
-      max(2px, env(safe-area-inset-right, 0px)) !important;
+      env(safe-area-inset-left, 0px)
+      env(safe-area-inset-right, 0px) !important;
   }
 }
 
