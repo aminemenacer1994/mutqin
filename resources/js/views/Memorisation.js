@@ -604,6 +604,7 @@ import {
   amdStageLabel,
   areAllHiddenWordsRevealed,
   areAllSessionWordsSettled,
+  hasReachedSessionPassageEnd,
   buildAssessmentAyahs,
   buildHiddenWordSeed,
   buildRecognitionWords,
@@ -19121,9 +19122,8 @@ export default {
       this.postSessionActionsUnlocked = true
       this.showTools = false
       this.postSessionOffcanvasOpen = false
-      if (this.aiTestModalsEnabled) {
-        void preloadAiMemorisationDetectionModal().catch(() => {})
-      }
+      // Do not preload AMD / adaptive chunks here. wrapChunkImport reloads the
+      // tab on a missing deploy asset, which wipes the success modal on production.
       // Fresh sessions wait for the learner. Revision / mastery loops
       // immediately reopen the AI reciter to evaluate the weak ayah.
       this.amdOpen = false
@@ -19135,9 +19135,6 @@ export default {
       this.postSessionAdaptiveCheckBusy = false
       this.postSessionAdaptiveSession = null
       this.postSessionAdaptiveResultView = null
-      void this.loadAdaptiveAssessmentBundle()
-        .then((mod) => { try { mod.clearAssessmentSession() } catch (_) { /* ignore */ } })
-        .catch(() => {})
       if (this.recommendedPracticePending) {
         const performance = this.buildCompletionPerformancePayload?.() || {}
         const focusKeys = new Set(
@@ -19263,9 +19260,6 @@ export default {
       this.postSessionAdaptiveCheckBusy = false
       this.postSessionAdaptiveSession = null
       this.postSessionAdaptiveResultView = null
-      void this.loadAdaptiveAssessmentBundle()
-        .then((mod) => { try { mod.clearAssessmentSession() } catch (_) { /* ignore */ } })
-        .catch(() => {})
       this.postSessionAdaptiveAnswer = ''
       this.postSessionAdaptiveSelectedOption = null
       this.postSessionAdaptiveOrdering = []
@@ -19539,22 +19533,12 @@ export default {
             requestId === this.postSessionRecommendationRequestId
             && this.postSessionRecommendationStatus === 'loading'
           ) {
-            if (useBackendRecommendations) {
-              this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
-              applyResult(null, 'error')
-            } else {
-              const fallback = snapshotFallback()
-              applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
-            }
+            const fallback = snapshotFallback()
+            applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
           }
           return
         }
         console.warn('Failed to load next-session recommendation:', error)
-        if (useBackendRecommendations) {
-          this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
-          applyResult(null, 'error')
-          return
-        }
         const fallback = snapshotFallback()
         const fallbackReady = isActionableRecommendation(fallback)
         this.postSessionRecommendationError = fallbackReady
@@ -19566,13 +19550,8 @@ export default {
           requestId === this.postSessionRecommendationRequestId
           && this.postSessionRecommendationStatus === 'loading'
         ) {
-          if (useBackendRecommendations) {
-            this.postSessionRecommendationError = this.t('memorisation.postSession.recommendation.loadError')
-            applyResult(null, 'error')
-          } else {
-            const fallback = snapshotFallback()
-            applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
-          }
+          const fallback = snapshotFallback()
+          applyResult(fallback, isActionableRecommendation(fallback) ? 'ready' : 'empty')
         }
       }
     },
@@ -27213,7 +27192,8 @@ export default {
       if (this.workspaceTourActive) return false
       if (!this.amdOpen || this._amdCompleting || this.amdEndingSoon) return false
       if (this.amdStage === AMD_STAGES.COMPLETE) return true
-      // Full-range pass finished (green/amber/red all settled) → auto-stop + plan.
+      // Full-range pass finished, or last session word heard despite live skip holes
+      // still pending → auto-stop recording and build the plan.
       if (areAllSessionWordsSettled(this.recitationLiveWords)) {
         void this.completeAmdTestAndReturnToRecommendation({ reason: 'session-complete' })
         return true
@@ -29960,28 +29940,39 @@ export default {
     hasRecitationCheckHeardThroughEnd(kind = 'recitation') {
       const targetWordCount = this.getRecitationCheckTargetWordCount(kind)
       if (targetWordCount <= 0) return false
-      const bestWords = this.getBestRecognitionWordsForAssessment(kind)
-      if (bestWords.length >= targetWordCount) return true
       const liveWords = kind === 'memorisation' ? this.aiMemorisationCheckerLiveWords : this.recitationLiveWords
-      if (!Array.isArray(liveWords) || liveWords.length < targetWordCount) return false
-      const lastWord = liveWords[targetWordCount - 1]
-      // Soft "omitted" during a pause must never count as heard — that cut slow / tajweed takes short.
-      return ['correct', 'partial', 'incorrect', 'uncertain'].includes(String(lastWord?.status || ''))
+      // Prefer live paint of the final target word. Raw ASR word-count alone can
+      // overshoot from extras/noise and must not auto-stop mid-passage.
+      if (Array.isArray(liveWords) && liveWords.length >= targetWordCount) {
+        if (hasReachedSessionPassageEnd(liveWords.slice(0, targetWordCount))) return true
+      }
+      const bestWords = this.getBestRecognitionWordsForAssessment(kind)
+      if (bestWords.length < targetWordCount) return false
+      const alignment = kind === 'memorisation'
+        ? this.aiMemorisationCheckerAlignmentState
+        : this.recitationAlignmentState
+      const cursor = Number(
+        alignment?.confirmedWordIndex
+        ?? alignment?.currentIndex
+        ?? 0,
+      )
+      // Live paint can lag one tick behind committed recognition near the end.
+      return Number.isFinite(cursor) && cursor >= targetWordCount
     },
     shouldAutoStopRecitationCheckFromAlignment(alignment = null) {
-      if (!this.recitationCheckRecording || !alignment?.progression?.complete) return false
-      // Memorisation test completes only when hidden words are recalled — never auto-stop.
+      if (!this.recitationCheckRecording) return false
+      // Memorisation test / AI Recite complete via maybeCompleteAmdMemorisationTest.
       if (this.amdOpen || this.postSessionAiReciteActive) return false
-      // Multi-ayah: never cut the learner off when soft alignment marks every word
-      // evaluated — let them finish and press Stop.
-      if (this.isSessionRecitationCheckActive()) return false
       // Require a spoken last word — soft omissions during pauses are not completion.
       if (!this.hasRecitationCheckHeardThroughEnd('recitation')) return false
-      return true
+      // Session multi-ayah: stop once the passage end is heard. Soft alignment can
+      // leave mid-range skip holes as pending, so do not wait on progression.complete.
+      if (this.isSessionRecitationCheckActive()) return true
+      return !!alignment?.progression?.complete
     },
     shouldAutoStopRecitationCheckFromSilence() {
       if (!this.recitationCheckRecording) return false
-      // Memorisation test: silence must not stop recognition or reveal progress.
+      // Memorisation test / AI Recite: silence must not stop recognition or reveal progress.
       if (this.amdOpen || this.postSessionAiReciteActive) return false
       if (!this.getCommittedRecognitionWords('recitation').length && !this.hasRecitationCheckHeardThroughEnd('recitation')) {
         return false
@@ -29990,12 +29981,12 @@ export default {
       if (!this.hasRecitationCheckHeardThroughEnd('recitation') && !this.recitationAlignmentState?.complete) {
         return false
       }
+      // Session multi-ayah: heard-through-end is enough. Soft live skip holes often
+      // keep progression.complete false until finalize.
       if (this.isSessionRecitationCheckActive()) {
-        return !!this.recitationAlignmentState?.complete
-          && this.hasRecitationCheckHeardThroughEnd('recitation')
+        return this.hasRecitationCheckHeardThroughEnd('recitation')
       }
-      if (!this.isSessionRecitationCheckActive()) return true
-      return !!this.recitationAlignmentState?.complete
+      return true
     },
     shouldAutoStopMemorisationCheckFromSilence() {
       if (!this.aiMemorisationCheckerRecording) return false
@@ -45451,8 +45442,18 @@ export default {
 
     handleSessionComplete() {
       if (!this.verses.length) return
-      if (this.sessionLifecycleMutation === SESSION_MUTATION.ENDING || this.sessionExitEndingBusy) return
-      if (this.sessionActionLock.isLocked() || this.sessionActionLock.isLocked('end')) return
+      if (this.showPostSessionModal || this.sessionCompleted) return
+      // A live End already owns the success modal — do not interrupt it.
+      if (
+        this.sessionLifecycleMutation === SESSION_MUTATION.ENDING
+        || this.sessionExitEndingBusy
+        || this.sessionActionLock.isLocked('end')
+      ) {
+        return
+      }
+      if (this.sessionActionLock.isLocked()) {
+        this.resetStuckSessionLifecycleControls()
+      }
       this.cancelSessionAutosave({ bumpGeneration: true })
       // Completing the queue is authoritative for the success modal snapshot.
       this.queuePlaybackExhausted = true
@@ -45462,115 +45463,61 @@ export default {
       endedSnapshot.versesInSurah = Number(this.currentChapter?.verses_count || 0)
       this.sessionEndedSnapshot = endedSnapshot
 
-      if (!this.isLoggedIn) {
+      const markCompleteLocally = () => {
         this.sessionCompleted = true
-        this.sessionCompletedAt = new Date().toISOString()
+        this.sessionCompletedAt = this.sessionCompletedAt || new Date().toISOString()
         this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
         this.centralSession.sessionStatus = 'completed'
         this.centralSession.sessionCompletedAt = this.sessionCompletedAt
         completeMutqinSession(this.mutqinState)
         this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
+        this.sessionPaused = false
         try {
           this.upsertAutosavedSession({ completed: true, immediate: true })
-        } catch (_) { /* local bookmark is best-effort */ }
-        this.recomputeAnalytics()
-        this.finishSessionCleanup()
+        } catch (_) { /* completion UI still opens below */ }
+        this.clearContinueSessionQuietly()
+        this.clearActiveSessionSnapshot()
         this.postSessionActionsUnlocked = true
         this.openPostSessionModal(endedSnapshot, { previousStreak })
-        return
       }
 
-      const priorStatus = this.sessionPaused ? SESSION_STATUS.PAUSED : SESSION_STATUS.ACTIVE
-      this.sessionActionLock.run('end', async () => {
-        this.sessionExitEndingBusy = true
-        this.transitionSessionLifecycle(SESSION_STATUS.COMPLETING, SESSION_MUTATION.ENDING)
+      // Production endSession + recommendation can take the full axios timeout.
+      // Never keep the learner on Ending… / a failed chunk reload for that.
+      markCompleteLocally()
+      this.recomputeAnalytics()
+      this.finishSessionCleanup()
+
+      if (!this.isLoggedIn) return
+
+      void this.sessionActionLock.run('end', async () => {
         try {
-          // Persist progress first; do not mark completed until endSession succeeds.
           try {
             this.persistContinueSession()
-          } catch (_) { /* endSession remains authoritative */ }
-
-          const endResult = await this.finaliseCompletedSessionOnBackend(endedSnapshot)
-          if (!endResult) {
-            const gate = resolveCompletionGate({
-              persistenceSucceeded: false,
-              priorStatus,
-            })
-            this.sessionLifecycleError = 'end_failed'
-            this.sessionExitEndingBusy = false
-            this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
-            this.showBanner(
-              this.t('toasts.sessionEndFailed'),
-              'danger',
-              4200
-            )
-            return null
-          }
-
-          const gate = resolveCompletionGate({ persistenceSucceeded: true })
-          this.sessionCompleted = true
-          this.sessionCompletedAt = new Date().toISOString()
-          this.centralSession.repetitionTimes = Math.max(0, Number(this.centralSession.repetitionTimes || 0)) + 1
-          this.centralSession.sessionStatus = 'completed'
-          this.centralSession.sessionCompletedAt = this.sessionCompletedAt
-          completeMutqinSession(this.mutqinState)
-          this.addActivityEvent({ ts: Date.now(), type: 'session_complete' })
-          this.sessionPaused = false
-          try {
-            this.upsertAutosavedSession({ completed: true, immediate: true })
-          } catch (_) { /* completion UI still opens below */ }
-          this.clearContinueSessionQuietly()
-          this.clearActiveSessionSnapshot()
-          this.sessionExitEndingBusy = false
-          this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
-          this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
-
-          if (gate.openCompletionScreen && gate.showPostCompletionActions) {
-            this.postSessionActionsUnlocked = true
-            this.openPostSessionModal(endedSnapshot, { previousStreak })
-          }
-
-          const finalizeAfterOpen = () => {
-            try {
-              this.recomputeAnalytics()
-              this.finishSessionCleanup()
-            } catch (_) { /* completion UI already open */ }
-          }
-          if (typeof requestIdleCallback === 'function') {
-            requestIdleCallback(finalizeAfterOpen, { timeout: 500 })
-          } else {
-            setTimeout(finalizeAfterOpen, 0)
-          }
-          return endedSnapshot
+          } catch (_) { /* endSession remains best-effort */ }
+          await Promise.race([
+            this.finaliseCompletedSessionOnBackend(endedSnapshot),
+            new Promise((_, reject) => {
+              window.setTimeout(() => reject(new Error('end_timeout')), 8000)
+            }),
+          ])
         } catch (error) {
-          console.error(error)
-          const gate = resolveCompletionGate({
-            persistenceSucceeded: false,
-            priorStatus,
-          })
-          this.sessionLifecycleError = 'end_failed'
-          this.sessionExitEndingBusy = false
-          this.transitionSessionLifecycle(gate.status, SESSION_MUTATION.IDLE)
-          this.showBanner(
-            this.t('toasts.sessionEndFailed'),
-            'danger',
-            4200
-          )
-          return null
+          this.noteLearningBackendFailure(error, 'end')
+          this.sessionLifecycleError = 'end_synced_locally'
         }
+        this.sessionBroadcast?.publish('session-ended', { at: Date.now() })
+        return endedSnapshot
       })
     },
     async finaliseCompletedSessionOnBackend(snapshot = null) {
       if (!this.learningBackendEnabled()) return { skipped: true }
-      // Avoid pushing a "completed" engine blob before endSession — LearningStateDeriver
-      // can finalise the row without recommendation metadata and race the end call.
-      try {
-        await this.pushLearningState(true)
-      } catch (_) { /* endSession below remains authoritative */ }
+      // Do not pushLearningState before endSession — a completed engine blob can
+      // finalise the row and race end into a 422 with no recommendation.
 
       try {
         const endResult = await learningApi.endSession({
           idempotency_key: `complete-${this.backendSessionSnapshot?.id || this.sessionCompletedAt || Date.now()}`,
+          session_id: Number(this.backendSessionSnapshot?.id || 0) || undefined,
+          range_complete: true,
           metadata: {
             completed: true,
             active: false,
@@ -45610,33 +45557,36 @@ export default {
         return endResult
       } catch (error) {
         console.warn('Failed to finalise completed session on backend:', error)
-        // Soft-recover when the row was already completed by state sync: still load a plan.
+        // Soft-recover when the row was already completed, or there was never
+        // an unfinished backend row (local-only sitting). Always treat 422 as
+        // ended so the success modal can open.
         if (error?.response?.status === 422) {
+          let recommendation = null
           try {
             const params = {}
             if (this.postSessionCompletedSessionId || this.backendSessionSnapshot?.id) {
               params.source_session_id = this.postSessionCompletedSessionId || this.backendSessionSnapshot.id
             }
-            const recommendation = await learningApi.getNextRecommendation(params)
+            recommendation = await learningApi.getNextRecommendation(params)
             if (recommendation) {
               this.postSessionRecommendation = this.enrichPostSessionRecommendation(recommendation)
               this.postSessionRecommendationStatus = 'ready'
               this.postSessionViewState = 'recommendation_ready'
               this.postSessionRecommendationFailed = false
               this.syncPostSessionConfidenceFromRecommendation(this.postSessionRecommendation, { force: true })
-              this.backendUnfinishedSession = false
-              this.backendSessionSnapshot = {
-                ...(this.backendSessionSnapshot || {}),
-                status: 'completed',
-              }
-              return {
-                saved: true,
-                unfinished: false,
-                recommendation,
-                recovered_from_end_conflict: true,
-              }
             }
-          } catch (_) { /* fall through to failure */ }
+          } catch (_) { /* recommendation is optional on already-ended rows */ }
+          this.backendUnfinishedSession = false
+          this.backendSessionSnapshot = {
+            ...(this.backendSessionSnapshot || {}),
+            status: 'completed',
+          }
+          return {
+            saved: true,
+            unfinished: false,
+            recommendation,
+            recovered_from_end_conflict: true,
+          }
         }
         return null
       }

@@ -11,6 +11,7 @@ import {
   DEFAULT_DIFFICULTY_PERCENT,
   areAllHiddenWordsRevealed,
   areAllSessionWordsSettled,
+  hasReachedSessionPassageEnd,
   buildHiddenWordSeed,
   createSeededRng,
   isWordHidden,
@@ -264,6 +265,36 @@ import {
   assert.equal(areAllSessionWordsSettled(live), true)
   live[2].status = 'pending'
   assert.equal(areAllSessionWordsSettled(live), false)
+  assert.equal(hasReachedSessionPassageEnd(live), false)
+}
+
+// 15c. Live skip holes stay pending — passage end still auto-stops once the last word is heard.
+{
+  const withSkipHole = [
+    { status: 'correct' },
+    { status: 'pending' },
+    { status: 'incorrect' },
+    { status: 'correct' },
+  ]
+  assert.equal(hasReachedSessionPassageEnd(withSkipHole), true)
+  assert.equal(areAllSessionWordsSettled(withSkipHole), true)
+
+  const uncertainEnd = [
+    { status: 'correct' },
+    { status: 'pending' },
+    { status: 'uncertain' },
+  ]
+  assert.equal(hasReachedSessionPassageEnd(uncertainEnd), true)
+  assert.equal(areAllSessionWordsSettled(uncertainEnd), true)
+
+  // Soft omitted last word during a pause must never auto-stop.
+  const softOmittedEnd = [
+    { status: 'correct' },
+    { status: 'correct' },
+    { status: 'omitted' },
+  ]
+  assert.equal(hasReachedSessionPassageEnd(softOmittedEnd), false)
+  assert.equal(areAllSessionWordsSettled(softOmittedEnd), false)
 }
 
 // 17. Reset clears only the current test attempt (seed attempt bump).

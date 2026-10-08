@@ -219,10 +219,15 @@ function words(entries) {
 }
 
 {
-  // Soft omitted last word is not "heard through end" in Memorisation.js
+  // Soft omitted last word is not "heard through end" — live passage-end helper
+  // requires a settled final status (correct/partial/incorrect/uncertain/…).
   assert.match(
     memorisationSource,
-    /return \['correct', 'partial', 'incorrect', 'uncertain'\]\.includes\(String\(lastWord\?\.status \|\| ''\)\)/,
+    /hasReachedSessionPassageEnd\(liveWords\.slice\(0, targetWordCount\)\)/,
+  )
+  assert.match(
+    memorisationSource,
+    /if \(this\.isSessionRecitationCheckActive\(\)\) return true/,
   )
 }
 

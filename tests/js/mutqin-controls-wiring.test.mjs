@@ -601,7 +601,8 @@ includesAll('ai recitation full-session recording', [
   /getBestRecognitionWordsForAssessment\(kind = 'recitation'\)/,
   /if \(this\.recitationCheckScope === 'session' && this\.recitationCheckPendingTargets\?\.length\) return this\.recitationCheckPendingTargets/,
   /if \(!this\.hasRecitationCheckHeardThroughEnd\('recitation'\) && !this\.recitationAlignmentState\?\.complete\) \{\s*return false\s*\}/s,
-  /if \(!this\.isSessionRecitationCheckActive\(\)\) return true\s*return !!this\.recitationAlignmentState\?\.complete/s
+  /if \(this\.isSessionRecitationCheckActive\(\)\) \{\s*return this\.hasRecitationCheckHeardThroughEnd\('recitation'\)\s*\}/s,
+  /if \(this\.isSessionRecitationCheckActive\(\)\) return true/,
 ])
 
 includesAll('session exit confirmation modal', [

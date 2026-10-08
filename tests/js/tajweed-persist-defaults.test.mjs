@@ -38,9 +38,29 @@ assert.match(
 )
 assert.match(
   memorisationJs,
-  /if \(!this\.isLoggedIn\) \{[\s\S]*?this\.openPostSessionModal\(endedSnapshot, \{ previousStreak \}\)/,
-  'guest completion must open the success modal',
+  /const markCompleteLocally = \(\) => \{[\s\S]*?this\.openPostSessionModal\(endedSnapshot, \{ previousStreak \}\)/,
+  'natural completion always opens the success modal locally',
 )
+assert.match(
+  memorisationJs,
+  /handleSessionComplete\(\) \{[\s\S]*?markCompleteLocally\(\)[\s\S]*?finaliseCompletedSessionOnBackend/,
+  'success modal must open before production endSession',
+)
+assert.doesNotMatch(
+  memorisationJs,
+  /handleSessionComplete\(\) \{[\s\S]*?if \(!endResult\) \{[\s\S]*?toasts\.sessionEndFailed[\s\S]*?return null/,
+  'natural completion must not trap the learner on Unable to end session',
+)
+{
+  const openModal = memorisationJs.match(
+    /openPostSessionModal\(snapshot = null, options = \{\}\) \{[\s\S]*?\n    clearPostSessionConfettiTimer\(\)/,
+  )?.[0] || ''
+  assert.doesNotMatch(
+    openModal,
+    /preloadAiMemorisationDetectionModal|loadAdaptiveAssessmentBundle/,
+    'opening the success modal must not preload chunks that can reload production',
+  )
+}
 assert.match(
   memorisationJs,
   /typeof uiState\?\.tajweedEnabled === 'boolean'/,

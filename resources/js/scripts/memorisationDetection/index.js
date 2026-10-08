@@ -17,6 +17,7 @@ export {
   isWordHidden,
   areAllHiddenWordsRevealed,
   areAllSessionWordsSettled,
+  hasReachedSessionPassageEnd,
   readStoredDifficultyPercent,
   storeDifficultyPercent,
 } from './hiddenWords'

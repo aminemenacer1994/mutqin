@@ -116,20 +116,55 @@ export function areAllHiddenWordsRevealed(hiddenIndexes, liveWords = []) {
 }
 
 /**
- * True when every word in the session range has been attempted
- * (green, amber, red, or omitted). Used to auto-finish after a full pass.
+ * Statuses that mean the final target word was actually heard.
+ * Soft omitted/skipped during a pause must never count — that cut slow tajweed short.
+ */
+const SESSION_PASSAGE_HEARD_STATUSES = new Set([
+  'correct',
+  'partial',
+  'incorrect',
+  'uncertain',
+])
+
+/** Statuses that count as attempted for a full-range settle check. */
+const SESSION_PASSAGE_SETTLED_STATUSES = new Set([
+  'correct',
+  'partial',
+  'incorrect',
+  'omitted',
+  'skipped',
+  'uncertain',
+])
+
+/**
+ * True when the final word of the session range has been heard.
+ * Mid-range live skip holes often stay `pending` (UNASSESSED) until finalize —
+ * those must not block auto-stop once the learner reaches the end.
+ * @param {Array<{ status?: string }>} liveWords
+ */
+export function hasReachedSessionPassageEnd(liveWords = []) {
+  const words = Array.isArray(liveWords) ? liveWords : []
+  if (!words.length) return false
+  const lastStatus = String(words[words.length - 1]?.status || '').toLowerCase()
+  return SESSION_PASSAGE_HEARD_STATUSES.has(lastStatus)
+}
+
+/**
+ * True when the session passage is ready to auto-stop recording.
+ * Requires the final word to have been heard (green/amber/red/uncertain).
+ * Mid-range live skip holes may still be `pending` — that must not block stop.
+ * Soft omitted/skipped on the last word alone never counts (pause grace).
  * @param {Array<{ status?: string }>} liveWords
  */
 export function areAllSessionWordsSettled(liveWords = []) {
   const words = Array.isArray(liveWords) ? liveWords : []
   if (!words.length) return false
-  return words.every((word) => {
+  if (!hasReachedSessionPassageEnd(words)) return false
+  // Last word heard. Earlier slots may be settled or still pending skip holes.
+  return words.every((word, index) => {
+    if (index === words.length - 1) return true
     const status = String(word?.status || '').toLowerCase()
-    return status === 'correct'
-      || status === 'partial'
-      || status === 'incorrect'
-      || status === 'omitted'
-      || status === 'skipped'
+    return SESSION_PASSAGE_SETTLED_STATUSES.has(status) || status === 'pending'
   })
 }
 
