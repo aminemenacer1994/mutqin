@@ -93,6 +93,20 @@ class RecitationAttemptClassifierTest extends TestCase
         $this->assertFalse($provider['valid_check']);
     }
 
+    public function test_provisional_live_is_not_scored(): void
+    {
+        $classification = RecitationAttemptClassifier::classifyPayload([
+            'failure_reason' => 'provisional_live',
+            'duration_ms' => 5000,
+            'recognition_words' => [
+                ['word' => 'بسم', 'confidence' => 0.95],
+            ],
+        ]);
+
+        $this->assertSame(RecitationAttemptClassifier::CANCELLED_STALE, $classification['class']);
+        $this->assertFalse($classification['affects_scoring']);
+    }
+
     public function test_cancelled_and_stale_attempts_are_ignored(): void
     {
         $cancelled = RecitationAttemptClassifier::classifyPayload([

@@ -144,9 +144,11 @@ class SessionAnalysisQueryService
                 ->first();
         }
 
-        $assessment = $session
-            ? $this->latestAssessmentForSession($user, (int) $session->id)
-            : $this->assessmentForAttempt($user, $attempt);
+        // Prefer the assessment linked to this attempt. Falling back to the
+        // session's latest assessment only when the attempt has no link avoids
+        // attaching a newer check's analysis to an older attempt.
+        $assessment = $this->assessmentForAttempt($user, $attempt)
+            ?? ($session ? $this->latestAssessmentForSession($user, (int) $session->id) : null);
 
         $recommendation = $session
             ? $this->recommendationForSession($user, $session)

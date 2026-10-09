@@ -2118,6 +2118,9 @@ export function buildDeterministicRecitationResult(targetText = '', recognitionW
     transcript: alignment.transcript,
     targetText,
     ayahRange: options.ayahRange || null,
+    rejectedWords: Array.isArray(options.rejectedWords)
+      ? options.rejectedWords.map((word) => (word && typeof word === 'object' ? { ...word } : word))
+      : [],
     score: accuracyScore,
     accuracyScore,
     confidence,

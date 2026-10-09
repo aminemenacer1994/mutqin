@@ -1265,6 +1265,24 @@ class NextSessionRecommendationService
             [$rangeStart, $rangeEnd] = [$rangeEnd, $rangeStart];
         }
 
+        // Remedial / repeat practice sessions shrink the active window (e.g. ayah 5
+        // after a weak check inside 1–6). Advancement must still jump past the
+        // originally completed source session, not the focus window alone.
+        $originSessionId = (int) ($session?->repeated_from_session_id ?? 0);
+        if ($originSessionId > 0) {
+            $origin = UserSession::query()->find($originSessionId);
+            if ($origin) {
+                $originMeta = is_array($origin->metadata) ? $origin->metadata : [];
+                $originConfig = is_array($originMeta['config'] ?? null) ? $originMeta['config'] : [];
+                $originStart = (int) ($originConfig['rangeStart'] ?? 0);
+                $originEnd = (int) ($originConfig['rangeEnd'] ?? 0);
+                if ($originStart > 0 && $originEnd >= $originStart) {
+                    $rangeStart = $rangeStart > 0 ? min($rangeStart, $originStart) : $originStart;
+                    $rangeEnd = max($rangeEnd, $originEnd);
+                }
+            }
+        }
+
         $preferred = $rangeStart && $rangeEnd
             ? max(self::MIN_SESSION_SIZE, min(self::MAX_SESSION_SIZE, $rangeEnd - $rangeStart + 1))
             : self::DEFAULT_SESSION_SIZE;

@@ -268,6 +268,48 @@ export const recitationEdgeScenarios = Object.freeze([
       resultState: 'developing',
     },
   },
+  {
+    id: 'early_stop_trailing_omission',
+    label: 'Early stop (trailing unread words omitted, not incorrect)',
+    targetText: 'الحمد لله رب العالمين',
+    recognitionWords: words(['الحمد', 'لله', 'رب']),
+    expectedSpeechmaticsAccuracy: 75,
+    expectedApiAccuracy: 75,
+    expected: {
+      types: ['MATCH', 'MATCH', 'MATCH', 'DELETION'],
+      statuses: ['correct', 'correct', 'correct', 'omitted'],
+      extras: [],
+      resultState: 'developing',
+    },
+  },
+  {
+    id: 'wrong_ayah_ikhlas_vs_basmala',
+    label: 'Wrong ayah (Ikhlas target, Basmala spoken)',
+    targetText: 'قل هو الله أحد',
+    recognitionWords: words(['بسم', 'الله', 'الرحمن', 'الرحيم']),
+    expectedSpeechmaticsAccuracy: 18,
+    expectedApiAccuracy: 18,
+    expected: {
+      types: ['SUBSTITUTION', 'DELETION', 'MATCH', 'SUBSTITUTION'],
+      statuses: ['incorrect', 'omitted', 'correct', 'incorrect'],
+      extras: ['OUT_OF_RANGE'],
+      resultState: 'needs_practice',
+    },
+  },
+  {
+    id: 'cascade_single_error_no_spread',
+    label: 'Single middle error does not cascade',
+    targetText: 'الحمد لله رب العالمين الرحمن الرحيم',
+    recognitionWords: words(['الحمد', 'لله', 'الرحمن', 'العالمين', 'الرحمن', 'الرحيم']),
+    expectedSpeechmaticsAccuracy: 80,
+    expectedApiAccuracy: 80,
+    expected: {
+      types: ['MATCH', 'MATCH', 'SUBSTITUTION', 'MATCH', 'MATCH', 'MATCH'],
+      statuses: ['correct', 'correct', 'incorrect', 'correct', 'correct', 'correct'],
+      extras: [],
+      resultState: 'developing',
+    },
+  },
 ])
 
 const byId = Object.freeze(Object.fromEntries(

@@ -101,6 +101,16 @@ const checks = [
     cmd: ['node', '--experimental-vm-modules', 'tests/js/recitation-edge-scenarios.test.mjs'],
   },
   {
+    id: 'js-ai-recite-qa-matrix',
+    label: 'AI Recite 100-scenario QA matrix',
+    cmd: ['node', '--experimental-vm-modules', 'tests/js/ai-recite-qa-matrix.test.mjs'],
+  },
+  {
+    id: 'js-ai-recite-real-passages',
+    label: 'AI Recite real Qur’an passage fixtures',
+    cmd: ['node', '--experimental-vm-modules', 'tests/js/ai-recite-real-passages.test.mjs'],
+  },
+  {
     id: 'js-captured-sessions',
     label: 'Captured Speechmatics session fixtures',
     cmd: ['node', '--experimental-vm-modules', 'tests/js/recitation-captured-sessions.test.mjs'],

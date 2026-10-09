@@ -27,6 +27,13 @@ final class RecitationScoringThresholds
 
     public const UNCERTAIN_CONFIDENCE = 0.42;
 
+    /**
+     * Synthetic confidence for plain-transcript tokens (no ASR confidence).
+     * Must stay below UNCERTAIN_CONFIDENCE so mismatches remain unassessed,
+     * and above DROP_HEARD_CONFIDENCE_BELOW so tokens still enter alignment.
+     */
+    public const TRANSCRIPT_ONLY_CONFIDENCE = 0.40;
+
     public const MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT = 0.68;
 
     public const DROP_HEARD_CONFIDENCE_BELOW = 0.15;
@@ -93,6 +100,7 @@ final class RecitationScoringThresholds
             'alignment_partial_similarity' => self::ALIGNMENT_PARTIAL_SIMILARITY,
             'wrong_order_penalty' => self::WRONG_ORDER_PENALTY,
             'uncertain_confidence' => self::UNCERTAIN_CONFIDENCE,
+            'transcript_only_confidence' => self::TRANSCRIPT_ONLY_CONFIDENCE,
             'min_confidence_for_similarity_correct' => self::MIN_CONFIDENCE_FOR_SIMILARITY_CORRECT,
             'drop_heard_confidence_below' => self::DROP_HEARD_CONFIDENCE_BELOW,
             'min_recognition_confidence' => self::MIN_RECOGNITION_CONFIDENCE,

@@ -136,6 +136,34 @@ function assertInvalid(classification, expectedClass) {
 }
 
 {
+  // Stabilize drops every token below the confidence floor. That must not look like silence.
+  const filteredLowConfidence = classifyRecitationAttempt({
+    result: {
+      transcript: '',
+      committedWords: [],
+      rejectedWords: [
+        { word: 'الحمد', confidence: 0.2, reason: 'below-confidence-threshold' },
+        { word: 'لله', confidence: 0.18, reason: 'below-confidence-threshold' },
+      ],
+      rawRecognitionWords: [
+        { word: 'الحمد', confidence: 0.2 },
+        { word: 'لله', confidence: 0.18 },
+      ],
+      durationSeconds: 8,
+      accuracyScore: 0,
+      wordStatuses: [
+        { status: 'omitted' },
+        { status: 'omitted' },
+        { status: 'omitted' },
+        { status: 'omitted' },
+      ],
+    },
+  })
+  assertInvalid(filteredLowConfidence, RECITATION_ATTEMPT_CLASS.EMPTY_LOW_CONFIDENCE_TRANSCRIPT)
+  assert.match(filteredLowConfidence.retryGuidance, /couldn.?t understand|recite clearly/i)
+}
+
+{
   const timeout = classifyRecitationAttempt({
     error: { message: 'Recording timed out before audio was ready' },
   })

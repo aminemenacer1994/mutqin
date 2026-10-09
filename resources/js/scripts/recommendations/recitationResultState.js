@@ -352,6 +352,29 @@ export function resolveInsufficientAudioReason(result = null, extras = {}, optio
   const hasSpoken = hasSpokenRecitationEvidence(result, extras)
 
   if (!hasSpoken) {
+    // Provider emitted tokens that stabilize rejected (below confidence). That is
+    // not silence — guide the learner to recite more clearly, not "we heard nothing".
+    const rejectedWords = []
+      .concat(Array.isArray(result?.rejectedWords) ? result.rejectedWords : [])
+      .concat(Array.isArray(extras.rejectedWords) ? extras.rejectedWords : [])
+    const rawRecognitionWords = []
+      .concat(Array.isArray(result?.rawRecognitionWords) ? result.rawRecognitionWords : [])
+      .concat(Array.isArray(result?.recognitionWords) ? result.recognitionWords : [])
+      .concat(Array.isArray(extras.recognition_words) ? extras.recognition_words : [])
+      .concat(Array.isArray(extras.rawRecognitionWords) ? extras.rawRecognitionWords : [])
+      .concat(Array.isArray(extras.recognizedWords) ? extras.recognizedWords : [])
+    const hasRejectedTokens = rejectedWords.some((word) => String(word?.word || word?.text || '').trim())
+    const lowConfidenceRaw = rawRecognitionWords.filter((word) => {
+      if (!String(word?.word || word?.text || '').trim()) return false
+      const confidence = finiteNumber(word?.confidence)
+      return confidence != null && confidence < thresholds.minRecognitionConfidence
+    })
+    if (hasRejectedTokens || lowConfidenceRaw.length > 0) {
+      return INSUFFICIENT_AUDIO_REASONS.LOW_CONFIDENCE
+    }
+    if (rawRecognitionWords.some((word) => String(word?.word || word?.text || '').trim())) {
+      return INSUFFICIENT_AUDIO_REASONS.EMPTY_TRANSCRIPT
+    }
     if (recordingSeconds != null && recordingSeconds > 0) return INSUFFICIENT_AUDIO_REASONS.NO_SPEECH
     if (!transcript && !committed.length) return INSUFFICIENT_AUDIO_REASONS.EMPTY_TRANSCRIPT
     return INSUFFICIENT_AUDIO_REASONS.NO_SPEECH

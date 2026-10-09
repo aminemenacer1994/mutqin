@@ -1194,6 +1194,24 @@ class QuranAlignmentServiceTest extends TestCase
         $this->assertSame('correct', $nearGlue['word_results'][0]['status']);
     }
 
+    public function test_transcript_only_confidence_keeps_mismatches_unassessed(): void
+    {
+        $confidence = \App\Services\Memorisation\RecitationScoringThresholds::TRANSCRIPT_ONLY_CONFIDENCE;
+        $result = $this->alignWords(
+            ['الحمد', 'لله', 'رب', 'العالمين'],
+            [
+                ['word' => 'الحمد', 'confidence' => $confidence],
+                ['word' => 'لله', 'confidence' => $confidence],
+                ['word' => 'الرحمن', 'confidence' => $confidence],
+                ['word' => 'العالمين', 'confidence' => $confidence],
+            ]
+        );
+
+        $this->assertSame('UNASSESSED', $result['word_results'][2]['type']);
+        $this->assertNotSame('wrong', $result['word_results'][2]['status']);
+        $this->assertNotSame('incorrect', $result['word_results'][2]['status']);
+    }
+
     public function test_skipped_word_realigns_instead_of_painting_the_tail_red(): void
     {
         $result = $this->alignWords(

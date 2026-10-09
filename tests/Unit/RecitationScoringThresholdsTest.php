@@ -15,6 +15,15 @@ class RecitationScoringThresholdsTest extends TestCase
         $this->assertSame(0.84, $all['correct_similarity']);
         $this->assertSame(0.58, $all['partial_similarity']);
         $this->assertSame(0.42, $all['uncertain_confidence']);
+        $this->assertSame(0.40, $all['transcript_only_confidence']);
+        $this->assertLessThan(
+            RecitationScoringThresholds::UNCERTAIN_CONFIDENCE,
+            RecitationScoringThresholds::TRANSCRIPT_ONLY_CONFIDENCE
+        );
+        $this->assertGreaterThan(
+            RecitationScoringThresholds::DROP_HEARD_CONFIDENCE_BELOW,
+            RecitationScoringThresholds::TRANSCRIPT_ONLY_CONFIDENCE
+        );
         $this->assertSame(85, $all['strong_accuracy_min']);
         $this->assertSame(68, $all['developing_accuracy_min']);
         $this->assertSame(90, $all['progression_with_errors_min']);

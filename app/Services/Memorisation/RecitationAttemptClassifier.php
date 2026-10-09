@@ -177,6 +177,7 @@ class RecitationAttemptClassifier
         }
 
         return match (true) {
+            (bool) preg_match('/provisional_live|live_lifecycle|alignment_lifecycle_live/', $value) => self::CANCELLED_STALE,
             (bool) preg_match('/cancel|stale|superseded|discard/', $value) => self::CANCELLED_STALE,
             (bool) preg_match('/mic|permission|denied|notallowed/', $value) => self::MICROPHONE_DENIED,
             (bool) preg_match('/short|empty_blob|missing_blob|too.?short/', $value) => self::RECORDING_TOO_SHORT,

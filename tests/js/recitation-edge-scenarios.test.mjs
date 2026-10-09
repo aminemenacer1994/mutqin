@@ -3,7 +3,7 @@ import { resolveRecitationResultState } from '../../resources/js/scripts/recomme
 import { recitationEdgeScenarios, scenarioById } from './fixtures/recitation-edge-scenarios.mjs'
 import { scoreSpeechmaticsPath } from './helpers/scoreRecitationScenario.mjs'
 
-assert.equal(recitationEdgeScenarios.length, 16)
+assert.equal(recitationEdgeScenarios.length, 19)
 assert.equal(scenarioById('perfect_fatiha_fragment').id, 'perfect_fatiha_fragment')
 assert.throws(() => scenarioById('does_not_exist'))
 

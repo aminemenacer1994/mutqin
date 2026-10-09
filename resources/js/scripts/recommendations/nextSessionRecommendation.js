@@ -780,6 +780,40 @@ export function buildLocalFallbackRecommendation(snapshot = {}) {
  * @param {object} [snapshot]
  * @returns {object|null}
  */
+/**
+ * End of the originally completed session window.
+ * Remedial / mastery retests shrink `rangeStart`/`rangeEnd` to a focus ayah;
+ * advancement must still jump past the source session (e.g. 1–6), not the
+ * remedial window (ayah 5 → wrongly suggests ayah 6).
+ *
+ * @param {object} snapshot
+ * @param {{ from?: number, to?: number }|null} [range]
+ * @returns {{ from: number, to: number }}
+ */
+export function resolveCompletedSessionBounds(snapshot = {}, range = null) {
+  const focusFrom = Number(snapshot.rangeStart || range?.from || 0)
+  const focusTo = Number(snapshot.rangeEnd || range?.to || focusFrom)
+  const sourceFrom = Number(
+    snapshot.sourceRangeStart
+    || snapshot.completedRangeStart
+    || snapshot.source_range_start
+    || snapshot.completed_range?.from
+    || snapshot.sourceRange?.from
+    || 0,
+  )
+  const sourceTo = Number(
+    snapshot.sourceRangeEnd
+    || snapshot.completedRangeEnd
+    || snapshot.source_range_end
+    || snapshot.completed_range?.to
+    || snapshot.sourceRange?.to
+    || 0,
+  )
+  const from = Math.max(0, sourceFrom || focusFrom)
+  const to = Math.max(from, sourceTo || focusTo, Number(range?.to || 0))
+  return { from, to }
+}
+
 export function adaptRecommendationForConfidence(recommendation, confidence, snapshot = {}) {
   if (!recommendation || (confidence !== 'confident' && confidence !== 'needs_practice')) {
     return recommendation
@@ -791,8 +825,11 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
   }
   const settings = { ...(recommendation.settings || {}) }
   const range = recommendation.ayah_range || null
-  const snapshotStart = Number(snapshot.rangeStart || range?.from || 0)
+  const completedBounds = resolveCompletedSessionBounds(snapshot, range)
+  const snapshotStart = Number(snapshot.rangeStart || range?.from || completedBounds.from || 0)
   const snapshotEnd = Number(snapshot.rangeEnd || range?.to || snapshotStart)
+  // Prefer the original completed session end when advancing after a remedial fix.
+  const advanceEnd = Math.max(completedBounds.to, snapshotEnd, Number(range?.to || 0))
   const totalAyahs = Number(
     snapshot.totalAyahsInSurah
     || snapshot.totalAyahs
@@ -891,9 +928,10 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
   const recFrom = Number(range?.from || 0)
   // A “forward” plan that still sits inside the completed window is stale —
   // treat it like a repeat so we advance to the true next session.
-  const rangeOverlapsCompleted = snapshotStart > 0
+  // Use the original session end (advanceEnd), not only the remedial focus end.
+  const rangeOverlapsCompleted = advanceEnd > 0
     && recFrom > 0
-    && recFrom <= snapshotEnd
+    && recFrom <= advanceEnd
 
   const aiOutcome = String(
     snapshot.aiDetails?.outcome
@@ -927,7 +965,7 @@ export function adaptRecommendationForConfidence(recommendation, confidence, sna
     }
   }
 
-  const completedEnd = Math.max(snapshotEnd, Number(range?.to || 0))
+  const completedEnd = advanceEnd
   const nextFrom = completedEnd + 1
   const completedSurahId = Number(
     recommendation.completed_surah?.id

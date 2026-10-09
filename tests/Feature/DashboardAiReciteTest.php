@@ -111,6 +111,26 @@ class DashboardAiReciteTest extends TestCase
         $this->assertSame(0, SessionRecommendation::query()->count());
     }
 
+    public function test_provisional_live_lifecycle_does_not_persist_a_scored_attempt(): void
+    {
+        $user = User::factory()->pro()->create();
+
+        $this->actingAs($user)->postJson('/api/memorisation/assessments', $this->payload([
+            'alignment_lifecycle' => 'live',
+            'idempotency_key' => 'dash-ai-live',
+        ]))->assertCreated()
+            ->assertJsonPath('invalid_attempt', true)
+            ->assertJsonPath('attempt_class', 'cancelled_stale')
+            ->assertJsonPath('assessment.accuracy', null)
+            ->assertJsonPath('practice_plan', null);
+
+        $this->assertDatabaseCount('ai_recite_attempts', 0);
+        $this->assertDatabaseHas('memorisation_assessments', [
+            'user_id' => $user->id,
+            'status' => 'failed',
+        ]);
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>

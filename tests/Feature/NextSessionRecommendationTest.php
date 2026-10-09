@@ -366,6 +366,72 @@ class NextSessionRecommendationTest extends TestCase
         $this->assertStringNotContainsStringIgnoringCase('mastery', $why);
     }
 
+    public function test_completing_remedial_repeat_advances_past_original_session(): void
+    {
+        $user = User::factory()->pro()->create();
+        // An-Nas 1–6; ayah 5 was weak so the learner practised only ayah 5.
+        $origin = $this->seedCompletedSession($user, 114, 1, 6);
+        $recommendationId = $this->actingAs($user)->getJson('/api/recommendations/next')->json('recommendation.id');
+
+        $repeat = $this->actingAs($user)
+            ->postJson('/api/recommendations/ai-assessment', [
+                'recommendation_id' => $recommendationId,
+                'result' => 'weak',
+                'summary' => 'Ayah 5 needs another pass',
+                'weak_ayahs' => [5],
+                'color_counts' => ['red' => 2, 'black' => 0, 'amber' => 1, 'green' => 8],
+                'average_accuracy' => 55,
+                'ayah_range' => ['from' => 5, 'to' => 5, 'count' => 1, 'focus_ayahs' => [5]],
+                'focus_ayahs' => [5],
+            ])
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertSame(RecommendationType::RepeatCurrentRange->value, $repeat['type']);
+        $this->assertSame(5, (int) $repeat['ayah_range']['from']);
+
+        $started = $this->actingAs($user)
+            ->postJson('/api/recommendations/start', ['recommendation_id' => $repeat['id']])
+            ->assertOk()
+            ->json('session');
+
+        $practice = UserSession::query()->findOrFail($started['id']);
+        $this->assertSame($origin->id, (int) $practice->repeated_from_session_id);
+        $practice->forceFill([
+            'status' => 'completed',
+            'ayah_number' => 5,
+            'ended_at' => now(),
+            'metadata' => array_merge(is_array($practice->metadata) ? $practice->metadata : [], [
+                'active' => false,
+                'completed' => true,
+                'config' => [
+                    'chapterId' => 114,
+                    'rangeStart' => 5,
+                    'rangeEnd' => 5,
+                ],
+            ]),
+        ])->save();
+
+        // Completing the remedial ayah-5 session must advance past the original
+        // 1–6 window (next surah), not suggest ayah 6 again.
+        $next = $this->actingAs($user)
+            ->getJson('/api/recommendations/next?source_session_id='.$practice->id)
+            ->assertOk()
+            ->json('recommendation');
+
+        $this->assertNotSame(6, (int) ($next['ayah_range']['from'] ?? 0));
+        $this->assertTrue(
+            ($next['type'] ?? '') === RecommendationType::NextSurah->value
+            || (int) ($next['surah']['id'] ?? 0) === 113
+            || (int) ($next['next_surah']['id'] ?? 0) === 113,
+            'Expected next-surah after finishing An-Nas remedial practice, got: '.json_encode([
+                'type' => $next['type'] ?? null,
+                'surah' => $next['surah']['id'] ?? null,
+                'from' => $next['ayah_range']['from'] ?? null,
+            ]),
+        );
+    }
+
     public function test_settings_overrides_apply_only_on_accept(): void
     {
         $user = User::factory()->create();

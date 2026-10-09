@@ -59074,10 +59074,26 @@ never recolour tajweed text */
 .post-session-simple--calm-v2 .post-session-simple__actions--2,
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2 {
   display: grid !important;
-  grid-template-columns: 1fr !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   align-items: stretch !important;
   gap: 0.55rem !important;
   width: 100% !important;
+}
+
+.post-session-simple__actions--3,
+.post-session-simple--calm-v2 .post-session-simple__actions--3,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 0.55rem !important;
+  width: 100% !important;
+}
+
+.post-session-simple__actions--3 > .post-session-simple__btn:first-child,
+.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn:first-child,
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn:first-child {
+  grid-column: 1 / -1 !important;
 }
 
 @media (min-width: 640px) {
@@ -59085,6 +59101,12 @@ never recolour tajweed text */
   .post-session-simple--calm-v2 .post-session-simple__actions--3,
   .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .post-session-simple__actions--3 > .post-session-simple__btn:first-child,
+  .post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn:first-child,
+  .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn:first-child {
+    grid-column: auto !important;
   }
 
   .post-session-simple__actions--2,
@@ -68574,11 +68596,21 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
 }
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions,
-html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.55rem !important;
+}
+
+/* 3 CTAs: primary full-width, secondary pair side-by-side (bento grid). */
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
   display: grid !important;
-  grid-template-columns: 1fr !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 0.55rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn:first-child {
+  grid-column: 1 / -1 !important;
 }
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
@@ -68668,7 +68700,15 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
   }
 
   html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2 {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn:first-child {
+    grid-column: auto !important;
   }
 }
 

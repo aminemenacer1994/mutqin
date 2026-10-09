@@ -79,7 +79,10 @@ class RecitationAssessmentService
             // Transcript-only tokens have no ASR confidence — keep them uncertain-capable
             // so mismatches are not automatically definite mistakes.
             $recognitionWords = array_values(array_filter(array_map(
-                static fn ($token) => ['word' => (string) $token, 'confidence' => 0.5],
+                static fn ($token) => [
+                    'word' => (string) $token,
+                    'confidence' => RecitationScoringThresholds::TRANSCRIPT_ONLY_CONFIDENCE,
+                ],
                 $tokens
             ), static fn ($entry) => trim((string) ($entry['word'] ?? '')) !== ''));
         }
@@ -93,6 +96,26 @@ class RecitationAssessmentService
         }
 
         $lifecycle = $this->resolveAlignmentLifecycle($payload);
+        // Persist path is final scoring only — provisional live must not write mastery.
+        if ($lifecycle === 'live') {
+            $assessment = $this->recordFailed(
+                $user,
+                array_merge($payload, [
+                    'attempt_class' => RecitationAttemptClassifier::CANCELLED_STALE,
+                    'failure_reason' => 'provisional_live',
+                ]),
+                $idempotencyKey,
+                'provisional_live'
+            );
+
+            return $this->buildInvalidAttemptResponse(
+                $assessment,
+                RecitationAttemptClassifier::classifyPayload([
+                    'failure_reason' => 'provisional_live',
+                ])
+            );
+        }
+
         $aligned = $this->alignment->align($ayahs, $recognitionWords, $targetText, [
             'lifecycle' => $lifecycle,
         ]);
@@ -633,10 +656,11 @@ class RecitationAssessmentService
      */
     private function resolveAlignmentLifecycle(array $payload): string
     {
+        // Only explicit alignment lifecycle keys. completion_state (incomplete /
+        // completed / failed) is not a live/final signal and must not force live.
         $raw = strtolower(trim((string) (
             $payload['alignment_lifecycle']
             ?? $payload['lifecycle']
-            ?? $payload['completion_state']
             ?? 'final'
         )));
 

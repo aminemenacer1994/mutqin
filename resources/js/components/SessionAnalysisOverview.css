@@ -460,25 +460,29 @@ body.session-analysis-modal-open {
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
   min-width: 0;
   width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(109, 77, 51, 0.14);
+  border-radius: 0.95rem;
+  background: rgba(250, 247, 241, 0.88);
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  display: inline-grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
   border: 0;
-  border-radius: 999px;
-  background: #8b5e3c;
+  border-radius: 0.75rem;
+  background: #2f7a58;
   color: #fffdf8;
-  box-shadow: 0 2px 8px rgba(139, 94, 60, 0.14);
+  box-shadow: 0 3px 10px rgba(47, 122, 88, 0.18);
+  cursor: pointer;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle i {
@@ -491,14 +495,14 @@ body.session-analysis-modal-open {
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-body {
+  display: grid;
+  gap: 0.28rem;
   min-width: 0;
-  flex: 1 1 auto;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-seek-row {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
   min-width: 0;
 }
 
@@ -506,46 +510,65 @@ body.session-analysis-modal-open {
   display: block;
   width: 100%;
   min-width: 0;
-  flex: 1 1 auto;
-  height: 1.25rem;
+  height: 1.2rem;
   margin: 0;
-  accent-color: #8b5e3c;
+  accent-color: #2f7a58;
 }
 
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-meta,
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-times {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-top: 0.15rem;
-  padding-inline-end: 1.7rem;
+  gap: 0.4rem;
+  margin-top: 0;
   color: #6f655b;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
 }
 
-#sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
-  flex: 0 0 auto;
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-meta-actions {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 0;
-  border-radius: 999px;
+  gap: 0.28rem;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  display: inline-grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 1px solid rgba(109, 77, 51, 0.14);
+  border-radius: 0.5rem;
   padding: 0;
-  background: transparent;
-  color: #9a7a5c;
+  background: rgba(255, 255, 255, 0.55);
+  color: #6f655b;
+  cursor: pointer;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-restart i {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   line-height: 1;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-restart:disabled {
   opacity: 0.4;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-speed {
+  min-width: 2.45rem;
+  min-height: 1.55rem;
+  padding: 0.12rem 0.38rem;
+  border: 1px solid rgba(109, 77, 51, 0.14);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.55);
+  color: #2a211a;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 750;
+  cursor: pointer;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__note {
@@ -716,23 +739,26 @@ body.session-analysis-modal-open {
 }
 
 /* Shared player skin used by the saved-session overview and the result modal. */
-.workspace-recite-result .sa-ov__player {
-  --player-surface: rgba(255, 255, 255, 0.74);
-  --player-line: rgba(80, 64, 48, 0.14);
+.workspace-recite-result .sa-ov__player,
+.workspace-recite-result .sa-ov__player--bento {
+  --player-surface: color-mix(in srgb, #fffdf8 88%, #e8dfd2);
+  --player-line: rgba(80, 64, 48, 0.12);
   --player-ink: #2a211a;
   --player-muted: #75695e;
   --player-accent: #2f7a58;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.72rem;
+  gap: 0.75rem;
   width: 100%;
   min-width: 0;
-  padding: 0.68rem 0.78rem 0.68rem 0.68rem;
+  padding: 0.72rem 0.85rem 0.72rem 0.72rem;
   border: 1px solid var(--player-line);
-  border-radius: 1rem;
-  background: var(--player-surface);
-  box-shadow: 0 8px 18px rgba(55, 42, 30, 0.06);
+  border-radius: 1.1rem;
+  background:
+    linear-gradient(165deg, color-mix(in srgb, #fff 70%, transparent), transparent 55%),
+    var(--player-surface);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55) inset, 0 10px 22px rgba(55, 42, 30, 0.06);
 }
 
 .workspace-recite-result .sa-ov__player audio {
@@ -743,22 +769,19 @@ body.session-analysis-modal-open {
   pointer-events: none;
 }
 
-.workspace-recite-result .sa-ov__player-main {
-  display: contents;
-}
-
 .workspace-recite-result .sa-ov__player-toggle {
   display: inline-grid;
   place-items: center;
-  width: 2.8rem;
-  height: 2.8rem;
+  width: 2.9rem;
+  height: 2.9rem;
   border: 0;
-  border-radius: 0.82rem;
+  border-radius: 0.95rem;
   background: var(--player-accent);
   color: #fffdf8;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   cursor: pointer;
-  box-shadow: 0 5px 12px rgba(47, 122, 88, 0.2);
+  box-shadow: 0 6px 14px rgba(47, 122, 88, 0.22);
+  transition: transform 140ms ease, filter 140ms ease;
 }
 
 /* Compact UI pass — saved session analysis */
@@ -941,58 +964,74 @@ body.session-analysis-modal-open {
 }
 
 .workspace-recite-result .sa-ov__player-body {
+  display: grid;
+  gap: 0.35rem;
   min-width: 0;
 }
 
 .workspace-recite-result .sa-ov__player-seek-row {
   display: flex;
   align-items: center;
-  gap: 0.36rem;
   min-width: 0;
 }
 
 .workspace-recite-result .sa-ov__player-seek {
   width: 100%;
   min-width: 0;
-  height: 1.4rem;
+  height: 1.35rem;
   margin: 0;
   accent-color: var(--player-accent);
   cursor: pointer;
 }
 
-.workspace-recite-result .sa-ov__player-times {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.6rem;
-  margin-top: 0.05rem;
+.workspace-recite-result .sa-ov__player-meta {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
   color: var(--player-muted);
   font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
 }
 
+.workspace-recite-result .sa-ov__player-meta-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.workspace-recite-result .sa-ov__player-time {
+  min-width: 2.1rem;
+}
+
+.workspace-recite-result .sa-ov__player-time--end {
+  text-align: end;
+}
+
 .workspace-recite-result .sa-ov__player-restart {
   display: inline-grid;
   place-items: center;
-  width: 1.65rem;
-  height: 1.65rem;
+  width: 1.7rem;
+  height: 1.7rem;
   padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
+  border: 1px solid var(--player-line);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, #fff 55%, transparent);
   color: var(--player-muted);
   cursor: pointer;
 }
 
 .workspace-recite-result .sa-ov__player-speed {
-  min-width: 2.9rem;
-  min-height: 2rem;
-  padding: 0.2rem 0.45rem;
+  min-width: 2.55rem;
+  min-height: 1.7rem;
+  padding: 0.15rem 0.4rem;
   border: 1px solid var(--player-line);
-  border-radius: 999px;
-  background: transparent;
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, #fff 55%, transparent);
   color: var(--player-ink);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 750;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -1000,21 +1039,10 @@ body.session-analysis-modal-open {
 
 .workspace-recite-result .sa-ov__player button:disabled { cursor: default; opacity: 0.45; }
 .workspace-recite-result .sa-ov__player-error {
-  grid-column: 2 / -1;
+  grid-column: 1 / -1;
   margin: 0;
   color: #a13a32;
   font-size: 0.74rem;
-}
-
-#sa-session-overview.session-analysis-modal-root .sa-ov__player {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.64rem;
-  padding: 0.58rem 0.68rem;
-  border: 1px solid rgba(109, 77, 51, 0.14);
-  border-radius: 0.9rem;
-  background: rgba(250, 247, 241, 0.82);
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player audio {
@@ -1025,24 +1053,16 @@ body.session-analysis-modal-open {
   pointer-events: none;
 }
 
-#sa-session-overview.session-analysis-modal-root .sa-ov__player-main { display: contents; }
-#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
-  width: 2.55rem;
-  height: 2.55rem;
-  border-radius: 0.76rem;
-  background: #2f7a58;
-  color: #fffdf8;
-}
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-speed {
-  min-width: 2.7rem;
-  min-height: 1.9rem;
-  padding: 0.15rem 0.42rem;
+  min-width: 2.45rem;
+  min-height: 1.55rem;
+  padding: 0.12rem 0.38rem;
   border: 1px solid rgba(109, 77, 51, 0.14);
-  border-radius: 999px;
-  background: transparent;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.55);
   color: #2a211a;
   font: inherit;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 750;
   cursor: pointer;
 }
@@ -1070,11 +1090,6 @@ body.session-analysis-modal-open {
   #sa-session-overview.session-analysis-modal-root .sa-ov__player {
     grid-template-columns: auto minmax(0, 1fr);
   }
-  #sa-session-overview.session-analysis-modal-root .sa-ov__player-speed {
-    grid-column: 2;
-    justify-self: start;
-    margin-top: -0.18rem;
-  }
 }
 
 [data-theme="sepia"] .workspace-recite-result .sa-ov__player {
@@ -1095,15 +1110,17 @@ body.session-analysis-modal-open {
 [data-theme="dark"] .workspace-recite-result .sa-ov__player-error { color: #ffaaa3; }
 
 @media (max-width: 430px) {
-  .workspace-recite-result .sa-ov__player {
+  .workspace-recite-result .sa-ov__player,
+  .workspace-recite-result .sa-ov__player--bento {
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.58rem;
+    gap: 0.62rem;
+    padding: 0.65rem 0.72rem 0.65rem 0.65rem;
   }
 
-  .workspace-recite-result .sa-ov__player-speed {
-    grid-column: 2;
-    justify-self: start;
-    margin-top: -0.2rem;
+  .workspace-recite-result .sa-ov__player-toggle {
+    width: 2.65rem;
+    height: 2.65rem;
+    border-radius: 0.85rem;
   }
 }
 
@@ -1120,16 +1137,16 @@ body.session-analysis-modal-open {
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player {
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.5rem;
-  padding: 0.42rem 0.52rem;
-  border-radius: 0.72rem;
+  padding: 0.48rem 0.55rem;
+  border-radius: 0.8rem;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 0.62rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.68rem;
   box-shadow: none;
 }
 
@@ -1137,22 +1154,22 @@ body.session-analysis-modal-open {
   height: 1.05rem;
 }
 
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-meta,
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-times {
   margin-top: 0;
-  padding-inline-end: 1.45rem;
   font-size: 0.66rem;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-speed {
-  min-width: 2.35rem;
-  min-height: 1.7rem;
-  padding-inline: 0.32rem;
-  font-size: 0.66rem;
+  min-width: 2.2rem;
+  min-height: 1.45rem;
+  padding-inline: 0.3rem;
+  font-size: 0.64rem;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__ayah--needs-correction {

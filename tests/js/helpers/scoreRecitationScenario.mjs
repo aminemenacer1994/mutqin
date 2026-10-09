@@ -58,7 +58,12 @@ export function scoreSpeechmaticsPath(scenario, options = {}) {
   const alignment = buildQuranAlignment(scenario.targetText, words, { strictProgression: false })
   const result = buildDeterministicRecitationResult(scenario.targetText, words, {
     strictProgression: false,
+    rejectedWords: state.rejectedWords || [],
   })
+  result.rawRecognitionWords = Array.isArray(scenario.recognitionWords)
+    ? scenario.recognitionWords
+    : []
+  result.rejectedWords = Array.isArray(state.rejectedWords) ? state.rejectedWords : []
 
   return {
     accuracy: Number(result.accuracyScore ?? 0),
@@ -66,6 +71,7 @@ export function scoreSpeechmaticsPath(scenario, options = {}) {
     reliable: selected.reliable,
     speakerStatus: selected.status ?? 'clear',
     wordCount: words.length,
+    rejectedWordCount: result.rejectedWords.length,
     types: (alignment.wordStatuses || []).map((word) => String(word.type)),
     statuses: (alignment.wordStatuses || []).map((word) => String(word.status)),
     extras: (alignment.extraWords || []).map((word) => String(word.type)),

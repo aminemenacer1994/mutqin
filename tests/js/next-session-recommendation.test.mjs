@@ -711,6 +711,31 @@ function t(key, params = {}) {
   assert.equal(needsPractice.reason_code, 'confidence_needs_practice')
   assert.equal(needsPractice.settings.playback_speed, 1.25)
   assert.ok(needsPractice.settings.repetitions >= 4)
+
+  // After fixing a weak ayah inside a completed 1–6 window, advance past 6
+  // (next surah), not to ayah 6 again.
+  const remedialAnNas = {
+    id: 12,
+    type: RECOMMENDATION_TYPES.REPEAT_CURRENT_RANGE,
+    session_mode: 'revision',
+    range_kind: 'repeated',
+    surah: { id: 114, name: 'An-Nas' },
+    ayah_range: { from: 5, to: 5, count: 1 },
+    reason_code: 'confidence_needs_practice',
+    settings: { technique: 'talqin', playback_speed: 1, repetitions: 4 },
+  }
+  const afterRemedial = adaptRecommendationForConfidence(remedialAnNas, 'confident', {
+    rangeStart: 5,
+    rangeEnd: 5,
+    sourceRangeStart: 1,
+    sourceRangeEnd: 6,
+    totalAyahsInSurah: 6,
+    chapterId: 114,
+    aiDetails: { outcome: 'strong', averageAccuracy: 100 },
+  })
+  assert.equal(afterRemedial.type, RECOMMENDATION_TYPES.NEXT_SURAH)
+  assert.equal(afterRemedial.ayah_range.from, 1)
+  assert.notEqual(afterRemedial.ayah_range?.from, 6)
 }
 
 {

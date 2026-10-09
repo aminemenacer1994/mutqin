@@ -5173,6 +5173,15 @@ export default {
             }
             : null
         )
+      const sourceSnapshotRange = Number(this.postSessionSnapshot?.sourceRangeStart) > 0
+        ? {
+          from: Number(this.postSessionSnapshot.sourceRangeStart),
+          to: Number(
+            this.postSessionSnapshot.sourceRangeEnd
+            || this.postSessionSnapshot.sourceRangeStart,
+          ),
+        }
+        : null
       const pickRange = (range) => {
         const from = Number(range?.from)
         const to = Number(range?.to ?? range?.from)
@@ -5182,8 +5191,9 @@ export default {
       // Advance plans must start after the finished window. Plan/rec ranges that
       // still sit inside the just-finished session (common when weak-ayah focus
       // rewrites the plan) are not valid "next" ranges.
+      // Prefer the original completed session over a remedial focus window.
       const candidateRange = pickRange(planRange) || pickRange(recRange)
-      const completedRange = pickRange(snapshotRange)
+      const completedRange = pickRange(sourceSnapshotRange) || pickRange(snapshotRange)
       const preferredSize = candidateRange
         ? Math.max(1, Number(candidateRange.to) - Number(candidateRange.from) + 1)
         : 3
@@ -19040,14 +19050,32 @@ export default {
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
       if (!this.postSessionSnapshot) return
       // Mastery re-test: keep the learner on the same range until AI Recite is strong.
+      // Preserve the originally completed session window so “next” advances past
+      // 1–6 (etc.), not past the remedial focus ayah alone.
       if (this.awaitingMasteryRetest && this.masteryTargetRange) {
         const target = this.masteryTargetRange
+        const prior = this.postSessionSnapshot || {}
+        const sourceFrom = Number(
+          target.sourceFrom
+          || prior.sourceRangeStart
+          || prior.rangeStart
+          || 0,
+        )
+        const sourceTo = Number(
+          target.sourceTo
+          || prior.sourceRangeEnd
+          || prior.rangeEnd
+          || sourceFrom
+          || 0,
+        )
         this.postSessionSnapshot = {
-          ...this.postSessionSnapshot,
-          chapterId: Number(target.chapterId || this.postSessionSnapshot.chapterId || 0),
-          chapterName: target.surahName || this.postSessionSnapshot.chapterName || '',
-          rangeStart: Number(target.from || this.postSessionSnapshot.rangeStart || 0),
-          rangeEnd: Number(target.to || this.postSessionSnapshot.rangeEnd || 0),
+          ...prior,
+          chapterId: Number(target.chapterId || prior.chapterId || 0),
+          chapterName: target.surahName || prior.chapterName || '',
+          rangeStart: Number(target.from || prior.rangeStart || 0),
+          rangeEnd: Number(target.to || prior.rangeEnd || 0),
+          sourceRangeStart: sourceFrom,
+          sourceRangeEnd: sourceTo,
         }
       }
       this.postSessionActionsUnlocked = true
@@ -19348,8 +19376,19 @@ export default {
       if (!isRepeatRecommendation(next)) {
         const snap = this.postSessionSnapshot || {}
         const completed = {
-          from: Number(snap.range?.from || snap.rangeStart || 0),
-          to: Number(snap.range?.to || snap.rangeEnd || snap.rangeStart || 0),
+          from: Number(
+            snap.sourceRangeStart
+            || snap.range?.from
+            || snap.rangeStart
+            || 0,
+          ),
+          to: Number(
+            snap.sourceRangeEnd
+            || snap.range?.to
+            || snap.rangeEnd
+            || snap.rangeStart
+            || 0,
+          ),
         }
         const advanced = resolveNextPracticeRangeAfterCompleted({
           candidateRange: next.ayah_range,
@@ -21973,11 +22012,14 @@ export default {
         })) {
           this.aiReciteAdvanceToNextSession = false
         }
+        const snap = this.postSessionSnapshot || {}
         this.masteryTargetRange = {
           chapterId,
           from: rangeStart,
           to: rangeEnd,
-          surahName: this.postSessionSnapshot?.chapterName || activeRecommendation?.surah?.name || '',
+          sourceFrom: Number(snap.sourceRangeStart || snap.rangeStart || rangeStart),
+          sourceTo: Number(snap.sourceRangeEnd || snap.rangeEnd || rangeEnd),
+          surahName: snap.chapterName || activeRecommendation?.surah?.name || '',
           settings: planSettings,
           planDetail: activeRecommendation?.plan_detail || this.aiReciteFinalPlan?.planDetail || null,
         }
@@ -22032,11 +22074,14 @@ export default {
           || 'talqin'
         this.recommendedPracticePending = true
         this.awaitingMasteryRetest = true
+        const snap = this.postSessionSnapshot || {}
         this.masteryTargetRange = {
           chapterId,
           from: rangeStart,
           to: rangeEnd,
-          surahName: this.postSessionSnapshot?.chapterName || activeRecommendation?.surah?.name || '',
+          sourceFrom: Number(snap.sourceRangeStart || snap.rangeStart || rangeStart),
+          sourceTo: Number(snap.sourceRangeEnd || snap.rangeEnd || rangeEnd),
+          surahName: snap.chapterName || activeRecommendation?.surah?.name || '',
           settings: planSettings,
         }
         this.focusPhraseRevisionActive = !!this.practiceFocusWeakWords?.length
@@ -31930,14 +31975,29 @@ export default {
       }
 
       if (this.postSessionRecommendation) {
+        const adaptSnap = {
+          ...snap,
+          sourceRangeStart: Number(
+            snap.sourceRangeStart
+            || this.masteryTargetRange?.sourceFrom
+            || snap.rangeStart
+            || 0,
+          ),
+          sourceRangeEnd: Number(
+            snap.sourceRangeEnd
+            || this.masteryTargetRange?.sourceTo
+            || snap.rangeEnd
+            || 0,
+          ),
+          weakAyahs: plan.weakAyahs,
+          weak_ayahs: plan.weakAyahs,
+        }
         if (achieved) {
           const adapted = adaptRecommendationForAiAssessment(
             this.postSessionRecommendation,
             'strong',
             {
-              ...snap,
-              weakAyahs: plan.weakAyahs,
-              weak_ayahs: plan.weakAyahs,
+              ...adaptSnap,
               aiDetails: { outcome: 'strong', averageAccuracy: plan.averageAccuracy },
             },
           )
@@ -31964,9 +32024,7 @@ export default {
             this.postSessionRecommendation,
             plan.outcome,
             {
-              ...snap,
-              weakAyahs: plan.weakAyahs,
-              weak_ayahs: plan.weakAyahs,
+              ...adaptSnap,
               aiDetails: { outcome: plan.outcome, averageAccuracy: plan.averageAccuracy },
             },
           )
@@ -32132,6 +32190,8 @@ export default {
           chapterId: Number(snap.chapterId || this.chapterId || 0),
           from: Number(plan.ayah_range?.from || snap.rangeStart || this.rangeStart || 1),
           to: Number(plan.ayah_range?.to || snap.rangeEnd || this.rangeEnd || snap.rangeStart || 1),
+          sourceFrom: Number(snap.sourceRangeStart || snap.rangeStart || this.rangeStart || 1),
+          sourceTo: Number(snap.sourceRangeEnd || snap.rangeEnd || this.rangeEnd || snap.rangeStart || 1),
           surahName: snap.chapterName || this.currentChapter?.name_simple || '',
           settings: { ...plan.settings },
           planDetail: plan.planDetail ? { ...plan.planDetail } : null,
@@ -34248,6 +34308,7 @@ export default {
       return {
         ...result,
         rawRecognitionWords: Array.isArray(recognitionWords) ? recognitionWords : [],
+        rejectedWords: Array.isArray(rejectedWords) ? rejectedWords : (result.rejectedWords || []),
         speakerDecision,
         unusableAudio: !speakerDecision.reliable,
         insufficient_audio: !speakerDecision.reliable,
@@ -40641,6 +40702,9 @@ export default {
         durationSeconds,
         rangeStart,
         rangeEnd,
+        // Original completed window — kept when mastery retests shrink rangeStart/End.
+        sourceRangeStart: rangeStart,
+        sourceRangeEnd: rangeEnd,
         summaryMessage,
         detailMessage,
         coveredAyahCount: coveredAyah,

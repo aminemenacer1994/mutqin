@@ -1,6 +1,6 @@
 <template>
   <div
-    class="sa-ov__player"
+    class="sa-ov__player sa-ov__player--bento"
     :class="{ 'is-playing': playing, 'has-error': error }"
     role="group"
     :aria-label="playerTitle"
@@ -14,31 +14,42 @@
       @ended="onEnded"
       @error="onError"
     ></audio>
-    <div class="sa-ov__player-main">
-      <button
-        type="button"
-        class="sa-ov__player-toggle"
-        :disabled="!src || error"
-        :aria-label="playing ? resolvedPauseLabel : resolvedPlayLabel"
-        :title="playing ? resolvedPauseLabel : resolvedPlayLabel"
-        @click="toggle"
-      >
-        <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
-      </button>
-      <div class="sa-ov__player-body">
-        <div class="sa-ov__player-seek-row">
-          <input
-            class="sa-ov__player-seek"
-            type="range"
-            min="0"
-            max="1000"
-            step="1"
-            :value="seekValue"
+    <button
+      type="button"
+      class="sa-ov__player-toggle"
+      :disabled="!src || error"
+      :aria-label="playing ? resolvedPauseLabel : resolvedPlayLabel"
+      :title="playing ? resolvedPauseLabel : resolvedPlayLabel"
+      @click="toggle"
+    >
+      <i class="bi" :class="playing ? 'bi-pause-fill' : 'bi-play-fill'" aria-hidden="true"></i>
+    </button>
+    <div class="sa-ov__player-body">
+      <div class="sa-ov__player-seek-row">
+        <input
+          class="sa-ov__player-seek"
+          type="range"
+          min="0"
+          max="1000"
+          step="1"
+          :value="seekValue"
+          :disabled="!src || error"
+          :aria-label="seekLabel"
+          :aria-valuetext="progressLabel"
+          @input="onSeek"
+        >
+      </div>
+      <div class="sa-ov__player-meta">
+        <span class="sa-ov__player-time">{{ currentLabel }}</span>
+        <div class="sa-ov__player-meta-actions">
+          <button
+            type="button"
+            class="sa-ov__player-speed"
             :disabled="!src || error"
-            :aria-label="seekLabel"
-            :aria-valuetext="progressLabel"
-            @input="onSeek"
-          >
+            :aria-label="playbackSpeedLabel"
+            :title="playbackSpeedLabel"
+            @click="cycleSpeed"
+          >{{ playbackRate }}×</button>
           <button
             type="button"
             class="sa-ov__player-restart"
@@ -50,20 +61,9 @@
             <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
           </button>
         </div>
-        <div class="sa-ov__player-times" aria-live="polite">
-          <span>{{ currentLabel }}</span>
-          <span>{{ durationLabel }}</span>
-        </div>
+        <span class="sa-ov__player-time sa-ov__player-time--end">{{ durationLabel }}</span>
       </div>
     </div>
-    <button
-      type="button"
-      class="sa-ov__player-speed"
-      :disabled="!src || error"
-      :aria-label="playbackSpeedLabel"
-      :title="playbackSpeedLabel"
-      @click="cycleSpeed"
-    >{{ playbackRate }}×</button>
     <p v-if="error" class="sa-ov__player-error" role="status">{{ resolvedErrorLabel }}</p>
   </div>
 </template>
