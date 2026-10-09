@@ -112,6 +112,7 @@ import {
   parseAyahKey,
   prepareQpcMadaniSessionLines,
 } from '../../scripts/mushaf/qpcMadaniSelection'
+import { toEasternArabicDigits } from '../../scripts/mushaf/madaniPageLayout'
 import MadaniLine from './MadaniLine.vue'
 
 const MADANI_MEASURE_SIZE = 40
@@ -261,8 +262,8 @@ export default {
       return count > 0 && count < 15
     },
     folioLabel() {
-      if (this.embedded) return String(this.pageNumber)
-      return new Intl.NumberFormat('ar-EG', { useGrouping: false }).format(this.pageNumber)
+      // Desktop spreads and mobile both use Eastern Arabic digits (٢٩٣), matching printed mushafs.
+      return toEasternArabicDigits(this.pageNumber)
     },
     sessionScoped() {
       return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
