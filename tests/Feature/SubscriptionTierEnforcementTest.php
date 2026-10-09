@@ -66,7 +66,9 @@ class SubscriptionTierEnforcementTest extends TestCase
 
         $this->actingAs($user)
             ->postJson(route('memorisation.transcription-token'))
-            ->assertForbidden();
+            ->assertForbidden()
+            ->assertJsonPath('reason', 'plan_required')
+            ->assertJsonPath('available', false);
     }
 
     public function test_free_user_can_request_transcription_token_when_demo_accounts_are_enabled(): void

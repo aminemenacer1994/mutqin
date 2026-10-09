@@ -853,7 +853,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
     --ask-pad: 0.95rem;
     border-radius: 16px;
     max-height: calc(100dvh - 1.25rem);
-    min-height: min(28rem, calc(100dvh - 1.25rem));
+    min-height: 0;
     font-size: 1.08rem;
   }
 
@@ -888,13 +888,14 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-body {
-    gap: 0.9rem;
-    padding-block: 0.4rem 0.55rem;
+    flex: 0 1 auto;
+    gap: 0.65rem;
+    padding-block: 0.25rem 0.35rem;
   }
 
   .ask-mutqin-intro {
-    font-size: 1.02rem;
-    line-height: 1.5;
+    font-size: 0.98rem;
+    line-height: 1.45;
     max-width: 100%;
     white-space: normal !important;
     overflow: visible !important;
@@ -906,7 +907,7 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-footer {
-    padding-bottom: 1.25rem;
+    padding-bottom: 0.95rem;
   }
 
   .ask-mutqin-ayah,
@@ -969,7 +970,21 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
     font-size: 1.08rem;
   }
 
-  .ask-mutqin-ayah__stage,
+  .ask-mutqin-ayah:not(.is-matched) {
+    flex: 0 0 auto;
+    max-height: min(7.25rem, 22dvh);
+    padding: 0.65rem 0.75rem 0.7rem;
+  }
+
+  .ask-mutqin-ayah:not(.is-matched) .ask-mutqin-ayah__stage {
+    flex: 0 0 auto;
+    min-height: 3.35rem;
+    max-height: 4.6rem;
+    padding-inline: 0.25rem;
+    padding-block: 0.35rem;
+    overflow: hidden;
+  }
+
   .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
     min-height: 0;
     max-height: none;
@@ -983,8 +998,9 @@ body.ask-mutqin-open .workspace-shell-progress-pills {
   }
 
   .ask-mutqin-ayah__placeholder {
-    font-size: 1.12rem;
-    max-width: 18rem;
+    font-size: 0.98rem;
+    line-height: 1.4;
+    max-width: 16rem;
   }
 
   .ask-mutqin-aid__toolbar {
@@ -1237,14 +1253,22 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-modal.mutqin-modal-surface {
-    min-height: min(28rem, calc(100dvh - 1.25rem)) !important;
-    padding: 0.95rem 0.9rem 0.85rem !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0.85rem 0.85rem 0.75rem !important;
     border-radius: 16px !important;
+    justify-content: flex-start !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-body {
+    flex: 0 1 auto !important;
+    gap: 0.65rem !important;
+    padding-block: 0.2rem 0.3rem !important;
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-intro {
-    font-size: 1.02rem !important;
-    line-height: 1.5 !important;
+    font-size: 0.98rem !important;
+    line-height: 1.45 !important;
     max-width: 100% !important;
     white-space: normal !important;
     overflow: visible !important;
@@ -1255,12 +1279,27 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
     line-clamp: unset !important;
   }
 
+  /* Listening panel: compact height on phones — modal hugs content. */
+  html body .ask-mutqin-overlay .ask-mutqin-ayah:not(.is-matched) {
+    flex: 0 0 auto !important;
+    max-height: min(7.25rem, 22dvh) !important;
+    padding: 0.65rem 0.75rem 0.7rem !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-ayah:not(.is-matched) .ask-mutqin-ayah__stage {
+    flex: 0 0 auto !important;
+    min-height: 3.35rem !important;
+    max-height: 4.6rem !important;
+    padding-block: 0.35rem !important;
+    overflow: hidden !important;
+  }
+
   html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched {
     flex: 0 0 auto !important;
+    max-height: none !important;
     overflow: visible !important;
   }
 
-  html body .ask-mutqin-overlay .ask-mutqin-ayah__stage,
   html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
     min-height: 0 !important;
     max-height: none !important;
@@ -1294,14 +1333,23 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-modal.mutqin-modal-surface {
-    min-height: min(24rem, calc(100dvh - 1rem)) !important;
+    min-height: 0 !important;
     padding: 0.8rem 0.7rem 0.7rem !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-ayah:not(.is-matched) {
+    max-height: min(6.5rem, 20dvh) !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-ayah:not(.is-matched) .ask-mutqin-ayah__stage {
+    min-height: 3rem !important;
+    max-height: 4.1rem !important;
   }
 }
 
 @media (max-height: 720px) {
   html body .ask-mutqin-overlay .ask-mutqin-modal.mutqin-modal-surface {
-    min-height: min(24rem, calc(100dvh - 1.25rem)) !important;
+    min-height: 0 !important;
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched .ask-mutqin-ayah__stage {
@@ -1795,6 +1843,7 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
 }
 
 @media (max-width: 767px) {
+  /* Bottom sheet: sit at the bottom, but size to content — never force full viewport. */
   html body .ask-mutqin-overlay.modal-overlay.mutqin-modal-overlay {
     display: flex !important;
     flex-direction: column !important;
@@ -1817,13 +1866,13 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
     bottom: auto !important;
     left: auto !important;
     display: flex !important;
-    flex: 1 1 auto !important;
+    flex: 0 1 auto !important;
     align-items: stretch !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     height: auto !important;
-    max-height: 100% !important;
+    max-height: calc(100dvh - 1rem) !important;
     min-height: 0 !important;
     margin: 0 !important;
     pointer-events: auto !important;
@@ -1832,14 +1881,15 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   html body .ask-mutqin-overlay .ask-mutqin-modal.mutqin-modal-surface {
     display: flex !important;
     flex-direction: column !important;
+    justify-content: flex-start !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    height: 100% !important;
-    max-height: 100% !important;
+    height: auto !important;
+    max-height: calc(100dvh - 1rem) !important;
     min-height: 0 !important;
     overflow: hidden !important;
-    padding: 1.15rem 1.15rem max(0.9rem, env(safe-area-inset-bottom, 0px)) !important;
+    padding: 0.9rem 0.9rem max(0.75rem, env(safe-area-inset-bottom, 0px)) !important;
     border-radius: 18px !important;
   }
 
@@ -1858,9 +1908,9 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-header {
-    gap: 0.4rem !important;
+    gap: 0.35rem !important;
     padding-top: 0 !important;
-    padding-bottom: 0.45rem !important;
+    padding-bottom: 0.35rem !important;
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-header h2 {
@@ -1875,17 +1925,44 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
     font-size: 0.74rem !important;
   }
 
+  html body .ask-mutqin-overlay .ask-mutqin-intro {
+    font-size: 0.95rem !important;
+    line-height: 1.4 !important;
+  }
+
   html body .ask-mutqin-overlay .ask-mutqin-body {
-    flex: 1 1 auto !important;
+    flex: 0 1 auto !important;
+    gap: 0.55rem !important;
     min-height: 0 !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
+    padding-block: 0.15rem 0.25rem !important;
+  }
+
+  /* Compact listening textbox — do not stretch into empty sheet space. */
+  html body .ask-mutqin-overlay .ask-mutqin-ayah:not(.is-matched) {
+    flex: 0 0 auto !important;
+    max-height: min(6.75rem, 20dvh) !important;
+    padding: 0.55rem 0.7rem 0.6rem !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-ayah:not(.is-matched) .ask-mutqin-ayah__stage {
+    flex: 0 0 auto !important;
+    min-height: 2.85rem !important;
+    max-height: 4rem !important;
+    padding-block: 0.3rem !important;
+    overflow: hidden !important;
+  }
+
+  html body .ask-mutqin-overlay .ask-mutqin-ayah:not(.is-matched) .ask-mutqin-ayah__placeholder {
+    font-size: 0.95rem !important;
+    line-height: 1.35 !important;
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-multiple {
     display: flex !important;
     flex-direction: column !important;
-    flex: 1 1 auto !important;
+    flex: 0 1 auto !important;
     min-height: 0 !important;
     overflow: visible !important;
   }
@@ -1910,11 +1987,13 @@ html body .ask-mutqin-overlay .ask-mutqin-footer {
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-ayah.is-matched {
+    flex: 0 0 auto !important;
     overflow: visible !important;
   }
 
   html body .ask-mutqin-overlay .ask-mutqin-footer {
-    padding-top: 0.55rem !important;
+    flex: 0 0 auto !important;
+    padding-top: 0.45rem !important;
     padding-bottom: 0 !important;
   }
 }

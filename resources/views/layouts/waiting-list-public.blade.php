@@ -352,7 +352,7 @@
         window.mutqinForceInitialLocale = true;
         window.mutqinAuthCheck = false;
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::appOrigin());
-        window.mutqinInitialTheme = 'dark';
+        window.mutqinInitialTheme = @json($appTheme);
         window.mutqinInitialThemePreference = @json($appThemePreference);
         window.mutqinThemeModes = @json(\App\Support\Theme::clientCatalog());
         window.mutqinDefaultTheme = @json(\App\Support\Theme::DEFAULT);

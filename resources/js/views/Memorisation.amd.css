@@ -6097,16 +6097,17 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
+    height: auto !important;
     padding-inline: 0 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
     text-wrap: wrap !important;
     white-space: normal !important;
     text-overflow: clip !important;
     font-size: clamp(0.82rem, 0.72rem + 1.8vw, 1.05rem) !important;
-    line-height: 1.2 !important;
-    padding-bottom: 0.2rem !important;
+    line-height: 1.45 !important;
+    padding-block: 0.08rem 0.32rem !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
@@ -6119,8 +6120,9 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
     min-width: 0 !important;
     max-width: 100% !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.45 !important;
     overflow-wrap: normal !important;
     word-break: keep-all !important;
     isolation: isolate;
@@ -6135,6 +6137,8 @@ html[data-theme="dark"] .post-session-simple .post-session-simple__backdrop {
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
     padding-inline-start: 0.2em !important;
+    line-height: 1.5 !important;
+    padding-block: 0.06em 0.1em !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
@@ -7147,6 +7151,48 @@ html body .app .workspace-recite-dock__button::after {
   animation: none !important;
 }
 
+/* Bottom-bar AI Recite: allow dual expanding border rings. */
+@media (max-width: 767.98px) {
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-ai-recite-cta.workspace-recite-dock__button,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button.is-animated,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-ai-recite-cta.workspace-recite-dock__button.is-animated,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button:hover,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button:active,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button:focus-visible {
+    --workspace-recite-size: 56px;
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    overflow: visible !important;
+    border: 1.5px solid var(--ai-recite-border, #39b979) !important;
+    border-radius: 50% !important;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 52%),
+      linear-gradient(180deg, var(--ai-recite-bg, #8ce7b8), var(--ai-recite-bg-deep, #55cf91)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 4px 14px rgba(42, 174, 111, 0.28) !important;
+    animation: workspace-reading-recite-breathe 2.4s ease-in-out infinite !important;
+    transform: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring {
+    animation: workspace-reading-recite-ring 2.1s cubic-bezier(0.18, 0.72, 0.24, 1) infinite !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring--mid {
+    animation-delay: 0.7s !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring--delayed {
+    animation-delay: 1.4s !important;
+  }
+}
+
 html body .amd-overlay .amd-modal .amd-header.amd-header--premium,
 html body .amd-overlay .amd-modal .amd-header.amd-header--compact,
 html body .amd-overlay .amd-modal .amd-header.amd-header--premium.amd-header--compact {
@@ -7588,6 +7634,29 @@ body > .workspace-recite-dock {
   body > .workspace-recite-dock {
     justify-content: center !important;
     padding-inline-end: 0 !important;
+  }
+
+  html body .workspace-recite-dock.workspace-reading-bottom-bar,
+  html body .app .workspace-recite-dock.workspace-reading-bottom-bar,
+  html body .app .workspace-recite-dock--mobile.workspace-reading-bottom-bar {
+    position: fixed !important;
+    top: auto !important;
+    inset-inline: 0 !important;
+    inset-block-end: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: auto !important;
+    min-height: calc(4.55rem + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    justify-content: stretch !important;
+    align-items: center !important;
+    pointer-events: none !important;
+    z-index: 1040 !important;
   }
 }
 
@@ -8095,16 +8164,26 @@ html body .app .workspace-shell .top-card-session-cluster.has-paired-actions .se
   html body .app .workspace-shell-overview-toggle.workspace-shell-main-title,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title {
     align-items: baseline !important;
-    min-height: 34px !important;
+    min-height: 2.15rem !important;
     height: auto !important;
-    padding-bottom: 0 !important;
-    line-height: 1.2 !important;
+    max-height: none !important;
+    padding-block: 0.12rem 0.32rem !important;
+    line-height: 1.45 !important;
     font-size: 1.08rem !important;
+    overflow: visible !important;
   }
 
   html body .app .workspace-shell-overview-toggle__text {
-    align-items: center !important;
+    align-items: baseline !important;
     gap: 0.45rem !important;
+    overflow: visible !important;
+    line-height: 1.45 !important;
+  }
+
+  html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+    line-height: 1.5 !important;
+    overflow: visible !important;
   }
 
   html body .app .workspace-shell-overview-toggle__chevron {

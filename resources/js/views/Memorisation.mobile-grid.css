@@ -194,8 +194,10 @@
     min-width: 0 !important;
     max-width: 100% !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     overflow-wrap: normal !important;
+    line-height: 1.45 !important;
+    padding-block: 0.08rem 0.2rem !important;
   }
 
   .workspace-shell-idle .workspace-shell-idle-title-en,
@@ -204,8 +206,14 @@
     flex: 0 1 auto !important;
     min-width: 0 !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.45 !important;
+  }
+
+  .workspace-shell-idle .workspace-shell-idle-title-ar {
+    line-height: 1.5 !important;
+    padding-block: 0.06em 0.1em !important;
   }
 
   .workspace-shell-idle--fresh .workspace-shell-main-title,
@@ -214,7 +222,7 @@
     font-size: clamp(1.02rem, 0.9rem + 1.8vw, 1.22rem) !important;
     font-weight: 500 !important;
     letter-spacing: 0.01em !important;
-    line-height: 1.25 !important;
+    line-height: 1.45 !important;
     color: var(--text) !important;
   }
 
@@ -222,7 +230,7 @@
   .workspace-shell-idle--continuing .workspace-shell-copy h1 {
     font-family: var(--font-surah-latin) !important;
     font-size: clamp(1.05rem, 0.92rem + 2vw, 1.28rem) !important;
-    line-height: 1.22 !important;
+    line-height: 1.45 !important;
     font-weight: 500 !important;
     letter-spacing: 0.015em !important;
     color: color-mix(in srgb, var(--text) 82%, var(--accent) 18%) !important;
@@ -376,14 +384,15 @@
   .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1 {
     margin: 0;
     padding-inline: 0.05rem;
+    padding-block: 0.08rem 0.32rem;
     font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
     font-size: clamp(1.05rem, 0.92rem + 2.2vw, 1.32rem) !important;
-    line-height: 1.22 !important;
+    line-height: 1.45 !important;
     font-weight: 500 !important;
     letter-spacing: 0.015em !important;
     color: color-mix(in srgb, var(--text) 78%, var(--accent) 22%) !important;
     white-space: normal !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     overflow-wrap: normal !important;
   }
 
@@ -391,11 +400,15 @@
     font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
     font-weight: 500 !important;
     letter-spacing: 0.015em !important;
+    line-height: 1.45 !important;
+    overflow: visible !important;
   }
 
   .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
     font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif !important;
     font-weight: 400 !important;
+    line-height: 1.5 !important;
+    overflow: visible !important;
   }
 
   .workspace-shell-lead {
@@ -4489,11 +4502,12 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .workspace-shell-main-title {
     font-size: clamp(1.05rem, 4.6vw, 1.28rem) !important;
-    line-height: 1.2 !important;
+    line-height: 1.45 !important;
     margin: 0 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     white-space: normal !important;
+    padding-block: 0.12rem 0.4rem !important;
   }
 
   /* Progress pills = row 2; session actions = real row-3 box (avoid display:contents overlap) */
@@ -7586,7 +7600,8 @@ html body.memorisation-page .tools.show {
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
-  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1 {
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.workspace-shell-main-title {
     display: flex !important;
     flex-flow: row wrap !important;
     align-items: baseline !important;
@@ -7596,9 +7611,13 @@ html body.memorisation-page .tools.show {
     gap: 0.05rem 0.45rem !important;
     width: fit-content !important;
     max-width: 100% !important;
-    overflow: hidden !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     white-space: normal !important;
     text-overflow: clip !important;
+    line-height: 1.45 !important;
+    padding-block: 0.12rem 0.4rem !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-sep {
@@ -7863,8 +7882,11 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     gap: 0.05rem 0.45rem !important;
     width: fit-content !important;
     max-width: 100% !important;
-    overflow: hidden !important;
+    height: auto !important;
+    overflow: visible !important;
     white-space: normal !important;
+    line-height: 1.45 !important;
+    padding-block: 0.08rem 0.32rem !important;
     font-size: clamp(0.82rem, 0.72rem + 1.8vw, 1.05rem) !important;
   }
 
@@ -7877,8 +7899,9 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     min-width: 0 !important;
     max-width: 100% !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.45 !important;
     isolation: isolate;
     unicode-bidi: isolate;
   }
@@ -7894,6 +7917,8 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
     padding-inline-start: 0.2em !important;
+    line-height: 1.5 !important;
+    padding-block: 0.06em 0.1em !important;
   }
 
   html body .app .workspace-shell-head-utility-row .top-card-session-cluster,
@@ -8104,7 +8129,8 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     flex-wrap: wrap !important;
     align-items: baseline !important;
     gap: 0.1rem 0.45rem !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+    line-height: 1.45 !important;
   }
 
   html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-en,
@@ -8114,8 +8140,9 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
     min-width: 0 !important;
     max-width: 100% !important;
     white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.45 !important;
     position: static !important;
     unicode-bidi: isolate;
   }
@@ -8127,6 +8154,8 @@ html[data-theme="dark"] body .app .top-card-icon-controls :is(
 
   html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar {
     font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif !important;
+    line-height: 1.5 !important;
+    padding-block: 0.06em 0.1em !important;
   }
 
   html body .app .workspace-shell-overview-toggle__chevron {
@@ -8778,5 +8807,398 @@ html body .app .workspace-recite-dock__button:hover {
   html body .app .player-dock:not(:has(.playback-pill, .player-bar, .player-talqin-strip)) * {
     visibility: hidden !important;
     pointer-events: none !important;
+  }
+}
+
+/* Mobile reading bottom dock — transport left, AI Recite right */
+@media (max-width: 767.98px) {
+  html body .app .workspace-recite-dock.workspace-recite-dock--mobile.workspace-reading-bottom-bar,
+  html body .app .main .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
+    --reading-bottom-bar-height: 4.55rem;
+    --bb-ink: #1f1914;
+    --bb-ink-muted: color-mix(in srgb, #1f1914 32%, #c4b4a2);
+    --bb-ink-soft: color-mix(in srgb, #1f1914 58%, #8f7d6a);
+    --bb-leaf: #1f7a52;
+    --bb-leaf-deep: #14573a;
+    --bb-paper: #fffcf7;
+    --workspace-recite-size: 56px;
+    position: fixed !important;
+    top: auto !important;
+    inset-inline: 0 !important;
+    inset-block-end: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1040 !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: calc(var(--reading-bottom-bar-height) + env(safe-area-inset-bottom, 0px)) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    border-block-start: 1px solid color-mix(in srgb, #2a2118 12%, transparent) !important;
+    background: color-mix(in srgb, #fffdf9 46%, transparent) !important;
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 58%, transparent) inset,
+      0 -8px 22px color-mix(in srgb, #3d2a18 6%, transparent) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
+    backdrop-filter: blur(24px) saturate(1.22) !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    html body .app .workspace-recite-dock.workspace-recite-dock--mobile.workspace-reading-bottom-bar,
+    html body .app .main .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
+      background: color-mix(in srgb, #fffdf9 92%, var(--zone-chrome-cream, #f0e9de)) !important;
+    }
+  }
+
+  html body .app .workspace-reading-bottom-bar__shell {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    min-height: 3.55rem !important;
+    margin: 0 !important;
+    padding:
+      0.45rem max(0.85rem, env(safe-area-inset-right, 0px))
+      calc(0.45rem + env(safe-area-inset-bottom, 0px))
+      max(0.85rem, env(safe-area-inset-left, 0px)) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    pointer-events: auto !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__cluster {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    pointer-events: auto !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__playback {
+    justify-self: start !important;
+    gap: 0.15rem !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__transport {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.05rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__spacer {
+    min-width: 0 !important;
+    pointer-events: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite {
+    justify-self: end !important;
+    justify-content: flex-end !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__divider {
+    width: 1px !important;
+    height: 1rem !important;
+    margin-inline: 0.35rem 0.2rem !important;
+    background: color-mix(in srgb, #2a2118 14%, transparent) !important;
+    border-radius: 1px !important;
+    flex: 0 0 auto !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__playing-dot {
+    display: none !important;
+  }
+
+  /* Icon-only controls — no filled button chrome */
+  html body .app .workspace-reading-bottom-bar__btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.55rem !important;
+    height: 2.55rem !important;
+    min-width: 2.55rem !important;
+    min-height: 2.55rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--bb-ink) !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    filter: none !important;
+    transition: color 140ms ease, opacity 140ms ease !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn i {
+    font-size: 1.38rem !important;
+    line-height: 1 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--play,
+  html body .app .workspace-reading-bottom-bar__btn--play:disabled,
+  html body .app .workspace-reading-bottom-bar__btn--play:hover:not(:disabled),
+  html body .app .workspace-reading-bottom-bar__btn--play:focus-visible {
+    width: 2.55rem !important;
+    min-width: 2.55rem !important;
+    height: 2.55rem !important;
+    min-height: 2.55rem !important;
+    color: var(--bb-ink) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--play i {
+    margin-inline-start: 0.06rem !important;
+    font-size: 1.5rem !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--stop i {
+    font-size: 1.12rem !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--fullscreen i {
+    font-size: 1.22rem !important;
+  }
+
+  /* Only the actionable control is green: play when idle, pause while playing. */
+  html body .app .workspace-reading-bottom-bar__btn--play.is-ready:not(:disabled) {
+    color: var(--bb-leaf) !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--play:disabled {
+    color: var(--bb-ink-muted) !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--pause.is-armed:not(:disabled) {
+    color: var(--bb-leaf) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--pause:not(.is-armed),
+  html body .app .workspace-reading-bottom-bar__btn--pause:disabled {
+    color: var(--bb-ink-muted) !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--stop.is-ready:not(:disabled) {
+    color: var(--bb-ink) !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--fullscreen.is-active {
+    color: var(--bb-leaf) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn:hover:not(:disabled),
+  html body .app .workspace-reading-bottom-bar__btn:focus-visible {
+    outline: none !important;
+    opacity: 0.78 !important;
+    background: transparent !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn--play.is-ready:hover:not(:disabled),
+  html body .app .workspace-reading-bottom-bar__btn--play.is-ready:focus-visible,
+  html body .app .workspace-reading-bottom-bar__btn--pause.is-armed:hover:not(:disabled),
+  html body .app .workspace-reading-bottom-bar__btn--pause.is-armed:focus-visible {
+    color: var(--bb-leaf) !important;
+    opacity: 0.85 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn:active:not(:disabled) {
+    transform: none !important;
+    opacity: 0.72 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__btn:disabled {
+    color: var(--bb-ink-muted) !important;
+    cursor: default !important;
+    background: transparent !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  /* AI Recite — classic green circular button */
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button.is-animated,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button:hover,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button:active,
+  html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button:focus-visible {
+    --workspace-recite-size: 56px;
+    --ai-recite-bg: #8ce7b8;
+    --ai-recite-bg-deep: #55cf91;
+    --ai-recite-border: #39b979;
+    --ai-recite-text: #124d38;
+    --ai-recite-icon: #0d7b4f;
+    width: 56px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    position: relative !important;
+    isolation: isolate !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1.5px solid var(--ai-recite-border) !important;
+    border-radius: 50% !important;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 52%),
+      linear-gradient(180deg, var(--ai-recite-bg), var(--ai-recite-bg-deep)) !important;
+    color: var(--ai-recite-text) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 4px 14px rgba(42, 174, 111, 0.28) !important;
+    animation: workspace-reading-recite-breathe 2.4s ease-in-out infinite !important;
+    transform: none !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-ring {
+    position: absolute !important;
+    inset: -4px !important;
+    border-radius: 50% !important;
+    border: 2px solid color-mix(in srgb, #39b979 75%, transparent) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring {
+    animation: workspace-reading-recite-ring 2.1s cubic-bezier(0.18, 0.72, 0.24, 1) infinite !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring--mid {
+    animation-delay: 0.7s !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring--delayed {
+    animation-delay: 1.4s !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn i,
+  html body .app .workspace-reading-bottom-bar__recite-btn span:not(.workspace-reading-bottom-bar__recite-ring) {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__recite-btn i {
+    font-size: 1.45rem !important;
+    color: var(--ai-recite-icon) !important;
+  }
+
+  @keyframes workspace-reading-recite-breathe {
+    0%, 100% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 4px 14px rgba(42, 174, 111, 0.26),
+        0 0 0 0 rgba(86, 222, 149, 0);
+    }
+    50% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.62),
+        0 7px 20px rgba(42, 174, 111, 0.38),
+        0 0 0 6px rgba(86, 222, 149, 0.14);
+    }
+  }
+
+  @keyframes workspace-reading-recite-ring {
+    0% {
+      opacity: 0.7;
+      transform: scale(0.9);
+      border-color: color-mix(in srgb, #2f9f68 85%, transparent);
+    }
+    45% {
+      opacity: 0.28;
+      transform: scale(1.18);
+      border-color: color-mix(in srgb, #56de95 65%, transparent);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.4);
+      border-color: transparent;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring,
+    html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button.is-animated,
+    html body .app .workspace-reading-bottom-bar__btn {
+      animation: none !important;
+      transition: none !important;
+    }
+
+    html body .app .workspace-reading-bottom-bar__recite-btn.is-animated {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 0 0 3px rgba(86, 222, 149, 0.22),
+        0 4px 14px rgba(42, 174, 111, 0.28) !important;
+    }
+  }
+
+  [data-theme="dark"] html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
+  html[data-theme="dark"] body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
+    --bb-ink: #f7f1e8;
+    --bb-ink-muted: color-mix(in srgb, #f7f1e8 30%, #6a5c4e);
+    --bb-ink-soft: color-mix(in srgb, #f7f1e8 58%, #8a7460);
+    --bb-leaf: #7dcca5;
+    --bb-leaf-deep: #a6e4c4;
+    border-block-start-color: color-mix(in srgb, #fff 16%, transparent) !important;
+    background: color-mix(in srgb, #1c1917 42%, transparent) !important;
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #fff 10%, transparent) inset,
+      0 -8px 22px rgba(0, 0, 0, 0.22) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(1.25) !important;
+    backdrop-filter: blur(24px) saturate(1.25) !important;
+  }
+
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    [data-theme="dark"] html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
+    html[data-theme="dark"] body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
+      background: color-mix(in srgb, #1c1917 94%, #2a241c) !important;
+    }
+  }
+
+  [data-theme="dark"] html body .app .workspace-reading-bottom-bar__divider,
+  html[data-theme="dark"] body .app .workspace-reading-bottom-bar__divider {
+    background: color-mix(in srgb, #fff 14%, transparent) !important;
+  }
+
+  [data-theme="dark"] html body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button,
+  html[data-theme="dark"] body .app .workspace-reading-bottom-bar__recite-btn.workspace-recite-dock__button {
+    --ai-recite-bg: #5ebd8b;
+    --ai-recite-bg-deep: #338b64;
+    --ai-recite-border: #8de4b5;
+    --ai-recite-text: #072e21;
+    --ai-recite-icon: #073e2a;
+  }
+
+  body:has(.workspace-reading-bottom-bar) .app .main,
+  body:has(.workspace-reading-bottom-bar) .app .workspace-main,
+  body:has(.workspace-reading-bottom-bar) .app .main.madani-qpc-mode-active .workspace-main {
+    --workspace-recite-clearance: calc(5.2rem + env(safe-area-inset-bottom, 0px));
+    --workspace-recite-sticky-top: auto;
+    padding-block-end: var(--workspace-recite-clearance) !important;
+    scroll-padding-block-end: var(--workspace-recite-clearance) !important;
   }
 }

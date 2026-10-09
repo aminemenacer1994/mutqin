@@ -8795,8 +8795,10 @@ html {
   font-size: 0.98em;
   font-weight: 400;
   letter-spacing: 0.02em;
-  line-height: 1.2;
+  line-height: 1.5;
+  padding-block: 0.06em 0.1em;
   white-space: nowrap;
+  overflow: visible;
   color: color-mix(in srgb, var(--text) 74%, var(--accent) 26%);
 }
 
@@ -8923,12 +8925,12 @@ html {
   gap: 0.5rem !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
   font-size: clamp(1.15rem, 0.95rem + 0.9vw, 1.45rem) !important;
   font-weight: 500 !important;
   letter-spacing: 0.01em !important;
-  line-height: 1.22 !important;
+  line-height: 1.45 !important;
   white-space: nowrap !important;
   color: color-mix(in srgb, var(--text) 82%, var(--accent) 18%) !important;
 }
@@ -8940,12 +8942,12 @@ html {
   gap: 0.5rem !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
   font-size: clamp(1.1rem, 0.92rem + 0.85vw, 1.4rem) !important;
   font-weight: 500 !important;
   letter-spacing: 0.015em !important;
-  line-height: 1.22 !important;
+  line-height: 1.45 !important;
   white-space: nowrap !important;
   color: color-mix(in srgb, var(--text) 82%, var(--accent) 18%) !important;
 }
@@ -60453,7 +60455,7 @@ html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
   width: auto !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   text-overflow: clip !important;
 }
 
@@ -60466,8 +60468,8 @@ html body .app .workspace-shell-head:not(.is-idle) h1.mutqin-surah-bilingual {
   min-width: 0 !important;
   max-width: 100% !important;
   white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
   isolation: isolate;
   unicode-bidi: isolate;
 }
@@ -60492,19 +60494,20 @@ html body .app .workspace-shell-main-title {
   max-width: 100% !important;
   min-width: 0 !important;
   margin: 0 !important;
-  padding-bottom: 0.35rem !important;
+  padding-top: 0.08rem !important;
+  padding-bottom: 0.4rem !important;
   direction: ltr !important;
   color: color-mix(in srgb, var(--text, #1f1a17) 78%, var(--accent, #8b5e3c) 22%) !important;
   font-family: var(--font-surah-latin) !important;
   font-size: clamp(1.2rem, 0.95rem + 1.2vw, 1.6rem) !important;
   font-weight: 500 !important;
   letter-spacing: 0.01em !important;
-  line-height: 1.35 !important;
+  line-height: 1.45 !important;
   unicode-bidi: isolate;
   text-wrap: wrap;
   overflow-wrap: normal;
   white-space: normal;
-  overflow: hidden;
+  overflow: visible;
   text-overflow: clip;
 }
 
@@ -60512,7 +60515,8 @@ html body .app .workspace-shell-main-title {
   font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
   font-size: 1.05em;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1.5;
+  padding-block: 0.06em 0.1em;
   direction: rtl;
   unicode-bidi: isolate;
   color: color-mix(in srgb, var(--text, #1f1a17) 82%, var(--accent, #8b5e3c) 18%);
@@ -60595,7 +60599,14 @@ html body .app[data-theme="dark"] .workspace-shell-main-title::after {
 .workspace-shell .workspace-shell-copy h1.workspace-shell-main-title,
 html body .app .workspace-shell-main-title {
     font-size: clamp(1.15rem, 0.95rem + 2.2vw, 1.4rem) !important;
-    line-height: 1.22 !important;
+    line-height: 1.45 !important;
+    overflow: visible !important;
+  }
+
+  .workspace-shell-surah-ar,
+  .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+    line-height: 1.5 !important;
+    overflow: visible !important;
   }
 }
 
@@ -64873,7 +64884,13 @@ html.mutqin-pwa-standalone .workspace-tour[data-tour-step="dashboard"] .workspac
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-arabic {
   font-family: var(--ps-rec-font-display) !important;
   font-size: clamp(1.05rem, 2.8vw, 1.22rem) !important;
-  line-height: 1.25 !important;
+  line-height: 1.45 !important;
+  overflow: visible !important;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__surah-arabic {
+  line-height: 1.5 !important;
+  padding-block: 0.06em 0.1em !important;
 }
 
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead,
@@ -66436,9 +66453,13 @@ html body:has(.top-card-menu-wrap.is-menu-open) > .workspace-float-rail {
   z-index: 1050 !important;
 }
 
-html body:has(.top-card-menu-wrap.is-menu-open) .workspace-recite-dock,
-html body:has(.top-card-menu-wrap.is-menu-open) .workspace-recite-dock--mobile {
+html body:has(.top-card-menu-wrap.is-menu-open) .workspace-recite-dock:not(.workspace-reading-bottom-bar),
+html body:has(.top-card-menu-wrap.is-menu-open) .workspace-recite-dock--mobile:not(.workspace-reading-bottom-bar) {
   z-index: 20 !important;
+}
+
+html body:has(.top-card-menu-wrap.is-menu-open) .workspace-reading-bottom-bar {
+  z-index: 1040 !important;
 }
 
 /* Post-session AI review — dark mode cascade guard (teleported modals + mobile pills). */
@@ -67778,8 +67799,8 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     margin-top: 0 !important;
   }
 
-  body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-recite-dock,
-  html body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile {
+  body:has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-recite-dock:not(.workspace-reading-bottom-bar),
+  html body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile:not(.workspace-reading-bottom-bar) {
     position: fixed !important;
     top: auto !important;
     bottom: calc(1.65rem + env(safe-area-inset-bottom, 0px)) !important;
@@ -67797,18 +67818,50 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
     transform: none !important;
   }
 
-  body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-recite-dock--mobile {
+  body:has(.player-dock):has(.workspace-recite-dock__button) .main.madani-qpc-mode-active .workspace-recite-dock--mobile:not(.workspace-reading-bottom-bar) {
     bottom: calc(1.65rem + env(safe-area-inset-bottom, 0px)) !important;
     z-index: 1040 !important;
   }
 
-  html body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile .workspace-recite-dock__button {
+  html body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile.workspace-reading-bottom-bar,
+  html body .app .main.madani-qpc-mode-active .workspace-reading-bottom-bar {
+    position: fixed !important;
+    top: auto !important;
+    inset-block-end: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: calc(4.55rem + env(safe-area-inset-bottom, 0px)) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    grid-template-columns: unset !important;
+    border-radius: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    justify-content: stretch !important;
+    align-items: center !important;
+    z-index: 1040 !important;
+    pointer-events: auto !important;
+    transform: none !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .workspace-recite-dock--mobile:not(.workspace-reading-bottom-bar) .workspace-recite-dock__button {
     margin: 0 !important;
     pointer-events: auto !important;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.5),
       0 6px 22px rgba(42, 174, 111, 0.38),
       0 0 0 5px rgba(86, 222, 149, 0.14);
+  }
+
+  html body .app .main.madani-qpc-mode-active .workspace-reading-bottom-bar .workspace-recite-dock__button {
+    margin: 0 !important;
+    overflow: visible !important;
   }
 
   html.is-app-fullscreen:has(.madani-fullscreen-bar)

@@ -333,6 +333,27 @@ includesAll('top card dashboard visibility', [
   const mobileGridCss = readFileSync(new URL('../../resources/js/views/Memorisation.mobile-grid.css', import.meta.url), 'utf8')
   const blade = readFileSync(new URL('../../resources/views/layouts/app.blade.php', import.meta.url), 'utf8')
 
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v231/,
+    'blade includes surah-title descender hotfix',
+  )
+  assert.match(
+    blade,
+    /mutqin-memorisation-hotfix-v231[\s\S]*?workspace-shell-head:not\(\.is-idle\) \.workspace-shell-overview-toggle\.workspace-shell-main-title[\s\S]*?overflow:\s*visible\s*!important/,
+    'pinned hotfix must beat mobile-grid overflow:hidden on overview titles',
+  )
+  assert.doesNotMatch(
+    mobileGridCss,
+    /workspace-shell-head:not\(\.is-idle\) \.workspace-shell-main-title[\s\S]{0,220}?overflow:\s*hidden\s*!important/,
+    'mobile-grid must not clip bilingual surah titles',
+  )
+  assert.match(
+    memorisationCss,
+    /\.workspace-shell-surah-ar\s*\{[\s\S]*?line-height:\s*1\.5/,
+    'Arabic surah names need room for descenders',
+  )
+
   assert.doesNotMatch(
     blade,
     /\.workspace-shell--post-session-choice \.top-card-icon-controls\s*\{[^}]*display:\s*none\s*!important/,

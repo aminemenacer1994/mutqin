@@ -488,6 +488,7 @@ async function inspectState(page, state) {
       }
       if (state === 'active') {
         expectParallel('.action-btn-exit', '.top-card-ellipsis', 'secondary action rail')
+        expectParallel('.workspace-reading-bottom-bar__shell .workspace-reading-bottom-bar__playback', '.workspace-reading-bottom-bar__shell .workspace-reading-bottom-bar__recite', 'reading bottom bar')
         const primary = visibleElements('.top-card-session-actions.has-paired-actions > .session-primary-action')[0]
         const end = visibleElements('.top-card-session-actions.has-paired-actions > .action-btn-exit')[0]
         if (!primary || !end) {

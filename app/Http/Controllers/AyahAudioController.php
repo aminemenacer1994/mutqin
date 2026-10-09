@@ -38,7 +38,10 @@ class AyahAudioController extends Controller
         }
 
         $cacheKey = "ayah-audio:v1:{$reciter}:{$ayah}";
-        $cached = Cache::get($cacheKey);
+        // Binary MP3 must not go through the database cache store (utf8 columns
+        // reject \\xFF\\xFB… and the failed SQL dump corrupts laravel.log).
+        $audioCache = Cache::store('file');
+        $cached = $audioCache->get($cacheKey);
         if (is_array($cached) && is_string($cached['body'] ?? null) && $cached['body'] !== '') {
             return $this->audioResponse($cached['body'], $ayah);
         }
@@ -63,7 +66,7 @@ class AyahAudioController extends Controller
                 $body = $response->body();
                 if (is_string($body) && $body !== '') {
                     try {
-                        Cache::put($cacheKey, ['body' => $body], self::PROXY_CACHE_TTL_SECONDS);
+                        $audioCache->put($cacheKey, ['body' => $body], self::PROXY_CACHE_TTL_SECONDS);
                     } catch (\Throwable $e) {
                         report($e);
                     }

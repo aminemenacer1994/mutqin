@@ -195,7 +195,11 @@ class SessionLifecycleService
                 return $recovered;
             }
 
-            throw $e;
+            // Never surface a raw SQL unique conflict as HTTP 500 to the SPA.
+            report($e);
+            throw ValidationException::withMessages([
+                'session' => ['Could not start the session due to a concurrent write. Please try again.'],
+            ]);
         }
     }
 

@@ -1179,9 +1179,10 @@
           min-inline-size: 0 !important;
         }
         .app .workspace-shell-main-title {
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
+          overflow: visible !important;
+          text-overflow: clip !important;
           white-space: nowrap !important;
+          line-height: 1.45 !important;
         }
         /* Mobile: sliders + ellipsis top-right; mushaf layout lives in the ellipsis menu. */
         .app .top-card-icon-controls {
@@ -3257,7 +3258,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-memorisation-hotfix-v168', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-memorisation-hotfix-v168', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180', 'mutqin-ui-lock-v181', 'mutqin-memorisation-hotfix-v231'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -3273,7 +3274,9 @@
           var pinning = false;
           var observer = new MutationObserver(function () {
             if (pinning) return;
-            var lock = document.getElementById('mutqin-ui-lock-v180');
+            var lock = document.getElementById('mutqin-memorisation-hotfix-v231')
+              || document.getElementById('mutqin-ui-lock-v181')
+              || document.getElementById('mutqin-ui-lock-v180');
             if (!lock || lock === document.body.lastElementChild) return;
             pinning = true;
             pin();
@@ -10242,7 +10245,7 @@ body.session-analysis-modal-open {
     text-align-last: center !important;
   }
 </style>
-<style id="mutqin-madani-fs-bar-v191">
+<style id="mutqin-madani-fs-bar-v193">
   /* Network-first immersive Madani toolbar — survives stale memorisation chunks. */
   @media (min-width: 768px) {
     .madani-fullscreen-bar {
@@ -10261,10 +10264,56 @@ body.session-analysis-modal-open {
   @media (max-width: 767.98px) {
     html.is-app-fullscreen:has(.madani-fullscreen-bar),
     html.is-app-fullscreen.has-madani-fullscreen-bar {
-      --madani-fs-bar-icon: 2.45rem;
-      --madani-fs-bar-recite: 3.1rem;
-      --madani-fs-bar-shell-pad-y: 0.42rem;
+      --madani-fs-bar-icon: 2.55rem;
+      --madani-fs-bar-recite: 3.5rem;
+      --madani-fs-bar-shell-pad-y: 0.45rem;
       --madani-fs-bar-row: max(var(--madani-fs-bar-icon), var(--madani-fs-bar-recite));
+    }
+
+    /* Full-bleed liquid glass dock */
+    .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
+      inset-inline-start: 0 !important;
+      inset-inline-end: 0 !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      max-width: none !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      border-block-start: 1px solid color-mix(in srgb, #2a2118 12%, transparent) !important;
+      background: color-mix(in srgb, #fffdf9 46%, transparent) !important;
+      box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 58%, transparent) inset,
+        0 -8px 22px color-mix(in srgb, #3d2a18 6%, transparent) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
+      backdrop-filter: blur(24px) saturate(1.22) !important;
+      overflow: visible !important;
+      pointer-events: none !important;
+    }
+
+    .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) .madani-fullscreen-bar__shell {
+      width: 100% !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+      pointer-events: auto !important;
+      overflow: visible !important;
+    }
+
+    .madani-fullscreen-bar--mobile[data-theme="dark"]:not(.madani-fullscreen-bar--top),
+    [data-theme="dark"] .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
+      border-block-start-color: color-mix(in srgb, #fff 16%, transparent) !important;
+      background: color-mix(in srgb, #1c1917 42%, transparent) !important;
+      box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 10%, transparent) inset,
+        0 -8px 22px rgba(0, 0, 0, 0.22) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(1.25) !important;
+      backdrop-filter: blur(24px) saturate(1.25) !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
@@ -10272,7 +10321,7 @@ body.session-analysis-modal-open {
       grid-template-columns: min-content minmax(0, 1fr) min-content !important;
       align-items: center !important;
       gap: 0.25rem !important;
-      min-height: var(--madani-fs-bar-row, 3.1rem) !important;
+      min-height: var(--madani-fs-bar-row, 3.5rem) !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--no-recite {
@@ -10284,13 +10333,16 @@ body.session-analysis-modal-open {
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon {
-      width: var(--madani-fs-bar-icon, 2.45rem) !important;
-      height: var(--madani-fs-bar-icon, 2.45rem) !important;
-      min-width: var(--madani-fs-bar-icon, 2.45rem) !important;
+      width: var(--madani-fs-bar-icon, 2.55rem) !important;
+      height: var(--madani-fs-bar-icon, 2.55rem) !important;
+      min-width: var(--madani-fs-bar-icon, 2.55rem) !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon i {
-      font-size: 1.375rem !important;
+      font-size: 1.38rem !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon--play i {
@@ -10303,24 +10355,28 @@ body.session-analysis-modal-open {
       opacity: 1 !important;
       position: relative !important;
       inset: auto !important;
-      width: var(--madani-fs-bar-recite, 3.1rem) !important;
-      height: var(--madani-fs-bar-recite, 3.1rem) !important;
-      min-width: var(--madani-fs-bar-recite, 3.1rem) !important;
-      min-height: var(--madani-fs-bar-recite, 3.1rem) !important;
-      border: 2px solid #2ea86a !important;
+      overflow: visible !important;
+      isolation: isolate !important;
+      width: var(--madani-fs-bar-recite, 3.5rem) !important;
+      height: var(--madani-fs-bar-recite, 3.5rem) !important;
+      min-width: var(--madani-fs-bar-recite, 3.5rem) !important;
+      min-height: var(--madani-fs-bar-recite, 3.5rem) !important;
+      border: 1.5px solid #39b979 !important;
       border-radius: 50% !important;
-      background: linear-gradient(165deg, #9ef0c4 0%, #5fd699 48%, #43c07f 100%) !important;
-      color: #0f4a32 !important;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 52%),
+        linear-gradient(180deg, #8ce7b8, #55cf91) !important;
+      color: #124d38 !important;
       box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.55) inset,
-        0 6px 16px rgba(47, 168, 106, 0.45) !important;
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 4px 14px rgba(42, 174, 111, 0.28) !important;
       pointer-events: auto !important;
       z-index: 2 !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
-      font-size: 1.4rem !important;
-      color: #0f4a32 !important;
+      font-size: 1.45rem !important;
+      color: #0d7b4f !important;
       opacity: 1 !important;
     }
 
@@ -10328,16 +10384,17 @@ body.session-analysis-modal-open {
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      width: var(--madani-fs-bar-icon, 2.45rem) !important;
-      height: var(--madani-fs-bar-icon, 2.45rem) !important;
-      min-width: var(--madani-fs-bar-icon, 2.45rem) !important;
-      border-radius: 10px !important;
+      width: var(--madani-fs-bar-icon, 2.55rem) !important;
+      height: var(--madani-fs-bar-icon, 2.55rem) !important;
+      min-width: var(--madani-fs-bar-icon, 2.55rem) !important;
+      border-radius: 0 !important;
+      background: transparent !important;
       position: relative !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-glyph {
       display: inline-block !important;
-      font-size: 1.375rem !important;
+      font-size: 1.38rem !important;
       line-height: 1 !important;
       opacity: 1 !important;
       color: #1b140d !important;
@@ -10348,22 +10405,38 @@ body.session-analysis-modal-open {
       color: #f6eadc !important;
     }
 
-    .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__shell {
-      background: #fff !important;
-      -webkit-backdrop-filter: none !important;
-      backdrop-filter: none !important;
-    }
-
     .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__icon,
     .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__reciter--mobile-icon .madani-fullscreen-bar__reciter-glyph {
       color: #1b140d !important;
     }
   }
+</style>
+<style id="mutqin-reading-bottom-bar-glass-v1">
+  /* Network-first liquid glass for the mobile reading dock. */
+  @media (max-width: 767.98px) {
+    html body .app .workspace-recite-dock.workspace-recite-dock--mobile.workspace-reading-bottom-bar,
+    html body .app .main .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
+    html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
+      border-block-start: 1px solid color-mix(in srgb, #2a2118 12%, transparent) !important;
+      background: color-mix(in srgb, #fffdf9 46%, transparent) !important;
+      box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 58%, transparent) inset,
+        0 -8px 22px color-mix(in srgb, #3d2a18 6%, transparent) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
+      backdrop-filter: blur(24px) saturate(1.22) !important;
+    }
 
-  .madani-fullscreen-bar[data-theme="light"] .madani-fullscreen-bar__shell {
-    background: #fff !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
+    [data-theme="dark"] html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
+    html[data-theme="dark"] body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
+    html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile[data-theme="dark"] {
+      border-block-start-color: color-mix(in srgb, #fff 16%, transparent) !important;
+      background: color-mix(in srgb, #1c1917 42%, transparent) !important;
+      box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 10%, transparent) inset,
+        0 -8px 22px rgba(0, 0, 0, 0.22) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(1.25) !important;
+      backdrop-filter: blur(24px) saturate(1.25) !important;
+    }
   }
 </style>
 <script id="mutqin-madani-fs-bar-v192">
@@ -11970,17 +12043,18 @@ body.session-analysis-modal-open {
     html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title {
       display: flex !important;
       flex-flow: row nowrap !important;
-      align-items: center !important;
+      align-items: baseline !important;
       justify-content: flex-start !important;
       gap: 0.4rem !important;
-      min-height: 34px !important;
-      height: 34px !important;
+      min-height: 2.15rem !important;
+      height: auto !important;
+      max-height: none !important;
       margin: 0 !important;
-      padding: 0 !important;
-      padding-bottom: 0 !important;
-      line-height: 1 !important;
+      padding: 0.12rem 0 0.32rem !important;
+      line-height: 1.45 !important;
       font-size: 1.08rem !important;
       letter-spacing: 0.01em !important;
+      overflow: visible !important;
       color: color-mix(in srgb, var(--text, #1f1a17) 88%, var(--accent, #8b5e3c) 12%) !important;
       -webkit-font-smoothing: antialiased !important;
       text-rendering: optimizeLegibility !important;
@@ -11989,7 +12063,7 @@ body.session-analysis-modal-open {
     html body .app .workspace-shell-overview-toggle.workspace-shell-main-title::after,
     html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title::after {
       inset-inline: 0 !important;
-      bottom: 1px !important;
+      bottom: 0 !important;
       height: 1px !important;
       opacity: 0.85 !important;
     }
@@ -11998,28 +12072,34 @@ body.session-analysis-modal-open {
       display: inline-flex !important;
       flex: 0 1 auto !important;
       flex-wrap: nowrap !important;
-      align-items: center !important;
+      align-items: baseline !important;
       gap: 0.45rem !important;
       min-width: 0 !important;
-      overflow: hidden !important;
-      line-height: 1 !important;
+      max-width: 100% !important;
+      overflow: visible !important;
+      line-height: 1.45 !important;
+      padding-block: 0.05em !important;
     }
 
     html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-en,
     html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
     html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
     html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
-      display: inline-flex !important;
-      align-items: center !important;
-      padding: 0 !important;
-      line-height: 1 !important;
+      display: inline !important;
+      align-items: baseline !important;
+      padding-block: 0.08em 0.12em !important;
+      line-height: 1.45 !important;
       white-space: nowrap !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
     }
 
     html body .app .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
     html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
-      font-size: 1.1em !important;
-      transform: translateY(0.02em) !important;
+      font-size: 1.12em !important;
+      font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif !important;
+      line-height: 1.5 !important;
+      transform: none !important;
     }
 
     html body .app .workspace-shell-overview-toggle__chevron {
@@ -12108,6 +12188,80 @@ body.session-analysis-modal-open {
       border-color: rgba(245, 242, 234, 0.18) !important;
       color: #f7efdf !important;
       box-shadow: none !important;
+    }
+  }
+</style>
+<style id="mutqin-memorisation-hotfix-v230">
+  /* Kept for id/compat; descender fix lives in v231 (pinned last). */
+</style>
+<style id="mutqin-memorisation-hotfix-v231">
+  /*
+   * Last-wins + pinned: beat mobile-grid
+   * `html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title { overflow:hidden }`
+   * which was clipping An-Nas / Al-Qadr descenders on the underline.
+   */
+  html body .app .workspace-shell-surah-ar,
+  html body .app .workspace-shell-idle-title-ar,
+  html body .app .post-session-simple__surah-arabic {
+    line-height: 1.55 !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    padding-block: 0.1em 0.18em !important;
+  }
+
+  @media (max-width: 767.98px) {
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.workspace-shell-main-title,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1,
+    html body .app .workspace-shell-idle .workspace-shell-main-title {
+      height: auto !important;
+      max-height: none !important;
+      min-height: 2.35rem !important;
+      line-height: 1.55 !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      padding: 0.15rem 0 0.55rem !important;
+      align-items: baseline !important;
+    }
+
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle.workspace-shell-main-title::after,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title::after,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title::after {
+      bottom: 0.08rem !important;
+      height: 1px !important;
+      opacity: 0.75 !important;
+    }
+
+    html body .app .workspace-shell-overview-toggle__text,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text,
+    html body .app .workspace-shell-head-toolbar > .workspace-shell-copy,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy {
+      overflow: visible !important;
+      line-height: 1.55 !important;
+      max-height: none !important;
+    }
+
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text .workspace-shell-surah-en,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
+    html body .app .workspace-shell-idle-title-en,
+    html body .app .workspace-shell-idle-title-ar {
+      display: inline !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      line-height: 1.55 !important;
+      max-height: none !important;
+      white-space: nowrap !important;
+    }
+
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-overview-toggle__text .workspace-shell-surah-ar,
+    html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar,
+    html body .app .workspace-shell-idle-title-ar {
+      line-height: 1.65 !important;
+      padding-block: 0.1em 0.2em !important;
+      transform: none !important;
     }
   }
 </style>

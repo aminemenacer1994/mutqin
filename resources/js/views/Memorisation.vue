@@ -662,18 +662,6 @@
                 <path d="M15.4 15.4 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
               </svg>
             </button>
-            <button
-              v-if="!isPostSessionChoiceVisible && isMobileViewport()"
-              type="button"
-              class="top-card-fullscreen-trigger top-card-action-trigger top-card-icon-control is-featured"
-              data-testid="workspace-mobile-fullscreen"
-              :title="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
-              :aria-label="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
-              :aria-pressed="isAppFullscreen ? 'true' : 'false'"
-              @click="toggleFullScreen"
-            >
-              <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
-            </button>
             <div
               class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
               role="group"
@@ -1782,22 +1770,99 @@
             </div>
             </div>
             <div
-              v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace && !showMadaniFullscreenBar"
-              class="workspace-recite-dock workspace-recite-dock--mobile"
+              v-if="shouldShowReadingWorkspace && !showMadaniFullscreenBar && isMobileViewport()"
+              class="workspace-recite-dock workspace-recite-dock--mobile workspace-reading-bottom-bar"
+              :class="{
+                'has-ai-recite': showWorkspaceAiReciteCta,
+                'is-playing': isPlaying,
+                'is-fullscreen': isAppFullscreen,
+              }"
+              role="toolbar"
+              :aria-label="t('memorisation.player.audioPlayer')"
               aria-live="polite"
             >
-              <button
-                type="button"
-                class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
-                :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                data-testid="workspace-ai-recite-mobile"
-                :title="t('dashboard.ai_recite.cta_label')"
-                :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                @click="openWorkspaceAiRecite"
-              >
-                <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-              </button>
+              <div class="workspace-reading-bottom-bar__shell">
+                <div
+                  class="workspace-reading-bottom-bar__cluster workspace-reading-bottom-bar__playback"
+                  role="group"
+                  :aria-label="t('memorisation.player.audioPlayer')"
+                >
+                  <div class="workspace-reading-bottom-bar__transport">
+                    <button
+                      type="button"
+                      class="workspace-reading-bottom-bar__btn workspace-reading-bottom-bar__btn--play"
+                      :class="{ 'is-ready': hasVerses && !isPlaying }"
+                      :disabled="!hasVerses || isPlaying"
+                      :title="t('memorisation.player.playAudio')"
+                      :aria-label="t('memorisation.player.playAudio')"
+                      data-testid="workspace-bottom-play"
+                      @click.stop="playWorkspaceAudio"
+                    >
+                      <i class="bi bi-play-fill" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="workspace-reading-bottom-bar__btn workspace-reading-bottom-bar__btn--pause"
+                      :class="{ 'is-armed': isPlaying }"
+                      :disabled="!hasVerses || !isPlaying"
+                      :title="t('memorisation.player.pauseAudio')"
+                      :aria-label="t('memorisation.player.pauseAudio')"
+                      data-testid="workspace-bottom-pause"
+                      @click.stop="pauseWorkspaceAudio"
+                    >
+                      <i class="bi bi-pause-fill" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="workspace-reading-bottom-bar__btn workspace-reading-bottom-bar__btn--stop"
+                      :class="{ 'is-ready': hasLoadedAudio || isPlaying }"
+                      :disabled="!hasVerses || (!isPlaying && !hasLoadedAudio)"
+                      :title="t('memorisation.player.stopAudio')"
+                      :aria-label="t('memorisation.player.stopAudio')"
+                      data-testid="workspace-bottom-stop"
+                      @click.stop="stopWorkspaceAudio"
+                    >
+                      <i class="bi bi-stop-fill" aria-hidden="true"></i>
+                    </button>
+                  </div>
+
+                  <span class="workspace-reading-bottom-bar__divider" aria-hidden="true"></span>
+
+                  <button
+                    type="button"
+                    class="workspace-reading-bottom-bar__btn workspace-reading-bottom-bar__btn--fullscreen"
+                    :class="{ 'is-active': isAppFullscreen }"
+                    data-testid="workspace-bottom-fullscreen"
+                    :title="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
+                    :aria-label="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
+                    :aria-pressed="isAppFullscreen ? 'true' : 'false'"
+                    @click.stop="toggleFullScreen"
+                  >
+                    <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <div class="workspace-reading-bottom-bar__spacer" aria-hidden="true"></div>
+
+                <div class="workspace-reading-bottom-bar__cluster workspace-reading-bottom-bar__recite">
+                  <button
+                    v-if="showWorkspaceAiReciteCta"
+                    type="button"
+                    class="action-btn workspace-ai-recite-cta workspace-recite-dock__button workspace-reading-bottom-bar__recite-btn"
+                    :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                    data-testid="workspace-ai-recite-mobile"
+                    :title="t('dashboard.ai_recite.cta_label')"
+                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                    @click="openWorkspaceAiRecite"
+                  >
+                    <span class="workspace-reading-bottom-bar__recite-ring" aria-hidden="true"></span>
+                    <span class="workspace-reading-bottom-bar__recite-ring workspace-reading-bottom-bar__recite-ring--mid" aria-hidden="true"></span>
+                    <span class="workspace-reading-bottom-bar__recite-ring workspace-reading-bottom-bar__recite-ring--delayed" aria-hidden="true"></span>
+                    <i class="bi bi-mic-fill" aria-hidden="true"></i>
+                    <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </main>
         </div>
@@ -4894,7 +4959,7 @@
               <button
                 type="button"
                 class="madani-fullscreen-bar__icon madani-fullscreen-bar__icon--play"
-                :class="{ 'is-playing': isPlaying }"
+                :class="isPlaying ? 'is-playing' : 'is-ready'"
                 :title="t('memorisation.player.playPause')"
                 :aria-label="isPlaying ? t('memorisation.player.pauseAudio') : t('memorisation.player.playAudio')"
                 @click.stop="togglePlay"
@@ -4911,6 +4976,17 @@
               >
                 <i class="bi bi-skip-forward-fill" aria-hidden="true"></i>
               </button>
+              <span class="madani-fullscreen-bar__sep" aria-hidden="true"></span>
+              <button
+                type="button"
+                class="madani-fullscreen-bar__icon madani-fullscreen-bar__icon--exit"
+                data-testid="madani-fullscreen-bar-exit"
+                :title="t('memorisation.reading.exitFullScreen')"
+                :aria-label="t('memorisation.reading.exitFullScreen')"
+                @click.stop="toggleFullScreen"
+              >
+                <i class="bi bi-fullscreen-exit" aria-hidden="true"></i>
+              </button>
             </div>
 
             <button
@@ -4922,6 +4998,9 @@
               :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
               @click.stop="openWorkspaceAiRecite"
             >
+              <span class="madani-fullscreen-bar__recite-ring" aria-hidden="true"></span>
+              <span class="madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--mid" aria-hidden="true"></span>
+              <span class="madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--delayed" aria-hidden="true"></span>
               <i class="bi bi-mic-fill" aria-hidden="true"></i>
             </button>
           </div>

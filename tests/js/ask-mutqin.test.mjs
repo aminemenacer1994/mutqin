@@ -15,6 +15,7 @@ import {
 } from '../../resources/js/scripts/askMutqin/heardStream.js'
 import { tokenizeForMatch } from '../../resources/js/scripts/memorisationDetection/speechMatch.js'
 import { SURAH_NAMES } from '../../resources/js/scripts/engine/hifz_session_engine.js'
+import { normalizeTranscriptionTokenError } from '../../resources/js/scripts/askMutqin/transcriptionErrors.js'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..')
 const memorisation = [
@@ -104,6 +105,21 @@ assert.match(modalCss, /z-index: 13050/, 'Ask Mutqin overlays the navbar')
 assert.match(modalCss, /position: fixed !important/, 'Ask Mutqin overlay stays fixed')
 assert.match(modalCss, /ask-mutqin-ayah__stage/, 'ayah text sits in a padded stage')
 assert.match(modalCss, /overflow-y: auto/, 'ayah stage scrolls for long text')
+assert.match(
+  modalCss,
+  /@media \(max-width: 767px\)[\s\S]*?ask-mutqin-ayah:not\(\.is-matched\)[\s\S]*?max-height:\s*min\(6\.75rem/,
+  'mobile listening panel is height-capped',
+)
+assert.match(
+  modalCss,
+  /@media \(max-width: 767px\)[\s\S]*?ask-mutqin-modal\.mutqin-modal-surface[\s\S]*?height:\s*auto\s*!important/,
+  'mobile modal sizes to content instead of filling the viewport',
+)
+assert.doesNotMatch(
+  modalCss,
+  /@media \(max-width: 767px\)[\s\S]*?ask-mutqin-modal\.mutqin-modal-surface[\s\S]*?height:\s*100%\s*!important/,
+  'mobile modal must not force height 100%',
+)
 assert.match(modalCss, /ask-mutqin-actions/, 'bottom open action is compact')
 assert.match(modalCss, /ask-mutqin-aid__box/, 'reading aid has its own text box')
 assert.match(modalCss, /ask-mutqin-aid__grid/, 'reading aids sit in a two-column grid')
@@ -275,5 +291,30 @@ assert.equal(ASK_MUTQIN_STATES.INTRO, 'intro')
 assert.equal(ASK_MUTQIN_STATES.MULTIPLE, 'multiple_matches')
 assert.equal(ASK_MUTQIN_STATES.NO_MATCH, 'no_match')
 assert.equal(ASK_MUTQIN_STATES.LISTENING_COMMAND, 'listening_command')
+
+const planDenied = normalizeTranscriptionTokenError({
+  response: { status: 403, data: { reason: 'plan_required', message: 'This feature needs a Pro plan.' } },
+  message: 'Request failed with status code 403',
+})
+assert.equal(planDenied.code, 'plan_required')
+const unavailable = normalizeTranscriptionTokenError({
+  response: { status: 502, data: { available: false, reason: 'unavailable', message: 'down' } },
+  message: 'Request failed with status code 502',
+})
+assert.equal(unavailable.code, 'transcription_unavailable')
+
+assert.match(modal, /planRequired/, 'Ask Mutqin surfaces Pro plan errors')
+assert.match(modal, /matching_index_unavailable/, 'Ask Mutqin distinguishes index load failures')
+assert.match(modal, /default: 'sepia'/, 'Ask Mutqin defaults to sepia theme')
+assert.match(
+  readFileSync(join(root, 'resources/js/scripts/askMutqin/voiceSession.js'), 'utf8'),
+  /handshakeTimeoutMs:\s*9000/,
+  'Ask Mutqin allows a longer Speechmatics handshake',
+)
+assert.match(
+  readFileSync(join(root, 'resources/views/layouts/waiting-list-public.blade.php'), 'utf8'),
+  /mutqinInitialTheme = @json\(\$appTheme\)/,
+  'waiting list inherits sepia default theme',
+)
 
 console.log('ask-mutqin.test.mjs: ok')

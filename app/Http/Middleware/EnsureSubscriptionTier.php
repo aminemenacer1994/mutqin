@@ -34,7 +34,20 @@ class EnsureSubscriptionTier
         };
 
         if (! $allowed) {
-            abort(403, __('billing.plan_required', ['tier' => $tier]));
+            $message = __('billing.plan_required', ['tier' => $tier]);
+
+            // JSON clients (Find by voice, AI Recite token mint) need a stable reason
+            // code — a bare abort(403) was mislabeled as a network/voice failure.
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'available' => false,
+                    'reason' => 'plan_required',
+                    'message' => $message,
+                    'tier' => $tier,
+                ], 403);
+            }
+
+            abort(403, $message);
         }
 
         return $next($request);

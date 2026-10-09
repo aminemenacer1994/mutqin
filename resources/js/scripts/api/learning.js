@@ -67,10 +67,22 @@ export const http = axios.create({
 attachNetworkFailureEmitter(http)
 attachHttpErrorTracking(http)
 
+function isSessionMutation(config = {}) {
+  const method = String(config.method || 'get').toLowerCase()
+  if (!['post', 'put', 'patch', 'delete'].includes(method)) return false
+  const path = String(config.url || '')
+  return path === '/session'
+    || path.startsWith('/session/')
+    || path === 'session'
+    || path.startsWith('session/')
+}
+
 http.interceptors.request.use(async (config) => {
   const method = String(config.method || 'get').toLowerCase()
-  if (['post', 'put', 'patch', 'delete'].includes(method) && !readXsrfCookie()) {
-    await ensureCsrfCookie()
+  // Session start/save/pause are CSRF-sensitive; refresh cookie when missing so a
+  // stale page meta token alone cannot produce a hard 419 failure.
+  if (['post', 'put', 'patch', 'delete'].includes(method) && (!readXsrfCookie() || isSessionMutation(config))) {
+    await ensureCsrfCookie({ force: !readXsrfCookie() })
   }
   return syncCsrfHeaders(config)
 })
@@ -88,7 +100,11 @@ http.interceptors.response.use(
     if (status === 419 && config && !config.__csrfRetried) {
       config.__csrfRetried = true
       await ensureCsrfCookie({ force: true })
-      return http.request(syncCsrfHeaders(config))
+      const retryConfig = syncCsrfHeaders(config)
+      if (readCsrfToken()) {
+        http.defaults.headers.common['X-CSRF-TOKEN'] = readCsrfToken()
+      }
+      return http.request(retryConfig)
     }
     return Promise.reject(error)
   }

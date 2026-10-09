@@ -10441,6 +10441,14 @@ export default {
     showPlayerDock() {
       if (this.showMadaniFullscreenBar) return false
       if (this.showCountdownOverlay) return false
+      // Mobile reading bottom bar owns play/pause/stop; keep the dock only for talqin.
+      if (
+        this.isMobileViewport()
+        && this.shouldShowReadingWorkspace
+        && !this.talqinRecitationTurnActive
+      ) {
+        return false
+      }
       // Loaded audio alone is not a surface. Mounting the fixed dock without
       // the bar, pill, or talqin strip leaves an invisible hit target.
       const hasVisibleSurface = this.playbackPillVisible
@@ -42026,7 +42034,21 @@ export default {
       menu.classList.add('top-card-menu--fixed')
       const width = menu.offsetWidth || Math.min(304, window.innerWidth - 16)
       const gap = 6
-      const top = Math.round(rect.bottom + gap)
+      const estimatedHeight = Math.min(menu.scrollHeight || 320, window.innerHeight - 24)
+      const spaceBelow = window.innerHeight - rect.bottom - 12
+      const spaceAbove = rect.top - 12
+      const openUpward = spaceBelow < Math.min(estimatedHeight, 220) && spaceAbove > spaceBelow
+      let top
+      let maxHeight
+      if (openUpward) {
+        maxHeight = Math.max(120, spaceAbove)
+        const usedHeight = Math.min(estimatedHeight, maxHeight)
+        top = Math.round(rect.top - gap - usedHeight)
+        top = Math.max(8, top)
+      } else {
+        top = Math.round(rect.bottom + gap)
+        maxHeight = Math.max(120, window.innerHeight - top - 12)
+      }
       let left = Math.round(rect.right - width)
       left = Math.max(8, Math.min(left, window.innerWidth - width - 8))
       menu.style.setProperty('position', 'fixed', 'important')
@@ -42034,8 +42056,39 @@ export default {
       menu.style.setProperty('left', `${left}px`, 'important')
       menu.style.setProperty('right', 'auto', 'important')
       menu.style.setProperty('inset-inline-end', 'auto', 'important')
-      const maxHeight = window.innerHeight - top - 12
-      menu.style.setProperty('max-height', `${Math.max(120, maxHeight)}px`, 'important')
+      menu.style.setProperty('max-height', `${maxHeight}px`, 'important')
+    },
+
+    playWorkspaceAudio() {
+      if (this.isPlaying) return
+      this.togglePlay()
+    },
+
+    pauseWorkspaceAudio() {
+      if (!this.isPlaying) return
+      this.togglePlay()
+    },
+
+    stopWorkspaceAudio() {
+      this.beginPlaybackGeneration()
+      this.playRequestLocked = false
+      this.clearRecitationWindowTimer?.()
+      this.clearTalqinPauseTimer?.()
+      this.clearPlaybackAdvanceTimer?.({ unlock: true })
+      this.stopWordHighlighting?.()
+      const player = this.ensureSessionAudioPlayer?.()
+      const audio = this.audioElement
+      if (player) {
+        try { player.pause({ bump: false }) } catch { /* ignore */ }
+      } else if (audio) {
+        try { audio.pause() } catch { /* ignore */ }
+      }
+      if (audio) {
+        try { audio.currentTime = 0 } catch { /* ignore */ }
+      }
+      this.currentTime = 0
+      this.isPlaying = false
+      this.syncSessionControlsWithPlayback?.(false)
     },
     toggleMainCardCollapsed() {
       if (!this.showMobileSessionOverviewCollapsible) return

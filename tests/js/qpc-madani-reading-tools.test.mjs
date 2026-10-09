@@ -86,13 +86,13 @@ assert.doesNotMatch(memorisationVue, /readingViewMode === 'stacked' \|\| reading
 assert.match(memorisationVue, /toggleFullScreen/)
 assert.match(
   memorisationVue,
-  /v-if="!isPostSessionChoiceVisible && isMobileViewport\(\)"[\s\S]{0,180}workspace-mobile-fullscreen/,
-  'full screen control is mobile-only in the top toolbar',
+  /data-testid="workspace-bottom-fullscreen"/,
+  'full screen control lives in the mobile reading bottom bar',
 )
 assert.doesNotMatch(
   memorisationVue,
-  /v-if="!isPostSessionChoiceVisible"[\s\S]{0,120}workspace-mobile-fullscreen/,
-  'full screen must not appear on desktop in the top toolbar',
+  /workspace-mobile-fullscreen/,
+  'full screen must not appear in the top toolbar on mobile',
 )
 assert.match(
   memorisationVue,
@@ -115,6 +115,26 @@ assert.match(memorisationJs, /syncMadaniFullscreenTopBarClearance/)
 assert.doesNotMatch(memorisationVue, /madani-qpc-fullscreen-exit/)
 assert.match(madaniFsBarCss, /--madani-fs-top-clearance/)
 assert.match(madaniFsBarCss, /madani-fullscreen-bar--top/)
+assert.match(
+  memorisationVue,
+  /madani-fullscreen-bar__icon--exit[\s\S]{0,120}madani-fullscreen-bar-exit/,
+  'immersive bar keeps exit control after transport',
+)
+assert.match(
+  memorisationVue,
+  /madani-fullscreen-bar__recite-ring--delayed/,
+  'immersive recite uses the same ring markup as the reading dock',
+)
+assert.match(
+  madaniFsBarCss,
+  /Full-bleed dock/,
+  'immersive mobile bar uses full-bleed chrome like the reading dock',
+)
+assert.match(
+  madaniFsBarCss,
+  /is-ready:not\(\.is-playing\)/,
+  'play ready and playing states stay mutually exclusive',
+)
 assert.doesNotMatch(memorisationCss, /madani-qpc-fullscreen-exit/)
 assert.match(pageVue, /--qpc-line-height: 1\.32/)
 assert.match(pageVue, /--qpc-surah-title-scale: 2\.45/)

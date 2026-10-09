@@ -15,6 +15,14 @@ class MemorisationAyahAudioTest extends TestCase
 
     private const FALLBACK = 'https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/1';
 
+    private const CACHE_KEY = 'ayah-audio:v1:ar.alafasy:1';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Cache::store('file')->forget(self::CACHE_KEY);
+    }
+
     public function test_bundled_ayah_audio_proxies_from_cdn_when_local_file_missing(): void
     {
         Http::fake([
@@ -44,7 +52,7 @@ class MemorisationAyahAudioTest extends TestCase
             ->assertSee('cached-audio-bytes', false);
 
         Http::assertSentCount(1);
-        $this->assertTrue(Cache::has('ayah-audio:v1:ar.alafasy:1'));
+        $this->assertTrue(Cache::store('file')->has(self::CACHE_KEY));
     }
 
     public function test_bundled_ayah_audio_falls_back_to_alquran_cloud(): void

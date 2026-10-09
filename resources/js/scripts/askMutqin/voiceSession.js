@@ -7,23 +7,31 @@ import {
 import { resolveAdaptiveSpeechmaticsDelays } from '../memorisationDetection/speechmaticsDelays.js'
 import { evaluateSpeechmaticsAudioGate } from '../audio/speechmaticsAudioGate.js'
 import { buildCsrfHeaders, ensureCsrfCookie, withCsrfRetry } from '../http/csrf.js'
+import { normalizeTranscriptionTokenError } from './transcriptionErrors.js'
+
+export { normalizeTranscriptionTokenError }
 
 async function fetchTranscriptionAccessToken() {
-  await ensureCsrfCookie()
-  const response = await withCsrfRetry(() => axios.post('/memorisation/transcription-token', null, {
-    withCredentials: true,
-    headers: buildCsrfHeaders(),
-  }))
+  try {
+    await ensureCsrfCookie()
+    const response = await withCsrfRetry(() => axios.post('/memorisation/transcription-token', null, {
+      withCredentials: true,
+      headers: buildCsrfHeaders(),
+    }))
 
-  const payload = response?.data || {}
-  const accessToken = String(payload?.access_token || '').trim()
-  const websocketHost = String(payload?.websocket_host || '').trim()
-  if (payload?.available === false || !accessToken || !websocketHost) {
-    const error = new Error(String(payload?.message || 'transcription_unavailable'))
-    error.code = payload?.reason === 'usage_cap' ? 'usage_cap' : 'transcription_unavailable'
-    throw error
+    const payload = response?.data || {}
+    const accessToken = String(payload?.access_token || '').trim()
+    const websocketHost = String(payload?.websocket_host || '').trim()
+    if (payload?.available === false || !accessToken || !websocketHost) {
+      const error = new Error(String(payload?.message || 'transcription_unavailable'))
+      error.code = payload?.reason === 'usage_cap' ? 'usage_cap' : 'transcription_unavailable'
+      error.response = { status: Number(payload?.speechmatics_status || response?.status || 0), data: payload }
+      throw error
+    }
+    return { accessToken, websocketHost }
+  } catch (error) {
+    throw normalizeTranscriptionTokenError(error)
   }
-  return { accessToken, websocketHost }
 }
 
 export function createAskMutqinVoiceSession(options = {}) {
@@ -103,12 +111,24 @@ export function createAskMutqinVoiceSession(options = {}) {
       amdLive: true,
       maxDelaySeconds: delays.maxDelaySeconds,
       endOfUtteranceSeconds: delays.endOfUtteranceSeconds,
-      handshakeTimeoutMs: 4500,
+      // Token mint + Speechmatics handshake can exceed 4.5s on cold starts.
+      handshakeTimeoutMs: 9000,
     })
     provider.onTranscript(onTranscript)
-    provider.onError(onError)
+    provider.onError((error) => {
+      const next = error instanceof Error ? error : new Error(String(error?.message || 'disconnected'))
+      if (!next.code) {
+        const category = String(error?.category || '').toLowerCase()
+        if (category === 'auth') next.code = 'transcription_unavailable'
+        else if (category === 'connection' || category === 'stream') next.code = 'transcription_unavailable'
+        else next.code = 'network'
+      }
+      onError(next)
+    })
     provider.onDisconnect(() => {
-      if (active && !switching) onError(Object.assign(new Error('disconnected'), { code: 'disconnected' }))
+      if (active && !switching) {
+        onError(Object.assign(new Error('disconnected'), { code: 'transcription_unavailable' }))
+      }
     })
     await provider.connect()
   }
@@ -159,6 +179,11 @@ export function createAskMutqinVoiceSession(options = {}) {
         stopTracks()
         const denied = /Permission|NotAllowed|denied/i.test(String(error?.name || error?.message || ''))
         if (denied && !error.code) error.code = 'permission_denied'
+        if (!error.code && error?.category) {
+          error.code = error.category === 'auth' || error.category === 'connection'
+            ? 'transcription_unavailable'
+            : 'network'
+        }
         throw error
       } finally {
         starting = false

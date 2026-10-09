@@ -460,6 +460,11 @@ body.session-analysis-modal-open {
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player {
+  --player-surface: color-mix(in srgb, var(--surface, #fffdf8) 88%, var(--bg, #f6f3ee));
+  --player-line: color-mix(in srgb, var(--border, rgba(109, 77, 51, 0.18)) 70%, transparent);
+  --player-ink: var(--text, #2a211a);
+  --player-muted: var(--text-muted, #75695e);
+  --player-accent: #2f7a58;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -467,9 +472,10 @@ body.session-analysis-modal-open {
   min-width: 0;
   width: 100%;
   padding: 0.55rem 0.65rem;
-  border: 1px solid rgba(109, 77, 51, 0.14);
+  border: 1px solid var(--player-line);
   border-radius: 0.95rem;
-  background: rgba(250, 247, 241, 0.88);
+  background: var(--player-surface);
+  color: var(--player-ink);
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
@@ -479,9 +485,9 @@ body.session-analysis-modal-open {
   height: 2.4rem;
   border: 0;
   border-radius: 0.75rem;
-  background: #2f7a58;
+  background: var(--player-accent);
   color: #fffdf8;
-  box-shadow: 0 3px 10px rgba(47, 122, 88, 0.18);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--player-accent) 28%, transparent);
   cursor: pointer;
 }
 
@@ -512,7 +518,7 @@ body.session-analysis-modal-open {
   min-width: 0;
   height: 1.2rem;
   margin: 0;
-  accent-color: #2f7a58;
+  accent-color: var(--player-accent);
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__player-meta,
@@ -522,7 +528,7 @@ body.session-analysis-modal-open {
   align-items: center;
   gap: 0.4rem;
   margin-top: 0;
-  color: #6f655b;
+  color: var(--player-muted);
   font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
@@ -540,11 +546,11 @@ body.session-analysis-modal-open {
   place-items: center;
   width: 1.55rem;
   height: 1.55rem;
-  border: 1px solid rgba(109, 77, 51, 0.14);
+  border: 1px solid var(--player-line);
   border-radius: 0.5rem;
   padding: 0;
-  background: rgba(255, 255, 255, 0.55);
-  color: #6f655b;
+  background: color-mix(in srgb, var(--surface, #fff) 55%, transparent);
+  color: var(--player-muted);
   cursor: pointer;
 }
 
@@ -561,14 +567,38 @@ body.session-analysis-modal-open {
   min-width: 2.45rem;
   min-height: 1.55rem;
   padding: 0.12rem 0.38rem;
-  border: 1px solid rgba(109, 77, 51, 0.14);
+  border: 1px solid var(--player-line);
   border-radius: 0.5rem;
-  background: rgba(255, 255, 255, 0.55);
-  color: #2a211a;
+  background: color-mix(in srgb, var(--surface, #fff) 55%, transparent);
+  color: var(--player-ink);
   font: inherit;
   font-size: 0.68rem;
   font-weight: 750;
   cursor: pointer;
+}
+
+html[data-theme="sepia"] #sa-session-overview.session-analysis-modal-root .sa-ov__player,
+[data-theme="sepia"] #sa-session-overview.session-analysis-modal-root .sa-ov__player {
+  --player-surface: color-mix(in srgb, #fff8ec 84%, #f1e7d8);
+  --player-line: rgba(118, 88, 54, 0.2);
+  --player-ink: #2a211a;
+  --player-muted: #75695e;
+  --player-accent: #2f7a58;
+}
+
+html[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player {
+  --player-surface: rgba(255, 255, 255, 0.07);
+  --player-line: rgba(255, 236, 216, 0.14);
+  --player-ink: #f3eee7;
+  --player-muted: #ccbcae;
+  --player-accent: #74c79d;
+  box-shadow: none;
+}
+
+html[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+  color: #1d1915;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__note {
@@ -741,10 +771,10 @@ body.session-analysis-modal-open {
 /* Shared player skin used by the saved-session overview and the result modal. */
 .workspace-recite-result .sa-ov__player,
 .workspace-recite-result .sa-ov__player--bento {
-  --player-surface: color-mix(in srgb, #fffdf8 88%, #e8dfd2);
-  --player-line: rgba(80, 64, 48, 0.12);
-  --player-ink: #2a211a;
-  --player-muted: #75695e;
+  --player-surface: color-mix(in srgb, var(--surface, #fffdf8) 88%, var(--bg, #e8dfd2));
+  --player-line: color-mix(in srgb, var(--border, rgba(80, 64, 48, 0.18)) 65%, transparent);
+  --player-ink: var(--text, #2a211a);
+  --player-muted: var(--text-muted, #75695e);
   --player-accent: #2f7a58;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -1130,9 +1160,14 @@ body.session-analysis-modal-open {
   }
 }
 
-/* Final visual pass: keep the review readable at a glance in dark mode and
-   keep the recording control from competing with the ayah review. */
+/* Final visual pass: keep the review readable at a glance.
+   Inherit the document theme (light / sepia / dark) instead of forcing light. */
 #sa-session-overview.session-analysis-modal-root {
+  color-scheme: inherit;
+}
+
+html[data-theme="light"] #sa-session-overview.session-analysis-modal-root,
+html[data-theme="sepia"] #sa-session-overview.session-analysis-modal-root {
   color-scheme: light;
 }
 

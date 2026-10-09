@@ -417,7 +417,7 @@ export default {
   name: 'AskMutqinModal',
   props: {
     open: { type: Boolean, default: false },
-    theme: { type: String, default: 'light' },
+    theme: { type: String, default: 'sepia' },
     reciters: { type: Array, default: () => [] },
     currentSpeed: { type: [Number, String], default: 1 },
     currentReciterId: { type: String, default: '' },
@@ -471,7 +471,7 @@ export default {
   },
   computed: {
     themeAttr() {
-      return this.theme || 'light'
+      return this.theme || document.documentElement?.getAttribute?.('data-theme') || 'sepia'
     },
     isBusy() {
       return isAskMutqinRecordingState(this.state)
@@ -790,13 +790,25 @@ export default {
       this.errorMessage = ''
       this.state = ASK_MUTQIN_STATES.RECITING
       try {
-        this.index = await loadAskMutqinMatchingIndex(this.searchIndex)
-        if (!this.index.length) {
-          const error = new Error('matching_index_unavailable')
-          error.code = 'transcription_unavailable'
-          throw error
-        }
-        await this.ensureVoice().then((voice) => voice.start('ar'))
+        // Start the mic + Speechmatics session while the matching index loads so a
+        // slow Quran proxy does not look like a voice connection failure.
+        const voiceReady = this.ensureVoice().then((voice) => voice.start('ar'))
+        const indexReady = loadAskMutqinMatchingIndex(this.searchIndex)
+          .then((index) => {
+            this.index = Array.isArray(index) ? index : []
+            if (!this.index.length) {
+              const error = new Error('matching_index_unavailable')
+              error.code = 'matching_index_unavailable'
+              throw error
+            }
+            return this.index
+          })
+          .catch((error) => {
+            const next = error instanceof Error ? error : new Error(String(error?.message || 'matching_index_unavailable'))
+            if (!next.code) next.code = 'matching_index_unavailable'
+            throw next
+          })
+        await Promise.all([voiceReady, indexReady])
       } catch (error) {
         this.fail(error)
       }
@@ -1305,7 +1317,13 @@ export default {
       await this.startSession()
     },
     fail(error) {
-      const code = String(error?.code || '')
+      const status = Number(error?.response?.status || error?.cause?.response?.status || 0)
+      const code = String(
+        error?.code
+        || (status === 401 || status === 403 ? 'plan_required' : '')
+        || (error?.category === 'connection' || error?.category === 'auth' ? 'transcription_unavailable' : '')
+        || '',
+      )
       this.errorCode = code
       this.recoverableState = this.state
       const micKind = classifyMicrophoneAccessError(error, {
@@ -1316,10 +1334,16 @@ export default {
         this.errorMessage = [help.explanation, ...help.steps].filter(Boolean).join(' ')
       } else if (code === 'usage_cap') {
         this.errorMessage = this.t('memorisation.aiCheck.usageCapReached')
-      } else if (code === 'transcription_unavailable') {
+      } else if (code === 'plan_required') {
+        this.errorMessage = this.t('memorisation.askMutqin.planRequired')
+      } else if (code === 'matching_index_unavailable') {
+        this.errorMessage = this.t('memorisation.askMutqin.indexUnavailable')
+      } else if (code === 'transcription_unavailable' || code === 'disconnected') {
         this.errorMessage = this.t('memorisation.askMutqin.serviceUnavailable')
-      } else {
+      } else if (code === 'network') {
         this.errorMessage = this.t('memorisation.askMutqin.networkError')
+      } else {
+        this.errorMessage = this.t('memorisation.askMutqin.serviceUnavailable')
       }
       this.state = ASK_MUTQIN_STATES.ERROR
       this.teardown({ keepLock: true })
