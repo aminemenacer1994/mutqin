@@ -1,5 +1,5 @@
 <template>
-  <!-- mutqin-ui-build: v186 -->
+  <!-- mutqin-ui-build: v207 -->
   <div class="app" :data-theme="theme" :dir="isRtlLocale ? 'rtl' : 'ltr'" :class="{
     'dark-mode': theme === 'dark',
     'is-rtl': isRtlLocale,
@@ -882,7 +882,7 @@
                       @click.stop="topCardMenuOpen = false"
                     >
                       <i class="bi bi-shield-check" aria-hidden="true"></i>
-                      <span>{{ t('common.adminDashboard') || 'Admin Dashboard' }}</span>
+                      <span>{{ t('common.adminDashboard') || 'Admin' }}</span>
                     </a>
                     <button type="button" class="top-card-menu-row" @click="openOnboardingFromTopMenu">
                       <i class="bi bi-compass" aria-hidden="true"></i>
@@ -1782,6 +1782,21 @@
               aria-live="polite"
             >
               <div class="workspace-reading-bottom-bar__shell">
+                <div class="workspace-reading-bottom-bar__cluster workspace-reading-bottom-bar__leading">
+                  <button
+                    type="button"
+                    class="workspace-reading-bottom-bar__btn workspace-reading-bottom-bar__btn--fullscreen"
+                    :class="{ 'is-active': isAppFullscreen }"
+                    data-testid="workspace-bottom-fullscreen"
+                    :title="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
+                    :aria-label="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
+                    :aria-pressed="isAppFullscreen ? 'true' : 'false'"
+                    @click.stop="toggleFullScreen"
+                  >
+                    <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
+                  </button>
+                </div>
+
                 <div
                   class="workspace-reading-bottom-bar__cluster workspace-reading-bottom-bar__playback"
                   role="group"
@@ -1825,24 +1840,7 @@
                       <i class="bi bi-stop-fill" aria-hidden="true"></i>
                     </button>
                   </div>
-
-                  <span class="workspace-reading-bottom-bar__divider" aria-hidden="true"></span>
-
-                  <button
-                    type="button"
-                    class="workspace-reading-bottom-bar__btn workspace-reading-bottom-bar__btn--fullscreen"
-                    :class="{ 'is-active': isAppFullscreen }"
-                    data-testid="workspace-bottom-fullscreen"
-                    :title="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
-                    :aria-label="isAppFullscreen ? t('memorisation.reading.exitFullScreen') : t('memorisation.reading.fullScreen')"
-                    :aria-pressed="isAppFullscreen ? 'true' : 'false'"
-                    @click.stop="toggleFullScreen"
-                  >
-                    <i class="bi" :class="isAppFullscreen ? 'bi-fullscreen-exit' : 'bi-arrows-fullscreen'" aria-hidden="true"></i>
-                  </button>
                 </div>
-
-                <div class="workspace-reading-bottom-bar__spacer" aria-hidden="true"></div>
 
                 <div class="workspace-reading-bottom-bar__cluster workspace-reading-bottom-bar__recite">
                   <button
@@ -4924,22 +4922,35 @@
       >
         <div class="madani-fullscreen-bar__shell">
           <div class="madani-fullscreen-bar__inner">
-            <label
-              class="madani-fullscreen-bar__reciter madani-fullscreen-bar__reciter--mobile-icon"
-              :title="fullscreenReciterName"
-            >
-              <span class="sr-only">{{ t('sessionSetup.reciter') }}: {{ fullscreenReciterName }}</span>
-              <i class="bi bi-headphones madani-fullscreen-bar__reciter-glyph" aria-hidden="true"></i>
-              <select
-                ref="madaniFullscreenReciterSelect"
-                :value="reciterId"
-                class="madani-fullscreen-bar__reciter-select"
-                :aria-label="t('sessionSetup.reciter')"
-                @change="onMadaniFullscreenReciterChange($event)"
+            <div class="madani-fullscreen-bar__cluster madani-fullscreen-bar__cluster--leading">
+              <label
+                class="madani-fullscreen-bar__reciter madani-fullscreen-bar__reciter--mobile-icon"
+                :title="fullscreenReciterName"
               >
-                <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
-              </select>
-            </label>
+                <span class="sr-only">{{ t('sessionSetup.reciter') }}: {{ fullscreenReciterName }}</span>
+                <i class="bi bi-headphones madani-fullscreen-bar__reciter-glyph" aria-hidden="true"></i>
+                <select
+                  ref="madaniFullscreenReciterSelect"
+                  :value="reciterId"
+                  class="madani-fullscreen-bar__reciter-select"
+                  :aria-label="t('sessionSetup.reciter')"
+                  @change="onMadaniFullscreenReciterChange($event)"
+                >
+                  <option v-for="r in reciters" :key="r.id" :value="r.id">{{ r.name }}</option>
+                </select>
+              </label>
+
+              <button
+                type="button"
+                class="madani-fullscreen-bar__icon madani-fullscreen-bar__icon--exit"
+                data-testid="madani-fullscreen-bar-exit"
+                :title="t('memorisation.reading.exitFullScreen')"
+                :aria-label="t('memorisation.reading.exitFullScreen')"
+                @click.stop="toggleFullScreen"
+              >
+                <i class="bi bi-fullscreen-exit" aria-hidden="true"></i>
+              </button>
+            </div>
 
             <div
               class="madani-fullscreen-bar__cluster madani-fullscreen-bar__cluster--transport"
@@ -4975,17 +4986,6 @@
                 @click.stop="next"
               >
                 <i class="bi bi-skip-forward-fill" aria-hidden="true"></i>
-              </button>
-              <span class="madani-fullscreen-bar__sep" aria-hidden="true"></span>
-              <button
-                type="button"
-                class="madani-fullscreen-bar__icon madani-fullscreen-bar__icon--exit"
-                data-testid="madani-fullscreen-bar-exit"
-                :title="t('memorisation.reading.exitFullScreen')"
-                :aria-label="t('memorisation.reading.exitFullScreen')"
-                @click.stop="toggleFullScreen"
-              >
-                <i class="bi bi-fullscreen-exit" aria-hidden="true"></i>
               </button>
             </div>
 

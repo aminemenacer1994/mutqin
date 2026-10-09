@@ -27,7 +27,7 @@ return [
     'menu' => 'Menu',
     'subscription' => 'Abonnement',
     'settings' => 'Paramètres',
-    'admin_dashboard' => 'Tableau de bord admin',
+    'admin_dashboard' => 'Admin',
     'contact_inbox' => 'Boîte de contact',
     'open_navigation' => 'Ouvrir le menu de navigation',
     'close_navigation' => 'Fermer le menu de navigation',

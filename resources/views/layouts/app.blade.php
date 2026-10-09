@@ -19,12 +19,12 @@
         'ur' => 'اردو',
     ];
     $appLocaleOptions = [
-        'en' => ['flag' => '🇬🇧', 'label' => $languageEndonyms['en']],
-        'fr' => ['flag' => '🇫🇷', 'label' => $languageEndonyms['fr']],
-        'es' => ['flag' => '🇪🇸', 'label' => $languageEndonyms['es']],
+        'en' => ['flag' => '🇬🇧', 'label' => 'EN'],
+        'fr' => ['flag' => '🇫🇷', 'label' => 'FR'],
+        'es' => ['flag' => '🇪🇸', 'label' => 'ES'],
     ];
     $supportedDocumentLocales = ['en', 'ar', 'fr', 'id', 'tr', 'es', 'ur'];
-    $activeLocaleOption = $appLocaleOptions[$appLocale] ?? ['flag' => '🇬🇧', 'label' => $languageEndonyms[$appLocale] ?? $appLocale];
+    $activeLocaleOption = $appLocaleOptions[$appLocale] ?? ['flag' => '🇬🇧', 'label' => strtoupper($appLocale)];
     $navUser = auth()->user();
     $authAwaitingVerification = $navUser !== null
         && \App\Support\EmailVerification::required()
@@ -132,12 +132,12 @@
       }
     </style>
     @endif
-    <meta name="mutqin-build" content="v131">
-    <meta name="mutqin-asset-build" content="{{ config('error_tracking.asset_build', 'v165') }}">
+    <meta name="mutqin-build" content="v207">
+    <meta name="mutqin-asset-build" content="{{ config('error_tracking.asset_build', 'v207') }}">
     <meta name="mutqin-release" content="{{ \App\Support\ErrorReporting::release() }}">
     <meta name="mutqin-environment" content="{{ app()->environment() }}">
     <script>
-      document.documentElement.dataset.mutqinAssetBuild = @json(config('error_tracking.asset_build', 'v165'));
+      document.documentElement.dataset.mutqinAssetBuild = @json(config('error_tracking.asset_build', 'v207'));
     </script>
     <style id="mutqin-ai-recite-force-v125">
       #mutqin-build-stamp {
@@ -186,7 +186,7 @@
         // reload here — that caused refresh loops with stale HTML. ChunkLoadError
         // recovery (resources/js/utils/chunkLoadRecovery.js) handles mid-session
         // stale chunks with at most one controlled reload.
-        var BUILD = @json(config('error_tracking.asset_build', 'v165'));
+        var BUILD = @json(config('error_tracking.asset_build', 'v207'));
         var STORE = 'mutqin.asset.build';
         try {
           if (localStorage.getItem(STORE) === BUILD) {
@@ -234,6 +234,124 @@
     @if(request()->routeIs('memorisation', 'memorisation.demo'))
     {{-- Survives stale memorisation JS chunks: HTML is network-first / not JS-chunk-cached.
          Canonical source for button semantics is resources/sass/app.scss (.btn-primary, etc.). --}}
+    <style id="mutqin-mobile-bottom-glass-v202">
+      /*
+       * Shared dock geometry + stronger liquid glass.
+       * Reading bar and fullscreen Madani bar MUST share these tokens.
+       */
+      @media (max-width: 767.98px) {
+        html {
+          --mq-dock-inset-l: max(0.7rem, env(safe-area-inset-left, 0px));
+          --mq-dock-inset-r: max(0.7rem, env(safe-area-inset-right, 0px));
+          --mq-dock-inset-b: max(0.65rem, env(safe-area-inset-bottom, 0px));
+          --mq-dock-height: 3.7rem;
+          --mq-dock-pad-y: 0.4rem;
+          --mq-dock-pad-x: 0.85rem;
+          --mq-bottom-bar-glass: linear-gradient(
+            165deg,
+            rgba(255, 255, 255, 0.72) 0%,
+            rgba(255, 255, 255, 0.28) 38%,
+            rgba(255, 253, 249, 0.18) 100%
+          );
+          --mq-bottom-bar-glass-shadow:
+            0 1.5px 0 rgba(255, 255, 255, 0.82) inset,
+            0 -0.5px 0 rgba(255, 255, 255, 0.2) inset,
+            0 14px 40px rgba(28, 20, 12, 0.16),
+            0 4px 14px rgba(28, 20, 12, 0.08);
+          --mq-bottom-bar-glass-blur: blur(44px) saturate(2.05) brightness(1.06);
+          --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.72);
+        }
+
+        html[data-theme="sepia"],
+        html:has(.app[data-theme="sepia"]) {
+          --mq-bottom-bar-glass: linear-gradient(
+            165deg,
+            rgba(255, 250, 240, 0.7) 0%,
+            rgba(255, 248, 236, 0.3) 40%,
+            rgba(247, 239, 226, 0.2) 100%
+          );
+          --mq-bottom-bar-glass-border: rgba(255, 252, 244, 0.76);
+          --mq-bottom-bar-glass-shadow:
+            0 1.5px 0 rgba(255, 255, 255, 0.7) inset,
+            0 -0.5px 0 rgba(255, 255, 255, 0.18) inset,
+            0 14px 40px rgba(60, 40, 18, 0.15),
+            0 4px 14px rgba(60, 40, 18, 0.07);
+        }
+
+        html[data-theme="dark"],
+        html:has(.app[data-theme="dark"]) {
+          --mq-bottom-bar-glass: linear-gradient(
+            165deg,
+            rgba(80, 70, 60, 0.48) 0%,
+            rgba(40, 34, 30, 0.34) 45%,
+            rgba(22, 19, 17, 0.28) 100%
+          );
+          --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.34);
+          --mq-bottom-bar-glass-blur: blur(44px) saturate(1.9) brightness(1.08);
+          --mq-bottom-bar-glass-shadow:
+            0 1.5px 0 rgba(255, 255, 255, 0.22) inset,
+            0 -0.5px 0 rgba(255, 255, 255, 0.06) inset,
+            0 16px 42px rgba(0, 0, 0, 0.4),
+            0 4px 14px rgba(0, 0, 0, 0.22);
+        }
+
+        html body .app .workspace-recite-dock.workspace-reading-bottom-bar,
+        html body .app .workspace-recite-dock--mobile.workspace-reading-bottom-bar,
+        html body .madani-fullscreen-bar.madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top),
+        html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
+          --madani-fs-bar-inset-x: var(--mq-dock-inset-l);
+          --madani-fs-bar-inset-bottom: 0px;
+          position: fixed !important;
+          top: auto !important;
+          left: var(--mq-dock-inset-l) !important;
+          right: var(--mq-dock-inset-r) !important;
+          bottom: var(--mq-dock-inset-b) !important;
+          inset-inline-start: var(--mq-dock-inset-l) !important;
+          inset-inline-end: var(--mq-dock-inset-r) !important;
+          inset-block-end: var(--mq-dock-inset-b) !important;
+          width: auto !important;
+          max-width: none !important;
+          min-height: var(--mq-dock-height) !important;
+          height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border-radius: 999px !important;
+          border: 1px solid var(--mq-bottom-bar-glass-border) !important;
+          background: var(--mq-bottom-bar-glass) !important;
+          box-shadow: var(--mq-bottom-bar-glass-shadow) !important;
+          -webkit-backdrop-filter: var(--mq-bottom-bar-glass-blur) !important;
+          backdrop-filter: var(--mq-bottom-bar-glass-blur) !important;
+          opacity: 1 !important;
+          isolation: isolate !important;
+          overflow: visible !important;
+          transform: none !important;
+          animation: none !important;
+          filter: none !important;
+          z-index: 1040 !important;
+        }
+
+        html body .app .workspace-recite-dock.workspace-reading-bottom-bar::before,
+        html body .app .workspace-recite-dock--mobile.workspace-reading-bottom-bar::before,
+        html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top)::before {
+          content: none !important;
+          display: none !important;
+        }
+
+        html body .app .workspace-reading-bottom-bar__shell,
+        html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) .madani-fullscreen-bar__shell {
+          position: relative !important;
+          z-index: 1 !important;
+          background: transparent !important;
+          border: 0 !important;
+          border-radius: 999px !important;
+          box-shadow: none !important;
+          -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+          padding: var(--mq-dock-pad-y) var(--mq-dock-pad-x) !important;
+          min-height: var(--mq-dock-height) !important;
+        }
+      }
+    </style>
     <style id="mutqin-button-colour-semantics">
       :root {
         --bs-danger: #dc2626;
@@ -4193,6 +4311,11 @@
         .app-navbar .nav-link-memorisation:focus,
         .app-navbar .nav-link-memorisation:focus-visible,
         .app-navbar .nav-link-memorisation.active,
+        .app-navbar .nav-link-about,
+        .app-navbar .nav-link-about:hover,
+        .app-navbar .nav-link-about:focus,
+        .app-navbar .nav-link-about:focus-visible,
+        .app-navbar .nav-link-about.active,
         .app-navbar .nav-link-guides,
         .app-navbar .nav-link-guides:hover,
         .app-navbar .nav-link-guides:focus,
@@ -7893,6 +8016,11 @@
                                 <span class="nav-link-copy"><strong data-i18n="memorisation">{{ __('ui.memorisation') }}</strong><small class="d-lg-none">{{ __('ui.nav_memorisation_sub') }}</small></span>
                                 <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                             </a>
+                            <a class="nav-link nav-link-about {{ request()->routeIs('about', 'about-us') ? 'active' : '' }}" href="{{ route('about') }}" @if (request()->routeIs('about', 'about-us')) aria-current="page" @endif>
+                                <i class="bi bi-info-circle nav-link-icon" aria-hidden="true"></i>
+                                <span class="nav-link-copy"><strong data-i18n="about">{{ __('ui.about') }}</strong><small class="d-lg-none">{{ __('ui.nav_about_sub') }}</small></span>
+                                <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                            </a>
                             @auth
                             @unless ($authAwaitingVerification)
                             @if (Auth::user()->isAdmin())
@@ -8651,12 +8779,13 @@
                     const toggle = wrap.querySelector('.app-lang-toggle');
                     if (!toggle) return;
                     const flag = activeBtn?.dataset.flag || activeBtn?.querySelector('.lang-btn-flag')?.textContent || '';
-                    const label = endonyms[next] || activeBtn?.dataset.label || activeBtn?.querySelector('.lang-btn-label')?.textContent || next;
+                    const label = activeBtn?.dataset.label || activeBtn?.querySelector('.lang-btn-label')?.textContent || String(next).toUpperCase();
+                    const a11yLabel = endonyms[next] || label;
                     const flagEl = toggle.querySelector('.app-lang-flag');
                     const labelEl = toggle.querySelector('.app-lang-label');
                     if (flagEl) flagEl.textContent = flag;
                     if (labelEl) labelEl.textContent = label;
-                    toggle.setAttribute('aria-label', label);
+                    toggle.setAttribute('aria-label', a11yLabel);
                 });
             }
 
@@ -10245,7 +10374,7 @@ body.session-analysis-modal-open {
     text-align-last: center !important;
   }
 </style>
-<style id="mutqin-madani-fs-bar-v193">
+<style id="mutqin-madani-fs-bar-v195">
   /* Network-first immersive Madani toolbar — survives stale memorisation chunks. */
   @media (min-width: 768px) {
     .madani-fullscreen-bar {
@@ -10265,38 +10394,25 @@ body.session-analysis-modal-open {
     html.is-app-fullscreen:has(.madani-fullscreen-bar),
     html.is-app-fullscreen.has-madani-fullscreen-bar {
       --madani-fs-bar-icon: 2.55rem;
-      --madani-fs-bar-recite: 3.5rem;
+      --madani-fs-bar-recite: 56px;
       --madani-fs-bar-shell-pad-y: 0.45rem;
+      --madani-fs-bar-height: 4.55rem;
       --madani-fs-bar-row: max(var(--madani-fs-bar-icon), var(--madani-fs-bar-recite));
     }
 
-    /* Full-bleed liquid glass dock */
     .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
-      inset-inline-start: 0 !important;
-      inset-inline-end: 0 !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      width: 100% !important;
-      max-width: none !important;
-      padding: 0 !important;
-      border: 0 !important;
-      border-radius: 0 !important;
-      border-block-start: 1px solid color-mix(in srgb, #2a2118 12%, transparent) !important;
-      background: color-mix(in srgb, #fffdf9 46%, transparent) !important;
-      box-shadow:
-        0 1px 0 color-mix(in srgb, #fff 58%, transparent) inset,
-        0 -8px 22px color-mix(in srgb, #3d2a18 6%, transparent) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
-      backdrop-filter: blur(24px) saturate(1.22) !important;
+      /* Layout + glass paint owned by mutqin-mobile-bottom-glass-v199. */
       overflow: visible !important;
       pointer-events: none !important;
     }
 
     .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) .madani-fullscreen-bar__shell {
+      display: grid !important;
       width: 100% !important;
+      min-height: 3.7rem !important;
       border: 0 !important;
-      border-radius: 0 !important;
+      border-radius: 999px !important;
+      padding: 0.4rem 0.85rem !important;
       background: transparent !important;
       box-shadow: none !important;
       -webkit-backdrop-filter: none !important;
@@ -10305,37 +10421,43 @@ body.session-analysis-modal-open {
       overflow: visible !important;
     }
 
-    .madani-fullscreen-bar--mobile[data-theme="dark"]:not(.madani-fullscreen-bar--top),
-    [data-theme="dark"] .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
-      border-block-start-color: color-mix(in srgb, #fff 16%, transparent) !important;
-      background: color-mix(in srgb, #1c1917 42%, transparent) !important;
-      box-shadow:
-        0 1px 0 color-mix(in srgb, #fff 10%, transparent) inset,
-        0 -8px 22px rgba(0, 0, 0, 0.22) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(1.25) !important;
-      backdrop-filter: blur(24px) saturate(1.25) !important;
-    }
-
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
       display: grid !important;
-      grid-template-columns: min-content minmax(0, 1fr) min-content !important;
+      grid-template-columns: minmax(2.55rem, 1fr) auto minmax(2.55rem, 1fr) !important;
       align-items: center !important;
-      gap: 0.25rem !important;
-      min-height: var(--madani-fs-bar-row, 3.5rem) !important;
+      gap: 0.35rem !important;
+      min-height: 3.7rem !important;
     }
 
-    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--no-recite {
-      grid-template-columns: min-content minmax(0, 1fr) !important;
-    }
-
-    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--leading {
+      display: inline-flex !important;
+      align-items: center !important;
       justify-self: start !important;
+      grid-column: 1 !important;
+      gap: 0.1rem !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-self: center !important;
+      grid-column: 2 !important;
+      gap: 0.05rem !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__spacer {
+      display: none !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+      justify-self: end !important;
+      grid-column: 3 !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon {
-      width: var(--madani-fs-bar-icon, 2.55rem) !important;
-      height: var(--madani-fs-bar-icon, 2.55rem) !important;
-      min-width: var(--madani-fs-bar-icon, 2.55rem) !important;
+      width: 2.55rem !important;
+      height: 2.55rem !important;
+      min-width: 2.55rem !important;
       background: transparent !important;
       box-shadow: none !important;
       border-radius: 0 !important;
@@ -10353,14 +10475,19 @@ body.session-analysis-modal-open {
       display: inline-flex !important;
       visibility: visible !important;
       opacity: 1 !important;
+      justify-self: end !important;
       position: relative !important;
       inset: auto !important;
       overflow: visible !important;
       isolation: isolate !important;
-      width: var(--madani-fs-bar-recite, 3.5rem) !important;
-      height: var(--madani-fs-bar-recite, 3.5rem) !important;
-      min-width: var(--madani-fs-bar-recite, 3.5rem) !important;
-      min-height: var(--madani-fs-bar-recite, 3.5rem) !important;
+      width: 56px !important;
+      height: 56px !important;
+      min-width: 56px !important;
+      min-height: 56px !important;
+      max-width: 56px !important;
+      max-height: 56px !important;
+      margin: 0 !important;
+      padding: 0 !important;
       border: 1.5px solid #39b979 !important;
       border-radius: 50% !important;
       background:
@@ -10375,18 +10502,30 @@ body.session-analysis-modal-open {
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
+      position: relative !important;
+      z-index: 1 !important;
       font-size: 1.45rem !important;
       color: #0d7b4f !important;
       opacity: 1 !important;
+    }
+
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite-ring {
+      position: absolute !important;
+      inset: -4px !important;
+      border-radius: 50% !important;
+      border: 2px solid color-mix(in srgb, #39b979 75%, transparent) !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
     }
 
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
-      width: var(--madani-fs-bar-icon, 2.55rem) !important;
-      height: var(--madani-fs-bar-icon, 2.55rem) !important;
-      min-width: var(--madani-fs-bar-icon, 2.55rem) !important;
+      width: 2.55rem !important;
+      height: 2.55rem !important;
+      min-width: 2.55rem !important;
       border-radius: 0 !important;
       background: transparent !important;
       position: relative !important;
@@ -10411,36 +10550,45 @@ body.session-analysis-modal-open {
     }
   }
 </style>
-<style id="mutqin-reading-bottom-bar-glass-v1">
-  /* Network-first liquid glass for the mobile reading dock. */
+<style id="mutqin-reading-bottom-bar-glass-v2">
+  /* Recite rings only — frosted pill owned by mutqin-mobile-bottom-glass-v199. */
   @media (max-width: 767.98px) {
-    html body .app .workspace-recite-dock.workspace-recite-dock--mobile.workspace-reading-bottom-bar,
-    html body .app .main .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
-    html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
-      border-block-start: 1px solid color-mix(in srgb, #2a2118 12%, transparent) !important;
-      background: color-mix(in srgb, #fffdf9 46%, transparent) !important;
-      box-shadow:
-        0 1px 0 color-mix(in srgb, #fff 58%, transparent) inset,
-        0 -8px 22px color-mix(in srgb, #3d2a18 6%, transparent) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
-      backdrop-filter: blur(24px) saturate(1.22) !important;
+    html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring,
+    html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring {
+      animation: mutqin-reading-recite-ring-v2 2.1s cubic-bezier(0.18, 0.72, 0.24, 1) infinite !important;
     }
 
-    [data-theme="dark"] html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
-    html[data-theme="dark"] body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
-    html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile[data-theme="dark"] {
-      border-block-start-color: color-mix(in srgb, #fff 16%, transparent) !important;
-      background: color-mix(in srgb, #1c1917 42%, transparent) !important;
-      box-shadow:
-        0 1px 0 color-mix(in srgb, #fff 10%, transparent) inset,
-        0 -8px 22px rgba(0, 0, 0, 0.22) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(1.25) !important;
-      backdrop-filter: blur(24px) saturate(1.25) !important;
+    html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring--mid {
+      animation-delay: 0.7s !important;
+    }
+
+    html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring--delayed {
+      animation-delay: 1.4s !important;
+    }
+  }
+
+  @keyframes mutqin-reading-recite-ring-v2 {
+    0% {
+      opacity: 0.7;
+      transform: scale(0.9);
+      border-color: color-mix(in srgb, #2f9f68 85%, transparent);
+    }
+    45% {
+      opacity: 0.28;
+      transform: scale(1.18);
+      border-color: color-mix(in srgb, #56de95 65%, transparent);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.4);
+      border-color: transparent;
     }
   }
 </style>
-<script id="mutqin-madani-fs-bar-v192">
+<script id="mutqin-madani-fs-bar-v195">
   (function () {
+    var syncing = false;
+
     function fixReciterToolbarIcon() {
       document.querySelectorAll('.madani-fullscreen-bar__reciter-glyph').forEach(function (el) {
         if (!(el instanceof HTMLElement)) return;
@@ -10452,7 +10600,7 @@ body.session-analysis-modal-open {
     }
 
     function hideBarOnWideViewports() {
-      var bar = document.querySelector('.madani-fullscreen-bar');
+      var bar = document.querySelector('.madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top), .madani-fullscreen-bar');
       if (!bar) return;
       var wide = window.innerWidth >= 768;
       bar.hidden = wide;
@@ -10460,15 +10608,105 @@ body.session-analysis-modal-open {
       bar.setAttribute('aria-hidden', wide ? 'true' : 'false');
       document.documentElement.classList.toggle('has-madani-fullscreen-bar', !wide && !!bar && !bar.hidden);
     }
+
+    /** Network-first layout: [headphones + exit] | centered transport | recite */
+    function fixImmersiveBarLayout() {
+      var bar = document.querySelector('.madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top)');
+      if (!bar || bar.hidden) return;
+      var inner = bar.querySelector('.madani-fullscreen-bar__inner');
+      if (!inner) return;
+
+      var leading = inner.querySelector(':scope > .madani-fullscreen-bar__cluster--leading');
+      var transport = inner.querySelector(':scope > .madani-fullscreen-bar__cluster--transport')
+        || inner.querySelector('.madani-fullscreen-bar__cluster--transport');
+      var recite = inner.querySelector(':scope > .madani-fullscreen-bar__recite')
+        || inner.querySelector('.madani-fullscreen-bar__recite');
+      var spacerEl = inner.querySelector(':scope > .madani-fullscreen-bar__spacer');
+      if (spacerEl) spacerEl.remove();
+
+      if (leading && transport && recite) {
+        var reciter = leading.querySelector('.madani-fullscreen-bar__reciter')
+          || inner.querySelector('.madani-fullscreen-bar__reciter');
+        var exitBtn = leading.querySelector('.madani-fullscreen-bar__icon--exit')
+          || transport.querySelector('.madani-fullscreen-bar__icon--exit')
+          || inner.querySelector('.madani-fullscreen-bar__icon--exit');
+        var sep = transport.querySelector('.madani-fullscreen-bar__sep');
+        if (sep) sep.remove();
+
+        if (reciter) leading.appendChild(reciter);
+        if (exitBtn) leading.appendChild(exitBtn);
+        var nestedTransport = leading.querySelector('.madani-fullscreen-bar__cluster--transport');
+        if (nestedTransport) {
+          // Keep transport as a sibling of leading (centered column).
+          transport = nestedTransport;
+        }
+
+        var orderOk =
+          leading.previousElementSibling === null
+          && transport.previousElementSibling === leading
+          && recite.previousElementSibling === transport
+          && inner.lastElementChild === recite
+          && !leading.contains(transport)
+          && inner.getAttribute('data-mutqin-fs-layout') === '2';
+        if (orderOk) return;
+
+        inner.appendChild(leading);
+        inner.appendChild(transport);
+        inner.appendChild(recite);
+        inner.setAttribute('data-mutqin-fs-layout', '2');
+        return;
+      }
+
+      var reciter = inner.querySelector('.madani-fullscreen-bar__reciter');
+      transport = inner.querySelector('.madani-fullscreen-bar__cluster--transport');
+      recite = inner.querySelector('.madani-fullscreen-bar__recite');
+      if (!reciter || !transport || !recite) return;
+
+      var exitBtn = transport.querySelector('.madani-fullscreen-bar__icon--exit')
+        || inner.querySelector('.madani-fullscreen-bar__icon--exit');
+      var sep = transport.querySelector('.madani-fullscreen-bar__sep');
+      if (sep) sep.remove();
+
+      leading = document.createElement('div');
+      leading.className = 'madani-fullscreen-bar__cluster madani-fullscreen-bar__cluster--leading';
+      leading.appendChild(reciter);
+      if (exitBtn) leading.appendChild(exitBtn);
+
+      while (inner.firstChild) inner.removeChild(inner.firstChild);
+      inner.appendChild(leading);
+      inner.appendChild(transport);
+      inner.appendChild(recite);
+      inner.setAttribute('data-mutqin-fs-layout', '2');
+    }
+
+    window.__mutqinFixImmersiveBarLayout = fixImmersiveBarLayout;
+
     function syncMadaniToolbarChrome() {
-      hideBarOnWideViewports();
-      fixReciterToolbarIcon();
+      if (syncing) return;
+      syncing = true;
+      try {
+        hideBarOnWideViewports();
+        fixReciterToolbarIcon();
+        fixImmersiveBarLayout();
+        if (typeof window.__mutqinApplyBottomChrome === 'function') {
+          window.__mutqinApplyBottomChrome();
+        }
+      } finally {
+        syncing = false;
+      }
     }
-    window.addEventListener('resize', syncMadaniToolbarChrome);
-    if (typeof MutationObserver !== 'undefined') {
-      new MutationObserver(syncMadaniToolbarChrome).observe(document.body, { childList: true, subtree: true });
+
+    var madaniChromeTimer = 0;
+    function scheduleMadaniToolbarChrome() {
+      window.clearTimeout(madaniChromeTimer);
+      madaniChromeTimer = window.setTimeout(syncMadaniToolbarChrome, 150);
     }
-    syncMadaniToolbarChrome();
+
+    window.addEventListener('resize', scheduleMadaniToolbarChrome);
+    window.addEventListener('mutqin:app-mounted', scheduleMadaniToolbarChrome);
+    if (document.documentElement.dataset.mutqinAppMounted === '1') {
+      scheduleMadaniToolbarChrome();
+    }
   })();
 </script>
 <script id="mutqin-mobile-reciter-v196">
@@ -12569,6 +12807,117 @@ body.session-analysis-modal-open {
       folioObserver.observe(document.documentElement, { childList: true, subtree: true })
     }
   })()
+</script>
+<!-- mutqin-bottom-chrome-v196 -->
+<script id="mutqin-bottom-chrome-v196">
+  (function () {
+    function themeKey() {
+      var app = document.querySelector('.app[data-theme], .madani-fullscreen-bar[data-theme]');
+      return (app && app.getAttribute('data-theme')) || document.documentElement.getAttribute('data-theme') || 'light';
+    }
+
+    function glassChrome(theme) {
+      if (theme === 'dark') {
+        return {
+          glass:
+            'linear-gradient(165deg, rgba(80, 70, 60, 0.48) 0%, rgba(40, 34, 30, 0.34) 45%, rgba(22, 19, 17, 0.28) 100%)',
+          blur: 'blur(44px) saturate(1.9) brightness(1.08)',
+          shadow:
+            '0 1.5px 0 rgba(255, 255, 255, 0.22) inset, 0 -0.5px 0 rgba(255, 255, 255, 0.06) inset, 0 16px 42px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.22)',
+          border: 'rgba(255, 255, 255, 0.34)',
+        };
+      }
+      if (theme === 'sepia') {
+        return {
+          glass:
+            'linear-gradient(165deg, rgba(255, 250, 240, 0.7) 0%, rgba(255, 248, 236, 0.3) 40%, rgba(247, 239, 226, 0.2) 100%)',
+          blur: 'blur(44px) saturate(2.05) brightness(1.06)',
+          shadow:
+            '0 1.5px 0 rgba(255, 255, 255, 0.7) inset, 0 -0.5px 0 rgba(255, 255, 255, 0.18) inset, 0 14px 40px rgba(60, 40, 18, 0.15), 0 4px 14px rgba(60, 40, 18, 0.07)',
+          border: 'rgba(255, 252, 244, 0.76)',
+        };
+      }
+      return {
+        glass:
+          'linear-gradient(165deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.28) 38%, rgba(255, 253, 249, 0.18) 100%)',
+        blur: 'blur(44px) saturate(2.05) brightness(1.06)',
+        shadow:
+          '0 1.5px 0 rgba(255, 255, 255, 0.82) inset, 0 -0.5px 0 rgba(255, 255, 255, 0.2) inset, 0 14px 40px rgba(28, 20, 12, 0.16), 0 4px 14px rgba(28, 20, 12, 0.08)',
+        border: 'rgba(255, 255, 255, 0.72)',
+      };
+    }
+
+    function applyBottomChrome() {
+      var theme = themeKey();
+      var chrome = glassChrome(theme);
+      var insetL = 'max(0.7rem, env(safe-area-inset-left, 0px))';
+      var insetR = 'max(0.7rem, env(safe-area-inset-right, 0px))';
+      var insetB = 'max(0.65rem, env(safe-area-inset-bottom, 0px))';
+      var bars = document.querySelectorAll(
+        '.workspace-recite-dock.workspace-reading-bottom-bar, .workspace-reading-bottom-bar.workspace-recite-dock--mobile, .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top)'
+      );
+      bars.forEach(function (bar) {
+        if (!(bar instanceof HTMLElement)) return;
+        bar.style.setProperty('--mq-bottom-bar-glass', chrome.glass);
+        bar.style.setProperty('--mq-bottom-bar-glass-shadow', chrome.shadow);
+        bar.style.setProperty('--mq-bottom-bar-glass-blur', chrome.blur);
+        bar.style.setProperty('--mq-bottom-bar-glass-border', chrome.border);
+        bar.style.setProperty('position', 'fixed', 'important');
+        bar.style.setProperty('top', 'auto', 'important');
+        bar.style.setProperty('left', insetL, 'important');
+        bar.style.setProperty('right', insetR, 'important');
+        bar.style.setProperty('bottom', insetB, 'important');
+        bar.style.setProperty('inset-inline-start', insetL, 'important');
+        bar.style.setProperty('inset-inline-end', insetR, 'important');
+        bar.style.setProperty('width', 'auto', 'important');
+        bar.style.setProperty('margin', '0', 'important');
+        bar.style.setProperty('transform', 'none', 'important');
+        bar.style.setProperty('background', chrome.glass, 'important');
+        bar.style.setProperty('border', '1px solid ' + chrome.border, 'important');
+        bar.style.setProperty('border-radius', '999px', 'important');
+        bar.style.setProperty('box-shadow', chrome.shadow, 'important');
+        bar.style.setProperty('-webkit-backdrop-filter', chrome.blur, 'important');
+        bar.style.setProperty('backdrop-filter', chrome.blur, 'important');
+        bar.style.setProperty('isolation', 'isolate', 'important');
+        bar.style.setProperty('min-height', '3.7rem', 'important');
+        bar.style.setProperty('z-index', '1040', 'important');
+      });
+
+      document.querySelectorAll('.madani-fullscreen-bar__recite, .workspace-reading-bottom-bar__recite-btn').forEach(function (btn) {
+        if (!(btn instanceof HTMLElement)) return;
+        btn.style.setProperty('width', '56px', 'important');
+        btn.style.setProperty('height', '56px', 'important');
+        btn.style.setProperty('min-width', '56px', 'important');
+        btn.style.setProperty('min-height', '56px', 'important');
+        btn.style.setProperty('max-width', '56px', 'important');
+        btn.style.setProperty('max-height', '56px', 'important');
+        btn.classList.add('is-animated');
+      });
+    }
+
+    var bottomChromeTimer = 0;
+    function scheduleBottomChrome() {
+      window.clearTimeout(bottomChromeTimer);
+      bottomChromeTimer = window.setTimeout(applyBottomChrome, 150);
+    }
+
+    window.__mutqinApplyBottomChrome = applyBottomChrome;
+    window.addEventListener('resize', scheduleBottomChrome);
+    window.addEventListener('mutqin:app-mounted', scheduleBottomChrome);
+    if (document.documentElement.dataset.mutqinAppMounted === '1') {
+      scheduleBottomChrome();
+    }
+    window.setTimeout(scheduleBottomChrome, 400);
+    window.setTimeout(scheduleBottomChrome, 1200);
+    if (typeof MutationObserver !== 'undefined') {
+      var themeChromeObserver = new MutationObserver(scheduleBottomChrome);
+      themeChromeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      var appThemeEl = document.querySelector('.app');
+      if (appThemeEl) {
+        themeChromeObserver.observe(appThemeEl, { attributes: true, attributeFilter: ['data-theme'] });
+      }
+    }
+  })();
 </script>
 @endif
 </body>

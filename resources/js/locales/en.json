@@ -41,7 +41,7 @@
     "endingSession": "Ending…",
     "startingSession": "Starting…",
     "dashboard": "Progress",
-    "adminDashboard": "Admin Dashboard",
+    "adminDashboard": "Admin",
     "retry": "Try again",
     "tryAgain": "Try again",
     "status": {
@@ -437,7 +437,7 @@
       "privacy": "Privacy",
       "terms": "Terms",
       "tagline": "A companion for Qur’an memorisation, revision and return.",
-      "aboutUs": "About",
+      "aboutUs": "About us",
       "ourMission": "Our mission",
       "workspace": "Memorisation workspace",
       "dashboard": "Dashboard",
@@ -4202,10 +4202,71 @@
   },
   "aboutUs": {
     "title": "About Mutqin",
-    "kicker": "About",
-    "heroDesc": "Mutqin is a Qur'an memorisation workspace. It supports practice between lessons. It does not replace a teacher.",
+    "kicker": "About Mutqin",
+    "hero": {
+      "headline": "Built for the quiet work of hifz"
+    },
+    "heroDesc": "Mutqin is a calm place to listen, practise, and return to the Qur’an between lessons. We built it to walk with you in memorisation, not to take the place of your teacher.",
+    "ctaExplore": "Explore Mutqin",
+    "ctaWaitlist": "Join the waiting list",
     "ctaMission": "Our mission",
     "ctaFeatures": "How it works",
+    "images": {
+      "heroAlt": "Someone reading the Qur’an in a calm, well-lit space",
+      "credit": "Photo by {name} on Pexels"
+    },
+    "what": {
+      "title": "Why we built Mutqin",
+      "desc": "Hifz asks for showing up again and again. We wanted a gentle workspace where you can pick up where you left off, revise what matters, and keep moving at your own pace."
+    },
+    "how": {
+      "title": "How you might use it",
+      "steps": {
+        "choose": "Choose a short passage that feels doable today.",
+        "practise": "Practise with focus, blur, or chaining until the ayahs sit more easily.",
+        "recite": "Recite from memory when you feel ready.",
+        "review": "Listen back and notice what still needs care.",
+        "return": "Come back tomorrow. Your saved session will be waiting."
+      }
+    },
+    "tools": {
+      "title": "What you will find inside",
+      "items": {
+        "focus": "Focus and blur to work one ayah at a time.",
+        "linking": "Linking and chaining to connect ayahs smoothly.",
+        "sessions": "Saved sessions so you always know where to resume.",
+        "feedback": "Optional recitation feedback when you want a second listen."
+      }
+    },
+    "trust": {
+      "title": "With your teacher",
+      "desc": "Nothing replaces a qualified teacher for tajweed and correction. Mutqin is for the quiet days in between, when you are practising on your own."
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "items": {
+        "what": {
+          "question": "What is Mutqin?",
+          "answer": "Mutqin is a Qur’an memorisation platform for hifz practice. It helps you listen, use memorisation techniques, recite, revise, and return between lessons. It does not replace a teacher."
+        },
+        "workflow": {
+          "question": "How does the memorisation workflow work?",
+          "answer": "Choose a range, practise with focus, blur, or chaining, recite from memory, review optional AI-assisted recitation feedback, then resume from saved sessions."
+        },
+        "ai": {
+          "question": "What does AI-assisted recitation feedback do?",
+          "answer": "When available, Mutqin listens as you recite and highlights words that may need attention. Treat it as practice guidance, not a perfect assessment or teacher substitute."
+        },
+        "teacher": {
+          "question": "Is a Qur’an teacher still valuable?",
+          "answer": "Yes. A qualified teacher is essential for tajweed, correction, and guidance. Mutqin supports practice between lessons."
+        },
+        "who": {
+          "question": "Who can use Mutqin?",
+          "answer": "Anyone doing Qur’an memorisation who wants a clearer workflow for practice and Qur’an revision."
+        }
+      }
+    },
     "core": {
       "purposeTitle": "Why it exists",
       "purposeDesc": "To help hifz stay steady between lessons and reviews.",

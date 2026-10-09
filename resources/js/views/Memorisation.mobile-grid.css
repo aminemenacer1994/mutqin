@@ -220,7 +220,7 @@
   .workspace-shell-idle--fresh .workspace-shell-copy h1 {
     font-family: var(--font-surah-latin) !important;
     font-size: clamp(1.02rem, 0.9rem + 1.8vw, 1.22rem) !important;
-    font-weight: 500 !important;
+    font-weight: 700 !important;
     letter-spacing: 0.01em !important;
     line-height: 1.45 !important;
     color: var(--text) !important;
@@ -231,7 +231,7 @@
     font-family: var(--font-surah-latin) !important;
     font-size: clamp(1.05rem, 0.92rem + 2vw, 1.28rem) !important;
     line-height: 1.45 !important;
-    font-weight: 500 !important;
+    font-weight: 700 !important;
     letter-spacing: 0.015em !important;
     color: color-mix(in srgb, var(--text) 82%, var(--accent) 18%) !important;
   }
@@ -388,7 +388,7 @@
     font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
     font-size: clamp(1.05rem, 0.92rem + 2.2vw, 1.32rem) !important;
     line-height: 1.45 !important;
-    font-weight: 500 !important;
+    font-weight: 700 !important;
     letter-spacing: 0.015em !important;
     color: color-mix(in srgb, var(--text) 78%, var(--accent) 22%) !important;
     white-space: normal !important;
@@ -398,7 +398,7 @@
 
   .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
     font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", "Noto Serif", Georgia, serif !important;
-    font-weight: 500 !important;
+    font-weight: 700 !important;
     letter-spacing: 0.015em !important;
     line-height: 1.45 !important;
     overflow: visible !important;
@@ -406,7 +406,7 @@
 
   .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
     font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif !important;
-    font-weight: 400 !important;
+    font-weight: 700 !important;
     line-height: 1.5 !important;
     overflow: visible !important;
   }
@@ -8814,7 +8814,7 @@ html body .app .workspace-recite-dock__button:hover {
 @media (max-width: 767.98px) {
   html body .app .workspace-recite-dock.workspace-recite-dock--mobile.workspace-reading-bottom-bar,
   html body .app .main .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
-    --reading-bottom-bar-height: 4.55rem;
+    --reading-bottom-bar-height: var(--mq-dock-height, 3.7rem);
     --bb-ink: #1f1914;
     --bb-ink-muted: color-mix(in srgb, #1f1914 32%, #c4b4a2);
     --bb-ink-soft: color-mix(in srgb, #1f1914 58%, #8f7d6a);
@@ -8822,61 +8822,84 @@ html body .app .workspace-recite-dock__button:hover {
     --bb-leaf-deep: #14573a;
     --bb-paper: #fffcf7;
     --workspace-recite-size: 56px;
+    --mq-dock-inset-l: max(0.7rem, env(safe-area-inset-left, 0px));
+    --mq-dock-inset-r: max(0.7rem, env(safe-area-inset-right, 0px));
+    --mq-dock-inset-b: max(0.65rem, env(safe-area-inset-bottom, 0px));
+    --mq-dock-height: 3.7rem;
+    --mq-bottom-bar-glass: linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.72) 0%,
+      rgba(255, 255, 255, 0.28) 38%,
+      rgba(255, 253, 249, 0.18) 100%
+    );
+    --mq-bottom-bar-glass-shadow:
+      0 1.5px 0 rgba(255, 255, 255, 0.82) inset,
+      0 -0.5px 0 rgba(255, 255, 255, 0.2) inset,
+      0 14px 40px rgba(28, 20, 12, 0.16),
+      0 4px 14px rgba(28, 20, 12, 0.08);
+    --mq-bottom-bar-glass-blur: blur(44px) saturate(2.05) brightness(1.06);
+    --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.72);
     position: fixed !important;
     top: auto !important;
-    inset-inline: 0 !important;
-    inset-block-end: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
+    left: var(--mq-dock-inset-l) !important;
+    right: var(--mq-dock-inset-r) !important;
+    bottom: var(--mq-dock-inset-b) !important;
+    inset-inline-start: var(--mq-dock-inset-l) !important;
+    inset-inline-end: var(--mq-dock-inset-r) !important;
+    inset-block-end: var(--mq-dock-inset-b) !important;
     z-index: 1040 !important;
     display: block !important;
-    width: 100% !important;
+    width: auto !important;
     max-width: none !important;
     height: auto !important;
-    min-height: calc(var(--reading-bottom-bar-height) + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: var(--mq-dock-height) !important;
     margin: 0 !important;
     padding: 0 !important;
     box-sizing: border-box !important;
     overflow: visible !important;
     pointer-events: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    border-block-start: 1px solid color-mix(in srgb, #2a2118 12%, transparent) !important;
-    background: color-mix(in srgb, #fffdf9 46%, transparent) !important;
-    box-shadow:
-      0 1px 0 color-mix(in srgb, #fff 58%, transparent) inset,
-      0 -8px 22px color-mix(in srgb, #3d2a18 6%, transparent) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
-    backdrop-filter: blur(24px) saturate(1.22) !important;
+    border: 1px solid var(--mq-bottom-bar-glass-border) !important;
+    border-radius: 999px !important;
+    background: var(--mq-bottom-bar-glass) !important;
+    box-shadow: var(--mq-bottom-bar-glass-shadow) !important;
+    opacity: 1 !important;
+    isolation: isolate !important;
+    -webkit-backdrop-filter: var(--mq-bottom-bar-glass-blur) !important;
+    backdrop-filter: var(--mq-bottom-bar-glass-blur) !important;
     transform: none !important;
+    animation: none !important;
     filter: none !important;
+  }
+
+  html body .app .workspace-recite-dock.workspace-recite-dock--mobile.workspace-reading-bottom-bar::before,
+  html body .app .main .workspace-reading-bottom-bar.workspace-recite-dock--mobile::before {
+    content: none !important;
+    display: none !important;
   }
 
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     html body .app .workspace-recite-dock.workspace-recite-dock--mobile.workspace-reading-bottom-bar,
     html body .app .main .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
-      background: color-mix(in srgb, #fffdf9 92%, var(--zone-chrome-cream, #f0e9de)) !important;
+      --mq-bottom-bar-glass: color-mix(in srgb, #fffdf9 88%, transparent);
     }
   }
 
   html body .app .workspace-reading-bottom-bar__shell {
     display: grid !important;
-    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    grid-template-columns: minmax(2.55rem, 1fr) auto minmax(2.55rem, 1fr) !important;
     align-items: center !important;
-    gap: 0.5rem !important;
+    gap: 0.35rem !important;
     width: 100% !important;
-    min-height: 3.55rem !important;
+    min-height: var(--mq-dock-height, 3.7rem) !important;
     margin: 0 !important;
-    padding:
-      0.45rem max(0.85rem, env(safe-area-inset-right, 0px))
-      calc(0.45rem + env(safe-area-inset-bottom, 0px))
-      max(0.85rem, env(safe-area-inset-left, 0px)) !important;
+    padding: var(--mq-dock-pad-y, 0.4rem) var(--mq-dock-pad-x, 0.85rem) !important;
     border: 0 !important;
-    border-radius: 0 !important;
+    border-radius: 999px !important;
     background: transparent !important;
     box-shadow: none !important;
     pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
   }
 
   html body .app .workspace-reading-bottom-bar__cluster {
@@ -8886,8 +8909,14 @@ html body .app .workspace-recite-dock__button:hover {
     pointer-events: auto !important;
   }
 
-  html body .app .workspace-reading-bottom-bar__playback {
+  html body .app .workspace-reading-bottom-bar__leading {
     justify-self: start !important;
+    grid-column: 1 !important;
+  }
+
+  html body .app .workspace-reading-bottom-bar__playback {
+    justify-self: center !important;
+    grid-column: 2 !important;
     gap: 0.15rem !important;
   }
 
@@ -8903,22 +8932,17 @@ html body .app .workspace-recite-dock__button:hover {
   }
 
   html body .app .workspace-reading-bottom-bar__spacer {
-    min-width: 0 !important;
-    pointer-events: none !important;
+    display: none !important;
   }
 
   html body .app .workspace-reading-bottom-bar__recite {
     justify-self: end !important;
     justify-content: flex-end !important;
+    grid-column: 3 !important;
   }
 
   html body .app .workspace-reading-bottom-bar__divider {
-    width: 1px !important;
-    height: 1rem !important;
-    margin-inline: 0.35rem 0.2rem !important;
-    background: color-mix(in srgb, #2a2118 14%, transparent) !important;
-    border-radius: 1px !important;
-    flex: 0 0 auto !important;
+    display: none !important;
   }
 
   html body .app .workspace-reading-bottom-bar__playing-dot {
@@ -9084,14 +9108,17 @@ html body .app .workspace-recite-dock__button:hover {
     z-index: 0 !important;
   }
 
+  html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring,
   html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring {
     animation: workspace-reading-recite-ring 2.1s cubic-bezier(0.18, 0.72, 0.24, 1) infinite !important;
   }
 
+  html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring--mid,
   html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring--mid {
     animation-delay: 0.7s !important;
   }
 
+  html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring--delayed,
   html body .app .workspace-reading-bottom-bar__recite-btn.is-animated .workspace-reading-bottom-bar__recite-ring--delayed {
     animation-delay: 1.4s !important;
   }
@@ -9163,19 +9190,47 @@ html body .app .workspace-recite-dock__button:hover {
     --bb-ink-soft: color-mix(in srgb, #f7f1e8 58%, #8a7460);
     --bb-leaf: #7dcca5;
     --bb-leaf-deep: #a6e4c4;
-    border-block-start-color: color-mix(in srgb, #fff 16%, transparent) !important;
-    background: color-mix(in srgb, #1c1917 42%, transparent) !important;
-    box-shadow:
-      0 1px 0 color-mix(in srgb, #fff 10%, transparent) inset,
-      0 -8px 22px rgba(0, 0, 0, 0.22) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.25) !important;
-    backdrop-filter: blur(24px) saturate(1.25) !important;
+    --mq-bottom-bar-glass: linear-gradient(
+      165deg,
+      rgba(80, 70, 60, 0.48) 0%,
+      rgba(40, 34, 30, 0.34) 45%,
+      rgba(22, 19, 17, 0.28) 100%
+    );
+    --mq-bottom-bar-glass-shadow:
+      0 1.5px 0 rgba(255, 255, 255, 0.22) inset,
+      0 -0.5px 0 rgba(255, 255, 255, 0.06) inset,
+      0 16px 42px rgba(0, 0, 0, 0.4),
+      0 4px 14px rgba(0, 0, 0, 0.22);
+    --mq-bottom-bar-glass-blur: blur(44px) saturate(1.9) brightness(1.08);
+    --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.34);
+  }
+
+  [data-theme="sepia"] html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
+  html[data-theme="sepia"] body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
+    --mq-bottom-bar-glass: linear-gradient(
+      165deg,
+      rgba(255, 250, 240, 0.7) 0%,
+      rgba(255, 248, 236, 0.3) 40%,
+      rgba(247, 239, 226, 0.2) 100%
+    );
+    --mq-bottom-bar-glass-border: rgba(255, 252, 244, 0.76);
+    --mq-bottom-bar-glass-shadow:
+      0 1.5px 0 rgba(255, 255, 255, 0.7) inset,
+      0 -0.5px 0 rgba(255, 255, 255, 0.18) inset,
+      0 14px 40px rgba(60, 40, 18, 0.15),
+      0 4px 14px rgba(60, 40, 18, 0.07);
+    --mq-bottom-bar-glass-blur: blur(44px) saturate(2.05) brightness(1.06);
   }
 
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     [data-theme="dark"] html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
     html[data-theme="dark"] body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
-      background: color-mix(in srgb, #1c1917 94%, #2a241c) !important;
+      --mq-bottom-bar-glass: color-mix(in srgb, #1c1917 86%, transparent);
+    }
+
+    [data-theme="sepia"] html body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile,
+    html[data-theme="sepia"] body .app .workspace-reading-bottom-bar.workspace-recite-dock--mobile {
+      --mq-bottom-bar-glass: color-mix(in srgb, #f7efe2 88%, transparent);
     }
   }
 
@@ -9196,7 +9251,7 @@ html body .app .workspace-recite-dock__button:hover {
   body:has(.workspace-reading-bottom-bar) .app .main,
   body:has(.workspace-reading-bottom-bar) .app .workspace-main,
   body:has(.workspace-reading-bottom-bar) .app .main.madani-qpc-mode-active .workspace-main {
-    --workspace-recite-clearance: calc(5.2rem + env(safe-area-inset-bottom, 0px));
+    --workspace-recite-clearance: calc(5.1rem + env(safe-area-inset-bottom, 0px));
     --workspace-recite-sticky-top: auto;
     padding-block-end: var(--workspace-recite-clearance) !important;
     scroll-padding-block-end: var(--workspace-recite-clearance) !important;

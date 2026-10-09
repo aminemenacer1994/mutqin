@@ -27,7 +27,7 @@ return [
     'menu' => 'Menú',
     'subscription' => 'Suscripción',
     'settings' => 'Ajustes',
-    'admin_dashboard' => 'Panel de administración',
+    'admin_dashboard' => 'Admin',
     'contact_inbox' => 'Bandeja de contacto',
     'open_navigation' => 'Abrir menú de navegación',
     'close_navigation' => 'Cerrar menú de navegación',

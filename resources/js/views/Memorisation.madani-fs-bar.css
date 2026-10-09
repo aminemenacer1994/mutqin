@@ -333,68 +333,106 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
 
   html.is-app-fullscreen:has(.madani-fullscreen-bar),
   html.is-app-fullscreen.has-madani-fullscreen-bar {
-    --madani-fs-bar-inset-x: 0px;
+    --mq-dock-inset-l: max(0.7rem, env(safe-area-inset-left, 0px));
+    --mq-dock-inset-r: max(0.7rem, env(safe-area-inset-right, 0px));
+    --mq-dock-inset-b: max(0.65rem, env(safe-area-inset-bottom, 0px));
+    --mq-dock-height: 3.7rem;
+    --madani-fs-bar-inset-x: var(--mq-dock-inset-l);
     --madani-fs-bar-inset-bottom: 0px;
     --madani-fs-bar-icon: 2.55rem;
-    --madani-fs-bar-recite: 3.5rem;
-    --madani-fs-bar-shell-pad-x: max(0.85rem, env(safe-area-inset-left, 0px));
-    --madani-fs-bar-shell-pad-y: 0.45rem;
+    --madani-fs-bar-recite: 56px;
+    --madani-fs-bar-shell-pad-x: 0.85rem;
+    --madani-fs-bar-shell-pad-y: 0.4rem;
+    --madani-fs-bar-height: var(--mq-dock-height);
     --madani-fs-bar-leaf: #1f7a52;
     --madani-fs-bar-ink: #1f1914;
     --madani-fs-bar-ink-muted: color-mix(in srgb, #1f1914 32%, #c4b4a2);
     --madani-fs-bar-row: max(var(--madani-fs-bar-icon), var(--madani-fs-bar-recite));
     --madani-fs-bar-offset: calc(
-      env(safe-area-inset-bottom, 0px)
-      + var(--madani-fs-bar-shell-pad-y)
-      + var(--madani-fs-bar-row)
-      + var(--madani-fs-bar-shell-pad-y)
+      var(--mq-dock-inset-b)
+      + var(--mq-dock-height)
+      + 0.35rem
     );
     --madani-fs-recite-clearance: calc(var(--madani-fs-bar-offset) + 0.45rem);
   }
 
-  /* Full-bleed dock — liquid glass (matches reading bottom bar). */
+  /* Exact same dock geometry + liquid glass as reading bottom bar. */
   .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
-    inset-inline-start: 0 !important;
-    inset-inline-end: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
+    --mq-dock-inset-l: max(0.7rem, env(safe-area-inset-left, 0px));
+    --mq-dock-inset-r: max(0.7rem, env(safe-area-inset-right, 0px));
+    --mq-dock-inset-b: max(0.65rem, env(safe-area-inset-bottom, 0px));
+    --mq-dock-height: 3.7rem;
+    --mq-bottom-bar-glass: linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.72) 0%,
+      rgba(255, 255, 255, 0.28) 38%,
+      rgba(255, 253, 249, 0.18) 100%
+    );
+    --mq-bottom-bar-glass-shadow:
+      0 1.5px 0 rgba(255, 255, 255, 0.82) inset,
+      0 -0.5px 0 rgba(255, 255, 255, 0.2) inset,
+      0 14px 40px rgba(28, 20, 12, 0.16),
+      0 4px 14px rgba(28, 20, 12, 0.08);
+    --mq-bottom-bar-glass-blur: blur(44px) saturate(2.05) brightness(1.06);
+    --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.72);
+    position: fixed !important;
+    top: auto !important;
+    inset-inline-start: var(--mq-dock-inset-l) !important;
+    inset-inline-end: var(--mq-dock-inset-r) !important;
+    bottom: var(--mq-dock-inset-b) !important;
+    left: var(--mq-dock-inset-l) !important;
+    right: var(--mq-dock-inset-r) !important;
+    width: auto !important;
     max-width: none !important;
-    min-height: calc(var(--madani-fs-bar-row) + (var(--madani-fs-bar-shell-pad-y) * 2) + env(safe-area-inset-bottom, 0px));
+    min-height: var(--mq-dock-height) !important;
+    height: auto !important;
+    margin: 0 !important;
     padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    border-block-start: 1px solid color-mix(in srgb, #2a2118 12%, transparent) !important;
-    background: color-mix(in srgb, #fffdf9 46%, transparent) !important;
-    box-shadow:
-      0 1px 0 color-mix(in srgb, #fff 58%, transparent) inset,
-      0 -8px 22px color-mix(in srgb, #3d2a18 6%, transparent) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
-    backdrop-filter: blur(24px) saturate(1.22) !important;
+    border: 1px solid var(--mq-bottom-bar-glass-border) !important;
+    border-radius: 999px !important;
+    background: var(--mq-bottom-bar-glass) !important;
+    box-shadow: var(--mq-bottom-bar-glass-shadow) !important;
+    opacity: 1 !important;
+    isolation: isolate !important;
+    -webkit-backdrop-filter: var(--mq-bottom-bar-glass-blur) !important;
+    backdrop-filter: var(--mq-bottom-bar-glass-blur) !important;
     overflow: visible !important;
     pointer-events: none !important;
+    transform: none !important;
+    animation: none !important;
+    filter: none !important;
+    z-index: 1040 !important;
+  }
+
+  .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top)::before {
+    content: none !important;
+    display: none !important;
   }
 
   .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) .madani-fullscreen-bar__shell {
+    display: grid !important;
     width: 100% !important;
-    border-radius: 0 !important;
+    min-height: var(--mq-dock-height) !important;
+    border-radius: 999px !important;
     border: 0 !important;
-    padding:
-      var(--madani-fs-bar-shell-pad-y)
-      max(0.85rem, env(safe-area-inset-right, 0px))
-      calc(var(--madani-fs-bar-shell-pad-y) + env(safe-area-inset-bottom, 0px))
-      max(0.85rem, env(safe-area-inset-left, 0px)) !important;
+    padding: 0.4rem 0.85rem !important;
     background: transparent !important;
     box-shadow: none !important;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
     overflow: visible !important;
     pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
   }
 
   .madani-fullscreen-bar--mobile[data-theme="light"]:not(.madani-fullscreen-bar--top) {
-    background: color-mix(in srgb, #fffcf7 46%, transparent) !important;
+    --mq-bottom-bar-glass: linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.72) 0%,
+      rgba(255, 255, 255, 0.28) 38%,
+      rgba(255, 253, 249, 0.18) 100%
+    );
   }
 
   [data-theme="dark"] .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top),
@@ -402,74 +440,111 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     --madani-fs-bar-leaf: #7dcca5;
     --madani-fs-bar-ink: #f7f1e8;
     --madani-fs-bar-ink-muted: color-mix(in srgb, #f7f1e8 30%, #6a5c4e);
-    border-block-start-color: color-mix(in srgb, #fff 16%, transparent) !important;
-    background: color-mix(in srgb, #1c1917 42%, transparent) !important;
-    box-shadow:
-      0 1px 0 color-mix(in srgb, #fff 10%, transparent) inset,
-      0 -8px 22px rgba(0, 0, 0, 0.22) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.25) !important;
-    backdrop-filter: blur(24px) saturate(1.25) !important;
+    --mq-bottom-bar-glass: linear-gradient(
+      165deg,
+      rgba(80, 70, 60, 0.48) 0%,
+      rgba(40, 34, 30, 0.34) 45%,
+      rgba(22, 19, 17, 0.28) 100%
+    );
+    --mq-bottom-bar-glass-shadow:
+      0 1.5px 0 rgba(255, 255, 255, 0.22) inset,
+      0 -0.5px 0 rgba(255, 255, 255, 0.06) inset,
+      0 16px 42px rgba(0, 0, 0, 0.4),
+      0 4px 14px rgba(0, 0, 0, 0.22);
+    --mq-bottom-bar-glass-blur: blur(44px) saturate(1.9) brightness(1.08);
+    --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.34);
   }
 
   [data-theme="sepia"] .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top),
   .madani-fullscreen-bar--mobile[data-theme="sepia"]:not(.madani-fullscreen-bar--top) {
-    background: color-mix(in srgb, #f7efe2 48%, transparent) !important;
+    --mq-bottom-bar-glass: linear-gradient(
+      165deg,
+      rgba(255, 250, 240, 0.7) 0%,
+      rgba(255, 248, 236, 0.3) 40%,
+      rgba(247, 239, 226, 0.2) 100%
+    );
+    --mq-bottom-bar-glass-border: rgba(255, 252, 244, 0.76);
+    --mq-bottom-bar-glass-shadow:
+      0 1.5px 0 rgba(255, 255, 255, 0.7) inset,
+      0 -0.5px 0 rgba(255, 255, 255, 0.18) inset,
+      0 14px 40px rgba(60, 40, 18, 0.15),
+      0 4px 14px rgba(60, 40, 18, 0.07);
+    --mq-bottom-bar-glass-blur: blur(44px) saturate(2.05) brightness(1.06);
   }
 
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
-      background: color-mix(in srgb, #fffdf9 92%, var(--zone-chrome, #f0e9de)) !important;
+      --mq-bottom-bar-glass: color-mix(in srgb, #fffdf9 88%, transparent);
     }
 
     .madani-fullscreen-bar--mobile[data-theme="light"]:not(.madani-fullscreen-bar--top) {
-      background: #fffcf7 !important;
+      --mq-bottom-bar-glass: color-mix(in srgb, #fffcf7 88%, transparent);
     }
 
     [data-theme="dark"] .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top),
     .madani-fullscreen-bar--mobile[data-theme="dark"]:not(.madani-fullscreen-bar--top) {
-      background: color-mix(in srgb, #1c1917 94%, #2a241c) !important;
+      --mq-bottom-bar-glass: color-mix(in srgb, #1c1917 86%, transparent);
     }
 
     [data-theme="sepia"] .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top),
     .madani-fullscreen-bar--mobile[data-theme="sepia"]:not(.madani-fullscreen-bar--top) {
-      background: color-mix(in srgb, #f7efe2 94%, #fff) !important;
+      --mq-bottom-bar-glass: color-mix(in srgb, #f7efe2 88%, transparent);
     }
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner {
     display: grid;
-    grid-template-columns: min-content minmax(0, 1fr) min-content;
+    grid-template-columns: minmax(2.55rem, 1fr) auto minmax(2.55rem, 1fr);
     align-items: center;
     gap: 0.35rem;
     width: 100%;
-    min-height: var(--madani-fs-bar-row);
+    min-height: var(--mq-dock-height, 3.7rem);
     direction: ltr;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__inner--no-recite {
-    grid-template-columns: min-content minmax(0, 1fr);
-  }
-
-  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {
-    justify-self: start;
+    grid-template-columns: minmax(2.55rem, 1fr) auto minmax(2.55rem, 1fr);
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster {
+    display: inline-flex;
+    align-items: center;
     background: transparent !important;
     padding: 0 !important;
     border: 0 !important;
     border-radius: 0 !important;
+    gap: 0.05rem;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--leading {
+    justify-self: start;
+    grid-column: 1;
     gap: 0.1rem;
+    max-width: 100%;
   }
 
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__cluster--transport {
     position: static;
     transform: none;
-    justify-self: start;
-    justify-content: flex-start;
+    justify-self: center;
+    grid-column: 2;
+    justify-content: center;
     gap: 0.05rem;
     max-width: 100%;
-    margin-inline-start: 0.15rem;
+    margin-inline-start: 0;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__spacer {
+    display: none;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+    justify-self: end;
+    grid-column: 3;
+  }
+
+  .madani-fullscreen-bar--mobile .madani-fullscreen-bar__reciter--mobile-icon {
+    justify-self: start;
   }
 
   /* Icon-only transport — no button chrome */
@@ -601,7 +676,7 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     background: color-mix(in srgb, var(--madani-fs-bar-ink, var(--text, #1b140d)) 14%, transparent);
   }
 
-  /* Green circular AI Recite — matches reading bottom bar */
+  /* Green circular AI Recite — same size/padding/animation as reading dock */
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
     box-sizing: border-box;
     display: inline-flex !important;
@@ -616,12 +691,12 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     overflow: visible;
     isolation: isolate;
     pointer-events: auto !important;
-    width: var(--madani-fs-bar-recite);
-    height: var(--madani-fs-bar-recite);
-    min-width: var(--madani-fs-bar-recite);
-    min-height: var(--madani-fs-bar-recite);
-    max-width: var(--madani-fs-bar-recite);
-    max-height: var(--madani-fs-bar-recite);
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    max-width: 56px;
+    max-height: 56px;
     aspect-ratio: 1 / 1;
     padding: 0;
     margin: 0;
@@ -637,6 +712,7 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.5),
       0 4px 14px rgba(42, 174, 111, 0.28);
+    transform: none;
     transition: filter 0.18s ease;
   }
 
@@ -659,7 +735,7 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite i {
     position: relative;
     z-index: 1;
-    font-size: 1.5rem;
+    font-size: 1.45rem;
     color: #0d7b4f;
     pointer-events: none;
   }
@@ -679,18 +755,22 @@ html.is-app-fullscreen:has(.madani-fullscreen-bar)
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite,
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite.is-animated {
       animation: madani-fs-recite-pulse 2.4s ease-in-out infinite;
     }
 
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite .madani-fullscreen-bar__recite-ring,
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite.is-animated .madani-fullscreen-bar__recite-ring {
       animation: madani-fs-recite-ring 2.1s cubic-bezier(0.18, 0.72, 0.24, 1) infinite;
     }
 
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite .madani-fullscreen-bar__recite-ring--mid,
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite.is-animated .madani-fullscreen-bar__recite-ring--mid {
       animation-delay: 0.7s;
     }
 
+    .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite .madani-fullscreen-bar__recite-ring--delayed,
     .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite.is-animated .madani-fullscreen-bar__recite-ring--delayed {
       animation-delay: 1.4s;
     }

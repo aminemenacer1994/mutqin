@@ -10,11 +10,11 @@
         'ur' => 'اردو',
     ];
     $appLocaleOptions = $appLocaleOptions ?? [
-        'en' => ['flag' => '🇬🇧', 'label' => $languageEndonyms['en']],
-        'fr' => ['flag' => '🇫🇷', 'label' => $languageEndonyms['fr']],
-        'es' => ['flag' => '🇪🇸', 'label' => $languageEndonyms['es']],
+        'en' => ['flag' => '🇬🇧', 'label' => 'EN'],
+        'fr' => ['flag' => '🇫🇷', 'label' => 'FR'],
+        'es' => ['flag' => '🇪🇸', 'label' => 'ES'],
     ];
-    $activeLocaleOption = $activeLocaleOption ?? ($appLocaleOptions[$appLocale] ?? ['flag' => '🇬🇧', 'label' => $languageEndonyms[$appLocale] ?? $appLocale]);
+    $activeLocaleOption = $activeLocaleOption ?? ($appLocaleOptions[$appLocale] ?? ['flag' => '🇬🇧', 'label' => strtoupper($appLocale)]);
 @endphp
 <div class="global-lang-switcher dropdown" aria-label="{{ __('ui.language_switcher') }}">
     <button class="btn app-lang-toggle lang-btn-group" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ $activeLocaleOption['label'] }}">

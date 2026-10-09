@@ -19,6 +19,13 @@
         >
             <span class="nav-link-copy"><strong>{{ __('ui.waiting_list') }}</strong></span>
         </a>
+        <a
+            class="nav-link nav-link-about {{ request()->is('about') || request()->is('about-us') ? 'active' : '' }}"
+            href="{{ url('/about') }}"
+            @if (request()->is('about') || request()->is('about-us')) aria-current="page" @endif
+        >
+            <span class="nav-link-copy"><strong>{{ __('ui.about') }}</strong></span>
+        </a>
     </nav>
     <button
         class="navbar-toggler waiting-list-early-access-menu-btn d-lg-none ms-auto flex-shrink-0"
@@ -73,6 +80,18 @@
                     <span class="nav-link-copy">
                         <strong>{{ __('ui.waiting_list') }}</strong>
                         <small class="d-lg-none">{{ __('ui.nav_waiting_list_sub') }}</small>
+                    </span>
+                    <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
+                </a>
+                <a
+                    class="nav-link nav-link-about {{ request()->is('about') || request()->is('about-us') ? 'active' : '' }}"
+                    href="{{ url('/about') }}"
+                    @if (request()->is('about') || request()->is('about-us')) aria-current="page" @endif
+                >
+                    <i class="bi bi-info-circle nav-link-icon" aria-hidden="true"></i>
+                    <span class="nav-link-copy">
+                        <strong>{{ __('ui.about') }}</strong>
+                        <small class="d-lg-none">{{ __('ui.nav_about_sub') }}</small>
                     </span>
                     <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
                 </a>

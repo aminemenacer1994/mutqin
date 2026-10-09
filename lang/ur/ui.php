@@ -27,7 +27,7 @@ return [
     'menu' => 'القائمة',
     'subscription' => 'الاشتراك',
     'settings' => 'الإعدادات',
-    'admin_dashboard' => 'ایڈمن ڈیش بورڈ',
+    'admin_dashboard' => 'ایڈمن',
     'contact_inbox' => 'صندوق الرسائل',
     'open_navigation' => 'فتح قائمة التنقل',
     'close_navigation' => 'إغلاق قائمة التنقل',

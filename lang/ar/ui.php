@@ -27,7 +27,7 @@ return [
     'menu' => 'القائمة',
     'subscription' => 'الاشتراك',
     'settings' => 'الإعدادات',
-    'admin_dashboard' => 'لوحة المشرف',
+    'admin_dashboard' => 'المشرف',
     'contact_inbox' => 'صندوق الرسائل',
     'open_navigation' => 'فتح قائمة التنقل',
     'close_navigation' => 'إغلاق قائمة التنقل',

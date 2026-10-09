@@ -145,6 +145,7 @@ class MutqinDomainRoutingTest extends TestCase
             ->assertSee('<homepage', false)
             ->assertSee('id="primaryNavbar"', false)
             ->assertSee('class="nav-link nav-link-memorisation', false)
+            ->assertSee('class="nav-link nav-link-about', false)
             ->assertSee('class="nav-link nav-link-home', false)
             ->assertDontSee('class="mutqin-early-access-nav"', false)
             ->assertDontSee('id="earlyAccessNavbar"', false);

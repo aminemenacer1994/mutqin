@@ -117,8 +117,13 @@ assert.match(madaniFsBarCss, /--madani-fs-top-clearance/)
 assert.match(madaniFsBarCss, /madani-fullscreen-bar--top/)
 assert.match(
   memorisationVue,
-  /madani-fullscreen-bar__icon--exit[\s\S]{0,120}madani-fullscreen-bar-exit/,
-  'immersive bar keeps exit control after transport',
+  /madani-fullscreen-bar__cluster--leading[\s\S]{0,1600}madani-fullscreen-bar__icon--exit[\s\S]{0,800}madani-fullscreen-bar__cluster--transport/,
+  'immersive bar places reciter + exit left of centered transport',
+)
+assert.match(
+  memorisationVue,
+  /workspace-reading-bottom-bar__leading[\s\S]{0,800}workspace-reading-bottom-bar__btn--fullscreen[\s\S]{0,1200}workspace-reading-bottom-bar__playback/,
+  'reading dock keeps fullscreen on the far left and playback centered',
 )
 assert.match(
   memorisationVue,
@@ -127,8 +132,8 @@ assert.match(
 )
 assert.match(
   madaniFsBarCss,
-  /Full-bleed dock/,
-  'immersive mobile bar uses full-bleed chrome like the reading dock',
+  /Exact same dock geometry/,
+  'immersive mobile bar shares dock geometry with the reading dock',
 )
 assert.match(
   madaniFsBarCss,

@@ -106,9 +106,11 @@ class SeoPagesTest extends TestCase
 
         $this->get('/about')
             ->assertOk()
-            ->assertSee('About Mutqin | Quran Memorization App', false)
+            ->assertSee('About Mutqin | Qur’an Memorisation Platform', false)
             ->assertSee('content="index, follow"', false)
-            ->assertSee('About Mutqin', false);
+            ->assertSee('Built for the quiet work of hifz', false)
+            ->assertSee('Qur’an memorisation', false)
+            ->assertDontSee('FAQPage', false);
 
         $this->get('/pricing')
             ->assertOk()

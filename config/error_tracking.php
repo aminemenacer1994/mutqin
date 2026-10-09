@@ -7,7 +7,7 @@ return [
     */
     'release' => env('SENTRY_RELEASE', env('MUTQIN_RELEASE')),
 
-    'asset_build' => env('MUTQIN_ASSET_BUILD', 'v183'),
+    'asset_build' => env('MUTQIN_ASSET_BUILD', 'v207'),
 
     /*
     | Authorized probe at GET /internal/error-test.

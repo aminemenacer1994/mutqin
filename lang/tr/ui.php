@@ -27,7 +27,7 @@ return [
     'menu' => 'Menü',
     'subscription' => 'Abonelik',
     'settings' => 'Ayarlar',
-    'admin_dashboard' => 'Yönetici Paneli',
+    'admin_dashboard' => 'Yönetici',
     'contact_inbox' => 'İletişim Gelen Kutusu',
     'open_navigation' => 'Gezinme menüsünü aç',
     'close_navigation' => 'Gezinme menüsünü kapat',

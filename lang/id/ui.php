@@ -27,7 +27,7 @@ return [
     'menu' => 'Menu',
     'subscription' => 'Langganan',
     'settings' => 'Pengaturan',
-    'admin_dashboard' => 'Dasbor Admin',
+    'admin_dashboard' => 'Admin',
     'contact_inbox' => 'Kotak Masuk Kontak',
     'open_navigation' => 'Buka menu navigasi',
     'close_navigation' => 'Tutup menu navigasi',
