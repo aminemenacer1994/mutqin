@@ -244,14 +244,14 @@
           --mq-dock-inset-l: max(0.7rem, env(safe-area-inset-left, 0px));
           --mq-dock-inset-r: max(0.7rem, env(safe-area-inset-right, 0px));
           --mq-dock-inset-b: max(0.65rem, env(safe-area-inset-bottom, 0px));
-          --mq-dock-height: 3.7rem;
+          --mq-dock-height: 3.35rem;
           --mq-dock-pad-y: 0.4rem;
           --mq-dock-pad-x: 0.85rem;
           --mq-bottom-bar-glass: linear-gradient(
             165deg,
-            rgba(255, 255, 255, 0.72) 0%,
-            rgba(255, 255, 255, 0.28) 38%,
-            rgba(255, 253, 249, 0.18) 100%
+            rgba(255, 255, 255, 0.24) 0%,
+            rgba(255, 255, 255, 0.08) 42%,
+            rgba(255, 255, 255, 0.03) 100%
           );
           --mq-bottom-bar-glass-shadow:
             0 1.5px 0 rgba(255, 255, 255, 0.82) inset,
@@ -259,18 +259,18 @@
             0 14px 40px rgba(28, 20, 12, 0.16),
             0 4px 14px rgba(28, 20, 12, 0.08);
           --mq-bottom-bar-glass-blur: blur(44px) saturate(2.05) brightness(1.06);
-          --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.72);
+          --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.36);
         }
 
         html[data-theme="sepia"],
         html:has(.app[data-theme="sepia"]) {
           --mq-bottom-bar-glass: linear-gradient(
             165deg,
-            rgba(255, 250, 240, 0.7) 0%,
-            rgba(255, 248, 236, 0.3) 40%,
-            rgba(247, 239, 226, 0.2) 100%
+            rgba(255, 250, 240, 0.22) 0%,
+            rgba(255, 248, 236, 0.08) 40%,
+            rgba(247, 239, 226, 0.03) 100%
           );
-          --mq-bottom-bar-glass-border: rgba(255, 252, 244, 0.76);
+          --mq-bottom-bar-glass-border: rgba(255, 252, 244, 0.38);
           --mq-bottom-bar-glass-shadow:
             0 1.5px 0 rgba(255, 255, 255, 0.7) inset,
             0 -0.5px 0 rgba(255, 255, 255, 0.18) inset,
@@ -282,11 +282,11 @@
         html:has(.app[data-theme="dark"]) {
           --mq-bottom-bar-glass: linear-gradient(
             165deg,
-            rgba(80, 70, 60, 0.48) 0%,
-            rgba(40, 34, 30, 0.34) 45%,
-            rgba(22, 19, 17, 0.28) 100%
+            rgba(115, 101, 88, 0.22) 0%,
+            rgba(55, 47, 41, 0.12) 45%,
+            rgba(22, 19, 17, 0.08) 100%
           );
-          --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.34);
+          --mq-bottom-bar-glass-border: rgba(255, 255, 255, 0.28);
           --mq-bottom-bar-glass-blur: blur(44px) saturate(1.9) brightness(1.08);
           --mq-bottom-bar-glass-shadow:
             0 1.5px 0 rgba(255, 255, 255, 0.22) inset,
@@ -317,7 +317,7 @@
           padding: 0 !important;
           border-radius: 999px !important;
           border: 1px solid var(--mq-bottom-bar-glass-border) !important;
-          background: var(--mq-bottom-bar-glass) !important;
+          background: rgba(255, 255, 255, 0.025) !important;
           box-shadow: var(--mq-bottom-bar-glass-shadow) !important;
           -webkit-backdrop-filter: var(--mq-bottom-bar-glass-blur) !important;
           backdrop-filter: var(--mq-bottom-bar-glass-blur) !important;
@@ -10585,6 +10585,96 @@ body.session-analysis-modal-open {
     }
   }
 </style>
+<style id="mutqin-ui-polish-v1">
+  @media (max-width: 767.98px) {
+    /* Keep the dock compact while preserving the green recite pulse. */
+    html body .app .workspace-reading-bottom-bar__recite-btn,
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
+      width: 52px !important;
+      height: 52px !important;
+      min-width: 52px !important;
+      min-height: 52px !important;
+      max-width: 52px !important;
+      max-height: 52px !important;
+    }
+
+    /* Theme-aware fullscreen close control: the top X and bottom exit icon
+       share the same readable treatment in every reading theme. */
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon--exit,
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon--exit i,
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__exit,
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__exit i {
+      opacity: 1 !important;
+      text-shadow: none !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__icon--exit,
+    html body .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__exit {
+      color: #211a15 !important;
+      background: transparent !important;
+      border-color: transparent !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__icon--exit i,
+    html body .madani-fullscreen-bar--mobile[data-theme="light"] .madani-fullscreen-bar__exit i {
+      color: #211a15 !important;
+      -webkit-text-fill-color: #211a15 !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile[data-theme="sepia"] .madani-fullscreen-bar__icon--exit,
+    html body .madani-fullscreen-bar--mobile[data-theme="sepia"] .madani-fullscreen-bar__exit {
+      color: #4b3321 !important;
+      background: transparent !important;
+      border-color: transparent !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile[data-theme="sepia"] .madani-fullscreen-bar__icon--exit i,
+    html body .madani-fullscreen-bar--mobile[data-theme="sepia"] .madani-fullscreen-bar__exit i {
+      color: #4b3321 !important;
+      -webkit-text-fill-color: #4b3321 !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__icon--exit,
+    html body .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__exit {
+      color: #f7ebdf !important;
+      background: transparent !important;
+      border-color: transparent !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__icon--exit i,
+    html body .madani-fullscreen-bar--mobile[data-theme="dark"] .madani-fullscreen-bar__exit i {
+      color: #f7ebdf !important;
+      -webkit-text-fill-color: #f7ebdf !important;
+    }
+
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon--exit:hover,
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__exit:hover,
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__icon--exit:focus-visible,
+    html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__exit:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--accent, #3b8f6b) 70%, transparent) !important;
+      outline-offset: 2px !important;
+    }
+
+    /* Keep stacked reading content inside the card frame. */
+    html body .app .workspace-reading-surface--stacked .verse-card {
+      padding-inline: max(1rem, var(--mq-mushaf-inline-start, 0px)) max(1rem, var(--mq-mushaf-inline-end, 0px)) !important;
+    }
+
+    /* Always show the green recite pulse; it should not depend on state timing. */
+    html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring {
+      position: absolute !important;
+      inset: -5px !important;
+      display: block !important;
+      border: 2px solid rgba(56, 190, 123, 0.75) !important;
+      border-radius: 50% !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+      animation: mutqin-reading-recite-ring-v2 2.1s cubic-bezier(0.18, 0.72, 0.24, 1) infinite !important;
+    }
+    html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring--mid { animation-delay: .7s !important; }
+    html body .app .workspace-reading-bottom-bar__recite-btn .workspace-reading-bottom-bar__recite-ring--delayed { animation-delay: 1.4s !important; }
+  }
+</style>
 <script id="mutqin-madani-fs-bar-v195">
   (function () {
     var syncing = false;
@@ -12885,12 +12975,12 @@ body.session-analysis-modal-open {
 
       document.querySelectorAll('.madani-fullscreen-bar__recite, .workspace-reading-bottom-bar__recite-btn').forEach(function (btn) {
         if (!(btn instanceof HTMLElement)) return;
-        btn.style.setProperty('width', '56px', 'important');
-        btn.style.setProperty('height', '56px', 'important');
-        btn.style.setProperty('min-width', '56px', 'important');
-        btn.style.setProperty('min-height', '56px', 'important');
-        btn.style.setProperty('max-width', '56px', 'important');
-        btn.style.setProperty('max-height', '56px', 'important');
+        btn.style.setProperty('width', '52px', 'important');
+        btn.style.setProperty('height', '52px', 'important');
+        btn.style.setProperty('min-width', '52px', 'important');
+        btn.style.setProperty('min-height', '52px', 'important');
+        btn.style.setProperty('max-width', '52px', 'important');
+        btn.style.setProperty('max-height', '52px', 'important');
         btn.classList.add('is-animated');
       });
     }
@@ -12920,5 +13010,88 @@ body.session-analysis-modal-open {
   })();
 </script>
 @endif
+<style id="mutqin-final-mobile-polish-v2">
+  @media (max-width: 767.98px) {
+    /* Transparent liquid glass: blur the page behind the dock without tinting it. */
+    html body .app .workspace-recite-dock.workspace-reading-bottom-bar,
+    html body .app .workspace-recite-dock--mobile.workspace-reading-bottom-bar,
+    html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      -webkit-backdrop-filter: blur(44px) saturate(1.8) !important;
+      backdrop-filter: blur(44px) saturate(1.8) !important;
+    }
+    html body .app .workspace-reading-bottom-bar__shell,
+    html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) .madani-fullscreen-bar__shell {
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    /* Give every stacked card a dependable content gutter. */
+    html body .app .workspace-reading-surface--stacked .verse-card,
+    html body .app .workspace-reading-surface--stacked .verse-card > * {
+      box-sizing: border-box !important;
+    }
+    html body .app .workspace-reading-surface--stacked .verse-card {
+      padding-inline: 1.15rem !important;
+    }
+    html body .app .workspace-reading-surface--stacked .verse-arabic,
+    html body .app .workspace-reading-surface--stacked .verse-header,
+    html body .app .workspace-reading-surface--stacked .verse-aid-block {
+      max-width: 100% !important;
+      padding-inline: 0 !important;
+    }
+
+    /* Keep the pulse visible even when the Vue animation state is false. */
+    html body .app .workspace-reading-bottom-bar__recite-btn {
+      position: relative !important;
+      overflow: visible !important;
+      isolation: isolate !important;
+    }
+    html body .app .workspace-reading-bottom-bar__recite-btn::before,
+    html body .app .workspace-reading-bottom-bar__recite-btn::after {
+      content: "" !important;
+      display: block !important;
+      position: absolute !important;
+      inset: -7px !important;
+      border: 2px solid #39c985 !important;
+      border-radius: 50% !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      opacity: 0 !important;
+      animation: mutqin-recite-pulse-final 2.2s ease-out infinite !important;
+    }
+    html body .app .workspace-reading-bottom-bar__recite-btn::after {
+      animation-delay: 1.1s !important;
+    }
+    html body .app .workspace-reading-bottom-bar__recite-btn > .workspace-reading-bottom-bar__recite-ring {
+      display: block !important;
+      position: absolute !important;
+      inset: -6px !important;
+      width: auto !important;
+      height: auto !important;
+      border: 2px solid #3fca86 !important;
+      border-radius: 50% !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      z-index: 0 !important;
+      animation: mutqin-reading-recite-ring-v2 2.1s cubic-bezier(0.18, 0.72, 0.24, 1) infinite !important;
+    }
+    html body .app .workspace-reading-bottom-bar__recite-btn > .workspace-reading-bottom-bar__recite-ring--mid { animation-delay: .7s !important; }
+    html body .app .workspace-reading-bottom-bar__recite-btn > .workspace-reading-bottom-bar__recite-ring--delayed { animation-delay: 1.4s !important; }
+    html body .app .workspace-reading-bottom-bar__recite-btn > i,
+    html body .app .workspace-reading-bottom-bar__recite-btn > span:not(.workspace-reading-bottom-bar__recite-ring) {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+  }
+
+  @keyframes mutqin-recite-pulse-final {
+    0% { opacity: .78; transform: scale(.92); }
+    55% { opacity: .3; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1.45); }
+  }
+</style>
 </body>
 </html>
