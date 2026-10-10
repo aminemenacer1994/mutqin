@@ -244,9 +244,9 @@
           --mq-dock-inset-l: max(0.7rem, env(safe-area-inset-left, 0px));
           --mq-dock-inset-r: max(0.7rem, env(safe-area-inset-right, 0px));
           --mq-dock-inset-b: max(0.65rem, env(safe-area-inset-bottom, 0px));
-          --mq-dock-height: 3.35rem;
-          --mq-dock-pad-y: 0.4rem;
-          --mq-dock-pad-x: 0.85rem;
+          --mq-dock-height: 3rem;
+          --mq-dock-pad-y: 0.25rem;
+          --mq-dock-pad-x: 0.65rem;
           --mq-bottom-bar-glass: linear-gradient(
             165deg,
             rgba(255, 255, 255, 0.24) 0%,
@@ -295,20 +295,20 @@
             0 4px 14px rgba(0, 0, 0, 0.22);
         }
 
-        html body .app .workspace-recite-dock.workspace-reading-bottom-bar,
-        html body .app .workspace-recite-dock--mobile.workspace-reading-bottom-bar,
-        html body .madani-fullscreen-bar.madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top),
-        html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
+    html body .app .workspace-recite-dock.workspace-reading-bottom-bar,
+    html body .app .workspace-recite-dock--mobile.workspace-reading-bottom-bar,
+    html body .madani-fullscreen-bar.madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top),
+    html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
           --madani-fs-bar-inset-x: var(--mq-dock-inset-l);
           --madani-fs-bar-inset-bottom: 0px;
           position: fixed !important;
           top: auto !important;
           left: var(--mq-dock-inset-l) !important;
           right: var(--mq-dock-inset-r) !important;
-          bottom: var(--mq-dock-inset-b) !important;
+          bottom: calc(var(--mq-dock-inset-b) + 0.45rem) !important;
           inset-inline-start: var(--mq-dock-inset-l) !important;
           inset-inline-end: var(--mq-dock-inset-r) !important;
-          inset-block-end: var(--mq-dock-inset-b) !important;
+          inset-block-end: calc(var(--mq-dock-inset-b) + 0.45rem) !important;
           width: auto !important;
           max-width: none !important;
           min-height: var(--mq-dock-height) !important;
@@ -10590,12 +10590,17 @@ body.session-analysis-modal-open {
     /* Keep the dock compact while preserving the green recite pulse. */
     html body .app .workspace-reading-bottom-bar__recite-btn,
     html body .madani-fullscreen-bar--mobile .madani-fullscreen-bar__recite {
-      width: 52px !important;
-      height: 52px !important;
-      min-width: 52px !important;
-      min-height: 52px !important;
-      max-width: 52px !important;
-      max-height: 52px !important;
+      width: 46px !important;
+      height: 46px !important;
+      min-width: 46px !important;
+      min-height: 46px !important;
+      max-width: 46px !important;
+      max-height: 46px !important;
+    }
+    html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) .madani-fullscreen-bar__shell,
+    html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) .madani-fullscreen-bar__inner {
+      min-height: 3rem !important;
+      padding-block: 0.25rem !important;
     }
 
     /* Theme-aware fullscreen close control: the top X and bottom exit icon
@@ -12975,12 +12980,12 @@ body.session-analysis-modal-open {
 
       document.querySelectorAll('.madani-fullscreen-bar__recite, .workspace-reading-bottom-bar__recite-btn').forEach(function (btn) {
         if (!(btn instanceof HTMLElement)) return;
-        btn.style.setProperty('width', '52px', 'important');
-        btn.style.setProperty('height', '52px', 'important');
-        btn.style.setProperty('min-width', '52px', 'important');
-        btn.style.setProperty('min-height', '52px', 'important');
-        btn.style.setProperty('max-width', '52px', 'important');
-        btn.style.setProperty('max-height', '52px', 'important');
+        btn.style.setProperty('width', '46px', 'important');
+        btn.style.setProperty('height', '46px', 'important');
+        btn.style.setProperty('min-width', '46px', 'important');
+        btn.style.setProperty('min-height', '46px', 'important');
+        btn.style.setProperty('max-width', '46px', 'important');
+        btn.style.setProperty('max-height', '46px', 'important');
         btn.classList.add('is-animated');
       });
     }
@@ -13012,6 +13017,13 @@ body.session-analysis-modal-open {
 @endif
 <style id="mutqin-final-mobile-polish-v2">
   @media (max-width: 767.98px) {
+    html body .app .workspace-recite-dock.workspace-reading-bottom-bar,
+    html body .app .workspace-recite-dock--mobile.workspace-reading-bottom-bar,
+    html body .madani-fullscreen-bar--mobile:not(.madani-fullscreen-bar--top) {
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 1.1rem) !important;
+      inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 1.1rem) !important;
+    }
+
     /* Transparent liquid glass: blur the page behind the dock without tinting it. */
     html body .app .workspace-recite-dock.workspace-reading-bottom-bar,
     html body .app .workspace-recite-dock--mobile.workspace-reading-bottom-bar,
