@@ -185,6 +185,14 @@ export default {
     mountAllow() {
       this.hydrateMountedLeaves()
     },
+    fontScale() {
+      // Clear the shared fit cap so both growing and shrinking text take
+      // effect immediately across the mounted session pages.
+      this.fitSizesByPage = {}
+      this.sharedWordSize = 0
+      this.pageHeights = {}
+      this.reservedPageHeight = 0
+    },
     tajweedEnabled() {
       // Glyph metrics change between plain QCF and tajweed COLR — drop cached sizes
       // so every page re-fits the same mobile rules in both modes.

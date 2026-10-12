@@ -6,6 +6,7 @@ import {
   applyPersistedFontSizeCssVariable,
   applyWorkspacePreferenceOverlay,
   bootPersistedFontSize,
+  normaliseLayoutFontSizes,
   normaliseWorkspacePreferences,
   patchWorkspacePreferences,
   readPersistedFontPreferences,
@@ -133,15 +134,17 @@ globalThis.localStorage = storage
   storage.store.clear()
   writePersistedFontPreferences({
     defaultFontSize: 210,
-    layoutFontSizes: { stacked: 140, mushaf: 210 },
+    layoutFontSizes: { stacked: 140, mushaf: 210, madani_mushaf: 225 },
   }, { userId: '8', storage })
 
   const mine = readPersistedFontPreferences({ userId: '8', storage })
   assert.equal(mine.found, true)
   assert.equal(mine.defaultFontSize, 210)
   assert.equal(mine.layoutFontSizes.mushaf, 210)
+  assert.equal(mine.layoutFontSizes.madani_mushaf, 225)
   assert.equal(storage.getItem('mutqin.defaultFontSize.8'), '210')
   assert.equal(JSON.parse(storage.getItem('mutqin.layoutFontSizes.8')).mushaf, 210)
+  assert.equal(JSON.parse(storage.getItem('mutqin.layoutFontSizes.8')).madani_mushaf, 225)
 
   const other = readPersistedFontPreferences({ userId: '9', storage })
   assert.equal(other.found, false)
@@ -150,6 +153,19 @@ globalThis.localStorage = storage
   storage.setItem('mutqin.uiState', JSON.stringify({ defaultFontSize: 90 }))
   const isolated = readPersistedFontPreferences({ userId: '9', storage })
   assert.equal(isolated.found, false, 'authenticated users must not inherit unscoped font size')
+}
+
+{
+  const normalised = normaliseLayoutFontSizes({ stacked: 120, mushaf: 180 })
+  assert.equal(normalised.madani_mushaf, DEFAULT_LAYOUT_FONT_SIZES.madani_mushaf)
+
+  storage.store.clear()
+  storage.setItem('mutqin.layoutFontSizes.8', JSON.stringify({
+    stacked: 130,
+    mushaf: 180,
+  }))
+  const migrated = readPersistedFontPreferences({ userId: '8', storage })
+  assert.equal(migrated.layoutFontSizes.madani_mushaf, DEFAULT_LAYOUT_FONT_SIZES.madani_mushaf)
 }
 
 {
@@ -170,6 +186,8 @@ globalThis.localStorage = storage
     },
   }
   writePersistedFontPreferences({ defaultFontSize: 230 }, { userId: '4', storage })
+  const defaultLayouts = JSON.parse(storage.getItem('mutqin.layoutFontSizes.4'))
+  assert.equal(defaultLayouts.madani_mushaf, DEFAULT_LAYOUT_FONT_SIZES.madani_mushaf)
   const booted = bootPersistedFontSize({ userId: '4', storage, root })
   assert.equal(booted.defaultFontSize, 230)
   assert.equal(props.get('--verse-font-percent'), '230')

@@ -9609,6 +9609,19 @@ html {
   max-width: 100%;
 }
 
+html body .app .workspace-shell-surah-setup-trigger {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: start;
+}
+
+html body .app .workspace-shell-surah-setup-trigger:focus-visible {
+  outline: 2px solid var(--accent, #b88952);
+  outline-offset: .25rem;
+  border-radius: .25rem;
+}
+
 [data-theme="dark"] .workspace-shell-main-title {
   color: color-mix(in srgb, var(--text) 88%, var(--accent) 12%);
 }
@@ -59030,10 +59043,8 @@ never recolour tajweed text */
 @media (max-width: 767.98px) {
   .app .main.mushaf-mode-active .mushaf-font-zoom,
   .main.mushaf-mode-active .mushaf-font-zoom {
-    flex: 0 0 2.55rem;
-    width: 2.55rem;
-    min-width: 2.55rem;
-    max-width: 2.55rem;
+    /* Keep this side rail desktop-only; mobile uses its compact reader tools. */
+    display: none !important;
   }
 }
 
@@ -62855,6 +62866,17 @@ html.is-app-fullscreen .main.madani-qpc-mode-active .madani-qpc-viewport {
 .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__sheet {
   min-height: 0 !important;
   height: auto !important;
+}
+
+@media (min-width: 768px) {
+  .madani-qpc-shell {
+    position: relative;
+  }
+
+  .madani-qpc-shell > .madani-qpc-viewport {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .madani-qpc-viewport .qpc-madani-session-scroll .qpc-madani-page__sheet {
@@ -66830,7 +66852,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 @media (min-width: 1080px) {
   .madani-qpc-stage {
     display: grid;
-    grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
+    grid-template-columns: minmax(2.75rem, 1fr) minmax(0, 56rem) minmax(2.75rem, 1fr);
     align-items: center;
     column-gap: 0.35rem;
   }
@@ -68845,6 +68867,146 @@ html body .post-session-simple.workspace-recite-result.post-session-simple--prem
   html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
     font-size: 1.2rem !important;
   }
+}
+
+html body .app .main.madani-qpc-mode-active .madani-qpc-chrome {
+  position: relative;
+}
+
+html body .app .main.madani-qpc-mode-active .madani-qpc-chrome__layout {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  margin-inline-start: auto;
+}
+
+html body .app .main.madani-qpc-mode-active .madani-qpc-layout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .34rem;
+  min-height: 2rem;
+  padding: .32rem .55rem;
+  border: 1px solid var(--border, rgba(184,137,82,.35));
+  border-radius: .45rem;
+  background: transparent;
+  color: var(--text-muted, var(--text, #f7ebdf));
+  font: inherit;
+  font-size: .78rem;
+}
+
+html body .app .main.madani-qpc-mode-active .madani-qpc-layout-btn.is-active {
+  border-color: var(--accent, #b88952);
+  background: color-mix(in srgb, var(--accent, #b88952) 18%, transparent);
+  color: var(--accent, #dcb27c);
+}
+
+html body .app .main.madani-qpc-mode-active .madani-qpc-layout-btn:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+html body .app .main.madani-qpc-mode-active .madani-qpc-stage {
+  position: relative;
+}
+
+html body .app .main.madani-qpc-mode-active .mushaf-centered-recite {
+  position: absolute;
+  z-index: 8;
+  inset-inline-start: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
+  min-height: 56px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+@media (min-width: 768px) {
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--ayah .qpc-madani-word {
+    font-size: clamp(34px, calc(var(--qpc-word-size, 32px) * 1.18), 60px) !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--basmala,
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line--basmallah {
+    margin-block-end: clamp(1rem, 2vw, 1.75rem) !important;
+    padding-block-end: clamp(.7rem, 1.25vw, 1.25rem) !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__folio {
+    padding-top: clamp(.75rem, 1.4vw, 1.4rem) !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  html body .app .main.madani-qpc-mode-active .madani-qpc-chrome__layout {
+    display: none;
+  }
+
+  html body .app .main.madani-qpc-mode-active .mushaf-centered-recite {
+    display: none;
+  }
+
+}
+
+@media (min-width: 768px) {
+  /* The recitation action remains visible while the reader itself scrolls. */
+  html body .app .main.madani-qpc-mode-active .mushaf-centered-recite.workspace-recite-dock__button {
+    position: fixed !important;
+    inset-inline-start: 50% !important;
+    inset-inline-end: auto !important;
+    bottom: max(1rem, env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 150 !important;
+    transform: translateX(-50%) !important;
+  }
+
+  /* Keep the printed metadata subordinate to the ayah text at desktop sizes. */
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-surah-name {
+    font-size: min(calc(var(--qpc-word-size, 22px) * 1.8), 4.25rem) !important;
+    line-height: 1 !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio-number {
+    font-size: clamp(0.72rem, calc(var(--qpc-word-size, 22px) * 0.5), 0.95rem) !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio {
+    margin-top: 0.2rem !important;
+    padding: 0.45rem 0 0.8rem !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio-number {
+    padding: 0.2rem 0.55rem !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio-number::before,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio-number::after {
+    width: 1.15rem !important;
+  }
+}
+
+html body .app .main.madani-qpc-mode-active {
+  --madani-reader-control-bg: color-mix(in srgb, #fffdf8 92%, #eadcc7);
+  --madani-reader-control-border: color-mix(in srgb, #513b26 18%, transparent);
+  --madani-reader-control-ink: #513b26;
+}
+
+html[data-theme="sepia"] body .app .main.madani-qpc-mode-active,
+html body .app[data-theme="sepia"] .main.madani-qpc-mode-active {
+  --madani-reader-control-bg: color-mix(in srgb, #f3e6d0 92%, #cda970);
+  --madani-reader-control-border: color-mix(in srgb, #654425 26%, transparent);
+  --madani-reader-control-ink: #654425;
+}
+
+html[data-theme="dark"] body .app .main.madani-qpc-mode-active,
+html body .app[data-theme="dark"] .main.madani-qpc-mode-active {
+  --madani-reader-control-bg: color-mix(in srgb, #241d18 92%, #4e3b2b);
+  --madani-reader-control-border: color-mix(in srgb, #f7ebdf 24%, transparent);
+  --madani-reader-control-ink: #f7ebdf;
 }
 
 

@@ -152,6 +152,7 @@ export default {
     fontFamily: { type: String, default: '' },
     fontUrl: { type: String, default: '' },
     layoutId: { type: String, default: MUSHAF_LAYOUT_MADANI_V2 },
+    pageLayout: { type: String, default: 'two' },
     controlledPageNumber: { type: Number, default: null },
     hideDevNav: { type: Boolean, default: false },
     readerMode: { type: Boolean, default: false },
@@ -198,10 +199,14 @@ export default {
     isIndopakLayout() {
       return isIndopakMushafLayout(this.layoutId)
     },
+    showTwoPages() {
+      return this.pageLayout === 'two'
+        && shouldShowTwoMushafPages(this.viewportWidth, this.activeLayout)
+    },
     readerDesktopSpread() {
       return this.readerMode
         && this.mode === 'spread'
-        && shouldShowTwoMushafPages(this.viewportWidth, this.activeLayout)
+        && this.showTwoPages
     },
     spreadViewportFill() {
       return this.readerDesktopSpread
@@ -220,7 +225,7 @@ export default {
       return clampMushafPage(this.activePageNumber ?? seeded, this.activeLayout)
     },
     mode() {
-      return shouldShowTwoMushafPages(this.viewportWidth, this.activeLayout) ? 'spread' : 'single'
+      return this.showTwoPages ? 'spread' : 'single'
     },
     spread() {
       return resolveMushafSpread(this.displayedPageNumber, this.activeLayout)
@@ -291,21 +296,10 @@ export default {
           ...this.leafBundleFor(number),
         }))
       }
-      if (this.readerDesktopSpread && this.sessionBoundsActive) {
-        const withSession = leaves.filter((leaf) => {
-          if (!leaf.page?.lines?.length) return false
-          return pageHasQpcMadaniSessionLines(
-            leaf.page.lines,
-            this.sessionStartAyah,
-            this.sessionEndAyah,
-          )
-        })
-        if (withSession.length) {
-          return withSession.length === 2
-            ? withSession
-            : orderMadaniSpreadLeavesForOpening(withSession)
-        }
-      } else if (this.readerDesktopSpread) {
+      // A desktop reading spread is always two physical pages. Do not remove
+      // the partner page just because the selected session range has no words
+      // on it; that collapses the spread into a misleading single-page view.
+      if (this.readerDesktopSpread) {
         return leaves
       }
       if (!this.sessionBoundsActive) {
@@ -395,6 +389,11 @@ export default {
     spreadViewportFill() {
       this.resetSpreadWordSizeSync()
       this.scheduleSpreadViewportBand()
+    },
+    fontScale() {
+      // A larger requested scale must not remain capped by the previous
+      // cross-page fit result.
+      this.resetSpreadWordSizeSync()
     },
     spreadUnifiedWordSize() {
       if (this.sessionBoundsActive && this.readerDesktopSpread) {

@@ -515,10 +515,12 @@
                 />
               </svg>
             </button>
-            <h1
+            <button
               v-else
-              class="workspace-shell-main-title mutqin-surah-bilingual"
+              type="button"
+              class="workspace-shell-main-title workspace-shell-surah-setup-trigger mutqin-surah-bilingual"
               :aria-label="topCardSessionLabel"
+              @click="openWorkspaceSurahSetup"
             >
               <template v-if="topCardSurahArabic || topCardSurahLatin">
                 <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en" dir="ltr">{{ topCardSurahLatin }}</span>
@@ -530,7 +532,7 @@
                 <span v-if="topCardSurahArabic" class="workspace-shell-surah-ar" dir="rtl" lang="ar">{{ topCardSurahArabic }}</span>
               </template>
               <template v-else>{{ topCardSessionLabel }}</template>
-            </h1>
+            </button>
           </div>
           <div class="workspace-shell-head-utility-row">
           <div class="workspace-shell-actions workspace-shell-head-actions">
@@ -1551,6 +1553,10 @@
                       class="madani-qpc-chrome__page"
                       aria-hidden="true"
                     >{{ qpcMadaniCurrentPage }}</span>
+                    <div class="madani-qpc-chrome__layout" role="group" aria-label="Mushaf page layout">
+                      <button type="button" class="madani-qpc-layout-btn" :class="{ 'is-active': mushafPageLayout === 'one' }" :aria-pressed="mushafPageLayout === 'one'" @click="setMushafPageLayout('one')"><i class="bi bi-file-earmark" aria-hidden="true"></i><span>1 page</span></button>
+                      <button type="button" class="madani-qpc-layout-btn" :class="{ 'is-active': mushafPageLayout === 'two' }" :aria-pressed="mushafPageLayout === 'two'" :disabled="!qpcMadaniTwoPageAvailable" @click="setMushafPageLayout('two')"><i class="bi bi-book" aria-hidden="true"></i><span>2 pages</span></button>
+                    </div>
                   </header>
 
                   <div
@@ -1614,6 +1620,7 @@
               <madani-spread
                 v-else-if="qpcMadaniCurrentPage"
                 :layout-id="mushafLayoutId"
+                :page-layout="mushafPageLayout"
                 :controlled-page-number="qpcMadaniCurrentPage"
                 :session-header-page-number="qpcMadaniSessionHeaderPage"
                 :desktop-short-surah-layout="workspaceDesktopShortSurahMushaf"
@@ -1643,6 +1650,16 @@
                 @peek-touchcancel="clearTouchPeek"
               />
                     </div>
+
+                    <button
+                      v-if="showWorkspaceAiReciteCta"
+                      type="button"
+                      class="action-btn workspace-ai-recite-cta workspace-recite-dock__button mushaf-centered-recite"
+                      :class="{ 'is-animated': workspaceAiReciteAnimated }"
+                      :title="t('dashboard.ai_recite.cta_label')"
+                      :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+                      @click="openWorkspaceAiRecite"
+                    ><i class="bi bi-mic-fill" aria-hidden="true"></i></button>
 
                     <button
                       v-if="showQpcMadaniSpreadPageNav && qpcMadaniCanGoNext"
@@ -1942,7 +1959,7 @@
                 <div class="field-stack field-stack-compact setup-field-list">
                   <div class="field setup-field-row" data-tour="setup-surah">
                     <label><i class="bi bi-journal-text"></i> {{ t('sessionSetup.surah') }}</label>
-                    <select :value="chapterId" @change="onChapterChange" class="select">
+                    <select ref="workspaceSurahSelect" :value="chapterId" @change="onChapterChange" class="select">
                       <option :value="0">{{ t('sessionSetup.chooseSurah') }}</option>
                       <option v-for="c in chapters" :key="c.id" :value="c.id">{{ chapterOptionLabel(c) }}</option>
                     </select>
@@ -2108,21 +2125,44 @@
               </button>
               <div class="sheet-content offcanvas-audio-panel" v-show="sectionOpen.advanced_playback">
                 <div class="field-stack field-stack-compact setup-field-list">
-                  <div class="field setup-field-row">
-                    <label>{{ t('memorisation.speed') }}</label>
-                    <div class="radio-group radio-group-tight radio-group-compact">
-                      <label class="radio" v-for="option in speedOptions" :key="`tool-speed-${option}`">
-                        <input type="radio" name="session-playback-speed" :value="option" v-model.number="speed"
-                          @change="setPlaybackSpeed(option)"> {{ option }}x
-                      </label>
+                  <div class="field field-repetitions-clean setup-field-row">
+                    <div class="field-header">
+                      <label>{{ t('memorisation.speed') }}</label>
+                      <span class="range-value-pill">{{ playbackSpeedDisplayValue }}</span>
+                    </div>
+                    <div class="range-control">
+                      <input
+                        type="range"
+                        :value="playbackSpeedSliderValue"
+                        :style="playbackSpeedSliderStyle"
+                        @input="setPlaybackSpeedFromSlider(Number($event.target.value))"
+                        min="0"
+                        :max="speedOptions.length - 1"
+                        step="1"
+                        class="input technique-range"
+                        :aria-valuetext="playbackSpeedDisplayValue"
+                      />
+                    </div>
+                    <div class="slider-markers slider-markers-compact slider-markers-aligned">
+                      <span
+                        v-for="(option, index) in speedOptions"
+                        :key="`tool-speed-${option}`"
+                        :style="{ insetInlineStart: `${(index / (speedOptions.length - 1)) * 100}%` }"
+                      >{{ option }}x</span>
                     </div>
                     <small class="field-hint">{{ t('memorisation.use_slower_speed_for_early_memorisation') }}</small>
                   </div>
                   <div class="field setup-field-row">
                     <label>{{ t('memorisation.auto_advance') }}</label>
                     <div class="radio-group radio-group-tight radio-group-compact">
-                      <label class="radio"><input type="radio" name="session-auto-advance" value="auto" v-model="playMode"> {{ t('common.yes') }}</label>
-                      <label class="radio"><input type="radio" name="session-auto-advance" value="manual" v-model="playMode"> {{ t('common.no') }}</label>
+                      <label class="radio">
+                        <input type="radio" name="session-auto-advance" value="auto" v-model="playMode">
+                        {{ t('common.yes') }}
+                      </label>
+                      <label class="radio">
+                        <input type="radio" name="session-auto-advance" value="manual" v-model="playMode">
+                        {{ t('common.no') }}
+                      </label>
                     </div>
                   </div>
                   <div v-if="talqinModeEnabled" class="field setup-field-row">
@@ -5014,7 +5054,7 @@
         class="workspace-float-rail workspace-float-rail--desktop"
       >
         <div
-          v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace"
+          v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace && readingViewMode !== 'madani_mushaf'"
           class="workspace-recite-dock"
           aria-live="polite"
         >

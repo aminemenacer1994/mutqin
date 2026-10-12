@@ -83,7 +83,9 @@ export function indopakFitSafety(ctx = {}) {
 
 export function mushafTwoPageMinWidth(layoutId = DEFAULT_MUSHAF_LAYOUT_ID) {
   if (isIndopakLayoutId(layoutId)) return INDOPAK_TWO_PAGE_MIN_WIDTH
-  return MADANI_TWO_PAGE_MIN_WIDTH
+  // The desktop Madani reader is a single portrait page, matching the
+  // printed-page presentation. IndoPak retains its own spread threshold.
+  return Number.POSITIVE_INFINITY
 }
 
 /**

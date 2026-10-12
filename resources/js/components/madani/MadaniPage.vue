@@ -112,7 +112,6 @@ import {
   parseAyahKey,
   prepareQpcMadaniSessionLines,
 } from '../../scripts/mushaf/qpcMadaniSelection'
-import { toEasternArabicDigits } from '../../scripts/mushaf/madaniPageLayout'
 import MadaniLine from './MadaniLine.vue'
 
 const MADANI_MEASURE_SIZE = 40
@@ -262,8 +261,8 @@ export default {
       return count > 0 && count < 15
     },
     folioLabel() {
-      // Desktop spreads and mobile both use Eastern Arabic digits (٢٩٣), matching printed mushafs.
-      return toEasternArabicDigits(this.pageNumber)
+      // Keep the folio readable as an English page number in the desktop spread.
+      return String(this.pageNumber)
     },
     sessionScoped() {
       return !!(String(this.sessionStartAyah || '').trim() && String(this.sessionEndAyah || '').trim())
@@ -313,6 +312,10 @@ export default {
       this.readyAndFit()
     },
     fontScale() {
+      // A size change can happen without a width change. Mark the page dirty so
+      // the fit routine recalculates the ink size instead of taking its
+      // same-width fast path.
+      this.fitted = false
       this.scheduleFit()
     },
     layoutId() {

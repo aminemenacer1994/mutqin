@@ -999,6 +999,8 @@ export default {
       workspaceQpcMadaniSpreadNavEnabled: typeof window !== 'undefined' && typeof window.matchMedia === 'function'
         ? window.matchMedia('(min-width: 1080px)').matches
         : false,
+      // Desktop readers can explicitly choose a single leaf or a facing spread.
+      mushafPageLayout: 'two',
       openVerseActionKey: '',
       verseFontSizes: {},
       defaultFontSize: typeof window !== 'undefined'
@@ -8793,6 +8795,18 @@ export default {
     repetitionDisplayValue() {
       return `${this.sliderRepetitionValue}x`
     },
+    playbackSpeedSliderValue() {
+      return Math.max(0, this.speedOptions.indexOf(this.normalizePlaybackSpeed(this.speed)))
+    },
+    playbackSpeedSliderStyle() {
+      const max = Math.max(1, this.speedOptions.length - 1)
+      return {
+        '--technique-range-progress': `${(this.playbackSpeedSliderValue / max) * 100}%`
+      }
+    },
+    playbackSpeedDisplayValue() {
+      return `${this.normalizePlaybackSpeed(this.speed)}x`
+    },
     setupIndividualAyahNumber() {
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
@@ -10039,8 +10053,7 @@ export default {
       const inSession = (pageNumber) => pages.includes(Number(pageNumber))
       let visible = inSession(current) ? [current] : []
       if (this.showQpcMadaniSpreadPageNav) {
-        const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-        if (shouldShowTwoMushafPages(width, this.mushafLayoutId)) {
+        if (this.qpcMadaniTwoPageLayout) {
           const spread = pages.length
             ? resolveSessionAwareSpread(current, pages)
             : resolveMushafSpread(current, this.mushafLayoutId)
@@ -10075,7 +10088,16 @@ export default {
 
     showQpcMadaniSpreadPageNav() {
       if (this.isMobileViewport()) return false
-      return !!this.workspaceQpcMadaniSpreadNavEnabled
+      return true
+    },
+
+    qpcMadaniTwoPageAvailable() {
+      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
+      return shouldShowTwoMushafPages(width, this.mushafLayoutId)
+    },
+
+    qpcMadaniTwoPageLayout() {
+      return this.mushafPageLayout === 'two' && this.qpcMadaniTwoPageAvailable
     },
 
     qpcMadaniStageNavClass() {
@@ -16974,6 +16996,11 @@ export default {
       this.repetitionsPerStep = next
       // Keep legacy loop-count state in sync so hydrate / queue rebuilds match the slider.
       this.selectedLoopCount = next
+    },
+
+    setPlaybackSpeedFromSlider(index) {
+      const safeIndex = Math.max(0, Math.min(this.speedOptions.length - 1, Number(index) || 0))
+      this.setPlaybackSpeed(this.speedOptions[safeIndex])
     },
 
     clampSetupIndividualAyah() {
@@ -37837,8 +37864,7 @@ export default {
         const page = this.qpcMadaniCurrentPage
         if (!page) return
         pages.add(Number(page))
-        const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-        if (shouldShowTwoMushafPages(width, this.mushafLayoutId)) {
+        if (this.qpcMadaniTwoPageLayout) {
           const spread = sessionPages.length
             ? resolveSessionAwareSpread(page, sessionPages)
             : resolveMushafSpread(page, this.mushafLayoutId)
@@ -37874,8 +37900,7 @@ export default {
       const target = clampMushafPage(pageNumber, this.mushafLayoutId)
       if (!target) return
       this.qpcMadaniPinnedPage = target
-      const width = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const mode = shouldShowTwoMushafPages(width, this.mushafLayoutId) ? 'spread' : 'single'
+      const mode = this.qpcMadaniTwoPageLayout ? 'spread' : 'single'
       const pages = [target]
       if (mode === 'spread') {
         const sessionPages = this.qpcMadaniSessionPageNumbers
@@ -38007,7 +38032,7 @@ export default {
       if (!pages.length || !anchor) return null
       // Two-page spread shows a pair at once; stepping from the pinned leaf only
       // moves one page within the same spread (looks like a no-op until the second click).
-      if (this.showQpcMadaniSpreadPageNav && shouldShowTwoMushafPages(typeof window !== 'undefined' ? window.innerWidth : 1080, this.mushafLayoutId)) {
+      if (this.showQpcMadaniSpreadPageNav && this.qpcMadaniTwoPageLayout) {
         const { min, max } = this.qpcMadaniVisibleSessionPageExtent
         if (direction < 0 && min != null) anchor = min
         else if (direction > 0 && max != null) anchor = max
@@ -38248,8 +38273,7 @@ export default {
       if (!nextKey) return
       const page = resolveMushafPageForVerseKey(nextKey, this.qpcVersePageIndex, this.mushafLayoutId)
       if (!page) return
-      const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1080
-      const mode = shouldShowTwoMushafPages(viewportWidth, this.mushafLayoutId) ? 'spread' : 'single'
+      const mode = this.qpcMadaniTwoPageLayout ? 'spread' : 'single'
       if (isIndopakMushafLayout(this.mushafLayoutId)) {
         prefetchMushafPageData([page], this.mushafLayoutId)
         void loadMushafPageLeaf(page, this.mushafLayoutId).catch(() => {})
@@ -41792,8 +41816,7 @@ export default {
         }
         const page = this.qpcMadaniCurrentPage
         if (page) {
-          const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1080
-          const mode = shouldShowTwoMushafPages(viewportWidth, this.mushafLayoutId) ? 'spread' : 'single'
+          const mode = this.qpcMadaniTwoPageLayout ? 'spread' : 'single'
           preloadMadaniNavigationTargets(mode, page)
           prefetchQpcMadaniPageFonts([page])
         }
@@ -47474,6 +47497,33 @@ export default {
       this.individualAyahFocusEnabled = false
       this.individualAyahRepeatCounts = {}
       this.applyWorkspaceControls({ reason: 'chapter' })
+    },
+
+    openWorkspaceSurahSetup() {
+      this.openToolsPanel({ tab: 'tools' })
+      this.sectionOpen.advanced_setup = true
+      this.$nextTick(() => {
+        const select = this.$refs.workspaceSurahSelect
+        if (!select) return
+
+        select.focus()
+        try {
+          if (typeof select.showPicker === 'function') select.showPicker()
+          else select.click()
+        } catch {
+          select.click()
+        }
+      })
+    },
+
+    setMushafPageLayout(layout) {
+      const next = layout === 'one' ? 'one' : 'two'
+      if (next === 'two' && !this.qpcMadaniTwoPageAvailable) return
+      this.mushafPageLayout = next
+      this.$nextTick(() => {
+        this.syncQpcMadaniPlaybackAyahDom()
+        this.scrollQpcMadaniActiveAyahIntoView()
+      })
     },
 
     refreshVerses() {

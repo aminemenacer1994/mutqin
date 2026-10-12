@@ -75,6 +75,8 @@ export const UI_SCALE_OPTIONS = Object.freeze([1, 1.1, 1.2])
 export const DEFAULT_LAYOUT_FONT_SIZES = Object.freeze({
   stacked: 108,
   mushaf: 160,
+  // QPC Madani pages use a larger, independent ink-size baseline.
+  madani_mushaf: 195,
 })
 
 export const DEFAULT_WORKSPACE_PREFERENCES = Object.freeze({
@@ -129,6 +131,10 @@ export function normaliseLayoutFontSizes(raw, fallbackDefault = DEFAULT_LAYOUT_F
     mushaf: mushafRaw === 120
       ? DEFAULT_LAYOUT_FONT_SIZES.mushaf
       : clampWorkspaceFontSize(src.mushaf, DEFAULT_LAYOUT_FONT_SIZES.mushaf),
+    madani_mushaf: clampWorkspaceFontSize(
+      src.madani_mushaf,
+      DEFAULT_LAYOUT_FONT_SIZES.madani_mushaf,
+    ),
   }
 }
 
@@ -160,7 +166,7 @@ function writePreferenceJson(storage, key, value) {
 }
 
 /**
- * Read the user's mushaf/stacked font size from owner-scoped keys.
+ * Read the user's stacked, classic mushaf, and Madani mushaf font sizes from owner-scoped keys.
  * Authenticated accounts never fall back to another profile's unscoped blob.
  * @param {{ userId?: string|number|null, storage?: Storage|null }} [options]
  */
@@ -199,13 +205,14 @@ export function readPersistedFontPreferences(options = {}) {
     : {
         stacked: defaultFontSize,
         mushaf: defaultFontSize,
+        madani_mushaf: DEFAULT_LAYOUT_FONT_SIZES.madani_mushaf,
       }
 
   return { defaultFontSize, layoutFontSizes, found: true }
 }
 
 /**
- * Persist font size on owner-scoped keys so reload / account switch stay isolated.
+ * Persist layout font sizes on owner-scoped keys so reload / account switch stay isolated.
  * @param {{ defaultFontSize?: unknown, layoutFontSizes?: unknown }} prefs
  * @param {{ userId?: string|number|null, storage?: Storage|null }} [options]
  */
@@ -214,7 +221,11 @@ export function writePersistedFontPreferences(prefs, options = {}) {
   const owner = resolveOwnerId(options.userId)
   const defaultFontSize = clampWorkspaceFontSize(prefs?.defaultFontSize, DEFAULT_LAYOUT_FONT_SIZES.mushaf)
   const layoutFontSizes = normaliseLayoutFontSizes(
-    prefs?.layoutFontSizes || { stacked: defaultFontSize, mushaf: defaultFontSize },
+    prefs?.layoutFontSizes || {
+      stacked: defaultFontSize,
+      mushaf: defaultFontSize,
+      madani_mushaf: DEFAULT_LAYOUT_FONT_SIZES.madani_mushaf,
+    },
     defaultFontSize,
   )
   const next = { defaultFontSize, layoutFontSizes }
