@@ -13147,6 +13147,20 @@ body.session-analysis-modal-open {
     box-shadow: 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
   }
 
+  /* Desktop stacked reading only: reduce Arabic ayah text, never Mushaf/mobile. */
+  @media (min-width: 768px) {
+    html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic,
+    html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verse-card .verse-arabic {
+      --verse-font-percent: 100 !important;
+      font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.35rem, 3.4vw, 1.85rem)) !important;
+      line-height: 1.9 !important;
+    }
+
+    html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic--qpc-madani .qpc-madani-word {
+      font-size: calc(var(--qpc-word-size, 22px) * 0.72) !important;
+    }
+  }
+
   /* Keep progress visible while the reading surface scrolls. */
   html body .app .workspace > .session-progress-rail,
   html body .app .main .workspace > .session-progress-rail {

@@ -9351,3 +9351,17 @@ html body .app .workspace-recite-dock__button:hover {
     display: none !important;
   }
 }
+
+/* Desktop stacked reading only: reduce ayah text without touching Mushaf or mobile. */
+@media (min-width: 768px) {
+  html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic,
+  html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verse-card .verse-arabic {
+    --verse-font-percent: 100 !important;
+    font-size: calc((var(--verse-font-percent, 100) / 100) * clamp(1.35rem, 3.4vw, 1.85rem)) !important;
+    line-height: 1.9 !important;
+  }
+
+  html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic--qpc-madani .qpc-madani-word {
+    font-size: calc(var(--qpc-word-size, 22px) * 0.72) !important;
+  }
+}
