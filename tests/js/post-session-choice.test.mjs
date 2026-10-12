@@ -91,9 +91,10 @@ assert.match(vue, /toolsPrimaryStartLabel/)
 assert.match(vue, /class="top-card-icon-controls"/)
 assert.match(vue, /action-btn-exit post-session-choice-custom/)
 assert.match(vue, /workspace-shell--post-session-choice/)
-assert.match(vue, /workspace-shell-bottom--post-session/)
-assert.match(vue, /workspace-shell-reading-toggles/)
-assert.match(vue, /top-card-layout-icons/)
+assert.match(vue, /top-card-menu-toggle--layout/)
+assert.doesNotMatch(vue, /workspace-shell-bottom--post-session/)
+assert.doesNotMatch(vue, /workspace-shell-reading-toggles/)
+assert.doesNotMatch(vue, /top-card-layout-icons/)
 
 // Dark mode: Custom session must use opaque dark surface (not white + cream text).
 {

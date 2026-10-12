@@ -515,12 +515,9 @@
                 />
               </svg>
             </button>
-            <button
+            <div
               v-else
-              type="button"
-              class="workspace-shell-main-title workspace-shell-surah-setup-trigger mutqin-surah-bilingual"
-              :aria-label="topCardSessionLabel"
-              @click="openWorkspaceSurahSetup"
+              class="workspace-shell-main-title mutqin-surah-bilingual"
             >
               <template v-if="topCardSurahArabic || topCardSurahLatin">
                 <span v-if="topCardSurahLatin" class="workspace-shell-surah-en" lang="en" dir="ltr">{{ topCardSurahLatin }}</span>
@@ -532,7 +529,25 @@
                 <span v-if="topCardSurahArabic" class="workspace-shell-surah-ar" dir="rtl" lang="ar">{{ topCardSurahArabic }}</span>
               </template>
               <template v-else>{{ topCardSessionLabel }}</template>
-            </button>
+            </div>
+            <div
+              v-if="topCardMetadataPills.length && !isMobileViewport()"
+              class="workspace-shell-head-metadata"
+              :aria-label="t('memorisation.a11y.sessionMetadata')"
+            >
+              <span
+                v-for="item in topCardMetadataPills"
+                :key="item.key"
+                class="badge rounded-pill workspace-shell-metadata-pill is-readonly"
+                :data-pill="item.key"
+                :data-session-chapter="item.key === 'surah' || item.key === 'range' ? (Number(chapterId || currentConfig?.chapterId || 0) || null) : null"
+                :data-ayah-range="item.key === 'range' ? `${Number(rangeStart || currentConfig?.rangeStart || 0) || ''}-${Number(rangeEnd || currentConfig?.rangeEnd || 0) || ''}` : null"
+                aria-disabled="true"
+              >
+                <strong>{{ item.label }}:</strong>
+                <span>{{ item.value }}</span>
+              </span>
+            </div>
           </div>
           <div class="workspace-shell-head-utility-row">
           <div class="workspace-shell-actions workspace-shell-head-actions">
@@ -664,23 +679,6 @@
                 <path d="M15.4 15.4 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
               </svg>
             </button>
-            <div
-              class="workspace-layout-toggle view-mode-toggle top-card-layout-icons"
-              role="group"
-              :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
-            >
-              <button
-                type="button"
-                class="view-mode-btn workspace-layout-btn top-card-icon-control"
-                :class="{ active: readingViewMode !== 'stacked' }"
-                :aria-pressed="readingViewMode !== 'stacked' ? 'true' : 'false'"
-                @click.stop="cycleReadingViewMode"
-                :title="nextReadingViewModeHint"
-                :aria-label="nextReadingViewModeLabel"
-              >
-                <i class="bi" :class="currentReadingViewModeIcon" aria-hidden="true"></i>
-              </button>
-            </div>
             <div v-if="!isPostSessionChoiceVisible" class="top-card-controls-wrap">
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-controls-trigger top-card-icon-control"
@@ -1161,68 +1159,6 @@
             {{ t('memorisation.techniques.chooseChainingMethod') }}
           </button>
         </p>
-        <div
-          v-if="hasVerses && !isMobileViewport() && (topCardMetadataPills.length || isPostSessionChoiceVisible)"
-          class="workspace-shell-bottom"
-          :class="{ 'workspace-shell-bottom--post-session': isPostSessionChoiceVisible }"
-        >
-          <!-- Source-guard reference: class="workspace-header-view-controls quick-right-controls" -->
-          <div
-            v-if="topCardMetadataPills.length"
-            class="workspace-shell-bottom-pills"
-          >
-            <div
-              class="workspace-shell-metadata d-flex flex-nowrap gap-2"
-              :aria-label="t('memorisation.a11y.sessionMetadata')"
-            >
-              <span
-                v-for="item in topCardMetadataPills"
-                :key="item.key"
-                class="badge rounded-pill workspace-shell-metadata-pill is-readonly"
-                :data-pill="item.key"
-                :data-session-chapter="item.key === 'surah' || item.key === 'range' ? (Number(chapterId || currentConfig?.chapterId || 0) || null) : null"
-                :data-ayah-range="item.key === 'range' ? `${Number(rangeStart || currentConfig?.rangeStart || 0) || ''}-${Number(rangeEnd || currentConfig?.rangeEnd || 0) || ''}` : null"
-                aria-disabled="true"
-              >
-                <strong>{{ item.label }}:</strong>
-                <span>{{ item.value }}</span>
-              </span>
-            </div>
-          </div>
-          <div
-            class="workspace-shell-reading-toggles workspace-shell-font-control"
-            :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
-          >
-            <div
-              class="workspace-layout-toggle view-mode-toggle"
-              role="group"
-              :aria-label="`${t('memorisation.view.stacked')} / ${t('memorisation.view.mushaf')}`"
-            >
-              <button
-                type="button"
-                class="view-mode-btn workspace-layout-btn"
-                :class="{ active: readingViewMode === 'stacked' }"
-                :aria-pressed="readingViewMode === 'stacked' ? 'true' : 'false'"
-                @click.stop="setReadingViewMode('stacked')"
-                :title="t('memorisation.view.stackedHint')"
-              >
-                <i class="bi bi-view-stacked" aria-hidden="true"></i>
-                <span>{{ t('memorisation.view.stacked') }}</span>
-              </button>
-              <button
-                type="button"
-                class="view-mode-btn workspace-layout-btn"
-                :class="{ active: readingViewMode === 'madani_mushaf' }"
-                :aria-pressed="readingViewMode === 'madani_mushaf' ? 'true' : 'false'"
-                @click.stop="setReadingViewMode('madani_mushaf')"
-                :title="mushafLayoutHint"
-              >
-                <i class="bi bi-book-half" aria-hidden="true"></i>
-                <span>{{ t('memorisation.view.mushaf') }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
         <div v-if="reviewPriorityLabel" class="workspace-shell-compact-meta">
           <span>{{ reviewPriorityLabel }}</span>
         </div>

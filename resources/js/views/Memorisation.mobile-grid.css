@@ -9257,3 +9257,97 @@ html body .app .workspace-recite-dock__button:hover {
     scroll-padding-block-end: var(--workspace-recite-clearance) !important;
   }
 }
+
+/* Desktop session overview: keep the header compact and put metadata beside
+ * the Surah name. Reading layout is menu-only; the ellipsis remains the
+ * single desktop entry point for Stacked/Mushaf. */
+@media (min-width: 768px) {
+  html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: 1rem !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-copy > .workspace-shell-main-title {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    padding-inline-end: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-metadata {
+    display: flex !important;
+    flex: 0 1 auto !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    min-width: 0 !important;
+    max-width: min(100%, 78rem) !important;
+    margin-inline: 0.25rem 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+  }
+
+  html body .app .workspace-shell-head-metadata .workspace-shell-metadata-pill {
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    min-height: 1.75rem !important;
+    padding: 0.3rem 0.6rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, #c49a6c) 22%, transparent) !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--surface, #221d19) 12%, transparent) !important;
+    color: var(--text, #f5efe7) !important;
+    line-height: 1.2 !important;
+    box-shadow: 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
+  }
+
+  html body .app .workspace-shell-head-metadata .workspace-shell-metadata-pill strong {
+    color: color-mix(in srgb, var(--text, #f5efe7) 72%, transparent) !important;
+    font-weight: 650 !important;
+  }
+
+  html body .app .workspace-shell-head-metadata .workspace-shell-metadata-pill span {
+    color: var(--text, #f5efe7) !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-inline-start: 0.75rem !important;
+    padding-inline-start: 0 !important;
+    border-inline-start: 0 !important;
+  }
+
+  html body .top-card-menu .top-card-menu-label--layout {
+    display: block !important;
+  }
+
+  html body .top-card-menu .top-card-menu-toggle--layout {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .workspace-shell-head-metadata {
+    display: none !important;
+  }
+}

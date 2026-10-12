@@ -73,8 +73,13 @@ assert.match(
 )
 assert.match(
   memorisationVue,
+  /top-card-menu-toggle--layout/,
+  'Stacked/Mushaf switcher remains available in the ellipsis menu'
+)
+assert.doesNotMatch(
+  memorisationVue,
   /workspace-shell-reading-toggles/,
-  'Stacked/Mushaf switcher remains in session header'
+  'standalone Stacked/Mushaf switcher is removed from the session dashboard'
 )
 assert.doesNotMatch(
   memorisationVue,

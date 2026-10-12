@@ -13122,5 +13122,44 @@ body.session-analysis-modal-open {
     100% { opacity: 0; transform: scale(1.45); }
   }
 </style>
+@if(request()->routeIs('memorisation', 'memorisation.demo'))
+<style id="mutqin-memorisation-session-chrome-final">
+  /* Last-wins session chrome: light pill-level borders, no padded rail. */
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+    gap: 1.15rem !important;
+  }
+
+  html body .app .workspace-shell-head-metadata {
+    gap: 0.5rem !important;
+    margin-inline: 0.25rem 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  html body .app .workspace-shell-head-metadata .workspace-shell-metadata-pill {
+    min-height: 1.75rem !important;
+    padding: 0.3rem 0.6rem !important;
+    border: 1px solid color-mix(in srgb, var(--accent, #c49a6c) 22%, transparent) !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--surface, #221d19) 12%, transparent) !important;
+    box-shadow: 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
+  }
+
+  /* Keep progress visible while the reading surface scrolls. */
+  html body .app .workspace > .session-progress-rail,
+  html body .app .main .workspace > .session-progress-rail {
+    position: sticky !important;
+    top: calc(var(--navbar-height, var(--navbar-offset, 64px)) + 0.5rem) !important;
+    inset-block-start: calc(var(--navbar-height, var(--navbar-offset, 64px)) + 0.5rem) !important;
+    z-index: 90 !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-block: 0.4rem 0 !important;
+  }
+</style>
+@endif
 </body>
 </html>

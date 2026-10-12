@@ -2531,8 +2531,8 @@ export default {
       if (!this.hasVerses && !this.hifzPlanExists && !this.isPostSessionChoiceVisible) return false
       // Hide from the start for everyone; only surface once there is real progress.
       if (this.sessionProgressMeter <= 0) return false
-      // Keep the workspace clear until audio is actually playing.
-      if (!this.isPlaying) return false
+      // Keep the rail available while paused and during scrolling. Playback
+      // state should not remove the user's progress context from the page.
       return true
     },
     shouldShowOffcanvasTabs() {

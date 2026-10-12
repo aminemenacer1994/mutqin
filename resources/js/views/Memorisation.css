@@ -5977,8 +5977,8 @@ body.has-navbar .tools-top {
 
 .verse-arabic {
   /* Keep stacked Arabic readable without dwarfing the translation. */
-  --verse-font-percent: 120;
-  --verse-font-size: clamp(1.28rem, calc(var(--verse-font-percent, 120) * 0.0125rem), 1.95rem);
+  --verse-font-percent: 100;
+  --verse-font-size: clamp(1.1rem, calc(var(--verse-font-percent, 100) * 0.01rem), 1.6rem);
   font-family: var(--quran-font, var(--font-ar));
   /* If we scale UI, apply it to Arabic too. */
   font-size: calc(var(--verse-font-size) * var(--ui-scale, 1) * var(--text-scale, 1));
@@ -67631,7 +67631,7 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
 
 .verses-grid .verse-arabic--qpc-madani .qpc-madani-word {
   display: inline-block;
-  font-size: var(--qpc-word-size, 22px);
+  font-size: calc(var(--qpc-word-size, 22px) * 0.8) !important;
   font-weight: 400;
   line-height: var(--qpc-line-height, 1.32);
   padding: 0.03em 0.02em 0.04em;
