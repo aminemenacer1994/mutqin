@@ -7,7 +7,10 @@ import {
   resolveAskMutqinRange,
   snapAskMutqinSpeed,
 } from '../../resources/js/scripts/askMutqin/range.js'
-import { matchHeardAyahPrefix } from '../../resources/js/scripts/askMutqin/matchAyah.js'
+import {
+  matchHeardAyahPrefix,
+  tokenizeHeardArabic,
+} from '../../resources/js/scripts/askMutqin/matchAyah.js'
 import {
   appendHeardPayload,
   createHeardStream,
@@ -246,6 +249,40 @@ const laterSpan = matchHeardAyahPrefix(index, 'كرسيه السماوات وا�
 assert.equal(laterSpan.status, 'matched', 'a phrase from later in a long ayah still matches')
 assert.equal(laterSpan.match.surah, 2)
 assert.equal(laterSpan.match.ayah, 255)
+
+const allahLaIlah = matchHeardAyahPrefix(index, 'الله لا إله')
+assert.equal(allahLaIlah.status, 'matched', 'الله لا إله resolves to the exact ayah')
+assert.equal(allahLaIlah.match.key, '2:255')
+assert.deepEqual(allahLaIlah.candidates.map((item) => item.key), ['2:255'])
+assert.deepEqual(
+  tokenizeHeardArabic('الله لاإله'),
+  ['الله', 'لا', 'اله'],
+  'attached لا إله speech tokens are split before matching',
+)
+const compactAllahLaIlah = matchHeardAyahPrefix(index, 'الله لاإله')
+assert.equal(compactAllahLaIlah.status, 'matched')
+assert.equal(compactAllahLaIlah.match.key, '2:255')
+
+const exactPhraseIndex = buildIndex([
+  {
+    number: 2,
+    englishName: 'Al-Baqara',
+    ayahs: [
+      { numberInSurah: 255, text: 'الله لا إله إلا هو الحي القيوم' },
+      { numberInSurah: 190, text: 'الله كلمة لا كلمة إله' },
+    ],
+  },
+])
+const exactPhraseOnly = matchHeardAyahPrefix(exactPhraseIndex, 'الله لا إله')
+assert.equal(exactPhraseOnly.status, 'matched')
+assert.equal(exactPhraseOnly.match.key, '2:255', 'scattered words cannot outrank a continuous phrase')
+assert.deepEqual(exactPhraseOnly.candidates.map((item) => item.key), ['2:255'])
+const phraseAfterFalseStart = matchHeardAyahPrefix(exactPhraseIndex, 'يا الله لا إله')
+assert.equal(phraseAfterFalseStart.status, 'matched', 'a false start does not hide a continuous phrase')
+assert.equal(phraseAfterFalseStart.match.key, '2:255')
+const phraseAfterRepeatedWord = matchHeardAyahPrefix(exactPhraseIndex, 'الله الله لا إله')
+assert.equal(phraseAfterRepeatedWord.status, 'matched', 'one duplicated speech token is tolerated')
+assert.equal(phraseAfterRepeatedWord.match.key, '2:255')
 
 const sharedPhraseIndex = buildIndex([
   {

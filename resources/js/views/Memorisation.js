@@ -3064,9 +3064,6 @@ export default {
     topCardMetadataPills() {
       if (!this.hasVerses) return []
 
-      const surahName = this.getChapterDisplayName(this.currentChapter || this.chapterId)
-        || this.activeChapterName
-        || this.topCardSessionLabel
       const start = Math.max(1, Number(this.rangeStart || 1))
       const end = Math.max(start, Number(this.rangeEnd || start))
       const reciter = this.reciters.find(item => String(item.id) === String(this.reciterId || ''))
@@ -3085,7 +3082,6 @@ export default {
       const delayValue = `${delaySeconds}s`
 
       return [
-        { key: 'surah', label: this.t('memorisation.topCard.metadata.surah'), value: surahName },
         { key: 'range', label: this.t('memorisation.topCard.metadata.range'), value: rangeValue },
         { key: 'reciter', label: this.t('memorisation.topCard.metadata.reciter'), value: reciter?.name || 'Alafasy' },
         { key: 'repetition', label: this.t('memorisation.topCard.metadata.repetition'), value: repeatValue },

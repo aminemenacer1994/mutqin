@@ -405,7 +405,7 @@
   }
 
   .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
-    font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif !important;
+    font-family: var(--font-surah-arabic, "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif) !important;
     font-weight: 700 !important;
     line-height: 1.5 !important;
     overflow: visible !important;
@@ -2753,7 +2753,7 @@
     min-inline-size: 0;
     max-inline-size: 100%;
     font-size: clamp(1.8rem, 8.8vw, 2.65rem) !important;
-    line-height: 2.05 !important;
+    line-height: 1.9 !important;
     white-space: normal !important;
   }
 
@@ -5246,7 +5246,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     white-space: nowrap !important;
     text-align: start !important;
     text-align-last: auto !important;
-    line-height: 1.9 !important;
+    line-height: 2.05 !important;
   }
 
   .main.mushaf-mode-active .madani-line,
@@ -9301,8 +9301,16 @@ html body .app .workspace-recite-dock__button:hover {
     border-radius: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
-    overflow: hidden !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     white-space: nowrap !important;
+  }
+
+  html body .app .workspace-shell-head-metadata::-webkit-scrollbar {
+    display: none;
   }
 
   html body .app .workspace-shell-head-metadata .workspace-shell-metadata-pill {
@@ -9363,5 +9371,15 @@ html body .app .workspace-recite-dock__button:hover {
 
   html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic--qpc-madani .qpc-madani-word {
     font-size: calc(var(--qpc-word-size, 22px) * 0.72) !important;
+  }
+}
+
+/* Desktop Mushaf only: add a small amount of breathing room between rows. */
+@media (min-width: 768px) {
+  html body .app .main.mushaf-mode-active .madani-qpc-viewport .qpc-madani-line--ayah,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-line--ayah {
+    min-height: calc(var(--qpc-word-size, 22px) * 1.26) !important;
+    margin-block-end: calc(var(--qpc-word-size, 22px) * 0.05) !important;
+    line-height: 1.32 !important;
   }
 }

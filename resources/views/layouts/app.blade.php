@@ -13124,27 +13124,43 @@ body.session-analysis-modal-open {
 </style>
 @if(request()->routeIs('memorisation', 'memorisation.demo'))
 <style id="mutqin-memorisation-session-chrome-final">
-  /* Last-wins session chrome: light pill-level borders, no padded rail. */
+  /* Keep the session header quiet: title, metadata, action. */
   html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
-    gap: 1.15rem !important;
+    gap: 1rem !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title {
+    font-family: var(--font-surah-latin, "Source Serif 4", serif) !important;
+    font-size: clamp(1.8rem, 2.8vw, 2.8rem) !important;
+    font-weight: 600 !important;
+    line-height: 1.1 !important;
+    padding-block: 0 !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
+    font-family: var(--font-surah-arabic, "Amiri", "Noto Naskh Arabic", serif) !important;
+  }
+
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title::after {
+    display: none !important;
   }
 
   html body .app .workspace-shell-head-metadata {
     gap: 0.5rem !important;
-    margin-inline: 0.25rem 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
+    margin-inline: 0 !important;
+    padding-inline-start: 0.85rem !important;
+    border-inline-start: 1px solid color-mix(in srgb, var(--accent, #c49a6c) 45%, transparent) !important;
   }
 
   html body .app .workspace-shell-head-metadata .workspace-shell-metadata-pill {
-    min-height: 1.75rem !important;
-    padding: 0.3rem 0.6rem !important;
+    min-height: 1.8rem !important;
+    padding: 0.3rem 0.65rem !important;
     border: 1px solid color-mix(in srgb, var(--accent, #c49a6c) 22%, transparent) !important;
     border-radius: 999px !important;
     background: color-mix(in srgb, var(--surface, #221d19) 12%, transparent) !important;
     box-shadow: 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
+    font-size: 0.74rem !important;
   }
 
   /* Desktop stacked reading only: reduce Arabic ayah text, never Mushaf/mobile. */
@@ -13158,6 +13174,14 @@ body.session-analysis-modal-open {
 
     html body .app .main:not(.mushaf-mode-active) .workspace-reading-surface--stacked .verses-grid .verse-arabic--qpc-madani .qpc-madani-word {
       font-size: calc(var(--qpc-word-size, 22px) * 0.72) !important;
+    }
+
+    /* Desktop Mushaf only: add a small amount of breathing room between rows. */
+    html body .app .main.mushaf-mode-active .madani-qpc-viewport .qpc-madani-line--ayah,
+    html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-line--ayah {
+      min-height: calc(var(--qpc-word-size, 22px) * 1.26) !important;
+      margin-block-end: calc(var(--qpc-word-size, 22px) * 0.05) !important;
+      line-height: 1.32 !important;
     }
   }
 

@@ -1,9 +1,11 @@
-import { normalizeArabicForRecitation } from '../engine/recitation_analysis.js'
 import {
-  matchSequentialTokens,
+  arabicAlefOptionalEqual,
+  getRecitationWordSimilarity,
+  normalizeArabicForRecitation,
+} from '../engine/recitation_analysis.js'
+import {
   normalizeForMatch,
   tokenizeForMatch,
-  tokensMatch,
 } from '../memorisationDetection/speechMatch.js'
 
 export const ASK_MUTQIN_MIN_WORDS = 3
@@ -11,7 +13,6 @@ export const ASK_MUTQIN_UNIQUE_MIN_WORDS = 2
 export const ASK_MUTQIN_STRONG_SCORE = 0.42
 export const ASK_MUTQIN_UNIQUE_SCORE = 0.68
 export const ASK_MUTQIN_AMBIGUOUS_GAP = 0.02
-export const ASK_MUTQIN_TOKEN_THRESHOLD = 0.58
 export const ASK_MUTQIN_MATCH_LIST_INITIAL = 5
 
 export function isClearAyahMatchWinner(top, runnerUp) {
@@ -42,6 +43,39 @@ const BASMALA_NORMALIZED = normalizeArabicForRecitation('بسم الله الر�
 const BASMALA_WORDS = BASMALA_NORMALIZED.split(/\s+/).filter(Boolean)
 const SHORT_PARTICLES = new Set(['لا', 'ما', 'من', 'في', 'عن', 'ان', 'ان', 'او', 'لم', 'لن', 'قد', 'بل'])
 
+/**
+ * Find-by-voice needs higher precision than live recitation assessment. The
+ * generic recitation matcher intentionally accepts article removal and short
+ * word similarity; that turns لا/فلا and إله/إلا into false Quran search hits.
+ * Keep exact normalized words, and only allow a small ASR edit tolerance for
+ * longer words.
+ */
+function askMutqinTokensMatch(heard, expected) {
+  const left = normalizeForMatch(heard)
+  const right = normalizeForMatch(expected)
+  if (!left || !right) return false
+  if (left === right) return true
+  // Qur'anic dagger-alif can be written or omitted by speech recognition
+  // (إِلَٰه / إله). This is safe to accept before short-word matching.
+  if (arabicAlefOptionalEqual(left, right)) return true
+  if (Math.min(left.length, right.length) < 4) return false
+  return getRecitationWordSimilarity(left, right, { allowArticleMatch: false }) >= 0.82
+}
+
+function expandAttachedArabicWords(words = []) {
+  const expanded = []
+  for (const word of Array.isArray(words) ? words : []) {
+    // Speech recognition sometimes emits “لا إله” as one Arabic token.
+    // Restore that boundary before candidate lookup and ranking.
+    if (word === 'لااله' || word === 'لاالاه') {
+      expanded.push('لا', 'اله')
+    } else {
+      expanded.push(word)
+    }
+  }
+  return expanded
+}
+
 function isMeaningfulWord(word) {
   const value = String(word || '').trim()
   if (!value) return false
@@ -50,57 +84,80 @@ function isMeaningfulWord(word) {
 }
 
 export function tokenizeHeardArabic(text) {
-  return tokenizeForMatch(text).filter(isMeaningfulWord)
+  return expandAttachedArabicWords(tokenizeForMatch(text)).filter(isMeaningfulWord)
 }
 
 export function stripLeadingBasmalaTokens(words = []) {
   const list = Array.isArray(words) ? words.slice() : []
   if (list.length < BASMALA_WORDS.length) return list
   const leading = list.slice(0, BASMALA_WORDS.length)
-  const isBasmala = leading.every((word, index) => tokensMatch(word, BASMALA_WORDS[index], ASK_MUTQIN_TOKEN_THRESHOLD))
+  const isBasmala = leading.every((word, index) => askMutqinTokensMatch(word, BASMALA_WORDS[index]))
   return isBasmala ? list.slice(BASMALA_WORDS.length) : list
 }
 
-function countOrderedMatches(phrase, expected, start) {
-  const { matchedIndexes } = matchSequentialTokens({
-    expectedTokens: expected.slice(start, start + phrase.length + 5),
-    heardTokens: phrase,
-    windowSize: Math.min(8, Math.max(4, phrase.length + 2)),
-    threshold: ASK_MUTQIN_TOKEN_THRESHOLD,
-  })
-  return matchedIndexes.length
+function requiredPhraseWords(heardLength) {
+  const length = Math.max(0, Number(heardLength) || 0)
+  if (length < ASK_MUTQIN_MIN_WORDS) return length
+  // A voice transcript can include a brief false start or a repeated final
+  // token. Three adjacent Quran words are enough evidence for the finder;
+  // longer recitations must contribute at least one additional word.
+  return length >= 6 ? 4 : ASK_MUTQIN_MIN_WORDS
 }
 
-function alignPhrase(heard, expected) {
-  let bestScore = 0
-  let bestMatched = 0
-  if (!heard.length || !expected.length) return { score: 0, matched: 0 }
+/**
+ * Find one uninterrupted run in an ayah. We deliberately stop at the first
+ * mismatch: finding word one, then jumping across an ayah to find words two
+ * and three is not evidence that the user recited that phrase.
+ */
+function findContiguousPhraseSpan(heard, expected) {
+  const phrase = Array.isArray(heard) ? heard.filter(Boolean) : []
+  const words = Array.isArray(expected) ? expected.filter(Boolean) : []
+  if (!phrase.length || !words.length) return { score: 0, matched: 0, start: -1, end: -1 }
 
-  const attempts = [{ phrase: heard, skipped: 0 }]
-  if (heard.length >= 3) attempts.push({ phrase: heard.slice(1), skipped: 1 })
+  let best = { score: 0, matched: 0, start: -1, end: -1 }
+  const required = requiredPhraseWords(phrase.length)
 
-  for (const { phrase, skipped } of attempts) {
-    if (phrase.length < 2) continue
-    for (let start = 0; start < expected.length; start += 1) {
-      if (!tokensMatch(phrase[0], expected[start], ASK_MUTQIN_TOKEN_THRESHOLD)) continue
-      const matched = countOrderedMatches(phrase, expected, start)
-      if (matched < 2) continue
-      const coverage = matched / heard.length
-      const complete = matched === phrase.length && skipped === 0
-      const score = Math.max(0, Math.min(1, coverage + (complete ? 0.12 : 0) - (skipped ? 0.08 : 0)))
-      if (matched > bestMatched || (matched === bestMatched && score > bestScore)) {
-        bestMatched = matched
-        bestScore = score
+  // Search each local part of the transcript. Speechmatics occasionally adds
+  // a repeated word or a short false start, which must not make a clearly
+  // recited Quran phrase unfindable. The target side never skips a word, so
+  // every accepted result is still one continuous Quran span.
+  for (let heardStart = 0; heardStart <= phrase.length - required; heardStart += 1) {
+    for (let start = 0; start < words.length; start += 1) {
+      if (!askMutqinTokensMatch(phrase[heardStart], words[start])) continue
+
+      let heardIndex = heardStart
+      let matched = 0
+      let skippedHeard = 0
+      while (heardIndex < phrase.length && start + matched < words.length) {
+        if (askMutqinTokensMatch(phrase[heardIndex], words[start + matched])) {
+          matched += 1
+          heardIndex += 1
+          continue
+        }
+        if (skippedHeard < 1 && heardIndex + 1 < phrase.length) {
+          skippedHeard += 1
+          heardIndex += 1
+          continue
+        }
+        break
+      }
+
+      if (matched < required) continue
+      const comparedWords = Math.max(ASK_MUTQIN_MIN_WORDS, Math.min(5, phrase.length - heardStart))
+      const coverage = matched / comparedWords
+      const score = Math.min(1, coverage + (skippedHeard ? -0.04 : 0) + (matched >= phrase.length - heardStart ? 0.12 : 0))
+      if (matched > best.matched || (matched === best.matched && score > best.score)) {
+        best = { score, matched, start, end: start + matched - 1 }
       }
     }
   }
-  return { score: bestScore, matched: bestMatched }
+  return best
 }
 
 export function scoreAyahPrefix(heardWords, ayahWords) {
   const heard = Array.isArray(heardWords) ? heardWords.filter(Boolean) : []
   const expected = Array.isArray(ayahWords) ? ayahWords.filter(Boolean) : []
-  return alignPhrase(heard, expected).score
+  return findContiguousPhraseSpan(heard, expected).score
 }
 
 const tokenIndexCache = new WeakMap()
@@ -141,7 +198,7 @@ function candidateItems(index, heardWords, surahFilter) {
   return index.filter((item) => {
     if (Number(surahFilter) > 0 && Number(item.surah) !== Number(surahFilter)) return false
     const words = Array.isArray(item.words) ? item.words : []
-    return anchors.some((token) => words.some((word) => tokensMatch(token, word, 0.45)))
+    return anchors.some((token) => words.some((word) => askMutqinTokensMatch(token, word)))
   })
 }
 
@@ -152,9 +209,9 @@ function rankCandidates(index, heardWords, surahFilter) {
   for (const item of scoped) {
     const words = Array.isArray(item.words) ? item.words : []
     if (!words.length) continue
-    const aligned = alignPhrase(heardWords, words)
-    if (aligned.score < 0.22 || aligned.matched < 2) continue
-    ranked.push({ ...item, score: aligned.score, matched: aligned.matched })
+    const aligned = findContiguousPhraseSpan(heardWords, words)
+    if (aligned.matched < requiredPhraseWords(heardWords.length)) continue
+    ranked.push({ ...item, ...aligned })
   }
   ranked.sort((a, b) => (b.matched - a.matched) || (b.score - a.score) || a.surah - b.surah || a.ayah - b.ayah)
   return ranked.slice(0, 8)
@@ -265,31 +322,10 @@ export function buildAskMutqinAyahHighlightParts(arabic, transcript) {
   }
 
   const expected = displayTokens.map((token) => normalizeForMatch(token))
-  const windowSize = Math.min(10, Math.max(4, heard.length + 3))
-  let bestIndexes = new Set()
-  let bestMatched = 0
-  let bestScore = 0
-
-  for (let start = 0; start < expected.length; start += 1) {
-    const slice = expected.slice(start)
-    const { matchedIndexes } = matchSequentialTokens({
-      expectedTokens: slice,
-      heardTokens: heard,
-      windowSize,
-      threshold: ASK_MUTQIN_TOKEN_THRESHOLD,
-    })
-    if (matchedIndexes.length < 1) continue
-    const absolute = matchedIndexes.map((index) => start + index)
-    const coverage = matchedIndexes.length / Math.max(1, heard.length)
-    const score = coverage + (matchedIndexes.length >= heard.length ? 0.08 : 0)
-    if (
-      matchedIndexes.length > bestMatched
-      || (matchedIndexes.length === bestMatched && score > bestScore)
-    ) {
-      bestMatched = matchedIndexes.length
-      bestScore = score
-      bestIndexes = new Set(absolute)
-    }
+  const span = findContiguousPhraseSpan(heard, expected)
+  const bestIndexes = new Set()
+  if (span.matched >= requiredPhraseWords(heard.length)) {
+    for (let index = span.start; index <= span.end; index += 1) bestIndexes.add(index)
   }
 
   return displayTokens.map((text, index) => ({

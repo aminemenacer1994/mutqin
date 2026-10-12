@@ -7,8 +7,12 @@ import {
 
 const ayah = 'وَلِلَّذِينَ كَفَرُوا بِرَبِّهِمْ عَذَابُ جَهَنَّمَ وَبِئْسَ الْمَصِيرُ'
 const parts = buildAskMutqinAyahHighlightParts(ayah, 'وللذين كفروا بربهم')
-const highlighted = parts.filter((part) => part.highlight).map((part) => part.text)
-assert.ok(highlighted.length >= 3, 'heard phrase highlights multiple non-contiguous words')
+const highlightedIndexes = parts
+  .map((part, index) => (part.highlight ? index : -1))
+  .filter((index) => index >= 0)
+assert.deepEqual(highlightedIndexes, [0, 1, 2], 'heard phrase highlights one continuous span')
+const scattered = buildAskMutqinAyahHighlightParts('الله كلمة لا كلمة إله', 'الله لا إله')
+assert.ok(scattered.every((part) => !part.highlight), 'scattered words are never highlighted as a phrase')
 assert.ok(
   parts.every((part) => !String(part.text).includes('\n')),
   'parts stay on display tokens without injecting newlines',

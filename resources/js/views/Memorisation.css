@@ -1247,6 +1247,7 @@
   --font-ar: 'Amiri', 'Noto Naskh Arabic', 'Scheherazade New', serif;
   --font-ui: "SF Pro Text", "SF Pro Display", "Avenir Next", "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
   --font-surah-latin: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, "Noto Serif", ui-serif, Georgia, serif;
+  --font-surah-arabic: "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif;
 }
 
 html[data-theme="dark"] {
@@ -60583,7 +60584,7 @@ html body .app .workspace-shell-main-title {
 }
 
 .workspace-shell-surah-ar {
-  font-family: "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
+  font-family: var(--font-surah-arabic);
   font-size: 1.05em;
   font-weight: 700;
   line-height: 1.5;
