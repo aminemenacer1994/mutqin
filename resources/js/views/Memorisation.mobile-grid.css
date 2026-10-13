@@ -9271,6 +9271,8 @@ html body .app .workspace-recite-dock__button:hover {
   html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
     display: flex !important;
     flex: 1 1 auto !important;
+    flex-flow: row nowrap !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
     gap: 1rem !important;
     width: auto !important;

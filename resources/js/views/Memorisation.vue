@@ -659,7 +659,7 @@
           />
           <div class="top-card-icon-controls" :aria-label="t('memorisation.a11y.readingTools')">
             <button
-              v-if="!isPostSessionChoiceVisible && !isMobileViewport()"
+              v-if="!isPostSessionChoiceVisible"
               type="button"
               class="top-card-search-trigger top-card-action-trigger top-card-icon-control is-featured"
               data-testid="workspace-ayah-search"
@@ -835,16 +835,6 @@
                     </button>
                   </div>
                   <div class="top-card-menu-group top-card-menu-group--utilities" role="group" :aria-label="t('memorisation.a11y.readingTools')">
-                    <button
-                      v-if="isMobileViewport() && !isPostSessionChoiceVisible"
-                      type="button"
-                      class="top-card-menu-row"
-                      data-testid="workspace-ayah-search-menu"
-                      @click.stop="openAskMutqin(); topCardMenuOpen = false"
-                    >
-                      <i class="bi bi-search" aria-hidden="true"></i>
-                      <span>{{ t('memorisation.askMutqin.searchForAyahMenu') }}</span>
-                    </button>
                     <button
                       type="button"
                       class="top-card-menu-row"
@@ -1298,19 +1288,6 @@
                       <i class="bi bi-dash-lg" aria-hidden="true"></i>
                     </button>
                   </div>
-                  <button
-                    v-if="showWorkspaceAiReciteCta"
-                    type="button"
-                    class="action-btn workspace-ai-recite-cta workspace-recite-dock__button mushaf-font-zoom__recite"
-                    :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                    data-testid="workspace-ai-recite"
-                    :title="t('dashboard.ai_recite.cta_label')"
-                    :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                    @click="openWorkspaceAiRecite"
-                  >
-                    <i class="bi bi-mic-fill" aria-hidden="true"></i>
-                    <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-                  </button>
                 </div>
                 <div ref="mushafViewport" class="mushaf-viewport-scroll col-md-11">
                   <div v-if="madaniPagesError" class="mushaf-empty-page mushaf-empty-page--error">
@@ -1588,16 +1565,6 @@
                     </div>
 
                     <button
-                      v-if="showWorkspaceAiReciteCta"
-                      type="button"
-                      class="action-btn workspace-ai-recite-cta workspace-recite-dock__button mushaf-centered-recite"
-                      :class="{ 'is-animated': workspaceAiReciteAnimated }"
-                      :title="t('dashboard.ai_recite.cta_label')"
-                      :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-                      @click="openWorkspaceAiRecite"
-                    ><i class="bi bi-mic-fill" aria-hidden="true"></i></button>
-
-                    <button
                       v-if="showQpcMadaniSpreadPageNav && qpcMadaniCanGoNext"
                       type="button"
                       class="madani-qpc-icon-btn madani-qpc-icon-btn--nav madani-qpc-icon-btn--next"
@@ -1813,6 +1780,7 @@
                     <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
                   </button>
                 </div>
+
               </div>
             </div>
           </main>
@@ -4897,7 +4865,7 @@
         :aria-label="t('memorisation.reading.immersiveBar')"
       >
         <div class="madani-fullscreen-bar__shell">
-          <div class="madani-fullscreen-bar__inner">
+          <div class="madani-fullscreen-bar__inner madani-fullscreen-bar__inner--no-recite">
             <div class="madani-fullscreen-bar__cluster madani-fullscreen-bar__cluster--leading">
               <label
                 class="madani-fullscreen-bar__reciter madani-fullscreen-bar__reciter--mobile-icon"
@@ -4965,20 +4933,6 @@
               </button>
             </div>
 
-            <button
-              type="button"
-              class="madani-fullscreen-bar__recite"
-              :class="{ 'is-animated': workspaceAiReciteAnimated }"
-              data-testid="madani-fullscreen-bar-recite"
-              :title="t('dashboard.ai_recite.cta_label')"
-              :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-              @click.stop="openWorkspaceAiRecite"
-            >
-              <span class="madani-fullscreen-bar__recite-ring" aria-hidden="true"></span>
-              <span class="madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--mid" aria-hidden="true"></span>
-              <span class="madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--delayed" aria-hidden="true"></span>
-              <i class="bi bi-mic-fill" aria-hidden="true"></i>
-            </button>
           </div>
         </div>
       </div>
@@ -4986,27 +4940,9 @@
 
     <Teleport to="body">
       <div
-        v-if="(showWorkspaceAiReciteCta && shouldShowReadingWorkspace) || showBackToTop"
+        v-if="showBackToTop"
         class="workspace-float-rail workspace-float-rail--desktop"
       >
-        <div
-          v-if="showWorkspaceAiReciteCta && shouldShowReadingWorkspace && readingViewMode !== 'madani_mushaf'"
-          class="workspace-recite-dock"
-          aria-live="polite"
-        >
-          <button
-            type="button"
-            class="action-btn workspace-ai-recite-cta workspace-recite-dock__button"
-            :class="{ 'is-animated': workspaceAiReciteAnimated }"
-            data-testid="workspace-ai-recite"
-            :title="t('dashboard.ai_recite.cta_label')"
-            :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
-            @click="openWorkspaceAiRecite"
-          >
-            <i class="bi bi-mic-fill" aria-hidden="true"></i>
-            <span>{{ t('dashboard.ai_recite.cta_label') }}</span>
-          </button>
-        </div>
         <button
           type="button"
           class="back-to-top-fab fab-btn"

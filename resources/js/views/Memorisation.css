@@ -8353,6 +8353,12 @@ html {
   background: color-mix(in srgb, var(--success, var(--accent)) 82%, var(--accent));
 }
 
+@media (min-width: 768px) {
+  .session-progress-rail {
+    display: none;
+  }
+}
+
 .app.is-rtl .session-progress-rail__fill,
 [dir="rtl"] .session-progress-rail__fill {
   margin-inline-start: auto;

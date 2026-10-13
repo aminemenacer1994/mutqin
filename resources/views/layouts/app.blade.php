@@ -13131,15 +13131,22 @@ body.session-analysis-modal-open {
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title,
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-copy h1.workspace-shell-main-title {
-    font-family: var(--font-surah-latin, "Source Serif 4", serif) !important;
-    font-size: clamp(1.8rem, 2.8vw, 2.8rem) !important;
+    font-family: "Cormorant Garamond", "Source Serif 4", Georgia, serif !important;
+    font-size: clamp(1.2rem, 1rem + 0.55vw, 1.65rem) !important;
     font-weight: 600 !important;
-    line-height: 1.1 !important;
+    line-height: 1.2 !important;
     padding-block: 0 !important;
   }
 
+  html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-en {
+    font-family: "Cormorant Garamond", "Source Serif 4", Georgia, serif !important;
+  }
+
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-surah-ar {
-    font-family: var(--font-surah-arabic, "Amiri", "Noto Naskh Arabic", serif) !important;
+    font-family: "Amiri Quran", "Amiri", "Noto Naskh Arabic", serif !important;
+    font-size: 1.08em !important;
+    font-weight: 400 !important;
+    transform: translateY(-0.08em) !important;
   }
 
   html body .app .workspace-shell-head:not(.is-idle) .workspace-shell-main-title::after {
@@ -13196,6 +13203,25 @@ body.session-analysis-modal-open {
     width: 100% !important;
     max-width: none !important;
     margin-block: 0.4rem 0 !important;
+  }
+
+  @media (min-width: 768px) {
+    html body .app .workspace > .session-progress-rail,
+    html body .app .main .workspace > .session-progress-rail {
+      display: none !important;
+    }
+  }
+
+  /* Keep the Mushaf ink clear of the page edge at every viewport size. */
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-page__sheet,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+    padding-block: 0.45rem 0.55rem !important;
+    padding-inline: max(0.28rem, env(safe-area-inset-left, 0px)) max(0.28rem, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line,
+  html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line {
+    padding-inline: 0.12rem !important;
   }
 </style>
 @endif

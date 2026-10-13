@@ -35,6 +35,16 @@ assert.match(memorisation, /openAskMutqin/, 'header opens Ask Mutqin')
 assert.match(memorisation, /AskMutqinModal/, 'workspace mounts the Ask Mutqin modal')
 assert.match(memorisation, /webpackChunkName: "ask-mutqin-modal"/, 'Ask Mutqin is lazy-loaded')
 assert.match(memorisation, /workspace-ai-cta-pair/, 'Ask Mutqin sits beside AI Recite')
+assert.match(
+  readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8'),
+  /top-card-search-trigger[\s\S]*?data-testid="workspace-ayah-search"[\s\S]*?top-card-search-glyph/,
+  'ayah search keeps the original toolbar icon',
+)
+assert.doesNotMatch(
+  readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8'),
+  /data-testid="workspace-ayah-search-menu"/,
+  'ayah search is not duplicated in the reading-options menu',
+)
 assert.match(memorisation, /\[data-theme="light"\] \.workspace-ask-mutqin-cta/, 'light theme')
 assert.match(memorisation, /\[data-theme="sepia"\] \.workspace-ask-mutqin-cta/, 'sepia theme')
 assert.match(memorisation, /\[data-theme="dark"\] \.workspace-ask-mutqin-cta/, 'dark theme')

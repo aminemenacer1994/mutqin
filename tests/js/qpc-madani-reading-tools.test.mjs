@@ -127,8 +127,23 @@ assert.match(
 )
 assert.match(
   memorisationVue,
-  /madani-fullscreen-bar__recite-ring--delayed/,
-  'immersive recite uses the same ring markup as the reading dock',
+  /madani-fullscreen-bar__inner--no-recite/,
+  'immersive bar uses the compact layout after removing the floating recite control',
+)
+assert.doesNotMatch(
+  memorisationVue,
+  /madani-fullscreen-bar__recite(?:["'\s]|$)|mushaf-centered-recite/,
+  'floating recite controls stay out of the immersive and mushaf surfaces',
+)
+assert.match(
+  memorisationVue,
+  /workspace-reading-bottom-bar__recite-btn[\s\S]{0,500}data-testid="workspace-ai-recite-mobile"/,
+  'recite remains available in the mobile bottom dock',
+)
+assert.doesNotMatch(
+  memorisationVue,
+  /workspace-float-rail[\s\S]{0,500}workspace-recite-dock__button/,
+  'desktop floating rail does not render recite',
 )
 assert.match(
   madaniFsBarCss,
