@@ -115,8 +115,37 @@ test('stale Version A tab hits 404 on old hashed chunk then recovers once to Ver
   })
 })
 
+test('stale watch-mode memorisation alias hits 404 and reloads the current shell', async () => {
+  await withStagingAssets(async ({ origin }) => {
+    const staleAlias = '/js/memorisation.js'
+    const missing = await fetch(`${origin}${staleAlias}`)
+    assert.equal(missing.status, 404)
+
+    const reloads = []
+    const result = recovery.recoverFromStaleChunk(
+      mixChunkError('memorisation', `${origin}${staleAlias}`),
+      {
+        store: memoryStore(),
+        offline: false,
+        locationHref: `${origin}/memorisation`,
+        clearCaches: async () => {},
+        showNotice: () => {},
+        persist: () => {},
+        reload: (url) => { reloads.push(url) },
+      },
+    )
+
+    assert.equal(result, 'reloading')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    assert.equal(reloads.length, 1)
+    assert.match(reloads[0], /\/memorisation/)
+    assert.match(reloads[0], /mutqin_chunk_reload=1/)
+  })
+})
+
 test('stale Mushaf/memorisation/homepage chunk URLs are Mix assets', () => {
   for (const path of [
+    '/js/memorisation.js',
     '/js/memorisation.11111111.js',
     '/js/madani-page.22222222.js',
     '/js/homepage.33333333.js',

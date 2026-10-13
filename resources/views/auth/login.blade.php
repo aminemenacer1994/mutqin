@@ -9,6 +9,8 @@
             <p class="auth-lede">{{ __('ui.auth_login_subtitle') }}</p>
         </header>
 
+        @include('partials.auth-tester-notice')
+
         @include('partials.ios-pwa-install')
 
         @if (session('status'))

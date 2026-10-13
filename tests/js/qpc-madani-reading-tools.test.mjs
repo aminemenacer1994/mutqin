@@ -127,13 +127,13 @@ assert.match(
 )
 assert.match(
   memorisationVue,
-  /madani-fullscreen-bar__inner--no-recite/,
-  'immersive bar uses the compact layout after removing the floating recite control',
+  /madani-fullscreen-bar__recite[\s\S]{0,500}data-testid="madani-fullscreen-recite"/,
+  'immersive playback bar includes the far-right Recite control',
 )
-assert.doesNotMatch(
+assert.match(
   memorisationVue,
-  /madani-fullscreen-bar__recite(?:["'\s]|$)|mushaf-centered-recite/,
-  'floating recite controls stay out of the immersive and mushaf surfaces',
+  /workspace-desktop-recite-dock[\s\S]{0,900}data-testid="workspace-ai-recite-desktop"/,
+  'desktop reading workspace renders the bottom-centered Recite control',
 )
 assert.match(
   memorisationVue,
@@ -143,7 +143,7 @@ assert.match(
 assert.doesNotMatch(
   memorisationVue,
   /workspace-float-rail[\s\S]{0,500}workspace-recite-dock__button/,
-  'desktop floating rail does not render recite',
+  'desktop floating rail does not render Recite',
 )
 assert.match(
   madaniFsBarCss,

@@ -1,6 +1,6 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
-    $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
+    $appDirection = $appDirection ?? (in_array($appLocale, ['ar', 'ur'], true) ? 'rtl' : 'ltr');
     $appThemePreference = $appThemePreference ?? (request()->cookie('mutqin_theme_set')
         ? (request()->cookie('mutqin_theme') ?: session('mutqin_theme', \App\Support\Theme::DEFAULT_PREFERENCE))
         : \App\Support\Theme::DEFAULT_PREFERENCE);

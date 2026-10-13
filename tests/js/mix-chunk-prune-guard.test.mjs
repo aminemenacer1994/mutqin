@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -15,13 +15,13 @@ assert.match(
 assert.match(mixSource, /keep\.add\(`\$\{match\[1\]\}\.js`\)/)
 assert.match(
   mixSource,
-  /Compatibility for tabs still running a dev\/watch runtime/,
-  'production builds must create stable aliases for stale dev runtimes',
+  /Never preserve watch-mode aliases in a production build/,
+  'production builds must make stale watch runtimes fail fast and reload',
 )
-assert.match(
+assert.doesNotMatch(
   mixSource,
-  /fs\.copyFileSync\(path\.join\(jsDir,\s*newest\),\s*path\.join\(jsDir,\s*alias\)\)/,
-  'named hashed chunks are copied to stable aliases like homepage.js',
+  /const alias = `\$\{family\}\.js`/,
+  'production prune must not synthesize stable aliases from hashed chunks',
 )
 
 // Mirror the Mix helper: stable + hashed references must both be collected.
@@ -68,10 +68,31 @@ assert.ok(
   [...keep].some((name) => /^homepage\.[a-f0-9]{8}\.js$/i.test(name)),
   'app.js must keep the current hashed homepage chunk',
 )
-for (const name of ['homepage.js', 'dashboard.js', 'admin-dashboard.js', 'admin-feedback.js']) {
-  assert.ok(
-    readFileSync(join(root, 'public/js', name)).length > 1000,
-    `${name} must exist on disk after Mix emit`,
+assert.ok(
+  [...keep].some((name) => /^memorisation\.[a-f0-9]{8}\.js$/i.test(name)),
+  'app.js must keep the current hashed memorisation chunk',
+)
+
+const manifest = JSON.parse(readFileSync(join(root, 'public/mix-manifest.json'), 'utf8'))
+for (const family of ['homepage', 'memorisation', 'admin-dashboard', 'admin-feedback']) {
+  assert.equal(
+    manifest[`/js/${family}.js`],
+    undefined,
+    `production manifest must not advertise stale-prone /js/${family}.js`,
+  )
+  assert.equal(
+    existsSync(join(root, 'public/js', `${family}.js`)),
+    false,
+    `production build must remove stale-prone /js/${family}.js`,
+  )
+}
+
+for (const name of keep) {
+  if (!/\.[a-f0-9]{8}\.js$/i.test(name)) continue
+  assert.equal(
+    existsSync(join(root, 'public/js', name)),
+    true,
+    `current runtime chunk ${name} must exist on disk`,
   )
 }
 

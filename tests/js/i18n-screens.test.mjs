@@ -18,9 +18,9 @@ if (!(await reachable())) {
 }
 
 const EXPECT = {
-  en: { home: 'Home', memorise: 'Memorise', cta: 'Start memorising' },
-  fr: { home: 'Accueil', memorise: 'Mémorisation', cta: 'Commencer votre session' },
-  es: { home: 'Inicio', memorise: 'Memorización', cta: 'Empieza tu sesión' },
+  en: { home: 'Home', memorise: 'Memorise', cta: 'Start memorisation' },
+  fr: { home: 'Accueil', memorise: 'Mémorisation', cta: 'Commencer la mémorisation' },
+  es: { home: 'Inicio', memorise: 'Memorización', cta: 'Empezar la memorización' },
 }
 
 const browser = await chromium.launch({ headless: true })

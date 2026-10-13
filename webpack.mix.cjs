@@ -272,40 +272,10 @@ mix.then(() => {
         }
     }
 
-    // Compatibility for tabs still running a dev/watch runtime after a prod build:
-    // that runtime requests /js/homepage.js while the fresh build emits
-    // /js/homepage.<hash>.js. Keep stable aliases for named chunks so those
-    // tabs load once, refresh their app shell, and stop retrying a 404.
-    for (const [family, list] of generationsByFamily.entries()) {
-        if (!/^[a-z][a-z0-9_-]*$/i.test(family)) continue;
-        list.sort((a, b) => b.mtime - a.mtime);
-        const newest = list[0]?.name;
-        if (!newest) continue;
-        const alias = `${family}.js`;
-        try {
-            const newestPath = path.join(jsDir, newest);
-            const aliasPath = path.join(jsDir, alias);
-            const aliasExists = fs.existsSync(aliasPath);
-            const aliasMtime = aliasExists ? fs.statSync(aliasPath).mtimeMs : 0;
-            const newestMtime = fs.statSync(newestPath).mtimeMs;
-            // A watch/dev build may have just emitted the stable alias. Do not
-            // overwrite that current chunk with an older hashed generation;
-            // its JSONP chunk id can differ from the current app runtime.
-            const hashedDeclaresFamily = stableChunkMatchesRuntime(newestPath, family);
-            if (!hashedDeclaresFamily) {
-                console.warn(
-                    `[mix] Skipping alias copy for ${alias}; ${newest} JSONP ids do not include "${family}". Run \`npm run dev\` or \`npm run watch\`.`
-                );
-            } else if (!aliasExists || aliasMtime < newestMtime) {
-                fs.copyFileSync(newestPath, aliasPath);
-            }
-            if (fs.existsSync(aliasPath) && stableChunkMatchesRuntime(aliasPath, family)) {
-                keepNames.add(alias);
-            }
-        } catch {
-            /* ignore locked files during watch */
-        }
-    }
+    // Never preserve watch-mode aliases in a production build. A long-lived
+    // watch runtime must receive a 404 for /js/<family>.js so the installed
+    // ChunkLoadError recovery reloads the current app shell. Returning 200 with
+    // an old string-id JSONP chunk silently leaves that tab on stale UI.
 
     // Always keep every lazy chunk the current app.js runtime can request.
     let skipPrune = false;

@@ -1,6 +1,9 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
-    $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
+    // Keep the server-rendered shell in the same direction as the client i18n
+    // runtime. English (and every other non-RTL locale) must never inherit an
+    // earlier Arabic/Urdu document direction during first paint.
+    $appDirection = $appDirection ?? (in_array($appLocale, ['ar', 'ur'], true) ? 'rtl' : 'ltr');
     $appThemePreference = $appThemePreference ?? session('mutqin_theme', \App\Support\Theme::DEFAULT_PREFERENCE);
     $appTheme = $appTheme ?? \App\Support\Theme::toDataTheme($appThemePreference);
     $appThemeChrome = \App\Support\Theme::chrome($appTheme);
@@ -8,6 +11,12 @@
     $appColorScheme = $appThemeChrome['color_scheme'];
     $appThemeModes = \App\Support\Theme::modes();
     $activeThemeMode = \App\Support\Theme::mode($appTheme);
+    // Pair the cache-reset marker with the generated Mix manifest. A deploy can
+    // change a lazy-loaded workspace chunk without changing MUTQIN_ASSET_BUILD;
+    // in that case installed/mobile clients still need to discard the old chunk.
+    $mixManifestPath = public_path('mix-manifest.json');
+    $mixManifestFingerprint = is_file($mixManifestPath) ? substr(md5_file($mixManifestPath), 0, 12) : 'no-manifest';
+    $assetBuildMarker = config('error_tracking.asset_build', 'v207').'-'.$mixManifestFingerprint;
     $switcherLocales = ['en', 'fr', 'es'];
     $languageEndonyms = [
         'en' => 'English',
@@ -132,12 +141,12 @@
       }
     </style>
     @endif
-    <meta name="mutqin-build" content="v207">
-    <meta name="mutqin-asset-build" content="{{ config('error_tracking.asset_build', 'v207') }}">
+    <meta name="mutqin-build" content="{{ $assetBuildMarker }}">
+    <meta name="mutqin-asset-build" content="{{ $assetBuildMarker }}">
     <meta name="mutqin-release" content="{{ \App\Support\ErrorReporting::release() }}">
     <meta name="mutqin-environment" content="{{ app()->environment() }}">
     <script>
-      document.documentElement.dataset.mutqinAssetBuild = @json(config('error_tracking.asset_build', 'v207'));
+      document.documentElement.dataset.mutqinAssetBuild = @json($assetBuildMarker);
     </script>
     <!-- Meta Pixel Code -->
     <script>
@@ -203,7 +212,7 @@
         // reload here — that caused refresh loops with stale HTML. ChunkLoadError
         // recovery (resources/js/utils/chunkLoadRecovery.js) handles mid-session
         // stale chunks with at most one controlled reload.
-        var BUILD = @json(config('error_tracking.asset_build', 'v207'));
+        var BUILD = @json($assetBuildMarker);
         var STORE = 'mutqin.asset.build';
         try {
           if (localStorage.getItem(STORE) === BUILD) {
@@ -10566,6 +10575,110 @@ body.session-analysis-modal-open {
       color: #1b140d !important;
     }
   }
+
+  /* Shell-owned desktop fallback. This remains available when a long-lived
+     client boots an older memorisation chunk that predates the Vue dock. */
+  .workspace-desktop-recite-dock {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    html body > .workspace-desktop-recite-dock {
+      position: fixed !important;
+      left: 50% !important;
+      right: auto !important;
+      bottom: max(1.15rem, env(safe-area-inset-bottom, 0px)) !important;
+      z-index: 1040 !important;
+      display: grid !important;
+      place-items: center !important;
+      width: 58px !important;
+      height: 58px !important;
+      transform: translateX(-50%) !important;
+      pointer-events: none !important;
+    }
+
+    html body > .workspace-desktop-recite-dock .workspace-desktop-recite {
+      --desktop-recite-bg: #8ce7b8;
+      --desktop-recite-bg-deep: #55cf91;
+      --desktop-recite-border: #39b979;
+      --desktop-recite-icon: #0d6f48;
+      position: relative !important;
+      isolation: isolate !important;
+      display: inline-grid !important;
+      place-items: center !important;
+      width: 58px !important;
+      min-width: 58px !important;
+      max-width: 58px !important;
+      height: 58px !important;
+      min-height: 58px !important;
+      max-height: 58px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 1.5px solid var(--desktop-recite-border) !important;
+      border-radius: 50% !important;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 52%),
+        linear-gradient(180deg, var(--desktop-recite-bg), var(--desktop-recite-bg-deep)) !important;
+      color: var(--desktop-recite-icon) !important;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.52),
+        0 5px 18px rgba(42, 174, 111, 0.3) !important;
+      overflow: visible !important;
+      pointer-events: auto !important;
+      cursor: pointer !important;
+    }
+
+    html body > .workspace-desktop-recite-dock[data-theme="dark"] .workspace-desktop-recite {
+      --desktop-recite-bg: #5ebd8b;
+      --desktop-recite-bg-deep: #338b64;
+      --desktop-recite-border: #8de4b5;
+      --desktop-recite-icon: #073e2a;
+    }
+
+    html body > .workspace-desktop-recite-dock .workspace-desktop-recite > i {
+      position: relative !important;
+      z-index: 2 !important;
+      font-size: 1.45rem !important;
+      line-height: 1 !important;
+      color: var(--desktop-recite-icon) !important;
+    }
+
+    html body > .workspace-desktop-recite-dock .workspace-desktop-recite__ring {
+      position: absolute !important;
+      inset: -5px !important;
+      z-index: 0 !important;
+      display: block !important;
+      border: 2px solid color-mix(in srgb, var(--desktop-recite-border) 78%, transparent) !important;
+      border-radius: 50% !important;
+      opacity: 0;
+      pointer-events: none !important;
+    }
+
+    html body > .workspace-desktop-recite-dock .workspace-desktop-recite:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--desktop-recite-border) 50%, transparent) !important;
+      outline-offset: 4px !important;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      html body > .workspace-desktop-recite-dock .workspace-desktop-recite__ring {
+        animation: mutqin-shell-desktop-recite-ring 2.1s cubic-bezier(0.18, 0.72, 0.24, 1) infinite;
+      }
+
+      html body > .workspace-desktop-recite-dock .workspace-desktop-recite__ring--mid {
+        animation-delay: 0.7s;
+      }
+
+      html body > .workspace-desktop-recite-dock .workspace-desktop-recite__ring--delayed {
+        animation-delay: 1.4s;
+      }
+    }
+  }
+
+  @keyframes mutqin-shell-desktop-recite-ring {
+    0% { opacity: 0.7; transform: scale(0.9); }
+    48% { opacity: 0.24; transform: scale(1.18); }
+    100% { opacity: 0; transform: scale(1.42); }
+  }
 </style>
 <style id="mutqin-reading-bottom-bar-glass-v2">
   /* Recite rings only — frosted pill owned by mutqin-mobile-bottom-glass-v199. */
@@ -10700,6 +10813,169 @@ body.session-analysis-modal-open {
 <script id="mutqin-madani-fs-bar-v195">
   (function () {
     var syncing = false;
+    var reciteLabel = 'Recite';
+    var reciteHint = 'Test your memorisation anytime';
+
+    function addRing(button, className) {
+      var ring = document.createElement('span');
+      ring.className = className;
+      ring.setAttribute('aria-hidden', 'true');
+      button.appendChild(ring);
+    }
+
+    function createReciteButton(kind) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.setAttribute('data-mutqin-recite-fallback', kind);
+      button.title = reciteLabel;
+      button.setAttribute('aria-label', reciteLabel + (reciteHint ? '. ' + reciteHint : ''));
+
+      if (kind === 'fullscreen') {
+        button.className = 'madani-fullscreen-bar__recite is-animated';
+        button.setAttribute('data-testid', 'madani-fullscreen-recite');
+        addRing(button, 'madani-fullscreen-bar__recite-ring');
+        addRing(button, 'madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--mid');
+        addRing(button, 'madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--delayed');
+      } else if (kind === 'mobile') {
+        button.className = 'action-btn workspace-ai-recite-cta workspace-recite-dock__button workspace-reading-bottom-bar__recite-btn is-animated';
+        button.setAttribute('data-testid', 'workspace-ai-recite-mobile');
+        addRing(button, 'workspace-reading-bottom-bar__recite-ring');
+        addRing(button, 'workspace-reading-bottom-bar__recite-ring workspace-reading-bottom-bar__recite-ring--mid');
+        addRing(button, 'workspace-reading-bottom-bar__recite-ring workspace-reading-bottom-bar__recite-ring--delayed');
+      } else {
+        button.className = 'workspace-desktop-recite is-animated';
+        button.setAttribute('data-testid', 'workspace-ai-recite-desktop');
+        addRing(button, 'workspace-desktop-recite__ring');
+        addRing(button, 'workspace-desktop-recite__ring workspace-desktop-recite__ring--mid');
+        addRing(button, 'workspace-desktop-recite__ring workspace-desktop-recite__ring--delayed');
+      }
+
+      var icon = document.createElement('i');
+      icon.className = 'bi bi-mic-fill';
+      icon.setAttribute('aria-hidden', 'true');
+      button.appendChild(icon);
+
+      var srLabel = document.createElement('span');
+      srLabel.className = 'sr-only';
+      srLabel.textContent = reciteLabel;
+      button.appendChild(srLabel);
+      return button;
+    }
+
+    function findMemorisationProxy() {
+      var mount = document.getElementById('app');
+      var vueApp = mount && mount.__vue_app__;
+      var queue = vueApp && vueApp._instance ? [vueApp._instance] : [];
+      var seen = [];
+
+      function enqueueVNode(vnode) {
+        if (!vnode || typeof vnode !== 'object') return;
+        if (Array.isArray(vnode)) {
+          vnode.forEach(enqueueVNode);
+          return;
+        }
+        if (vnode.component) queue.push(vnode.component);
+        if (Array.isArray(vnode.children)) vnode.children.forEach(enqueueVNode);
+        if (Array.isArray(vnode.dynamicChildren)) vnode.dynamicChildren.forEach(enqueueVNode);
+      }
+
+      while (queue.length && seen.length < 160) {
+        var instance = queue.shift();
+        if (!instance || seen.indexOf(instance) !== -1) continue;
+        seen.push(instance);
+        if (instance.proxy && typeof instance.proxy.openWorkspaceAiRecite === 'function') {
+          return instance.proxy;
+        }
+        if (instance.subTree) enqueueVNode(instance.subTree);
+      }
+      return null;
+    }
+
+    function requestWorkspaceAiRecite(event) {
+      if (event) {
+        if (event.__mutqinReciteHandled) return;
+        event.__mutqinReciteHandled = true;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+      if (typeof window.__mutqinOpenWorkspaceAiRecite === 'function') {
+        window.__mutqinOpenWorkspaceAiRecite();
+        return;
+      }
+
+      var proxy = findMemorisationProxy();
+      if (proxy) {
+        proxy.openWorkspaceAiRecite();
+        return;
+      }
+
+      var nativeButton = document.querySelector(
+        '[data-testid="workspace-ai-recite-mobile"]:not([data-mutqin-recite-fallback]), ' +
+        '[data-testid="workspace-ai-recite-desktop"]:not([data-mutqin-recite-fallback]), ' +
+        '.workspace-ai-recite-cta:not([data-mutqin-recite-fallback])'
+      );
+      if (nativeButton instanceof HTMLElement) {
+        nativeButton.click();
+        return;
+      }
+
+      window.dispatchEvent(new CustomEvent('mutqin:open-workspace-ai-recite'));
+    }
+
+    // Register before the deferred Vue bundle mounts. Some older workspace
+    // chunks install document-capture handlers that stop late target clicks;
+    // this shell-owned capture bridge keeps the forced fallback actionable.
+    document.addEventListener('click', function (event) {
+      var target = event.target && event.target.closest
+        ? event.target.closest('[data-mutqin-recite-fallback]')
+        : null;
+      if (!(target instanceof HTMLButtonElement)) return;
+      requestWorkspaceAiRecite(event);
+    }, true);
+
+    function ensureMobileDockRecite() {
+      if (window.innerWidth >= 768) return;
+      document.querySelectorAll('.workspace-reading-bottom-bar').forEach(function (dock) {
+        if (!(dock instanceof HTMLElement)) return;
+        var shell = dock.querySelector('.workspace-reading-bottom-bar__shell');
+        if (!shell) return;
+        var nativeButton = shell.querySelector('.workspace-reading-bottom-bar__recite-btn:not([data-mutqin-recite-fallback])');
+        var fallbackButton = shell.querySelector('.workspace-reading-bottom-bar__recite-btn[data-mutqin-recite-fallback="mobile"]');
+        if (nativeButton) {
+          if (fallbackButton) fallbackButton.remove();
+          return;
+        }
+        if (fallbackButton) return;
+        var cluster = shell.querySelector('.workspace-reading-bottom-bar__recite');
+        if (!cluster) {
+          cluster = document.createElement('div');
+          cluster.className = 'workspace-reading-bottom-bar__cluster workspace-reading-bottom-bar__recite';
+          shell.appendChild(cluster);
+        }
+        cluster.appendChild(createReciteButton('mobile'));
+      });
+    }
+
+    function ensureDesktopRecite() {
+      var fallback = document.querySelector('.workspace-desktop-recite-dock[data-mutqin-recite-fallback="desktop"]');
+      var nativeDock = document.querySelector('.workspace-desktop-recite-dock:not([data-mutqin-recite-fallback])');
+      var readingSurface = document.querySelector('.workspace-reading-surface');
+      var shouldShow = window.innerWidth >= 768 && readingSurface && readingSurface.getClientRects().length > 0;
+
+      if (!shouldShow || nativeDock) {
+        if (fallback) fallback.remove();
+        return;
+      }
+      if (!fallback) {
+        fallback = document.createElement('div');
+        fallback.className = 'workspace-desktop-recite-dock';
+        fallback.setAttribute('data-mutqin-recite-fallback', 'desktop');
+        fallback.appendChild(createReciteButton('desktop'));
+        document.body.appendChild(fallback);
+      }
+      fallback.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') || 'light');
+      fallback.dir = document.documentElement.dir || 'ltr';
+    }
 
     function fixReciterToolbarIcon() {
       document.querySelectorAll('.madani-fullscreen-bar__reciter-glyph').forEach(function (el) {
@@ -10727,6 +11003,15 @@ body.session-analysis-modal-open {
       if (!bar || bar.hidden) return;
       var inner = bar.querySelector('.madani-fullscreen-bar__inner');
       if (!inner) return;
+
+      inner.classList.remove('madani-fullscreen-bar__inner--no-recite');
+      var nativeRecite = inner.querySelector('.madani-fullscreen-bar__recite:not([data-mutqin-recite-fallback])');
+      var fallbackRecite = inner.querySelector('.madani-fullscreen-bar__recite[data-mutqin-recite-fallback="fullscreen"]');
+      if (nativeRecite && fallbackRecite) {
+        fallbackRecite.remove();
+      } else if (!nativeRecite && !fallbackRecite) {
+        inner.appendChild(createReciteButton('fullscreen'));
+      }
 
       var leading = inner.querySelector(':scope > .madani-fullscreen-bar__cluster--leading');
       var transport = inner.querySelector(':scope > .madani-fullscreen-bar__cluster--transport')
@@ -10800,6 +11085,8 @@ body.session-analysis-modal-open {
         hideBarOnWideViewports();
         fixReciterToolbarIcon();
         fixImmersiveBarLayout();
+        ensureMobileDockRecite();
+        ensureDesktopRecite();
         if (typeof window.__mutqinApplyBottomChrome === 'function') {
           window.__mutqinApplyBottomChrome();
         }
@@ -10816,8 +11103,16 @@ body.session-analysis-modal-open {
 
     window.addEventListener('resize', scheduleMadaniToolbarChrome);
     window.addEventListener('mutqin:app-mounted', scheduleMadaniToolbarChrome);
+    window.addEventListener('mutqin:theme-change', scheduleMadaniToolbarChrome);
     if (document.documentElement.dataset.mutqinAppMounted === '1') {
       scheduleMadaniToolbarChrome();
+    }
+    window.setTimeout(scheduleMadaniToolbarChrome, 0);
+    window.setTimeout(scheduleMadaniToolbarChrome, 400);
+    window.setTimeout(scheduleMadaniToolbarChrome, 1200);
+    if (typeof MutationObserver !== 'undefined') {
+      var reciteObserver = new MutationObserver(scheduleMadaniToolbarChrome);
+      reciteObserver.observe(document.body, { childList: true, subtree: true });
     }
   })();
 </script>
@@ -13222,6 +13517,19 @@ body.session-analysis-modal-open {
   html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-line,
   html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-line {
     padding-inline: 0.12rem !important;
+  }
+
+  /* The ayah finder stays in the toolbar, including the mobile/post-session layout. */
+  html body .app .top-card-icon-controls > .top-card-search-trigger {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    flex: 0 0 var(--mq-top-icon, var(--top-card-toolbar-icon, 2.25rem)) !important;
+    width: var(--mq-top-icon, var(--top-card-toolbar-icon, 2.25rem)) !important;
+    height: var(--mq-top-icon, var(--top-card-toolbar-icon, 2.25rem)) !important;
+    min-width: var(--mq-top-icon, var(--top-card-toolbar-icon, 2.25rem)) !important;
+    min-height: var(--mq-top-icon, var(--top-card-toolbar-icon, 2.25rem)) !important;
   }
 </style>
 @endif

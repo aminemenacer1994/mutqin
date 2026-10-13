@@ -3280,7 +3280,6 @@ export default {
       }
     },
     showWorkspaceAiReciteCta() {
-      if (!this.isLoggedIn) return false
       if (!this.aiTestModalsEnabled) return false
       if (this.showCountdownOverlay) return false
       if (this.isPostSessionChoiceVisible) return false
@@ -10845,6 +10844,9 @@ export default {
         if (target?.classList?.contains('madani-fullscreen-bar__reciter-select')) return
         this.onSessionReciterChange(event)
       }
+      this._openWorkspaceAiReciteBridge = () => this.openWorkspaceAiRecite()
+      window.__mutqinOpenWorkspaceAiRecite = this._openWorkspaceAiReciteBridge
+      window.addEventListener('mutqin:open-workspace-ai-recite', this._openWorkspaceAiReciteBridge)
     }
     this.initSessionWorkspaceScrollController()
     this.bindStaleScrollLockRelease()
@@ -11314,6 +11316,13 @@ export default {
     }
     if (typeof window !== 'undefined' && window.__mutqinMobileReciterChange) {
       delete window.__mutqinMobileReciterChange
+    }
+    if (typeof window !== 'undefined' && this._openWorkspaceAiReciteBridge) {
+      window.removeEventListener('mutqin:open-workspace-ai-recite', this._openWorkspaceAiReciteBridge)
+      if (window.__mutqinOpenWorkspaceAiRecite === this._openWorkspaceAiReciteBridge) {
+        delete window.__mutqinOpenWorkspaceAiRecite
+      }
+      this._openWorkspaceAiReciteBridge = null
     }
     this.sessionWorkspaceScrollController?.dispose?.()
     this.sessionWorkspaceScrollController = null

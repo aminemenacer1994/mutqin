@@ -659,7 +659,6 @@
           />
           <div class="top-card-icon-controls" :aria-label="t('memorisation.a11y.readingTools')">
             <button
-              v-if="!isPostSessionChoiceVisible"
               type="button"
               class="top-card-search-trigger top-card-action-trigger top-card-icon-control is-featured"
               data-testid="workspace-ayah-search"
@@ -1575,6 +1574,7 @@
                         <path d="M15.3 4.7a1.2 1.2 0 0 1 0 1.7L9.7 12l5.6 5.6a1.2 1.2 0 1 1-1.7 1.7l-6.4-6.4a1.2 1.2 0 0 1 0-1.8l6.4-6.4a1.2 1.2 0 0 1 1.7 0z"/>
                       </svg>
                     </button>
+
                   </div>
 
                 </div>
@@ -1764,7 +1764,6 @@
 
                 <div class="workspace-reading-bottom-bar__cluster workspace-reading-bottom-bar__recite">
                   <button
-                    v-if="showWorkspaceAiReciteCta"
                     type="button"
                     class="action-btn workspace-ai-recite-cta workspace-recite-dock__button workspace-reading-bottom-bar__recite-btn"
                     :class="{ 'is-animated': workspaceAiReciteAnimated }"
@@ -3852,6 +3851,8 @@
         'workspace-tour-plan-active': workspaceTourActive && workspaceTourStep?.key === 'plan',
       }"
       :data-theme="theme"
+      :dir="isRtlLocale ? 'rtl' : 'ltr'"
+      :lang="activeLocale || 'en'"
       aria-live="polite"
     >
       <ViewportConfetti
@@ -3861,11 +3862,17 @@
 
       <div
         class="post-session-simple__overlay"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="postSessionTitle"
       >
-        <div class="post-session-simple__dialog post-session-simple__dialog--lg">
+        <div
+          ref="postSessionDialog"
+          class="post-session-simple__dialog post-session-simple__dialog--lg"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="postSessionTitle"
+          :aria-describedby="postSessionDisplayLead ? 'postSessionDescription' : undefined"
+          tabindex="-1"
+          @vue:mounted="(vnode) => vnode?.el?.focus?.()"
+        >
           <header class="post-session-simple__header post-session-simple__header--calm">
             <span class="post-session-simple__check" aria-hidden="true">
               <i class="bi bi-check-lg"></i>
@@ -3876,6 +3883,7 @@
               </h2>
               <p
                 v-if="postSessionDisplayLead"
+                id="postSessionDescription"
                 class="post-session-simple__subtitle"
               >
                 {{ postSessionDisplayLead }}
@@ -4019,27 +4027,31 @@
                         @click="onPostSessionFocusPhraseActivate(row.activatePayload)"
                       >
                         <span
-                          class="post-session-simple__quran-focus-text"
+                          class="post-session-simple__quran-focus-copy"
                           dir="rtl"
                           lang="ar"
                         >
-                          <span
-                            v-for="(part, idx) in row.parts"
-                            :key="`focus-${row.ayah}-${idx}`"
-                            class="post-session-simple__quran-token"
-                            :class="{
-                              'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
-                              'is-incorrect': part.tone === 'incorrect',
-                              'is-partial': part.tone === 'partial',
-                              'is-omitted': part.tone === 'omitted',
-                              'is-corrected': part.tone === 'ok' && !part.weak,
-                            }"
-                            :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
-                          >
-                            <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
+                          <span class="post-session-simple__quran-focus-text">
+                            <span
+                              v-for="(part, idx) in row.parts"
+                              :key="`focus-${row.ayah}-${idx}`"
+                              class="post-session-simple__quran-token"
+                              :class="{
+                                'is-weak': part.weak && part.tone !== 'omitted' && part.tone !== 'partial',
+                                'is-incorrect': part.tone === 'incorrect',
+                                'is-partial': part.tone === 'partial',
+                                'is-omitted': part.tone === 'omitted',
+                                'is-corrected': part.tone === 'ok' && !part.weak,
+                              }"
+                              :data-tone="part.tone || (part.weak ? 'incorrect' : 'ok')"
+                            >
+                              <span class="post-session-simple__quran-token-text">{{ part.text }}</span>
+                            </span>
                           </span>
                         </span>
-                        <i class="bi bi-play-circle post-session-simple__focus-phrase-icon" aria-hidden="true"></i>
+                        <span class="post-session-simple__focus-phrase-control" aria-hidden="true">
+                          <i class="bi bi-play-circle post-session-simple__focus-phrase-icon"></i>
+                        </span>
                       </button>
                     </li>
                   </ul>
@@ -4463,26 +4475,45 @@
                     data-testid="post-session-scope-picker"
                     data-tour="rec-plans"
                     role="radiogroup"
-                    :aria-label="postSessionInfoArchitecture.revisionOptions.lead"
+                    aria-labelledby="postSessionScopePickerTitle"
                   >
-                    <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
+                    <h3
+                      id="postSessionScopePickerTitle"
+                      class="post-session-simple__section-kicker post-session-simple__section-kicker--sub"
+                    >
                       {{ postSessionInfoArchitecture.revisionOptions.title }}
-                    </p>
+                    </h3>
                     <div class="post-session-simple__scope-cards">
                       <button
-                        v-for="option in postSessionInfoArchitecture.revisionOptions.options"
+                        v-for="(option, optionIndex) in postSessionInfoArchitecture.revisionOptions.options"
                         :key="option.id"
+                        :id="`postSessionScopeOption-${option.id}`"
                         type="button"
                         class="post-session-simple__scope-card"
                         role="radio"
                         :aria-checked="postSessionSelectedPracticeScope === option.id ? 'true' : 'false'"
+                        :aria-posinset="optionIndex + 1"
+                        :aria-setsize="postSessionInfoArchitecture.revisionOptions.options.length"
+                        :aria-describedby="[
+                          option.benefit || option.description ? `postSessionScopeBenefit-${option.id}` : '',
+                          option.meta ? `postSessionScopeMeta-${option.id}` : '',
+                        ].filter(Boolean).join(' ') || undefined"
+                        :tabindex="postSessionSelectedPracticeScope === option.id ? 0 : -1"
                         :class="{
                           'is-selected': postSessionSelectedPracticeScope === option.id,
                           'is-recommended': option.recommended,
                         }"
                         :disabled="postSessionActionsBusy"
                         :data-scope="option.id"
+                        :data-selected="postSessionSelectedPracticeScope === option.id ? 'true' : 'false'"
+                        :data-recommended="option.recommended ? 'true' : 'false'"
                         @click="selectPostSessionPracticeScope(option.id)"
+                        @keydown.right.prevent="($event.currentTarget.nextElementSibling || $event.currentTarget.parentElement?.firstElementChild)?.click(); ($event.currentTarget.nextElementSibling || $event.currentTarget.parentElement?.firstElementChild)?.focus()"
+                        @keydown.down.prevent="($event.currentTarget.nextElementSibling || $event.currentTarget.parentElement?.firstElementChild)?.click(); ($event.currentTarget.nextElementSibling || $event.currentTarget.parentElement?.firstElementChild)?.focus()"
+                        @keydown.left.prevent="($event.currentTarget.previousElementSibling || $event.currentTarget.parentElement?.lastElementChild)?.click(); ($event.currentTarget.previousElementSibling || $event.currentTarget.parentElement?.lastElementChild)?.focus()"
+                        @keydown.up.prevent="($event.currentTarget.previousElementSibling || $event.currentTarget.parentElement?.lastElementChild)?.click(); ($event.currentTarget.previousElementSibling || $event.currentTarget.parentElement?.lastElementChild)?.focus()"
+                        @keydown.home.prevent="($event.currentTarget.parentElement?.firstElementChild)?.click(); ($event.currentTarget.parentElement?.firstElementChild)?.focus()"
+                        @keydown.end.prevent="($event.currentTarget.parentElement?.lastElementChild)?.click(); ($event.currentTarget.parentElement?.lastElementChild)?.focus()"
                       >
                         <span class="post-session-simple__scope-card-top">
                           <span class="post-session-simple__scope-card-icon" aria-hidden="true">
@@ -4495,12 +4526,22 @@
                               class="post-session-simple__scope-recommended"
                             >{{ t('memorisation.postSession.recommendation.recommendedTag') || 'Recommended' }}</span>
                           </span>
+                          <span
+                            v-if="postSessionSelectedPracticeScope === option.id"
+                            class="post-session-simple__scope-selected-indicator"
+                            aria-hidden="true"
+                          ><i class="bi bi-check2-circle"></i></span>
                         </span>
                         <span
                           v-if="option.benefit || option.description"
+                          :id="`postSessionScopeBenefit-${option.id}`"
                           class="post-session-simple__scope-card-benefit"
                         >{{ option.benefit || option.description }}</span>
-                        <span v-if="option.meta" class="post-session-simple__scope-card-meta">{{ option.meta }}</span>
+                        <span
+                          v-if="option.meta"
+                          :id="`postSessionScopeMeta-${option.id}`"
+                          class="post-session-simple__scope-card-meta"
+                        >{{ option.meta }}</span>
                       </button>
                     </div>
                   </div>
@@ -4865,7 +4906,7 @@
         :aria-label="t('memorisation.reading.immersiveBar')"
       >
         <div class="madani-fullscreen-bar__shell">
-          <div class="madani-fullscreen-bar__inner madani-fullscreen-bar__inner--no-recite">
+          <div class="madani-fullscreen-bar__inner">
             <div class="madani-fullscreen-bar__cluster madani-fullscreen-bar__cluster--leading">
               <label
                 class="madani-fullscreen-bar__reciter madani-fullscreen-bar__reciter--mobile-icon"
@@ -4933,8 +4974,48 @@
               </button>
             </div>
 
+            <button
+              type="button"
+              class="madani-fullscreen-bar__recite"
+              data-testid="madani-fullscreen-recite"
+              :title="t('dashboard.ai_recite.cta_label')"
+              :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+              @click.stop="openWorkspaceAiRecite"
+            >
+              <span class="madani-fullscreen-bar__recite-ring" aria-hidden="true"></span>
+              <span class="madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--mid" aria-hidden="true"></span>
+              <span class="madani-fullscreen-bar__recite-ring madani-fullscreen-bar__recite-ring--delayed" aria-hidden="true"></span>
+              <i class="bi bi-mic-fill" aria-hidden="true"></i>
+              <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}</span>
+            </button>
+
           </div>
         </div>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div
+        v-if="shouldShowReadingWorkspace && !isMobileViewport()"
+        class="workspace-desktop-recite-dock"
+        :data-theme="theme"
+        :dir="isRtlLocale ? 'rtl' : 'ltr'"
+      >
+        <button
+          type="button"
+          class="workspace-desktop-recite"
+          :class="{ 'is-animated': workspaceAiReciteAnimated }"
+          data-testid="workspace-ai-recite-desktop"
+          :title="t('dashboard.ai_recite.cta_label')"
+          :aria-label="`${t('dashboard.ai_recite.cta_label')}. ${t('dashboard.ai_recite.cta_hint')}`"
+          @click.stop="openWorkspaceAiRecite"
+        >
+          <span class="workspace-desktop-recite__ring" aria-hidden="true"></span>
+          <span class="workspace-desktop-recite__ring workspace-desktop-recite__ring--mid" aria-hidden="true"></span>
+          <span class="workspace-desktop-recite__ring workspace-desktop-recite__ring--delayed" aria-hidden="true"></span>
+          <i class="bi bi-mic-fill" aria-hidden="true"></i>
+          <span class="sr-only">{{ t('dashboard.ai_recite.cta_label') }}</span>
+        </button>
       </div>
     </Teleport>
 

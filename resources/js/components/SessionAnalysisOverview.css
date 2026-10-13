@@ -1160,6 +1160,207 @@ html[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov_
   }
 }
 
+/* Recording player refresh: this is the live player used by the result modal. */
+.workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.78rem;
+  padding: 0.82rem 0.92rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in srgb, var(--player-accent) 25%, var(--player-line) 75%);
+  background: color-mix(in srgb, var(--player-surface) 90%, var(--player-accent) 10%);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--player-ink) 10%, transparent), inset 0 1px 0 rgba(255,255,255,.38);
+}
+
+.workspace-recite-result .sa-ov__player-toggle,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+  width: 3.35rem;
+  height: 3.35rem;
+  border-radius: 1rem;
+  align-self: center;
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+.workspace-recite-result .sa-ov__player-toggle:hover:not(:disabled),
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.07);
+  box-shadow: 0 7px 16px color-mix(in srgb, var(--player-accent) 34%, transparent);
+}
+
+.workspace-recite-result .sa-ov__player-seek,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek {
+  height: 1.65rem;
+}
+
+.workspace-recite-result .sa-ov__player-meta,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-meta {
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.workspace-recite-result .sa-ov__player-speed,
+.workspace-recite-result .sa-ov__player-restart,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-speed,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  min-height: 1.9rem;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--player-surface) 74%, transparent);
+}
+
+.workspace-recite-result .sa-ov__player-toggle:focus-visible,
+.workspace-recite-result .sa-ov__player-speed:focus-visible,
+.workspace-recite-result .sa-ov__player-restart:focus-visible,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle:focus-visible,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-speed:focus-visible,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-restart:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--player-accent) 48%, transparent);
+  outline-offset: 3px;
+}
+
+[data-theme="dark"] .workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  border-color: rgba(116, 217, 158, 0.28);
+  background: linear-gradient(145deg, rgba(44, 67, 57, 0.94), rgba(25, 34, 30, 0.98));
+  box-shadow: 0 12px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+@media (max-width: 430px) {
+  .workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+  #sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+    gap: 0.62rem;
+    padding: 0.68rem 0.72rem;
+  }
+  .workspace-recite-result .sa-ov__player-toggle,
+  #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+    width: 2.9rem;
+    height: 2.9rem;
+  }
+}
+
+/* AI recitation player: calm, high-contrast light/sepia treatment. */
+html[data-theme="light"] .workspace-recite-result .sa-ov__player,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player,
+[data-theme="light"] .workspace-recite-result .sa-ov__player,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player {
+  --player-surface: #fffdfa;
+  --player-line: rgba(92, 67, 44, 0.18);
+  --player-ink: #2d241d;
+  --player-muted: #76695e;
+  --player-accent: #287652;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 0.8rem 0.9rem 0.8rem 0.8rem;
+  border: 1px solid var(--player-line);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, var(--player-surface) 72%);
+  box-shadow: 0 5px 16px rgba(65, 46, 29, 0.07), 0 1px 0 #fff inset;
+}
+
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player {
+  --player-surface: #fbf1df;
+  --player-line: rgba(112, 78, 42, 0.24);
+  --player-ink: #3a2b1f;
+  --player-muted: #806d59;
+  --player-accent: #80532b;
+  background: linear-gradient(135deg, #fff9ed 0%, #f8ead2 100%);
+  box-shadow: 0 5px 16px rgba(91, 59, 28, 0.08), 0 1px 0 rgba(255, 255, 255, 0.75) inset;
+}
+
+html[data-theme="light"] .workspace-recite-result .sa-ov__player-toggle,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-toggle,
+[data-theme="light"] .workspace-recite-result .sa-ov__player-toggle,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player-toggle {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.9rem;
+  background: var(--player-accent);
+  color: #fffdf8;
+  font-size: 1.2rem;
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--player-accent) 24%, transparent);
+}
+
+html[data-theme="light"] .workspace-recite-result .sa-ov__player-body,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-body,
+[data-theme="light"] .workspace-recite-result .sa-ov__player-body,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player-body {
+  gap: 0.42rem;
+}
+
+html[data-theme="light"] .workspace-recite-result .sa-ov__player-seek,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-seek,
+[data-theme="light"] .workspace-recite-result .sa-ov__player-seek,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player-seek {
+  height: 1.6rem;
+  accent-color: var(--player-accent);
+}
+
+html[data-theme="light"] .workspace-recite-result .sa-ov__player-seek::-webkit-slider-runnable-track,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-seek::-webkit-slider-runnable-track,
+[data-theme="light"] .workspace-recite-result .sa-ov__player-seek::-webkit-slider-runnable-track,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player-seek::-webkit-slider-runnable-track {
+  height: 0.42rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--player-line) 80%, #ffffff);
+}
+
+html[data-theme="light"] .workspace-recite-result .sa-ov__player-seek::-webkit-slider-thumb,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-seek::-webkit-slider-thumb,
+[data-theme="light"] .workspace-recite-result .sa-ov__player-seek::-webkit-slider-thumb,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player-seek::-webkit-slider-thumb {
+  width: 1rem;
+  height: 1rem;
+  margin-top: -0.29rem;
+  border: 3px solid var(--player-surface);
+  background: var(--player-accent);
+  box-shadow: 0 1px 4px rgba(45, 36, 29, 0.22);
+}
+
+html[data-theme="light"] .workspace-recite-result .sa-ov__player-meta,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-meta,
+[data-theme="light"] .workspace-recite-result .sa-ov__player-meta,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player-meta {
+  gap: 0.5rem;
+  color: var(--player-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+html[data-theme="light"] .workspace-recite-result .sa-ov__player-speed,
+html[data-theme="light"] .workspace-recite-result .sa-ov__player-restart,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-speed,
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-restart,
+[data-theme="light"] .workspace-recite-result .sa-ov__player-speed,
+[data-theme="light"] .workspace-recite-result .sa-ov__player-restart,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player-speed,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player-restart {
+  min-height: 1.85rem;
+  border-color: var(--player-line);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--player-surface) 76%, #ffffff);
+  color: var(--player-ink);
+}
+
+@media (max-width: 430px) {
+  html[data-theme="light"] .workspace-recite-result .sa-ov__player,
+  html[data-theme="sepia"] .workspace-recite-result .sa-ov__player,
+  [data-theme="light"] .workspace-recite-result .sa-ov__player,
+  [data-theme="sepia"] .workspace-recite-result .sa-ov__player {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 0.7rem;
+    padding: 0.72rem;
+  }
+
+  html[data-theme="light"] .workspace-recite-result .sa-ov__player-toggle,
+  html[data-theme="sepia"] .workspace-recite-result .sa-ov__player-toggle,
+  [data-theme="light"] .workspace-recite-result .sa-ov__player-toggle,
+  [data-theme="sepia"] .workspace-recite-result .sa-ov__player-toggle {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
 /* Final visual pass: keep the review readable at a glance.
    Inherit the document theme (light / sepia / dark) instead of forcing light. */
 #sa-session-overview.session-analysis-modal-root {

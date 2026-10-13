@@ -1,6 +1,6 @@
 @php
     $appLocale = $appLocale ?? app()->getLocale();
-    $appDirection = $appDirection ?? ($appLocale === 'ar' ? 'rtl' : 'ltr');
+    $appDirection = $appDirection ?? (in_array($appLocale, ['ar', 'ur'], true) ? 'rtl' : 'ltr');
     $appThemePreference = \App\Support\Theme::DEFAULT_PREFERENCE;
     $appTheme = \App\Support\Theme::DEFAULT;
     $appThemeChrome = \App\Support\Theme::chrome($appTheme);
