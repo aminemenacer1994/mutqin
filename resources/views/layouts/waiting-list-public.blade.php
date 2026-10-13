@@ -333,6 +333,7 @@
                 >
             </a>
             @include('partials.waiting-list-minimal-nav')
+            
         </div>
         @stack('early-access-offcanvas')
     </nav>
@@ -343,6 +344,7 @@
     </div>
 
     <script>
+     
         window.mutqinMinimalPublicPage = true;
         window.mutqinWaitingListEndpoint = @json(\App\Support\MutqinDomains::waitingListStoreUrl(request()));
     </script>

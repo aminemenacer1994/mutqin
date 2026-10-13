@@ -440,6 +440,9 @@ export default {
         status.message = '';
         joined.value = true;
         trackWaitingListJoin({ alreadyJoined: false });
+        if (typeof window.fbq === 'function') {
+          window.fbq('track', 'Lead');
+        }
         trackAckeeEvent(ACKEE_EVENTS.WAITING_LIST_SIGNUP_COMPLETED);
         resetFormFields();
         await nextTick();
