@@ -290,22 +290,8 @@ html[data-theme="dark"] .user-dashboard,
 
 @media (min-width: 1024px) {
   .user-dashboard__content {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
-  }
-
-  .user-dashboard__primary,
-  .user-dashboard__primary > .dash-section {
-    height: 100%;
-  }
-
-  .user-dashboard__primary > .dash-section {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .user-dashboard__primary > .dash-section .dash-section__body {
-    flex: 1 1 auto;
   }
 
   .dash-section--weekly {
@@ -318,17 +304,8 @@ html[data-theme="dark"] .user-dashboard,
     grid-auto-rows: max-content;
   }
 
-  .user-dashboard__primary > .dash-section .dash-glance-actions {
-    margin-top: auto;
-  }
-
-  .user-dashboard__primary {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
   .dash-section--weekly {
-    grid-column: 2;
+    grid-column: 1;
     grid-row: 1;
   }
 

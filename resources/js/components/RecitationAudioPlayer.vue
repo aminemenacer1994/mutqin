@@ -11,6 +11,10 @@
       preload="metadata"
       @timeupdate="onTime"
       @loadedmetadata="onTime"
+      @durationchange="onTime"
+      @seeked="onTime"
+      @playing="onPlaying"
+      @pause="onPause"
       @ended="onEnded"
       @error="onError"
     ></audio>
@@ -33,10 +37,12 @@
           max="1000"
           step="1"
           :value="seekValue"
-          :disabled="!src || error"
+          :style="seekStyle"
+          :disabled="!seekReady"
           :aria-label="seekLabel"
           :aria-valuetext="progressLabel"
-          @input="onSeek"
+          @input="previewSeek"
+          @change="commitSeek"
         >
       </div>
       <div class="sa-ov__player-meta">
@@ -99,19 +105,25 @@ export default {
   },
   computed: {
     knownDuration() {
-      if (this.duration > 0 && Number.isFinite(this.duration)) return this.duration
-      const ms = Number(this.durationMs)
-      return Number.isFinite(ms) && ms > 0 ? ms / 1000 : 0
+      // Server duration metadata can include capture latency. The decoded
+      // media duration is the only reliable source for a seek timeline.
+      return this.duration > 0 && Number.isFinite(this.duration) ? this.duration : 0
+    },
+    seekReady() {
+      return !!this.src && !this.error && this.knownDuration > 0
     },
     seekValue() {
       if (this.knownDuration <= 0) return 0
       return Math.round((this.current / this.knownDuration) * 1000)
     },
+    seekStyle() {
+      return { '--player-seek-progress': `${this.seekValue / 10}%` }
+    },
     currentLabel() {
       return formatClock(this.current)
     },
     durationLabel() {
-      return formatClock(this.knownDuration)
+      return this.knownDuration > 0 ? formatClock(this.knownDuration) : '–:–'
     },
     progressLabel() {
       return `${this.currentLabel} / ${this.durationLabel}`
@@ -163,8 +175,11 @@ export default {
       audio.playbackRate = this.playbackRate
       audio.play?.()?.then(() => {
         this.playing = true
-      }).catch(() => {
+      }).catch((error) => {
         this.playing = false
+        // Autoplay can be rejected while a recording is loading. It is not a
+        // broken recording, so leave the control available for the next tap.
+        if (error?.name !== 'NotAllowedError') this.error = true
       })
     },
     pause() {
@@ -175,8 +190,7 @@ export default {
     restart() {
       const audio = this.player()
       if (!audio) return
-      audio.currentTime = 0
-      this.current = 0
+      this.setCurrentTime(0)
       if (this.src && !this.error) {
         audio.playbackRate = this.playbackRate
         audio.play?.()?.then(() => {
@@ -193,12 +207,32 @@ export default {
       const audio = this.player()
       if (audio) audio.playbackRate = this.playbackRate
     },
-    onSeek(event) {
+    seekTarget(event) {
+      const raw = Number(event?.target?.value)
+      if (!Number.isFinite(raw) || this.knownDuration <= 0) return null
+      return Math.max(0, Math.min(this.knownDuration, (raw / 1000) * this.knownDuration))
+    },
+    setCurrentTime(nextTime) {
       const audio = this.player()
-      if (!audio || this.knownDuration <= 0) return
-      const next = (Number(event.target.value) / 1000) * this.knownDuration
-      audio.currentTime = next
-      this.current = next
+      const safe = Math.max(0, Math.min(this.knownDuration || 0, Number(nextTime) || 0))
+      this.current = safe
+      if (!audio) return safe
+      const mediaDuration = Number(audio.duration)
+      const target = Number.isFinite(mediaDuration) && mediaDuration > 0
+        ? Math.min(safe, mediaDuration)
+        : safe
+      try { audio.currentTime = target } catch { /* metadata may still be loading */ }
+      return target
+    },
+    previewSeek(event) {
+      const target = this.seekTarget(event)
+      if (target == null) return
+      this.setCurrentTime(target)
+    },
+    commitSeek(event) {
+      const target = this.seekTarget(event)
+      if (target == null) return
+      this.setCurrentTime(target)
     },
     onTime() {
       const audio = this.player()
@@ -209,6 +243,13 @@ export default {
         this.duration = mediaDuration
       }
       this.playing = !audio.paused
+    },
+    onPlaying() {
+      this.playing = true
+    },
+    onPause() {
+      this.playing = false
+      this.onTime()
     },
     onEnded() {
       this.playing = false

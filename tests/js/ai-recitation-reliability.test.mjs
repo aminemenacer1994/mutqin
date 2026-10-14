@@ -76,6 +76,16 @@ function words(entries) {
   assert.match(memorisationSource, /maybeApplyPostSessionAiAssessmentFromResult\(result\)/)
   assert.match(memorisationSource, /estimateSessionRecitationPaceFactor/)
   assert.match(memorisationSource, /interruptActiveRecitationForLifecycle/)
+  assert.match(
+    memorisationSource,
+    /recorder\.ondataavailable = event => \{[\s\S]{0,450}?recitationCheckMediaRecorder !== recorder[\s\S]{0,180}?isActiveRecitationAttempt\(attemptId\)/,
+    'late recorder chunks must not contaminate a replacement attempt',
+  )
+  assert.match(
+    memorisationSource,
+    /recorder\.onerror = \(\) => \{[\s\S]{0,520}?recitationCheckDiscardOnStop = true[\s\S]{0,160}?beginRecitationAttempt\(\)/,
+    'a recorder error must invalidate its take before a late stop can submit it',
+  )
   assert.match(memorisationSource, /reconcileRecitationMediaAfterForeground/)
   assert.match(
     memorisationSource,

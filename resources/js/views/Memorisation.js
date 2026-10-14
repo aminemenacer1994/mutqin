@@ -9673,7 +9673,11 @@ export default {
 
     canStartSession() {
       const config = this.sessionConfig
-      return this.appReady &&
+      // A dashboard review is consumed while the workspace is still finishing
+      // bootstrap. At that point its range and verses are ready, but appReady
+      // is only flipped in mounted()'s finally block. Do not reject that valid
+      // start and show a misleading “Could not start” message.
+      return (
         // Allow starting when verses are already loaded, even if a background refresh is in progress.
         (this.isDataReady || (!!this.verses.length || !!this.currentConfig.verses.length)) &&
         !!config.chapterId &&
@@ -9681,6 +9685,7 @@ export default {
         config.rangeEnd >= config.rangeStart &&
         (!!this.verses.length || !!this.currentConfig.verses.length) &&
         (!this.chainingEnabled || this.hasChainingMethodSelected)
+      )
     },
 
     currentSessionExplanation() {
@@ -32533,12 +32538,29 @@ export default {
 
         // Start the mic immediately — never block recording on the Speechmatics token.
         recorder.ondataavailable = event => {
+          // MediaRecorder can still deliver its final chunk after a retry has
+          // replaced this recorder. Chunks are kept on component state, so a
+          // stale callback must never append old audio to the new attempt.
+          if (
+            this.recitationCheckMediaRecorder !== recorder
+            || !this.isActiveRecitationAttempt(attemptId)
+          ) return
           if (event.data?.size) {
             this.recitationCheckChunks.push(event.data)
             this.streamTranscriptionAudioChunk('recitation', event.data)
           }
         }
         recorder.onerror = () => {
+          // Ignore a recorder that has already been stopped/replaced. Without
+          // this, a late error from a cancelled take can fail the new take.
+          if (
+            this.recitationCheckMediaRecorder !== recorder
+            || !this.isActiveRecitationAttempt(attemptId)
+          ) return
+          // Invalidate this take before cleanup. Its eventual onstop must not
+          // submit a partial blob as though it were a completed recitation.
+          this.recitationCheckDiscardOnStop = true
+          this.beginRecitationAttempt()
           this.reportRecitationCheckFailure(this.t('memorisation.aiCheck.micStoppedUnexpectedly'))
           this.cleanupRecitationCheckMedia()
         }
@@ -32546,7 +32568,10 @@ export default {
           const stopAttemptId = attemptId
           // Allow the final dataavailable from stop() to land before we snapshot chunks.
           await new Promise(resolve => queueMicrotask(resolve))
-          if (!this.isActiveRecitationAttempt(stopAttemptId) && !this._recitationCapturingForReplay) {
+          if (
+            (this.recitationCheckMediaRecorder !== recorder || !this.isActiveRecitationAttempt(stopAttemptId))
+            && !this._recitationCapturingForReplay
+          ) {
             return
           }
 

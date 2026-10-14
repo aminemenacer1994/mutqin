@@ -79,165 +79,10 @@
           </div>
         </header>
 
-        <section
-          v-if="showDailyRevision"
-          class="dash-daily-revision dash-reveal"
-          aria-labelledby="dash-daily-revision-heading"
-          style="--dash-delay: 10ms"
-        >
-          <div class="dash-daily-revision__head">
-            <div>
-              <span class="dash-kicker">{{ t('dashboard.daily_revision_kicker') }}</span>
-              <h2 id="dash-daily-revision-heading">{{ t('dashboard.daily_revision_title') }}</h2>
-              <p>{{ t('dashboard.daily_revision_hint') }}</p>
-            </div>
-            <span class="dash-daily-revision__mark" aria-hidden="true"><i class="bi bi-arrow-repeat"></i></span>
-          </div>
-
-          <div class="dash-daily-revision__grid">
-            <article class="dash-daily-revision__card dash-daily-revision__card--recommended">
-              <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_recommended') }}</span>
-              <template v-if="dailyRecommendedPractice">
-                <strong>{{ dailyRecommendedPractice.surah_name }} · {{ dailyRecommendedRange }}</strong>
-                <p>{{ t('dashboard.daily_revision_practice_hint') }}</p>
-                <a class="dash-btn dash-btn--primary dash-btn--sm" :href="dailyRecommendedPractice.href">
-                  {{ t('dashboard.daily_revision_practise') }}
-                  <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
-                </a>
-              </template>
-              <p v-else class="dash-daily-revision__empty">{{ t('dashboard.daily_revision_recommended_empty') }}</p>
-            </article>
-
-            <article class="dash-daily-revision__card">
-              <div class="dash-daily-revision__card-head">
-                <div class="dash-daily-revision__card-label">
-                  <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_due') }}</span>
-                  <span v-if="dailyDueTotal" class="dash-daily-revision__count">{{ dailyDueTotal }}</span>
-                </div>
-                <button
-                  v-if="dailyDueTotal > dailyDueItems.length"
-                  type="button"
-                  class="dash-daily-revision__all"
-                  @click="openDrawer('due')"
-                >{{ t('dashboard.view_all') }}</button>
-              </div>
-              <ul v-if="dailyDueItems.length" class="dash-daily-revision__list">
-                <li v-for="item in dailyDueItems" :key="item.key">
-                  <a :href="item.href || memorisationUrl">{{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</a>
-                </li>
-              </ul>
-              <div v-else class="dash-daily-revision__empty">
-                <strong>{{ t('dashboard.daily_revision_due_empty_title') }}</strong>
-              </div>
-            </article>
-
-            <article class="dash-daily-revision__card">
-              <div class="dash-daily-revision__card-head">
-                <div class="dash-daily-revision__card-label">
-                  <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_weak') }}</span>
-                  <span v-if="dailyWeakTotal" class="dash-daily-revision__count">{{ dailyWeakTotal }}</span>
-                </div>
-                <button
-                  v-if="dailyWeakTotal > dailyWeakItems.length"
-                  type="button"
-                  class="dash-daily-revision__all"
-                  @click="openDrawer('murajaah')"
-                >{{ t('dashboard.view_all') }}</button>
-              </div>
-              <ul v-if="dailyWeakItems.length" class="dash-daily-revision__list">
-                <li v-for="item in dailyWeakItems" :key="item.key">
-                  <a :href="reviewNowHref(item)">{{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</a>
-                </li>
-              </ul>
-              <div v-else class="dash-daily-revision__empty">
-                <strong>{{ t('dashboard.daily_revision_weak_empty') }}</strong>
-              </div>
-            </article>
-          </div>
-        </section>
-
         <div class="user-dashboard__content">
-        <div class="user-dashboard__primary">
-        <section class="dash-section dash-section--flat dash-reveal" aria-labelledby="dash-data-heading" style="--dash-delay: 10ms">
-          <div class="dash-section__head dash-section__head--compact">
-            <div class="dash-section__title">
-              <span class="dash-section__icon dash-section__icon--success" aria-hidden="true">
-                <i class="bi bi-journal-bookmark-fill" aria-hidden="true"></i>
-              </span>
-              <div class="dash-section__title-copy">
-                <h2 id="dash-data-heading">{{ t('dashboard.journey_data_title') }}</h2>
-              </div>
-            </div>
-          </div>
-          <div class="dash-section__body">
-            <div class="dash-glance">
-              <div class="dash-glance__stats" role="list" :aria-label="t('dashboard.journey_data_title')">
-                <div
-                  v-for="stat in hifzGlanceStats"
-                  :key="stat.key"
-                  class="dash-glance-stat"
-                  :class="`dash-glance-stat--${stat.key}`"
-                  role="listitem"
-                >
-                  <span class="dash-glance-stat__icon" aria-hidden="true">
-                    <i :class="stat.icon" aria-hidden="true"></i>
-                  </span>
-                  <div class="dash-glance-stat__copy">
-                    <strong class="dash-glance-stat__value">
-                      <DashAnimatedNumber :value="stat.value" :reduce-motion="reduceMotion" />
-                    </strong>
-                    <span class="dash-glance-stat__label">{{ stat.label }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="dash-glance__overall" aria-labelledby="dash-overall-heading">
-                <div class="dash-glance__overall-head">
-                  <div class="dash-glance__overall-copy">
-                    <span id="dash-overall-heading" class="dash-glance__overall-label">
-                      {{ t('dashboard.journey_overall_label') }}
-                    </span>
-                  </div>
-                  <strong class="dash-glance__percent">
-                    <DashAnimatedNumber :value="journeyOverallPercent" :reduce-motion="reduceMotion" />%
-                  </strong>
-                </div>
-                <div
-                  class="dash-progress-bar dash-progress-bar--overall"
-                  role="progressbar"
-                  :aria-valuenow="journeyOverallPercent"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  :aria-label="t('dashboard.journey_overall_label')"
-                >
-                  <span
-                    :class="{ 'is-nonzero': journeyOverallDisplay.hasProgress }"
-                    :style="{ width: journeyOverallDisplay.fillWidth }"
-                  ></span>
-                </div>
-                <p v-if="earlyProgressMessage" class="dash-glance__meta dash-glance__meta--note">
-                  {{ earlyProgressMessage }}
-                </p>
-              </div>
-            </div>
-
-            <div class="dash-glance-actions">
-              <button type="button" class="dash-glance-action" @click="openDrawer('activity')">
-                <i class="bi bi-clock-history" aria-hidden="true"></i>
-                {{ t('dashboard.view_all_activity') }}
-              </button>
-              <button type="button" class="dash-glance-action" @click="openDrawer('hifz')">
-                <i class="bi bi-journal-bookmark" aria-hidden="true"></i>
-                {{ t('dashboard.view_memorised_ayahs') }}
-              </button>
-            </div>
-          </div>
-        </section>
-        </div>
-
         <div class="user-dashboard__review-row">
         <section
-          v-if="(murajaahPreview.length || showMurajaahEmpty) && !showDailyRevision"
+          v-if="murajaahPreview.length || showMurajaahEmpty"
           class="dash-section dash-section--flat dash-reveal dash-section--murajaah"
           aria-labelledby="dash-murajaah-heading"
           style="--dash-delay: 20ms"
@@ -1286,10 +1131,6 @@ export default {
       const items = this.dailyRevision.due_all_items
       return Array.isArray(items) ? items : this.dailyDueItems
     },
-    dailyDueTotal() {
-      const total = Number(this.dailyRevision.due_total ?? 0)
-      return total > 0 ? total : this.dailyDueItems.length
-    },
     dailyWeakItems() {
       const items = this.dailyRevision.weak_items
       return Array.isArray(items) ? items : this.murajaahPreview
@@ -1297,30 +1138,6 @@ export default {
     dailyWeakAllItems() {
       const items = this.dailyRevision.weak_all_items
       return Array.isArray(items) ? items : this.dailyWeakItems
-    },
-    dailyWeakTotal() {
-      const total = Number(this.dailyRevision.weak_total ?? 0)
-      return total > 0 ? total : this.dailyWeakItems.length
-    },
-    dailyRecommendedPractice() {
-      const item = this.dailyRevision.recommended_practice || this.recommendedNext
-      return item?.surah_name && item?.ayah_start && item?.href ? item : null
-    },
-    dailyRecommendedRange() {
-      const item = this.dailyRecommendedPractice
-      if (!item) return ''
-      const start = Number(item.ayah_start || 0)
-      const end = Number(item.ayah_end || start)
-      return start === end
-        ? this.t('dashboard.ayah_n', { n: start })
-        : this.t('dashboard.ayah_range', { start, end })
-    },
-    showDailyRevision() {
-      return this.dailyDueItems.length > 0
-        || this.dailyWeakItems.length > 0
-        || !!this.dailyRecommendedPractice
-        || this.journeyHasStarted
-        || this.hasMemorisationHistory
     },
     snapshotCards() {
       const snap = this.data?.snapshot || {}

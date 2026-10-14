@@ -819,6 +819,117 @@ html[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov_
   color: #f4ebe1 !important;
 }
 
+/* Native range fills differ between browsers. Paint the elapsed amount with a
+   CSS variable so the scrubber always matches the displayed recording time. */
+.workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  --player-track: color-mix(in srgb, var(--player-line) 88%, transparent);
+  --player-seek-fill: var(--player-accent);
+}
+
+.workspace-recite-result .sa-ov__player-seek,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1.35rem !important;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.workspace-recite-result .sa-ov__player-seek::-webkit-slider-runnable-track,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek::-webkit-slider-runnable-track {
+  height: 0.32rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--player-seek-fill) var(--player-seek-progress, 0%), var(--player-track) var(--player-seek-progress, 0%));
+}
+
+.workspace-recite-result .sa-ov__player-seek::-webkit-slider-thumb,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 0.82rem;
+  height: 0.82rem;
+  margin-top: -0.25rem;
+  border: 2px solid var(--player-surface);
+  border-radius: 50%;
+  background: var(--player-seek-fill);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--player-seek-fill) 34%, transparent);
+}
+
+.workspace-recite-result .sa-ov__player-seek::-moz-range-track,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek::-moz-range-track {
+  height: 0.32rem;
+  border-radius: 999px;
+  background: var(--player-track);
+}
+
+.workspace-recite-result .sa-ov__player-seek::-moz-range-progress,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek::-moz-range-progress {
+  height: 0.32rem;
+  border-radius: 999px;
+  background: var(--player-seek-fill);
+}
+
+.workspace-recite-result .sa-ov__player-seek::-moz-range-thumb,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek::-moz-range-thumb {
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 2px solid var(--player-surface);
+  border-radius: 50%;
+  background: var(--player-seek-fill);
+}
+
+.workspace-recite-result .sa-ov__player-meta,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-meta {
+  grid-template-columns: minmax(2.4rem, 1fr) auto minmax(2.4rem, 1fr);
+  gap: 0.28rem;
+  font-size: 0.68rem;
+}
+
+.workspace-recite-result .sa-ov__player-time--end,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-time--end { text-align: end; }
+
+html[data-theme="light"] .workspace-recite-result .sa-ov__player,
+html[data-theme="light"] #sa-session-overview.session-analysis-modal-root .sa-ov__player,
+[data-theme="light"] .workspace-recite-result .sa-ov__player,
+[data-theme="light"] #sa-session-overview.session-analysis-modal-root .sa-ov__player {
+  --player-track: #ded6cc;
+  --player-seek-fill: #287354;
+}
+
+html[data-theme="sepia"] .workspace-recite-result .sa-ov__player,
+html[data-theme="sepia"] #sa-session-overview.session-analysis-modal-root .sa-ov__player,
+[data-theme="sepia"] .workspace-recite-result .sa-ov__player,
+[data-theme="sepia"] #sa-session-overview.session-analysis-modal-root .sa-ov__player {
+  --player-track: #d4bea1;
+  --player-seek-fill: #79612f;
+}
+
+html[data-theme="dark"] .workspace-recite-result .sa-ov__player,
+html[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player,
+[data-theme="dark"] .workspace-recite-result .sa-ov__player,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player {
+  --player-track: rgba(247, 235, 221, 0.25);
+  --player-seek-fill: #9adbb9;
+}
+
+@media (max-width: 430px) {
+  .workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+  #sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+    gap: 0.52rem !important;
+    padding: 0.5rem 0.55rem !important;
+  }
+
+  .workspace-recite-result .sa-ov__player-toggle,
+  #sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+    width: 2.55rem !important;
+    height: 2.55rem !important;
+  }
+
+  .workspace-recite-result .sa-ov__player-meta,
+  #sa-session-overview.session-analysis-modal-root .sa-ov__player-meta { font-size: 0.64rem; }
+}
+
 /* Recording controls: one compact, predictable control surface in every theme. */
 .workspace-recite-result .sa-ov__player.sa-ov__player--bento,
 #sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
