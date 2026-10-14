@@ -59,6 +59,13 @@ const sudaisUrls = orderAyahAudioCandidateUrls({
   existingUrl: 'https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3',
 })
 assert.equal(sudaisUrls[0], 'https://cdn.islamic.network/quran/audio/128/ar.abdurrahmaansudais/1.mp3')
+
+const proxiedUrls = orderAyahAudioCandidateUrls({
+  reciterId: 'ar.alafasy',
+  globalAyahNumber: 262,
+  bundledUrl: '/audio/ayah/ar.alafasy/262.mp3',
+})
+assert.equal(proxiedUrls[0], '/audio/ayah/ar.alafasy/262.mp3')
 assert.ok(
   sudaisUrls.indexOf('https://cdn.islamic.network/quran/audio/128/ar.abdurrahmaansudais/1.mp3')
     < sudaisUrls.indexOf('https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3'),

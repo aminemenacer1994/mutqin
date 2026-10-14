@@ -5550,41 +5550,36 @@ export default {
       if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
       const details = this.postSessionAiReviewDetails || {}
       const chips = []
-      const matched = Number(details.matchedWords)
-      const total = Number(details.totalWords)
-      if (Number.isFinite(matched) && Number.isFinite(total) && total > 0) {
+      const rawScore = details.scoredAccuracy ?? details.accuracy
+      const score = rawScore == null ? Number.NaN : Number(rawScore)
+      if (Number.isFinite(score)) {
         chips.push({
-          key: 'match',
-          tone: matched >= total ? 'strong' : (matched / total >= 0.75 ? 'mixed' : 'weak'),
-          icon: 'bi bi-check2-circle',
-          label: this.t('memorisation.postSession.recommendation.statMatched'),
-          value: `${matched}/${total}`,
-          hint: this.t('memorisation.postSession.recommendation.statMatchedHint')
-            || 'Words Mutqin clearly recognised in this check',
+          key: 'score',
+          tone: score >= 90 ? 'strong' : (score >= 75 ? 'mixed' : 'weak'),
+          icon: 'bi bi-bar-chart-line',
+          label: this.t('memorisation.quiz.score') || 'Score',
+          value: `${Math.round(Math.max(0, Math.min(100, score)))}%`,
+          hint: this.t('memorisation.quiz.accuracy') || 'Accuracy for this check',
         })
       }
       const counts = details.colorCounts || {}
-      // Keep the red pill honest: black is an omission, not an incorrect word.
       const wrong = Number(counts.red || 0)
       const close = Number(counts.amber || 0)
       const omitted = Number(counts.black || 0)
-      if (wrong > 0 || close > 0 || omitted > 0) {
-        chips.push({
-          key: 'issues',
-          tone: wrong > 0 ? 'weak' : 'review',
-          icon: 'bi bi-exclamation-circle',
-          label: this.t('memorisation.postSession.recommendation.statNeedsWork'),
-          value: wrong > 0
-            ? (this.t('memorisation.postSession.recommendation.statWrongCount', { count: wrong })
-              || `${wrong} wrong`)
-            : close > 0
-              ? (this.t('memorisation.postSession.recommendation.statCloseCount', { count: close })
-                || `${close} close`)
-              : `${omitted} omitted`,
-          hint: this.t('memorisation.postSession.recommendation.statNeedsWorkHint')
-            || 'Words that need another calm pass',
-        })
-      }
+      const wordMistakes = wrong + close + omitted
+      const reportedMistakes = Number(details.mistakeCount)
+      const mistakes = Number.isFinite(reportedMistakes)
+        ? Math.max(0, reportedMistakes)
+        : wordMistakes
+      chips.push({
+        key: 'mistakes',
+        tone: mistakes === 0 ? 'strong' : (wrong > 0 || omitted > 0 ? 'weak' : 'review'),
+        icon: mistakes === 0 ? 'bi bi-check2-circle' : 'bi bi-exclamation-circle',
+        label: this.t('memorisation.quiz.mistakes') || 'Mistakes',
+        value: String(mistakes),
+        hint: this.t('memorisation.postSession.recommendation.statNeedsWorkHint')
+          || 'Words that need another calm pass',
+      })
       const durationLabel = this.postSessionCheckDurationLabel
       if (durationLabel) {
         chips.push({
@@ -45090,12 +45085,12 @@ export default {
     bundledAyahAudioUrl(reciter, globalAyahNumber) {
       const n = Number(globalAyahNumber)
       const id = String(reciter || 'ar.alafasy').trim() || 'ar.alafasy'
-      // Al-Fatihah is the default onboarding / smoke-test set. Keep it local so
-      // a blocked CDN cannot leave the dock at 00:00.
-      if (id === 'ar.alafasy' && n >= 1 && n <= 7) {
-        return `/audio/ayah/ar.alafasy/${n}.mp3`
-      }
-      return ''
+      // Always prefer the same-origin audio route. It serves a local asset when
+      // available and otherwise proxies the approved CDNs, so a review opened
+      // from the dashboard does not depend on a browser being allowed to load
+      // third-party media directly. The CDN candidates remain as fallbacks.
+      if (!Number.isInteger(n) || n < 1 || n > 6236 || !/^[a-z0-9._-]+$/i.test(id)) return ''
+      return `/audio/ayah/${encodeURIComponent(id)}/${n}.mp3`
     },
     listAyahAudioCandidates(verse = {}) {
       const reciter = String(this.reciterId || verse.reciterId || DEFAULT_ALQURAN_RECITER).trim() || DEFAULT_ALQURAN_RECITER

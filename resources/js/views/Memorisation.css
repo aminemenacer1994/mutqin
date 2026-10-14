@@ -56475,6 +56475,19 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   border-top: 1px solid color-mix(in srgb, var(--ps-line) 70%, transparent);
 }
 
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-action {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-action-copy {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ps-ink);
+}
+
 /* Weak areas stay a scannable one-line summary instead of stacked red cards. */
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-list--inline {
   display: flex;

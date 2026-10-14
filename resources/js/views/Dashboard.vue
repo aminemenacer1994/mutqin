@@ -110,9 +110,12 @@
 
             <article class="dash-daily-revision__card">
               <div class="dash-daily-revision__card-head">
-                <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_due') }}</span>
+                <div class="dash-daily-revision__card-label">
+                  <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_due') }}</span>
+                  <span v-if="dailyDueTotal" class="dash-daily-revision__count">{{ dailyDueTotal }}</span>
+                </div>
                 <button
-                  v-if="dailyDueItems.length"
+                  v-if="dailyDueTotal > dailyDueItems.length"
                   type="button"
                   class="dash-daily-revision__all"
                   @click="openDrawer('due')"
@@ -123,14 +126,19 @@
                   <a :href="item.href || memorisationUrl">{{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</a>
                 </li>
               </ul>
-              <p v-else class="dash-daily-revision__empty">{{ t('dashboard.daily_revision_due_empty') }}</p>
+              <div v-else class="dash-daily-revision__empty">
+                <strong>{{ t('dashboard.daily_revision_due_empty_title') }}</strong>
+              </div>
             </article>
 
             <article class="dash-daily-revision__card">
               <div class="dash-daily-revision__card-head">
-                <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_weak') }}</span>
+                <div class="dash-daily-revision__card-label">
+                  <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_weak') }}</span>
+                  <span v-if="dailyWeakTotal" class="dash-daily-revision__count">{{ dailyWeakTotal }}</span>
+                </div>
                 <button
-                  v-if="murajaahTotal > dailyWeakItems.length"
+                  v-if="dailyWeakTotal > dailyWeakItems.length"
                   type="button"
                   class="dash-daily-revision__all"
                   @click="openDrawer('murajaah')"
@@ -141,7 +149,9 @@
                   <a :href="reviewNowHref(item)">{{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</a>
                 </li>
               </ul>
-              <p v-else class="dash-daily-revision__empty">{{ t('dashboard.daily_revision_weak_empty') }}</p>
+              <div v-else class="dash-daily-revision__empty">
+                <strong>{{ t('dashboard.daily_revision_weak_empty') }}</strong>
+              </div>
             </article>
           </div>
         </section>
@@ -1121,9 +1131,13 @@ export default {
       return this.t('dashboard.early_progress_message')
     },
     isSavedSessionContinue() {
+      // Both a live paused/interrupted session and a deliberately ended-early
+      // portion are saved work. Give each the same unambiguous return surface.
       if (this.liveReturnSession) return true
       const type = String(this.data?.continue?.action_type || '')
-      return type === 'continue_incomplete'
+      return type === 'resume_session'
+        || type === 'continue_session'
+        || type === 'continue_incomplete'
     },
     savedSessionContinueSource() {
       if (this.liveReturnSession) return this.liveReturnSession
@@ -1136,7 +1150,7 @@ export default {
         const title = this.continueSessionTitle(source)
         return {
           kind: 'saved',
-          href: this.journeyContinueHref,
+          href: String(source.href || this.continueHref || this.memorisationUrl).trim(),
           label: this.t('dashboard.saved_session_label'),
           title,
           hint: this.t('dashboard.saved_session_hint'),
@@ -1283,6 +1297,10 @@ export default {
     dailyWeakAllItems() {
       const items = this.dailyRevision.weak_all_items
       return Array.isArray(items) ? items : this.dailyWeakItems
+    },
+    dailyWeakTotal() {
+      const total = Number(this.dailyRevision.weak_total ?? 0)
+      return total > 0 ? total : this.dailyWeakItems.length
     },
     dailyRecommendedPractice() {
       const item = this.dailyRevision.recommended_practice || this.recommendedNext

@@ -218,15 +218,24 @@ html[data-theme="dark"] .user-dashboard,
   gap: 0.5rem;
 }
 
+.dash-daily-revision__card-label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0.45rem;
+}
+
 .dash-daily-revision__count {
   display: grid;
+  flex: 0 0 auto;
   min-width: 1.4rem;
   height: 1.4rem;
   place-items: center;
   padding-inline: 0.3rem;
   border-radius: 999px;
-  background: var(--dash-accent);
-  color: var(--dash-on-accent);
+  border: 1px solid var(--dash-border);
+  background: transparent;
+  color: var(--dash-muted);
   font-size: 0.75rem;
 }
 
@@ -240,6 +249,7 @@ html[data-theme="dark"] .user-dashboard,
 
 .dash-daily-revision__list a,
 .dash-daily-revision__all {
+  flex: 0 0 auto;
   color: var(--dash-ink);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -262,7 +272,14 @@ html[data-theme="dark"] .user-dashboard,
 }
 
 .dash-daily-revision__empty {
-  min-height: 2.35rem;
+  display: grid;
+  min-height: 1.5rem;
+  align-content: center;
+}
+
+.dash-daily-revision__empty strong {
+  font-size: 0.875rem;
+  line-height: 1.3;
 }
 
 @media (max-width: 760px) {

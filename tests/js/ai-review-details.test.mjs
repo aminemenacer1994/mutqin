@@ -219,6 +219,7 @@ const t = (key, params = {}) => {
   assert.equal(details.totalWords, 10)
   assert.equal(details.accuracy, 100)
   assert.equal(details.scoredAccuracy, 78)
+  assert.equal(details.mistakeCount, 1, 'an order slip is shown in the primary mistake count')
   assert.equal(details.progressPercent, 100)
   assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '100%'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '10/10'))
@@ -366,7 +367,7 @@ const t = (key, params = {}) => {
   ]), 80)
 }
 
-// Template order: ResultSummary → focus/recommendation → details disclosure.
+// Template order: score/mistakes → focus → next action → details disclosure.
 {
   const vue = readFileSync(join(root, 'resources/js/views/Memorisation.vue'), 'utf8')
   const aiReviewStart = vue.indexOf('post-session-simple__ai-review')
@@ -374,11 +375,15 @@ const t = (key, params = {}) => {
   const slice = vue.slice(aiReviewStart, aiReviewStart + 12000)
   const summaryIdx = slice.indexOf('post-session-simple__ai-review-summary')
   const focusIdx = slice.indexOf('post-session-simple__focus-block')
+  const nextActionIdx = slice.indexOf('post-session-simple__next-action')
   const detailsIdx = slice.indexOf('post-session-simple__ai-details')
   assert.ok(summaryIdx > 0)
   assert.ok(focusIdx > summaryIdx, 'focus / recommendation appears after summary')
-  assert.ok(detailsIdx > focusIdx, 'details disclosure appears after focus')
+  assert.ok(nextActionIdx > focusIdx, 'next action appears after visible mistakes')
+  assert.ok(detailsIdx > nextActionIdx, 'details disclosure appears after score, mistakes, and next action')
   assert.match(slice, /postSessionInlineRecommendationRows|postSessionGuidedMethodRows|postSessionFocusAyahRows/)
+  assert.match(slice, /postSessionOutcomeStatChips/)
+  assert.match(slice, /postSessionPrimaryNextLine/)
   assert.match(slice, /viewDetails/)
   // Colour meter / metrics only inside expanded details body.
   const meterIdx = slice.indexOf('post-session-simple__check-meter')

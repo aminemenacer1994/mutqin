@@ -814,7 +814,11 @@ class DashboardService
         ?MemorisationPracticePlan $activePlan,
         ?array $main = null,
     ): array {
-        if ($unfinished && $this->sessionMatchesMain($unfinished, $main)) {
+        // An unfinished session always takes precedence over a suggested or
+        // primary journey range. Learners may deliberately work outside their
+        // main journey (for example, a revision set) and must never lose the
+        // direct way back to that work.
+        if ($unfinished) {
             $status = UserSessionStatus::tryFromMixed($unfinished->status);
             $isPausedOrInterrupted = in_array($status, [
                 UserSessionStatus::Paused,
@@ -840,7 +844,6 @@ class DashboardService
                 'href' => $this->memorisationHref([
                     'resume' => 1,
                     'session' => (int) $unfinished->id,
-                    'journey' => 'main',
                 ]),
                 'session_id' => (int) $unfinished->id,
                 'recommendation_id' => null,
@@ -868,7 +871,10 @@ class DashboardService
             ->latest('id')
             ->first();
 
-        if ($incomplete && $this->sessionMatchesMain($incomplete, $main)) {
+        // Ending early is a conscious stop, not a reason to hide the portion.
+        // Keep its return route available even when it is outside the main
+        // memorisation journey.
+        if ($incomplete) {
             $meta = is_array($incomplete->metadata) ? $incomplete->metadata : [];
             $config = is_array($meta['config'] ?? null) ? $meta['config'] : [];
             $surah = (int) ($incomplete->surah_number ?? $config['chapterId'] ?? 0);
@@ -878,7 +884,6 @@ class DashboardService
                 'surah' => $surah ?: null,
                 'from' => $rangeStart ?: null,
                 'to' => $rangeEnd ?: null,
-                'journey' => 'main',
             ]);
 
             return [
@@ -1129,6 +1134,35 @@ class DashboardService
         }
 
         $remembered = $this->mainPosition->rememberedInRange($user, $main);
+        $continueMatchesMain = $this->rangeMatchesMain(
+            $main,
+            (int) ($continue['surah_number'] ?? 0),
+            (int) ($continue['ayah_start'] ?? 0),
+            (int) ($continue['ayah_end'] ?? $continue['ayah_start'] ?? 0),
+        );
+
+        // The primary dashboard action may point to a saved revision session
+        // outside the main journey. Keep that action intact, but do not let it
+        // rewrite the separate journey summary.
+        if (! $continueMatchesMain) {
+            $continue = [
+                'surah_number' => $main['surah_number'],
+                'surah_name' => $main['surah_name'],
+                'ayah_start' => $main['ayah_start'],
+                'ayah_end' => $main['ayah_end'],
+                'remembered_count' => $remembered['remembered_count'],
+                'range_ayah_count' => $remembered['range_ayah_count'],
+                'href' => $this->memorisationHref([
+                    'surah' => $main['surah_number'],
+                    'from' => $main['ayah_start'],
+                    'to' => $main['ayah_end'],
+                    'journey' => 'main',
+                ]),
+                'action_type' => 'continue_range',
+                'cta_key' => 'cta_continue_memorisation',
+            ];
+        }
+
         $journey['continue'] = [
             'surah_number' => $continue['surah_number'] ?? $main['surah_number'],
             'surah_name' => $continue['surah_name'] ?? $main['surah_name'],

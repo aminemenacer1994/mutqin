@@ -4118,6 +4118,18 @@
                   </ul>
                 </section>
 
+                <section
+                  v-if="postSessionPrimaryNextLine"
+                  class="post-session-simple__next-action post-session-simple__support-block"
+                  data-testid="post-session-next-action"
+                  :aria-label="t('memorisation.postSession.coach.evidenceNext') || 'Next action'"
+                >
+                  <p class="post-session-simple__section-kicker post-session-simple__section-kicker--sub">
+                    {{ t('memorisation.postSession.coach.evidenceNext') || 'Next' }}
+                  </p>
+                  <p class="post-session-simple__next-action-copy">{{ postSessionPrimaryNextLine }}</p>
+                </section>
+
                 <div v-if="postSessionShowAiDetailsToggle" class="post-session-simple__ai-details">
                   <button
                     type="button"

@@ -229,6 +229,98 @@ class DashboardTest extends TestCase
         $this->assertStringContainsString('surah=114', $recommendHref);
     }
 
+    public function test_continue_card_keeps_an_unfinished_session_outside_the_main_journey(): void
+    {
+        $user = User::factory()->create();
+
+        UserLastPosition::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 1,
+            'last_opened_at' => now(),
+            'metadata' => [
+                'main_position' => [
+                    'surah_number' => 2,
+                    'ayah_start' => 1,
+                    'ayah_end' => 5,
+                    'source' => 'explicit',
+                ],
+            ],
+        ]);
+
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 114,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::Paused,
+            'is_onboarding_example' => false,
+            'paused_at' => now()->subHour(),
+            'last_activity_at' => now()->subHour(),
+            'metadata' => [
+                'paused' => true,
+                'config' => ['chapterId' => 114, 'rangeStart' => 1, 'rangeEnd' => 6],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.continue.action_type', 'resume_session')
+            ->assertJsonPath('data.continue.session_id', $session->id)
+            ->assertJsonPath('data.continue.surah_number', 114);
+
+        $href = (string) $response->json('data.continue.href');
+        $this->assertStringContainsString('resume=1', $href);
+        $this->assertStringContainsString('session='.$session->id, $href);
+        $this->assertStringNotContainsString('journey=main', $href);
+    }
+
+    public function test_continue_card_keeps_an_ended_early_portion_outside_the_main_journey(): void
+    {
+        $user = User::factory()->create();
+
+        UserLastPosition::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 1,
+            'last_opened_at' => now(),
+            'metadata' => [
+                'main_position' => [
+                    'surah_number' => 2,
+                    'ayah_start' => 1,
+                    'ayah_end' => 5,
+                    'source' => 'explicit',
+                ],
+            ],
+        ]);
+
+        $session = UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 114,
+            'ayah_number' => 4,
+            'status' => UserSessionStatus::EndedEarly,
+            'is_onboarding_example' => false,
+            'ended_at' => now()->subHour(),
+            'last_activity_at' => now()->subHour(),
+            'metadata' => [
+                'ended_early' => true,
+                'config' => ['chapterId' => 114, 'rangeStart' => 1, 'rangeEnd' => 6],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.continue.action_type', 'continue_incomplete')
+            ->assertJsonPath('data.continue.session_id', $session->id)
+            ->assertJsonPath('data.continue.surah_number', 114);
+
+        $this->assertStringNotContainsString(
+            'journey=main',
+            (string) $response->json('data.continue.href')
+        );
+    }
+
     public function test_dashboard_api_ignores_client_supplied_user_id(): void
     {
         $user = User::factory()->create(['name' => 'Amina']);
@@ -1223,13 +1315,14 @@ class DashboardTest extends TestCase
             ->assertJsonPath('data.journey.continue.ayah_end', 30)
             ->assertJsonPath('data.journey.continue.remembered_count', 7)
             ->assertJsonPath('data.journey.continue.range_ayah_count', 10)
-            ->assertJsonPath('data.continue.surah_number', 2)
+            ->assertJsonPath('data.continue.action_type', 'resume_session')
+            ->assertJsonPath('data.continue.surah_number', 36)
             ->assertJsonPath('data.journey.review.surah_number', 1)
             ->assertJsonPath('data.journey.overall.percent', 1);
 
         $this->assertSame('Al-Fatihah', $response->json('data.journey.review.surah_name'));
         $this->assertStringContainsString('journey=main', (string) $response->json('data.journey.continue.href'));
-        $this->assertStringNotContainsString('resume=1', (string) $response->json('data.continue.href'));
+        $this->assertStringContainsString('resume=1', (string) $response->json('data.continue.href'));
     }
 
     public function test_session_start_on_another_range_does_not_move_main_position(): void

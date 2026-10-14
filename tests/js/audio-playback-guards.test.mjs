@@ -120,7 +120,7 @@ describe('audio playback guards', () => {
     )
   })
 
-  it('plays bundled Al-Fatihah audio first and keeps same-origin paths local', () => {
+  it('plays same-origin ayah audio first and keeps local paths local', () => {
     const normalizeAudioUrl = extractNormalizeAudioUrl()
     assert.equal(
       normalizeAudioUrl('/audio/ayah/ar.alafasy/1.mp3'),
@@ -131,7 +131,7 @@ describe('audio playback guards', () => {
       '/memorisation/audio-download?url=https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3',
     )
     assert.match(memorisationSource, /bundledAyahAudioUrl\(/)
-    assert.match(memorisationSource, /\/audio\/ayah\/ar\.alafasy\/\$\{n\}\.mp3/)
+    assert.match(memorisationSource, /\/audio\/ayah\/\$\{encodeURIComponent\(id\)\}\/\$\{n\}\.mp3/)
     assert.match(
       memorisationSource,
       /audioLoadedMetadata = \(\) => \{[\s\S]*syncAudioUiState/,
