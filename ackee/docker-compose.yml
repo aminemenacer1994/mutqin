@@ -21,8 +21,8 @@ services:
       ACKEE_MONGODB: mongodb://mongo:27017/ackee
       ACKEE_USERNAME: ${ACKEE_USERNAME}
       ACKEE_PASSWORD: ${ACKEE_PASSWORD}
-      ACKEE_ALLOW_ORIGIN: ${ACKEE_ALLOW_ORIGIN}
-      ACKEE_AUTO_ORIGIN: ${ACKEE_AUTO_ORIGIN:-true}
+      ACKEE_ALLOW_ORIGIN: ${ACKEE_ALLOW_ORIGIN},http://localhost:8080
+      ACKEE_AUTO_ORIGIN: "false"
     depends_on:
       mongo:
         condition: service_started

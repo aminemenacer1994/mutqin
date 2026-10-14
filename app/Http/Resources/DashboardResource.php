@@ -27,6 +27,7 @@ class DashboardResource extends JsonResource
             'welcome' => $payload['welcome'] ?? null,
             'continue' => $payload['continue'] ?? null,
             'recommended_next' => $payload['recommended_next'] ?? null,
+            'daily_revision' => $payload['daily_revision'] ?? null,
             'ai_recite_stats' => $payload['ai_recite_stats'] ?? null,
             'journey' => $payload['journey'] ?? null,
             'snapshot' => $payload['snapshot'] ?? null,

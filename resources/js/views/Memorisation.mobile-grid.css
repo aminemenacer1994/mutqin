@@ -2085,7 +2085,12 @@
     min-block-size: 0;
     overflow-x: visible !important;
     overflow-y: auto !important;
-    overscroll-behavior: contain;
+    /* One deliberate touch scroll owner. The momentum declaration is needed
+       by older iOS WebKit; containment prevents a sheet reaching its edge
+       from dragging the document beneath it on current browsers. */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
   }
 
   .post-onboarding-modal:not(.post-onboarding-modal--guided) {
@@ -9383,5 +9388,18 @@ html body .app .workspace-recite-dock__button:hover {
     min-height: calc(var(--qpc-word-size, 22px) * 1.26) !important;
     margin-block-end: calc(var(--qpc-word-size, 22px) * 0.05) !important;
     line-height: 1.32 !important;
+  }
+}
+
+/* Phone mushaf sheets need a small physical gutter: without it, edge glyphs
+   are hard to tap/read and can sit under a curved screen or browser chrome. */
+@media (max-width: 767.98px) {
+  html body .app .main.mushaf-mode-active .madani-page-sheet,
+  html body .app .main.mushaf-mode-active .madani-page-sheet--unicode {
+    box-sizing: border-box !important;
+    padding-inline:
+      max(10px, var(--mq-mushaf-inline-start, env(safe-area-inset-left, 0px)))
+      max(10px, var(--mq-mushaf-inline-end, env(safe-area-inset-right, 0px)))
+      !important;
   }
 }

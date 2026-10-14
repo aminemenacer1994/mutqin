@@ -281,10 +281,30 @@ function resolveRangeLabel(rangeStart, rangeEnd, t) {
  * @param {(key: string, params?: Record<string, unknown>) => string} t
  */
 export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
-  const result = input.result && typeof input.result === 'object' ? input.result : null
+  const localResult = input.result && typeof input.result === 'object' ? input.result : null
   const submitData = input.submitData && typeof input.submitData === 'object' ? input.submitData : null
   const assessment = submitData?.assessment || input.assessment || null
   const aiAttempt = submitData?.ai_attempt || input.aiAttempt || null
+  // The assessment is the final server alignment and the attempt is its persisted
+  // presentation snapshot. Do not mix either with the provisional live result:
+  // doing so can show a saved percentage beside different detected words/errors.
+  const attemptWordStatuses = Array.isArray(aiAttempt?.word_statuses)
+    ? aiAttempt.word_statuses
+    : []
+  const savedWordStatuses = attemptWordStatuses.length
+    ? attemptWordStatuses
+    : (Array.isArray(assessment?.word_results) ? assessment.word_results : [])
+  const result = savedWordStatuses.length
+    ? {
+        ...(localResult || {}),
+        accuracyScore: assessment?.accuracy ?? aiAttempt?.accuracy_percent ?? localResult?.accuracyScore,
+        confidence: assessment?.confidence ?? localResult?.confidence,
+        durationSeconds: (Number(aiAttempt?.duration_ms ?? assessment?.duration_ms ?? 0) / 1000)
+          || localResult?.durationSeconds,
+        colorCounts: aiAttempt?.color_counts || localResult?.colorCounts,
+        wordStatuses: savedWordStatuses,
+      }
+    : localResult
   const wordStatuses = Array.isArray(result?.wordStatuses) ? result.wordStatuses : []
   const accuracy = Math.round(Number(
     assessment?.accuracy
@@ -302,7 +322,7 @@ export function buildWorkspaceAiReciteResultView(input = {}, t = (key) => key) {
   const outcome = recitationAccuracyBand(accuracy)
   const extras = {
     accuracy_percent: accuracy,
-    color_counts: result?.colorCounts || aiAttempt?.color_counts || null,
+    color_counts: aiAttempt?.color_counts || result?.colorCounts || null,
     duration_seconds: durationSeconds,
     weak_ayahs: Array.isArray(result?.weakAyahs) ? result.weakAyahs : undefined,
   }

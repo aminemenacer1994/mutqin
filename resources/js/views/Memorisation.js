@@ -503,6 +503,7 @@ import { scoreRetention } from '../scripts/composables/useRetentionZones'
 import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
 import AppStatus from '../components/AppStatus.vue'
+import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
 import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
 import WorkspaceAiReciteResultModal from '../components/WorkspaceAiReciteResultModal.vue'
 import {
@@ -529,10 +530,6 @@ const lazyWorkspaceChunk = (importer, feature) => defineAsyncComponent({
   timeout: 120000,
 })
 
-const HifzPlanCreatorModal = lazyWorkspaceChunk(
-  () => import(/* webpackChunkName: "hifz-plan-modal" */ '../components/HifzPlanCreatorModal.vue'),
-  'hifz-plan-modal'
-)
 const preloadAiMemorisationDetectionModal = () => wrapChunkImport(
   () => import(/* webpackChunkName: "amd-modal" */ '../components/AiMemorisationDetectionModal.vue'),
   { feature: 'amd-modal' }
@@ -901,6 +898,7 @@ export default {
       learnerDashboardChart: null,
       learnerDashboardWeekSummary: null,
       learnerDashboardWeaknesses: null,
+      dashboardEntryReturnHref: null,
       learnerJourneyLoading: false,
       learnerJourneyHydrated: false,
       learnerStreakDays: 0,
@@ -10997,6 +10995,9 @@ export default {
       }
       window.addEventListener('resize', this.scheduleWorkspaceViewportMetrics, { passive: true })
       window.visualViewport?.addEventListener?.('resize', this.scheduleWorkspaceViewportMetrics, { passive: true })
+      // iOS can move the visual viewport (URL bar / software keyboard) without
+      // emitting a layout resize. Keep reader and modal measurements current.
+      window.visualViewport?.addEventListener?.('scroll', this.scheduleWorkspaceViewportMetrics, { passive: true })
       this.$nextTick(() => this.scheduleWorkspaceViewportMetrics?.())
       // Re-apply highlights when anchor/tajweed toggles affect word layout
       this.$watch('tajweedEnabled', () => {
@@ -11350,6 +11351,7 @@ export default {
     this.syncNavbarOffset = null
     window.removeEventListener('resize', this.scheduleWorkspaceViewportMetrics)
     window.visualViewport?.removeEventListener?.('resize', this.scheduleWorkspaceViewportMetrics)
+    window.visualViewport?.removeEventListener?.('scroll', this.scheduleWorkspaceViewportMetrics)
     if (this._workspaceViewportFrame) window.cancelAnimationFrame(this._workspaceViewportFrame)
     this._workspaceViewportFrame = null
     this.syncWorkspaceViewportMetrics = null
@@ -13216,6 +13218,9 @@ export default {
     async consumeDashboardEntryIntent(intent = null) {
       const entry = intent || this.readDashboardEntryIntent()
       if (!entry) return false
+      this.dashboardEntryReturnHref = entry.returnTo === 'dashboard'
+        ? (this.learnerDashboardUrl || '/dashboard')
+        : null
       const dashboardContext = preserveDashboardMadaniContext(entry)
 
       // Persist before clearing the URL so refresh keeps the intended destination.
@@ -27231,7 +27236,14 @@ export default {
           } else if (attemptId <= 0 && capturedBlob && this._amdSubmitStatus === 'ok') {
             console.warn('AI Recite audio skipped: missing attempt id after assessment')
           }
-          this.presentWorkspaceReciteAnalysis(submitData, result, capturedAudioUrl)
+          // submitAmdAssessmentToBackend replaces recitationCheckResult with the
+          // server's final Quran alignment. Use that same object in the immediate
+          // result modal, rather than the provisional live result used for submit.
+          this.presentWorkspaceReciteAnalysis(
+            submitData,
+            this.recitationCheckResult || result,
+            capturedAudioUrl,
+          )
         }
         if (assessmentSaved) this.playUiTone?.('complete')
       }
@@ -35706,6 +35718,10 @@ export default {
       }
       // Admins use the same Progress page as learners; admin console stays in nav.
       window.location.assign(this.learnerDashboardUrl)
+    },
+    returnToDashboard() {
+      const href = this.dashboardEntryReturnHref || this.learnerDashboardUrl || '/dashboard'
+      window.location.assign(href)
     },
     handleHeaderSessionAction() {
       if (this.workspaceTourFreshStartPending) {
@@ -46405,6 +46421,12 @@ export default {
         try {
           this.interruptActiveRecitationForLifecycle?.({ reason: type || 'visibilitychange' })
         } catch (_) { /* best-effort mic interrupt */ }
+        // A mobile page can be frozen before its media pause event is delivered.
+        // Pause transport before serialising recovery state so Resume never
+        // restores a stale "playing" flag or attempts autoplay on foreground.
+        try {
+          this.pauseSessionAudioForBackground?.()
+        } catch (_) { /* lifecycle persistence below remains authoritative */ }
         this.flushSessionLifecycleForBackground({ reason: type || 'visibilitychange' })
         return
       }
@@ -46568,6 +46590,10 @@ export default {
     flushSessionLifecycleForBackground({ reason = 'visibility' } = {}) {
       if (this.onboardingSampleSessionActive) return
       if (this.sessionCompleted || this.centralSession?.sessionStatus === 'completed') return
+
+      try {
+        this.pauseSessionAudioForBackground()
+      } catch (_) { /* persist the session even if a media implementation misbehaves */ }
 
       // Always persist locally first — Safari may kill the network request.
       try {
@@ -46788,7 +46814,7 @@ export default {
       if (!live) return
 
       try {
-        this.softPausePlayback?.()
+        this.pauseSessionAudioForBackground()
         this.flushPlaybackTime?.()
         this.applyLocalPausedSessionState()
       } catch (_) { /* best-effort unload pause */ }
@@ -46835,6 +46861,23 @@ export default {
           learningApi.pauseSession(payload).catch(() => {})
         })
       } catch (_) { /* local pause already applied */ }
+    },
+
+    /**
+     * Backgrounding cannot retain a reliable autoplay grant on mobile. Keep the
+     * current position, cancel queued automation, and require the user to tap
+     * Play after returning instead of allowing a late media promise to restart.
+     */
+    pauseSessionAudioForBackground() {
+      const audio = this.audioElement || this.$refs?.audio
+      const wasActive = !!this.isPlaying || !!(audio && !audio.paused)
+      if (!wasActive) return false
+      this.softPausePlayback?.()
+      if (audio) {
+        this.currentTime = Math.max(0, Number(audio.currentTime || this.currentTime || 0))
+      }
+      this.playbackAwaitingGesture = true
+      return true
     },
 
     // ---- Backend-driven learning persistence -----------------------------

@@ -112,6 +112,13 @@ class DashboardService
                 'message' => 'Open memorisation to start a new session.',
             ],
             'recommended_next' => null,
+            'daily_revision' => [
+                'due_items' => [],
+                'due_total' => 0,
+                'weak_items' => [],
+                'weak_total' => 0,
+                'recommended_practice' => null,
+            ],
             'ai_recite_stats' => $this->emptyAiReciteStats(),
             'journey' => $this->emptyJourney(),
             'snapshot' => [
@@ -216,6 +223,7 @@ class DashboardService
             $main
         );
         $recommendedNext = $this->buildRecommendedNext($openRecommendation);
+        $dailyRevision = $this->buildDailyRevision($user, $recommendedNext);
         $journey = $this->buildJourney($user, $main, $continue, $retention, $weaknesses);
         $aiReciteStats = $this->sessionAnalysis->dashboardStats($user);
 
@@ -233,6 +241,7 @@ class DashboardService
             ],
             'continue' => $continue,
             'recommended_next' => $recommendedNext,
+            'daily_revision' => $dailyRevision,
             'ai_recite_stats' => $aiReciteStats,
             'journey' => $journey,
             'snapshot' => $snapshot,
@@ -638,6 +647,94 @@ class DashboardService
                 ? ($recommendation->payload['decision'] ?? null)
                 : null,
             'maturity_tier' => data_get($recommendation->payload, 'personalisation.maturity.tier'),
+            'recommendation_type' => $recommendation->recommendation_type,
+            'reason_code' => $recommendation->reason_code,
+        ];
+    }
+
+    /**
+     * The dashboard's actionable revision queue. Scheduled returns stay separate
+     * from weak ayahs so a learner can see both what is due and what needs care.
+     *
+     * @param  array<string, mixed>|null  $recommendedNext
+     * @return array<string, mixed>
+     */
+    private function buildDailyRevision(User $user, ?array $recommendedNext): array
+    {
+        $dueQuery = MemorisationProgress::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['memorised', 'mastered', 'reviewing'])
+            ->whereNotNull('metadata->next_review')
+            ->where('metadata->next_review', '<=', now()->endOfDay()->toIso8601String());
+
+        $dueTotal = (clone $dueQuery)->count();
+        $due = $dueQuery
+            ->orderBy('metadata->next_review')
+            ->limit(120)
+            ->get(['surah_number', 'ayah_number', 'metadata'])
+            ->map(function (MemorisationProgress $progress): ?array {
+                $metadata = is_array($progress->metadata) ? $progress->metadata : [];
+                $dueAt = $metadata['next_review'] ?? null;
+                $surah = (int) $progress->surah_number;
+                $ayah = (int) $progress->ayah_number;
+                if ($surah <= 0 || $ayah <= 0 || ! $dueAt) {
+                    return null;
+                }
+
+                try {
+                    $dueAt = Carbon::parse($dueAt)->toIso8601String();
+                } catch (\Throwable) {
+                    return null;
+                }
+
+                return [
+                    'key' => $surah.':'.$ayah,
+                    'surah_number' => $surah,
+                    'surah_name' => QuranMetadata::name($surah),
+                    'ayah_number' => $ayah,
+                    'due_at' => $dueAt,
+                    'href' => $this->murajaahReviewHref($surah, $ayah),
+                ];
+            })
+            ->filter()
+            ->unique('key')
+            ->values();
+
+        $weakItems = MemorisationWeakSpot::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', [
+                MemorisationWeakSpot::STATUS_ACTIVE,
+                MemorisationWeakSpot::STATUS_IMPROVING,
+            ])
+            ->orderByRaw("case severity when 'high' then 3 when 'medium' then 2 else 1 end desc")
+            ->orderByDesc('last_identified_at')
+            ->limit(120)
+            ->get()
+            ->map(function (MemorisationWeakSpot $spot): array {
+                $surah = (int) $spot->surah_number;
+                $ayah = (int) $spot->ayah_number;
+                $metadata = is_array($spot->metadata) ? $spot->metadata : [];
+
+                return [
+                    'key' => $surah.':'.$ayah,
+                    'surah_number' => $surah,
+                    'surah_name' => QuranMetadata::name($surah),
+                    'ayah_number' => $ayah,
+                    'phrase' => trim((string) ($metadata['text'] ?? '')) ?: null,
+                    'href' => $this->murajaahReviewHref($surah, $ayah),
+                ];
+            })
+            ->unique('key')
+            ->values();
+
+        return [
+            'due_items' => $due->take(3)->all(),
+            'due_all_items' => $due->all(),
+            'due_total' => $dueTotal,
+            'weak_items' => $weakItems->take(3)->all(),
+            'weak_all_items' => $weakItems->all(),
+            'weak_total' => $weakItems->count(),
+            'recommended_practice' => $recommendedNext,
         ];
     }
 

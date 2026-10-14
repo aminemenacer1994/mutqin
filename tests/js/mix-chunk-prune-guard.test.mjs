@@ -23,6 +23,11 @@ assert.doesNotMatch(
   /const alias = `\$\{family\}\.js`/,
   'production prune must not synthesize stable aliases from hashed chunks',
 )
+assert.match(
+  mixSource,
+  /if \(!mix\.inProduction\(\)\) return;/,
+  'production-only cleanup must not delete development lazy chunks',
+)
 
 // Mirror the Mix helper: stable + hashed references must both be collected.
 function collectReferencedChunkFiles(source) {
@@ -64,6 +69,23 @@ function collectReferencedChunkFiles(source) {
 }
 
 const keep = collectReferencedChunkFiles(appJs)
+const manifest = JSON.parse(readFileSync(join(root, 'public/mix-manifest.json'), 'utf8'))
+
+// Development runtimes intentionally request stable names. Their complete
+// chunk set must survive the post-build production cleanup hook.
+if (existsSync(join(root, 'public/js/memorisation.js'))) {
+  for (const family of ['ayah-notes-modal', 'ai-audio-consent', 'mic-permission-help', 'madani-page']) {
+    assert.equal(
+      existsSync(join(root, 'public/js', `${family}.js`)),
+      true,
+      `development runtime chunk ${family}.js must exist on disk`,
+    )
+  }
+  assert.match(manifest['/js/app.js'], /^\/js\/app\.js\?id=/)
+  console.log('mix-chunk-prune-guard: ok (development)')
+  process.exit(0)
+}
+
 assert.ok(
   [...keep].some((name) => /^homepage\.[a-f0-9]{8}\.js$/i.test(name)),
   'app.js must keep the current hashed homepage chunk',
@@ -73,7 +95,6 @@ assert.ok(
   'app.js must keep the current hashed memorisation chunk',
 )
 
-const manifest = JSON.parse(readFileSync(join(root, 'public/mix-manifest.json'), 'utf8'))
 for (const family of ['homepage', 'memorisation', 'admin-dashboard', 'admin-feedback']) {
   assert.equal(
     manifest[`/js/${family}.js`],

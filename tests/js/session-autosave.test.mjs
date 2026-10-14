@@ -234,6 +234,16 @@ const learningSource = readFileSync(join(root, 'resources/js/scripts/api/learnin
   assert.match(memorisationSource, /pushSessionCheckpoint/)
   assert.match(memorisationSource, /cancelSessionAutosave/)
   assert.match(memorisationSource, /postKeepalive\('\/api\/session\/pause'/)
+  assert.match(
+    memorisationSource,
+    /handleVisibilityAutosave\(event\) \{[\s\S]*pauseSessionAudioForBackground[\s\S]*flushSessionLifecycleForBackground/,
+    'backgrounding must pause media before writing the recovery snapshot'
+  )
+  assert.match(
+    memorisationSource,
+    /pauseSessionAudioForBackground\(\) \{[\s\S]*softPausePlayback[\s\S]*playbackAwaitingGesture = true/,
+    'foreground resume must require a new user gesture on mobile'
+  )
   assert.match(memorisationSource, /cancelSessionAutosave\(\{\s*bumpGeneration:\s*true\s*\}\)/)
   // Manual lifecycle actions cancel pending autosave.
   assert.match(memorisationSource, /pauseSessionFromPrimaryAction[\s\S]{0,200}cancelSessionAutosave/)

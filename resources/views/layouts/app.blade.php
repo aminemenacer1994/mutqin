@@ -13487,6 +13487,29 @@ body.session-analysis-modal-open {
     }
   }
 
+  /*
+   * Session pages are deliberately a single vertical stack, but they must
+   * retain a printed-page measure on a desktop. Earlier full-bleed rules are
+   * useful on phones and were also winning here through selector specificity.
+   */
+  @media (min-width: 1080px) {
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page > .qpc-madani-page,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-session-scroll__page > .qpc-madani-page {
+      width: min(100%, 40rem) !important;
+      max-width: min(100%, 40rem) !important;
+      margin-inline: auto !important;
+    }
+
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-session-scroll__page > .qpc-madani-page > .qpc-madani-page__ornament,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-session-scroll__page > .qpc-madani-page > .qpc-madani-page__ornament,
+    html body.memorisation-page .app .main.madani-qpc-mode-active .qpc-madani-session-scroll .qpc-madani-page__sheet,
+    html body.memorisation-page .app .qpc-madani-session-scroll .qpc-madani-page__sheet {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+
   /* Keep progress visible while the reading surface scrolls. */
   html body .app .workspace > .session-progress-rail,
   html body .app .main .workspace > .session-progress-rail {

@@ -228,6 +228,13 @@ const KEEP_CHUNK_GENERATIONS = 2;
 mix.then(() => {
     if (!fs.existsSync(manifestPath) || !fs.existsSync(jsDir)) return;
 
+    // Watch/dev builds use stable lazy-chunk names. Do not run the production
+    // generation/manifest cleanup against them: it only retains hashed files,
+    // so it can delete freshly emitted files such as ai-audio-consent.js while
+    // app.js still points at them. That leaves a seemingly successful Mix
+    // build serving ChunkLoadError 404s until every lazy feature is rebuilt.
+    if (!mix.inProduction()) return;
+
     let manifest;
     try {
         manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));

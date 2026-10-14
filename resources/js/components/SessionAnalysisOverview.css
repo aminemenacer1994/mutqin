@@ -768,6 +768,119 @@ html[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov_
   }
 }
 
+/* Keep this last: earlier legacy player skins must not reintroduce oversized controls. */
+.workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  gap: 0.6rem !important;
+  padding: 0.58rem 0.65rem !important;
+  border-radius: 0.9rem !important;
+  box-shadow: none !important;
+}
+
+.workspace-recite-result .sa-ov__player-toggle,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+  width: 2.65rem !important;
+  height: 2.65rem !important;
+  border-radius: 0.78rem !important;
+  box-shadow: none !important;
+}
+
+.workspace-recite-result .sa-ov__player-body,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-body { gap: 0.16rem !important; }
+
+.workspace-recite-result .sa-ov__player-seek,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek { height: 1rem !important; }
+
+.workspace-recite-result .sa-ov__player-speed,
+.workspace-recite-result .sa-ov__player-restart,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-speed,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  min-height: 1.65rem !important;
+  border-radius: 0.55rem !important;
+}
+
+[data-theme="dark"] .workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  --player-surface: #201d1a;
+  --player-line: rgba(247, 235, 219, 0.14);
+  --player-ink: #f4ebe1;
+  --player-muted: #c4b7aa;
+  --player-accent: #78d0a0;
+  background: #201d1a !important;
+  border-color: rgba(247, 235, 219, 0.14) !important;
+}
+
+[data-theme="dark"] .workspace-recite-result .sa-ov__player-speed,
+[data-theme="dark"] .workspace-recite-result .sa-ov__player-restart,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-speed,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  background: #2c2824 !important;
+  border-color: rgba(247, 235, 219, 0.14) !important;
+  color: #f4ebe1 !important;
+}
+
+/* Recording controls: one compact, predictable control surface in every theme. */
+.workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  gap: 0.6rem !important;
+  padding: 0.58rem 0.65rem !important;
+  border-radius: 0.9rem !important;
+  box-shadow: none !important;
+}
+
+.workspace-recite-result .sa-ov__player-toggle,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+  width: 2.65rem !important;
+  height: 2.65rem !important;
+  border-radius: 0.78rem !important;
+  box-shadow: none !important;
+}
+
+.workspace-recite-result .sa-ov__player-body,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-body {
+  gap: 0.16rem !important;
+}
+
+.workspace-recite-result .sa-ov__player-seek,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek {
+  height: 1rem !important;
+}
+
+.workspace-recite-result .sa-ov__player-speed,
+.workspace-recite-result .sa-ov__player-restart,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-speed,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  min-height: 1.65rem !important;
+  border-radius: 0.55rem !important;
+}
+
+[data-theme="dark"] .workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  --player-surface: #201d1a;
+  --player-line: rgba(247, 235, 219, 0.14);
+  --player-ink: #f4ebe1;
+  --player-muted: #c4b7aa;
+  --player-accent: #78d0a0;
+  background: #201d1a !important;
+  border-color: rgba(247, 235, 219, 0.14) !important;
+}
+
+[data-theme="dark"] .workspace-recite-result .sa-ov__player-speed,
+[data-theme="dark"] .workspace-recite-result .sa-ov__player-restart,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-speed,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  background: #2c2824 !important;
+  border-color: rgba(247, 235, 219, 0.14) !important;
+  color: #f4ebe1 !important;
+}
+
+@media (max-width: 430px) {
+  .workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+  #sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+    padding: 0.52rem 0.58rem !important;
+  }
+}
+
 /* Shared player skin used by the saved-session overview and the result modal. */
 .workspace-recite-result .sa-ov__player,
 .workspace-recite-result .sa-ov__player--bento {
@@ -1520,4 +1633,55 @@ html[data-theme="sepia"] #sa-session-overview.session-analysis-modal-root {
   #sa-session-overview.session-analysis-modal-root .sa-ui-body {
     padding-inline: 0.8rem !important;
   }
+}
+
+/* Final player cascade: compact controls and an opaque, high-contrast dark skin. */
+.workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  gap: 0.6rem !important;
+  padding: 0.58rem 0.65rem !important;
+  border-radius: 0.9rem !important;
+  box-shadow: none !important;
+}
+
+.workspace-recite-result .sa-ov__player-toggle,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-toggle {
+  width: 2.65rem !important;
+  height: 2.65rem !important;
+  border-radius: 0.78rem !important;
+  box-shadow: none !important;
+}
+
+.workspace-recite-result .sa-ov__player-body,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-body { gap: 0.16rem !important; }
+
+.workspace-recite-result .sa-ov__player-seek,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-seek { height: 1rem !important; }
+
+.workspace-recite-result .sa-ov__player-speed,
+.workspace-recite-result .sa-ov__player-restart,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-speed,
+#sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  min-height: 1.65rem !important;
+  border-radius: 0.55rem !important;
+}
+
+[data-theme="dark"] .workspace-recite-result .sa-ov__player.sa-ov__player--bento,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player.sa-ov__player--bento {
+  --player-surface: #201d1a;
+  --player-line: rgba(247, 235, 219, 0.14);
+  --player-ink: #f4ebe1;
+  --player-muted: #c4b7aa;
+  --player-accent: #78d0a0;
+  background: #201d1a !important;
+  border-color: rgba(247, 235, 219, 0.14) !important;
+}
+
+[data-theme="dark"] .workspace-recite-result .sa-ov__player-speed,
+[data-theme="dark"] .workspace-recite-result .sa-ov__player-restart,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-speed,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__player-restart {
+  background: #2c2824 !important;
+  border-color: rgba(247, 235, 219, 0.14) !important;
+  color: #f4ebe1 !important;
 }

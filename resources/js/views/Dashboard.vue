@@ -79,6 +79,73 @@
           </div>
         </header>
 
+        <section
+          v-if="showDailyRevision"
+          class="dash-daily-revision dash-reveal"
+          aria-labelledby="dash-daily-revision-heading"
+          style="--dash-delay: 10ms"
+        >
+          <div class="dash-daily-revision__head">
+            <div>
+              <span class="dash-kicker">{{ t('dashboard.daily_revision_kicker') }}</span>
+              <h2 id="dash-daily-revision-heading">{{ t('dashboard.daily_revision_title') }}</h2>
+              <p>{{ t('dashboard.daily_revision_hint') }}</p>
+            </div>
+            <span class="dash-daily-revision__mark" aria-hidden="true"><i class="bi bi-arrow-repeat"></i></span>
+          </div>
+
+          <div class="dash-daily-revision__grid">
+            <article class="dash-daily-revision__card dash-daily-revision__card--recommended">
+              <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_recommended') }}</span>
+              <template v-if="dailyRecommendedPractice">
+                <strong>{{ dailyRecommendedPractice.surah_name }} · {{ dailyRecommendedRange }}</strong>
+                <p>{{ t('dashboard.daily_revision_practice_hint') }}</p>
+                <a class="dash-btn dash-btn--primary dash-btn--sm" :href="dailyRecommendedPractice.href">
+                  {{ t('dashboard.daily_revision_practise') }}
+                  <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
+                </a>
+              </template>
+              <p v-else class="dash-daily-revision__empty">{{ t('dashboard.daily_revision_recommended_empty') }}</p>
+            </article>
+
+            <article class="dash-daily-revision__card">
+              <div class="dash-daily-revision__card-head">
+                <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_due') }}</span>
+                <button
+                  v-if="dailyDueItems.length"
+                  type="button"
+                  class="dash-daily-revision__all"
+                  @click="openDrawer('due')"
+                >{{ t('dashboard.view_all') }}</button>
+              </div>
+              <ul v-if="dailyDueItems.length" class="dash-daily-revision__list">
+                <li v-for="item in dailyDueItems" :key="item.key">
+                  <a :href="item.href || memorisationUrl">{{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</a>
+                </li>
+              </ul>
+              <p v-else class="dash-daily-revision__empty">{{ t('dashboard.daily_revision_due_empty') }}</p>
+            </article>
+
+            <article class="dash-daily-revision__card">
+              <div class="dash-daily-revision__card-head">
+                <span class="dash-daily-revision__eyebrow">{{ t('dashboard.daily_revision_weak') }}</span>
+                <button
+                  v-if="murajaahTotal > dailyWeakItems.length"
+                  type="button"
+                  class="dash-daily-revision__all"
+                  @click="openDrawer('murajaah')"
+                >{{ t('dashboard.view_all') }}</button>
+              </div>
+              <ul v-if="dailyWeakItems.length" class="dash-daily-revision__list">
+                <li v-for="item in dailyWeakItems" :key="item.key">
+                  <a :href="reviewNowHref(item)">{{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</a>
+                </li>
+              </ul>
+              <p v-else class="dash-daily-revision__empty">{{ t('dashboard.daily_revision_weak_empty') }}</p>
+            </article>
+          </div>
+        </section>
+
         <div class="user-dashboard__content">
         <div class="user-dashboard__primary">
         <section class="dash-section dash-section--flat dash-reveal" aria-labelledby="dash-data-heading" style="--dash-delay: 10ms">
@@ -160,7 +227,7 @@
 
         <div class="user-dashboard__review-row">
         <section
-          v-if="murajaahPreview.length || showMurajaahEmpty"
+          v-if="(murajaahPreview.length || showMurajaahEmpty) && !showDailyRevision"
           class="dash-section dash-section--flat dash-reveal dash-section--murajaah"
           aria-labelledby="dash-murajaah-heading"
           style="--dash-delay: 20ms"
@@ -674,15 +741,15 @@
               </li>
             </ul>
 
-            <ul v-else-if="drawerMode === 'murajaah'" class="dash-drawer__list dash-drawer__list--murajaah">
-              <li v-for="(item, index) in visibleDrawerItems" :key="`murajaah-${item.key}`">
+            <ul v-else-if="drawerMode === 'murajaah' || drawerMode === 'due'" class="dash-drawer__list dash-drawer__list--murajaah">
+              <li v-for="(item, index) in visibleDrawerItems" :key="`${drawerMode}-${item.key}`">
                 <div
                   class="dash-drawer__row dash-drawer__row--murajaah dash-reveal"
                   :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
                 >
                   <div class="dash-drawer__murajaah-copy">
                     <div class="dash-drawer__murajaah-top">
-                      <span class="dash-drawer__type">{{ t('dashboard.strengthen_title') }}</span>
+                      <span class="dash-drawer__type">{{ drawerMode === 'due' ? t('dashboard.daily_revision_due') : t('dashboard.daily_revision_weak') }}</span>
                       <span
                         v-if="item.strength"
                         class="dash-strength dash-strength--compact"
@@ -816,6 +883,7 @@ const DRAWER_TITLES = {
   notes: 'drawer_notes_title',
   hifz: 'drawer_hifz_title',
   murajaah: 'drawer_murajaah_title',
+  due: 'drawer_due_title',
 }
 
 const DRAWER_SUBTITLES = {
@@ -825,6 +893,7 @@ const DRAWER_SUBTITLES = {
   notes: 'drawer_notes_subtitle',
   hifz: 'drawer_hifz_subtitle',
   murajaah: 'drawer_murajaah_subtitle',
+  due: 'drawer_due_subtitle',
 }
 
 const DRAWER_EMPTY = {
@@ -834,6 +903,7 @@ const DRAWER_EMPTY = {
   notes: 'drawer_notes_empty',
   hifz: 'drawer_hifz_empty',
   murajaah: 'drawer_murajaah_empty',
+  due: 'drawer_due_empty',
 }
 
 const DRAWER_ICONS = {
@@ -843,6 +913,7 @@ const DRAWER_ICONS = {
   notes: 'bi bi-journal-text',
   hifz: 'bi bi-journal-bookmark',
   murajaah: 'bi bi-arrow-repeat',
+  due: 'bi bi-calendar-check',
 }
 
 export default {
@@ -1189,6 +1260,49 @@ export default {
       const next = this.data?.recommended_next
       if (!next || !next.surah_number || !next.ayah_start || !next.href) return null
       return next
+    },
+    dailyRevision() {
+      const revision = this.data?.daily_revision
+      return revision && typeof revision === 'object' ? revision : {}
+    },
+    dailyDueItems() {
+      return Array.isArray(this.dailyRevision.due_items) ? this.dailyRevision.due_items : []
+    },
+    dailyDueAllItems() {
+      const items = this.dailyRevision.due_all_items
+      return Array.isArray(items) ? items : this.dailyDueItems
+    },
+    dailyDueTotal() {
+      const total = Number(this.dailyRevision.due_total ?? 0)
+      return total > 0 ? total : this.dailyDueItems.length
+    },
+    dailyWeakItems() {
+      const items = this.dailyRevision.weak_items
+      return Array.isArray(items) ? items : this.murajaahPreview
+    },
+    dailyWeakAllItems() {
+      const items = this.dailyRevision.weak_all_items
+      return Array.isArray(items) ? items : this.dailyWeakItems
+    },
+    dailyRecommendedPractice() {
+      const item = this.dailyRevision.recommended_practice || this.recommendedNext
+      return item?.surah_name && item?.ayah_start && item?.href ? item : null
+    },
+    dailyRecommendedRange() {
+      const item = this.dailyRecommendedPractice
+      if (!item) return ''
+      const start = Number(item.ayah_start || 0)
+      const end = Number(item.ayah_end || start)
+      return start === end
+        ? this.t('dashboard.ayah_n', { n: start })
+        : this.t('dashboard.ayah_range', { start, end })
+    },
+    showDailyRevision() {
+      return this.dailyDueItems.length > 0
+        || this.dailyWeakItems.length > 0
+        || !!this.dailyRecommendedPractice
+        || this.journeyHasStarted
+        || this.hasMemorisationHistory
     },
     snapshotCards() {
       const snap = this.data?.snapshot || {}
@@ -2043,7 +2157,14 @@ export default {
       this.syncDrawerBodyLock(true)
 
       if (mode === 'murajaah') {
-        this.drawerItems = this.murajaahAllItems
+        this.drawerItems = this.dailyWeakAllItems
+        this.drawerLoading = false
+        this.drawerError = false
+        return
+      }
+
+      if (mode === 'due') {
+        this.drawerItems = this.dailyDueAllItems
         this.drawerLoading = false
         this.drawerError = false
         return

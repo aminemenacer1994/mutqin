@@ -693,7 +693,19 @@
                 <i class="bi bi-sliders" aria-hidden="true"></i>
               </div>
             </div>
-            <div v-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap">
+            <div v-if="dashboardEntryReturnHref" class="top-card-dashboard-wrap">
+              <button
+                type="button"
+                class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
+                data-testid="workspace-return-dashboard"
+                :title="t('memorisation.open_dashboard')"
+                :aria-label="t('memorisation.open_dashboard')"
+                @click="returnToDashboard"
+              >
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div v-else-if="showTopCardDashboardIcon" class="top-card-dashboard-wrap">
               <div
                 class="action-btn action-btn-secondary top-card-action-trigger top-card-dashboard-trigger top-card-icon-control"
                 role="button"

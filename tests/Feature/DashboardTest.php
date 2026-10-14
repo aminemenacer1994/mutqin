@@ -977,6 +977,60 @@ class DashboardTest extends TestCase
         $this->assertSame('112:1', $response->json('data.weaknesses.items.0.key'));
     }
 
+    public function test_dashboard_exposes_daily_revision_queue_with_due_ayahs_and_recommended_practice(): void
+    {
+        $user = User::factory()->create();
+
+        MemorisationProgress::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_number' => 2,
+            'status' => 'memorised',
+            'mastery_level' => 80,
+            'metadata' => ['next_review' => now()->subDay()->toIso8601String()],
+        ]);
+
+        $recommendation = SessionRecommendation::create([
+            'user_id' => $user->id,
+            'surah_number' => 112,
+            'ayah_start' => 1,
+            'ayah_end' => 4,
+            'recommendation_type' => 'revision',
+            'reason_code' => 'review_overdue',
+            'status' => RecommendationStatus::Generated,
+            'recommended_technique' => 'talqin',
+        ]);
+        MemorisationWeakSpot::create([
+            'user_id' => $user->id,
+            'spot_type' => MemorisationWeakSpot::TYPE_AYAH,
+            'surah_number' => 112,
+            'ayah_number' => 3,
+            'spot_key' => 'daily-active-112:3',
+            'severity' => 'high',
+            'status' => MemorisationWeakSpot::STATUS_ACTIVE,
+        ]);
+        MemorisationWeakSpot::create([
+            'user_id' => $user->id,
+            'spot_type' => MemorisationWeakSpot::TYPE_AYAH,
+            'surah_number' => 112,
+            'ayah_number' => 4,
+            'spot_key' => 'daily-resolved-112:4',
+            'severity' => 'high',
+            'status' => MemorisationWeakSpot::STATUS_RESOLVED,
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.daily_revision.due_total', 1)
+            ->assertJsonPath('data.daily_revision.due_items.0.key', '112:2')
+            ->assertJsonPath('data.daily_revision.weak_total', 1)
+            ->assertJsonPath('data.daily_revision.weak_items.0.key', '112:3')
+            ->assertJsonPath('data.daily_revision.recommended_practice.recommendation_id', $recommendation->id)
+            ->assertJsonPath('data.daily_revision.recommended_practice.recommendation_type', 'revision')
+            ->assertJsonPath('data.daily_revision.recommended_practice.reason_code', 'review_overdue');
+    }
+
     public function test_murajaah_includes_weak_ayahs_from_ai_assessment_without_weak_words(): void
     {
         $user = User::factory()->create();

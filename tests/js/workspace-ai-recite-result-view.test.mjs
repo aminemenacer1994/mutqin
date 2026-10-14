@@ -46,6 +46,40 @@ assert.equal(view.showDetailsToggle, true, 'details toggle is available')
 assert.ok(view.colourSegments.length >= 1, 'colour meter segments exist')
 assert.equal(view.audioUrl, 'blob:audio', 'audio url is preserved')
 
+const savedCanonical = buildWorkspaceAiReciteResultView({
+  // This intentionally disagrees with the final response, as live alignment can
+  // be provisional while the server finalises Quran-aware alignment.
+  result: {
+    wordStatuses: [{ text: 'stale', status: 'correct', ayahNumber: 1 }],
+    accuracyScore: 100,
+    colorCounts: { green: 1, amber: 0, red: 0, black: 0, gray: 0 },
+  },
+  submitData: {
+    assessment: { accuracy: 50, word_results: [{ text: 'ignored assessment copy', status: 'correct' }] },
+    ai_attempt: {
+      accuracy_percent: 50,
+      duration_ms: 12000,
+      color_counts: { green: 1, amber: 0, red: 1, black: 0, gray: 0 },
+      word_statuses: [
+        { text: 'ثابت', status: 'correct', ayah_number: 1 },
+        { text: 'خطأ', status: 'wrong', ayah_number: 1 },
+      ],
+    },
+  },
+  surahName: 'Al-Fatiha',
+  rangeStart: 1,
+  rangeEnd: 1,
+}, t)
+
+assert.equal(savedCanonical.reviewDetails.accuracy, 50, 'saved accuracy wins over live accuracy')
+assert.equal(savedCanonical.reviewDetails.matchedWords, 1, 'detected words use the saved attempt')
+assert.equal(savedCanonical.reviewDetails.totalWords, 2, 'saved error words share the detected-word denominator')
+assert.equal(
+  savedCanonical.reviewDetails.detailsMetrics.find((metric) => metric.key === 'missed')?.value,
+  '1',
+  'saved error count wins over live error count',
+)
+
 const omissionOnly = buildWorkspaceAiReciteResultView({
   result: {
     wordStatuses: [
