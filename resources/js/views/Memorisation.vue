@@ -3905,6 +3905,14 @@
                 {{ postSessionDisplayLead }}
               </p>
             </div>
+            <button
+              type="button"
+              class="post-session-simple__close"
+              :aria-label="t('common.close') || 'Close results'"
+              @click="closePostSessionRecommendationModal"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
           </header>
 
           <div class="post-session-simple__body">

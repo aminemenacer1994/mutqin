@@ -86,6 +86,10 @@ import {
   resolveAudioWordIndex as resolveMadaniAudioWordIndexHelper
 } from '../scripts/mushaf/madaniWordSync'
 import {
+  audioSourceMatchesWordTrack,
+  getAuthoritativeAyahWordTrack,
+} from '../scripts/audio/ayahWordTrack.js'
+import {
   loadQcfPageFont,
   loadSurahNamesFont,
   prefetchQcfPageFonts,
@@ -1100,7 +1104,6 @@ export default {
       // Arabic text word highlighting state
       currentWordIndex: -1,
       currentHighlightedVerseKey: null,
-      wordTimestampsMap: new Map(),
       wordHighlightHandler: null,
       currentVerseWords: [],
       wordHighlightFrame: null,
@@ -1133,6 +1136,8 @@ export default {
       playRequestLocked: false,
       /** Bumped on every playVerse start so stale awaits cannot clear locks or call play(). */
       playGeneration: 0,
+      /** Exact timing map paired with the source selected by the current play transaction. */
+      activeWordTimingTrack: null,
       /** Single owner for the main session <audio> element. */
       sessionAudioPlayer: null,
       audioBuffering: false,
@@ -15759,6 +15764,7 @@ export default {
       this.wordByWordAudioEnabled = true
     },
     syncWordHighlightingForReciter() {
+      this.activeWordTimingTrack = null
       this.wordByWordAudioEnabled = true
     },
     applyRecommendedSetup() {
@@ -43366,40 +43372,50 @@ export default {
       return html
     },
 
-    async getWordTimings(verse, actualDuration = null) {
+    async getAuthoritativeWordTrack(verse, expectedWordCount) {
+      return getAuthoritativeAyahWordTrack(this.reciterId, verse?.key, expectedWordCount)
+    },
+
+    async getWordTimings(verse, options = {}) {
       if (!verse || !verse.key) {
         console.warn('getWordTimings: no verse')
         return []
       }
 
       let sourceWords = listSpokenAudioWords(verse).map((item) => item.text)
-      if (!sourceWords.length) {
-        sourceWords = tokenizeArabicText(verse.arabic || verse.arabic_uthmani || '')
-      }
+      const plainArabicWords = tokenizeArabicText(verse.arabic || verse.arabic_uthmani || '')
+      if (!sourceWords.length) sourceWords = plainArabicWords
 
       if (!sourceWords.length) {
         console.warn('getWordTimings: no words for verse', verse.key)
         return []
       }
 
-      let safeDuration = 0
-      if (Number.isFinite(Number(actualDuration)) && Number(actualDuration) > 0) {
-        safeDuration = Number(actualDuration)
-      } else if (verse.duration && Number(verse.duration) > 0) {
-        safeDuration = Number(verse.duration)
-      } else {
-        safeDuration = this.estimateVerseDuration(verse)
+      const suppliedTrack = options.track || this.activeWordTimingTrack
+      const suppliedTrackIsCurrent = suppliedTrack
+        && String(suppliedTrack.verseKey || '') === String(verse.key)
+        && String(suppliedTrack.reciterId || '') === String(this.reciterId || '')
+        && Array.isArray(suppliedTrack.timings)
+        && suppliedTrack.timings.length === sourceWords.length
+      if (suppliedTrackIsCurrent) return suppliedTrack.timings
+
+      const authoritativeTrack = await this.getAuthoritativeWordTrack(verse, sourceWords.length)
+      const mediaSource = this.audioElement?.currentSrc || this.audioElement?.src || ''
+      if (audioSourceMatchesWordTrack(mediaSource, authoritativeTrack)) {
+        return authoritativeTrack.timings
       }
 
-      const cacheKey = `${verse.key}_${this.reciterId}_${Math.round(safeDuration * 10)}_${sourceWords.length}`
-
-      if (this.wordTimestampsMap.has(cacheKey)) {
-        return this.wordTimestampsMap.get(cacheKey)
-      }
-
-      const timestamps = buildEstimatedWordTimings(sourceWords, safeDuration)
-      this.wordTimestampsMap.set(cacheKey, timestamps)
-      return timestamps
+      const mediaDuration = Number(options.duration ?? this.audioElement?.duration ?? verse.duration)
+      if (!Number.isFinite(mediaDuration) || mediaDuration <= 0) return []
+      const fallbackWords = plainArabicWords.length === sourceWords.length
+        ? plainArabicWords
+        : sourceWords
+      return buildEstimatedWordTimings(fallbackWords, mediaDuration, {
+        // Conservative fallback for reciters without published word segments.
+        // It keeps the feature present but moves interior boundaries later so
+        // the visual does not race ahead of natural pauses and elongations.
+        boundaryCurve: 0.82,
+      })
     },
 
     calculateWordTimings(verse, audioDuration = null) {
@@ -43606,7 +43622,7 @@ export default {
     },
 
     async ensureWordHighlightTrack(verse, options = {}) {
-      const { force = false } = options
+      const { force = false, track = null } = options
       if (!verse?.key || !this.wordByWordAudioEnabled) return []
       if (!force && this.currentHighlightedVerseKey === verse.key && this.wordHighlightTimestamps?.length) {
         return this.wordHighlightTimestamps
@@ -43619,8 +43635,10 @@ export default {
       this.currentPhraseIndex = -1
 
       try {
-        const duration = Number(this.audioElement?.duration)
-        const timestamps = await this.getWordTimings(verse, Number.isFinite(duration) && duration > 0 ? duration : null)
+        const timestamps = await this.getWordTimings(verse, {
+          track,
+          duration: Number(this.audioElement?.duration),
+        })
         if (requestId !== this.wordHighlightRequestId) return []
 
         this.wordHighlightTimestamps = Array.isArray(timestamps) ? timestamps : []
@@ -43931,11 +43949,9 @@ export default {
         if (!audio) return
         this.syncAudioUiState(Number(audio.currentTime || 0), Number(audio.duration || 0))
 
-        // The first highlighting pass can run while the browser is still
-        // discovering the media duration. Its duration estimate is only a
-        // temporary fallback; retaining it makes every boundary drift further
-        // from the spoken word as the ayah plays. Rebuild from this track's
-        // authoritative duration as soon as metadata is available.
+        // A source may change after an earlier timing request began. Once the
+        // browser identifies the loaded file, rebuild only against the timing
+        // map paired with that file.
         const verse = this.activeVerseRef
         const duration = Number(audio.duration)
         if (!verse?.key || !this.wordByWordAudioEnabled || !Number.isFinite(duration) || duration <= 0) return
@@ -44061,7 +44077,20 @@ export default {
         return
       }
 
-      const sourceCandidates = this.listAyahAudioCandidates(verse)
+      let timingWords = listSpokenAudioWords(verse).map((item) => item.text)
+      if (!timingWords.length) {
+        timingWords = tokenizeArabicText(verse.arabic || verse.arabic_uthmani || '')
+      }
+      const authoritativeTrack = this.wordByWordAudioEnabled && timingWords.length
+        ? await this.getAuthoritativeWordTrack(verse, timingWords.length)
+        : null
+      // Timing segments only describe the exact Quran.com ayah file returned
+      // with them. Prefer that paired file; using the CDN fallback here would
+      // reintroduce the offset this track is intended to remove.
+      const sourceCandidates = [
+        authoritativeTrack?.audioUrl,
+        ...this.listAyahAudioCandidates(verse),
+      ].filter(Boolean)
       if (!sourceCandidates.length) {
         this.showBanner(this.t('toasts.audioNotAvailableForVerse', { number: verse.number }), 'info', 2000)
         this.playRequestLocked = false
@@ -44084,6 +44113,7 @@ export default {
       const playGeneration = this.beginPlaybackGeneration()
 
       // Stop current playback and highlighting
+      this.activeWordTimingTrack = null
       this.stopWordHighlighting()
       if (this.sessionAudioPlayer) {
         this.sessionAudioPlayer.pause({ bump: false })
@@ -44117,6 +44147,7 @@ export default {
       try {
         let sameAudioSource = false
         let attached = false
+        let attachedCandidate = ''
         let playError = null
         const player = this.sessionAudioPlayer
 
@@ -44151,6 +44182,7 @@ export default {
             if (playGeneration !== this.playGeneration) return
             await player.play({ generation: playGeneration, rewindIfEnded: !segment })
             attached = true
+            attachedCandidate = candidate
             playError = null
             break
           } catch (error) {
@@ -44161,6 +44193,12 @@ export default {
         }
         if (!attached) throw (playError || new Error('Audio load timeout'))
         if (playGeneration !== this.playGeneration) return
+
+        // Bind word timings to the candidate that actually survived loading.
+        // This avoids metadata/load events guessing which recording won.
+        this.activeWordTimingTrack = audioSourceMatchesWordTrack(attachedCandidate, authoritativeTrack)
+          ? authoritativeTrack
+          : null
 
         this.isPlaying = true
         this.playerVisible = true
@@ -44173,7 +44211,10 @@ export default {
         this.addActivityEvent({ ts: Date.now(), type: 'play', verseKey: verse.key })
         this.recomputeAnalytics()
         if (this.wordByWordAudioEnabled) {
-          this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
+          this.ensureWordHighlightTrack(verse, {
+            force: true,
+            track: this.activeWordTimingTrack,
+          }).then(() => {
             this.syncWordHighlightFromAudio(verse)
             if (!this.audioElement?.paused) this.queueWordHighlightFrame(verse)
           }).catch(err => {
@@ -48260,7 +48301,14 @@ export default {
         return
       }
 
-      const verseAudioUrl = this.normalizeAudioUrl(targetVerse.audio)
+      let timingWords = listSpokenAudioWords(targetVerse).map((item) => item.text)
+      if (!timingWords.length) {
+        timingWords = tokenizeArabicText(targetVerse.arabic || targetVerse.arabic_uthmani || '')
+      }
+      const authoritativeTrack = timingWords.length
+        ? await this.getAuthoritativeWordTrack(targetVerse, timingWords.length)
+        : null
+      const verseAudioUrl = authoritativeTrack?.audioUrl || this.normalizeAudioUrl(targetVerse.audio)
       if (!verseAudioUrl || !this.audioElement) {
         this.showAudioUnavailableError('recording')
         return

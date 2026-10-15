@@ -69269,4 +69269,100 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
   line-height: 1.5 !important;
 }
 
+/* Finishing pass: a quiet, dependable result surface with clear exits and
+   touch-safe actions. The visual treatment is deliberately restrained so the
+   learner's next action remains more prominent than the interface itself. */
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog {
+  isolation: isolate;
+  overflow: hidden !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__header {
+  position: relative;
+  padding-inline-end: 3.9rem !important;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ps-ui-panel) 94%, var(--ps-ui-bronze) 6%), var(--ps-ui-paper)) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__close {
+  position: absolute !important;
+  inset-block-start: 0.82rem;
+  inset-inline-end: 0.82rem;
+  display: inline-grid !important;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin: 0 !important;
+  padding: 0;
+  border: 1px solid var(--ps-ui-line) !important;
+  border-radius: 999px;
+  background: var(--ps-ui-raised) !important;
+  color: var(--ps-ui-muted) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__close:hover {
+  border-color: var(--ps-ui-line-strong) !important;
+  background: var(--ps-ui-panel) !important;
+  color: var(--ps-ui-ink) !important;
+  transform: translateY(-1px);
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__close:focus-visible,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn:focus-visible,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus:focus-visible,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--ps-ui-bronze) 58%, transparent) !important;
+  outline-offset: 3px !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-chip-value,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dd {
+  font-variant-numeric: tabular-nums;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--ps-ui-bronze) 34%, var(--ps-ui-line)) !important;
+  transform: translateY(-1px);
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn:active:not(:disabled),
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+@media (max-width: 480px) {
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions,
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--2,
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn:first-child {
+    grid-column: auto !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__footer {
+    padding-top: 0.72rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__close,
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card,
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
+    transition: none !important;
+  }
+}
+
 

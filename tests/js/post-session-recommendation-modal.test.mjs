@@ -205,6 +205,8 @@ function t(key, params = {}) {
   ])
   assert.match(completionModal, /data-testid="post-session-actions"/)
   assert.match(completionModal, /postSessionCtaButtons/)
+  assert.match(completionModal, /class="post-session-simple__close"/)
+  assert.match(completionModal, /@click="closePostSessionRecommendationModal"/)
   assert.doesNotMatch(completionModal, /post-session-simple__text-close/)
   assert.doesNotMatch(completionModal, /data-testid="post-session-close"/)
   assert.match(js, /postSessionShowCloseTextAction\(\)\s*\{[\s\S]*?return false/)

@@ -77,8 +77,13 @@ export function getEditionsByLanguage(language, params = {}) {
   return alquranClient.get(`/edition/language/${language}`, { params })
 }
 
-export function getChapterRecitation(recitationId, normalizedSurah) {
-  return quranComClient.get(`/chapter_recitations/${recitationId}/${normalizedSurah}`)
+export function getChapterRecitation(recitationId, normalizedSurah, params = {}) {
+  return quranComClient.get(`/chapter_recitations/${recitationId}/${normalizedSurah}`, { params })
+}
+
+/** Quran.com ayah audio with optional word-level `[index, position, start, end]` segments. */
+export function getAyahRecitation(recitationId, ayahKey, params = {}) {
+  return quranComClient.get(`/recitations/${recitationId}/by_ayah/${ayahKey}`, { params })
 }
 
 export function getSurahEdition(surahNumber, edition) {

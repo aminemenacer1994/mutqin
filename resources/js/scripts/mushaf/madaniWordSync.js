@@ -53,7 +53,7 @@ export function listSpokenAudioWords(verse = {}) {
   return spoken
 }
 
-export function buildEstimatedWordTimings(sourceWords = [], duration = 0) {
+export function buildEstimatedWordTimings(sourceWords = [], duration = 0, options = {}) {
   const words = (Array.isArray(sourceWords) ? sourceWords : [])
     .map((word) => String(word || '').trim())
     .filter(Boolean)
@@ -69,23 +69,70 @@ export function buildEstimatedWordTimings(sourceWords = [], duration = 0) {
     return (charCount + 0.75) * leadInBoost * shortWordLift
   })
   const totalUnits = weightedUnits.reduce((sum, unit) => sum + unit, 0) || 1
-  const timestamps = []
-  let currentTime = 0
+  // With no recording-specific segments, a linear text estimate tends to
+  // advance too early because real reciters elongate and pause more near the
+  // beginning/middle of an ayah. A curve below 1 moves interior boundaries
+  // later while still ending exactly with the media file.
+  const boundaryCurve = Math.max(0.65, Math.min(1, Number(options.boundaryCurve) || 1))
+  const boundaries = [0]
+  let consumedUnits = 0
+  for (let index = 0; index < weightedUnits.length - 1; index += 1) {
+    consumedUnits += weightedUnits[index]
+    const progress = Math.max(0, Math.min(1, consumedUnits / totalUnits))
+    boundaries.push(usableDuration * Math.pow(progress, boundaryCurve))
+  }
+  boundaries.push(usableDuration)
 
-  weightedUnits.forEach((unit, index) => {
-    const wordDuration = index === weightedUnits.length - 1
-      ? Math.max(0, usableDuration - currentTime)
-      : usableDuration * (unit / totalUnits)
-
-    timestamps.push({
-      index,
-      start: currentTime,
-      end: currentTime + wordDuration,
-    })
-    currentTime += wordDuration
-  })
+  const timestamps = weightedUnits.map((_, index) => ({
+    index,
+    start: boundaries[index],
+    end: boundaries[index + 1],
+  }))
 
   return timestamps
+}
+
+/**
+ * Convert Quran.com's word segments into the local ayah-audio timeline.
+ * Ayah-file segments retain their native leading-silence offset; chapter-file
+ * segments can opt into rebasing at their first spoken word.
+ *
+ * Incomplete segment rows (the API may include marker-only `[position]` rows)
+ * deliberately return no timeline. Callers can then use their non-authoritative
+ * estimate instead of applying a shifted or incomplete highlight map.
+ */
+export function buildAuthoritativeWordTimings(segments = [], expectedWordCount = 0, options = {}) {
+  const expected = Math.max(0, Math.trunc(Number(expectedWordCount) || 0))
+  if (!expected || !Array.isArray(segments)) return []
+
+  const byIndex = new Map()
+  for (const segment of segments) {
+    if (!Array.isArray(segment) || segment.length < 3) continue
+    // Chapter tracks use [position, start, end]; ayah tracks include the
+    // zero-based segment index first: [index, position, start, end].
+    const offset = segment.length >= 4 ? 1 : 0
+    const position = Math.trunc(Number(segment[offset]))
+    const startMs = Number(segment[offset + 1])
+    const endMs = Number(segment[offset + 2])
+    const index = position - 1
+    if (
+      !Number.isFinite(position) || position < 1 || index >= expected
+      || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs
+      || byIndex.has(index)
+    ) continue
+    byIndex.set(index, { index, startMs, endMs })
+  }
+
+  if (byIndex.size !== expected) return []
+  const rows = Array.from(byIndex.values()).sort((a, b) => a.index - b.index)
+  if (rows.some((row, index) => row.index !== index)) return []
+
+  const originMs = options.relativeToFirstSegment === true ? rows[0].startMs : 0
+  return rows.map((row) => ({
+    index: row.index,
+    start: Math.max(0, (row.startMs - originMs) / 1000),
+    end: Math.max(0.01, (row.endMs - originMs) / 1000),
+  }))
 }
 
 export function buildAudioIndexMap(verses = []) {
