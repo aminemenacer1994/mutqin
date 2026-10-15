@@ -17,6 +17,7 @@
 /public/hot
 /public/mix-manifest.json
 /public/css/app.css
+/public/css/vue-styles.css
 /public/js/*
 !/public/js/.gitkeep
 /public/storage

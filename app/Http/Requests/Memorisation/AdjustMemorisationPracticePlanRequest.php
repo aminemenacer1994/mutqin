@@ -23,6 +23,10 @@ class AdjustMemorisationPracticePlanRequest extends FormRequest
             'audio_enabled' => ['sometimes', 'boolean'],
             'visual_assistance' => ['sometimes', 'string', 'in:low,medium,high'],
             'difficulty' => ['sometimes', 'string', 'in:light,focused,gentle'],
+            // The learner can switch between a short weak-area pass and the
+            // full range after seeing the result. Keep that choice with the
+            // plan rather than only in the browser's recommendation card.
+            'practice_scope' => ['sometimes', 'string', 'in:weak_areas,full_range'],
             'playback_speed' => ['sometimes', 'numeric', 'min:0.5', 'max:1.5'],
             'techniques' => ['sometimes', 'array', 'max:4'],
             'techniques.*' => ['string', 'in:anchor,talqin,chunking,blur,chaining,focus'],

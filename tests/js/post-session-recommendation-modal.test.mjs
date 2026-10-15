@@ -196,13 +196,12 @@ function t(key, params = {}) {
   assert.match(js, /persistedForLater|dashboard and session history/)
 }
 
-// CTA hierarchy: Repeat weak ayah / focused review primary → secondary alternate → Back to mushaf
+// CTA hierarchy: one focused action plus a safe route back to the mushaf.
 {
   const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
   assert.deepEqual(needsPractice.map((b) => [b.variant, b.action]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE],
-    ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN],
-    ['ghost', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE],
   ])
   assert.match(completionModal, /data-testid="post-session-actions"/)
   assert.match(completionModal, /postSessionCtaButtons/)
@@ -286,8 +285,7 @@ function t(key, params = {}) {
   })
   assert.equal(mostlySecureWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
   assert.equal(mostlySecureWeak[0].variant, 'primary')
-  assert.equal(mostlySecureWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
-  assert.equal(mostlySecureWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(mostlySecureWeak[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
   const strongRepeatLead = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, { isRepeat: true })[0]
   assert.equal(strongRepeatLead.labelKey, 'repeatThisSession')
 }

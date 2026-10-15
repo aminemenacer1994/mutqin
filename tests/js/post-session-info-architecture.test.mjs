@@ -159,7 +159,7 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
   assert.equal(rec.singleAyah, 'Ayah {ayah}')
   assert.match(rec.scopeFullRangeLabel, /full set/i)
   assert.match(rec.scopeWeakAreasLabel, /weak ayahs/i)
-  assert.match(rec.weakSpotsLead, /ayahs need more practice/i)
+  assert.match(rec.weakSpotsLead, /words to review/i)
   assert.doesNotMatch(rec.planDetail.focusVerse, /Verse/i)
   assert.doesNotMatch(rec.scopeFullRangeBenefit, /\bayat\b/i)
 }
@@ -167,6 +167,8 @@ const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>
 // Modal consumes structured IA instead of free-form inference for hierarchy
 {
   assert.match(js, /postSessionInfoArchitecture\(\)/)
+  assert.match(js, /postSessionNextPracticeRange\(\)/)
+  assert.match(js, /const persistedNext = this\.postSessionNextPracticeRange/)
   assert.match(js, /buildPostSessionInfoArchitecture/)
   assert.match(js, /formatRecommendationAyahLabel/)
   assert.match(completionModal, /postSessionInfoArchitecture\.mainFocus\.explanation/)

@@ -426,22 +426,7 @@ export function mapPostSessionCtas(state, options = {}) {
             POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
             options,
           ),
-        Number(options.weakAyahNumber) > 0
-          ? withPracticeRange(
-            reviseLabelKey,
-            'revise_focus_phrase',
-            'secondary',
-            POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
-            options,
-          )
-          : cta('check_again', 'secondary', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
-        // Tertiary escape hatch — ghost so the row stays primary / secondary / ghost.
-        cta(
-          'return_to_workspace',
-          'ghost',
-          LABEL_KEYS.returnToWorkspace,
-          POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE,
-        ),
+        returnToWorkspace,
       ]
 
     case POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED:
@@ -457,22 +442,13 @@ export function mapPostSessionCtas(state, options = {}) {
             POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
             options,
           ),
-        Number(options.weakAyahNumber) > 0
-          ? withPracticeRange(
-            reviseLabelKey,
-            'revise_focus_phrase',
-            'secondary',
-            POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
-            options,
-          )
-          : cta('continue_next_range', 'secondary', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
-            labelParams: nextSessionLabelParams,
-          }),
         returnToWorkspace,
       ]
 
     case POST_SESSION_CTA_STATES.MOSTLY_SECURE:
-      // Consolidate the weak ayah first (prominent), then allow progression.
+      // Consolidate the weak ayah first. The next learning range is visible in
+      // the plan, but is deliberately not a competing CTA until this pass is
+      // complete.
       return [
         Number(options.weakAyahNumber) > 0
           ? cta('review_weak_ayah', 'primary', reviewWeakLabelKey, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, {
@@ -485,17 +461,6 @@ export function mapPostSessionCtas(state, options = {}) {
             POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE,
             options,
           ),
-        Number(options.weakAyahNumber) > 0
-          ? withPracticeRange(
-            reviseLabelKey,
-            'revise_focus_phrase',
-            'secondary',
-            POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE,
-            options,
-          )
-          : cta('continue_next_range', 'secondary', nextSessionLabelKey, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, {
-            labelParams: nextSessionLabelParams,
-          }),
         returnToWorkspace,
       ]
 
@@ -503,12 +468,6 @@ export function mapPostSessionCtas(state, options = {}) {
       return [
         cta('check_again', 'primary', LABEL_KEYS.retest, POST_SESSION_CTA_ACTIONS.CHECK_AGAIN),
         returnToWorkspace,
-        cta(
-          'continue_practising',
-          'ghost',
-          LABEL_KEYS.repeatThisSession,
-          POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING,
-        ),
       ]
 
     case POST_SESSION_CTA_STATES.STRONG:
@@ -518,20 +477,9 @@ export function mapPostSessionCtas(state, options = {}) {
           labelParams: nextSessionLabelParams,
         }),
         returnToWorkspace,
-        // Alternate: stay on the current range (not the recommended advance).
-        withPracticeRange(
-          options.isRepeat ? LABEL_KEYS.reviewOnceMore : LABEL_KEYS.repeatThisSession,
-          'review_once_more',
-          'ghost',
-          POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE,
-          options,
-        ),
       ]
 
     case POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO: {
-      const reason = String(options.insufficientReason || '').toLowerCase().trim()
-      const showMic = options.showMicrophoneCheck === true
-        || reason === 'mic_permission'
       const buttons = [
         cta(
           'try_recording_again',
@@ -541,16 +489,6 @@ export function mapPostSessionCtas(state, options = {}) {
         ),
         returnToWorkspace,
       ]
-      if (showMic) {
-        buttons.push(cta(
-          'check_microphone',
-          'ghost',
-          LABEL_KEYS.checkMicrophone,
-          POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE,
-        ))
-      } else {
-        buttons.push(cta('close', 'ghost', LABEL_KEYS.close, POST_SESSION_CTA_ACTIONS.CLOSE))
-      }
       return buttons
     }
 

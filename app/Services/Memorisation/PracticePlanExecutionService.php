@@ -41,6 +41,14 @@ class PracticePlanExecutionService
         if (isset($adjustments['difficulty'])) {
             $plan->difficulty = (string) $adjustments['difficulty'];
         }
+        if (array_key_exists('practice_scope', $adjustments)) {
+            $scope = (string) $adjustments['practice_scope'];
+            $plan->practice_scope = $scope;
+            // The session launcher consumes config, while history consumes the
+            // model column. Persist both representations together.
+            $config['practice_scope'] = $scope;
+            $config['practice_weak_words_only'] = $scope === MemorisationPracticePlan::SCOPE_WEAK_AREAS;
+        }
 
         $repetitions = is_array($plan->repetitions) ? $plan->repetitions : ['target' => 3];
         if (isset($adjustments['repetitions'])) {

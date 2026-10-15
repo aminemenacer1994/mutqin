@@ -2024,6 +2024,16 @@
                       >{{ setupIndividualAyahSelectedCountLabel }}</small>
                     </template>
                   </div>
+                  <div class="field field-individual-ayah field-individual-ayah-unified field-delay-between-recitations setup-field-row">
+                    <div class="field-header individual-ayah-header">
+                      <label><i class="bi bi-hourglass-split" aria-hidden="true"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
+                    </div>
+                    <select v-model.number="delay" class="select individual-ayah-select">
+                      <option v-for="option in delayOptions" :key="`tool-delay-${option}`" :value="option">{{ option }}s
+                      </option>
+                    </select>
+                    <small class="field-hint individual-ayah-intro">{{ t('memorisation.pause_before_each_next_repetition_recitation_in_au') }}</small>
+                  </div>
                 </div>
               </div>
             </section>
@@ -2086,14 +2096,6 @@
                       <option v-for="option in recitationWindowOptions" :key="`recitation-window-${option}`" :value="option">{{ option }}s</option>
                     </select>
                     <small class="field-hint">{{ t('memorisation.recitation_window_hint') }}</small>
-                  </div>
-                  <div class="field setup-field-row">
-                    <label><i class="bi bi-hourglass-split"></i> {{ t('memorisation.delay_between_recitations_secs') }}</label>
-                    <select v-model.number="delay" class="select">
-                      <option v-for="option in delayOptions" :key="`tool-delay-${option}`" :value="option">{{ option }}s
-                      </option>
-                    </select>
-                    <small class="field-hint">{{ t('memorisation.pause_before_each_next_repetition_recitation_in_au') }}</small>
                   </div>
                 </div>
               </div>
@@ -3274,6 +3276,7 @@
     </div>
 
     <SessionAnalysisModal
+      v-if="showSessionAnalyticsModal"
       :open="showSessionAnalyticsModal"
       :loading="!analyticsModalLoaded"
       :error="analyticsModalError"
@@ -3465,6 +3468,7 @@
     </SessionAnalysisModal>
 
     <WorkspaceAiReciteResultModal
+      v-if="workspaceReciteAnalysisOpen"
       :theme="theme"
       :open="workspaceReciteAnalysisOpen"
       :loading="workspaceReciteAnalysisLoading"
@@ -4070,7 +4074,7 @@
                 </div>
 
                 <section
-                  v-if="postSessionInfoArchitecture.weakAreas.items.length"
+                  v-if="postSessionInfoArchitecture.weakAreas.items.length > postSessionFocusAyahRows.length"
                   class="post-session-simple__weak-spots post-session-simple__support-block"
                   data-testid="post-session-weak-spots"
                   data-tour="weak-areas"

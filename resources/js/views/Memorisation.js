@@ -504,8 +504,6 @@ import { updateAyahProgress } from '../scripts/engine/spaced_repetition_memory'
 import { WordSyncEngine } from '../scripts/audioSync'
 import AppStatus from '../components/AppStatus.vue'
 import HifzPlanCreatorModal from '../components/HifzPlanCreatorModal.vue'
-import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
-import WorkspaceAiReciteResultModal from '../components/WorkspaceAiReciteResultModal.vue'
 import {
   buildMutashabihatCompareView,
   detectDriftForWorkspaceRecite,
@@ -529,6 +527,18 @@ const lazyWorkspaceChunk = (importer, feature) => defineAsyncComponent({
   delay: 120,
   timeout: 120000,
 })
+
+// These result views are only needed after a learner explicitly opens an
+// analysis surface. Keeping them out of the initial workspace chunk makes the
+// recitation screen responsive sooner without changing either flow.
+const SessionAnalysisModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "session-analysis-modal" */ '../components/SessionAnalysisModal.vue'),
+  'session-analysis-modal'
+)
+const WorkspaceAiReciteResultModal = lazyWorkspaceChunk(
+  () => import(/* webpackChunkName: "workspace-recite-result" */ '../components/WorkspaceAiReciteResultModal.vue'),
+  'workspace-recite-result'
+)
 
 const preloadAiMemorisationDetectionModal = () => wrapChunkImport(
   () => import(/* webpackChunkName: "amd-modal" */ '../components/AiMemorisationDetectionModal.vue'),
@@ -5142,19 +5152,24 @@ export default {
         }))
     },
     /**
-     * Structured IA for the recommendation modal: Main focus, Weak areas,
-     * Revision options, What to practise next — not inferred from free-form copy.
+     * One canonical next range for every result surface.
+     *
+     * The assessment plan may intentionally point back to a weak ayah. That
+     * makes it useful for revision, but it is not the next learning target.
+     * Resolve the next target once from persisted recommendation fields and
+     * the completed session, then feed the same value to copy and CTAs.
      */
-    postSessionInfoArchitecture() {
-      const plan = this.postSessionPersonalPlan
+    postSessionNextPracticeRange() {
+      const plan = this.postSessionPersonalPlan || {}
       const rec = this.postSessionRecommendation || {}
-      const translate = this.t?.bind?.(this) || null
-      const primaryWeakAyah = typeof this.resolvePrimaryPostSessionWeakAyah === 'function'
-        ? this.resolvePrimaryPostSessionWeakAyah()
-        : null
       const planRange = plan?.range && typeof plan.range === 'object'
         ? { from: plan.range.from, to: plan.range.to }
         : null
+      const explicitNextRange = rec?.next_range
+        || rec?.next_ayah_range
+        || rec?.recommended_next_range
+        || plan?.nextRange
+        || null
       const recRange = rec?.ayah_range && typeof rec.ayah_range === 'object'
         ? { from: rec.ayah_range.from, to: rec.ayah_range.to }
         : null
@@ -5183,11 +5198,11 @@ export default {
         if (!Number.isFinite(from) || from <= 0) return null
         return { from, to: Number.isFinite(to) && to >= from ? to : from }
       }
-      // Advance plans must start after the finished window. Plan/rec ranges that
-      // still sit inside the just-finished session (common when weak-ayah focus
-      // rewrites the plan) are not valid "next" ranges.
-      // Prefer the original completed session over a remedial focus window.
-      const candidateRange = pickRange(planRange) || pickRange(recRange)
+      // Prefer an explicit range supplied by the server. Fall back to the
+      // recommendation range, then the personal plan only when needed.
+      const candidateRange = pickRange(explicitNextRange)
+        || pickRange(recRange)
+        || pickRange(planRange)
       const completedRange = pickRange(sourceSnapshotRange) || pickRange(snapshotRange)
       const preferredSize = candidateRange
         ? Math.max(1, Number(candidateRange.to) - Number(candidateRange.from) + 1)
@@ -5210,6 +5225,20 @@ export default {
         preferredMax: preferredSize,
         allowRepeat: isRepeatRecommendation(rec),
       })
+      return nextRange
+    },
+    /**
+     * Structured IA for the recommendation modal: Main focus, Weak areas,
+     * Revision options, What to practise next — not inferred from free-form copy.
+     */
+    postSessionInfoArchitecture() {
+      const plan = this.postSessionPersonalPlan
+      const rec = this.postSessionRecommendation || {}
+      const translate = this.t?.bind?.(this) || null
+      const primaryWeakAyah = typeof this.resolvePrimaryPostSessionWeakAyah === 'function'
+        ? this.resolvePrimaryPostSessionWeakAyah()
+        : null
+      const nextRange = this.postSessionNextPracticeRange
       const chapterId = Number(
         rec.surah?.id
         || rec.next_surah?.id
@@ -5258,7 +5287,9 @@ export default {
         surahArabicName,
         nextRange,
         nextHeadline,
-        methodTitle: plan?.practiceApproach?.title || '',
+        methodTitle: plan?.practiceApproach?.id
+          ? this.getTechniqueDisplayLabel(plan.practiceApproach.id, { short: true })
+          : (plan?.practiceApproach?.title || ''),
         complementaryTitle,
         timeLabel: this.postSessionEstimatedTimeLabel || plan?.time?.label || '',
         planWhy: this.postSessionPlanWhyText || '',
@@ -6080,8 +6111,9 @@ export default {
       const methodValue = this.resolvePostSessionMethodCopy(plan)
       const rec = this.postSessionRecommendation || {}
       const snap = this.postSessionSnapshot || {}
-      const nextFrom = Number(rec.ayah_range?.from || 0)
-      const nextTo = Number(rec.ayah_range?.to || nextFrom)
+      const persistedNext = this.postSessionNextPracticeRange || {}
+      const nextFrom = Number(persistedNext.from || rec.ayah_range?.from || 0)
+      const nextTo = Number(persistedNext.to || rec.ayah_range?.to || nextFrom)
       const ctaState = this.postSessionCtaState
       const allowProgress = ctaState === POST_SESSION_CTA_STATES.MOSTLY_SECURE
         || ctaState === POST_SESSION_CTA_STATES.STRONG
@@ -6154,8 +6186,9 @@ export default {
         || (total > 0 && Number.isFinite(matched) && matched < total)
         || (Array.isArray(details?.weakAyahs) && details.weakAyahs.length > 0)
       const rec = this.postSessionRecommendation || {}
-      const nextFrom = Number(rec.ayah_range?.from || 0)
-      const nextTo = Number(rec.ayah_range?.to || nextFrom)
+      const persistedNext = this.postSessionNextPracticeRange || {}
+      const nextFrom = Number(persistedNext.from || rec.ayah_range?.from || 0)
+      const nextTo = Number(persistedNext.to || rec.ayah_range?.to || nextFrom)
       const ctaState = this.postSessionCtaState
       const allowProgress = ctaState === POST_SESSION_CTA_STATES.MOSTLY_SECURE
         || ctaState === POST_SESSION_CTA_STATES.STRONG
@@ -6318,8 +6351,9 @@ export default {
       const primaryWeakAyah = this.resolvePrimaryPostSessionWeakAyah?.() || null
       const rec = this.postSessionRecommendation || {}
       const snap = this.postSessionSnapshot || {}
-      const nextFrom = Number(rec.ayah_range?.from || 0)
-      const nextTo = Number(rec.ayah_range?.to || nextFrom)
+      const persistedNext = this.postSessionNextPracticeRange || {}
+      const nextFrom = Number(persistedNext.from || rec.ayah_range?.from || 0)
+      const nextTo = Number(persistedNext.to || rec.ayah_range?.to || nextFrom)
       const practiceFrom = Number(
         snap.rangeStart
         || rec.ayah_range?.from
@@ -19944,6 +19978,43 @@ export default {
       }
       if (this.postSessionRecommendation?.id) {
         await this.persistPostSessionRecommendationSettings(nextSettings)
+      }
+
+      // A plan produced by AI Recite is a durable record, not just a view
+      // model. Keep its scope in sync with the recommendation selector so a
+      // reload, the practice-history screen, and the launched session all use
+      // the learner's latest choice.
+      const plan = this.amdPracticePlan
+      const planId = Number(plan?.id || 0)
+      if (!planId || !this.isLoggedIn) return
+
+      const priorityAyahs = normalised === PRACTICE_SCOPE.WEAK_AREAS
+        ? (this.postSessionWeakOnlySequence?.ayahIds || this.postSessionRevisionWeakAyahs || [])
+        : (plan.priority_ayahs || this.postSessionRevisionWeakAyahs || [])
+      try {
+        const savedPlan = await memorisationDetectionApi.adjustPlan(planId, {
+          practice_scope: normalised,
+          priority_ayahs: [...new Set(priorityAyahs.map(Number).filter((ayah) => ayah > 0))],
+        })
+        if (!savedPlan) return
+        this.amdPracticePlan = savedPlan
+        this.postSessionRecommendation = this.enrichPostSessionRecommendation({
+          ...this.postSessionRecommendation,
+          settings: {
+            ...nextSettings,
+            ...(savedPlan.config || {}),
+            practice_scope: savedPlan.practice_scope || normalised,
+          },
+          plan_detail: {
+            ...(this.postSessionRecommendation.plan_detail || {}),
+            practice_plan_id: savedPlan.id,
+            range: savedPlan.range || this.postSessionRecommendation.plan_detail?.range,
+          },
+        })
+      } catch (error) {
+        // The recommendation setting has already been saved. Surface a quiet
+        // warning rather than discarding the learner's immediate selection.
+        console.warn('Failed to sync practice-plan scope:', error)
       }
     },
     ensurePostSessionPracticeScopeDefault() {
@@ -43859,6 +43930,26 @@ export default {
         const audio = this.audioElement
         if (!audio) return
         this.syncAudioUiState(Number(audio.currentTime || 0), Number(audio.duration || 0))
+
+        // The first highlighting pass can run while the browser is still
+        // discovering the media duration. Its duration estimate is only a
+        // temporary fallback; retaining it makes every boundary drift further
+        // from the spoken word as the ayah plays. Rebuild from this track's
+        // authoritative duration as soon as metadata is available.
+        const verse = this.activeVerseRef
+        const duration = Number(audio.duration)
+        if (!verse?.key || !this.wordByWordAudioEnabled || !Number.isFinite(duration) || duration <= 0) return
+
+        this.ensureWordHighlightTrack(verse, { force: true }).then(() => {
+          // A new ayah may have replaced the source while the timing work was
+          // pending. Never apply a completed request to that new track.
+          if (this.audioElement !== audio || this.activeVerseRef?.key !== verse.key) return
+          this.syncWordHighlightFromAudio(verse)
+          if (!audio.paused && !audio.ended) this.queueWordHighlightFrame(verse)
+        }).catch(() => {
+          // Highlighting is an enhancement; media playback must remain usable
+          // if a timing refresh is interrupted by a source change.
+        })
       }
 
       this.audioError = (e, detail = null) => {

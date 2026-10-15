@@ -113,6 +113,7 @@
     <link rel="preload" href="{{ mix('js/app.js') }}" as="script">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    <link rel="stylesheet" href="{{ mix('css/vue-styles.css') }}">
     <style id="mutqin-no-horizontal-scroll">
       html, body {
         width: 100%;

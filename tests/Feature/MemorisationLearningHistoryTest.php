@@ -204,6 +204,28 @@ class MemorisationLearningHistoryTest extends TestCase
         $this->assertGreaterThanOrEqual(1, count($plans->json('data') ?? $plans->json()['data'] ?? []));
     }
 
+    public function test_practice_scope_adjustment_is_persisted_for_the_next_session(): void
+    {
+        $user = User::factory()->pro()->create();
+        $create = $this->actingAs($user)->postJson('/api/memorisation/assessments', $this->assessmentPayload())
+            ->assertCreated();
+        $planId = (int) $create->json('practice_plan.id');
+
+        $response = $this->actingAs($user)->patchJson("/api/memorisation/practice-plans/{$planId}", [
+            'practice_scope' => MemorisationPracticePlan::SCOPE_FULL_RANGE,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('practice_plan.practice_scope', MemorisationPracticePlan::SCOPE_FULL_RANGE)
+            ->assertJsonPath('practice_plan.config.practice_scope', MemorisationPracticePlan::SCOPE_FULL_RANGE)
+            ->assertJsonPath('practice_plan.config.practice_weak_words_only', false);
+
+        $this->assertDatabaseHas('memorisation_practice_plans', [
+            'id' => $planId,
+            'practice_scope' => MemorisationPracticePlan::SCOPE_FULL_RANGE,
+        ]);
+    }
+
     public function test_ownership_hides_other_users_attempt_detail(): void
     {
         $owner = User::factory()->pro()->create();

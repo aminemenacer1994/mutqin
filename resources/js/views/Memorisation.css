@@ -69188,4 +69188,85 @@ html[data-theme="dark"] .post-session-simple.post-session-simple--premium.post-s
   padding-inline: 0 !important;
 }
 
+/* Post-session results: one calm decision at a time.
+   The modal is intentionally wider on desktop so small, lightweight summary
+   rows can replace the former stack of oversized cards without cramping. */
+@media (min-width: 760px) {
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog,
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__dialog--lg {
+    width: min(60rem, calc(100vw - 3rem)) !important;
+    max-width: min(60rem, calc(100vw - 3rem)) !important;
+    max-height: min(92dvh, 56rem) !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__body {
+    padding: 1rem 1.35rem 1.1rem !important;
+  }
+
+  html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__title {
+  font-size: clamp(1.12rem, 2vw, 1.35rem) !important;
+  font-weight: 620 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__subtitle,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-lead,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__weak-spots-lead,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why-block {
+  font-size: 0.88rem !important;
+  font-weight: 430 !important;
+  line-height: 1.45 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row {
+  min-height: 0 !important;
+  padding: 0.6rem 0.7rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__next-meta-row dd {
+  font-size: 0.88rem !important;
+  font-weight: 590 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__scope-card,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__why--plan,
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__success-flow {
+  padding: 0.75rem 0.85rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn {
+  min-height: 2.65rem !important;
+  font-size: 0.86rem !important;
+  font-weight: 570 !important;
+}
+
+/* Quran focus remains the visual anchor, but should not consume a whole
+   result screen for one ayah. These rules deliberately keep its Arabic face
+   and spacious line-height while reducing the previous oversized panel. */
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-list {
+  gap: 0.45rem !important;
+  margin-top: 0.45rem !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__focus-ayah-label {
+  margin: 0 0 0.18rem !important;
+  font-size: 0.84rem !important;
+  font-weight: 620 !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus {
+  padding: 0.55rem 0.8rem !important;
+  border-radius: 0.85rem !important;
+  box-shadow: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__quran-focus-text {
+  font-size: clamp(1.45rem, 3.8vw, 2.15rem) !important;
+  line-height: 1.5 !important;
+}
+
 

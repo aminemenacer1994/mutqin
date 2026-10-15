@@ -26,6 +26,22 @@ assert.doesNotMatch(
   'QPC/IndoPak glyphs have text, not ar — timings must not require word.ar',
 )
 
+const loadedMetadataHandler = memorisationJs.slice(
+  memorisationJs.indexOf('this.audioLoadedMetadata = () => {'),
+  memorisationJs.indexOf('this.audioError = (e, detail = null) => {'),
+)
+
+assert.match(
+  loadedMetadataHandler,
+  /ensureWordHighlightTrack\(verse, \{ force: true \}\)/,
+  'metadata must replace any pre-metadata timing estimate with the actual media duration',
+)
+assert.match(
+  loadedMetadataHandler,
+  /this\.activeVerseRef\?\.key !== verse\.key/,
+  'a delayed metadata timing refresh must not overwrite a newly selected ayah',
+)
+
 const wbwVerse = {
   key: '1:1',
   arabic: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',

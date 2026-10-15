@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const mix = require('laravel-mix');
 
 const manifestPath = path.join(__dirname, 'public/mix-manifest.json');
@@ -143,6 +144,22 @@ function isStableNamedChunkFile(name) {
     return /^[a-z][a-z0-9_-]+\.js$/i.test(name) && name !== 'app.js';
 }
 
+function addVueStylesManifestEntry(manifest) {
+    const vueStylesKey = '/css/vue-styles.css';
+    const vueStylesPath = path.join(publicDir, 'css/vue-styles.css');
+    if (!fs.existsSync(vueStylesPath)) return;
+
+    try {
+        const version = crypto
+            .createHash('md5')
+            .update(fs.readFileSync(vueStylesPath))
+            .digest('hex');
+        manifest[vueStylesKey] = `${vueStylesKey}?id=${version}`;
+    } catch {
+        manifest[vueStylesKey] = vueStylesKey;
+    }
+}
+
 // Mix keeps prior contenthashed keys in memory across watch rebuilds. Our
 // mix.then() prune deletes the old files from disk, then mix.version() tries
 // to hash those ghost keys and ENOENTs. Strip missing entries before Mix's
@@ -191,7 +208,11 @@ if (mix.inProduction()) {
 }
 
 mix.js('resources/js/app.js', 'public/js')
-   .vue()
+   // Memorisation is loaded as an async route. Extract its large component
+   // styles instead of injecting them into the route's JavaScript bundle so
+   // the browser can fetch CSS in parallel and reach an interactive workspace
+   // sooner.
+   .vue({ extractStyles: 'css/vue-styles.css' })
    .sass('resources/sass/app.scss', 'public/css')
    .options({
        progress: false
@@ -228,17 +249,25 @@ const KEEP_CHUNK_GENERATIONS = 2;
 mix.then(() => {
     if (!fs.existsSync(manifestPath) || !fs.existsSync(jsDir)) return;
 
+    let manifest;
+    try {
+        manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch {
+        return;
+    }
+
     // Watch/dev builds use stable lazy-chunk names. Do not run the production
     // generation/manifest cleanup against them: it only retains hashed files,
     // so it can delete freshly emitted files such as ai-audio-consent.js while
     // app.js still points at them. That leaves a seemingly successful Mix
     // build serving ChunkLoadError 404s until every lazy feature is rebuilt.
-    if (!mix.inProduction()) return;
-
-    let manifest;
-    try {
-        manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    } catch {
+    if (!mix.inProduction()) {
+        addVueStylesManifestEntry(manifest);
+        try {
+            fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 4)}\n`);
+        } catch {
+            /* ignore */
+        }
         return;
     }
 
@@ -344,6 +373,12 @@ mix.then(() => {
     for (const key of alwaysKeepKeys) {
         pruned[key] = manifest[key];
     }
+
+    // Vue's extracted style chunk is emitted by webpack rather than Mix's
+    // normal asset task. Include it in the manifest for a cache-busted,
+    // deployment-safe stylesheet URL.
+    addVueStylesManifestEntry(pruned);
+
     for (const name of [...keepNames].sort()) {
         if (name === 'app.js' || name === 'app.css') continue;
         if (!/\.js$/i.test(name)) continue;

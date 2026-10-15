@@ -126,8 +126,7 @@ import {
   const needsPractice = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE)
   assert.deepEqual(needsPractice.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
+    ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
   ])
 
   const needsPracticeWeak = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
@@ -137,11 +136,9 @@ import {
   assert.equal(needsPracticeWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
   assert.equal(needsPracticeWeak[0].labelKey, 'reviewAyahOnce')
   assert.equal(needsPracticeWeak[0].variant, 'primary')
-  assert.equal(needsPracticeWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
-  assert.equal(needsPracticeWeak[1].labelKey, 'startFocusedReview')
-  assert.equal(needsPracticeWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
-  assert.equal(needsPracticeWeak[2].variant, 'ghost')
-  assert.equal(needsPracticeWeak.length, 3)
+  assert.equal(needsPracticeWeak[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(needsPracticeWeak[1].variant, 'secondary')
+  assert.equal(needsPracticeWeak.length, 2)
 
   const reviseRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.NEEDS_PRACTICE, {
     preferReviseRange: true,
@@ -152,7 +149,6 @@ import {
   assert.deepEqual(insufficient.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CLOSE, 'close'],
   ], 'non-mic failures must offer Return to workspace as secondary')
 
   const micBlocked = mapPostSessionCtas(POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO, {
@@ -161,7 +157,6 @@ import {
   assert.deepEqual(micBlocked.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE, 'checkMicrophone'],
   ])
 
   assert.equal(resolvePostSessionCtaState({
@@ -179,14 +174,12 @@ import {
   assert.deepEqual(revisionDone.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.CHECK_AGAIN, 'retest'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CONTINUE_PRACTISING, 'repeatThisSession'],
   ])
 
   const strong = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG)
   assert.deepEqual(strong.map((b) => [b.variant, b.action, b.labelKey]), [
     ['success', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE, 'repeatThisSession'],
   ])
 
   const strongWithRange = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, {
@@ -198,7 +191,7 @@ import {
 
   const strongRepeat = mapPostSessionCtas(POST_SESSION_CTA_STATES.STRONG, { isRepeat: true })
   assert.equal(strongRepeat[0].labelKey, 'repeatThisSession')
-  assert.equal(strongRepeat[2].labelKey, 'reviewOnceMore')
+  assert.equal(strongRepeat[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
   const awaiting = mapPostSessionCtas(POST_SESSION_CTA_STATES.AWAITING_CHECK)
   assert.deepEqual(awaiting.map((b) => [b.variant, b.action, b.labelKey]), [
@@ -219,7 +212,6 @@ import {
   })
   assert.deepEqual(mostlySecure.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH, 'reviewAyahOnce'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'startFocusedReview'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
   ])
 
@@ -229,13 +221,11 @@ import {
   })
   assert.equal(mostlySecureNoWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_ONCE_MORE)
   assert.equal(mostlySecureNoWeak[0].variant, 'primary')
-  assert.equal(mostlySecureNoWeak[1].action, POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE)
-  assert.equal(mostlySecureNoWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(mostlySecureNoWeak[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
   const reviewRecommended = mapPostSessionCtas(POST_SESSION_CTA_STATES.REVIEW_RECOMMENDED)
   assert.deepEqual(reviewRecommended.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE, 'reviseFocusPhrase'],
-    ['secondary', POST_SESSION_CTA_ACTIONS.CONTINUE_NEXT_RANGE, 'continueToNextRange'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
   ])
 
@@ -244,8 +234,7 @@ import {
     preferStartFocusedReview: true,
   })
   assert.equal(reviewRecommendedWeak[0].action, POST_SESSION_CTA_ACTIONS.REVIEW_WEAK_AYAH)
-  assert.equal(reviewRecommendedWeak[1].action, POST_SESSION_CTA_ACTIONS.REVISE_FOCUS_PHRASE)
-  assert.equal(reviewRecommendedWeak[2].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
+  assert.equal(reviewRecommendedWeak[1].action, POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE)
 
   // Every recommendation state: one lead CTA, Return to workspace as secondary
   // (except the soft AI-check nudge, whose secondary is Continue without testing).
