@@ -249,7 +249,15 @@
       "viewPricing": "View plans",
       "seeFeatures": "Nasıl yardımcı olduğunu gör",
       "seeHow": "Nasıl çalıştığını görün",
-      "startMemorisation": "Ezberlemeye başla"
+      "startMemorisation": "Ezberlemeye başla",
+      "startFirstSession": "İlk oturumunu başlat",
+      "seeFirstSession": "Önce ne olduğunu gör",
+      "firstSessionLabel": "Önerilen ilk oturumun",
+      "firstSessionTime": "Yaklaşık 10 dakika",
+      "firstSessionRange": "1–3 ayetle başla",
+      "firstSessionOutcome": "Sonraki tekrar adımıyla bitir",
+      "previewKicker": "Gerçek bir oturumun içinde",
+      "previewTitle": "Küçük bir aralık belirle, çalış ve sırada ne olduğunu öğren"
     },
     "shots": {
       "hero": "Mutqin oturumu Al-Kafirun ile başlamaya hazır",
@@ -325,6 +333,54 @@
           "detail": "Bi’idhnillāh net bir plan, böylece sırada ne açacağını merak etmezsin."
         }
       }
+    },
+    "access": {
+      "available": {
+        "label": "Şimdi kullanılabilir",
+        "detail": "Bugün ücretsiz ilk oturumunu başlat — bekleme listesine gerek yok."
+      },
+      "early": {
+        "label": "Erken erişim",
+        "detail": "Erişim aşamalı olarak açılıyor. Bekleme listesine katılın, sizi davet edelim."
+      }
+    },
+    "practiceTypes": {
+      "kicker": "Doğru çalışmayı seç",
+      "title": "Hıfz çalışmanızın dört ayrı parçası",
+      "subtitle": "Birlikte çalışırlar; ancak kısa bir aralığı kalıcı kılmak için her birinin farklı bir görevi vardır.",
+      "items": {
+        "memorise": {
+          "title": "Ezberle",
+          "description": "Dinleyerek, tekrarlayarak ve metinden aşamalı olarak uzaklaşarak kısa yeni bir aralık öğrenin.",
+          "cue": "Yeni ayetler öğrenirken kullanın."
+        },
+        "revise": {
+          "title": "Tekrar et",
+          "description": "Daha önce öğrendiğiniz ayetlere, özellikle daha az sağlam hissettiklerinize geri dönün.",
+          "cue": "Önceki emeği canlı tutmak için kullanın."
+        },
+        "aiRecite": {
+          "title": "AI Recite",
+          "description": "İsteğe bağlı sesli geri bildirim, dikkatle yeniden çalışılması gereken kelime veya ayetleri fark etmenize yardımcı olur.",
+          "cue": "Ezberden çalıştıktan sonra kullanın."
+        },
+        "assess": {
+          "title": "Değerlendir",
+          "description": "Neyin kaldığını, neyin ilgiye ihtiyacı olduğunu ve sonraki oturumunuz için en net adımı görün.",
+          "cue": "Bu sonuç ve sonraki planınızdır; ayrı bir çalışma modu değildir."
+        }
+      }
+    },
+    "firstSession": {
+      "kicker": "Önerilen ilk oturum",
+      "title": "Küçük başla. Sonra ne yapacağını bilerek bitir.",
+      "subtitle": "1–3 ayet için yaklaşık 10 dakika ayırın. Dinleyecek, tekrar edecek, ezberden okuyacak ve net bir sonraki tekrarla ayrılacaksınız.",
+      "durationLabel": "Ayırın",
+      "duration": "Yaklaşık 10 dakika",
+      "startLabel": "Şununla başlayın",
+      "start": "Kısa bir aralık — 1–3 ayet",
+      "leaveLabel": "Şununla ayrılırsınız",
+      "leave": "Kaydedilmiş bir başlangıç noktası ve tekrar edilecek net bir aralık"
     },
     "demo": {
       "session": "سورة Al-Mulk · آية 3",
@@ -1430,9 +1486,12 @@
       "consentTitle": "Microphone and AI processing",
       "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
       "consentProcessor": "Live transcription may be handled by {processor}.",
+      "consentBrowserPrompt": "Ardından tarayıcınız mikrofona erişim isteyecek. Kaydı başlatmak için İzin ver’i seçin.",
       "consentRetentionNever": "Raw recordings are not saved after the check finishes.",
       "consentRetentionTemporary": "Temporary audio may be kept briefly on this device for review, then deleted automatically.",
+      "consentRetentionTemporaryFor": "Geçici ses, inceleme için bu cihazda en fazla {hours} saat tutulabilir ve sonra otomatik olarak silinir.",
       "consentRetentionRetain": "You can keep a local recording for your own replay. Mutqin does not sell your audio.",
+      "consentNoSale": "Mutqin sesinizi asla satmaz.",
       "consentPrivacyLink": "Read the Privacy policy",
       "consentAccept": "Allow and continue",
       "consentDecline": "Not now",
@@ -1507,6 +1566,7 @@
       "micNotFoundLead": "This device does not appear to have a microphone Mutqin can use.",
       "micUnavailableTitle": "Microphone unavailable",
       "micUnavailableLead": "Another app or system process may currently be using it.",
+      "micUnavailableStep": "Mikrofonu kullanan aramaları, kayıt uygulamalarını veya tarayıcı sekmelerini kapatın; sonra yeniden deneyin.",
       "micSecurityTitle": "Microphone access unavailable",
       "micSecurityLead": "Ensure Mutqin is being used over HTTPS and microphone access is allowed.",
       "micUnsupportedTitle": "Microphone not supported in this browser",
@@ -3644,6 +3704,7 @@
       "hintProcessing": "Processing your recitation…",
       "hintProcessingSlow": "Bu is taking longer than expected.",
       "hintAnalysing": "Comparing with the Quran text…",
+      "hintUploading": "Kaydınız güvenle kaydediliyor…",
       "startFailed": "Could not start assessment.",
       "analyseFailed": "Could not analyse this recitation. Please try again.",
       "sessionExpired": "Your oturum expired. Refresh the page, then try again.",
@@ -3682,6 +3743,12 @@
       "tajweedOff": "kapalı",
       "tajweedHint": "Göster or hide tajweed colouring on the text",
       "mistakeVisual": "hata confirmed",
+      "feedbackListening": "Dinliyor — okumaya devam edin",
+      "feedbackListeningDetail": "Kelimelerin netleşmesi biraz zaman alabilir.",
+      "feedbackChecking": "Yakın bir eşleşme kontrol ediliyor",
+      "feedbackCheckingDetail": "Bu henüz hata olarak işaretlenmedi. Okumaya devam edin.",
+      "feedbackConfirmed": "Farklılık onaylandı",
+      "feedbackConfirmedDetail": "Gözden geçirmek için not edildi. Durmadan okumaya devam edin.",
       "autoFollow": "otomatik takip",
       "autoFollowOn": "otomatik takip on",
       "autoFollowOff": "otomatik takip off",
@@ -3704,6 +3771,7 @@
         "complete": "Tamamlandı",
         "processing": "معالجة",
         "analysing": "تحليل",
+        "uploading": "Kaydı kaydediyor",
         "results": "نتائج التقييم",
         "plan": "Pratik plan",
         "plan_adjusted": "plan adjusted",
@@ -4733,6 +4801,7 @@
     "load_error_hint": "Lütfen try again.",
     "retry": "Yeniden dene",
     "refresh": "تحديث",
+    "updated": "İlerleme güncellendi.",
     "bismillah": "بسم الله",
     "greeting": "Tekrar hoş geldiniz, {name}",
     "dear_friend": "« friend»",
@@ -4749,6 +4818,7 @@
     "progress_subtitle": "yeriniz surah, yeriniz week, ve how often sen practise.",
     "weekly_title": "Bu week",
     "weekly_subtitle": "How often sen sat ile the Qur'an.",
+    "progress_note": "Bu sayılar pratiğinizin kaydıdır; yetişmeniz gereken bir hedef değildir.",
     "weekly_stats_aria": "نشاط الأسبوع",
     "weekly_empty_title": "yeriniz Qur'an journey starts here.",
     "weekly_empty_message": "tamamlandı your first oturum and your weekly activity will appear here.",
@@ -4907,6 +4977,7 @@
     "activity_note_saved": "not kaydedilmiş",
     "cta_resume": "dön",
     "journey_kicker": "yeriniz hifz",
+    "next_step_hint": "Buradan başlayın. Hazır olana kadar diğer her şey bekleyebilir.",
     "journey_start_title": "Başla with the Qur'an",
     "journey_start_hint": "Başlat with Al-Fatihah, or choose any surah.",
     "journey_start_beginning": "Başla with Al-Fatihah",
@@ -4953,6 +5024,7 @@
     "cta_review": "Başla muraja'ah",
     "cta_recommendation": "Başla",
     "cta_start": "Başla",
+    "open_practice": "Bir pratik oturumu aç",
     "msg_resume": "",
     "msg_continue": "",
     "msg_incomplete": "",

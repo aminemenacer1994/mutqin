@@ -249,7 +249,15 @@
       "viewPricing": "Ver planes",
       "seeFeatures": "Ver cómo ayuda",
       "seeHow": "Ver cómo funciona",
-      "startMemorisation": "Empezar la memorización"
+      "startMemorisation": "Empezar la memorización",
+      "startFirstSession": "Empezar tu primera sesión",
+      "seeFirstSession": "Ver qué ocurre primero",
+      "firstSessionLabel": "Tu primera sesión recomendada",
+      "firstSessionTime": "Unos 10 minutos",
+      "firstSessionRange": "Empieza con 1–3 aleyas",
+      "firstSessionOutcome": "Termina con un próximo repaso",
+      "previewKicker": "Dentro de una sesión real",
+      "previewTitle": "Elige un rango breve, practícalo y sabe qué hacer después"
     },
     "shots": {
       "hero": "Sesión Mutqin lista para empezar en Al-Kafirun",
@@ -325,6 +333,54 @@
           "detail": "Un plan claro mientras los versos aún están cercanos, para no dudar qué abrir después."
         }
       }
+    },
+    "access": {
+      "available": {
+        "label": "Disponible ahora",
+        "detail": "Empieza hoy una primera sesión gratuita; no necesitas lista de espera."
+      },
+      "early": {
+        "label": "Acceso anticipado",
+        "detail": "El acceso se abre por etapas. Únete a la lista de espera y te invitaremos."
+      }
+    },
+    "practiceTypes": {
+      "kicker": "Elige la práctica adecuada",
+      "title": "Cuatro partes distintas de tu práctica de Hifz",
+      "subtitle": "Funcionan juntas, pero cada una tiene un trabajo diferente para que un rango breve se quede contigo.",
+      "items": {
+        "memorise": {
+          "title": "Memoriza",
+          "description": "Aprende un rango breve escuchando, repitiendo y alejándote poco a poco del texto.",
+          "cue": "Úsalo cuando estés aprendiendo nuevas aleyas."
+        },
+        "revise": {
+          "title": "Repasa",
+          "description": "Vuelve a las aleyas que ya aprendiste, especialmente a las que sientes menos seguras.",
+          "cue": "Úsalo para mantener vivo el trabajo anterior."
+        },
+        "aiRecite": {
+          "title": "AI Recite",
+          "description": "Los comentarios orales opcionales te ayudan a notar las palabras o aleyas que merecen otro repaso cuidadoso.",
+          "cue": "Úsalo después de practicar de memoria."
+        },
+        "assess": {
+          "title": "Evalúa",
+          "description": "Mira qué se mantuvo, qué necesita cuidado y el siguiente paso más claro para tu próxima sesión.",
+          "cue": "Es tu resultado y tu siguiente plan, no un modo de práctica distinto."
+        }
+      }
+    },
+    "firstSession": {
+      "kicker": "Primera sesión recomendada",
+      "title": "Empieza poco a poco. Termina sabiendo qué hacer después.",
+      "subtitle": "Reserva unos 10 minutos para 1–3 aleyas. Escucharás, repetirás, recitarás y terminarás con un siguiente repaso claro.",
+      "durationLabel": "Reserva",
+      "duration": "Unos 10 minutos",
+      "startLabel": "Empieza con",
+      "start": "Un rango breve: 1–3 aleyas",
+      "leaveLabel": "Terminas con",
+      "leave": "Un punto de partida guardado y un rango claro para repasar"
     },
     "demo": {
       "session": "Sourate Al-Mulk · آية 3",
@@ -1432,9 +1488,12 @@
       "consentTitle": "Comprobaciones de voz con IA",
       "consentBody": "Cuando usas Recitación IA, Mutqin usa el micrófono para valorar la recitación del Corán. El audio puede procesarlo {processor}. Escuchar y las demás herramientas funcionan sin ello.",
       "consentProcessor": "La transcripción en vivo puede estar a cargo de {processor}.",
+      "consentBrowserPrompt": "A continuación, tu navegador pedirá usar el micrófono. Elige Permitir para empezar a grabar.",
       "consentRetentionNever": "Las grabaciones en bruto no se guardan cuando termina el control.",
       "consentRetentionTemporary": "El audio temporal puede quedarse un momento en este dispositivo para revisarlo y luego se borra solo.",
+      "consentRetentionTemporaryFor": "El audio temporal puede conservarse en este dispositivo hasta {hours} horas para revisarlo y luego se borra automáticamente.",
       "consentRetentionRetain": "Puedes conservar una grabación local para volver a oírla. Mutqin no vende tu audio.",
+      "consentNoSale": "Mutqin nunca vende tu audio.",
       "consentPrivacyLink": "Política de privacidad",
       "consentAccept": "Aceptar",
       "consentDecline": "Ahora no",
@@ -1509,6 +1568,7 @@
       "micNotFoundLead": "Este dispositivo no parece tener un micrófono que Mutqin pueda usar.",
       "micUnavailableTitle": "Micrófono no disponible",
       "micUnavailableLead": "Otra app o proceso del sistema puede estar usándolo.",
+      "micUnavailableStep": "Cierra las llamadas, aplicaciones de grabación o pestañas que estén usando el micrófono y vuelve a intentarlo.",
       "micSecurityTitle": "Acceso al micrófono no disponible",
       "micSecurityLead": "Asegúrate de usar Mutqin por HTTPS y de que el acceso al micrófono esté permitido.",
       "micUnsupportedTitle": "El micrófono no es compatible con este navegador",
@@ -3632,6 +3692,7 @@
       "hintProcessing": "Finalizando…",
       "hintProcessingSlow": "Está tardando más de lo previsto.",
       "hintAnalysing": "Comparando con el texto del Corán…",
+      "hintUploading": "Guardando tu grabación de forma segura…",
       "startFailed": "No se pudo start assessment.",
       "analyseFailed": "No hemos podido valorar este intento. Comprueba el micrófono o la conexión e inténtalo de nuevo.",
       "sessionExpired": "Tu sesión ha caducado. Actualiza la página e inténtalo de nuevo.",
@@ -3670,6 +3731,12 @@
       "tajweedOff": "Desactivado",
       "tajweedHint": "Mostrar u ocultar el color de Tajweed en el texto",
       "mistakeVisual": "error confirmed",
+      "feedbackListening": "Escuchando — sigue recitando",
+      "feedbackListeningDetail": "Las palabras pueden tardar un momento en confirmarse.",
+      "feedbackChecking": "Comprobando una coincidencia cercana",
+      "feedbackCheckingDetail": "Aún no se marca como error. Sigue recitando.",
+      "feedbackConfirmed": "Diferencia confirmada",
+      "feedbackConfirmedDetail": "Se ha anotado para revisar. Sigue recitando sin detenerte.",
       "autoFollow": "seguimiento automático",
       "autoFollowOn": "seguimiento automático on",
       "autoFollowOff": "seguimiento automático off",
@@ -3692,6 +3759,7 @@
         "complete": "Completado",
         "processing": "معالجة",
         "analysing": "تحليل",
+        "uploading": "Guardando grabación",
         "results": "نتائج التقييم",
         "plan": "Practica plan",
         "plan_adjusted": "plan adjusted",
@@ -4725,6 +4793,7 @@
     "load_error_hint": "Inténtalo de nuevo.",
     "retry": "Reintentar",
     "refresh": "تحديث",
+    "updated": "Progreso actualizado.",
     "bismillah": "Prêt à commencer",
     "greeting": "Assalamu alaikum, {name}",
     "dear_friend": "« friend»",
@@ -4741,6 +4810,7 @@
     "progress_subtitle": "tu surah, tu Semana, y how often tú practise.",
     "weekly_title": "Esta semana",
     "weekly_subtitle": "How often tú sat con el Qur'an.",
+    "progress_note": "Estas cifras registran tu práctica; no son una meta que debas alcanzar.",
     "weekly_stats_aria": "نشاط الأسبوع",
     "weekly_empty_title": "tu Qur'an journey starts here.",
     "weekly_empty_message": "Completa tu primera sesión y tu actividad semanal aparecerá aquí.",
@@ -4899,6 +4969,7 @@
     "activity_note_saved": "nota guardado",
     "cta_resume": "Retour",
     "journey_kicker": "sesión overview",
+    "next_step_hint": "Empieza aquí. Todo lo demás puede esperar hasta que estés listo.",
     "journey_start_title": "Empieza con el Corán",
     "journey_start_hint": "Empieza con Al-Fatihah o elige cualquier sura.",
     "journey_start_beginning": "Empieza con Al-Fatihah",
@@ -4945,6 +5016,7 @@
     "cta_review": "Comenzar muraja'ah",
     "cta_recommendation": "Comenzar",
     "cta_start": "Comenzar",
+    "open_practice": "Abrir una sesión de práctica",
     "msg_resume": "",
     "msg_continue": "",
     "msg_incomplete": "",

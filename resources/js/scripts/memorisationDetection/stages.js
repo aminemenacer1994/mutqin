@@ -13,6 +13,7 @@ export const AMD_STAGES = Object.freeze({
   // Legacy (bypassed in streamlined journey)
   PROCESSING: 'processing',
   ANALYSING: 'analysing',
+  UPLOADING: 'uploading',
   RESULTS: 'results',
   PLAN: 'plan',
   PLAN_ADJUSTED: 'plan_adjusted',

@@ -46,6 +46,12 @@
             {{ tryAgainLabel }}
           </button>
         </div>
+        <button
+          v-if="continueWithoutLabel"
+          type="button"
+          class="mic-permission-continue"
+          @click.stop="onContinueWithoutAi"
+        >{{ continueWithoutLabel }}</button>
       </div>
     </div>
   </Teleport>
@@ -69,8 +75,9 @@ export default {
     steps: { type: Array, default: () => [] },
     tryAgainLabel: { type: String, default: '' },
     cancelLabel: { type: String, default: '' },
+    continueWithoutLabel: { type: String, default: '' },
   },
-  emits: ['try-again', 'cancel'],
+  emits: ['try-again', 'cancel', 'continue-without-ai'],
   data() {
     return {
       _returnFocusEl: null,
@@ -111,6 +118,9 @@ export default {
     },
     onCancel() {
       this.$emit('cancel')
+    },
+    onContinueWithoutAi() {
+      this.$emit('continue-without-ai')
     },
   },
 }
@@ -247,6 +257,29 @@ export default {
   background: #5c4030;
   border-color: #5c4030;
   color: #fff;
+}
+
+.mic-permission-continue {
+  display: block;
+  width: 100%;
+  margin: 0.85rem 0 0;
+  padding: 0.35rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  cursor: pointer;
+}
+
+.mic-permission-continue:focus-visible {
+  outline: 3px solid var(--focus-ring-color, #8b5e3c);
+  outline-offset: 3px;
+  border-radius: 0.45rem;
 }
 
 [data-theme="dark"] .mic-permission-card,

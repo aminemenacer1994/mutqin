@@ -36,6 +36,7 @@
                     'amd-mic-status--recording': isListening && !sttRecovering,
                     'amd-mic-status--starting': isStarting && !sttRecovering,
                     'amd-mic-status--reconnecting': sttRecovering,
+                    'amd-mic-status--processing': isProcessing || endingSoon,
                   }"
                   :data-status="micStatusKey"
                   role="status"
@@ -163,11 +164,51 @@
             </div>
 
             <section
+              v-if="showAudioProgress"
+              class="amd-recording-state"
+              :class="{
+                'is-listening': isListening,
+                'is-processing': isProcessing || endingSoon,
+                'is-reconnecting': sttRecovering,
+              }"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <span class="amd-recording-state__icon" aria-hidden="true">
+                <i :class="audioProgressIcon"></i>
+              </span>
+              <span class="amd-recording-state__copy">
+                <strong>{{ audioProgressTitle }}</strong>
+                <span v-if="audioProgressDetail">{{ audioProgressDetail }}</span>
+              </span>
+              <time v-if="isListening" class="amd-recording-state__timer">{{ elapsedLabel }}</time>
+            </section>
+
+            <section
+              v-if="isListening && feedbackTitle"
+              class="amd-live-feedback"
+              :class="`is-${feedbackState}`"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <i :class="feedbackIcon" aria-hidden="true"></i>
+              <span>
+                <strong>{{ feedbackTitle }}</strong>
+                <small v-if="feedbackDetail">{{ feedbackDetail }}</small>
+              </span>
+            </section>
+
+            <section
               v-if="endingSoon"
               class="amd-complete amd-complete--handoff"
-              aria-hidden="true"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
             >
               <span class="amd-complete__spinner" aria-hidden="true"></span>
+              <span class="amd-complete__handoff-label">{{ displayMicStatusLabel }}</span>
             </section>
 
             <section
@@ -280,6 +321,10 @@
 <script>
 import { playRecordingStartBeep } from '../scripts/audio/recordingStartBeep.js'
 import {
+  captureReturnFocus as captureModalReturnFocus,
+  restoreReturnFocus as restoreModalReturnFocus,
+} from '../utils/modalFocus.js'
+import {
   createLiveAutoFollowController,
   prefersReducedMotion,
   readStoredAutoFollowEnabled,
@@ -307,6 +352,7 @@ export default {
     micStatusLabel: { type: String, default: 'Ready' },
     micGuidance: { type: String, default: '' },
     liveHint: { type: String, default: '' },
+    stageLabel: { type: String, default: '' },
     recordingActiveLabel: { type: String, default: 'Recording' },
     sttRecovering: { type: Boolean, default: false },
     ayahHtml: { type: String, default: '' },
@@ -346,6 +392,9 @@ export default {
     theme: { type: String, default: '' },
     mistakeVisualActive: { type: Boolean, default: false },
     mistakeVisualLabel: { type: String, default: 'Mistake confirmed' },
+    feedbackState: { type: String, default: 'idle' },
+    feedbackTitle: { type: String, default: '' },
+    feedbackDetail: { type: String, default: '' },
     autoFollowLabel: { type: String, default: 'Auto-follow' },
     autoFollowOnLabel: { type: String, default: 'Auto-follow on' },
     autoFollowOffLabel: { type: String, default: 'Auto-follow off' },
@@ -414,7 +463,7 @@ export default {
     },
     isProcessing() {
       const stage = String(this.stage || '')
-      return stage === 'processing' || stage === 'analysing'
+      return stage === 'processing' || stage === 'analysing' || stage === 'uploading'
     },
     // Keep gap/blur mask chrome through idle → record → stop → processing.
     // Never drop presentation classes on stage changes (that flashes full text).
@@ -459,6 +508,27 @@ export default {
         return this.recordingActiveLabel || this.micStatusLabel || 'Recording'
       }
       return this.micStatusLabel || 'Ready'
+    },
+    showAudioProgress() {
+      return !this.isComplete && !this.isError && !this.endingSoon
+        && (this.isStarting || this.isListening || this.isProcessing)
+    },
+    audioProgressTitle() {
+      if (this.isListening) return this.recordingActiveLabel || this.micStatusLabel
+      return this.stageLabel || this.displayMicStatusLabel
+    },
+    audioProgressDetail() {
+      return this.liveHint || ''
+    },
+    audioProgressIcon() {
+      if (this.isListening) return 'bi bi-mic-fill'
+      if (this.isProcessing || this.endingSoon) return 'bi bi-arrow-repeat'
+      return 'bi bi-mic-fill'
+    },
+    feedbackIcon() {
+      if (this.feedbackState === 'confirmed') return 'bi bi-check2-circle'
+      if (this.feedbackState === 'checking') return 'bi bi-hourglass-split'
+      return 'bi bi-soundwave'
     },
     stopActionLabel() {
       if (this.isProcessing || this.endingSoon) {
@@ -919,22 +989,12 @@ export default {
       })
     },
     captureReturnFocus() {
-      if (typeof document === 'undefined') return
-      const active = document.activeElement
-      if (active instanceof HTMLElement && !this.$refs.overlay?.contains(active)) {
-        this._returnFocusEl = active
-      }
+      this._returnFocusEl = captureModalReturnFocus(this.$refs.overlay)
     },
     restoreReturnFocus() {
       const target = this._returnFocusEl
       this._returnFocusEl = null
-      if (!target || typeof target.focus !== 'function') return
-      if (typeof document !== 'undefined' && !document.contains(target)) return
-      try {
-        target.focus({ preventScroll: true })
-      } catch (_) {
-        try { target.focus() } catch (__) { /* ignore */ }
-      }
+      restoreModalReturnFocus(target)
     },
     getFocusableElements() {
       const root = this.$refs.dialog

@@ -1,6 +1,6 @@
 <template>
   <main id="mainContent" class="user-dashboard" tabindex="-1">
-    <div class="container-fluid user-dashboard__shell">
+    <div class="container user-dashboard__shell">
       <div v-if="loading && !data" class="user-dashboard__loading" role="status" aria-live="polite">
         <div class="dash-spinner" aria-hidden="true"></div>
         <span>{{ t('dashboard.loading') }}</span>
@@ -34,6 +34,7 @@
               <span class="dash-kicker">{{ t('dashboard.journey_kicker') }}</span>
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
               <p v-if="heroProgressSummary" class="dash-hero__summary">{{ heroProgressSummary }}</p>
+              <p class="dash-hero__direction">{{ t('dashboard.next_step_hint') }}</p>
             </div>
             <button
               type="button"
@@ -52,6 +53,7 @@
               ref="continueCard"
               class="dash-continue-card"
               :class="{
+                'dash-continue-card--primary': true,
                 'dash-continue-card--saved': primaryContinueAction.kind === 'saved',
                 'dash-continue-card--fresh': primaryContinueAction.kind === 'fresh',
               }"
@@ -84,6 +86,7 @@
         <section
           v-if="murajaahPreview.length || showMurajaahEmpty"
           class="dash-section dash-section--flat dash-reveal dash-section--murajaah"
+          :class="{ 'dash-section--empty': showMurajaahEmpty }"
           aria-labelledby="dash-murajaah-heading"
           style="--dash-delay: 20ms"
         >
@@ -98,6 +101,7 @@
                     <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
                       {{ t('dashboard.strengthen_title') }}
                     </h2>
+                    <p class="dash-section__hint">{{ t('dashboard.strengthen_subtitle') }}</p>
                   </div>
                 </div>
               </div>
@@ -128,6 +132,14 @@
                   {{ t('dashboard.murajaah_practise') }}
                 </a>
               </div>
+              <a
+                v-if="!optionalReviewSuggestion"
+                class="dash-btn dash-btn--ghost dash-btn--sm"
+                :href="primaryContinueAction?.href || memorisationUrl"
+              >
+                <i class="bi bi-play-circle" aria-hidden="true"></i>
+                {{ primaryContinueAction?.cta || t('dashboard.cta_start') }}
+              </a>
             </div>
 
             <ul v-else class="dash-murajaah-list">
@@ -172,6 +184,7 @@
           id="ai-recite-results"
           ref="aiReciteResults"
           class="dash-section dash-section--flat dash-ai-results dash-reveal"
+          :class="{ 'dash-section--empty': !aiReciteLoading && !aiReciteError && (!aiReciteView || aiReciteView.empty) }"
           aria-labelledby="dash-ai-results-heading"
           style="--dash-delay: 40ms"
         >
@@ -183,6 +196,7 @@
                 </span>
                 <div class="dash-section__title-copy">
                   <h2 id="dash-ai-results-heading">{{ t('dashboard.ai_recite.results_title') }}</h2>
+                  <p class="dash-section__hint">{{ t('dashboard.ai_recite.results_subtitle') }}</p>
                 </div>
               </div>
               <button
@@ -213,6 +227,10 @@
               </span>
               <p class="dash-ai-results__empty-title">{{ t('dashboard.ai_recite.stats_empty_title') }}</p>
               <p class="dash-ai-results__empty-hint">{{ t('dashboard.ai_recite.results_empty_hint') }}</p>
+              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="memorisationUrl">
+                <i class="bi bi-mic" aria-hidden="true"></i>
+                {{ t('dashboard.open_practice') }}
+              </a>
             </div>
             <template v-else>
               <article
@@ -313,7 +331,10 @@
                 <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
                   <i class="bi bi-calendar-week" aria-hidden="true"></i>
                 </span>
-                <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
+                <div class="dash-section__title-copy">
+                  <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
+                  <p class="dash-section__hint">{{ t('dashboard.weekly_subtitle') }}</p>
+                </div>
               </div>
               <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
                 <button
@@ -343,6 +364,10 @@
             <div v-if="showWeeklyEmpty" class="dash-chart__empty">
               <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
               <span>{{ t('dashboard.weekly_empty_message') }}</span>
+              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="primaryContinueAction?.href || memorisationUrl">
+                <i class="bi bi-play-circle" aria-hidden="true"></i>
+                {{ primaryContinueAction?.cta || t('dashboard.cta_start') }}
+              </a>
             </div>
             <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
               <Bar
@@ -353,9 +378,13 @@
                 :aria-label="t('dashboard.chart_aria')"
               />
             </div>
-            <p v-if="chartSummaryText" class="dash-chart__summary">
-              {{ chartSummaryText }}
-            </p>
+            <div v-if="chartSummaryText" class="dash-chart__footer">
+              <p class="dash-chart__summary">{{ chartSummaryText }}</p>
+              <button type="button" class="dash-text-link dash-chart__action" @click="openDrawer('activity')">
+                <i class="bi bi-clock-history" aria-hidden="true"></i>
+                {{ t('dashboard.view_all_activity') }}
+              </button>
+            </div>
 
             <div
               class="dash-analytics"
@@ -380,8 +409,13 @@
                   <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
                 </p>
                 <p class="dash-analytic__label">{{ item.label }}</p>
+                <p v-if="item.hint" class="dash-analytic__hint">{{ item.hint }}</p>
               </button>
             </div>
+            <p class="dash-progress-note">
+              <i class="bi bi-heart" aria-hidden="true"></i>
+              {{ t('dashboard.progress_note') }}
+            </p>
           </div>
         </section>
         </div>
@@ -418,16 +452,24 @@
     <Teleport to="body">
       <div
         v-if="drawerOpen"
+        ref="drawerRoot"
         class="dash-drawer-root"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="drawerTitleId"
+        @keydown="onDrawerKeydown"
       >
-        <div class="dash-drawer__backdrop" aria-hidden="true"></div>
+        <button
+          type="button"
+          class="dash-drawer__backdrop"
+          :aria-label="t('dashboard.drawer_close')"
+          @click="closeDrawer"
+        ></button>
           <aside
+            ref="drawer"
             class="dash-drawer"
             :class="drawerMode ? `dash-drawer--${drawerMode}` : ''"
             tabindex="-1"
+            role="dialog"
+            aria-modal="true"
+            :aria-labelledby="drawerTitleId"
           >
             <div class="dash-drawer__handle" aria-hidden="true"></div>
             <header class="dash-drawer__head">
@@ -442,6 +484,7 @@
               </div>
             </div>
             <button
+              ref="drawerClose"
               type="button"
               class="dash-icon-btn dash-drawer__close"
               :aria-label="t('dashboard.drawer_close')"
@@ -697,6 +740,18 @@
       @close="closeSessionAnalysis"
       @retry="retrySessionAnalysis"
     />
+
+    <Teleport to="body">
+      <Transition name="dash-toast">
+        <div v-if="toastMessage" class="dash-toast" role="status" aria-live="polite">
+          <i class="bi bi-check2-circle" aria-hidden="true"></i>
+          <span>{{ toastMessage }}</span>
+          <button type="button" :aria-label="t('common.close')" @click="clearToast">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
   </main>
 </template>
 
@@ -721,6 +776,11 @@ import { progressBarDisplay } from '../utils/progressDisplay'
 import { buildDashboardAiReciteStatsView } from '../scripts/dashboardAiRecite/buildStatsView'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
+import {
+  captureReturnFocus,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../utils/modalFocus'
 import './Dashboard.css'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -801,6 +861,7 @@ export default {
       drawerLoading: false,
       drawerError: false,
       drawerRequestId: 0,
+      drawerReturnFocus: null,
       dashboardRequestId: 0,
       activityFilter: 'all',
       darkTheme: false,
@@ -820,6 +881,8 @@ export default {
       aiReciteLoading: false,
       aiReciteError: false,
       aiReciteRequestId: 0,
+      toastMessage: '',
+      toastTimer: null,
     }
   },
   computed: {
@@ -1267,7 +1330,7 @@ export default {
       return !!this.aiReciteView?.holding
     },
     aiRecitePreview() {
-      return (this.aiReciteView?.recent || []).slice(0, 5)
+      return (this.aiReciteView?.recent || []).slice(0, 3)
     },
     aiReciteImprovement() {
       const card = (this.aiReciteView?.cards || []).find((item) => item.key === 'improvement')
@@ -1593,6 +1656,7 @@ export default {
     if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
     if (this.themeObserver) this.themeObserver.disconnect()
     if (this.continueObserver) this.continueObserver.disconnect()
+    this.clearToast()
     this.syncDrawerBodyLock(false)
   },
   methods: {
@@ -1985,11 +2049,15 @@ export default {
     },
     async openDrawer(mode) {
       if (!mode || mode === 'notes') return
+      if (!this.drawerOpen) this.drawerReturnFocus = captureReturnFocus()
       this.drawerMode = mode
       this.drawerItems = []
       this.drawerError = false
       this.activityFilter = 'all'
       this.syncDrawerBodyLock(true)
+      this.$nextTick(() => {
+        this.$refs.drawerClose?.focus?.({ preventScroll: true })
+      })
 
       if (mode === 'murajaah') {
         this.drawerItems = this.dailyWeakAllItems
@@ -2030,14 +2098,26 @@ export default {
         if (requestId === this.drawerRequestId) this.drawerLoading = false
       }
     },
-    closeDrawer() {
+    closeDrawer({ restoreFocus = true } = {}) {
       this.drawerRequestId += 1
+      const returnFocus = this.drawerReturnFocus
+      this.drawerReturnFocus = null
       this.drawerMode = null
       this.drawerItems = []
       this.drawerLoading = false
       this.drawerError = false
       this.activityFilter = 'all'
       this.syncDrawerBodyLock(false)
+      if (restoreFocus) {
+        this.$nextTick(() => restoreReturnFocus(returnFocus))
+      }
+    },
+    onDrawerKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.drawer,
+        onEscape: () => this.closeDrawer(),
+        open: this.drawerOpen,
+      })
     },
     retryDrawer() {
       if (!this.drawerMode) return
@@ -2099,6 +2179,7 @@ export default {
         ? this.attemptAnalysisKey(item)
         : this.sessionAnalysisKey(item)
       this.analysisView = null
+      if (this.drawerOpen) this.closeDrawer({ restoreFocus: false })
       this.analysisError = false
       this.analysisLoading = true
       this.analysisModalOpen = true
@@ -2184,7 +2265,7 @@ export default {
         .sort((a, b) => a.surah_number - b.surah_number)
     },
     reload(force = false) {
-      this.fetchDashboard(this.chartDays, { force })
+      this.fetchDashboard(this.chartDays, { force, announce: force })
       this.loadAiReciteResults()
     },
     setChartDays(days) {
@@ -2195,7 +2276,7 @@ export default {
       this.fetchDashboard(next)
     },
     async fetchDashboard(days = this.chartDays, options = {}) {
-      const { quiet = false, initial = false, force = false } = options
+      const { quiet = false, initial = false, force = false, announce = false } = options
       const safeDays = days === 7 ? 7 : 30
       if (
         quiet
@@ -2250,6 +2331,7 @@ export default {
           this.refreshActiveSessionSnapshot()
           this.setupContinueObserver()
           this.scrollToAiReciteResults()
+          if (announce) this.showToast(this.t('dashboard.updated'))
         }
       } catch (error) {
         if (
@@ -2261,18 +2343,31 @@ export default {
         }
         console.error('Dashboard fetch failed', error)
         if (requestId !== this.dashboardRequestId) return
-        if (initial || force || !this.data) {
+        if (initial || !this.data) {
           this.failureKind = classifyRequestFailure(error)
           this.error = true
           this.data = null
         }
         this.syncState = 'error'
+        if (announce) this.showToast(this.t('dashboard.load_error'))
         this.chartReady = true
       } finally {
         if (requestId === this.dashboardRequestId) {
           this.loading = false
         }
       }
+    },
+    showToast(message) {
+      const text = String(message || '').trim()
+      if (!text) return
+      if (this.toastTimer) clearTimeout(this.toastTimer)
+      this.toastMessage = text
+      this.toastTimer = setTimeout(() => this.clearToast(), 3500)
+    },
+    clearToast() {
+      if (this.toastTimer) clearTimeout(this.toastTimer)
+      this.toastTimer = null
+      this.toastMessage = ''
     },
   },
 }

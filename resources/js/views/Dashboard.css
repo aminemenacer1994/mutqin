@@ -3988,3 +3988,284 @@ a.dash-drawer__row--link:focus-visible,
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Progress dashboard accessibility + desktop container pass ─────────── */
+
+/* A bounded reading column keeps the eye on the next useful action rather
+   than scattering progress across an ultra-wide desktop canvas. */
+.user-dashboard {
+  --dash-content-max: 78rem;
+  font-size: 1rem;
+}
+
+.user-dashboard__shell.container {
+  width: 100%;
+  max-width: var(--dash-content-max);
+  margin-inline: auto !important;
+  padding-inline: var(--dash-gutter);
+}
+
+/* Small labels used to fall as low as 10–11px. Keep supporting copy useful
+   at normal zoom without making the hierarchy shout. */
+.user-dashboard .dash-kicker,
+.user-dashboard .dash-section__hint,
+.user-dashboard .dash-hero__summary,
+.user-dashboard .dash-hero__direction,
+.user-dashboard .dash-continue-card__label,
+.user-dashboard .dash-continue-card__hint,
+.user-dashboard .dash-continue-card__learning,
+.user-dashboard .dash-btn,
+.user-dashboard .dash-glance-action,
+.user-dashboard .dash-analytic__label,
+.user-dashboard .dash-analytic__hint,
+.user-dashboard .dash-chart__summary,
+.user-dashboard .dash-ai-results__facts span,
+.user-dashboard .dash-ai-results__attempt-meta,
+.user-dashboard .dash-ai-results__attempt-meta time,
+.user-dashboard .dash-ai-results__band,
+.user-dashboard .dash-strength {
+  font-size: 0.8125rem !important;
+}
+
+.user-dashboard .dash-murajaah-row__history,
+.user-dashboard .dash-murajaah-row__phrase,
+.user-dashboard .dash-ai-results__empty-hint,
+.user-dashboard .dash-ai-results__muted {
+  font-size: 0.875rem !important;
+}
+
+.dash-hero__direction {
+  margin: 0.45rem 0 0;
+  max-width: 44rem;
+  color: var(--dash-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.dash-continue-card--primary {
+  border-color: color-mix(in srgb, var(--dash-accent) 42%, var(--dash-border));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--dash-accent) 10%, transparent);
+}
+
+/* Empty supporting sections should acknowledge the state, then make room for
+   the single next step above instead of behaving like a full dashboard card. */
+.dash-section--empty .dash-section__body {
+  padding-block: 0.95rem;
+}
+
+.dash-section--empty .dash-ai-results__empty,
+.dash-section--empty .dash-murajaah-block__empty {
+  gap: 0.65rem;
+}
+
+/* The weekly record is one coherent view: chart first, plain-language totals
+   beside it on desktop instead of three equally weighted dashboard cards. */
+@media (min-width: 768px) {
+  .dash-section--weekly .dash-section__body {
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
+    grid-template-areas:
+      "chart metrics"
+      "summary metrics"
+      "note metrics";
+    align-items: stretch;
+    column-gap: 1.25rem;
+  }
+
+  .dash-section--weekly .dash-chart__wrap {
+    grid-area: chart;
+  }
+
+  .dash-section--weekly .dash-chart__footer {
+    grid-area: summary;
+    align-self: start;
+  }
+
+  .dash-section--weekly .dash-analytics {
+    grid-area: metrics;
+    grid-template-columns: 1fr;
+    gap: 0;
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius-sm);
+    overflow: hidden;
+    background: color-mix(in srgb, var(--dash-surface) 96%, var(--dash-bg));
+  }
+
+  .dash-section--weekly .dash-analytic {
+    position: relative;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "icon value"
+      "icon label"
+      "icon hint";
+    justify-items: start;
+    align-content: center;
+    min-height: 0;
+    padding: 0.85rem 0.9rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: start;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .dash-section--weekly .dash-analytic + .dash-analytic {
+    border-top: 1px solid var(--dash-border);
+  }
+
+  .dash-section--weekly .dash-analytic:hover,
+  .dash-section--weekly .dash-analytic:focus-visible {
+    background: color-mix(in srgb, var(--dash-accent-light) 38%, var(--dash-surface));
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dash-accent) 20%, transparent);
+    transform: none;
+  }
+
+  .dash-section--weekly .dash-analytic__icon { grid-area: icon; }
+  .dash-section--weekly .dash-analytic__value { grid-area: value; font-size: 1.55rem; }
+  .dash-section--weekly .dash-analytic__label { grid-area: label; }
+  .dash-section--weekly .dash-analytic__hint { grid-area: hint; }
+  .dash-section--weekly .dash-progress-note { grid-area: note; }
+
+  .user-dashboard__review-row {
+    align-items: start;
+  }
+
+  .user-dashboard__review-row > .dash-section {
+    height: auto;
+  }
+
+  .user-dashboard__review-row > .dash-section .dash-section__body {
+    flex: initial;
+  }
+}
+
+.dash-chart__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--dash-border);
+}
+
+.dash-chart__footer .dash-chart__summary {
+  flex: 1 1 16rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.dash-chart__action {
+  gap: 0.35rem;
+  color: var(--dash-accent-strong);
+}
+
+.dash-progress-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--dash-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.dash-progress-note i {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: var(--dash-accent-strong);
+}
+
+/* Teleported overlays repeat the same keyboard contract: focus remains inside,
+   Escape and the backdrop close the layer, and focus returns to its trigger. */
+.dash-drawer__backdrop {
+  cursor: pointer;
+}
+
+.dash-drawer__backdrop:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--dash-accent) 62%, white);
+  outline-offset: -5px;
+}
+
+.dash-drawer__subtitle,
+.dash-drawer__count,
+.dash-drawer__type,
+.dash-drawer__row-meta,
+.dash-drawer__row-time,
+.dash-drawer__status {
+  font-size: 0.875rem !important;
+}
+
+.dash-toast {
+  position: fixed;
+  z-index: 1200;
+  left: 50%;
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: max-content;
+  max-width: min(30rem, calc(100vw - 2rem));
+  padding: 0.58rem 0.7rem 0.58rem 0.9rem;
+  border: 1px solid var(--border-strong, rgba(78, 58, 38, 0.24));
+  border-radius: 999px;
+  background: var(--surface-strong, #fffaf3);
+  color: var(--text, #1f1a17);
+  box-shadow: 0 12px 34px rgba(31, 24, 18, 0.22);
+  font-family: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  transform: translateX(-50%);
+}
+
+.dash-toast > i {
+  color: var(--success-text, #2d6a4f);
+  font-size: 1rem;
+}
+
+.dash-toast button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: -0.3rem -0.15rem -0.3rem 0.05rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dash-toast button:hover,
+.dash-toast button:focus-visible {
+  background: var(--accent-light, rgba(154, 103, 56, 0.12));
+  outline: 2px solid var(--accent, #9a6738);
+  outline-offset: 1px;
+}
+
+.dash-toast-enter-active,
+.dash-toast-leave-active {
+  transition: opacity 180ms var(--dash-ease, ease), transform 180ms var(--dash-ease, ease);
+}
+
+.dash-toast-enter-from,
+.dash-toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 0.5rem);
+}
+
+@media (max-width: 767.98px) {
+  .user-dashboard__shell.container {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-toast-enter-active,
+  .dash-toast-leave-active {
+    transition: none;
+  }
+}

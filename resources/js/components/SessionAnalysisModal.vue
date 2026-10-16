@@ -185,6 +185,12 @@
 import AppStatus from './AppStatus.vue'
 import RecitationAudioPlayer from './RecitationAudioPlayer.vue'
 import { recitationAccuracyBand } from '../scripts/engine/recitationThresholds.js'
+import {
+  captureReturnFocus,
+  focusInitialElement,
+  handleModalKeydown,
+  restoreReturnFocus,
+} from '../utils/modalFocus'
 import './SessionAnalysisOverview.css'
 
 export default {
@@ -226,6 +232,7 @@ export default {
   data() {
     return {
       titleId: 'sessionAnalysisTitle',
+      returnFocusEl: null,
     }
   },
   computed: {
@@ -303,12 +310,16 @@ export default {
       handler(isOpen) {
         this.syncBodyLock(!!isOpen)
         if (isOpen) {
+          this.returnFocusEl = captureReturnFocus(this.$refs.dialog)
           this.bindEscape()
           this.$nextTick(() => {
-            this.$refs.dialog?.focus?.()
+            focusInitialElement(this.$refs.dialog, '.btn-close, [id*="Title"], [id*="title"], h2')
           })
         } else {
           this.unbindEscape()
+          const returnFocus = this.returnFocusEl
+          this.returnFocusEl = null
+          this.$nextTick(() => restoreReturnFocus(returnFocus))
         }
       },
     },
@@ -316,6 +327,7 @@ export default {
   beforeUnmount() {
     this.unbindEscape()
     this.syncBodyLock(false)
+    restoreReturnFocus(this.returnFocusEl)
   },
   methods: {
     translate(key, fallback) {
@@ -344,17 +356,18 @@ export default {
         .join(' ')
     },
     onOverlayKeydown(event) {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        event.stopPropagation()
-        this.$emit('close')
-      }
+      handleModalKeydown(event, {
+        container: this.$refs.dialog,
+        onEscape: () => this.$emit('close'),
+        open: this.open,
+      })
     },
     onDocumentKeydown(event) {
-      if (event.key !== 'Escape' || !this.open) return
-      event.preventDefault()
-      event.stopPropagation()
-      this.$emit('close')
+      handleModalKeydown(event, {
+        container: this.$refs.dialog,
+        onEscape: () => this.$emit('close'),
+        open: this.open,
+      })
     },
     bindEscape() {
       if (typeof document === 'undefined' || this._escapeBound) return

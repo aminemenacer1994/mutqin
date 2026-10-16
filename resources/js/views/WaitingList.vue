@@ -156,6 +156,7 @@ import {
   trackWaitingListJoin,
 } from '../scripts/seoTools/track.js';
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js';
+import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -440,9 +441,7 @@ export default {
         status.message = '';
         joined.value = true;
         trackWaitingListJoin({ alreadyJoined: false });
-        if (typeof window.fbq === 'function') {
-          window.fbq('track', 'Lead');
-        }
+        trackMetaPixelEvent(META_PIXEL_EVENTS.WAITING_LIST_SIGNUP_COMPLETED);
         trackAckeeEvent(ACKEE_EVENTS.WAITING_LIST_SIGNUP_COMPLETED);
         resetFormFields();
         await nextTick();

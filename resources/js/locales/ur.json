@@ -249,7 +249,15 @@
       "viewPricing": "View plans",
       "seeFeatures": "دیکھیں یہ کیسے مدد کرتا ہے",
       "seeHow": "دیکھیں یہ کیسے کام کرتا ہے",
-      "startMemorisation": "حفظ شروع کریں"
+      "startMemorisation": "حفظ شروع کریں",
+      "startFirstSession": "اپنا پہلا سیشن شروع کریں",
+      "seeFirstSession": "دیکھیں پہلے کیا ہوتا ہے",
+      "firstSessionLabel": "آپ کا تجویز کردہ پہلا سیشن",
+      "firstSessionTime": "تقریباً 10 منٹ",
+      "firstSessionRange": "1–3 آیات سے شروع کریں",
+      "firstSessionOutcome": "اگلی مراجعت کے ساتھ مکمل کریں",
+      "previewKicker": "ایک حقیقی سیشن کے اندر",
+      "previewTitle": "چھوٹی حد مقرر کریں، اس کی مشق کریں، پھر جانیں آگے کیا کرنا ہے"
     },
     "shots": {
       "hero": "متقن سیشن سورۃ الکافرون پر شروع کے لیے تیار",
@@ -325,6 +333,54 @@
           "detail": "ایک واضح منصوبہ بإذن اللہ، تاکہ اگلا کیا کھولنا ہے اس میں الجھن نہ ہو۔"
         }
       }
+    },
+    "access": {
+      "available": {
+        "label": "اب دستیاب ہے",
+        "detail": "آج اپنا مفت پہلا سیشن شروع کریں — ویٹنگ لسٹ کی ضرورت نہیں۔"
+      },
+      "early": {
+        "label": "ابتدائی رسائی",
+        "detail": "رسائی مرحلہ وار کھل رہی ہے۔ ویٹنگ لسٹ میں شامل ہوں، ہم آپ کو دعوت دیں گے۔"
+      }
+    },
+    "practiceTypes": {
+      "kicker": "درست مشق منتخب کریں",
+      "title": "آپ کی حفظ کی مشق کے چار الگ حصے",
+      "subtitle": "یہ ایک ساتھ کام کرتے ہیں، مگر مختصر حد کو مضبوط رکھنے میں ہر ایک کا الگ کام ہے۔",
+      "items": {
+        "memorise": {
+          "title": "حفظ کریں",
+          "description": "سننے، دہرانے اور آہستہ آہستہ متن سے دور ہونے کے ذریعے ایک مختصر نئی حد سیکھیں۔",
+          "cue": "نئی آیات سیکھتے وقت اسے استعمال کریں۔"
+        },
+        "revise": {
+          "title": "مراجعہ کریں",
+          "description": "پہلے سیکھی ہوئی آیات کی طرف واپس آئیں، خاص طور پر جن میں اعتماد کم محسوس ہو۔",
+          "cue": "پہلی محنت کو تازہ رکھنے کے لیے اسے استعمال کریں۔"
+        },
+        "aiRecite": {
+          "title": "AI Recite",
+          "description": "اختیاری صوتی رائے آپ کو ان الفاظ یا آیات پر توجہ دلانے میں مدد دیتی ہے جنہیں دوبارہ احتیاط سے دہرانا چاہیے۔",
+          "cue": "حفظ سے مشق کرنے کے بعد اسے استعمال کریں۔"
+        },
+        "assess": {
+          "title": "جانچیں",
+          "description": "دیکھیں کیا محفوظ رہا، کس چیز کو توجہ چاہیے، اور اگلے سیشن کے لیے سب سے واضح قدم کیا ہے۔",
+          "cue": "یہ آپ کا نتیجہ اور اگلا منصوبہ ہے، الگ مشق کا موڈ نہیں۔"
+        }
+      }
+    },
+    "firstSession": {
+      "kicker": "تجویز کردہ پہلا سیشن",
+      "title": "چھوٹا شروع کریں۔ یہ جان کر مکمل کریں کہ آگے کیا کرنا ہے۔",
+      "subtitle": "1–3 آیات کے لیے تقریباً 10 منٹ رکھیں۔ آپ سنیں گے، دہرائیں گے، حفظ سے تلاوت کریں گے، اور واضح اگلی مراجعت کے ساتھ مکمل کریں گے۔",
+      "durationLabel": "رکھیں",
+      "duration": "تقریباً 10 منٹ",
+      "startLabel": "شروع کریں",
+      "start": "ایک مختصر حد — 1–3 آیات",
+      "leaveLabel": "آپ کے پاس ہوگا",
+      "leave": "محفوظ ابتدائی نقطہ اور مراجعے کے لیے واضح حد"
     },
     "demo": {
       "session": "سورة الملك · الآية ٣",
@@ -1430,9 +1486,12 @@
       "consentTitle": "Microphone and AI processing",
       "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
       "consentProcessor": "Live transcription may be handled by {processor}.",
+      "consentBrowserPrompt": "اس کے بعد آپ کا براؤزر مائیکروفون استعمال کرنے کی اجازت مانگے گا۔ ریکارڈنگ شروع کرنے کے لیے Allow منتخب کریں۔",
       "consentRetentionNever": "Raw recordings are not saved after the check finishes.",
       "consentRetentionTemporary": "Temporary audio may be kept briefly on this device for review, then deleted automatically.",
+      "consentRetentionTemporaryFor": "عارضی آڈیو جائزے کے لیے اس آلے پر {hours} گھنٹے تک رک سکتی ہے، پھر خودکار طور پر حذف ہو جاتی ہے۔",
       "consentRetentionRetain": "You can keep a local recording for your own replay. Mutqin does not sell your audio.",
+      "consentNoSale": "Mutqin آپ کی آڈیو کبھی فروخت نہیں کرتا۔",
       "consentPrivacyLink": "Read the Privacy policy",
       "consentAccept": "Allow and continue",
       "consentDecline": "Not now",
@@ -1507,6 +1566,7 @@
       "micNotFoundLead": "This device does not appear to have a microphone Mutqin can use.",
       "micUnavailableTitle": "Microphone unavailable",
       "micUnavailableLead": "Another app or system process may currently be using it.",
+      "micUnavailableStep": "مائیکروفون استعمال کرنے والی کالز، ریکارڈنگ ایپس یا براؤزر ٹیبز بند کریں، پھر دوبارہ کوشش کریں۔",
       "micSecurityTitle": "Microphone access unavailable",
       "micSecurityLead": "Ensure Mutqin is being used over HTTPS and microphone access is allowed.",
       "micUnsupportedTitle": "Microphone not supported in this browser",
@@ -3644,6 +3704,7 @@
       "hintProcessing": "Processing your recitation…",
       "hintProcessingSlow": "يستغرق هذا وقتًا أطول من المتوقع.",
       "hintAnalysing": "Comparing with the Quran text…",
+      "hintUploading": "آپ کی ریکارڈنگ محفوظ طریقے سے محفوظ کی جا رہی ہے…",
       "startFailed": "Could not start assessment.",
       "analyseFailed": "Could not analyse this recitation. Please try again.",
       "sessionExpired": "انتهت جلستك. حدّث الصفحة ثم أعد التقييم.",
@@ -3682,6 +3743,12 @@
       "tajweedOff": "إيقاف",
       "tajweedHint": "اعرض أو hide tajweed colouring على نص",
       "mistakeVisual": "خطأ confirmed",
+      "feedbackListening": "سن رہا ہے — تلاوت جاری رکھیں",
+      "feedbackListeningDetail": "الفاظ کو واضح ہونے میں ایک لمحہ لگ سکتا ہے۔",
+      "feedbackChecking": "قریب کے ملاپ کی جانچ ہو رہی ہے",
+      "feedbackCheckingDetail": "اسے ابھی غلطی کے طور پر نشان زد نہیں کیا گیا۔ تلاوت جاری رکھیں۔",
+      "feedbackConfirmed": "فرق کی تصدیق ہو گئی",
+      "feedbackConfirmedDetail": "یہ مراجَعے کے لیے نوٹ کر لیا گیا ہے۔ بغیر رکے تلاوت جاری رکھیں۔",
       "autoFollow": "المتابعة التلقائية",
       "autoFollowOn": "المتابعة التلقائية on",
       "autoFollowOff": "المتابعة التلقائية off",
@@ -3704,6 +3771,7 @@
         "complete": "اكتمل",
         "processing": "معالجة",
         "analysing": "تحليل",
+        "uploading": "ریکارڈنگ محفوظ کی جا رہی ہے",
         "results": "نتائج التقييم",
         "plan": "تمرين خطة",
         "plan_adjusted": "تم ضبط الخطة",
@@ -4733,6 +4801,7 @@
     "load_error_hint": "يرجى المحاولة مجددًا.",
     "retry": "إعادة المحاولة",
     "refresh": "تحديث",
+    "updated": "پیش رفت تازہ کر دی گئی۔",
     "bismillah": "بسم الله",
     "greeting": "السلام عليكم، {name}",
     "dear_friend": "أخي",
@@ -4749,6 +4818,7 @@
     "progress_subtitle": "سورتك، أسبوعك، ووتيرة تمرينك.",
     "weekly_title": "هذا الأسبوع",
     "weekly_subtitle": "كيف often  sat مع  القرآن.",
+    "progress_note": "یہ اعداد آپ کی مشق کا ریکارڈ ہیں، پیچھا کرنے کا ہدف نہیں۔",
     "weekly_stats_aria": "نشاط الأسبوع",
     "weekly_empty_title": "رحلتك مع القرآن تبدأ هنا.",
     "weekly_empty_message": "أكمل جلستك الأولى وسيظهر نشاطك الأسبوعي هنا.",
@@ -4907,6 +4977,7 @@
     "activity_note_saved": "حُفظت الملاحظة",
     "cta_resume": "عُد",
     "journey_kicker": "حفظك",
+    "next_step_hint": "یہاں سے شروع کریں۔ باقی سب اس وقت تک انتظار کر سکتا ہے جب تک آپ تیار ہوں۔",
     "journey_start_title": "ابدأ مع القرآن",
     "journey_start_hint": "ابدأ بالفاتحة، أو اختر أي سورة.",
     "journey_start_beginning": "ابدأ بالفاتحة",
@@ -4953,6 +5024,7 @@
     "cta_review": "ابدأ المراجعة",
     "cta_recommendation": "ابدأ",
     "cta_start": "ابدأ",
+    "open_practice": "مشق کا سیشن کھولیں",
     "msg_resume": "",
     "msg_continue": "",
     "msg_incomplete": "",

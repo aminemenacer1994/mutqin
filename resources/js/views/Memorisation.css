@@ -59388,6 +59388,20 @@ html[data-theme="dark"] body .app .top-card-icon-controls .top-card-fullscreen-t
 }
 
 @media (max-width: 767.98px) {
+  /* Let the session CTA shrink with the toolbar instead of carrying its
+     desktop width into narrow viewports and pushing adjacent controls off-screen. */
+  html body .app .workspace-shell-head-utility-row .session-primary-action,
+  html body .app .workspace-shell-head-utility-row .session-primary-action[style] {
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+
+  html body .app .workspace-shell-head-utility-row {
+    gap: 0.6rem !important;
+    padding-inline: 0.25rem !important;
+  }
+
   html body .app .workspace-shell-head-utility-row > .top-card-session-hr,
   .workspace-shell-head-utility-row > .top-card-session-hr {
     display: block !important;

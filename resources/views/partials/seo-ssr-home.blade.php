@@ -1,8 +1,16 @@
 <article class="seo-ssr">
-    <h1>A calmer, more structured way to memorise the Qur’an.</h1>
-    <p>Mutqin is a Quran memorization app for Hifz. Listen, repeat, recite and review each ayah on a clear path. <a href="/features/ai-recite">AI Recite</a> can follow along when you practise from memory.</p>
-    <h2>A clear path for every ayah</h2>
-    <p>Set a short range, practise, recite, then return to what still needs care. Start with a <a href="/guides/quran-memorization-for-beginners">beginner plan</a> or <a href="/guides/quran-memorization-techniques">how to memorize the Quran</a>.</p>
+    @php($earlyAccess = \App\Support\MutqinDomains::restrictMarketingHost(request()))
+    <h1>Build stronger recall, one clear session at a time.</h1>
+    <p>Mutqin is a Quran memorization app for Hifz. Choose a small range, then listen, repeat, recite from memory, and return to the ayahs that need care. <a href="/features/ai-recite">AI Recite</a> offers optional spoken feedback when you practise from memory.</p>
+    @if($earlyAccess)
+        <p><strong>Early access:</strong> access is opening in stages. <a href="/waiting-list">Join the waiting list</a> for an invitation.</p>
+    @else
+        <p><strong>Available now:</strong> start a free first session today — no waiting list needed. <a href="/memorisation">Start your first session</a>.</p>
+    @endif
+    <h2>Your recommended first session</h2>
+    <p>Set aside about 10 minutes and start with one to three ayahs. You will listen, repeat, recite, and leave with a saved starting point and a clear set to revisit. Read the <a href="/guides/quran-memorization-for-beginners">beginner plan</a> or learn <a href="/guides/quran-memorization-techniques">how to memorize the Quran</a>.</p>
+    <h2>Four distinct parts of your Hifz practice</h2>
+    <p>Memorisation helps you learn new ayahs; revision helps you return to earlier work; AI Recite helps you notice what needs another careful pass; assessment shows what held and the clearest next step.</p>
     <h2>What supports your Hifz</h2>
     <p>Guided memorisation, listen and repeat, spaced review, AI Recite, <a href="/features/mushaf">Mushaf layout with progressive hiding</a>, and reading aids. Free tools include a <a href="/tools/quran-memorization-planner">Quran memorization planner</a>, <a href="/tools/hifz-progress-calculator">Hifz progress calculator</a>, <a href="/tools/quran-memorization-test">memorization test</a>, and <a href="/tools/find-an-ayah">Find an ayah</a>.</p>
     <h2>Questions about memorising with Mutqin</h2>

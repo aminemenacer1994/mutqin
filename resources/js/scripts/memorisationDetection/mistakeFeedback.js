@@ -28,7 +28,10 @@ export const UNCERTAIN_STATUSES = Object.freeze([
 
 export const MISTAKE_CUE_MIN_CONFIDENCE = 0.28
 export const STOP_ON_MISTAKE_CUE_MIN_CONFIDENCE = 0.12
-export const MISTAKE_CUE_DEBOUNCE_MS = 180
+/** Let a final recognition settle before interrupting a flowing recitation. */
+export const MISTAKE_CUE_CONFIRMATION_MS = 420
+/** Keep confirmed cues from sounding like a rapid alarm. */
+export const MISTAKE_CUE_DEBOUNCE_MS = 800
 export const MISTAKE_CUE_PEAK_GAIN = 0.14
 export const MISTAKE_VISUAL_MS = 900
 
@@ -134,6 +137,7 @@ export function createMistakeFeedbackController(options = {}) {
   let playing = false
   let lastPlayedAt = 0
   const signalledIndexes = new Set()
+  const pendingWordCues = new Map()
   let ownsContext = false
 
   function ensureContext() {
@@ -186,6 +190,10 @@ export function createMistakeFeedbackController(options = {}) {
 
   function resetSessionSignals() {
     signalledIndexes.clear()
+    pendingWordCues.forEach((timer) => {
+      try { (options.clearTimeoutFn || clearTimeout)(timer) } catch (_) { /* ignore */ }
+    })
+    pendingWordCues.clear()
     lastPlayedAt = 0
     playing = false
   }
@@ -282,6 +290,51 @@ export function createMistakeFeedbackController(options = {}) {
     }
   }
 
+  /**
+   * Queue a cue only after the same final result has had a brief chance to
+   * settle. Call cancelPendingWordTransition if recognition revises the word.
+   */
+  function scheduleWordTransition(transition = {}, {
+    delayMs = MISTAKE_CUE_CONFIRMATION_MS,
+    onResult = null,
+  } = {}) {
+    const wordIndex = Number(transition.wordIndex)
+    const gate = shouldPlayMistakeCue({
+      ...transition,
+      muted: !enabled,
+      alreadySignalled: hasSignalled(wordIndex),
+      minConfidence: mode === MISTAKE_HANDLING_MODES.STOP_ON_MISTAKE
+        ? STOP_ON_MISTAKE_CUE_MIN_CONFIDENCE
+        : MISTAKE_CUE_MIN_CONFIDENCE,
+    })
+    if (!gate.play || !Number.isFinite(wordIndex)) {
+      return { scheduled: false, reason: gate.reason }
+    }
+
+    const previousTimer = pendingWordCues.get(wordIndex)
+    if (previousTimer != null) {
+      try { (options.clearTimeoutFn || clearTimeout)(previousTimer) } catch (_) { /* ignore */ }
+    }
+    const schedule = options.setTimeoutFn || setTimeout
+    const timer = schedule(() => {
+      pendingWordCues.delete(wordIndex)
+      const result = notifyWordTransition(transition)
+      if (typeof onResult === 'function') onResult(result)
+    }, Math.max(0, Number(delayMs) || 0))
+    pendingWordCues.set(wordIndex, timer)
+    return { scheduled: true, reason: gate.reason }
+  }
+
+  function cancelPendingWordTransition(wordIndex) {
+    const index = Number(wordIndex)
+    if (!Number.isFinite(index)) return false
+    const timer = pendingWordCues.get(index)
+    if (timer == null) return false
+    try { (options.clearTimeoutFn || clearTimeout)(timer) } catch (_) { /* ignore */ }
+    pendingWordCues.delete(index)
+    return true
+  }
+
   function dispose() {
     resetSessionSignals()
     buffer = null
@@ -309,6 +362,8 @@ export function createMistakeFeedbackController(options = {}) {
     markSignalled,
     playTone,
     notifyWordTransition,
+    scheduleWordTransition,
+    cancelPendingWordTransition,
     dispose,
   }
 }

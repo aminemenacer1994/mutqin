@@ -9403,3 +9403,41 @@ html body .app .workspace-recite-dock__button:hover {
       !important;
   }
 }
+
+/* Tablet and split-window widths do not have room for the desktop header's
+   title, metadata, session action, and icon controls on one line. Give the
+   action controls their own row so no metadata chip is pushed off-screen. */
+@media (min-width: 768px) and (max-width: 1024px) {
+  html body .app .workspace-shell-head:not(.is-idle) > .workspace-shell-head-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0.55rem !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-copy {
+    grid-column: 1 !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.4rem 0.65rem !important;
+    min-width: 0 !important;
+  }
+
+  html body .app .workspace-shell-head-metadata {
+    flex: 1 1 26rem !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+
+  html body .app .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
+    grid-column: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline-start: 0 !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 0.6rem !important;
+  }
+}

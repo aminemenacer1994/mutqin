@@ -249,7 +249,15 @@
       "viewPricing": "View plans",
       "seeFeatures": "Lihat bagaimana ini membantu",
       "seeHow": "Lihat cara kerjanya",
-      "startMemorisation": "Mulai menghafal"
+      "startMemorisation": "Mulai menghafal",
+      "startFirstSession": "Mulai sesi pertama Anda",
+      "seeFirstSession": "Lihat apa yang terjadi lebih dahulu",
+      "firstSessionLabel": "Sesi pertama yang dianjurkan",
+      "firstSessionTime": "Sekitar 10 menit",
+      "firstSessionRange": "Mulai dengan 1–3 ayat",
+      "firstSessionOutcome": "Selesai dengan langkah ulang berikutnya",
+      "previewKicker": "Di dalam sesi nyata",
+      "previewTitle": "Tentukan rentang kecil, latih, lalu tahu langkah berikutnya"
     },
     "shots": {
       "hero": "Sesi Mutqin siap dimulai pada Al-Kafirun",
@@ -325,6 +333,54 @@
           "detail": "Satu rencana yang jelas, bi’idhnillāh, agar Anda tidak bingung apa yang dibuka selanjutnya."
         }
       }
+    },
+    "access": {
+      "available": {
+        "label": "Tersedia sekarang",
+        "detail": "Mulai sesi pertama gratis Anda hari ini — tidak perlu daftar tunggu."
+      },
+      "early": {
+        "label": "Akses awal",
+        "detail": "Akses dibuka bertahap. Bergabunglah dengan daftar tunggu dan kami akan mengundang Anda."
+      }
+    },
+    "practiceTypes": {
+      "kicker": "Pilih latihan yang tepat",
+      "title": "Empat bagian berbeda dalam latihan Hifz Anda",
+      "subtitle": "Semuanya bekerja bersama, tetapi masing-masing punya peran berbeda untuk menjaga rentang pendek tetap kuat.",
+      "items": {
+        "memorise": {
+          "title": "Menghafal",
+          "description": "Pelajari rentang baru yang singkat dengan mendengar, mengulang, dan perlahan meninggalkan teks.",
+          "cue": "Gunakan saat Anda mempelajari ayat baru."
+        },
+        "revise": {
+          "title": "Mengulang",
+          "description": "Kembali ke ayat yang sudah dipelajari, terutama yang terasa kurang kuat.",
+          "cue": "Gunakan untuk menjaga hafalan lama tetap hangat."
+        },
+        "aiRecite": {
+          "title": "AI Recite",
+          "description": "Umpan balik lisan opsional membantu Anda melihat kata atau ayat yang perlu dilalui lagi dengan saksama.",
+          "cue": "Gunakan setelah berlatih dari hafalan."
+        },
+        "assess": {
+          "title": "Menilai",
+          "description": "Lihat apa yang bertahan, apa yang perlu perhatian, dan langkah berikutnya yang paling jelas untuk sesi Anda.",
+          "cue": "Ini hasil dan rencana berikutnya, bukan mode latihan terpisah."
+        }
+      }
+    },
+    "firstSession": {
+      "kicker": "Sesi pertama yang dianjurkan",
+      "title": "Mulai kecil. Selesai dengan tahu apa yang dilakukan berikutnya.",
+      "subtitle": "Sediakan sekitar 10 menit untuk 1–3 ayat. Anda akan mendengar, mengulang, melafalkan, dan selesai dengan langkah ulang yang jelas.",
+      "durationLabel": "Sediakan",
+      "duration": "Sekitar 10 menit",
+      "startLabel": "Mulai dengan",
+      "start": "Satu rentang singkat — 1–3 ayat",
+      "leaveLabel": "Anda selesai dengan",
+      "leave": "Titik awal tersimpan dan rentang jelas untuk diulang"
     },
     "demo": {
       "session": "سورة Al-Mulk · آية 3",
@@ -1430,9 +1486,12 @@
       "consentTitle": "Microphone and AI processing",
       "consentBody": "Mutqin uses your microphone to assess Qur’an recitation during AI Recite and Check memorisation. Audio is processed only for that feedback.",
       "consentProcessor": "Live transcription may be handled by {processor}.",
+      "consentBrowserPrompt": "Selanjutnya, browser Anda akan meminta izin memakai mikrofon. Pilih Izinkan untuk mulai merekam.",
       "consentRetentionNever": "Raw recordings are not saved after the check finishes.",
       "consentRetentionTemporary": "Temporary audio may be kept briefly on this device for review, then deleted automatically.",
+      "consentRetentionTemporaryFor": "Audio sementara dapat disimpan di perangkat ini hingga {hours} jam untuk ditinjau, lalu dihapus secara otomatis.",
       "consentRetentionRetain": "You can keep a local recording for your own replay. Mutqin does not sell your audio.",
+      "consentNoSale": "Mutqin tidak pernah menjual audio Anda.",
       "consentPrivacyLink": "Read the Privacy policy",
       "consentAccept": "Allow and continue",
       "consentDecline": "Not now",
@@ -1507,6 +1566,7 @@
       "micNotFoundLead": "This device does not appear to have a microphone Mutqin can use.",
       "micUnavailableTitle": "Microphone unavailable",
       "micUnavailableLead": "Another app or system process may currently be using it.",
+      "micUnavailableStep": "Tutup panggilan, aplikasi perekam, atau tab browser yang menggunakan mikrofon, lalu coba lagi.",
       "micSecurityTitle": "Microphone access unavailable",
       "micSecurityLead": "Ensure Mutqin is being used over HTTPS and microphone access is allowed.",
       "micUnsupportedTitle": "Microphone not supported in this browser",
@@ -3644,6 +3704,7 @@
       "hintProcessing": "Processing your recitation…",
       "hintProcessingSlow": "Ini is taking longer than expected.",
       "hintAnalysing": "Comparing with the Quran text…",
+      "hintUploading": "Menyimpan rekaman Anda dengan aman…",
       "startFailed": "Could not start assessment.",
       "analyseFailed": "Could not analyse this recitation. Please try again.",
       "sessionExpired": "Your sesi expired. Refresh the page, then try again.",
@@ -3682,6 +3743,12 @@
       "tajweedOff": "nonaktif",
       "tajweedHint": "Tampilkan or hide tajweed colouring on the text",
       "mistakeVisual": "kesalahan confirmed",
+      "feedbackListening": "Mendengarkan — teruskan membaca",
+      "feedbackListeningDetail": "Kata-kata mungkin perlu waktu sejenak untuk dipastikan.",
+      "feedbackChecking": "Memeriksa kecocokan yang mendekati",
+      "feedbackCheckingDetail": "Ini belum ditandai sebagai kesalahan. Teruskan membaca.",
+      "feedbackConfirmed": "Perbedaan terkonfirmasi",
+      "feedbackConfirmedDetail": "Dicatat untuk ditinjau. Teruskan membaca tanpa berhenti.",
       "autoFollow": "ikuti otomatis",
       "autoFollowOn": "ikuti otomatis on",
       "autoFollowOff": "ikuti otomatis off",
@@ -3704,6 +3771,7 @@
         "complete": "Selesai",
         "processing": "معالجة",
         "analysing": "تحليل",
+        "uploading": "Menyimpan rekaman",
         "results": "نتائج التقييم",
         "plan": "Latihan plan",
         "plan_adjusted": "rencana adjusted",
@@ -4733,6 +4801,7 @@
     "load_error_hint": "Silakan try again.",
     "retry": "Coba lagi",
     "refresh": "تحديث",
+    "updated": "Progres diperbarui.",
     "bismillah": "بسم الله",
     "greeting": "Selamat datang kembali, {name}",
     "dear_friend": "« friend»",
@@ -4749,6 +4818,7 @@
     "progress_subtitle": "Anda surah, Anda week, dan how often Anda practise.",
     "weekly_title": "Ini week",
     "weekly_subtitle": "How often Anda sat dengan the Qur'an.",
+    "progress_note": "Angka ini adalah catatan latihan Anda, bukan target yang harus dikejar.",
     "weekly_stats_aria": "نشاط الأسبوع",
     "weekly_empty_title": "Anda Qur'an journey starts here.",
     "weekly_empty_message": "selesai your first sesi and your weekly activity will appear here.",
@@ -4907,6 +4977,7 @@
     "activity_note_saved": "catatan disimpan",
     "cta_resume": "kembali",
     "journey_kicker": "Anda hifz",
+    "next_step_hint": "Mulai dari sini. Yang lain dapat menunggu sampai Anda siap.",
     "journey_start_title": "Mulai with the Qur'an",
     "journey_start_hint": "Mulai with Al-Fatihah, or choose any surah.",
     "journey_start_beginning": "Mulai with Al-Fatihah",
@@ -4953,6 +5024,7 @@
     "cta_review": "Mulai muraja'ah",
     "cta_recommendation": "Mulai",
     "cta_start": "Mulai",
+    "open_practice": "Buka sesi latihan",
     "msg_resume": "",
     "msg_continue": "",
     "msg_incomplete": "",

@@ -133,19 +133,22 @@
               </div>
 
               <div
-                v-if="stage === 'recording'"
+                v-if="recordingProgressActive"
                 class="dash-ai-recite-pill"
+                :class="{
+                  'is-starting': stage === 'starting',
+                  'is-processing': stage === 'processing',
+                }"
                 role="status"
                 aria-live="polite"
+                aria-atomic="true"
               >
                 <span class="dash-ai-recite-pill__dot" aria-hidden="true"></span>
-                <strong>{{ t('memorisation.amd.micListening') }}</strong>
-                <span>{{ elapsedLabel }}</span>
-              </div>
-
-              <div v-if="stage === 'processing'" class="dash-ai-recite-status" role="status">
-                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
-                <span>{{ processingLabel }}</span>
+                <span class="dash-ai-recite-pill__copy">
+                  <strong>{{ recordingProgressTitle }}</strong>
+                  <small>{{ recordingProgressDetail }}</small>
+                </span>
+                <time v-if="stage === 'recording'">{{ elapsedLabel }}</time>
               </div>
 
               <AppStatus
@@ -386,7 +389,20 @@ export default {
         : this.t('dashboard.ai_recite.title')
     },
     isBusy() {
-      return this.stage === 'recording' || this.stage === 'processing' || this.starting || this.stopping
+      return ['starting', 'recording', 'processing'].includes(this.stage) || this.starting || this.stopping
+    },
+    recordingProgressActive() {
+      return ['starting', 'recording', 'processing'].includes(this.stage)
+    },
+    recordingProgressTitle() {
+      if (this.stage === 'recording') return this.t('memorisation.amd.micListening')
+      if (this.stage === 'processing') return this.t('memorisation.amd.stages.processing')
+      return this.t('memorisation.amd.stages.starting')
+    },
+    recordingProgressDetail() {
+      if (this.stage === 'recording') return this.t('memorisation.amd.hintListening')
+      if (this.stage === 'processing') return this.processingLabel || this.t('memorisation.amd.hintProcessing')
+      return this.t('memorisation.amd.hintStarting')
     },
     canPeek() {
       return ['ready', 'recording', 'result'].includes(this.stage)
@@ -531,6 +547,7 @@ export default {
         return
       }
       this.starting = true
+      this.stage = 'starting'
       this.peekRevealed = false
       this.analysisView = null
       this.audioUrl = ''
@@ -693,6 +710,7 @@ export default {
         writeStoredLastLocation(this.userId, { surah_number: this.surah, ayah: this.ayah })
         if (this.savedAttemptId && this.audioBlob) {
           try {
+            this.processingLabel = this.t('memorisation.amd.hintUploading')
             const savedAudio = await learningApi.uploadAiReciteAttemptAudio(
               this.savedAttemptId,
               this.audioBlob,

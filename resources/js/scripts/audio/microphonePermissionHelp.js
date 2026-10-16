@@ -129,7 +129,11 @@ export function resolveMicrophoneHelp(t, options = {}) {
         'memorisation.aiCheck.micUnavailableLead',
         'Another app or system process may currently be using it.',
       ),
-      steps: [],
+      steps: [translate(
+        t,
+        'memorisation.aiCheck.micUnavailableStep',
+        'Close any calls, recording apps, or browser tabs using the microphone, then try again.',
+      )],
       showPermissionInstructions: false,
       ...browserInfo,
     }

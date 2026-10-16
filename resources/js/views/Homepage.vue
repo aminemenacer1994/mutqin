@@ -14,13 +14,49 @@
             </h1>
             <p class="hero__desc">{{ t('homepage.hero.desc') }}</p>
 
-            <div class="hero__promise" role="group" :aria-label="t('homepage.hero.promiseLabel')">
-              <p><span>{{ t('homepage.hero.problem') }}</span> {{ t('homepage.hero.problemText') }}</p>
-              <p><span>{{ t('homepage.hero.solution') }}</span> {{ t('homepage.hero.solutionText') }}</p>
+            <div
+              class="hero__availability"
+              :class="{ 'hero__availability--early': !showStartMemorisationCta }"
+              role="status"
+            >
+              <i
+                class="bi"
+                :class="showStartMemorisationCta ? 'bi-check-circle-fill' : 'bi-hourglass-split'"
+                aria-hidden="true"
+              ></i>
+              <div>
+                <strong>{{ t(showStartMemorisationCta ? 'homepage.access.available.label' : 'homepage.access.early.label') }}</strong>
+                <span>{{ t(showStartMemorisationCta ? 'homepage.access.available.detail' : 'homepage.access.early.detail') }}</span>
+              </div>
             </div>
+
+            <ul class="hero__session-signals" :aria-label="t('homepage.hero.firstSessionLabel')">
+              <li>
+                <i class="bi bi-clock" aria-hidden="true"></i>
+                <span>{{ t('homepage.hero.firstSessionTime') }}</span>
+              </li>
+              <li>
+                <i class="bi bi-bookmark-heart" aria-hidden="true"></i>
+                <span>{{ t('homepage.hero.firstSessionRange') }}</span>
+              </li>
+              <li>
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                <span>{{ t('homepage.hero.firstSessionOutcome') }}</span>
+              </li>
+            </ul>
 
             <div class="hero__actions">
               <a
+                v-if="showStartMemorisationCta"
+                href="/memorisation"
+                class="btn btn--primary"
+                @click="onSeoCta('memorisation', '/memorisation', t('homepage.hero.startFirstSession'))"
+              >
+                <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
+                {{ t('homepage.hero.startFirstSession') }}
+              </a>
+              <a
+                v-else
                 href="/waiting-list"
                 class="btn btn--primary"
                 @click="onSeoCta('waiting_list', '/waiting-list', t('homepage.waitlist.cta'))"
@@ -30,17 +66,20 @@
               </a>
               <a
                 v-if="showStartMemorisationCta"
-                href="/memorisation"
+                href="#first-session"
                 class="btn btn--secondary"
-                @click="onSeoCta('memorisation', '/memorisation', t('homepage.hero.startMemorisation'))"
               >
-                <i class="bi bi-journal-text" aria-hidden="true"></i>
-                {{ t('homepage.hero.startMemorisation') }}
+                <i class="bi bi-arrow-down" aria-hidden="true"></i>
+                {{ t('homepage.hero.seeFirstSession') }}
               </a>
             </div>
           </div>
 
           <div class="hero__visual">
+            <div class="hero__visual-note">
+              <span>{{ t('homepage.hero.previewKicker') }}</span>
+              <strong>{{ t('homepage.hero.previewTitle') }}</strong>
+            </div>
             <div class="hero__fan">
               <figure
                 v-for="shot in heroShots"
@@ -70,13 +109,62 @@
       </div>
     </section>
 
-    <section id="how-it-works" class="how" aria-labelledby="how-title">
+    <section class="practice-types" aria-labelledby="practice-types-title">
       <div class="wrap">
         <header class="section-head" data-reveal>
-          <p class="section-kicker">{{ t('homepage.how.kicker') }}</p>
-          <h2 id="how-title" class="section-title">{{ t('homepage.how.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.how.subtitle') }}</p>
+          <p class="section-kicker">{{ t('homepage.practiceTypes.kicker') }}</p>
+          <h2 id="practice-types-title" class="section-title">{{ t('homepage.practiceTypes.title') }}</h2>
+          <p class="section-sub">{{ t('homepage.practiceTypes.subtitle') }}</p>
         </header>
+
+        <div class="practice-types__grid">
+          <article
+            v-for="(mode, idx) in practiceModes"
+            :key="mode.id"
+            class="practice-types__card"
+            data-reveal
+            :style="{ '--delay': `${idx * 60}ms` }"
+          >
+            <span class="practice-types__icon" aria-hidden="true"><i class="bi" :class="mode.icon"></i></span>
+            <h3>{{ mode.title }}</h3>
+            <p>{{ mode.description }}</p>
+            <span class="practice-types__cue">{{ mode.cue }}</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <header id="first-session" class="section-head" data-reveal>
+          <p class="section-kicker">{{ t('homepage.firstSession.kicker') }}</p>
+          <h2 id="how-title" class="section-title">{{ t('homepage.firstSession.title') }}</h2>
+          <p class="section-sub">{{ t('homepage.firstSession.subtitle') }}</p>
+        </header>
+
+        <div class="session-brief" data-reveal>
+          <div class="session-brief__item">
+            <i class="bi bi-clock-history" aria-hidden="true"></i>
+            <div>
+              <strong>{{ t('homepage.firstSession.durationLabel') }}</strong>
+              <span>{{ t('homepage.firstSession.duration') }}</span>
+            </div>
+          </div>
+          <div class="session-brief__item">
+            <i class="bi bi-book" aria-hidden="true"></i>
+            <div>
+              <strong>{{ t('homepage.firstSession.startLabel') }}</strong>
+              <span>{{ t('homepage.firstSession.start') }}</span>
+            </div>
+          </div>
+          <div class="session-brief__item session-brief__item--outcome">
+            <i class="bi bi-check2-circle" aria-hidden="true"></i>
+            <div>
+              <strong>{{ t('homepage.firstSession.leaveLabel') }}</strong>
+              <span>{{ t('homepage.firstSession.leave') }}</span>
+            </div>
+          </div>
+        </div>
 
         <div class="how__stage demo__stage" data-reveal>
           <div class="demo__phone">
@@ -384,6 +472,7 @@ import { reactive, ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getSavedTheme, setGlobalTheme } from '../utils/theme';
 import { trackSeoCtaClick, trackSeoLandingView } from '../scripts/seoTools/track.js';
+import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js';
 
 export default {
   name: 'Homepage',
@@ -624,6 +713,40 @@ export default {
       ];
     });
 
+    const practiceModes = computed(() => {
+      void locale.value;
+      return [
+        {
+          id: 'memorise',
+          icon: 'bi-journal-plus',
+          title: t('homepage.practiceTypes.items.memorise.title'),
+          description: t('homepage.practiceTypes.items.memorise.description'),
+          cue: t('homepage.practiceTypes.items.memorise.cue'),
+        },
+        {
+          id: 'revise',
+          icon: 'bi-arrow-repeat',
+          title: t('homepage.practiceTypes.items.revise.title'),
+          description: t('homepage.practiceTypes.items.revise.description'),
+          cue: t('homepage.practiceTypes.items.revise.cue'),
+        },
+        {
+          id: 'ai-recite',
+          icon: 'bi-mic-fill',
+          title: t('homepage.practiceTypes.items.aiRecite.title'),
+          description: t('homepage.practiceTypes.items.aiRecite.description'),
+          cue: t('homepage.practiceTypes.items.aiRecite.cue'),
+        },
+        {
+          id: 'assess',
+          icon: 'bi-clipboard2-check',
+          title: t('homepage.practiceTypes.items.assess.title'),
+          description: t('homepage.practiceTypes.items.assess.description'),
+          cue: t('homepage.practiceTypes.items.assess.cue'),
+        },
+      ];
+    });
+
     const features = computed(() => {
       void locale.value;
       return [
@@ -689,6 +812,7 @@ export default {
     });
 
     const onSeoCta = (dest, href, label) => {
+      trackMetaPixelEvent(META_PIXEL_EVENTS.PRIMARY_CTA_CLICKED, { destination: dest });
       trackSeoCtaClick({
         dest,
         href,
@@ -765,6 +889,7 @@ export default {
       scrollToFeatures,
       scrollToId,
       heroShots,
+      practiceModes,
       features,
       faqItems,
       demoPlaying,

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import {
   AMD_MISTAKE_SOUND_PREF_KEY,
   MISTAKE_HANDLING_MODES,
+  MISTAKE_CUE_CONFIRMATION_MS,
   MISTAKE_CUE_DEBOUNCE_MS,
   MISTAKE_CUE_MIN_CONFIDENCE,
   createMistakeFeedbackController,
@@ -22,6 +23,52 @@ function createMemoryStorage(seed = {}) {
       map.set(key, String(value))
     },
   }
+}
+
+// A final transcript gets a short chance to settle before the learner hears a cue.
+{
+  let timerId = 0
+  const timers = new Map()
+  const audioContext = createMockAudioContext()
+  const controller = createMistakeFeedbackController({
+    audioContext,
+    enabled: true,
+    setTimeoutFn(callback, delay) {
+      const id = ++timerId
+      timers.set(id, { callback, delay })
+      return id
+    },
+    clearTimeoutFn(id) {
+      timers.delete(id)
+    },
+  })
+  await controller.prepareAfterUserGesture()
+
+  const first = controller.scheduleWordTransition({
+    wordIndex: 3,
+    previousStatus: 'pending',
+    nextStatus: 'incorrect',
+    confidence: 0.9,
+    micActive: true,
+  })
+  assert.equal(first.scheduled, true)
+  assert.equal([...timers.values()][0].delay, MISTAKE_CUE_CONFIRMATION_MS)
+  assert.equal(audioContext._sources.length, 0, 'no immediate interruption')
+
+  assert.equal(controller.cancelPendingWordTransition(3), true)
+  assert.equal(timers.size, 0, 'a revised recognition cancels its cue')
+
+  controller.scheduleWordTransition({
+    wordIndex: 4,
+    previousStatus: 'pending',
+    nextStatus: 'omitted',
+    confidence: 0.9,
+    micActive: true,
+  })
+  const [{ callback }] = timers.values()
+  callback()
+  assert.equal(audioContext._sources.length, 1, 'a sustained result gets one cue')
+  controller.dispose()
 }
 
 function createMockAudioContext() {

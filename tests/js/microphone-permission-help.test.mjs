@@ -95,6 +95,8 @@ const DESKTOP_SAFARI = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit
   const busy = resolveMicrophoneHelp((key) => key, { error: { name: 'NotReadableError' }, userAgent: IOS_SAFARI })
   assert.equal(busy.kind, MICROPHONE_ACCESS_KIND.NOT_READABLE)
   assert.match(busy.explanation, /Another app or system process/)
+  assert.equal(busy.steps.length, 1)
+  assert.match(busy.steps[0], /Close any calls, recording apps, or browser tabs/)
   assert.equal(busy.showPermissionInstructions, false)
 
   const security = resolveMicrophoneHelp((key) => key, { error: { name: 'SecurityError' }, userAgent: IOS_CHROME })

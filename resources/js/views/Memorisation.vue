@@ -2819,7 +2819,7 @@
         <div class="modal-header">
           <div class="modal-header-text">
             <div class="modal-context-badge">{{ sessionContextBadge }}</div>
-            <h2 id="confirmModalTitle">{{ confirmModal.title }}</h2>
+            <h2 id="confirmModalTitle" tabindex="-1">{{ confirmModal.title }}</h2>
           </div>
           <button class="modal-close-btn" @click="closeConfirmModal" type="button" :aria-label="t('memorisation.confirmModals.closeDialog')"><i
               class="bi bi-x-lg" aria-hidden="true"></i></button>
@@ -2975,13 +2975,14 @@
         aria-modal="true"
         aria-labelledby="sessionExitTitle"
         aria-describedby="sessionExitDescription"
+        @keydown="onModalOverlayKeydown($event, { containerRef: 'sessionExitDialog', onClose: keepPractisingFromExitModal })"
       >
         <div class="modal-dialog mutqin-modal-dialog session-exit-dialog">
-          <div class="modal-content mutqin-modal-surface session-exit-modal confirm-modal">
+          <div ref="sessionExitDialog" class="modal-content mutqin-modal-surface session-exit-modal confirm-modal">
             <div class="container-fluid session-exit-fluid px-0 w-100">
               <div class="modal-header session-exit-header w-100">
                 <div class="modal-header-text">
-                  <h2 id="sessionExitTitle" class="session-exit-title">
+                  <h2 id="sessionExitTitle" class="session-exit-title" tabindex="-1">
                     {{ sessionExitModalTitle }}
                   </h2>
                 </div>
@@ -2989,7 +2990,7 @@
                   class="modal-close-btn session-exit-close"
                   type="button"
                   :disabled="sessionExitEndingBusy"
-                  :aria-label="t('memorisation.confirmModals.closeDialog')"
+                  :aria-label="t('memorisation.sessionExit.keepPractising')"
                   @click="keepPractisingFromExitModal"
                 >
                   <i class="bi bi-x-lg" aria-hidden="true"></i>
@@ -3887,6 +3888,7 @@
           aria-labelledby="postSessionTitle"
           :aria-describedby="postSessionDisplayLead ? 'postSessionDescription' : undefined"
           tabindex="-1"
+          @keydown="onPostSessionDialogKeydown"
           @vue:mounted="(vnode) => vnode?.el?.focus?.()"
         >
           <header class="post-session-simple__header post-session-simple__header--calm">
@@ -3894,7 +3896,7 @@
               <i class="bi bi-check-lg"></i>
             </span>
             <div class="post-session-simple__header-copy">
-              <h2 id="postSessionTitle" class="post-session-simple__title">
+              <h2 id="postSessionTitle" class="post-session-simple__title" tabindex="-1">
                 {{ postSessionDisplayTitle }}
               </h2>
               <p
@@ -5265,6 +5267,7 @@
       :mic-status-label="amdLearnerMicStatusLabel"
       :mic-guidance="amdMicGuidance"
       :live-hint="amdLiveHint"
+      :stage-label="amdStageLabel"
       :recording-active-label="amdRecordingActiveLabel"
       :stt-recovering="amdSttStallNotice || amdSttRecovering"
       :ayah-html="amdStaticAyahHtml"
@@ -5296,6 +5299,9 @@
       :theme="theme"
       :mistake-visual-active="amdMistakeVisualActive"
       :mistake-visual-label="amdLabels.mistakeVisualLabel"
+      :feedback-state="amdLiveFeedback.state"
+      :feedback-title="amdLiveFeedback.title"
+      :feedback-detail="amdLiveFeedback.detail"
       :auto-follow-label="amdLabels.autoFollow"
       :auto-follow-on-label="amdLabels.autoFollowOn"
       :auto-follow-off-label="amdLabels.autoFollowOff"
@@ -5332,6 +5338,8 @@
       :open="showAiAudioConsentModal"
       :title="aiAudioConsentTitle"
       :lead="aiAudioConsentBody"
+      :browser-prompt="aiAudioConsentBrowserPrompt"
+      :privacy-items="aiAudioConsentPrivacyItems"
       :privacy-policy-url="aiAudioConsentPrivacyUrl"
       :privacy-policy-label="aiAudioConsentPrivacyLinkLabel"
       :accept-label="aiAudioConsentAcceptLabel"
@@ -5348,8 +5356,10 @@
       :steps="microphoneHelpSteps"
       :try-again-label="microphoneHelpTryAgainLabel"
       :cancel-label="microphoneHelpCancelLabel"
+      :continue-without-label="t('memorisation.aiCheck.continueWithoutAi')"
       @try-again="retryMicrophoneHelp"
       @cancel="closeMicrophoneHelp"
+      @continue-without-ai="continuePracticeWithoutAi"
     />
 
   <div

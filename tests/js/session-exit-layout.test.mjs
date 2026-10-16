@@ -31,7 +31,13 @@ assert.doesNotMatch(
 assert.match(css, /\.session-exit-scope-surah/)
 assert.match(css, /\.session-exit-progress-metrics/)
 assert.match(vue, /session-exit-dialog/)
+assert.match(vue, /ref="sessionExitDialog"/)
+assert.match(vue, /containerRef: 'sessionExitDialog'/)
+assert.match(vue, /id="sessionExitTitle"[^>]*tabindex="-1"/)
+assert.match(vue, /:aria-label="t\('memorisation\.sessionExit\.keepPractising'\)"/)
 assert.match(css, /--mutqin-modal-width-confirm:\s*min\(26rem/)
 assert.match(css, /\.session-exit-modal-wrap \.modal-dialog\.session-exit-dialog/)
+assert.match(js, /sessionExitReturnFocusEl/)
+assert.match(js, /restoreSessionExitReturnFocus\(\)/)
 
 console.log('session-exit-layout.test.mjs: ok')

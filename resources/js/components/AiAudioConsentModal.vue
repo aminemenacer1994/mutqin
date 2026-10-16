@@ -17,10 +17,20 @@
           </span>
           <div>
             <span class="ai-audio-consent-eyebrow">{{ $t('memorisation.aiCheck.aiRecitation') }}</span>
-            <h2 id="aiAudioConsentTitle" class="ai-audio-consent-title">{{ title }}</h2>
+            <h2 id="aiAudioConsentTitle" class="ai-audio-consent-title" tabindex="-1">{{ title }}</h2>
           </div>
         </div>
         <p id="aiAudioConsentBody" class="ai-audio-consent-lead">{{ lead }}</p>
+        <p v-if="browserPrompt" class="ai-audio-consent-next-step">
+          <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>
+          <span>{{ browserPrompt }}</span>
+        </p>
+        <ul v-if="privacyItems.length" class="ai-audio-consent-facts">
+          <li v-for="item in privacyItems" :key="item">
+            <i class="bi bi-check2" aria-hidden="true"></i>
+            <span>{{ item }}</span>
+          </li>
+        </ul>
         <div class="ai-audio-consent-privacy">
           <i class="bi bi-shield-check" aria-hidden="true"></i>
           <a
@@ -65,6 +75,8 @@ export default {
     open: { type: Boolean, default: false },
     title: { type: String, default: '' },
     lead: { type: String, default: '' },
+    browserPrompt: { type: String, default: '' },
+    privacyItems: { type: Array, default: () => [] },
     privacyPolicyLabel: { type: String, default: '' },
     privacyPolicyUrl: { type: String, default: '/privacy' },
     acceptLabel: { type: String, default: '' },
@@ -132,6 +144,9 @@ export default {
 .ai-audio-consent-card {
   width: min(100%, 30rem);
   max-width: 100%;
+  max-height: min(42rem, calc(100dvh - 2rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   box-sizing: border-box;
   margin: 0;
   padding: clamp(1.35rem, 3vw, 1.9rem);
@@ -195,6 +210,50 @@ export default {
   font-size: 1rem;
   line-height: 1.62;
   opacity: 0.92;
+}
+
+.ai-audio-consent-next-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0.95rem 0 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid color-mix(in srgb, #8b5e3c 24%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, #b77a45 9%, transparent);
+  color: #5c4030;
+  font-size: 0.91rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.ai-audio-consent-next-step i {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+  color: #8b5e3c;
+}
+
+.ai-audio-consent-facts {
+  display: grid;
+  gap: 0.46rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.87rem;
+  line-height: 1.45;
+}
+
+.ai-audio-consent-facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.ai-audio-consent-facts i {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: #2f6f58;
+  font-size: 1rem;
 }
 
 .ai-audio-consent-privacy {
@@ -277,6 +336,20 @@ export default {
 [data-theme="dark"] .ai-audio-consent-eyebrow,
 [data-theme="dark"] .ai-audio-consent-privacy {
   color: #e3bd91;
+}
+
+[data-theme="dark"] .ai-audio-consent-next-step {
+  border-color: rgba(227, 189, 145, 0.28);
+  background: rgba(196, 164, 132, 0.14);
+  color: #f0dfcb;
+}
+
+[data-theme="dark"] .ai-audio-consent-next-step i {
+  color: #e3bd91;
+}
+
+[data-theme="dark"] .ai-audio-consent-facts i {
+  color: #8bd2ad;
 }
 
 [data-theme="dark"] .ai-audio-consent-btn--primary {

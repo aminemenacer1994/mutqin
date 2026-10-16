@@ -17,6 +17,10 @@ const en = readFileSync(join(root, 'resources/js/locales/en.json'), 'utf8')
 
 const completionModal = vue.match(/post-session-simple__dialog[\s\S]*?<\/footer>/)?.[0] || ''
 assert.ok(completionModal.length > 0, 'completion modal markup present')
+assert.match(completionModal, /@keydown="onPostSessionDialogKeydown"/)
+assert.match(completionModal, /id="postSessionTitle"[^>]*tabindex="-1"/)
+assert.match(js, /postSessionReturnFocusEl/)
+assert.match(js, /restorePostSessionReturnFocus\(\)/)
 
 function t(key, params = {}) {
   const dict = {

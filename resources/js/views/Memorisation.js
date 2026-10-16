@@ -200,6 +200,7 @@ import { setSurahArabicNameCache } from '../scripts/mushaf/surahArabicNameCache.
 import { loadMutqinState, saveMutqinState, watchMutqinState, replaceMutqinState } from '../scripts/composables/useMutqinPersistence'
 import learningApi, { createDebouncer, withRetry } from '../scripts/api/learning'
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js'
+import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js'
 import { progressBarDisplay } from '../utils/progressDisplay'
 import {
   RECOMMENDATION_TYPES,
@@ -623,6 +624,8 @@ import {
   createMistakeFeedbackController,
   memorisationDetectionApi,
   MISTAKE_HANDLING_MODES,
+  MISTAKE_CUE_CONFIRMATION_MS,
+  MISTAKE_CUE_MIN_CONFIDENCE,
   MISTAKE_VISUAL_MS,
   normaliseDifficultyPercent,
   selectHiddenWordIndexes,
@@ -1231,6 +1234,7 @@ export default {
       showPostSessionConfetti: false,
       postSessionConfettiTimer: null,
       postSessionSnapshot: null,
+      postSessionReturnFocusEl: null,
       postSessionOffcanvasOpen: false,
       postSessionStatsExpanded: false,
       postSessionEmotionalContext: null,
@@ -1736,6 +1740,7 @@ export default {
       playbackAdvanceTimer: null,
       toolsReturnFocusEl: null,
       modalReturnFocusEl: null,
+      sessionExitReturnFocusEl: null,
       workspaceTourReturnFocusEl: null,
       aiRecallModeAnnouncement: '',
       _lastAiRecallAnnouncedTone: '',
@@ -8187,6 +8192,27 @@ export default {
       return this.t('memorisation.aiCheck.consentBody', { processor: meta.processorName })
         || `When you use AI Recite, Mutqin uses your microphone to assess Qur’an recitation. Audio may be processed by ${meta.processorName}. Listening and other tools work without it.`
     },
+    aiAudioConsentBrowserPrompt() {
+      return this.t('memorisation.aiCheck.consentBrowserPrompt')
+    },
+    aiAudioConsentPrivacyItems() {
+      const config = readAudioPrivacyConfig()
+      const processor = this.t('memorisation.aiCheck.consentProcessor', {
+        processor: config.processor_name,
+      })
+      const retention = config.raw_recording_retention === 'never'
+        ? this.t('memorisation.aiCheck.consentRetentionNever')
+        : (config.raw_recording_retention === 'retain'
+          ? this.t('memorisation.aiCheck.consentRetentionRetain')
+          : this.t('memorisation.aiCheck.consentRetentionTemporaryFor', {
+            hours: config.temporary_ttl_hours,
+          }))
+      return [
+        processor,
+        retention,
+        this.t('memorisation.aiCheck.consentNoSale'),
+      ].filter((item) => item && !String(item).startsWith('memorisation.'))
+    },
     aiAudioConsentPrivacyLinkLabel() {
       return this.t('memorisation.aiCheck.consentPrivacyLink') || 'Privacy policy'
     },
@@ -8275,6 +8301,9 @@ export default {
         }
         return this.t?.('memorisation.amd.hintAnalysing') || 'Comparing with the Quran text…'
       }
+      if (this.amdStage === AMD_STAGES.UPLOADING) {
+        return this.t?.('memorisation.amd.hintUploading') || 'Saving your recording securely…'
+      }
       return ''
     },
     amdElapsedLabel() {
@@ -8282,6 +8311,65 @@ export default {
     },
     amdElapsedSeconds() {
       return Math.max(0, Math.round(Number(this.amdElapsedMs || 0) / 1000))
+    },
+    amdLiveFeedback() {
+      const fallback = {
+        listening: {
+          title: 'Listening — keep reciting',
+          detail: 'Words can take a moment to settle.',
+        },
+        checking: {
+          title: 'Checking a close match',
+          detail: 'This is not marked as a mistake yet. Keep reciting.',
+        },
+        confirmed: {
+          title: 'Confirmed mismatch',
+          detail: 'It is noted for review. Keep reciting without stopping.',
+        },
+      }
+      const labels = {
+        listening: {
+          title: this.t?.('memorisation.amd.feedbackListening') || fallback.listening.title,
+          detail: this.t?.('memorisation.amd.feedbackListeningDetail') || fallback.listening.detail,
+        },
+        checking: {
+          title: this.t?.('memorisation.amd.feedbackChecking') || fallback.checking.title,
+          detail: this.t?.('memorisation.amd.feedbackCheckingDetail') || fallback.checking.detail,
+        },
+        confirmed: {
+          title: this.t?.('memorisation.amd.feedbackConfirmed') || fallback.confirmed.title,
+          detail: this.t?.('memorisation.amd.feedbackConfirmedDetail') || fallback.confirmed.detail,
+        },
+      }
+      const listening = this.amdStage === AMD_STAGES.LISTENING
+        || this.amdStage === AMD_STAGES.STARTING
+      if (!listening || !this.recitationCheckRecording) {
+        return { state: 'idle', title: '', detail: '' }
+      }
+
+      const words = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
+      const cursor = Math.max(0, Number(this.amdLiveCursor?.confirmedWordIndex || 0))
+      // Prefer the last settled word at or before the live cursor. It describes
+      // what the learner just said without letting an unseen future status speak.
+      let current = null
+      for (let index = Math.min(cursor, words.length - 1); index >= 0; index -= 1) {
+        const candidate = words[index]
+        if (String(candidate?.status || '').toLowerCase() !== 'pending') {
+          current = candidate
+          break
+        }
+      }
+      const status = String(current?.status || '').toLowerCase()
+      const confidence = Number(current?.confidence)
+      const lowConfidence = Number.isFinite(confidence) && confidence < MISTAKE_CUE_MIN_CONFIDENCE
+      const unsettled = current?.interim === true || current?.hypothesis === true || lowConfidence
+      if (['partial', 'uncertain'].includes(status) || unsettled) {
+        return { state: 'checking', ...labels.checking }
+      }
+      if (['incorrect', 'omitted', 'skipped'].includes(status)) {
+        return { state: 'confirmed', ...labels.confirmed }
+      }
+      return { state: 'listening', ...labels.listening }
     },
     amdHowKicker() {
       return this.t?.('memorisation.amd.howKicker') || 'How Mutqin mistake detection works'
@@ -12688,6 +12776,7 @@ export default {
     },
 
     continuePracticeWithoutAi() {
+      this.closeMicrophoneHelp()
       try { this.closeAmdModal?.({ returnToCompletion: false }) } catch (_) { /* ignore */ }
       this.showSelfCheckModal = false
       this.postSessionAiReciteActive = false
@@ -19132,8 +19221,12 @@ export default {
       await this.completeOnboardingIntoFirstSession()
     },
     openPostSessionModal(snapshot = null, options = {}) {
+      const shouldCaptureReturnFocus = !this.showPostSessionModal
       this.postSessionSnapshot = snapshot || this.buildSessionEndedSnapshot({ force: true })
       if (!this.postSessionSnapshot) return
+      if (shouldCaptureReturnFocus) {
+        this.postSessionReturnFocusEl = captureReturnFocus()
+      }
       // Mastery re-test: keep the learner on the same range until AI Recite is strong.
       // Preserve the originally completed session window so “next” advances past
       // 1–6 (etc.), not past the remedial focus ayah alone.
@@ -19232,6 +19325,7 @@ export default {
         || this.onboardingSampleSessionActive
       )
       this.showPostSessionModal = true
+      this.$nextTick(() => focusInitialElement(this.$refs.postSessionDialog, '#postSessionTitle'))
       this.postSessionActionsUnlocked = true
       this.showTools = false
       this.postSessionOffcanvasOpen = false
@@ -26694,6 +26788,7 @@ export default {
       ).toLowerCase()
       if (raw === 'wrong' || raw === 'incorrect' || raw === 'red') return 'incorrect'
       if (raw === 'partial' || raw === 'minor_mistake' || raw === 'amber') return 'partial'
+      if (raw === 'uncertain' || raw === 'unrecognised' || raw === 'unrecognized') return 'uncertain'
       if (raw === 'correct' || raw === 'green') return 'correct'
       if (raw === 'omitted' || raw === 'missing' || raw === 'omission' || raw === 'black') return 'omitted'
       if (raw === 'skipped') return 'skipped'
@@ -27209,7 +27304,10 @@ export default {
 
       this._amdAttemptIdempotencyKey = `amd-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`.slice(0, 64)
       try {
-      let result = this.buildAmdLiveAssessmentResult(reason)
+        // The take is safely closed. Be explicit that evaluation, rather than
+        // recording, is now underway.
+        this.amdStage = AMD_STAGES.ANALYSING
+        let result = this.buildAmdLiveAssessmentResult(reason)
       const targets = Array.isArray(this.recitationCheckPendingTargets) && this.recitationCheckPendingTargets.length
         ? this.recitationCheckPendingTargets
         : (this.getRecitationCheckTargetVerses?.() || [])
@@ -27292,6 +27390,7 @@ export default {
           )
           if (attemptId > 0 && capturedBlob && capturedBlob.size > 0) {
             try {
+              this.amdStage = AMD_STAGES.UPLOADING
               const savedAudio = await learningApi.uploadAiReciteAttemptAudio(
                 attemptId,
                 capturedBlob,
@@ -27359,6 +27458,7 @@ export default {
       if (
         this.amdStage === AMD_STAGES.PROCESSING
         || this.amdStage === AMD_STAGES.ANALYSING
+        || this.amdStage === AMD_STAGES.UPLOADING
       ) return
       void this.completeAmdTestAndReturnToRecommendation({ reason: 'stop' })
     },
@@ -27539,6 +27639,43 @@ export default {
       })
       if (result?.visual) this.flashAmdMistakeVisual()
       return result
+    },
+    scheduleAmdConfirmedMistake({
+      wordIndex,
+      previousStatus,
+      nextStatus,
+      confidence,
+      interim = false,
+    } = {}) {
+      if (!this.amdOpen) return null
+      const reviewing = this.amdStage === AMD_STAGES.COMPLETE
+        || this.amdStage === AMD_STAGES.RESULTS
+        || this.amdEndingSoon
+      const micActive = !!this.recitationCheckRecording
+        && (this.amdStage === AMD_STAGES.LISTENING || this.amdStage === AMD_STAGES.STARTING)
+      const controller = this.ensureAmdMistakeFeedbackController()
+      return controller.scheduleWordTransition({
+        wordIndex,
+        previousStatus,
+        nextStatus,
+        confidence,
+        micActive,
+        reviewing,
+        interim,
+      }, {
+        delayMs: MISTAKE_CUE_CONFIRMATION_MS,
+        onResult: (result) => {
+          // The modal may have closed while its final ASR result settled.
+          if (result?.visual && this.amdOpen) this.flashAmdMistakeVisual()
+        },
+      })
+    },
+    cancelAmdPendingMistakeCue(wordIndex) {
+      try {
+        return this.amdMistakeFeedback?.cancelPendingWordTransition?.(wordIndex) || false
+      } catch (_) {
+        return false
+      }
     },
     startAmdPeek() {
       if (this.amdStage === AMD_STAGES.COMPLETE || this.amdEndingSoon) return
@@ -27818,13 +27955,9 @@ export default {
             || (this.t?.('memorisation.amd.startFailed') || 'Could not start assessment.')
           if (help?.kind === 'not_allowed') {
             this.amdMicStatus = 'denied'
-            if (this.postSessionAiReciteActive || this.showPostSessionModal) {
-              void this.applyInsufficientAudioAssessment(null, {
-                reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
-                micPermissionFailed: true,
-                failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
-              })
-            }
+            // A blocked browser prompt is not a recitation attempt. Keep the
+            // chosen ayah, live session, and recommendation untouched so the
+            // learner can recover from settings and retry in place.
           } else if (help?.kind === 'unsupported') {
             this.amdMicStatus = 'unsupported'
           }
@@ -29690,14 +29823,20 @@ export default {
         next[index] = nextWord
         changedWords.push({ index, word: nextWord })
         if (this.amdOpen && targetKey === 'recitationLiveWords') {
-          const cue = this.maybeNotifyAmdConfirmedMistake({
-            wordIndex: index,
-            previousStatus: word.status || 'pending',
-            nextStatus: nextWord.status || 'pending',
-            confidence: nextWord.confidence,
-            interim: status.interim === true || status.hypothesis === true,
-          })
-          if (cue?.visual) this.flashAmdMistakeVisual()
+          const nextStatus = nextWord.status || 'pending'
+          if (['incorrect', 'omitted', 'skipped'].includes(String(nextStatus).toLowerCase())) {
+            this.scheduleAmdConfirmedMistake({
+              wordIndex: index,
+              previousStatus: word.status || 'pending',
+              nextStatus,
+              confidence: nextWord.confidence,
+              interim: status.interim === true || status.hypothesis === true,
+            })
+          } else {
+            // A revised transcript is recognition noise, not a learner error.
+            // Cancel its pending cue before it can interrupt the recitation.
+            this.cancelAmdPendingMistakeCue(index)
+          }
         }
       }
       if (next === current) return false
@@ -31914,6 +32053,19 @@ export default {
       this.postSessionViewState = this.postSessionRecommendation
         ? 'recommendation_ready'
         : (this.postSessionViewState || 'idle')
+      this.restorePostSessionReturnFocus()
+    },
+    onPostSessionDialogKeydown(event) {
+      handleModalKeydown(event, {
+        container: this.$refs.postSessionDialog,
+        open: this.showPostSessionModal && !this.postSessionAiReciteActive,
+        onEscape: () => this.closePostSessionRecommendationModal(),
+      })
+    },
+    restorePostSessionReturnFocus() {
+      const target = this.postSessionReturnFocusEl
+      this.postSessionReturnFocusEl = null
+      this.$nextTick(() => restoreReturnFocus(target))
     },
     async finalizePostSessionAiReciteFromResult(result) {
       if (!result || !this.postSessionAiReciteActive) return false
@@ -32927,13 +33079,8 @@ export default {
             retry: this.amdOpen ? 'amd' : 'recitation',
           })
           this.reportRecitationCheckFailure(help.heading, { error, skipBanner: true })
-          if (help.kind === 'not_allowed' && (this.postSessionAiReciteActive || this.showPostSessionModal)) {
-            void this.applyInsufficientAudioAssessment(null, {
-              reason: INSUFFICIENT_AUDIO_REASONS.MIC_PERMISSION,
-              micPermissionFailed: true,
-              failureReason: String(error?.name || error?.message || 'mic_permission_denied'),
-            })
-          }
+          // Permission is requested before a recording exists. Do not create
+          // an insufficient-audio result or reset the active session here.
           return
         }
         this.reportRecitationCheckFailure(this.resolveRecitationFailureText(error, { context: 'mic_start' }))
@@ -40459,6 +40606,7 @@ export default {
         || this.isSessionLive
       )
       if (!this.hasVerses && !this.playerVisible && !canOpenWithoutWorkspace) return
+      this.sessionExitReturnFocusEl = captureReturnFocus()
       // Soft-pause keeps position for Keep practising; paint the modal before heavy persistence.
       this.softPausePlayback()
       if (this.audioElement) {
@@ -40469,6 +40617,7 @@ export default {
       this.sessionExitOffcanvasOpen = false
       this.sessionExitEndingBusy = false
       this.showSessionExitModal = true
+      this.$nextTick(() => focusInitialElement(this.$refs.sessionExitDialog, '#sessionExitTitle'))
       const persistExitState = () => {
         try {
           this.flushPlaybackTime()
@@ -40694,6 +40843,7 @@ export default {
       this.showSessionExitModal = false
       this.sessionExitOffcanvasOpen = false
       this.sessionExitPreviewSnapshot = null
+      this.restoreSessionExitReturnFocus()
       if (!snapshot) return
       this.restoreSessionFromSnapshot(snapshot, { autoplay: false })
       // Keep practising after pause: pick up at the same time — no countdown.
@@ -40766,10 +40916,18 @@ export default {
       this.sessionExitEndingBusy = false
       if (restore) {
         this.restoreSessionExitSnapshot({ autoplay: !!autoplay })
+        this.restoreSessionExitReturnFocus()
       } else {
         this.sessionExitSnapshot = null
+        this.sessionExitReturnFocusEl = null
       }
       this.sessionExitPreviewSnapshot = null
+    },
+
+    restoreSessionExitReturnFocus() {
+      const target = this.sessionExitReturnFocusEl
+      this.sessionExitReturnFocusEl = null
+      this.$nextTick(() => restoreReturnFocus(target))
     },
 
     clearExitSessionStorage() {
@@ -41006,6 +41164,7 @@ export default {
       this.sessionCompletedAt = this.sessionCompletedAt || new Date().toISOString()
       if (!endedEarly) {
         trackAckeeEvent(ACKEE_EVENTS.MEMORISATION_SESSION_COMPLETED)
+        trackMetaPixelEvent(META_PIXEL_EVENTS.MEMORISATION_SESSION_COMPLETED)
       }
 
       if (this.mutqinState?.sessionState) {
@@ -45210,6 +45369,7 @@ export default {
         3000
       )
       trackAckeeEvent(ACKEE_EVENTS.MEMORISATION_SESSION_STARTED)
+      trackMetaPixelEvent(META_PIXEL_EVENTS.MEMORISATION_SESSION_STARTED)
     },
 
     getSessionElapsedSeconds(options = {}) {
