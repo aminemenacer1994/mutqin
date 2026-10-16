@@ -238,11 +238,11 @@
   "homepage": {
     "hero": {
       "badge": "Qur’an memorisation companion",
-      "title": "Build stronger recall, one clear session at a time.",
-      "desc": "Choose a small range. Mutqin helps you listen, repeat, recite from memory, and return to the ayahs that need care.",
+      "title": "Not sure what to memorise or revise next?",
+      "desc": "Whether you are new to Hifz, returning after a pause or strengthening what you know, start with a small range. Mutqin guides you to listen, repeat, recite and return at the right time.",
       "promiseLabel": "Why Mutqin",
       "problem": "The struggle",
-      "problemText": "Forgetting what to revise, losing weak ayahs, and stopping without a way back.",
+      "problemText": "Forgetting what to revise, losing weaker ayahs and stopping without a clear way back.",
       "solution": "Mutqin",
       "solutionText": "A steady path to listen, recite, review and return, one ayah at a time.",
       "startFree": "Start memorising",
@@ -255,7 +255,7 @@
       "seeFirstSession": "See what happens first",
       "firstSessionLabel": "Your recommended first session",
       "firstSessionTime": "About 10 minutes",
-      "firstSessionRange": "Start with 1–3 ayahs",
+      "firstSessionRange": "Start with 1 to 3 ayahs",
       "firstSessionOutcome": "Leave with a next return",
       "previewKicker": "Inside a real session",
       "previewTitle": "Set a small range, practise it, then know what comes next"
@@ -263,7 +263,7 @@
     "access": {
       "available": {
         "label": "Available now",
-        "detail": "Start a free first session today — no waiting list needed."
+        "detail": "Start a free first session today. No waiting list needed."
       },
       "early": {
         "label": "Early access",
@@ -368,18 +368,18 @@
         "assess": {
           "title": "Assess",
           "description": "See what held, what needs care and the clearest next step for your next sitting.",
-          "cue": "This is your result and next plan — not a separate practice mode."
+          "cue": "This is your result and next plan, not a separate practice mode."
         }
       }
     },
     "firstSession": {
       "kicker": "Recommended first session",
       "title": "Start small. Finish knowing what to do next.",
-      "subtitle": "Set aside about 10 minutes for 1–3 ayahs. You will listen, repeat, recite, and leave with a clear next return.",
+      "subtitle": "Set aside about 10 minutes for 1 to 3 ayahs. You will listen, repeat, recite and leave with a clear next return.",
       "durationLabel": "Set aside",
       "duration": "About 10 minutes",
       "startLabel": "Start with",
-      "start": "One short range — 1–3 ayahs",
+      "start": "One short range: 1 to 3 ayahs",
       "leaveLabel": "You leave with",
       "leave": "A saved starting point and a clear set to revisit"
     },
@@ -447,7 +447,7 @@
         },
         "whoFor": {
           "question": "Who is Mutqin for?",
-          "answer": "Anyone beginning Hifz, revising, or returning after a pause, who wants a calmer, step-by-step way to continue with the Qur’an."
+          "answer": "Mutqin is for beginners, adults returning after a pause and experienced learners who want a calmer way to continue. Children can use it with a parent or teacher."
         }
       }
     },

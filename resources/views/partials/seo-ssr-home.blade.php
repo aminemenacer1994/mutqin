@@ -1,11 +1,11 @@
 <article class="seo-ssr">
     @php($earlyAccess = \App\Support\MutqinDomains::restrictMarketingHost(request()))
-    <h1>Build stronger recall, one clear session at a time.</h1>
-    <p>Mutqin is a Quran memorization app for Hifz. Choose a small range, then listen, repeat, recite from memory, and return to the ayahs that need care. <a href="/features/ai-recite">AI Recite</a> offers optional spoken feedback when you practise from memory.</p>
+    <h1>Not sure what to memorise or revise next?</h1>
+    <p>Mutqin is a calm, guided companion for Qur’an memorisation. Start with a small range, listen, repeat, recite and return to the ayahs that need another look. <a href="/features/ai-recite">AI Recite</a> offers optional spoken feedback when you practise from memory.</p>
     @if($earlyAccess)
         <p><strong>Early access:</strong> access is opening in stages. <a href="/waiting-list">Join the waiting list</a> for an invitation.</p>
     @else
-        <p><strong>Available now:</strong> start a free first session today — no waiting list needed. <a href="/memorisation">Start your first session</a>.</p>
+        <p><strong>Available now:</strong> start a free first session today. No waiting list needed. <a href="/memorisation">Start your first session</a>.</p>
     @endif
     <h2>Your recommended first session</h2>
     <p>Set aside about 10 minutes and start with one to three ayahs. You will listen, repeat, recite, and leave with a saved starting point and a clear set to revisit. Read the <a href="/guides/quran-memorization-for-beginners">beginner plan</a> or learn <a href="/guides/quran-memorization-techniques">how to memorize the Quran</a>.</p>

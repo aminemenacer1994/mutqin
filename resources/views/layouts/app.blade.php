@@ -16,6 +16,16 @@
     // in that case installed/mobile clients still need to discard the old chunk.
     $mixManifestPath = public_path('mix-manifest.json');
     $mixManifestFingerprint = is_file($mixManifestPath) ? substr(md5_file($mixManifestPath), 0, 12) : 'no-manifest';
+    // Mix's version hash can stay the same when only lazy-loaded chunks change.
+    // Tie the entry assets to the full manifest too, so a browser with an
+    // already-open workspace fetches the updated chunk map after a deploy.
+    $appScriptUrl = mix('js/app.js').'&build='.$mixManifestFingerprint;
+    $appStylesUrl = mix('css/app.css').'&build='.$mixManifestFingerprint;
+    // Vue component CSS is emitted outside Mix's manifest. Version it directly
+    // so an already-open workspace cannot keep a stale modal/reader stylesheet
+    // after a frontend build.
+    $vueStylesPath = public_path('css/vue-styles.css');
+    $vueStylesFingerprint = is_file($vueStylesPath) ? substr(md5_file($vueStylesPath), 0, 12) : 'no-vue-styles';
     $assetBuildMarker = config('error_tracking.asset_build', 'v207').'-'.$mixManifestFingerprint;
     $switcherLocales = ['en', 'fr', 'es'];
     $languageEndonyms = [
@@ -110,12 +120,12 @@
     <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
     <link rel="preconnect" href="https://verses.quran.foundation" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preload" href="{{ mix('js/app.js') }}" as="script">
+    <link rel="preload" href="{{ $appScriptUrl }}" as="script">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    <link rel="stylesheet" href="{{ $appStylesUrl }}">
     {{-- This stylesheet is emitted by webpack's Vue loader, not by a Mix entry.
          It is therefore not guaranteed to be present in mix-manifest.json. --}}
-    <link rel="stylesheet" href="{{ asset('css/vue-styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/vue-styles.css').'?v='.$vueStylesFingerprint }}">
     <style id="mutqin-no-horizontal-scroll">
       html, body {
         width: 100%;
@@ -8321,7 +8331,7 @@
     </script>
     @endauth
 
-    <script src="{{ mix('js/app.js') }}" defer></script>
+    <script src="{{ $appScriptUrl }}" defer></script>
 
     @if (request()->is('waiting-list'))
     <script>
