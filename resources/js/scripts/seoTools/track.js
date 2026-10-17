@@ -5,10 +5,13 @@
  * Attribution is sessionStorage-only (first landing + UTMs + referrer host).
  */
 
+import { hasMarketingConsent } from '../analytics/waitingListAttribution.js'
+
 const TOOL_ATTR_KEY = 'mutqin_seo_tool'
 const ATTR_KEY = 'mutqin_seo_attr'
 const REG_COMPLETE_KEY = 'mutqin_seo_reg_complete_sent'
 const GUIDE_KEY = 'mutqin_seo_guide'
+const ATTRIBUTION_KEYS = new Set([TOOL_ATTR_KEY, ATTR_KEY, GUIDE_KEY])
 
 const ORGANIC_HOST_RE = /(?:^|\.)((google|googleweblight|bing|duckduckgo|yahoo|yandex|baidu|ecosia)\.)/i
 const PAID_MEDIUM_RE = /^(cpc|ppc|paid|paidsearch|display|retargeting|cpm|cpv)$/i
@@ -57,6 +60,7 @@ function referrerHost() {
 
 function readStorage(key) {
   if (typeof window === 'undefined') return null
+  if (ATTRIBUTION_KEYS.has(key) && !hasMarketingConsent()) return null
   try {
     return window.sessionStorage.getItem(key)
   } catch {
@@ -66,6 +70,7 @@ function readStorage(key) {
 
 function writeStorage(key, value, maxLen = 200) {
   if (typeof window === 'undefined') return
+  if (ATTRIBUTION_KEYS.has(key) && value && !hasMarketingConsent()) return
   try {
     if (value == null || value === '') window.sessionStorage.removeItem(key)
     else window.sessionStorage.setItem(key, String(value).slice(0, maxLen))

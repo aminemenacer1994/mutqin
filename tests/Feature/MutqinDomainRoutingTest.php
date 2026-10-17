@@ -143,6 +143,7 @@ class MutqinDomainRoutingTest extends TestCase
         $this->onAppHost('/')
             ->assertOk()
             ->assertSee('<homepage', false)
+            ->assertSee('rel="canonical" href="https://mutqin.ai/"', false)
             ->assertSee('Available now:', false)
             ->assertSee('Start your first session', false)
             ->assertDontSee('Early access:', false)

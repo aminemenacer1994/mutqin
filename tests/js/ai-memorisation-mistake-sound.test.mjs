@@ -110,7 +110,7 @@ function createMockAudioContext() {
 // Preference persistence
 {
   const storage = createMemoryStorage()
-  assert.equal(readStoredMistakeSoundEnabled(storage), true, 'default preference is on')
+  assert.equal(readStoredMistakeSoundEnabled(storage), false, 'sound is optional by default')
   storeMistakeSoundEnabled(false, storage)
   assert.equal(storage.getItem(AMD_MISTAKE_SOUND_PREF_KEY), '0')
   assert.equal(readStoredMistakeSoundEnabled(storage), false)

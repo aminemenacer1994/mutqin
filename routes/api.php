@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/admin/feedback/{feedback}', [AdminFeedbackController::class, 'destroy'])->name('api.admin.feedback.destroy');
         Route::get('/admin/feedback/{feedback}/screenshot', [AdminFeedbackController::class, 'screenshot'])->name('api.admin.feedback.screenshot');
         Route::get('/admin/waiting-list', [AdminWaitingListController::class, 'index'])->name('api.admin.waiting-list.index');
+        Route::get('/admin/waiting-list/analytics', [AdminWaitingListController::class, 'analytics'])->name('api.admin.waiting-list.analytics');
         Route::get('/admin/waiting-list/{entry}', [AdminWaitingListController::class, 'show'])
             ->whereNumber('entry')
             ->name('api.admin.waiting-list.show');

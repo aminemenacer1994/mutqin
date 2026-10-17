@@ -35,6 +35,7 @@
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
               <p v-if="heroProgressSummary" class="dash-hero__summary">{{ heroProgressSummary }}</p>
               <p class="dash-hero__direction">{{ t('dashboard.next_step_hint') }}</p>
+              <p class="dash-hero__direction">{{ t('dashboard.return_at_your_pace') }}</p>
             </div>
             <button
               type="button"
@@ -232,6 +233,8 @@
               </a>
             </div>
             <template v-else>
+              <details v-if="aiReciteScore" class="dash-score-details">
+                <summary>{{ t('dashboard.ai_recite.show_score_details') }}</summary>
               <article
                 v-if="aiReciteScore"
                 class="dash-ai-results__hero"
@@ -261,6 +264,7 @@
                   </li>
                 </ul>
               </article>
+              </details>
 
               <p v-if="aiReciteHolding" class="dash-ai-results__holding">
                 <i class="bi bi-check2-circle" aria-hidden="true"></i>

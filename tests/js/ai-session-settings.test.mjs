@@ -45,7 +45,7 @@ class MemoryStorage {
     },
     amd: {
       hide_percent: 100,
-      mistake_sound_enabled: true,
+      mistake_sound_enabled: false,
       mistake_handling_mode: 'continue_and_review',
     },
   })

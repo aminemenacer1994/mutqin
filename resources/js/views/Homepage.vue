@@ -773,7 +773,7 @@ export default {
 
       const nodes = document.querySelectorAll('[data-reveal]');
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduceMotion) {
+      if (reduceMotion || !('IntersectionObserver' in window)) {
         nodes.forEach((el) => el.classList.add('is-in'));
       } else {
         revealObserver = new IntersectionObserver((entries) => {

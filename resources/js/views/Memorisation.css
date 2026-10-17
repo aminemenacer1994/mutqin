@@ -69380,3 +69380,21 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
 }
 
 
+
+/* Secondary choices stay available without competing with the next step. */
+.post-session-simple__optional {
+  margin-top: 0.75rem;
+}
+.post-session-simple__optional > summary {
+  cursor: pointer;
+  color: var(--text-muted, #6d6256);
+  font-weight: 600;
+}
+.post-session-simple__optional[open] > summary {
+  margin-bottom: 0.75rem;
+}
+.post-session-simple__optional > summary:focus-visible,
+.user-dashboard .dash-score-details > summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}

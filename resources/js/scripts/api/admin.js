@@ -91,6 +91,11 @@ export const adminApi = {
     }
   },
 
+  async getWaitingListAnalytics() {
+    const { data } = await withRetry(() => http.get('/admin/waiting-list/analytics'))
+    return data
+  },
+
   async getWaitingListEntry(id) {
     const { data } = await withRetry(() => http.get(`/admin/waiting-list/${id}`))
     return data?.entry || null

@@ -10,21 +10,21 @@
             class="nav-link nav-link-home {{ request()->is('/') ? 'active' : '' }}"
             href="{{ url('/') }}"
         >
-            <span class="nav-link-copy"><strong data-i18n="home">{{ __('ui.home') }}</strong></span>
+            <span class="nav-link-copy"><span class="nav-link-label" data-i18n="home">{{ __('ui.home') }}</span></span>
         </a>
         <a
             class="nav-link nav-link-waiting-list {{ request()->is('waiting-list') ? 'active' : '' }}"
             href="{{ url('/waiting-list') }}"
             @if (request()->is('waiting-list')) aria-current="page" @endif
         >
-            <span class="nav-link-copy"><strong>{{ __('ui.waiting_list') }}</strong></span>
+            <span class="nav-link-copy"><span class="nav-link-label">{{ __('ui.waiting_list') }}</span></span>
         </a>
         <a
             class="nav-link nav-link-about {{ request()->is('about') || request()->is('about-us') ? 'active' : '' }}"
             href="{{ url('/about') }}"
             @if (request()->is('about') || request()->is('about-us')) aria-current="page" @endif
         >
-            <span class="nav-link-copy"><strong>{{ __('ui.about') }}</strong></span>
+            <span class="nav-link-copy"><span class="nav-link-label">{{ __('ui.about') }}</span></span>
         </a>
     </nav>
     <button
@@ -66,7 +66,7 @@
                 >
                     <i class="bi bi-house-door nav-link-icon" aria-hidden="true"></i>
                     <span class="nav-link-copy">
-                        <strong data-i18n="home">{{ __('ui.home') }}</strong>
+                        <span class="nav-link-label" data-i18n="home">{{ __('ui.home') }}</span>
                         <small class="d-lg-none">{{ __('ui.nav_home_sub') }}</small>
                     </span>
                     <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
@@ -78,7 +78,7 @@
                 >
                     <i class="bi bi-hourglass-split nav-link-icon" aria-hidden="true"></i>
                     <span class="nav-link-copy">
-                        <strong>{{ __('ui.waiting_list') }}</strong>
+                        <span class="nav-link-label">{{ __('ui.waiting_list') }}</span>
                         <small class="d-lg-none">{{ __('ui.nav_waiting_list_sub') }}</small>
                     </span>
                     <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>
@@ -90,7 +90,7 @@
                 >
                     <i class="bi bi-info-circle nav-link-icon" aria-hidden="true"></i>
                     <span class="nav-link-copy">
-                        <strong>{{ __('ui.about') }}</strong>
+                        <span class="nav-link-label">{{ __('ui.about') }}</span>
                         <small class="d-lg-none">{{ __('ui.nav_about_sub') }}</small>
                     </span>
                     <i class="bi bi-chevron-right nav-link-chevron d-lg-none" aria-hidden="true"></i>

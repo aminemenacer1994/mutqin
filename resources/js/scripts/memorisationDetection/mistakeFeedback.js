@@ -35,20 +35,20 @@ export const MISTAKE_CUE_DEBOUNCE_MS = 800
 export const MISTAKE_CUE_PEAK_GAIN = 0.14
 export const MISTAKE_VISUAL_MS = 900
 
-export function normaliseMistakeSoundEnabled(value, fallback = true) {
+export function normaliseMistakeSoundEnabled(value, fallback = false) {
   if (value === true || value === 1 || value === '1' || value === 'on' || value === 'true') return true
   if (value === false || value === 0 || value === '0' || value === 'off' || value === 'false') return false
   return fallback
 }
 
 export function readStoredMistakeSoundEnabled(storage = typeof localStorage !== 'undefined' ? localStorage : null) {
-  if (!storage) return true
+  if (!storage) return false
   try {
     const raw = storage.getItem(AMD_MISTAKE_SOUND_PREF_KEY)
-    if (raw == null) return true
-    return normaliseMistakeSoundEnabled(raw, true)
+    if (raw == null) return false
+    return normaliseMistakeSoundEnabled(raw, false)
   } catch {
-    return true
+    return false
   }
 }
 
@@ -128,7 +128,7 @@ function createSoftMistakeBuffer(audioContext) {
 export function createMistakeFeedbackController(options = {}) {
   const nowFn = typeof options.now === 'function' ? options.now : () => Date.now()
   let enabled = options.enabled != null
-    ? normaliseMistakeSoundEnabled(options.enabled, true)
+    ? normaliseMistakeSoundEnabled(options.enabled, false)
     : readStoredMistakeSoundEnabled(options.storage)
   let mode = options.mode || MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW
   let audioContext = options.audioContext || null

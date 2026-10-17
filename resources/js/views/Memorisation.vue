@@ -3210,7 +3210,7 @@
           <div class="planner-completion-head-copy">
             <span class="planner-completion-kicker">{{ t('memorisation.session_finished') }}</span>
             <h2 id="plannerCompletionTitle">{{ t('memorisation.congratulations_todays_hifz_session_is_complete') }}</h2>
-            <p>{{ plannerCompletionSummaryMessage }}</p>
+            <p>{{ t('memorisation.postSession.recommendation.completedWithCare') }}</p>
           </div>
           <button class="modal-close-btn" @click="closePlannerCompletionModal" :aria-label="t('common.close')">
             <i class="bi bi-x-lg"></i>
@@ -3218,6 +3218,9 @@
         </div>
         <div class="modal-body planner-completion-body">
           <div class="container-fluid planner-completion-shell px-0">
+            <details class="post-session-simple__optional">
+              <summary>{{ t('memorisation.postSession.viewStats') }}</summary>
+              <p>{{ plannerCompletionSummaryMessage }}</p>
             <div class="row g-3 planner-completion-stats-row">
               <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
@@ -3259,6 +3262,7 @@
                 <strong>{{ item.value }}</strong>
               </button>
             </div>
+            </details>
           </div>
         </div>
         <div class="modal-footer mutqin-modal-footer">
@@ -4507,8 +4511,9 @@
                     </ol>
                   </div>
 
+                  <details v-if="postSessionInfoArchitecture.revisionOptions.visible" class="post-session-simple__optional">
+                    <summary>{{ t('memorisation.postSession.recommendation.moreOptions') }}</summary>
                   <div
-                    v-if="postSessionInfoArchitecture.revisionOptions.visible"
                     class="post-session-simple__scope-picker post-session-simple__support-block"
                     data-testid="post-session-scope-picker"
                     data-tour="rec-plans"
@@ -4583,6 +4588,7 @@
                       </button>
                     </div>
                   </div>
+                  </details>
 
                 </template>
                 <p
@@ -4665,7 +4671,7 @@
           <footer class="post-session-simple__footer">
             <div
               class="post-session-simple__actions"
-              :class="postSessionCtaButtons.length <= 2 ? 'post-session-simple__actions--2' : 'post-session-simple__actions--3'"
+              :class="onboardingSampleSessionActive ? 'post-session-simple__actions--3' : 'post-session-simple__actions--2'"
               data-testid="post-session-actions"
               data-tour="rec-cta"
               :data-cta-state="postSessionCtaState || undefined"
@@ -4684,7 +4690,7 @@
 
               <template v-else>
                 <button
-                  v-for="btn in postSessionCtaButtons"
+                  v-for="btn in postSessionCtaButtons.slice(0, 2)"
                   :key="btn.id"
                   type="button"
                   class="post-session-simple__btn"
@@ -4703,6 +4709,26 @@
                 </button>
               </template>
             </div>
+            <details v-if="!onboardingSampleSessionActive && postSessionCtaButtons.length > 2" class="post-session-simple__optional">
+              <summary>{{ t('memorisation.postSession.recommendation.moreOptions') }}</summary>
+              <div class="post-session-simple__actions post-session-simple__actions--2">
+                <button
+                  v-for="btn in postSessionCtaButtons.slice(2)"
+                  :key="btn.id"
+                  type="button"
+                  class="post-session-simple__btn"
+                  :class="`post-session-simple__btn--${btn.variant}`"
+                  :disabled="postSessionCtaButtonDisabled(btn)"
+                  :aria-busy="postSessionCtaButtonBusy(btn) ? 'true' : 'false'"
+                  :aria-label="btn.label"
+                  :data-action="btn.dataAction"
+                  @click.stop.prevent="onPostSessionCtaAction(btn.action)"
+                >
+                  <i v-if="btn.icon" :class="btn.icon" aria-hidden="true"></i>
+                  <span>{{ btn.label }}</span>
+                </button>
+              </div>
+            </details>
           </footer>
         </div>
       </div>

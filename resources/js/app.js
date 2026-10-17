@@ -22,6 +22,9 @@ import { bootPersistedQuranFont } from './scripts/quran/quranFonts';
 import { bootPersistedFontSize } from './scripts/settings/workspacePreferences';
 import { useSeo } from './seo/useSeo';
 import { initSeoConversionTracking } from './scripts/seoTools/track.js';
+import { initWaitingListAttribution } from './scripts/analytics/waitingListAttribution.js';
+
+initWaitingListAttribution();
 
 // Apply the user's Qur’anic font CSS vars before Vue mounts Memorisation.
 try {

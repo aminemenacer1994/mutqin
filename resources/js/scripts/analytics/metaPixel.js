@@ -4,6 +4,8 @@
  * Do not pass personal data here. The landing funnel needs only a small set of
  * action names and, for the primary CTA, its non-identifying destination.
  */
+import { hasMarketingConsent } from './waitingListAttribution.js';
+
 export const META_PIXEL_EVENTS = Object.freeze({
   WAITING_LIST_SIGNUP_COMPLETED: 'waiting_list_signup_completed',
   REGISTRATION_COMPLETED: 'registration_completed',
@@ -11,6 +13,8 @@ export const META_PIXEL_EVENTS = Object.freeze({
   MEMORISATION_SESSION_STARTED: 'memorisation_session_started',
   MEMORISATION_SESSION_COMPLETED: 'memorisation_session_completed',
 });
+
+const sentConversions = new Set();
 
 const EVENT_DEFINITIONS = Object.freeze({
   [META_PIXEL_EVENTS.WAITING_LIST_SIGNUP_COMPLETED]: { name: 'Lead', method: 'track' },
@@ -32,13 +36,25 @@ function safeProperties(properties = {}) {
  * It intentionally has no storage or network fallback: the Pixel owns delivery
  * and existing consent/runtime behaviour remains unchanged.
  */
-export function trackMetaPixelEvent(event, properties = {}) {
+export function trackMetaPixelEvent(event, properties = {}, eventId = '') {
   try {
     const definition = EVENT_DEFINITIONS[event];
-    if (!definition || typeof window === 'undefined' || typeof window.fbq !== 'function') return;
+    if (!definition || !hasMarketingConsent() || typeof window.fbq !== 'function') return;
+
+    if (event === META_PIXEL_EVENTS.WAITING_LIST_SIGNUP_COMPLETED) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(eventId) || sentConversions.has(eventId)) return;
+      sentConversions.add(eventId);
+      window.fbq(definition.method, definition.name, {}, { eventID: eventId });
+      return;
+    }
 
     window.fbq(definition.method, definition.name, safeProperties(properties));
   } catch {
     // Analytics must never interrupt a learner's journey.
   }
+}
+
+export function trackWaitingListConversion(status, payload) {
+  if (status !== 201 || payload?.already_joined !== false || !payload?.conversion_event_id) return;
+  trackMetaPixelEvent(META_PIXEL_EVENTS.WAITING_LIST_SIGNUP_COMPLETED, {}, payload.conversion_event_id);
 }

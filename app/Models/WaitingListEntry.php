@@ -9,7 +9,13 @@ class WaitingListEntry extends Model
     protected $fillable = [
         'name',
         'email',
+        'attribution',
+        'first_source',
+        'last_source',
+        'last_campaign',
     ];
+
+    protected $casts = ['attribution' => 'array'];
 
     public function getConnectionName(): ?string
     {

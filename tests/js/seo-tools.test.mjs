@@ -86,6 +86,7 @@ if (flash) {
 const store = new Map()
 const events = []
 globalThis.window = {
+  mutqinMarketingConsent: true,
   location: {
     pathname: '/tools/quran-memorization-planner',
     search: '?utm_source=seo_tool&utm_medium=cta&utm_campaign=planner',
@@ -158,5 +159,12 @@ events.length = 0
 trackSeoLandingView({ kind: 'guide', pageId: 'guide-techniques', path: '/guides/quran-memorization-techniques' })
 assert.ok(events.some((e) => e[1] === 'seo_guide_view'))
 assert.equal(getSeoAttribution().guide_path, '/guides/quran-memorization-techniques')
+
+store.clear()
+window.mutqinMarketingConsent = false
+captureSeoAttribution({ tool: 'planner' })
+rememberSeoTool('planner')
+assert.equal(store.has('mutqin_seo_attr'), false)
+assert.equal(store.has('mutqin_seo_tool'), false)
 
 console.log('seo-tools.test.mjs: ok')

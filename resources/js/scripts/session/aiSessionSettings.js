@@ -28,7 +28,7 @@ export const DEFAULT_AI_SESSION_SETTINGS = Object.freeze({
   }),
   amd: Object.freeze({
     hide_percent: DEFAULT_DIFFICULTY_PERCENT,
-    mistake_sound_enabled: true,
+    mistake_sound_enabled: false,
     mistake_handling_mode: MISTAKE_HANDLING_MODES.CONTINUE_AND_REVIEW,
   }),
 })

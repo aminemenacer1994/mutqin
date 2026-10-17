@@ -4240,3 +4240,11 @@ a.dash-drawer__row--link:focus-visible,
     transition: none;
   }
 }
+
+/* Let learners open score details when they want them. */
+.user-dashboard .dash-score-details summary {
+  color: var(--dash-text-muted, inherit);
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}

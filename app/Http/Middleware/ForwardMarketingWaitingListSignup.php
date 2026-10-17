@@ -31,6 +31,7 @@ class ForwardMarketingWaitingListSignup
                 ->post($target, [
                     'name' => $request->input('name'),
                     'email' => $request->input('email'),
+                    'attribution' => $request->input('attribution'),
                 ]);
         } catch (\Throwable) {
             return response()->json([
@@ -42,7 +43,7 @@ class ForwardMarketingWaitingListSignup
             ->header('Content-Type', 'application/json');
     }
 
-    private function shouldForward(Request $request): bool
+    protected function shouldForward(Request $request): bool
     {
         if (app()->runningUnitTests()) {
             return false;

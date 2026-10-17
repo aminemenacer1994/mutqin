@@ -38,7 +38,7 @@ class AiSessionSettingsService
             ],
             'amd' => [
                 'hide_percent' => 100,
-                'mistake_sound_enabled' => true,
+                'mistake_sound_enabled' => false,
             ],
         ];
     }

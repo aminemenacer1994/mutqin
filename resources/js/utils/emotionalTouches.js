@@ -87,15 +87,12 @@ export function buildPostSessionEmotionalContext({
   const encouragement = t(`memorisation.emotional.postSession.encouragement${encouragementIndex}`)
 
   const surahMilestone = detectSurahCompletion(snapshot, chapter)
-  const streakMilestone = detectStreakMilestone(previousStreak, currentStreak)
 
   let milestone = ''
   if (surahMilestone?.chapterName) {
     milestone = t('memorisation.emotional.milestone.surahComplete', {
       chapter: surahMilestone.chapterName
     })
-  } else if (streakMilestone?.days) {
-    milestone = t(`memorisation.emotional.milestone.streak${streakMilestone.days}`)
   }
 
   return {

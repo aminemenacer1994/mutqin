@@ -156,7 +156,8 @@ import {
   trackWaitingListJoin,
 } from '../scripts/seoTools/track.js';
 import { trackEvent as trackAckeeEvent, ACKEE_EVENTS } from '../scripts/analytics/ackee.js';
-import { META_PIXEL_EVENTS, trackMetaPixelEvent } from '../scripts/analytics/metaPixel.js';
+import { trackWaitingListConversion } from '../scripts/analytics/metaPixel.js';
+import { getWaitingListAttribution } from '../scripts/analytics/waitingListAttribution.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -415,7 +416,7 @@ export default {
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
           },
-          body: JSON.stringify({ name, email }),
+          body: JSON.stringify({ name, email, attribution: getWaitingListAttribution() }),
         });
 
         const payload = await response.json().catch(() => ({}));
@@ -441,7 +442,7 @@ export default {
         status.message = '';
         joined.value = true;
         trackWaitingListJoin({ alreadyJoined: false });
-        trackMetaPixelEvent(META_PIXEL_EVENTS.WAITING_LIST_SIGNUP_COMPLETED);
+        trackWaitingListConversion(response.status, payload);
         trackAckeeEvent(ACKEE_EVENTS.WAITING_LIST_SIGNUP_COMPLETED);
         resetFormFields();
         await nextTick();

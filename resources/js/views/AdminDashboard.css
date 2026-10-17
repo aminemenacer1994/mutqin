@@ -1,4 +1,26 @@
 /* Admin ops console — warm editorial surface system */
+.waiting-analytics { margin: 0 0 1.5rem; }
+.waiting-analytics__head { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
+.waiting-analytics__head h2 { font-size: 1.3rem; margin: 0; }
+.waiting-analytics__head p, .waiting-analytics__note { color: var(--dash-muted); margin: .35rem 0; }
+.waiting-analytics__summary, .waiting-analytics__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: .75rem; margin-bottom: .75rem; }
+.waiting-analytics__card { min-width: 0; padding: 1rem; border: 1px solid var(--dash-line); border-radius: var(--dash-radius-sm); background: var(--dash-card); box-shadow: var(--dash-shadow-xs); }
+.waiting-analytics__summary span { display: block; color: var(--dash-muted); }
+.waiting-analytics__summary strong { display: block; font-size: 1.6rem; }
+.waiting-analytics__card h3 { font-size: 1rem; margin: 0 0 .75rem; }
+.waiting-analytics__list { margin: 0; }
+.waiting-analytics__list div { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--dash-line); padding: .4rem 0; }
+.waiting-analytics__list dt { overflow-wrap: anywhere; font-weight: 400; }
+.waiting-analytics__list dd { margin: 0; font-weight: 700; }
+.waiting-analytics__trend { grid-column: 1 / -1; }
+.waiting-analytics__days { max-height: 18rem; overflow: auto; }
+.waiting-analytics__day { display: grid; grid-template-columns: 6rem minmax(0, 1fr) 2.5rem; gap: .6rem; align-items: center; padding: .18rem 0; font-variant-numeric: tabular-nums; }
+.waiting-analytics__day strong { text-align: end; }
+.waiting-analytics__bar { display: block; height: .55rem; border-radius: 1rem; background: var(--dash-soft); }
+.waiting-analytics__bar i { display: block; height: 100%; border-radius: inherit; background: var(--admin-teal); }
+.waiting-analytics__details { margin: 1rem 0; overflow-wrap: anywhere; }
+.waiting-analytics__details h3 { font-size: 1rem; }
+.waiting-analytics__details h4 { font-size: .9rem; margin-top: .8rem; text-transform: capitalize; }
 #mainContent > .admin-console {
   min-width: 0;
   max-width: 100%;

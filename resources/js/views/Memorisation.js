@@ -2756,13 +2756,6 @@ export default {
           label: this.t('memorisation.analytics.todayProgress'),
           value: `${this.progressPercent}%`,
           description: this.t('memorisation.analytics.todayProgressDesc', { covered, total })
-        },
-        {
-          key: 'streak',
-          icon: 'bi-fire',
-          label: this.t('memorisation.analytics.streak'),
-          value: this.analytics?.currentStreak || 0,
-          description: this.t('memorisation.analytics.streakDesc')
         }
       ]
     },
@@ -6926,6 +6919,9 @@ export default {
     /** Single lead under the hero title. */
     postSessionDisplayLead() {
       if (this.onboardingSampleSessionActive) return ''
+      if (!this.postSessionHasAiCheck && this.postSessionRecommendationStep !== 'confirm') {
+        return this.t('memorisation.postSession.recommendation.completedWithCare')
+      }
       const subtitle = String(this.postSessionHeaderSubtitle || '').trim()
       if (subtitle) return subtitle
       if (this.postSessionHasAiCheck) {
@@ -7389,7 +7385,6 @@ export default {
       const forecast = this.hifzPlannerForecast
       const position = this.hifzCurrentPlanPosition
       return [
-        { key: 'streak', icon: 'bi-fire', value: this.analytics?.currentStreak || 0, label: this.t('memorisation.hifzPlanner.metrics.currentStreak') },
         { key: 'active', icon: 'bi-calendar2-check', value: this.hifzDaysActive, label: this.t('memorisation.hifzPlanner.metrics.daysActive') },
         { key: 'remaining', icon: 'bi-hourglass-split', value: forecast.estimatedDays, label: this.t('memorisation.hifzPlanner.metrics.daysRemaining') },
         { key: 'progress', icon: 'bi-pie-chart', value: `${this.hifzPlannerProgressPercent}%`, label: this.t('memorisation.hifzPlanner.metrics.currentProgress') },
@@ -7442,13 +7437,6 @@ export default {
             completed: this.hifzCompletedAyahCount,
             total: this.hifzPlannerForecast.totalAyahs
           })
-        },
-        {
-          key: 'streak',
-          icon: 'bi-fire',
-          value: this.analytics?.currentStreak || 0,
-          label: this.t('memorisation.hifzPlanner.metrics.streak'),
-          detail: this.t('memorisation.hifzPlanner.metrics.activeDays')
         },
         {
           key: 'target',
@@ -7522,8 +7510,7 @@ export default {
           icon: 'bi-graph-up',
           rows: [
             { label: this.t('memorisation.hifzPlanner.metrics.dailyTarget'), value: `${forecast.dailyTarget}/day`, detail: this.t('memorisation.hifzPlanner.analytics.currentPace') },
-            { label: this.t('memorisation.hifzPlanner.metrics.daysRemaining'), value: forecast.estimatedDays, detail: forecast.estimatedDuration },
-            { label: this.t('memorisation.hifzPlanner.analytics.missedDayHistory'), value: this.hifzPlanHealth.missedDays, detail: this.hifzPlanHealth.detail }
+            { label: this.t('memorisation.hifzPlanner.metrics.daysRemaining'), value: forecast.estimatedDays, detail: forecast.estimatedDuration }
           ]
         }
       ]
@@ -8346,6 +8333,9 @@ export default {
       if (!listening || !this.recitationCheckRecording) {
         return { state: 'idle', title: '', detail: '' }
       }
+
+      // Keep the default experience focused on recitation; review remains available afterward.
+      if (!this.amdMistakeSoundEnabled) return { state: 'listening', ...labels.listening }
 
       const words = Array.isArray(this.recitationLiveWords) ? this.recitationLiveWords : []
       const cursor = Math.max(0, Number(this.amdLiveCursor?.confirmedWordIndex || 0))

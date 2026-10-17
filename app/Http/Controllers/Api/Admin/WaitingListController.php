@@ -6,12 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\WaitingListEntry;
 use App\Rules\WaitingListEmail;
 use App\Services\AdminDashboardService;
+use App\Services\WaitingListAnalyticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class WaitingListController extends Controller
 {
+    public function analytics(Request $request, WaitingListAnalyticsService $analytics): JsonResponse
+    {
+        $this->admin($request);
+
+        return response()->json($analytics->report())
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->admin($request);
@@ -82,7 +91,7 @@ class WaitingListController extends Controller
                 'required',
                 'string',
                 'max:255',
-                new WaitingListEmail(),
+                new WaitingListEmail,
                 Rule::unique(WaitingListEntry::class, 'email')->ignore($entry->getKey()),
             ],
         ]);
@@ -121,6 +130,7 @@ class WaitingListController extends Controller
             'email' => (string) $entry->email,
             'created_at' => $entry->created_at?->toIso8601String(),
             'joined_at' => $entry->created_at?->format('j M Y, H:i'),
+            'attribution' => $entry->attribution,
         ];
     }
 

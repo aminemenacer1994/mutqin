@@ -725,6 +725,7 @@
           </template>
 
           <template v-else-if="directoryTab === 'waiting'">
+            <WaitingListAnalytics ref="waitingAnalytics" />
             <div class="admin-toolbar">
               <div class="admin-toolbar__row">
                 <div class="admin-toolbar__search-wrap">
@@ -1577,6 +1578,19 @@
                 <dd>{{ formatWaitingJoinedAt(waitingDetail) || '—' }}</dd>
               </div>
             </dl>
+            <div class="waiting-analytics__details">
+              <h3>Attribution</h3>
+              <p v-if="!waitingDetail.attribution" class="admin-muted">Unknown / unattributed</p>
+              <template v-else>
+                <div v-for="touch in ['first', 'last']" :key="touch">
+                  <h4>{{ touch === 'first' ? 'First touch' : 'Last touch' }}</h4>
+                  <dl v-if="waitingDetail.attribution[touch]" class="admin-feedback-detail__meta">
+                    <div v-for="(value, key) in waitingDetail.attribution[touch]" :key="key"><dt>{{ key.replace(/_/g, ' ') }}</dt><dd>{{ value }}</dd></div>
+                  </dl>
+                  <p v-else class="admin-muted">Unknown / unattributed</p>
+                </div>
+              </template>
+            </div>
             <div class="admin-form__actions admin-form__actions--split">
               <button
                 type="button"
@@ -1707,6 +1721,7 @@
 <script>
 import { adminApi } from '../scripts/api/admin'
 import NetworkFallback from '../components/NetworkFallback.vue'
+import WaitingListAnalytics from '../components/WaitingListAnalytics.vue'
 import { classifyRequestFailure, subscribeNetworkStatus } from '../utils/networkStatus'
 import { formatAppDate, unwrapLocale } from '../utils/i18nFormat'
 import './AdminDashboard.css'
@@ -1726,7 +1741,7 @@ const emptyCreate = () => ({
 
 export default {
   name: 'AdminDashboard',
-  components: { NetworkFallback },
+  components: { NetworkFallback, WaitingListAnalytics },
   props: {
     auth: { type: Object, default: () => ({}) },
     initialData: { type: Object, default: null },
@@ -2198,7 +2213,10 @@ export default {
         }
         await this.reloadUsers()
         if (this.directoryTab === 'feedback') await this.loadFeedback(this.feedbackPage)
-        if (this.directoryTab === 'waiting') await this.loadWaitingList(this.waitingPage)
+        if (this.directoryTab === 'waiting') {
+          await this.loadWaitingList(this.waitingPage)
+          await this.$refs.waitingAnalytics?.load()
+        }
         if (this.selectedUserId) {
           delete this.detailCache[this.selectedUserId]
           await this.loadDetail(this.selectedUserId)
@@ -2532,6 +2550,7 @@ export default {
           this.waitingDeleteFromModal = false
         }
         await this.loadWaitingList(this.waitingPage)
+        await this.$refs.waitingAnalytics?.load()
         await this.refreshSnapshotQuiet()
         this.showToast(this.t('admin.waiting_list.deleted'))
       } catch (error) {
@@ -2555,6 +2574,7 @@ export default {
           this.waitingDeleteFromModal = false
         }
         await this.loadWaitingList(this.waitingPage)
+        await this.$refs.waitingAnalytics?.load()
         await this.refreshSnapshotQuiet()
         this.showToast(this.t('admin.waiting_list.bulkDeleted', { n: ids.length }))
       } catch (error) {

@@ -77,9 +77,12 @@ class SeoPagesTest extends TestCase
             ->assertSee('SoftwareApplication', false)
             ->assertSee('Organization', false)
             ->assertSee('WebSite', false)
-            ->assertSee('Build stronger recall, one clear session at a time.', false)
-            ->assertSee('Your recommended first session', false)
-            ->assertSee('Four distinct parts of your Hifz practice', false)
+            ->assertSee('Forgetting ayahs or unsure what to revise next?', false)
+            ->assertSee('Quran memorisation app for Hifz', false)
+            ->assertSee('AI recitation feedback', false)
+            ->assertSee('Quran revision', false)
+            ->assertSee('memorisation progress', false)
+            ->assertSee('Your first 10 minutes with Mutqin', false)
             ->assertSee('href="/waiting-list"', false)
             ->assertSee('href="/tools"', false)
             ->assertSee('href="/tools/quran-memorization-planner"', false)
@@ -94,6 +97,12 @@ class SeoPagesTest extends TestCase
         $this->assertStringContainsString('summary_large_image', $html);
         $this->assertStringNotContainsString('aggregateRating', $html);
         $this->assertStringNotContainsString('reviewCount', $html);
+
+        $document = new \DOMDocument;
+        @$document->loadHTML($html);
+        foreach ($document->getElementsByTagName('img') as $image) {
+            $this->assertTrue($image->hasAttribute('alt'), 'Homepage image is missing an alt attribute: '.$image->getAttribute('src'));
+        }
     }
 
     public function test_public_content_pages_are_indexable_and_have_distinct_titles(): void
