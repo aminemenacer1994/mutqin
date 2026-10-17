@@ -33,12 +33,14 @@
                 <div
                   class="amd-mic-status amd-mic-status--header amd-mic-status--compact"
                   :class="{
-                    'amd-mic-status--recording': isListening && !sttRecovering,
+                    'amd-mic-status--recording': isListening && !isStarting && !sttRecovering,
                     'amd-mic-status--starting': isStarting && !sttRecovering,
                     'amd-mic-status--reconnecting': sttRecovering,
                     'amd-mic-status--processing': isProcessing || endingSoon,
+                    'amd-mic-status--ai-review': isAnalysing,
+                    'amd-mic-status--saving': isUploading,
                   }"
-                  :data-status="micStatusKey"
+                  :data-status="headerMicStatusKey"
                   role="status"
                   aria-live="polite"
                   aria-atomic="true"
@@ -130,7 +132,7 @@
                 'is-blur-active': blurActive && !peeking && keepVisibilityMask,
                 'is-gap-mask': !blurActive && !peeking && keepVisibilityMask,
                 'is-peeking': peeking && keepVisibilityMask,
-                'is-listening': isListening,
+                'is-listening': isListening && !isStarting,
                 'is-ready': isReady,
                 'is-complete': isComplete,
                 'is-mistake-flash': mistakeVisualActive,
@@ -168,9 +170,13 @@
               class="amd-recording-state"
               :class="{
                 'is-listening': isListening,
+                'is-starting': isStarting,
                 'is-processing': isProcessing || endingSoon,
+                'is-ai-review': isAnalysing,
+                'is-saving': isUploading,
                 'is-reconnecting': sttRecovering,
               }"
+              :data-state="audioProgressState"
               role="status"
               aria-live="polite"
               aria-atomic="true"
@@ -465,6 +471,12 @@ export default {
       const stage = String(this.stage || '')
       return stage === 'processing' || stage === 'analysing' || stage === 'uploading'
     },
+    isAnalysing() {
+      return String(this.stage || '') === 'analysing'
+    },
+    isUploading() {
+      return String(this.stage || '') === 'uploading'
+    },
     // Keep gap/blur mask chrome through idle → record → stop → processing.
     // Never drop presentation classes on stage changes (that flashes full text).
     keepVisibilityMask() {
@@ -500,11 +512,12 @@ export default {
       return this.isListening
     },
     displayMicStatusLabel() {
-      if (this.isProcessing || this.endingSoon) {
+      if (this.endingSoon) {
         return this.liveHint || 'Processing…'
       }
-      // Record → Recording immediately (starting + listening). Keep one status pill only.
-      if (this.stage === 'listening' || this.isStarting) {
+      if (this.isProcessing) return this.stageLabel || 'Processing…'
+      if (this.isStarting) return this.stageLabel || 'Starting…'
+      if (this.stage === 'listening') {
         return this.recordingActiveLabel || this.micStatusLabel || 'Recording'
       }
       return this.micStatusLabel || 'Ready'
@@ -514,16 +527,29 @@ export default {
         && (this.isStarting || this.isListening || this.isProcessing)
     },
     audioProgressTitle() {
+      if (this.isStarting) return this.stageLabel || 'Starting…'
       if (this.isListening) return this.recordingActiveLabel || this.micStatusLabel
+      if (this.isAnalysing) return this.stageLabel || 'AI review'
       return this.stageLabel || this.displayMicStatusLabel
     },
     audioProgressDetail() {
       return this.liveHint || ''
     },
     audioProgressIcon() {
+      if (this.isStarting) return 'bi bi-arrow-repeat'
       if (this.isListening) return 'bi bi-mic-fill'
+      if (this.isAnalysing) return 'bi bi-stars'
+      if (this.isUploading) return 'bi bi-shield-check'
       if (this.isProcessing || this.endingSoon) return 'bi bi-arrow-repeat'
       return 'bi bi-mic-fill'
+    },
+    audioProgressState() {
+      if (this.isStarting) return 'starting'
+      if (this.isListening) return 'recording'
+      if (this.isAnalysing) return 'ai-review'
+      if (this.isUploading) return 'saving'
+      if (this.isProcessing || this.endingSoon) return 'processing'
+      return 'ready'
     },
     feedbackIcon() {
       if (this.feedbackState === 'confirmed') return 'bi bi-check2-circle'
@@ -579,6 +605,14 @@ export default {
       if (raw === 'denied') return 'need_access'
       if (raw === 'unsupported') return 'unavailable'
       return raw
+    },
+    headerMicStatusKey() {
+      if (this.isStarting) return 'starting'
+      if (this.isAnalysing) return 'ai-review'
+      if (this.isUploading) return 'saving'
+      if (this.isProcessing || this.endingSoon) return 'processing'
+      if (this.isListening) return 'listening'
+      return this.micStatusKey
     },
   },
   watch: {

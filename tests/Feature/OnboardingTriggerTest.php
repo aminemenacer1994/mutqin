@@ -33,6 +33,7 @@ class OnboardingTriggerTest extends TestCase
         $page->assertOk();
         $page->assertSee('just_registered":true', false);
         $page->assertDontSee('just_logged_in":true', false);
+        $page->assertSee('window.mutqinJustRegisteredFlash = true', false);
     }
 
     public function test_existing_user_login_flashes_just_logged_in_not_registered(): void

@@ -295,21 +295,37 @@ function runWhenIdle(task, timeoutMs = 2000) {
 
 function scheduleDeferredShellWork() {
     runWhenIdle(async () => {
+        const justRegistered = Boolean(
+            typeof window !== 'undefined' && window.mutqinJustRegisteredFlash
+        );
+
+        initSeoConversionTracking({
+            path: typeof window !== 'undefined' ? window.location.pathname : '',
+            justRegistered,
+            registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
+        });
+
         try {
             const { initAckee, trackEvent: trackAckeeEvent, ACKEE_EVENTS } = await import(
                 /* webpackChunkName: "ackee-analytics" */ './scripts/analytics/ackee.js'
             );
             initAckee();
-            initSeoConversionTracking({
-                path: typeof window !== 'undefined' ? window.location.pathname : '',
-                justRegistered: Boolean(typeof window !== 'undefined' && window.mutqinJustRegisteredFlash),
-                registerMethod: (typeof window !== 'undefined' && window.mutqinRegisterMethod) || 'email',
-            });
-            if (typeof window !== 'undefined' && window.mutqinJustRegisteredFlash) {
+            if (justRegistered) {
                 trackAckeeEvent(ACKEE_EVENTS.REGISTER_COMPLETED);
             }
         } catch {
             /* analytics must never block boot */
+        }
+
+        if (justRegistered) {
+            try {
+                const { META_PIXEL_EVENTS, trackMetaPixelEvent } = await import(
+                    /* webpackChunkName: "meta-pixel" */ './scripts/analytics/metaPixel.js'
+                );
+                trackMetaPixelEvent(META_PIXEL_EVENTS.REGISTRATION_COMPLETED);
+            } catch {
+                /* analytics must never block boot */
+            }
         }
     });
 }

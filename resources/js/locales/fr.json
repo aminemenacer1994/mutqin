@@ -237,8 +237,15 @@
   "homepage": {
     "hero": {
       "badge": "Compagnon de Hifz",
-      "title": "Gardez votre Hifz près du cœur, une session calme à la fois.",
+      "title": "Vous oubliez des ayahs ou ne savez pas quoi réviser ensuite ?",
       "desc": "Pratiquez un court ensemble, récitez pour Allah, et partez en sachant quoi ouvrir ensuite, bi’idhnillāh.",
+      "painKicker": "Si cela vous semble familier, vous n’êtes pas seul.",
+      "painPoints": {
+        "recall": "Certaines ayahs semblent moins sûres qu’avant.",
+        "consistency": "Une semaine chargée peut interrompre votre rythme de révision.",
+        "restart": "Reprendre peut sembler plus difficile que nécessaire."
+      },
+      "audience": "Pour les débutants, ceux qui reprennent, les mémorisants expérimentés et les enfants accompagnés d’un parent ou d’un enseignant.",
       "promiseLabel": "Le besoin et la réponse",
       "problem": "Besoin",
       "problemText": "Les journées chargées dispersent votre place dans le Qur’an. Les ayahs faibles s’effacent, et la prochaine ouverture devient floue.",
@@ -337,7 +344,7 @@
     "access": {
       "available": {
         "label": "Disponible maintenant",
-        "detail": "Commencez une première session gratuite aujourd’hui — sans liste d’attente."
+        "detail": "Commencez une première session gratuite aujourd’hui. Sans liste d’attente."
       },
       "early": {
         "label": "Accès anticipé",
@@ -367,7 +374,7 @@
         "assess": {
           "title": "Évaluer",
           "description": "Voyez ce qui est resté, ce qui demande du soin et la prochaine étape la plus claire pour votre prochaine séance.",
-          "cue": "C’est votre résultat et votre prochaine étape — pas un mode de pratique distinct."
+          "cue": "C’est votre résultat et votre prochaine étape, pas un mode de pratique distinct."
         }
       }
     },
@@ -378,7 +385,7 @@
       "durationLabel": "Prévoyez",
       "duration": "Environ 10 minutes",
       "startLabel": "Commencez avec",
-      "start": "Un court passage — 1 à 3 ayahs",
+      "start": "Un court passage: 1 à 3 ayahs",
       "leaveLabel": "Vous repartez avec",
       "leave": "Un point de départ sauvegardé et un passage clair à revoir"
     },
@@ -3776,7 +3783,7 @@
         "paused": "en pausa",
         "complete": "Completado",
         "processing": "« Processing»",
-        "analysing": "« Analysing»",
+        "analysing": "Analyse par l’IA",
         "uploading": "Enregistrement audio",
         "results": "« Assessment results»",
         "plan": "Practica plan",

@@ -3661,8 +3661,8 @@ a.dash-drawer__row--link:focus-visible,
 
 /* Final cascade guard for the compact dashboard layout. */
 .user-dashboard {
-  --dash-section-gap: 0.85rem !important;
-  padding-top: 0.85rem !important;
+  --dash-section-gap: 0.65rem !important;
+  padding-top: 0.7rem !important;
   padding-bottom: 2.25rem !important;
 }
 
@@ -3670,13 +3670,13 @@ a.dash-drawer__row--link:focus-visible,
   width: 100% !important;
   max-width: 100% !important;
   margin-inline: 0 !important;
-  gap: 0.85rem !important;
+  gap: 0.65rem !important;
 }
 
 .user-dashboard__content,
 .user-dashboard__primary,
 .user-dashboard__review-row {
-  gap: 0.85rem !important;
+  gap: 0.65rem !important;
 }
 
 .dash-section,
@@ -4058,17 +4058,17 @@ a.dash-drawer__row--link:focus-visible,
   gap: 0.65rem;
 }
 
-/* The weekly record is one coherent view: chart first, plain-language totals
-   beside it on desktop instead of three equally weighted dashboard cards. */
+/* The weekly record is one coherent view: chart first, with a quiet stat list
+   beside it rather than a stack of competing progress cards. */
 @media (min-width: 768px) {
   .dash-section--weekly .dash-section__body {
-    grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
+    grid-template-columns: minmax(0, 1fr) minmax(13rem, 16rem);
     grid-template-areas:
       "chart metrics"
       "summary metrics"
       "note metrics";
-    align-items: stretch;
-    column-gap: 1.25rem;
+    align-items: start;
+    column-gap: 0.9rem;
   }
 
   .dash-section--weekly .dash-chart__wrap {
@@ -4084,10 +4084,11 @@ a.dash-drawer__row--link:focus-visible,
     grid-area: metrics;
     grid-template-columns: 1fr;
     gap: 0;
-    border: 1px solid var(--dash-border);
-    border-radius: var(--dash-radius-sm);
-    overflow: hidden;
-    background: color-mix(in srgb, var(--dash-surface) 96%, var(--dash-bg));
+    align-self: start;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
   }
 
   .dash-section--weekly .dash-analytic {
@@ -4100,7 +4101,7 @@ a.dash-drawer__row--link:focus-visible,
     justify-items: start;
     align-content: center;
     min-height: 0;
-    padding: 0.85rem 0.9rem;
+    padding: 0.7rem 0.15rem;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -4115,8 +4116,8 @@ a.dash-drawer__row--link:focus-visible,
 
   .dash-section--weekly .dash-analytic:hover,
   .dash-section--weekly .dash-analytic:focus-visible {
-    background: color-mix(in srgb, var(--dash-accent-light) 38%, var(--dash-surface));
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dash-accent) 20%, transparent);
+    background: color-mix(in srgb, var(--dash-accent-light) 28%, transparent);
+    box-shadow: none;
     transform: none;
   }
 
@@ -4137,6 +4138,56 @@ a.dash-drawer__row--link:focus-visible,
   .user-dashboard__review-row > .dash-section .dash-section__body {
     flex: initial;
   }
+}
+
+/* Keep the same quieter, list-like treatment when the metrics stack below the
+   chart. This preserves their buttons while removing three more card shells. */
+@media (max-width: 767.98px) {
+  .dash-section--weekly .dash-analytics {
+    grid-template-columns: 1fr;
+    gap: 0;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .dash-section--weekly .dash-analytic {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "icon value"
+      "icon label"
+      "icon hint";
+    justify-items: start;
+    min-height: 0;
+    padding: 0.65rem 0.15rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: start;
+    box-shadow: none;
+  }
+
+  .dash-section--weekly .dash-analytic + .dash-analytic {
+    border-top: 1px solid var(--dash-border);
+  }
+
+  .dash-section--weekly .dash-analytic__icon { grid-area: icon; }
+  .dash-section--weekly .dash-analytic__value { grid-area: value; }
+  .dash-section--weekly .dash-analytic__label { grid-area: label; }
+  .dash-section--weekly .dash-analytic__hint { grid-area: hint; }
+
+  .dash-section--weekly .dash-analytic:hover,
+  .dash-section--weekly .dash-analytic:focus-visible {
+    background: color-mix(in srgb, var(--dash-accent-light) 28%, transparent);
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.dash-section--weekly .dash-analytic:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--dash-accent) 58%, transparent);
+  outline-offset: 2px;
 }
 
 .dash-chart__footer {

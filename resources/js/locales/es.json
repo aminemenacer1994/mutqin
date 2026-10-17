@@ -237,8 +237,15 @@
   "homepage": {
     "hero": {
       "badge": "Memorización del Corán con IA",
-      "title": "Una forma más serena y ordenada de memorizar el Corán.",
+      "title": "¿Olvidas aleyas o no sabes qué repasar después?",
       "desc": "Practica un conjunto breve, recita por Allah, y sal sabiendo qué abrir después, bi’idhnillāh.",
+      "painKicker": "Si esto te resulta familiar, no estás solo.",
+      "painPoints": {
+        "recall": "Algunas aleyas ya no se sienten tan seguras como antes.",
+        "consistency": "Una semana ocupada puede interrumpir tu ritmo de repaso.",
+        "restart": "Volver a empezar puede sentirse más difícil de lo que debería."
+      },
+      "audience": "Para principiantes, quienes retoman el aprendizaje, memorizadores con experiencia y niños que aprenden con el apoyo de un familiar o profesor.",
       "promiseLabel": "La necesidad y la respuesta",
       "problem": "Necesidad",
       "problemText": "Olvidar qué repasar, perder aleyas débiles y parar sin un camino de vuelta.",
@@ -254,7 +261,7 @@
       "seeFirstSession": "Ver qué ocurre primero",
       "firstSessionLabel": "Tu primera sesión recomendada",
       "firstSessionTime": "Unos 10 minutos",
-      "firstSessionRange": "Empieza con 1–3 aleyas",
+      "firstSessionRange": "Empieza con 1 a 3 aleyas",
       "firstSessionOutcome": "Termina con un próximo repaso",
       "previewKicker": "Dentro de una sesión real",
       "previewTitle": "Elige un rango breve, practícalo y sabe qué hacer después"
@@ -374,11 +381,11 @@
     "firstSession": {
       "kicker": "Primera sesión recomendada",
       "title": "Empieza poco a poco. Termina sabiendo qué hacer después.",
-      "subtitle": "Reserva unos 10 minutos para 1–3 aleyas. Escucharás, repetirás, recitarás y terminarás con un siguiente repaso claro.",
+      "subtitle": "Reserva unos 10 minutos para 1 a 3 aleyas. Escucharás, repetirás, recitarás y terminarás con un siguiente repaso claro.",
       "durationLabel": "Reserva",
       "duration": "Unos 10 minutos",
       "startLabel": "Empieza con",
-      "start": "Un rango breve: 1–3 aleyas",
+      "start": "Un rango breve: 1 a 3 aleyas",
       "leaveLabel": "Terminas con",
       "leave": "Un punto de partida guardado y un rango claro para repasar"
     },
@@ -3758,7 +3765,7 @@
         "paused": "en pausa",
         "complete": "Completado",
         "processing": "معالجة",
-        "analysing": "تحليل",
+        "analysing": "Revisión con IA",
         "uploading": "Guardando grabación",
         "results": "نتائج التقييم",
         "plan": "Practica plan",

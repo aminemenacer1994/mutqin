@@ -27,12 +27,14 @@ test('uses the existing Pixel API for the landing funnel without personal data',
   withPixel((calls) => {
     trackMetaPixelEvent(META_PIXEL_EVENTS.PRIMARY_CTA_CLICKED, { destination: 'waiting_list' })
     trackMetaPixelEvent(META_PIXEL_EVENTS.WAITING_LIST_SIGNUP_COMPLETED)
+    trackMetaPixelEvent(META_PIXEL_EVENTS.REGISTRATION_COMPLETED)
     trackMetaPixelEvent(META_PIXEL_EVENTS.MEMORISATION_SESSION_STARTED)
     trackMetaPixelEvent(META_PIXEL_EVENTS.MEMORISATION_SESSION_COMPLETED)
 
     assert.deepEqual(calls, [
       ['trackCustom', 'MutqinPrimaryCtaClicked', { destination: 'waiting_list' }],
       ['track', 'Lead', {}],
+      ['track', 'CompleteRegistration', {}],
       ['trackCustom', 'MutqinMemorisationSessionStarted', {}],
       ['trackCustom', 'MutqinMemorisationSessionCompleted', {}],
     ])
@@ -59,10 +61,12 @@ test('wires funnel events to the actual successful action points', () => {
   const homepage = readFileSync(join(root, 'resources/js/views/Homepage.vue'), 'utf8')
   const waitingList = readFileSync(join(root, 'resources/js/views/WaitingList.vue'), 'utf8')
   const memorisation = readFileSync(join(root, 'resources/js/views/Memorisation.js'), 'utf8')
+  const app = readFileSync(join(root, 'resources/js/app.js'), 'utf8')
 
   assert.match(homepage, /trackMetaPixelEvent\(META_PIXEL_EVENTS\.PRIMARY_CTA_CLICKED/)
   assert.match(waitingList, /joined\.value = true;[\s\S]{0,240}trackMetaPixelEvent\(META_PIXEL_EVENTS\.WAITING_LIST_SIGNUP_COMPLETED\)/)
   assert.doesNotMatch(waitingList, /window\.fbq\(/)
   assert.match(memorisation, /trackAckeeEvent\(ACKEE_EVENTS\.MEMORISATION_SESSION_STARTED\)[\s\S]{0,120}trackMetaPixelEvent\(META_PIXEL_EVENTS\.MEMORISATION_SESSION_STARTED\)/)
   assert.match(memorisation, /trackAckeeEvent\(ACKEE_EVENTS\.MEMORISATION_SESSION_COMPLETED\)[\s\S]{0,120}trackMetaPixelEvent\(META_PIXEL_EVENTS\.MEMORISATION_SESSION_COMPLETED\)/)
+  assert.match(app, /trackMetaPixelEvent\(META_PIXEL_EVENTS\.REGISTRATION_COMPLETED\)/)
 })

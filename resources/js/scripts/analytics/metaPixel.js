@@ -6,6 +6,7 @@
  */
 export const META_PIXEL_EVENTS = Object.freeze({
   WAITING_LIST_SIGNUP_COMPLETED: 'waiting_list_signup_completed',
+  REGISTRATION_COMPLETED: 'registration_completed',
   PRIMARY_CTA_CLICKED: 'primary_cta_clicked',
   MEMORISATION_SESSION_STARTED: 'memorisation_session_started',
   MEMORISATION_SESSION_COMPLETED: 'memorisation_session_completed',
@@ -13,6 +14,7 @@ export const META_PIXEL_EVENTS = Object.freeze({
 
 const EVENT_DEFINITIONS = Object.freeze({
   [META_PIXEL_EVENTS.WAITING_LIST_SIGNUP_COMPLETED]: { name: 'Lead', method: 'track' },
+  [META_PIXEL_EVENTS.REGISTRATION_COMPLETED]: { name: 'CompleteRegistration', method: 'track' },
   [META_PIXEL_EVENTS.PRIMARY_CTA_CLICKED]: { name: 'MutqinPrimaryCtaClicked', method: 'trackCustom' },
   [META_PIXEL_EVENTS.MEMORISATION_SESSION_STARTED]: { name: 'MutqinMemorisationSessionStarted', method: 'trackCustom' },
   [META_PIXEL_EVENTS.MEMORISATION_SESSION_COMPLETED]: { name: 'MutqinMemorisationSessionCompleted', method: 'trackCustom' },

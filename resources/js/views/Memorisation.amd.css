@@ -1948,6 +1948,20 @@
   color: #7a502c;
 }
 
+.amd-recording-state.is-ai-review,
+.amd-mic-status--ai-review {
+  border-color: color-mix(in srgb, #4756a8 38%, transparent);
+  background: color-mix(in srgb, #5265bc 12%, #fff);
+  color: #35458f;
+}
+
+.amd-recording-state.is-saving,
+.amd-mic-status--saving {
+  border-color: color-mix(in srgb, #1d7a67 38%, transparent);
+  background: color-mix(in srgb, #23816d 11%, #fff);
+  color: #176354;
+}
+
 .amd-recording-state.is-reconnecting {
   border-color: color-mix(in srgb, #d97706 36%, transparent);
   background: color-mix(in srgb, #f59e0b 12%, #fff);
@@ -1970,6 +1984,18 @@
 
 .amd-recording-state.is-processing .amd-recording-state__icon i {
   animation: amd-complete-spin 1.1s linear infinite;
+}
+
+.amd-recording-state.is-starting .amd-recording-state__icon i {
+  animation: amd-complete-spin 1.1s linear infinite;
+}
+
+.amd-recording-state.is-ai-review .amd-recording-state__icon {
+  animation: amd-ai-review-pulse 1.35s ease-in-out infinite;
+}
+
+.amd-recording-state.is-saving .amd-recording-state__icon i {
+  animation: amd-saving-pulse 1.3s ease-in-out infinite;
 }
 
 .amd-recording-state__copy {
@@ -2032,8 +2058,41 @@
   color: #fde68a;
 }
 
+[data-theme="dark"] .amd-recording-state.is-ai-review,
+.amd-overlay[data-theme="dark"] .amd-recording-state.is-ai-review,
+[data-theme="dark"] .amd-mic-status--ai-review,
+.amd-overlay[data-theme="dark"] .amd-mic-status--ai-review {
+  border-color: rgba(165, 180, 252, 0.4);
+  background: color-mix(in srgb, #373f93 38%, #171412);
+  color: #c7d2fe;
+}
+
+[data-theme="dark"] .amd-recording-state.is-saving,
+.amd-overlay[data-theme="dark"] .amd-recording-state.is-saving,
+[data-theme="dark"] .amd-mic-status--saving,
+.amd-overlay[data-theme="dark"] .amd-mic-status--saving {
+  border-color: rgba(94, 234, 212, 0.34);
+  background: color-mix(in srgb, #135f52 38%, #171412);
+  color: #99f6e4;
+}
+
 @keyframes amd-handoff-spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes amd-ai-review-pulse {
+  50% { transform: scale(1.1); }
+}
+
+@keyframes amd-saving-pulse {
+  50% { transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .amd-recording-state__icon,
+  .amd-recording-state__icon i {
+    animation: none !important;
+  }
 }
 
 .amd-complete--premium .amd-complete__title {
@@ -8457,4 +8516,61 @@ html body .app .workspace-shell .top-card-session-cluster.has-paired-actions .se
   color: #9fd4f1 !important;
   -webkit-text-fill-color: #9fd4f1 !important;
   background: rgba(95, 160, 197, 0.14) !important;
+}
+
+/* The compact header badge mirrors the larger lifecycle panel. Its state is
+ * readable even while the mushaf is scrolled away. */
+.amd-header .amd-mic-status--recording {
+  border-color: color-mix(in srgb, #dc2626 35%, transparent);
+  background: color-mix(in srgb, #dc2626 11%, #fff);
+  color: #991b1b;
+}
+
+.amd-header .amd-mic-status--starting,
+.amd-header .amd-mic-status--processing {
+  border-color: color-mix(in srgb, #d97706 32%, transparent);
+  background: color-mix(in srgb, #f59e0b 12%, #fff);
+  color: #92400e;
+}
+
+.amd-header .amd-mic-status--ai-review {
+  border-color: color-mix(in srgb, #4756a8 38%, transparent);
+  background: color-mix(in srgb, #5265bc 12%, #fff);
+  color: #35458f;
+}
+
+.amd-header .amd-mic-status--saving {
+  border-color: color-mix(in srgb, #1d7a67 38%, transparent);
+  background: color-mix(in srgb, #23816d 11%, #fff);
+  color: #176354;
+}
+
+[data-theme="dark"] .amd-header .amd-mic-status--recording,
+.amd-overlay[data-theme="dark"] .amd-header .amd-mic-status--recording {
+  border-color: rgba(252, 165, 165, 0.38);
+  background: rgba(127, 29, 29, 0.32);
+  color: #fecaca;
+}
+
+[data-theme="dark"] .amd-header .amd-mic-status--starting,
+[data-theme="dark"] .amd-header .amd-mic-status--processing,
+.amd-overlay[data-theme="dark"] .amd-header .amd-mic-status--starting,
+.amd-overlay[data-theme="dark"] .amd-header .amd-mic-status--processing {
+  border-color: rgba(251, 191, 36, 0.32);
+  background: rgba(120, 83, 27, 0.28);
+  color: #fde68a;
+}
+
+[data-theme="dark"] .amd-header .amd-mic-status--ai-review,
+.amd-overlay[data-theme="dark"] .amd-header .amd-mic-status--ai-review {
+  border-color: rgba(165, 180, 252, 0.4);
+  background: rgba(55, 65, 147, 0.32);
+  color: #c7d2fe;
+}
+
+[data-theme="dark"] .amd-header .amd-mic-status--saving,
+.amd-overlay[data-theme="dark"] .amd-header .amd-mic-status--saving {
+  border-color: rgba(94, 234, 212, 0.34);
+  background: rgba(19, 95, 82, 0.3);
+  color: #99f6e4;
 }

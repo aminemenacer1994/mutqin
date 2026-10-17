@@ -136,14 +136,20 @@
                 v-if="recordingProgressActive"
                 class="dash-ai-recite-pill"
                 :class="{
+                  'is-recording': stage === 'recording',
                   'is-starting': stage === 'starting',
-                  'is-processing': stage === 'processing',
+                  'is-finishing': stage === 'processing' && processingPhase === 'finishing',
+                  'is-ai-review': stage === 'processing' && processingPhase === 'analysing',
+                  'is-saving': stage === 'processing' && processingPhase === 'saving',
                 }"
+                :data-state="recordingProgressState"
                 role="status"
                 aria-live="polite"
                 aria-atomic="true"
               >
-                <span class="dash-ai-recite-pill__dot" aria-hidden="true"></span>
+                <span class="dash-ai-recite-pill__signal" aria-hidden="true">
+                  <i :class="recordingProgressIcon"></i>
+                </span>
                 <span class="dash-ai-recite-pill__copy">
                   <strong>{{ recordingProgressTitle }}</strong>
                   <small>{{ recordingProgressDetail }}</small>
@@ -350,6 +356,7 @@ export default {
       stopping: false,
       elapsedLabel: '00:00',
       processingLabel: '',
+      processingPhase: 'finishing',
       errorTitle: '',
       errorDesc: '',
       showMicrophoneHelp: false,
@@ -396,6 +403,12 @@ export default {
     },
     recordingProgressTitle() {
       if (this.stage === 'recording') return this.t('memorisation.amd.micListening')
+      if (this.stage === 'processing' && this.processingPhase === 'analysing') {
+        return this.t('memorisation.amd.stages.analysing')
+      }
+      if (this.stage === 'processing' && this.processingPhase === 'saving') {
+        return this.t('memorisation.amd.stages.uploading')
+      }
       if (this.stage === 'processing') return this.t('memorisation.amd.stages.processing')
       return this.t('memorisation.amd.stages.starting')
     },
@@ -403,6 +416,20 @@ export default {
       if (this.stage === 'recording') return this.t('memorisation.amd.hintListening')
       if (this.stage === 'processing') return this.processingLabel || this.t('memorisation.amd.hintProcessing')
       return this.t('memorisation.amd.hintStarting')
+    },
+    recordingProgressIcon() {
+      if (this.stage === 'recording') return 'bi bi-mic-fill'
+      if (this.stage === 'processing' && this.processingPhase === 'analysing') return 'bi bi-stars'
+      if (this.stage === 'processing' && this.processingPhase === 'saving') return 'bi bi-shield-check'
+      return 'bi bi-arrow-repeat'
+    },
+    recordingProgressState() {
+      if (this.stage === 'recording') return 'recording'
+      if (this.stage === 'processing' && this.processingPhase === 'analysing') return 'ai-review'
+      if (this.stage === 'processing' && this.processingPhase === 'saving') return 'saving'
+      if (this.stage === 'processing') return 'processing'
+      if (this.stage === 'starting') return 'starting'
+      return 'ready'
     },
     canPeek() {
       return ['ready', 'recording', 'result'].includes(this.stage)
@@ -482,6 +509,7 @@ export default {
       this.errorTitle = ''
       this.errorDesc = ''
       this.showMicrophoneHelp = false
+      this.processingPhase = 'finishing'
       this.ensureRecorder()
       let lastTested = null
       try {
@@ -598,6 +626,7 @@ export default {
       const requestId = ++this.analysisRequestId
       this.stopping = true
       this.stage = 'processing'
+      this.processingPhase = 'finishing'
       this.processingLabel = this.t('memorisation.amd.hintProcessing')
       let capture = null
       try {
@@ -658,6 +687,7 @@ export default {
           )
           return
         }
+        this.processingPhase = 'analysing'
         this.processingLabel = this.t('memorisation.amd.hintAnalysing')
         const verse = await loadAyah(this.surah, this.ayah)
         if (!this.isCurrentAnalysis(requestId)) return
@@ -710,6 +740,7 @@ export default {
         writeStoredLastLocation(this.userId, { surah_number: this.surah, ayah: this.ayah })
         if (this.savedAttemptId && this.audioBlob) {
           try {
+            this.processingPhase = 'saving'
             this.processingLabel = this.t('memorisation.amd.hintUploading')
             const savedAudio = await learningApi.uploadAiReciteAttemptAudio(
               this.savedAttemptId,

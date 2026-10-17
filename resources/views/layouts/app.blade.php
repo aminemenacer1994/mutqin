@@ -3415,7 +3415,7 @@
       // Re-assert colour/hotfix lock after Vue injects chunk CSS (beats stale cached chunks).
       (function () {
         function pin() {
-          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-memorisation-hotfix-v168', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180', 'mutqin-ui-lock-v181', 'mutqin-memorisation-hotfix-v231'].forEach(function (id) {
+          ['mutqin-button-colour-semantics', 'mutqin-memorisation-hotfix-v131', 'mutqin-memorisation-hotfix-v117', 'mutqin-memorisation-hotfix-v116', 'mutqin-memorisation-hotfix-v115', 'mutqin-memorisation-hotfix-v167', 'mutqin-memorisation-hotfix-v168', 'mutqin-post-session-site-theme-v2', 'mutqin-practice-modal-premium-v1', 'mutqin-ui-lock-v180', 'mutqin-ui-lock-v181', 'mutqin-memorisation-hotfix-v231', 'mutqin-memorisation-session-chrome-final'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.appendChild(el);
           });
@@ -3431,7 +3431,8 @@
           var pinning = false;
           var observer = new MutationObserver(function () {
             if (pinning) return;
-            var lock = document.getElementById('mutqin-memorisation-hotfix-v231')
+            var lock = document.getElementById('mutqin-memorisation-session-chrome-final')
+              || document.getElementById('mutqin-memorisation-hotfix-v231')
               || document.getElementById('mutqin-ui-lock-v181')
               || document.getElementById('mutqin-ui-lock-v180');
             if (!lock || lock === document.body.lastElementChild) return;
@@ -4258,6 +4259,17 @@
         .app-navbar::after,
         .navbar-shell::before,
         .navbar-shell::after {
+            box-shadow: none !important;
+            filter: none !important;
+        }
+
+        /* Keep the global navigation visually flat on every page. Some page
+           styles use a more specific navbar selector, so this intentionally
+           matches the rendered element rather than relying on .navbar alone. */
+        html body nav.navbar.app-navbar,
+        html body nav.navbar.app-navbar .navbar-shell,
+        html body nav.navbar.app-navbar::before,
+        html body nav.navbar.app-navbar::after {
             box-shadow: none !important;
             filter: none !important;
         }
@@ -7964,8 +7976,53 @@
         }
       }
     </style>
+    <style id="mutqin-marketing-home-header">
+        /* The marketing home needs one calm, uninterrupted header rather than
+           a second, boxed desktop off-canvas panel. */
+        body.marketing-home .app-navbar {
+            background: var(--surface-strong) !important;
+            border-bottom: 1px solid var(--border) !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        @media (min-width: 992px) {
+            body.marketing-home .app-navbar .navbar-shell {
+                display: grid !important;
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                gap: clamp(1rem, 2.4vw, 2.5rem);
+            }
+
+            body.marketing-home .app-navbar #primaryNavbar.offcanvas-lg,
+            body.marketing-home .app-navbar #primaryNavbar.offcanvas-lg .offcanvas-body {
+                position: static !important;
+                display: flex !important;
+                visibility: visible !important;
+                width: auto !important;
+                height: auto !important;
+                min-width: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                background: transparent !important;
+                border: 0 !important;
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            body.marketing-home .app-navbar #primaryNavbar.offcanvas-lg {
+                flex: 1 1 auto;
+            }
+
+            body.marketing-home .app-navbar #primaryNavbar .navbar-nav-shell {
+                display: flex;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
-<body dir="{{ $appDirection }}" @if (\App\Support\MutqinDomains::usesEarlyAccessNav(request())) class="mutqin-early-access-nav" @endif>
+<body dir="{{ $appDirection }}" class="{{ \App\Support\MutqinDomains::usesEarlyAccessNav(request()) ? 'mutqin-early-access-nav ' : '' }}{{ request()->routeIs('home') ? 'marketing-home' : '' }}">
     @php
         $usesEarlyAccessNav = \App\Support\MutqinDomains::usesEarlyAccessNav(request());
     @endphp
@@ -8346,8 +8403,8 @@
         window.mutqinInitialDirection = @json($appDirection);
         window.mutqinForceInitialLocale = @json($usesEarlyAccessNav || request()->query('lang') ? true : false);
         window.mutqinAuthCheck = @json(Auth::check());
-        {{-- Peek only: /memorisation still consumes mutqin_just_registered for onboarding. --}}
-        window.mutqinJustRegisteredFlash = @json((bool) session('mutqin_just_registered', false));
+        {{-- /memorisation consumes the session flag for onboarding, so retain its view value for conversion tracking. --}}
+        window.mutqinJustRegisteredFlash = @json(!empty($justRegistered) || (bool) session('mutqin_just_registered', false));
         window.mutqinRegisterMethod = @json((string) session('mutqin_register_method', 'email'));
         window.mutqinRestrictMarketingHost = @json(\App\Support\MutqinDomains::restrictMarketingHost(request()));
         window.mutqinAppUrl = @json(\App\Support\MutqinDomains::hostRoutingEnabled() ? \App\Support\MutqinDomains::appOrigin() : '');
@@ -13476,6 +13533,71 @@ body.session-analysis-modal-open {
     background: color-mix(in srgb, var(--surface, #221d19) 12%, transparent) !important;
     box-shadow: 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
     font-size: 0.74rem !important;
+  }
+
+  /* Session setup needs all four settings at a glance. Do not make this row
+     horizontally scroll before moving the action into the available space. */
+  @media (min-width: 1025px) and (max-width: 1199.98px) {
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head > .workspace-shell-head-toolbar {
+      grid-template-columns: minmax(0, 1fr) !important;
+      row-gap: 0.55rem !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-copy {
+      flex-wrap: wrap !important;
+      overflow: visible !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head-metadata {
+      flex: 1 1 100% !important;
+      flex-wrap: wrap !important;
+      max-width: 100% !important;
+      overflow: visible !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
+      grid-column: 1 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      justify-content: flex-end !important;
+      margin-inline-start: 0 !important;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head > .workspace-shell-head-toolbar {
+      column-gap: 0.45rem !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-copy {
+      overflow: hidden !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-copy > .workspace-shell-main-title {
+      flex: 0 1 auto !important;
+      min-width: 0 !important;
+      max-width: min(15vw, 14rem) !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head-metadata {
+      flex: 0 0 auto !important;
+      gap: 0.35rem !important;
+      max-width: none !important;
+      padding-inline-start: 0.55rem !important;
+      overflow: visible !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head-metadata .workspace-shell-metadata-pill {
+      padding-inline: 0.5rem !important;
+      font-size: 0.72rem !important;
+    }
+
+    html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
+      margin-inline-start: 0.35rem !important;
+    }
   }
 
   /* Desktop stacked reading only: reduce Arabic ayah text, never Mushaf/mobile. */

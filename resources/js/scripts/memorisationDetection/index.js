@@ -208,7 +208,7 @@ export function amdStageLabel(stage, t = null) {
     paused: 'Paused',
     complete: 'Complete',
     processing: 'Processing',
-    analysing: 'Analysing',
+    analysing: 'AI review',
     uploading: 'Saving recording',
     results: 'Assessment results',
     plan: 'Practice plan',

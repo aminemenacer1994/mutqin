@@ -5,14 +5,18 @@
       <div class="hero__inner">
         <div class="hero__grid">
           <div class="hero__copy">
-            <p class="hero__brand">
-              <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
-              Mutqin
-            </p>
             <h1 id="homepage-hero-title" class="hero__title">
               {{ t('homepage.hero.title') }}
             </h1>
             <p class="hero__desc">{{ t('homepage.hero.desc') }}</p>
+            <p class="hero__problem">
+              <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+              <span>{{ t('homepage.hero.problemText') }}</span>
+            </p>
+            <p class="hero__audience">
+              <i class="bi bi-people" aria-hidden="true"></i>
+              <span>{{ t('homepage.hero.audience') }}</span>
+            </p>
 
             <div
               class="hero__availability"
@@ -30,30 +34,15 @@
               </div>
             </div>
 
-            <ul class="hero__session-signals" :aria-label="t('homepage.hero.firstSessionLabel')">
-              <li>
-                <i class="bi bi-clock" aria-hidden="true"></i>
-                <span>{{ t('homepage.hero.firstSessionTime') }}</span>
-              </li>
-              <li>
-                <i class="bi bi-bookmark-heart" aria-hidden="true"></i>
-                <span>{{ t('homepage.hero.firstSessionRange') }}</span>
-              </li>
-              <li>
-                <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                <span>{{ t('homepage.hero.firstSessionOutcome') }}</span>
-              </li>
-            </ul>
-
             <div class="hero__actions">
               <a
                 v-if="showStartMemorisationCta"
-                href="/memorisation"
+                :href="primaryCta.href"
                 class="btn btn--primary"
-                @click="onSeoCta('memorisation', '/memorisation', t('homepage.hero.startFirstSession'))"
+                @click="onSeoCta(primaryCta.destination, primaryCta.href, primaryCta.label)"
               >
                 <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
-                {{ t('homepage.hero.startFirstSession') }}
+                {{ primaryCta.label }}
               </a>
               <a
                 v-else
@@ -105,31 +94,6 @@
               </figure>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="practice-types" aria-labelledby="practice-types-title">
-      <div class="wrap">
-        <header class="section-head" data-reveal>
-          <p class="section-kicker">{{ t('homepage.practiceTypes.kicker') }}</p>
-          <h2 id="practice-types-title" class="section-title">{{ t('homepage.practiceTypes.title') }}</h2>
-          <p class="section-sub">{{ t('homepage.practiceTypes.subtitle') }}</p>
-        </header>
-
-        <div class="practice-types__grid">
-          <article
-            v-for="(mode, idx) in practiceModes"
-            :key="mode.id"
-            class="practice-types__card"
-            data-reveal
-            :style="{ '--delay': `${idx * 60}ms` }"
-          >
-            <span class="practice-types__icon" aria-hidden="true"><i class="bi" :class="mode.icon"></i></span>
-            <h3>{{ mode.title }}</h3>
-            <p>{{ mode.description }}</p>
-            <span class="practice-types__cue">{{ mode.cue }}</span>
-          </article>
         </div>
       </div>
     </section>
@@ -215,7 +179,12 @@
                 class="demo__rail-item"
                 :class="{ 'is-active': idx === demoActiveIndex, 'is-done': idx < demoActiveIndex }"
               >
-                <button type="button" class="demo__rail-btn" @click="seekDemoStep(idx)">
+                <button
+                  type="button"
+                  class="demo__rail-btn"
+                  :aria-current="idx === demoActiveIndex ? 'step' : undefined"
+                  @click="seekDemoStep(idx)"
+                >
                   <span class="demo__rail-num" aria-hidden="true">{{ idx + 1 }}</span>
                   <span class="demo__rail-label">{{ step.label }}</span>
                 </button>
@@ -329,6 +298,26 @@
       </div>
     </section>
 
+    <section v-if="showStartMemorisationCta" class="closing" aria-labelledby="closing-title">
+      <div class="wrap wrap--tight">
+        <div class="closing__card" data-reveal>
+          <p class="section-kicker">{{ t('homepage.cta.kicker') }}</p>
+          <h2 id="closing-title" class="closing__title">{{ t('homepage.cta.title') }}</h2>
+          <p class="closing__sub">{{ t('homepage.cta.subtitle') }}</p>
+          <div class="closing__actions">
+            <a
+              :href="primaryCta.href"
+              class="btn btn--primary"
+              @click="onSeoCta(primaryCta.destination, primaryCta.href, primaryCta.label)"
+            >
+              <i class="bi bi-play-circle-fill" aria-hidden="true"></i>
+              {{ primaryCta.label }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="faq" class="faq">
       <div class="wrap">
         <header class="section-head" data-reveal>
@@ -432,7 +421,6 @@
             <a href="#how-it-works" @click.prevent="scrollToId('how-it-works')">{{ t('homepage.footer.howItWorks') }}</a>
             <a href="#features" @click.prevent="scrollToFeatures">{{ t('homepage.footer.features') }}</a>
             <a href="#faq" @click.prevent="scrollToId('faq')">{{ t('homepage.footer.faq') }}</a>
-            <a href="/pricing">{{ t('homepage.footer.pricing') }}</a>
             <a href="/features">{{ t('homepage.footer.featurePages') }}</a>
             <a href="/articles">{{ t('homepage.footer.articles') }}</a>
           </div>
@@ -479,6 +467,21 @@ export default {
   setup() {
     const { t, locale } = useI18n();
     const showStartMemorisationCta = typeof window === 'undefined' || !window.mutqinRestrictMarketingHost;
+    const primaryCta = computed(() => {
+      const isAuthenticated = typeof window !== 'undefined' && Boolean(window.mutqinAuthCheck);
+
+      return isAuthenticated
+        ? {
+          destination: 'memorisation',
+          href: '/memorisation',
+          label: t('homepage.hero.startFirstSession'),
+        }
+        : {
+          destination: 'registration',
+          href: '/register',
+          label: t('homepage.hero.startFree'),
+        };
+    });
     const currentTheme = ref(getSavedTheme());
     const FEATURES_CAROUSEL_START_INDEX = 2;
     const FEATURES_MOBILE_MQ = '(max-width: 767.98px)';
@@ -517,18 +520,6 @@ export default {
           image: '/images/landing/journey-03-check.jpg',
           label: t('homepage.pipelineDemo.steps.check.label'),
           text: t('homepage.pipelineDemo.steps.check.text'),
-        },
-        {
-          id: 'complete',
-          image: '/images/landing/journey-04-complete.jpg',
-          label: t('homepage.pipelineDemo.steps.complete.label'),
-          text: t('homepage.pipelineDemo.steps.complete.text'),
-        },
-        {
-          id: 'result',
-          image: '/images/landing/demo-step-5.jpg',
-          label: t('homepage.pipelineDemo.steps.result.label'),
-          text: t('homepage.pipelineDemo.steps.result.text'),
         },
         {
           id: 'recommend',
@@ -584,7 +575,6 @@ export default {
     };
 
     let revealObserver = null;
-    let demoObserver = null;
 
     const syncFeaturesMobile = () => {
       isFeaturesMobile.value = featuresMobileMq?.matches ?? false;
@@ -713,40 +703,6 @@ export default {
       ];
     });
 
-    const practiceModes = computed(() => {
-      void locale.value;
-      return [
-        {
-          id: 'memorise',
-          icon: 'bi-journal-plus',
-          title: t('homepage.practiceTypes.items.memorise.title'),
-          description: t('homepage.practiceTypes.items.memorise.description'),
-          cue: t('homepage.practiceTypes.items.memorise.cue'),
-        },
-        {
-          id: 'revise',
-          icon: 'bi-arrow-repeat',
-          title: t('homepage.practiceTypes.items.revise.title'),
-          description: t('homepage.practiceTypes.items.revise.description'),
-          cue: t('homepage.practiceTypes.items.revise.cue'),
-        },
-        {
-          id: 'ai-recite',
-          icon: 'bi-mic-fill',
-          title: t('homepage.practiceTypes.items.aiRecite.title'),
-          description: t('homepage.practiceTypes.items.aiRecite.description'),
-          cue: t('homepage.practiceTypes.items.aiRecite.cue'),
-        },
-        {
-          id: 'assess',
-          icon: 'bi-clipboard2-check',
-          title: t('homepage.practiceTypes.items.assess.title'),
-          description: t('homepage.practiceTypes.items.assess.description'),
-          cue: t('homepage.practiceTypes.items.assess.cue'),
-        },
-      ];
-    });
-
     const features = computed(() => {
       void locale.value;
       return [
@@ -777,20 +733,6 @@ export default {
           title: t('homepage.features.items.aiRecitation.title'),
           description: t('homepage.features.items.aiRecitation.description'),
           shotAlt: t('homepage.shots.check'),
-        },
-        {
-          id: 'mushafLayout',
-          image: '/images/landing/journey-02-practise.jpg',
-          title: t('homepage.features.items.mushafLayout.title'),
-          description: t('homepage.features.items.mushafLayout.description'),
-          shotAlt: t('homepage.shots.practise'),
-        },
-        {
-          id: 'translationTajweed',
-          image: '/images/landing/hero-center.jpg',
-          title: t('homepage.features.items.translationTajweed.title'),
-          description: t('homepage.features.items.translationTajweed.description'),
-          shotAlt: t('homepage.shots.hero'),
         },
       ];
     });
@@ -850,26 +792,11 @@ export default {
       featuresMobileMq.addEventListener('change', onFeaturesMobileChange);
       initFeaturesCarousel();
 
-      const howSection = document.getElementById('how-it-works');
-      if (howSection) {
-        demoObserver = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (reduceMotion) {
-              stopDemoPlayback();
-              return;
-            }
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.35) startDemoPlayback();
-            else stopDemoPlayback();
-          });
-        }, { threshold: [0, 0.35, 0.75] });
-        demoObserver.observe(howSection);
-      }
     });
 
     onUnmounted(() => {
       window.removeEventListener('mutqin:theme-change', onThemeChange);
       revealObserver?.disconnect();
-      demoObserver?.disconnect();
       featuresMobileMq?.removeEventListener('change', onFeaturesMobileChange);
       disposeFeaturesCarousel();
       clearDemoTimer();
@@ -878,6 +805,7 @@ export default {
     return {
       t,
       showStartMemorisationCta,
+      primaryCta,
       currentTheme,
       socialLinks,
       FEATURES_CAROUSEL_START_INDEX,
@@ -889,7 +817,6 @@ export default {
       scrollToFeatures,
       scrollToId,
       heroShots,
-      practiceModes,
       features,
       faqItems,
       demoPlaying,

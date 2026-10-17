@@ -238,32 +238,33 @@
   "homepage": {
     "hero": {
       "badge": "Qur’an memorisation companion",
-      "title": "Not sure what to memorise or revise next?",
-      "desc": "Whether you are new to Hifz, returning after a pause or strengthening what you know, start with a small range. Mutqin guides you to listen, repeat, recite and return at the right time.",
+      "title": "Forgetting ayahs or unsure what to revise next?",
+      "desc": "Start small: listen, repeat and recite aloud. AI Recite can flag possible mistakes to practise again.",
       "promiseLabel": "Why Mutqin",
       "problem": "The struggle",
-      "problemText": "Forgetting what to revise, losing weaker ayahs and stopping without a clear way back.",
+      "problemText": "A disrupted rhythm can make it hard to know where to restart.",
+      "audience": "For beginners, children with guidance, returning adults and experienced Hifz students.",
       "solution": "Mutqin",
       "solutionText": "A steady path to listen, recite, review and return, one ayah at a time.",
-      "startFree": "Start memorising",
+      "startFree": "Create free account",
       "joinWaitlist": "Join the waiting list",
       "viewPricing": "View plans",
       "seeFeatures": "See how it helps",
       "seeHow": "See how Mutqin works",
       "startMemorisation": "Start memorisation",
-      "startFirstSession": "Start your first session",
-      "seeFirstSession": "See what happens first",
+      "startFirstSession": "Start 10-minute session",
+      "seeFirstSession": "See how it works",
       "firstSessionLabel": "Your recommended first session",
       "firstSessionTime": "About 10 minutes",
       "firstSessionRange": "Start with 1 to 3 ayahs",
       "firstSessionOutcome": "Leave with a next return",
-      "previewKicker": "Inside a real session",
-      "previewTitle": "Set a small range, practise it, then know what comes next"
+      "previewKicker": "A real session",
+      "previewTitle": "Choose a range, practise it, and save your next step"
     },
     "access": {
       "available": {
         "label": "Available now",
-        "detail": "Start a free first session today. No waiting list needed."
+        "detail": "Start a free first session today."
       },
       "early": {
         "label": "Early access",
@@ -286,9 +287,9 @@
       "progress": "Hifz progress with memorised ayahs and overall share"
     },
     "features": {
-      "kicker": "For Hifz",
-      "title": "What supports your Hifz",
-      "subtitle": "Each part of Mutqin supports memorising, practising, revising and returning.",
+      "kicker": "Built for Hifz",
+      "title": "The essentials for steady Hifz",
+      "subtitle": "Learn a small range, practise your recall, then return at the right time.",
       "cta": "",
       "carouselLabel": "Feature screenshots",
       "items": {
@@ -306,7 +307,7 @@
         },
         "aiRecitation": {
           "title": "AI Recite",
-          "description": "Recite from memory and get feedback on the words and ayahs that need more attention."
+          "description": "Recite aloud and see possible words or ayahs to practise again."
         },
         "mushafLayout": {
           "title": "Mushaf layout",
@@ -373,15 +374,15 @@
       }
     },
     "firstSession": {
-      "kicker": "Recommended first session",
-      "title": "Start small. Finish knowing what to do next.",
-      "subtitle": "Set aside about 10 minutes for 1 to 3 ayahs. You will listen, repeat, recite and leave with a clear next return.",
+      "kicker": "Your first session",
+      "title": "Your first 10 minutes with Mutqin",
+      "subtitle": "Choose 1 to 3 ayahs. Listen, repeat and recite from memory. Mutqin saves your next step.",
       "durationLabel": "Set aside",
-      "duration": "About 10 minutes",
+      "duration": "10 minutes",
       "startLabel": "Start with",
-      "start": "One short range: 1 to 3 ayahs",
-      "leaveLabel": "You leave with",
-      "leave": "A saved starting point and a clear set to revisit"
+      "start": "1 to 3 ayahs",
+      "leaveLabel": "Finish with",
+      "leave": "A saved place and a clear next step"
     },
     "demo": {
       "session": "Surah Al-Mulk · Ayah 3",
@@ -556,15 +557,15 @@
     },
     "cta": {
       "kicker": "Begin",
-      "title": "Start with one ayah.\nKeep building from there.",
-      "subtitle": "Create your memorisation space in Mutqin and begin at your own pace.",
-      "button": "Start memorising",
+      "title": "Begin with one small range.",
+      "subtitle": "Your first session takes about 10 minutes. You can begin free.",
+      "button": "Start your first session",
       "note": "You will open your space and start from a short ayah range."
     },
     "purpose": {
       "kicker": "The journey",
-      "title": "Memorisation is built through return.",
-      "text": "An ayah listened to, repeated, recited and revisited becomes part of a longer journey. Mutqin is designed to make that journey clearer, calmer and easier to continue."
+      "title": "Built for the return.",
+      "text": "A small range today and a clear reason to come back tomorrow. Mutqin helps make that rhythm easier to keep."
     },
     "badge": {
       "free": "Free",
@@ -668,7 +669,7 @@
         },
         "check": {
           "label": "Recite",
-          "text": "Recite from memory while Mutqin follows and highlights weaker words."
+          "text": "Recite aloud. AI Recite can highlight possible words to practise again."
         },
         "complete": {
           "label": "Session done",
@@ -3896,7 +3897,7 @@
         "paused": "Paused",
         "complete": "Complete",
         "processing": "Processing",
-        "analysing": "Analysing",
+        "analysing": "AI review",
         "uploading": "Saving recording",
         "results": "Assessment results",
         "plan": "Practice plan",
