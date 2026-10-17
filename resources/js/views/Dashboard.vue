@@ -50,7 +50,6 @@
           <div class="dash-hero__stack">
             <a
               v-if="primaryContinueAction"
-              ref="continueCard"
               class="dash-continue-card"
               :class="{
                 'dash-continue-card--primary': true,
@@ -402,14 +401,10 @@
                 :aria-label="`${item.label}: ${item.value}`"
                 @click="onAnalyticActivate(item)"
               >
-                <span v-if="item.icon" class="dash-analytic__icon" aria-hidden="true">
-                  <i :class="item.icon" aria-hidden="true"></i>
-                </span>
                 <p class="dash-analytic__value">
                   <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
                 </p>
                 <p class="dash-analytic__label">{{ item.label }}</p>
-                <p v-if="item.hint" class="dash-analytic__hint">{{ item.hint }}</p>
               </button>
             </div>
             <p class="dash-progress-note">
@@ -422,32 +417,6 @@
 
       </template>
     </div>
-
-    <Teleport to="body">
-      <div
-        v-if="showStickyContinue"
-        class="dash-sticky-continue"
-        :class="{ 'is-visible': stickyContinueVisible }"
-      >
-        <a
-          class="dash-sticky-continue__link"
-          :class="{ 'dash-sticky-continue__link--saved': primaryContinueAction.kind === 'saved' }"
-          :href="primaryContinueAction.href"
-        >
-          <span class="dash-sticky-continue__copy">
-            <span v-if="primaryContinueAction.kind === 'saved'" class="dash-sticky-continue__label">
-              {{ primaryContinueAction.label }}
-            </span>
-            <strong>{{ primaryContinueAction.title }}</strong>
-            <span v-if="primaryContinueAction.hint" class="dash-sticky-continue__hint">{{ primaryContinueAction.hint }}</span>
-            <span v-else-if="primaryContinueAction.range" class="dash-sticky-continue__range">{{ primaryContinueAction.range }}</span>
-          </span>
-          <span class="dash-sticky-continue__cta">
-            {{ primaryContinueAction.cta }}
-          </span>
-        </a>
-      </div>
-    </Teleport>
 
     <Teleport to="body">
       <div
@@ -867,8 +836,6 @@ export default {
       darkTheme: false,
       themeObserver: null,
       activeSessionSnapshot: null,
-      stickyContinueVisible: false,
-      continueObserver: null,
       analysisModalOpen: false,
       analysisLoading: false,
       analysisError: false,
@@ -1099,9 +1066,6 @@ export default {
         cta: action.cta,
         icon: 'bi bi-book-half',
       }
-    },
-    showStickyContinue() {
-      return !!this.primaryContinueAction
     },
     journeyMemorisationAction() {
       if (!this.journeyContinue) return null
@@ -1643,7 +1607,6 @@ export default {
     this.unsubscribeNetwork = subscribeNetworkStatus((online) => {
       if (online && this.error && !this.data) this.reload(true)
     })
-    this.setupContinueObserver()
     this.loadAiReciteResults()
     this.scrollToAiReciteResults()
     trackAckeeEvent(ACKEE_EVENTS.PROGRESS_DASHBOARD_VIEWED)
@@ -1655,7 +1618,6 @@ export default {
     if (this.focusHandler) window.removeEventListener('focus', this.focusHandler)
     if (this.escapeHandler) document.removeEventListener('keydown', this.escapeHandler)
     if (this.themeObserver) this.themeObserver.disconnect()
-    if (this.continueObserver) this.continueObserver.disconnect()
     this.clearToast()
     this.syncDrawerBodyLock(false)
   },
@@ -1696,27 +1658,6 @@ export default {
           : this.t('dashboard.ayah_range', { start, end }))
       if (surah && range) return `${surah} · ${range}`
       return surah || range
-    },
-    setupContinueObserver() {
-      if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return
-      if (this.continueObserver) {
-        this.continueObserver.disconnect()
-        this.continueObserver = null
-      }
-      this.$nextTick(() => {
-        const target = this.$refs.continueCard
-        if (!target || !this.showStickyContinue) {
-          this.stickyContinueVisible = false
-          return
-        }
-        this.continueObserver = new IntersectionObserver(
-          ([entry]) => {
-            this.stickyContinueVisible = !!entry && !entry.isIntersecting
-          },
-          { root: null, threshold: 0, rootMargin: '0px 0px -8px 0px' },
-        )
-        this.continueObserver.observe(target)
-      })
     },
     murajaahPrimaryMeta(source = {}) {
       const start = Number(source.ayah_start || source.ayah_number || 0)
@@ -2329,7 +2270,6 @@ export default {
         if (requestId === this.dashboardRequestId) {
           this.chartReady = true
           this.refreshActiveSessionSnapshot()
-          this.setupContinueObserver()
           this.scrollToAiReciteResults()
           if (announce) this.showToast(this.t('dashboard.updated'))
         }

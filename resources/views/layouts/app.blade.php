@@ -4274,6 +4274,17 @@
             filter: none !important;
         }
 
+        /* On desktop the offcanvas becomes part of the navbar, not a card. */
+        @media (min-width: 992px) {
+            html body nav.navbar.app-navbar #primaryNavbar.offcanvas-lg,
+            html body nav.navbar.app-navbar #primaryNavbar.offcanvas-lg .offcanvas-body {
+                background: transparent !important;
+                border: 0 !important;
+                box-shadow: none !important;
+                filter: none !important;
+            }
+        }
+
         body.mutqin-early-access-nav .global-lang-switcher,
         body.mutqin-waiting-list-public .global-lang-switcher {
             display: none !important;

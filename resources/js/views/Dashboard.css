@@ -2761,141 +2761,6 @@ a.dash-drawer__row--link:focus-visible,
   }
 }
 
-/* ── Sticky mobile Continue ── */
-
-.dash-sticky-continue {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
-  z-index: 120;
-  padding: 0.65rem var(--dash-gutter);
-  padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
-  background: color-mix(in srgb, var(--dash-surface) 92%, transparent);
-  border-top: 1px solid var(--dash-border);
-  backdrop-filter: blur(10px);
-  transform: translateY(110%);
-  transition: transform 220ms var(--dash-ease);
-  pointer-events: none;
-}
-
-.dash-sticky-continue.is-visible {
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.dash-sticky-continue__link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  max-width: var(--dash-content-max);
-  margin-inline: auto;
-  padding: 0.55rem 0.65rem 0.55rem 0.85rem;
-  border: 1px solid var(--dash-border);
-  border-radius: 999px;
-  background: var(--dash-surface);
-  text-decoration: none;
-  color: inherit;
-}
-
-.dash-sticky-continue__link--saved {
-  border-color: color-mix(in srgb, var(--dash-accent) 34%, var(--dash-border));
-  background: color-mix(in srgb, var(--dash-accent-light) 40%, var(--dash-surface));
-}
-
-.dash-sticky-continue__copy {
-  display: grid;
-  gap: 0.12rem;
-  min-width: 0;
-}
-
-.dash-sticky-continue__label {
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--dash-accent-strong);
-}
-
-.dash-sticky-continue__copy strong {
-  font-size: 0.875rem;
-  font-weight: 650;
-  color: var(--dash-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dash-sticky-continue__copy span {
-  font-size: 0.75rem;
-  color: var(--dash-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dash-sticky-continue__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex: 0 0 auto;
-  min-height: 2.5rem;
-  padding: 0.45rem 0.95rem;
-  border: 1px solid color-mix(in srgb, var(--dash-accent) 40%, var(--dash-border));
-  border-radius: 999px;
-  background: var(--dash-accent);
-  color: var(--dash-on-accent);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-[data-theme="dark"] .dash-sticky-continue__link--saved {
-  border-color: color-mix(in srgb, var(--dash-accent) 40%, var(--dash-border));
-}
-
-@media (max-width: 767.98px) {
-  .dash-sticky-continue {
-    padding: 0.45rem var(--dash-gutter);
-    padding-bottom: max(0.45rem, env(safe-area-inset-bottom));
-  }
-
-  .dash-sticky-continue__link {
-    padding: 0.45rem 0.55rem 0.45rem 0.72rem;
-    border-radius: 14px;
-    gap: 0.55rem;
-  }
-
-  .dash-sticky-continue__copy {
-    gap: 0.06rem;
-  }
-
-  .dash-sticky-continue__label {
-    font-size: 0.58rem;
-    letter-spacing: 0.05em;
-  }
-
-  .dash-sticky-continue__copy strong {
-    font-size: 0.8125rem;
-  }
-
-  .dash-sticky-continue__hint {
-    display: none;
-  }
-
-  .dash-sticky-continue__cta {
-    min-height: 2.25rem;
-    padding: 0.35rem 0.78rem;
-    font-size: 0.78rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .dash-sticky-continue {
-    display: none;
-  }
-}
-
 /* ── Mobile ── */
 
 @media (max-width: 767px) {
@@ -2993,7 +2858,6 @@ a.dash-drawer__row--link:focus-visible,
   .dash-action-card,
   .dash-action-card--pulse,
   .dash-continue-card,
-  .dash-sticky-continue,
   .dash-num.is-settled,
   .dash-drawer-root,
   .dash-drawer,
@@ -3655,10 +3519,6 @@ a.dash-drawer__row--link:focus-visible,
   }
 }
 
-.user-dashboard:has(.dash-sticky-continue.is-visible) {
-  padding-bottom: calc(6.25rem + env(safe-area-inset-bottom));
-}
-
 /* Final cascade guard for the compact dashboard layout. */
 .user-dashboard {
   --dash-section-gap: 0.65rem !important;
@@ -4003,6 +3863,8 @@ a.dash-drawer__row--link:focus-visible,
   max-width: var(--dash-content-max);
   margin-inline: auto !important;
   padding-inline: var(--dash-gutter);
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
 }
 
 /* Small labels used to fall as low as 10–11px. Keep supporting copy useful
@@ -4188,6 +4050,64 @@ a.dash-drawer__row--link:focus-visible,
 .dash-section--weekly .dash-analytic:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--dash-accent) 58%, transparent);
   outline-offset: 2px;
+}
+
+/* A chart and a compact strip of figures are enough for the practice summary. */
+.user-dashboard .dash-section--weekly .dash-section__body {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "chart" "metrics" "summary" "note";
+  grid-auto-rows: auto;
+  gap: 0.7rem;
+}
+
+.dash-section--weekly .dash-chart__wrap,
+.dash-section--weekly .dash-chart__empty { grid-area: chart; }
+.dash-section--weekly .dash-chart__footer { grid-area: summary; }
+.dash-section--weekly .dash-progress-note { grid-area: note; }
+
+.user-dashboard .dash-section--weekly .dash-analytics {
+  grid-area: metrics;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 !important;
+  border-block: 1px solid var(--dash-border);
+}
+
+.user-dashboard .dash-section--weekly .dash-analytic {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem 0.45rem;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0.5rem 0.35rem !important;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+}
+
+.user-dashboard .dash-section--weekly .dash-analytic + .dash-analytic {
+  border-top: 0;
+  border-inline-start: 1px solid var(--dash-border);
+}
+
+.user-dashboard .dash-section--weekly .dash-analytic__value {
+  font-size: 1.3rem;
+}
+
+.user-dashboard .dash-section--weekly .dash-analytic:hover,
+.user-dashboard .dash-section--weekly .dash-analytic:focus-visible {
+  background: color-mix(in srgb, var(--dash-accent-light) 28%, transparent);
+  box-shadow: none;
+  transform: none;
+}
+
+.user-dashboard .dash-section--weekly .dash-chart__footer {
+  margin-top: 0;
+  padding-top: 0;
+  border: 0;
 }
 
 .dash-chart__footer {
