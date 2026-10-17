@@ -13540,10 +13540,12 @@ body.session-analysis-modal-open {
   @media (min-width: 1025px) and (max-width: 1199.98px) {
     html body.memorisation-page .app .workspace-shell .workspace-shell-head > .workspace-shell-head-toolbar {
       grid-template-columns: minmax(0, 1fr) !important;
+      grid-template-rows: auto auto !important;
       row-gap: 0.55rem !important;
     }
 
     html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-copy {
+      grid-row: 1 !important;
       flex-wrap: wrap !important;
       overflow: visible !important;
     }
@@ -13557,6 +13559,7 @@ body.session-analysis-modal-open {
 
     html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {
       grid-column: 1 !important;
+      grid-row: 2 !important;
       width: 100% !important;
       max-width: 100% !important;
       justify-content: flex-end !important;
@@ -13570,7 +13573,7 @@ body.session-analysis-modal-open {
     }
 
     html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-copy {
-      overflow: hidden !important;
+      overflow: visible !important;
     }
 
     html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-copy > .workspace-shell-main-title {
@@ -13583,16 +13586,19 @@ body.session-analysis-modal-open {
     }
 
     html body.memorisation-page .app .workspace-shell .workspace-shell-head-metadata {
-      flex: 0 0 auto !important;
+      flex: 0 1 auto !important;
+      flex-wrap: wrap !important;
       gap: 0.35rem !important;
-      max-width: none !important;
+      max-width: 100% !important;
       padding-inline-start: 0.55rem !important;
       overflow: visible !important;
     }
 
     html body.memorisation-page .app .workspace-shell .workspace-shell-head-metadata .workspace-shell-metadata-pill {
+      max-width: 100% !important;
       padding-inline: 0.5rem !important;
       font-size: 0.72rem !important;
+      white-space: normal !important;
     }
 
     html body.memorisation-page .app .workspace-shell .workspace-shell-head-toolbar > .workspace-shell-head-utility-row {

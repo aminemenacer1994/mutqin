@@ -239,6 +239,7 @@
       "badge": "Pendamping Hifz",
       "title": "Lupa ayat atau tidak yakin apa yang harus diulang berikutnya?",
       "desc": "Practise a short range, check what you still hold, and know what to return to next, bi’idhnillāh.",
+      "mobileDesc": "Hafalkan dalam sesi singkat, baca lantang untuk melihat kemungkinan kesalahan, dan ketahui apa yang perlu diulang.",
       "painKicker": "Jika ini terasa akrab, Anda tidak sendiri.",
       "painPoints": {
         "recall": "Beberapa ayat tidak lagi terasa sekuat sebelumnya.",
@@ -344,7 +345,8 @@
     "access": {
       "available": {
         "label": "Tersedia sekarang",
-        "detail": "Mulai sesi pertama gratis Anda hari ini. Tidak perlu daftar tunggu."
+        "detail": "Mulai sesi pertama gratis Anda hari ini. Tidak perlu daftar tunggu.",
+        "mobileDetail": "Mulai gratis"
       },
       "early": {
         "label": "Akses awal",

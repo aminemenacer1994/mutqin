@@ -8,31 +8,16 @@
             <h1 id="homepage-hero-title" class="hero__title">
               {{ t('homepage.hero.title') }}
             </h1>
-            <p class="hero__desc">{{ t('homepage.hero.desc') }}</p>
-            <p class="hero__problem">
-              <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
-              <span>{{ t('homepage.hero.problemText') }}</span>
+            <p class="hero__desc hero__desc--desktop">{{ t('homepage.hero.desc') }}</p>
+            <p class="hero__desc hero__desc--mobile">{{ t('homepage.hero.mobileDesc') }}</p>
+            <p class="hero__recite">
+              <i class="bi bi-mic" aria-hidden="true"></i>
+              <span>{{ t('homepage.pipelineDemo.steps.check.text') }}</span>
             </p>
             <p class="hero__audience">
               <i class="bi bi-people" aria-hidden="true"></i>
               <span>{{ t('homepage.hero.audience') }}</span>
             </p>
-
-            <div
-              class="hero__availability"
-              :class="{ 'hero__availability--early': !showStartMemorisationCta }"
-              role="status"
-            >
-              <i
-                class="bi"
-                :class="showStartMemorisationCta ? 'bi-check-circle-fill' : 'bi-hourglass-split'"
-                aria-hidden="true"
-              ></i>
-              <div>
-                <strong>{{ t(showStartMemorisationCta ? 'homepage.access.available.label' : 'homepage.access.early.label') }}</strong>
-                <span>{{ t(showStartMemorisationCta ? 'homepage.access.available.detail' : 'homepage.access.early.detail') }}</span>
-              </div>
-            </div>
 
             <div class="hero__actions">
               <a
@@ -61,6 +46,23 @@
                 <i class="bi bi-arrow-down" aria-hidden="true"></i>
                 {{ t('homepage.hero.seeFirstSession') }}
               </a>
+            </div>
+
+            <div
+              class="hero__availability"
+              :class="{ 'hero__availability--early': !showStartMemorisationCta }"
+              role="status"
+            >
+              <i
+                class="bi"
+                :class="showStartMemorisationCta ? 'bi-check-circle-fill' : 'bi-hourglass-split'"
+                aria-hidden="true"
+              ></i>
+              <div>
+                <strong>{{ t(showStartMemorisationCta ? 'homepage.access.available.label' : 'homepage.access.early.label') }}</strong>
+                <span class="hero__availability-detail">{{ t(showStartMemorisationCta ? 'homepage.access.available.detail' : 'homepage.access.early.detail') }}</span>
+                <span v-if="showStartMemorisationCta" class="hero__availability-compact">{{ t('homepage.access.available.mobileDetail') }}</span>
+              </div>
             </div>
           </div>
 
@@ -104,6 +106,7 @@
           <p class="section-kicker">{{ t('homepage.firstSession.kicker') }}</p>
           <h2 id="how-title" class="section-title">{{ t('homepage.firstSession.title') }}</h2>
           <p class="section-sub">{{ t('homepage.firstSession.subtitle') }}</p>
+          <p class="how__audience">{{ t('homepage.hero.audience') }}</p>
         </header>
 
         <div class="session-brief" data-reveal>

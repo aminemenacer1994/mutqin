@@ -239,7 +239,8 @@
     "hero": {
       "badge": "Qur’an memorisation companion",
       "title": "Forgetting ayahs or unsure what to revise next?",
-      "desc": "Start small: listen, repeat and recite aloud. AI Recite can flag possible mistakes to practise again.",
+      "desc": "Build a steady routine with short sessions. Listen, repeat and learn at your own pace.",
+      "mobileDesc": "Memorise in short sessions, recite aloud to spot possible mistakes, and know what to revise next.",
       "promiseLabel": "Why Mutqin",
       "problem": "The struggle",
       "problemText": "A disrupted rhythm can make it hard to know where to restart.",
@@ -264,7 +265,8 @@
     "access": {
       "available": {
         "label": "Available now",
-        "detail": "Start a free first session today."
+        "detail": "Free to start.",
+        "mobileDetail": "Free to start"
       },
       "early": {
         "label": "Early access",
@@ -381,8 +383,8 @@
       "duration": "10 minutes",
       "startLabel": "Start with",
       "start": "1 to 3 ayahs",
-      "leaveLabel": "Finish with",
-      "leave": "A saved place and a clear next step"
+      "leaveLabel": "Leave with",
+      "leave": "A clear next step"
     },
     "demo": {
       "session": "Surah Al-Mulk · Ayah 3",
@@ -669,7 +671,7 @@
         },
         "check": {
           "label": "Recite",
-          "text": "Recite aloud. AI Recite can highlight possible words to practise again."
+          "text": "Recite aloud. AI Recite can highlight possible mistakes to practise again."
         },
         "complete": {
           "label": "Session done",

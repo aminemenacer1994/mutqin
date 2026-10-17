@@ -239,6 +239,7 @@
       "badge": "Memorización del Corán con IA",
       "title": "¿Olvidas aleyas o no sabes qué repasar después?",
       "desc": "Practica un conjunto breve, recita por Allah, y sal sabiendo qué abrir después, bi’idhnillāh.",
+      "mobileDesc": "Memoriza en sesiones breves, recita en voz alta para detectar posibles errores y descubre qué repasar después.",
       "painKicker": "Si esto te resulta familiar, no estás solo.",
       "painPoints": {
         "recall": "Algunas aleyas ya no se sienten tan seguras como antes.",
@@ -344,7 +345,8 @@
     "access": {
       "available": {
         "label": "Disponible ahora",
-        "detail": "Empieza hoy una primera sesión gratuita; no necesitas lista de espera."
+        "detail": "Empieza hoy una primera sesión gratuita; no necesitas lista de espera.",
+        "mobileDetail": "Gratis para empezar"
       },
       "early": {
         "label": "Acceso anticipado",

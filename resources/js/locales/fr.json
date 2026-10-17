@@ -239,6 +239,7 @@
       "badge": "Compagnon de Hifz",
       "title": "Vous oubliez des ayahs ou ne savez pas quoi réviser ensuite ?",
       "desc": "Pratiquez un court ensemble, récitez pour Allah, et partez en sachant quoi ouvrir ensuite, bi’idhnillāh.",
+      "mobileDesc": "Mémorisez par courtes séances, récitez à voix haute pour repérer d’éventuelles erreurs et sachez quoi réviser ensuite.",
       "painKicker": "Si cela vous semble familier, vous n’êtes pas seul.",
       "painPoints": {
         "recall": "Certaines ayahs semblent moins sûres qu’avant.",
@@ -344,7 +345,8 @@
     "access": {
       "available": {
         "label": "Disponible maintenant",
-        "detail": "Commencez une première session gratuite aujourd’hui. Sans liste d’attente."
+        "detail": "Commencez une première session gratuite aujourd’hui. Sans liste d’attente.",
+        "mobileDetail": "Gratuit pour commencer"
       },
       "early": {
         "label": "Accès anticipé",

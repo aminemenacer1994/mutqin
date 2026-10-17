@@ -239,6 +239,7 @@
       "badge": "Hifz yol arkadaşı",
       "title": "Ayetleri unutuyor veya sonra neyi tekrar edeceğinizi bilemiyor musunuz?",
       "desc": "Practise a short range, check what you still hold, and know what to return to next, bi’idhnillāh.",
+      "mobileDesc": "Kısa oturumlarda ezberleyin, olası hataları görmek için sesli okuyun ve sonra neyi tekrar edeceğinizi öğrenin.",
       "painKicker": "Bu size tanıdık geliyorsa yalnız değilsiniz.",
       "painPoints": {
         "recall": "Bazı ayetler artık eskisi kadar sağlam gelmiyor.",
@@ -344,7 +345,8 @@
     "access": {
       "available": {
         "label": "Şimdi kullanılabilir",
-        "detail": "Bugün ücretsiz ilk oturumunu başlat. Bekleme listesine gerek yok."
+        "detail": "Bugün ücretsiz ilk oturumunu başlat. Bekleme listesine gerek yok.",
+        "mobileDetail": "Başlamak ücretsiz"
       },
       "early": {
         "label": "Erken erişim",
