@@ -60,6 +60,20 @@ class SeoCatalogTest extends TestCase
         $this->assertFalse($seo->indexable);
         $this->assertSame('noindex, follow', $seo->robots);
         $this->assertSame([], $seo->jsonLd);
+        $this->assertSame([], $seo->hreflang);
+    }
+
+    public function test_indexable_pages_have_only_real_self_referencing_hreflang_versions(): void
+    {
+        foreach (SeoCatalog::sitemapEntries() as $entry) {
+            $path = parse_url($entry['loc'], PHP_URL_PATH) ?: '/';
+            $seo = SeoCatalog::forPath($path);
+            $alternates = collect($seo->hreflang)->keyBy('hreflang');
+
+            $this->assertSame($seo->canonical, $alternates->get('en')['href'] ?? null, $path);
+            $this->assertSame($seo->canonical, $alternates->get('x-default')['href'] ?? null, $path);
+            $this->assertSame(['en', 'x-default'], $alternates->keys()->all(), $path);
+        }
     }
 
     public function test_use_seo_client_module_exports_apply_helpers(): void

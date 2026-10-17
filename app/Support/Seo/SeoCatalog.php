@@ -67,7 +67,10 @@ final class SeoCatalog
         $ogLocale = self::ogLocale();
         $ogImageAlt = (string) ($definition['og_image_alt'] ?? self::OG_IMAGE_ALT);
 
-        $hreflang = self::hreflangFor($canonical);
+        // Hreflang is only meaningful for indexable documents. Emitting language
+        // alternates on authenticated/noindex screens can make private URLs look
+        // like public landing pages to crawlers.
+        $hreflang = $indexable ? self::hreflangFor($canonical) : [];
 
         $jsonLd = self::jsonLdFor(
             $definition['json_ld'] ?? [],
@@ -225,11 +228,13 @@ final class SeoCatalog
      */
     private static function hreflangFor(string $canonical): array
     {
-        // Locale is cookie/query based today. Point hreflang at the canonical URL
-        // only; add prefixed alternates when /fr/*, /es/*, … routes exist.
+        // Locale is cookie/query based today and there are no public locale-prefixed
+        // routes. The only real language version is English, so keep one explicit
+        // self-referencing alternate plus x-default. Do not invent alternates for
+        // locales that do not have their own crawlable URLs.
         return [
-            ['hreflang' => 'x-default', 'href' => $canonical],
             ['hreflang' => 'en', 'href' => $canonical],
+            ['hreflang' => 'x-default', 'href' => $canonical],
         ];
     }
 

@@ -15,9 +15,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="{{ $appThemeColor }}">
     <meta name="color-scheme" content="{{ $appColorScheme }}">
-    <meta name="robots" content="index, follow">
-    <meta name="description" content="Mutqin early access — join the waiting list to be invited first to try Qur'an memorisation support between lessons.">
-    <title>Mutqin</title>
+    {{-- Keep this legacy/public shell on the same centralized SEO contract as
+         the main app layout: title, canonical, hreflang, Open Graph, and robots
+         must not drift when the page is served on either host. --}}
+    @include('partials.seo-head')
     @include('partials.google-analytics')
     @include('partials.ackee-config')
     @include('partials.meta-pixel')
