@@ -2556,6 +2556,23 @@ export default {
     shouldShowOffcanvasTabs() {
       return true
     },
+    controlsPanelTitle() {
+      const titles = {
+        tools: this.t('memorisation.tools.tabs.setup'),
+        techniques: this.t('memorisation.practice'),
+        saved: this.t('memorisation.saved'),
+        stats: this.t('memorisation.insights'),
+      }
+      return titles[this.tab] || this.t('common.controls')
+    },
+    controlsPanelHint() {
+      const hints = {
+        tools: this.t('memorisation.controlsHints.setup'),
+        techniques: this.t('memorisation.controlsHints.practice'),
+        saved: this.t('memorisation.controlsHints.saved'),
+      }
+      return hints[this.tab] || ''
+    },
     showPracticeToolsTab() {
       return true
     },
@@ -45159,8 +45176,16 @@ export default {
       }
       this.applyChainingQueueChange(this.currentMode, { restart: true })
     },
+    syncPracticeToolSectionOpen(sectionKey, enabled) {
+      if (!this.sectionOpen || typeof this.sectionOpen !== 'object') return
+      if (enabled) {
+        this.sectionOpen[sectionKey] = true
+      }
+    },
+
     toggleTalqinModeRadio() {
       this.talqinModeEnabled = !this.talqinModeEnabled
+      this.syncPracticeToolSectionOpen('talqin_mode', this.talqinModeEnabled)
       this.persistUiState()
       this.persistCentralSessionState()
       const label = this.getTechniqueDisplayLabel('talqin')
@@ -45174,17 +45199,27 @@ export default {
     },
     toggleFocusModeRadio() {
       this.focusModeEnabled = !this.focusModeEnabled
+      this.syncPracticeToolSectionOpen('focus_mode', this.focusModeEnabled)
       this.persistUiState()
     },
     toggleBlurModeRadio() {
       this.blurModeEnabled = !this.blurModeEnabled
+      this.syncPracticeToolSectionOpen('blur_mode', this.blurModeEnabled)
       this.persistUiState()
     },
     toggleChainingRadio() {
-      this.setChainingEnabled(!this.chainingEnabled)
+      const nextEnabled = !this.chainingEnabled
+      this.setChainingEnabled(nextEnabled)
+      if (this.chainingEnabled === nextEnabled) {
+        this.syncPracticeToolSectionOpen('chaining', nextEnabled)
+      }
     },
     toggleAnchorModeRadio() {
-      this.setAnchorMode(!this.anchorModeEnabled)
+      const nextEnabled = !this.anchorModeEnabled
+      this.setAnchorMode(nextEnabled)
+      if (this.anchorModeEnabled === nextEnabled) {
+        this.syncPracticeToolSectionOpen('anchor_mode', nextEnabled)
+      }
     },
 
     setAnchorMode(enabled) {

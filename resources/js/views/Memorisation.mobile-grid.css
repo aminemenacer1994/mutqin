@@ -1357,10 +1357,33 @@
     grid-column: 1 / span 3;
   }
 
-  .tools-title h3 {
+  .tools-title h3,
+  .tools-title__heading {
     margin: 0;
-    font-size: clamp(1.4rem, 6.5vw, 1.8rem);
-    line-height: 1.1;
+    font-family: var(--font-ui, system-ui, -apple-system, "Segoe UI", sans-serif) !important;
+    font-size: clamp(0.98rem, 4vw, 1.12rem);
+    font-weight: 600 !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.2;
+    color: var(--text) !important;
+  }
+
+  .tools-title__eyebrow {
+    font-family: var(--font-ui, system-ui, -apple-system, "Segoe UI", sans-serif) !important;
+  }
+
+  .tools-tabs > button {
+    font-family: var(--font-ui, system-ui, -apple-system, "Segoe UI", sans-serif) !important;
+    font-weight: 550 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .tools-tab-hint {
+    font-family: var(--font-ui, system-ui, -apple-system, "Segoe UI", sans-serif) !important;
+    margin-top: 0.35rem !important;
+    padding: 0.38rem 0.55rem !important;
+    font-size: 0.68rem !important;
+    line-height: 1.35 !important;
   }
 
   .tools-x {
@@ -1386,8 +1409,8 @@
     place-content: center;
     gap: 5px;
     min-inline-size: 0;
-    min-block-size: 44px;
-    padding: 7px 4px;
+    min-block-size: 38px;
+    padding: 6px 4px;
     border-radius: 12px;
     font-size: clamp(0.68rem, 3vw, 0.82rem);
     line-height: 1.1;
@@ -1425,7 +1448,7 @@
     display: flex !important;
     flex-direction: column !important;
     grid-template-columns: none !important;
-    gap: 0.85rem !important;
+    gap: 0.55rem !important;
   }
 
   .sheet.saved-sheet--beige > *,
@@ -1500,12 +1523,46 @@
   }
 
   .saved-sheet__row {
-    display: flex !important;
-    flex-direction: column !important;
-    flex-wrap: nowrap !important;
-    align-items: stretch !important;
-    gap: 0.55rem !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      'main main'
+      'actions actions' !important;
+    align-items: center !important;
+    gap: 0.35rem 0.45rem !important;
     min-inline-size: 0 !important;
+    padding: 0.48rem 0.55rem !important;
+  }
+
+  .saved-sheet__row-main {
+    grid-area: main;
+  }
+
+  .saved-sheet__row-actions {
+    grid-area: actions;
+    border-top: 0 !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    justify-content: flex-end !important;
+  }
+
+  @media (min-width: 380px) {
+    .saved-sheet__row {
+      grid-template-columns: minmax(0, 1fr) auto !important;
+      grid-template-areas: 'main actions' !important;
+    }
+
+    .saved-sheet__row-actions {
+      inline-size: auto !important;
+      max-inline-size: none !important;
+    }
+
+    .saved-sheet__action--primary,
+    .saved-sheet__action--secondary {
+      flex: 0 0 auto !important;
+      min-inline-size: auto !important;
+      padding-inline: 0.55rem !important;
+    }
   }
 
   .saved-sheet__row-main {
@@ -1556,9 +1613,13 @@
 
   .sheet > .sheet-section,
 .sheet > .technique-group-copy,
+.sheet > .practice-tool-stack,
 .sheet > .technique-presets,
 .sheet > .stats-sessions-container {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
 
   /* Practice preset chips: full-width wrap, never a 1-col squeeze */
@@ -1635,8 +1696,8 @@
     border-radius: 12px !important;
   }
 
-  .sheet-toggle,
-.tools-body .sheet-toggle {
+  .sheet-toggle:not(.sheet-toggle--practice),
+.tools-body .sheet-toggle:not(.sheet-toggle--practice) {
     --sheet-control-radio: 32px;
     --sheet-control-chev: 28px;
     display: grid !important;
@@ -1695,7 +1756,7 @@
     align-self: center;
   }
 
-  .sheet-toggle .st-right-group {
+  .sheet-toggle:not(.sheet-toggle--practice) .st-right-group {
     grid-column: 3 / -1;
     grid-row: 1;
     display: grid !important;
@@ -1723,7 +1784,7 @@
     justify-self: end;
   }
 
-  .sheet-toggle .mode-radio-group {
+  .sheet-toggle:not(.sheet-toggle--practice) .mode-radio-group {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1736,8 +1797,8 @@
     max-block-size: var(--sheet-control-radio) !important;
   }
 
-  .sheet-toggle .mode-radio,
-.sheet-toggle .st-chev {
+  .sheet-toggle:not(.sheet-toggle--practice) .mode-radio,
+.sheet-toggle:not(.sheet-toggle--practice) .st-chev {
     inline-size: var(--sheet-control-radio) !important;
     min-inline-size: var(--sheet-control-radio) !important;
     max-inline-size: var(--sheet-control-radio) !important;
@@ -1773,6 +1834,164 @@
 
   .sheet-toggle .st-chev i {
     font-size: 0.72rem !important;
+  }
+
+  /*
+   * Practice tools: sheet-toggle--practice wraps label + switch in sheet-toggle__body.
+   * The generic 4-column grid above squeezes that button into the 36px icon column.
+   */
+  .sheet-toggle.sheet-toggle--practice,
+  .tools-body .sheet-toggle.sheet-toggle--practice {
+    --sheet-control-radio: 2.75rem;
+    --sheet-control-chev: 2rem;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.45rem !important;
+    grid-template-columns: unset !important;
+    padding: 0.58rem 0.62rem !important;
+    min-inline-size: 0 !important;
+    width: 100% !important;
+    max-inline-size: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .sheet-toggle--practice .sheet-toggle__body {
+    flex: 1 1 auto !important;
+    min-inline-size: 0 !important;
+    max-inline-size: 100% !important;
+    width: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    text-align: start !important;
+  }
+
+  .sheet-toggle--practice .sheet-toggle__body .st-left {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+    min-inline-size: 0 !important;
+    width: 100% !important;
+  }
+
+  .sheet-toggle--practice .st-ico {
+    grid-column: unset !important;
+    grid-row: unset !important;
+    flex: 0 0 auto !important;
+    width: 1.85rem !important;
+    height: 1.85rem !important;
+    min-width: 1.85rem !important;
+  }
+
+  .sheet-toggle--practice .st-txt {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+    flex: 1 1 auto !important;
+    min-inline-size: 0 !important;
+    max-inline-size: 100% !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .sheet-toggle--practice .st-title {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    line-height: 1.25 !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    padding-top: 0 !important;
+  }
+
+  .sheet-toggle--practice .st-sub {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    line-height: 1.32 !important;
+    font-size: 0.68rem !important;
+  }
+
+  .sheet-toggle--practice .st-right-group {
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.38rem !important;
+    grid-column: unset !important;
+    grid-row: unset !important;
+    inline-size: auto !important;
+    min-inline-size: auto !important;
+    max-inline-size: none !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+
+  .sheet-toggle--practice .mode-radio-group {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    inline-size: auto !important;
+    min-inline-size: auto !important;
+    max-inline-size: none !important;
+    width: auto !important;
+    height: auto !important;
+    block-size: auto !important;
+    min-block-size: 0 !important;
+    max-block-size: none !important;
+  }
+
+  .sheet-toggle--practice .mode-radio {
+    position: relative !important;
+    inline-size: 2.65rem !important;
+    min-inline-size: 2.65rem !important;
+    max-inline-size: 2.65rem !important;
+    width: 2.65rem !important;
+    block-size: 1.55rem !important;
+    min-block-size: 1.55rem !important;
+    max-block-size: 1.55rem !important;
+    height: 1.55rem !important;
+    border-radius: 999px !important;
+    aspect-ratio: auto !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+  }
+
+  .sheet-toggle--practice .st-chev-btn,
+  .sheet-toggle--practice .st-right-group .st-chev,
+  .sheet-toggle--practice .st-right-group .st-chev-btn {
+    inline-size: 2rem !important;
+    min-inline-size: 2rem !important;
+    max-inline-size: 2rem !important;
+    width: 2rem !important;
+    block-size: 2rem !important;
+    min-block-size: 2rem !important;
+    max-block-size: 2rem !important;
+    height: 2rem !important;
+    flex: 0 0 2rem !important;
+    border-radius: 10px !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+  }
+
+  .sheet-section--practice {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+  }
+
+  .practice-tool-stack {
+    gap: 0.38rem !important;
+    min-inline-size: 0 !important;
+    width: 100% !important;
+  }
+
+  .sheet--practice {
+    gap: 0.45rem !important;
   }
 
   .sheet-toggle .st-txt,
@@ -4974,26 +5193,56 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .tools-body .setup-field-row.field-repetitions-clean,
   .tools-body .setup-field-row.field-individual-ayah-unified {
-    gap: 8px !important;
-    padding: 0.75rem 0.85rem !important;
-    border: 1px solid color-mix(in srgb, var(--border) 88%, transparent) !important;
-    border-radius: 12px !important;
-    background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 94%, var(--surface) 6%) !important;
-    box-shadow:
-      0 1px 2px color-mix(in srgb, var(--border) 38%, transparent),
-      0 5px 16px color-mix(in srgb, var(--border) 16%, transparent),
-      inset 0 1px 0 color-mix(in srgb, #fff 72%, transparent) !important;
+    gap: 6px !important;
+    padding: 0.52rem 0.58rem !important;
+    border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+    border-radius: 11px !important;
+    background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 92%, var(--surface) 8%) !important;
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--border) 22%, transparent) !important;
   }
 
   .tools-body .setup-field-row.field-repetitions-clean .range-control,
   .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-range-control {
-    padding: 0.55rem 0.7rem !important;
+    padding: 0.38rem 0.5rem !important;
     border-radius: 999px !important;
-    border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
     background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%) !important;
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
-      0 1px 2px color-mix(in srgb, var(--border) 12%, transparent) !important;
+    box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 62%, transparent) !important;
+  }
+
+  .tools-body .sheet-section-compact .sheet-toggle {
+    padding: 0.58rem 0.62rem !important;
+  }
+
+  .tools-body .sheet-section-compact .sheet-content,
+  .tools-body.compact .sheet-content {
+    padding: 0.45rem 0.58rem 0.55rem !important;
+  }
+
+  .tools-body .setup-field-row {
+    gap: 0.35rem !important;
+    padding-block: 0.15rem !important;
+  }
+
+  .tools-body .setup-field-row .field-hint {
+    font-size: 0.68rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .tools-body .offcanvas-audio-panel .radio-group-compact {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0.35rem !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+
+  .tools-body .offcanvas-audio-panel .radio-group-compact .radio {
+    flex: 0 0 auto !important;
+    min-height: 2rem !important;
+    padding: 0.28rem 0.72rem !important;
+    white-space: nowrap !important;
   }
 
   .tools-body .setup-field-row > .select,
@@ -5463,7 +5712,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     align-self: stretch !important;
   }
 
-  .app .tools-body .sheet .sheet-content .radio-group,
+  .app .tools-body .sheet .sheet-content .radio-group:not(.radio-group-compact),
 .app .tools-body .sheet .sheet-content .techniques-choice-group {
     display: flex !important;
     flex-direction: column !important;
@@ -7068,30 +7317,32 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 }
 
-/* Setup feature cards — elevated panels (all breakpoints, wins over transparent setup-field-row) */
+/* Setup feature cards — compact elevated panels (wins over transparent setup-field-row) */
 .app .tools-body .setup-field-row.field-repetitions-clean,
 .app .tools-body .setup-field-row.field-individual-ayah-unified {
-  gap: 8px !important;
-  padding: 0.75rem 0.85rem !important;
-  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent) !important;
-  border-radius: 12px !important;
-  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 94%, var(--surface) 6%) !important;
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--border) 38%, transparent),
-    0 5px 16px color-mix(in srgb, var(--border) 16%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 72%, transparent) !important;
+  gap: 6px !important;
+  padding: 0.55rem 0.62rem !important;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent) !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 92%, var(--surface) 8%) !important;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--border) 22%, transparent) !important;
 }
 
 .app .tools-body .setup-field-row.field-repetitions-clean .range-control,
 .app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-range-control {
   margin-top: 0 !important;
-  padding: 0.55rem 0.7rem !important;
+  padding: 0.4rem 0.52rem !important;
   border-radius: 999px !important;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent) !important;
   background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%) !important;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #fff 68%, transparent),
-    0 1px 2px color-mix(in srgb, var(--border) 12%, transparent) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 62%, transparent) !important;
+}
+
+@media (max-width: 767.98px) {
+  .app .tools-body .sheet-toggle.sheet-toggle--practice,
+  .app .tools-body .sheet-toggle--practice {
+    display: flex !important;
+  }
 }
 
 .app .tools-body .setup-field-row.field-individual-ayah-unified .individual-ayah-select {

@@ -7531,11 +7531,13 @@ html {
 }
 
 .tools-top {
-  padding: 18px 18px 12px;
+  padding: 14px 16px 10px;
   border-bottom: 1px solid var(--zone-divider);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--zone-chrome) 88%, white 12%), var(--zone-chrome));
   box-shadow: 0 1px 0 color-mix(in srgb, white 35%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .tools-topbar {
@@ -7547,9 +7549,18 @@ html {
 
 .tools-title {
   font-family: var(--font-ui);
-  font-size: clamp(1.2rem, 3.2vw, 1.45rem);
+  font-size: clamp(1.05rem, 2.6vw, 1.28rem);
   font-weight: 700;
   letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.tools-title__heading {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: inherit;
+  font-weight: 600;
+  letter-spacing: -0.025em;
   color: var(--text);
 }
 
@@ -34324,6 +34335,39 @@ and the ayah page closer to the centred justified flow of a printed mushaf.
   line-height: 1.45;
 }
 
+.technique-group-copy--fold {
+  margin: 0 0 0.35rem;
+}
+
+.technique-group-copy--fold summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.technique-group-copy--fold summary::-webkit-details-marker {
+  display: none;
+}
+
+.technique-group-copy--fold summary::after {
+  content: '+';
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text-muted, #6d655b) 88%, transparent);
+}
+
+.technique-group-copy--fold[open] summary::after {
+  content: '−';
+}
+
+.technique-group-copy--fold p {
+  margin: 0.28rem 0 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
 .technique-presets {
   display: flex;
   flex-wrap: wrap;
@@ -38951,6 +38995,280 @@ but not its destructive red. */
   box-shadow: none;
 }
 
+.sheet-toggle--practice {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  border: none;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.sheet-toggle__body {
+  display: block;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sheet-toggle--practice .st-right-group {
+  flex: 0 0 auto;
+  gap: 0.4rem;
+}
+
+.sheet-toggle__body:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.sheet-toggle--practice.is-enabled {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+}
+
+.sheet-toggle--practice .st-chev-btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--zone-elevated, #fff) 92%, var(--surface) 8%);
+  color: var(--text-muted, #6d655b);
+  cursor: pointer;
+  transition: transform 0.16s ease, background 0.16s ease;
+}
+
+.sheet-toggle--practice .st-chev-btn.open {
+  transform: rotate(180deg);
+}
+
+.sheet-toggle--practice .st-chev-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tools-title__eyebrow {
+  margin: 0 0 0.12rem;
+  font-size: 0.64rem;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text-muted, #6d655b) 92%, transparent);
+}
+
+.tools-tab-hint {
+  margin: 0.45rem 0 0;
+  padding: 0.42rem 0.62rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 88%, var(--accent) 12%);
+  font-size: 0.72rem;
+  font-weight: 450;
+  line-height: 1.38;
+  color: color-mix(in srgb, var(--text) 78%, var(--text-muted, #6d655b) 22%);
+}
+
+.practice-tool-stack {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.sheet-section--practice {
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 92%, var(--surface) 8%);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--border) 28%, transparent),
+    0 10px 24px color-mix(in srgb, var(--border) 10%, transparent);
+  overflow: hidden;
+}
+
+.sheet-section--practice .sheet-content {
+  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--zone-reading, #fff) 94%, var(--surface) 6%);
+}
+
+.sheet-toggle--practice {
+  position: relative;
+  padding: 0.62rem 0.7rem;
+  border-radius: 0;
+  background: transparent;
+}
+
+.sheet-toggle--practice.is-enabled::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.55rem;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+}
+
+.sheet-toggle--practice.is-enabled {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.sheet-toggle--practice .st-ico {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--accent) 14%, #fff 86%),
+    color-mix(in srgb, var(--accent) 6%, var(--zone-elevated, #fffaf3) 94%)
+  );
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.sheet-toggle--practice .st-title {
+  font-size: 0.84rem;
+  font-weight: 620;
+  letter-spacing: -0.015em;
+}
+
+.sheet-toggle--practice .st-sub {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--text-muted, #6d655b) 94%, transparent);
+}
+
+.sheet-toggle--practice .mode-radio {
+  width: 2.65rem;
+  min-width: 2.65rem;
+  max-width: 2.65rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--text-muted, #6d655b) 22%, var(--zone-chrome) 78%);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, #000 8%, transparent);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.sheet-toggle--practice .mode-radio:not(.is-locked) .mode-radio-icon {
+  display: none;
+}
+
+.sheet-toggle--practice .mode-radio::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 0.16rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px color-mix(in srgb, #000 18%, transparent);
+  transform: translateY(-50%);
+  transition: inset-inline-start 180ms ease, transform 180ms ease;
+}
+
+.sheet-toggle--practice .mode-radio.active {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.sheet-toggle--practice .mode-radio.active::after {
+  inset-inline-start: calc(100% - 1.15rem - 0.16rem);
+}
+
+.sheet-toggle--practice .mode-radio.is-locked {
+  opacity: 0.78;
+  background: color-mix(in srgb, var(--text-muted, #6d655b) 16%, var(--zone-chrome) 84%);
+}
+
+.sheet-toggle--practice .mode-radio.is-locked::after {
+  display: none;
+}
+
+.sheet-toggle--practice .mode-radio.is-locked .mode-radio-icon {
+  display: inline-flex;
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--text) 62%, transparent);
+}
+
+.sheet-toggle--practice .st-chev-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  border-color: color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 90%, var(--surface) 10%);
+  color: color-mix(in srgb, var(--text-muted, #6d655b) 92%, transparent);
+}
+
+.sheet-toggle--practice .st-chev-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 8%, var(--zone-elevated, #fffaf3) 92%);
+}
+
+.technique-group-copy--fold summary {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.technique-group-kicker__chev {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--text-muted, #6d655b) 88%, transparent);
+  transition: transform 160ms ease;
+}
+
+.technique-group-copy--fold[open] .technique-group-kicker__chev {
+  transform: rotate(180deg);
+}
+
+.technique-group-copy--fold summary::after {
+  content: none;
+}
+
+.saved-sheet__lead {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 450;
+  line-height: 1.4;
+  color: var(--saved-muted);
+}
+
+.saved-sheet--compact .saved-sheet__header-copy {
+  gap: 0.28rem;
+}
+
+.saved-sheet__intro-details {
+  margin-top: 0.1rem;
+}
+
+[data-theme="dark"] .tools-tab-hint {
+  background: color-mix(in srgb, var(--zone-elevated) 88%, var(--accent) 12%);
+  border-color: color-mix(in srgb, var(--border) 68%, transparent);
+}
+
+[data-theme="dark"] .sheet-section--practice {
+  background: color-mix(in srgb, var(--zone-elevated) 90%, #000 10%);
+  border-color: color-mix(in srgb, var(--border) 62%, transparent);
+}
+
+[data-theme="dark"] .sheet-toggle--practice .mode-radio::after {
+  background: #f5f0ea;
+}
+
 [data-theme="dark"] .tools-body .sheet-toggle {
   background: rgba(255, 255, 255, 0.04);
 }
@@ -38985,9 +39303,9 @@ but not its destructive red. */
 
 .tools-body .field-repetitions-clean,
 .tools-body .field-individual-ayah-unified {
-  gap: 8px;
-  padding: 0.75rem 0.85rem;
-  border-radius: 12px;
+  gap: 6px;
+  padding: 0.55rem 0.62rem;
+  border-radius: 11px;
   border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
   background: color-mix(in srgb, var(--zone-elevated, #fffaf3) 94%, var(--surface) 6%);
   box-shadow:
@@ -38999,7 +39317,7 @@ but not its destructive red. */
 .tools-body .field-repetitions-clean .range-control,
 .tools-body .field-individual-ayah-unified .individual-ayah-range-control {
   margin-top: 0;
-  padding: 0.55rem 0.7rem;
+  padding: 0.4rem 0.52rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
   background: color-mix(in srgb, var(--zone-reading, #fff) 96%, var(--surface) 4%);
@@ -40869,6 +41187,64 @@ but not its destructive red. */
   font-size: 0.78rem;
   line-height: 1.4;
   color: var(--saved-muted);
+}
+
+.saved-sheet__intro-details {
+  margin: 0;
+}
+
+.saved-sheet__intro-details summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.74rem;
+  font-weight: 550;
+  line-height: 1.35;
+  color: var(--saved-muted);
+}
+
+.saved-sheet__intro-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.saved-sheet__intro-details[open] summary {
+  margin-bottom: 0.25rem;
+}
+
+.saved-sheet__intro-details .saved-sheet__intro {
+  margin-top: 0.15rem;
+}
+
+.saved-sheet--compact .saved-sheet__header {
+  gap: 0.35rem;
+  padding: 0;
+}
+
+.saved-sheet--compact .saved-sheet__groups {
+  padding: 0.28rem;
+}
+
+.saved-sheet--compact .saved-sheet__row {
+  padding: 0.55rem 0.62rem;
+  gap: 0.45rem;
+}
+
+.saved-sheet--compact .saved-sheet__row-icon {
+  width: 1.55rem;
+  height: 1.55rem;
+  font-size: 0.82rem;
+}
+
+.saved-sheet--compact .saved-sheet__list {
+  gap: 0.28rem;
+}
+
+.saved-sheet--compact .saved-sheet__card--current {
+  padding: 0.62rem 0.72rem;
+}
+
+.saved-sheet--compact .saved-sheet__group-toggle {
+  min-height: 2.1rem;
+  padding: 0.35rem 0.45rem;
 }
 
 .saved-sheet__toolbar {
@@ -44833,8 +45209,10 @@ body,
     gap: 0.75rem;
   }
 
-  .tools-title h3 {
-    font-size: clamp(1.5rem, 8vw, 2rem);
+  .tools-title h3,
+  .tools-title__heading {
+    font-size: clamp(1.02rem, 4.4vw, 1.18rem);
+    line-height: 1.2;
   }
 
   .tools-x {
@@ -44856,8 +45234,8 @@ body,
   .tools-tabs button,
 .tools-tabs > button {
     min-width: 0;
-    min-height: 52px;
-    padding: 0.7rem 0.45rem;
+    min-height: 42px;
+    padding: 0.5rem 0.4rem;
     display: grid;
     place-items: center;
     gap: 0.18rem;
@@ -44890,7 +45268,7 @@ body,
     min-height: 44px;
   }
 
-  .sheet-toggle {
+  .sheet-toggle:not(.sheet-toggle--practice) {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.75rem;
@@ -44899,14 +45277,22 @@ body,
     padding: 0.9rem 0.95rem;
   }
 
-  .sheet-toggle .st-left {
+  .sheet-toggle--practice {
+    display: flex !important;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.62rem 0.68rem;
+  }
+
+  .sheet-toggle:not(.sheet-toggle--practice) .st-left {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: 0.75rem;
     align-items: start;
   }
 
-  .sheet-toggle .st-right-group {
+  .sheet-toggle:not(.sheet-toggle--practice) .st-right-group {
     flex: 0 0 auto;
     display: grid;
     grid-auto-flow: column;
@@ -45758,8 +46144,9 @@ body,
     gap: 0.65rem;
   }
 
-  .tools-title h3 {
-    font-size: clamp(1.35rem, 6.6vw, 1.75rem);
+  .tools-title h3,
+  .tools-title__heading {
+    font-size: clamp(1rem, 4.2vw, 1.14rem);
     line-height: 1.2;
   }
 

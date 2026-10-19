@@ -1074,6 +1074,7 @@
       "useTalqinMode": "Use talqin mode",
       "useChaining": "Use chaining",
       "useAnchorMode": "Use anchor mode",
+      "practiceToolOptions": "Show or hide tool options",
       "hideAyahRecite": "Hide the ayah and recite from memory",
       "openAiMemoryAyah": "Open AI memorisation checker for this ayah",
       "closeSelfCheck": "Close self-check",
@@ -2238,6 +2239,14 @@
     "anchor_points_per_ayah": "Anchor points per ayah",
     "saved_sessions": "Saved Sessions",
     "saved_sessions_intro": "Your Hifz journeys, bookmarked with barakah, pick up a completed khatm or return to an ayah range still in progress.",
+    "saved_sessions_intro_short": "Bookmarked sets — resume in progress or review completed ranges.",
+    "saved_sessions_intro_summary": "About saved sessions",
+    "controls_panel_eyebrow": "Session controls",
+    "controlsHints": {
+      "setup": "Choose surah, ayah range, reciter, and how many repeats.",
+      "practice": "Toggle a tool on, then open options with the chevron.",
+      "saved": "Pick up where you left off or test recall on completed sets."
+    },
     "completed_sessions": "Completed",
     "completed_sessions_desc": "Sessions where you reached the end of your selected ayah range. Revisit for muraja'ah and strengthen your recall.",
     "incomplete_sessions": "In Progress",

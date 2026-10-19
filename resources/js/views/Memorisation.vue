@@ -1821,7 +1821,8 @@
         <div class="tools-top">
         <div class="tools-topbar">
           <div id="memorisationToolsTitle" class="tools-title">
-            <h3><b>{{ t('common.controls') }}</b></h3>
+            <p class="tools-title__eyebrow">{{ t('memorisation.controls_panel_eyebrow') }}</p>
+            <h3 class="tools-title__heading">{{ controlsPanelTitle }}</h3>
           </div>
             <button class="tools-x" @click="closeToolsPanel" :aria-label="t('memorisation.a11y.closePanel')" type="button">
               <span class="tools-x-glyph" aria-hidden="true">&times;</span>
@@ -1854,6 +1855,7 @@
               <i class="bi bi-bar-chart-line"></i> {{ t('memorisation.insights') }}
             </button> -->
           </div>
+          <p v-if="shouldShowOffcanvasTabs && controlsPanelHint" class="tools-tab-hint">{{ controlsPanelHint }}</p>
         </div>
 
         <div ref="toolsBody" class="tools-body compact">
@@ -2103,21 +2105,36 @@
           </div>
 
           <!-- TECHNIQUES TAB -->
-          <div v-if="tab === 'techniques'" class="sheet" data-tour="practice-sheet">
-            <div class="technique-group-copy technique-group-beginner">
-              <span class="technique-group-kicker">{{ t('memorisation.practiceTools.beginner') }}</span>
+          <div v-if="tab === 'techniques'" class="sheet sheet--practice" data-tour="practice-sheet">
+            <details class="technique-group-copy technique-group-copy--fold technique-group-beginner">
+              <summary class="technique-group-kicker">
+                <span>{{ t('memorisation.practiceTools.beginner') }}</span>
+                <i class="bi bi-chevron-down technique-group-kicker__chev" aria-hidden="true"></i>
+              </summary>
               <p>{{ t('memorisation.practiceTools.beginnerDesc') }}</p>
-            </div>
+            </details>
 
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('focus_mode')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-bullseye"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('focus') }}</span>
-                    <span class="st-sub">{{ getTechniqueDisplaySummary('focus') }}</span>
+            <div class="practice-tool-stack">
+            <section class="sheet-section sheet-section--practice">
+              <div
+                class="sheet-toggle sheet-toggle--practice"
+                :class="{ 'is-expanded': sectionOpen.focus_mode, 'is-enabled': focusModeEnabled }"
+              >
+                <button
+                  class="sheet-toggle__body"
+                  type="button"
+                  :aria-pressed="focusModeEnabled ? 'true' : 'false'"
+                  :aria-label="t('memorisation.a11y.useFocusMode')"
+                  @click="toggleFocusModeRadio"
+                >
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-bullseye"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('focus') }}</span>
+                      <span class="st-sub">{{ getTechniqueDisplaySummary('focus') }}</span>
+                    </span>
                   </span>
-                </span>
+                </button>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <span
@@ -2135,11 +2152,18 @@
                         aria-hidden="true"></i>
                     </span>
                   </div>
-                  <span class="st-chev" :class="{ open: sectionOpen.focus_mode }">
-                    <i class="bi bi-chevron-down"></i>
-                  </span>
+                  <button
+                    type="button"
+                    class="st-chev st-chev-btn"
+                    :class="{ open: sectionOpen.focus_mode }"
+                    :aria-expanded="sectionOpen.focus_mode ? 'true' : 'false'"
+                    :aria-label="t('memorisation.a11y.practiceToolOptions')"
+                    @click="toggleSection('focus_mode')"
+                  >
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                  </button>
                 </div>
-              </button>
+              </div>
               <div class="sheet-content" v-show="sectionOpen.focus_mode">
                 <div class="field-stack">
                   <div class="field">
@@ -2164,15 +2188,26 @@
               </div>
             </section>
 
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('blur_mode')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-cloud-haze2"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('blur') }}</span>
-                    <span class="st-sub">{{ getTechniqueDisplaySummary('blur') }}</span>
+            <section class="sheet-section sheet-section--practice">
+              <div
+                class="sheet-toggle sheet-toggle--practice"
+                :class="{ 'is-expanded': sectionOpen.blur_mode, 'is-enabled': blurModeEnabled }"
+              >
+                <button
+                  class="sheet-toggle__body"
+                  type="button"
+                  :aria-pressed="blurModeEnabled ? 'true' : 'false'"
+                  :aria-label="t('memorisation.a11y.useBlurMode')"
+                  @click="toggleBlurModeRadio"
+                >
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-cloud-haze2"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('blur') }}</span>
+                      <span class="st-sub">{{ getTechniqueDisplaySummary('blur') }}</span>
+                    </span>
                   </span>
-                </span>
+                </button>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <span
@@ -2193,10 +2228,18 @@
                       ></i>
                     </span>
                   </div>
-                  <span class="st-chev" :class="{ open: sectionOpen.blur_mode }"><i
-                      class="bi bi-chevron-down"></i></span>
+                  <button
+                    type="button"
+                    class="st-chev st-chev-btn"
+                    :class="{ open: sectionOpen.blur_mode }"
+                    :aria-expanded="sectionOpen.blur_mode ? 'true' : 'false'"
+                    :aria-label="t('memorisation.a11y.practiceToolOptions')"
+                    @click="toggleSection('blur_mode')"
+                  >
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                  </button>
                 </div>
-              </button>
+              </div>
               <div class="sheet-content" v-show="sectionOpen.blur_mode">
                 <div class="field-stack">
                   <div class="field">
@@ -2221,15 +2264,26 @@
               </div>
             </section>
 
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('talqin_mode')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-soundwave"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('talqin') }}</span>
-                    <span class="st-sub">{{ getTechniqueDisplaySummary('talqin') }}</span>
+            <section class="sheet-section sheet-section--practice">
+              <div
+                class="sheet-toggle sheet-toggle--practice"
+                :class="{ 'is-expanded': sectionOpen.talqin_mode, 'is-enabled': talqinModeEnabled }"
+              >
+                <button
+                  class="sheet-toggle__body"
+                  type="button"
+                  :aria-pressed="talqinModeEnabled ? 'true' : 'false'"
+                  :aria-label="t('memorisation.a11y.useTalqinMode')"
+                  @click="toggleTalqinModeRadio"
+                >
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-soundwave"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('talqin') }}</span>
+                      <span class="st-sub">{{ getTechniqueDisplaySummary('talqin') }}</span>
+                    </span>
                   </span>
-                </span>
+                </button>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <span
@@ -2247,9 +2301,18 @@
                       <i class="mode-radio-icon bi" :class="talqinModeEnabled ? 'bi-check-circle-fill' : 'bi-circle'" aria-hidden="true"></i>
                     </span>
                   </div>
-                  <span class="st-chev" :class="{ open: sectionOpen.talqin_mode }"><i class="bi bi-chevron-down"></i></span>
+                  <button
+                    type="button"
+                    class="st-chev st-chev-btn"
+                    :class="{ open: sectionOpen.talqin_mode }"
+                    :aria-expanded="sectionOpen.talqin_mode ? 'true' : 'false'"
+                    :aria-label="t('memorisation.a11y.practiceToolOptions')"
+                    @click="toggleSection('talqin_mode')"
+                  >
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                  </button>
                 </div>
-              </button>
+              </div>
               <div class="sheet-content" v-show="sectionOpen.talqin_mode">
                 <div class="field-stack">
                   <div class="field">
@@ -2266,21 +2329,37 @@
                 </div>
               </div>
             </section>
-
-            <div class="technique-group-copy technique-group-advanced">
-              <span class="technique-group-kicker">{{ t('memorisation.practiceTools.advanced') }}</span>
-              <p>{{ t('memorisation.practiceTools.advancedDesc') }}</p>
             </div>
+
+            <details class="technique-group-copy technique-group-copy--fold technique-group-advanced">
+              <summary class="technique-group-kicker">
+                <span>{{ t('memorisation.practiceTools.advanced') }}</span>
+                <i class="bi bi-chevron-down technique-group-kicker__chev" aria-hidden="true"></i>
+              </summary>
+              <p>{{ t('memorisation.practiceTools.advancedDesc') }}</p>
+            </details>
             
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('chaining')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-link-45deg"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('chaining') }}</span>
-                    <span class="st-sub">{{ chainingMethodDescription }}</span>
+            <div class="practice-tool-stack">
+            <section class="sheet-section sheet-section--practice">
+              <div
+                class="sheet-toggle sheet-toggle--practice"
+                :class="{ 'is-expanded': sectionOpen.chaining, 'is-enabled': chainingEnabled }"
+              >
+                <button
+                  class="sheet-toggle__body"
+                  type="button"
+                  :aria-pressed="chainingEnabled ? 'true' : 'false'"
+                  :aria-label="t('memorisation.a11y.useChaining')"
+                  @click="toggleChainingRadio"
+                >
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-link-45deg"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('chaining') }}</span>
+                      <span class="st-sub">{{ chainingMethodDescription }}</span>
+                    </span>
                   </span>
-                </span>
+                </button>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <span
@@ -2301,10 +2380,18 @@
                       ></i>
                     </span>
                   </div>
-                  <span class="st-chev" :class="{ open: sectionOpen.chaining }"><i
-                      class="bi bi-chevron-down"></i></span>
+                  <button
+                    type="button"
+                    class="st-chev st-chev-btn"
+                    :class="{ open: sectionOpen.chaining }"
+                    :aria-expanded="sectionOpen.chaining ? 'true' : 'false'"
+                    :aria-label="t('memorisation.a11y.practiceToolOptions')"
+                    @click="toggleSection('chaining')"
+                  >
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                  </button>
                 </div>
-              </button>
+              </div>
               <div class="sheet-content" v-show="sectionOpen.chaining">
                 <div class="field-stack">
                   <div class="field">
@@ -2360,15 +2447,26 @@
               </div>
             </section>
 
-            <section class="sheet-section">
-              <button class="sheet-toggle" @click="toggleSection('anchor_mode')" type="button">
-                <span class="st-left">
-                  <span class="st-ico"><i class="bi bi-pin-angle-fill"></i></span>
-                  <span class="st-txt">
-                    <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('anchor') }}</span>
-                    <span class="st-sub">{{ getTechniqueDisplaySummary('anchor') }}</span>
+            <section class="sheet-section sheet-section--practice">
+              <div
+                class="sheet-toggle sheet-toggle--practice"
+                :class="{ 'is-expanded': sectionOpen.anchor_mode, 'is-enabled': anchorModeEnabled }"
+              >
+                <button
+                  class="sheet-toggle__body"
+                  type="button"
+                  :aria-pressed="anchorModeEnabled ? 'true' : 'false'"
+                  :aria-label="t('memorisation.a11y.useAnchorMode')"
+                  @click="toggleAnchorModeRadio"
+                >
+                  <span class="st-left">
+                    <span class="st-ico"><i class="bi bi-pin-angle-fill"></i></span>
+                    <span class="st-txt">
+                      <span class="st-title technique-label-wrap">{{ getTechniqueDisplayLabel('anchor') }}</span>
+                      <span class="st-sub">{{ getTechniqueDisplaySummary('anchor') }}</span>
+                    </span>
                   </span>
-                </span>
+                </button>
                 <div class="st-right-group">
                   <div class="mode-radio-group" @click.stop>
                     <span
@@ -2389,10 +2487,18 @@
                       ></i>
                     </span>
                   </div>
-                  <span class="st-chev" :class="{ open: sectionOpen.anchor_mode }"><i
-                      class="bi bi-chevron-down"></i></span>
+                  <button
+                    type="button"
+                    class="st-chev st-chev-btn"
+                    :class="{ open: sectionOpen.anchor_mode }"
+                    :aria-expanded="sectionOpen.anchor_mode ? 'true' : 'false'"
+                    :aria-label="t('memorisation.a11y.practiceToolOptions')"
+                    @click="toggleSection('anchor_mode')"
+                  >
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                  </button>
                 </div>
-              </button>
+              </div>
               <div class="sheet-content" v-show="sectionOpen.anchor_mode">
                 <div class="field-stack">
                   <div class="field">
@@ -2416,8 +2522,9 @@
                 </div>
               </div>
             </section>
+            </div>
 
-            <section class="sheet-section">
+            <section class="sheet-section sheet-section--practice">
               <button class="sheet-toggle" @click="toggleSection('mutashabihat')" type="button">
                 <span class="st-left">
                   <span class="st-ico"><i class="bi bi-shuffle"></i></span>
@@ -2539,11 +2646,13 @@
           </div>
 
           <!-- SAVED TAB -->
-          <div v-if="tab === 'saved'" class="sheet saved-sheet saved-sheet--beige" data-tour="saved-sheet">
-            <header class="saved-sheet__header">
+          <div v-if="tab === 'saved'" class="sheet saved-sheet saved-sheet--beige saved-sheet--compact" data-tour="saved-sheet">
+            <header class="saved-sheet__header saved-header-compact">
               <div class="saved-sheet__header-copy">
-                <h3 class="saved-sheet__title">{{ t('memorisation.saved_sessions') }}</h3>
-                <p class="saved-sheet__intro">{{ t('memorisation.saved_sessions_intro') }}</p>
+                <h3
+                  class="saved-sheet__title"
+                  :class="{ 'sr-only': shouldShowOffcanvasTabs }"
+                >{{ t('memorisation.saved_sessions') }}</h3>
               </div>
               <div v-if="savedSessions.length > 0" class="saved-sheet__toolbar">
                 <button
