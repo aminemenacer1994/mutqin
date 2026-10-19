@@ -196,6 +196,7 @@
           </div>
 
           <div class="dash-section__body">
+            <div class="dash-review-feed-scroll">
             <ul class="dash-section__feed dash-ai-results__attempts">
               <li v-for="(item, index) in murajaahPreview" :key="item.key">
                 <a
@@ -220,15 +221,13 @@
                       {{ item.surah_name }}
                       <span>{{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</span>
                     </strong>
-                    <span v-if="item.phrase" class="dash-ai-results__attempt-meta">
-                      <span class="dash-section__feed-phrase" lang="ar" dir="rtl">{{ item.phrase }}</span>
-                    </span>
-                    <span v-else class="dash-ai-results__attempt-meta">{{ t('dashboard.review_now') }}</span>
+                    <span class="dash-ai-results__attempt-meta">{{ murajaahItemHint(item) }}</span>
                   </span>
                   <i class="dash-ai-results__attempt-go bi bi-chevron-right" aria-hidden="true"></i>
                 </a>
               </li>
             </ul>
+            </div>
           </div>
         </section>
 
@@ -305,7 +304,8 @@
 
               <div class="dash-ai-results__layout">
                 <section class="dash-ai-results__panel dash-ai-results__panel--list" :aria-label="t('dashboard.ai_recite.recent_attempts')">
-                  <ul v-if="aiReciteView.recent.length" class="dash-section__feed dash-ai-results__attempts">
+                  <div v-if="aiReciteView.recent.length" class="dash-review-feed-scroll">
+                  <ul class="dash-section__feed dash-ai-results__attempts">
                     <li v-for="item in aiRecitePreview" :key="item.id">
                       <button
                         type="button"
@@ -315,7 +315,7 @@
                         :aria-label="aiAttemptActionLabel(item)"
                         @click="openAnalysisForItem(item, 'attempt')"
                       >
-                        <span class="dash-ai-results__attempt-score">{{ aiAttemptAccuracy(item) }}</span>
+                        <span class="dash-ai-results__attempt-score">{{ aiAttemptScoreShort(item) }}</span>
                         <span class="dash-ai-results__attempt-copy">
                           <strong>
                             {{ aiCheckTitle(item) }}
@@ -341,6 +341,7 @@
                       </button>
                     </li>
                   </ul>
+                  </div>
                   <p v-else class="dash-ai-results__muted">{{ t('dashboard.ai_recite.no_recent') }}</p>
                 </section>
 
@@ -548,46 +549,40 @@
               >
                 {{ t('dashboard.ai_history_empty_filtered') }}
               </p>
-              <ul v-else class="dash-drawer__list">
+              <ul v-else class="dash-drawer__list dash-drawer__list--ai-checks">
                 <li v-for="(item, index) in visibleDrawerItems" :key="`ai-${item.id}`">
                   <div
-                    class="dash-drawer__row dash-drawer__row--analysis dash-reveal"
+                    class="dash-drawer__ai-check dash-reveal"
                     :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
                   >
-                    <div class="dash-drawer__analysis-copy">
-                      <span class="dash-drawer__type">{{ t('dashboard.activity_type_ai_check') }}</span>
-                      <span class="dash-drawer__row-title">
-                        {{ aiCheckTitle(item) }}
-                        <template v-if="formatItemRange(item)"> · {{ formatItemRange(item) }}</template>
+                    <button
+                      v-if="canViewAnalysis(item, 'attempt')"
+                      type="button"
+                      class="dash-drawer__ai-check-main"
+                      :disabled="isAnalysisLoading(item, 'attempt')"
+                      :aria-label="aiAttemptActionLabel(item)"
+                      @click="openAnalysisForItem(item, 'attempt')"
+                    >
+                      <span
+                        class="dash-drawer__ai-check-score"
+                        :class="`is-${aiAttemptTone(item)}`"
+                      >{{ aiAttemptScoreShort(item) }}</span>
+                      <span class="dash-drawer__ai-check-copy">
+                        <span class="dash-drawer__ai-check-title">
+                          {{ aiCheckTitle(item) }}
+                          <template v-if="formatItemRange(item)"> · {{ formatItemRange(item) }}</template>
+                        </span>
+                        <span class="dash-drawer__ai-check-meta">
+                          <span v-if="aiBandLabel(item.band)">{{ aiBandLabel(item.band) }}</span>
+                          <time :datetime="item.occurred_at">{{ formatActivityDate(item.occurred_at) }}</time>
+                        </span>
                       </span>
-                      <span class="dash-drawer__row-meta">{{ aiResultLabel(item) }}</span>
-                      <time class="dash-drawer__row-time" :datetime="item.occurred_at">
-                        {{ formatActivityDate(item.occurred_at) }}
-                      </time>
-                      <span v-if="item.has_audio" class="dash-drawer__listen">
-                        <i class="bi bi-play-fill" aria-hidden="true"></i>
-                        {{ t('dashboard.ai_recite.listen') }}
-                      </span>
-                    </div>
-                    <div class="dash-drawer__analysis-actions">
-                      <a
-                        v-if="aiCheckRevisionHref(item)"
-                        class="dash-btn dash-btn--ghost dash-btn--sm"
-                        :href="aiCheckRevisionHref(item)"
-                      >
-                        {{ t('dashboard.review_now') }}
-                      </a>
-                      <button
-                        v-if="canViewAnalysis(item, 'attempt')"
-                        type="button"
-                        class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
-                        :disabled="isAnalysisLoading(item, 'attempt')"
-                        @click="openAnalysisForItem(item, 'attempt')"
-                      >
-                        <i class="bi bi-graph-up" aria-hidden="true"></i>
-                        {{ t('dashboard.view_analysis') }}
-                      </button>
-                    </div>
+                      <i
+                        class="dash-drawer__ai-check-go"
+                        :class="isAnalysisLoading(item, 'attempt') ? 'bi bi-hourglass-split' : 'bi bi-chevron-right'"
+                        aria-hidden="true"
+                      ></i>
+                    </button>
                   </div>
                 </li>
               </ul>
@@ -616,20 +611,7 @@
                       </span>
                       {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
                     </span>
-                    <p
-                      v-if="item.phrase"
-                      class="dash-drawer__murajaah-phrase"
-                      lang="ar"
-                      dir="rtl"
-                    >{{ item.phrase }}</p>
-                    <p
-                      v-if="weakHistoryLine(item)"
-                      class="dash-drawer__row-meta dash-drawer__murajaah-history"
-                      data-testid="dash-weak-history"
-                    >{{ weakHistoryLine(item) }}</p>
-                    <p v-else-if="item.explanation_key" class="dash-drawer__row-meta dash-drawer__murajaah-note">
-                      {{ t(`dashboard.${item.explanation_key}`) }}
-                    </p>
+                    <p class="dash-drawer__row-meta dash-drawer__murajaah-note">{{ murajaahItemHint(item) }}</p>
                   </div>
                   <div class="dash-drawer__murajaah-actions">
                     <a class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__murajaah-cta" :href="reviewNowHref(item)">
@@ -687,7 +669,7 @@
       :correct-ayah-label="t('dashboard.analysis_correct_ayah_label')"
       :not-recited-label="t('dashboard.analysis_not_recited_label')"
       :recommendations-title="t('dashboard.analysis_recommendations_title')"
-      :audio-title="t('dashboard.ai_recite.audio')"
+      :audio-title="t('dashboard.analysis_audio_title')"
       :no-recommendations="t('dashboard.analysis_no_recommendations')"
       :audio-unavailable="t('dashboard.analysis_audio_unavailable')"
       :audio-expired="t('dashboard.ai_recite.audio_expired')"
@@ -1107,7 +1089,7 @@ export default {
       return Array.isArray(items) ? items : []
     },
     murajaahPreview() {
-      return this.sortMurajaahByUrgency(this.murajaahAllItems).slice(0, 4)
+      return this.sortMurajaahByUrgency(this.murajaahAllItems).slice(0, 16)
     },
     murajaahTotal() {
       const total = Number(this.data?.weaknesses?.total ?? 0)
@@ -1300,7 +1282,7 @@ export default {
       return !!this.aiReciteView?.holding
     },
     aiRecitePreview() {
-      return (this.aiReciteView?.recent || []).slice(0, 4)
+      return (this.aiReciteView?.recent || []).slice(0, 16)
     },
     aiReciteImprovement() {
       const card = (this.aiReciteView?.cards || []).find((item) => item.key === 'improvement')
@@ -1933,6 +1915,21 @@ export default {
       if (status === 'active') return this.t('dashboard.weak_history_status_active')
       return ''
     },
+    murajaahItemHint(item) {
+      if (!item) return ''
+      const key = String(item.explanation_key || '').trim()
+      if (key === 'weak_explain_phrase' && item.phrase) {
+        return this.t('dashboard.murajaah_hint_phrase')
+      }
+      if (key === 'weak_explain_ai') return this.t('dashboard.murajaah_hint_ai')
+      if (key === 'weak_explain_plan') return this.t('dashboard.murajaah_hint_plan')
+      if (key === 'weak_explain_history') return this.t('dashboard.murajaah_hint_history')
+      const strength = String(item.strength || '').toLowerCase()
+      if (strength === 'fragile') return this.t('dashboard.murajaah_hint_fragile')
+      if (strength === 'building') return this.t('dashboard.murajaah_hint_building')
+      if (strength === 'strong') return this.t('dashboard.murajaah_hint_strong')
+      return this.t('dashboard.murajaah_hint_default')
+    },
     weakHistoryLine(item) {
       if (!item) return ''
       const attempts = Number(item.history_attempts || 0)
@@ -2005,6 +2002,11 @@ export default {
       const accuracy = Number(item?.accuracy_percent)
       if (!Number.isFinite(accuracy) || accuracy < 0) return '—'
       return this.t('dashboard.drawer_accuracy', { n: accuracy })
+    },
+    aiAttemptScoreShort(item) {
+      const accuracy = Number(item?.accuracy_percent)
+      if (!Number.isFinite(accuracy) || accuracy < 0) return '—'
+      return `${Math.round(accuracy)}%`
     },
     aiAttemptTone(item) {
       const accuracy = Number(item?.accuracy_percent)

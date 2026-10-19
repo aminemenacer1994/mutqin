@@ -8,6 +8,8 @@ const dashboard = readFileSync(join(root, 'resources/js/views/Dashboard.vue'), '
 const en = JSON.parse(readFileSync(join(root, 'resources/js/locales/en.json'), 'utf8'))
 
 assert.match(dashboard, /drawerAiSearch/, 'AI history drawer supports search')
+assert.match(dashboard, /dash-drawer__ai-check-main/, 'AI history drawer uses compact tappable rows')
+assert.match(dashboard, /dash-review-feed-scroll/, 'dashboard review previews scroll vertically')
 assert.match(dashboard, /drawerAiBandFilter/, 'AI history drawer supports band filters')
 assert.match(dashboard, /aiCheckTitle/, 'AI history avoids misleading Not begun labels')
 assert.match(dashboard, /sortMurajaahByUrgency/, 'Revision list sorts by urgency')

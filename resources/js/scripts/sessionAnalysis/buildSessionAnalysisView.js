@@ -161,33 +161,90 @@ function formatDuration(seconds) {
   return `${minutes}:${remain}`
 }
 
-function buildRevisionTargets(payload, t) {
+function revisionTargetRows(payload, ayahNumbers, surah, rangeEnd, t) {
+  return [...new Set(ayahNumbers)]
+    .sort((a, b) => a - b)
+    .slice(0, 6)
+    .map((ayah) => ({
+      key: `${surah}:${ayah}`,
+      surah_number: surah,
+      ayah_number: ayah,
+      label: t('dashboard.ayah_n', { n: ayah }) || `Ayah ${ayah}`,
+      query: {
+        surah: String(surah),
+        from: String(ayah),
+        to: String(Math.max(ayah, rangeEnd || ayah)),
+        review: '1',
+        return: 'dashboard',
+      },
+    }))
+}
+
+function buildRevisionPanel(payload, ayahRows, t) {
   const session = payload.session && typeof payload.session === 'object' ? payload.session : {}
   const attempt = payload.ai_attempt && typeof payload.ai_attempt === 'object' ? payload.ai_attempt : null
   const assessment = payload.assessment && typeof payload.assessment === 'object' ? payload.assessment : null
   const surah = asNumber(session.surah_number || attempt?.surah_number || assessment?.surah_number)
-  if (surah <= 0) return []
-
-  const weakAyahs = collectWeakAyahs(payload)
   const rangeStart = asNumber(session.ayah_start || attempt?.ayah_start || assessment?.start_ayah)
   const rangeEnd = asNumber(session.ayah_end || attempt?.ayah_end || assessment?.end_ayah || rangeStart)
-  const ayahs = weakAyahs.length
-    ? weakAyahs
-    : (rangeStart > 0 ? [rangeStart] : [])
+  const band = String(attempt?.band || '').toLowerCase()
+  const weakAyahs = collectWeakAyahs(payload)
+  const mistakeAyahs = [...new Set(
+    (ayahRows || [])
+      .filter((row) => row?.hasMistake)
+      .map((row) => asNumber(row?.ayah))
+      .filter((n) => n > 0),
+  )]
 
-  return [...new Set(ayahs)].sort((a, b) => a - b).slice(0, 6).map((ayah) => ({
-    key: `${surah}:${ayah}`,
-    surah_number: surah,
-    ayah_number: ayah,
-    label: t('dashboard.ayah_n', { n: ayah }) || `Ayah ${ayah}`,
-    query: {
-      surah: String(surah),
-      from: String(ayah),
-      to: String(Math.max(ayah, rangeEnd || ayah)),
-      review: '1',
-      return: 'dashboard',
-    },
-  }))
+  if (surah <= 0) {
+    return {
+      targets: [],
+      state: 'unavailable',
+      message: t('dashboard.analysis_revision_unavailable'),
+      hint: '',
+    }
+  }
+
+  let ayahs = weakAyahs.length ? weakAyahs : mistakeAyahs
+  if (!ayahs.length && (band === 'weak' || band === 'mixed') && rangeStart > 0) {
+    ayahs = [rangeStart]
+  }
+
+  const targets = revisionTargetRows(payload, ayahs, surah, rangeEnd, t)
+  if (targets.length) {
+    return {
+      targets,
+      state: 'targets',
+      message: '',
+      hint: t('dashboard.analysis_revision_hint'),
+    }
+  }
+
+  const words = collectWords(payload)
+  if (!words.length) {
+    return {
+      targets: [],
+      state: 'unassessed',
+      message: t('dashboard.analysis_revision_unassessed'),
+      hint: '',
+    }
+  }
+
+  if (band === 'strong') {
+    return {
+      targets: [],
+      state: 'holding',
+      message: t('dashboard.analysis_revision_holding'),
+      hint: '',
+    }
+  }
+
+  return {
+    targets: [],
+    state: 'clear',
+    message: t('dashboard.analysis_revision_clear'),
+    hint: '',
+  }
 }
 
 function collectWeakAyahs(payload) {
@@ -379,7 +436,7 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
     || recommendations.length
   )
 
-  const revisionTargets = buildRevisionTargets(payload, t)
+  const revision = buildRevisionPanel(payload, ayahRows, t)
 
   return {
     hasContent,
@@ -389,7 +446,8 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
     aiReview,
     ayahRows,
     recommendations,
-    revisionTargets,
+    revision,
+    revisionTargets: revision.targets,
     audio: payload.audio && typeof payload.audio === 'object' ? payload.audio : null,
   }
 }

@@ -20,21 +20,23 @@
           tabindex="-1"
         >
           <div class="modal-header border-0 sa-ui-header">
-            <div class="sa-ui-header__copy">
-              <h2 :id="titleId" class="modal-title">{{ title }}</h2>
-              <div class="sa-ov__session">
+            <div class="sa-ui-header__main">
+              <div class="sa-ui-header__top">
+                <h2 :id="titleId" class="modal-title">{{ title }}</h2>
+                <div class="sa-ui-header__actions">
+                  <slot name="header-actions" />
+                  <button
+                    type="button"
+                    class="btn-close"
+                    :aria-label="closeLabel"
+                    @click="$emit('close')"
+                  ></button>
+                </div>
+              </div>
+              <div v-if="resolvedSessionLabel || resolvedSessionMeta" class="sa-ov__session">
                 <span v-if="resolvedSessionLabel" class="sa-ov__chip">{{ resolvedSessionLabel }}</span>
                 <span v-if="resolvedSessionMeta" class="sa-ov__when">{{ resolvedSessionMeta }}</span>
               </div>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-              <slot name="header-actions" />
-              <button
-                type="button"
-                class="btn-close"
-                :aria-label="closeLabel"
-                @click="$emit('close')"
-              ></button>
             </div>
           </div>
           <div class="modal-body sa-ui-body">
@@ -87,24 +89,30 @@
                       <div class="sa-ov__hero-copy">
                         <p class="sa-ov__hero-label">{{ recallScoreLabel }}</p>
                         <p v-if="aiHeroSummary" class="sa-ov__hero-status">{{ aiHeroSummary }}</p>
+                        <p v-if="recordingNotice" class="sa-ov__recording-note">{{ recordingNotice }}</p>
                       </div>
                     </div>
                   </section>
 
                   <p v-else-if="aiHeroSummary" class="sa-ov__meta sa-ov__meta--lead">{{ aiHeroSummary }}</p>
+                  <p v-if="!analysis.aiReview && recordingNotice" class="sa-ov__meta sa-ov__recording-note">{{ recordingNotice }}</p>
 
                   <p v-if="overviewCards.length" class="sa-ov__meta">
                     <span v-for="item in overviewCards" :key="item.key">{{ item.label }} {{ item.value }}</span>
                   </p>
 
-                  <section class="sa-ov__panel sa-ov__audio" data-testid="session-overview-audio">
-                    <h3>{{ audioTitle || $t('dashboard.analysis_recitation_label') }}</h3>
+                  <section
+                    v-if="showRecordingPanel"
+                    class="sa-ov__panel sa-ov__audio"
+                    data-testid="session-overview-audio"
+                  >
+                    <h3>{{ resolvedAudioTitle }}</h3>
                     <RecitationAudioPlayer
                       v-if="analysis.audio?.url"
                       :src="analysis.audio.url"
                       :duration-ms="analysis.audio.duration_ms"
                       :active="open"
-                      :title="audioTitle || $t('dashboard.analysis_recitation_label')"
+                      :title="resolvedAudioTitle"
                       :play-label="playLabel"
                       :pause-label="pauseLabel"
                       :restart-label="restartLabel"
@@ -115,11 +123,15 @@
                     </p>
                   </section>
 
-                  <section v-if="analysis.revisionTargets?.length" class="sa-ov__panel sa-ov__revision">
+                  <section
+                    v-if="showRevisionPanel"
+                    class="sa-ov__panel sa-ov__revision"
+                    :class="revisionPanelTone ? `is-${revisionPanelTone}` : ''"
+                  >
                     <h3>{{ resolvedRevisionTitle }}</h3>
-                    <p class="sa-ov__meta">{{ resolvedRevisionHint }}</p>
-                    <ul class="sa-ov__revision-list">
-                      <li v-for="target in analysis.revisionTargets" :key="target.key">
+                    <p v-if="revisionPanelHint" class="sa-ov__meta">{{ revisionPanelHint }}</p>
+                    <ul v-if="revisionTargets.length" class="sa-ov__revision-list">
+                      <li v-for="target in revisionTargets" :key="target.key">
                         <a
                           class="sa-ov__revision-link"
                           :href="revisionHref(target)"
@@ -129,10 +141,16 @@
                         </a>
                       </li>
                     </ul>
+                    <p v-else-if="revisionPanelMessage" class="sa-ov__revision-note">{{ revisionPanelMessage }}</p>
                   </section>
 
-                  <section v-if="analysis.ayahRows?.length" class="sa-ov__panel">
+                  <section v-if="analysis.ayahRows?.length" class="sa-ov__panel sa-ov__panel--ayahs">
                     <h3>{{ wordsTitle }}</h3>
+                    <div
+                      class="sa-ov__ayah-scroll"
+                      tabindex="0"
+                      :aria-label="wordsTitle"
+                    >
                     <article
                       v-for="row in analysis.ayahRows"
                       :key="`ayah-${row.ayah || row.ayahLabel}`"
@@ -161,6 +179,7 @@
                         <span v-if="ayahIndex(row)" class="sa-ov__ayah-no">{{ ayahIndex(row) }}</span>
                       </p>
                     </article>
+                    </div>
                   </section>
 
                 </div>
@@ -310,12 +329,81 @@ export default {
       if (percent == null) return 'neutral'
       return recitationAccuracyBand(percent)
     },
-    audioEmptyCopy() {
-      const reason = String(this.analysis?.audio?.reason || '')
-      if ((reason === 'expired' || reason === 'purged') && this.audioExpired) {
+    resolvedAudioTitle() {
+      return this.audioTitle
+        || this.translate('dashboard.analysis_audio_title', 'Recording')
+    },
+    hasWordFeedback() {
+      return (this.analysis?.ayahRows || []).length > 0
+    },
+    showRecordingPanel() {
+      return Boolean(this.analysis?.audio?.url)
+    },
+    recordingNotice() {
+      const audio = this.analysis?.audio
+      if (!audio || audio.url) return ''
+      const reason = String(audio.reason || '')
+      if (reason === 'expired' || reason === 'purged') {
         return this.audioExpired
+          || this.translate(
+            'dashboard.analysis_audio_expired_notice',
+            'Recording expired for privacy. Your word match feedback is still saved.',
+          )
       }
-      return this.audioUnavailable
+      if (reason === 'none' && this.hasWordFeedback) {
+        return this.translate(
+          'dashboard.analysis_audio_not_kept',
+          'No recording was kept for this check. Your word match feedback is below.',
+        )
+      }
+      if (reason === 'none') {
+        return this.translate(
+          'dashboard.analysis_audio_not_kept_short',
+          'No recording was kept for this check.',
+        )
+      }
+      return ''
+    },
+    audioEmptyCopy() {
+      return this.recordingNotice
+        || this.audioUnavailable
+        || this.translate('dashboard.analysis_audio_unavailable', 'No recording is saved for this session.')
+    },
+    revisionPanel() {
+      const revision = this.analysis?.revision
+      if (revision && typeof revision === 'object') return revision
+      const targets = Array.isArray(this.analysis?.revisionTargets) ? this.analysis.revisionTargets : []
+      return {
+        targets,
+        state: targets.length ? 'targets' : 'unavailable',
+        message: '',
+        hint: targets.length ? this.resolvedRevisionHint : '',
+      }
+    },
+    revisionTargets() {
+      return Array.isArray(this.revisionPanel?.targets) ? this.revisionPanel.targets : []
+    },
+    showRevisionPanel() {
+      if (!this.analysis) return false
+      return Boolean(
+        this.revisionTargets.length
+        || this.revisionPanelMessage
+        || this.revisionPanelHint,
+      )
+    },
+    revisionPanelHint() {
+      const hint = String(this.revisionPanel?.hint || '').trim()
+      if (hint) return hint
+      return this.revisionTargets.length ? this.resolvedRevisionHint : ''
+    },
+    revisionPanelMessage() {
+      return String(this.revisionPanel?.message || '').trim()
+    },
+    revisionPanelTone() {
+      const state = String(this.revisionPanel?.state || '')
+      if (state === 'holding' || state === 'clear') return 'positive'
+      if (state === 'unassessed' || state === 'unavailable') return 'muted'
+      return ''
     },
     resolvedRecitationLabel() {
       return this.recitationLabel || this.translate('dashboard.analysis_recitation_label', 'Your recitation')

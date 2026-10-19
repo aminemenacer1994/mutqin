@@ -54,6 +54,9 @@ assert.equal(en.dashboard.analysis_not_recited_label, 'Not recited')
 assert.equal(en.dashboard.analysis_recall_score, 'Word match')
 assert.equal(en.dashboard.drawer_accuracy.replace('{n}', '88'), '88% match')
 assert.match(modal, /sa-ov__revision/, 'analysis modal links weak ayahs to revision')
+assert.match(modal, /showRecordingPanel/, 'recording panel only shows when a playable URL exists')
+assert.match(modal, /recordingNotice/, 'expired or missing audio uses an inline notice')
+assert.match(modal, /revisionPanelMessage/, 'revision panel can show non-link states')
 assert.match(
   overviewCss,
   /\.sa-ov__ayah-ar \{[\s\S]*?unicode-bidi:\s*plaintext/,
@@ -63,6 +66,12 @@ assert.match(
   modal,
   /sa-ov__ayah-text/,
   'ayah rows render a continuous Arabic text run',
+)
+assert.match(modal, /sa-ov__ayah-scroll/, 'multiple ayahs scroll inside the analysis panel')
+assert.match(
+  overviewCss,
+  /\.sa-ov__hero-status \{[\s\S]*?font-weight:\s*400/,
+  'word match summary stays regular weight',
 )
 assert.match(
   overviewCss,
@@ -223,6 +232,23 @@ const revisionLinks = buildSessionAnalysisView({
 }, t)
 assert.ok(revisionLinks.revisionTargets?.length >= 1)
 assert.equal(revisionLinks.revisionTargets[0].surah_number, 106)
+assert.equal(revisionLinks.revision?.state, 'targets')
+
+const strongHold = buildSessionAnalysisView({
+  has_analysis: true,
+  session: { surah_number: 2, surah_name: 'Al-Baqarah', ayah_start: 255, ayah_end: 255, status: 'completed' },
+  ai_attempt: {
+    band: 'strong',
+    accuracy_percent: 92,
+    surah_number: 2,
+    ayah_start: 255,
+    ayah_end: 255,
+    word_statuses: [{ text: 'الله', status: 'correct', ayah_number: 255 }],
+  },
+}, t)
+assert.equal(strongHold.revisionTargets.length, 0)
+assert.equal(strongHold.revision?.state, 'holding')
+assert.ok(strongHold.revision?.message)
 
 const withAudio = buildSessionAnalysisView({
   has_analysis: true,

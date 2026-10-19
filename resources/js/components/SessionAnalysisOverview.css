@@ -36,13 +36,35 @@ body.session-analysis-modal-open {
 
 #sa-session-overview.session-analysis-modal-root .sa-ui-header {
   display: flex !important;
-  flex-direction: row !important;
-  align-items: flex-start !important;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 0;
   padding: 1.15rem 1.3rem 1rem;
   border-bottom: 1px solid rgba(80, 64, 48, 0.1);
   background: rgba(255, 253, 248, 0.86);
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ui-header__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+  width: 100%;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ui-header__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ui-header__actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ui-header .modal-title {
@@ -58,7 +80,7 @@ body.session-analysis-modal-open {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem 0.65rem;
-  margin-top: 0.5rem;
+  margin-top: 0;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__chip {
@@ -78,7 +100,8 @@ body.session-analysis-modal-open {
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ui-header .btn-close {
-  margin-top: 0.1rem;
+  margin: 0;
+  flex-shrink: 0;
   opacity: 0.55;
 }
 
@@ -170,9 +193,9 @@ body.session-analysis-modal-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Amiri", "Noto Naskh Arabic", Georgia, serif;
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-family: var(--font-ui, "Avenir Next", "Segoe UI", sans-serif);
+  font-size: 0.95rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -195,10 +218,19 @@ body.session-analysis-modal-open {
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__hero-status {
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  color: #5c534b;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__recording-note {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #7a6f63;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__revision-list {
@@ -207,6 +239,23 @@ body.session-analysis-modal-open {
   margin: 0.65rem 0 0;
   padding: 0;
   list-style: none;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__revision-note {
+  margin: 0.45rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #5c534b;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__panel.sa-ov__revision.is-positive {
+  border-color: rgba(45, 106, 79, 0.16);
+  background: color-mix(in srgb, rgba(45, 106, 79, 0.06) 55%, rgba(255, 255, 255, 0.78));
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__panel.sa-ov__revision.is-muted .sa-ov__revision-note {
+  color: #6f655b;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__revision-link {
@@ -256,7 +305,8 @@ body.session-analysis-modal-open {
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__meta--lead {
   margin: 0 0 0.85rem;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  font-weight: 450;
   line-height: 1.45;
   color: var(--dash-muted, #5c6b64);
 }
@@ -286,6 +336,23 @@ body.session-analysis-modal-open {
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__panel--ayahs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__ayah-scroll {
+  max-height: min(52vh, 28rem);
+  overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 0.45rem;
+  padding-inline-end: 0.12rem;
+  scrollbar-gutter: stable;
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__ayah {
@@ -670,6 +737,11 @@ html[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov_
 [data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__chip {
   background: rgba(212, 165, 116, 0.14);
   color: #e7c8a4;
+}
+
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__hero-status,
+[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__meta--lead {
+  color: #c9b8a8;
 }
 
 [data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov__when,
@@ -1125,7 +1197,8 @@ html[data-theme="dark"] #sa-session-overview.session-analysis-modal-root .sa-ov_
 }
 
 #sa-session-overview.session-analysis-modal-root .sa-ov__hero-status {
-  font-size: 1.08rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
 }
 
 #sa-session-analysis-modal-root .sa-ov__facts {
@@ -1822,4 +1895,11 @@ html[data-theme="sepia"] #sa-session-overview.session-analysis-modal-root {
   background: #2c2824 !important;
   border-color: rgba(247, 235, 219, 0.14) !important;
   color: #f4ebe1 !important;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__hero-status,
+#sa-session-overview.session-analysis-modal-root .sa-ov__meta--lead {
+  font-size: 0.8125rem !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
 }
