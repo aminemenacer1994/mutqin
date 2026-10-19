@@ -48,13 +48,24 @@ function formatSpeed(speed) {
   return `${rounded}×`
 }
 
-function formatVisibility(blurEnabled, blurIntensity, focusDimPercent) {
+function formatVisibility(blurEnabled, blurIntensity, focusDimPercent, t) {
   if (blurEnabled) {
     const intensity = Math.max(0, Math.min(100, Number(blurIntensity) || 50))
-    return `${intensity}%`
+    return translate(
+      t,
+      'memorisation.activePracticeSetup.visibilityCompact',
+      `${intensity}% visible`,
+      { n: intensity },
+    )
   }
   if (Number.isFinite(Number(focusDimPercent))) {
-    return `${Math.max(0, Math.min(100, Number(focusDimPercent)))}% dim`
+    const n = Math.max(0, Math.min(100, Number(focusDimPercent)))
+    return translate(
+      t,
+      'memorisation.activePracticeSetup.visibilityDim',
+      `${n}% dim`,
+      { n },
+    )
   }
   return null
 }
@@ -128,7 +139,12 @@ export function buildPracticeSetupStatusMessage(change, t) {
   const type = String(change?.type || '')
   const value = change?.value
   const map = {
-    visibility: translate(t, 'memorisation.activePracticeSetup.toasts.visibility', `Text reduced to ${value || '50%'} visibility.`, { value: value || '50%' }),
+    visibility: translate(
+      t,
+      'memorisation.activePracticeSetup.toasts.visibility',
+      `Text visibility now ${value || '50% visible'}.`,
+      { value: value || translate(t, 'memorisation.activePracticeSetup.visibilityCompact', '50% visible', { n: 50 }) },
+    ),
     next_repetition: translate(t, 'memorisation.activePracticeSetup.toasts.nextRepetition', 'Moving to the next repetition.'),
     weak_emphasis: translate(t, 'memorisation.activePracticeSetup.toasts.weakEmphasis', 'Weak-word emphasis is now active.'),
     auto_follow_paused: translate(t, 'memorisation.activePracticeSetup.toasts.autoFollowPaused', 'Auto-follow paused because you scrolled manually.'),
@@ -288,7 +304,7 @@ export function buildActivePracticeSetup(input = {}, t = null) {
     canChangeDuringSession: canChangePracticeSetting('playback_speed', input),
   })
 
-  const visibility = formatVisibility(input.blurEnabled, input.blurIntensity, input.focusDimPercent)
+  const visibility = formatVisibility(input.blurEnabled, input.blurIntensity, input.focusDimPercent, t)
   if (visibility) {
     items.push({
       id: 'visibility',
@@ -436,7 +452,7 @@ export function buildSessionConfirmationPanel(input = {}, items = [], t = null) 
     {
       id: 'visibility',
       label: translate(t, 'memorisation.activePracticeSetup.confirm.visibility', 'Text visibility'),
-      value: formatVisibility(input.blurEnabled, input.blurIntensity, input.focusDimPercent)
+      value: formatVisibility(input.blurEnabled, input.blurIntensity, input.focusDimPercent, t)
         || translate(t, 'memorisation.activePracticeSetup.confirm.visibilityFull', 'Full text visible'),
     },
   ]

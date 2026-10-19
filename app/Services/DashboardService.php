@@ -2068,10 +2068,10 @@ class DashboardService
             return strcmp((string) ($b['detected_at'] ?? ''), (string) ($a['detected_at'] ?? ''));
         })->values();
         $total = $sorted->count();
-        $allItems = $this->enrichWeaknessStrengthLabels(
+        $allItems = $this->sortWeaknessItemsByUrgency($this->enrichWeaknessStrengthLabels(
             $user,
             $sorted->values()->all()
-        );
+        ));
         $previewCount = 2;
         $historyCount = count(array_filter(
             $allItems,
@@ -2214,6 +2214,52 @@ class DashboardService
      * @param  list<array<string, mixed>>  $items
      * @return list<array<string, mixed>>
      */
+    /**
+     * Fragile before building before strong; then active weak-spot history.
+     *
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function sortWeaknessItemsByUrgency(array $items): array
+    {
+        if ($items === []) {
+            return [];
+        }
+
+        $strengthRank = static fn (?string $strength): int => match (strtolower(trim((string) $strength))) {
+            'fragile' => 0,
+            'building' => 1,
+            'strong' => 2,
+            default => 3,
+        };
+
+        $historyRank = static fn (array $item): int => match ((string) ($item['history_status'] ?? '')) {
+            MemorisationWeakSpot::STATUS_ACTIVE => 0,
+            MemorisationWeakSpot::STATUS_IMPROVING => 1,
+            MemorisationWeakSpot::STATUS_RESOLVED => 2,
+            default => 3,
+        };
+
+        usort($items, function (array $a, array $b) use ($strengthRank, $historyRank): int {
+            $strengthDelta = $strengthRank($a['strength'] ?? null) <=> $strengthRank($b['strength'] ?? null);
+            if ($strengthDelta !== 0) {
+                return $strengthDelta;
+            }
+            $historyDelta = $historyRank($a) <=> $historyRank($b);
+            if ($historyDelta !== 0) {
+                return $historyDelta;
+            }
+            $attemptsDelta = ((int) ($b['history_attempts'] ?? 0)) <=> ((int) ($a['history_attempts'] ?? 0));
+            if ($attemptsDelta !== 0) {
+                return $attemptsDelta;
+            }
+
+            return strcmp((string) ($b['detected_at'] ?? ''), (string) ($a['detected_at'] ?? ''));
+        });
+
+        return $items;
+    }
+
     private function enrichWeaknessStrengthLabels(User $user, array $items): array
     {
         if ($items === []) {

@@ -262,7 +262,8 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       key: 'accuracy',
       tone: 'soft',
       label: t('memorisation.postSession.recommendation.aiMetricAccuracy'),
-      value: `${accuracy}%`,
+      value: t('dashboard.drawer_accuracy', { n: accuracy }),
+      hint: t('memorisation.postSession.recommendation.aiMetricAccuracyHint'),
     })
   }
   if (totalWords > 0) {
@@ -272,6 +273,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       label: t('memorisation.postSession.recommendation.aiMetricDetectedWords')
         || t('memorisation.postSession.recommendation.aiMetricWords'),
       value: `${resolvedMatched}/${totalWords}`,
+      hint: t('memorisation.postSession.recommendation.aiMetricWordsHint'),
     })
   }
   detailsMetrics.push({
@@ -280,6 +282,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     label: t('memorisation.postSession.recommendation.aiMetricMissedWords')
       || t('memorisation.postSession.recommendation.aiMetricMissed'),
     value: String(missed),
+    hint: t('memorisation.postSession.recommendation.aiMetricMissedHint'),
   })
 
   const sequenceMetric = buildSequenceMetric({
@@ -295,6 +298,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       tone: 'soft',
       label: t('memorisation.postSession.recommendation.aiMetricClose'),
       value: String(amberCount),
+      hint: t('memorisation.postSession.recommendation.aiMetricCloseHint'),
     })
   }
   if ((colorCounts.black || 0) > 0) {
@@ -303,6 +307,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
       tone: 'soft',
       label: t('memorisation.postSession.recommendation.aiMetricOmitted'),
       value: String(colorCounts.black),
+      hint: t('memorisation.postSession.recommendation.aiMetricOmittedHint'),
     })
   }
 
@@ -445,7 +450,7 @@ export function buildAiReviewDetails(outcome = 'mixed', extras = {}, result = nu
     resultState: resolvedState,
     matchedWords: resolvedMatched,
     totalWords,
-    accuracy: scoredAccuracy ?? accuracy,
+    accuracy,
     hasWordLevelEvidence,
     weakAyahs: hasWordLevelEvidence ? weakAyahs : [],
     missed,
@@ -575,7 +580,7 @@ function buildValidZeroMatchDetails({
       key: 'accuracy',
       tone: 'soft',
       label: t('memorisation.postSession.recommendation.aiMetricAccuracy'),
-      value: `${accuracy}%`,
+      value: t('dashboard.drawer_accuracy', { n: accuracy }),
     },
     {
       key: 'words',

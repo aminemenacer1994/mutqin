@@ -51,6 +51,9 @@ assert.doesNotMatch(
   'ayah comparison labels stay readable instead of looking like raw keys',
 )
 assert.equal(en.dashboard.analysis_not_recited_label, 'Not recited')
+assert.equal(en.dashboard.analysis_recall_score, 'Word match')
+assert.equal(en.dashboard.drawer_accuracy.replace('{n}', '88'), '88% match')
+assert.match(modal, /sa-ov__revision/, 'analysis modal links weak ayahs to revision')
 assert.match(
   overviewCss,
   /\.sa-ov__ayah-ar \{[\s\S]*?unicode-bidi:\s*plaintext/,
@@ -208,6 +211,18 @@ const incorrectHistory = buildSessionAnalysisView({
 assert.equal(incorrectHistory.ayahRows[0].parts[1].text, 'للرحمن')
 assert.equal(incorrectHistory.ayahRows[0].parts[1].tone, 'is-incorrect')
 assert.equal(incorrectHistory.ayahRows[0].correctText, 'الحمد لله')
+
+const revisionLinks = buildSessionAnalysisView({
+  has_analysis: true,
+  session: { id: 14, surah_number: 106, surah_name: 'Quraysh', ayah_start: 1, ayah_end: 4, status: 'completed' },
+  ai_attempt: {
+    accuracy_percent: 65,
+    word_statuses: [{ text: 'لِإِيلَافِ', status: 'wrong', ayah_number: 1 }],
+    weak_words: [{ ayahNumber: 1, text: 'لِإِيلَافِ' }],
+  },
+}, t)
+assert.ok(revisionLinks.revisionTargets?.length >= 1)
+assert.equal(revisionLinks.revisionTargets[0].surah_number, 106)
 
 const withAudio = buildSessionAnalysisView({
   has_analysis: true,

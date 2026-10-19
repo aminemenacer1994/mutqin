@@ -106,7 +106,7 @@
                       v-for="shown in shownPercentOptions"
                       :key="`shown-${shown}`"
                       :value="shown"
-                    >{{ shown }}%</option>
+                    >{{ formatShownOption(shown) }}</option>
                   </select>
                 </label>
 
@@ -684,6 +684,15 @@ export default {
     if (this.open) this.restoreReturnFocus()
   },
   methods: {
+    formatShownOption(shown) {
+      const n = Number(shown)
+      if (!Number.isFinite(n)) return `${shown}%`
+      if (typeof this.$t === 'function') {
+        const label = this.$t('memorisation.activePracticeSetup.visibilityCompact', { n })
+        if (label && label !== 'memorisation.activePracticeSetup.visibilityCompact') return label
+      }
+      return `${n}% visible`
+    },
     onStart() {
       if (this.busy || this.endingSoon || this.isProcessing || this.isListening) return
       playRecordingStartBeep()

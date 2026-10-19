@@ -54,6 +54,7 @@ assert.doesNotMatch(
 )
 assertMatch('vue footer hosts complete actions', vue, /amd-complete__actions--footer/)
 assertMatch('vue footer hosts stop action', vue, /amd-footer-stop-btn|amd-footer__stop/)
+assertMatch('vue labels visibility percent as text visible', vue, /formatShownOption|visibilityCompact/)
 assertMatch('vue distinguishes the AI review lifecycle state', vue, /is-ai-review/)
 assertMatch('vue exposes the exact recording lifecycle state', vue, /:data-state="audioProgressState"/)
 assertMatch('css gives AI review its own treatment', css, /\.amd-recording-state\.is-ai-review/)

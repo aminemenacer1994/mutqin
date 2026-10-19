@@ -201,6 +201,26 @@ body.session-analysis-modal-open {
   line-height: 1.2;
 }
 
+#sa-session-overview.session-analysis-modal-root .sa-ov__revision-list {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#sa-session-overview.session-analysis-modal-root .sa-ov__revision-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--dash-accent, #2f4f42) 8%, transparent);
+  color: inherit;
+  font-weight: 650;
+  text-decoration: none;
+}
+
 #sa-session-overview.session-analysis-modal-root .sa-ov__facts {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr));

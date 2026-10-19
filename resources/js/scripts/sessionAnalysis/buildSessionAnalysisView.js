@@ -161,6 +161,35 @@ function formatDuration(seconds) {
   return `${minutes}:${remain}`
 }
 
+function buildRevisionTargets(payload, t) {
+  const session = payload.session && typeof payload.session === 'object' ? payload.session : {}
+  const attempt = payload.ai_attempt && typeof payload.ai_attempt === 'object' ? payload.ai_attempt : null
+  const assessment = payload.assessment && typeof payload.assessment === 'object' ? payload.assessment : null
+  const surah = asNumber(session.surah_number || attempt?.surah_number || assessment?.surah_number)
+  if (surah <= 0) return []
+
+  const weakAyahs = collectWeakAyahs(payload)
+  const rangeStart = asNumber(session.ayah_start || attempt?.ayah_start || assessment?.start_ayah)
+  const rangeEnd = asNumber(session.ayah_end || attempt?.ayah_end || assessment?.end_ayah || rangeStart)
+  const ayahs = weakAyahs.length
+    ? weakAyahs
+    : (rangeStart > 0 ? [rangeStart] : [])
+
+  return [...new Set(ayahs)].sort((a, b) => a - b).slice(0, 6).map((ayah) => ({
+    key: `${surah}:${ayah}`,
+    surah_number: surah,
+    ayah_number: ayah,
+    label: t('dashboard.ayah_n', { n: ayah }) || `Ayah ${ayah}`,
+    query: {
+      surah: String(surah),
+      from: String(ayah),
+      to: String(Math.max(ayah, rangeEnd || ayah)),
+      review: '1',
+      return: 'dashboard',
+    },
+  }))
+}
+
 function collectWeakAyahs(payload) {
   const fromAttempt = Array.isArray(payload?.ai_attempt?.weak_words)
     ? payload.ai_attempt.weak_words.map((item) => item?.ayahNumber ?? item?.ayah_number)
@@ -350,6 +379,8 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
     || recommendations.length
   )
 
+  const revisionTargets = buildRevisionTargets(payload, t)
+
   return {
     hasContent,
     sessionLabel,
@@ -358,6 +389,7 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
     aiReview,
     ayahRows,
     recommendations,
+    revisionTargets,
     audio: payload.audio && typeof payload.audio === 'object' ? payload.audio : null,
   }
 }

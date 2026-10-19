@@ -170,6 +170,18 @@ function buildDetailsMetrics(details, t) {
 function buildOutcomeStatChips(details, durationSeconds, t) {
   if (String(details?.presentationMode || '') === 'insufficient_audio') return []
   const chips = []
+  const matchPercent = Number(details.accuracy)
+  if (Number.isFinite(matchPercent) && matchPercent >= 0) {
+    chips.push({
+      key: 'match_percent',
+      tone: matchPercent >= 90 ? 'strong' : (matchPercent >= 75 ? 'mixed' : 'weak'),
+      icon: 'bi bi-bar-chart-line',
+      label: t('memorisation.postSession.recommendation.aiMetricAccuracy') || 'Match',
+      value: t('dashboard.drawer_accuracy', { n: Math.round(matchPercent) }) || `${Math.round(matchPercent)}% match`,
+      hint: t('memorisation.postSession.recommendation.aiMetricAccuracyHint')
+        || 'Share of words that matched what you recited',
+    })
+  }
   const matched = Number(details.matchedWords)
   const total = Number(details.totalWords)
   if (Number.isFinite(matched) && Number.isFinite(total) && total > 0) {

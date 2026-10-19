@@ -734,8 +734,34 @@ class SessionAnalysisQueryService
         $surah = (int) ($range['surah'] ?? $range['chapterId'] ?? $range['surah_number'] ?? 0);
         $from = (int) ($range['from'] ?? $range['rangeStart'] ?? $range['start'] ?? 0);
         $to = (int) ($range['to'] ?? $range['rangeEnd'] ?? $range['end'] ?? $from);
+        $name = isset($range['surah_name']) ? (string) $range['surah_name'] : null;
 
-        return $this->namedRange($surah, $from, $to);
+        if ($surah <= 0 || $from <= 0) {
+            $words = is_array($attempt->word_statuses) ? $attempt->word_statuses : [];
+            if ($words !== []) {
+                $first = $words[0];
+                if ($surah <= 0) {
+                    $surah = (int) ($first['surah_number'] ?? $first['surahNumber'] ?? $first['chapterId'] ?? 0);
+                }
+                if ($from <= 0) {
+                    $from = (int) ($first['ayah_number'] ?? $first['ayahNumber'] ?? 0);
+                    $to = $to > 0 ? $to : $from;
+                }
+            }
+        }
+
+        if ($surah <= 0 && $attempt->user_session_id) {
+            $session = UserSession::query()->find($attempt->user_session_id);
+            if ($session) {
+                $sessionRange = $this->sessionRange($session);
+                $surah = (int) ($sessionRange['surah_number'] ?? 0);
+                $from = $from > 0 ? $from : (int) ($sessionRange['ayah_start'] ?? 0);
+                $to = $to > 0 ? $to : (int) ($sessionRange['ayah_end'] ?? $from);
+                $name = $name ?: ($sessionRange['surah_name'] ?? null);
+            }
+        }
+
+        return $this->namedRange($surah, $from, $to, $name);
     }
 
     /**

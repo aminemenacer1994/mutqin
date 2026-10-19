@@ -15,6 +15,7 @@ const root = join(__dirname, '../..')
 const t = (key, params = {}) => {
   const map = {
     'memorisation.postSession.recommendation.aiMetricAccuracy': 'Match',
+    'dashboard.drawer_accuracy': `${params.n}% match`,
     'memorisation.postSession.recommendation.aiMetricWords': 'Words',
     'memorisation.postSession.recommendation.aiMetricDetectedWords': 'Detected words',
     'memorisation.postSession.recommendation.aiMetricWordsApprox': `~${params.percent}% matched`,
@@ -112,7 +113,7 @@ const t = (key, params = {}) => {
   assert.equal(details.presentationMode, 'standard')
   assert.equal(details.metrics.length, 0, 'primary metric wall hidden by default')
   assert.equal(details.showDetailsToggle, true)
-  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '90%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '90% match'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '9/10'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'missed' && m.value === '1'))
   assert.match(details.summaryLine, /We clearly matched 9 of 10 words/i)
@@ -143,7 +144,7 @@ const t = (key, params = {}) => {
   assert.match(details.summaryLine, /We clearly matched 6 of 10 words/i)
   assert.match(details.summaryLine, /Revise the highlighted words, then check again/i)
   assert.equal(details.metrics.length, 0)
-  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '60%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '60% match'))
   // One Match % only — no second equivalent accuracy percentage chip.
   assert.equal(details.detailsMetrics.filter((m) => /%/.test(String(m.value || ''))).length, 1)
 }
@@ -189,7 +190,7 @@ const t = (key, params = {}) => {
   assert.equal(details.scoredAccuracy, 96)
   assert.equal(details.metrics.length, 0)
   assert.ok(details.detailsMetrics.length >= 3)
-  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '100%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '100% match'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '10/10'))
   assert.ok(details.highlights.length >= 1)
   assert.match(details.focus, /Keep this pace/i)
@@ -221,7 +222,7 @@ const t = (key, params = {}) => {
   assert.equal(details.scoredAccuracy, 78)
   assert.equal(details.mistakeCount, 1, 'an order slip is shown in the primary mistake count')
   assert.equal(details.progressPercent, 100)
-  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '100%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '100% match'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '10/10'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'missed' && m.value === '0'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'sequence' && /1 slips/.test(m.value)))
@@ -272,7 +273,7 @@ const t = (key, params = {}) => {
   assert.match(details.summaryLine, /We clearly matched 0 of 10 words/i)
   assert.equal(details.metrics.length, 0, 'primary metric wall hidden for valid 0%')
   assert.equal(details.showDetailsToggle, true)
-  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '0%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '0% match'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '0/10'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'missed' && m.value === '10'))
   const sequence = details.detailsMetrics.find((m) => m.key === 'sequence')
@@ -357,7 +358,7 @@ const t = (key, params = {}) => {
   assert.equal(partial.presentationMode, 'standard')
   assert.equal(partial.accuracy, 40)
   assert.equal(partial.metrics.length, 0)
-  assert.ok(partial.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '40%'))
+  assert.ok(partial.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '40% match'))
   assert.ok(partial.detailsMetrics.some((m) => m.key === 'words' && m.value === '2/5'))
   const sequence = partial.detailsMetrics.find((m) => m.key === 'sequence')
   assert.equal(sequence.value, 'Steady')

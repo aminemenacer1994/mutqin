@@ -180,7 +180,7 @@
                 </span>
                 <div class="dash-section__title-copy">
                   <h2 id="dash-murajaah-heading">{{ t('dashboard.strengthen_title') }}</h2>
-                  <p class="dash-section__hint">{{ t('dashboard.strengthen_subtitle') }}</p>
+                  <p class="dash-section__hint">{{ murajaahSectionSubtitle }}</p>
                 </div>
               </div>
               <button
@@ -204,11 +204,19 @@
                   :href="reviewNowHref(item)"
                   :aria-label="`${t('dashboard.review_now')}: ${item.surah_name} ${t('dashboard.ayah_n', { n: item.ayah_number })}`"
                 >
-                  <span class="dash-ai-results__attempt-score dash-ai-results__attempt-mark" aria-hidden="true">
-                    <i class="bi bi-arrow-repeat"></i>
+                  <span
+                    class="dash-ai-results__attempt-score dash-ai-results__attempt-mark"
+                    :class="item.strength ? `dash-strength--${item.strength}` : ''"
+                    aria-hidden="true"
+                  >
+                    <i v-if="!item.strength" class="bi bi-arrow-repeat"></i>
+                    <span v-else class="dash-strength dash-strength--compact">{{ strengthLabel(item) }}</span>
                   </span>
                   <span class="dash-ai-results__attempt-copy">
                     <strong>
+                      <span v-if="index === 0 && item.strength === 'fragile'" class="dash-murajaah-priority">
+                        {{ t('dashboard.revision_priority_start') }}
+                      </span>
                       {{ item.surah_name }}
                       <span>{{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</span>
                     </strong>
@@ -310,7 +318,7 @@
                         <span class="dash-ai-results__attempt-score">{{ aiAttemptAccuracy(item) }}</span>
                         <span class="dash-ai-results__attempt-copy">
                           <strong>
-                            {{ item.surah_name || t('dashboard.not_started') }}
+                            {{ aiCheckTitle(item) }}
                             <span v-if="ayahRangeLabel(item)">{{ ayahRangeLabel(item) }}</span>
                           </strong>
                           <span class="dash-ai-results__attempt-meta">
@@ -426,7 +434,10 @@
                 {{ t('dashboard.retry') }}
               </button>
             </div>
-            <div v-else-if="!visibleDrawerItems.length" class="dash-drawer__status dash-drawer__status--empty">
+            <div
+              v-else-if="!visibleDrawerItems.length && drawerMode !== 'ai_checks'"
+              class="dash-drawer__status dash-drawer__status--empty"
+            >
               <span class="dash-drawer__status-icon" aria-hidden="true">
                 <i class="bi bi-inbox"></i>
               </span>
@@ -500,41 +511,87 @@
               </li>
             </ul>
 
-            <ul v-else-if="drawerMode === 'ai_checks'" class="dash-drawer__list">
-              <li v-for="(item, index) in visibleDrawerItems" :key="`ai-${item.id}`">
-                <div
-                  class="dash-drawer__row dash-drawer__row--analysis dash-reveal"
-                  :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
-                >
-                  <div class="dash-drawer__analysis-copy">
-                    <span class="dash-drawer__type">{{ t('dashboard.activity_type_ai_check') }}</span>
-                    <span class="dash-drawer__row-title">
-                      {{ item.surah_name || t('dashboard.not_started') }}
-                      <template v-if="formatItemRange(item)"> · {{ formatItemRange(item) }}</template>
-                    </span>
-                    <span class="dash-drawer__row-meta">{{ aiResultLabel(item) }}</span>
-                    <time class="dash-drawer__row-time" :datetime="item.occurred_at">
-                      {{ formatActivityDate(item.occurred_at) }}
-                    </time>
-                    <span v-if="item.has_audio" class="dash-drawer__listen">
-                      <i class="bi bi-play-fill" aria-hidden="true"></i>
-                      {{ t('dashboard.ai_recite.listen') }}
-                    </span>
-                  </div>
-                  <div v-if="canViewAnalysis(item, 'attempt')" class="dash-drawer__analysis-actions">
-                    <button
-                      type="button"
-                      class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
-                      :disabled="isAnalysisLoading(item, 'attempt')"
-                      @click="openAnalysisForItem(item, 'attempt')"
-                    >
-                      <i class="bi bi-graph-up" aria-hidden="true"></i>
-                      {{ t('dashboard.view_analysis') }}
-                    </button>
-                  </div>
+            <template v-else-if="drawerMode === 'ai_checks'">
+              <div
+                v-if="!drawerLoading && !drawerError"
+                class="dash-drawer__filters dash-drawer__filters--stack"
+              >
+                <label class="dash-drawer__search">
+                  <span class="visually-hidden">{{ t('dashboard.ai_history_search_label') }}</span>
+                  <i class="bi bi-search" aria-hidden="true"></i>
+                  <input
+                    v-model="drawerAiSearch"
+                    type="search"
+                    class="dash-drawer__search-input"
+                    :placeholder="t('dashboard.ai_history_search_placeholder')"
+                    autocomplete="off"
+                  />
+                </label>
+                <div class="dash-drawer__filters" role="tablist" :aria-label="t('dashboard.ai_history_filter_label')">
+                  <button
+                    v-for="filter in aiCheckBandFilters"
+                    :key="filter.key"
+                    type="button"
+                    role="tab"
+                    class="dash-drawer__filter"
+                    :class="{ 'is-active': drawerAiBandFilter === filter.key }"
+                    :aria-selected="drawerAiBandFilter === filter.key ? 'true' : 'false'"
+                    @click="drawerAiBandFilter = filter.key"
+                  >
+                    {{ filter.label }}
+                  </button>
                 </div>
-              </li>
-            </ul>
+              </div>
+              <p
+                v-if="!drawerLoading && !drawerError && !visibleDrawerItems.length"
+                class="dash-drawer__status dash-drawer__status--empty dash-drawer__status--inline"
+              >
+                {{ t('dashboard.ai_history_empty_filtered') }}
+              </p>
+              <ul v-else class="dash-drawer__list">
+                <li v-for="(item, index) in visibleDrawerItems" :key="`ai-${item.id}`">
+                  <div
+                    class="dash-drawer__row dash-drawer__row--analysis dash-reveal"
+                    :style="{ '--dash-delay': `${Math.min(index, 12) * 40}ms` }"
+                  >
+                    <div class="dash-drawer__analysis-copy">
+                      <span class="dash-drawer__type">{{ t('dashboard.activity_type_ai_check') }}</span>
+                      <span class="dash-drawer__row-title">
+                        {{ aiCheckTitle(item) }}
+                        <template v-if="formatItemRange(item)"> · {{ formatItemRange(item) }}</template>
+                      </span>
+                      <span class="dash-drawer__row-meta">{{ aiResultLabel(item) }}</span>
+                      <time class="dash-drawer__row-time" :datetime="item.occurred_at">
+                        {{ formatActivityDate(item.occurred_at) }}
+                      </time>
+                      <span v-if="item.has_audio" class="dash-drawer__listen">
+                        <i class="bi bi-play-fill" aria-hidden="true"></i>
+                        {{ t('dashboard.ai_recite.listen') }}
+                      </span>
+                    </div>
+                    <div class="dash-drawer__analysis-actions">
+                      <a
+                        v-if="aiCheckRevisionHref(item)"
+                        class="dash-btn dash-btn--ghost dash-btn--sm"
+                        :href="aiCheckRevisionHref(item)"
+                      >
+                        {{ t('dashboard.review_now') }}
+                      </a>
+                      <button
+                        v-if="canViewAnalysis(item, 'attempt')"
+                        type="button"
+                        class="dash-btn dash-btn--primary dash-btn--sm dash-drawer__analysis-cta"
+                        :disabled="isAnalysisLoading(item, 'attempt')"
+                        @click="openAnalysisForItem(item, 'attempt')"
+                      >
+                        <i class="bi bi-graph-up" aria-hidden="true"></i>
+                        {{ t('dashboard.view_analysis') }}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </template>
 
             <ul v-else-if="drawerMode === 'murajaah' || drawerMode === 'due'" class="dash-drawer__list dash-drawer__list--murajaah">
               <li v-for="(item, index) in visibleDrawerItems" :key="`${drawerMode}-${item.key}`">
@@ -554,6 +611,9 @@
                       </span>
                     </div>
                     <span class="dash-drawer__row-title dash-drawer__murajaah-ref">
+                      <span v-if="index === 0 && item.strength === 'fragile'" class="dash-murajaah-priority">
+                        {{ t('dashboard.revision_priority_start') }}
+                      </span>
                       {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
                     </span>
                     <p
@@ -634,6 +694,7 @@
       :play-label="t('dashboard.ai_recite.play')"
       :pause-label="t('dashboard.ai_recite.pause')"
       :restart-label="t('dashboard.ai_recite.restart')"
+      :memorisation-base-path="memorisationUrl"
       @close="closeSessionAnalysis"
       @retry="retrySessionAnalysis"
     />
@@ -761,6 +822,8 @@ export default {
       drawerReturnFocus: null,
       dashboardRequestId: 0,
       activityFilter: 'all',
+      drawerAiSearch: '',
+      drawerAiBandFilter: 'all',
       darkTheme: false,
       themeObserver: null,
       activeSessionSnapshot: null,
@@ -1044,7 +1107,7 @@ export default {
       return Array.isArray(items) ? items : []
     },
     murajaahPreview() {
-      return this.murajaahAllItems.slice(0, 4)
+      return this.sortMurajaahByUrgency(this.murajaahAllItems).slice(0, 4)
     },
     murajaahTotal() {
       const total = Number(this.data?.weaknesses?.total ?? 0)
@@ -1475,7 +1538,35 @@ export default {
         { key: 'ai_check', label: this.t('dashboard.activity_filter_ai') },
       ]
     },
+    aiCheckBandFilters() {
+      return [
+        { key: 'all', label: this.t('dashboard.ai_history_filter_all') },
+        { key: 'weak', label: this.t('dashboard.drawer_result_weak') },
+        { key: 'mixed', label: this.t('dashboard.drawer_result_mixed') },
+        { key: 'strong', label: this.t('dashboard.drawer_result_strong') },
+      ]
+    },
     visibleDrawerItems() {
+      if (this.drawerMode === 'ai_checks') {
+        let items = Array.isArray(this.drawerItems) ? [...this.drawerItems] : []
+        const q = String(this.drawerAiSearch || '').trim().toLowerCase()
+        if (q) {
+          items = items.filter((item) => {
+            const name = String(item?.surah_name || '').toLowerCase()
+            const surah = String(item?.surah_number || '')
+            const range = String(this.formatItemRange(item) || '').toLowerCase()
+            const accuracy = String(item?.accuracy_percent ?? '')
+            return name.includes(q) || surah.includes(q) || range.includes(q) || accuracy.includes(q)
+          })
+        }
+        if (this.drawerAiBandFilter !== 'all') {
+          items = items.filter((item) => String(item?.band || '').toLowerCase() === this.drawerAiBandFilter)
+        }
+        return items
+      }
+      if (this.drawerMode === 'murajaah' || this.drawerMode === 'due') {
+        return this.sortMurajaahByUrgency(this.drawerItems)
+      }
       if (this.drawerMode !== 'activity' || this.activityFilter === 'all') {
         return this.drawerItems.filter((item) => String(item?.type || '').toLowerCase() !== 'note')
       }
@@ -1770,6 +1861,48 @@ export default {
       }
       this.darkTheme = document.documentElement.getAttribute('data-theme') === 'dark'
     },
+    murajaahStrengthRank(item) {
+      const key = String(item?.strength || '').toLowerCase()
+      if (key === 'fragile') return 0
+      if (key === 'building') return 1
+      if (key === 'strong') return 2
+      return 3
+    },
+    sortMurajaahByUrgency(items) {
+      const list = Array.isArray(items) ? [...items] : []
+      return list.sort((a, b) => {
+        const strengthDelta = this.murajaahStrengthRank(a) - this.murajaahStrengthRank(b)
+        if (strengthDelta !== 0) return strengthDelta
+        const historyRank = (item) => {
+          const status = String(item?.history_status || '').toLowerCase()
+          if (status === 'active') return 0
+          if (status === 'improving') return 1
+          if (status === 'resolved') return 2
+          return 3
+        }
+        const statusDelta = historyRank(a) - historyRank(b)
+        if (statusDelta !== 0) return statusDelta
+        return Number(b?.history_attempts || 0) - Number(a?.history_attempts || 0)
+      })
+    },
+    aiCheckTitle(item) {
+      const name = String(item?.surah_name || '').trim()
+      if (name) return name
+      const surah = Number(item?.surah_number || 0)
+      if (surah > 0) {
+        return this.t('dashboard.surah_number_label', { n: surah }) || `Surah ${surah}`
+      }
+      return this.t('dashboard.ai_check_unknown_surah')
+    },
+    aiCheckRevisionHref(item) {
+      const surah = Number(item?.surah_number || 0)
+      const start = Number(item?.ayah_start || item?.ayah_end || 0)
+      if (!(surah > 0 && start > 0)) return ''
+      return this.reviewNowHref({
+        surah_number: surah,
+        ayah_number: start,
+      })
+    },
     reviewNowHref(item) {
       const href = String(item?.href || '').trim()
       if (href) return href
@@ -1883,7 +2016,7 @@ export default {
     },
     aiAttemptActionLabel(item) {
       const parts = [
-        item?.surah_name || this.t('dashboard.not_started'),
+        this.aiCheckTitle(item),
         this.ayahRangeLabel(item),
         this.aiAttemptAccuracy(item),
         this.formatActivityDate(item.occurred_at),
@@ -1939,6 +2072,8 @@ export default {
       this.drawerItems = []
       this.drawerError = false
       this.activityFilter = 'all'
+      this.drawerAiSearch = ''
+      this.drawerAiBandFilter = 'all'
       this.syncDrawerBodyLock(true)
       this.$nextTick(() => {
         this.$refs.drawerClose?.focus?.({ preventScroll: true })
@@ -1992,6 +2127,8 @@ export default {
       this.drawerLoading = false
       this.drawerError = false
       this.activityFilter = 'all'
+      this.drawerAiSearch = ''
+      this.drawerAiBandFilter = 'all'
       this.syncDrawerBodyLock(false)
       if (restoreFocus) {
         this.$nextTick(() => restoreReturnFocus(returnFocus))

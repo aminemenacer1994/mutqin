@@ -142,6 +142,20 @@ export function resolveAccuracyPercent(result = null, extras = {}) {
 }
 
 /**
+ * Word-level match % for UI (aligned with matched/total when statuses exist).
+ * Scored accuracy may include order penalties and must not replace this in labels.
+ *
+ * @param {Record<string, unknown>|null|undefined} review
+ * @returns {number|null}
+ */
+export function resolveDisplayMatchPercent(review = null) {
+  if (!review || typeof review !== 'object') return null
+  const wordMatch = finiteNumber(review.accuracy)
+  if (wordMatch != null) return wordMatch
+  return finiteNumber(review.scoredAccuracy)
+}
+
+/**
  * @param {Record<string, unknown>|null|undefined} result
  * @param {Record<string, unknown>} extras
  * @returns {string[]}

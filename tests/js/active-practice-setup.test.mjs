@@ -17,7 +17,8 @@ import { readFileSync } from 'node:fs'
 const t = (key, params = {}) => {
   if (key.endsWith('moreCount')) return `+${params.count} more`
   if (key.endsWith('repetitionsValue')) return `${params.count} repetitions`
-  if (key.includes('toasts.visibility') && params.value) return `Text reduced to ${params.value} visibility.`
+  if (key.includes('visibilityCompact') && params.n != null) return `${params.n}% visible`
+  if (key.includes('toasts.visibility') && params.value) return `Text visibility now ${params.value}.`
   if (key.endsWith('techniqueOn')) return `${params.label} is now active.`
   if (key.endsWith('recommendedLabel')) return 'Recommended for this session'
   if (key.endsWith('recommendedReasonDefault')) return 'Recommended because this helps the areas that need care.'
@@ -102,6 +103,8 @@ function baseInput(overrides = {}) {
   }), t)
   assert.equal(setup.snapshot.restored_from_resume, true)
   assert.equal(setup.snapshot.visibility_percent, 50)
+  const visibilityItem = setup.items.find((i) => i.id === 'visibility')
+  assert.match(visibilityItem?.value || '', /visible/i)
   assert.equal(
     buildPracticeSetupStatusMessage({ type: 'restored' }, t),
     'Restored your previous practice setup.'

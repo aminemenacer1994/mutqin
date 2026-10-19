@@ -5588,16 +5588,18 @@ export default {
       if (this.postSessionAiPresentationMode === 'insufficient_audio') return []
       const details = this.postSessionAiReviewDetails || {}
       const chips = []
-      const rawScore = details.scoredAccuracy ?? details.accuracy
+      const rawScore = details.accuracy ?? details.scoredAccuracy
       const score = rawScore == null ? Number.NaN : Number(rawScore)
       if (Number.isFinite(score)) {
+        const rounded = Math.round(Math.max(0, Math.min(100, score)))
         chips.push({
           key: 'score',
           tone: score >= 90 ? 'strong' : (score >= 75 ? 'mixed' : 'weak'),
           icon: 'bi bi-bar-chart-line',
-          label: this.t('memorisation.quiz.score') || 'Score',
-          value: `${Math.round(Math.max(0, Math.min(100, score)))}%`,
-          hint: this.t('memorisation.quiz.accuracy') || 'Accuracy for this check',
+          label: this.t('memorisation.postSession.recommendation.aiMetricAccuracy') || 'Match',
+          value: this.t('dashboard.drawer_accuracy', { n: rounded }) || `${rounded}% match`,
+          hint: this.t('memorisation.postSession.recommendation.aiMetricAccuracyHint')
+            || 'Share of words in this range that matched what you recited',
         })
       }
       const counts = details.colorCounts || {}

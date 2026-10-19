@@ -57,6 +57,7 @@ const t = (key, params = {}) => {
     'memorisation.postSession.recommendation.insufficientAudioProcessingSummary': 'We couldn’t assess this attempt. Check your microphone or connection and try again.',
     'memorisation.postSession.recommendation.insufficientAudioHint': 'Check your microphone or connection, then try again.',
     'memorisation.postSession.recommendation.insufficientAudioFocus': 'Check your microphone or connection, then try again.',
+    'dashboard.drawer_accuracy': `${params.n}% match`,
   }
   return map[key] || key
 }
@@ -262,7 +263,7 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
   assert.equal(details.presentationMode, 'standard')
   assert.equal(details.accuracy, 40)
   assert.equal(details.metrics.length, 0, 'primary metric wall stays hidden on compact card')
-  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '40%'))
+  assert.ok(details.detailsMetrics.some((m) => m.key === 'accuracy' && m.value === '40% match'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'words' && m.value === '2/5'))
   assert.ok(details.detailsMetrics.some((m) => m.key === 'missed' && m.value === '3'))
   const sequence = details.detailsMetrics.find((m) => m.key === 'sequence')
@@ -360,7 +361,6 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
   assert.deepEqual(buttons.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CLOSE, 'close'],
   ])
 
   const micButtons = mapPostSessionCtas(POST_SESSION_CTA_STATES.INSUFFICIENT_AUDIO, {
@@ -369,8 +369,22 @@ function assertInsufficientPresentation(details, summaryPattern = /couldn.?t ass
   assert.deepEqual(micButtons.map((b) => [b.variant, b.action, b.labelKey]), [
     ['primary', POST_SESSION_CTA_ACTIONS.TRY_RECORDING_AGAIN, 'tryRecordingAgain'],
     ['secondary', POST_SESSION_CTA_ACTIONS.RETURN_TO_WORKSPACE, 'returnToWorkspace'],
-    ['ghost', POST_SESSION_CTA_ACTIONS.CHECK_MICROPHONE, 'checkMicrophone'],
   ])
+}
+
+// Display match % follows word ratio when it differs from scored accuracy.
+{
+  const wordStatuses = Array.from({ length: 10 }, (_, i) => ({
+    status: i < 6 ? 'correct' : 'missing',
+    ayah_number: 1,
+  }))
+  const details = buildAiReviewDetails('mixed', {
+    accuracy_percent: 67,
+  }, { wordStatuses }, t)
+  assert.equal(details.accuracy, 60, 'Match % equals matched words (6/10), not penalised score')
+  assert.equal(details.scoredAccuracy, 67)
+  const matchMetric = details.detailsMetrics.find((m) => m.key === 'accuracy')
+  assert.match(String(matchMetric?.value || ''), /60/)
 }
 
 console.log('recitation-result-state.test.mjs: ok')

@@ -82,7 +82,7 @@
                             :stroke-dasharray="`${aiLeadPercent} 100`"
                           />
                         </svg>
-                        <strong>{{ Math.round(aiLeadPercent) }}</strong>
+                        <strong>{{ Math.round(aiLeadPercent) }}%</strong>
                       </div>
                       <div class="sa-ov__hero-copy">
                         <p class="sa-ov__hero-label">{{ recallScoreLabel }}</p>
@@ -113,6 +113,22 @@
                     <p v-else class="sa-ov__audio-empty" data-testid="session-overview-audio-empty">
                       {{ audioEmptyCopy || audioUnavailable || $t('dashboard.analysis_audio_unavailable') }}
                     </p>
+                  </section>
+
+                  <section v-if="analysis.revisionTargets?.length" class="sa-ov__panel sa-ov__revision">
+                    <h3>{{ resolvedRevisionTitle }}</h3>
+                    <p class="sa-ov__meta">{{ resolvedRevisionHint }}</p>
+                    <ul class="sa-ov__revision-list">
+                      <li v-for="target in analysis.revisionTargets" :key="target.key">
+                        <a
+                          class="sa-ov__revision-link"
+                          :href="revisionHref(target)"
+                        >
+                          <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                          {{ revisionLinkLabel(target) }}
+                        </a>
+                      </li>
+                    </ul>
                   </section>
 
                   <section v-if="analysis.ayahRows?.length" class="sa-ov__panel">
@@ -203,6 +219,10 @@ export default {
     playLabel: { type: String, default: 'Play' },
     pauseLabel: { type: String, default: 'Pause' },
     restartLabel: { type: String, default: 'Restart' },
+    memorisationBasePath: { type: String, default: '/memorisation' },
+    revisionTitle: { type: String, default: '' },
+    revisionHint: { type: String, default: '' },
+    revisionLinkTemplate: { type: String, default: '' },
   },
   emits: ['close', 'retry'],
   data() {
@@ -224,7 +244,7 @@ export default {
       return cards.filter((card) => card.key === 'time' || card.key === 'repeats')
     },
     recallScoreLabel() {
-      return this.translate('dashboard.analysis_recall_score', 'Recall score')
+      return this.translate('dashboard.analysis_recall_score', 'Word match')
     },
     aiHeroSummary() {
       const review = this.analysis?.aiReview
@@ -237,7 +257,12 @@ export default {
       if (this.aiLeadPercent == null) return ''
       const score = Math.round(this.aiLeadPercent)
       const summary = this.aiHeroSummary
-      return summary ? `${this.recallScoreLabel} ${score}%. ${summary}` : `${this.recallScoreLabel} ${score}%`
+      let matchPct = `${score}% match`
+      if (typeof this.$t === 'function') {
+        const localized = this.$t('dashboard.drawer_accuracy', { n: score })
+        if (localized && localized !== 'dashboard.drawer_accuracy') matchPct = localized
+      }
+      return summary ? `${this.recallScoreLabel} ${matchPct}. ${summary}` : `${this.recallScoreLabel} ${matchPct}`
     },
     aiStatChips() {
       const review = this.analysis?.aiReview
@@ -271,7 +296,7 @@ export default {
     aiLeadPercent() {
       const review = this.analysis?.aiReview
       if (!review) return null
-      const direct = Number(review.scoredAccuracy ?? review.accuracy)
+      const direct = Number(review.accuracy ?? review.scoredAccuracy)
       if (Number.isFinite(direct) && direct >= 0) {
         return Math.max(0, Math.min(100, direct))
       }
@@ -300,6 +325,12 @@ export default {
     },
     resolvedNotRecitedLabel() {
       return this.notRecitedLabel || this.translate('dashboard.analysis_not_recited_label', 'Not recited')
+    },
+    resolvedRevisionTitle() {
+      return this.revisionTitle || this.translate('dashboard.analysis_revision_title', 'Targeted revision')
+    },
+    resolvedRevisionHint() {
+      return this.revisionHint || this.translate('dashboard.analysis_revision_hint', 'Practise the ayahs that needed care in this check.')
     },
   },
   watch: {
@@ -352,6 +383,20 @@ export default {
         .map((part) => part?.text)
         .filter(Boolean)
         .join(' ')
+    },
+    revisionHref(target) {
+      const base = String(this.memorisationBasePath || '/memorisation').split('?')[0]
+      const query = target?.query && typeof target.query === 'object' ? target.query : {}
+      const params = new URLSearchParams(query)
+      const qs = params.toString()
+      return qs ? `${base}?${qs}` : base
+    },
+    revisionLinkLabel(target) {
+      const ayahLabel = target?.label || ''
+      const template = this.revisionLinkTemplate
+        || this.translate('dashboard.analysis_revision_link', 'Revise {ayah}')
+      if (template.includes('{ayah}')) return template.replace('{ayah}', ayahLabel)
+      return `${template} ${ayahLabel}`.trim()
     },
     onOverlayKeydown(event) {
       handleModalKeydown(event, {
