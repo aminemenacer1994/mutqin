@@ -320,14 +320,14 @@
   min-height: 3rem;
   padding-inline: 1.25rem;
   background: color-mix(in srgb, var(--surface-strong, var(--surface)) 88%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-color: color-mix(in srgb, var(--border) 88%, transparent);
 
 }
 
 .btn--secondary:hover {
-  background: var(--accent-light);
-  border-color: var(--accent);
-  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 94%, var(--text-muted));
+  border-color: color-mix(in srgb, var(--border) 62%, var(--text-muted));
+  color: var(--text);
 }
 
 .btn:focus-visible,

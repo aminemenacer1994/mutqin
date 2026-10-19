@@ -4786,14 +4786,14 @@
               :data-cta-state="postSessionCtaState || undefined"
             >
               <template v-if="onboardingSampleSessionActive">
+                <button type="button" class="post-session-simple__btn post-session-simple__btn--primary" @click="continueFromOnboardingPostSession">
+                  <span>{{ t('memorisation.onboarding.postSession.continue') }}</span>
+                </button>
                 <button type="button" class="post-session-simple__btn post-session-simple__btn--secondary" @click="repeatPostSession">
                   <span>{{ postSessionUi.repeat }}</span>
                 </button>
                 <button type="button" class="post-session-simple__btn post-session-simple__btn--secondary" @click="openPostSessionNewSessionOffcanvas">
                   <span>{{ postSessionUi.newSession }}</span>
-                </button>
-                <button type="button" class="post-session-simple__btn post-session-simple__btn--primary" @click="continueFromOnboardingPostSession">
-                  <span>{{ t('memorisation.onboarding.postSession.continue') }}</span>
                 </button>
               </template>
 

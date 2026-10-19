@@ -323,6 +323,8 @@ export default {
 }
 
 .qpc-madani-line--surah_name {
+  /* LTR flex axis so the banner centres on the page; Arabic stays RTL in the header. */
+  direction: ltr;
   align-items: center;
   width: 100%;
   min-height: 0;
@@ -425,12 +427,21 @@ export default {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  direction: rtl;
   text-align: center;
   color: var(--qpc-ink, #1b140d);
 }
 
+.qpc-madani-surah-header--indopak {
+  direction: rtl;
+}
+
 .qpc-madani-surah-name {
-  display: inline-block;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  text-align: center;
   font-family: surahnames, serif !important;
   font-size: calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.45));
   font-weight: 400;

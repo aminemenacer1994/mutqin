@@ -254,7 +254,7 @@
 
 .action-btn:hover {
   transform: translateY(-1px);
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--border) 62%, var(--text-muted));
   box-shadow: 0 12px 24px rgba(31, 24, 18, 0.06),
     0 1px 0 rgba(255, 255, 255, 0.48) inset;
 }
@@ -7680,11 +7680,11 @@ html {
 }
 
 .tools-body.compact .field-stack-compact {
-  gap: 10px;
+  gap: 14px;
 }
 
 .tools-body.compact .field-stack-compact .field {
-  gap: 6px;
+  gap: 8px;
 }
 
 .tools-body.compact .field-stack-compact .field label {
@@ -7697,7 +7697,7 @@ html {
 }
 
 .tools-body.compact .field-stack-compact .field-hint {
-  margin-top: 1px;
+  margin-top: 5px;
 }
 
 .tools-body.compact .field-stack-compact .slider-markers {
@@ -21019,18 +21019,18 @@ button:active {
 .workspace-shell-actions .tools-btn,
 .workspace-shell-actions .top-card-ellipsis,
 .workspace-shell-actions .action-icon-btn {
-  background: color-mix(in srgb, var(--surface-strong) 88%, var(--accent-wash));
-  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
-  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  color: var(--text);
 }
 
 .workspace-shell-actions .action-btn-secondary:hover,
 .workspace-shell-actions .tools-btn:hover,
 .workspace-shell-actions .top-card-ellipsis:hover,
 .workspace-shell-actions .action-icon-btn:hover {
-  background: var(--accent-light);
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 92%, var(--text-muted));
+  border-color: color-mix(in srgb, var(--border) 55%, var(--text-muted));
+  color: var(--text);
 }
 
 .quick-ai-action i,
@@ -42812,13 +42812,13 @@ finish-choice selection */
 }
 
 .mutqin-modal-btn--secondary:hover:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
-  color: var(--accent-strong);
-  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 90%, var(--text-muted));
+  border-color: color-mix(in srgb, var(--border) 58%, var(--text-muted));
 }
 
 .mutqin-modal-btn--secondary:active:not(:disabled):not(.is-loading):not([aria-busy="true"]) {
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  background: color-mix(in srgb, var(--surface-strong, var(--surface)) 84%, var(--text-muted));
 }
 
 .mutqin-modal-btn--muted {
@@ -60777,48 +60777,6 @@ html body.memorisation-page .app .qpc-madani-page.is-page-revealed .qpc-madani-p
   text-overflow: clip !important;
 }
 
-.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--primary,
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--primary {
-  grid-column: auto !important;
-  background: #1f6b45 !important;
-  border: 1.5px solid #1f6b45 !important;
-  color: #fff !important;
-  order: 1;
-}
-
-.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary,
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary,
-.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--ghost,
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--ghost {
-  background: color-mix(in srgb, #fff 72%, var(--ps-cream, #f7f3eb)) !important;
-  border: 1.5px solid color-mix(in srgb, #c5a075 55%, var(--border, #d6d3d1)) !important;
-  color: var(--text, #1c1917) !important;
-  box-shadow: none !important;
-  text-decoration: none !important;
-  font-weight: 600 !important;
-  min-height: 2.15rem !important;
-}
-
-.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary,
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary {
-  order: 2;
-}
-
-.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--ghost,
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--ghost {
-  order: 3;
-}
-
-.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary:hover:not(:disabled),
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--secondary:hover:not(:disabled),
-.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--ghost:hover:not(:disabled),
-.post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 > .post-session-simple__btn--ghost:hover:not(:disabled) {
-  background: color-mix(in srgb, #fff 88%, var(--ps-cream, #f7f3eb)) !important;
-  border-color: color-mix(in srgb, #c5a075 72%, var(--border, #d6d3d1)) !important;
-  color: var(--text, #1c1917) !important;
-  text-decoration: none !important;
-}
-
 @media (max-width: 420px) {
   .post-session-simple--calm-v2 .post-session-simple__actions--3,
 .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__actions--3 {
@@ -69197,6 +69155,8 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
   background: linear-gradient(180deg, color-mix(in srgb, var(--ps-ui-bronze) 92%, #fff), var(--ps-ui-bronze)) !important;
   border-color: color-mix(in srgb, var(--ps-ui-bronze) 80%, #000) !important;
   color: var(--ps-ui-bronze-ink) !important;
+  font-weight: 650 !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--ps-ui-bronze) 22%, transparent) !important;
 }
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--success,
@@ -69210,8 +69170,23 @@ html body .post-session-simple.post-session-simple--premium.post-session-simple-
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost {
   background: var(--ps-ui-raised) !important;
   border-color: var(--ps-ui-line-strong) !important;
-  color: var(--ps-ui-ink) !important;
+  color: color-mix(in srgb, var(--ps-ui-ink) 78%, var(--ps-ui-muted)) !important;
   font-weight: 550 !important;
+  box-shadow: none !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--primary:hover:not(:disabled),
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--reinforce:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--ps-ui-bronze) 26%, transparent) !important;
+}
+
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--secondary:hover:not(:disabled),
+html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__btn--ghost:hover:not(:disabled) {
+  background: var(--ps-ui-panel) !important;
+  border-color: var(--ps-ui-line-strong) !important;
+  color: var(--ps-ui-ink) !important;
+  box-shadow: none !important;
 }
 
 html body .post-session-simple.post-session-simple--premium.post-session-simple--calm-v2 .post-session-simple__outcome-tools {
@@ -69395,6 +69370,30 @@ html body .app .main.madani-qpc-mode-active .mushaf-centered-recite {
   html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-surah-name {
     font-size: min(calc(var(--qpc-word-size, 22px) * 1.8), 4.25rem) !important;
     line-height: 1 !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-line--surah_name {
+    direction: ltr !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-line--surah_name .qpc-madani-surah-header,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-line--surah_name .madani-surah-heading {
+    direction: rtl !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-surah-name,
+  html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-heading__title {
+    display: block !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    margin-inline: auto !important;
+    text-align: center !important;
   }
 
   html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-page__folio,

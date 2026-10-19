@@ -3,7 +3,7 @@
     <transition name="post-session-fade">
       <div
         v-if="open"
-        class="post-session-simple post-session-simple--calm-v2 mutashabihat-practice"
+        class="post-session-simple post-session-simple--calm-v2 post-session-simple--premium mutashabihat-practice"
         :data-theme="theme"
         data-testid="mutashabihat-practice"
       >

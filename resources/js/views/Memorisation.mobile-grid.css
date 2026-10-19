@@ -5173,16 +5173,16 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   .tools-body .setup-field-list {
     display: grid !important;
     grid-template-columns: 1fr !important;
-    gap: 0.65rem !important;
+    gap: 0.85rem !important;
     width: 100% !important;
   }
 
   .tools-body .setup-field-row {
     display: grid !important;
-    gap: 0.35rem !important;
+    gap: 0.52rem !important;
     width: 100% !important;
     max-width: 100% !important;
-    padding: 0.65rem 0.7rem !important;
+    padding: 0.75rem 0.82rem !important;
     border: 1px solid transparent;
     border-radius: 0.65rem;
     background: color-mix(in srgb, var(--zone-reading, #fff) 88%, var(--zone-elevated, #f7f4ef) 12%);
@@ -5216,17 +5216,13 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
 
   .tools-body .sheet-section-compact .sheet-content,
   .tools-body.compact .sheet-content {
-    padding: 0.45rem 0.58rem 0.55rem !important;
-  }
-
-  .tools-body .setup-field-row {
-    gap: 0.35rem !important;
-    padding-block: 0.15rem !important;
+    padding: 0.65rem 0.72rem 0.82rem !important;
   }
 
   .tools-body .setup-field-row .field-hint {
-    font-size: 0.68rem !important;
-    line-height: 1.35 !important;
+    margin-top: 0.15rem !important;
+    font-size: 0.72rem !important;
+    line-height: 1.45 !important;
   }
 
   .tools-body .offcanvas-audio-panel .radio-group-compact {
@@ -5643,7 +5639,7 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
     display: flex !important;
     flex-direction: column !important;
     grid-template-columns: none !important;
-    gap: 0.7rem !important;
+    gap: 0.85rem !important;
     width: 100% !important;
     max-width: 100% !important;
   }
@@ -5664,11 +5660,22 @@ html[data-theme="dark"] .workspace-shell-actions .action-buttons-group .post-ses
   }
 
   .app .tools-body .setup-field-row {
-    padding: 0.7rem 0.75rem !important;
+    gap: 0.52rem !important;
+    padding: 0.78rem 0.85rem !important;
     border: 1px solid transparent !important;
     border-radius: 0.7rem !important;
     background: color-mix(in srgb, var(--zone-elevated, #2a241c) 92%, transparent) !important;
     box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 42%, transparent) !important;
+  }
+
+  html[data-theme="dark"] .app .tools-body .setup-field-row,
+  [data-theme="dark"] .app .tools-body .setup-field-row {
+    padding: 0.85rem 1.05rem !important;
+  }
+
+  html[data-theme="dark"] .app .tools-body .sheet-section-compact .sheet-content,
+  [data-theme="dark"] .app .tools-body .sheet-section-compact .sheet-content {
+    padding-inline: 1rem !important;
   }
 
   .app .tools-body .setup-field-row.field-repetitions-clean,

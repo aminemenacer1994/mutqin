@@ -8733,68 +8733,77 @@ html body .app .tools-body .offcanvas-audio-panel .radio-group-compact .radio {
   white-space: nowrap !important;
 }
 
-/* Setup tab: even rhythm, less vertical scroll. */
+/* Setup tab: clear vertical rhythm — label / control / hint grouped per field. */
 html body .app .tools-body:has(.sheet--setup) {
-  padding-top: 8px !important;
-  padding-bottom: 10px !important;
-  gap: 8px !important;
+  padding-top: 12px !important;
+  padding-bottom: 14px !important;
+  gap: 10px !important;
 }
 
 html body .app .tools-body .sheet--setup {
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.45rem !important;
+  gap: 0.65rem !important;
   width: 100% !important;
 }
 
 html body .app .tools-body .sheet--setup .sheet-section-compact .sheet-toggle {
   min-height: 0 !important;
-  padding: 0.48rem 0.62rem !important;
+  padding: 0.62rem 0.75rem !important;
 }
 
 html body .app .tools-body .sheet--setup .sheet-content {
-  padding: 0.35rem 0.55rem 0.5rem !important;
+  padding: 0.7rem 0.8rem 0.9rem !important;
 }
 
 html body .app .tools-body .sheet--setup .setup-field-list {
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.55rem !important;
+  gap: 0.9rem !important;
 }
 
 html body .app .tools-body .sheet--setup .setup-field-row {
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.28rem !important;
+  gap: 0.52rem !important;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: 0.72rem 0.92rem !important;
+  box-sizing: border-box !important;
 }
 
 html body .app .tools-body .sheet--setup .setup-field-row > label,
 html body .app .tools-body .sheet--setup .field-header label,
 html body .app .tools-body .sheet--setup .individual-ayah-repeat-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
   margin: 0 !important;
-  font-size: 0.78rem !important;
-  line-height: 1.25 !important;
+  font-size: 0.8rem !important;
+  line-height: 1.35 !important;
 }
 
 html body .app .tools-body .sheet--setup .select,
 html body .app .tools-body .sheet--setup .input,
 html body .app .tools-body .sheet--setup .range.range-single .input {
-  min-height: 2.15rem !important;
-  padding: 0.35rem 0.65rem !important;
+  min-height: 2.55rem !important;
+  padding: 0.58rem 0.9rem !important;
+}
+
+html body .app .tools-body .sheet--setup .range.range-single {
+  gap: 0.65rem !important;
 }
 
 html body .app .tools-body .sheet--setup .field-hint {
-  margin: 0 !important;
-  font-size: 0.68rem !important;
-  line-height: 1.3 !important;
+  margin: 0.2rem 0 0 !important;
+  padding-top: 0.12rem !important;
+  font-size: 0.72rem !important;
+  line-height: 1.45 !important;
 }
 
 html body .app .tools-body .sheet--setup .field-repetitions-clean,
 html body .app .tools-body .sheet--setup .field-individual-ayah-unified {
-  gap: 0.32rem !important;
-  padding: 0.45rem 0.55rem !important;
+  gap: 0.5rem !important;
+  padding: 0.65rem 0.72rem !important;
 }
 
 html body .app .tools-body .sheet--setup .range-control,
@@ -8811,4 +8820,69 @@ html body .app .tools-body .sheet--setup .field-header,
 html body .app .tools-body .sheet--setup .individual-ayah-header {
   margin: 0 !important;
   min-height: 0 !important;
+}
+
+/* Dark setup cards: extra inset so labels, fields, and hints clear the card rim. */
+html[data-theme="dark"] body .app .tools-body:has(.sheet--setup),
+[data-theme="dark"] html body .app .tools-body:has(.sheet--setup) {
+  padding-inline: 0.65rem !important;
+}
+
+html[data-theme="dark"] body .app .tools-body .sheet--setup .sheet-section-compact .sheet-toggle,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .sheet-section-compact .sheet-toggle {
+  padding-inline: 1rem !important;
+}
+
+html[data-theme="dark"] body .app .tools-body .sheet--setup .sheet-content,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .sheet-content {
+  padding: 0.75rem 1rem 0.95rem !important;
+}
+
+html[data-theme="dark"] body .app .tools-body .sheet--setup .setup-field-row,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .setup-field-row {
+  padding: 0.85rem 1.08rem !important;
+}
+
+html[data-theme="dark"] body .app .tools-body .sheet--setup .setup-field-row > label,
+html[data-theme="dark"] body .app .tools-body .sheet--setup .field-hint,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .setup-field-row > label,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .field-hint {
+  padding-inline: 0.06rem !important;
+}
+
+html[data-theme="dark"] body .app .tools-body .sheet--setup .select,
+html[data-theme="dark"] body .app .tools-body .sheet--setup .input,
+html[data-theme="dark"] body .app .tools-body .sheet--setup .range.range-single .input,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .select,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .input,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .range.range-single .input {
+  padding-inline: 1rem !important;
+}
+
+html[data-theme="dark"] body .app .tools-body .sheet--setup .field-repetitions-clean,
+html[data-theme="dark"] body .app .tools-body .sheet--setup .field-individual-ayah-unified,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .field-repetitions-clean,
+[data-theme="dark"] html body .app .tools-body .sheet--setup .field-individual-ayah-unified {
+  padding: 0.78rem 1.05rem !important;
+}
+
+/* QPC / IndoPak surah banners — centred on the page (ayah rows stay RTL). */
+html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-line--surah_name {
+  direction: ltr !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-line--surah_name .qpc-madani-surah-header,
+html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-line--surah_name .madani-surah-heading {
+  direction: rtl !important;
+  width: 100% !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .qpc-madani-surah-name,
+html body .app .main.madani-qpc-mode-active .madani-qpc-viewport .madani-surah-heading__title {
+  margin-inline: auto !important;
+  text-align: center !important;
 }

@@ -57,7 +57,9 @@ export default {
 
 .madani-surah-heading__title {
   display: block;
+  width: fit-content;
   max-width: 100%;
+  margin-inline: auto;
   font-size: calc(var(--qpc-word-size, 22px) * var(--qpc-surah-title-scale, 2.35));
   font-weight: 400;
   font-synthesis: none;
@@ -65,6 +67,7 @@ export default {
   white-space: nowrap;
   letter-spacing: 0;
   text-align: center;
+  unicode-bidi: plaintext;
   color: currentColor;
   opacity: 0.35;
 }

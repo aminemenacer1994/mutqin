@@ -15,12 +15,12 @@
     // change a lazy-loaded workspace chunk without changing MUTQIN_ASSET_BUILD;
     // in that case installed/mobile clients still need to discard the old chunk.
     $mixManifestPath = public_path('mix-manifest.json');
-    $mixManifestFingerprint = is_file($mixManifestPath) ? substr(md5_file($mixManifestPath), 0, 12) : 'no-manifest';
+    $mixManifestFingerprint = \App\Support\MixAssetUrl::manifestFingerprint($mixManifestPath);
     // Mix's version hash can stay the same when only lazy-loaded chunks change.
     // Tie the entry assets to the full manifest too, so a browser with an
     // already-open workspace fetches the updated chunk map after a deploy.
-    $appScriptUrl = mix('js/app.js').'&build='.$mixManifestFingerprint;
-    $appStylesUrl = mix('css/app.css').'&build='.$mixManifestFingerprint;
+    $appScriptUrl = \App\Support\MixAssetUrl::withManifestBuild('js/app.js', $mixManifestPath);
+    $appStylesUrl = \App\Support\MixAssetUrl::withManifestBuild('css/app.css', $mixManifestPath);
     // Vue component CSS is emitted outside Mix's manifest. Version it directly
     // so an already-open workspace cannot keep a stale modal/reader stylesheet
     // after a frontend build.
