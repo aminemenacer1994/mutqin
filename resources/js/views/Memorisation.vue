@@ -1860,7 +1860,7 @@
 
         <div ref="toolsBody" class="tools-body compact">
           <!-- TOOLS TAB -->
-          <div v-if="tab === 'tools'" class="sheet">
+          <div v-if="tab === 'tools'" class="sheet sheet--setup">
             <section class="sheet-section sheet-section-compact" data-tour="setup-sheet">
               <button class="sheet-toggle" @click="toggleSection('advanced_setup')" type="button">
                 <span class="st-left">

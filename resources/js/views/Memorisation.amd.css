@@ -8732,3 +8732,83 @@ html body .app .tools-body .offcanvas-audio-panel .radio-group-compact .radio {
   min-height: 2rem !important;
   white-space: nowrap !important;
 }
+
+/* Setup tab: even rhythm, less vertical scroll. */
+html body .app .tools-body:has(.sheet--setup) {
+  padding-top: 8px !important;
+  padding-bottom: 10px !important;
+  gap: 8px !important;
+}
+
+html body .app .tools-body .sheet--setup {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.45rem !important;
+  width: 100% !important;
+}
+
+html body .app .tools-body .sheet--setup .sheet-section-compact .sheet-toggle {
+  min-height: 0 !important;
+  padding: 0.48rem 0.62rem !important;
+}
+
+html body .app .tools-body .sheet--setup .sheet-content {
+  padding: 0.35rem 0.55rem 0.5rem !important;
+}
+
+html body .app .tools-body .sheet--setup .setup-field-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.55rem !important;
+}
+
+html body .app .tools-body .sheet--setup .setup-field-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.28rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html body .app .tools-body .sheet--setup .setup-field-row > label,
+html body .app .tools-body .sheet--setup .field-header label,
+html body .app .tools-body .sheet--setup .individual-ayah-repeat-label {
+  margin: 0 !important;
+  font-size: 0.78rem !important;
+  line-height: 1.25 !important;
+}
+
+html body .app .tools-body .sheet--setup .select,
+html body .app .tools-body .sheet--setup .input,
+html body .app .tools-body .sheet--setup .range.range-single .input {
+  min-height: 2.15rem !important;
+  padding: 0.35rem 0.65rem !important;
+}
+
+html body .app .tools-body .sheet--setup .field-hint {
+  margin: 0 !important;
+  font-size: 0.68rem !important;
+  line-height: 1.3 !important;
+}
+
+html body .app .tools-body .sheet--setup .field-repetitions-clean,
+html body .app .tools-body .sheet--setup .field-individual-ayah-unified {
+  gap: 0.32rem !important;
+  padding: 0.45rem 0.55rem !important;
+}
+
+html body .app .tools-body .sheet--setup .range-control,
+html body .app .tools-body .sheet--setup .individual-ayah-range-control {
+  margin: 0 !important;
+  padding: 0.28rem 0.45rem !important;
+}
+
+html body .app .tools-body .sheet--setup .slider-markers {
+  margin-top: 0.1rem !important;
+}
+
+html body .app .tools-body .sheet--setup .field-header,
+html body .app .tools-body .sheet--setup .individual-ayah-header {
+  margin: 0 !important;
+  min-height: 0 !important;
+}
