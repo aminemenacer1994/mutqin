@@ -33,9 +33,7 @@
             <div class="dash-hero__greeting">
               <span class="dash-kicker">{{ t('dashboard.journey_kicker') }}</span>
               <h1 id="dash-welcome-heading">{{ greetingText }}</h1>
-              <p v-if="heroProgressSummary" class="dash-hero__summary">{{ heroProgressSummary }}</p>
-              <p class="dash-hero__direction">{{ t('dashboard.next_step_hint') }}</p>
-              <p class="dash-hero__direction">{{ t('dashboard.return_at_your_pace') }}</p>
+              <p v-if="showHeroProgressSummary" class="dash-hero__summary">{{ heroProgressSummary }}</p>
             </div>
             <button
               type="button"
@@ -82,109 +80,155 @@
         </header>
 
         <div class="user-dashboard__content">
-        <div class="user-dashboard__review-row">
+        <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
+          <div class="dash-section__head dash-section__head--compact">
+            <div class="dash-section__head-row">
+              <div class="dash-section__title">
+                <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
+                  <i class="bi bi-calendar-week" aria-hidden="true"></i>
+                </span>
+                <div class="dash-section__title-copy">
+                  <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
+                  <p v-if="showWeeklySectionHint" class="dash-section__hint">{{ t('dashboard.weekly_subtitle') }}</p>
+                </div>
+              </div>
+              <div v-if="!showWeeklyEmpty" class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
+                <button
+                  type="button"
+                  class="dash-btn dash-btn--ghost dash-btn--sm"
+                  :class="{ 'is-active': chartDays === 7 }"
+                  :aria-pressed="chartDays === 7 ? 'true' : 'false'"
+                  :disabled="loading"
+                  @click="setChartDays(7)"
+                >
+                  {{ t('dashboard.days_7') }}
+                </button>
+                <button
+                  type="button"
+                  class="dash-btn dash-btn--ghost dash-btn--sm"
+                  :class="{ 'is-active': chartDays === 30 }"
+                  :aria-pressed="chartDays === 30 ? 'true' : 'false'"
+                  :disabled="loading"
+                  @click="setChartDays(30)"
+                >
+                  {{ t('dashboard.days_30') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="dash-section__body">
+            <div v-if="showWeeklyEmpty" class="dash-chart__empty">
+              <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
+              <span>{{ t('dashboard.weekly_empty_message') }}</span>
+            </div>
+            <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
+              <Bar
+                v-if="chartReady"
+                :key="chartInstanceKey"
+                :data="chartData"
+                :options="chartOptions"
+                :aria-label="t('dashboard.chart_aria')"
+              />
+            </div>
+            <div
+              v-if="showPracticeMetrics"
+              class="dash-analytics"
+              role="list"
+              :aria-label="t('dashboard.weekly_stats_aria')"
+            >
+              <button
+                v-for="(item, index) in weeklyAnalytics"
+                :key="item.key"
+                type="button"
+                class="dash-analytic dash-reveal"
+                :style="{ '--dash-delay': `${index * 60}ms` }"
+                role="listitem"
+                :title="item.hint || item.label"
+                :aria-label="`${item.label}: ${item.value}. ${item.hint || ''}`"
+                @click="onAnalyticActivate(item)"
+              >
+                <span v-if="item.icon" class="dash-analytic__icon" aria-hidden="true">
+                  <i :class="item.icon"></i>
+                </span>
+                <p class="dash-analytic__value">
+                  <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
+                </p>
+                <p class="dash-analytic__label">{{ item.label }}</p>
+              </button>
+            </div>
+            <div v-if="showPracticeMetrics" class="dash-chart__footer dash-chart__footer--compact">
+              <button type="button" class="dash-text-link dash-chart__action dash-chart__action--solo" @click="openDrawer('activity')">
+                <i class="bi bi-clock-history" aria-hidden="true"></i>
+                {{ t('dashboard.view_all_activity') }}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div v-if="showMurajaahSection || showAiReciteSection" class="user-dashboard__review-row user-dashboard__review-row--secondary">
         <section
-          v-if="murajaahPreview.length || showMurajaahEmpty"
+          v-if="showMurajaahSection"
           class="dash-section dash-section--flat dash-reveal dash-section--murajaah"
-          :class="{ 'dash-section--empty': showMurajaahEmpty }"
           aria-labelledby="dash-murajaah-heading"
           style="--dash-delay: 20ms"
         >
-          <div class="dash-murajaah-block">
-            <div class="dash-murajaah-block__head dash-murajaah-block__head--compact">
-              <div class="dash-murajaah-block__head-main">
-                <div class="dash-murajaah-block__title-row">
-                  <span class="dash-section__icon dash-section__icon--review" aria-hidden="true">
-                    <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                  </span>
-                  <div class="dash-section__title-copy">
-                    <h2 id="dash-murajaah-heading" class="dash-murajaah-block__title">
-                      {{ t('dashboard.strengthen_title') }}
-                    </h2>
-                    <p class="dash-section__hint">{{ t('dashboard.strengthen_subtitle') }}</p>
-                  </div>
+          <div class="dash-section__head dash-section__head--compact">
+            <div class="dash-section__head-row">
+              <div class="dash-section__title">
+                <span class="dash-section__icon dash-section__icon--review" aria-hidden="true">
+                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                </span>
+                <div class="dash-section__title-copy">
+                  <h2 id="dash-murajaah-heading">{{ t('dashboard.strengthen_title') }}</h2>
+                  <p class="dash-section__hint">{{ t('dashboard.strengthen_subtitle') }}</p>
                 </div>
               </div>
               <button
                 v-if="showMurajaahViewAll"
                 type="button"
-                class="dash-glance-action dash-glance-action--ghost dash-murajaah-block__view-all"
+                class="dash-glance-action dash-glance-action--ghost"
                 @click="openDrawer('murajaah')"
               >
                 <i class="bi bi-list-ul" aria-hidden="true"></i>
                 {{ t('dashboard.view_all_reviews') }}
               </button>
             </div>
+          </div>
 
-            <div v-if="showMurajaahEmpty" class="dash-murajaah-block__empty">
-              <span class="dash-murajaah-block__empty-icon" aria-hidden="true">
-                <i class="bi bi-check2-circle" aria-hidden="true"></i>
-              </span>
-              <p class="dash-murajaah-block__empty-title">{{ t('dashboard.murajaah_no_urgent') }}</p>
-              <p v-if="!optionalReviewSuggestion" class="dash-murajaah-block__empty-hint">
-                {{ t('dashboard.weak_empty_message') }}
-              </p>
-              <div v-else class="dash-murajaah-suggestion">
-                <span class="dash-kicker">{{ t('dashboard.murajaah_keep_fresh') }}</span>
-                <strong class="dash-murajaah-suggestion__title">{{ optionalReviewSuggestion.title }}</strong>
-                <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="optionalReviewSuggestion.href">
-                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                  {{ t('dashboard.murajaah_practise') }}
-                </a>
-              </div>
-              <a
-                v-if="!optionalReviewSuggestion"
-                class="dash-btn dash-btn--ghost dash-btn--sm"
-                :href="primaryContinueAction?.href || memorisationUrl"
-              >
-                <i class="bi bi-play-circle" aria-hidden="true"></i>
-                {{ primaryContinueAction?.cta || t('dashboard.cta_start') }}
-              </a>
-            </div>
-
-            <ul v-else class="dash-murajaah-list">
+          <div class="dash-section__body">
+            <ul class="dash-section__feed dash-ai-results__attempts">
               <li v-for="(item, index) in murajaahPreview" :key="item.key">
-                <div class="dash-murajaah-row dash-reveal" :style="{ '--dash-delay': `${index * 50}ms` }">
-                  <a class="dash-murajaah-row__info" :href="item.href || memorisationUrl">
-                    <span class="dash-murajaah-row__ref">
-                      {{ item.surah_name }} · {{ t('dashboard.ayah_n', { n: item.ayah_number }) }}
+                <a
+                  class="dash-ai-results__attempt is-neutral dash-reveal"
+                  :style="{ '--dash-delay': `${index * 40}ms` }"
+                  :href="reviewNowHref(item)"
+                  :aria-label="`${t('dashboard.review_now')}: ${item.surah_name} ${t('dashboard.ayah_n', { n: item.ayah_number })}`"
+                >
+                  <span class="dash-ai-results__attempt-score dash-ai-results__attempt-mark" aria-hidden="true">
+                    <i class="bi bi-arrow-repeat"></i>
+                  </span>
+                  <span class="dash-ai-results__attempt-copy">
+                    <strong>
+                      {{ item.surah_name }}
+                      <span>{{ t('dashboard.ayah_n', { n: item.ayah_number }) }}</span>
+                    </strong>
+                    <span v-if="item.phrase" class="dash-ai-results__attempt-meta">
+                      <span class="dash-section__feed-phrase" lang="ar" dir="rtl">{{ item.phrase }}</span>
                     </span>
-                    <span
-                      v-if="item.phrase"
-                      class="dash-murajaah-row__phrase"
-                      lang="ar"
-                      dir="rtl"
-                    >{{ item.phrase }}</span>
-                    <span
-                      v-if="weakHistoryLine(item)"
-                      class="dash-murajaah-row__history"
-                      data-testid="dash-weak-history"
-                    >{{ weakHistoryLine(item) }}</span>
-                  </a>
-                  <div class="dash-murajaah-row__aside">
-                    <span
-                      v-if="item.strength"
-                      class="dash-strength"
-                      :class="`dash-strength--${item.strength}`"
-                    >
-                      {{ strengthLabel(item) }}
-                    </span>
-                    <a class="dash-btn dash-btn--ghost dash-btn--sm dash-murajaah-row__cta" :href="reviewNowHref(item)">
-                      <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-                      {{ t('dashboard.review_now') }}
-                    </a>
-                  </div>
-                </div>
+                    <span v-else class="dash-ai-results__attempt-meta">{{ t('dashboard.review_now') }}</span>
+                  </span>
+                  <i class="dash-ai-results__attempt-go bi bi-chevron-right" aria-hidden="true"></i>
+                </a>
               </li>
             </ul>
           </div>
         </section>
 
         <section
+          v-if="showAiReciteSection"
           id="ai-recite-results"
           ref="aiReciteResults"
           class="dash-section dash-section--flat dash-ai-results dash-reveal"
-          :class="{ 'dash-section--empty': !aiReciteLoading && !aiReciteError && (!aiReciteView || aiReciteView.empty) }"
           aria-labelledby="dash-ai-results-heading"
           style="--dash-delay: 40ms"
         >
@@ -221,31 +265,15 @@
                 {{ t('dashboard.retry') }}
               </button>
             </div>
-            <div v-else-if="!aiReciteView || aiReciteView.empty" class="dash-ai-results__empty">
-              <span class="dash-ai-results__empty-icon" aria-hidden="true">
-                <i class="bi bi-mic" aria-hidden="true"></i>
-              </span>
-              <p class="dash-ai-results__empty-title">{{ t('dashboard.ai_recite.stats_empty_title') }}</p>
-              <p class="dash-ai-results__empty-hint">{{ t('dashboard.ai_recite.results_empty_hint') }}</p>
-              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="memorisationUrl">
-                <i class="bi bi-mic" aria-hidden="true"></i>
-                {{ t('dashboard.open_practice') }}
-              </a>
-            </div>
-            <template v-else>
-              <details v-if="aiReciteScore" class="dash-score-details">
-                <summary>{{ t('dashboard.ai_recite.show_score_details') }}</summary>
+            <template v-if="aiReciteView && !aiReciteView.empty">
               <article
-                v-if="aiReciteScore"
+                v-if="showAiReciteAggregateScore && aiReciteScore"
                 class="dash-ai-results__hero"
                 :class="`is-${aiReciteScore.tone}`"
               >
                 <div class="dash-ai-results__score">
                   <span class="dash-ai-results__score-label">{{ aiReciteScore.label }}</span>
                   <strong class="dash-ai-results__score-value">{{ aiReciteScore.value }}</strong>
-                  <span v-if="aiReciteImprovement" class="dash-ai-results__delta">
-                    {{ aiReciteImprovement }}
-                  </span>
                 </div>
                 <div
                   class="dash-ai-results__meter"
@@ -257,14 +285,7 @@
                 >
                   <span :style="{ width: `${aiReciteScore.percent}%` }"></span>
                 </div>
-                <ul v-if="aiReciteFacts.length" class="dash-ai-results__facts">
-                  <li v-for="fact in aiReciteFacts" :key="fact.key">
-                    <span>{{ fact.label }}</span>
-                    <strong>{{ fact.value }}</strong>
-                  </li>
-                </ul>
               </article>
-              </details>
 
               <p v-if="aiReciteHolding" class="dash-ai-results__holding">
                 <i class="bi bi-check2-circle" aria-hidden="true"></i>
@@ -275,9 +296,8 @@
               </p>
 
               <div class="dash-ai-results__layout">
-                <section class="dash-ai-results__panel" :aria-label="t('dashboard.ai_recite.recent_attempts')">
-                  <h3>{{ t('dashboard.ai_recite.recent_attempts') }}</h3>
-                  <ul v-if="aiReciteView.recent.length" class="dash-ai-results__attempts">
+                <section class="dash-ai-results__panel dash-ai-results__panel--list" :aria-label="t('dashboard.ai_recite.recent_attempts')">
+                  <ul v-if="aiReciteView.recent.length" class="dash-section__feed dash-ai-results__attempts">
                     <li v-for="item in aiRecitePreview" :key="item.id">
                       <button
                         type="button"
@@ -294,11 +314,6 @@
                             <span v-if="ayahRangeLabel(item)">{{ ayahRangeLabel(item) }}</span>
                           </strong>
                           <span class="dash-ai-results__attempt-meta">
-                            <span
-                              v-if="item.band"
-                              class="dash-ai-results__band"
-                              :class="`dash-ai-results__band--${item.band}`"
-                            >{{ aiBandLabel(item.band) }}</span>
                             <time :datetime="item.occurred_at">{{ formatActivityDate(item.occurred_at) }}</time>
                             <span v-if="item.has_audio" class="dash-ai-results__listen">
                               <i class="bi bi-play-fill" aria-hidden="true"></i>
@@ -326,97 +341,6 @@
           </div>
         </section>
         </div>
-
-        <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
-          <div class="dash-section__head dash-section__head--compact">
-            <div class="dash-section__head-row">
-              <div class="dash-section__title">
-                <span class="dash-section__icon dash-section__icon--activity" aria-hidden="true">
-                  <i class="bi bi-calendar-week" aria-hidden="true"></i>
-                </span>
-                <div class="dash-section__title-copy">
-                  <h2 id="dash-week-heading">{{ t('dashboard.activity_chart_title') }}</h2>
-                  <p class="dash-section__hint">{{ t('dashboard.weekly_subtitle') }}</p>
-                </div>
-              </div>
-              <div class="dash-range-toggle" role="group" :aria-label="t('dashboard.chart_range')">
-                <button
-                  type="button"
-                  class="dash-btn dash-btn--ghost dash-btn--sm"
-                  :class="{ 'is-active': chartDays === 7 }"
-                  :aria-pressed="chartDays === 7 ? 'true' : 'false'"
-                  :disabled="loading"
-                  @click="setChartDays(7)"
-                >
-                  {{ t('dashboard.days_7') }}
-                </button>
-                <button
-                  type="button"
-                  class="dash-btn dash-btn--ghost dash-btn--sm"
-                  :class="{ 'is-active': chartDays === 30 }"
-                  :aria-pressed="chartDays === 30 ? 'true' : 'false'"
-                  :disabled="loading"
-                  @click="setChartDays(30)"
-                >
-                  {{ t('dashboard.days_30') }}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="dash-section__body">
-            <div v-if="showWeeklyEmpty" class="dash-chart__empty">
-              <strong>{{ t('dashboard.weekly_empty_title') }}</strong>
-              <span>{{ t('dashboard.weekly_empty_message') }}</span>
-              <a class="dash-btn dash-btn--ghost dash-btn--sm" :href="primaryContinueAction?.href || memorisationUrl">
-                <i class="bi bi-play-circle" aria-hidden="true"></i>
-                {{ primaryContinueAction?.cta || t('dashboard.cta_start') }}
-              </a>
-            </div>
-            <div v-else class="dash-chart__wrap" :class="{ 'is-loading': loading }">
-              <Bar
-                v-if="chartReady"
-                :key="chartInstanceKey"
-                :data="chartData"
-                :options="chartOptions"
-                :aria-label="t('dashboard.chart_aria')"
-              />
-            </div>
-            <div v-if="chartSummaryText" class="dash-chart__footer">
-              <p class="dash-chart__summary">{{ chartSummaryText }}</p>
-              <button type="button" class="dash-text-link dash-chart__action" @click="openDrawer('activity')">
-                <i class="bi bi-clock-history" aria-hidden="true"></i>
-                {{ t('dashboard.view_all_activity') }}
-              </button>
-            </div>
-
-            <div
-              class="dash-analytics"
-              role="list"
-              :aria-label="t('dashboard.weekly_stats_aria')"
-            >
-              <button
-                v-for="(item, index) in weeklyAnalytics"
-                :key="item.key"
-                type="button"
-                class="dash-analytic dash-reveal"
-                :style="{ '--dash-delay': `${index * 60}ms` }"
-                role="listitem"
-                :title="item.hint || item.label"
-                :aria-label="`${item.label}: ${item.value}`"
-                @click="onAnalyticActivate(item)"
-              >
-                <p class="dash-analytic__value">
-                  <DashAnimatedNumber :value="item.value" :reduce-motion="reduceMotion" />
-                </p>
-                <p class="dash-analytic__label">{{ item.label }}</p>
-              </button>
-            </div>
-            <p class="dash-progress-note">
-              <i class="bi bi-heart" aria-hidden="true"></i>
-              {{ t('dashboard.progress_note') }}
-            </p>
-          </div>
-        </section>
         </div>
 
       </template>
@@ -1004,6 +928,38 @@ export default {
       }
       return parts.join(' · ')
     },
+    showHeroProgressSummary() {
+      if (!this.heroProgressSummary) return false
+      if (this.primaryContinueAction?.kind === 'fresh') return false
+      const action = this.primaryContinueAction
+      if (!action) return true
+      const title = String(action.title || '').trim()
+      const range = String(action.range || action.hint || '').trim()
+      const summary = this.heroProgressSummary
+      if (title && summary.includes(title)) return false
+      if (range && summary.includes(range)) return false
+      if (this.currentlyLearningText && summary === this.currentlyLearningText && (title || range)) {
+        return false
+      }
+      return true
+    },
+    showMurajaahSection() {
+      return this.murajaahPreview.length > 0
+    },
+    showAiReciteSection() {
+      if (this.aiReciteLoading) return true
+      if (this.aiReciteError) return true
+      return !!(this.aiReciteView && !this.aiReciteView.empty)
+    },
+    showPracticeMetrics() {
+      return this.weeklyAnalytics.some((item) => Number(item.value ?? 0) > 0)
+    },
+    showWeeklySectionHint() {
+      return this.showWeeklyEmpty || !this.showPracticeMetrics
+    },
+    showAiReciteAggregateScore() {
+      return !(this.aiRecitePreview?.length)
+    },
     earlyProgressMessage() {
       const pct = this.journeyOverallPercent
       if (pct <= 0 || pct > 10) return ''
@@ -1081,26 +1037,6 @@ export default {
         cta: this.journeyContinueCta,
       }
     },
-    optionalReviewSuggestion() {
-      if (this.murajaahPreview.length) return null
-      const progress = this.data?.progress
-      const cont = this.journeyContinue
-      const surahName = progress?.current_surah_name || cont?.surah_name
-      const start = Number(progress?.ayah_start || cont?.ayah_start || 0)
-      const end = Number(progress?.ayah_end || cont?.ayah_end || start)
-      if (!surahName || start <= 0) return null
-      const range = start === end
-        ? this.t('dashboard.ayah_n', { n: start })
-        : this.t('dashboard.ayah_range', { start, end })
-      const surah = Number(progress?.current_surah_number || cont?.surah_number || 0)
-      const href = surah > 0 && start > 0
-        ? this.reviewNowHref({ surah_number: surah, ayah_number: start })
-        : this.journeyContinueHref
-      return {
-        title: `${surahName} · ${range}`,
-        href,
-      }
-    },
     murajaahAllItems() {
       const all = this.data?.weaknesses?.all_items
       if (Array.isArray(all) && all.length) return all
@@ -1108,7 +1044,7 @@ export default {
       return Array.isArray(items) ? items : []
     },
     murajaahPreview() {
-      return this.murajaahAllItems.slice(0, 2)
+      return this.murajaahAllItems.slice(0, 4)
     },
     murajaahTotal() {
       const total = Number(this.data?.weaknesses?.total ?? 0)
@@ -1122,10 +1058,6 @@ export default {
     },
     showMurajaahViewAll() {
       return this.murajaahTotal > this.murajaahPreview.length
-    },
-    showMurajaahEmpty() {
-      if (this.murajaahPreview.length) return false
-      return this.journeyHasStarted || this.hasMemorisationHistory
     },
     isLiveContinueAction() {
       const type = String(this.data?.continue?.action_type || '')
@@ -1248,16 +1180,21 @@ export default {
       return parts.join(' · ')
     },
     showWeeklyEmpty() {
-      return !!this.data?.week_summary?.is_empty && !!this.data?.chart?.is_empty
+      if (this.data?.chart?.is_empty) return true
+      return !this.showPracticeMetrics
     },
     weeklyAnalytics() {
+      const period = this.data?.chart?.period_summary || {}
       const week = this.data?.week_summary || {}
+      const stats = period.is_empty === false || Number(period.sessions ?? 0) > 0
+        ? period
+        : week
       return [
         {
           key: 'week_sessions',
           label: this.t('dashboard.analytics_week_sessions'),
           hint: this.t('dashboard.analytics_week_sessions_hint'),
-          value: Number(week.sessions ?? 0),
+          value: Number(stats.sessions ?? 0),
           drawer: 'activity',
           filter: 'session',
           icon: 'bi bi-journal-check',
@@ -1266,16 +1203,18 @@ export default {
           key: 'week_ayahs',
           label: this.t('dashboard.analytics_week_ayahs'),
           hint: this.t('dashboard.analytics_week_ayahs_hint'),
-          value: Number(week.ayahs_practised ?? 0),
-          drawer: 'hifz',
+          value: Number(stats.ayahs_practised ?? 0),
+          drawer: 'activity',
+          filter: 'all',
           icon: 'bi bi-book',
         },
         {
           key: 'active_days',
           label: this.t('dashboard.analytics_active_days'),
           hint: this.t('dashboard.analytics_active_days_hint'),
-          value: Number(week.active_days ?? 0),
+          value: Number(stats.active_days ?? 0),
           drawer: 'activity',
+          filter: 'all',
           icon: 'bi bi-calendar-check',
         },
       ]
@@ -1298,7 +1237,7 @@ export default {
       return !!this.aiReciteView?.holding
     },
     aiRecitePreview() {
-      return (this.aiReciteView?.recent || []).slice(0, 3)
+      return (this.aiReciteView?.recent || []).slice(0, 4)
     },
     aiReciteImprovement() {
       const card = (this.aiReciteView?.cards || []).find((item) => item.key === 'improvement')
@@ -1727,7 +1666,7 @@ export default {
         ? item.outcome_params
         : {}
 
-      if (key === 'session_completed') return this.t('dashboard.drawer_status_completed')
+      if (key === 'session_completed') return this.t('dashboard.drawer_status_range_complete')
       if (key === 'session_ended_early') return this.t('dashboard.drawer_status_ended_early')
       if (key === 'session_saved') return this.t('dashboard.activity_outcome_saved')
       if (key === 'session_resumed') return this.t('dashboard.activity_outcome_resumed')
@@ -1891,6 +1830,7 @@ export default {
     },
     sessionStatusLabel(status) {
       if (status === 'ended_early') return this.t('dashboard.drawer_status_ended_early')
+      if (status === 'completed') return this.t('dashboard.drawer_status_range_complete')
       return this.t('dashboard.drawer_status_completed')
     },
     aiBandLabel(band) {
@@ -2160,7 +2100,7 @@ export default {
           ? await learningApi.getAiReciteAttemptAnalysis(id)
           : await learningApi.getSessionAnalysis(id)
         if (requestId !== this.analysisRequestId) return
-        this.analysisView = buildSessionAnalysisView(payload, this.t.bind(this))
+        this.analysisView = buildSessionAnalysisView(payload, this.t.bind(this), { includeRecommendations: false })
         this.analysisError = false
       } catch (error) {
         console.error('Session analysis fetch failed', error)

@@ -121,6 +121,49 @@ html[data-theme="dark"] .user-dashboard,
   min-width: 0;
 }
 
+.user-dashboard__review-row--secondary {
+  padding-top: 0;
+}
+
+.dash-chart__footer--compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem 1rem;
+  margin-top: 0.35rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid color-mix(in srgb, var(--dash-border) 80%, transparent);
+}
+
+.dash-chart__action--solo {
+  margin-inline-start: auto;
+}
+
+.dash-section__feed {
+  margin: 0;
+  padding: 0 0.2rem;
+  list-style: none;
+}
+
+.dash-section__feed-phrase {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--dash-font-ar);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.dash-section--murajaah .dash-section__body {
+  padding-bottom: 1.15rem;
+}
+
+.dash-ai-results__panel--list h3 {
+  display: none;
+}
+
 /* ── Daily revision ── */
 
 .dash-daily-revision {
@@ -334,16 +377,12 @@ html[data-theme="dark"] .user-dashboard,
 }
 
 @media (max-width: 1023.98px) {
-  .user-dashboard__primary {
+  .dash-section--weekly {
     order: 1;
   }
 
   .user-dashboard__review-row {
     order: 2;
-  }
-
-  .dash-section--weekly {
-    order: 3;
   }
 }
 
@@ -460,6 +499,11 @@ html[data-theme="dark"] .user-dashboard,
 
 .dash-section__title-copy h2 {
   margin: 0;
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--dash-ink);
 }
 
 .dash-section__hint {
@@ -1291,10 +1335,12 @@ html[data-theme="dark"] .user-dashboard,
 .dash-murajaah-block__head--compact .dash-murajaah-block__title {
   margin: 0;
   font-family: var(--dash-serif);
-  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
-  letter-spacing: 0;
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
   text-transform: none;
   color: var(--dash-ink);
+  line-height: 1.2;
 }
 
 .dash-murajaah-block__view-all {
@@ -1525,9 +1571,17 @@ html[data-theme="dark"] .user-dashboard,
 .dash-analytic__label {
   margin: 0;
   font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--dash-muted);
+  font-weight: 600;
+  color: var(--dash-ink);
   line-height: 1.3;
+}
+
+.dash-analytic__action {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--dash-accent-strong);
+  line-height: 1.25;
 }
 
 .dash-analytic__hint {
@@ -2926,7 +2980,8 @@ a.dash-drawer__row--link:focus-visible,
   overflow: visible;
 }
 
-.dash-ai-results .dash-section__head {
+.dash-ai-results .dash-section__head,
+.dash-section--murajaah .dash-section__head {
   border-start-start-radius: inherit;
   border-start-end-radius: inherit;
 }
@@ -3160,6 +3215,10 @@ a.dash-drawer__row--link:focus-visible,
   list-style: none;
 }
 
+a.dash-ai-results__attempt {
+  text-decoration: none;
+}
+
 .dash-ai-results__attempt {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -3227,6 +3286,17 @@ a.dash-drawer__row--link:focus-visible,
 .dash-ai-results__attempt.is-weak .dash-ai-results__attempt-score {
   color: #8b3d3d;
   background: color-mix(in srgb, #b45555 14%, transparent);
+}
+
+.dash-ai-results__attempt.is-neutral .dash-ai-results__attempt-score,
+.dash-ai-results__attempt-mark {
+  font-size: 1.05rem;
+  color: var(--dash-accent-strong);
+  background: color-mix(in srgb, var(--dash-accent-light) 52%, var(--dash-surface));
+}
+
+.dash-ai-results__attempt-mark i {
+  line-height: 1;
 }
 
 .dash-ai-results__attempt-copy {
@@ -3959,7 +4029,7 @@ a.dash-drawer__row--link:focus-visible,
     grid-template-areas:
       "icon value"
       "icon label"
-      "icon hint";
+      "icon action";
     justify-items: start;
     align-content: center;
     min-height: 0;
@@ -3986,7 +4056,7 @@ a.dash-drawer__row--link:focus-visible,
   .dash-section--weekly .dash-analytic__icon { grid-area: icon; }
   .dash-section--weekly .dash-analytic__value { grid-area: value; font-size: 1.55rem; }
   .dash-section--weekly .dash-analytic__label { grid-area: label; }
-  .dash-section--weekly .dash-analytic__hint { grid-area: hint; }
+  .dash-section--weekly .dash-analytic__action { grid-area: action; justify-self: start; }
   .dash-section--weekly .dash-progress-note { grid-area: note; }
 
   .user-dashboard__review-row {
@@ -4019,7 +4089,7 @@ a.dash-drawer__row--link:focus-visible,
     grid-template-areas:
       "icon value"
       "icon label"
-      "icon hint";
+      "icon action";
     justify-items: start;
     min-height: 0;
     padding: 0.65rem 0.15rem;
@@ -4037,7 +4107,7 @@ a.dash-drawer__row--link:focus-visible,
   .dash-section--weekly .dash-analytic__icon { grid-area: icon; }
   .dash-section--weekly .dash-analytic__value { grid-area: value; }
   .dash-section--weekly .dash-analytic__label { grid-area: label; }
-  .dash-section--weekly .dash-analytic__hint { grid-area: hint; }
+  .dash-section--weekly .dash-analytic__action { grid-area: action; justify-self: start; }
 
   .dash-section--weekly .dash-analytic:hover,
   .dash-section--weekly .dash-analytic:focus-visible {

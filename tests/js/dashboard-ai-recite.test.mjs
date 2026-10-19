@@ -44,7 +44,7 @@ assert.match(
   /max-width:\s*1023\.98px[\s\S]*?\.user-dashboard__review-row[\s\S]*?order:\s*2[\s\S]*?\.dash-section--weekly[\s\S]*?order:\s*3/,
   'mobile progress page shows Muraja’ah + AI Recite above Days with the Qur’an',
 )
-assert.match(dashboard, /weakHistoryLine/, 'progress page shows weak ayah history on muraja’ah rows')
+assert.match(dashboard, /weakHistoryLine/, 'progress page keeps weak ayah history in the review drawer')
 assert.match(dashboard, /data-testid="dash-weak-history"/, 'weak ayah history is marked for tests')
 assert.match(dashboardCss, /\.dash-murajaah-row__history/, 'weak ayah history has compact row styles')
 assert.equal(en.dashboard.weak_history_attempts, '{n} checks')

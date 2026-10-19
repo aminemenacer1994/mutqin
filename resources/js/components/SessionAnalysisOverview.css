@@ -234,6 +234,13 @@ body.session-analysis-modal-open {
   line-height: 1.25;
 }
 
+#sa-session-overview.session-analysis-modal-root .sa-ov__meta--lead {
+  margin: 0 0 0.85rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--dash-muted, #5c6b64);
+}
+
 #sa-session-overview.session-analysis-modal-root .sa-ov__meta {
   display: flex;
   flex-wrap: wrap;

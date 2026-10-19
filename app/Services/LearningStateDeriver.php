@@ -26,7 +26,8 @@ class LearningStateDeriver
      */
     private const STATUS_MAP = [
         'mastered' => 'mastered',
-        'reviewed' => 'memorised',
+        // Self-graded retention is not confirmed hifz — keep dashboard memorised counts strict.
+        'reviewed' => 'reviewing',
         'weak' => 'reviewing',
         'hidden_practice' => 'learning',
         'learning' => 'learning',

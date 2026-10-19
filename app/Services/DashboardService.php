@@ -1440,10 +1440,15 @@ class DashboardService
             ->filter(fn (LearningAnalytic $row) => $row->session_date !== null)
             ->keyBy(fn (LearningAnalytic $row) => $row->session_date->toDateString());
 
+        $practiceStatuses = [
+            UserSessionStatus::Completed->value,
+            UserSessionStatus::EndedEarly->value,
+        ];
+
         $completedByDay = UserSession::query()
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
-            ->where('status', UserSessionStatus::Completed->value)
+            ->whereIn('status', $practiceStatuses)
             ->where(function ($query) use ($from, $to) {
                 $query->whereBetween('ended_at', [$from, $to])
                     ->orWhere(function ($inner) use ($from, $to) {
@@ -1460,7 +1465,7 @@ class DashboardService
         $sessionAyahsByDay = UserSession::query()
             ->where('user_id', $user->id)
             ->where('is_onboarding_example', false)
-            ->where('status', UserSessionStatus::Completed->value)
+            ->whereIn('status', $practiceStatuses)
             ->where(function ($query) use ($from, $to) {
                 $query->whereBetween('ended_at', [$from, $to])
                     ->orWhere(function ($inner) use ($from, $to) {
@@ -1544,6 +1549,12 @@ class DashboardService
                 'sessions' => $totalSessions,
                 'active_days' => $activeDays,
             ],
+            'period_summary' => [
+                'sessions' => $totalSessions,
+                'ayahs_practised' => $totalAyahs,
+                'active_days' => $activeDays,
+                'is_empty' => $activeDays === 0,
+            ],
             'is_empty' => $activeDays === 0,
         ];
     }
@@ -1608,6 +1619,7 @@ class DashboardService
 
         $sessionStatuses = [
             UserSessionStatus::Completed->value,
+            UserSessionStatus::EndedEarly->value,
             UserSessionStatus::Paused->value,
         ];
 

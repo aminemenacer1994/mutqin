@@ -180,14 +180,8 @@ class SessionAnalysisQueryService
             ->whereIn('user_session_id', $ids)
             ->whereNotNull('user_session_id');
 
-        $fromRecommendations = SessionRecommendation::query()
-            ->select('source_session_id as session_id')
-            ->where('user_id', $user->id)
-            ->whereIn('source_session_id', $ids)
-            ->whereNotNull('ai_assessment');
-
         $flags = [];
-        foreach ($fromAssessments->union($fromAttempts)->union($fromRecommendations)->pluck('session_id') as $id) {
+        foreach ($fromAssessments->union($fromAttempts)->pluck('session_id') as $id) {
             $flags[(int) $id] = true;
         }
 
@@ -505,7 +499,7 @@ class SessionAnalysisQueryService
 
         $weakSpots = $this->retentionSpots($user, $session, $assessment, $attempt);
         $sessionMeta = $this->transformSession($session, $assessment, $attempt);
-        $hasAnalysis = (bool) ($assessment || $attempt || $this->recommendationHasAnalysis($recommendation));
+        $hasAnalysis = $this->sessionHasPersistedRecitationCheck($assessment, $attempt);
 
         return [
             'has_analysis' => $hasAnalysis,
@@ -692,11 +686,29 @@ class SessionAnalysisQueryService
         ];
     }
 
-    private function recommendationHasAnalysis(?SessionRecommendation $recommendation): bool
-    {
-        $ai = is_array($recommendation?->ai_assessment) ? $recommendation->ai_assessment : [];
+    private function sessionHasPersistedRecitationCheck(
+        ?MemorisationAssessment $assessment,
+        ?AiReciteAttempt $attempt,
+    ): bool {
+        if ($attempt) {
+            $words = is_array($attempt->word_statuses) ? $attempt->word_statuses : [];
+            if ($words !== []) {
+                return true;
+            }
+            if ($attempt->accuracy_percent !== null || filled($attempt->band)) {
+                return true;
+            }
+        }
 
-        return $ai !== [];
+        if ($assessment && $assessment->status === MemorisationAssessment::STATUS_COMPLETED) {
+            if ($assessment->accuracy !== null || $assessment->overall_accuracy !== null) {
+                return true;
+            }
+
+            return $assessment->wordResults()->exists();
+        }
+
+        return false;
     }
 
     /**

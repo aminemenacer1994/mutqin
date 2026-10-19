@@ -1,4 +1,4 @@
-import { buildAiReviewDetails } from '../recommendations/aiReviewDetails.js'
+import { ASSESSMENT_QUALITY, buildAiReviewDetails } from '../recommendations/aiReviewDetails.js'
 import { classifyRecitationWordColor, RECITATION_COLOR, resolveRecitationWordDisplay } from '../engine/recitation_analysis.js'
 import { isKnownTechniqueId, resolveTechniqueDisplay } from '../techniques/techniqueDisplay.js'
 
@@ -265,7 +265,9 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
   const status = asText(session.status)
   const statusLabel = status === 'ended_early'
     ? t('dashboard.drawer_status_ended_early')
-    : (status ? t('dashboard.drawer_status_completed') : '')
+    : (status === 'completed'
+      ? t('dashboard.drawer_status_range_complete')
+      : (status ? t('dashboard.drawer_status_completed') : ''))
   const occurredAt = formatOccurredAt(session.occurred_at || attempt?.occurred_at || assessment?.completed_at)
   const sessionMeta = [statusLabel, occurredAt].filter(Boolean).join(' · ')
 
@@ -303,7 +305,7 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
         description: t('memorisation.analyticsReport.runsCompleted'),
       }
       : null,
-    accuracy > 0 || attempt || assessment
+    accuracy > 0
       ? {
         key: 'accuracy',
         label: t('dashboard.analysis_accuracy_label'),
@@ -331,15 +333,21 @@ export function buildSessionAnalysisView(payload, t = (key) => key, options = {}
     }, t)
     : null
 
-  const includeRecommendations = options.includeRecommendations !== false
-  const recommendations = includeRecommendations ? recommendationLines(payload, t) : []
+  const recitationAssessed = words.length > 0
+    || (aiReview
+      && aiReview.assessmentQuality !== ASSESSMENT_QUALITY.INSUFFICIENT_AUDIO
+      && (accuracy > 0 || words.length > 0))
+
+  const includeRecommendations = options.includeRecommendations === true
+  const recommendations = includeRecommendations && recitationAssessed
+    ? recommendationLines(payload, t)
+    : []
   const ayahRows = groupWordsByAyah(words, t)
   const hasContent = Boolean(
     summaryCards.length
     || aiReview
     || ayahRows.length
     || recommendations.length
-    || payload?.has_analysis
   )
 
   return {

@@ -64,13 +64,12 @@
             <template v-else>
               <slot>
                 <div v-if="analysis" class="sa-ov">
-                  <section v-if="analysis.aiReview" class="sa-ov__hero" :class="`is-${aiLeadTone}`">
+                  <section v-if="analysis.aiReview && aiLeadPercent != null" class="sa-ov__hero" :class="`is-${aiLeadTone}`">
                     <div class="sa-ov__hero-main">
                       <div
-                        v-if="aiLeadPercent != null"
                         class="sa-ov__ring"
                         role="img"
-                        :aria-label="aiLeadStat ? `${aiLeadStat.label} ${aiLeadStat.value}` : ''"
+                        :aria-label="aiHeroAriaLabel"
                       >
                         <svg viewBox="0 0 36 36" aria-hidden="true">
                           <circle class="sa-ov__ring-track" cx="18" cy="18" r="15.5" pathLength="100" />
@@ -86,17 +85,13 @@
                         <strong>{{ Math.round(aiLeadPercent) }}</strong>
                       </div>
                       <div class="sa-ov__hero-copy">
-                        <p v-if="aiLeadStat" class="sa-ov__hero-label">{{ aiLeadStat.label }}</p>
-                        <p v-if="analysis.aiReview.outcomeLabel" class="sa-ov__hero-status">{{ analysis.aiReview.outcomeLabel }}</p>
+                        <p class="sa-ov__hero-label">{{ recallScoreLabel }}</p>
+                        <p v-if="aiHeroSummary" class="sa-ov__hero-status">{{ aiHeroSummary }}</p>
                       </div>
                     </div>
-                    <ul v-if="aiFactStats.length" class="sa-ov__facts">
-                      <li v-for="stat in aiFactStats" :key="stat.key">
-                        <span>{{ stat.label }}</span>
-                        <strong>{{ stat.value }}</strong>
-                      </li>
-                    </ul>
                   </section>
+
+                  <p v-else-if="aiHeroSummary" class="sa-ov__meta sa-ov__meta--lead">{{ aiHeroSummary }}</p>
 
                   <p v-if="overviewCards.length" class="sa-ov__meta">
                     <span v-for="item in overviewCards" :key="item.key">{{ item.label }} {{ item.value }}</span>
@@ -150,25 +145,6 @@
                         <span v-if="ayahIndex(row)" class="sa-ov__ayah-no">{{ ayahIndex(row) }}</span>
                       </p>
                     </article>
-                  </section>
-
-                  <section v-if="analysis.recommendations?.length" class="sa-ov__panel sa-ov__panel--recommendations">
-                    <h3>{{ recommendationsTitle }}</h3>
-                    <div class="sa-ov__recommendation-list">
-                      <article
-                        v-for="(item, index) in analysis.recommendations"
-                        :key="item.key"
-                        class="sa-ov__note sa-ov__note--recommendation"
-                      >
-                        <span class="sa-ov__recommendation-icon" aria-hidden="true">
-                          <i :class="index === 0 ? 'bi bi-lightning-charge-fill' : 'bi bi-check2'"></i>
-                        </span>
-                        <span class="sa-ov__recommendation-copy">
-                          <strong>{{ item.label }}</strong>
-                          <span v-if="item.detail">{{ item.detail }}</span>
-                        </span>
-                      </article>
-                    </div>
                   </section>
 
                 </div>
@@ -244,8 +220,24 @@ export default {
     },
     overviewCards() {
       const cards = Array.isArray(this.analysis?.summaryCards) ? this.analysis.summaryCards : []
-      if (!this.analysis?.aiReview) return cards
+      if (this.analysis?.aiReview) return []
       return cards.filter((card) => card.key === 'time' || card.key === 'repeats')
+    },
+    recallScoreLabel() {
+      return this.translate('dashboard.analysis_recall_score', 'Recall score')
+    },
+    aiHeroSummary() {
+      const review = this.analysis?.aiReview
+      if (!review) return ''
+      const summary = String(review.summaryLine || '').trim()
+      if (summary) return summary
+      return String(review.outcomeLabel || '').trim()
+    },
+    aiHeroAriaLabel() {
+      if (this.aiLeadPercent == null) return ''
+      const score = Math.round(this.aiLeadPercent)
+      const summary = this.aiHeroSummary
+      return summary ? `${this.recallScoreLabel} ${score}%. ${summary}` : `${this.recallScoreLabel} ${score}%`
     },
     aiStatChips() {
       const review = this.analysis?.aiReview
@@ -277,6 +269,12 @@ export default {
       return this.aiStatChips.slice(1)
     },
     aiLeadPercent() {
+      const review = this.analysis?.aiReview
+      if (!review) return null
+      const direct = Number(review.scoredAccuracy ?? review.accuracy)
+      if (Number.isFinite(direct) && direct >= 0) {
+        return Math.max(0, Math.min(100, direct))
+      }
       const raw = String(this.aiLeadStat?.value || '')
       const match = raw.match(/(\d+(?:\.\d+)?)/)
       if (!match) return null

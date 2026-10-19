@@ -121,8 +121,34 @@ assert.ok(first.aiReview)
 assert.notEqual(first.aiReview.accuracy, 41)
 assert.ok(first.ayahRows.some((row) => row.ayah === 2))
 assert.ok(first.ayahRows.every((row) => typeof row.text === 'string'))
-assert.ok(first.recommendations.some((item) => /weak ayah|Return to ayah 2|Gradually hide the text/i.test(`${item.label} ${item.detail}`)))
-assert.ok(!first.recommendations.some((item) => item.label === 'blur'))
+assert.equal(first.recommendations.length, 0, 'session overview hides recommendation cards by default')
+const withRecommendations = buildSessionAnalysisView({
+  has_analysis: true,
+  session: {
+    id: 11,
+    surah_name: 'Al-Ikhlas',
+    ayah_start: 1,
+    ayah_end: 4,
+    status: 'completed',
+  },
+  ai_attempt: {
+    band: 'mixed',
+    accuracy_percent: 77,
+    word_statuses: [
+      { text: 'قل', status: 'correct', ayah_number: 1 },
+      { text: 'الصمد', status: 'wrong', ayah_number: 2 },
+    ],
+    plan_snapshot: { title: 'Gradually hide the text' },
+  },
+  practice_plan: { title: 'Strengthen Your Weak Ayahs', why: 'Focus on ayah 2' },
+  recommendation: {
+    recommended_technique: 'blur',
+    ai_assessment: { summary: 'Return to ayah 2', result: 'mixed', weak_ayahs: [2] },
+  },
+}, t, { includeRecommendations: true })
+assert.ok(withRecommendations.recommendations.some((item) => /weak ayah|Return to ayah 2|Gradually hide the text/i.test(`${item.label} ${item.detail}`)))
+assert.ok(!withRecommendations.recommendations.some((item) => item.label === 'blur'))
+assert.doesNotMatch(modal, /sa-ov__panel--recommendations/, 'recommendations panel removed from session overview UI')
 assert.equal(first.retention, undefined)
 assert.equal(first.ayahRows.find((row) => row.ayah === 2)?.correctText, 'الصمد')
 assert.equal(first.audio, null)
@@ -212,6 +238,18 @@ assert.equal(hasSavedAnalysis({}), false)
 
 const empty = buildSessionAnalysisView({ has_analysis: false, session: { id: 3 } }, t)
 assert.equal(empty.hasContent, false)
+
+const failedReciteOnly = buildSessionAnalysisView({
+  has_analysis: true,
+  session: { id: 20, surah_name: 'Al-Baqarah', ayah_start: 1, ayah_end: 286, status: 'completed', duration_seconds: 8 },
+  ai_attempt: { band: null, accuracy_percent: null, word_statuses: [] },
+  recommendation: {
+    recommended_technique: 'slow_repeat',
+    ai_assessment: { summary: 'Good effort. A few marked words need another calm pass before you move on.' },
+  },
+}, t)
+assert.match(failedReciteOnly.sessionMeta, /Range complete/)
+assert.equal(failedReciteOnly.recommendations.length, 0, 'recommendations stay hidden when recitation was not assessed')
 
 const noExtras = buildSessionAnalysisView({
   has_analysis: true,

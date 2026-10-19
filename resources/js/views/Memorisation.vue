@@ -3224,16 +3224,16 @@
             <div class="row g-3 planner-completion-stats-row">
               <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
-                  <span>{{ t('memorisation.memorised_today') }}</span>
-                  <strong>{{ plannerCompletionStats.memorised }}</strong>
-                  <small>{{ plannerCompletionStats.memorisedLabel }}</small>
+                  <span>{{ t('memorisation.practiced_today') }}</span>
+                  <strong>{{ plannerCompletionStats.practiced }}</strong>
+                  <small>{{ plannerCompletionStats.practicedLabel }}</small>
                 </article>
               </div>
               <div class="col-3 planner-completion-stat-col">
                 <article class="planner-completion-stat">
-                  <span>{{ t('memorisation.new_ayahs') }}</span>
-                  <strong>{{ plannerCompletionStats.newAyahs }}</strong>
-                  <small>{{ plannerCompletionStats.newAyahsLabel }}</small>
+                  <span>{{ t('memorisation.confirmed_memorised_today') }}</span>
+                  <strong>{{ plannerCompletionStats.memorised }}</strong>
+                  <small>{{ plannerCompletionStats.memorisedLabel }}</small>
                 </article>
               </div>
               <div class="col-3 planner-completion-stat-col">

@@ -3979,17 +3979,21 @@ export default {
     },
     plannerCompletionStats() {
       const snapshot = this.plannerCompletionSnapshot || {}
+      const practicedAyahs = Math.max(0, Number(snapshot.newAyahsCovered ?? snapshot.newAyahs ?? 0))
       const memorisedAyahs = Math.max(0, Number(snapshot.memorisedAyahs || 0))
-      const newAyahs = Math.max(0, Number(snapshot.newAyahs || memorisedAyahs || 0))
       const todayGoalCompleted = Math.max(0, Number(snapshot.todayGoalCompleted || 0))
       const todayGoalTarget = Math.max(1, Number(snapshot.todayGoalTarget || 1))
       return {
+        practiced: practicedAyahs,
+        practicedLabel: practicedAyahs === 1
+          ? this.t('memorisation.workspaceProgress.ayahPracticedToday')
+          : this.t('memorisation.workspaceProgress.ayahsPracticedToday'),
         memorised: memorisedAyahs,
         memorisedLabel: memorisedAyahs === 1
-          ? this.t('memorisation.workspaceProgress.ayahMemorisedToday')
-          : this.t('memorisation.workspaceProgress.ayahsMemorisedToday'),
-        newAyahs,
-        newAyahsLabel: newAyahs === 1
+          ? this.t('memorisation.workspaceProgress.ayahConfirmedMemorised')
+          : this.t('memorisation.workspaceProgress.ayahsConfirmedMemorised'),
+        newAyahs: practicedAyahs,
+        newAyahsLabel: practicedAyahs === 1
           ? this.t('memorisation.workspaceProgress.newAyahAdded')
           : this.t('memorisation.workspaceProgress.newAyahsAdded'),
         goalProgress: `${todayGoalCompleted}/${todayGoalTarget}`,
@@ -37097,34 +37101,59 @@ export default {
         ? sessions
         : [{ key: 'planner-future-maintenance', label: 'Next session', value: 'Revision only until the next ayahs are due.' }]
     },
+    plannerItemVerseKey(item) {
+      if (!item) return null
+      if (item.key) return String(item.key)
+      const surah = Number(item.surah)
+      const ayah = Number(item.ayah)
+      if (Number.isFinite(surah) && Number.isFinite(ayah)) {
+        return `${surah}:${ayah}`
+      }
+      return null
+    },
+    countConfirmedMemorisedPlannerItems(items = []) {
+      return items.filter(item => {
+        const key = this.plannerItemVerseKey(item)
+        return key && this.isMasteredAyah(key)
+      }).length
+    },
     buildPlannerCompletionSnapshot(options = {}) {
+      const counts = options.counts || this.getPlannerCompletionCounts()
       const todayGoalTarget = Math.max(1, normalizeDailyNewAyahCount(this.hifzPlan || {}))
-      const memorisedAyahs = Math.max(0, Number(options.memorisedAyahs || 0))
-      const todayGoalCompleted = Math.min(todayGoalTarget, memorisedAyahs)
+      const newAyahsCovered = Math.max(0, Number(counts.newAyahsCovered ?? 0))
+      const memorisedAyahs = Math.max(0, Number(options.memorisedAyahs ?? counts.memorisedAyahs ?? 0))
+      const todayGoalCompleted = Math.min(todayGoalTarget, newAyahsCovered)
       const reviewSchedule = this.buildPlannerReviewSchedule()
       const nextReview = reviewSchedule[0]?.label || 'Tomorrow'
       return {
         memorisedAyahs,
-        newAyahs: memorisedAyahs,
+        newAyahsCovered,
+        newAyahs: newAyahsCovered,
         todayGoalCompleted,
         todayGoalTarget,
         nextReview,
         nextReviewHint: nextReview === 'Tomorrow'
-          ? 'Due tomorrow'
-          : 'Already scheduled',
+          ? this.t('memorisation.workspaceProgress.nextReviewDueTomorrow')
+          : this.t('memorisation.workspaceProgress.nextReviewScheduled'),
         summaryMessage: todayGoalCompleted >= todayGoalTarget
-          ? `Today you memorised ${memorisedAyahs} ayah${memorisedAyahs === 1 ? '' : 's'}.`
-          : `Today you memorised ${todayGoalCompleted} of ${todayGoalTarget} planned ayah${todayGoalTarget === 1 ? '' : 's'}.`
+          ? this.t('memorisation.workspaceProgress.plannerSessionFinishedAll', { count: newAyahsCovered })
+          : this.t('memorisation.workspaceProgress.plannerSessionPartialGoal', {
+            completed: todayGoalCompleted,
+            target: todayGoalTarget,
+          }),
       }
     },
     getPlannerCompletionCounts() {
       const todaySession = Array.isArray(this.appState?.todaySession) ? this.appState.todaySession : []
       const coveredCount = Math.max(0, Math.min(todaySession.length, Number(this.currentPosition || 0)))
       const coveredItems = todaySession.slice(0, coveredCount)
-      const memorisedAyahs = coveredItems.filter(item => item?.type === 'new').length
+      const newItems = coveredItems.filter(item => item?.type === 'new')
+      const newAyahsCovered = newItems.length
+      const memorisedAyahs = this.countConfirmedMemorisedPlannerItems(newItems)
       return {
         coveredAyahs: coveredCount,
-        memorisedAyahs: memorisedAyahs || coveredCount
+        newAyahsCovered,
+        memorisedAyahs,
       }
     },
     showPlannerCompletionCelebration(snapshot = null) {
@@ -41063,10 +41092,14 @@ export default {
       this.showSessionEndedModal = false
     },
 
-    finalizePlannerSessionProgress() {
+    finalizePlannerSessionProgress(options = {}) {
       if (this.currentMode !== 'planner' || !this.hifzPlan || !Array.isArray(this.appState?.todaySession) || !this.appState.todaySession.length) {
         return
       }
+      const endedEarly = options.endedEarly ?? !!this.sessionEndedEarly
+      const rangeComplete = options.rangeComplete ?? (
+        !endedEarly && (this.isSessionFullyCompleted() || !!this.queuePlaybackExhausted)
+      )
       const coveredCount = Math.max(0, Math.min(this.appState.todaySession.length, Number(this.currentPosition || 0)))
       const coveredItems = this.appState.todaySession.slice(0, coveredCount)
       if (!coveredCount) {
@@ -41081,11 +41114,15 @@ export default {
         return
       }
 
-      const score = this.queueIndex >= Math.max((this.queue?.length || 1) - 1, 0) ? 1 : 0.5
-      coveredItems.forEach(item => {
-        updateAyahProgress(item.surah, item.ayah, score)
-      })
-      const completedNewAyahs = coveredItems.filter(item => item?.type === 'new').length
+      if (rangeComplete) {
+        const score = this.queueIndex >= Math.max((this.queue?.length || 1) - 1, 0) ? 1 : 0.5
+        coveredItems.forEach(item => {
+          updateAyahProgress(item.surah, item.ayah, score)
+        })
+      }
+      const completedNewAyahs = rangeComplete
+        ? coveredItems.filter(item => item?.type === 'new').length
+        : 0
 
       const summary = {
         ...(this.hifzPlan.progressSummary || {}),
@@ -41114,7 +41151,7 @@ export default {
     finishSessionCleanup(options = {}) {
       const endedEarly = options.endedEarly ?? !!this.sessionEndedEarly
       const discardSet = options.discardSet === true
-      this.finalizePlannerSessionProgress()
+      this.finalizePlannerSessionProgress({ endedEarly })
       this.clearRecitationWindowTimer()
       this.clearTalqinPauseTimer()
       this.closePlayer()

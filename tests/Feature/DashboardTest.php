@@ -429,6 +429,36 @@ class DashboardTest extends TestCase
         $this->assertLessThanOrEqual(3, count($points));
     }
 
+    public function test_chart_counts_ended_early_sessions_in_selected_period(): void
+    {
+        $user = User::factory()->create();
+        $sessionAt = now()->subDays(3)->setTime(15, 0);
+
+        UserSession::create([
+            'user_id' => $user->id,
+            'surah_number' => 2,
+            'ayah_number' => 100,
+            'status' => UserSessionStatus::EndedEarly,
+            'is_onboarding_example' => false,
+            'ended_at' => $sessionAt,
+            'last_activity_at' => $sessionAt,
+            'metadata' => [
+                'ended_early' => true,
+                'config' => [
+                    'rangeStart' => 100,
+                    'rangeEnd' => 199,
+                ],
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/dashboard?days=30')
+            ->assertOk()
+            ->assertJsonPath('data.chart.is_empty', false)
+            ->assertJsonPath('data.chart.period_summary.sessions', 1)
+            ->assertJsonPath('data.chart.period_summary.active_days', 1);
+    }
+
     public function test_chart_uses_session_range_when_analytics_has_not_landed_yet(): void
     {
         $user = User::factory()->create();

@@ -201,7 +201,7 @@ const ArticleDetailPage = lazyPage(
     { feature: 'article-detail' }
 );
 const UserDashboard = lazyPage(
-    () => import(/* webpackChunkName: "user-dashboard-audio-1" */ './views/Dashboard.vue'),
+    () => import(/* webpackChunkName: "user-dashboard" */ './views/Dashboard.vue'),
     { feature: 'dashboard' }
 );
 const AdminDashboard = lazyPage(
