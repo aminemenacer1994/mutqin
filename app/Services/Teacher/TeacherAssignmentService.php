@@ -161,7 +161,11 @@ class TeacherAssignmentService
                 $completedAt = null;
             }
 
-            if ($recipient->status !== $status || $recipient->completed_at?->eq($completedAt) === false) {
+            $current = $recipient->status instanceof AssignmentStatus
+                ? $recipient->status
+                : AssignmentStatus::tryFrom((string) $recipient->status);
+
+            if ($current !== $status || $recipient->completed_at?->eq($completedAt) === false) {
                 $recipient->forceFill([
                     'status' => $status->value,
                     'completed_at' => $completedAt,
@@ -179,7 +183,15 @@ class TeacherAssignmentService
             abort(404);
         }
 
-        if ($recipient->status !== AssignmentStatus::Completed && $recipient->started_at === null) {
+        $current = $recipient->status instanceof AssignmentStatus
+            ? $recipient->status
+            : AssignmentStatus::tryFrom((string) $recipient->status);
+
+        if ($current === AssignmentStatus::Completed) {
+            return $recipient->refresh();
+        }
+
+        if ($recipient->started_at === null) {
             $recipient->forceFill([
                 'started_at' => now(),
                 'status' => AssignmentStatus::InProgress->value,
@@ -340,6 +352,9 @@ class TeacherAssignmentService
                 $scoredAttempts,
                 $unfinishedSessions,
             );
+            if ((int) ($payload['progress']['completed'] ?? 0) >= (int) ($payload['progress']['target'] ?? 1)) {
+                $payload['status'] = AssignmentStatus::Completed->value;
+            }
             $payload['href'] = $this->practiceHref($assignment, $resumeSessionId);
             if ($includeComparison) {
                 $payload['comparison'] = $this->comparison($assignment, (int) $recipient->student_id);

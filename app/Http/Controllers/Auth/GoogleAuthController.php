@@ -62,7 +62,7 @@ class GoogleAuthController extends Controller
 
         $this->syncGoogleConfig();
 
-        // Authenticated users start an explicit link flow (never email-only auto-link).
+        // Authenticated users linking from Profile return there after callback.
         if (Auth::check()) {
             request()->session()->put('google_link_intent', true);
         } else {

@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             PracticeAccountSeeder::class,
             RegistrationOrganisationSeeder::class,
             OrganisationNetworkSeeder::class,
+            TeacherAnchorStudentSeeder::class,
             DemoDataSeeder::class,
         ]);
     }

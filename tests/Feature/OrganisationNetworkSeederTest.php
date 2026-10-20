@@ -32,6 +32,7 @@ class OrganisationNetworkSeederTest extends TestCase
     {
         parent::setUp();
         $this->enableTeacherFeatures();
+        config()->set('mutqin.teacher_anchor_student_emails', []);
     }
 
     public function test_organisation_network_seeder_links_orgs_teachers_and_students(): void

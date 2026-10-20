@@ -31,6 +31,29 @@ class TeacherFeaturesTest extends TestCase
         $this->enableTeacherFeatures();
 
         $this->assertTrue(TeacherFeatures::enabled());
+        $this->assertTrue(TeacherFeatures::learnerSectionEnabled());
+    }
+
+    public function test_learner_teacher_section_stays_off_in_deployment_when_not_configured(): void
+    {
+        config([
+            'mutqin.teacher_features_enabled' => true,
+            'mutqin.learner_teacher_section_enabled' => false,
+        ]);
+
+        $this->assertTrue(TeacherFeatures::enabled());
+        $this->assertFalse(TeacherFeatures::learnerSectionEnabled());
+
+        $student = User::factory()->create([
+            'account_role' => AccountRole::Student->value,
+        ]);
+
+        $this->actingAs($student)->getJson(route('api.me.support'))->assertNotFound();
+
+        $this->actingAs($student)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('"learner_teacher_section_enabled":false', false);
     }
 
     public function test_disabled_registration_keeps_the_existing_form_and_rejects_teacher_accounts(): void

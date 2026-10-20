@@ -44,6 +44,7 @@ class DashboardController extends Controller
                     'subscription_status' => $user->subscription_status ?? 'free',
                     'is_admin' => $user->isAdmin(),
                     'teacher_features_enabled' => TeacherFeatures::enabled(),
+                    'learner_teacher_section_enabled' => TeacherFeatures::learnerSectionEnabled(),
                     'account_role' => TeacherFeatures::enabled() ? $user->account_role?->value : null,
                     'teacher_dashboard_url' => TeacherFeatures::enabled() && $user->isTeacher()
                         ? route('teacher.dashboard')

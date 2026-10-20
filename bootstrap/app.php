@@ -5,6 +5,7 @@ use App\Http\Middleware\ApplySeoRobotsHeader;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnforceMarketingHostPolicy;
 use App\Http\Middleware\EnsureSubscriptionTier;
+use App\Http\Middleware\EnsureLearnerTeacherSectionEnabled;
 use App\Http\Middleware\EnsureTeacherFeaturesEnabled;
 use App\Http\Middleware\ForwardMarketingWaitingListSignup;
 use App\Http\Middleware\LogMutqinApiRequest;
@@ -114,12 +115,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'plan' => EnsureSubscriptionTier::class,
             'teacher.features' => EnsureTeacherFeaturesEnabled::class,
+            'learner.teacher.section' => EnsureLearnerTeacherSectionEnabled::class,
         ]);
 
         // Run before auth so a disabled feature is a 404, including for guests.
         $middleware->prependToPriorityList(
             AuthenticatesRequests::class,
             EnsureTeacherFeaturesEnabled::class,
+        );
+        $middleware->prependToPriorityList(
+            AuthenticatesRequests::class,
+            EnsureLearnerTeacherSectionEnabled::class,
         );
 
         $middleware->redirectUsersTo(static function (Request $request): string {

@@ -251,7 +251,7 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertTrue($fresh->isAdmin());
     }
 
-    public function test_verified_local_account_is_not_auto_linked_by_email_alone(): void
+    public function test_verified_local_account_auto_links_when_google_email_is_verified(): void
     {
         $user = User::factory()->create([
             'email' => 'linked@example.com',
@@ -270,14 +270,13 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('login'))
-            ->assertSessionHasErrors([
-                'google' => GoogleSignInService::GENERIC_LINK_REQUIRED,
-            ]);
+            ->assertRedirect(route('memorisation'));
 
-        $this->assertGuest();
-        $this->assertNull($user->fresh()->google_id);
-        $this->assertTrue(Hash::check('local-password', $user->fresh()->password));
+        $fresh = $user->fresh();
+        $this->assertAuthenticatedAs($fresh);
+        $this->assertSame('google-456', $fresh->google_id);
+        $this->assertSame('https://example.com/avatar.png', $fresh->avatar);
+        $this->assertTrue(Hash::check('local-password', $fresh->password));
         $this->assertSame(1, User::count());
     }
 
@@ -563,7 +562,7 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_password_reset_still_works_for_verified_local_accounts_after_collision_block(): void
+    public function test_password_reset_still_works_after_google_auto_links_verified_local_account(): void
     {
         $user = User::factory()->create([
             'email' => 'reset-me@example.com',
@@ -579,10 +578,12 @@ class GoogleAuthControllerTest extends TestCase
         ]);
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('login'))
-            ->assertSessionHasErrors('google');
+            ->assertRedirect(route('memorisation'));
 
-        $this->assertNull($user->fresh()->google_id);
+        $this->assertSame('google-reset-collision', $user->fresh()->google_id);
+
+        $this->post(route('logout'));
+        $this->assertGuest();
 
         $token = Password::broker()->createToken($user);
 

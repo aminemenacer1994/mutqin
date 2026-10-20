@@ -26,6 +26,7 @@ use App\Models\UserSession;
 use App\Services\Demo\TeacherDemoReset;
 use App\Services\Memorisation\RecitationScoringThresholds;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\Organisations\TeacherAnchorStudentEnroller;
 use App\Services\Teacher\TeacherAssignmentService;
 use App\Support\Demo\TeacherDemoCatalog;
 use App\Support\QuranMetadata;
@@ -96,6 +97,7 @@ class TeacherDemoSeeder extends Seeder
         $this->seedNotes();
         $this->refreshAssignmentStatuses();
         $this->assertVolumes();
+        app(TeacherAnchorStudentEnroller::class)->enrolAll();
     }
 
     private function assertRanges(): void

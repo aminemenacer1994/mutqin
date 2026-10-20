@@ -16,9 +16,22 @@ final class TeacherFeatures
         return (bool) config('mutqin.teacher_features_enabled', false);
     }
 
+    public static function learnerSectionEnabled(): bool
+    {
+        return self::enabled()
+            && (bool) config('mutqin.learner_teacher_section_enabled', false);
+    }
+
     public static function abortUnlessEnabled(): void
     {
         if (! self::enabled()) {
+            abort(404);
+        }
+    }
+
+    public static function abortUnlessLearnerSectionEnabled(): void
+    {
+        if (! self::learnerSectionEnabled()) {
             abort(404);
         }
     }

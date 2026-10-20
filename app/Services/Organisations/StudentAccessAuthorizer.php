@@ -35,11 +35,7 @@ class StudentAccessAuthorizer
             return false;
         }
 
-        if ($actor->organisation_id === null || $student->organisation_id === null) {
-            return false;
-        }
-
-        if ((int) $actor->organisation_id !== (int) $student->organisation_id) {
+        if ($actor->organisation_id === null) {
             return false;
         }
 
@@ -95,9 +91,8 @@ class StudentAccessAuthorizer
             ->whereHas('learningGroup', function ($query) use ($actor) {
                 $query->where('organisation_id', $actor->organisation_id);
             })
-            ->whereHas('user', function ($query) use ($actor) {
-                $query->where('account_role', AccountRole::Student->value)
-                    ->where('organisation_id', $actor->organisation_id);
+            ->whereHas('user', function ($query) {
+                $query->where('account_role', AccountRole::Student->value);
             })
             ->pluck('user_id')
             ->map(fn ($id) => (int) $id)

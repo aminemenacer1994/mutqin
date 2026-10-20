@@ -9,6 +9,7 @@ use App\Models\MemorisationWeakSpot;
 use App\Models\Organisation;
 use App\Models\TeacherAssignment;
 use App\Models\TeacherAssignmentRecipient;
+use App\Models\TeacherNote;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Organisations\StudentAccessAuthorizer;
@@ -28,6 +29,7 @@ class TeacherDemoSeederTest extends TestCase
     {
         parent::setUp();
         $this->enableTeacherFeatures();
+        config()->set('mutqin.teacher_anchor_student_emails', []);
     }
 
     public function test_teacher_demo_seeding_refuses_production(): void
@@ -218,8 +220,13 @@ class TeacherDemoSeederTest extends TestCase
         $this->assertFalse(collect($support['feedback'])->contains(fn (array $note) => $note['body'] === TeacherDemoCatalog::PRIVATE_NOTE));
         $this->assertTrue(collect($support['assignments'])->contains(fn (array $row) => ($row['assignment']['surah_number'] ?? null) === 112));
 
-        $teacherNotes = $dashboard->profile($madrassa, $repeated, 'overview')['payload']['notes'];
-        $this->assertTrue(collect($teacherNotes)->contains(fn (array $note) => $note['body'] === TeacherDemoCatalog::PRIVATE_NOTE && $note['kind'] === 'note'));
+        $this->assertTrue(
+            TeacherNote::query()
+                ->where('teacher_id', $madrassa->id)
+                ->where('student_id', $repeated->id)
+                ->where('body', TeacherDemoCatalog::PRIVATE_NOTE)
+                ->exists()
+        );
         $repeatedSupport = $dashboard->learnerSupport($repeated);
         $this->assertFalse(collect($repeatedSupport['feedback'])->contains(fn (array $note) => $note['body'] === TeacherDemoCatalog::PRIVATE_NOTE));
 

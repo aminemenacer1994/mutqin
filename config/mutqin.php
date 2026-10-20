@@ -23,6 +23,30 @@ return [
     'teacher_features_enabled' => filter_var(env('MUTQIN_TEACHER_FEATURES_ENABLED', false), FILTER_VALIDATE_BOOL),
 
     /*
+     | Learner dashboard block ("From your teacher"). Requires teacher_features_enabled.
+     | Off by default in deployed environments; local/testing mirror teacher_features unless set.
+     */
+    'learner_teacher_section_enabled' => filter_var(
+        env(
+            'MUTQIN_LEARNER_TEACHER_SECTION_ENABLED',
+            in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)
+                ? env('MUTQIN_TEACHER_FEATURES_ENABLED', false)
+                : false
+        ),
+        FILTER_VALIDATE_BOOL
+    ),
+
+    /*
+     | Comma-separated student mailboxes enrolled into every demo teacher group when
+     | organisation-network or teacher-demo seeders run (non-production only).
+     | Leave empty in production. Example: menacer72@gmail.com
+     */
+    'teacher_anchor_student_emails' => array_values(array_filter(array_map(
+        static fn (string $email): string => strtolower(trim($email)),
+        explode(',', (string) env('MUTQIN_TEACHER_ANCHOR_STUDENT_EMAILS', 'menacer72@gmail.com'))
+    ))),
+
+    /*
      | Host-based routing (production): mutqin.ai serves the public site; app.mutqin.ai
      | serves the Laravel application. Disabled automatically when hosts match (local/tests).
      */

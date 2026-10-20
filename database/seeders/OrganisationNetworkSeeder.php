@@ -16,6 +16,7 @@ use App\Models\Organisation;
 use App\Models\User;
 use App\Models\UserSession;
 use App\Services\Organisations\StudentAccessAuthorizer;
+use App\Services\Organisations\TeacherAnchorStudentEnroller;
 use App\Support\Demo\OrganisationNetworkCatalog;
 use App\Support\Demo\OrganisationNetworkClassroom;
 use App\Support\Registration\OrganisationName;
@@ -60,6 +61,8 @@ class OrganisationNetworkSeeder extends Seeder
                         $classroom->plantStudent($student['user'], $teacher, $student['definition']);
                     }
                 }
+
+                app(TeacherAnchorStudentEnroller::class)->enrolAll();
             });
         });
 

@@ -165,19 +165,14 @@
           </div>
         </section>
 
-        <LearnerTeacherAssignments
-          v-if="showLearnerAssignments"
-          :assignments="learnerAssignments"
+        <LearnerTeacherSection
+          v-if="showLearnerTeacherSection"
+          :support="support"
           :loading="supportLoading"
           :error="supportError"
+          :groups-error="supportGroupsError"
           :starting-id="assignmentStartingId"
           @start="startSupportAssignment"
-        />
-
-        <LearnerTeacherSupport
-          v-if="showLearnerSupport"
-          :support="support"
-          :error="supportGroupsError"
           @request-group="requestSupportGroup"
           @grant-consent="grantSupportConsent"
         />
@@ -808,8 +803,7 @@ import {
 } from 'chart.js'
 import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
-import LearnerTeacherAssignments from '../components/teacher/LearnerTeacherAssignments.vue'
-import LearnerTeacherSupport from '../components/teacher/LearnerTeacherSupport.vue'
+import LearnerTeacherSection from '../components/teacher/LearnerTeacherSection.vue'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
@@ -879,8 +873,7 @@ export default {
   components: {
     Bar,
     NetworkFallback,
-    LearnerTeacherAssignments,
-    LearnerTeacherSupport,
+    LearnerTeacherSection,
     DashAnimatedNumber,
     SessionAnalysisModal,
   },
@@ -944,21 +937,10 @@ export default {
     memorisationUrl() {
       return this.auth?.memorisation_url || '/memorisation'
     },
-    learnerAssignments() {
-      return Array.isArray(this.support?.assignments) ? this.support.assignments : []
-    },
-    showLearnerAssignments() {
-      if (this.auth?.teacher_features_enabled !== true) return false
-      return this.supportLoading || this.support !== null
-    },
-    showLearnerSupport() {
-      if (this.auth?.teacher_features_enabled !== true) return false
-      if (!this.support) return false
-      return Boolean(
-        this.support.teacher_dashboard_url
-        || this.support.feedback?.length
-        || this.support.groups?.length
-      )
+    showLearnerTeacherSection() {
+      if (this.auth?.learner_teacher_section_enabled !== true) return false
+      if (this.supportLoading || this.support !== null) return true
+      return false
     },
     savedSessionsHref() {
       const base = this.memorisationUrl.split('?')[0]
@@ -1749,6 +1731,7 @@ export default {
     this.visibilityHandler = () => {
       if (document.visibilityState === 'visible') {
         this.refreshActiveSessionSnapshot()
+        this.loadLearnerSupport()
         this.fetchDashboard(this.chartDays, { quiet: true })
       }
     }
@@ -2441,7 +2424,7 @@ export default {
       this.loadLearnerSupport()
     },
     async loadLearnerSupport() {
-      if (this.auth?.teacher_features_enabled !== true) return
+      if (this.auth?.learner_teacher_section_enabled !== true) return
       this.supportLoading = true
       try {
         this.support = await learningApi.getLearnerSupport()
@@ -2455,7 +2438,7 @@ export default {
       }
     },
     async startSupportAssignment(item) {
-      if (this.auth?.teacher_features_enabled !== true) return
+      if (this.auth?.learner_teacher_section_enabled !== true) return
       this.supportError = ''
       this.assignmentStartingId = Number(item?.id || 0)
       try {
@@ -2479,7 +2462,7 @@ export default {
       }
     },
     async requestSupportGroup(group) {
-      if (this.auth?.teacher_features_enabled !== true) return
+      if (this.auth?.learner_teacher_section_enabled !== true) return
       this.supportGroupsError = ''
       try {
         this.support = await learningApi.requestLearnerGroup(group.id)
@@ -2490,7 +2473,7 @@ export default {
       }
     },
     async grantSupportConsent(group) {
-      if (this.auth?.teacher_features_enabled !== true) return
+      if (this.auth?.learner_teacher_section_enabled !== true) return
       this.supportGroupsError = ''
       try {
         this.support = await learningApi.grantLearnerConsent(group.membership_id)

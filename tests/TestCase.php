@@ -13,6 +13,9 @@ abstract class TestCase extends BaseTestCase
 
     protected function enableTeacherFeatures(): void
     {
-        config(['mutqin.teacher_features_enabled' => true]);
+        config([
+            'mutqin.teacher_features_enabled' => true,
+            'mutqin.learner_teacher_section_enabled' => true,
+        ]);
     }
 }

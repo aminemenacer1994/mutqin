@@ -106,12 +106,14 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.feedback.store');
 
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
-        Route::middleware('teacher.features')->group(function () {
+        Route::middleware('learner.teacher.section')->group(function () {
             Route::get('/me/support', [LearnerSupportController::class, 'show'])->name('api.me.support');
             Route::post('/me/groups/{group}/request', [LearnerSupportController::class, 'requestGroup'])->name('api.me.groups.request');
             Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
             Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
+        });
 
+        Route::middleware('teacher.features')->group(function () {
             Route::prefix('teacher')->group(function () {
                 Route::get('/overview', [TeacherDashboardController::class, 'overview'])->name('api.teacher.overview');
                 Route::get('/students', [TeacherDashboardController::class, 'students'])->name('api.teacher.students');

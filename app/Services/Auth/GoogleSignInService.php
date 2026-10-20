@@ -20,7 +20,8 @@ use Laravel\Socialite\Contracts\User as SocialiteUserContract;
  * Trust model:
  * - Primary key is Google subject id (`google_id`), not email.
  * - Email from Google is used only when Google reports email_verified=true.
- * - Verified local accounts require an authenticated explicit link (same user session).
+ * - Verified local accounts with no google_id auto-link when Google reports email_verified.
+ *   Profile “Link Google” remains for users who prefer an authenticated link flow.
  * - Unverified local squats are reclaimed for a verified Google identity (password wiped).
  */
 class GoogleSignInService
@@ -30,8 +31,6 @@ class GoogleSignInService
     ) {}
 
     public const GENERIC_FAILURE = 'Unable to sign in with Google. Please try again.';
-
-    public const GENERIC_LINK_REQUIRED = 'Unable to sign in with Google. If you already have an account, sign in with your password and link Google from your profile.';
 
     /**
      * @return array{user: ?User, created: bool, error: ?string}
@@ -238,7 +237,8 @@ class GoogleSignInService
     }
 
     /**
-     * Verified local accounts are never auto-linked by email alone.
+     * Verified local account matched by email; google_id is still null (see resolve()).
+     * Google already proved mailbox ownership via email_verified upstream.
      *
      * @return array{user: ?User, created: bool, error: ?string}
      */
@@ -249,21 +249,8 @@ class GoogleSignInService
         string $providerSubject,
         ?User $authenticatedUser
     ): array {
-        $canExplicitLink = $authenticatedUser
-            && (int) $authenticatedUser->id === (int) $local->id
-            && strtolower(trim((string) $authenticatedUser->email)) === $email
-            && $authenticatedUser->email_verified_at !== null
-            && $local->google_id === null;
-
-        if (! $canExplicitLink) {
-            $this->securityLog('google_oauth_verified_local_collision_requires_explicit_link', [
-                'user_id' => $local->id,
-                'provider_subject' => $providerSubject,
-                'email_hash' => $this->emailHash($email),
-                'authenticated_user_id' => $authenticatedUser?->id,
-            ]);
-
-            return $this->fail(self::GENERIC_LINK_REQUIRED);
+        if ($local->google_id !== null) {
+            return $this->fail(self::GENERIC_FAILURE);
         }
 
         $local->forceFill([
@@ -271,11 +258,21 @@ class GoogleSignInService
             'avatar' => $googleUser->getAvatar() ?: $local->avatar,
         ])->save();
 
-        $this->securityLog('google_oauth_explicit_link_completed', [
-            'user_id' => $local->id,
-            'provider_subject' => $providerSubject,
-            'email_hash' => $this->emailHash($email),
-        ]);
+        $explicitProfileLink = $authenticatedUser
+            && (int) $authenticatedUser->id === (int) $local->id
+            && strtolower(trim((string) $authenticatedUser->email)) === $email;
+
+        $this->securityLog(
+            $explicitProfileLink
+                ? 'google_oauth_explicit_link_completed'
+                : 'google_oauth_verified_email_auto_link',
+            [
+                'user_id' => $local->id,
+                'provider_subject' => $providerSubject,
+                'email_hash' => $this->emailHash($email),
+                'authenticated_user_id' => $authenticatedUser?->id,
+            ]
+        );
 
         return ['user' => $local->fresh(), 'created' => false, 'error' => null];
     }
