@@ -4,18 +4,16 @@
       v-for="(card, index) in cards"
       :key="card.key"
       type="button"
-      class="dash-analytic is-action"
-      :class="`dash-analytic--${card.tone || 'accent'}`"
+      class="teacher-stat-card"
+      :class="`teacher-stat-card--${card.key}`"
       :style="stagger ? { '--dash-delay': `${index * 45}ms` } : undefined"
       :disabled="!selectable"
       @click="selectable && $emit('select', card.key)"
     >
-      <span v-if="card.icon" class="dash-analytic__icon" :class="`dash-analytic__icon--${card.tone || 'accent'}`" aria-hidden="true">
-        <i :class="card.icon"></i>
-      </span>
-      <p class="dash-analytic__value dash-num">{{ card.value }}</p>
-      <p class="dash-analytic__label">{{ card.label }}</p>
-      <span v-if="selectable" class="dash-analytic__action">
+      <span class="teacher-stat-card__icon" aria-hidden="true"><i :class="card.icon"></i></span>
+      <span class="teacher-stat-card__value dash-num">{{ card.value }}</span>
+      <span class="teacher-stat-card__label">{{ card.label }}</span>
+      <span v-if="selectable" class="teacher-stat-card__action">
         {{ card.action || t('teacher.open') }}
         <i class="bi bi-arrow-right-short" aria-hidden="true"></i>
       </span>

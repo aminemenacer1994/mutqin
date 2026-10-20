@@ -4,8 +4,8 @@
       :title="t('teacher.nav_students')"
       :subtitle="t('teacher.students_subtitle')"
     />
-    <div class="teacher-toolbar">
-      <label class="teacher-search">
+    <div class="teacher-toolbar teacher-toolbar--filters teacher-toolbar--notion">
+      <label class="teacher-search teacher-search--compact">
         <span class="visually-hidden">{{ t('teacher.search') }}</span>
         <i class="bi bi-search" aria-hidden="true"></i>
         <input
@@ -15,6 +15,22 @@
           autocomplete="off"
           @input="onQueryInput"
         >
+      </label>
+      <label class="teacher-field teacher-field--inline">
+        <span class="visually-hidden">{{ t('teacher.group') }}</span>
+        <select :value="filters.group_id" @change="onFilterChange('group_id', $event.target.value)">
+          <option value="">{{ t('teacher.any_group') }}</option>
+          <option v-for="group in groups" :key="group.id" :value="String(group.id)">{{ group.name }}</option>
+        </select>
+      </label>
+      <label class="teacher-field teacher-field--inline">
+        <span class="visually-hidden">{{ t('teacher.activity_filter') }}</span>
+        <select :value="filters.activity" @change="onFilterChange('activity', $event.target.value)">
+          <option value="">{{ t('teacher.any') }}</option>
+          <option value="active_7">{{ t('teacher.active_7') }}</option>
+          <option value="active_30">{{ t('teacher.active_30') }}</option>
+          <option value="inactive_7">{{ t('teacher.inactive_7') }}</option>
+        </select>
       </label>
       <button
         type="button"
@@ -33,30 +49,12 @@
       {{ t('teacher.loading') }}
     </p>
     <TeacherEmpty v-else-if="!students.length" icon="bi bi-people" :message="t('teacher.students_empty')" />
-    <div v-else class="teacher-groups">
-      <section
-        v-for="group in performanceGroups"
-        :key="group.key"
-        class="teacher-group"
-        :aria-labelledby="`teacher-group-${group.key}`"
-      >
-        <h2 :id="`teacher-group-${group.key}`" class="teacher-group__title">
-          {{ group.title }}
-          <span class="teacher-group__count">{{ group.students.length }}</span>
-        </h2>
-        <div class="teacher-grid">
-          <TeacherStudentCard
-            v-for="(student, index) in group.students"
-            :key="student.id"
-            :student="student"
-            :organisation-label="organisationName"
-            :format-when="formatWhen"
-            :style="{ '--dash-delay': `${Math.min(index, 8) * 28}ms` }"
-            @open="$emit('open-student', $event)"
-          />
-        </div>
-      </section>
-    </div>
+    <TeacherStudentTable
+      v-else
+      :students="students"
+      :format-when="formatWhen"
+      @open="$emit('open-student', $event)"
+    />
     <TeacherMore
       :remaining="remaining"
       :loading="loadingMore"
@@ -67,19 +65,18 @@
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
-import { groupStudentsByPerformance } from '../../scripts/teacher/formatters'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
 import TeacherPageHeader from './TeacherPageHeader.vue'
-import TeacherStudentCard from './TeacherStudentCard.vue'
+import TeacherStudentTable from './TeacherStudentTable.vue'
 
 export default {
   name: 'TeacherStudentsSection',
-  components: { TeacherEmpty, TeacherMore, TeacherPageHeader, TeacherStudentCard },
+  components: { TeacherEmpty, TeacherMore, TeacherPageHeader, TeacherStudentTable },
   mixins: [i18nMixin],
   props: {
     filters: { type: Object, required: true },
-    organisationName: { type: String, default: '' },
+    groups: { type: Array, default: () => [] },
     students: { type: Array, default: () => [] },
     meta: { type: Object, required: true },
     loading: { type: Boolean, default: false },
@@ -88,9 +85,6 @@ export default {
   },
   emits: ['update:filters', 'search', 'queue-search', 'more', 'open-student'],
   computed: {
-    performanceGroups() {
-      return groupStudentsByPerformance(this.students, this.t)
-    },
     remaining() {
       const total = Number(this.meta.total || 0)
       if (total > 0) return Math.max(0, total - this.students.length)

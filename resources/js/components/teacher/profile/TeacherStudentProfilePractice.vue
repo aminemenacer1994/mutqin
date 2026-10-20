@@ -1,35 +1,50 @@
 <template>
-  <div>
-    <p v-if="profile.payload.latest_saved" class="teacher-saved">
-      <span class="teacher-pill teacher-pill--practice">
-        <i class="bi bi-bookmark-fill" aria-hidden="true"></i>
-        {{ t('teacher.saved_session') }}
-      </span>
-      {{ sessionLabel(profile.payload.latest_saved) }}
-    </p>
-    <TeacherEmpty v-else icon="bi bi-bookmark" :message="t('teacher.saved_empty')" />
-    <ul v-if="profile.payload.sessions?.length" class="teacher-list teacher-list--bordered">
-      <li v-for="session in profile.payload.sessions" :key="session.id">
-        <span>{{ sessionLabel(session) }}</span>
-        <span class="teacher-chip teacher-chip--practising">{{ formatWhen(session.last_activity_at) }}</span>
-      </li>
-    </ul>
+  <TeacherSectionPane
+    :title="t('teacher.tab_practice')"
+    :hint="t('teacher.profile_tab_practice_hint')"
+    icon="bi bi-play-circle"
+    tone="practice"
+  >
+    <div v-if="profile.payload.latest_saved" class="teacher-spotlight teacher-spotlight--practice teacher-spotlight--inline">
+      <span class="teacher-spotlight__icon" aria-hidden="true"><i class="bi bi-bookmark-fill"></i></span>
+      <div class="teacher-spotlight__copy">
+        <span class="teacher-spotlight__label">{{ t('teacher.saved_session') }}</span>
+        <span class="teacher-quran teacher-spotlight__value">{{ sessionLabel(profile.payload.latest_saved) }}</span>
+      </div>
+    </div>
+    <TeacherRecordList v-if="sessionRows.length" :rows="sessionRows" />
     <TeacherEmpty v-else icon="bi bi-play-circle" :message="t('teacher.practice_empty')" />
-  </div>
+  </TeacherSectionPane>
 </template>
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
 import TeacherEmpty from '../TeacherEmpty.vue'
+import TeacherRecordList from '../TeacherRecordList.vue'
+import TeacherSectionPane from '../TeacherSectionPane.vue'
 
 export default {
   name: 'TeacherStudentProfilePractice',
-  components: { TeacherEmpty },
+  components: { TeacherEmpty, TeacherRecordList, TeacherSectionPane },
   mixins: [i18nMixin],
   props: {
     profile: { type: Object, required: true },
     sessionLabel: { type: Function, required: true },
     formatWhen: { type: Function, required: true },
+  },
+  computed: {
+    sessionRows() {
+      return (this.profile.payload.sessions || []).map((session) => ({
+        key: session.id,
+        icon: 'bi bi-journal-text',
+        iconTone: 'accent',
+        title: this.sessionLabel(session),
+        quran: true,
+        hint: this.t('teacher.profile_session_when', { when: this.formatWhen(session.last_activity_at) }),
+        badge: this.formatWhen(session.last_activity_at),
+        badgeTone: 'muted',
+      }))
+    },
   },
 }
 </script>

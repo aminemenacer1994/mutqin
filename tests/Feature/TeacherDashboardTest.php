@@ -117,6 +117,9 @@ class TeacherDashboardTest extends TestCase
         $this->assertArrayHasKey('needs_attention', $overview['metrics']);
         $this->assertArrayHasKey('active_7', $overview['metrics']);
 
+        $tasks = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'tasks']))->assertOk()->json('payload');
+        $this->assertArrayHasKey('assignments', $tasks);
+
         $analytics = $this->actingAs($teacher)->getJson(route('api.teacher.students.show', ['student' => $student, 'section' => 'analytics']))->assertOk()->json('payload');
         $this->assertSame(80, $analytics['success_rate']);
         $this->assertArrayHasKey('sessions', $analytics);

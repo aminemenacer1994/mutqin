@@ -55,6 +55,50 @@ export function issueLabel(issues, t) {
   return t('teacher.issues', issues)
 }
 
+export function attentionReasonTags(student, t) {
+  const tags = []
+  if (student?.active_7 === false || (!student?.active_7 && !student?.last_activity_at)) {
+    tags.push({ key: 'inactive', tone: 'quiet', icon: 'bi bi-moon', label: t('teacher.reason_inactive') })
+  }
+  if ((student?.revision_overdue || 0) > 0) {
+    tags.push({ key: 'revision', tone: 'warn', icon: 'bi bi-arrow-repeat', label: t('teacher.overdue_revisions') })
+  }
+  if ((student?.assignments?.overdue || 0) > 0) {
+    tags.push({ key: 'tasks', tone: 'danger', icon: 'bi bi-clock', label: t('teacher.kpi_overdue_tasks') })
+  }
+  if ((student?.weak_count || 0) > 0) {
+    tags.push({ key: 'weak', tone: 'warn', icon: 'bi bi-exclamation-triangle', label: t('teacher.reason_hard_ayahs') })
+  }
+  if (typeof student?.ai_success_rate === 'number' && student.ai_success_rate < 65) {
+    tags.push({ key: 'score', tone: 'danger', icon: 'bi bi-mic', label: t('teacher.reason_low_score') })
+  }
+  if (!tags.length && student?.needs_attention) {
+    tags.push({ key: 'help', tone: 'warn', icon: 'bi bi-hand-index', label: t('teacher.need_look') })
+  }
+  return tags.slice(0, 3)
+}
+
+export function attentionReasons(student, t) {
+  return attentionReasonTags(student, t).map((tag) => tag.label)
+}
+
+export function scoreBadgeTone(score) {
+  if (typeof score !== 'number') return 'muted'
+  if (score >= 85) return 'good'
+  if (score >= 65) return 'mid'
+  return 'warn'
+}
+
+export function stageMeta(stageKey) {
+  const map = {
+    quiet: { icon: 'bi bi-seedling', tone: 'quiet' },
+    attention: { icon: 'bi bi-exclamation-circle', tone: 'warn' },
+    strong: { icon: 'bi bi-star', tone: 'good' },
+    practising: { icon: 'bi bi-play-circle', tone: 'accent' },
+  }
+  return map[stageKey] || map.practising
+}
+
 export function studentStatus(student, t) {
   if (!student?.last_activity_at && !student?.sessions) {
     return { key: 'quiet', label: t('teacher.stage_new'), hint: t('teacher.stage_new_hint') }

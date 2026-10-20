@@ -46,6 +46,10 @@ export function useTeacherDashboard(authRef) {
   const assignmentRows = ref([])
   const assignmentSaving = ref(false)
   const assignment = ref(defaultAssignmentForm())
+  const assignmentFormOpen = ref(false)
+  const formSuccess = ref('')
+  const attentionPreview = ref([])
+  const teacherGroups = ref([])
 
   const featuresEnabled = computed(() => authRef?.teacher_features_enabled === true)
 
@@ -60,6 +64,8 @@ export function useTeacherDashboard(authRef) {
 
   const kpiCards = computed(() => {
     const kpis = overview.value?.kpis || {}
+    const overdueTasks = Number(kpis.overdue_assignments ?? 0)
+    const overdueRevision = Number(kpis.overdue_revisions ?? 0)
     return [
       {
         key: 'students',
@@ -70,20 +76,28 @@ export function useTeacherDashboard(authRef) {
         action: t('teacher.kpi_open_students'),
       },
       {
-        key: 'attention',
-        label: t('teacher.kpi_attention'),
-        value: kpis.needs_attention ?? '—',
-        icon: 'bi bi-exclamation-circle',
-        tone: 'teal',
-        action: t('teacher.kpi_open_help'),
-      },
-      {
         key: 'active',
-        label: t('teacher.kpi_active'),
+        label: t('teacher.kpi_active_7d'),
         value: kpis.active_7_days ?? '—',
         icon: 'bi bi-calendar-week',
         tone: 'teal',
         action: t('teacher.kpi_open_week'),
+      },
+      {
+        key: 'overdue',
+        label: t('teacher.kpi_overdue_tasks'),
+        value: overdueTasks + overdueRevision,
+        icon: 'bi bi-clock-history',
+        tone: 'teal',
+        action: t('teacher.view_all'),
+      },
+      {
+        key: 'attention',
+        label: t('teacher.kpi_need_support'),
+        value: kpis.needs_attention ?? '—',
+        icon: 'bi bi-exclamation-circle',
+        tone: 'teal',
+        action: t('teacher.kpi_open_help'),
       },
     ]
   })
@@ -163,6 +177,24 @@ export function useTeacherDashboard(authRef) {
     window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`)
   }
 
+  async function loadAttentionPreview() {
+    try {
+      const payload = await learningApi.getTeacherStudents({ attention: '1', page: 1, per_page: 6 })
+      attentionPreview.value = payload.data || []
+    } catch {
+      attentionPreview.value = []
+    }
+  }
+
+  async function loadTeacherGroups() {
+    try {
+      const payload = await learningApi.getTeacherGroups()
+      teacherGroups.value = Array.isArray(payload) ? payload : (payload.data || [])
+    } catch {
+      teacherGroups.value = []
+    }
+  }
+
   async function loadOverview() {
     loading.value = !overview.value
     error.value = false
@@ -171,6 +203,7 @@ export function useTeacherDashboard(authRef) {
       chartReady.value = false
       await nextTick()
       chartReady.value = true
+      await loadAttentionPreview()
     } catch (err) {
       error.value = !overview.value
       failureKind.value = classifyRequestFailure(err)
@@ -189,12 +222,15 @@ export function useTeacherDashboard(authRef) {
   function openView(nextView) {
     view.value = nextView
     formError.value = ''
+    formSuccess.value = ''
     syncUrl()
     if (nextView === 'students') {
       loadStudents(1)
+      loadTeacherGroups()
     }
     if (nextView === 'assignments') {
       loadStudents(1)
+      loadTeacherGroups()
       loadAssignments()
     }
   }
@@ -206,6 +242,27 @@ export function useTeacherDashboard(authRef) {
       activity: key === 'active' ? 'active_7' : '',
     }
     openView('students')
+  }
+
+  function prefillAssignmentFromStudent(student) {
+    const next = {
+      ...defaultAssignmentForm(),
+      student_id: student?.id ? String(student.id) : '',
+      kind: 'practice',
+    }
+    const weak = student?.weak_example
+    if (weak?.surah_number) {
+      next.surah_number = String(weak.surah_number)
+      next.ayah_start = Number(weak.ayah_number) || 1
+      next.ayah_end = Number(weak.ayah_number) || 1
+    }
+    assignment.value = next
+  }
+
+  function openAssignRevision(student) {
+    prefillAssignmentFromStudent(student)
+    assignmentFormOpen.value = true
+    openView('assignments')
   }
 
   function queueStudentSearch() {
@@ -242,8 +299,12 @@ export function useTeacherDashboard(authRef) {
     }
   }
 
+  function profileTabIds() {
+    return TEACHER_PROFILE_TABS.map((tab) => (typeof tab === 'string' ? tab : tab.id))
+  }
+
   function resolveProfileSection(section) {
-    if (TEACHER_PROFILE_TABS.includes(section)) return section
+    if (profileTabIds().includes(section)) return section
     return 'overview'
   }
 
@@ -290,7 +351,9 @@ export function useTeacherDashboard(authRef) {
     payload.student_id = Number(assignment.value.student_id)
     try {
       await learningApi.createTeacherAssignment(payload)
-      assignment.value.feedback = ''
+      assignment.value = { ...defaultAssignmentForm(), surah_number: assignment.value.surah_number }
+      assignmentFormOpen.value = false
+      formSuccess.value = t('teacher.assign_success')
       await loadAssignments()
       await loadOverview()
     } catch (err) {
@@ -351,6 +414,10 @@ export function useTeacherDashboard(authRef) {
     assignmentRows,
     assignmentSaving,
     assignment,
+    assignmentFormOpen,
+    formSuccess,
+    attentionPreview,
+    teacherGroups,
     featuresEnabled,
     firstName,
     practiceUrl,
@@ -372,6 +439,8 @@ export function useTeacherDashboard(authRef) {
     loadProfile,
     metric,
     createAssignment,
+    openAssignRevision,
+    prefillAssignmentFromStudent,
     isNavActive: (id) => isTeacherNavActive(view.value, id),
     formatWhen: formatTeacherWhen,
     studentInitial,

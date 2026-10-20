@@ -228,7 +228,7 @@ class TeacherDashboardService
 
         $this->assertAuthorised($teacher, $student);
         $this->assignments->refreshStatuses($teacher, [(int) $student->id]);
-        $section = in_array($section, ['overview', 'analytics', 'practice', 'weak', 'ai', 'revision'], true) ? $section : 'overview';
+        $section = in_array($section, ['overview', 'analytics', 'practice', 'weak', 'ai', 'revision', 'tasks'], true) ? $section : 'overview';
         $metrics = $this->metricsFor($teacher, [(int) $student->id])[(int) $student->id];
         $groups = $this->sharedGroups($teacher, [(int) $student->id])->get($student->id, collect());
 
@@ -251,6 +251,7 @@ class TeacherDashboardService
             'weak' => $this->weakSection($student),
             'ai' => $this->aiSection($student),
             'revision' => $this->revisionSection($teacher, $student),
+            'tasks' => $this->tasksSection($teacher, $student),
             'analytics' => $this->analyticsSection($teacher, $student, $metrics),
             default => $this->overviewSection($teacher, $student, $metrics),
         };
@@ -1074,6 +1075,18 @@ class TeacherDashboardService
         }
 
         return compact('wrong', 'skipped', 'extra', 'repeated');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function tasksSection(User $teacher, User $student): array
+    {
+        $revision = $this->revisionSection($teacher, $student);
+
+        return [
+            'assignments' => $revision['assignments'] ?? [],
+        ];
     }
 
     /**

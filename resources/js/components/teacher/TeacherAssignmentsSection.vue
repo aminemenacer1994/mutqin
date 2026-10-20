@@ -3,140 +3,157 @@
     <TeacherPageHeader
       :title="t('teacher.nav_assignments')"
       :subtitle="t('teacher.tasks_subtitle')"
-    />
-    <TeacherPanel
-      :title="t('teacher.assign_form_title')"
-      :hint="t('teacher.assign_form_lead')"
-      icon="bi bi-journal-text"
-      compact
     >
-      <form class="teacher-compose" @submit.prevent="$emit('create')">
-        <fieldset class="teacher-compose__block">
-          <legend class="teacher-compose__legend">{{ t('teacher.assign_section_student') }}</legend>
-        <label class="teacher-field teacher-field--full">
-          <span>{{ t('teacher.student') }}</span>
-          <select :value="form.student_id" required @change="patch('student_id', $event.target.value)">
-            <option value="">{{ t('teacher.choose') }}</option>
-            <option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.name }}</option>
-          </select>
-        </label>
-        </fieldset>
-
-        <fieldset class="teacher-compose__block">
-          <legend class="teacher-compose__legend">{{ t('teacher.assign_section_task') }}</legend>
-        <div class="teacher-compose__row">
-          <label class="teacher-field">
-            <span>{{ t('teacher.kind') }}</span>
-            <select :value="form.kind" @change="patch('kind', $event.target.value)">
-              <option value="practice">{{ t('teacher.kind_practice') }}</option>
-              <option value="ai_recite">{{ t('teacher.kind_ai') }}</option>
-            </select>
-          </label>
-          <label class="teacher-field teacher-field--grow">
-            <span>{{ t('teacher.surah') }}</span>
-            <select :value="form.surah_number" @change="patch('surah_number', $event.target.value)">
-              <option v-for="surah in surahs" :key="surah.number" :value="String(surah.number)">{{ surah.number }}. {{ surah.name }}</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="teacher-compose__range">
-          <label class="teacher-field">
-            <span>{{ t('teacher.from') }}</span>
-            <input :value="form.ayah_start" type="number" min="1" required @input="patch('ayah_start', Number($event.target.value))">
-          </label>
-          <label class="teacher-field">
-            <span>{{ t('teacher.to') }}</span>
-            <input :value="form.ayah_end" type="number" min="1" required @input="patch('ayah_end', Number($event.target.value))">
-          </label>
-          <label class="teacher-field">
-            <span>{{ t('teacher.due') }}</span>
-            <input :value="form.due_at" type="date" @input="patch('due_at', $event.target.value)">
-          </label>
-        </div>
-        </fieldset>
-
-        <button type="submit" class="teacher-compose__send" :disabled="saving">
-          <i class="bi bi-send" aria-hidden="true"></i>
-          {{ t('teacher.assign') }}
+      <template #actions>
+        <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" @click="$emit('update:formOpen', true)">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          {{ t('teacher.add_task') }}
         </button>
-      </form>
-    </TeacherPanel>
+      </template>
+    </TeacherPageHeader>
 
-    <TeacherPanel
-      v-if="rows.length"
+    <p v-if="success" class="teacher-alert teacher-alert--success" role="status">{{ success }}</p>
+
+    <label class="teacher-search teacher-search--tasks">
+      <span class="visually-hidden">{{ t('teacher.search') }}</span>
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input v-model="query" type="search" :placeholder="t('teacher.search_placeholder')" autocomplete="off">
+    </label>
+
+    <TeacherSectionPane
+      v-if="filteredItems.length"
       :title="t('teacher.sent_tasks')"
+      :hint="t('teacher.sent_tasks_hint')"
       icon="bi bi-send"
-      compact
+      tone="neutral"
     >
-      <ul class="teacher-task-list">
+      <ul class="teacher-records teacher-records--interactive">
         <li v-for="item in visibleItems" :key="item.key">
-          <button type="button" class="teacher-task-row" :disabled="!item.studentId" @click="item.studentId && $emit('open-student', item.studentId)">
-            <span class="teacher-list__avatar" aria-hidden="true">
+          <button
+            type="button"
+            class="teacher-records__item teacher-records__item--btn"
+            :disabled="!item.studentId"
+            @click="item.studentId && $emit('open-student', item.studentId)"
+          >
+            <span class="teacher-records__icon" :class="`teacher-records__icon--${item.statusTone}`" aria-hidden="true">
               <i :class="item.kind === 'ai_recite' ? 'bi bi-mic' : 'bi bi-journal-text'"></i>
             </span>
-            <span class="teacher-tile__copy">
-              <strong>{{ item.title }}</strong>
-              <span class="teacher-tile__meta">{{ item.studentName }} · {{ t(`teacher.status_${item.status}`) }}</span>
+            <span class="teacher-records__copy">
+              <span class="teacher-records__title teacher-quran">{{ item.title }}</span>
+              <span class="teacher-records__hint">{{ item.studentName }}</span>
             </span>
-            <span class="teacher-tile__go" aria-hidden="true">
-              <i class="bi bi-arrow-right-short"></i>
+            <span class="teacher-records__aside">
+              <span class="teacher-badge" :class="`teacher-badge--${item.statusTone}`">{{ t(`teacher.status_${item.status}`) }}</span>
+              <span v-if="item.progress || item.due" class="teacher-records__meta">{{ item.progress || item.due }}</span>
+              <i class="bi bi-chevron-right teacher-records__chev" aria-hidden="true"></i>
             </span>
           </button>
         </li>
       </ul>
-      <TeacherMore :remaining="flatItems.length - shown" @more="shown += STEP" />
-    </TeacherPanel>
+      <TeacherMore :remaining="filteredItems.length - shown" @more="shown += STEP" />
+    </TeacherSectionPane>
     <TeacherEmpty v-else icon="bi bi-clipboard-check" :message="t('teacher.assignments_empty')" />
+
+    <TeacherTaskSheet
+      :open="formOpen"
+      :form="form"
+      :saving="saving"
+      :students="students"
+      :surahs="surahs"
+      @close="closeForm"
+      @submit="$emit('create')"
+      @update:form="$emit('update:form', $event)"
+    />
   </section>
 </template>
 
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
+import { formatTeacherWhen } from '../../scripts/teacher/formatters'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
 import TeacherPageHeader from './TeacherPageHeader.vue'
-import TeacherPanel from './TeacherPanel.vue'
+import TeacherSectionPane from './TeacherSectionPane.vue'
+import TeacherTaskSheet from './TeacherTaskSheet.vue'
 
-const STEP = 4
+const STEP = 8
 
 export default {
   name: 'TeacherAssignmentsSection',
-  components: { TeacherEmpty, TeacherMore, TeacherPageHeader, TeacherPanel },
+  components: { TeacherEmpty, TeacherMore, TeacherPageHeader, TeacherSectionPane, TeacherTaskSheet },
   mixins: [i18nMixin],
   props: {
     form: { type: Object, required: true },
+    formOpen: { type: Boolean, default: false },
     saving: { type: Boolean, default: false },
+    success: { type: String, default: '' },
     rows: { type: Array, default: () => [] },
     students: { type: Array, default: () => [] },
     surahs: { type: Array, default: () => [] },
   },
-  emits: ['update:form', 'create', 'open-student'],
+  emits: ['update:form', 'update:formOpen', 'create', 'open-student'],
   data() {
-    return { shown: STEP, STEP }
+    return { shown: STEP, STEP, query: '' }
   },
   computed: {
     flatItems() {
       return this.rows.flatMap((row) => {
-        const title = `${row.assignment.surah_name} ${row.assignment.ayah_start} to ${row.assignment.ayah_end}`
-        const recipients = row.recipients?.length ? row.recipients : [{ id: row.assignment.id, student_id: null, student_name: this.t('teacher.no_authorised'), status: 'pending' }]
-        return recipients.map((recipient) => ({
-          key: `${row.assignment.id}-${recipient.id}`,
-          kind: row.assignment.kind,
-          title,
-          studentId: recipient.student_id,
-          studentName: recipient.student_name,
-          status: recipient.status || 'pending',
-        }))
+        const assignment = row.assignment || {}
+        const title = `${assignment.surah_name} ${assignment.ayah_start}–${assignment.ayah_end}`
+        const recipients = row.recipients?.length ? row.recipients : [{
+          id: assignment.id,
+          student_id: null,
+          student_name: this.t('teacher.no_authorised'),
+          status: 'pending',
+        }]
+        return recipients.map((recipient) => {
+          const status = recipient.status || 'pending'
+          return {
+            key: `${assignment.id}-${recipient.id}`,
+            kind: assignment.kind,
+            title,
+            studentId: recipient.student_id,
+            studentName: recipient.student_name,
+            status,
+            statusTone: this.statusTone(status),
+            due: assignment.due_at ? formatTeacherWhen(assignment.due_at) : '',
+            progress: this.progressLabel(recipient),
+          }
+        })
       })
     },
+    filteredItems() {
+      const needle = this.query.trim().toLowerCase()
+      if (!needle) return this.flatItems
+      return this.flatItems.filter((item) => (
+        item.title.toLowerCase().includes(needle)
+        || item.studentName.toLowerCase().includes(needle)
+      ))
+    },
     visibleItems() {
-      return this.flatItems.slice(0, this.shown)
+      return this.filteredItems.slice(0, this.shown)
     },
   },
   methods: {
     patch(key, value) {
       this.$emit('update:form', { ...this.form, [key]: value })
+    },
+    closeForm() {
+      this.$emit('update:formOpen', false)
+    },
+    progressLabel(recipient) {
+      const progress = recipient.progress
+      if (!progress?.target) return ''
+      return this.t('teacher.learner_assignments_progress', {
+        completed: progress.completed ?? 0,
+        target: progress.target,
+      })
+    },
+    statusTone(status) {
+      if (status === 'completed') return 'good'
+      if (status === 'overdue') return 'danger'
+      if (status === 'in_progress') return 'mid'
+      return 'muted'
     },
   },
 }

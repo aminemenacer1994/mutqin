@@ -33,6 +33,7 @@
 
           <div class="teacher-dashboard__main dash-reveal" style="--dash-delay: 80ms">
             <p v-if="formError" class="teacher-alert" role="alert">{{ formError }}</p>
+            <p v-if="formSuccess && view !== 'assignments'" class="teacher-alert teacher-alert--success" role="status">{{ formSuccess }}</p>
 
             <TeacherHero
               v-if="view === 'overview'"
@@ -45,15 +46,17 @@
               v-if="view === 'overview' && overview"
               :overview="overview"
               :kpi-cards="kpiCards"
+              :attention-preview="attentionPreview"
               :format-when="formatWhen"
               @open-student="openStudent"
               @select-kpi="openStudentsFromKpi"
+              @assign-revision="openAssignRevision"
             />
 
             <TeacherStudentsSection
               v-else-if="view === 'students'"
               :filters="filters"
-              :organisation-name="overview?.teacher?.organisation?.name || ''"
+              :groups="teacherGroups"
               :students="students"
               :meta="studentMeta"
               :loading="studentsLoading"
@@ -81,16 +84,20 @@
               :format-when="formatWhen"
               @back="openView('students')"
               @change-section="onProfileSection"
+              @assign-revision="openAssignRevision"
             />
 
             <TeacherAssignmentsSection
               v-else-if="view === 'assignments'"
               :form="assignment"
+              :form-open="assignmentFormOpen"
               :saving="assignmentSaving"
+              :success="formSuccess"
               :rows="assignmentRows"
               :students="students"
               :surahs="surahs"
               @update:form="assignment = $event"
+              @update:form-open="assignmentFormOpen = $event"
               @create="createAssignment"
               @open-student="openStudent"
             />

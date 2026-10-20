@@ -1,41 +1,57 @@
 <template>
-  <div>
-    <p v-if="profile.payload.success_rate !== null" class="teacher-saved">
-      <span class="teacher-pill teacher-pill--recite">
-        <i class="bi bi-mic-fill" aria-hidden="true"></i>
-        {{ t('teacher.ai_rate') }} {{ profile.payload.success_rate }}%
-      </span>
-    </p>
+  <TeacherSectionPane
+    :title="t('teacher.tab_ai')"
+    :hint="aiHint"
+    icon="bi bi-mic"
+    tone="recite"
+  >
+    <TeacherRecordList v-if="attemptRows.length" :rows="attemptRows" />
     <TeacherEmpty v-else icon="bi bi-mic" :message="t('teacher.ai_empty')" />
-    <ul v-if="profile.payload.attempts?.length" class="teacher-list teacher-list--bordered">
-      <li v-for="attempt in profile.payload.attempts" :key="attempt.id">
-        <span>{{ attempt.range?.surah_name || t('teacher.unavailable') }} {{ attempt.range?.from }} to {{ attempt.range?.to }}</span>
-        <span class="teacher-chip" :class="scoreChip(attempt.accuracy_percent)">
-          {{ attempt.accuracy_percent === null ? t('teacher.unavailable') : `${attempt.accuracy_percent}%` }}
-        </span>
-      </li>
-    </ul>
-  </div>
+  </TeacherSectionPane>
 </template>
 
 <script>
 import { i18nMixin } from '../../../mixins/i18nMixin'
+import { scoreBadgeTone } from '../../../scripts/teacher/formatters'
 import TeacherEmpty from '../TeacherEmpty.vue'
+import TeacherRecordList from '../TeacherRecordList.vue'
+import TeacherSectionPane from '../TeacherSectionPane.vue'
 
 export default {
   name: 'TeacherStudentProfileAi',
-  components: { TeacherEmpty },
+  components: { TeacherEmpty, TeacherRecordList, TeacherSectionPane },
   mixins: [i18nMixin],
   props: {
     profile: { type: Object, required: true },
     issueLabel: { type: Function, required: true },
   },
-  methods: {
-    scoreChip(score) {
-      if (typeof score !== 'number') return 'teacher-chip--quiet'
-      if (score >= 85) return 'teacher-chip--strong'
-      if (score >= 65) return 'teacher-chip--practising'
-      return 'teacher-chip--attention'
+  computed: {
+    aiHint() {
+      const rate = this.profile.payload.success_rate
+      if (typeof rate === 'number') {
+        return this.t('teacher.profile_tab_ai_hint_score', { score: rate })
+      }
+      return this.t('teacher.profile_tab_ai_hint')
+    },
+    attemptRows() {
+      return (this.profile.payload.attempts || []).map((attempt) => {
+        const name = attempt.range?.surah_name || this.t('teacher.unavailable')
+        const from = attempt.range?.from
+        const to = attempt.range?.to
+        const title = from && to ? `${name} ${from}–${to}` : name
+        const issues = attempt.issues
+        const hint = issues ? this.issueLabel(issues) : ''
+        return {
+          key: attempt.id,
+          icon: 'bi bi-mic',
+          iconTone: scoreBadgeTone(attempt.accuracy_percent),
+          title,
+          quran: true,
+          hint: hint || this.t('teacher.profile_recite_attempt'),
+          badge: typeof attempt.accuracy_percent === 'number' ? `${attempt.accuracy_percent}%` : this.t('teacher.unavailable'),
+          badgeTone: scoreBadgeTone(attempt.accuracy_percent),
+        }
+      })
     },
   },
 }

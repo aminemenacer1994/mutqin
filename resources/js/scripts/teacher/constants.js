@@ -9,7 +9,14 @@ export const TEACHER_NAV = [
   { id: 'settings', label: 'teacher.nav_settings', icon: 'bi bi-person' },
 ]
 
-export const TEACHER_PROFILE_TABS = ['overview']
+export const TEACHER_PROFILE_TABS = [
+  { id: 'overview', label: 'teacher.tab_overview', icon: 'bi bi-house-door' },
+  { id: 'practice', label: 'teacher.tab_practice', icon: 'bi bi-play-circle' },
+  { id: 'ai', label: 'teacher.tab_ai', icon: 'bi bi-mic' },
+  { id: 'weak', label: 'teacher.tab_weak', icon: 'bi bi-exclamation-triangle' },
+  { id: 'revision', label: 'teacher.tab_revision', icon: 'bi bi-arrow-repeat' },
+  { id: 'tasks', label: 'teacher.nav_assignments', icon: 'bi bi-journal-text' },
+]
 
 export function defaultAssignmentForm() {
   return {
@@ -25,5 +32,5 @@ export function defaultAssignmentForm() {
 }
 
 export function defaultStudentFilters() {
-  return { q: '', activity: '', performance: '', attention: '' }
+  return { q: '', group_id: '', activity: '', performance: '', attention: '' }
 }
