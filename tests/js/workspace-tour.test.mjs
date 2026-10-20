@@ -53,21 +53,21 @@ function sliceMethod(source, name) {
 
 {
   const steps = sliceMethod(memorisationJs, 'workspaceTourSteps')
-  for (const key of ['welcome', 'controls', 'setup', 'practice', 'saved', 'start', 'session', 'ai', 'results', 'weak', 'plan', 'dashboard']) {
+  for (const key of ['welcome', 'controls', 'setup', 'practice', 'saved', 'start', 'session', 'ai', 'results']) {
     assert.match(steps, new RegExp(`key:\\s*'${key}'`))
   }
+  assert.doesNotMatch(steps, /key:\s*'weak'/)
+  assert.doesNotMatch(steps, /key:\s*'plan'/)
+  assert.doesNotMatch(steps, /key:\s*'dashboard'/)
   assert.match(steps, /data-tour="ai-modal"/)
   assert.match(steps, /data-tour="ai-results"/)
   assert.match(steps, /post-session-section-1/)
   assert.match(steps, /scroll:\s*'start'/)
   assert.match(steps, /placement:\s*'dock-outside'/)
-  assert.match(steps, /data-tour="weak-areas"/)
-  assert.match(steps, /data-tour="rec-why"/)
-  assert.match(steps, /data-tour="rec-plan"/)
-  assert.match(steps, /data-tour="rec-plans"/)
   assert.match(steps, /workspace-welcome/)
   assert.match(steps, /placement:\s*'dock-bottom'/)
-  assert.match(steps, /tour-dashboard/)
+  assert.doesNotMatch(steps, /data-tour="weak-areas"/)
+  assert.doesNotMatch(steps, /tour-dashboard/)
   assert.doesNotMatch(steps, /data-tour="rec-cta"/)
 }
 
@@ -359,14 +359,14 @@ function sliceMethod(source, name) {
 
   const apply = sliceMethod(memorisationJs, 'applyWorkspaceTourStep')
   assert.doesNotMatch(apply, /step\.key === 'welcome' && !this\.showWelcomeBackModal/)
-  assert.match(apply, /'weak', 'plan', 'dashboard'/)
+  assert.match(apply, /step\.key === 'results' \? 280 : 240/)
 
   const prepare = sliceMethod(memorisationJs, 'prepareWorkspaceTourStep')
   assert.match(prepare, /ensureWorkspaceTourAiModal/)
   assert.match(prepare, /ensureWorkspaceTourResultsPreview/)
-  assert.match(prepare, /ensureWorkspaceTourPlanPreview/)
+  assert.doesNotMatch(prepare, /ensureWorkspaceTourPlanPreview/)
   assert.match(prepare, /openWorkspaceTourControlsTab/)
-  assert.match(prepare, /workspaceTourDashboardOpen = true/)
+  assert.doesNotMatch(prepare, /workspaceTourDashboardOpen = true/)
   assert.doesNotMatch(prepare, /topCardMenuOpen = true/)
 
   const preview = sliceMethod(memorisationJs, 'applyWorkspaceTourPracticePreview')

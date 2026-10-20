@@ -7988,7 +7988,10 @@
             body.marketing-home .app-navbar .navbar-shell {
                 display: grid !important;
                 grid-template-columns: auto minmax(0, 1fr) auto;
-                gap: clamp(1rem, 2.4vw, 2.5rem);
+                gap: 0;
+                align-items: stretch;
+                width: 100%;
+                max-width: none;
             }
 
             body.marketing-home .app-navbar #primaryNavbar.offcanvas-lg,
@@ -8015,6 +8018,90 @@
             body.marketing-home .app-navbar #primaryNavbar .navbar-nav-shell {
                 display: flex;
                 justify-content: center;
+                width: 100%;
+            }
+
+            body.marketing-home .app-navbar .nav-links-desktop {
+                width: 100%;
+                justify-content: space-evenly;
+            }
+        }
+    </style>
+    <style id="mutqin-app-navbar-desktop-layout">
+        /* Desktop: three equal-weight columns so link clusters are not floating in dead space. */
+        @media (min-width: 992px) {
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar .navbar-shell {
+                display: grid !important;
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                align-items: stretch;
+                gap: 0;
+                width: 100%;
+                max-width: none;
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar .navbar-brand {
+                grid-column: 1;
+                justify-self: stretch;
+                display: flex;
+                align-items: center;
+                padding-inline: clamp(0.35rem, 1.2vw, 1rem);
+                padding-block: 6px;
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar #primaryNavbar.offcanvas-lg,
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar #primaryNavbar.offcanvas-lg .offcanvas-body {
+                position: static !important;
+                display: flex !important;
+                visibility: visible !important;
+                width: 100% !important;
+                height: auto !important;
+                min-width: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                background: transparent !important;
+                border: 0 !important;
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar #primaryNavbar.offcanvas-lg {
+                grid-column: 2;
+                flex: none !important;
+                display: flex !important;
+                align-items: stretch;
+                padding-inline: clamp(0.35rem, 1.2vw, 1rem);
+                padding-block: 6px;
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar #primaryNavbar .offcanvas-body {
+                flex: 1 1 auto;
+                width: 100%;
+                min-width: 0;
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar .navbar-nav-shell {
+                flex: 1 1 auto;
+                width: 100%;
+                min-width: 0;
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar .nav-links-desktop {
+                width: 100%;
+                max-width: 100%;
+                justify-content: space-evenly;
+                gap: clamp(0.25rem, 0.8vw, 0.75rem);
+            }
+
+            body:not(.mutqin-early-access-nav):not(.mutqin-waiting-list-public) .app-navbar .navbar-quick-actions {
+                grid-column: 3;
+                justify-self: stretch;
+                justify-content: flex-end;
+                align-items: center;
+                padding-inline: clamp(0.35rem, 1.2vw, 1rem);
+                padding-block: 6px;
+                margin-inline-start: 0 !important;
+                flex-shrink: 0;
             }
         }
     </style>

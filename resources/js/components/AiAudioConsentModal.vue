@@ -151,7 +151,7 @@ export default {
   overscroll-behavior: contain;
   box-sizing: border-box;
   margin: 0;
-  padding: clamp(1.35rem, 3vw, 1.9rem);
+  padding: clamp(1.05rem, 2.6vw, 1.55rem);
   border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
   border-radius: 1.35rem;
   background: var(--surface, #f6f1ea);
@@ -208,9 +208,9 @@ export default {
 }
 
 .ai-audio-consent-lead {
-  margin: 1.15rem 0 0;
-  font-size: 1rem;
-  line-height: 1.62;
+  margin: 0.85rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
   opacity: 0.92;
 }
 

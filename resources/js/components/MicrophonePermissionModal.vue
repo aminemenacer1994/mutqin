@@ -154,7 +154,7 @@ export default {
   overflow: auto;
   box-sizing: border-box;
   margin: 0;
-  padding: clamp(1.2rem, 3vw, 1.7rem);
+  padding: clamp(1.05rem, 2.6vw, 1.5rem);
   border-radius: var(--mutqin-modal-radius, 1.35rem);
   background: var(--mutqin-modal-surface-bg, var(--surface, #f6f1ea));
   border: 1px solid var(--mutqin-modal-surface-border, color-mix(in srgb, currentColor 12%, transparent));
@@ -198,9 +198,9 @@ export default {
 }
 
 .mic-permission-lead {
-  margin: 1rem 0 0;
-  font-size: 0.98rem;
-  line-height: 1.55;
+  margin: 0.75rem 0 0;
+  font-size: 0.94rem;
+  line-height: 1.5;
   opacity: 0.92;
 }
 

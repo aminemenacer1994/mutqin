@@ -843,6 +843,63 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
   .demo-fade-leave-active { transition: none !important; }
 }
 
+.practice-types {
+  border-block: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+  background: color-mix(in srgb, var(--surface-strong) 72%, transparent);
+}
+
+.practice-types__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.practice-types__card {
+  display: grid;
+  align-content: start;
+  gap: 0.48rem;
+  min-width: 0;
+  padding: 1rem 0.9rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--bg) 78%, var(--accent-light));
+}
+
+.practice-types__icon {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--accent) 13%, var(--surface-strong, var(--surface)));
+  color: var(--accent-strong);
+  font-size: 1.05rem;
+}
+
+.practice-types__card h3 {
+  margin: 0.08rem 0 0;
+  color: var(--hp-heading);
+  font-family: var(--hp-display);
+  font-size: 1.08rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.practice-types__card p {
+  margin: 0;
+  color: var(--hp-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.practice-types__cue {
+  margin-top: 0.12rem;
+  color: color-mix(in srgb, var(--accent-strong) 84%, var(--hp-muted));
+  font-size: 0.76rem;
+  font-weight: 680;
+  line-height: 1.4;
+}
+
 .how {
   background: color-mix(in srgb, var(--accent-light) 9%, transparent);
   padding-block: clamp(1.5rem, 3vw, 2.5rem);
@@ -1620,6 +1677,8 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
   .hero__availability { text-align: start; }
   .hero__actions { justify-content: center; }
 
+  .practice-types__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
   .how__row,
   .how__row--flip {
     grid-template-columns: minmax(0, 1fr);
@@ -1687,6 +1746,8 @@ html[dir="rtl"] .demo__rail-item.is-active .demo__rail-btn {
   }
 
   .hero__actions .btn { width: 100%; }
+
+  .practice-types__grid { grid-template-columns: minmax(0, 1fr); }
 
   .session-brief { grid-template-columns: minmax(0, 1fr); }
 

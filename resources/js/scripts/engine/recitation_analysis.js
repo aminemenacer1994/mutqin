@@ -4405,7 +4405,7 @@ function getRecitationRecommendation(score, mistakes) {
   if (extra) return 'Extra wording detected. Slow down and keep the ayah boundary tight.'
   if (score >= 100) return 'Clean match. Save it and keep this ayah on light review.'
   if (score >= 85) return 'Mostly clean. Recheck once before saving.'
-  return 'Replay the ayah once, recite without looking, then run another Recite Check.'
+  return 'Replay the ayah once, recite without looking, then run AI Recite again.'
 }
 
 function buildReviewRecommendations({ mistakes = {}, weakWords = [], repetitions = [], structural = {} }) {

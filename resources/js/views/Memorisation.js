@@ -2586,7 +2586,7 @@ export default {
       return AI_TEST_MODALS_ENABLED === true
     },
     canUsePremiumTechniques() {
-      return hasPremiumAccess(this.auth)
+      return true
     },
     canUseProFeatures() {
       return hasProAccess(this.auth) || !!this.auth?.show_tester_guide
@@ -7083,7 +7083,7 @@ export default {
         this.postSessionRecommendation?.completed_surah
           || { id: this.postSessionSnapshot?.chapterId, name: this.postSessionSnapshot?.chapterName }
       )
-      if (!name) return ''
+          || 'Check your memorisation when ready, keep practising this range, or choose another.'
       return this.t('memorisation.postSession.recommendation.surahCompletedTitle', { surah: name })
     },
     postSessionTechniqueTip() {
@@ -7591,13 +7591,9 @@ export default {
       }))
     },
     onboardingSteps() {
-      // Core journey: ayahs → tools → AI check → next plan → keep going
       const defs = [
         { key: 'setup', icon: 'bi-journal-text' },
         { key: 'practice', icon: 'bi-stars' },
-        { key: 'coach', icon: 'bi-mic' },
-        { key: 'improve', icon: 'bi-arrow-repeat' },
-        { key: 'continue', icon: 'bi-signpost-2' }
       ]
       return defs.map(({ key, icon }) => this.buildOnboardingStep(key, icon))
     },
@@ -7731,9 +7727,6 @@ export default {
         { key: 'session', selector: '[data-tour="workspace-main"], [data-tour="end-session"]', pad: 8, radius: 14, placement: 'bottom' },
         { key: 'ai', selector: '[data-tour="ai-modal"] .amd-mushaf-shell, [data-tour="ai-modal"], .amd-modal', pad: 8, radius: 20, placement: 'left' },
         { key: 'results', selector: '[data-tour="ai-results"], [data-testid="post-session-section-1"]', pad: 8, radius: 18, placement: 'dock-outside', scroll: 'start' },
-        { key: 'weak', selector: '[data-tour="weak-areas"], [data-testid="post-session-weak-spots"]', pad: 8, radius: 16, placement: 'top', scroll: 'center', maxHeight: 240 },
-        { key: 'plan', selector: '[data-tour="rec-plans"], [data-testid="post-session-scope-picker"], [data-tour="rec-why"], [data-testid="post-session-plan-why"], [data-testid="post-session-personal-plan"], [data-tour="rec-plan"]', pad: 8, radius: 16, placement: 'top', scroll: 'center', maxHeight: 280 },
-        { key: 'dashboard', selector: '[data-tour="tour-dashboard"]', pad: 8, radius: 16, placement: 'dock-bottom' },
       ]
     },
     workspaceTourStep() {
@@ -18194,7 +18187,7 @@ export default {
       this.measureWorkspaceTourTarget({ allowScroll: true })
       window.setTimeout(() => {
         if (this.workspaceTourActive) this.measureWorkspaceTourTarget({ allowScroll: true })
-      }, ['weak', 'plan', 'dashboard'].includes(step.key) ? 280 : 240)
+      }, step.key === 'results' ? 280 : 240)
     },
     async closeWorkspaceTourOverlays({ keepAi = false, keepPostSession = false } = {}) {
       this.topCardMenuOpen = false
@@ -18256,19 +18249,10 @@ export default {
         return
       }
 
-      if (key === 'results' || key === 'weak' || key === 'plan') {
+      if (key === 'results') {
         await this.closeWorkspaceTourOverlays({ keepPostSession: true })
         if (this.showTools) await this.closeToolsPanel()
-        if (key === 'results') await this.ensureWorkspaceTourResultsPreview()
-        else await this.ensureWorkspaceTourPlanPreview()
-        return
-      }
-
-      if (key === 'dashboard') {
-        await this.closeWorkspaceTourOverlays()
-        if (this.showTools) await this.closeToolsPanel()
-        this.workspaceTourDashboardOpen = true
-        await this.ensureWorkspaceTourDashboardPreview()
+        await this.ensureWorkspaceTourResultsPreview()
       }
     },
     isWorkspaceTourTargetVisible(el) {
@@ -18701,7 +18685,7 @@ export default {
         this.measureWorkspaceTourTarget()
         return
       }
-      if (['results', 'weak', 'plan'].includes(this.workspaceTourStep?.key) && this.showPostSessionModal) {
+      if (this.workspaceTourStep?.key === 'results' && this.showPostSessionModal) {
         this.measureWorkspaceTourTarget()
       }
     },
@@ -18985,7 +18969,7 @@ export default {
       this.nextWorkspaceTourStep()
     },
     readOnboardingStepIndex() {
-      const max = Math.max(0, (this.onboardingSteps?.length || 5) - 1)
+      const max = Math.max(0, (this.onboardingSteps?.length || 2) - 1)
       const raw = Number(this.readWorkspaceStateValue('onboardingStepIndex', 0) || 0)
       if (!Number.isFinite(raw)) return 0
       return Math.max(0, Math.min(max, Math.round(raw)))

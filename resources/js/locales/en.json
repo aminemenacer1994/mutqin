@@ -241,6 +241,12 @@
       "title": "Forgetting ayahs or unsure what to revise next?",
       "desc": "A Quran memorisation app for Hifz, Mutqin helps when you’re forgetting ayahs or unsure what to revise next.",
       "mobileDesc": "A Quran memorisation app for Hifz, Mutqin helps when you’re forgetting ayahs or unsure what to revise next.",
+      "painKicker": "If this feels familiar, you are not alone.",
+      "painPoints": {
+        "recall": "Some ayahs feel less secure than they used to.",
+        "consistency": "A busy week can break your revision rhythm.",
+        "restart": "Coming back can feel harder than it needs to."
+      },
       "promiseLabel": "Why Mutqin",
       "problem": "The struggle",
       "problemText": "A disrupted rhythm can make it hard to know where to restart.",
@@ -921,7 +927,7 @@
       "beginner": "Beginner Tools",
       "beginnerDesc": "Free. One ayah at a time, hide the text, and listen and repeat.",
       "advanced": "Advanced Tools",
-      "advancedDesc": "Join ayahs together and highlight memory words. These two need Pro."
+      "advancedDesc": "Join ayahs together and highlight memory words for smoother recall."
     },
     "activePracticeSetup": {
       "title": "Active practice setup",

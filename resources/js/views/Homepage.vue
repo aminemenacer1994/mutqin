@@ -100,6 +100,31 @@
       </div>
     </section>
 
+    <section class="practice-types" aria-labelledby="practice-types-title">
+      <div class="wrap">
+        <header class="section-head" data-reveal>
+          <p class="section-kicker">{{ t('homepage.practiceTypes.kicker') }}</p>
+          <h2 id="practice-types-title" class="section-title">{{ t('homepage.practiceTypes.title') }}</h2>
+          <p class="section-sub">{{ t('homepage.practiceTypes.subtitle') }}</p>
+        </header>
+
+        <div class="practice-types__grid">
+          <article
+            v-for="(mode, idx) in practiceModes"
+            :key="mode.id"
+            class="practice-types__card"
+            data-reveal
+            :style="{ '--delay': `${idx * 60}ms` }"
+          >
+            <span class="practice-types__icon" aria-hidden="true"><i class="bi" :class="mode.icon"></i></span>
+            <h3>{{ mode.title }}</h3>
+            <p>{{ mode.description }}</p>
+            <span class="practice-types__cue">{{ mode.cue }}</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section id="how-it-works" class="how" aria-labelledby="how-title">
       <div class="wrap">
         <header id="first-session" class="section-head" data-reveal>
@@ -706,6 +731,40 @@ export default {
       ];
     });
 
+    const practiceModes = computed(() => {
+      void locale.value;
+      return [
+        {
+          id: 'memorise',
+          icon: 'bi-journal-plus',
+          title: t('homepage.practiceTypes.items.memorise.title'),
+          description: t('homepage.practiceTypes.items.memorise.description'),
+          cue: t('homepage.practiceTypes.items.memorise.cue'),
+        },
+        {
+          id: 'revise',
+          icon: 'bi-arrow-repeat',
+          title: t('homepage.practiceTypes.items.revise.title'),
+          description: t('homepage.practiceTypes.items.revise.description'),
+          cue: t('homepage.practiceTypes.items.revise.cue'),
+        },
+        {
+          id: 'ai-recite',
+          icon: 'bi-mic-fill',
+          title: t('homepage.practiceTypes.items.aiRecite.title'),
+          description: t('homepage.practiceTypes.items.aiRecite.description'),
+          cue: t('homepage.practiceTypes.items.aiRecite.cue'),
+        },
+        {
+          id: 'assess',
+          icon: 'bi-clipboard2-check',
+          title: t('homepage.practiceTypes.items.assess.title'),
+          description: t('homepage.practiceTypes.items.assess.description'),
+          cue: t('homepage.practiceTypes.items.assess.cue'),
+        },
+      ];
+    });
+
     const features = computed(() => {
       void locale.value;
       return [
@@ -736,6 +795,20 @@ export default {
           title: t('homepage.features.items.aiRecitation.title'),
           description: t('homepage.features.items.aiRecitation.description'),
           shotAlt: t('homepage.shots.check'),
+        },
+        {
+          id: 'mushafLayout',
+          image: '/images/landing/feature-return.jpg',
+          title: t('homepage.features.items.mushafLayout.title'),
+          description: t('homepage.features.items.mushafLayout.description'),
+          shotAlt: t('homepage.shots.practise'),
+        },
+        {
+          id: 'translationTajweed',
+          image: '/images/landing/feature-next.jpg',
+          title: t('homepage.features.items.translationTajweed.title'),
+          description: t('homepage.features.items.translationTajweed.description'),
+          shotAlt: t('homepage.shots.setup'),
         },
       ];
     });
@@ -820,6 +893,7 @@ export default {
       scrollToFeatures,
       scrollToId,
       heroShots,
+      practiceModes,
       features,
       faqItems,
       demoPlaying,
