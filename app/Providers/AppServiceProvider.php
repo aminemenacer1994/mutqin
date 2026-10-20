@@ -3,11 +3,20 @@
 namespace App\Providers;
 
 use App\Listeners\LogBackupEvents;
+use App\Models\GroupMembership;
+use App\Models\LearningGroup;
+use App\Models\Organisation;
 use App\Models\User;
+use App\Policies\GroupMembershipPolicy;
+use App\Policies\LearningGroupPolicy;
+use App\Policies\OrganisationPolicy;
 use App\Services\Memorisation\LearningHistoryRetentionService;
+use App\Services\Organisations\StudentAccessAuthorizer;
 use App\Services\SpeechmaticsRateLimit;
 use App\Support\DatabaseDeploySafety;
 use App\Support\PublicAppUrl;
+use App\Support\Registration\OrganisationRegistrationCatalog;
+use Illuminate\Support\Facades\View;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
@@ -51,6 +60,13 @@ class AppServiceProvider extends ServiceProvider
             // Authorization uses the authenticated persisted user only (never request email).
             return $user instanceof User && $user->isAdmin();
         });
+
+        Gate::policy(Organisation::class, OrganisationPolicy::class);
+        Gate::policy(LearningGroup::class, LearningGroupPolicy::class);
+        Gate::policy(GroupMembership::class, GroupMembershipPolicy::class);
+        Gate::define('view-student-analytics', function (User $actor, User $student): bool {
+            return app(StudentAccessAuthorizer::class)->allows($actor, $student);
+        });
         Paginator::useBootstrapFive();
 
         RateLimiter::for('public-proxy', function (Request $request) {
@@ -81,5 +97,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(BackupWasSuccessful::class, [LogBackupEvents::class, 'handleBackupSucceeded']);
         Event::listen(CleanupHasFailed::class, [LogBackupEvents::class, 'handleCleanupFailed']);
         Event::listen(UnhealthyBackupWasFound::class, [LogBackupEvents::class, 'handleUnhealthy']);
+
+        View::composer('auth.register', function ($view): void {
+            if (! $view->offsetExists('organisationOptions')) {
+                $view->with('organisationOptions', OrganisationRegistrationCatalog::options());
+            }
+        });
     }
 }

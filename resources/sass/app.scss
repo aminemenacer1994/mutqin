@@ -769,6 +769,14 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   text-decoration: none;
 }
 
+button.auth-google {
+  font-family: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .auth-google:hover {
   color: var(--text);
   background: color-mix(in srgb, var(--surface) 90%, var(--surface-strong));
@@ -809,6 +817,104 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   margin-top: 0.1rem;
 }
 
+.auth-role {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.auth-role__legend {
+  float: none;
+  width: auto;
+  margin: 0 0 0.4rem;
+  padding: 0;
+  font-weight: 500;
+  font-size: 0.86rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.auth-role__options {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.auth-role__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
+  background: color-mix(in srgb, var(--surface-strong) 96%, transparent);
+  color: var(--text);
+  font-size: 0.86rem;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.auth-role__option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent-light) 70%, var(--surface-strong));
+}
+
+.auth-role__option:has(input:focus-visible) {
+  box-shadow: var(--ring);
+}
+
+.auth-role__option input {
+  width: 1rem;
+  height: 1rem;
+  min-width: 1rem;
+  min-height: 1rem;
+  margin: 0.12rem 0 0;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.auth-role__option span {
+  min-width: 0;
+}
+
+.auth-org {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  margin: 0;
+  transition: grid-template-rows var(--dur) var(--ease-out), visibility 0s linear var(--dur);
+}
+
+.auth-role:has(input[value="student"]:checked) .auth-org,
+.auth-role:has(input[value="teacher"]:checked) .auth-org,
+.auth-org.is-open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  margin-top: 0.7rem;
+  transition: grid-template-rows var(--dur) var(--ease-out), visibility 0s linear 0s;
+}
+
+.auth-org__inner {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.auth-field select.form-control {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-org,
+  .auth-role__option {
+    transition: none;
+  }
+}
+
 .auth-field {
   display: grid;
   gap: 0.38rem;
@@ -839,10 +945,14 @@ html[data-theme="dark"] .app-navbar-logo--dark {
 }
 
 .auth-field-hint {
-  margin: 0;
+  margin: 0.35rem 0 0;
   font-size: 0.82rem;
   line-height: 1.45;
   color: color-mix(in srgb, var(--text-muted) 92%, var(--text));
+}
+
+.auth-field--nested {
+  margin-top: 0.65rem;
 }
 
 .auth-alert__list {
@@ -968,6 +1078,11 @@ html[data-theme="dark"] .app-navbar-logo--dark {
   margin: 0;
   width: 1rem;
   height: 1rem;
+  min-width: 1rem;
+  min-height: 1rem;
+  flex-shrink: 0;
+  border-radius: 0.25em;
+  cursor: pointer;
 }
 
 .auth-link,
@@ -1089,10 +1204,16 @@ button.auth-link {
 }
 
 [data-theme="dark"] .auth-google,
-[data-theme="dark"] .auth-field .form-control {
+[data-theme="dark"] .auth-field .form-control,
+[data-theme="dark"] .auth-role__option {
   background: color-mix(in srgb, #1a1714 94%, #000);
   border-color: rgba(245, 245, 244, 0.12);
   color: #f5f5f4;
+}
+
+[data-theme="dark"] .auth-role__option:has(input:checked) {
+  background: color-mix(in srgb, var(--accent-light) 80%, #1a1714);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 [data-theme="dark"] .auth-google:hover {
@@ -1139,6 +1260,15 @@ html[data-theme="sepia"] .tester-start-guide {
   }
 
   .auth-form {
+    gap: 0.85rem;
+  }
+
+  .auth-role__option {
+    padding: 0.4rem 0.55rem;
+    font-size: 0.84rem;
+  }
+
+  .auth-org__inner {
     gap: 0.85rem;
   }
 

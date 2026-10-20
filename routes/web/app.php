@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FeedbackController as AdminFeedbackPageController;
 use App\Http\Controllers\Admin\WaitingListController as AdminWaitingListController;
+use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\Auth\DemoLoginController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\AyahAudioController;
@@ -17,13 +18,13 @@ use App\Http\Controllers\Internal\HealthController as InternalHealthController;
 use App\Http\Controllers\MadaniPageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuranProxyController;
-use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\Seo\SeoArticleController;
+use App\Http\Controllers\Seo\SeoGuidesController;
+use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardPageController;
 use App\Http\Controllers\WaitingListController;
 use App\Services\SpeechmaticsRateLimit;
 use App\Services\SpeechmaticsUsageCap;
 use App\Support\ErrorReporting;
-use App\Http\Controllers\Seo\SeoArticleController;
-use App\Http\Controllers\Seo\SeoGuidesController;
 use App\Support\Seo\SeoLaunchPages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,6 +41,9 @@ Route::post('/login/demo', DemoLoginController::class)
 
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+Route::post('/auth/google/prepare', [GoogleAuthController::class, 'prepare'])
+    ->middleware('guest')
+    ->name('auth.google.prepare');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 Route::get('/auth/redirect', [GoogleAuthController::class, 'redirect']);
 Route::get('/auth/callback', [GoogleAuthController::class, 'callback']);
@@ -166,6 +170,9 @@ Route::middleware(['auth'])->group(function () {
 // when the provider reports a verified email — see GoogleSignInService).
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/teacher', [TeacherDashboardPageController::class, 'index'])
+        ->middleware('teacher.features')
+        ->name('teacher.dashboard');
     Route::post('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
 
     Route::get('/memorisation/audio-download', function (Request $request) {

@@ -204,6 +204,10 @@ const UserDashboard = lazyPage(
     () => import(/* webpackChunkName: "user-dashboard" */ './views/Dashboard.vue'),
     { feature: 'dashboard' }
 );
+const TeacherDashboard = lazyPage(
+    () => import(/* webpackChunkName: "teacher-dashboard" */ './views/TeacherDashboard.vue'),
+    { feature: 'teacher-dashboard' }
+);
 const AdminDashboard = lazyPage(
     () => import(/* webpackChunkName: "admin-dashboard" */ './views/AdminDashboard.vue'),
     { feature: 'admin-dashboard' }
@@ -253,6 +257,7 @@ async function bootstrapApp() {
     app.component('homepage', Homepage);
     app.component('memorisation', Memorisation);
     app.component('user-dashboard', UserDashboard);
+    app.component('teacher-dashboard', TeacherDashboard);
     app.component('admin-dashboard', AdminDashboard);
     app.component('admin-feedback', AdminFeedback);
     app.component('about', About);

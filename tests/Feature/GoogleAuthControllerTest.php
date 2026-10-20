@@ -2,9 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AccountRole;
+use App\Models\GroupMembership;
+use App\Models\Organisation;
 use App\Models\User;
 use App\Services\Auth\GoogleSignInService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
@@ -20,6 +24,7 @@ class GoogleAuthControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->enableTeacherFeatures();
 
         config([
             'services.google.client_id' => 'test-client.apps.googleusercontent.com',
@@ -532,6 +537,8 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertNull($user->getAttributes()['password'] ?? null);
         $this->assertNull($user->password_set_at);
         $this->assertFalse($user->hasSetPassword());
+        $this->assertSame(AccountRole::Individual, $user->account_role);
+        $this->assertNull($user->organisation_id);
         $this->assertAuthenticatedAs($user);
         $this->assertSame(1, User::count());
     }
@@ -587,6 +594,95 @@ class GoogleAuthControllerTest extends TestCase
         ])->assertRedirect('/memorisation');
 
         $this->assertTrue(Hash::check('brand-new-password', $user->fresh()->password));
+    }
+
+    public function test_google_prepare_rejects_a_teacher_without_an_organisation(): void
+    {
+        $this->from(route('register'))
+            ->post(route('auth.google.prepare'), [
+                'account_role' => 'teacher',
+            ])->assertRedirect(route('register'))
+            ->assertSessionHasErrors(['organisation_type', 'organisation_name']);
+
+        $this->assertNull(session('mutqin_registration_intent'));
+        $this->assertSame(0, User::count());
+    }
+
+    public function test_google_registration_stores_the_role_without_granting_student_access(): void
+    {
+        $this->mockGoogleRedirect();
+
+        $this->post(route('auth.google.prepare'), [
+            'account_role' => 'teacher',
+            'organisation_type' => 'halaqa',
+            'organisation_name' => '  Al   Noor  ',
+        ])->assertRedirect('https://accounts.google.com/o/oauth2/auth');
+
+        $this->mockGoogleUser([
+            'id' => 'google-teacher-1',
+            'name' => 'New Teacher',
+            'email' => 'teacher-google@example.com',
+            'avatar' => 'https://example.com/teacher.png',
+            'email_verified' => true,
+        ]);
+
+        $this->get(route('auth.google.callback'))
+            ->assertRedirect(route('memorisation'));
+
+        $teacher = User::where('email', 'teacher-google@example.com')->firstOrFail();
+        $this->assertSame(AccountRole::Teacher, $teacher->account_role);
+        $this->assertSame('Al Noor', $teacher->organisation->name);
+        $this->assertSame('al noor', $teacher->organisation->name_canonical);
+        $this->assertSame(0, GroupMembership::count());
+        $this->assertFalse(Gate::forUser($teacher)->allows('viewMembers', $teacher->organisation));
+    }
+
+    public function test_login_google_redirect_discards_a_registration_intent(): void
+    {
+        $this->mockGoogleRedirect();
+
+        $this->withSession([
+            'mutqin_registration_intent' => [
+                'account_role' => 'teacher',
+                'organisation_type' => 'school',
+                'organisation_name' => 'Al Noor',
+                'expires_at' => now()->addMinutes(10)->getTimestamp(),
+            ],
+        ])->get(route('auth.google.redirect'))
+            ->assertRedirect('https://accounts.google.com/o/oauth2/auth');
+
+        $this->assertNull(session('mutqin_registration_intent'));
+    }
+
+    public function test_existing_google_user_is_not_relabelled_by_a_registration_intent(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'existing-role@example.com',
+            'google_id' => 'google-existing-role',
+        ]);
+
+        $this->mockGoogleUser([
+            'id' => 'google-existing-role',
+            'name' => 'Existing User',
+            'email' => 'existing-role@example.com',
+            'avatar' => 'https://example.com/avatar.png',
+            'email_verified' => true,
+        ]);
+
+        $this->withSession([
+            'mutqin_registration_intent' => [
+                'account_role' => 'student',
+                'organisation_type' => 'madrassa',
+                'organisation_name' => 'Nur Academy',
+                'expires_at' => now()->addMinutes(10)->getTimestamp(),
+            ],
+        ])->get(route('auth.google.callback'))
+            ->assertRedirect(route('memorisation'));
+
+        $fresh = $user->fresh();
+        $this->assertNull($fresh->account_role);
+        $this->assertNull($fresh->organisation_id);
+        $this->assertSame(0, Organisation::count());
     }
 
     /**

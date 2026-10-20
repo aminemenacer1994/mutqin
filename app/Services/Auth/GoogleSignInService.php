@@ -2,8 +2,12 @@
 
 namespace App\Services\Auth;
 
+use App\Enums\AccountRole;
 use App\Models\User;
+use App\Services\Organisations\AccountRegistrationService;
 use App\Support\AdminEmails;
+use App\Support\Registration\RegistrationProfile;
+use App\Support\TeacherFeatures;
 use App\Support\Theme;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +25,10 @@ use Laravel\Socialite\Contracts\User as SocialiteUserContract;
  */
 class GoogleSignInService
 {
+    public function __construct(
+        private readonly AccountRegistrationService $accounts
+    ) {}
+
     public const GENERIC_FAILURE = 'Unable to sign in with Google. Please try again.';
 
     public const GENERIC_LINK_REQUIRED = 'Unable to sign in with Google. If you already have an account, sign in with your password and link Google from your profile.';
@@ -28,7 +36,7 @@ class GoogleSignInService
     /**
      * @return array{user: ?User, created: bool, error: ?string}
      */
-    public function resolve(SocialiteUserContract $googleUser, ?User $authenticatedUser = null): array
+    public function resolve(SocialiteUserContract $googleUser, ?User $authenticatedUser = null, ?array $registrationIntent = null): array
     {
         $providerSubject = trim((string) $googleUser->getId());
         $email = strtolower(trim((string) $googleUser->getEmail()));
@@ -56,7 +64,7 @@ class GoogleSignInService
             return $this->fail(self::GENERIC_FAILURE);
         }
 
-        return DB::transaction(function () use ($googleUser, $providerSubject, $email, $authenticatedUser) {
+        return DB::transaction(function () use ($googleUser, $providerSubject, $email, $authenticatedUser, $registrationIntent) {
             $bySubject = User::query()
                 ->where('google_id', $providerSubject)
                 ->lockForUpdate()
@@ -73,15 +81,15 @@ class GoogleSignInService
 
             if (! $byEmail) {
                 $isAllowlistedAdmin = AdminEmails::isAllowlisted($email);
-                $user = $this->createGoogleUser($googleUser, $email, $providerSubject, $isAllowlistedAdmin);
+                $user = $this->createGoogleUser($googleUser, $email, $providerSubject, $isAllowlistedAdmin, $registrationIntent);
 
                 $this->securityLog($isAllowlistedAdmin
                     ? 'google_oauth_admin_account_created'
                     : 'google_oauth_account_created', [
-                    'user_id' => $user->id,
-                    'provider_subject' => $providerSubject,
-                    'email_hash' => $this->emailHash($email),
-                ]);
+                        'user_id' => $user->id,
+                        'provider_subject' => $providerSubject,
+                        'email_hash' => $this->emailHash($email),
+                    ]);
 
                 return ['user' => $user, 'created' => true, 'error' => null];
             }
@@ -101,7 +109,8 @@ class GoogleSignInService
                     $byEmail,
                     $googleUser,
                     $email,
-                    $providerSubject
+                    $providerSubject,
+                    $registrationIntent
                 );
             }
 
@@ -154,10 +163,10 @@ class GoogleSignInService
                 $this->securityLog($conflict
                     ? 'google_oauth_email_change_blocked_conflict'
                     : 'google_oauth_email_change_blocked_reserved', [
-                    'user_id' => $user->id,
-                    'provider_subject' => $user->google_id,
-                    'email_hash' => $this->emailHash($email),
-                ]);
+                        'user_id' => $user->id,
+                        'provider_subject' => $user->google_id,
+                        'email_hash' => $this->emailHash($email),
+                    ]);
             } else {
                 $updates['email'] = $email;
                 $updates['email_verified_at'] = now();
@@ -193,8 +202,12 @@ class GoogleSignInService
         User $squat,
         SocialiteUserContract $googleUser,
         string $email,
-        string $providerSubject
+        string $providerSubject,
+        ?array $registrationIntent = null
     ): array {
+        $profile = $registrationIntent !== null
+            ? RegistrationProfile::validated($registrationIntent)
+            : null;
         $previousUserId = $squat->id;
 
         $squat->forceFill([
@@ -207,6 +220,12 @@ class GoogleSignInService
             'password_set_at' => null,
             'is_admin' => AdminEmails::isAllowlisted($email) ? true : $squat->is_admin,
         ])->save();
+
+        if ($profile !== null) {
+            $this->accounts->apply($squat, $profile);
+        } elseif (TeacherFeatures::enabled() && $squat->account_role === null) {
+            $squat->forceFill(['account_role' => AccountRole::Individual->value])->save();
+        }
 
         $this->securityLog('google_oauth_unverified_local_reclaimed', [
             'user_id' => $previousUserId,
@@ -265,8 +284,11 @@ class GoogleSignInService
         SocialiteUserContract $googleUser,
         string $email,
         string $providerSubject,
-        bool $isAdmin = false
+        bool $isAdmin = false,
+        ?array $registrationIntent = null
     ): User {
+        $profile = RegistrationProfile::validated($registrationIntent);
+
         $user = new User;
         $user->forceFill([
             'name' => $googleUser->getName() ?: Str::before($email, '@'),
@@ -279,6 +301,8 @@ class GoogleSignInService
             'is_admin' => $isAdmin,
             'theme' => Theme::DEFAULT_PREFERENCE,
         ])->save();
+
+        $this->accounts->apply($user, $profile);
 
         return $user;
     }

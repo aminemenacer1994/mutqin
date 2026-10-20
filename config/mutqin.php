@@ -12,6 +12,17 @@ if (! in_array($rawRecordingRetention, ['never', 'temporary', 'retain'], true)) 
 
 return [
     /*
+     | Teacher and student management (registration roles, organisations,
+     | teacher dashboard, assignments, notes, groups).
+     |
+     | Off unless MUTQIN_TEACHER_FEATURES_ENABLED=true. Do not infer this from
+     | APP_ENV. Laravel Cloud config:cache reads this value at deploy time, so
+     | set it in each environment before caching config. One application serves
+     | both mutqin.ai and app.mutqin.ai, so false hides the features on both.
+     */
+    'teacher_features_enabled' => filter_var(env('MUTQIN_TEACHER_FEATURES_ENABLED', false), FILTER_VALIDATE_BOOL),
+
+    /*
      | Host-based routing (production): mutqin.ai serves the public site; app.mutqin.ai
      | serves the Laravel application. Disabled automatically when hosts match (local/tests).
      */

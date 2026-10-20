@@ -4559,3 +4559,64 @@ a.dash-ai-results__attempt {
   font-weight: 600;
   margin-bottom: 0.75rem;
 }
+
+.user-dashboard .teacher-support {
+  display: grid;
+  gap: clamp(0.75rem, 2vw, 1rem);
+}
+
+.user-dashboard .teacher-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-dashboard .teacher-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--dash-border) 88%, transparent);
+  border-radius: var(--dash-radius-sm);
+  background: color-mix(in srgb, var(--dash-card-bg) 94%, var(--dash-bg));
+  transition: border-color 160ms var(--dash-ease), background-color 160ms var(--dash-ease);
+}
+
+.user-dashboard .teacher-list li:hover {
+  border-color: color-mix(in srgb, var(--dash-accent) 28%, var(--dash-border));
+  background: color-mix(in srgb, var(--dash-accent-light) 38%, var(--dash-card-bg));
+}
+
+.user-dashboard .teacher-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+}
+
+.user-dashboard .teacher-feedback {
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border-inline-start: 3px solid var(--dash-accent);
+  border-radius: 0 var(--dash-radius-sm) var(--dash-radius-sm) 0;
+  background: var(--dash-accent-light);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.user-dashboard .teacher-alert {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--danger, #b55041) 35%, var(--dash-border));
+  border-radius: var(--dash-radius-sm);
+  background: color-mix(in srgb, var(--danger-soft, rgba(181, 80, 65, 0.14)) 80%, var(--dash-card-bg));
+  color: var(--dash-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+}

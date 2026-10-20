@@ -5,6 +5,7 @@ use App\Http\Middleware\ApplySeoRobotsHeader;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnforceMarketingHostPolicy;
 use App\Http\Middleware\EnsureSubscriptionTier;
+use App\Http\Middleware\EnsureTeacherFeaturesEnabled;
 use App\Http\Middleware\ForwardMarketingWaitingListSignup;
 use App\Http\Middleware\LogMutqinApiRequest;
 use App\Http\Middleware\NormalizeLocalDevelopmentHost;
@@ -20,6 +21,7 @@ use App\Support\MutqinDomains;
 use App\Support\Theme;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -111,7 +113,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'plan' => EnsureSubscriptionTier::class,
+            'teacher.features' => EnsureTeacherFeaturesEnabled::class,
         ]);
+
+        // Run before auth so a disabled feature is a 404, including for guests.
+        $middleware->prependToPriorityList(
+            AuthenticatesRequests::class,
+            EnsureTeacherFeaturesEnabled::class,
+        );
 
         $middleware->redirectUsersTo(static function (Request $request): string {
             $user = $request->user();

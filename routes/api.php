@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardControll
 use App\Http\Controllers\Api\Admin\FeedbackController as AdminFeedbackController;
 use App\Http\Controllers\Api\Admin\WaitingListController as AdminWaitingListController;
 use App\Http\Controllers\Api\ClientErrorController;
+use App\Http\Controllers\Auth\RegistrationOrganisationController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Learning\AiReciteAttemptController;
@@ -11,15 +12,17 @@ use App\Http\Controllers\Api\Learning\AnalyticsController;
 use App\Http\Controllers\Api\Learning\AyahNoteController;
 use App\Http\Controllers\Api\Learning\ContinueController;
 use App\Http\Controllers\Api\Learning\HifzPlanController;
+use App\Http\Controllers\Api\Learning\LearnerSupportController;
 use App\Http\Controllers\Api\Learning\MigrateLocalStorageController;
 use App\Http\Controllers\Api\Learning\MutashabihatController;
 use App\Http\Controllers\Api\Learning\ProgressController;
 use App\Http\Controllers\Api\Learning\RecommendationController;
 use App\Http\Controllers\Api\Learning\SessionController;
 use App\Http\Controllers\Api\Learning\StateSyncController;
-use App\Http\Controllers\AskMutqinCommandController;
 use App\Http\Controllers\Api\Memorisation\MemorisationDetectionController;
 use App\Http\Controllers\Api\Memorisation\MemorisationHistoryController;
+use App\Http\Controllers\Api\Teacher\TeacherDashboardController;
+use App\Http\Controllers\AskMutqinCommandController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactSubmissionController;
 use App\Http\Controllers\ProfileController;
@@ -35,6 +38,9 @@ Route::post('/contact', [ContactSubmissionController::class, 'store'])
     ->name('api.contact.store');
 
 Route::middleware('throttle:120,1')->group(function () {
+    Route::get('/registration/organisations', [RegistrationOrganisationController::class, 'index'])
+        ->middleware('guest')
+        ->name('api.registration.organisations');
     Route::get('/mutashabihat/catalog', [MutashabihatController::class, 'catalog'])
         ->name('api.mutashabihat.catalog');
     Route::get('/mutashabihat/for-ayah', [MutashabihatController::class, 'forAyah'])
@@ -100,6 +106,28 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.feedback.store');
 
         Route::get('/dashboard', [DashboardController::class, 'show'])->name('api.dashboard.show');
+        Route::middleware('teacher.features')->group(function () {
+            Route::get('/me/support', [LearnerSupportController::class, 'show'])->name('api.me.support');
+            Route::post('/me/groups/{group}/request', [LearnerSupportController::class, 'requestGroup'])->name('api.me.groups.request');
+            Route::post('/me/memberships/{membership}/consent', [LearnerSupportController::class, 'grantConsent'])->name('api.me.memberships.consent');
+            Route::post('/me/assignments/{recipient}/start', [LearnerSupportController::class, 'startAssignment'])->name('api.me.assignments.start');
+
+            Route::prefix('teacher')->group(function () {
+                Route::get('/overview', [TeacherDashboardController::class, 'overview'])->name('api.teacher.overview');
+                Route::get('/students', [TeacherDashboardController::class, 'students'])->name('api.teacher.students');
+                Route::get('/students/{student}', [TeacherDashboardController::class, 'show'])->name('api.teacher.students.show');
+                Route::post('/students/{student}/notes', [TeacherDashboardController::class, 'storeNote'])->name('api.teacher.students.notes');
+                Route::get('/groups', [TeacherDashboardController::class, 'groups'])->name('api.teacher.groups');
+                Route::post('/groups', [TeacherDashboardController::class, 'storeGroup'])->name('api.teacher.groups.store');
+                Route::get('/groups/{group}', [TeacherDashboardController::class, 'showGroup'])->name('api.teacher.groups.show');
+                Route::post('/groups/{group}/join', [TeacherDashboardController::class, 'joinGroup'])->name('api.teacher.groups.join');
+                Route::post('/memberships/{membership}/approve', [TeacherDashboardController::class, 'approveMembership'])->name('api.teacher.memberships.approve');
+                Route::post('/memberships/{membership}/reject', [TeacherDashboardController::class, 'rejectMembership'])->name('api.teacher.memberships.reject');
+                Route::post('/memberships/{membership}/remove', [TeacherDashboardController::class, 'removeMembership'])->name('api.teacher.memberships.remove');
+                Route::get('/assignments', [TeacherDashboardController::class, 'assignments'])->name('api.teacher.assignments');
+                Route::post('/assignments', [TeacherDashboardController::class, 'storeAssignment'])->name('api.teacher.assignments.store');
+            });
+        });
         Route::get('/dashboard/activity', [DashboardController::class, 'activity'])->name('api.dashboard.activity');
 
         Route::get('/session', [SessionController::class, 'show'])->name('api.session.show');

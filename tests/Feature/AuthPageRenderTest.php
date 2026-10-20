@@ -122,10 +122,17 @@ class AuthPageRenderTest extends TestCase
 
     public function test_register_page_renders_localised_auth_copy(): void
     {
+        $this->enableTeacherFeatures();
+
         $this->get(route('register'))
             ->assertOk()
             ->assertSee(__('ui.auth_register_heading'))
             ->assertSee(__('ui.continue_google'))
+            ->assertSee(__('ui.auth_role_prompt'))
+            ->assertSee(__('ui.auth_role_individual'))
+            ->assertSee(__('ui.auth_org_name_placeholder'))
+            ->assertSee(route('auth.google.prepare'), false)
+            ->assertDontSee('Select an existing organisation', false)
             ->assertSee(__('ui.create_account'));
     }
 
@@ -219,6 +226,22 @@ class AuthPageRenderTest extends TestCase
             'reset_password',
             'forgot_password',
             'new_password_title',
+            'auth_role_prompt',
+            'auth_role_individual',
+            'auth_role_student',
+            'auth_role_teacher',
+            'auth_role_invalid',
+            'auth_org_type',
+            'auth_org_type_placeholder',
+            'auth_org_type_halaqa',
+            'auth_org_type_madrassa',
+            'auth_org_type_school',
+            'auth_org_type_other',
+            'auth_org_type_required',
+            'auth_org_name',
+            'auth_org_name_placeholder',
+            'auth_org_name_required',
+            'auth_org_name_max',
         ];
 
         foreach (['en', 'ar', 'fr', 'es', 'tr', 'id', 'ur'] as $locale) {

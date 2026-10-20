@@ -10,4 +10,9 @@ abstract class TestCase extends BaseTestCase
     {
         config(['auth.require_email_verification' => true]);
     }
+
+    protected function enableTeacherFeatures(): void
+    {
+        config(['mutqin.teacher_features_enabled' => true]);
+    }
 }

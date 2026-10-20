@@ -584,6 +584,67 @@ export const learningApi = {
     })
     return data?.recommendation ?? null
   },
+
+  async getLearnerSupport() {
+    const { data } = await http.get('/me/support', { headers: { 'Cache-Control': 'no-cache' } })
+    return data
+  },
+  async requestLearnerGroup(groupId) {
+    const { data } = await http.post(`/me/groups/${groupId}/request`)
+    return data
+  },
+  async grantLearnerConsent(membershipId) {
+    const { data } = await http.post(`/me/memberships/${membershipId}/consent`)
+    return data
+  },
+  async startLearnerAssignment(recipientId) {
+    const { data } = await http.post(`/me/assignments/${recipientId}/start`)
+    return data
+  },
+  async getTeacherOverview(days = 30) {
+    const { data } = await http.get('/teacher/overview', { params: { days } })
+    return data
+  },
+  async getTeacherStudents(params = {}) {
+    const { data } = await http.get('/teacher/students', { params })
+    return data
+  },
+  async getTeacherStudent(studentId, section = 'overview') {
+    const { data } = await http.get(`/teacher/students/${studentId}`, { params: { section } })
+    return data
+  },
+  async saveTeacherNote(studentId, payload) {
+    const { data } = await http.post(`/teacher/students/${studentId}/notes`, payload)
+    return data
+  },
+  async getTeacherGroups() {
+    const { data } = await http.get('/teacher/groups')
+    return data
+  },
+  async createTeacherGroup(name) {
+    const { data } = await http.post('/teacher/groups', { name })
+    return data
+  },
+  async getTeacherGroup(groupId) {
+    const { data } = await http.get(`/teacher/groups/${groupId}`)
+    return data
+  },
+  async joinTeacherGroup(groupId) {
+    const { data } = await http.post(`/teacher/groups/${groupId}/join`)
+    return data
+  },
+  async reviewTeacherMembership(membershipId, action) {
+    const { data } = await http.post(`/teacher/memberships/${membershipId}/${action}`)
+    return data
+  },
+  async getTeacherAssignments() {
+    const { data } = await http.get('/teacher/assignments')
+    return data
+  },
+  async createTeacherAssignment(payload) {
+    const { data } = await http.post('/teacher/assignments', payload)
+    return data
+  },
 }
 
 function sanitizeRecommendationSettings(settings) {

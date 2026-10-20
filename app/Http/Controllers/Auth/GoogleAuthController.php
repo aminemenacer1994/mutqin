@@ -8,11 +8,15 @@ use App\Services\AdminDashboardService;
 use App\Services\Auth\GoogleSignInService;
 use App\Support\AuthRedirect;
 use App\Support\GoogleOAuthRedirect;
+use App\Support\Registration\RegistrationIntent;
+use App\Support\Registration\RegistrationProfile;
 use App\Support\Theme;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
@@ -22,12 +26,36 @@ class GoogleAuthController extends Controller
         private readonly GoogleSignInService $googleSignIn
     ) {}
 
+    public function prepare(Request $request): RedirectResponse
+    {
+        if ($error = $this->googleConfigError()) {
+            return redirect()
+                ->route('register')
+                ->withErrors(['google' => $error]);
+        }
+
+        RegistrationIntent::forget();
+
+        $data = $request->validate(
+            RegistrationProfile::rules($request->all()),
+            RegistrationProfile::messages(),
+        );
+
+        RegistrationIntent::store($data);
+
+        return $this->redirect();
+    }
+
     public function redirect(): RedirectResponse
     {
         if ($error = $this->googleConfigError()) {
             return redirect()
                 ->route('login')
                 ->withErrors(['google' => $error]);
+        }
+
+        if (! RegistrationIntent::pullArmed()) {
+            RegistrationIntent::forget();
         }
 
         $this->syncGoogleConfig();
@@ -64,7 +92,22 @@ class GoogleAuthController extends Controller
                 ->withErrors(['google' => GoogleSignInService::GENERIC_FAILURE]);
         }
 
-        $result = $this->googleSignIn->resolve($googleUser, Auth::user());
+        try {
+            $result = $this->googleSignIn->resolve(
+                $googleUser,
+                Auth::user(),
+                RegistrationIntent::get(),
+            );
+        } catch (ValidationException $exception) {
+            RegistrationIntent::forget();
+
+            return redirect()
+                ->route('register')
+                ->withErrors($exception->errors())
+                ->withInput($exception->validator->getData());
+        }
+
+        RegistrationIntent::forget();
 
         if ($result['error'] !== null || $result['user'] === null) {
             request()->session()->forget('google_link_intent');

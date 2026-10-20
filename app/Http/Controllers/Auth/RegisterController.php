@@ -4,18 +4,23 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AdminDashboardService;
+use App\Services\Organisations\AccountRegistrationService;
 use App\Support\AdminEmails;
 use App\Support\AuthRedirect;
 use App\Support\BillingIntent;
 use App\Support\EmailVerification;
+use App\Support\Registration\OrganisationRegistrationCatalog;
+use App\Support\Registration\RegistrationProfile;
 use App\Support\Theme;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class RegisterController extends Controller
 {
@@ -37,8 +42,9 @@ class RegisterController extends Controller
      *
      * @return void
      */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly AccountRegistrationService $accounts
+    ) {
         $this->middleware('guest');
     }
 
@@ -54,7 +60,9 @@ class RegisterController extends Controller
     {
         BillingIntent::rememberFromRequest(request());
 
-        return view('auth.register');
+        return view('auth.register', [
+            'organisationOptions' => OrganisationRegistrationCatalog::options(),
+        ]);
     }
 
     /**
@@ -76,8 +84,10 @@ class RegisterController extends Controller
                 Rule::notIn(AdminEmails::reserved()),
             ],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
+            ...RegistrationProfile::rules($data),
         ], [
             'email.not_in' => 'This email address is reserved.',
+            ...RegistrationProfile::messages(),
         ]);
     }
 
@@ -88,29 +98,33 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'password_set_at' => now(),
-            'theme' => Theme::DEFAULT_PREFERENCE,
-        ]);
+        return DB::transaction(function () use ($data) {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'password_set_at' => now(),
+                'theme' => Theme::DEFAULT_PREFERENCE,
+            ]);
 
-        if (! EmailVerification::required() || EmailVerification::bypassesForDemo(
-            (string) $data['email'],
-            isset($data['password']) && is_string($data['password']) ? $data['password'] : null,
-        )) {
-            $user->forceFill(['email_verified_at' => now()])->save();
-        }
+            $this->accounts->apply($user, RegistrationProfile::validated($data));
 
-        return $user;
+            if (! EmailVerification::required() || EmailVerification::bypassesForDemo(
+                (string) $data['email'],
+                isset($data['password']) && is_string($data['password']) ? $data['password'] : null,
+            )) {
+                $user->forceFill(['email_verified_at' => now()])->save();
+            }
+
+            return $user;
+        });
     }
 
     protected function registered(Request $request, $user)
     {
-        if ($user instanceof \App\Models\User) {
+        if ($user instanceof User) {
             $user->touchLastLogin();
-            \App\Services\AdminDashboardService::invalidateCaches();
+            AdminDashboardService::invalidateCaches();
         }
 
         // Match login/Google: login event id powers Welcome Back vs onboarding,
@@ -124,7 +138,7 @@ class RegisterController extends Controller
 
         // Force sepia on every surface for brand-new accounts (session + cookie).
         $theme = Theme::DEFAULT_PREFERENCE;
-        if ($user instanceof \App\Models\User && $user->theme !== $theme) {
+        if ($user instanceof User && $user->theme !== $theme) {
             $user->forceFill(['theme' => $theme])->save();
         }
         $request->session()->put('mutqin_theme', $theme);

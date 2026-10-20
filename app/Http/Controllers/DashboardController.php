@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
+use App\Support\TeacherFeatures;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -42,6 +43,11 @@ class DashboardController extends Controller
                     'subscription_tier' => $user->effectiveSubscriptionTier(),
                     'subscription_status' => $user->subscription_status ?? 'free',
                     'is_admin' => $user->isAdmin(),
+                    'teacher_features_enabled' => TeacherFeatures::enabled(),
+                    'account_role' => TeacherFeatures::enabled() ? $user->account_role?->value : null,
+                    'teacher_dashboard_url' => TeacherFeatures::enabled() && $user->isTeacher()
+                        ? route('teacher.dashboard')
+                        : null,
                 ],
             ])
             ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate');

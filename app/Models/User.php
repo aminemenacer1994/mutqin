@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AccountRole;
 use App\Notifications\ResetPassword;
 use App\Notifications\VerifyEmail;
 use App\Support\AdminEmails;
@@ -10,6 +11,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -110,7 +112,28 @@ class User extends Authenticatable implements HasLocalePreference, MustVerifyEma
             'subscription_current_period_ends_at' => 'datetime',
             'ai_audio_consent_at' => 'datetime',
             'ai_session_settings' => 'array',
+            'account_role' => AccountRole::class,
         ];
+    }
+
+    public function organisation(): BelongsTo
+    {
+        return $this->belongsTo(Organisation::class);
+    }
+
+    public function groupMemberships(): HasMany
+    {
+        return $this->hasMany(GroupMembership::class);
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->account_role === AccountRole::Teacher;
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->account_role === AccountRole::Student;
     }
 
     public function touchLastLogin(): void

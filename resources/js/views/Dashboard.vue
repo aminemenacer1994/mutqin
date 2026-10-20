@@ -79,6 +79,15 @@
           </div>
         </header>
 
+        <LearnerTeacherSupport
+          v-if="showLearnerSupport"
+          :support="support"
+          :error="supportError"
+          @start-assignment="startSupportAssignment"
+          @request-group="requestSupportGroup"
+          @grant-consent="grantSupportConsent"
+        />
+
         <div class="user-dashboard__content">
         <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
           <div class="dash-section__head dash-section__head--compact">
@@ -707,6 +716,7 @@ import {
 } from 'chart.js'
 import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
+import LearnerTeacherSupport from '../components/teacher/LearnerTeacherSupport.vue'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
 import { buildSessionAnalysisView } from '../scripts/sessionAnalysis/buildSessionAnalysisView'
@@ -773,7 +783,7 @@ const DRAWER_ICONS = {
 
 export default {
   name: 'UserDashboard',
-  components: { Bar, NetworkFallback, DashAnimatedNumber, SessionAnalysisModal },
+  components: { Bar, NetworkFallback, LearnerTeacherSupport, DashAnimatedNumber, SessionAnalysisModal },
   props: {
     auth: { type: Object, default: () => ({}) },
     initialData: { type: Object, default: null },
@@ -823,11 +833,23 @@ export default {
       aiReciteRequestId: 0,
       toastMessage: '',
       toastTimer: null,
+      support: null,
+      supportError: '',
     }
   },
   computed: {
     memorisationUrl() {
       return this.auth?.memorisation_url || '/memorisation'
+    },
+    showLearnerSupport() {
+      if (this.auth?.teacher_features_enabled !== true) return false
+      if (!this.support) return false
+      return Boolean(
+        this.support.teacher_dashboard_url
+        || this.support.assignments?.length
+        || this.support.feedback?.length
+        || this.support.groups?.length
+      )
     },
     savedSessionsHref() {
       const base = this.memorisationUrl.split('?')[0]
@@ -1593,6 +1615,7 @@ export default {
     }
 
     this.refreshActiveSessionSnapshot()
+    this.loadLearnerSupport()
     if (!this.data) {
       this.fetchDashboard(this.chartDays, { initial: true })
     }
@@ -2291,6 +2314,52 @@ export default {
     reload(force = false) {
       this.fetchDashboard(this.chartDays, { force, announce: force })
       this.loadAiReciteResults()
+      this.loadLearnerSupport()
+    },
+    async loadLearnerSupport() {
+      if (this.auth?.teacher_features_enabled !== true) return
+      try {
+        this.support = await learningApi.getLearnerSupport()
+        this.supportError = ''
+      } catch (_) {
+        this.supportError = ''
+      }
+    },
+    async startSupportAssignment(item) {
+      if (this.auth?.teacher_features_enabled !== true) return
+      this.supportError = ''
+      try {
+        const payload = await learningApi.startLearnerAssignment(item.id)
+        if (payload?.href) window.location.assign(payload.href)
+      } catch (error) {
+        this.supportError = error?.response?.data?.message || this.t('teacher.action_failed')
+      }
+    },
+    async requestSupportGroup(group) {
+      if (this.auth?.teacher_features_enabled !== true) return
+      this.supportError = ''
+      try {
+        this.support = await learningApi.requestLearnerGroup(group.id)
+      } catch (error) {
+        this.supportError = this.supportErrorMessage(error)
+      }
+    },
+    async grantSupportConsent(group) {
+      if (this.auth?.teacher_features_enabled !== true) return
+      this.supportError = ''
+      try {
+        this.support = await learningApi.grantLearnerConsent(group.membership_id)
+      } catch (error) {
+        this.supportError = this.supportErrorMessage(error)
+      }
+    },
+    supportErrorMessage(error) {
+      const errors = error?.response?.data?.errors
+      if (errors && typeof errors === 'object') {
+        const first = Object.values(errors).flat()[0]
+        if (first) return String(first)
+      }
+      return error?.response?.data?.message || this.t('teacher.action_failed')
     },
     setChartDays(days) {
       const next = days === 7 ? 7 : 30
