@@ -28,6 +28,7 @@ use App\Support\Registration\OrganisationName;
 use App\Support\TeacherFeatures;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -47,42 +48,62 @@ class TeacherDashboardService
         TeacherFeatures::abortUnlessEnabled();
 
         $days = in_array($days, [7, 30, 90], true) ? $days : 30;
-        $ids = $this->access->authorizedStudentIds($teacher)->all();
-        $this->assignments->refreshStatuses($teacher, $ids);
-        $metrics = $this->metricsFor($teacher, $ids);
-        $start = now()->subDays($days - 1)->startOfDay();
+        $cacheKey = sprintf('teacher.overview.%d.%d', (int) $teacher->id, $days);
 
-        $chart = $this->activityChart($ids, $start, $days);
-        $rates = collect($metrics)->pluck('ai_success_rate')->filter(fn ($rate) => $rate !== null);
-        $attention = collect($metrics)->filter(fn (array $row) => $row['needs_attention'])->count();
-        $active7 = collect($metrics)->filter(fn (array $row) => $row['active_7'])->count();
-        $active30 = collect($metrics)->filter(fn (array $row) => $row['active_30'])->count();
+        return Cache::remember($cacheKey, 60, function () use ($teacher, $days) {
+            $ids = $this->access->authorizedStudentIds($teacher)->all();
+            $this->assignments->refreshStatuses($teacher, $ids);
+            $metrics = $this->metricsFor($teacher, $ids);
+            $start = now()->subDays($days - 1)->startOfDay();
 
-        $recent = $this->activityLists($metrics);
-        $assignments = $this->assignmentCounts($teacher, $ids);
+            $chart = $this->activityChart($ids, $start, $days);
+            $rates = collect($metrics)->pluck('ai_success_rate')->filter(fn ($rate) => $rate !== null);
+            $attention = collect($metrics)->filter(fn (array $row) => $row['needs_attention'])->count();
+            $active7 = collect($metrics)->filter(fn (array $row) => $row['active_7'])->count();
+            $active30 = collect($metrics)->filter(fn (array $row) => $row['active_30'])->count();
 
-        return [
-            'teacher' => $this->teacherProfile($teacher),
-            'days' => $days,
-            'kpis' => [
-                'authorised_students' => count($ids),
-                'active_7_days' => $active7,
-                'active_30_days' => $active30,
-                'ai_success_rate' => $rates->isEmpty() ? null : round((float) $rates->avg(), 1),
-                'ai_success_students' => $rates->count(),
-                'needs_attention' => $attention,
-                'overdue_revisions' => collect($metrics)->sum('revision_overdue'),
-                'outstanding_assignments' => $assignments['outstanding'],
-                'overdue_assignments' => $assignments['overdue'],
-            ],
-            'chart' => $chart,
-            'recently_active' => $recent['active'],
-            'inactive' => $recent['inactive'],
-            'recent_ai' => $this->recentAi($ids),
-            'assignments' => $assignments,
-            'surahs' => $this->surahCatalog(),
-            'roster' => $this->organisationRoster($teacher, $ids),
-        ];
+            $recent = $this->activityLists($metrics);
+            $assignments = $this->assignmentCounts($teacher, $ids);
+            $completed = (int) ($assignments['completed'] ?? 0);
+            $outstanding = (int) ($assignments['outstanding'] ?? 0);
+            $totalTasks = $completed + $outstanding;
+            $completionRate = $totalTasks > 0 ? round(($completed / $totalTasks) * 100, 1) : null;
+
+            $strong = collect($metrics)->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] >= RecitationScoringThresholds::STRONG_ACCURACY_MIN)->count();
+            $developing = collect($metrics)->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] < RecitationScoringThresholds::STRONG_ACCURACY_MIN)->count();
+
+            return [
+                'teacher' => $this->teacherProfile($teacher),
+                'days' => $days,
+                'kpis' => [
+                    'authorised_students' => count($ids),
+                    'active_7_days' => $active7,
+                    'active_30_days' => $active30,
+                    'ai_success_rate' => $rates->isEmpty() ? null : round((float) $rates->avg(), 1),
+                    'ai_success_students' => $rates->count(),
+                    'needs_attention' => $attention,
+                    'overdue_revisions' => collect($metrics)->sum('revision_overdue'),
+                    'outstanding_assignments' => $outstanding,
+                    'overdue_assignments' => $assignments['overdue'],
+                    'completion_rate' => $completionRate,
+                ],
+                'stage_distribution' => $this->stageDistribution($metrics),
+                'filter_counts' => [
+                    'attention' => $attention,
+                    'active' => $active7,
+                    'inactive' => max(0, count($ids) - $active7),
+                    'strong' => $strong,
+                    'developing' => $developing,
+                ],
+                'chart' => $chart,
+                'recently_active' => $recent['active'],
+                'inactive' => $recent['inactive'],
+                'recent_ai' => $this->recentAi($ids),
+                'assignments' => $assignments,
+                'surahs' => $this->surahCatalog(),
+                'roster' => $this->organisationRoster($teacher, $ids),
+            ];
+        });
     }
 
     /**
@@ -162,6 +183,26 @@ class TeacherDashboardService
         if ((string) ($filters['attention'] ?? '') === '1') {
             $rows = $rows->filter(fn (array $row) => $row['needs_attention'])->values();
         }
+
+        $scoreMin = $filters['score_min'] ?? null;
+        if ($scoreMin !== null && $scoreMin !== '') {
+            $min = (float) $scoreMin;
+            $rows = $rows->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] >= $min)->values();
+        }
+
+        $scoreMax = $filters['score_max'] ?? null;
+        if ($scoreMax !== null && $scoreMax !== '') {
+            $max = (float) $scoreMax;
+            $rows = $rows->filter(fn (array $row) => $row['ai_success_rate'] !== null && $row['ai_success_rate'] <= $max)->values();
+        }
+
+        $sort = (string) ($filters['sort'] ?? 'name');
+        $rows = match ($sort) {
+            'score' => $rows->sortByDesc(fn (array $row) => $row['ai_success_rate'] ?? -1)->values(),
+            'last_seen' => $rows->sortByDesc(fn (array $row) => $row['last_activity_at'] ?? '')->values(),
+            'attention' => $rows->sortByDesc(fn (array $row) => (int) $row['needs_attention'])->values(),
+            default => $rows->sortBy(fn (array $row) => mb_strtolower($row['name']))->values(),
+        };
 
         $perPage = min(50, max(1, (int) ($filters['per_page'] ?? 20)));
         $page = max(1, (int) ($filters['page'] ?? 1));
@@ -342,9 +383,10 @@ class TeacherDashboardService
 
         $assignments = TeacherAssignmentRecipient::query()
             ->where('student_id', $user->id)
+            ->whereHas('assignment')
             ->with(['assignment.teacher:id,name'])
             ->latest('id')
-            ->limit(30)
+            ->limit(50)
             ->get();
 
         if ($assignments->isNotEmpty()) {
@@ -357,11 +399,29 @@ class TeacherDashboardService
             }
             $assignments = TeacherAssignmentRecipient::query()
                 ->where('student_id', $user->id)
+                ->whereHas('assignment')
                 ->with(['assignment.teacher:id,name'])
                 ->latest('id')
-                ->limit(30)
+                ->limit(50)
                 ->get();
         }
+
+        $completedSessions = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where('is_onboarding_example', false)
+            ->where('status', UserSessionStatus::Completed->value)
+            ->get();
+        $scoredAttempts = AiReciteAttempt::query()
+            ->validScored()
+            ->where('user_id', $user->id)
+            ->get();
+        $unfinishedSessions = UserSession::query()
+            ->where('user_id', $user->id)
+            ->where('is_onboarding_example', false)
+            ->whereIn('status', UserSessionStatus::unfinishedDatabaseValues())
+            ->orderByDesc('last_activity_at')
+            ->orderByDesc('id')
+            ->get();
 
         $feedback = TeacherNote::query()
             ->where('student_id', $user->id)
@@ -380,12 +440,22 @@ class TeacherDashboardService
         return [
             'account_role' => $user->account_role?->value,
             'teacher_dashboard_url' => $user->isTeacher() ? route('teacher.dashboard') : null,
-            'assignments' => $assignments->map(function (TeacherAssignmentRecipient $recipient) {
-                $payload = $this->assignments->presentRecipient($recipient);
-                $payload['teacher_name'] = $recipient->assignment?->teacher?->name;
+            'assignments' => $assignments
+                ->map(function (TeacherAssignmentRecipient $recipient) use ($completedSessions, $scoredAttempts, $unfinishedSessions) {
+                    $payload = $this->assignments->presentRecipient(
+                        $recipient,
+                        false,
+                        $completedSessions,
+                        $scoredAttempts,
+                        $unfinishedSessions,
+                    );
+                    $payload['teacher_name'] = $recipient->assignment?->teacher?->name;
 
-                return $payload;
-            })->all(),
+                    return $payload;
+                })
+                ->sort(fn (array $a, array $b) => $this->sortLearnerAssignments($a, $b))
+                ->values()
+                ->all(),
             'feedback' => $feedback,
             'groups' => $user->isStudent() ? $this->studentGroups($user) : [],
         ];
@@ -676,6 +746,28 @@ class TeacherDashboardService
      * @param  list<int>  $ids
      * @return array<string, int>
      */
+    /**
+     * @param  array<int, array<string, mixed>>  $metrics
+     * @return array{learning: int, practising: int, revising: int, mastered: int}
+     */
+    private function stageDistribution(array $metrics): array
+    {
+        $dist = ['learning' => 0, 'practising' => 0, 'revising' => 0, 'mastered' => 0];
+        foreach ($metrics as $row) {
+            if (($row['memorised_ayahs'] ?? 0) > 0 && ($row['ai_success_rate'] ?? 0) >= RecitationScoringThresholds::STRONG_ACCURACY_MIN) {
+                $dist['mastered']++;
+            } elseif (($row['revision_overdue'] ?? 0) > 0 || ($row['revision_upcoming'] ?? 0) > 0) {
+                $dist['revising']++;
+            } elseif ($row['active_7'] ?? false) {
+                $dist['practising']++;
+            } else {
+                $dist['learning']++;
+            }
+        }
+
+        return $dist;
+    }
+
     private function assignmentCounts(User $teacher, array $ids): array
     {
         $counts = ['pending' => 0, 'in_progress' => 0, 'completed' => 0, 'overdue' => 0, 'outstanding' => 0];
@@ -1254,6 +1346,49 @@ class TeacherDashboardService
                 'sharing' => (bool) $sharing,
             ];
         })->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $a
+     * @param  array<string, mixed>  $b
+     */
+    private function sortLearnerAssignments(array $a, array $b): int
+    {
+        $rank = fn (string $status): int => match ($status) {
+            AssignmentStatus::Overdue->value => 0,
+            AssignmentStatus::InProgress->value => 1,
+            AssignmentStatus::Pending->value => 2,
+            AssignmentStatus::Completed->value => 3,
+            default => 4,
+        };
+
+        $statusCompare = $rank((string) ($a['status'] ?? '')) <=> $rank((string) ($b['status'] ?? ''));
+        if ($statusCompare !== 0) {
+            return $statusCompare;
+        }
+
+        $dueA = isset($a['assignment']['due_at']) ? Carbon::parse($a['assignment']['due_at']) : null;
+        $dueB = isset($b['assignment']['due_at']) ? Carbon::parse($b['assignment']['due_at']) : null;
+        if ($dueA !== null || $dueB !== null) {
+            if ($dueA === null) {
+                return 1;
+            }
+            if ($dueB === null) {
+                return -1;
+            }
+            $dueCompare = $dueA->getTimestamp() <=> $dueB->getTimestamp();
+            if ($dueCompare !== 0) {
+                return $dueCompare;
+            }
+        }
+
+        $updatedA = isset($a['updated_at']) ? Carbon::parse($a['updated_at']) : null;
+        $updatedB = isset($b['updated_at']) ? Carbon::parse($b['updated_at']) : null;
+        if ($updatedA !== null && $updatedB !== null) {
+            return $updatedB->getTimestamp() <=> $updatedA->getTimestamp();
+        }
+
+        return ((int) ($b['id'] ?? 0)) <=> ((int) ($a['id'] ?? 0));
     }
 
     private function assertAuthorised(User $teacher, User $student): void

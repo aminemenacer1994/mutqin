@@ -144,9 +144,7 @@ class TeacherAssignmentService
                 continue;
             }
 
-            $matches = $assignment->kind === AssignmentKind::AiRecite
-                ? $attempts->filter(fn (AiReciteAttempt $attempt) => $this->attemptMatches($attempt, $assignment, (int) $recipient->student_id))->count()
-                : $sessions->filter(fn (UserSession $session) => $this->sessionMatches($session, $assignment, (int) $recipient->student_id))->count();
+            $matches = $this->completedRepeats($recipient, $sessions, $attempts);
 
             $target = max(1, (int) ($assignment->repetition_target ?? 1));
             $status = AssignmentStatus::Pending;
@@ -191,7 +189,7 @@ class TeacherAssignmentService
         return $recipient->refresh();
     }
 
-    public function practiceHref(TeacherAssignment $assignment): string
+    public function practiceHref(TeacherAssignment $assignment, ?int $resumeSessionId = null): string
     {
         $params = [
             'surah' => $assignment->surah_number,
@@ -206,7 +204,71 @@ class TeacherAssignmentService
             $params['review'] = '1';
         }
 
+        if ($resumeSessionId !== null && $resumeSessionId > 0) {
+            $params['resume'] = '1';
+            $params['session'] = $resumeSessionId;
+        }
+
         return route('memorisation').'?'.http_build_query($params);
+    }
+
+    public function resumeSessionId(TeacherAssignmentRecipient $recipient, ?Collection $unfinishedSessions = null): ?int
+    {
+        $assignment = $recipient->assignment;
+        if ($assignment === null || $assignment->kind === AssignmentKind::AiRecite) {
+            return null;
+        }
+
+        $sessions = $unfinishedSessions ?? UserSession::query()
+            ->where('user_id', (int) $recipient->student_id)
+            ->where('is_onboarding_example', false)
+            ->whereIn('status', UserSessionStatus::unfinishedDatabaseValues())
+            ->orderByDesc('last_activity_at')
+            ->orderByDesc('id')
+            ->get();
+
+        $match = $sessions->first(
+            fn (UserSession $session) => $this->sessionMatches($session, $assignment, (int) $recipient->student_id)
+        );
+
+        return $match ? (int) $match->id : null;
+    }
+
+    /**
+     * @return array{completed: int, target: int, resume_available: bool}
+     */
+    public function progressForRecipient(
+        TeacherAssignmentRecipient $recipient,
+        ?Collection $completedSessions = null,
+        ?Collection $scoredAttempts = null,
+        ?Collection $unfinishedSessions = null,
+    ): array {
+        $assignment = $recipient->assignment;
+        $target = max(1, (int) ($assignment?->repetition_target ?? 1));
+        if ($assignment === null) {
+            return ['completed' => 0, 'target' => $target, 'resume_available' => false];
+        }
+
+        if ($completedSessions === null || $scoredAttempts === null) {
+            $studentId = (int) $recipient->student_id;
+            $completedSessions = UserSession::query()
+                ->where('user_id', $studentId)
+                ->where('is_onboarding_example', false)
+                ->where('status', UserSessionStatus::Completed->value)
+                ->get();
+            $scoredAttempts = AiReciteAttempt::query()
+                ->validScored()
+                ->where('user_id', $studentId)
+                ->get();
+        }
+
+        $completed = $this->completedRepeats($recipient, $completedSessions, $scoredAttempts);
+
+        return [
+            'completed' => $completed,
+            'target' => $target,
+            'resume_available' => $this->resumeSessionId($recipient, $unfinishedSessions) !== null,
+        ];
     }
 
     /**
@@ -249,8 +311,13 @@ class TeacherAssignmentService
     /**
      * @return array<string, mixed>
      */
-    public function presentRecipient(TeacherAssignmentRecipient $recipient, bool $includeComparison = false): array
-    {
+    public function presentRecipient(
+        TeacherAssignmentRecipient $recipient,
+        bool $includeComparison = false,
+        ?Collection $completedSessions = null,
+        ?Collection $scoredAttempts = null,
+        ?Collection $unfinishedSessions = null,
+    ): array {
         $assignment = $recipient->assignment;
         $status = $this->displayStatus($recipient, $assignment);
 
@@ -261,11 +328,19 @@ class TeacherAssignmentService
             'status' => $status,
             'started_at' => $recipient->started_at?->toIso8601String(),
             'completed_at' => $recipient->completed_at?->toIso8601String(),
+            'updated_at' => $recipient->updated_at?->toIso8601String(),
         ];
 
         if ($assignment) {
+            $resumeSessionId = $this->resumeSessionId($recipient, $unfinishedSessions);
             $payload['assignment'] = $this->presentAssignment($assignment);
-            $payload['href'] = $this->practiceHref($assignment);
+            $payload['progress'] = $this->progressForRecipient(
+                $recipient,
+                $completedSessions,
+                $scoredAttempts,
+                $unfinishedSessions,
+            );
+            $payload['href'] = $this->practiceHref($assignment, $resumeSessionId);
             if ($includeComparison) {
                 $payload['comparison'] = $this->comparison($assignment, (int) $recipient->student_id);
             }
@@ -336,6 +411,31 @@ class TeacherAssignmentService
             ->pluck('user_id');
 
         return $members->map(fn ($id) => (int) $id)->unique()->values();
+    }
+
+    /**
+     * @param  Collection<int, UserSession>  $completedSessions
+     * @param  Collection<int, AiReciteAttempt>  $scoredAttempts
+     */
+    private function completedRepeats(
+        TeacherAssignmentRecipient $recipient,
+        Collection $completedSessions,
+        Collection $scoredAttempts,
+    ): int {
+        $assignment = $recipient->assignment;
+        if ($assignment === null) {
+            return 0;
+        }
+
+        if ($assignment->kind === AssignmentKind::AiRecite) {
+            return $scoredAttempts
+                ->filter(fn (AiReciteAttempt $attempt) => $this->attemptMatches($attempt, $assignment, (int) $recipient->student_id))
+                ->count();
+        }
+
+        return $completedSessions
+            ->filter(fn (UserSession $session) => $this->sessionMatches($session, $assignment, (int) $recipient->student_id))
+            ->count();
     }
 
     private function sessionMatches(UserSession $session, TeacherAssignment $assignment, int $studentId): bool

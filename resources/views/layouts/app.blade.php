@@ -126,6 +126,12 @@
     {{-- This stylesheet is emitted by webpack's Vue loader, not by a Mix entry.
          It is therefore not guaranteed to be present in mix-manifest.json. --}}
     <link rel="stylesheet" href="{{ asset('css/vue-styles.css').'?v='.$vueStylesFingerprint }}">
+    @if(request()->routeIs('teacher.dashboard'))
+        @php
+            $teacherStylesUrl = \App\Support\MixAssetUrl::withManifestBuild('css/teacher-dashboard.css', $mixManifestPath);
+        @endphp
+        <link rel="stylesheet" href="{{ $teacherStylesUrl }}" id="mutqin-teacher-dashboard-styles">
+    @endif
     <style id="mutqin-no-horizontal-scroll">
       html, body {
         width: 100%;
@@ -8106,7 +8112,7 @@
         }
     </style>
 </head>
-<body dir="{{ $appDirection }}" class="{{ \App\Support\MutqinDomains::usesEarlyAccessNav(request()) ? 'mutqin-early-access-nav ' : '' }}{{ request()->routeIs('home') ? 'marketing-home' : '' }}">
+<body dir="{{ $appDirection }}" class="{{ \App\Support\MutqinDomains::usesEarlyAccessNav(request()) ? 'mutqin-early-access-nav ' : '' }}{{ request()->routeIs('teacher.dashboard') ? 'teacher-page ' : '' }}{{ request()->routeIs('home') ? 'marketing-home' : '' }}">
     @php
         $usesEarlyAccessNav = \App\Support\MutqinDomains::usesEarlyAccessNav(request());
     @endphp

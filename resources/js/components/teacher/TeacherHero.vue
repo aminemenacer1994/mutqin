@@ -1,5 +1,5 @@
 <template>
-  <header class="dash-hero dash-section dash-reveal">
+  <header class="dash-hero dash-section dash-reveal teacher-hero teacher-hero--compact">
     <div class="dash-hero__top">
       <div class="dash-hero__greeting">
         <p class="teacher-kicker">{{ t('teacher.kicker') }}</p>
@@ -8,6 +8,7 @@
           <i class="bi bi-building" aria-hidden="true"></i>
           {{ organisationName }}
         </p>
+        <p class="teacher-hero__summary">{{ t('teacher.hero_summary') }}</p>
       </div>
       <div class="teacher-hero__actions">
         <a class="dash-btn dash-btn--ghost" :href="practiceUrl">

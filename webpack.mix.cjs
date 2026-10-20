@@ -214,6 +214,7 @@ mix.js('resources/js/app.js', 'public/js')
    // sooner.
    .vue({ extractStyles: 'css/vue-styles.css' })
    .sass('resources/sass/app.scss', 'public/css')
+   .sass('resources/sass/teacher-dashboard.scss', 'public/css')
    .options({
        progress: false
    })
@@ -274,7 +275,7 @@ mix.then(() => {
     const alwaysKeepKeys = new Set();
     for (const key of Object.keys(manifest)) {
         const base = path.basename(key.split('?')[0]);
-        if (base === 'app.js' || base === 'app.css') {
+        if (base === 'app.js' || base === 'app.css' || base === 'teacher-dashboard.css') {
             alwaysKeepKeys.add(key);
         }
     }

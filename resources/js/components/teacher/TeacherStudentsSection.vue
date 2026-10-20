@@ -1,5 +1,9 @@
 <template>
   <section class="teacher-stack">
+    <TeacherPageHeader
+      :title="t('teacher.nav_students')"
+      :subtitle="t('teacher.students_subtitle')"
+    />
     <div class="teacher-toolbar">
       <label class="teacher-search">
         <span class="visually-hidden">{{ t('teacher.search') }}</span>
@@ -66,11 +70,12 @@ import { i18nMixin } from '../../mixins/i18nMixin'
 import { groupStudentsByPerformance } from '../../scripts/teacher/formatters'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
+import TeacherPageHeader from './TeacherPageHeader.vue'
 import TeacherStudentCard from './TeacherStudentCard.vue'
 
 export default {
   name: 'TeacherStudentsSection',
-  components: { TeacherEmpty, TeacherMore, TeacherStudentCard },
+  components: { TeacherEmpty, TeacherMore, TeacherPageHeader, TeacherStudentCard },
   mixins: [i18nMixin],
   props: {
     filters: { type: Object, required: true },

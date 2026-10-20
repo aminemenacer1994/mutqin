@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use Illuminate\Foundation\MixFileNotFoundException;
+use Throwable;
+
 final class MixAssetUrl
 {
     /**
@@ -18,10 +21,19 @@ final class MixAssetUrl
     /**
      * Mix versioned URL plus a manifest fingerprint query param.
      * Uses ? or & correctly so URLs stay valid when Mix returns an unversioned path.
+     * Falls back to asset() when the Mix entry is missing so pages never 500.
      */
     public static function withManifestBuild(string $mixPath, ?string $manifestPath = null): string
     {
-        $url = mix($mixPath);
+        $normalized = '/'.ltrim($mixPath, '/');
+        try {
+            $url = mix($mixPath);
+        } catch (MixFileNotFoundException|Throwable) {
+            $disk = public_path(ltrim($normalized, '/'));
+            $version = is_file($disk) ? substr((string) md5_file($disk), 0, 12) : 'missing';
+            $url = asset(ltrim($normalized, '/')).'?id='.$version;
+        }
+
         $build = self::manifestFingerprint($manifestPath);
         $separator = str_contains($url, '?') ? '&' : '?';
 

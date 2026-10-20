@@ -37,7 +37,10 @@ class TeacherDashboardTest extends TestCase
         $this->actingAs($student)->getJson(route('api.teacher.overview'))->assertForbidden();
 
         $teacher = User::factory()->create(['account_role' => AccountRole::Teacher->value]);
-        $this->actingAs($teacher)->get(route('teacher.dashboard'))->assertOk()->assertSee('teacher-dashboard', false);
+        $this->actingAs($teacher)->get(route('teacher.dashboard'))
+            ->assertOk()
+            ->assertSee('teacher-dashboard', false)
+            ->assertSee('teacher-dashboard.css', false);
     }
 
     public function test_overview_uses_authorised_records_only(): void
@@ -232,6 +235,8 @@ class TeacherDashboardTest extends TestCase
 
         $support = $this->actingAs($student)->getJson(route('api.me.support'))->assertOk()->json();
         $this->assertSame('Recite slowly.', $support['assignments'][0]['assignment']['feedback']);
+        $this->assertSame(1, $support['assignments'][0]['progress']['completed']);
+        $this->assertSame(1, $support['assignments'][0]['progress']['target']);
         $this->assertArrayNotHasKey('private', $support);
 
         $started = $this->actingAs($student)

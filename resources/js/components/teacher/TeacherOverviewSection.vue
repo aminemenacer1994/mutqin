@@ -41,7 +41,6 @@
     </TeacherPanel>
   </section>
 </template>
-
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherEmpty from './TeacherEmpty.vue'
@@ -93,3 +92,4 @@ export default {
   },
 }
 </script>
+

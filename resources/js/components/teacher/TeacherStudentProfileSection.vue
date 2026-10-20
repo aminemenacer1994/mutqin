@@ -8,20 +8,13 @@
     <div v-if="loading" class="teacher-skeletons"><div class="teacher-skeleton"></div></div>
 
     <template v-else-if="profile">
-      <TeacherPanel compact>
-        <div class="teacher-profile-hero">
-          <span class="teacher-profile-hero__avatar" aria-hidden="true">{{ studentInitial(profile.student.name) }}</span>
-          <div class="teacher-profile-hero__copy">
-            <h2>{{ profile.student.name }}</h2>
-            <p v-if="profile.student.organisation" class="teacher-meta">
-              <i class="bi bi-building" aria-hidden="true"></i>
-              {{ profile.student.organisation }}
-            </p>
-          </div>
-        </div>
-      </TeacherPanel>
+      <TeacherPageHeader
+        :title="profile.student.name"
+        display-title
+        :subtitle="profileHeaderSubtitle"
+      />
 
-      <div class="dash-section dash-section--flat">
+      <div class="dash-section dash-section--flat teacher-profile-body">
         <div class="dash-section__body">
           <TeacherStudentProfileOverview
             :profile="profile"
@@ -41,14 +34,14 @@
 <script>
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherEmpty from './TeacherEmpty.vue'
-import TeacherPanel from './TeacherPanel.vue'
+import TeacherPageHeader from './TeacherPageHeader.vue'
 import TeacherStudentProfileOverview from './profile/TeacherStudentProfileOverview.vue'
 
 export default {
   name: 'TeacherStudentProfileSection',
   components: {
     TeacherEmpty,
-    TeacherPanel,
+    TeacherPageHeader,
     TeacherStudentProfileOverview,
   },
   mixins: [i18nMixin],
@@ -66,5 +59,25 @@ export default {
     formatWhen: { type: Function, required: true },
   },
   emits: ['back', 'change-section'],
+  computed: {
+    profileHeaderSubtitle() {
+      const org = this.profile?.student?.organisation
+      const detail = this.profileSubtitle
+      if (org && detail) return `${org} · ${detail}`
+      return org || detail
+    },
+    profileSubtitle() {
+      const metrics = this.profile?.payload?.metrics
+      if (!metrics) return this.t('teacher.profile_subtitle_default')
+      const saved = this.profile.payload?.latest_saved
+      if (saved) {
+        return this.t('teacher.profile_subtitle_position', { place: this.sessionLabel(saved) })
+      }
+      if (metrics.needs_attention) {
+        return this.t('teacher.profile_subtitle_attention')
+      }
+      return this.t('teacher.profile_subtitle_default')
+    },
+  },
 }
 </script>

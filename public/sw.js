@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'mutqin-shell-v91';
-const RUNTIME_CACHE = 'mutqin-runtime-v91';
+const SHELL_CACHE = 'mutqin-shell-v92';
+const RUNTIME_CACHE = 'mutqin-runtime-v92';
 
 // Precache icons/manifest only — never HTML shells (stale HTML → deleted Mix chunks).
 const SHELL_URLS = [
@@ -80,6 +80,7 @@ self.addEventListener('fetch', event => {
     url.pathname === '/js/app.js'
     || url.pathname === '/js/memorisation.js'
     || url.pathname === '/css/app.css'
+    || url.pathname === '/css/teacher-dashboard.css'
     || url.pathname === '/mix-manifest.json'
     || url.pathname === '/sw.js'
     || isUnhashedMixJs

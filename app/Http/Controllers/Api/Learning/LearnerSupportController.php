@@ -55,9 +55,15 @@ class LearnerSupportController extends Controller
         $updated = $assignments->start($user, $recipient);
         $updated->loadMissing('assignment');
 
+        $resumeSessionId = $updated->assignment
+            ? $assignments->resumeSessionId($updated)
+            : null;
+
         return response()->json([
             'recipient' => $assignments->presentRecipient($updated),
-            'href' => $updated->assignment ? $assignments->practiceHref($updated->assignment) : null,
+            'href' => $updated->assignment
+                ? $assignments->practiceHref($updated->assignment, $resumeSessionId)
+                : null,
         ]);
     }
 }

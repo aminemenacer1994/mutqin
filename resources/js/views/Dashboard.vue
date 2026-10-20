@@ -79,15 +79,6 @@
           </div>
         </header>
 
-        <LearnerTeacherSupport
-          v-if="showLearnerSupport"
-          :support="support"
-          :error="supportError"
-          @start-assignment="startSupportAssignment"
-          @request-group="requestSupportGroup"
-          @grant-consent="grantSupportConsent"
-        />
-
         <div class="user-dashboard__content">
         <section class="dash-section dash-section--flat dash-section--weekly dash-reveal" aria-labelledby="dash-week-heading" style="--dash-delay: 30ms">
           <div class="dash-section__head dash-section__head--compact">
@@ -173,6 +164,23 @@
             </div>
           </div>
         </section>
+
+        <LearnerTeacherAssignments
+          v-if="showLearnerAssignments"
+          :assignments="learnerAssignments"
+          :loading="supportLoading"
+          :error="supportError"
+          :starting-id="assignmentStartingId"
+          @start="startSupportAssignment"
+        />
+
+        <LearnerTeacherSupport
+          v-if="showLearnerSupport"
+          :support="support"
+          :error="supportGroupsError"
+          @request-group="requestSupportGroup"
+          @grant-consent="grantSupportConsent"
+        />
 
         <div v-if="showMurajaahSection || showAiReciteSection" class="user-dashboard__review-row user-dashboard__review-row--secondary">
         <section
@@ -800,6 +808,7 @@ import {
 } from 'chart.js'
 import { learningApi } from '../scripts/api/learning'
 import NetworkFallback from '../components/NetworkFallback.vue'
+import LearnerTeacherAssignments from '../components/teacher/LearnerTeacherAssignments.vue'
 import LearnerTeacherSupport from '../components/teacher/LearnerTeacherSupport.vue'
 import DashAnimatedNumber from '../components/DashAnimatedNumber.vue'
 import SessionAnalysisModal from '../components/SessionAnalysisModal.vue'
@@ -867,7 +876,14 @@ const DRAWER_ICONS = {
 
 export default {
   name: 'UserDashboard',
-  components: { Bar, NetworkFallback, LearnerTeacherSupport, DashAnimatedNumber, SessionAnalysisModal },
+  components: {
+    Bar,
+    NetworkFallback,
+    LearnerTeacherAssignments,
+    LearnerTeacherSupport,
+    DashAnimatedNumber,
+    SessionAnalysisModal,
+  },
   props: {
     auth: { type: Object, default: () => ({}) },
     initialData: { type: Object, default: null },
@@ -918,19 +934,28 @@ export default {
       toastMessage: '',
       toastTimer: null,
       support: null,
+      supportLoading: false,
       supportError: '',
+      supportGroupsError: '',
+      assignmentStartingId: 0,
     }
   },
   computed: {
     memorisationUrl() {
       return this.auth?.memorisation_url || '/memorisation'
     },
+    learnerAssignments() {
+      return Array.isArray(this.support?.assignments) ? this.support.assignments : []
+    },
+    showLearnerAssignments() {
+      if (this.auth?.teacher_features_enabled !== true) return false
+      return this.supportLoading || this.support !== null
+    },
     showLearnerSupport() {
       if (this.auth?.teacher_features_enabled !== true) return false
       if (!this.support) return false
       return Boolean(
         this.support.teacher_dashboard_url
-        || this.support.assignments?.length
         || this.support.feedback?.length
         || this.support.groups?.length
       )
@@ -2417,39 +2442,62 @@ export default {
     },
     async loadLearnerSupport() {
       if (this.auth?.teacher_features_enabled !== true) return
+      this.supportLoading = true
       try {
         this.support = await learningApi.getLearnerSupport()
         this.supportError = ''
-      } catch (_) {
-        this.supportError = ''
+        this.supportGroupsError = ''
+      } catch (error) {
+        this.support = this.support || { assignments: [], feedback: [], groups: [] }
+        this.supportError = error?.response?.data?.message || this.t('teacher.learner_assignments_load_failed')
+      } finally {
+        this.supportLoading = false
       }
     },
     async startSupportAssignment(item) {
       if (this.auth?.teacher_features_enabled !== true) return
       this.supportError = ''
+      this.assignmentStartingId = Number(item?.id || 0)
       try {
         const payload = await learningApi.startLearnerAssignment(item.id)
-        if (payload?.href) window.location.assign(payload.href)
+        if (payload?.recipient && Array.isArray(this.support?.assignments)) {
+          const next = this.support.assignments.map((row) => (
+            row.id === payload.recipient.id ? { ...row, ...payload.recipient } : row
+          ))
+          this.support = { ...this.support, assignments: next }
+        }
+        if (payload?.href) {
+          window.location.assign(payload.href)
+          return
+        }
+        this.showToast(this.t('teacher.action_failed'))
       } catch (error) {
         this.supportError = error?.response?.data?.message || this.t('teacher.action_failed')
+        this.showToast(this.supportError)
+      } finally {
+        this.assignmentStartingId = 0
       }
     },
     async requestSupportGroup(group) {
       if (this.auth?.teacher_features_enabled !== true) return
-      this.supportError = ''
+      this.supportGroupsError = ''
       try {
         this.support = await learningApi.requestLearnerGroup(group.id)
+        this.showToast(this.t('teacher.learner_groups_updated'))
       } catch (error) {
-        this.supportError = this.supportErrorMessage(error)
+        this.supportGroupsError = this.supportErrorMessage(error)
+        this.showToast(this.supportGroupsError)
       }
     },
     async grantSupportConsent(group) {
       if (this.auth?.teacher_features_enabled !== true) return
-      this.supportError = ''
+      this.supportGroupsError = ''
       try {
         this.support = await learningApi.grantLearnerConsent(group.membership_id)
+        this.showToast(this.t('teacher.learner_groups_updated'))
       } catch (error) {
-        this.supportError = this.supportErrorMessage(error)
+        this.supportGroupsError = this.supportErrorMessage(error)
+        this.showToast(this.supportGroupsError)
       }
     },
     supportErrorMessage(error) {

@@ -2349,3 +2349,6 @@ html[data-theme="dark"] .mutqin-pwa-install__btn--primary {
   background: transparent !important;
   box-shadow: none !important;
 }
+
+/* Teacher workspace (also loaded on /teacher via teacher-dashboard.css). */
+@import '../js/views/TeacherDashboard.css';

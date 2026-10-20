@@ -11,22 +11,6 @@
     </div>
     <div class="dash-section__body teacher-support">
       <p v-if="error" class="teacher-alert" role="alert">{{ error }}</p>
-      <ul v-if="support.assignments?.length" class="dash-section__feed">
-        <li v-for="item in support.assignments" :key="item.id">
-          <div class="dash-ai-results__attempt is-neutral">
-            <span class="dash-ai-results__attempt-copy">
-              <strong>{{ item.assignment?.surah_name }} {{ item.assignment?.ayah_start }}–{{ item.assignment?.ayah_end }}</strong>
-              <span class="dash-ai-results__attempt-meta">
-                {{ item.assignment?.kind === 'ai_recite' ? t('teacher.kind_ai') : t('teacher.kind_practice') }}
-                · {{ t(`teacher.status_${item.status}`) }}
-                <template v-if="item.teacher_name"> · {{ item.teacher_name }}</template>
-              </span>
-              <span v-if="item.assignment?.feedback" class="teacher-feedback">{{ t('teacher.feedback') }}: {{ item.assignment.feedback }}</span>
-            </span>
-            <button type="button" class="dash-btn dash-btn--primary dash-btn--sm" @click="$emit('start-assignment', item)">{{ t('teacher.start') }}</button>
-          </div>
-        </li>
-      </ul>
       <ul v-if="support.feedback?.length" class="teacher-list teacher-list--bordered">
         <li v-for="note in support.feedback" :key="note.id">
           <strong>{{ t('teacher.feedback') }}<template v-if="note.teacher_name"> · {{ note.teacher_name }}</template></strong>
@@ -57,6 +41,6 @@ export default {
     support: { type: Object, required: true },
     error: { type: String, default: '' },
   },
-  emits: ['start-assignment', 'request-group', 'grant-consent'],
+  emits: ['request-group', 'grant-consent'],
 }
 </script>

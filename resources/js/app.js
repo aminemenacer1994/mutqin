@@ -243,6 +243,17 @@ async function bootstrapApp() {
 
     const i18n = await setupI18n();
 
+    // /teacher: load the dashboard chunk before mount so UI updates ship with the
+    // same refresh as app.js (avoids a stale lazy chunk after deploy).
+    let TeacherDashboardComponent = TeacherDashboard;
+    if (typeof document !== 'undefined' && document.querySelector('teacher-dashboard')) {
+        const mod = await import(
+            /* webpackChunkName: "teacher-dashboard" */
+            './views/TeacherDashboard.vue'
+        );
+        TeacherDashboardComponent = mod.default;
+    }
+
     app.use(i18n);
     app.mixin(i18nMixin);
     app.config.globalProperties.$setLocale = (locale) => setLocale(i18n, locale);
@@ -257,7 +268,7 @@ async function bootstrapApp() {
     app.component('homepage', Homepage);
     app.component('memorisation', Memorisation);
     app.component('user-dashboard', UserDashboard);
-    app.component('teacher-dashboard', TeacherDashboard);
+    app.component('teacher-dashboard', TeacherDashboardComponent);
     app.component('admin-dashboard', AdminDashboard);
     app.component('admin-feedback', AdminFeedback);
     app.component('about', About);

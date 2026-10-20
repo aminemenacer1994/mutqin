@@ -1,6 +1,11 @@
 <template>
-  <main v-if="featuresEnabled" id="mainContent" class="user-dashboard teacher-dashboard" tabindex="-1">
-    <div class="container user-dashboard__shell">
+  <div
+    v-if="featuresEnabled"
+    class="user-dashboard teacher-dashboard"
+    data-teacher-ui="2026-10-20"
+    tabindex="-1"
+  >
+    <div class="container user-dashboard__shell teacher-dashboard__shell">
       <div v-if="loading && !overview" class="teacher-skeletons" role="status" aria-live="polite">
         <div v-for="n in 4" :key="n" class="teacher-skeleton"></div>
         <span class="visually-hidden">{{ t('teacher.loading') }}</span>
@@ -17,13 +22,6 @@
       />
 
       <template v-else>
-        <TeacherHero
-          v-if="view === 'overview'"
-          :first-name="firstName"
-          :organisation-name="overview?.teacher?.organisation?.name || ''"
-          :practice-url="practiceUrl"
-        />
-
         <div class="teacher-dashboard__layout">
           <TeacherNav
             variant="desktop"
@@ -35,6 +33,13 @@
 
           <div class="teacher-dashboard__main dash-reveal" style="--dash-delay: 80ms">
             <p v-if="formError" class="teacher-alert" role="alert">{{ formError }}</p>
+
+            <TeacherHero
+              v-if="view === 'overview'"
+              :first-name="firstName"
+              :organisation-name="overview?.teacher?.organisation?.name || ''"
+              :practice-url="practiceUrl"
+            />
 
             <TeacherOverviewSection
               v-if="view === 'overview' && overview"
@@ -104,7 +109,7 @@
         <TeacherNav variant="mobile" :items="TEACHER_NAV" :active-view="view" @select="openView" />
       </template>
     </div>
-  </main>
+  </div>
 </template>
 
 <script>
@@ -117,8 +122,6 @@ import TeacherSettingsSection from '../components/teacher/TeacherSettingsSection
 import TeacherStudentProfileSection from '../components/teacher/TeacherStudentProfileSection.vue'
 import TeacherStudentsSection from '../components/teacher/TeacherStudentsSection.vue'
 import { useTeacherDashboard } from '../scripts/composables/useTeacherDashboard'
-import './Dashboard.css'
-import './TeacherDashboard.css'
 
 export default {
   name: 'TeacherDashboard',

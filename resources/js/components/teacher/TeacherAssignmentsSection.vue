@@ -1,11 +1,18 @@
 <template>
   <section class="teacher-stack">
-    <TeacherPanel
+    <TeacherPageHeader
       :title="t('teacher.nav_assignments')"
+      :subtitle="t('teacher.tasks_subtitle')"
+    />
+    <TeacherPanel
+      :title="t('teacher.assign_form_title')"
+      :hint="t('teacher.assign_form_lead')"
       icon="bi bi-journal-text"
       compact
     >
       <form class="teacher-compose" @submit.prevent="$emit('create')">
+        <fieldset class="teacher-compose__block">
+          <legend class="teacher-compose__legend">{{ t('teacher.assign_section_student') }}</legend>
         <label class="teacher-field teacher-field--full">
           <span>{{ t('teacher.student') }}</span>
           <select :value="form.student_id" required @change="patch('student_id', $event.target.value)">
@@ -13,7 +20,10 @@
             <option v-for="student in students" :key="student.id" :value="String(student.id)">{{ student.name }}</option>
           </select>
         </label>
+        </fieldset>
 
+        <fieldset class="teacher-compose__block">
+          <legend class="teacher-compose__legend">{{ t('teacher.assign_section_task') }}</legend>
         <div class="teacher-compose__row">
           <label class="teacher-field">
             <span>{{ t('teacher.kind') }}</span>
@@ -44,6 +54,7 @@
             <input :value="form.due_at" type="date" @input="patch('due_at', $event.target.value)">
           </label>
         </div>
+        </fieldset>
 
         <button type="submit" class="teacher-compose__send" :disabled="saving">
           <i class="bi bi-send" aria-hidden="true"></i>
@@ -84,13 +95,14 @@
 import { i18nMixin } from '../../mixins/i18nMixin'
 import TeacherEmpty from './TeacherEmpty.vue'
 import TeacherMore from './TeacherMore.vue'
+import TeacherPageHeader from './TeacherPageHeader.vue'
 import TeacherPanel from './TeacherPanel.vue'
 
 const STEP = 4
 
 export default {
   name: 'TeacherAssignmentsSection',
-  components: { TeacherEmpty, TeacherMore, TeacherPanel },
+  components: { TeacherEmpty, TeacherMore, TeacherPageHeader, TeacherPanel },
   mixins: [i18nMixin],
   props: {
     form: { type: Object, required: true },
